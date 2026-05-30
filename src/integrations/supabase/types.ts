@@ -421,6 +421,7 @@ export type Database = {
           payout_processed: boolean | null
           payout_processed_at: string | null
           payout_transfer_id: string | null
+          referral_code: string | null
           responded_at: string | null
           shopper_confirmed_at: string | null
           shopper_id: string
@@ -481,6 +482,7 @@ export type Database = {
           payout_processed?: boolean | null
           payout_processed_at?: string | null
           payout_transfer_id?: string | null
+          referral_code?: string | null
           responded_at?: string | null
           shopper_confirmed_at?: string | null
           shopper_id: string
@@ -541,6 +543,7 @@ export type Database = {
           payout_processed?: boolean | null
           payout_processed_at?: string | null
           payout_transfer_id?: string | null
+          referral_code?: string | null
           responded_at?: string | null
           shopper_confirmed_at?: string | null
           shopper_id?: string
@@ -2103,6 +2106,10 @@ export type Database = {
           quiet_hours_end: string | null
           quiet_hours_start: string | null
           quiet_hours_timezone: string | null
+          referral_suspended: boolean
+          referral_terms_version_accepted: string | null
+          referral_w9_collected: boolean
+          referral_ytd_earnings: number
           shop_policies: Json | null
           state: string | null
           stripe_account_id: string | null
@@ -2140,6 +2147,10 @@ export type Database = {
           quiet_hours_end?: string | null
           quiet_hours_start?: string | null
           quiet_hours_timezone?: string | null
+          referral_suspended?: boolean
+          referral_terms_version_accepted?: string | null
+          referral_w9_collected?: boolean
+          referral_ytd_earnings?: number
           shop_policies?: Json | null
           state?: string | null
           stripe_account_id?: string | null
@@ -2177,6 +2188,10 @@ export type Database = {
           quiet_hours_end?: string | null
           quiet_hours_start?: string | null
           quiet_hours_timezone?: string | null
+          referral_suspended?: boolean
+          referral_terms_version_accepted?: string | null
+          referral_w9_collected?: boolean
+          referral_ytd_earnings?: number
           shop_policies?: Json | null
           state?: string | null
           stripe_account_id?: string | null
@@ -2392,6 +2407,57 @@ export type Database = {
         }
         Relationships: []
       }
+      referral_clicks: {
+        Row: {
+          code: string
+          converted_to_signup: boolean
+          cookie_set: boolean
+          country: string | null
+          created_at: string
+          destination_path: string | null
+          device_type: string | null
+          hashed_ip: string | null
+          id: string
+          program_type: string | null
+          region: string | null
+          signup_user_id: string | null
+          source_header: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          code: string
+          converted_to_signup?: boolean
+          cookie_set?: boolean
+          country?: string | null
+          created_at?: string
+          destination_path?: string | null
+          device_type?: string | null
+          hashed_ip?: string | null
+          id?: string
+          program_type?: string | null
+          region?: string | null
+          signup_user_id?: string | null
+          source_header?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          code?: string
+          converted_to_signup?: boolean
+          cookie_set?: boolean
+          country?: string | null
+          created_at?: string
+          destination_path?: string | null
+          device_type?: string | null
+          hashed_ip?: string | null
+          id?: string
+          program_type?: string | null
+          region?: string | null
+          signup_user_id?: string | null
+          source_header?: string | null
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
       referral_codes: {
         Row: {
           code: string
@@ -2434,11 +2500,247 @@ export type Database = {
         }
         Relationships: []
       }
+      referral_fraud_flags: {
+        Row: {
+          created_at: string
+          details: Json
+          flag_type: string
+          id: string
+          referral_id: string | null
+          referrer_id: string | null
+          resolution_note: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          severity: string
+        }
+        Insert: {
+          created_at?: string
+          details?: Json
+          flag_type: string
+          id?: string
+          referral_id?: string | null
+          referrer_id?: string | null
+          resolution_note?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string
+        }
+        Update: {
+          created_at?: string
+          details?: Json
+          flag_type?: string
+          id?: string
+          referral_id?: string | null
+          referrer_id?: string | null
+          resolution_note?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "referral_fraud_flags_referral_id_fkey"
+            columns: ["referral_id"]
+            isOneToOne: false
+            referencedRelation: "referrals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      referral_payouts: {
+        Row: {
+          amount_gross: number
+          amount_net: number
+          attempted_at: string
+          completed_at: string | null
+          created_at: string
+          failure_reason: string | null
+          id: string
+          referral_ids: string[]
+          referrer_id: string
+          status: string
+          stripe_fee: number
+          stripe_transfer_id: string | null
+        }
+        Insert: {
+          amount_gross: number
+          amount_net: number
+          attempted_at?: string
+          completed_at?: string | null
+          created_at?: string
+          failure_reason?: string | null
+          id?: string
+          referral_ids?: string[]
+          referrer_id: string
+          status?: string
+          stripe_fee?: number
+          stripe_transfer_id?: string | null
+        }
+        Update: {
+          amount_gross?: number
+          amount_net?: number
+          attempted_at?: string
+          completed_at?: string | null
+          created_at?: string
+          failure_reason?: string | null
+          id?: string
+          referral_ids?: string[]
+          referrer_id?: string
+          status?: string
+          stripe_fee?: number
+          stripe_transfer_id?: string | null
+        }
+        Relationships: []
+      }
+      referral_program_config: {
+        Row: {
+          hold_days: number
+          is_active: boolean
+          min_transaction_value: number
+          monthly_cap: number | null
+          program_type: string
+          reward_amount: number
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          hold_days?: number
+          is_active?: boolean
+          min_transaction_value?: number
+          monthly_cap?: number | null
+          program_type: string
+          reward_amount: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          hold_days?: number
+          is_active?: boolean
+          min_transaction_value?: number
+          monthly_cap?: number | null
+          program_type?: string
+          reward_amount?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
+      referral_status_log: {
+        Row: {
+          changed_by_source: string
+          changed_by_user_id: string | null
+          created_at: string
+          id: string
+          new_status: string
+          note: string | null
+          old_status: string | null
+          referral_id: string
+        }
+        Insert: {
+          changed_by_source?: string
+          changed_by_user_id?: string | null
+          created_at?: string
+          id?: string
+          new_status: string
+          note?: string | null
+          old_status?: string | null
+          referral_id: string
+        }
+        Update: {
+          changed_by_source?: string
+          changed_by_user_id?: string | null
+          created_at?: string
+          id?: string
+          new_status?: string
+          note?: string | null
+          old_status?: string | null
+          referral_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "referral_status_log_referral_id_fkey"
+            columns: ["referral_id"]
+            isOneToOne: false
+            referencedRelation: "referrals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      referral_terms_acceptance: {
+        Row: {
+          accepted_at: string
+          id: string
+          ip_address: string | null
+          terms_version: string
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          accepted_at?: string
+          id?: string
+          ip_address?: string | null
+          terms_version: string
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          accepted_at?: string
+          id?: string
+          ip_address?: string | null
+          terms_version?: string
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      referral_w9_records: {
+        Row: {
+          address_city: string | null
+          address_line: string | null
+          address_state: string | null
+          address_zip: string | null
+          collected_at: string
+          id: string
+          storage_path: string | null
+          tax_id_last4: string
+          taxpayer_name: string
+          user_id: string
+        }
+        Insert: {
+          address_city?: string | null
+          address_line?: string | null
+          address_state?: string | null
+          address_zip?: string | null
+          collected_at?: string
+          id?: string
+          storage_path?: string | null
+          tax_id_last4: string
+          taxpayer_name: string
+          user_id: string
+        }
+        Update: {
+          address_city?: string | null
+          address_line?: string | null
+          address_state?: string | null
+          address_zip?: string | null
+          collected_at?: string
+          id?: string
+          storage_path?: string | null
+          tax_id_last4?: string
+          taxpayer_name?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       referrals: {
         Row: {
+          attribution_source: string | null
           code: string
           created_at: string
           id: string
+          on_hold_until: string | null
+          payout_date: string | null
+          program_type: string | null
           qualified_at: string | null
           qualifying_entity_id: string | null
           qualifying_event: string | null
@@ -2450,13 +2752,20 @@ export type Database = {
           referrer_reward_amount: number | null
           referrer_reward_payout_id: string | null
           referrer_reward_status: string | null
+          reward_amount: number | null
           status: string
+          transaction_id: string | null
           updated_at: string
+          void_reason: string | null
         }
         Insert: {
+          attribution_source?: string | null
           code: string
           created_at?: string
           id?: string
+          on_hold_until?: string | null
+          payout_date?: string | null
+          program_type?: string | null
           qualified_at?: string | null
           qualifying_entity_id?: string | null
           qualifying_event?: string | null
@@ -2468,13 +2777,20 @@ export type Database = {
           referrer_reward_amount?: number | null
           referrer_reward_payout_id?: string | null
           referrer_reward_status?: string | null
+          reward_amount?: number | null
           status?: string
+          transaction_id?: string | null
           updated_at?: string
+          void_reason?: string | null
         }
         Update: {
+          attribution_source?: string | null
           code?: string
           created_at?: string
           id?: string
+          on_hold_until?: string | null
+          payout_date?: string | null
+          program_type?: string | null
           qualified_at?: string | null
           qualifying_entity_id?: string | null
           qualifying_event?: string | null
@@ -2486,8 +2802,11 @@ export type Database = {
           referrer_reward_amount?: number | null
           referrer_reward_payout_id?: string | null
           referrer_reward_status?: string | null
+          reward_amount?: number | null
           status?: string
+          transaction_id?: string | null
           updated_at?: string
+          void_reason?: string | null
         }
         Relationships: []
       }
@@ -2628,6 +2947,7 @@ export type Database = {
           platform_fee: number
           promo_code_id: string | null
           promo_discount: number | null
+          referral_code: string | null
           seller_confirmed_at: string | null
           seller_id: string
           seller_payout: number
@@ -2669,6 +2989,7 @@ export type Database = {
           platform_fee: number
           promo_code_id?: string | null
           promo_discount?: number | null
+          referral_code?: string | null
           seller_confirmed_at?: string | null
           seller_id: string
           seller_payout: number
@@ -2710,6 +3031,7 @@ export type Database = {
           platform_fee?: number
           promo_code_id?: string | null
           promo_discount?: number | null
+          referral_code?: string | null
           seller_confirmed_at?: string | null
           seller_id?: string
           seller_payout?: number
@@ -3289,6 +3611,32 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_update_referral_config: {
+        Args: {
+          p_hold_days: number
+          p_is_active: boolean
+          p_min_transaction_value: number
+          p_monthly_cap: number
+          p_program_type: string
+          p_reward_amount: number
+        }
+        Returns: {
+          hold_days: number
+          is_active: boolean
+          min_transaction_value: number
+          monthly_cap: number | null
+          program_type: string
+          reward_amount: number
+          updated_at: string
+          updated_by: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "referral_program_config"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       calculate_booking_end_timestamp: {
         Args: { p_end_date: string; p_hourly_slots: Json }
         Returns: string
@@ -3304,6 +3652,10 @@ export type Database = {
           p_start_date: string
         }
         Returns: Json
+      }
+      count_purchase_referrals_this_month: {
+        Args: { p_referrer_id: string }
+        Returns: number
       }
       delete_email: {
         Args: { message_id: number; queue_name: string }
@@ -3432,6 +3784,23 @@ export type Database = {
       }
       is_admin: { Args: { user_id: string }; Returns: boolean }
       is_fast_responder: { Args: { host_user_id: string }; Returns: boolean }
+      list_payable_referrers: {
+        Args: { p_min_payout?: number }
+        Returns: {
+          referral_ids: string[]
+          referrer_id: string
+          total_owed: number
+        }[]
+      }
+      log_referral_status_change: {
+        Args: {
+          p_new_status: string
+          p_note?: string
+          p_referral_id: string
+          p_source?: string
+        }
+        Returns: undefined
+      }
       lookup_referral_code: {
         Args: { p_code: string }
         Returns: {
