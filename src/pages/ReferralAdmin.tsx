@@ -19,6 +19,7 @@ const ReferralAdmin = () => {
   const [referrals, setReferrals] = useState<any[]>([]);
   const [config, setConfig] = useState<any[]>([]);
   const [flags, setFlags] = useState<any[]>([]);
+  const [featureFlags, setFeatureFlags] = useState<any[]>([]);
   const [running, setRunning] = useState(false);
 
   useEffect(() => {
