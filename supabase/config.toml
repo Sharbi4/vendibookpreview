@@ -206,3 +206,24 @@ verify_jwt = false
 
 [functions.handle-email-suppression]
 verify_jwt = false
+
+[functions.marketing-fetch-content]
+verify_jwt = true
+
+[functions.marketing-compose-assist]
+verify_jwt = true
+
+[functions.marketing-send-test]
+verify_jwt = true
+
+[functions.marketing-send-broadcast]
+verify_jwt = true
+
+[functions.marketing-feedback-redirect]
+verify_jwt = false
+
+[functions.marketing-unsubscribe]
+verify_jwt = false
+
+[functions.marketing-resend-webhook]
+verify_jwt = false
