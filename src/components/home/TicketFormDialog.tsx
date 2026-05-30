@@ -70,19 +70,8 @@ const TicketFormDialog = ({ open, onOpenChange }: TicketFormDialogProps) => {
     setIsSubmitting(true);
 
     try {
-      const intentLabel = INTENT_OPTIONS.find(o => o.value === result.data.intent)?.label || result.data.intent;
-      
-      const { data, error } = await supabase.functions.invoke('create-zendesk-ticket', {
-        body: {
-          requester_name: result.data.name,
-          requester_email: result.data.email,
-          requester_phone: result.data.phone,
-          subject: `Match Me Request — Looking to ${intentLabel}`,
-          description: `New Match Me request:\n\nName: ${result.data.name}\nEmail: ${result.data.email}\nPhone: ${result.data.phone}\nZip Code: ${result.data.zipCode}\nIntent: ${intentLabel}\n\nThis person wants to be matched with the right listing. Please follow up.`,
-          type: 'task',
-          priority: 'high',
-          tags: ['vendibook', 'match-me', 'concierge', result.data.intent],
-        },
+      const { error } = await supabase.functions.invoke('vapi-outbound-call', {
+        body: { name: result.data.name, phone: result.data.phone },
       });
 
       if (error) throw error;
