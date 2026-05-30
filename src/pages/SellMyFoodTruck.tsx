@@ -192,25 +192,26 @@ const SellMyFoodTruck = () => {
                 className="max-w-3xl mx-auto text-center"
               >
                 <h1 className="text-3xl md:text-5xl font-bold tracking-tight mb-4">
-                  Sell your food truck — with serious buyers and a clean process.
+                  Sell your food truck — without getting buried on Facebook Marketplace.
                 </h1>
                 <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-                  List in minutes. Get a price estimate instantly. Manage offers, payments, and next steps from your dashboard.
+                  List once and reach buyers actively searching for food trucks and trailers — not scrolling past your post. Verified inquiries, secure checkout, financing-friendly buyers.
                 </p>
                 
                 <div className="flex flex-col sm:flex-row gap-3 justify-center mb-8">
                   <Button size="lg" variant="glass-cta" asChild className="text-base">
                     <Link to="/list?mode=sale">
-                      List for Sale
+                      List Your Food Truck
                       <ArrowRight className="ml-2 h-4 w-4" />
                     </Link>
                   </Button>
                   <Button size="lg" variant="glass-cta" asChild className="text-base">
-                    <Link to="/tools/pricepilot">
-                      Get a Price Estimate
+                    <Link to="/food-trucks-for-sale">
+                      See Food Trucks for Sale
                     </Link>
                   </Button>
                 </div>
+
                 
                 {/* Trust Row */}
                 <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm text-muted-foreground">
