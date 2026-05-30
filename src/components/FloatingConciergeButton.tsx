@@ -24,15 +24,16 @@ const FloatingConciergeButton = () => {
   );
 
   const handleClick = () => {
-    if (window.zE) {
+    const tawk = (window as any).Tawk_API;
+    if (tawk?.maximize) {
       try {
-        window.zE('messenger', 'open');
+        tawk.maximize();
         return;
       } catch (error) {
-        console.debug('Zendesk messenger open:', error);
+        console.debug('Tawk open:', error);
       }
     }
-    // Fallback: open ticket form if Zendesk isn't available
+    // Fallback: open ticket form if Tawk isn't loaded yet
     setIsTicketOpen(true);
   };
 

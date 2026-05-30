@@ -4,11 +4,10 @@ import { useMemo } from 'react';
 
 const SocialContactOptions = () => {
   const openZendeskChat = () => {
-    // Open Vendi chat (Vapi Chat API)
     try {
-      window.dispatchEvent(new CustomEvent('open-vendi-chat'));
+      (window as any).Tawk_API?.maximize?.();
     } catch (error) {
-      console.debug('Vendi chat open error:', error);
+      console.debug('Tawk chat open error:', error);
     }
   };
 
