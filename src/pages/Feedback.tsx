@@ -40,7 +40,7 @@ export default function Feedback() {
   }, [token]);
 
   const submit = async () => {
-    if (!rating) { toast.error("Please select a rating"); return; }
+    if (!rating && nps === null) { toast.error("Please select a rating or NPS score"); return; }
     setSubmitting(true);
     const resolvedBusinessType = businessType === "Other" ? businessTypeOther.trim() : businessType;
     const newMetadata = {
