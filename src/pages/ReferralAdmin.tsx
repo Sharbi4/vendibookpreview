@@ -238,6 +238,8 @@ const ReferralAdmin = () => {
     setNoteValue("");
     setHoldUntil("");
     setSeverity("medium");
+    // Pin one idempotency key per dialog open so accidental double-submits dedupe server-side.
+    setDialogIdempotencyKey(crypto.randomUUID?.() ?? `${Date.now()}-${Math.random()}`);
     setDialogOpen(true);
   };
 
@@ -260,6 +262,7 @@ const ReferralAdmin = () => {
     if (dialogAction === "flag_fraud") {
       body.payload = { severity, flag_type: "manual_admin_flag" };
     }
+
     const ok = await callAdmin(body);
     setSubmitting(false);
     if (ok) setDialogOpen(false);
