@@ -17,8 +17,10 @@ import {
   Shield,
   Sparkles,
   Megaphone,
-  ChefHat
+  ChefHat,
+  Gift
 } from 'lucide-react';
+import { useReferralEarnings } from '@/hooks/useReferralEarnings';
 import { useDashboardPersona } from '@/hooks/useDashboardPersona';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
