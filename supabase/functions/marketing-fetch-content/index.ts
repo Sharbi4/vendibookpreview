@@ -10,7 +10,7 @@ const corsHeaders = {
 };
 
 function priceLabel(row: any): string {
-  if (row.mode === "for_sale" && row.price_sale) return `$${Number(row.price_sale).toLocaleString()}`;
+  if (row.mode === "sale" && row.price_sale) return `$${Number(row.price_sale).toLocaleString()}`;
   if (row.price_hourly) return `$${row.price_hourly}/hr`;
   if (row.price_daily) return `$${row.price_daily}/day`;
   if (row.price_weekly) return `$${row.price_weekly}/wk`;
@@ -46,7 +46,7 @@ serve(async (req) => {
       .from("listings")
       .select("id,title,city,state,price_sale,cover_image_url,image_urls,category,subcategory,mode,published_at")
       .eq("status", "published")
-      .eq("mode", "for_sale")
+      .eq("mode", "sale")
       .not("published_at", "is", null)
       .not("title", "ilike", "DEMO%")
       .order("published_at", { ascending: false })
@@ -59,7 +59,7 @@ serve(async (req) => {
       .from("listings")
       .select("id,title,city,state,price_hourly,price_daily,price_weekly,price_monthly,cover_image_url,image_urls,category,amenities,mode,featured_enabled,featured_expires_at,published_at")
       .eq("status", "published")
-      .eq("mode", "for_rent")
+      .eq("mode", "rent")
       .eq("featured_enabled", true)
       .or(`featured_expires_at.is.null,featured_expires_at.gt.${now}`)
       .not("title", "ilike", "DEMO%")
@@ -70,7 +70,7 @@ serve(async (req) => {
         .from("listings")
         .select("id,title,city,state,price_hourly,price_daily,price_weekly,price_monthly,cover_image_url,image_urls,category,amenities,mode,published_at")
         .eq("status", "published")
-        .eq("mode", "for_rent")
+        .eq("mode", "rent")
         .not("title", "ilike", "DEMO%")
         .not("published_at", "is", null)
         .order("published_at", { ascending: false })
