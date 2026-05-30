@@ -3322,6 +3322,20 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      get_feedback_by_token: {
+        Args: { _token: string }
+        Returns: {
+          context_id: string
+          context_type: string
+          created_at: string
+          email: string
+          id: string
+          message: string
+          metadata: Json
+          nps: number
+          rating: number
+        }[]
+      }
       get_host_avg_response_time: {
         Args: { host_user_id: string }
         Returns: string
@@ -3416,6 +3430,17 @@ export type Database = {
           msg_id: number
           read_ct: number
         }[]
+      }
+      submit_feedback_by_token: {
+        Args: {
+          _business_type: string
+          _can_share: boolean
+          _message: string
+          _nps: number
+          _rating: number
+          _token: string
+        }
+        Returns: string
       }
       update_asset_request_status: {
         Args: {
