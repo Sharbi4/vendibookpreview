@@ -170,9 +170,49 @@ export default function Feedback() {
         </div>
 
         <div className="space-y-3">
+          <p className="text-sm font-medium">What kind of business are you running?</p>
+          <div className="flex flex-wrap gap-2">
+            {businessOptions.map(opt => (
+              <button
+                key={opt}
+                type="button"
+                onClick={() => setBusinessType(opt)}
+                className={`px-3 py-1.5 rounded-full border text-sm transition ${businessType === opt ? "bg-primary text-primary-foreground border-primary" : "border-border hover:border-foreground/40"}`}
+              >{opt}</button>
+            ))}
+          </div>
+          {businessType === "Other" && (
+            <Textarea
+              value={businessTypeOther}
+              onChange={(e) => setBusinessTypeOther(e.target.value)}
+              placeholder="Tell us about your business…"
+              rows={2}
+            />
+          )}
+        </div>
+
+        <div className="space-y-3">
           <p className="text-sm font-medium">Anything else? (optional)</p>
           <Textarea value={message} onChange={(e) => setMessage(e.target.value)} placeholder="What worked? What didn't?" rows={5} />
         </div>
+
+        <label className="flex items-start gap-3 text-sm text-muted-foreground cursor-pointer">
+          <input
+            type="checkbox"
+            checked={canShare}
+            onChange={(e) => setCanShare(e.target.checked)}
+            className="mt-1 h-4 w-4 rounded border-border"
+          />
+          <span>You can share my feedback or story (anonymously if needed) with the Vendibook community.</span>
+        </label>
+
+        <Button onClick={submit} disabled={submitting} size="lg" className="w-full">
+          {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Submit feedback"}
+        </Button>
+      </div>
+    </div>
+  );
+}
 
         <Button onClick={submit} disabled={submitting} size="lg" className="w-full">
           {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Submit feedback"}
