@@ -32,8 +32,45 @@ Deno.serve(async (req) => {
     const { data: isAdmin } = await admin.rpc("is_admin", { user_id: user.id });
     if (!isAdmin) return new Response(JSON.stringify({ error: "forbidden" }), { status: 403, headers: corsHeaders });
 
-    const { action, referral_id, referrer_id, suspend, note, hold_until, payload } = await req.json();
+    const body = await req.json();
+    const { action, referral_id, referrer_id, suspend, note, hold_until, payload } = body;
+    const idempotencyKey: string | undefined =
+      req.headers.get("Idempotency-Key") ?? body?.idempotency_key ?? undefined;
+
+    // Idempotency: if we've already processed this key, return the cached response.
+    if (idempotencyKey) {
+      const { data: existing } = await admin
+        .from("admin_action_idempotency")
+        .select("response")
+        .eq("idempotency_key", idempotencyKey)
+        .maybeSingle();
+      if (existing?.response) {
+        return new Response(JSON.stringify({ ...existing.response, idempotent_replay: true }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      // Reserve the key up front so concurrent duplicates lose the race.
+      const { error: reserveErr } = await admin.from("admin_action_idempotency").insert({
+        idempotency_key: idempotencyKey,
+        action,
+        user_id: user.id,
+        response: { ok: true, pending: true },
+      });
+      if (reserveErr && reserveErr.code === "23505") {
+        // Lost the race — return the winning response.
+        const { data: winner } = await admin
+          .from("admin_action_idempotency")
+          .select("response")
+          .eq("idempotency_key", idempotencyKey)
+          .maybeSingle();
+        return new Response(JSON.stringify({ ...(winner?.response ?? { ok: true }), idempotent_replay: true }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+
     let lastError: any = null;
+
 
     switch (action) {
       case "qualify": {
