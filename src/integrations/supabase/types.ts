@@ -88,6 +88,30 @@ export type Database = {
           },
         ]
       }
+      app_feature_flags: {
+        Row: {
+          description: string | null
+          enabled: boolean
+          key: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          description?: string | null
+          enabled?: boolean
+          key: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          description?: string | null
+          enabled?: boolean
+          key?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       asset_requests: {
         Row: {
           admin_notes: string | null
@@ -2950,12 +2974,18 @@ export type Database = {
       }
       referrals: {
         Row: {
+          admin_notes: string | null
+          approved_at: string | null
+          approved_by: string | null
           attribution_source: string | null
           code: string
+          cookie_attribution_code: string | null
           created_at: string
           id: string
+          manual_attribution_code: string | null
           on_hold_until: string | null
           payout_date: string | null
+          pending_review_at: string | null
           program_type: string | null
           qualified_at: string | null
           qualifying_entity_id: string | null
@@ -2975,12 +3005,18 @@ export type Database = {
           void_reason: string | null
         }
         Insert: {
+          admin_notes?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
           attribution_source?: string | null
           code: string
+          cookie_attribution_code?: string | null
           created_at?: string
           id?: string
+          manual_attribution_code?: string | null
           on_hold_until?: string | null
           payout_date?: string | null
+          pending_review_at?: string | null
           program_type?: string | null
           qualified_at?: string | null
           qualifying_entity_id?: string | null
@@ -3000,12 +3036,18 @@ export type Database = {
           void_reason?: string | null
         }
         Update: {
+          admin_notes?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
           attribution_source?: string | null
           code?: string
+          cookie_attribution_code?: string | null
           created_at?: string
           id?: string
+          manual_attribution_code?: string | null
           on_hold_until?: string | null
           payout_date?: string | null
+          pending_review_at?: string | null
           program_type?: string | null
           qualified_at?: string | null
           qualifying_entity_id?: string | null
