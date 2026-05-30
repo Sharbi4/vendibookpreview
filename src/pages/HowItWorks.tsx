@@ -34,6 +34,7 @@ import {
 import AnimatedHeroScene from '@/components/howitworks/AnimatedHeroScene';
 import ScrollWalkthrough, { WalkthroughStep } from '@/components/howitworks/ScrollWalkthrough';
 import ValuePillars, { Pillar } from '@/components/howitworks/ValuePillars';
+import { TellVendibookButton } from '@/components/lead/TellVendibookButton';
 
 type Role = 'rent' | 'buy' | 'host' | 'sell';
 
@@ -214,6 +215,95 @@ const HowItWorks = () => {
             </div>
           </div>
         </section>
+
+        {/* TWO-PATH CHOOSER — split intent immediately */}
+        <section className="py-12 md:py-16 border-y border-border bg-card/30">
+          <div className="container max-w-5xl mx-auto px-4">
+            <div className="text-center mb-8">
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground mb-2">Where do you want to start?</p>
+              <h2 className="text-2xl md:text-3xl font-bold text-foreground">Pick a path. We'll handle the rest.</h2>
+            </div>
+            <div className="grid md:grid-cols-2 gap-4 md:gap-6">
+              {/* Find or book */}
+              <motion.button
+                type="button"
+                onClick={() => {
+                  setRole('rent');
+                  document.getElementById('role-walkthrough')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }}
+                whileHover={{ y: -4 }}
+                className={`text-left rounded-2xl border p-6 md:p-7 bg-background transition-all ${
+                  role === 'rent' || role === 'buy'
+                    ? 'border-foreground/40 shadow-lg'
+                    : 'border-border hover:border-foreground/30 hover:shadow-md'
+                }`}
+              >
+                <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-foreground/5 text-[10px] font-semibold uppercase tracking-[0.14em] text-foreground/70 mb-3">
+                  <Search className="w-3 h-3" /> Find or book
+                </div>
+                <h3 className="text-xl md:text-2xl font-bold text-foreground mb-2">I want to find or book something</h3>
+                <p className="text-sm md:text-base text-muted-foreground mb-5 leading-relaxed">
+                  Search verified trucks, trailers, kitchens, and vendor spaces. Check availability, message hosts, or let our concierge confirm everything before you commit.
+                </p>
+                <ol className="space-y-2 mb-5 text-sm text-foreground/80">
+                  <li className="flex gap-2"><span className="text-foreground/40 font-mono text-xs mt-0.5">01</span> Search by city, date, and category</li>
+                  <li className="flex gap-2"><span className="text-foreground/40 font-mono text-xs mt-0.5">02</span> Check availability or ask Vendibook for help</li>
+                  <li className="flex gap-2"><span className="text-foreground/40 font-mono text-xs mt-0.5">03</span> Book securely with escrow protection</li>
+                </ol>
+                <div className="flex flex-wrap gap-2">
+                  <Button size="sm" variant="dark-shine" asChild className="rounded-full">
+                    <Link to="/search" onClick={(e) => e.stopPropagation()}>Browse listings <ArrowRight className="w-3.5 h-3.5 ml-1" /></Link>
+                  </Button>
+                  <span onClick={(e) => e.stopPropagation()}>
+                    <TellVendibookButton variant="outline" size="sm" defaultIntent="rent" sourcePage="how_it_works_renter_path" showIcon={false}>
+                      Talk to concierge
+                    </TellVendibookButton>
+                  </span>
+                </div>
+              </motion.button>
+
+              {/* List or sell */}
+              <motion.button
+                type="button"
+                onClick={() => {
+                  setRole('host');
+                  document.getElementById('role-walkthrough')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }}
+                whileHover={{ y: -4 }}
+                className={`text-left rounded-2xl border p-6 md:p-7 bg-background transition-all ${
+                  role === 'host' || role === 'sell'
+                    ? 'border-foreground/40 shadow-lg'
+                    : 'border-border hover:border-foreground/30 hover:shadow-md'
+                }`}
+              >
+                <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-primary/10 text-[10px] font-semibold uppercase tracking-[0.14em] text-primary mb-3">
+                  <DollarSign className="w-3 h-3" /> List or sell
+                </div>
+                <h3 className="text-xl md:text-2xl font-bold text-foreground mb-2">I want to list or sell something</h3>
+                <p className="text-sm md:text-base text-muted-foreground mb-5 leading-relaxed">
+                  Turn your truck, trailer, kitchen, or vendor space into income. Verified buyers and renters, automated documents, and 24-hour payouts.
+                </p>
+                <ol className="space-y-2 mb-5 text-sm text-foreground/80">
+                  <li className="flex gap-2"><span className="text-foreground/40 font-mono text-xs mt-0.5">01</span> List in minutes — free, no subscription</li>
+                  <li className="flex gap-2"><span className="text-foreground/40 font-mono text-xs mt-0.5">02</span> Verify your identity and documents</li>
+                  <li className="flex gap-2"><span className="text-foreground/40 font-mono text-xs mt-0.5">03</span> Get paid — rentals in 24h, sales in 2–5 days</li>
+                </ol>
+                <div className="flex flex-wrap gap-2">
+                  <Button size="sm" variant="dark-shine" asChild className="rounded-full">
+                    <Link to="/list" onClick={(e) => e.stopPropagation()}>Start a listing <ArrowRight className="w-3.5 h-3.5 ml-1" /></Link>
+                  </Button>
+                  <span onClick={(e) => e.stopPropagation()}>
+                    <TellVendibookButton variant="outline" size="sm" defaultIntent="list" sourcePage="how_it_works_host_path" showIcon={false}>
+                      Talk to concierge
+                    </TellVendibookButton>
+                  </span>
+                </div>
+              </motion.button>
+            </div>
+          </div>
+        </section>
+
+        <div id="role-walkthrough" />
 
         {/* ROLE TABS */}
         <section className="sticky top-16 z-30 bg-background/80 backdrop-blur-xl border-y border-border">
