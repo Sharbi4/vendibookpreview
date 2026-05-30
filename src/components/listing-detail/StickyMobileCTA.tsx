@@ -161,11 +161,11 @@ export const StickyMobileCTA = ({
           {/* Rental CTA */}
           {isRental ? (
             <Button
-              variant="dark-shine"
+              variant={instantBook ? 'dark-shine' : 'outline'}
               size="lg"
               onClick={handleRentalCTA}
               disabled={!isAvailable}
-              className="gap-2 min-w-[140px] h-12 text-base font-semibold shadow-lg"
+              className={`gap-2 min-w-[140px] h-12 text-base font-semibold ${instantBook ? 'shadow-lg' : 'border-primary/40'}`}
             >
               {instantBook ? <Zap className="h-5 w-5" /> : <Calendar className="h-5 w-5" />}
               {instantBook ? 'Book Now' : 'Request to Book'}
