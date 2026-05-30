@@ -174,7 +174,12 @@ export const DashboardLayout = ({ children, mode, onModeChange, isHost }: Dashbo
                   />
                 )}
                 <item.icon className="h-5 w-5" strokeWidth={active ? 2 : 1.75} />
-                {item.title}
+                <span className="flex-1">{item.title}</span>
+                {item.title === 'Refer & Earn' && referralEarned > 0 && (
+                  <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground">
+                    ${Math.round(referralEarned)} earned
+                  </span>
+                )}
               </Link>
             );
           })}
