@@ -11,6 +11,7 @@ import { useListingRequiredDocuments } from '@/hooks/useRequiredDocuments';
 import { calculateRentalFees } from '@/lib/commissions';
 import { trackFormSubmitConversion } from '@/lib/gtagConversions';
 import { trackRequestStarted, trackRequestSubmitted } from '@/lib/analytics';
+import { trackLeadEvent } from '@/lib/leadTracking';
 import type { ListingCategory, FulfillmentType } from '@/types/listing';
 import type { DocumentType } from '@/types/documents';
 import type { TablesInsert } from '@/integrations/supabase/types';
