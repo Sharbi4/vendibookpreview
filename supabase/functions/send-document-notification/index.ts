@@ -243,76 +243,34 @@ serve(async (req) => {
       for (const adminEmail of adminEmails) {
         emails.push({
           to: adminEmail,
-          subject: `📄 Document Pending Review - ${listingTitle}`,
-          html: `
-            <!DOCTYPE html><html><head><meta charset="utf-8"><style>@font-face{font-family:'Sofia Pro Soft';src:url('https://vendibook-docs.s3.us-east-1.amazonaws.com/documents/sofiaprosoftlight-webfont.woff') format('woff');font-weight:300;font-style:normal;}</style></head><body style="margin:0;padding:0;background:#f9fafb;">
-            <div style="font-family: 'Sofia Pro Soft', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-              <div style="background: linear-gradient(135deg, #f97316 0%, #ea580c 100%); padding: 24px; border-radius: 12px 12px 0 0; text-align: center;">
-                <h1 style="color: white; margin: 0; font-size: 22px;">Document Pending Admin Review 📄</h1>
-              </div>
-              
-              <div style="background: #f9fafb; padding: 24px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 12px 12px;">
-                <p style="color: #374151; font-size: 16px; line-height: 1.6; margin: 0 0 16px 0;">
-                  A new document has been uploaded and requires your review.
-                </p>
-                
-                ${isInstantBook ? `
-                <div style="background: #fef3c7; border-radius: 8px; padding: 12px; border: 1px solid #fcd34d; margin: 0 0 16px 0;">
-                  <p style="margin: 0; color: #92400e; font-size: 14px;">
-                    ⚡ <strong>Instant Book:</strong> Payment has been collected. If documents are approved, booking will be auto-confirmed. If rejected, payment will be refunded.
-                  </p>
-                </div>
-                ` : ''}
-                
-                <div style="background: white; border-radius: 8px; padding: 16px; border: 1px solid #e5e7eb; margin: 0 0 20px 0;">
-                  <table style="width: 100%; border-collapse: collapse;">
-                    <tr>
-                      <td style="padding: 8px 0; color: #6b7280;">Document:</td>
-                      <td style="padding: 8px 0; font-weight: 600; color: #1f2937;">${documentLabel}</td>
-                    </tr>
-                    <tr>
-                      <td style="padding: 8px 0; color: #6b7280;">Listing:</td>
-                      <td style="padding: 8px 0; color: #1f2937;">${listingTitle}</td>
-                    </tr>
-                    <tr>
-                      <td style="padding: 8px 0; color: #6b7280;">Renter:</td>
-                      <td style="padding: 8px 0; color: #1f2937;">${renter?.full_name || 'Unknown'} (${renter?.email || 'N/A'})</td>
-                    </tr>
-                    <tr>
-                      <td style="padding: 8px 0; color: #6b7280;">Host:</td>
-                      <td style="padding: 8px 0; color: #1f2937;">${host?.full_name || 'Unknown'}</td>
-                    </tr>
-                    <tr>
-                      <td style="padding: 8px 0; color: #6b7280;">Booking Dates:</td>
-                      <td style="padding: 8px 0; color: #1f2937;">${startDate} - ${endDate}</td>
-                    </tr>
-                    <tr>
-                      <td style="padding: 8px 0; color: #6b7280;">Status:</td>
-                      <td style="padding: 8px 0;">
-                        <span style="background: #fef3c7; color: #92400e; padding: 4px 12px; border-radius: 9999px; font-size: 14px; font-weight: 500;">Pending Review</span>
-                      </td>
-                    </tr>
-                  </table>
-                </div>
-                
-                <p style="color: #374151; font-size: 16px; line-height: 1.6; margin: 0 0 8px 0;">
-                  <strong>Typical review time:</strong> Within 30 minutes
-                </p>
-                <p style="color: #6b7280; font-size: 14px; line-height: 1.6; margin: 0 0 20px 0;">
-                  Some cases may take longer. The renter will be notified once you've reviewed the document.
-                </p>
-                
-                <div style="text-align: center;">
-                  <a href="https://vendibook.com/admin" style="display: inline-block; background: linear-gradient(135deg, #f97316 0%, #ea580c 100%); color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: 600;">Review in Admin Panel</a>
-                </div>
-              </div>
-              
-              <div style="padding: 16px; text-align: center; color: #9ca3af; font-size: 12px;">
-                <p style="margin: 0 0 8px 0;">Vendibook Admin Notification</p>
-                <p style="margin: 0;">© ${new Date().getFullYear()} Vendibook. All rights reserved.</p>
-              </div>
-            </div>
-          `,
+          idempotencyKey: `doc-uploaded-${booking_id}-${document_type || "any"}-${adminEmail}`,
+          payload: {
+            preview: `Document pending review — ${listingTitle}`,
+            kicker: "Admin review",
+            heading: "Document pending admin review",
+            paragraphs: [
+              "A new document has been uploaded and requires your review.",
+              isInstantBook
+                ? "⚡ Instant Book: payment has been collected. If approved, the booking auto-confirms; if rejected, payment is refunded."
+                : "The renter will be notified once you've reviewed the document.",
+            ],
+            details: [
+              { label: "Document", value: documentLabel },
+              { label: "Listing", value: listingTitle },
+              { label: "Renter", value: `${renter?.full_name || "Unknown"} (${renter?.email || "N/A"})` },
+              { label: "Host", value: host?.full_name || "Unknown" },
+              { label: "Booking dates", value: `${startDate} – ${endDate}` },
+              { label: "Status", value: "Pending review" },
+            ],
+            alert: {
+              tone: "warning",
+              title: "Action required",
+              body: "Typical review time: within 30 minutes.",
+            },
+            ctaLabel: "Review in admin panel",
+            ctaUrl: ADMIN_URL,
+            footnote: "Vendibook admin notification",
+          },
         });
       }
     } else if (event_type === "all_approved") {
