@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { motion } from 'framer-motion';
 import { useUnreadMessageCount } from '@/hooks/useUnreadMessageCount';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { 
@@ -143,7 +144,7 @@ export const DashboardLayout = ({ children, mode, onModeChange, isHost }: Dashbo
         )}
       </div>
 
-      {/* Nav Links - Clean Airbnb Style */}
+      {/* Nav Links — sliding 2px indicator */}
       <ScrollArea className="flex-1">
         <div className="py-3">
           {navigation.map((item) => {
@@ -154,17 +155,20 @@ export const DashboardLayout = ({ children, mode, onModeChange, isHost }: Dashbo
                 to={item.href}
                 onClick={onLinkClick}
                 className={cn(
-                  "flex items-center gap-3 px-6 py-3 text-sm transition-colors relative",
-                  active 
-                    ? "text-foreground font-medium" 
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                  "group flex items-center gap-3 px-6 py-2.5 text-[13px] transition-colors duration-150 relative",
+                  active
+                    ? "text-foreground font-medium"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
                 )}
               >
-                {/* Active indicator - left border */}
                 {active && (
-                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-foreground rounded-r-full" />
+                  <motion.div
+                    layoutId="sidebar-active-indicator"
+                    className="absolute left-0 top-1/2 -translate-y-1/2 w-[2px] h-5 bg-foreground rounded-r-full"
+                    transition={{ type: 'spring', stiffness: 380, damping: 32 }}
+                  />
                 )}
-                <item.icon className="h-5 w-5" />
+                <item.icon className="h-5 w-5" strokeWidth={active ? 2 : 1.75} />
                 {item.title}
               </Link>
             );
@@ -327,11 +331,11 @@ export const DashboardLayout = ({ children, mode, onModeChange, isHost }: Dashbo
                 to="/dashboard?view=host" 
                 className={cn(
                   "flex flex-col items-center gap-1 px-3 py-2 transition-colors relative",
-                  location.pathname === '/dashboard' && location.search.includes('view=host') ? "text-orange-600" : "text-muted-foreground"
+                  location.pathname === '/dashboard' && location.search.includes('view=host') ? "text-foreground" : "text-muted-foreground"
                 )}
               >
                 {location.pathname === '/dashboard' && location.search.includes('view=host') && (
-                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-6 h-0.5 bg-orange-600 rounded-full" />
+                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-6 h-0.5 bg-foreground rounded-full" />
                 )}
                 <LayoutGrid className="h-6 w-6" />
                 <span className="text-[10px] font-medium">Overview</span>
@@ -340,11 +344,11 @@ export const DashboardLayout = ({ children, mode, onModeChange, isHost }: Dashbo
                 to="/host/listings" 
                 className={cn(
                   "flex flex-col items-center gap-1 px-3 py-2 transition-colors relative",
-                  location.pathname === '/host/listings' ? "text-orange-600" : "text-muted-foreground"
+                  location.pathname === '/host/listings' ? "text-foreground" : "text-muted-foreground"
                 )}
               >
                 {location.pathname === '/host/listings' && (
-                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-6 h-0.5 bg-orange-600 rounded-full" />
+                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-6 h-0.5 bg-foreground rounded-full" />
                 )}
                 <Truck className="h-6 w-6" />
                 <span className="text-[10px] font-medium">Listings</span>
@@ -353,11 +357,11 @@ export const DashboardLayout = ({ children, mode, onModeChange, isHost }: Dashbo
                 to="/host/bookings" 
                 className={cn(
                   "flex flex-col items-center gap-1 px-3 py-2 transition-colors relative",
-                  location.pathname === '/host/bookings' ? "text-orange-600" : "text-muted-foreground"
+                  location.pathname === '/host/bookings' ? "text-foreground" : "text-muted-foreground"
                 )}
               >
                 {location.pathname === '/host/bookings' && (
-                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-6 h-0.5 bg-orange-600 rounded-full" />
+                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-6 h-0.5 bg-foreground rounded-full" />
                 )}
                 <CalendarDays className="h-6 w-6" />
                 <span className="text-[10px] font-medium">Manager</span>
@@ -366,11 +370,11 @@ export const DashboardLayout = ({ children, mode, onModeChange, isHost }: Dashbo
                 to="/messages" 
                 className={cn(
                   "flex flex-col items-center gap-1 px-3 py-2 transition-colors relative",
-                  location.pathname === '/messages' ? "text-orange-600" : "text-muted-foreground"
+                  location.pathname === '/messages' ? "text-foreground" : "text-muted-foreground"
                 )}
               >
                 {location.pathname === '/messages' && (
-                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-6 h-0.5 bg-orange-600 rounded-full" />
+                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-6 h-0.5 bg-foreground rounded-full" />
                 )}
                 <div className="relative">
                   <MessageSquare className="h-6 w-6" />
@@ -386,11 +390,11 @@ export const DashboardLayout = ({ children, mode, onModeChange, isHost }: Dashbo
                 to="/account" 
                 className={cn(
                   "flex flex-col items-center gap-1 px-3 py-2 transition-colors relative",
-                  location.pathname === '/account' ? "text-orange-600" : "text-muted-foreground"
+                  location.pathname === '/account' ? "text-foreground" : "text-muted-foreground"
                 )}
               >
                 {location.pathname === '/account' && (
-                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-6 h-0.5 bg-orange-600 rounded-full" />
+                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-6 h-0.5 bg-foreground rounded-full" />
                 )}
                 <User className="h-6 w-6" />
                 <span className="text-[10px] font-medium">Profile</span>
@@ -403,11 +407,11 @@ export const DashboardLayout = ({ children, mode, onModeChange, isHost }: Dashbo
                 to="/search" 
                 className={cn(
                   "flex flex-col items-center gap-1 px-4 py-2 transition-colors relative",
-                  location.pathname === '/search' ? "text-orange-600" : "text-muted-foreground"
+                  location.pathname === '/search' ? "text-foreground" : "text-muted-foreground"
                 )}
               >
                 {location.pathname === '/search' && (
-                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-6 h-0.5 bg-orange-600 rounded-full" />
+                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-6 h-0.5 bg-foreground rounded-full" />
                 )}
                 <Search className="h-6 w-6" />
                 <span className="text-[10px] font-medium">Explore</span>
@@ -416,11 +420,11 @@ export const DashboardLayout = ({ children, mode, onModeChange, isHost }: Dashbo
                 to="/favorites" 
                 className={cn(
                   "flex flex-col items-center gap-1 px-4 py-2 transition-colors relative",
-                  location.pathname === '/favorites' ? "text-orange-600" : "text-muted-foreground"
+                  location.pathname === '/favorites' ? "text-foreground" : "text-muted-foreground"
                 )}
               >
                 {location.pathname === '/favorites' && (
-                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-6 h-0.5 bg-orange-600 rounded-full" />
+                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-6 h-0.5 bg-foreground rounded-full" />
                 )}
                 <Heart className="h-6 w-6" />
                 <span className="text-[10px] font-medium">Favorites</span>
@@ -429,11 +433,11 @@ export const DashboardLayout = ({ children, mode, onModeChange, isHost }: Dashbo
                 to="/dashboard" 
                 className={cn(
                   "flex flex-col items-center gap-1 px-4 py-2 transition-colors relative",
-                  location.pathname === '/dashboard' && !location.search.includes('view=host') ? "text-orange-600" : "text-muted-foreground"
+                  location.pathname === '/dashboard' && !location.search.includes('view=host') ? "text-foreground" : "text-muted-foreground"
                 )}
               >
                 {location.pathname === '/dashboard' && !location.search.includes('view=host') && (
-                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-6 h-0.5 bg-orange-600 rounded-full" />
+                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-6 h-0.5 bg-foreground rounded-full" />
                 )}
                 <CalendarDays className="h-6 w-6" />
                 <span className="text-[10px] font-medium">Bookings</span>
@@ -442,11 +446,11 @@ export const DashboardLayout = ({ children, mode, onModeChange, isHost }: Dashbo
                 to="/messages" 
                 className={cn(
                   "flex flex-col items-center gap-1 px-4 py-2 transition-colors relative",
-                  location.pathname === '/messages' ? "text-orange-600" : "text-muted-foreground"
+                  location.pathname === '/messages' ? "text-foreground" : "text-muted-foreground"
                 )}
               >
                 {location.pathname === '/messages' && (
-                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-6 h-0.5 bg-orange-600 rounded-full" />
+                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-6 h-0.5 bg-foreground rounded-full" />
                 )}
                 <div className="relative">
                   <MessageSquare className="h-6 w-6" />
@@ -462,11 +466,11 @@ export const DashboardLayout = ({ children, mode, onModeChange, isHost }: Dashbo
                 to="/account" 
                 className={cn(
                   "flex flex-col items-center gap-1 px-4 py-2 transition-colors relative",
-                  location.pathname === '/account' ? "text-orange-600" : "text-muted-foreground"
+                  location.pathname === '/account' ? "text-foreground" : "text-muted-foreground"
                 )}
               >
                 {location.pathname === '/account' && (
-                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-6 h-0.5 bg-orange-600 rounded-full" />
+                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-6 h-0.5 bg-foreground rounded-full" />
                 )}
                 <User className="h-6 w-6" />
                 <span className="text-[10px] font-medium">Profile</span>
