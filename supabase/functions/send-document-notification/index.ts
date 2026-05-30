@@ -519,32 +519,22 @@ serve(async (req) => {
         }
       }
     }
-    const results = [];
+    const results: { success: boolean; to: string; error?: string }[] = [];
     for (const email of emails) {
       try {
-        const response = await fetch("https://api.resend.com/emails", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${RESEND_API_KEY}`,
+        const { error } = await supabaseClient.functions.invoke("send-transactional-email", {
+          body: {
+            templateName: "generic-notice",
+            recipientEmail: email.to,
+            idempotencyKey: email.idempotencyKey,
+            templateData: email.payload,
           },
-          body: JSON.stringify({
-            from: "VendiBook <noreply@updates.vendibook.com>",
-            to: [email.to],
-            subject: email.subject,
-            html: email.html,
-          }),
         });
-        
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.message || "Failed to send email");
-        }
-        
-        logStep("Email sent", { to: email.to, subject: email.subject });
+        if (error) throw error;
+        logStep("Email enqueued via Lovable Emails", { to: email.to });
         results.push({ success: true, to: email.to });
       } catch (emailError: any) {
-        logStep("Failed to send email", { to: email.to, error: emailError.message });
+        logStep("Failed to enqueue email", { to: email.to, error: emailError.message });
         results.push({ success: false, to: email.to, error: emailError.message });
       }
     }
