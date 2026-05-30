@@ -758,6 +758,63 @@ serve(async (req) => {
               transactionId = newTx.id;
               logStep("Sale transaction created", { transactionId, amount, buyerId, sellerId });
 
+              // Persist referral_code from session metadata for audit trail
+              const refCodeFromMeta = session.metadata?.referral_code || '';
+              if (refCodeFromMeta) {
+                await supabaseClient
+                  .from("sale_transactions")
+                  .update({ referral_code: refCodeFromMeta })
+                  .eq("id", transactionId);
+              }
+
+              // Fire purchase referral qualifying event (idempotent via session id).
+              // referral-record-event handles all eligibility/fraud gates.
+              try {
+                await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/referral-record-event`, {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+                  },
+                  body: JSON.stringify({
+                    program_type: "purchase",
+                    referred_user_id: buyerId,
+                    transaction_id: transactionId,
+                    transaction_value: amount,
+                    referral_code: refCodeFromMeta || undefined,
+                    seller_id: sellerId,
+                    idempotency_key: `purchase-${session.id}`,
+                  }),
+                });
+                logStep("Purchase referral event posted", { transactionId });
+              } catch (refErr) {
+                logStep("WARNING: purchase referral event failed", { error: String(refErr) });
+              }
+
+              // Fire supply referral qualifying event for the seller (their referrer earns
+              // when the listing's first transaction closes within the 30–90 day window).
+              try {
+                await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/referral-record-event`, {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+                  },
+                  body: JSON.stringify({
+                    program_type: "supply",
+                    referred_user_id: sellerId,
+                    transaction_id: transactionId,
+                    transaction_value: amount,
+                    listing_id: listingId,
+                    idempotency_key: `supply-${session.id}`,
+                  }),
+                });
+                logStep("Supply referral event posted", { transactionId });
+              } catch (refErr) {
+                logStep("WARNING: supply referral event failed", { error: String(refErr) });
+              }
+
+
               // Create in-app notification for buyer
               try {
                 await supabaseClient.from("notifications").insert({
