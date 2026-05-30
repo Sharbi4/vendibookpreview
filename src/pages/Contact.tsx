@@ -482,7 +482,7 @@ const Contact = () => {
                               'No waiting on hold – we call you',
                               'Speak with a real person, not a chatbot',
                               'Get personalized help for your situation',
-                              'Available Mon-Sat during business hours'
+                              'Available Mon–Fri during business hours'
                             ].map((item, i) => (
                               <li key={i} className="flex items-start gap-3 text-sm">
                                 <div className="w-5 h-5 rounded-full bg-primary/20 text-primary flex items-center justify-center flex-shrink-0 mt-0.5">
