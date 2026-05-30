@@ -1,8 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
-
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -134,94 +132,28 @@ const handler = async (req: Request): Promise<Response> => {
           };
           const categoryLabel = categoryLabels[listing.category] || listing.category;
 
-          // Send email using fetch to Resend API
           try {
-            const appUrl = Deno.env.get("SUPABASE_URL")?.includes("localhost") 
-              ? "http://localhost:5173" 
-              : "https://vendibook.com";
-
-            const emailHtml = `
-              <!DOCTYPE html>
-              <html>
-              <head>
-                <meta charset="utf-8">
-                <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                <style>
-                  @font-face {
-                    font-family: 'Sofia Pro Soft';
-                    src: url('https://vendibook-docs.s3.us-east-1.amazonaws.com/documents/sofiaprosoftlight-webfont.woff') format('woff');
-                    font-weight: 300;
-                    font-style: normal;
-                  }
-                </style>
-              </head>
-              <body style="font-family: 'Sofia Pro Soft', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; margin: 0; padding: 0; background-color: #f4f4f5;">
-                <div style="max-width: 600px; margin: 0 auto; padding: 40px 20px;">
-                  <div style="background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-                    ${listing.cover_image_url ? `
-                      <img src="${listing.cover_image_url}" alt="${listing.title}" style="width: 100%; height: 200px; object-fit: cover;" />
-                    ` : `
-                      <div style="width: 100%; height: 200px; background: linear-gradient(135deg, #f97316, #fb923c);"></div>
-                    `}
-                    
-                    <div style="padding: 32px;">
-                      <div style="display: inline-block; background: #fff7ed; color: #ea580c; padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; margin-bottom: 16px;">
-                        ${listing.mode === "rent" ? "FOR RENT" : "FOR SALE"}
-                      </div>
-                      
-                      <h1 style="margin: 0 0 8px 0; font-size: 24px; color: #18181b;">
-                        ${listing.title}
-                      </h1>
-                      
-                      <p style="margin: 0 0 16px 0; color: #71717a; font-size: 14px;">
-                        ${categoryLabel} - ${listing.address || "Location available on listing"}
-                      </p>
-                      
-                      <p style="margin: 0 0 24px 0; font-size: 28px; font-weight: 700; color: #f97316;">
-                        ${price}
-                      </p>
-                      
-                      <a href="${appUrl}/listing/${listing.id}" 
-                         style="display: inline-block; background: linear-gradient(135deg, #f97316, #ea580c); color: white; text-decoration: none; padding: 14px 32px; border-radius: 12px; font-weight: 600; font-size: 16px;">
-                        View Listing
-                      </a>
-                    </div>
-                  </div>
-                  
-                  <div style="text-align: center; margin-top: 24px; color: #71717a; font-size: 12px;">
-                    <p>You received this because you signed up for availability alerts for zip code ${alert.zip_code}.</p>
-                    <p>
-                      <a href="${appUrl}/unsubscribe-alert?id=${alert.id}" style="color: #71717a;">Unsubscribe from alerts</a>
-                    </p>
-                  </div>
-                </div>
-              </body>
-              </html>
-            `;
-
-            const emailResponse = await fetch("https://api.resend.com/emails", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${RESEND_API_KEY}`,
+            const { error: emailError } = await supabase.functions.invoke("send-transactional-email", {
+              body: {
+                templateName: "new-message",
+                recipientEmail: alert.email,
+                idempotencyKey: `availability-${alert.id}-${listing.id}`,
+                templateData: {
+                  name: "there",
+                  subject: `New ${categoryLabel} Available Near You!`,
+                  message: `${listing.title} just went live in zip code area ${alert.zip_code}. ${categoryLabel} — ${price}.`,
+                  ctaUrl: `https://vendibook.com/listing/${listing.id}`,
+                  ctaLabel: "View Listing",
+                  listingId: listing.id,
+                  listingTitle: listing.title,
+                },
               },
-              body: JSON.stringify({
-                from: "VendiBook <noreply@updates.vendibook.com>",
-                to: [alert.email],
-                subject: `New ${categoryLabel} Available Near You!`,
-                html: emailHtml,
-              }),
             });
-
-            if (!emailResponse.ok) {
-              const errorText = await emailResponse.text();
-              console.error(`Resend API error: ${errorText}`);
+            if (emailError) {
+              console.error(`Email invoke error:`, emailError);
             } else {
-              console.log(`Email sent to ${alert.email}`);
               emailsSent++;
               processedAlerts.push(alert.id);
-
-              // Update notified_at
               await supabase
                 .from("availability_alerts")
                 .update({ notified_at: new Date().toISOString() })
