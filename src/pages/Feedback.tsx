@@ -16,6 +16,9 @@ export default function Feedback() {
   const [rating, setRating] = useState(0);
   const [nps, setNps] = useState<number | null>(null);
   const [message, setMessage] = useState("");
+  const [businessType, setBusinessType] = useState("");
+  const [businessTypeOther, setBusinessTypeOther] = useState("");
+  const [canShare, setCanShare] = useState(false);
 
   useEffect(() => {
     document.title = "Share your feedback · Vendibook";
