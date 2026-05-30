@@ -51,6 +51,7 @@ import { AffirmBadge } from '@/components/ui/AffirmBadge';
 import { AfterpayBadge } from '@/components/ui/AfterpayBadge';
 import { AuthGateOfferModal } from '@/components/offers/AuthGateOfferModal';
 import { trackLeadEvent } from '@/lib/leadTracking';
+import { detectAvailabilityConflict } from '@/lib/availabilityConflict';
 
 type FulfillmentSelection = 'pickup' | 'delivery' | 'on_site';
 
