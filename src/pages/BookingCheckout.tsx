@@ -110,6 +110,8 @@ const BookingCheckout = () => {
   );
   const [startTime, setStartTime] = useState<string | undefined>(startTimeParam || undefined);
   const [endTime, setEndTime] = useState<string | undefined>(endTimeParam || undefined);
+  const [referralCode, setReferralCode] = useState<string>('');
+  const [referralValid, setReferralValid] = useState<boolean>(false);
   const [showDateModal, setShowDateModal] = useState(false);
   const [activeStep, setActiveStep] = useState<number | null>(1);
   const [completedSteps, setCompletedSteps] = useState<number[]>([]);
