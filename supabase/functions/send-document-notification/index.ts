@@ -275,9 +275,6 @@ serve(async (req) => {
       }
     } else if (event_type === "all_approved") {
       // This is a bulk approval - send summary email to BOTH host and renter
-      const docListHtml = is_bulk_approval && documentLabels.length > 0 
-        ? documentLabels.map(label => `<li style="color: #166534;">${label}</li>`).join('')
-        : `<li style="color: #166534;">${documentLabel}</li>`;
 
       const approvedDocs = is_bulk_approval && documentLabels.length > 0
         ? documentLabels.join(", ")
