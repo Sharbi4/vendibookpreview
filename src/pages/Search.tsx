@@ -8,6 +8,7 @@ import vendibookLogo from '@/assets/vendibook-logo.png';
 import Footer from '@/components/layout/Footer';
 import { usePageTracking } from '@/hooks/usePageTracking';
 import { usePredictivePrefetch } from '@/hooks/usePredictivePrefetch';
+import { trackLeadEvent } from '@/lib/leadTracking';
 import ListingCard from '@/components/listing/ListingCard';
 import QuickBookingModal from '@/components/search/QuickBookingModal';
 import DateRangeFilter from '@/components/search/DateRangeFilter';
@@ -72,6 +73,7 @@ interface SearchResponse {
 
 const Search = () => {
   usePredictivePrefetch();
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   
   // Track page views with Google Analytics
