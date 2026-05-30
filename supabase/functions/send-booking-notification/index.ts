@@ -212,12 +212,30 @@ serve(async (req) => {
           idempotencyKey: `booking-${booking_id}-declined-guest`,
         });
       }
+      if (host?.email && hostWantsRequest) {
+        emails.push({
+          to: host.email,
+          subject: `You declined a request · #${bookingRef}`,
+          payload: {
+            subject: `Request declined · #${bookingRef}`,
+            kicker: "Declined",
+            heading: "You declined this booking request.",
+            paragraphs: [`We let ${shopper?.full_name || "the guest"} know their request for ${listingTitle} (${startDate} → ${endDate}) wasn't approved. No charge was made.`],
+            details: baseDetails,
+            ...(host_response ? { alert: { tone: "info" as Tone, title: "Message you sent", body: host_response } } : {}),
+            ctaLabel: "Manage calendar",
+            ctaUrl: `${SITE_URL}/dashboard`,
+          },
+          idempotencyKey: `booking-${booking_id}-declined-host`,
+        });
+      }
       inApp.push({
         user_id: booking.shopper_id, type: "booking_declined",
         title: `Booking #${bookingRef} Declined`,
         message: `Your booking request for ${listingTitle} was not approved${host_response ? `: "${host_response}"` : ""}`,
         link: "/dashboard",
       });
+
     } else if (event_type === "hold_released") {
       const releaseReason = reason || host_response || "The host was unable to approve your booking.";
       if (shopper?.email) {
