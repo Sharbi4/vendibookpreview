@@ -48,7 +48,7 @@ const HeroFocused = () => {
           <motion.img
             src={vendibookLogo}
             alt="Vendibook"
-            className="h-9 sm:h-10 w-auto mx-auto mb-5 sm:mb-6 opacity-90"
+            className="h-36 sm:h-40 w-auto mx-auto mb-5 sm:mb-6 opacity-90"
             initial={{ opacity: 0, y: -6 }}
             animate={{ opacity: 0.9, y: 0 }}
             transition={{ duration: 0.4 }}
