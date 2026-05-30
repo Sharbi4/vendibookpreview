@@ -35,6 +35,8 @@ interface CheckoutRequest {
   vendibook_freight_enabled?: boolean;
   freight_payer?: 'buyer' | 'seller';
   freight_cost?: number; // Estimated freight cost in dollars
+  // Referral attribution (manual code entered at checkout; cookie attribution is on the user's profile)
+  referral_code?: string;
 }
 
 serve(async (req) => {
