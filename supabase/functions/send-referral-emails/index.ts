@@ -68,10 +68,10 @@ Deno.serve(async (req) => {
   }
 
   // ---------- P8: 24h-after-first-transaction PS ----------
-  // Bookings completed (paid) in the 24h window
+  // Bookings paid in the 24h window
   const { data: recentBookings } = await supabase
-    .from('bookings')
-    .select('id, renter_id, payment_status, created_at')
+    .from('booking_requests')
+    .select('id, shopper_id, payment_status, created_at')
     .eq('payment_status', 'paid')
     .gte('created_at', oneDayAgoStart)
     .lt('created_at', oneDayAgoEnd)
@@ -79,14 +79,14 @@ Deno.serve(async (req) => {
   // Sales paid in the window
   const { data: recentSales } = await supabase
     .from('sale_transactions')
-    .select('id, buyer_id, payment_status, created_at')
-    .eq('payment_status', 'paid')
+    .select('id, buyer_id, status, created_at')
+    .in('status', ['paid', 'completed'])
     .gte('created_at', oneDayAgoStart)
     .lt('created_at', oneDayAgoEnd)
 
   type Tx = { userId: string; type: 'rental' | 'purchase' }
   const txs: Tx[] = [
-    ...(recentBookings || []).map((b: any) => ({ userId: b.renter_id, type: 'rental' as const })),
+    ...(recentBookings || []).map((b: any) => ({ userId: b.shopper_id, type: 'rental' as const })),
     ...(recentSales || []).map((s: any) => ({ userId: s.buyer_id, type: 'purchase' as const })),
   ].filter((t) => t.userId)
 
