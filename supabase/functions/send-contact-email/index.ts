@@ -322,38 +322,22 @@ const handler = async (req: Request): Promise<Response> => {
     );
     logStep("Customer confirmation email sent");
 
-    // Create Zendesk ticket in background
+    // Trigger Vapi outbound call in background (Zendesk removed)
     try {
-      const zendeskResponse = await fetch(
-        `${Deno.env.get("SUPABASE_URL")}/functions/v1/create-zendesk-ticket`,
+      await fetch(
+        `${Deno.env.get("SUPABASE_URL")}/functions/v1/vapi-outbound-call`,
         {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${Deno.env.get("SUPABASE_ANON_KEY")}`,
           },
-          body: JSON.stringify({
-            requester_name: name,
-            requester_email: email,
-            requester_phone: phone,
-            subject: `[Contact Form] ${subject}`,
-            description: `Contact form submission from ${name}\n\nPhone: ${phone}\nEmail: ${email}\n\nMessage:\n${message}\n\nSubmitted at: ${currentTime} EST`,
-            priority: 'high',
-            type: 'question',
-            tags: ['vendibook', 'contact-form', 'callback-requested'],
-          }),
+          body: JSON.stringify({ name, phone }),
         }
       );
-      
-      if (zendeskResponse.ok) {
-        const zendeskResult = await zendeskResponse.json();
-        logStep("Zendesk ticket created", { ticketId: zendeskResult.ticket_id });
-      } else {
-        const errorData = await zendeskResponse.json();
-        logStep("Zendesk ticket creation failed", { error: errorData });
-      }
-    } catch (zendeskError: any) {
-      logStep("Zendesk integration error (non-blocking)", { error: zendeskError.message });
+      logStep("Vapi outbound call triggered");
+    } catch (callError: any) {
+      logStep("Vapi outbound call error (non-blocking)", { error: callError.message });
     }
 
     logStep("Function completed successfully");
