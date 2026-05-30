@@ -42,10 +42,15 @@ serve(async (req) => {
       saleListings: payload.saleListings ?? [],
       featuredRental: payload.featuredRental ?? null,
       referralRotation: (send.referral_rotation ?? "purchase") as any,
-      tools: (payload.tools && payload.tools.length === 3 ? payload.tools : DEFAULT_TOOLS.slice(0, 3)),
+      tools: (payload.tools && payload.tools.length >= 3 ? payload.tools : DEFAULT_TOOLS.slice(0, 6)),
       insightTitle: payload.insight?.title ?? "",
       insightPullQuote: payload.insight?.pullQuote ?? "",
       insightBody: payload.insight?.body ?? "",
+      saleSectionLabel: payload.sectionLabelSale ?? send.section_label_sale ?? undefined,
+      rentalSectionLabel: payload.sectionLabelRental ?? send.section_label_rental ?? undefined,
+      listingsReplacement: payload.listingsReplacement ?? null,
+      rentalReplacement: payload.rentalReplacement ?? null,
+      expandTools: !!payload.meta?.bothThin,
       recipientEmail: testEmail,
       sendId: send.id,
       unsubscribeUrl: `${UNSUBSCRIBE_URL_BASE}?e=${encodeURIComponent(testEmail)}`,
@@ -85,7 +90,10 @@ serve(async (req) => {
       send_id: sendId,
       recipient_email: testEmail,
     });
-    await supabase.from("email_sends").update({ status: "test_sent" }).eq("id", sendId);
+    await supabase.from("email_sends").update({
+      status: "test_sent",
+      test_message_id: result.id ?? null,
+    }).eq("id", sendId);
 
     return new Response(JSON.stringify({ ok: true, recipient: testEmail, resendId: result.id }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

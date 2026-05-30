@@ -1039,55 +1039,85 @@ export type Database = {
       }
       email_sends: {
         Row: {
+          automation_source: string | null
           composed_payload: Json
           created_at: string
           created_by: string | null
+          featured_rental_id: string | null
           hero_headline: string
           id: string
           issue_number: number
+          listings_section_replaced: boolean
           recipient_count: number | null
           referral_rotation: string
+          rental_section_replaced: boolean
           resend_broadcast_id: string | null
+          sale_listing_ids: string[] | null
           scheduled_for: string | null
+          section_label_rental: string | null
+          section_label_sale: string | null
           send_day: string | null
           sent_at: string | null
           status: Database["public"]["Enums"]["marketing_send_status"]
           subject_line: string
+          test_message_id: string | null
           updated_at: string
+          used_fallback_listings: boolean
+          used_fallback_rental: boolean
         }
         Insert: {
+          automation_source?: string | null
           composed_payload?: Json
           created_at?: string
           created_by?: string | null
+          featured_rental_id?: string | null
           hero_headline: string
           id?: string
           issue_number?: number
+          listings_section_replaced?: boolean
           recipient_count?: number | null
           referral_rotation?: string
+          rental_section_replaced?: boolean
           resend_broadcast_id?: string | null
+          sale_listing_ids?: string[] | null
           scheduled_for?: string | null
+          section_label_rental?: string | null
+          section_label_sale?: string | null
           send_day?: string | null
           sent_at?: string | null
           status?: Database["public"]["Enums"]["marketing_send_status"]
           subject_line: string
+          test_message_id?: string | null
           updated_at?: string
+          used_fallback_listings?: boolean
+          used_fallback_rental?: boolean
         }
         Update: {
+          automation_source?: string | null
           composed_payload?: Json
           created_at?: string
           created_by?: string | null
+          featured_rental_id?: string | null
           hero_headline?: string
           id?: string
           issue_number?: number
+          listings_section_replaced?: boolean
           recipient_count?: number | null
           referral_rotation?: string
+          rental_section_replaced?: boolean
           resend_broadcast_id?: string | null
+          sale_listing_ids?: string[] | null
           scheduled_for?: string | null
+          section_label_rental?: string | null
+          section_label_sale?: string | null
           send_day?: string | null
           sent_at?: string | null
           status?: Database["public"]["Enums"]["marketing_send_status"]
           subject_line?: string
+          test_message_id?: string | null
           updated_at?: string
+          used_fallback_listings?: boolean
+          used_fallback_rental?: boolean
         }
         Relationships: []
       }
@@ -4117,6 +4147,7 @@ export type Database = {
         | "sent"
         | "failed"
         | "canceled"
+        | "broadcast_failed"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -4299,6 +4330,7 @@ export const Constants = {
         "sent",
         "failed",
         "canceled",
+        "broadcast_failed",
       ],
     },
   },

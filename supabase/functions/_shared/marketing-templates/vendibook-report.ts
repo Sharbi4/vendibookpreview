@@ -29,6 +29,13 @@ export interface FeaturedRental {
   amenities: string[];
   image: string;
   url: string;
+  extraTagline?: string | null;
+}
+export interface ReplacementBlock {
+  headline: string;
+  body: string;
+  ctaLabel: string;
+  ctaUrl: string;
 }
 export interface ToolHighlight {
   label: string;
@@ -46,6 +53,12 @@ export interface ReportPayload {
   insightTitle: string;
   insightPullQuote: string;
   insightBody: string;
+  // Fallback / dynamic content
+  saleSectionLabel?: string;
+  rentalSectionLabel?: string;
+  listingsReplacement?: ReplacementBlock | null;
+  rentalReplacement?: ReplacementBlock | null;
+  expandTools?: boolean; // when both sections are thin, render 6 tools (2x3)
   recipientEmail: string;
   sendId: string;
   unsubscribeUrl: string;
@@ -183,29 +196,55 @@ export function renderVendibookReport(p: ReportPayload): string {
 
         <!-- FOR SALE -->
         <tr><td style="padding:8px 24px 0;">
-          <div style="text-align:center;font-family:'DM Sans',Arial,sans-serif;font-size:11px;letter-spacing:3px;color:${COLORS.textMuted};text-transform:uppercase;padding:24px 0 8px;">RECENTLY LISTED FOR SALE</div>
+          ${
+            p.listingsReplacement
+              ? `
+          <div style="text-align:center;font-family:'DM Sans',Arial,sans-serif;font-size:11px;letter-spacing:3px;color:${COLORS.textMuted};text-transform:uppercase;padding:24px 0 8px;">${esc(p.saleSectionLabel ?? "BROWSE VENDIBOOK")}</div>
+          <div style="height:1px;background:${COLORS.divider};margin:0 0 24px;"></div>
+          <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+            <tr><td style="background:${COLORS.bgWarm};border:1px solid ${COLORS.divider};border-radius:6px;padding:40px 28px;text-align:center;">
+              <h2 style="font-family:'Playfair Display',Georgia,serif;font-size:26px;color:${COLORS.textDark};font-weight:700;margin:0 0 12px;">${esc(p.listingsReplacement.headline)}</h2>
+              <p style="font-family:'DM Sans',Arial,sans-serif;font-size:15px;color:${COLORS.textMuted};margin:0 0 24px;">${esc(p.listingsReplacement.body)}</p>
+              ${pillButton(p.listingsReplacement.ctaLabel, `${p.listingsReplacement.ctaUrl}${SOURCE}`)}
+            </td></tr>
+          </table>
+          <div style="height:24px;"></div>`
+              : `
+          <div style="text-align:center;font-family:'DM Sans',Arial,sans-serif;font-size:11px;letter-spacing:3px;color:${COLORS.textMuted};text-transform:uppercase;padding:24px 0 8px;">${esc(p.saleSectionLabel ?? "RECENTLY LISTED FOR SALE")}</div>
           <div style="height:1px;background:${COLORS.divider};margin:0 0 16px;"></div>
           <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
             ${chunkCards(p.saleListings)}
           </table>
           <div style="text-align:center;padding:24px 0 36px;">
             ${pillButton("Browse All For Sale Listings", `${p.baseUrl}/browse?type=for_sale${SOURCE.slice(1)}`)}
-          </div>
+          </div>`
+          }
         </td></tr>
 
         ${
-          p.featuredRental
+          p.rentalReplacement
+            ? `
+        <!-- HOST RECRUITMENT (rental fallback) -->
+        <tr><td style="background:${COLORS.bgDark};padding:48px 32px;text-align:center;">
+          <div style="font-family:'DM Sans',Arial,sans-serif;font-size:11px;letter-spacing:3px;color:#9a9a9a;text-transform:uppercase;padding-bottom:14px;">BECOME A HOST</div>
+          <div style="width:40px;height:2px;background:${COLORS.orange};margin:0 auto 22px;"></div>
+          <h2 style="font-family:'Playfair Display',Georgia,serif;font-size:28px;color:#fff;font-weight:700;margin:0 0 14px;line-height:1.25;">${esc(p.rentalReplacement.headline)}</h2>
+          <p style="font-family:'DM Sans',Arial,sans-serif;font-size:15px;color:#bdbdbd;line-height:1.6;margin:0 auto 26px;max-width:440px;">${esc(p.rentalReplacement.body)}</p>
+          ${pillButton(p.rentalReplacement.ctaLabel, `${p.rentalReplacement.ctaUrl}${SOURCE}`)}
+        </td></tr>`
+            : p.featuredRental
             ? `
         <!-- FEATURED RENTAL -->
         <tr><td style="background:${COLORS.bgWarm};padding:40px 32px;">
-          <div style="text-align:center;font-family:'DM Sans',Arial,sans-serif;font-size:11px;letter-spacing:3px;color:${COLORS.textMuted};text-transform:uppercase;padding:0 0 8px;">FEATURED FOR RENT</div>
+          <div style="text-align:center;font-family:'DM Sans',Arial,sans-serif;font-size:11px;letter-spacing:3px;color:${COLORS.textMuted};text-transform:uppercase;padding:0 0 8px;">${esc(p.rentalSectionLabel ?? "FEATURED FOR RENT")}</div>
           <div style="height:1px;background:${COLORS.divider};margin:0 0 24px;"></div>
           <a href="${esc(p.featuredRental.url)}${SOURCE}" style="text-decoration:none;color:inherit;">
             <img src="${esc(p.featuredRental.image)}" alt="${esc(p.featuredRental.title)}" width="576" style="display:block;width:100%;height:auto;border-radius:4px;aspect-ratio:16/9;object-fit:cover;" />
           </a>
           <h2 style="font-family:'Playfair Display',Georgia,serif;font-size:26px;color:${COLORS.textDark};margin:20px 0 8px;font-weight:700;line-height:1.2;">${esc(p.featuredRental.title)}</h2>
           <div style="font-family:'DM Sans',Arial,sans-serif;font-size:13px;color:${COLORS.textMuted};margin-bottom:10px;">📍 ${esc(p.featuredRental.location)}</div>
-          <div style="font-family:'DM Sans',Arial,sans-serif;font-size:20px;color:${COLORS.orange};font-weight:700;margin-bottom:14px;">${esc(p.featuredRental.price)}</div>
+          <div style="font-family:'DM Sans',Arial,sans-serif;font-size:20px;color:${COLORS.orange};font-weight:700;margin-bottom:6px;">${esc(p.featuredRental.price)}</div>
+          ${p.featuredRental.extraTagline ? `<div style="font-family:'DM Sans',Arial,sans-serif;font-size:13px;color:${COLORS.textMuted};font-style:italic;margin-bottom:14px;">${esc(p.featuredRental.extraTagline)}</div>` : `<div style="margin-bottom:8px;"></div>`}
           <div style="margin-bottom:24px;">
             ${p.featuredRental.amenities.map((a) => `<span style="display:inline-block;background:#fff;border:1px solid ${COLORS.divider};color:${COLORS.textDark};font-family:'DM Sans',Arial,sans-serif;font-size:11px;padding:6px 12px;border-radius:999px;margin:0 6px 6px 0;">${esc(a)}</span>`).join("")}
           </div>
@@ -240,9 +279,17 @@ export function renderVendibookReport(p: ReportPayload): string {
         <!-- TOOLS HIGHLIGHT (dark) -->
         <tr><td style="background:${COLORS.bgDark};padding:40px 24px;">
           <div style="text-align:center;font-family:'DM Sans',Arial,sans-serif;font-size:11px;letter-spacing:3px;color:#9a9a9a;text-transform:uppercase;padding-bottom:24px;">BUILT FOR FOOD ENTREPRENEURS</div>
-          <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
-            <tr>${p.tools.slice(0, 3).map(toolColumn).join("")}</tr>
-          </table>
+          ${
+            p.expandTools
+              ? `<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+              <tr>${p.tools.slice(0, 3).map(toolColumn).join("")}</tr>
+              <tr><td colspan="3" style="height:24px;"></td></tr>
+              <tr>${p.tools.slice(3, 6).map(toolColumn).join("")}</tr>
+            </table>`
+              : `<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+              <tr>${p.tools.slice(0, 3).map(toolColumn).join("")}</tr>
+            </table>`
+          }
         </td></tr>
 
         <!-- INSIGHT -->

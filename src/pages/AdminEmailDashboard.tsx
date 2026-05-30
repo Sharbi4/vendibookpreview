@@ -600,16 +600,26 @@ export default function AdminEmailDashboard() {
                     </tr>
                   </thead>
                   <tbody>
-                    {history?.map((s: any) => (
+                    {history?.map((s: any) => {
+                      const health = s.listings_section_replaced || s.rental_section_replaced
+                        ? { dot: "🔴", label: "Minimal" }
+                        : (s.used_fallback_listings || s.used_fallback_rental)
+                        ? { dot: "🟡", label: "Partial" }
+                        : { dot: "🟢", label: "Full" };
+                      return (
                       <tr key={s.id} className="border-b hover:bg-muted/40">
                         <td className="py-2 font-mono">#{s.issue_number}</td>
                         <td>{s.sent_at ? new Date(s.sent_at).toLocaleDateString() : "—"}</td>
                         <td className="max-w-xs truncate">{s.subject_line}</td>
-                        <td><Badge variant={s.status === "sent" ? "default" : "outline"}>{s.status}</Badge></td>
+                        <td>
+                          <span title={health.label} className="mr-2">{health.dot}</span>
+                          <Badge variant={s.status === "sent" ? "default" : "outline"}>{s.status}</Badge>
+                        </td>
                         <td>{s.recipient_count ?? "—"}</td>
                         <td className="text-xs text-muted-foreground">{ROTATION_LABELS[s.referral_rotation] ?? s.referral_rotation}</td>
                       </tr>
-                    ))}
+                      );
+                    })}
                     {!history?.length && (
                       <tr><td colSpan={6} className="py-8 text-center text-muted-foreground">No sends yet</td></tr>
                     )}
