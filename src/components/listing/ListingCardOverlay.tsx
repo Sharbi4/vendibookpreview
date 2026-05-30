@@ -1,10 +1,12 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
 import { trackLeadEvent } from '@/lib/leadTracking';
 import TellVendibookModal from '@/components/lead/TellVendibookModal';
+import { AvailabilityCalendarDisplay } from '@/components/listing-detail/AvailabilityCalendarDisplay';
 import type { Listing } from '@/types/listing';
+
 
 
 interface ListingCardOverlayProps {
@@ -81,15 +83,25 @@ const ListingCardOverlay = ({ open, onClose, listing }: ListingCardOverlayProps)
     return () => window.removeEventListener('keydown', onKey);
   }, [open, onClose, listing.id, isSale]);
 
-  const headline = isSale ? 'Start your purchase' : 'Check availability';
+  const headline = isSale ? 'Start your purchase' : 'Check live availability';
   const subhead = isSale
     ? 'Review the next steps before contacting the seller.'
-    : 'Tell us when and where you need it before starting a booking request.';
+    : 'Open dates for this month, plus the host\'s minimum stay and slot count.';
   const steps = isSale ? SALE_STEPS : RENT_STEPS;
-  const primaryLabel = isSale ? 'Start Purchase Request' : 'Request Dates';
+  const primaryLabel = isSale ? 'Start Purchase Request' : 'Request these dates';
   const finePrint = isSale
     ? 'No commitment. Final terms, availability, and transfer details are confirmed with the seller.'
     : 'No commitment. Dates, deposits, and final terms are confirmed before any payment is taken.';
+
+  const anyListing = listing as any;
+  const minDays = Number(anyListing.rental_min_days) > 0 ? Number(anyListing.rental_min_days) : 1;
+  const totalSlots = Number(anyListing.total_slots) > 0 ? Number(anyListing.total_slots) : 1;
+  const dailyRate = listing.price_daily;
+  const monthLabel = useMemo(
+    () => new Date().toLocaleString('en-US', { month: 'long', year: 'numeric' }),
+    [],
+  );
+
 
   const handlePrimary = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -147,7 +159,7 @@ const ListingCardOverlay = ({ open, onClose, listing }: ListingCardOverlayProps)
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.96, y: 8 }}
             transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
-            className="relative w-full sm:max-w-[440px] mx-0 sm:mx-4 bg-[#111113] border border-white/10 rounded-t-2xl sm:rounded-2xl p-7 shadow-2xl"
+            className={`relative w-full ${isSale ? 'sm:max-w-[440px]' : 'sm:max-w-[520px]'} mx-0 sm:mx-4 bg-[#111113] border border-white/10 rounded-t-2xl sm:rounded-2xl p-7 shadow-2xl max-h-[92vh] overflow-y-auto`}
             style={{ borderTopWidth: 2, borderTopColor: '#f97316' }}
           >
             {/* Mobile drag handle */}
@@ -160,29 +172,67 @@ const ListingCardOverlay = ({ open, onClose, listing }: ListingCardOverlayProps)
 
             <div className="my-5 h-px bg-white/[0.07]" />
 
-            <div className="space-y-4">
-              {steps.map((step, i) => (
-                <motion.div
-                  key={step.n}
-                  initial={{ opacity: 0, y: 6 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.08 + i * 0.06, duration: 0.25, ease: 'easeOut' }}
-                  className="flex gap-3"
-                >
-                  <span className="text-[11px] font-semibold uppercase tracking-wider text-[#f97316] pt-0.5 w-7 shrink-0">
-                    {step.n}
-                  </span>
-                  <div>
-                    <div className="text-[14px] font-semibold text-white leading-snug">
-                      {step.title}
+            {isSale ? (
+              <div className="space-y-4">
+                {steps.map((step, i) => (
+                  <motion.div
+                    key={step.n}
+                    initial={{ opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.08 + i * 0.06, duration: 0.25, ease: 'easeOut' }}
+                    className="flex gap-3"
+                  >
+                    <span className="text-[11px] font-semibold uppercase tracking-wider text-[#f97316] pt-0.5 w-7 shrink-0">
+                      {step.n}
+                    </span>
+                    <div>
+                      <div className="text-[14px] font-semibold text-white leading-snug">
+                        {step.title}
+                      </div>
+                      <div className="mt-0.5 text-[12px] text-[#6b7280] leading-relaxed">
+                        {step.desc}
+                      </div>
                     </div>
-                    <div className="mt-0.5 text-[12px] text-[#6b7280] leading-relaxed">
-                      {step.desc}
+                  </motion.div>
+                ))}
+              </div>
+            ) : (
+              <>
+                {/* Listing stat strip */}
+                <div className="grid grid-cols-3 gap-2 mb-4">
+                  {[
+                    { label: 'Daily rate', value: dailyRate ? `$${Number(dailyRate).toLocaleString()}` : '—' },
+                    { label: 'Minimum stay', value: `${minDays} day${minDays > 1 ? 's' : ''}` },
+                    { label: 'Slots', value: `${totalSlots}` },
+                  ].map((s) => (
+                    <div
+                      key={s.label}
+                      className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2.5"
+                    >
+                      <div className="text-[10px] uppercase tracking-wider text-[#6b7280]">
+                        {s.label}
+                      </div>
+                      <div className="mt-0.5 text-[14px] font-semibold text-white tabular-nums">
+                        {s.value}
+                      </div>
                     </div>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
+                  ))}
+                </div>
+
+                <div className="text-[11px] uppercase tracking-wider text-[#6b7280] mb-2">
+                  {monthLabel}
+                </div>
+
+                {/* Live availability calendar */}
+                <div className="rounded-xl border border-white/10 bg-black/30 p-2 sm:p-3">
+                  <AvailabilityCalendarDisplay
+                    listingId={listing.id}
+                    availableFrom={anyListing.available_from}
+                    availableTo={anyListing.available_to}
+                  />
+                </div>
+              </>
+            )}
 
             <div className="my-5 h-px bg-white/[0.07]" />
 
@@ -192,6 +242,7 @@ const ListingCardOverlay = ({ open, onClose, listing }: ListingCardOverlayProps)
             >
               {primaryLabel}
             </button>
+
 
             <Link
               to={`/listing/${listing.id}`}
