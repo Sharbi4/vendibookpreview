@@ -42,6 +42,8 @@ import { template as refundProcessed } from './refund-processed.tsx'
 import { template as feedbackReceivedAdmin } from './feedback-received-admin.tsx'
 import { template as feedbackWeeklyDigest } from './feedback-weekly-digest.tsx'
 import { template as genericNotice } from './generic-notice.tsx'
+import { template as referralOnboarding } from './referral-onboarding.tsx'
+import { template as referralPostTxPs } from './referral-post-tx-ps.tsx'
 
 export const TEMPLATES: Record<string, TemplateEntry> = {
   'booking-abandoned': bookingAbandoned,
@@ -77,4 +79,6 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'feedback-received-admin': feedbackReceivedAdmin,
   'feedback-weekly-digest': feedbackWeeklyDigest,
   'generic-notice': genericNotice,
+  'referral-onboarding': referralOnboarding,
+  'referral-post-tx-ps': referralPostTxPs,
 }
