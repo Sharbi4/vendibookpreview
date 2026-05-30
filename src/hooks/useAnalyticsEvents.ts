@@ -96,13 +96,15 @@ export const useAdminFunnelMetrics = (days: number = 7) => {
         'listing_published'
       ];
 
-      // Demand funnel events
+      // Demand funnel events (standardized — kept in sync with src/lib/leadTracking.ts)
       const demandEvents = [
-        'search_started',
-        'listing_viewed',
-        'request_started',
-        'request_submitted',
-        'booking_confirmed'
+        'search_performed',
+        'listing_card_click',
+        'check_availability_click',
+        'lead_form_started',
+        'lead_form_submitted',
+        'booking_request_started',
+        'booking_request_submitted',
       ];
 
       // Fetch all events in date range

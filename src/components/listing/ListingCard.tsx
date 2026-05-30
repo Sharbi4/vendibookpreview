@@ -468,11 +468,19 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
       </div>
       </Link>
 
-      {/* Buy Now / Book Now CTA */}
+      {/* Lower-friction CTA: Check Availability (rent) / Ask About This Listing (sale) */}
       <div className="px-4 pb-3 pt-0">
         <Link
           to={`/listing/${listing.id}`}
-          onClick={(e) => e.stopPropagation()}
+          onClick={(e) => {
+            e.stopPropagation();
+            trackLeadEvent('listing_card_click', {
+              listing_id: listing.id,
+              category: listing.category,
+              source: 'listing_card_cta',
+              intent: listing.mode === 'sale' ? 'ask_about_listing' : 'check_availability',
+            });
+          }}
           className={cn(
             "block w-full text-center text-sm font-semibold py-2 rounded-xl transition-all duration-200",
             listing.mode === 'sale'
@@ -480,7 +488,7 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
               : "bg-primary/15 text-primary hover:bg-primary/25 border border-primary/20"
           )}
         >
-          {listing.mode === 'sale' ? 'Buy Now' : 'Book Now'}
+          {listing.mode === 'sale' ? 'Ask About This Listing' : 'Check Availability'}
         </Link>
       </div>
       
