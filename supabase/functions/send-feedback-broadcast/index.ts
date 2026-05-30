@@ -82,7 +82,8 @@ Deno.serve(async (req) => {
 
     const recipientName = (p as any).first_name || ((p as any).full_name || '').split(' ')[0] || undefined;
 
-    const ANON_KEY = Deno.env.get('VITE_SUPABASE_ANON_KEY') || Deno.env.get('VITE_SUPABASE_PUBLISHABLE_KEY') || Deno.env.get('SUPABASE_ANON_KEY') || '';
+    // Legacy-JWT anon key (publishable, safe to bake in). send-transactional-email requires a JWT.
+    const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5icmVoYndmc21lZGJlbHpudHFzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgxMDgzMTMsImV4cCI6MjA4MzY4NDMxM30.EkA-lGUmkLQ9rPAO-unLxGGGHVmPDdVR8awlA2ShVpU';
     const FN_URL = `${Deno.env.get('SUPABASE_URL')}/functions/v1/send-transactional-email`;
     const resp = await fetch(FN_URL, {
       method: 'POST',
