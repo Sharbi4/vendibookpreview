@@ -46,6 +46,7 @@ export const DashboardLayout = ({ children, mode, onModeChange, isHost }: Dashbo
   const location = useLocation();
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const { count: unreadMessageCount } = useUnreadMessageCount();
+  const { earned: referralEarned } = useReferralEarnings();
 
   const { hasGhostKitchen } = useDashboardPersona();
 
