@@ -71,7 +71,15 @@ const HeroSearchFirst = () => {
             {CATEGORIES.map((item) => (
               <button
                 key={item.label}
-                onClick={() => navigate(`/search?mode=${item.mode}&category=${item.cat}`)}
+                onClick={() => {
+                  trackLeadEvent('search_performed', {
+                    query: '',
+                    category: item.cat,
+                    intent: item.mode,
+                    source: 'home_hero_category_pill',
+                  });
+                  navigate(`/search?mode=${item.mode}&category=${item.cat}`);
+                }}
                 className="px-3 py-1.5 rounded-full text-[11px] border border-border/50 hover:border-primary/30 text-muted-foreground hover:text-foreground bg-transparent hover:bg-white/[0.03] transition-all"
               >
                 {item.label}
