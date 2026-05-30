@@ -121,7 +121,10 @@ Deno.serve(async (req) => {
       ? new Date(Date.now() + cfg.hold_days * 24 * 60 * 60 * 1000).toISOString()
       : null;
 
-    const targetStatus = holdUntil ? "on_hold" : "qualified";
+    // Phase 1 guardrail: qualifying events go to PENDING_REVIEW.
+    // Admin must move them to `qualified` → `approved` before payout.
+    // The `on_hold_until` window is still recorded so admin sees when hold expires.
+    const targetStatus = "pending_review";
 
     await admin
       .from("referrals")
@@ -131,6 +134,7 @@ Deno.serve(async (req) => {
         transaction_id: transaction_id ?? null,
         on_hold_until: holdUntil,
         qualifying_event: program_type,
+        pending_review_at: new Date().toISOString(),
       })
       .eq("id", referralId);
 
@@ -138,7 +142,7 @@ Deno.serve(async (req) => {
       p_referral_id: referralId,
       p_new_status: targetStatus,
       p_source: "system",
-      p_note: `Qualifying ${program_type} event recorded${transaction_value ? ` ($${transaction_value})` : ""}`,
+      p_note: `Qualifying ${program_type} event recorded${transaction_value ? ` ($${transaction_value})` : ""}; awaiting admin review`,
     });
 
     return new Response(JSON.stringify({ ok: true, referral_id: referralId, status: targetStatus }), {
