@@ -484,6 +484,21 @@ const ListingDetail = () => {
                 </div>
                 </div>
 
+                {/* Vendibook Concierge Box — soft-conversion above the fold */}
+                {!isOwner && (
+                  <ListingConciergeBox
+                    listingId={listing.id}
+                    listingTitle={listing.title}
+                    city={listing.city || undefined}
+                    category={listing.category}
+                    isOwner={isOwner || false}
+                    onCheckAvailability={() => {
+                      const el = document.getElementById('booking-widget');
+                      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }}
+                  />
+                )}
+
                 {/* Inline Message Form */}
                 {!isOwner && (
                   <MessageHostForm
