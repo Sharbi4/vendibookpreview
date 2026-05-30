@@ -76,7 +76,7 @@ const ZendeskTicketForm = () => {
 
       if (error) throw error;
 
-      setTicketId(`call-${Date.now()}`);
+      setTicketId(Date.now());
       toast({
         title: "We're calling you now!",
         description: "Our team is dialing your number — please answer to get connected.",
