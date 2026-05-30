@@ -27,6 +27,7 @@ import { DocumentComplianceBadge } from './DocumentComplianceBadge';
 import InstantBookTimeline from './InstantBookTimeline';
 import BookingPhaseIndicator, { getBookingPhase } from './BookingPhaseIndicator';
 import BookingConfirmationSection from './BookingConfirmationSection';
+import NextActionBanner from '@/components/shared/NextActionBanner';
 import { AddToCalendarButton } from '@/components/booking/AddToCalendarButton';
 
 // Type for business info stored in JSONB
@@ -294,6 +295,11 @@ const BookingRequestCard = ({ booking, onApprove, onDecline, onCancel, onDeposit
               </div>
             )}
 
+            {/* Next-action banner — what the host needs to do right now */}
+            <div className="mb-3">
+              <NextActionBanner phase={bookingPhase} role="host" />
+            </div>
+
             {/* Booking Phase Indicator - Show for approved paid bookings */}
             {isApproved && isPaid && (
               <div className="mb-3">
@@ -305,6 +311,7 @@ const BookingRequestCard = ({ booking, onApprove, onDecline, onCancel, onDeposit
                   hostConfirmedAt={hostConfirmedAt}
                   shopperConfirmedAt={shopperConfirmedAt}
                   disputeStatus={disputeStatus}
+                  role="host"
                 />
               </div>
             )}

@@ -50,6 +50,7 @@ import ReviewForm from '@/components/reviews/ReviewForm';
 import { DocumentUploadSection } from '@/components/documents/DocumentUploadSection';
 import { BookingReceiptModal } from '@/components/receipts/BookingReceiptModal';
 import { PriceBreakdownModal, CheckoutOverlay } from '@/components/checkout';
+import NextActionBanner from '@/components/shared/NextActionBanner';
 import { useBookingReview } from '@/hooks/useReviews';
 import { useDocumentComplianceStatus } from '@/hooks/useRequiredDocuments';
 import { useToast } from '@/hooks/use-toast';
@@ -323,6 +324,13 @@ const ShopperBookingCard = ({ booking, onCancel, onPaymentInitiated }: ShopperBo
             </div>
           )}
 
+          {/* Next-action banner — short, plain-language guidance */}
+          {bookingPhase !== 'completed' && booking.status !== 'cancelled' && booking.status !== 'declined' && (
+            <div className="mb-3">
+              <NextActionBanner phase={bookingPhase} role="customer" />
+            </div>
+          )}
+
           {/* Booking Phase Indicator - Show for approved bookings */}
           {isApproved && isPaid && (
             <div className="mb-3">
@@ -334,6 +342,7 @@ const ShopperBookingCard = ({ booking, onCancel, onPaymentInitiated }: ShopperBo
                 hostConfirmedAt={hostConfirmedAt}
                 shopperConfirmedAt={shopperConfirmedAt}
                 disputeStatus={disputeStatus}
+                role="customer"
               />
             </div>
           )}
