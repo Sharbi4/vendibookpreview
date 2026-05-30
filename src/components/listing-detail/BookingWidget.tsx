@@ -30,6 +30,7 @@ import { useBlockedDates } from '@/hooks/useBlockedDates';
 import { useHourlyAvailability } from '@/hooks/useHourlyAvailability';
 import { useAuth } from '@/contexts/AuthContext';
 import { trackCTAClick } from '@/lib/analytics';
+import { trackLeadEvent } from '@/lib/leadTracking';
 import { cn } from '@/lib/utils';
 import { AffirmBadge, isAffirmEligible } from '@/components/ui/AffirmBadge';
 import { AfterpayBadge, isAfterpayEligible } from '@/components/ui/AfterpayBadge';
