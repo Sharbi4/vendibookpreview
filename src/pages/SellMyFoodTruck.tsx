@@ -681,12 +681,13 @@ const SellMyFoodTruck = () => {
         <div className="fixed bottom-0 left-0 right-0 p-3 bg-background/95 backdrop-blur-sm border-t md:hidden z-40">
           <div className="flex gap-2">
             <Button variant="glass-cta" asChild className="flex-1">
-              <Link to="/list?mode=sale">List for Sale</Link>
+              <Link to="/list?mode=sale">List Your Food Truck</Link>
             </Button>
             <Button variant="glass-cta" asChild className="flex-1">
-              <Link to="/tools/pricepilot">Price Estimate</Link>
+              <Link to="/food-trucks-for-sale">For Sale</Link>
             </Button>
           </div>
+
         </div>
       </div>
     </>
