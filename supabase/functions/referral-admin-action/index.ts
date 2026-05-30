@@ -72,11 +72,17 @@ Deno.serve(async (req) => {
     let lastError: any = null;
 
 
+    // Helper: ignore PG unique-violation errors from idempotency indexes (23505)
+    // so retries with the same key are silently deduped at the DB layer.
+    const ignoreDup = (err: any) =>
+      err && err.code !== "23505" ? err : null;
+
     switch (action) {
       case "qualify": {
         const { error } = await admin.rpc("log_referral_status_change", {
           p_referral_id: referral_id, p_new_status: "qualified",
           p_source: "admin", p_note: note || "Admin moved to qualified",
+          p_idempotency_key: idempotencyKey ?? null, p_action_type: action,
         });
         lastError = error;
         break;
@@ -91,6 +97,7 @@ Deno.serve(async (req) => {
         const { error: e2 } = await admin.rpc("log_referral_status_change", {
           p_referral_id: referral_id, p_new_status: "approved",
           p_source: "admin", p_note: note || "Admin approved for payout",
+          p_idempotency_key: idempotencyKey ?? null, p_action_type: action,
         });
         lastError = e1 || e2;
         break;
@@ -105,6 +112,7 @@ Deno.serve(async (req) => {
         const { error: e2 } = await admin.rpc("log_referral_status_change", {
           p_referral_id: referral_id, p_new_status: "voided",
           p_source: "admin", p_note: note,
+          p_idempotency_key: idempotencyKey ?? null, p_action_type: action,
         });
         lastError = e1 || e2;
         break;
@@ -116,6 +124,7 @@ Deno.serve(async (req) => {
         const { error: e2 } = await admin.rpc("log_referral_status_change", {
           p_referral_id: referral_id, p_new_status: "voided",
           p_source: "admin", p_note: note || "Admin voided",
+          p_idempotency_key: idempotencyKey ?? null, p_action_type: action,
         });
         lastError = e1 || e2;
         break;
@@ -129,6 +138,7 @@ Deno.serve(async (req) => {
         const { error: e2 } = await admin.rpc("log_referral_status_change", {
           p_referral_id: referral_id, p_new_status: "on_hold",
           p_source: "admin", p_note: note || "Admin placed on hold",
+          p_idempotency_key: idempotencyKey ?? null, p_action_type: action,
         });
         lastError = e1 || e2;
         break;
@@ -143,6 +153,7 @@ Deno.serve(async (req) => {
         const { error: e2 } = await admin.rpc("log_referral_status_change", {
           p_referral_id: referral_id, p_new_status: "paid",
           p_source: "admin", p_note: `MANUAL PAYOUT: ${note}`,
+          p_idempotency_key: idempotencyKey ?? null, p_action_type: action,
         });
         lastError = e1 || e2;
         break;
@@ -157,10 +168,12 @@ Deno.serve(async (req) => {
           changed_by_source: "admin",
           changed_by_user_id: user.id,
           note,
+          idempotency_key: idempotencyKey ?? null,
+          action_type: action,
         });
         const { error: e2 } = await admin.from("referrals")
           .update({ admin_notes: note }).eq("id", referral_id);
-        lastError = e1 || e2;
+        lastError = ignoreDup(e1) || e2;
         break;
       }
 
@@ -174,6 +187,8 @@ Deno.serve(async (req) => {
           flag_type: payload?.flag_type || "manual_admin_flag",
           severity,
           details: { note, flagged_by: user.id },
+          idempotency_key: idempotencyKey ?? null,
+          action_type: action,
         });
         // Log to status_log for audit trail without changing status
         const { error: e2 } = await admin.from("referral_status_log").insert({
@@ -183,8 +198,10 @@ Deno.serve(async (req) => {
           changed_by_source: "admin",
           changed_by_user_id: user.id,
           note: `FRAUD FLAG (${severity}): ${note}`,
+          idempotency_key: idempotencyKey ?? null,
+          action_type: `${action}_log`,
         });
-        lastError = e1 || e2;
+        lastError = ignoreDup(e1) || ignoreDup(e2);
         break;
       }
 

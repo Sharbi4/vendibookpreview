@@ -2766,10 +2766,12 @@ export type Database = {
       }
       referral_fraud_flags: {
         Row: {
+          action_type: string | null
           created_at: string
           details: Json
           flag_type: string
           id: string
+          idempotency_key: string | null
           referral_id: string | null
           referrer_id: string | null
           resolution_note: string | null
@@ -2778,10 +2780,12 @@ export type Database = {
           severity: string
         }
         Insert: {
+          action_type?: string | null
           created_at?: string
           details?: Json
           flag_type: string
           id?: string
+          idempotency_key?: string | null
           referral_id?: string | null
           referrer_id?: string | null
           resolution_note?: string | null
@@ -2790,10 +2794,12 @@ export type Database = {
           severity?: string
         }
         Update: {
+          action_type?: string | null
           created_at?: string
           details?: Json
           flag_type?: string
           id?: string
+          idempotency_key?: string | null
           referral_id?: string | null
           referrer_id?: string | null
           resolution_note?: string | null
@@ -2891,30 +2897,36 @@ export type Database = {
       }
       referral_status_log: {
         Row: {
+          action_type: string | null
           changed_by_source: string
           changed_by_user_id: string | null
           created_at: string
           id: string
+          idempotency_key: string | null
           new_status: string
           note: string | null
           old_status: string | null
           referral_id: string
         }
         Insert: {
+          action_type?: string | null
           changed_by_source?: string
           changed_by_user_id?: string | null
           created_at?: string
           id?: string
+          idempotency_key?: string | null
           new_status: string
           note?: string | null
           old_status?: string | null
           referral_id: string
         }
         Update: {
+          action_type?: string | null
           changed_by_source?: string
           changed_by_user_id?: string | null
           created_at?: string
           id?: string
+          idempotency_key?: string | null
           new_status?: string
           note?: string | null
           old_status?: string | null
@@ -4074,15 +4086,27 @@ export type Database = {
           total_owed: number
         }[]
       }
-      log_referral_status_change: {
-        Args: {
-          p_new_status: string
-          p_note?: string
-          p_referral_id: string
-          p_source?: string
-        }
-        Returns: undefined
-      }
+      log_referral_status_change:
+        | {
+            Args: {
+              p_new_status: string
+              p_note?: string
+              p_referral_id: string
+              p_source?: string
+            }
+            Returns: undefined
+          }
+        | {
+            Args: {
+              p_action_type?: string
+              p_idempotency_key?: string
+              p_new_status: string
+              p_note?: string
+              p_referral_id: string
+              p_source?: string
+            }
+            Returns: undefined
+          }
       lookup_referral_code: {
         Args: { p_code: string }
         Returns: {
