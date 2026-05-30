@@ -27,7 +27,7 @@ const PROGRAMS = [
     amount: 500,
     title: "Refer a buyer",
     who: "Anyone who buys a food truck, trailer, or commercial equipment",
-    trigger: "Pays out 14 days after the transaction clears with no disputes",
+    trigger: "Eligible after the transaction clears, no disputes, and admin review",
     fine: "Minimum $3,000 purchase. Max 10 per month per referrer.",
   },
   {
@@ -35,7 +35,7 @@ const PROGRAMS = [
     amount: 150,
     title: "Refer a lister",
     who: "Anyone who lists their food truck, trailer, or kitchen on Vendibook",
-    trigger: "Pays out 7 days after their first transaction (within 90 days)",
+    trigger: "Eligible after their first transaction (within 90 days) and admin review",
     fine: "Listing must remain active 30+ days and pass verification.",
   },
   {
@@ -43,14 +43,14 @@ const PROGRAMS = [
     amount: 50,
     title: "Refer a renter",
     who: "Anyone who books a kitchen, lot, or vendor space on Vendibook",
-    trigger: "Pays out 48 hours after the booking is completed",
+    trigger: "Eligible after the booking completes and admin review",
     fine: "Minimum $150 booking value. One reward per referred renter.",
   },
 ];
 
 const FAQ = [
   ["Who counts as a new user?", "Anyone without a prior Vendibook account using their email, phone, or device. We check at signup."],
-  ["When do I get paid?", "Rental: 48 hours after booking completes. Supply: 7 days after first transaction. Purchase: 14 days after sale clears with no dispute."],
+  ["When do I get paid?", "After your referral qualifies, our team reviews it. Once approved and any hold window has passed, payouts run weekly on Mondays via Stripe Connect once you've accumulated at least $50."],
   ["How is the money sent?", "Through Stripe Connect, batched weekly on Mondays. Minimum $50 accumulated before a transfer is initiated."],
   ["Can I refer myself with a second account?", "No. Self-referrals are auto-detected and voided. Fraud also triggers account suspension."],
   ["Are referral rewards taxable?", "Yes. If you earn $600+ in a calendar year, we collect W-9 info and issue a 1099 form."],
