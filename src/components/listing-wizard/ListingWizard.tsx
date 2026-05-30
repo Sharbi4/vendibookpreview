@@ -835,6 +835,13 @@ export const ListingWizard: React.FC = () => {
           priceSale: formData.price_sale ? parseFloat(formData.price_sale) : null,
         });
         setShowSuccessModal(true);
+
+        trackLeadEvent('host_listing_published', {
+          listing_id: listing.id,
+          category: formData.category!,
+          intent: formData.mode === 'sale' ? 'sell' : 'host',
+          city: formData.city || undefined,
+        });
       } else {
         toast({
           title: 'Draft Saved',
