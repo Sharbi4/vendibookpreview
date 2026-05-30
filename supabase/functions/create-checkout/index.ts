@@ -134,7 +134,7 @@ serve(async (req) => {
     if (booking_id) {
       const { data: booking } = await supabaseClient
         .from('booking_requests')
-        .select('start_date, end_date, start_time, end_time')
+        .select('start_date, end_date, start_time, end_time, is_hourly_booking, hourly_slots, slot_number')
         .eq('id', booking_id)
         .single();
       
@@ -146,8 +146,36 @@ serve(async (req) => {
           start_time: booking.start_time,
           end_time: booking.end_time 
         });
+
+        // === Availability guard for rentals: prevent double-booking ===
+        if (mode === 'rent') {
+          const { data: availability, error: availErr } = await supabaseClient.rpc(
+            'check_booking_availability',
+            {
+              p_listing_id: listing_id,
+              p_start_date: booking.start_date,
+              p_end_date: booking.end_date,
+              p_is_hourly_booking: (booking as { is_hourly_booking?: boolean }).is_hourly_booking ?? false,
+              p_hourly_slots: (booking as { hourly_slots?: unknown }).hourly_slots ?? null,
+              p_slot_number: (booking as { slot_number?: number }).slot_number ?? null,
+              p_exclude_booking_id: booking_id,
+            }
+          );
+
+          if (availErr) {
+            logStep("Availability RPC error", { error: availErr.message });
+          } else if (availability && (availability as { available?: boolean }).available === false) {
+            const reason = (availability as { error?: string }).error || 'This time is no longer available.';
+            logStep("Availability conflict", { reason });
+            return new Response(
+              JSON.stringify({ error: reason, code: 'availability_conflict' }),
+              { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 409 }
+            );
+          }
+        }
       }
     }
+
     
     // Build location string for display
     const locationDisplay = listing.address || listing.pickup_location_text || '';
