@@ -1,59 +1,96 @@
 import * as React from 'npm:react@18.3.1'
-import { Body, Button, Container, Head, Heading, Html, Hr, Preview, Section, Text } from 'npm:@react-email/components@0.0.22'
+import { Body, Button, Container, Head, Heading, Html, Hr, Link, Preview, Section, Text } from 'npm:@react-email/components@0.0.22'
 import type { TemplateEntry } from './registry.ts'
 import { s, SITE_URL } from './_styles.ts'
 
 interface Props {
   recipientName?: string
   contextLabel?: string
-  contextType?: string // 'booking' | 'sale' | 'message_thread' | 'listing_publish' | 'general'
+  contextType?: string // 'booking' | 'sale' | 'message_thread' | 'listing_publish' | 'broadcast' | 'general'
   feedbackToken?: string
   aiIntro?: string
+}
+
+// Public NPS click endpoint — records the score, then redirects to /feedback for an optional comment.
+const NPS_ENDPOINT = 'https://nbrehbwfsmedbelzntqs.supabase.co/functions/v1/feedback-nps-click'
+
+const npsCellBase = {
+  display: 'inline-block',
+  width: '34px',
+  height: '34px',
+  lineHeight: '34px',
+  textAlign: 'center' as const,
+  fontSize: '13px',
+  fontWeight: 600,
+  color: '#fafafa',
+  backgroundColor: '#141414',
+  border: '1px solid #232323',
+  borderRadius: '8px',
+  textDecoration: 'none',
+  margin: '0 3px 6px 0',
 }
 
 const E = ({ recipientName, contextLabel, contextType, feedbackToken, aiIntro }: Props) => {
   const url = `${SITE_URL}/feedback?token=${feedbackToken || ''}`
   const isPublish = contextType === 'listing_publish'
+  const isBroadcast = contextType === 'broadcast'
+
   return (
-    <Html lang="en" dir="ltr"><Head /><Preview>From one small business owner to another — how did we do?</Preview>
+    <Html lang="en" dir="ltr"><Head /><Preview>One tap, 0–10. How likely are you to recommend Vendibook?</Preview>
       <Body style={s.main}><Container style={s.container}>
         <Section style={s.brandBar}><Text style={s.brandMark}>VENDIBOOK</Text></Section>
         <Section style={s.card}>
-          <Text style={s.smallHeader}>{isPublish ? 'A QUICK NOTE FROM THE FOUNDERS' : "WE'D LOVE YOUR FEEDBACK"}</Text>
+          <Text style={s.smallHeader}>
+            {isBroadcast ? 'A QUICK ASK FROM THE FOUNDERS' : isPublish ? 'A QUICK NOTE FROM THE FOUNDERS' : "WE'D LOVE YOUR FEEDBACK"}
+          </Text>
           <Heading style={s.h1}>
-            {recipientName ? `${recipientName}, how did it go?` : 'How did it go?'}
+            {recipientName ? `${recipientName}, one tap — how are we doing?` : 'One tap — how are we doing?'}
           </Heading>
 
-          {isPublish && (
-            <>
-              <Text style={s.lede}>
-                Quick context: Vendibook is a tech startup built by working food-truck and small-business owners.
-                We kept losing deals to clunky booking tools, hidden fees, and dead-end DMs — so we built the
-                marketplace we wished existed. Every host that publishes (you!) makes this thing real.
-              </Text>
-              <Text style={s.lede}>
-                30 seconds of honest feedback on {contextLabel || 'publishing your listing'} would mean the world.
-                We also want to know a bit about <strong>you</strong> — are you a food-truck owner, kitchen operator,
-                event host, or running another kind of business? Can we share your story with the community?
-              </Text>
-            </>
-          )}
-
-          {!isPublish && (
+          {isBroadcast && (
             <Text style={s.lede}>
-              {aiIntro || `Quick gut check on ${contextLabel || 'your recent experience'} — your honest take helps us improve every corner of Vendibook.`}
+              Vendibook is built by working food-truck and small-business owners. We're a tiny startup and your
+              honest read shapes what we ship next. <strong>One tap below</strong> is enough — a comment is a bonus.
+            </Text>
+          )}
+          {isPublish && !isBroadcast && (
+            <Text style={s.lede}>
+              You just published a listing — thank you. 30 seconds of honest feedback on
+              {' '}{contextLabel || 'publishing your listing'} would mean the world.
+            </Text>
+          )}
+          {!isPublish && !isBroadcast && (
+            <Text style={s.lede}>
+              {aiIntro || `Quick gut check on ${contextLabel || 'your recent experience'}.`}
             </Text>
           )}
 
-          <Section style={s.ctaWrap}>
-            <Button href={url} style={s.button}>
-              {isPublish ? 'Share feedback & tell us about you' : 'Share feedback (30 sec)'}
-            </Button>
+          <Text style={{ ...s.smallHeader, margin: '8px 0 10px' }}>HOW LIKELY ARE YOU TO RECOMMEND US? (0–10)</Text>
+          <Section style={{ margin: '0 0 8px' }}>
+            {Array.from({ length: 11 }, (_, i) => i).map((n) => {
+              const tone =
+                n >= 9 ? { backgroundColor: '#0f2e22', borderColor: '#1f5a44', color: '#10b981' } :
+                n >= 7 ? { backgroundColor: '#1a1407', borderColor: '#3a2a10', color: '#f59e0b' } :
+                { backgroundColor: '#1f0c0c', borderColor: '#4a1818', color: '#ef4444' }
+              return (
+                <Link key={n} href={`${NPS_ENDPOINT}?token=${feedbackToken || ''}&score=${n}`} style={{ ...npsCellBase, ...tone }}>
+                  {n}
+                </Link>
+              )
+            })}
           </Section>
-          <Text style={s.small}>Rate, tell us about your business, done. We read every response personally.</Text>
-          <Hr style={{ borderColor: '#e5e5e5', margin: '24px 0 12px' }} />
+          <Text style={{ ...s.small, margin: '0 0 24px' }}>
+            <span>0 = Not at all likely &nbsp;·&nbsp; 10 = Extremely likely</span>
+          </Text>
+
+          <Section style={s.ctaWrap}>
+            <Button href={url} style={s.button}>Add a comment (optional)</Button>
+          </Section>
+          <Text style={s.small}>Tap a number above to send instantly — the button is only if you want to say more.</Text>
+
+          <Hr style={{ borderColor: '#1f1f1f', margin: '24px 0 12px' }} />
           <Text style={s.footnote}>
-            — The Vendibook founders. Replies to this email aren't monitored — please use the link above.
+            — The Vendibook founders. Replies aren't monitored — please use the buttons above.
           </Text>
         </Section>
       </Container></Body></Html>
@@ -63,13 +100,14 @@ const E = ({ recipientName, contextLabel, contextType, feedbackToken, aiIntro }:
 export const template = {
   component: E,
   subject: (d: any) => {
+    if (d?.contextType === 'broadcast') {
+      return d?.recipientName ? `${d.recipientName}, one tap — how are we doing?` : 'One tap — how are we doing?'
+    }
     if (d?.contextType === 'listing_publish') {
-      return d?.recipientName
-        ? `${d.recipientName}, a note from the Vendibook founders`
-        : 'A quick note from the Vendibook founders'
+      return d?.recipientName ? `${d.recipientName}, a note from the Vendibook founders` : 'A quick note from the Vendibook founders'
     }
     return d?.recipientName ? `${d.recipientName}, quick feedback?` : 'How did we do?'
   },
   displayName: 'Feedback request',
-  previewData: { recipientName: 'Jordan', contextLabel: 'publishing "Demo Kitchen"', contextType: 'listing_publish', feedbackToken: 'demo-token' },
+  previewData: { recipientName: 'Jordan', contextType: 'broadcast', feedbackToken: 'demo-token' },
 } satisfies TemplateEntry
