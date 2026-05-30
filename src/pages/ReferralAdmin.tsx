@@ -107,6 +107,8 @@ const ReferralAdmin = () => {
   const [holdUntil, setHoldUntil] = useState("");
   const [severity, setSeverity] = useState<"low" | "medium" | "high">("medium");
   const [submitting, setSubmitting] = useState(false);
+  const [dialogIdempotencyKey, setDialogIdempotencyKey] = useState<string>("");
+
 
   useEffect(() => {
     if (!user?.id) {
@@ -145,13 +147,17 @@ const ReferralAdmin = () => {
   const flagValue = (key: string) =>
     featureFlags.find((x) => x.key === key)?.enabled ?? (key === "referral_program_enabled");
 
-  const callAdmin = async (body: any) => {
-    const { data, error } = await supabase.functions.invoke("referral-admin-action", { body });
+  const callAdmin = async (body: any, idempotencyKey?: string) => {
+    const key = idempotencyKey ?? (crypto.randomUUID?.() ?? `${Date.now()}-${Math.random()}`);
+    const { data, error } = await supabase.functions.invoke("referral-admin-action", {
+      body: { ...body, idempotency_key: key },
+      headers: { "Idempotency-Key": key },
+    });
     if (error || (data as any)?.error) {
       toast.error("Action failed");
       return false;
     }
-    toast.success("Done");
+    toast.success((data as any)?.idempotent_replay ? "Already applied" : "Done");
     setRunning((x) => !x);
     return true;
   };
@@ -170,6 +176,7 @@ const ReferralAdmin = () => {
       });
     }
   };
+
 
   const updateConfig = async (program: any) => {
     await callAdmin({
@@ -231,6 +238,8 @@ const ReferralAdmin = () => {
     setNoteValue("");
     setHoldUntil("");
     setSeverity("medium");
+    // Pin one idempotency key per dialog open so accidental double-submits dedupe server-side.
+    setDialogIdempotencyKey(crypto.randomUUID?.() ?? `${Date.now()}-${Math.random()}`);
     setDialogOpen(true);
   };
 
@@ -253,7 +262,8 @@ const ReferralAdmin = () => {
     if (dialogAction === "flag_fraud") {
       body.payload = { severity, flag_type: "manual_admin_flag" };
     }
-    const ok = await callAdmin(body);
+
+    const ok = await callAdmin(body, dialogIdempotencyKey);
     setSubmitting(false);
     if (ok) setDialogOpen(false);
   };
