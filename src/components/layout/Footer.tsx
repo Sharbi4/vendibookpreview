@@ -41,6 +41,7 @@ const footerSections: FooterSection[] = [
       { label: 'Payment Options', href: '/payments' },
       { label: 'Host FAQ', href: '/faq' },
       { label: 'Insurance Info', href: '/insurance' },
+      { label: 'Refer & Earn', href: '/referral' },
     ],
   },
   {
