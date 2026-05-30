@@ -316,6 +316,15 @@ const BookingWizard = ({
       if (error) throw error;
       setBookingId(bookingResult.id);
 
+      trackLeadEvent('booking_request_submitted', {
+        listing_id: listingId,
+        category,
+        intent: 'rent',
+        instant_book: instantBook,
+        booking_id: bookingResult.id,
+      });
+
+
       // For Instant Book: redirect to payment
       if (instantBook) {
         const { data: checkoutData, error: checkoutError } = await supabase.functions.invoke('create-checkout', {
