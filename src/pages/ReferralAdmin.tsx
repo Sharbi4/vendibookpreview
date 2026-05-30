@@ -7,14 +7,14 @@ import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { SEO } from "@/components/SEO";
+import SEO from "@/components/SEO";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Loader2, ShieldAlert, PlayCircle, FileDown } from "lucide-react";
 
 const ReferralAdmin = () => {
-  const { user, loading: authLoading } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [referrals, setReferrals] = useState<any[]>([]);
   const [config, setConfig] = useState<any[]>([]);
@@ -93,7 +93,7 @@ const ReferralAdmin = () => {
 
   return (
     <>
-      <SEO title="Referral Admin — Vendibook" />
+      <SEO title="Referral Admin — Vendibook" description="Internal referral program admin." noindex />
       <div className="container mx-auto px-4 py-10 max-w-7xl">
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-3xl font-bold">Referral Admin</h1>

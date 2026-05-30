@@ -52,6 +52,7 @@ import { AfterpayBadge } from '@/components/ui/AfterpayBadge';
 import { AuthGateOfferModal } from '@/components/offers/AuthGateOfferModal';
 import { trackLeadEvent } from '@/lib/leadTracking';
 import { detectAvailabilityConflict } from '@/lib/availabilityConflict';
+import { ReferralCodeField } from '@/components/referrals/ReferralCodeField';
 
 type FulfillmentSelection = 'pickup' | 'delivery' | 'on_site';
 
@@ -109,6 +110,8 @@ const BookingCheckout = () => {
   );
   const [startTime, setStartTime] = useState<string | undefined>(startTimeParam || undefined);
   const [endTime, setEndTime] = useState<string | undefined>(endTimeParam || undefined);
+  const [referralCode, setReferralCode] = useState<string>('');
+  const [referralValid, setReferralValid] = useState<boolean>(false);
   const [showDateModal, setShowDateModal] = useState(false);
   const [activeStep, setActiveStep] = useState<number | null>(1);
   const [completedSteps, setCompletedSteps] = useState<number[]>([]);
@@ -409,6 +412,7 @@ const BookingCheckout = () => {
           amount: fees.subtotal,
           delivery_fee: currentDeliveryFee,
           deposit_amount: depositAmount,
+          referral_code: referralValid ? referralCode : undefined,
         },
       });
 
@@ -1040,6 +1044,16 @@ const BookingCheckout = () => {
                           <span className="text-muted-foreground">Fulfillment</span>
                           <span className="font-medium capitalize">{fulfillmentSelected.replace('_', ' ')}</span>
                         </div>
+                      </div>
+
+                      {/* Referral code */}
+                      <div className="p-3 border border-border rounded-lg">
+                        <ReferralCodeField
+                          programType="rental"
+                          value={referralCode}
+                          onChange={(code, valid) => { setReferralCode(code); setReferralValid(valid); }}
+                          autoFillFromCookie
+                        />
                       </div>
 
                       {/* Trust badges */}

@@ -23,6 +23,7 @@ import StickySummary from '@/components/shared/StickySummary';
 
 // Step components
 import { PurchaseStepDelivery, PurchaseStepInfo, PurchaseStepReview, type BuyerInfo } from '@/components/purchase-wizard';
+import { ReferralCodeField } from '@/components/referrals/ReferralCodeField';
 
 type FulfillmentSelection = 'pickup' | 'delivery' | 'vendibook_freight';
 type CheckoutStep = 'information' | 'delivery' | 'review';
@@ -54,6 +55,8 @@ const SaleCheckout = () => {
   // Accepted offer state - price from negotiation
   const [acceptedOfferPrice, setAcceptedOfferPrice] = useState<number | null>(null);
   const [isLoadingOffer, setIsLoadingOffer] = useState(false);
+  const [referralCode, setReferralCode] = useState<string>('');
+  const [referralValid, setReferralValid] = useState<boolean>(false);
 
   // Check if user is the owner of this listing
   const isOwner = user?.id && listing?.host_id && user.id === listing.host_id;
@@ -473,6 +476,7 @@ const SaleCheckout = () => {
           vendibook_freight_enabled: isVendibookFreight,
           freight_payer: isVendibookFreight ? freightPayer : 'buyer',
           freight_cost: isVendibookFreight ? freightCost : 0,
+          referral_code: referralValid ? referralCode : undefined,
         },
       });
 
@@ -658,29 +662,39 @@ const SaleCheckout = () => {
                       )}
 
                       {currentStep === 'review' && (
-                        <PurchaseStepReview
-                          listing={listing}
-                          priceSale={priceSale}
-                          currentDeliveryFee={currentDeliveryFee}
-                          totalPrice={totalPrice}
-                          fulfillmentSelected={fulfillmentSelected}
-                          deliveryAddress={deliveryAddress}
-                          buyerInfo={buyerInfo}
-                          hasValidEstimate={hasValidEstimate}
-                          estimate={estimate}
-                          isFreightSellerPaid={isFreightSellerPaid}
-                          freightCost={freightCost}
-                          paymentMethod={paymentMethod}
-                          setPaymentMethod={setPaymentMethod}
-                          hasMultiplePaymentOptions={hasMultiplePaymentOptions}
-                          agreedToTerms={agreedToTerms}
-                          setAgreedToTerms={setAgreedToTerms}
-                          isPurchasing={isPurchasing}
-                          onBack={() => setCurrentStep('delivery')}
-                          onEditDelivery={() => setCurrentStep('delivery')}
-                          onEditInfo={() => setCurrentStep('information')}
-                          onSubmit={handlePurchase}
-                        />
+                        <>
+                          <div className="p-4 mb-4 border border-border rounded-lg bg-card">
+                            <ReferralCodeField
+                              programType="purchase"
+                              value={referralCode}
+                              onChange={(code, valid) => { setReferralCode(code); setReferralValid(valid); }}
+                              autoFillFromCookie
+                            />
+                          </div>
+                          <PurchaseStepReview
+                            listing={listing}
+                            priceSale={priceSale}
+                            currentDeliveryFee={currentDeliveryFee}
+                            totalPrice={totalPrice}
+                            fulfillmentSelected={fulfillmentSelected}
+                            deliveryAddress={deliveryAddress}
+                            buyerInfo={buyerInfo}
+                            hasValidEstimate={hasValidEstimate}
+                            estimate={estimate}
+                            isFreightSellerPaid={isFreightSellerPaid}
+                            freightCost={freightCost}
+                            paymentMethod={paymentMethod}
+                            setPaymentMethod={setPaymentMethod}
+                            hasMultiplePaymentOptions={hasMultiplePaymentOptions}
+                            agreedToTerms={agreedToTerms}
+                            setAgreedToTerms={setAgreedToTerms}
+                            isPurchasing={isPurchasing}
+                            onBack={() => setCurrentStep('delivery')}
+                            onEditDelivery={() => setCurrentStep('delivery')}
+                            onEditInfo={() => setCurrentStep('information')}
+                            onSubmit={handlePurchase}
+                          />
+                        </>
                       )}
                     </motion.div>
                   </AnimatePresence>

@@ -110,6 +110,11 @@ const SignageRequest = lazy(() => import("./pages/SignageRequest"));
 
 const StartFoodBusiness = lazy(() => import("./pages/StartFoodBusiness"));
 const Homepage2 = lazy(() => import("./pages/Homepage2"));
+const ReferralLanding = lazy(() => import("./pages/ReferralLanding"));
+const ReferralDashboard = lazy(() => import("./pages/ReferralDashboard"));
+const ReferralTerms = lazy(() => import("./pages/ReferralTerms"));
+const ReferralAdmin = lazy(() => import("./pages/ReferralAdmin"));
+const RHandler = lazy(() => import("./pages/RHandler"));
 const CategoryCityPage = lazy(() => import("./pages/CategoryCityPage"));
 const CategoryIndex = lazy(() => import("./pages/CategoryIndex"));
 import { CATEGORY_INDEX_CONFIGS } from "./data/categoryIndexConfigs";
@@ -245,6 +250,14 @@ const AnimatedRoutes = () => {
           <Route path="/listing-published/:listingId" element={<PageTransition><ListingPublished /></PageTransition>} />
           <Route path="/checkout/:listingId" element={<PageTransition><SaleCheckout /></PageTransition>} />
           <Route path="/book/:listingId" element={<PageTransition><BookingCheckout /></PageTransition>} />
+
+          {/* Referral program */}
+          <Route path="/r/:code" element={<RHandler />} />
+          <Route path="/referral" element={<PageTransition><ReferralLanding /></PageTransition>} />
+          <Route path="/referral/dashboard" element={<PageTransition><ReferralDashboard /></PageTransition>} />
+          <Route path="/referral/terms" element={<PageTransition><ReferralTerms /></PageTransition>} />
+          <Route path="/referral/admin" element={<PageTransition><ReferralAdmin /></PageTransition>} />
+
           
           <Route path="/order-tracking/:transactionId" element={<PageTransition><OrderTracking /></PageTransition>} />
           <Route path="/transactions" element={<PageTransition><Transactions /></PageTransition>} />
