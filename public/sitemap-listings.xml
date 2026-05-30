@@ -12,17 +12,6 @@
     </image:image>
   </url>
   <url>
-    <loc>https://vendibook.com/listing/894f40df-0bcb-4569-a568-5c4b402b10ea</loc>
-    <lastmod>2026-05-21</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://images.unsplash.com/photo-1567521464027-f127ff144326?w=800</image:loc>
-      <image:title>Food Truck Park Space</image:title>
-      <image:caption>Food Truck Park Space on Vendibook</image:caption>
-    </image:image>
-  </url>
-  <url>
     <loc>https://vendibook.com/listing/fc44cd73-df2e-48a8-93b5-4a09cf597d90</loc>
     <lastmod>2026-05-30</lastmod>
     <changefreq>weekly</changefreq>
@@ -31,6 +20,17 @@
       <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/demo/vendor-space-demo.png</image:loc>
       <image:title>The Woodlands Market Street - Upscale Venue</image:title>
       <image:caption>The Woodlands Market Street - Upscale Venue in The Woodlands, TX on Vendibook</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://vendibook.com/listing/894f40df-0bcb-4569-a568-5c4b402b10ea</loc>
+    <lastmod>2026-05-21</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://images.unsplash.com/photo-1567521464027-f127ff144326?w=800</image:loc>
+      <image:title>Food Truck Park Space</image:title>
+      <image:caption>Food Truck Park Space on Vendibook</image:caption>
     </image:image>
   </url>
   <url>
@@ -606,17 +606,6 @@
     </image:image>
   </url>
   <url>
-    <loc>https://vendibook.com/listing/6356eca8-4204-4856-9556-63a4a005df50</loc>
-    <lastmod>2026-05-29</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/demo/vendor-space-demo.png</image:loc>
-      <image:title>Deep Ellum Brewery Lot - 6 Premium Spots</image:title>
-      <image:caption>Deep Ellum Brewery Lot - 6 Premium Spots in Dallas, TX on Vendibook</image:caption>
-    </image:image>
-  </url>
-  <url>
     <loc>https://vendibook.com/listing/3d4b8b98-aec6-4bdd-9af8-d45470c091c7</loc>
     <lastmod>2026-05-21</lastmod>
     <changefreq>weekly</changefreq>
@@ -691,6 +680,17 @@
       <image:loc>https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800</image:loc>
       <image:title>Downtown Ghost Kitchen - Prime Location</image:title>
       <image:caption>Downtown Ghost Kitchen - Prime Location in Dallas, TX on Vendibook</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://vendibook.com/listing/6356eca8-4204-4856-9556-63a4a005df50</loc>
+    <lastmod>2026-05-30</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/demo/vendor-space-demo.png</image:loc>
+      <image:title>Deep Ellum Brewery Lot - 6 Premium Spots</image:title>
+      <image:caption>Deep Ellum Brewery Lot - 6 Premium Spots in Dallas, TX on Vendibook</image:caption>
     </image:image>
   </url>
   <url>
