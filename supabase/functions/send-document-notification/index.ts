@@ -429,54 +429,30 @@ serve(async (req) => {
                 if (renter?.email) {
                   emails.push({
                     to: renter.email,
-                    subject: `🎉 Booking Confirmed! - ${listingTitle}`,
-                    html: `
-                      <div style="font-family: 'Sofia Pro Soft', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-                        <div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 24px; border-radius: 12px 12px 0 0; text-align: center;">
-                          <h1 style="color: white; margin: 0; font-size: 22px;">Booking Confirmed! 🎉</h1>
-                        </div>
-                        
-                        <div style="background: #f9fafb; padding: 24px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 12px 12px;">
-                          <p style="color: #374151; font-size: 16px; line-height: 1.6; margin: 0 0 16px 0;">
-                            Hi ${renter.full_name || 'there'},
-                          </p>
-                          <p style="color: #374151; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
-                            Great news! All your documents have been approved and your Instant Book for <strong>${listingTitle}</strong> is now confirmed!
-                          </p>
-                          
-                          <div style="background: #dcfce7; border-radius: 8px; padding: 16px; border: 1px solid #bbf7d0; margin: 0 0 20px 0; text-align: center;">
-                            <p style="margin: 0 0 4px 0; font-weight: 600; color: #166534; font-size: 18px;">✓ Booking Confirmed</p>
-                            <p style="margin: 0; color: #15803d; font-size: 14px;">Your reservation is all set!</p>
-                          </div>
-                          
-                          <div style="background: white; border-radius: 8px; padding: 16px; border: 1px solid #e5e7eb; margin: 0 0 20px 0;">
-                            <table style="width: 100%; border-collapse: collapse;">
-                              <tr>
-                                <td style="padding: 8px 0; color: #6b7280;">Listing:</td>
-                                <td style="padding: 8px 0; font-weight: 600; color: #1f2937;">${listingTitle}</td>
-                              </tr>
-                              <tr>
-                                <td style="padding: 8px 0; color: #6b7280;">Dates:</td>
-                                <td style="padding: 8px 0; color: #1f2937;">${startDate} - ${endDate}</td>
-                              </tr>
-                              <tr>
-                                <td style="padding: 8px 0; color: #6b7280;">Total Paid:</td>
-                                <td style="padding: 8px 0; font-weight: 600; color: #1f2937;">$${booking.total_price.toFixed(2)}</td>
-                              </tr>
-                            </table>
-                          </div>
-                          
-                          <div style="text-align: center;">
-                            <a href="${Deno.env.get("SUPABASE_URL")?.replace('.supabase.co', '.lovable.app')}/dashboard" style="display: inline-block; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: 600;">View Booking Details</a>
-                          </div>
-                        </div>
-                        
-                        <div style="padding: 16px; text-align: center; color: #9ca3af; font-size: 12px;">
-                          <p style="margin: 0 0 8px 0;">Need help? Call <a href="tel:+17257559598" style="color: #FF5124; text-decoration: none;">(725) 755-9598</a></p>
-                          <p style="margin: 0;">© ${new Date().getFullYear()} Vendibook. All rights reserved.</p>
-                        </div>
-                      </div>
-                    `,
+                    idempotencyKey: `instant-book-confirmed-${booking_id}`,
+                    payload: {
+                      preview: `Booking confirmed — ${listingTitle}`,
+                      kicker: "Booking confirmed",
+                      heading: "Booking confirmed 🎉",
+                      greeting: `Hi ${renter.full_name || "there"},`,
+                      paragraphs: [
+                        `All your documents have been approved and your Instant Book for ${listingTitle} is now confirmed.`,
+                        "Your reservation is all set.",
+                      ],
+                      details: [
+                        { label: "Listing", value: listingTitle },
+                        { label: "Dates", value: `${startDate} – ${endDate}` },
+                        { label: "Total paid", value: `$${booking.total_price.toFixed(2)}` },
+                      ],
+                      alert: {
+                        tone: "success",
+                        title: "Confirmed",
+                        body: "Your reservation is locked in.",
+                      },
+                      ctaLabel: "View booking details",
+                      ctaUrl: DASHBOARD_URL,
+                      footnote: "Need help? Call (725) 755-9598 or email support@vendibook.com.",
+                    },
                   });
                 }
 
