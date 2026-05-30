@@ -35,10 +35,8 @@ serve(async (req) => {
       { auth: { persistSession: false } }
     );
 
-    const resendApiKey = Deno.env.get("RESEND_API_KEY");
-    if (!resendApiKey) {
-      throw new Error("RESEND_API_KEY is not configured");
-    }
+    // Email sending now goes through send-transactional-email (Lovable Email)
+
 
     logStep("Starting document reminder job");
 
@@ -197,149 +195,27 @@ serve(async (req) => {
           .map(d => DOCUMENT_TYPE_LABELS[d.document_type] || d.document_type)
           .join(", ");
 
-        const appUrl = "https://vendibook.com";
-
-        // Determine email content based on urgency level
-        const emailSubject = isUrgent 
-          ? `🚨 URGENT: Documents required immediately for your ${listingTitle} booking`
-          : `📄 Reminder: Documents needed for your ${listingTitle} booking`;
-
-        const emailHeaderBg = isUrgent
-          ? "linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)"
-          : "linear-gradient(135deg, #f97316 0%, #ea580c 100%)";
-
-        const emailHeaderIcon = isUrgent ? "🚨" : "📄";
-        const emailHeaderTitle = isUrgent ? "Urgent: Documents Required" : "Document Reminder";
-
-        const urgentBanner = isUrgent ? `
-          <div style="background: #fef2f2; border: 2px solid #dc2626; border-radius: 8px; padding: 16px; margin: 0 0 20px 0;">
-            <p style="margin: 0; color: #991b1b; font-size: 15px; font-weight: 600;">
-              ⏰ This is your second reminder. Your booking was created over 48 hours ago and still requires documents.
-            </p>
-            <p style="margin: 8px 0 0 0; color: #b91c1c; font-size: 14px;">
-              If documents are not uploaded soon, your booking may be at risk of cancellation.
-            </p>
-          </div>
-        ` : '';
-
-        const reminderText = isUrgent
-          ? `<strong>Action required immediately:</strong> Your Instant Book booking for <strong>${listingTitle}</strong> is still waiting for required documents. This is your second reminder.`
-          : `This is a friendly reminder that your Instant Book booking for <strong>${listingTitle}</strong> is still waiting for required documents.`;
-
-        const emailHtml = `
-          <!DOCTYPE html>
-          <html>
-          <head>
-            <meta charset="utf-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <style>
-              @font-face {
-                font-family: 'Sofia Pro Soft';
-                src: url('https://vendibook-docs.s3.us-east-1.amazonaws.com/documents/sofiaprosoftlight-webfont.woff') format('woff');
-                font-weight: 300;
-                font-style: normal;
-              }
-            </style>
-          </head>
-          <body style="margin: 0; padding: 0; background-color: #f9fafb; font-family: 'Sofia Pro Soft', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
-          <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
-            <div style="background: ${emailHeaderBg}; padding: 24px; border-radius: 12px 12px 0 0; text-align: center;">
-              <h1 style="color: white; margin: 0; font-size: 22px;">${emailHeaderIcon} ${emailHeaderTitle}</h1>
-            </div>
-            
-            <div style="background: #f9fafb; padding: 24px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 12px 12px;">
-              <p style="color: #374151; font-size: 16px; line-height: 1.6; margin: 0 0 16px 0;">
-                Hi ${renterName},
-              </p>
-              
-              ${urgentBanner}
-              
-              <p style="color: #374151; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
-                ${reminderText}
-              </p>
-              
-              <div style="background: ${isUrgent ? '#fef2f2' : '#fef3c7'}; border-radius: 8px; padding: 12px; border: 1px solid ${isUrgent ? '#fecaca' : '#fcd34d'}; margin: 0 0 16px 0;">
-                <p style="margin: 0; color: ${isUrgent ? '#991b1b' : '#92400e'}; font-size: 14px;">
-                  ⚠️ <strong>Important:</strong> Your booking cannot be confirmed until all required documents are uploaded and approved by the host.
-                </p>
-              </div>
-              
-              <div style="background: white; border-radius: 8px; padding: 16px; border: 1px solid #e5e7eb; margin: 0 0 20px 0;">
-                <table style="width: 100%; border-collapse: collapse;">
-                  <tr>
-                    <td style="padding: 8px 0; color: #6b7280;">Listing:</td>
-                    <td style="padding: 8px 0; font-weight: 600; color: #1f2937;">${listingTitle}</td>
-                  </tr>
-                  <tr>
-                    <td style="padding: 8px 0; color: #6b7280;">Start Date:</td>
-                    <td style="padding: 8px 0; color: #1f2937;">${startDate}</td>
-                  </tr>
-                  ${missingDocs.length > 0 ? `
-                  <tr>
-                    <td style="padding: 8px 0; color: #6b7280;">Missing Documents:</td>
-                    <td style="padding: 8px 0; color: #dc2626; font-weight: 500;">${missingDocsList}</td>
-                  </tr>
-                  ` : ''}
-                  ${rejectedDocs.length > 0 ? `
-                  <tr>
-                    <td style="padding: 8px 0; color: #6b7280;">Rejected Documents:</td>
-                    <td style="padding: 8px 0; color: #dc2626; font-weight: 500;">${rejectedDocsList}</td>
-                  </tr>
-                  ` : ''}
-                </table>
-              </div>
-              
-              <div style="text-align: center; margin: 24px 0;">
-                <a href="${appUrl}/dashboard" 
-                   style="display: inline-block; background: ${isUrgent ? '#dc2626' : '#f97316'}; color: white; font-weight: 600; text-decoration: none; padding: 14px 28px; border-radius: 8px; font-size: 16px;">
-                  Upload Documents Now
-                </a>
-              </div>
-              
-              ${isUrgent ? `
-              <div style="background: #fef2f2; border-radius: 8px; padding: 12px; border: 1px solid #fecaca; margin: 20px 0 0 0;">
-                <p style="margin: 0; color: #991b1b; font-size: 13px;">
-                  <strong>Need help?</strong> If you're having trouble uploading documents, please contact our support team immediately.
-                </p>
-              </div>
-              ` : ''}
-              
-              <p style="color: #6b7280; font-size: 14px; line-height: 1.5; margin: 20px 0 0 0;">
-                If you have any questions, feel free to message the host or contact our support team.
-              </p>
-              
-              <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 24px 0;" />
-              
-              <p style="color: #9ca3af; font-size: 12px; text-align: center; margin: 0;">
-                Need help? Call <a href="tel:+17257559598" style="color: #FF5124; text-decoration: none;">(725) 755-9598</a>
-                <br><br>
-                © ${new Date().getFullYear()} VendiBook. All rights reserved.
-              </p>
-            </div>
-          </div>
-          </body>
-          </html>
-        `;
-
-        // Send the email
-        const emailResponse = await fetch("https://api.resend.com/emails", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${resendApiKey}`,
+        // Send the email via Lovable Email
+        const { error: emailError } = await supabaseClient.functions.invoke("send-transactional-email", {
+          body: {
+            templateName: "document-status",
+            recipientEmail: renterEmail,
+            idempotencyKey: `doc-reminder-${booking.id}-${isUrgent ? "urgent" : "normal"}-${new Date().toISOString().slice(0,10)}`,
+            templateData: {
+              name: renterName,
+              listingTitle,
+              startDate,
+              isUrgent,
+              missingDocuments: missingDocsList,
+              rejectedDocuments: rejectedDocsList,
+              ctaUrl: "https://vendibook.com/dashboard",
+            },
           },
-          body: JSON.stringify({
-            from: "VendiBook <noreply@updates.vendibook.com>",
-            to: [renterEmail],
-            subject: emailSubject,
-            html: emailHtml,
-          }),
         });
 
-        if (!emailResponse.ok) {
-          const errorText = await emailResponse.text();
-          logStep("Email send failed", { bookingId: booking.id, error: errorText });
-          errors.push(`Failed to send email for booking ${booking.id}: ${errorText}`);
+        if (emailError) {
+          logStep("Email send failed", { bookingId: booking.id, error: emailError.message });
+          errors.push(`Failed to send email for booking ${booking.id}: ${emailError.message}`);
           continue;
         }
 

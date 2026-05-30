@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
-import { Resend } from "https://esm.sh/resend@2.0.0";
+
 
 declare const EdgeRuntime: { waitUntil: (promise: Promise<unknown>) => void };
 
@@ -122,8 +122,7 @@ serve(async (req) => {
       .eq('id', transaction.seller_id)
       .single();
 
-    // Send email notifications
-    const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
+    // Send email notifications via Lovable Email
     const listingTitle = listing?.title || 'Item';
     const buyerEmail = transaction.buyer_email || buyerProfile?.email;
     const sellerEmail = sellerProfile?.email;
@@ -133,7 +132,7 @@ serve(async (req) => {
     const otherParty = isBuyer ? sellerName : buyerName;
     const otherPartyId = isBuyer ? transaction.seller_id : transaction.buyer_id;
 
-    // Create in-app notification for the other party
+    // In-app notification for the other party
     await supabaseClient.from("notifications").insert({
       user_id: otherPartyId,
       type: "dispute",
@@ -143,158 +142,60 @@ serve(async (req) => {
     });
     logStep("In-app notification created for other party");
 
-    const emailPromises = [];
-
-    // Email to the person who raised the dispute
+    const emailPromises: Promise<any>[] = [];
     const raiserEmail = isBuyer ? buyerEmail : sellerEmail;
+    const otherEmail = isBuyer ? sellerEmail : buyerEmail;
+
     if (raiserEmail) {
       emailPromises.push(
-        resend.emails.send({
-          from: "Vendibook <updates@vendibook.com>",
-          to: [raiserEmail],
-          subject: `Dispute Submitted - ${listingTitle}`,
-          html: `
-            <!DOCTYPE html>
-            <html>
-            <head>
-              <meta charset="utf-8">
-              <meta name="viewport" content="width=device-width, initial-scale=1.0">
-              <style>
-                @font-face {
-                  font-family: 'Sofia Pro Soft';
-                  src: url('https://vendibook-docs.s3.us-east-1.amazonaws.com/documents/sofiaprosoftlight-webfont.woff') format('woff');
-                  font-weight: 300;
-                  font-style: normal;
-                }
-              </style>
-            </head>
-            <body style="font-family: 'Sofia Pro Soft', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; margin: 0; padding: 0; background-color: #f9fafb;">
-              <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
-                <h1 style="color: #1a1a1a; font-size: 24px; margin-bottom: 24px;">Dispute Submitted</h1>
-                <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6;">
-                  Your dispute for <strong>${listingTitle}</strong> has been submitted and is under review.
-                </p>
-                <div style="background: #fef3c7; border-radius: 12px; padding: 20px; margin: 24px 0;">
-                  <h3 style="color: #92400e; margin: 0 0 12px;">Your Reason</h3>
-                  <p style="color: #78350f; margin: 0;">${reason}</p>
-                </div>
-                <div style="background: #f8f9fa; border-radius: 12px; padding: 20px; margin: 24px 0;">
-                  <h3 style="color: #1a1a1a; margin: 0 0 12px;">What Happens Next?</h3>
-                  <ul style="color: #4a4a4a; margin: 0; padding-left: 20px; line-height: 1.8;">
-                    <li>Payment will remain in escrow until the dispute is resolved</li>
-                    <li>We've notified ${otherParty} about this dispute</li>
-                    <li>Our team will review and may contact both parties</li>
-                    <li>Resolution typically takes 3-5 business days</li>
-                  </ul>
-                </div>
-                <p style="color: #4a4a4a; margin-top: 24px;">Best regards,<br><strong>The Vendibook Team</strong></p>
-              </div>
-            </body>
-            </html>
-          `,
+        supabaseClient.functions.invoke("send-transactional-email", {
+          body: {
+            templateName: "support-reply",
+            recipientEmail: raiserEmail,
+            idempotencyKey: `dispute-raiser-${transaction_id}`,
+            templateData: {
+              name: disputeRaiser,
+              subject: `Dispute Submitted - ${listingTitle}`,
+              message: `Your dispute for ${listingTitle} has been submitted and is under review.\n\nYour reason: ${reason}\n\nPayment will remain in escrow until the dispute is resolved. We've notified ${otherParty} and our team will review within 3–5 business days.`,
+            },
+          },
         }).catch(err => logStep("Raiser email failed", { error: err.message }))
       );
     }
 
-    // Email to the other party
-    const otherEmail = isBuyer ? sellerEmail : buyerEmail;
     if (otherEmail) {
       emailPromises.push(
-        resend.emails.send({
-          from: "Vendibook <updates@vendibook.com>",
-          to: [otherEmail],
-          subject: `Dispute Raised - ${listingTitle}`,
-          html: `
-            <!DOCTYPE html>
-            <html>
-            <head>
-              <meta charset="utf-8">
-              <meta name="viewport" content="width=device-width, initial-scale=1.0">
-              <style>
-                @font-face {
-                  font-family: 'Sofia Pro Soft';
-                  src: url('https://vendibook-docs.s3.us-east-1.amazonaws.com/documents/sofiaprosoftlight-webfont.woff') format('woff');
-                  font-weight: 300;
-                  font-style: normal;
-                }
-              </style>
-            </head>
-            <body style="font-family: 'Sofia Pro Soft', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; margin: 0; padding: 0; background-color: #f9fafb;">
-              <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
-                <h1 style="color: #dc2626; font-size: 24px; margin-bottom: 24px;">Dispute Raised</h1>
-                <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6;">
-                  <strong>${disputeRaiser}</strong> has raised a dispute for the transaction involving <strong>${listingTitle}</strong>.
-                </p>
-                <div style="background: #fef2f2; border-radius: 12px; padding: 20px; margin: 24px 0;">
-                  <h3 style="color: #991b1b; margin: 0 0 12px;">Dispute Reason</h3>
-                  <p style="color: #7f1d1d; margin: 0;">${reason}</p>
-                </div>
-                <div style="background: #f8f9fa; border-radius: 12px; padding: 20px; margin: 24px 0;">
-                  <h3 style="color: #1a1a1a; margin: 0 0 12px;">What This Means</h3>
-                  <ul style="color: #4a4a4a; margin: 0; padding-left: 20px; line-height: 1.8;">
-                    <li>Payment is now held pending dispute resolution</li>
-                    <li>No funds will be released until this is resolved</li>
-                    <li>Our team may contact you for more information</li>
-                    <li>You can respond via your dashboard or by contacting support</li>
-                  </ul>
-                </div>
-                <p style="color: #4a4a4a; margin-top: 24px;">Best regards,<br><strong>The Vendibook Team</strong></p>
-              </div>
-            </body>
-            </html>
-          `,
+        supabaseClient.functions.invoke("send-transactional-email", {
+          body: {
+            templateName: "support-reply",
+            recipientEmail: otherEmail,
+            idempotencyKey: `dispute-other-${transaction_id}`,
+            templateData: {
+              name: otherParty,
+              subject: `Dispute Raised - ${listingTitle}`,
+              message: `${disputeRaiser} has raised a dispute for the transaction involving ${listingTitle}.\n\nReason: ${reason}\n\nPayment is now held pending resolution. Our team may contact you for more information.`,
+            },
+          },
         }).catch(err => logStep("Other party email failed", { error: err.message }))
       );
     }
 
-    // Send admin notification
+    // Admin notification
     emailPromises.push(
-      resend.emails.send({
-        from: "Vendibook <updates@vendibook.com>",
-        to: ["support@vendibook.com"],
-        subject: `[ACTION REQUIRED] New Dispute - ${listingTitle}`,
-        html: `
-          <!DOCTYPE html>
-          <html>
-          <head>
-            <meta charset="utf-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <style>
-              @font-face {
-                font-family: 'Sofia Pro Soft';
-                src: url('https://vendibook-docs.s3.us-east-1.amazonaws.com/documents/sofiaprosoftlight-webfont.woff') format('woff');
-                font-weight: 300;
-                font-style: normal;
-              }
-            </style>
-          </head>
-          <body style="font-family: 'Sofia Pro Soft', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; margin: 0; padding: 0; background-color: #f9fafb;">
-            <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
-              <h1 style="color: #dc2626; font-size: 24px; margin-bottom: 24px;">New Dispute Requires Attention</h1>
-              <div style="background: #f8f9fa; border-radius: 12px; padding: 20px; margin: 24px 0;">
-                <table style="width: 100%; color: #4a4a4a;">
-                  <tr><td style="padding: 8px 0; font-weight: 600;">Transaction ID:</td><td>${transaction_id}</td></tr>
-                  <tr><td style="padding: 8px 0; font-weight: 600;">Listing:</td><td>${listingTitle}</td></tr>
-                  <tr><td style="padding: 8px 0; font-weight: 600;">Raised By:</td><td>${disputeRaiser} (${role})</td></tr>
-                  <tr><td style="padding: 8px 0; font-weight: 600;">Amount:</td><td>$${Number(transaction.amount).toLocaleString()}</td></tr>
-                  <tr><td style="padding: 8px 0; font-weight: 600;">Seller Payout:</td><td>$${Number(transaction.seller_payout).toLocaleString()}</td></tr>
-                </table>
-              </div>
-              <div style="background: #fef2f2; border-radius: 12px; padding: 20px; margin: 24px 0;">
-                <h3 style="color: #991b1b; margin: 0 0 12px;">Dispute Reason</h3>
-                <p style="color: #7f1d1d; margin: 0;">${reason}</p>
-              </div>
-              <div style="background: #f8f9fa; border-radius: 12px; padding: 20px; margin: 24px 0;">
-                <h3 style="color: #1a1a1a; margin: 0 0 12px;">Parties</h3>
-                <p style="margin: 8px 0;"><strong>Buyer:</strong> ${buyerName} (${buyerEmail || 'No email'})</p>
-                <p style="margin: 8px 0;"><strong>Seller:</strong> ${sellerName} (${sellerEmail || 'No email'})</p>
-              </div>
-            </div>
-          </body>
-          </html>
-        `,
+      supabaseClient.functions.invoke("send-transactional-email", {
+        body: {
+          templateName: "support-reply",
+          recipientEmail: "support@vendibook.com",
+          idempotencyKey: `dispute-admin-${transaction_id}`,
+          templateData: {
+            name: "Vendibook Support",
+            subject: `[ACTION REQUIRED] New Dispute - ${listingTitle}`,
+            message: `Transaction: ${transaction_id}\nListing: ${listingTitle}\nRaised by: ${disputeRaiser} (${role})\nAmount: $${Number(transaction.amount).toLocaleString()}\nSeller payout: $${Number(transaction.seller_payout).toLocaleString()}\n\nBuyer: ${buyerName} (${buyerEmail || 'no email'})\nSeller: ${sellerName} (${sellerEmail || 'no email'})\n\nReason: ${reason}`,
+          },
+        },
       }).catch(err => logStep("Admin email failed", { error: err.message }))
     );
+
 
     // Zendesk ticket creation removed — dispute is already emailed to support above
 

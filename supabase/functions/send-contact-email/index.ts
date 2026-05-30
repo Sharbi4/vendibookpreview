@@ -1,12 +1,5 @@
-import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-
-const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
-
-// Simple in-memory rate limiting (per-IP, resets on function cold start)
-// For production, consider using Upstash Redis for persistent rate limiting
-const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
-const RATE_LIMIT_MAX = 5; // Max 5 requests per hour per IP
-const RATE_LIMIT_WINDOW = 60 * 60 * 1000; // 1 hour in milliseconds
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -19,347 +12,68 @@ interface ContactRequest {
   phone: string;
   subject: string;
   message: string;
-  // Honeypot field - should always be empty if submitted by a real user
-  website?: string;
+  website?: string; // honeypot
 }
 
-const logStep = (step: string, details?: any) => {
-  const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
-  console.log(`[CONTACT-EMAIL] ${step}${detailsStr}`);
-};
-
-// HTML entity encoding to prevent XSS in emails
-const escapeHtml = (text: string): string => {
-  return text
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
-};
-
-// Sanitize phone number for tel: links (only allow digits, +, -, spaces, parentheses)
-const sanitizePhone = (phone: string): string => {
-  return phone.replace(/[^\d+\-\s()]/g, '');
-};
-
-// Get client IP address from request headers
-const getClientIP = (req: Request): string => {
-  return req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
-         req.headers.get("x-real-ip") ||
-         req.headers.get("cf-connecting-ip") ||
-         "anonymous";
-};
-
-// Check rate limit for the given IP
-const checkRateLimit = (ip: string): { allowed: boolean; remaining: number } => {
-  const now = Date.now();
-  const record = rateLimitMap.get(ip);
-  
-  if (!record || now > record.resetTime) {
-    // New record or expired - reset
-    rateLimitMap.set(ip, { count: 1, resetTime: now + RATE_LIMIT_WINDOW });
-    return { allowed: true, remaining: RATE_LIMIT_MAX - 1 };
-  }
-  
-  if (record.count >= RATE_LIMIT_MAX) {
-    return { allowed: false, remaining: 0 };
-  }
-  
-  record.count++;
-  return { allowed: true, remaining: RATE_LIMIT_MAX - record.count };
-};
-
-const sendEmail = async (to: string[], subject: string, html: string) => {
-  const response = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${RESEND_API_KEY}`,
-    },
-    body: JSON.stringify({
-      from: "VendiBook <noreply@updates.vendibook.com>",
-      to,
-      subject,
-      html,
-    }),
-  });
-
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.message || "Failed to send email");
-  }
-
-  return response.json();
-};
-
-const handler = async (req: Request): Promise<Response> => {
-  // Handle CORS preflight requests
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
-  }
-
+serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   try {
-    logStep("Function started");
-    
-    // Rate limiting check
-    const clientIP = getClientIP(req);
-    const { allowed, remaining } = checkRateLimit(clientIP);
-    
-    if (!allowed) {
-      logStep("Rate limit exceeded", { ip: clientIP });
-      return new Response(
-        JSON.stringify({ error: "Too many requests. Please try again later." }),
-        { 
-          status: 429, 
-          headers: { 
-            "Content-Type": "application/json",
-            "X-RateLimit-Remaining": "0",
-            ...corsHeaders 
-          } 
-        }
-      );
+    const body: ContactRequest = await req.json();
+    if (body.website && body.website.trim() !== "") {
+      // honeypot triggered — silently accept
+      return new Response(JSON.stringify({ success: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" }
+      });
     }
-    
-    logStep("Rate limit check passed", { ip: clientIP, remaining });
-
-    const { name, email, phone, subject, message, website }: ContactRequest = await req.json();
-    
-    // Honeypot check - if the hidden "website" field is filled, it's likely a bot
-    if (website && website.trim().length > 0) {
-      logStep("Honeypot triggered - bot detected", { ip: clientIP });
-      // Return success to not alert the bot, but don't actually send anything
-      return new Response(
-        JSON.stringify({ success: true }),
-        { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
-      );
+    if (!body.email || !body.name || !body.message) {
+      return new Response(JSON.stringify({ error: "Missing required fields" }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" }
+      });
     }
-    
-    logStep("Request received", { name, email, subject });
+    const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
 
-    // Validate required fields
-    if (!name || !email || !phone || !subject || !message) {
-      logStep("Missing required fields");
-      return new Response(
-        JSON.stringify({ error: "All fields are required" }),
-        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
-      );
-    }
-
-    // Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      logStep("Invalid email format", { email });
-      return new Response(
-        JSON.stringify({ error: "Invalid email format" }),
-        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
-      );
-    }
-
-    // Sanitize inputs (basic length checks)
-    if (name.length > 100 || email.length > 255 || phone.length > 20 || subject.length > 200 || message.length > 2000) {
-      logStep("Input validation failed: fields too long");
-      return new Response(
-        JSON.stringify({ error: "Input fields exceed maximum length" }),
-        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
-      );
-    }
-
-    const currentTime = new Date().toLocaleString("en-US", {
-      timeZone: "America/New_York",
-      weekday: "long",
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
+    // Confirmation to the user
+    await admin.functions.invoke("send-transactional-email", {
+      body: {
+        templateName: "support-reply",
+        recipientEmail: body.email,
+        idempotencyKey: `contact-confirm-${body.email}-${Date.now()}`,
+        templateData: {
+          name: body.name,
+          subject: body.subject || "Your message to Vendibook",
+          message: "Thanks for reaching out. Our team will get back to you shortly.",
+        },
+      },
     });
 
-    // Sanitize all user inputs for HTML emails to prevent XSS
-    const safeName = escapeHtml(name);
-    const safeSubject = escapeHtml(subject);
-    const safeMessage = escapeHtml(message).replace(/\n/g, '<br>');
-    const safePhone = sanitizePhone(phone);
-    const safePhoneDisplay = escapeHtml(phone);
-    // Email is already validated with regex, but escape for display
-    const safeEmail = escapeHtml(email);
+    // Notify support
+    await admin.functions.invoke("send-transactional-email", {
+      body: {
+        templateName: "support-reply",
+        recipientEmail: "support@vendibook.com",
+        idempotencyKey: `contact-internal-${body.email}-${Date.now()}`,
+        templateData: {
+          name: "Vendibook Support",
+          subject: `New contact form: ${body.subject || "(no subject)"}`,
+          message: `From: ${body.name} <${body.email}>${body.phone ? ` (${body.phone})` : ""}\n\n${body.message}`,
+        },
+      },
+    });
 
-    // Send notification email to support
-    logStep("Sending support notification email");
-    
-    const supportEmailHtml = `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <style>
-          @font-face {
-            font-family: 'Sofia Pro Soft';
-            src: url('https://vendibook-docs.s3.us-east-1.amazonaws.com/documents/sofiaprosoftlight-webfont.woff') format('woff');
-            font-weight: 300;
-            font-style: normal;
-          }
-          body { font-family: 'Sofia Pro Soft', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background: #f9fafb; }
-          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-          .header { background: #F97316; color: white; padding: 20px; border-radius: 8px 8px 0 0; text-align: center; }
-          .content { background: #f9f9f9; padding: 20px; border-radius: 0 0 8px 8px; }
-          .urgent { background: #FEF3C7; border-left: 4px solid #F59E0B; padding: 15px; margin-bottom: 20px; }
-          .field { margin-bottom: 15px; }
-          .label { font-weight: bold; color: #666; font-size: 12px; text-transform: uppercase; }
-          .value { font-size: 16px; color: #333; margin-top: 4px; }
-          .message-box { background: white; padding: 15px; border-radius: 8px; border: 1px solid #e5e5e5; }
-          .cta { background: #F97316; color: white; padding: 15px 25px; text-decoration: none; border-radius: 8px; display: inline-block; margin-top: 15px; }
-        </style>
-      </head>
-      <body>
-        <div class="container">
-          <div class="header">
-            <h1 style="margin:0;">New Contact Form Submission</h1>
-          </div>
-          <div class="content">
-            <div class="urgent">
-              <strong>⚡ ACTION REQUIRED:</strong> Call this person within 2 minutes!
-            </div>
-            
-            <div class="field">
-              <div class="label">Submitted At</div>
-              <div class="value">${currentTime} EST</div>
-            </div>
-
-            <div class="field">
-              <div class="label">Name</div>
-              <div class="value">${safeName}</div>
-            </div>
-            
-            <div class="field">
-              <div class="label">📞 Phone Number (CALL NOW!)</div>
-              <div class="value" style="font-size: 24px; color: #F97316; font-weight: bold;">
-                <a href="tel:${safePhone}" style="color: #F97316; text-decoration: none;">${safePhoneDisplay}</a>
-              </div>
-            </div>
-            
-            <div class="field">
-              <div class="label">Email</div>
-              <div class="value"><a href="mailto:${email}">${safeEmail}</a></div>
-            </div>
-            
-            <div class="field">
-              <div class="label">Subject</div>
-              <div class="value">${safeSubject}</div>
-            </div>
-            
-            <div class="field">
-              <div class="label">Message</div>
-              <div class="message-box">${safeMessage}</div>
-            </div>
-            
-            <a href="tel:${safePhone}" class="cta">📞 Call ${safeName} Now</a>
-          </div>
-        </div>
-      </body>
-      </html>
-    `;
-
-    await sendEmail(
-      ["support@vendibook.com"],
-      `🔔 URGENT: New Contact Form - ${safeSubject}`,
-      supportEmailHtml
-    );
-    logStep("Support email sent");
-
-    // Send confirmation email to customer
-    logStep("Sending customer confirmation email");
-    
-    const customerEmailHtml = `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <style>
-          body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-          .header { background: #F97316; color: white; padding: 30px; border-radius: 8px 8px 0 0; text-align: center; }
-          .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 8px 8px; }
-          .highlight { background: #FEF3C7; border-radius: 8px; padding: 20px; margin: 20px 0; text-align: center; }
-          .footer { text-align: center; padding: 20px; color: #666; font-size: 14px; }
-        </style>
-      </head>
-      <body>
-        <div class="container">
-          <div class="header">
-            <h1 style="margin:0;">Thank You, ${safeName}!</h1>
-            <p style="margin:10px 0 0 0; opacity: 0.9;">We have received your message</p>
-          </div>
-          <div class="content">
-            <p>Hi ${safeName},</p>
-            
-            <p>Thank you for reaching out to Vendibook! We have received your inquiry regarding:</p>
-            
-            <p><strong>"${safeSubject}"</strong></p>
-            
-            <div class="highlight">
-              <p style="margin:0; font-size: 18px;">📞 <strong>We will call you within 2 minutes</strong></p>
-              <p style="margin:10px 0 0 0; color: #666;">during our business hours (Mon-Fri 9am-6pm, Sat 10am-4pm EST)</p>
-            </div>
-            
-            <p>If you submitted this outside of business hours, we will call you first thing when we open.</p>
-            
-            <p>In the meantime, feel free to browse our marketplace for food trucks, trailers, and mobile food business assets.</p>
-            
-            <p>Best regards,<br>The Vendibook Team</p>
-          </div>
-          <div class="footer">
-            <p>Vendibook - The marketplace for mobile food businesses</p>
-            <p><a href="tel:+17257559598" style="color: #F97316;">(725) 755-9598</a> | <a href="mailto:support@vendibook.com">support@vendibook.com</a></p>
-          </div>
-        </div>
-      </body>
-      </html>
-    `;
-
-    await sendEmail(
-      [email],
-      `We received your message - Vendibook`,
-      customerEmailHtml
-    );
-    logStep("Customer confirmation email sent");
-
-    // Trigger Vapi outbound call in background (Zendesk removed)
-    try {
-      await fetch(
-        `${Deno.env.get("SUPABASE_URL")}/functions/v1/vapi-outbound-call`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${Deno.env.get("SUPABASE_ANON_KEY")}`,
-          },
-          body: JSON.stringify({ name, phone }),
-        }
-      );
-      logStep("Vapi outbound call triggered");
-    } catch (callError: any) {
-      logStep("Vapi outbound call error (non-blocking)", { error: callError.message });
+    // Trigger Vapi outbound callback if phone provided
+    if (body.phone) {
+      admin.functions.invoke("vapi-outbound-call", {
+        body: { name: body.name, phone: body.phone },
+      }).catch((e) => console.error("vapi-outbound-call failed", e));
     }
 
-    logStep("Function completed successfully");
-
-    return new Response(
-      JSON.stringify({ success: true }),
-      { 
-        status: 200, 
-        headers: { 
-          "Content-Type": "application/json",
-          "X-RateLimit-Remaining": String(remaining),
-          ...corsHeaders 
-        } 
-      }
-    );
-  } catch (error: any) {
-    logStep("ERROR", { message: error.message });
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
-    );
+    return new Response(JSON.stringify({ success: true }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" }
+    });
+  } catch (e: any) {
+    console.error("send-contact-email error", e);
+    return new Response(JSON.stringify({ error: e.message }), {
+      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" }
+    });
   }
-};
-
-serve(handler);
+});
