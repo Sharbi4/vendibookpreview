@@ -32,6 +32,7 @@ import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import SEO from '@/components/SEO';
 import JsonLd from '@/components/JsonLd';
+import { TellVendibookButton } from '@/components/lead/TellVendibookButton';
 
 // --- Modular Components ---
 
@@ -66,7 +67,7 @@ const KitchenHero = () => {
             Turn your downtime into a second revenue stream. We connect you with vetted food businesses and handle the payments and compliance automatically.
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
+          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-4">
             <Button asChild size="lg" variant="glass-cta" className="h-14 px-8 text-lg">
               <Link to="/list?category=ghost_kitchen">
                 List Your Kitchen
@@ -78,6 +79,17 @@ const KitchenHero = () => {
                 Calculate Earnings
               </Link>
             </Button>
+          </div>
+          <div className="flex justify-center mb-8">
+            <TellVendibookButton
+              variant="ghost"
+              size="default"
+              defaultIntent="list"
+              defaultCategory="commercial_kitchen"
+              sourcePage="rent_my_commercial_kitchen"
+            >
+              Not ready? Tell Vendibook what you have →
+            </TellVendibookButton>
           </div>
 
           <div className="flex items-center justify-center gap-6 text-sm text-muted-foreground">
