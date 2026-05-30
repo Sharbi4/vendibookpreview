@@ -206,8 +206,17 @@ const ListingCardOverlay = ({ open, onClose, listing }: ListingCardOverlayProps)
                 {/* Listing stat strip */}
                 <div className="grid grid-cols-3 gap-2 mb-4">
                   {[
-                    { label: 'Daily rate', value: dailyRate ? `$${Number(dailyRate).toLocaleString()}` : '—' },
-                    { label: 'Minimum stay', value: `${minDays} day${minDays > 1 ? 's' : ''}` },
+                    {
+                      label: hourlySettings.hourlyEnabled && hourlyRate
+                        ? 'Hourly rate'
+                        : 'Daily rate',
+                      value: hourlySettings.hourlyEnabled && hourlyRate
+                        ? `$${Number(hourlyRate).toLocaleString()}`
+                        : dailyRate
+                          ? `$${Number(dailyRate).toLocaleString()}`
+                          : '—',
+                    },
+                    { label: 'Min booking time', value: minBookingLabel },
                     { label: 'Slots', value: `${totalSlots}` },
                   ].map((s) => (
                     <div
@@ -228,31 +237,34 @@ const ListingCardOverlay = ({ open, onClose, listing }: ListingCardOverlayProps)
                   {monthLabel}
                 </div>
 
-                {/* Live availability calendar */}
-                <div className="rounded-xl border border-white/10 bg-black/30 p-2 sm:p-3">
-                  <AvailabilityCalendarDisplay
-                    listingId={listing.id}
-                    availableFrom={anyListing.available_from}
-                    availableTo={anyListing.available_to}
-                  />
-                </div>
+                {/* Live availability + time-slot picker */}
+                <InlineAvailabilitySlotPicker
+                  listingId={listing.id}
+                  availableFrom={anyListing.available_from}
+                  availableTo={anyListing.available_to}
+                  onClose={onClose}
+                />
               </>
             )}
 
             <div className="my-5 h-px bg-white/[0.07]" />
 
-            <button
-              onClick={handlePrimary}
-              className="w-full h-12 rounded-xl bg-[#f97316] hover:bg-[#ea6c0a] text-white text-[14px] font-semibold transition-all duration-150 hover:scale-[1.01]"
-            >
-              {primaryLabel}
-            </button>
-
+            {isSale && (
+              <button
+                onClick={handlePrimary}
+                className="w-full h-12 rounded-xl bg-[#f97316] hover:bg-[#ea6c0a] text-white text-[14px] font-semibold transition-all duration-150 hover:scale-[1.01]"
+              >
+                {primaryLabel}
+              </button>
+            )}
 
             <Link
               to={`/listing/${listing.id}`}
               onClick={(e) => e.stopPropagation()}
-              className="mt-2.5 flex items-center justify-center w-full h-11 rounded-xl border border-white/15 hover:border-white/30 text-white text-[14px] font-medium transition-colors duration-150"
+              className={cn(
+                'flex items-center justify-center w-full h-11 rounded-xl border border-white/15 hover:border-white/30 text-white text-[14px] font-medium transition-colors duration-150',
+                isSale && 'mt-2.5',
+              )}
             >
               View Full Listing
             </Link>
