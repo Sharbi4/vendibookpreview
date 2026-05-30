@@ -180,9 +180,9 @@ const HelpCenter = () => {
   const openZendeskChat = () => {
     trackEventToDb('help_chat_click', 'engagement', { source: 'help_center' });
     try {
-      window.dispatchEvent(new CustomEvent('open-vendi-chat'));
+      (window as any).Tawk_API?.maximize?.();
     } catch (error) {
-      console.debug('Vendi chat open error:', error);
+      console.debug('Tawk chat open error:', error);
     }
   };
 
