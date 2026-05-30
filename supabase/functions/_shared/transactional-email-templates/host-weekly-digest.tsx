@@ -14,9 +14,16 @@ interface Props {
   topListingId?: string
   aiInsight?: string
   tip?: string
+  referralProgram?: 'purchase' | 'supply' | 'rental' | null
 }
 
-const E = ({ hostName, weekLabel, views, inquiries, bookings, earnings, topListingTitle, topListingId, aiInsight, tip }: Props) => (
+const REFERRAL_COPY: Record<string, string> = {
+  purchase: 'Know a buyer? You could earn $500 when they complete their first purchase.',
+  supply: 'Know a seller? You could earn $150 when their first transaction clears.',
+  rental: 'Know a renter? You could earn $50 when they complete their first booking.',
+}
+
+const E = ({ hostName, weekLabel, views, inquiries, bookings, earnings, topListingTitle, topListingId, aiInsight, tip, referralProgram }: Props) => (
   <Html lang="en" dir="ltr"><Head /><Preview>Your weekly Vendibook digest</Preview>
     <Body style={s.main}><Container style={s.container}>
       <Section style={s.brandBar}><Text style={s.brandMark}>VENDIBOOK</Text></Section>
@@ -44,6 +51,17 @@ const E = ({ hostName, weekLabel, views, inquiries, bookings, earnings, topListi
             <Hr style={s.hr} />
             <Text style={s.smallHeader}>TIP OF THE WEEK</Text>
             <Text style={s.text}>{tip}</Text>
+          </>
+        ) : null}
+
+        {referralProgram ? (
+          <>
+            <Hr style={s.hr} />
+            <Text style={s.smallHeader}>REFER &amp; EARN</Text>
+            <Text style={s.text}>{REFERRAL_COPY[referralProgram]}</Text>
+            <Text style={s.text}>
+              <a href={`${SITE_URL}/referral/dashboard?source=email_weekly`} style={{ color: '#FF5124', textDecoration: 'underline' }}>See your referral dashboard →</a>
+            </Text>
           </>
         ) : null}
 
