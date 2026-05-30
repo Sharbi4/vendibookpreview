@@ -62,10 +62,12 @@ export const DashboardLayout = ({ children, mode, onModeChange, isHost }: Dashbo
       : []),
     { title: 'Reporting', icon: BarChart3, href: '/host/reporting', tab: null },
     { title: 'Messages', icon: MessageSquare, href: '/messages', tab: null },
+    { title: 'Refer & Earn', icon: Gift, href: '/referral/dashboard?source=sidebar', tab: null },
   ] : [
     { title: 'Bookings', icon: CalendarDays, href: '/dashboard', tab: null },
     { title: 'Favorites', icon: Heart, href: '/favorites', tab: null },
     { title: 'Messages', icon: MessageSquare, href: '/messages', tab: null },
+    { title: 'Refer & Earn', icon: Gift, href: '/referral/dashboard?source=sidebar', tab: null },
   ];
 
   // Active state logic
