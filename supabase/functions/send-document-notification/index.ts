@@ -473,66 +473,32 @@ serve(async (req) => {
             if (host?.email) {
               emails.push({
                 to: host.email,
-                subject: `✅ All Documents Approved - ${listingTitle}`,
-                html: `
-                  <div style="font-family: 'Sofia Pro Soft', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-                    <div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 24px; border-radius: 12px 12px 0 0; text-align: center;">
-                      <h1 style="color: white; margin: 0; font-size: 22px;">All Documents Verified! 🎉</h1>
-                    </div>
-                    
-                    <div style="background: #f9fafb; padding: 24px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 12px 12px;">
-                      <p style="color: #374151; font-size: 16px; line-height: 1.6; margin: 0 0 16px 0;">
-                        Hi ${host.full_name || 'there'},
-                      </p>
-                      <p style="color: #374151; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
-                        Great news! All required documents for <strong>${renter?.full_name || 'your renter'}</strong>'s booking of <strong>${listingTitle}</strong> have been verified and approved.
-                      </p>
-                      
-                      ${isInstantBook ? `
-                      <div style="background: #dbeafe; border-radius: 8px; padding: 12px; border: 1px solid #93c5fd; margin: 0 0 16px 0;">
-                        <p style="margin: 0; color: #1e40af; font-size: 14px;">
-                          ⚡ <strong>Instant Book:</strong> This booking has been automatically confirmed.
-                        </p>
-                      </div>
-                      ` : ''}
-                      
-                      <div style="background: #dcfce7; border-radius: 8px; padding: 16px; border: 1px solid #bbf7d0; margin: 0 0 20px 0; text-align: center;">
-                        <p style="margin: 0 0 4px 0; font-weight: 600; color: #166534; font-size: 18px;">✓ Documents Complete</p>
-                        <p style="margin: 0; color: #15803d; font-size: 14px;">All required documents have been submitted and approved</p>
-                      </div>
-                      
-                      <div style="background: white; border-radius: 8px; padding: 16px; border: 1px solid #e5e7eb; margin: 0 0 20px 0;">
-                        <table style="width: 100%; border-collapse: collapse;">
-                          <tr>
-                            <td style="padding: 8px 0; color: #6b7280;">Renter:</td>
-                            <td style="padding: 8px 0; font-weight: 600; color: #1f2937;">${renter?.full_name || 'N/A'}</td>
-                          </tr>
-                          <tr>
-                            <td style="padding: 8px 0; color: #6b7280;">Booking Dates:</td>
-                            <td style="padding: 8px 0; color: #1f2937;">${startDate} - ${endDate}</td>
-                          </tr>
-                          <tr>
-                            <td style="padding: 8px 0; color: #6b7280;">Listing:</td>
-                            <td style="padding: 8px 0; color: #1f2937;">${listingTitle}</td>
-                          </tr>
-                        </table>
-                      </div>
-                      
-                      <p style="color: #374151; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
-                        The booking is now fully compliant with all documentation requirements.
-                      </p>
-                      
-                      <div style="text-align: center;">
-                        <a href="${Deno.env.get("SUPABASE_URL")?.replace('.supabase.co', '.lovable.app')}/dashboard" style="display: inline-block; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: 600;">View Dashboard</a>
-                      </div>
-                    </div>
-                    
-                    <div style="padding: 16px; text-align: center; color: #9ca3af; font-size: 12px;">
-                      <p style="margin: 0 0 8px 0;">Need help? Call <a href="tel:+17257559598" style="color: #FF5124; text-decoration: none;">(725) 755-9598</a></p>
-                      <p style="margin: 0;">© ${new Date().getFullYear()} Vendibook. All rights reserved.</p>
-                    </div>
-                  </div>
-                `,
+                idempotencyKey: `doc-all-approved-host-checkall-${booking_id}`,
+                payload: {
+                  preview: `All documents approved — ${listingTitle}`,
+                  kicker: "Documents verified",
+                  heading: "All documents verified 🎉",
+                  greeting: `Hi ${host.full_name || "there"},`,
+                  paragraphs: [
+                    `All required documents for ${renter?.full_name || "your renter"}'s booking of ${listingTitle} have been verified and approved.`,
+                    isInstantBook
+                      ? "⚡ Instant Book: this booking has been automatically confirmed."
+                      : "The booking is now fully compliant with all documentation requirements.",
+                  ],
+                  details: [
+                    { label: "Renter", value: renter?.full_name || "N/A" },
+                    { label: "Listing", value: listingTitle },
+                    { label: "Booking dates", value: `${startDate} – ${endDate}` },
+                  ],
+                  alert: {
+                    tone: "success",
+                    title: "Documents complete",
+                    body: "All required documents have been submitted and approved.",
+                  },
+                  ctaLabel: "View dashboard",
+                  ctaUrl: DASHBOARD_URL,
+                  footnote: "Need help? Call (725) 755-9598 or email support@vendibook.com.",
+                },
               });
             }
             
