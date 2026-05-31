@@ -27,6 +27,172 @@ export const BLOG_CATEGORIES = [
 
 export const BLOG_POSTS: BlogPost[] = [
   {
+    slug: 'new-exit-plan-food-truck-after-layoffs',
+    title: 'The New Exit Plan: A Food Truck, a Recipe, and a Fresh Start After Layoffs',
+    description: 'As AI reshapes the workforce, more Americans are turning job loss into ownership through food trucks, trailers, shared kitchens, and mobile food businesses.',
+    excerpt: 'As AI reshapes the workforce, more Americans are turning job loss into ownership through food trucks, trailers, shared kitchens, and mobile food businesses.',
+    image: '/images/blog/new-exit-plan-food-truck.png',
+    content: `
+<p class="text-lg text-muted-foreground mb-6"><em>By Brad Pittman | Published by Vendibook · May 31, 2026</em></p>
+
+<p class="text-lg mb-6">There is a moment a lot of people are experiencing right now.</p>
+
+<p class="mb-6">You get the email. Or the meeting invite with no context. HR is on the call. The language is polished, careful, and corporate.</p>
+
+<p class="mb-6"><em>Restructuring. Realignment. Efficiency. Workforce reduction.</em></p>
+
+<p class="mb-6">And just like that, a job you built years of your life around is gone.</p>
+
+<p class="mb-6">For many people, that moment is devastating. But for a growing number of Americans, it is also becoming a turning point.</p>
+
+<p class="mb-6">They are not only refreshing LinkedIn. They are not only updating resumes and waiting for the next company to decide their future.</p>
+
+<p class="mb-6">Some are asking a different question:</p>
+
+<p class="mb-6 text-xl font-semibold"><em>What if I built something of my own?</em></p>
+
+<p class="mb-6">For a lot of people, that answer does not look like another corporate role. It does not look like driving rideshare, delivering food through someone else's app, or trying to survive inside the gig economy.</p>
+
+<p class="mb-6">It looks like a food truck. A trailer. A catering concept. A shared kitchen. A family recipe that finally gets a business plan. A long-time dream that suddenly feels less risky than going back to a workforce that no longer feels stable.</p>
+
+<h2 class="text-2xl font-bold mt-10 mb-4">The Workforce Is Changing</h2>
+
+<p class="mb-6">The timing is not a coincidence.</p>
+
+<p class="mb-6">Artificial intelligence is changing how companies think about staffing, productivity, and cost. Some companies are using AI to support workers. Others are using it to restructure teams, reduce headcount, or rethink entire departments.</p>
+
+<p class="mb-6">In April 2026, Challenger, Gray &amp; Christmas reported that artificial intelligence led all cited reasons for job cuts for the second month in a row, accounting for <strong>21,490 announced cuts</strong> during the month. AI represented about 26 percent of total job cuts in April and roughly 16 percent of all 2026 job-cut plans year to date.</p>
+
+<p class="mb-6">At the same time, Americans are still starting businesses at a remarkable pace. The U.S. Census Bureau reported <strong>503,171 business applications in April 2026 alone</strong>, seasonally adjusted, up 2.1 percent from March.</p>
+
+<p class="mb-6">That contrast matters.</p>
+
+<p class="mb-6">As traditional employment feels less predictable, more people are looking for control. They are looking for ownership. They are looking for a path where they are not just waiting for the next layoff, the next reorganization, or the next software rollout to decide their future.</p>
+
+<p class="mb-6">For many, food is one of the most realistic places to start.</p>
+
+<h2 class="text-2xl font-bold mt-10 mb-4">Food Trucks Are No Longer a Fringe Idea</h2>
+
+<p class="mb-6">Mobile food is not just a cute side hustle anymore. It is a growing part of the American food economy.</p>
+
+<p class="mb-6">The U.S. Bureau of Labor Statistics reported that employment in mobile food services reached <strong>44,119 in 2024</strong>, about ten times its level in 2000. That is a 907 percent increase.</p>
+
+<p class="mb-6">IBISWorld also reports that the U.S. food truck industry reached <strong>92,257 businesses in 2025</strong>, with the number of businesses growing at a 23.8 percent compound annual growth rate between 2020 and 2025.</p>
+
+<p class="mb-6">That growth tells us something important. People are not only dreaming about food businesses. They are building them.</p>
+
+<p class="mb-6">And for someone coming out of a corporate job, a food truck can feel more reachable than a full restaurant. A brick and mortar restaurant often means a long lease, expensive buildout, large staff, and major upfront risk. A truck, trailer, shared kitchen, or vendor space can offer a more flexible path.</p>
+
+<p class="mb-6">It is still hard work. It still requires permits, inspections, insurance, prep space, equipment, maintenance, marketing, and long days. But it gives people a way to test demand, serve real customers, and build a brand without immediately taking on the full weight of a restaurant.</p>
+
+<h2 class="text-2xl font-bold mt-10 mb-4">Real People Are Already Making the Leap</h2>
+
+<p class="mb-6">This shift is not theoretical.</p>
+
+<p class="mb-6"><strong>Casey Stevens</strong> lost her job as Bob Evans' manager of product development after pandemic-related closures and layoffs. She later launched Biscuit Boss, a Columbus-area food truck built around breakfast and biscuits.</p>
+
+<p class="mb-6"><strong>LaToya Jolly</strong> was laid off from a banking job in 2017 and went on to build Jolly Cakes, a mobile dessert business in Birmingham.</p>
+
+<p class="mb-6"><strong>Thomas DeGeest</strong> left IBM in 2007 and launched Wafels &amp; Dinges, bringing Belgian waffles to the streets of New York from a 1968 Chevy truck.</p>
+
+<p class="mb-6"><strong>Chef Nic</strong> in Phoenix dreamed for years of owning a food truck before quitting his job in 2017 and launching Kamikaze, a fusion concept built around Chinese and Southwestern flavors.</p>
+
+<p class="mb-6">Different cities. Different menus. Different backgrounds. But the pattern is familiar.</p>
+
+<p class="mb-6">A person reaches a point where the old path no longer fits. Then food becomes the vehicle, literally and figuratively, for something new.</p>
+
+<h2 class="text-2xl font-bold mt-10 mb-4">Food Is One Thing Technology Cannot Fully Replace</h2>
+
+<p class="mb-6">There is something important that gets lost in a lot of AI conversations.</p>
+
+<p class="mb-6">Yes, technology can automate tasks. It can summarize documents. It can answer support questions. It can generate images, analyze spreadsheets, write code, and replace parts of workflows that used to require entire teams.</p>
+
+<p class="mb-6">But it cannot replace the feeling of standing in line at a truck you love. It cannot replace the smell of something being cooked fresh. It cannot replace a grandmother's recipe. It cannot replace the way a neighborhood comes alive when food trucks line up on a Friday night.</p>
+
+<p class="mb-6">Food is one of the last deeply human industries. It carries memory. Culture. Family history. Creativity. Time. Care.</p>
+
+<p class="mb-6">A sauce may come from someone's mother. A dessert may come from a recipe passed down for generations. A barbecue method may have taken years to perfect. A taco, biscuit, waffle, burger, curry, plate lunch, or loaded potato can carry a whole story.</p>
+
+<p class="mb-6">That is why people come back. They are not only buying food. They are buying connection. They are buying a moment. They are supporting a person who had the courage to put their name, their story, and their work in front of the public.</p>
+
+<p class="mb-6">In a world becoming more automated, that kind of human connection becomes more valuable, not less.</p>
+
+<h2 class="text-2xl font-bold mt-10 mb-4">The Entrepreneurship Economy Is Different From the Gig Economy</h2>
+
+<p class="mb-6">When the economy gets difficult, many people turn to gig work. Driving. Delivering. Picking up shifts through an app. Doing whatever creates income quickly.</p>
+
+<p class="mb-6">There is nothing wrong with that. Flexibility matters. Income matters.</p>
+
+<p class="mb-6">But the gig economy often gives people access to tasks, not ownership. You drive under someone else's brand. You deliver through someone else's platform. You follow someone else's rules. You build someone else's customer base.</p>
+
+<p class="mb-6">A food truck is different.</p>
+
+<ul class="list-disc pl-6 mb-6 space-y-2">
+<li>The brand is yours.</li>
+<li>The recipes are yours.</li>
+<li>The relationship with customers is yours.</li>
+<li>The reputation you build over months and years of showing up is yours.</li>
+</ul>
+
+<p class="mb-6">That is the difference between simply earning income and building equity in something you own.</p>
+
+<p class="mb-6">This is the entrepreneurship economy. And food is one of its most powerful on-ramps.</p>
+
+<h2 class="text-2xl font-bold mt-10 mb-4">Why Vendibook Exists</h2>
+
+<p class="mb-6">Vendibook was built for this moment.</p>
+
+<p class="mb-6">Because one of the biggest barriers for new food entrepreneurs is not passion. It is access.</p>
+
+<ul class="list-disc pl-6 mb-6 space-y-2">
+<li>Access to the right truck.</li>
+<li>Access to a food trailer.</li>
+<li>Access to a shared kitchen.</li>
+<li>Access to vendor spaces, lots, and mobile food infrastructure.</li>
+<li>Access to transparent pricing, availability, documents, payments, and trust.</li>
+</ul>
+
+<p class="mb-6">The mobile food economy has always had demand, but the infrastructure around it has been fragmented. People search through scattered posts, outdated listings, private Facebook groups, word of mouth, screenshots, phone calls, and unclear rental options.</p>
+
+<p class="mb-6">That makes it harder for new operators to start. It also makes it harder for hosts, owners, and kitchen operators to monetize the equipment and space they already have.</p>
+
+<p class="mb-6">Vendibook is building a marketplace for the mobile food economy, where people can list, rent, buy, and book food trucks, trailers, shared kitchens, ghost kitchens, and vendor spaces with more confidence.</p>
+
+<p class="mb-6">Because the next great food business may not start in a restaurant.</p>
+
+<p class="mb-6">It may start with someone who just got laid off. Someone who finally quit. Someone who has been cooking from home for years. Someone whose grandmother's recipe deserves a bigger audience. Someone who is done waiting for permission.</p>
+
+<p class="mb-6">The future of work does not have to be only about automation, layoffs, or survival. It can also be about ownership. It can be about community. It can be about food.</p>
+
+<p class="mb-8 text-lg font-semibold">And for many people, it may begin with a truck.</p>
+
+<div class="bg-primary/10 p-6 rounded-lg text-center mb-8">
+<h3 class="font-bold text-xl mb-3">Start at vendibook.com</h3>
+<p class="mb-4"><a href="/search" class="text-primary underline font-medium text-lg">Browse Food Trucks, Trailers &amp; Shared Kitchens →</a></p>
+</div>
+
+<h2 class="text-2xl font-bold mt-10 mb-4">Sources &amp; Further Reading</h2>
+
+<ul class="list-disc pl-6 mb-6 space-y-2 text-muted-foreground">
+<li>Challenger, Gray &amp; Christmas: AI led cited reasons for April 2026 job cuts, with 21,490 AI-related announced cuts during the month.</li>
+<li>U.S. Census Bureau: 503,171 business applications in April 2026, seasonally adjusted.</li>
+<li>U.S. Bureau of Labor Statistics: mobile food services employment reached 44,119 in 2024, about ten times its level in 2000.</li>
+<li>IBISWorld: 92,257 U.S. food truck businesses in 2025, with 23.8 percent CAGR from 2020 to 2025.</li>
+<li>Birmingham Times profile of LaToya Jolly / Jolly Cakes.</li>
+<li>Wafels &amp; Dinges company story (Thomas DeGeest).</li>
+<li>Roaming Hunger profile of Chef Nic / Kamikaze, Phoenix.</li>
+<li>614Now and Southern Foodways Alliance coverage of Casey Stevens / Biscuit Boss.</li>
+</ul>
+    `,
+    author: 'Brad Pittman',
+    authorRole: 'Contributing Writer',
+    datePublished: '2026-05-31',
+    category: 'industry-insights',
+    tags: ['food truck', 'layoffs', 'AI workforce', 'entrepreneurship', 'mobile food', 'shared kitchen', 'small business'],
+    readingTime: 9,
+    featured: true,
+  },
+  {
     slug: 'restaurant-proof-of-concept-shared-kitchens',
     title: 'The $250k Gamble: Why Smart Chefs Test Concepts in Shared Kitchens First',
     description: 'Don\'t sign a lease until you\'ve tested your menu. Learn why the "Lean Startup" method using shared kitchens and food trucks is the smartest financial move for new food entrepreneurs.',
