@@ -12,6 +12,8 @@ interface Listing {
   category: string;
   mode: string;
   address: string | null;
+  latitude: number | null;
+  longitude: number | null;
   price_daily: number | null;
   price_sale: number | null;
   cover_image_url: string | null;
@@ -21,168 +23,214 @@ interface Listing {
 interface AvailabilityAlert {
   id: string;
   email: string;
+  name: string | null;
   zip_code: string;
   category: string | null;
   mode: string | null;
+  radius_miles: number | null;
+  latitude: number | null;
+  longitude: number | null;
   notified_at: string | null;
 }
 
-// Extract zip code from address string
-function extractZipCode(address: string | null): string | null {
-  if (!address) return null;
-  const zipMatch = address.match(/\b\d{5}(-\d{4})?\b/);
-  return zipMatch ? zipMatch[0].substring(0, 5) : null;
+const CATEGORY_LABELS: Record<string, string> = {
+  food_truck: "Food Truck",
+  food_trailer: "Food Trailer",
+  ghost_kitchen: "Shared Kitchen",
+  vendor_lot: "Vendor Lot",
+};
+
+function haversineMiles(lat1: number, lng1: number, lat2: number, lng2: number): number {
+  const R = 3958.8;
+  const toRad = (d: number) => (d * Math.PI) / 180;
+  const dLat = toRad(lat2 - lat1);
+  const dLng = toRad(lng2 - lng1);
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(a));
 }
 
-// Check if zip codes are in the same area (first 3 digits match = same region)
-function isNearbyZipCode(listingZip: string | null, alertZip: string): boolean {
-  if (!listingZip) return false;
-  // Match first 3 digits for regional proximity
-  return listingZip.substring(0, 3) === alertZip.substring(0, 3);
+function extractZip(address: string | null): string | null {
+  if (!address) return null;
+  const m = address.match(/\b(\d{5})(?:-\d{4})?\b/);
+  return m ? m[1] : null;
+}
+
+async function geocodeZip(zip: string): Promise<{ lat: number; lng: number; city?: string; state?: string } | null> {
+  try {
+    const res = await fetch(`https://api.zippopotam.us/us/${zip}`);
+    if (!res.ok) return null;
+    const data = await res.json();
+    const place = data?.places?.[0];
+    if (!place) return null;
+    const lat = Number(place.latitude);
+    const lng = Number(place.longitude);
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+    return { lat, lng, city: place["place name"], state: place["state abbreviation"] };
+  } catch {
+    return null;
+  }
 }
 
 const handler = async (req: Request): Promise<Response> => {
-  // Handle CORS
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
-  }
+  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+    );
 
-    console.log("Starting availability alert job...");
+    const body = await req.json().catch(() => ({}));
+    // Allow operator override; default look-back window = 65 minutes (cron runs hourly).
+    const lookbackMinutes: number = Number(body?.lookback_minutes) || 65;
+    const sinceIso = new Date(Date.now() - lookbackMinutes * 60 * 1000).toISOString();
 
-    // Get listings published in the last hour
-    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
-    
+    console.log(`[availability-alerts] window since ${sinceIso}`);
+
     const { data: newListings, error: listingsError } = await supabase
       .from("listings")
-      .select("id, title, category, mode, address, price_daily, price_sale, cover_image_url, published_at")
+      .select("id, title, category, mode, address, latitude, longitude, price_daily, price_sale, cover_image_url, published_at")
       .eq("status", "published")
-      .gte("published_at", oneHourAgo);
+      .gte("published_at", sinceIso);
 
-    if (listingsError) {
-      console.error("Error fetching listings:", listingsError);
-      throw listingsError;
+    if (listingsError) throw listingsError;
+    if (!newListings?.length) {
+      return new Response(JSON.stringify({ success: true, listings: 0, emails: 0 }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
-    if (!newListings || newListings.length === 0) {
-      console.log("No new listings found in the last hour");
-      return new Response(
-        JSON.stringify({ success: true, message: "No new listings to process" }),
-        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    console.log(`Found ${newListings.length} new listing(s)`);
-
-    // Get all active alerts (not unsubscribed)
     const { data: alerts, error: alertsError } = await supabase
       .from("availability_alerts")
-      .select("*")
+      .select("id, email, name, zip_code, category, mode, radius_miles, latitude, longitude, notified_at")
       .is("unsubscribed_at", null);
 
-    if (alertsError) {
-      console.error("Error fetching alerts:", alertsError);
-      throw alertsError;
+    if (alertsError) throw alertsError;
+    if (!alerts?.length) {
+      return new Response(JSON.stringify({ success: true, listings: newListings.length, emails: 0 }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
-    if (!alerts || alerts.length === 0) {
-      console.log("No active alerts found");
-      return new Response(
-        JSON.stringify({ success: true, message: "No active alerts" }),
-        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+    // Lazily geocode alerts that are missing coordinates.
+    const geocodeCache = new Map<string, { lat: number; lng: number } | null>();
+    const enriched: AvailabilityAlert[] = [];
+    for (const a of alerts as AvailabilityAlert[]) {
+      if (a.latitude != null && a.longitude != null) {
+        enriched.push(a);
+        continue;
+      }
+      const zip = a.zip_code?.match(/^\d{5}$/) ? a.zip_code : extractZip(a.zip_code);
+      if (!zip) {
+        enriched.push(a);
+        continue;
+      }
+      let coords = geocodeCache.get(zip);
+      if (coords === undefined) {
+        coords = await geocodeZip(zip);
+        geocodeCache.set(zip, coords);
+      }
+      if (coords) {
+        await supabase
+          .from("availability_alerts")
+          .update({ latitude: coords.lat, longitude: coords.lng, last_geocoded_at: new Date().toISOString() })
+          .eq("id", a.id);
+        enriched.push({ ...a, latitude: coords.lat, longitude: coords.lng });
+      } else {
+        enriched.push(a);
+      }
     }
-
-    console.log(`Found ${alerts.length} active alert(s)`);
 
     let emailsSent = 0;
-    const processedAlerts: string[] = [];
+    const notifiedThisRun = new Set<string>(); // one email per alert per run
 
-    // For each listing, find matching alerts and send emails
     for (const listing of newListings as Listing[]) {
-      const listingZip = extractZipCode(listing.address);
-      
-      for (const alert of alerts as AvailabilityAlert[]) {
-        // Skip if already processed this alert in this run
-        if (processedAlerts.includes(alert.id)) continue;
-
-        // Check if listing matches alert criteria
-        const categoryMatch = !alert.category || alert.category === listing.category;
-        const modeMatch = !alert.mode || alert.mode === listing.mode;
-        const locationMatch = isNearbyZipCode(listingZip, alert.zip_code);
-
-        if (categoryMatch && modeMatch && locationMatch) {
-          console.log(`Match found: Alert ${alert.id} matches listing ${listing.id}`);
-
-          // Format price
-          const price = listing.mode === "rent" 
-            ? `$${listing.price_daily?.toLocaleString()}/day` 
-            : `$${listing.price_sale?.toLocaleString()}`;
-
-          // Format category for display
-          const categoryLabels: Record<string, string> = {
-            food_truck: "Food Truck",
-            food_trailer: "Food Trailer",
-            ghost_kitchen: "Shared Kitchen",
-            vendor_lot: "Vendor Lot",
-          };
-          const categoryLabel = categoryLabels[listing.category] || listing.category;
-
-          try {
-            const { error: emailError } = await supabase.functions.invoke("send-transactional-email", {
-              body: {
-                templateName: "new-message",
-                recipientEmail: alert.email,
-                idempotencyKey: `availability-${alert.id}-${listing.id}`,
-                templateData: {
-                  name: "there",
-                  subject: `New ${categoryLabel} Available Near You!`,
-                  message: `${listing.title} just went live in zip code area ${alert.zip_code}. ${categoryLabel} — ${price}.`,
-                  ctaUrl: `https://vendibook.com/listing/${listing.id}`,
-                  ctaLabel: "View Listing",
-                  listingId: listing.id,
-                  listingTitle: listing.title,
-                },
-              },
-            });
-            if (emailError) {
-              console.error(`Email invoke error:`, emailError);
-            } else {
-              emailsSent++;
-              processedAlerts.push(alert.id);
-              await supabase
-                .from("availability_alerts")
-                .update({ notified_at: new Date().toISOString() })
-                .eq("id", alert.id);
-            }
-          } catch (emailError) {
-            console.error(`Failed to send email to ${alert.email}:`, emailError);
+      // Resolve listing coords (fall back to ZIP centroid if missing).
+      let lLat = listing.latitude;
+      let lLng = listing.longitude;
+      let lCity: string | undefined;
+      let lState: string | undefined;
+      if (lLat == null || lLng == null) {
+        const zip = extractZip(listing.address);
+        if (zip) {
+          let coords = geocodeCache.get(zip);
+          if (coords === undefined) {
+            const g = await geocodeZip(zip);
+            geocodeCache.set(zip, g);
+            coords = g;
+            if (g) { lCity = g.city; lState = g.state; }
           }
+          if (coords) { lLat = coords.lat; lLng = coords.lng; }
+        }
+      }
+      if (lLat == null || lLng == null) continue;
+
+      for (const alert of enriched) {
+        if (notifiedThisRun.has(alert.id)) continue;
+        if (alert.latitude == null || alert.longitude == null) continue;
+
+        if (alert.category && alert.category !== listing.category) continue;
+        if (alert.mode && alert.mode !== listing.mode) continue;
+
+        const radius = alert.radius_miles ?? 50;
+        const distance = haversineMiles(alert.latitude, alert.longitude, lLat, lLng);
+        if (distance > radius) continue;
+
+        const categoryLabel = CATEGORY_LABELS[listing.category] || listing.category;
+        const modeLabel = listing.mode === "rent" ? "For Rent" : "For Sale";
+        const priceLabel = listing.mode === "rent"
+          ? (listing.price_daily ? `$${listing.price_daily.toLocaleString()}/day` : "")
+          : (listing.price_sale ? `$${listing.price_sale.toLocaleString()}` : "");
+
+        try {
+          const { error: emailError } = await supabase.functions.invoke("send-transactional-email", {
+            body: {
+              templateName: "new-listing-alert",
+              recipientEmail: alert.email,
+              idempotencyKey: `availability-${alert.id}-${listing.id}`,
+              templateData: {
+                name: alert.name || undefined,
+                listingTitle: listing.title,
+                listingId: listing.id,
+                categoryLabel,
+                modeLabel,
+                priceLabel,
+                city: lCity,
+                state: lState,
+                distanceMiles: distance,
+                coverImageUrl: listing.cover_image_url || undefined,
+              },
+            },
+          });
+          if (emailError) {
+            console.error(`[availability-alerts] email error for ${alert.email}`, emailError);
+            continue;
+          }
+          emailsSent++;
+          notifiedThisRun.add(alert.id);
+          await supabase
+            .from("availability_alerts")
+            .update({ notified_at: new Date().toISOString() })
+            .eq("id", alert.id);
+        } catch (e) {
+          console.error(`[availability-alerts] invoke failed`, e);
         }
       }
     }
 
-    console.log(`Job complete. Sent ${emailsSent} email(s)`);
-
+    console.log(`[availability-alerts] done. listings=${newListings.length} emails=${emailsSent}`);
     return new Response(
-      JSON.stringify({ 
-        success: true, 
-        listings_processed: newListings.length,
-        emails_sent: emailsSent 
-      }),
-      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      JSON.stringify({ success: true, listings: newListings.length, emails: emailsSent }),
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
-
   } catch (error: any) {
-    console.error("Error in availability alert job:", error);
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    console.error("[availability-alerts] fatal", error);
+    return new Response(JSON.stringify({ error: error.message }), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   }
 };
 
