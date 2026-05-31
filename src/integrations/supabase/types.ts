@@ -241,6 +241,9 @@ export type Database = {
           created_at: string
           email: string
           id: string
+          last_geocoded_at: string | null
+          latitude: number | null
+          longitude: number | null
           mode: string | null
           name: string | null
           notified_at: string | null
@@ -254,6 +257,9 @@ export type Database = {
           created_at?: string
           email: string
           id?: string
+          last_geocoded_at?: string | null
+          latitude?: number | null
+          longitude?: number | null
           mode?: string | null
           name?: string | null
           notified_at?: string | null
@@ -267,6 +273,9 @@ export type Database = {
           created_at?: string
           email?: string
           id?: string
+          last_geocoded_at?: string | null
+          latitude?: number | null
+          longitude?: number | null
           mode?: string | null
           name?: string | null
           notified_at?: string | null
