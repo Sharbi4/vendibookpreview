@@ -257,23 +257,34 @@ export const AuthFormPanel = ({ mode, setMode }: AuthFormPanelProps) => {
             trackSignupConversion({ method: 'email', user_type: 'shopper' });
           }
 
-          // Fire AI orchestrator for welcome message (fire-and-forget)
+          // Detect whether the user already has an active session
+          // (auto-confirm enabled) vs needs to verify their email.
+          let hasSession = false;
           try {
-            const { data: { user: newUser } } = await supabase.auth.getUser();
-            if (newUser?.id) {
+            const { data: { session: newSession } } = await supabase.auth.getSession();
+            hasSession = !!newSession?.user;
+            if (newSession?.user?.id) {
               triggerOrchestrator({
-                user_id: newUser.id,
+                user_id: newSession.user.id,
                 event_type: 'user_signup',
                 payload: { role: selectedRole, first_name: trimmedFirstName },
               });
             }
           } catch {}
-          
-          toast({
-            title: 'Check your email!',
-            description: 'We sent you a verification link. Please check your inbox to complete signup.',
-          });
-          setMode('verify');
+
+          if (hasSession) {
+            toast({
+              title: 'Welcome to Vendibook!',
+              description: 'Your account is ready.',
+            });
+            navigate(redirectUrl !== '/' ? redirectUrl : '/dashboard');
+          } else {
+            toast({
+              title: 'Check your email!',
+              description: 'We sent you a verification link. Please check your inbox to complete signup.',
+            });
+            setMode('verify');
+          }
         }
       } else {
         trackLoginAttempt('email');
