@@ -237,4 +237,8 @@ verify_jwt = false
 [functions.send-blog-broadcast-once]
 verify_jwt = false
 
+[functions.log-error-event]
+verify_jwt = false
+
+
 
