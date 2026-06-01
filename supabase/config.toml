@@ -230,3 +230,7 @@ verify_jwt = false
 
 [functions.send-blog-test-once]
 verify_jwt = false
+
+[functions.blog-subscribe]
+verify_jwt = false
+

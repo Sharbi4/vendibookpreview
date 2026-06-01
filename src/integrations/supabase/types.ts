@@ -322,6 +322,36 @@ export type Database = {
         }
         Relationships: []
       }
+      blog_subscribers: {
+        Row: {
+          confirmed: boolean
+          created_at: string
+          email: string
+          id: string
+          name: string | null
+          source: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          confirmed?: boolean
+          created_at?: string
+          email: string
+          id?: string
+          name?: string | null
+          source?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          confirmed?: boolean
+          created_at?: string
+          email?: string
+          id?: string
+          name?: string | null
+          source?: string | null
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
       booking_documents: {
         Row: {
           booking_id: string

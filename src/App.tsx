@@ -117,6 +117,7 @@ const ReferralAdmin = lazy(() => import("./pages/ReferralAdmin"));
 const RHandler = lazy(() => import("./pages/RHandler"));
 const AdminEmailDashboard = lazy(() => import("./pages/AdminEmailDashboard"));
 const AdminCampaignNewExitPlan = lazy(() => import("./pages/AdminCampaignNewExitPlan"));
+const Subscribe = lazy(() => import("./pages/Subscribe"));
 const EmailFeedbackThanks = lazy(() => import("./pages/EmailFeedbackThanks"));
 const CategoryCityPage = lazy(() => import("./pages/CategoryCityPage"));
 const CategoryIndex = lazy(() => import("./pages/CategoryIndex"));
@@ -310,6 +311,7 @@ const AnimatedRoutes = () => {
           <Route path="/blog" element={<PageTransition><Blog /></PageTransition>} />
           <Route path="/blog/:slug" element={<PageTransition><BlogPost /></PageTransition>} />
           <Route path="/blog/category/:category" element={<PageTransition><BlogCategory /></PageTransition>} />
+          <Route path="/subscribe" element={<PageTransition><Subscribe /></PageTransition>} />
           
           {/* Programmatic SEO: category + city + mode pages */}
           <Route path="/rent/:categorySlug/:cityStateSlug" element={<PageTransition><CategoryCityPage mode="rent" /></PageTransition>} />
