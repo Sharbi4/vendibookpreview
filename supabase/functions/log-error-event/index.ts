@@ -170,14 +170,17 @@ Deno.serve(async (req) => {
       ].join("\n");
 
       try {
-        await admin.functions.invoke("send-transactional-email", {
-          body: {
-            templateName: "admin-daily-digest",
-            recipientEmail: ADMIN_EMAIL,
-            idempotencyKey: `error-alert-${fingerprint}-${Math.floor(Date.now() / (ALERT_COOLDOWN_MINUTES * 60_000))}`,
-            templateData: { subject, summary: subject, details },
-          },
-        });
+        const idemBucket = Math.floor(Date.now() / (ALERT_COOLDOWN_MINUTES * 60_000));
+        for (const recipient of [ADMIN_EMAIL, ADMIN_CC_EMAIL]) {
+          await admin.functions.invoke("send-transactional-email", {
+            body: {
+              templateName: "admin-daily-digest",
+              recipientEmail: recipient,
+              idempotencyKey: `error-alert-${fingerprint}-${idemBucket}-${recipient}`,
+              templateData: { subject, summary: subject, details },
+            },
+          });
+        }
         alertSent = true;
 
         await admin.from("error_events")
