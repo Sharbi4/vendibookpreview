@@ -29,7 +29,7 @@ function buildHtml(unsubUrl: string) {
 <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;">${PREVIEW}</div>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f5f5f4;padding:24px 12px;"><tr><td align="center">
 <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,0.04);">
-<tr><td align="center" style="padding:32px 32px 12px 32px;"><img src="${LOGO_IMG}" alt="Vendibook" height="64" style="height:64px;width:auto;display:inline-block;border:0;"></td></tr>
+<tr><td align="center" style="padding:32px 32px 12px 32px;"><img src="${LOGO_IMG}" alt="Vendibook" height="128" style="height:128px;width:auto;display:inline-block;border:0;"></td></tr>
 <tr><td style="padding:8px 24px 0 24px;"><img src="${HERO_IMG}" alt="The New Exit Plan" width="552" style="width:100%;height:auto;border-radius:12px;display:block;border:0;"></td></tr>
 <tr><td style="padding:28px 32px 0 32px;">
 <p style="margin:0 0 10px 0;font-size:12px;letter-spacing:0.18em;text-transform:uppercase;color:#ff5124;font-weight:700;">From Vendibook</p>
