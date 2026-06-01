@@ -45,6 +45,7 @@ import { template as genericNotice } from './generic-notice.tsx'
 import { template as referralOnboarding } from './referral-onboarding.tsx'
 import { template as referralPostTxPs } from './referral-post-tx-ps.tsx'
 import { template as newListingAlert } from './new-listing-alert.tsx'
+import { template as accountReadyRecovery } from './account-ready-recovery.tsx'
 
 export const TEMPLATES: Record<string, TemplateEntry> = {
   'booking-abandoned': bookingAbandoned,
@@ -83,4 +84,5 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'referral-onboarding': referralOnboarding,
   'referral-post-tx-ps': referralPostTxPs,
   'new-listing-alert': newListingAlert,
+  'account-ready-recovery': accountReadyRecovery,
 }
