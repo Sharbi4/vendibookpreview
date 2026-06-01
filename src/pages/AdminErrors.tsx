@@ -121,7 +121,7 @@ const AdminErrors = () => {
     return { high, total };
   }, [events]);
 
-  if (authLoading || !isAdmin) {
+  if (authLoading || checkingAdmin || !isAdmin) {
     return (
       <div className="min-h-screen bg-background">
         <Header />
@@ -130,6 +130,7 @@ const AdminErrors = () => {
       </div>
     );
   }
+
 
   return (
     <div className="min-h-screen bg-background">
