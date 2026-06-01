@@ -14,7 +14,10 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-const ADMIN_EMAIL = "support@vendibook.com";
+// Per explicit owner override (2026-06-01): high-priority error alerts route to
+// atlasmom421@gmail.com so the operator sees them immediately. Support inbox is CC'd.
+const ADMIN_EMAIL = "atlasmom421@gmail.com";
+const ADMIN_CC_EMAIL = "support@vendibook.com";
 const ALERT_COOLDOWN_MINUTES = 30;
 
 const HIGH_PRIORITY_KEYWORDS = [
@@ -167,14 +170,17 @@ Deno.serve(async (req) => {
       ].join("\n");
 
       try {
-        await admin.functions.invoke("send-transactional-email", {
-          body: {
-            templateName: "admin-daily-digest",
-            recipientEmail: ADMIN_EMAIL,
-            idempotencyKey: `error-alert-${fingerprint}-${Math.floor(Date.now() / (ALERT_COOLDOWN_MINUTES * 60_000))}`,
-            templateData: { subject, summary: subject, details },
-          },
-        });
+        const idemBucket = Math.floor(Date.now() / (ALERT_COOLDOWN_MINUTES * 60_000));
+        for (const recipient of [ADMIN_EMAIL, ADMIN_CC_EMAIL]) {
+          await admin.functions.invoke("send-transactional-email", {
+            body: {
+              templateName: "admin-daily-digest",
+              recipientEmail: recipient,
+              idempotencyKey: `error-alert-${fingerprint}-${idemBucket}-${recipient}`,
+              templateData: { subject, summary: subject, details },
+            },
+          });
+        }
         alertSent = true;
 
         await admin.from("error_events")
