@@ -115,18 +115,21 @@ serve(async (req) => {
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
 
-    // Admin gate via caller JWT
-    const authHeader = req.headers.get("Authorization") ?? "";
-    const token = authHeader.replace("Bearer ", "");
-    if (!token) return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-    const userClient = createClient(supabaseUrl, anonKey, { global: { headers: { Authorization: `Bearer ${token}` } } });
-    const { data: userRes } = await userClient.auth.getUser();
-    const callerId = userRes?.user?.id;
-    if (!callerId) return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-
+    // Admin gate: either a service-account secret header (for agent-triggered sends) or caller JWT with admin role
     const admin = createClient(supabaseUrl, serviceKey);
-    const { data: isAdmin } = await admin.rpc("has_role", { _user_id: callerId, _role: "admin" });
-    if (!isAdmin) return new Response(JSON.stringify({ error: "Forbidden" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    const svcSecret = Deno.env.get("SERVICE_ACCOUNT_SECRET");
+    const svcHeader = req.headers.get("x-service-account-secret");
+    if (!(svcSecret && svcHeader && svcHeader === svcSecret)) {
+      const authHeader = req.headers.get("Authorization") ?? "";
+      const token = authHeader.replace("Bearer ", "");
+      if (!token) return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      const userClient = createClient(supabaseUrl, anonKey, { global: { headers: { Authorization: `Bearer ${token}` } } });
+      const { data: userRes } = await userClient.auth.getUser();
+      const callerId = userRes?.user?.id;
+      if (!callerId) return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      const { data: isAdmin } = await admin.rpc("has_role", { _user_id: callerId, _role: "admin" });
+      if (!isAdmin) return new Response(JSON.stringify({ error: "Forbidden" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
 
     const body = await req.json().catch(() => ({}));
     const mode: "test" | "broadcast" | "preview_count" = body.mode ?? "preview_count";
