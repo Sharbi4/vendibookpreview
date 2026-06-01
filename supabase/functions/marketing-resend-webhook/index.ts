@@ -53,8 +53,15 @@ serve(async (req) => {
     const type: string = payload.type ?? "";
     const data = payload.data ?? {};
     const recipient: string | undefined = Array.isArray(data.to) ? data.to[0] : data.to;
-    const tags: any[] = data.tags ?? [];
-    const isMarketing = tags.some((t) => t.name === "type" && (t.value === "marketing" || t.value === "marketing_test"));
+    // Resend may send tags as an array of {name,value} OR as a plain object map {key: value}.
+    // Normalize to an array of {name,value} so .some() always works.
+    const rawTags = data.tags;
+    const tags: Array<{ name: string; value: string }> = Array.isArray(rawTags)
+      ? rawTags
+      : rawTags && typeof rawTags === "object"
+        ? Object.entries(rawTags).map(([name, value]) => ({ name, value: String(value) }))
+        : [];
+    const isMarketing = tags.some((t) => t?.name === "type" && (t?.value === "marketing" || t?.value === "marketing_test"));
     if (!isMarketing) return new Response("ignored", { status: 200 });
 
     const map: Record<string, string> = {
