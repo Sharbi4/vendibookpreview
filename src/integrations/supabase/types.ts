@@ -1327,6 +1327,105 @@ export type Database = {
         }
         Relationships: []
       }
+      error_events: {
+        Row: {
+          action: string | null
+          alert_count: number
+          alert_sent_at: string | null
+          boost_id: string | null
+          created_at: string
+          endpoint: string | null
+          error_message: string | null
+          error_type: string | null
+          fingerprint: string
+          id: string
+          internal_notes: string | null
+          listing_id: string | null
+          metadata: Json
+          method: string | null
+          occurred_at: string
+          page_url: string | null
+          payment_id: string | null
+          priority: string
+          reference_code: string
+          resolved: boolean
+          resolved_at: string | null
+          resolved_by: string | null
+          session_id: string | null
+          source: string
+          stack: string | null
+          status_code: number | null
+          updated_at: string
+          user_agent: string | null
+          user_email: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action?: string | null
+          alert_count?: number
+          alert_sent_at?: string | null
+          boost_id?: string | null
+          created_at?: string
+          endpoint?: string | null
+          error_message?: string | null
+          error_type?: string | null
+          fingerprint: string
+          id?: string
+          internal_notes?: string | null
+          listing_id?: string | null
+          metadata?: Json
+          method?: string | null
+          occurred_at?: string
+          page_url?: string | null
+          payment_id?: string | null
+          priority?: string
+          reference_code: string
+          resolved?: boolean
+          resolved_at?: string | null
+          resolved_by?: string | null
+          session_id?: string | null
+          source?: string
+          stack?: string | null
+          status_code?: number | null
+          updated_at?: string
+          user_agent?: string | null
+          user_email?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string | null
+          alert_count?: number
+          alert_sent_at?: string | null
+          boost_id?: string | null
+          created_at?: string
+          endpoint?: string | null
+          error_message?: string | null
+          error_type?: string | null
+          fingerprint?: string
+          id?: string
+          internal_notes?: string | null
+          listing_id?: string | null
+          metadata?: Json
+          method?: string | null
+          occurred_at?: string
+          page_url?: string | null
+          payment_id?: string | null
+          priority?: string
+          reference_code?: string
+          resolved?: boolean
+          resolved_at?: string | null
+          resolved_by?: string | null
+          session_id?: string | null
+          source?: string
+          stack?: string | null
+          status_code?: number | null
+          updated_at?: string
+          user_agent?: string | null
+          user_email?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       favorites: {
         Row: {
           created_at: string
