@@ -192,6 +192,9 @@ const ListingPublished: React.FC = () => {
 
       {/* Share Kit */}
       <div className="container max-w-2xl mx-auto px-4 py-12">
+        {user?.id && listingId && (
+          <PublishStatusSummary listingId={listingId} hostId={user.id} />
+        )}
         <ShareKit listing={listing} onClose={handleClose} />
       </div>
 
