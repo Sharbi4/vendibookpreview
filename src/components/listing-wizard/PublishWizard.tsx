@@ -1490,10 +1490,11 @@ export const PublishWizard: React.FC = () => {
         return; // Exit early - webhook will handle publishing after payment
       }
 
-      // If Featured Listing is enabled and not already paid for, redirect to checkout for the $30 fee.
-      // This works for both rental and sale listings.
-      const listingAlreadyFeatured = !!(listing as any).featured_at;
-      if (featuredEnabled && !listingAlreadyFeatured) {
+      // If Featured Listing is enabled and not already active/comped, redirect to checkout for the $30 fee.
+      // Pending complimentary boosts are applied by the database trigger when status changes to published.
+      const listingHasPendingFeatured = !!listing.pending_featured_payment;
+      const listingAlreadyFeatured = isListingFeatured(listing);
+      if (featuredEnabled && !listingAlreadyFeatured && !listingHasPendingFeatured) {
         const { error: persistError } = await supabase
           .from('listings')
           .update({ ...baseUpdateData, ...pricingUpdateData })
