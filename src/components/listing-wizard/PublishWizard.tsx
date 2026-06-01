@@ -1549,6 +1549,7 @@ export const PublishWizard: React.FC = () => {
         .update({
           ...baseUpdateData,
           ...pricingUpdateData,
+          ...(listingHasPendingFeatured ? { featured_enabled: false } : {}),
           status: 'published',
           // Only set published_at if this is the first time publishing
           ...(isFirstTimePublish ? { published_at: new Date().toISOString() } : {}),
