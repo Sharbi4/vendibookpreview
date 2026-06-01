@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Eye, Calendar, Heart, MessageSquare, MapPin, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -29,6 +30,9 @@ const pick = <T,>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)];
  * pill in the bottom-left of the viewport.
  */
 export const LiveActivityFeed = () => {
+  const { pathname } = useLocation();
+  // Only show on listing detail pages — keeps homepage/chat-widget areas clear.
+  const allowed = /^\/(listing|listings)\//.test(pathname);
   const [events, setEvents] = useState<Event[]>([]);
   const [activeIdx, setActiveIdx] = useState(0);
   const [visible, setVisible] = useState(true);
@@ -140,7 +144,7 @@ export const LiveActivityFeed = () => {
     return `${h}h ago`;
   }, [current]);
 
-  if (!current || hidden) return null;
+  if (!allowed || !current || hidden) return null;
 
   return (
     <div
