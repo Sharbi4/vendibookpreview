@@ -234,3 +234,7 @@ verify_jwt = false
 [functions.blog-subscribe]
 verify_jwt = false
 
+[functions.send-blog-broadcast-once]
+verify_jwt = false
+
+
