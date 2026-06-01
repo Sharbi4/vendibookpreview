@@ -40,16 +40,12 @@ export default function Subscribe() {
     }
   }
 
+  useEffect(() => {
+    document.title = "Subscribe to Vendibook — Stories, listings, and insights";
+  }, []);
+
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <Helmet>
-        <title>Subscribe to Vendibook — Stories, listings, and insights</title>
-        <meta
-          name="description"
-          content="Subscribe to Vendibook for stories, new listings, financing breakdowns, and insights from the mobile food economy."
-        />
-        <link rel="canonical" href="https://vendibook.com/subscribe" />
-      </Helmet>
 
       <main className="mx-auto max-w-3xl px-4 sm:px-6 py-16 sm:py-24">
         {!success ? (
