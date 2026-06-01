@@ -113,6 +113,12 @@
     <!-- Start of Tawk.to Script -->
     <script type="text/javascript">
       var Tawk_API = Tawk_API || {}, Tawk_LoadStart = new Date();
+      // Auto-minimize the greeting bubble after 5s so it doesn't cover the page
+      Tawk_API.onLoad = function(){
+        setTimeout(function(){
+          try { Tawk_API.minimize && Tawk_API.minimize(); } catch(e) {}
+        }, 5000);
+      };
       (function(){
         var s1 = document.createElement("script"), s0 = document.getElementsByTagName("script")[0];
         s1.async = true;
