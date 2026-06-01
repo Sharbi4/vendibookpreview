@@ -286,6 +286,42 @@ export type Database = {
         }
         Relationships: []
       }
+      blog_campaign_sends: {
+        Row: {
+          campaign_id: string
+          created_at: string
+          email: string
+          error_message: string | null
+          id: string
+          is_test: boolean
+          resend_message_id: string | null
+          status: string
+          user_id: string | null
+        }
+        Insert: {
+          campaign_id: string
+          created_at?: string
+          email: string
+          error_message?: string | null
+          id?: string
+          is_test?: boolean
+          resend_message_id?: string | null
+          status?: string
+          user_id?: string | null
+        }
+        Update: {
+          campaign_id?: string
+          created_at?: string
+          email?: string
+          error_message?: string | null
+          id?: string
+          is_test?: boolean
+          resend_message_id?: string | null
+          status?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       booking_documents: {
         Row: {
           booking_id: string

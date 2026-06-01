@@ -116,6 +116,7 @@ const ReferralTerms = lazy(() => import("./pages/ReferralTerms"));
 const ReferralAdmin = lazy(() => import("./pages/ReferralAdmin"));
 const RHandler = lazy(() => import("./pages/RHandler"));
 const AdminEmailDashboard = lazy(() => import("./pages/AdminEmailDashboard"));
+const AdminCampaignNewExitPlan = lazy(() => import("./pages/AdminCampaignNewExitPlan"));
 const EmailFeedbackThanks = lazy(() => import("./pages/EmailFeedbackThanks"));
 const CategoryCityPage = lazy(() => import("./pages/CategoryCityPage"));
 const CategoryIndex = lazy(() => import("./pages/CategoryIndex"));
@@ -224,6 +225,7 @@ const AnimatedRoutes = () => {
           <Route path="/admin/digest" element={<PageTransition><AdminDigest /></PageTransition>} />
           <Route path="/admin/orchestration" element={<PageTransition><AdminOrchestration /></PageTransition>} />
           <Route path="/admin/email/dashboard" element={<PageTransition><AdminEmailDashboard /></PageTransition>} />
+          <Route path="/admin/campaigns/new-exit-plan" element={<PageTransition><AdminCampaignNewExitPlan /></PageTransition>} />
           <Route path="/email/thanks" element={<PageTransition><EmailFeedbackThanks /></PageTransition>} />
           <Route path="/notification-preferences" element={<PageTransition><NotificationPreferences /></PageTransition>} />
           <Route path="/help" element={<PageTransition><HelpCenter /></PageTransition>} />
