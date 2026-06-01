@@ -144,7 +144,7 @@ export const LiveActivityFeed = () => {
     return `${h}h ago`;
   }, [current]);
 
-  if (!current || hidden) return null;
+  if (!allowed || !current || hidden) return null;
 
   return (
     <div
