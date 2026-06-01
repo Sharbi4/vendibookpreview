@@ -55,6 +55,7 @@ import {
   RENTAL_HOST_FEE_PERCENT,
   SALE_SELLER_FEE_PERCENT,
 } from '@/lib/commissions';
+import { isListingFeatured } from '@/lib/featured';
 
 type PublishStep = 'photos' | 'headline' | 'includes' | 'pricing' | 'details' | 'location' | 'availability' | 'documents' | 'stripe' | 'review';
 
@@ -102,6 +103,10 @@ interface ListingData {
   is_static_location?: boolean;
   latitude: number | null;
   longitude: number | null;
+  featured_enabled?: boolean | null;
+  featured_at?: string | null;
+  featured_expires_at?: string | null;
+  pending_featured_payment?: unknown;
 }
 
 interface RentalSuggestions {
@@ -1485,10 +1490,11 @@ export const PublishWizard: React.FC = () => {
         return; // Exit early - webhook will handle publishing after payment
       }
 
-      // If Featured Listing is enabled and not already paid for, redirect to checkout for the $30 fee.
-      // This works for both rental and sale listings.
-      const listingAlreadyFeatured = !!(listing as any).featured_at;
-      if (featuredEnabled && !listingAlreadyFeatured) {
+      // If Featured Listing is enabled and not already active/comped, redirect to checkout for the $30 fee.
+      // Pending complimentary boosts are applied by the database trigger when status changes to published.
+      const listingHasPendingFeatured = !!listing.pending_featured_payment;
+      const listingAlreadyFeatured = isListingFeatured(listing);
+      if (featuredEnabled && !listingAlreadyFeatured && !listingHasPendingFeatured) {
         const { error: persistError } = await supabase
           .from('listings')
           .update({ ...baseUpdateData, ...pricingUpdateData })
@@ -1543,6 +1549,7 @@ export const PublishWizard: React.FC = () => {
         .update({
           ...baseUpdateData,
           ...pricingUpdateData,
+          ...(listingHasPendingFeatured ? { featured_enabled: false } : {}),
           status: 'published',
           // Only set published_at if this is the first time publishing
           ...(isFirstTimePublish ? { published_at: new Date().toISOString() } : {}),
