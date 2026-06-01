@@ -345,9 +345,17 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Apply sorting
+    // Featured-first PRIMARY sort key — boosted listings always surface
+    // on page 1 regardless of the secondary sort. Mirrors src/lib/featured.ts.
+    const nowIso = new Date().toISOString();
+    const isFeatured = (l: any) =>
+      !!(l.featured_enabled && l.featured_expires_at && l.featured_expires_at > nowIso);
+
+    // Apply sorting (featured-first, then requested order)
     if (sort_by === 'distance' && latitude !== undefined && longitude !== undefined) {
       filteredListings.sort((a, b) => {
+        const fa = isFeatured(a), fb = isFeatured(b);
+        if (fa !== fb) return fa ? -1 : 1;
         if (a.distance_miles === null && b.distance_miles === null) return 0;
         if (a.distance_miles === null) return 1;
         if (b.distance_miles === null) return -1;
@@ -355,33 +363,37 @@ Deno.serve(async (req) => {
       });
     } else if (sort_by === 'price_low') {
       filteredListings.sort((a, b) => {
-        // For rentals, use daily price if available, otherwise hourly
+        const fa = isFeatured(a), fb = isFeatured(b);
+        if (fa !== fb) return fa ? -1 : 1;
         const priceA = a.mode === 'rent' ? (a.price_daily || a.price_hourly || 0) : (a.price_sale || 0);
         const priceB = b.mode === 'rent' ? (b.price_daily || b.price_hourly || 0) : (b.price_sale || 0);
         return priceA - priceB;
       });
     } else if (sort_by === 'price_high') {
       filteredListings.sort((a, b) => {
-        // For rentals, use daily price if available, otherwise hourly
+        const fa = isFeatured(a), fb = isFeatured(b);
+        if (fa !== fb) return fa ? -1 : 1;
         const priceA = a.mode === 'rent' ? (a.price_daily || a.price_hourly || 0) : (a.price_sale || 0);
         const priceB = b.mode === 'rent' ? (b.price_daily || b.price_hourly || 0) : (b.price_sale || 0);
         return priceB - priceA;
       });
     } else if (sort_by === 'relevance' && query && query.trim()) {
-      // For relevance, prioritize title matches over description matches
       const searchLower = query.toLowerCase();
       filteredListings.sort((a, b) => {
+        const fa = isFeatured(a), fb = isFeatured(b);
+        if (fa !== fb) return fa ? -1 : 1;
         const aTitleMatch = a.title?.toLowerCase().includes(searchLower) ? 0 : 1;
         const bTitleMatch = b.title?.toLowerCase().includes(searchLower) ? 0 : 1;
         if (aTitleMatch !== bTitleMatch) return aTitleMatch - bTitleMatch;
-        // Secondary sort by newest
         return new Date(b.published_at || b.created_at).getTime() - new Date(a.published_at || a.created_at).getTime();
       });
     } else {
-      // Default: newest
-      filteredListings.sort((a, b) => 
-        new Date(b.published_at || b.created_at).getTime() - new Date(a.published_at || a.created_at).getTime()
-      );
+      // Default: newest (featured-first)
+      filteredListings.sort((a, b) => {
+        const fa = isFeatured(a), fb = isFeatured(b);
+        if (fa !== fb) return fa ? -1 : 1;
+        return new Date(b.published_at || b.created_at).getTime() - new Date(a.published_at || a.created_at).getTime();
+      });
     }
 
     // Calculate total after all filters
