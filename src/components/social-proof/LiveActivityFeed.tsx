@@ -30,6 +30,9 @@ const pick = <T,>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)];
  * pill in the bottom-left of the viewport.
  */
 export const LiveActivityFeed = () => {
+  const { pathname } = useLocation();
+  // Only show on listing detail pages — keeps homepage/chat-widget areas clear.
+  const allowed = /^\/(listing|listings)\//.test(pathname);
   const [events, setEvents] = useState<Event[]>([]);
   const [activeIdx, setActiveIdx] = useState(0);
   const [visible, setVisible] = useState(true);
