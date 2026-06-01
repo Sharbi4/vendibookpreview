@@ -117,6 +117,7 @@ const ReferralAdmin = lazy(() => import("./pages/ReferralAdmin"));
 const RHandler = lazy(() => import("./pages/RHandler"));
 const AdminEmailDashboard = lazy(() => import("./pages/AdminEmailDashboard"));
 const AdminCampaignNewExitPlan = lazy(() => import("./pages/AdminCampaignNewExitPlan"));
+const Subscribe = lazy(() => import("./pages/Subscribe"));
 const EmailFeedbackThanks = lazy(() => import("./pages/EmailFeedbackThanks"));
 const CategoryCityPage = lazy(() => import("./pages/CategoryCityPage"));
 const CategoryIndex = lazy(() => import("./pages/CategoryIndex"));
