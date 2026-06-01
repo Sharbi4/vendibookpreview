@@ -227,3 +227,6 @@ verify_jwt = false
 
 [functions.marketing-resend-webhook]
 verify_jwt = false
+
+[functions.send-blog-test-once]
+verify_jwt = false
