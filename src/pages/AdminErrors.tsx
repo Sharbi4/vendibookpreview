@@ -53,19 +53,34 @@ type PriorityFilter = "all" | "high" | "normal";
 type StatusFilter = "all" | "unresolved" | "resolved";
 
 const AdminErrors = () => {
-  const { hasRole, isLoading: authLoading } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [events, setEvents] = useState<ErrorEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [priority, setPriority] = useState<PriorityFilter>("all");
   const [status, setStatus] = useState<StatusFilter>("unresolved");
   const [search, setSearch] = useState("");
-
-  const isAdmin = hasRole("admin");
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [checkingAdmin, setCheckingAdmin] = useState(true);
 
   useEffect(() => {
-    if (!authLoading && !isAdmin) navigate("/", { replace: true });
-  }, [authLoading, isAdmin, navigate]);
+    const check = async () => {
+      if (!user) { setCheckingAdmin(false); return; }
+      const { data } = await supabase.rpc("is_admin", { user_id: user.id });
+      setIsAdmin(!!data);
+      setCheckingAdmin(false);
+    };
+    check();
+  }, [user]);
+
+  useEffect(() => {
+    if (!authLoading && !user) navigate("/auth");
+  }, [authLoading, user, navigate]);
+
+  useEffect(() => {
+    if (!checkingAdmin && !isAdmin && user) navigate("/", { replace: true });
+  }, [checkingAdmin, isAdmin, user, navigate]);
+
 
   const load = async () => {
     setLoading(true);
