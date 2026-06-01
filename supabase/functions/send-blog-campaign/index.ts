@@ -15,7 +15,8 @@ const SUBJECT = "A Food Truck, a Recipe, and a Fresh Start";
 const PREVIEW = "As AI reshapes work, more people are turning recipes, trucks, trailers, and shared kitchens into a path toward ownership.";
 const ARTICLE_URL = "https://vendibook.com/blog/new-exit-plan-food-truck-after-layoffs";
 const HOME_URL = "https://vendibook.com";
-const HERO_IMG = "https://vendibook.com/images/blog/new-exit-plan-food-truck.png";
+const SUBSCRIBE_URL = "https://vendibook.com/blog";
+const HERO_IMG = "https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/email-assets/blog/new-exit-plan-food-truck.png";
 const LOGO_IMG = "https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/email-assets/vendibook-email-logo.png";
 const FROM = "Vendibook <hello@updates.vendibook.com>";
 const REPLY_TO = "support@vendibook.com";
@@ -34,10 +35,10 @@ function buildHtml(unsubUrl: string) {
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f5f5f4;padding:24px 12px;">
   <tr><td align="center">
     <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,0.04);">
-      <tr><td style="padding:28px 32px 8px 32px;">
-        <img src="${LOGO_IMG}" alt="Vendibook" height="36" style="height:36px;display:block;border:0;">
+      <tr><td align="center" style="padding:32px 32px 12px 32px;">
+        <img src="${LOGO_IMG}" alt="Vendibook" height="64" style="height:64px;width:auto;display:inline-block;border:0;">
       </td></tr>
-      <tr><td style="padding:16px 24px 0 24px;">
+      <tr><td style="padding:8px 24px 0 24px;">
         <img src="${HERO_IMG}" alt="The New Exit Plan" width="552" style="width:100%;height:auto;border-radius:12px;display:block;border:0;">
       </td></tr>
       <tr><td style="padding:28px 32px 0 32px;">
@@ -45,24 +46,23 @@ function buildHtml(unsubUrl: string) {
         <h1 style="margin:0 0 18px 0;font-size:28px;line-height:1.2;font-weight:700;color:#0a0a0a;letter-spacing:-0.01em;">The New Exit Plan: A Food Truck, a Recipe, and a Fresh Start After Layoffs</h1>
       </td></tr>
       <tr><td style="padding:8px 32px 0 32px;font-size:16px;line-height:1.65;color:#262626;">
-        <p style="margin:0 0 16px 0;">There is a moment a lot of people are experiencing right now.</p>
-        <p style="margin:0 0 16px 0;">The meeting invite with no context. The HR call. The carefully worded message about restructuring, realignment, or workforce reduction.</p>
-        <p style="margin:0 0 16px 0;">For many people, that moment is devastating. But for others, it is becoming a turning point.</p>
-        <p style="margin:0 0 16px 0;">Instead of going back into another uncertain job market, some workers are asking a different question:</p>
-        <p style="margin:0 0 20px 0;font-style:italic;color:#0a0a0a;"><strong>What if I built something of my own?</strong></p>
-        <p style="margin:0 0 16px 0;">For many, that answer looks like a food truck, a trailer, a catering concept, a shared kitchen, or a family recipe that finally gets a business plan.</p>
-        <p style="margin:0 0 24px 0;">In our latest Vendibook article, we look at how layoffs, AI, and the changing workforce are pushing more people toward mobile food entrepreneurship — and why food remains one of the most human, community-rooted businesses someone can build.</p>
+        <p style="margin:0 0 16px 0;">There is a moment a lot of people are experiencing right now — the meeting invite with no context, the HR call, the carefully worded message about restructuring.</p>
+        <p style="margin:0 0 16px 0;">For many, that moment is devastating. For others, it is becoming a turning point — a chance to ask a different question:</p>
+        <p style="margin:0 0 24px 0;font-style:italic;color:#0a0a0a;"><strong>What if I built something of my own?</strong></p>
       </td></tr>
       <tr><td align="center" style="padding:8px 32px 32px 32px;">
         <a href="${ARTICLE_URL}?utm_source=email&utm_medium=campaign&utm_campaign=${CAMPAIGN_ID}" style="display:inline-block;background:#ff5124;color:#ffffff;text-decoration:none;font-weight:700;font-size:15px;padding:14px 32px;border-radius:999px;letter-spacing:0.01em;">Keep Reading →</a>
       </td></tr>
       <tr><td style="padding:0 32px;"><hr style="border:0;border-top:1px solid #e7e5e4;margin:0;"></td></tr>
       <tr><td style="padding:28px 32px 8px 32px;font-size:16px;line-height:1.65;color:#262626;">
-        <p style="margin:0 0 12px 0;font-weight:600;color:#0a0a0a;">Thinking about starting, listing, renting, or selling in the mobile food economy?</p>
-        <p style="margin:0 0 20px 0;">Vendibook helps connect food truck owners, trailer sellers, kitchen hosts, vendor spaces, and aspiring operators in one marketplace.</p>
+        <p style="margin:0 0 12px 0;font-weight:600;color:#0a0a0a;">Stay up to date with Vendibook news</p>
+        <p style="margin:0 0 20px 0;">Get the latest stories, listings, and insights from the mobile food economy delivered to your inbox.</p>
+      </td></tr>
+      <tr><td align="center" style="padding:0 32px 28px 32px;">
+        <a href="${SUBSCRIBE_URL}?utm_source=email&utm_medium=campaign&utm_campaign=${CAMPAIGN_ID}_subscribe" style="display:inline-block;background:#ff5124;color:#ffffff;text-decoration:none;font-weight:700;font-size:15px;padding:13px 30px;border-radius:999px;">Subscribe to Vendibook</a>
       </td></tr>
       <tr><td align="center" style="padding:0 32px 36px 32px;">
-        <a href="${HOME_URL}?utm_source=email&utm_medium=campaign&utm_campaign=${CAMPAIGN_ID}" style="display:inline-block;background:#ffffff;color:#0a0a0a;text-decoration:none;font-weight:700;font-size:15px;padding:13px 30px;border-radius:999px;border:1.5px solid #0a0a0a;">Explore Vendibook</a>
+        <a href="${HOME_URL}?utm_source=email&utm_medium=campaign&utm_campaign=${CAMPAIGN_ID}" style="display:inline-block;background:#ffffff;color:#0a0a0a;text-decoration:none;font-weight:700;font-size:14px;padding:11px 26px;border-radius:999px;border:1.5px solid #0a0a0a;">Explore Vendibook</a>
       </td></tr>
       <tr><td style="background:#fafaf9;padding:24px 32px;border-top:1px solid #e7e5e4;font-size:12px;line-height:1.6;color:#737373;text-align:center;">
         <p style="margin:0 0 6px 0;color:#0a0a0a;font-weight:700;letter-spacing:0.04em;">VENDIBOOK</p>
