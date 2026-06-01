@@ -56,6 +56,7 @@ const AdminRisk = lazy(() => import("./pages/AdminRisk"));
 const AdminFinance = lazy(() => import("./pages/AdminFinance"));
 const AdminDigest = lazy(() => import("./pages/AdminDigest"));
 const AdminOrchestration = lazy(() => import("./pages/AdminOrchestration"));
+const AdminErrors = lazy(() => import("./pages/AdminErrors"));
 const NotificationPreferences = lazy(() => import("./pages/NotificationPreferences"));
 const HelpCenter = lazy(() => import("./pages/HelpCenter"));
 const HelpArticle = lazy(() => import("./pages/HelpArticle"));
