@@ -55,6 +55,7 @@ import {
   RENTAL_HOST_FEE_PERCENT,
   SALE_SELLER_FEE_PERCENT,
 } from '@/lib/commissions';
+import { isListingFeatured } from '@/lib/featured';
 
 type PublishStep = 'photos' | 'headline' | 'includes' | 'pricing' | 'details' | 'location' | 'availability' | 'documents' | 'stripe' | 'review';
 
@@ -102,6 +103,10 @@ interface ListingData {
   is_static_location?: boolean;
   latitude: number | null;
   longitude: number | null;
+  featured_enabled?: boolean | null;
+  featured_at?: string | null;
+  featured_expires_at?: string | null;
+  pending_featured_payment?: unknown;
 }
 
 interface RentalSuggestions {
