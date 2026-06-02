@@ -38,6 +38,8 @@ import { template as bookingAbandoned } from './booking-abandoned.tsx'
 import { template as supportReply } from './support-reply.tsx'
 import { template as featuredPaymentReceipt } from './featured-payment-receipt.tsx'
 import { template as featuredPaymentAdminAlert } from './featured-payment-admin-alert.tsx'
+import { template as featuredPaymentRefunded } from './featured-payment-refunded.tsx'
+import { template as featuredBoostExpired } from './featured-boost-expired.tsx'
 import { template as refundProcessed } from './refund-processed.tsx'
 import { template as feedbackReceivedAdmin } from './feedback-received-admin.tsx'
 import { template as feedbackWeeklyDigest } from './feedback-weekly-digest.tsx'
@@ -77,6 +79,8 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'support-reply': supportReply,
   'featured-payment-receipt': featuredPaymentReceipt,
   'featured-payment-admin-alert': featuredPaymentAdminAlert,
+  'featured-payment-refunded': featuredPaymentRefunded,
+  'featured-boost-expired': featuredBoostExpired,
   'refund-processed': refundProcessed,
   'feedback-received-admin': feedbackReceivedAdmin,
   'feedback-weekly-digest': feedbackWeeklyDigest,
