@@ -1035,8 +1035,19 @@ const Search = () => {
                   {listings.length > 0 ? (
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                       {listings.map((listing, index) => (
-                        <>
-                          <div key={listing.id} className="relative">
+                        <React.Fragment key={listing.id}>
+                          <ImpressionTracker
+                            eventName="search_result_impression"
+                            dedupKey={`search-impression-${listing.id}-${page}`}
+                            payload={{
+                              listing_id: listing.id,
+                              position: index,
+                              page,
+                              category: (listing as any).category,
+                              mode,
+                            }}
+                            className="relative"
+                          >
                             <ListingCard 
                               listing={listing} 
                               hostVerified={listing.host_verified ?? false}
@@ -1050,16 +1061,22 @@ const Search = () => {
                                 {listing.distance_miles < 1 ? '< 1' : Math.round(listing.distance_miles)} mi
                               </div>
                             )}
-                          </div>
+                          </ImpressionTracker>
                           {/* Get alerts after 8th listing */}
                           {index === 7 && listings.length > 8 && (
-                            <div key="get-alerts" className="col-span-1 sm:col-span-2 lg:col-span-3">
+                            <div className="col-span-1 sm:col-span-2 lg:col-span-3">
                               <GetAlertsCard category={category !== 'all' ? category : undefined} radius={searchRadius} />
                             </div>
                           )}
-                        </>
+                        </React.Fragment>
                       ))}
                     </div>
+                    {/* Supply CTA on sparse results — surface host opportunity */}
+                    {listings.length > 0 && listings.length < 3 && (
+                      <div className="mt-6">
+                        <HostSupplyCTA />
+                      </div>
+                    )}
                   ) : (
                     <SmartNoResults
                       searchParams={searchRequestParams}
