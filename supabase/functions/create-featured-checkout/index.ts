@@ -144,25 +144,26 @@ serve(async (req) => {
     const origin = req.headers.get("origin") || req.headers.get("referer")?.replace(/\/$/, '').split('/').slice(0, 3).join('/') || "https://vendibook.com";
     logStep("Origin determined", { origin });
 
-    // Create checkout session for the featured listing fee
-    const session = await stripe.checkout.sessions.create({
-      customer: customerId,
-      customer_email: customerId ? undefined : user.email,
-      line_items: [
-        {
-          price: FEATURED_LISTING_PRICE_ID,
-          quantity: 1,
+    // Create checkout session for the featured listing fee.
+    // Idempotency key scopes to (user, listing, hour) — bursty double-clicks return the SAME session
+    // instead of creating duplicate Stripe sessions.
+    const idempotencyKey = `featured-${user.id}-${listing_id}-${Math.floor(Date.now() / (60 * 60 * 1000))}`;
+    const session = await stripe.checkout.sessions.create(
+      {
+        customer: customerId,
+        customer_email: customerId ? undefined : user.email,
+        line_items: [{ price: FEATURED_LISTING_PRICE_ID, quantity: 1 }],
+        mode: "payment",
+        success_url: `${origin}/listing-published?listing_id=${listing_id}&featured_paid=true`,
+        cancel_url: `${origin}/create-listing/${listing_id}?featured_cancelled=true`,
+        metadata: {
+          listing_id: listing_id,
+          user_id: user.id,
+          type: "featured_listing",
         },
-      ],
-      mode: "payment",
-      success_url: `${origin}/listing-published?listing_id=${listing_id}&featured_paid=true`,
-      cancel_url: `${origin}/create-listing/${listing_id}?featured_cancelled=true`,
-      metadata: {
-        listing_id: listing_id,
-        user_id: user.id,
-        type: "featured_listing",
       },
-    });
+      { idempotencyKey }
+    );
 
     logStep("Checkout session created", { sessionId: session.id, url: session.url });
 
