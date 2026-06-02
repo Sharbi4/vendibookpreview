@@ -249,6 +249,42 @@ const ListingPublished: React.FC = () => {
         </div>
       )}
 
+      {/* Featured Boost Success / Syncing Banner */}
+      {featuredPaid && (
+        <div className={`border-b ${featuredActive ? 'bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800' : 'bg-muted/40 border-border'}`}>
+          <div className="container max-w-2xl mx-auto px-4 py-4">
+            <div className="flex items-center gap-3">
+              <div className={`p-2 rounded-full ${featuredActive ? 'bg-amber-100 dark:bg-amber-900' : 'bg-muted'}`}>
+                {featuredSyncing ? (
+                  <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+                ) : (
+                  <CheckCircle2 className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+                )}
+              </div>
+              <div className="flex-1">
+                <p className="font-medium">
+                  {featuredActive
+                    ? 'Featured Boost Activated ⭐'
+                    : featuredSyncing
+                      ? 'Finalizing your Featured Boost…'
+                      : 'Payment received — boost will activate shortly'}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  {featuredActive
+                    ? `Your listing is now published and featured at the top of search for 30 days.`
+                    : 'Your payment was successful. Your listing is published and the boost will appear within a minute.'}
+                </p>
+              </div>
+              {isPublished && (
+                <span className="text-xs px-2 py-1 rounded-full bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-300 whitespace-nowrap">
+                  Listing live
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Share Kit */}
       <div className="container max-w-2xl mx-auto px-4 py-12">
         {user?.id && listingId && (
