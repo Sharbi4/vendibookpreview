@@ -15,6 +15,7 @@ const ListingPublished: React.FC = () => {
   // Support both route param and query param for listing_id
   const listingId = listingIdFromParams || searchParams.get('listing_id');
   const notaryPaid = searchParams.get('notary_paid') === 'true';
+  const featuredPaid = searchParams.get('featured_paid') === 'true';
   const { toast } = useToast();
   const navigate = useNavigate();
   const { user, isLoading: authLoading } = useAuth();
@@ -23,6 +24,9 @@ const ListingPublished: React.FC = () => {
   const [boostCandidate, setBoostCandidate] = useState<any | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [featuredSyncing, setFeaturedSyncing] = useState(featuredPaid);
+  const [featuredActive, setFeaturedActive] = useState(false);
+  const [isPublished, setIsPublished] = useState(false);
 
   useEffect(() => {
     // Show toast for notary payment success
