@@ -412,6 +412,19 @@ const TransactionsPage = () => {
                 )}
               </section>
             </TabsContent>
+
+            {/* Account Charges Tab — boost payments, comped credits, listing add-ons */}
+            <TabsContent value="charges" className="space-y-6">
+              <section>
+                <div className="flex items-center gap-2 mb-2">
+                  <h2 className="text-lg font-semibold text-foreground">Account Charges</h2>
+                </div>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Featured Boost payments, comped credits, and listing add-ons.
+                </p>
+                {user?.id && <AccountChargesSection userId={user.id} />}
+              </section>
+            </TabsContent>
           </Tabs>
         </div>
       </main>
