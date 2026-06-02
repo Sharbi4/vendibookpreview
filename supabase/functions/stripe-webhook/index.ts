@@ -166,7 +166,7 @@ serve(async (req) => {
           // First, fetch the listing to check current status
           const { data: existingListing, error: fetchError } = await supabaseClient
             .from("listings")
-            .select("id, title, host_id, published_at, status")
+            .select("id, title, host_id, published_at, status, featured_enabled, featured_expires_at, pending_featured_payment")
             .eq("id", listingId)
             .single();
 
@@ -175,30 +175,42 @@ serve(async (req) => {
             break;
           }
 
+          // IDEMPOTENCY: if this exact Stripe session was already applied, skip everything.
+          const priorPayment = existingListing.pending_featured_payment as
+            | { session_id?: string; applied_at?: string }
+            | null;
+          if (priorPayment?.session_id === session.id) {
+            logStep("Featured payment already recorded for this session — skipping duplicate", {
+              sessionId: session.id,
+              alreadyApplied: !!priorPayment?.applied_at,
+            });
+            break;
+          }
+
           const isFirstTimePublish = !existingListing.published_at;
           const isDraft = existingListing.status !== 'published' || !existingListing.published_at;
           const now = new Date();
           const expiresAt = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000); // 30 days
 
-          // GUARANTEE: paid boost always sticks.
-          //  - If listing is already published: activate featured immediately.
-          //  - If listing is still a draft: store pending_featured_payment. The DB trigger
-          //    `trg_apply_pending_featured` will auto-activate the boost on publish.
+          // Always write a `pending_featured_payment` record (with applied_at when activated immediately).
+          // This is our permanent ledger entry and the dedup key for future webhook retries.
+          const paymentLedger = {
+            source: 'stripe',
+            payment_intent_id: paymentIntentId,
+            session_id: session.id,
+            amount: '$30.00',
+            paid_at: now.toISOString(),
+            ...(isDraft ? {} : { applied_at: now.toISOString(), applied_expires_at: expiresAt.toISOString() }),
+          };
+
           const updateData: Record<string, unknown> = isDraft
-            ? {
-                pending_featured_payment: {
-                  source: 'stripe',
-                  payment_intent_id: paymentIntentId,
-                  session_id: session.id,
-                  amount: '$30.00',
-                  paid_at: now.toISOString(),
-                },
-              }
+            ? { pending_featured_payment: paymentLedger }
             : {
                 status: 'published',
                 featured_enabled: true,
                 featured_at: now.toISOString(),
                 featured_expires_at: expiresAt.toISOString(),
+                pending_featured_payment: paymentLedger,
                 ...(isFirstTimePublish ? { published_at: now.toISOString() } : {}),
               };
 

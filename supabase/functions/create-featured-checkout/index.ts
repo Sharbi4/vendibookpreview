@@ -51,7 +51,7 @@ serve(async (req) => {
     // Verify the listing exists and belongs to this user
     const { data: listing, error: listingError } = await supabaseClient
       .from("listings")
-      .select("id, title, host_id, featured_enabled, status, mode, published_at")
+      .select("id, title, host_id, featured_enabled, featured_expires_at, status, mode, published_at, pending_featured_payment")
       .eq("id", listing_id)
       .single();
 
@@ -68,17 +68,55 @@ serve(async (req) => {
       throw new Error("Unauthorized: You do not own this listing");
     }
 
+    const origin = req.headers.get("origin") || req.headers.get("referer")?.replace(/\/$/, '').split('/').slice(0, 3).join('/') || "https://vendibook.com";
+    logStep("Origin determined", { origin });
+
+    // IDEMPOTENCY GUARD 1: boost already active → don't create another Stripe session.
+    const now = Date.now();
+    const activeBoost =
+      listing.featured_enabled === true &&
+      listing.featured_expires_at &&
+      new Date(listing.featured_expires_at).getTime() > now;
+    if (activeBoost) {
+      logStep("Boost already active — returning success URL without new charge", {
+        listingId: listing.id,
+        expires: listing.featured_expires_at,
+      });
+      return new Response(
+        JSON.stringify({
+          url: `${origin}/listing-published?listing_id=${listing_id}&featured_paid=true&already_active=true`,
+          already_active: true,
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
+      );
+    }
+
+    // IDEMPOTENCY GUARD 2: a prior boost payment is queued (paid but listing was draft).
+    // Don't charge again — send the user to the published page so the queued boost can apply on publish.
+    const pendingPaid = listing.pending_featured_payment as { session_id?: string; applied_at?: string } | null;
+    if (pendingPaid?.session_id && !pendingPaid.applied_at) {
+      logStep("Pending paid boost exists — returning without new charge", {
+        listingId: listing.id,
+        priorSessionId: pendingPaid.session_id,
+      });
+      return new Response(
+        JSON.stringify({
+          url: `${origin}/listing-published?listing_id=${listing_id}&featured_paid=true&pending=true`,
+          already_paid: true,
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
+      );
+    }
+
     // If the listing wizard sends the boost checkout request while the saved
-    // row is still a draft, publish it here before creating checkout. This
-    // keeps the customer flow unblocked even if the client-side publish update
-    // has not propagated yet.
+    // row is still a draft, publish it here before creating checkout.
     if (listing.status !== 'published' || !listing.published_at) {
-      const now = new Date().toISOString();
+      const nowIso = new Date().toISOString();
       const { data: publishedListing, error: publishError } = await supabaseClient
         .from("listings")
         .update({
           status: 'published',
-          published_at: listing.published_at ?? now,
+          published_at: listing.published_at ?? nowIso,
         })
         .eq("id", listing.id)
         .eq("host_id", user.id)
@@ -106,25 +144,26 @@ serve(async (req) => {
     const origin = req.headers.get("origin") || req.headers.get("referer")?.replace(/\/$/, '').split('/').slice(0, 3).join('/') || "https://vendibook.com";
     logStep("Origin determined", { origin });
 
-    // Create checkout session for the featured listing fee
-    const session = await stripe.checkout.sessions.create({
-      customer: customerId,
-      customer_email: customerId ? undefined : user.email,
-      line_items: [
-        {
-          price: FEATURED_LISTING_PRICE_ID,
-          quantity: 1,
+    // Create checkout session for the featured listing fee.
+    // Idempotency key scopes to (user, listing, hour) — bursty double-clicks return the SAME session
+    // instead of creating duplicate Stripe sessions.
+    const idempotencyKey = `featured-${user.id}-${listing_id}-${Math.floor(Date.now() / (60 * 60 * 1000))}`;
+    const session = await stripe.checkout.sessions.create(
+      {
+        customer: customerId,
+        customer_email: customerId ? undefined : user.email,
+        line_items: [{ price: FEATURED_LISTING_PRICE_ID, quantity: 1 }],
+        mode: "payment",
+        success_url: `${origin}/listing-published?listing_id=${listing_id}&featured_paid=true`,
+        cancel_url: `${origin}/create-listing/${listing_id}?featured_cancelled=true`,
+        metadata: {
+          listing_id: listing_id,
+          user_id: user.id,
+          type: "featured_listing",
         },
-      ],
-      mode: "payment",
-      success_url: `${origin}/listing-published?listing_id=${listing_id}&featured_paid=true`,
-      cancel_url: `${origin}/create-listing/${listing_id}?featured_cancelled=true`,
-      metadata: {
-        listing_id: listing_id,
-        user_id: user.id,
-        type: "featured_listing",
       },
-    });
+      { idempotencyKey }
+    );
 
     logStep("Checkout session created", { sessionId: session.id, url: session.url });
 
