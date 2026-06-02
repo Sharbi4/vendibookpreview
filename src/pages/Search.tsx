@@ -1035,7 +1035,9 @@ const Search = () => {
               {viewMode === 'grid' && (
                 <>
                   {listings.length > 0 ? (
+                    <>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+
                       {listings.map((listing, index) => (
                         <React.Fragment key={listing.id}>
                           <ImpressionTracker
@@ -1079,6 +1081,7 @@ const Search = () => {
                         <HostSupplyCTA />
                       </div>
                     )}
+                    </>
                   ) : (
                     <SmartNoResults
                       searchParams={searchRequestParams}
