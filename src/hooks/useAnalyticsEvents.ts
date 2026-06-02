@@ -50,6 +50,37 @@ const getSessionId = (): string => {
   return sessionId;
 };
 
+// Cache: is the current user an admin (or QA mode on)? Cached per-tab to avoid
+// repeated user_roles lookups on every analytics event.
+let internalFlagPromise: Promise<boolean> | null = null;
+let cachedUserIdForInternal: string | null = null;
+
+const resolveIsInternal = async (userId: string | null): Promise<boolean> => {
+  // QA mode override (any tab, any auth state)
+  if (typeof window !== 'undefined' && window.localStorage?.getItem('vendibook_qa_mode') === '1') {
+    return true;
+  }
+  if (!userId) return false;
+  if (cachedUserIdForInternal === userId && internalFlagPromise) {
+    return internalFlagPromise;
+  }
+  cachedUserIdForInternal = userId;
+  internalFlagPromise = (async () => {
+    try {
+      const { data } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', userId)
+        .eq('role', 'admin')
+        .maybeSingle();
+      return !!data;
+    } catch {
+      return false;
+    }
+  })();
+  return internalFlagPromise;
+};
+
 // Track event to database
 export const trackEventToDb = async (
   eventName: string,
@@ -61,13 +92,14 @@ export const trackEventToDb = async (
   try {
     const { data: { user } } = await supabase.auth.getUser();
     const route = typeof window !== 'undefined' ? window.location.pathname : null;
+    const isInternal = await resolveIsInternal(user?.id ?? null);
 
     await (supabase.from('analytics_events') as any).insert({
       user_id: user?.id || null,
       session_id: getSessionId(),
       event_name: eventName,
       event_category: eventCategory || null,
-      metadata: metadata || {},
+      metadata: { ...(metadata || {}), ...(isInternal ? { is_internal: true } : {}) },
       route,
       city: city || null,
       listing_id: listingId || null,
@@ -76,6 +108,7 @@ export const trackEventToDb = async (
     console.error('[Analytics] Failed to track event:', error);
   }
 };
+
 
 // Admin hook for viewing funnel metrics
 export const useAdminFunnelMetrics = (days: number = 7) => {

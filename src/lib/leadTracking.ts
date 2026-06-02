@@ -7,10 +7,16 @@ import { trackEventToDb } from '@/hooks/useAnalyticsEvents';
 
 export type LeadEventName =
   | 'search_performed'
+  | 'search_results_returned'
+  | 'search_zero_results'
+  | 'search_result_impression'
   | 'listing_card_click'
   | 'check_availability_click'
   | 'contact_host_click'
   | 'lead_form_started'
+  | 'lead_form_field_blur'
+  | 'lead_form_validation_error'
+  | 'lead_form_abandoned'
   | 'lead_form_submitted'
   | 'booking_request_started'
   | 'booking_request_submitted'
@@ -39,7 +45,15 @@ export type LeadEventName =
   | 'availability_date_selected'
   | 'availability_time_slot_selected'
   | 'availability_time_range_selected'
-  | 'availability_unavailable_conflict';
+  | 'availability_unavailable_conflict'
+  // Storefront (/u/...) funnel
+  | 'profile_storefront_view'
+  | 'profile_listing_click'
+  | 'profile_message_host_click'
+  | 'profile_share_click'
+  // Session linking
+  | 'session_user_link';
+
 
 export interface LeadEventPayload {
   listing_id?: string;
@@ -52,10 +66,16 @@ export interface LeadEventPayload {
 
 const EVENT_CATEGORY: Record<LeadEventName, string> = {
   search_performed: 'discovery',
+  search_results_returned: 'discovery',
+  search_zero_results: 'discovery',
+  search_result_impression: 'discovery',
   listing_card_click: 'discovery',
   check_availability_click: 'booking',
   contact_host_click: 'booking',
   lead_form_started: 'lead',
+  lead_form_field_blur: 'lead',
+  lead_form_validation_error: 'lead',
+  lead_form_abandoned: 'lead',
   lead_form_submitted: 'lead',
   booking_request_started: 'booking',
   booking_request_submitted: 'booking',
@@ -82,7 +102,13 @@ const EVENT_CATEGORY: Record<LeadEventName, string> = {
   availability_time_slot_selected: 'booking',
   availability_time_range_selected: 'booking',
   availability_unavailable_conflict: 'booking',
+  profile_storefront_view: 'storefront',
+  profile_listing_click: 'storefront',
+  profile_message_host_click: 'storefront',
+  profile_share_click: 'storefront',
+  session_user_link: 'attribution',
 };
+
 
 export const trackLeadEvent = (name: LeadEventName, payload: LeadEventPayload = {}) => {
   void trackEventToDb(
