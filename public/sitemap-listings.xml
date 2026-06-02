@@ -2,7 +2,7 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
   <url>
     <loc>https://vendibook.com/listing/cd1c62cd-1e1f-4d72-8811-576957af53f4</loc>
-    <lastmod>2026-06-01</lastmod>
+    <lastmod>2026-06-02</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
@@ -130,6 +130,17 @@
       <image:loc>https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=800</image:loc>
       <image:title>Asian Fusion Food Truck</image:title>
       <image:caption>Asian Fusion Food Truck in Los Angeles, CA on Vendibook</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://vendibook.com/listing/4e50a07a-6909-411b-a4e0-429fee24c52a</loc>
+    <lastmod>2026-06-02</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/7825c02f-90ed-4e89-b173-dfae547ab1c8/4e50a07a-6909-411b-a4e0-429fee24c52a/1780430632481-ow7rui.jpg</image:loc>
+      <image:title>Immaculate Custom 2018 Ford F59 Food Truck by Prestige (Only 5,100 Miles!) </image:title>
+      <image:caption>Immaculate Custom 2018 Ford F59 Food Truck by Prestige (Only 5,100 Miles!)  on Vendibook</image:caption>
     </image:image>
   </url>
   <url>
@@ -321,7 +332,7 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/ee20ce79-1fbc-4885-aaf8-61f4c3a5cc25</loc>
-    <lastmod>2026-05-31</lastmod>
+    <lastmod>2026-06-02</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
@@ -464,7 +475,7 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/99d179ad-16ad-4bb3-9ccb-cd1a8e157284</loc>
-    <lastmod>2026-06-01</lastmod>
+    <lastmod>2026-06-02</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
@@ -596,7 +607,7 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/f4d5e5ae-31eb-4ba0-9d2b-13df7279d020</loc>
-    <lastmod>2026-06-01</lastmod>
+    <lastmod>2026-06-02</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
