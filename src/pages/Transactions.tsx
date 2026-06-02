@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, Navigate, useSearchParams } from 'react-router-dom';
-import { Loader2, Calendar, ShoppingBag, ArrowLeft, Package, Receipt } from 'lucide-react';
+import { Loader2, Calendar, ShoppingBag, ArrowLeft, Package, Receipt, Sparkles } from 'lucide-react';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import SEO from '@/components/SEO';
