@@ -192,14 +192,32 @@ serve(async (req) => {
           const now = new Date();
           const expiresAt = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000); // 30 days
 
+          // Try to capture the Stripe-hosted receipt URL from the underlying charge
+          let receiptUrl: string | null = null;
+          try {
+            if (paymentIntentId) {
+              const pi = await stripe.paymentIntents.retrieve(paymentIntentId, {
+                expand: ['latest_charge'],
+              });
+              const latestCharge = pi.latest_charge as Stripe.Charge | string | null;
+              if (latestCharge && typeof latestCharge !== 'string') {
+                receiptUrl = latestCharge.receipt_url ?? null;
+              }
+            }
+          } catch (rcptErr) {
+            logStep("WARNING: Failed to retrieve receipt_url for boost", { error: String(rcptErr) });
+          }
+
           // Always write a `pending_featured_payment` record (with applied_at when activated immediately).
           // This is our permanent ledger entry and the dedup key for future webhook retries.
           const paymentLedger = {
             source: 'stripe',
+            status: 'paid',
             payment_intent_id: paymentIntentId,
             session_id: session.id,
             amount: '$30.00',
             paid_at: now.toISOString(),
+            receipt_url: receiptUrl,
             ...(isDraft ? {} : { applied_at: now.toISOString(), applied_expires_at: expiresAt.toISOString() }),
           };
 
