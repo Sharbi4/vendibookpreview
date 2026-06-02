@@ -1,4 +1,6 @@
-import { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
+import { ImpressionTracker } from '@/components/analytics/ImpressionTracker';
+import { HostSupplyCTA } from '@/components/search/HostSupplyCTA';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Search as SearchIcon, SlidersHorizontal, X, MapPin, Tag, DollarSign, CalendarIcon, Navigation, CheckCircle2, Plug, Zap, Refrigerator, Flame, Wind, Wifi, Car, Shield, Droplet, Truck, LayoutGrid, Map, Columns, Rows3, Star, Heart } from 'lucide-react';
 import { DateRange } from 'react-day-picker';
