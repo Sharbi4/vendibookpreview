@@ -169,7 +169,13 @@ serve(async (req) => {
     ]);
 
     const unique = Array.from(new Set(all.map((e) => e.toLowerCase())));
-    let recipients = unique.filter((e) => !blocked.has(e));
+    let recipients = unique.filter((e) => {
+      if (blocked.has(e)) return false;
+      if (e.endsWith("@vendibook.test")) return false;
+      if (e.endsWith(".test")) return false;
+      if (e.startsWith("qatest_") || e.startsWith("qaverify_")) return false;
+      return true;
+    });
     if (limit && limit > 0) recipients = recipients.slice(0, limit);
 
     if (dryRun) {
