@@ -15,6 +15,7 @@ import { useHostBookings } from '@/hooks/useHostBookings';
 import { useBuyerSaleTransactions, useSellerSaleTransactions } from '@/hooks/useSaleTransactions';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import AccountChargesSection from '@/components/dashboard/AccountChargesSection';
 
 const TransactionsPage = () => {
   const { user, isLoading: authLoading } = useAuth();
