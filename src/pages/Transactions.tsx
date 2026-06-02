@@ -217,7 +217,15 @@ const TransactionsPage = () => {
                 <ShoppingBag className="h-4 w-4" />
                 Purchases ({totalPurchases})
               </TabsTrigger>
+              <TabsTrigger 
+                value="charges" 
+                className="flex items-center gap-2 pb-3 px-0 rounded-none bg-transparent data-[state=active]:bg-transparent data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-foreground text-muted-foreground data-[state=active]:text-foreground transition-colors"
+              >
+                <Sparkles className="h-4 w-4" />
+                Account Charges
+              </TabsTrigger>
             </TabsList>
+
 
             {/* Bookings Tab */}
             <TabsContent value="bookings" className="space-y-8">
