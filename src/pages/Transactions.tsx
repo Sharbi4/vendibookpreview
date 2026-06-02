@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, Navigate, useSearchParams } from 'react-router-dom';
-import { Loader2, Calendar, ShoppingBag, ArrowLeft, Package, Receipt } from 'lucide-react';
+import { Loader2, Calendar, ShoppingBag, ArrowLeft, Package, Receipt, Sparkles } from 'lucide-react';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import SEO from '@/components/SEO';
@@ -15,11 +15,13 @@ import { useHostBookings } from '@/hooks/useHostBookings';
 import { useBuyerSaleTransactions, useSellerSaleTransactions } from '@/hooks/useSaleTransactions';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import AccountChargesSection from '@/components/dashboard/AccountChargesSection';
 
 const TransactionsPage = () => {
   const { user, isLoading: authLoading } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
-  const initialTab = searchParams.get('tab') === 'purchases' ? 'purchases' : 'bookings';
+  const tabParam = searchParams.get('tab');
+  const initialTab = tabParam === 'purchases' ? 'purchases' : tabParam === 'charges' ? 'charges' : 'bookings';
   const [activeTab, setActiveTab] = useState(initialTab);
   const { toast } = useToast();
 
@@ -215,7 +217,15 @@ const TransactionsPage = () => {
                 <ShoppingBag className="h-4 w-4" />
                 Purchases ({totalPurchases})
               </TabsTrigger>
+              <TabsTrigger 
+                value="charges" 
+                className="flex items-center gap-2 pb-3 px-0 rounded-none bg-transparent data-[state=active]:bg-transparent data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-foreground text-muted-foreground data-[state=active]:text-foreground transition-colors"
+              >
+                <Sparkles className="h-4 w-4" />
+                Account Charges
+              </TabsTrigger>
             </TabsList>
+
 
             {/* Bookings Tab */}
             <TabsContent value="bookings" className="space-y-8">
@@ -400,6 +410,19 @@ const TransactionsPage = () => {
                     ))}
                   </div>
                 )}
+              </section>
+            </TabsContent>
+
+            {/* Account Charges Tab — boost payments, comped credits, listing add-ons */}
+            <TabsContent value="charges" className="space-y-6">
+              <section>
+                <div className="flex items-center gap-2 mb-2">
+                  <h2 className="text-lg font-semibold text-foreground">Account Charges</h2>
+                </div>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Featured Boost payments, comped credits, and listing add-ons.
+                </p>
+                {user?.id && <AccountChargesSection userId={user.id} />}
               </section>
             </TabsContent>
           </Tabs>
