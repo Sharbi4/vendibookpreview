@@ -77,11 +77,11 @@ const TERMS_VERSION = "2026-05-30";
 const ReferralTerms = () => (
   <>
     <SEO title="Referral Program Terms — Vendibook" description="Full terms and fine print for the Vendibook referral program." />
-    <div className="bg-[#FAFAF7] min-h-screen">
+    <div className="bg-[#FAFAF7] min-h-screen text-[#08080a]">
       <div className="container mx-auto px-4 py-12 max-w-6xl">
         <header className="mb-12">
-          <h1 className="text-4xl md:text-5xl font-black text-foreground">Referral Program Terms</h1>
-          <p className="mt-2 text-muted-foreground">Version {TERMS_VERSION} · Last updated May 30, 2026</p>
+          <h1 className="text-4xl md:text-5xl font-black text-[#08080a]">Referral Program Terms</h1>
+          <p className="mt-2 text-[#08080a]/60">Version {TERMS_VERSION} · Last updated May 30, 2026</p>
         </header>
 
         <div className="grid md:grid-cols-[220px_1fr] gap-12">
@@ -90,18 +90,18 @@ const ReferralTerms = () => (
               <a
                 key={s.id}
                 href={`#${s.id}`}
-                className="block py-1.5 text-muted-foreground hover:text-[#FF5124] border-l-2 border-transparent hover:border-[#FF5124] pl-3 transition-colors"
+                className="block py-1.5 text-[#08080a]/70 hover:text-[#FF5124] border-l-2 border-transparent hover:border-[#FF5124] pl-3 transition-colors"
               >
                 {s.title}
               </a>
             ))}
           </nav>
 
-          <main className="prose prose-lg max-w-none space-y-12">
+          <main className="max-w-none space-y-12">
             {SECTIONS.map((s) => (
               <section key={s.id} id={s.id} className="scroll-mt-24">
                 <h2 className="text-2xl font-bold text-[#FF5124]">{s.title}</h2>
-                <ul className="mt-4 space-y-2.5 text-foreground/80 leading-relaxed">
+                <ul className="mt-4 space-y-2.5 text-[#08080a]/85 leading-relaxed">
                   {s.items.map((it) => (
                     <li key={it} className="pl-6 relative">
                       <span className="absolute left-0 top-2.5 h-1.5 w-1.5 rounded-full bg-[#FF5124]" />
@@ -112,7 +112,7 @@ const ReferralTerms = () => (
               </section>
             ))}
 
-            <section className="border-t pt-8 text-sm text-muted-foreground">
+            <section className="border-t border-[#08080a]/10 pt-8 text-sm text-[#08080a]/60">
               <p>
                 Questions? Email{" "}
                 <a className="text-[#FF5124] underline" href="mailto:support@vendibook.com">support@vendibook.com</a>{" "}
