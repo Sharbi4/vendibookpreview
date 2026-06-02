@@ -15,6 +15,7 @@ const ListingPublished: React.FC = () => {
   // Support both route param and query param for listing_id
   const listingId = listingIdFromParams || searchParams.get('listing_id');
   const notaryPaid = searchParams.get('notary_paid') === 'true';
+  const featuredPaid = searchParams.get('featured_paid') === 'true';
   const { toast } = useToast();
   const navigate = useNavigate();
   const { user, isLoading: authLoading } = useAuth();
@@ -23,6 +24,9 @@ const ListingPublished: React.FC = () => {
   const [boostCandidate, setBoostCandidate] = useState<any | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [featuredSyncing, setFeaturedSyncing] = useState(featuredPaid);
+  const [featuredActive, setFeaturedActive] = useState(false);
+  const [isPublished, setIsPublished] = useState(false);
 
   useEffect(() => {
     // Show toast for notary payment success
@@ -81,6 +85,21 @@ const ListingPublished: React.FC = () => {
           return;
         }
 
+        // If returning from Stripe boost and listing is still a draft, self-heal: publish it.
+        if (featuredPaid && data.status !== 'published') {
+          const nowIso = new Date().toISOString();
+          const { error: pubErr } = await supabase
+            .from('listings')
+            .update({ status: 'published', published_at: data.published_at ?? nowIso })
+            .eq('id', listingId);
+          if (!pubErr) {
+            data.status = 'published';
+            data.published_at = data.published_at ?? nowIso;
+          }
+        }
+
+        setIsPublished(data.status === 'published');
+
         setListing({
           id: data.id,
           title: data.title,
@@ -102,6 +121,10 @@ const ListingPublished: React.FC = () => {
           featured_enabled: (data as any).featured_enabled,
           featured_expires_at: (data as any).featured_expires_at,
         });
+        if ((data as any).featured_enabled) {
+          setFeaturedActive(true);
+          setFeaturedSyncing(false);
+        }
         // Always offer boost right after a fresh publish — clear any prior suppression
         if (user?.id) {
           try { localStorage.removeItem(`vendi_boost_prompt_dismissed_${user.id}`); } catch {}
@@ -117,7 +140,43 @@ const ListingPublished: React.FC = () => {
     if (user) {
       fetchListing();
     }
-  }, [listingId, user, authLoading, navigate]);
+  }, [listingId, user, authLoading, navigate, featuredPaid]);
+
+  // Poll for featured activation after returning from Stripe (webhook may lag)
+  useEffect(() => {
+    if (!featuredPaid || featuredActive || !listingId || !user?.id) return;
+    let cancelled = false;
+    let attempts = 0;
+    const maxAttempts = 15; // ~30s
+    const tick = async () => {
+      if (cancelled) return;
+      attempts++;
+      const { data } = await supabase
+        .from('listings')
+        .select('featured_enabled, featured_expires_at, status')
+        .eq('id', listingId)
+        .maybeSingle();
+      if (cancelled) return;
+      if (data?.featured_enabled) {
+        setFeaturedActive(true);
+        setFeaturedSyncing(false);
+        setIsPublished(data.status === 'published');
+        toast({
+          title: 'Featured Boost Activated ⭐',
+          description: 'Your listing is now featured for 30 days.',
+        });
+        return;
+      }
+      if (attempts >= maxAttempts) {
+        setFeaturedSyncing(false);
+        return;
+      }
+      setTimeout(tick, 2000);
+    };
+    tick();
+    return () => { cancelled = true; };
+  }, [featuredPaid, featuredActive, listingId, user?.id, toast]);
+
 
   const handleClose = () => {
     navigate('/dashboard');
@@ -185,6 +244,42 @@ const ListingPublished: React.FC = () => {
                 </p>
               </div>
               <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400 ml-auto" />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Featured Boost Success / Syncing Banner */}
+      {featuredPaid && (
+        <div className={`border-b ${featuredActive ? 'bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800' : 'bg-muted/40 border-border'}`}>
+          <div className="container max-w-2xl mx-auto px-4 py-4">
+            <div className="flex items-center gap-3">
+              <div className={`p-2 rounded-full ${featuredActive ? 'bg-amber-100 dark:bg-amber-900' : 'bg-muted'}`}>
+                {featuredSyncing ? (
+                  <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+                ) : (
+                  <CheckCircle2 className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+                )}
+              </div>
+              <div className="flex-1">
+                <p className="font-medium">
+                  {featuredActive
+                    ? 'Featured Boost Activated ⭐'
+                    : featuredSyncing
+                      ? 'Finalizing your Featured Boost…'
+                      : 'Payment received — boost will activate shortly'}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  {featuredActive
+                    ? `Your listing is now published and featured at the top of search for 30 days.`
+                    : 'Your payment was successful. Your listing is published and the boost will appear within a minute.'}
+                </p>
+              </div>
+              {isPublished && (
+                <span className="text-xs px-2 py-1 rounded-full bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-300 whitespace-nowrap">
+                  Listing live
+                </span>
+              )}
             </div>
           </div>
         </div>
