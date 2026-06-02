@@ -68,11 +68,28 @@ serve(async (req) => {
       throw new Error("Unauthorized: You do not own this listing");
     }
 
-    // Boost can ONLY be purchased on PUBLISHED listings. Drafts must be
-    // published first — this avoids the historical "pending featured payment"
-    // edge cases where Stripe charged before the listing existed publicly.
+    // If the listing wizard sends the boost checkout request while the saved
+    // row is still a draft, publish it here before creating checkout. This
+    // keeps the customer flow unblocked even if the client-side publish update
+    // has not propagated yet.
     if (listing.status !== 'published' || !listing.published_at) {
-      throw new Error("Your listing must be published before you can boost it. Please publish first, then boost.");
+      const now = new Date().toISOString();
+      const { data: publishedListing, error: publishError } = await supabaseClient
+        .from("listings")
+        .update({
+          status: 'published',
+          published_at: listing.published_at ?? now,
+        })
+        .eq("id", listing.id)
+        .eq("host_id", user.id)
+        .select("id, status, published_at")
+        .single();
+
+      if (publishError || publishedListing?.status !== 'published' || !publishedListing?.published_at) {
+        throw new Error(`Unable to publish listing before boost checkout: ${publishError?.message || 'Unknown publish error'}`);
+      }
+
+      logStep("Draft listing published before checkout", { listingId: listing.id, published_at: publishedListing.published_at });
     }
     logStep("Listing verified", { listingId: listing.id, title: listing.title });
 
