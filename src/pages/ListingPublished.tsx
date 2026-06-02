@@ -85,6 +85,21 @@ const ListingPublished: React.FC = () => {
           return;
         }
 
+        // If returning from Stripe boost and listing is still a draft, self-heal: publish it.
+        if (featuredPaid && data.status !== 'published') {
+          const nowIso = new Date().toISOString();
+          const { error: pubErr } = await supabase
+            .from('listings')
+            .update({ status: 'published', published_at: data.published_at ?? nowIso })
+            .eq('id', listingId);
+          if (!pubErr) {
+            data.status = 'published';
+            data.published_at = data.published_at ?? nowIso;
+          }
+        }
+
+        setIsPublished(data.status === 'published');
+
         setListing({
           id: data.id,
           title: data.title,
@@ -106,6 +121,10 @@ const ListingPublished: React.FC = () => {
           featured_enabled: (data as any).featured_enabled,
           featured_expires_at: (data as any).featured_expires_at,
         });
+        if ((data as any).featured_enabled) {
+          setFeaturedActive(true);
+          setFeaturedSyncing(false);
+        }
         // Always offer boost right after a fresh publish — clear any prior suppression
         if (user?.id) {
           try { localStorage.removeItem(`vendi_boost_prompt_dismissed_${user.id}`); } catch {}
@@ -121,7 +140,43 @@ const ListingPublished: React.FC = () => {
     if (user) {
       fetchListing();
     }
-  }, [listingId, user, authLoading, navigate]);
+  }, [listingId, user, authLoading, navigate, featuredPaid]);
+
+  // Poll for featured activation after returning from Stripe (webhook may lag)
+  useEffect(() => {
+    if (!featuredPaid || featuredActive || !listingId || !user?.id) return;
+    let cancelled = false;
+    let attempts = 0;
+    const maxAttempts = 15; // ~30s
+    const tick = async () => {
+      if (cancelled) return;
+      attempts++;
+      const { data } = await supabase
+        .from('listings')
+        .select('featured_enabled, featured_expires_at, status')
+        .eq('id', listingId)
+        .maybeSingle();
+      if (cancelled) return;
+      if (data?.featured_enabled) {
+        setFeaturedActive(true);
+        setFeaturedSyncing(false);
+        setIsPublished(data.status === 'published');
+        toast({
+          title: 'Featured Boost Activated ⭐',
+          description: 'Your listing is now featured for 30 days.',
+        });
+        return;
+      }
+      if (attempts >= maxAttempts) {
+        setFeaturedSyncing(false);
+        return;
+      }
+      setTimeout(tick, 2000);
+    };
+    tick();
+    return () => { cancelled = true; };
+  }, [featuredPaid, featuredActive, listingId, user?.id, toast]);
+
 
   const handleClose = () => {
     navigate('/dashboard');
