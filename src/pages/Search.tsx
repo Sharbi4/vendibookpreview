@@ -201,7 +201,7 @@ const Search = () => {
   useEffect(() => {
     if (isLoadingListings) return;
     const t = setTimeout(() => {
-      trackLeadEvent('search_performed', {
+      const payload = {
         query: searchQuery.trim() || undefined,
         mode: mode !== 'all' ? mode : 'all',
         category: category !== 'all' ? category : 'all',
@@ -209,11 +209,20 @@ const Search = () => {
         result_count: totalCount,
         page,
         source: 'search_page',
-      });
+      };
+      trackLeadEvent('search_performed', payload);
+      // Split signal: separate zero-results from results-returned so we can
+      // tell whether searches are landing empty vs landing-but-ignored.
+      if (totalCount === 0) {
+        trackLeadEvent('search_zero_results', payload);
+      } else {
+        trackLeadEvent('search_results_returned', payload);
+      }
     }, 600);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchQuery, mode, category, locationText, totalCount, page, isLoadingListings]);
+
 
 
   // Update URL params

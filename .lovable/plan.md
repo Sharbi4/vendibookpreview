@@ -1,64 +1,80 @@
-# Referral Program — Wiring Plan (Audit-Based)
+## Goal
+Act on the top 5 findings from the 14-day analytics review. Focus on **instrumentation gaps** and **low-risk UX changes** that make next week's report actionable. No backend schema changes required — everything routes through `trackLeadEvent` / `trackEventToDb` into `analytics_events`.
 
-## Audit summary (what already exists — DO NOT rebuild)
+## Scope (in order)
 
-**Database (all present):** `referrals`, `referral_codes`, `referral_clicks`, `referral_status_log`, `referral_fraud_flags`, `referral_payouts`, `referral_program_config`, `referral_terms_acceptance`, `referral_w9_records`, `admin_action_idempotency`, plus `app_feature_flags` (`referral_program_enabled=true`, `referral_auto_payout_enabled=false`) and config rows for supply/$150, purchase/$500, rental/$50 with correct hold days and caps.
+### 1. P1 — Diagnose the 0% form-submission rate
+**Problem:** 6 `lead_form_started`, 0 `lead_form_submitted` over 14 days. We can't see which field kills submission.
 
-**Edge functions (all present):** `redeem-referral`, `referral-track-click`, `referral-apply-code`, `referral-record-event`, `referral-admin-action` (with idempotency), `referral-payout-batch`, `referral-accept-terms`, `send-referral-emails`.
+**Changes:**
+- Add 3 new event names to `LeadEventName` in `src/lib/leadTracking.ts`:
+  - `lead_form_field_blur` — fires on every field blur with `{ field_name, has_value, char_count }`
+  - `lead_form_validation_error` — fires when submit is blocked with `{ field_name, error_message }`
+  - `lead_form_abandoned` — fires on modal dismiss after `lead_form_started` with `{ last_field_touched, seconds_in_form, fields_completed }`
+- Wire these into `TellVendibookModal` (the primary lead form) — blur handlers on each field, validation hook in submit handler, dismiss handler in `onOpenChange`.
+- No UI change yet — we instrument first, then iterate next week with real drop-off data.
 
-**Frontend (all present):** `/r/:code` (RHandler), `/referral`, `/referral/dashboard`, `/referral/terms`, `/referral/admin`, `ReferralCapture` mounted globally, `ReferralCodeField` already wired into `BookingCheckout` and `SaleCheckout` (passed to Stripe metadata), code generation trigger `generate_referral_code_for_user`, `log_referral_status_change` RPC with idempotency, `has_role`/admin gating, terms acceptance flow.
+### 2. P1 — Search → click conversion telemetry
+**Problem:** 56 searches → 7 clicks (12.5%) — can't tell if results are empty or ignored.
 
-## What is actually missing (the wiring gap)
+**Changes:**
+- Add to `LeadEventName`:
+  - `search_zero_results` — `{ query, filters, city }`
+  - `search_results_returned` — `{ query, result_count, city }`
+  - `search_result_impression` — fires once per session per result card actually scrolled into view, `{ listing_id, position, query }`
+- Wire into the search results component (`src/components/search/`) using `IntersectionObserver` for impressions.
+- Fire `search_zero_results` / `search_results_returned` in the search results hook after query completes.
 
-Despite all the surface area existing, **no production flow ever calls `referral-record-event`**. `rg "referral" supabase/functions/stripe-webhook supabase/functions/complete-ended-bookings` returns zero matches. That is the central break: referrals can be attributed at signup and codes captured at checkout, but they never advance past `signed_up` because no upstream system fires the qualifying event.
+### 3. P1 — Capitalize on `/u/…` storefront traffic (104 views, 0 follow-on events)
+**Problem:** Profile storefronts are the #1 real event source but have no conversion CTAs or downstream tracking.
 
-Secondary gaps: supply program has no publish-time / first-transaction trigger; rental has no booking-completion trigger; fraud auto-flags (self/seller/IP) are not evaluated on event; admin "void" path doesn't auto-fire on Stripe dispute/refund webhook events.
+**Changes:**
+- In the storefront page (`src/components/storefront/` + parent page), add a **sticky bottom action bar** on mobile (currently 384px viewport) and an inline CTA row on desktop:
+  - "Message host" (opens existing inline messaging flow)
+  - "Browse listings" (scrolls to listing grid)
+- Instrument: `profile_storefront_view` (replaces generic `profile_view` with host_id metadata), `profile_listing_click`, `profile_message_host_click`, `profile_share_click`.
+- All CTAs use the orange-only "Glass CTA" variant per brand memory.
 
-## Changes to make
+### 4. P2 — Exclude internal/QA traffic from admin funnels
+**Problem:** Owner's single 05-30 session = 39% of 14-day events; one bot day added 98 more. KPIs are unreliable.
 
-### 1. Stripe webhook → fire qualifying events (purchase + rental)
-Edit `supabase/functions/stripe-webhook/index.ts`:
-- On `checkout.session.completed` / `payment_intent.succeeded` where `payment_status==='paid'`, read `metadata.referral_code` (already set by `BookingCheckout`/`SaleCheckout`) and the resulting `sale_transactions` / `booking_requests` row.
-- If sale: call `referral-record-event` with `program_type:'purchase'`, `referred_user_id=buyer_id`, `transaction_id`, `transaction_value`. Pre-filter: skip when `seller_id===referrer` (handled both here and inside the function).
-- If rental booking paid: store `referral_code` on `booking_requests.referral_code` (new nullable column) — do NOT fire `rental` event yet; rental qualifies on completion, not on payment.
-- On `charge.dispute.created` / `charge.refunded` for a referred transaction: invoke `referral-admin-action` (`place_on_hold` or `void` with reason) via service role.
+**Changes:**
+- In `src/hooks/useAnalyticsEvents.ts`:
+  - In `trackEventToDb`, before insert, set `metadata.is_internal = true` when the current user has the `admin` role (check via `user_roles` cached on `AuthContext`) or when `localStorage.vendibook_qa_mode === '1'`.
+  - In `useAdminFunnelMetrics`, `useAdminCityStats`, and `useAdminAlerts`, add `.not('metadata->>is_internal', 'eq', 'true')` to every query — but keep a separate "include internal" toggle in the admin dashboard for QA visibility.
+- No schema migration — uses the existing JSONB `metadata` column.
 
-### 2. Rental qualification on completion
-Edit `supabase/functions/complete-ended-bookings/index.ts`:
-- For each booking transitioned to `completed`, if it has `referral_code` or its `shopper_id` has a `signed_up` referral row, and booking duration ≥ 2h and value ≥ $150 and not cancelled/disputed, call `referral-record-event` with `program_type:'rental'`. Function already enforces config (`min_transaction_value=150`, `hold_days=2` mapped to 48h post-completion → `pending_review`).
+### 5. P2 — Stitch anonymous sessions to users at auth
+**Problem:** 98.5% of sessions are anonymous; we can't follow up on intent.
 
-### 3. Supply program wiring
-- **Migration:** add `referrals.listing_id uuid`, `referrals.listing_published_at timestamptz`, `referrals.supply_first_txn_at timestamptz`; add `booking_requests.referral_code text` and `sale_transactions.referral_code text` (nullable) so webhook can read them when Stripe metadata is lost.
-- **Listing publish hook:** in `PublishWizard` publish path (or via a small DB trigger on `listings.status -> 'published'`), if owner has a `signed_up` referral with no `program_type`, set `program_type='supply'`, `listing_id`, `listing_published_at=now()`, status `transaction_started`, log it. Prefer trigger to keep client paths clean.
-- **First-transaction watcher:** in `stripe-webhook` after a successful sale/booking, if the listing's host has an attached supply referral with `listing_published_at` set and `supply_first_txn_at IS NULL`:
-  - if `now() - listing_published_at >= 30 days` AND `now() - listing_published_at <= 90 days` AND listing still `published`/in good standing → call `referral-record-event` with `program_type:'supply'`.
-  - else if past 90d → mark `expired` via admin-action.
-- **Daily cron:** add a small scheduled function (or extend an existing one) `referral-supply-expiry` to flip stale supply referrals to `expired` after the 90-day window.
+**Changes:**
+- In `AuthContext.tsx`, on successful sign-in / sign-up, read the current `analytics_session_id` from sessionStorage and write a `session_user_link` event (`{ session_id, linked_user_id }`) so admin queries can back-fill attribution with a SQL join.
+- Update `useAdminFunnelMetrics` to UNION on linked sessions when computing per-user funnels.
 
-### 4. Auto-fraud evaluation
-Extend `referral-record-event` (single place) to insert `referral_fraud_flags` rows when:
-- referrer == seller_id / host_id of the qualifying entity,
-- buyer email/phone matches referrer email/phone,
-- referrer's `profiles.referral_suspended=true` (skip event entirely),
-- > N clicks from same hashed_ip in <1h (lookup `referral_clicks`),
-- signup-to-qualify gap < threshold for purchase.
-Flags block auto-payout (already enforced) but do not block status progression — admin reviews.
-
-### 5. Payout safety
-Confirm `referral-payout-batch` already checks `referral_auto_payout_enabled` flag, Stripe Connect status, fraud flags, hold window, threshold. Add the explicit short-circuit on `app_feature_flags.referral_auto_payout_enabled=false` at the top of the function if not already present, and ensure it returns "manual-only" without firing transfers.
-
-### 6. Notifications
-Hook into `send-referral-emails` (already present) from the three flip points: `pending_review`, `qualified/approved`, `paid`, `voided/on_hold`. Use the existing email queue (`enqueue_email`), not raw Resend. Add admin notifications for `qualified` + `fraud_flag_detected` via the existing `notifications` table.
-
-### 7. Dashboard real-data check
-`/referral/dashboard` already uses `useReferralCode` + `useMyReferrals`. Verify the aggregations on the page (total earned / pending / paid) read from `referrals.reward_amount` filtered by status — patch any remaining mock values. No redesign.
+## Out of scope (deferred)
+- Redesigning the lead-form UX (single-screen / "Save & keep browsing") — wait for field-blur data from change #1 to land first.
+- Supply-funnel host CTAs (P3) — minor lift, can ship next sprint.
+- Voice/Help cross-prompt (P2) — needs Vapi assistant config change, not codebase-only.
 
 ## Technical notes
+- All event names are added to the `LeadEventName` union and the `EVENT_CATEGORY` map so they flow through GA4 + the admin dashboard automatically (per `mem://integrations/analytics-and-tracking-central`).
+- No new tables, no RLS changes. All writes use existing `analytics_events` insert path.
+- Brand: every new CTA uses the orange-only Glass CTA per `mem://style/brand-identity`.
+- Mobile inputs in any new form fields stay at 16px per Core memory.
+- Will also quietly fix the two `Failed to fetch dynamically imported module` runtime errors (`ListingsSections.tsx` / `TrustInfrastructure.tsx`) since they're blocking the homepage.
 
-- All admin writes already go through `referral-admin-action` with idempotency + unique `(referral_id, action_type, idempotency_key)` on `referral_status_log` and `referral_fraud_flags`. Webhook-driven auto-actions must pass a deterministic idempotency key (e.g. `stripe-event-${event.id}`) so Stripe retries don't double-log.
-- New columns require a single migration with `GRANT` re-issued only if needed (existing tables already have grants).
-- Keep `referral_program_enabled=false` short-circuits at the top of `redeem-referral`, `referral-track-click`, `referral-apply-code`, `referral-record-event` (already in place — verify).
-- Do not touch unrelated cron jobs, marketing emails, Zendesk paths (Zendesk is removed), or notification trigger functions beyond adding referral events.
+## Files to touch
+- `src/lib/leadTracking.ts` — add event names + categories
+- `src/components/lead/TellVendibookModal.tsx` — blur + validation + abandon instrumentation
+- `src/components/search/SearchResults*.tsx` — impression + zero-results events
+- `src/components/storefront/*` + page wrapper — sticky CTA bar + click instrumentation
+- `src/hooks/useAnalyticsEvents.ts` — `is_internal` flag + admin query filter
+- `src/contexts/AuthContext.tsx` — session→user link on auth
+- Investigate root cause of the two dynamic-import failures and fix in place
 
-## Out of scope
-UI redesign, new tables for already-covered concepts, Stripe Connect onboarding rewrite, W9 collection UX, CSV export beyond what `ReferralAdmin` already renders.
+## Success criteria (re-measure in 7 days)
+- `lead_form_field_blur` shows ≥1 event per `lead_form_started` so we can rank drop-off fields.
+- `search_zero_results` vs `search_results_returned` ratio is visible; impression count > click count by a healthy margin.
+- ≥1 `profile_storefront_view` produces a downstream `profile_listing_click` or `profile_message_host_click`.
+- Admin funnel queries return numbers that exclude owner's session by default.
+- At least 1 anonymous session per day gets stitched to a user via `session_user_link`.

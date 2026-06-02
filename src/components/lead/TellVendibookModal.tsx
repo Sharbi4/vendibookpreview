@@ -108,10 +108,16 @@ export const TellVendibookModal = ({
   const [name, setName] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [openedAt, setOpenedAt] = useState<number | null>(null);
+  const [lastFieldTouched, setLastFieldTouched] = useState<string | null>(null);
+  const [fieldsCompleted, setFieldsCompleted] = useState<Set<string>>(new Set());
 
   // Fire lead_form_started once per open
   useEffect(() => {
     if (open && !submitted) {
+      setOpenedAt(Date.now());
+      setLastFieldTouched(null);
+      setFieldsCompleted(new Set());
       trackLeadEvent('lead_form_started', {
         intent: defaultIntent,
         category: defaultCategory,
@@ -128,10 +134,36 @@ export const TellVendibookModal = ({
 
   const budgetOptions = intent === 'buy' || intent === 'sell' ? BUDGET_BUY : BUDGET_RENT;
 
+  const trackBlur = (field: string, value: string) => {
+    const hasValue = value.trim().length > 0;
+    setLastFieldTouched(field);
+    setFieldsCompleted((prev) => {
+      const next = new Set(prev);
+      if (hasValue) next.add(field); else next.delete(field);
+      return next;
+    });
+    trackLeadEvent('lead_form_field_blur', {
+      field_name: field,
+      has_value: hasValue,
+      char_count: value.trim().length,
+      step,
+      listing_id: listingId,
+      source: sourcePage,
+    });
+  };
+
   const handleNext = () => {
     const parsed = step1Schema.safeParse({ intent, city, email, phone });
     if (!parsed.success) {
-      toast({ title: 'Almost there', description: parsed.error.issues[0]?.message, variant: 'destructive' });
+      const issue = parsed.error.issues[0];
+      trackLeadEvent('lead_form_validation_error', {
+        field_name: String(issue?.path?.[0] ?? 'unknown'),
+        error_message: issue?.message ?? 'invalid',
+        step: 1,
+        listing_id: listingId,
+        source: sourcePage,
+      });
+      toast({ title: 'Almost there', description: issue?.message, variant: 'destructive' });
       return;
     }
     setStep(2);
@@ -143,9 +175,18 @@ export const TellVendibookModal = ({
     const parsed = step1Schema.safeParse({ intent, city, email, phone });
     if (!parsed.success) {
       setStep(1);
-      toast({ title: 'Almost there', description: parsed.error.issues[0]?.message, variant: 'destructive' });
+      const issue = parsed.error.issues[0];
+      trackLeadEvent('lead_form_validation_error', {
+        field_name: String(issue?.path?.[0] ?? 'unknown'),
+        error_message: issue?.message ?? 'invalid',
+        step,
+        listing_id: listingId,
+        source: sourcePage,
+      });
+      toast({ title: 'Almost there', description: issue?.message, variant: 'destructive' });
       return;
     }
+
 
     setSubmitting(true);
     try {
@@ -243,10 +284,22 @@ export const TellVendibookModal = ({
 
   const handleClose = (next: boolean) => {
     if (!next) {
+      // Fire abandon event if user started but did not submit
+      if (open && !submitted) {
+        trackLeadEvent('lead_form_abandoned', {
+          last_field_touched: lastFieldTouched,
+          seconds_in_form: openedAt ? Math.round((Date.now() - openedAt) / 1000) : null,
+          fields_completed: Array.from(fieldsCompleted),
+          step,
+          listing_id: listingId,
+          source: sourcePage,
+        });
+      }
       setTimeout(() => { setSubmitted(false); setStep(1); }, 300);
     }
     onOpenChange(next);
   };
+
 
   const labelCls = 'text-[11px] font-semibold uppercase tracking-[0.14em] text-foreground/60';
   const inputCls = 'bg-white/[0.03] border-white/[0.08] text-[16px]';
@@ -318,6 +371,7 @@ export const TellVendibookModal = ({
                 id="tv-city"
                 value={city}
                 onChange={(e) => setCity(e.target.value)}
+                onBlur={(e) => trackBlur('city', e.target.value)}
                 placeholder="e.g. Austin, TX"
                 className={inputCls}
                 required
@@ -328,13 +382,14 @@ export const TellVendibookModal = ({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-2">
                 <Label htmlFor="tv-email" className={labelCls}>Email</Label>
-                <Input id="tv-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} className={inputCls} placeholder="you@example.com" />
+                <Input id="tv-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} onBlur={(e) => trackBlur('email', e.target.value)} className={inputCls} placeholder="you@example.com" />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="tv-phone" className={labelCls}>Phone</Label>
-                <Input id="tv-phone" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} className={inputCls} placeholder="(555) 555-5555" />
+                <Input id="tv-phone" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} onBlur={(e) => trackBlur('phone', e.target.value)} className={inputCls} placeholder="(555) 555-5555" />
               </div>
             </div>
+
             <p className="text-[11px] text-foreground/40 -mt-2">Email <em>or</em> phone — whichever's easiest.</p>
 
             <ConciergeTrustLine />

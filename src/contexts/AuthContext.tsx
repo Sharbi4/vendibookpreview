@@ -149,6 +149,28 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
               await syncGoogleProfile(session.user.id, session.user.user_metadata);
             }
 
+            // Stitch the anonymous analytics session to the now-known user so
+            // pre-auth events can be back-attributed in admin queries.
+            if (event === 'SIGNED_IN') {
+              try {
+                const sid = typeof window !== 'undefined'
+                  ? window.sessionStorage?.getItem('analytics_session_id')
+                  : null;
+                if (sid) {
+                  await (supabase.from('analytics_events') as any).insert({
+                    user_id: session.user.id,
+                    session_id: sid,
+                    event_name: 'session_user_link',
+                    event_category: 'attribution',
+                    metadata: { session_id: sid, linked_user_id: session.user.id, provider: session.user.app_metadata?.provider ?? 'email' },
+                    route: typeof window !== 'undefined' ? window.location.pathname : null,
+                  });
+                }
+              } catch (e) {
+                console.warn('[Analytics] session_user_link failed', e);
+              }
+            }
+
             const [profileData, rolesData] = await Promise.all([
               fetchProfile(session.user.id),
               fetchRoles(session.user.id),
@@ -164,6 +186,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         }
       }
     );
+
 
     // THEN check for existing session
     supabase.auth.getSession().then(async ({ data: { session } }) => {
