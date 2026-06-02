@@ -1203,6 +1203,105 @@ serve(async (req) => {
               actionType: "void_refund",
             });
           }
+
+          // ===== Featured Boost refunds =====
+          // Find any listing whose recorded boost payment matches this PI.
+          const { data: boostedListings, error: boostLookupErr } = await supabaseClient
+            .from('listings')
+            .select('id, title, host_id, featured_enabled, featured_expires_at, pending_featured_payment')
+            .filter('pending_featured_payment->>payment_intent_id', 'eq', paymentIntentId);
+
+          if (boostLookupErr) {
+            logStep('WARNING: boost refund lookup failed', { error: boostLookupErr.message });
+          } else if (boostedListings && boostedListings.length > 0) {
+            for (const listing of boostedListings) {
+              const prior = (listing.pending_featured_payment || {}) as Record<string, any>;
+              // Idempotency: skip if we already recorded this exact refund event
+              if (prior.refund_event_id === event.id || prior.status === 'refunded') {
+                logStep('Boost refund already applied — skipping', { listingId: listing.id });
+                continue;
+              }
+
+              const refundAmount = (charge.amount_refunded || 0) / 100;
+              const refundedAt = new Date().toISOString();
+              const updatedLedger = {
+                ...prior,
+                status: 'refunded',
+                refunded_at: refundedAt,
+                refund_amount: `$${refundAmount.toFixed(2)}`,
+                refund_event_id: event.id,
+                refund_reason: (charge.refunds?.data?.[0]?.reason) || 'requested_by_customer',
+              };
+
+              const { error: boostUpdErr } = await supabaseClient
+                .from('listings')
+                .update({
+                  featured_enabled: false,
+                  featured_expires_at: refundedAt,
+                  pending_featured_payment: updatedLedger,
+                })
+                .eq('id', listing.id);
+
+              if (boostUpdErr) {
+                logStep('ERROR: Failed to mark boost as refunded', { listingId: listing.id, error: boostUpdErr.message });
+                continue;
+              }
+              logStep('Boost marked as refunded', { listingId: listing.id, refundAmount });
+
+              // Fetch host profile for notification + email
+              const { data: hostProfile } = await supabaseClient
+                .from('profiles')
+                .select('email, first_name, full_name')
+                .eq('id', listing.host_id)
+                .single();
+
+              // In-app notification
+              try {
+                await supabaseClient.from('notifications').insert({
+                  user_id: listing.host_id,
+                  type: 'listing',
+                  title: 'Featured Boost Refunded',
+                  message: `Your $${refundAmount.toFixed(2)} Featured Boost for "${listing.title}" was refunded. Featured status has been removed.`,
+                  link: '/transactions?tab=charges',
+                });
+              } catch (n) {
+                logStep('WARNING: refund notification insert failed', { error: String(n) });
+              }
+
+              // Refund email
+              if (hostProfile?.email) {
+                try {
+                  await fetch(
+                    `${Deno.env.get('SUPABASE_URL')}/functions/v1/send-transactional-email`,
+                    {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${Deno.env.get('SUPABASE_ANON_KEY')}`,
+                      },
+                      body: JSON.stringify({
+                        templateName: 'featured-payment-refunded',
+                        recipientEmail: hostProfile.email,
+                        idempotencyKey: `featured-refund-${event.id}-${listing.id}`,
+                        templateData: {
+                          firstName: hostProfile.first_name || hostProfile.full_name?.split(' ')[0],
+                          listingTitle: listing.title,
+                          listingId: listing.id,
+                          amount: `$${refundAmount.toFixed(2)}`,
+                          refundedAt: new Date(refundedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
+                          receiptId: paymentIntentId,
+                          reason: updatedLedger.refund_reason,
+                        },
+                      }),
+                    }
+                  );
+                  logStep('Boost refund email sent', { email: hostProfile.email });
+                } catch (e) {
+                  logStep('WARNING: refund email failed', { error: String(e) });
+                }
+              }
+            }
+          }
         }
         break;
       }
