@@ -371,6 +371,7 @@ export const TellVendibookModal = ({
                 id="tv-city"
                 value={city}
                 onChange={(e) => setCity(e.target.value)}
+                onBlur={(e) => trackBlur('city', e.target.value)}
                 placeholder="e.g. Austin, TX"
                 className={inputCls}
                 required
@@ -381,13 +382,14 @@ export const TellVendibookModal = ({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-2">
                 <Label htmlFor="tv-email" className={labelCls}>Email</Label>
-                <Input id="tv-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} className={inputCls} placeholder="you@example.com" />
+                <Input id="tv-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} onBlur={(e) => trackBlur('email', e.target.value)} className={inputCls} placeholder="you@example.com" />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="tv-phone" className={labelCls}>Phone</Label>
-                <Input id="tv-phone" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} className={inputCls} placeholder="(555) 555-5555" />
+                <Input id="tv-phone" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} onBlur={(e) => trackBlur('phone', e.target.value)} className={inputCls} placeholder="(555) 555-5555" />
               </div>
             </div>
+
             <p className="text-[11px] text-foreground/40 -mt-2">Email <em>or</em> phone — whichever's easiest.</p>
 
             <ConciergeTrustLine />

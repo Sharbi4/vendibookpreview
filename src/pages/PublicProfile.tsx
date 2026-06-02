@@ -197,22 +197,27 @@ const PublicProfile = () => {
     return null;
   })();
 
-  // Track profile view
+  // Track storefront view (kept as profile_view for back-compat AND a new
+  // canonical profile_storefront_view so dashboards can dedupe).
   useEffect(() => {
     if (actualUserId && !isOwnProfile) {
-      trackEventToDb('profile_view', 'engagement', { 
+      trackEventToDb('profile_view', 'engagement', {
         host_id: actualUserId,
-        from_listing: listingContext 
+        from_listing: listingContext,
+      });
+      trackEventToDb('profile_storefront_view', 'storefront', {
+        host_id: actualUserId,
+        from_listing: listingContext,
       });
     }
   }, [actualUserId, isOwnProfile, listingContext]);
 
   // Handle message host
   const handleMessageHost = async () => {
-    trackEventToDb('message_host_click', 'conversion', { 
+    trackEventToDb('profile_message_host_click', 'storefront', {
       host_id: actualUserId,
       from_listing: listingContext,
-      source: 'profile' 
+      source: 'profile',
     });
 
     if (!user) {
@@ -256,16 +261,17 @@ const PublicProfile = () => {
 
   // Handle view listings click
   const handleViewListingsClick = () => {
-    trackEventToDb('view_listings_click', 'engagement', { 
+    trackEventToDb('profile_listing_click', 'storefront', {
       host_id: actualUserId,
-      source: 'profile' 
+      source: 'profile_view_listings_cta',
     });
     listingsRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
   // Handle share
   const handleShare = async () => {
-    trackEventToDb('share_profile_click', 'engagement', { host_id: actualUserId });
+    trackEventToDb('profile_share_click', 'storefront', { host_id: actualUserId });
+
     const url = `${window.location.origin}/u/${profile?.username || actualUserId}`;
     
     if (navigator.share) {
@@ -465,12 +471,13 @@ const PublicProfile = () => {
           soldListingsLoading={soldListingsLoading}
           pinnedListingId={profile.pinned_listing_id}
           onListingClick={(listingId) => {
-            trackEventToDb('listing_card_click', 'engagement', { 
+            trackEventToDb('profile_listing_click', 'storefront', {
               listing_id: listingId,
               host_id: actualUserId,
-              source: 'profile' 
+              source: 'profile_listing_card',
             });
           }}
+
           onMessageHost={handleMessageHost}
           onViewListings={handleViewListingsClick}
         />
