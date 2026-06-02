@@ -53,7 +53,7 @@
     --input: 0 0% 30%;
     --ring: 14 100% 57%;
 
-    --radius: 0.75rem;
+    --radius: 1rem;
 
     --sidebar-background: 0 0% 8%;
     --sidebar-foreground: 0 0% 95%;
@@ -134,6 +134,18 @@
   * {
     @apply border-border;
   }
+
+  /* Thicker, smoother borders globally */
+  .border,
+  .border-t,
+  .border-r,
+  .border-b,
+  .border-l,
+  .border-x,
+  .border-y {
+    border-width: 1.5px;
+  }
+  .border-2 { border-width: 2.5px; }
 
   body {
     @apply bg-background text-foreground antialiased;
