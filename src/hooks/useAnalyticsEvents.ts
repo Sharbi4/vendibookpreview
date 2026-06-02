@@ -140,12 +140,14 @@ export const useAdminFunnelMetrics = (days: number = 7) => {
         'booking_request_submitted',
       ];
 
-      // Fetch all events in date range
+      // Fetch all events in date range (exclude internal/QA-flagged traffic)
       const { data: events, error } = await supabase
         .from('analytics_events')
         .select('event_name, created_at')
         .gte('created_at', startDate.toISOString())
-        .in('event_name', [...supplyEvents, ...demandEvents]);
+        .in('event_name', [...supplyEvents, ...demandEvents])
+        .not('metadata->>is_internal', 'eq', 'true');
+
 
       if (error) throw error;
 
