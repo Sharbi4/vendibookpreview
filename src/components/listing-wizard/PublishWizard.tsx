@@ -1495,9 +1495,19 @@ export const PublishWizard: React.FC = () => {
       const listingHasPendingFeatured = !!listing.pending_featured_payment;
       const listingAlreadyFeatured = isListingFeatured(listing);
       if (featuredEnabled && !listingAlreadyFeatured && !listingHasPendingFeatured) {
+        // Publish FIRST so the boost checkout (which requires a published
+        // listing) succeeds. If the user abandons payment the listing stays
+        // published without the boost — correct fallback. Webhook flips
+        // featured_enabled once payment clears.
+        const isFirstTimePublishForBoost = !listing.published_at;
         const { error: persistError } = await supabase
           .from('listings')
-          .update({ ...baseUpdateData, ...pricingUpdateData })
+          .update({
+            ...baseUpdateData,
+            ...pricingUpdateData,
+            status: 'published',
+            ...(isFirstTimePublishForBoost ? { published_at: new Date().toISOString() } : {}),
+          })
           .eq('id', listing.id);
 
         if (persistError) throw persistError;
