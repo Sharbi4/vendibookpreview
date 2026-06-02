@@ -20,7 +20,8 @@ import AccountChargesSection from '@/components/dashboard/AccountChargesSection'
 const TransactionsPage = () => {
   const { user, isLoading: authLoading } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
-  const initialTab = searchParams.get('tab') === 'purchases' ? 'purchases' : 'bookings';
+  const tabParam = searchParams.get('tab');
+  const initialTab = tabParam === 'purchases' ? 'purchases' : tabParam === 'charges' ? 'charges' : 'bookings';
   const [activeTab, setActiveTab] = useState(initialTab);
   const { toast } = useToast();
 
