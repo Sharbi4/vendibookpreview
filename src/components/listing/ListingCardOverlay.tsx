@@ -228,13 +228,13 @@ const ListingCardOverlay = ({ open, onClose, listing }: ListingCardOverlayProps)
               onClick={(e) => {
                 e.stopPropagation();
                 trackLeadEvent(
-                  isSale ? 'overlay_dismissed' : 'availability_overlay_view_full_listing',
+                  'listing_overlay_view_full_listing',
                   { listing_id: listing.id, source: 'listing_card_availability_overlay' },
                 );
               }}
-              className="mt-3 flex items-center justify-center w-full h-11 rounded-xl border border-white/15 hover:border-white/30 text-white text-[14px] font-medium transition-colors"
+              className="mt-3 flex items-center justify-center w-full h-12 rounded-xl bg-white/[0.08] hover:bg-white/[0.14] border border-white/20 text-white text-[14px] font-semibold transition-colors"
             >
-              View Full Listing
+              Open full listing
             </Link>
 
             <p className="mt-3 text-center text-[11px] text-white/30 leading-relaxed">
