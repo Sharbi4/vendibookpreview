@@ -34,6 +34,7 @@ export type LeadEventName =
   | 'listing_start_purchase_click'
   | 'listing_check_dates_click'
   | 'listing_view_availability_click'
+  | 'listing_overlay_view_full_listing'
   | 'purchase_request_started'
   | 'rental_dates_request_started'
   | 'overlay_dismissed'
@@ -91,6 +92,7 @@ const EVENT_CATEGORY: Record<LeadEventName, string> = {
   listing_start_purchase_click: 'discovery',
   listing_check_dates_click: 'discovery',
   listing_view_availability_click: 'discovery',
+  listing_overlay_view_full_listing: 'discovery',
   purchase_request_started: 'lead',
   rental_dates_request_started: 'lead',
   overlay_dismissed: 'lead',
