@@ -110,6 +110,41 @@
 
   <!-- Analytics scripts are loaded dynamically based on cookie consent -->
 
+    <!-- Prevent third-party chat widgets (Tawk.to) from hijacking the browser tab title
+         with "(N) New Message" style alerts. We revert any title that matches the
+         tab-notification pattern back to the last legitimate title set by the app. -->
+    <script type="text/javascript">
+      (function(){
+        try {
+          var lastRealTitle = document.title;
+          // Matches "(1) ...", "(12) ...", or any title containing "new message"
+          var hijackPattern = /^\(\d+\)\s|new message/i;
+          var apply = function(){
+            var titleEl = document.querySelector('title');
+            if (!titleEl) return;
+            var revert = function(){
+              var t = document.title;
+              if (hijackPattern.test(t)) {
+                if (document.title !== lastRealTitle) {
+                  document.title = lastRealTitle;
+                }
+              } else {
+                lastRealTitle = t;
+              }
+            };
+            new MutationObserver(revert).observe(titleEl, { childList: true, subtree: true, characterData: true });
+            // Also guard against blur/focus-driven flashes
+            window.addEventListener('focus', revert);
+          };
+          if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', apply);
+          } else {
+            apply();
+          }
+        } catch (e) { /* no-op */ }
+      })();
+    </script>
+
     <!-- Start of Tawk.to Script -->
     <script type="text/javascript">
       var Tawk_API = Tawk_API || {}, Tawk_LoadStart = new Date();
