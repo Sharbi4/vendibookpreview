@@ -18,17 +18,43 @@ serve(async (req) => {
     const { type, data }: NotificationRequest = await req.json();
 
     const subjectMap: Record<string, string> = {
-      new_user: "New user signed up",
+      new_user: "New Vendibook user signed up",
       new_booking: "New booking request",
       booking_paid: "Booking payment received",
       sale_payment: "Sale payment received",
       newsletter_signup: "New newsletter signup",
-      new_listing: "New listing published",
+      new_listing: "New Vendibook listing published",
     };
 
-    const lines = Object.entries(data || {})
-      .map(([k, v]) => `${k}: ${typeof v === "object" ? JSON.stringify(v) : v}`)
-      .join("\n");
+    const labelMap: Record<string, string> = {
+      email: "Email",
+      full_name: "Name",
+      first_name: "First name",
+      last_name: "Last name",
+      phone_number: "Phone",
+      role: "Role",
+      provider: "Signup method",
+      user_id: "User ID",
+      listing_id: "Listing ID",
+      listing_title: "Listing",
+      title: "Title",
+      category: "Category",
+      mode: "Mode",
+      price: "Price",
+      city: "City",
+      state: "State",
+      host_email: "Owner email",
+      host_name: "Owner name",
+      published_at: "Published at",
+    };
+
+    const details = Object.entries(data || {})
+      .filter(([, v]) => v !== null && v !== undefined && v !== "")
+      .map(([k, v]) => ({
+        label: labelMap[k] || k.replace(/_/g, " "),
+        value: typeof v === "object" ? JSON.stringify(v) : String(v),
+        mono: k.endsWith("_id") || k === "email" || k === "host_email",
+      }));
 
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
     const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
@@ -42,13 +68,18 @@ serve(async (req) => {
           apikey: ANON_KEY,
         },
         body: JSON.stringify({
-          templateName: "admin-daily-digest",
+          templateName: "generic-notice",
           recipientEmail: recipient,
           idempotencyKey: `admin-notify-${type}-${recipient}-${Date.now()}`,
           templateData: {
             subject: subjectMap[type] || `Admin notification: ${type}`,
-            summary: subjectMap[type] || type,
-            details: lines,
+            preview: subjectMap[type] || type,
+            kicker: "Admin alert",
+            heading: subjectMap[type] || type,
+            paragraphs: ["This is a real-time Vendibook event notification."],
+            details,
+            ctaLabel: "Open admin",
+            ctaUrl: "https://vendibook.com/admin",
           },
         }),
       });

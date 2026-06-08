@@ -166,17 +166,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                   supabase.functions.invoke('send-welcome-email', {
                     body: { email, fullName, role: 'shopper' },
                   }).catch(e => console.error('welcome email failed', e));
-                  supabase.functions.invoke('send-admin-notification', {
-                    body: {
-                      type: 'new_user',
-                      data: {
-                        email,
-                        full_name: fullName,
-                        provider: session.user.app_metadata.provider,
-                        user_id: session.user.id,
-                      },
-                    },
-                  }).catch(e => console.error('admin notification failed', e));
                 }
               } catch (e) {
                 console.warn('new-user notification check failed', e);
@@ -295,22 +284,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           console.error('Failed to send welcome email:', welcomeError);
         }
 
-        // Send admin notification for new user signup
-        try {
-          await supabase.functions.invoke('send-admin-notification', {
-            body: {
-              type: 'new_user',
-              data: {
-                email,
-                full_name: fullName,
-                role,
-                user_id: data.user.id,
-              },
-            },
-          });
-        } catch (notifyError) {
-          console.error('Failed to send admin notification:', notifyError);
-        }
       }
 
       return { error: null };
