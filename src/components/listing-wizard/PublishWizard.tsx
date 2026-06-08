@@ -1315,8 +1315,8 @@ export const PublishWizard: React.FC = () => {
 
     if (stripeRequired && !isOnboardingComplete) {
       toast({
-        title: 'Connect Stripe to receive payments',
-        description: 'You need to complete Stripe onboarding before publishing.',
+        title: 'Connect Stripe to accept card payments',
+        description: 'Or switch to cash-only (Pay in Person) on the Pricing step to publish now and add Stripe later.',
         variant: 'destructive',
       });
       return;
