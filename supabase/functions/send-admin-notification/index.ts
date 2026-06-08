@@ -33,29 +33,31 @@ serve(async (req) => {
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
     const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
 
-    const resp = await fetch(`${SUPABASE_URL}/functions/v1/send-transactional-email`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${ANON_KEY}`,
-        apikey: ANON_KEY,
-      },
-      body: JSON.stringify({
-        templateName: "admin-daily-digest",
-        recipientEmail: ADMIN_EMAIL,
-        idempotencyKey: `admin-notify-${type}-${Date.now()}`,
-        templateData: {
-          subject: subjectMap[type] || `Admin notification: ${type}`,
-          summary: subjectMap[type] || type,
-          details: lines,
+    const results = await Promise.all(ADMIN_EMAILS.map(async (recipient) => {
+      const r = await fetch(`${SUPABASE_URL}/functions/v1/send-transactional-email`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${ANON_KEY}`,
+          apikey: ANON_KEY,
         },
-      }),
-    });
+        body: JSON.stringify({
+          templateName: "admin-daily-digest",
+          recipientEmail: recipient,
+          idempotencyKey: `admin-notify-${type}-${recipient}-${Date.now()}`,
+          templateData: {
+            subject: subjectMap[type] || `Admin notification: ${type}`,
+            summary: subjectMap[type] || type,
+            details: lines,
+          },
+        }),
+      });
+      if (!r.ok) {
+        const errText = await r.text();
+        throw new Error(`send-transactional-email failed for ${recipient} (${r.status}): ${errText}`);
+      }
+    }));
 
-    if (!resp.ok) {
-      const errText = await resp.text();
-      throw new Error(`send-transactional-email failed (${resp.status}): ${errText}`);
-    }
 
     return new Response(JSON.stringify({ success: true }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
