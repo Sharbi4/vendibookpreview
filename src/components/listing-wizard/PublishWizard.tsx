@@ -1677,7 +1677,7 @@ export const PublishWizard: React.FC = () => {
     if (!hasValidTitle) errors.push(`Title must be at least ${MIN_TITLE_LENGTH} characters`);
     if (!hasValidDescription) errors.push(`Description must be at least ${MIN_DESCRIPTION_LENGTH} characters (currently ${description.trim().length})`);
     if (!checklistState.hasLocation) errors.push('Complete the location and logistics section');
-    if (requiresStripe && !isOnboardingComplete) errors.push('Connect Stripe to receive payments');
+    if (requiresStripe && !isOnboardingComplete) errors.push('Connect Stripe to accept card payments — or switch to cash-only (Pay in Person) on the Pricing step to publish now and add Stripe later.');
     return errors;
   };
 
