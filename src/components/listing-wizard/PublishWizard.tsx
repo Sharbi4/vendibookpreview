@@ -1315,8 +1315,8 @@ export const PublishWizard: React.FC = () => {
 
     if (stripeRequired && !isOnboardingComplete) {
       toast({
-        title: 'Connect Stripe to receive payments',
-        description: 'You need to complete Stripe onboarding before publishing.',
+        title: 'Connect Stripe to accept card payments',
+        description: 'Or switch to cash-only (Pay in Person) on the Pricing step to publish now and add Stripe later.',
         variant: 'destructive',
       });
       return;
@@ -3849,18 +3849,32 @@ export const PublishWizard: React.FC = () => {
                             Connect to get paid from your listings
                           </h3>
                           <p className="text-sm text-muted-foreground mb-3">
-                            To go live and receive payments, you need to connect your Stripe account. Takes about 2 minutes.
+                            To accept card payments, connect Stripe (about 2 minutes). Or switch to cash-only (Pay in Person) and publish now — you can add Stripe later.
                           </p>
                           <div className="flex flex-wrap gap-2">
                             <Button size="sm" variant="dark-shine" onClick={handleStripeConnect} disabled={isConnecting}>
                               {isConnecting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
                               Connect Stripe (2 min)
                             </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => {
+                                setAcceptCardPayment(false);
+                                setAcceptCashPayment(true);
+                                toast({
+                                  title: 'Switched to cash-only',
+                                  description: 'You can publish now and add Stripe later from your dashboard.',
+                                });
+                              }}
+                            >
+                              Switch to cash-only & publish
+                            </Button>
                           </div>
                           <p className="text-xs text-muted-foreground mt-2">
                             ⚠️ Stripe opens in a new tab — please disable your pop-up blocker if it doesn't open.
                           </p>
-                          <div className="flex flex-wrap gap-2">
+                          <div className="flex flex-wrap gap-2 mt-2">
                             <Button size="sm" variant="dark-shine" onClick={() => navigate('/dashboard')}>
                               <Save className="w-4 h-4 mr-1" />
                               Save Draft
