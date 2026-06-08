@@ -1,5 +1,4 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -17,7 +16,6 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   try {
     const { type, data }: NotificationRequest = await req.json();
-    const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
 
     const subjectMap: Record<string, string> = {
       new_user: "New user signed up",
@@ -32,8 +30,17 @@ serve(async (req) => {
       .map(([k, v]) => `${k}: ${typeof v === "object" ? JSON.stringify(v) : v}`)
       .join("\n");
 
-    const { error } = await admin.functions.invoke("send-transactional-email", {
-      body: {
+    const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
+    const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
+
+    const resp = await fetch(`${SUPABASE_URL}/functions/v1/send-transactional-email`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${ANON_KEY}`,
+        apikey: ANON_KEY,
+      },
+      body: JSON.stringify({
         templateName: "admin-daily-digest",
         recipientEmail: ADMIN_EMAIL,
         idempotencyKey: `admin-notify-${type}-${Date.now()}`,
@@ -42,17 +49,22 @@ serve(async (req) => {
           summary: subjectMap[type] || type,
           details: lines,
         },
-      },
+      }),
     });
-    if (error) throw error;
+
+    if (!resp.ok) {
+      const errText = await resp.text();
+      throw new Error(`send-transactional-email failed (${resp.status}): ${errText}`);
+    }
 
     return new Response(JSON.stringify({ success: true }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" }
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e: any) {
     console.error("send-admin-notification error", e);
     return new Response(JSON.stringify({ error: e.message }), {
-      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" }
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
 });
