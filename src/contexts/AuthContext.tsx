@@ -149,6 +149,41 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
               await syncGoogleProfile(session.user.id, session.user.user_metadata);
             }
 
+            // Notify on first sign-in for OAuth (Google) users — email/password
+            // signups are handled inline in signUp(). Detected by created_at
+            // being close to now and matching last_sign_in_at.
+            if (event === 'SIGNED_IN' && session.user.app_metadata?.provider && session.user.app_metadata.provider !== 'email') {
+              try {
+                const createdAt = new Date(session.user.created_at).getTime();
+                const lastSignIn = session.user.last_sign_in_at ? new Date(session.user.last_sign_in_at).getTime() : createdAt;
+                const isNewUser = Math.abs(lastSignIn - createdAt) < 60_000 && Date.now() - createdAt < 5 * 60_000;
+                const flagKey = `welcome_sent_${session.user.id}`;
+                if (isNewUser && !window.localStorage.getItem(flagKey)) {
+                  window.localStorage.setItem(flagKey, '1');
+                  const meta = session.user.user_metadata || {};
+                  const fullName = meta.full_name || meta.name || '';
+                  const email = session.user.email || '';
+                  supabase.functions.invoke('send-welcome-email', {
+                    body: { email, fullName, role: 'shopper' },
+                  }).catch(e => console.error('welcome email failed', e));
+                  supabase.functions.invoke('send-admin-notification', {
+                    body: {
+                      type: 'new_user',
+                      data: {
+                        email,
+                        full_name: fullName,
+                        provider: session.user.app_metadata.provider,
+                        user_id: session.user.id,
+                      },
+                    },
+                  }).catch(e => console.error('admin notification failed', e));
+                }
+              } catch (e) {
+                console.warn('new-user notification check failed', e);
+              }
+            }
+
+
             // Stitch the anonymous analytics session to the now-known user so
             // pre-auth events can be back-attributed in admin queries.
             if (event === 'SIGNED_IN') {

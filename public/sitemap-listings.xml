@@ -79,7 +79,7 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/4e50a07a-6909-411b-a4e0-429fee24c52a</loc>
-    <lastmod>2026-06-04</lastmod>
+    <lastmod>2026-06-08</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
@@ -144,17 +144,6 @@
     </image:image>
   </url>
   <url>
-    <loc>https://vendibook.com/listing/fec458ae-0672-4073-ac92-c120de896c8a</loc>
-    <lastmod>2026-05-24</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://images.unsplash.com/photo-1559339352-11d035aa65de?w=800</image:loc>
-      <image:title>Premium Seafood Truck Empire</image:title>
-      <image:caption>Premium Seafood Truck Empire in Seattle, WA on Vendibook</image:caption>
-    </image:image>
-  </url>
-  <url>
     <loc>https://vendibook.com/listing/1826a0de-496d-4e32-842b-268c40b32d94</loc>
     <lastmod>2026-06-08</lastmod>
     <changefreq>weekly</changefreq>
@@ -163,6 +152,17 @@
       <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/4f5b0c8b-1cf0-4359-8f09-b8c78873db09/1826a0de-496d-4e32-842b-268c40b32d94/1780439085518-638kie.png</image:loc>
       <image:title>My Food Truck</image:title>
       <image:caption>My Food Truck on Vendibook</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://vendibook.com/listing/fec458ae-0672-4073-ac92-c120de896c8a</loc>
+    <lastmod>2026-06-08</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://images.unsplash.com/photo-1559339352-11d035aa65de?w=800</image:loc>
+      <image:title>Premium Seafood Truck Empire</image:title>
+      <image:caption>Premium Seafood Truck Empire in Seattle, WA on Vendibook</image:caption>
     </image:image>
   </url>
   <url>
