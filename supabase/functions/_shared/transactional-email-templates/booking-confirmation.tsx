@@ -4,6 +4,7 @@ import {
 } from 'npm:@react-email/components@0.0.22'
 import type { TemplateEntry } from './registry.ts'
 import { s, SITE_URL, SUPPORT_PHONE } from './_styles.ts'
+import { BlogHighlights, ToolsBlock } from './_blocks.tsx'
 
 interface BookingProps {
   guestName?: string
@@ -75,6 +76,9 @@ const BookingConfirmationEmail = ({
           <Text style={s.listItem}>• Message the host directly from your dashboard.</Text>
           <Text style={s.listItem}>• Upload any required documents before your start date.</Text>
           <Text style={s.listItem}>• Precise address unlocks once your booking is fully confirmed.</Text>
+
+          <ToolsBlock role="guest" />
+          <BlogHighlights role="guest" />
         </Section>
 
         <Text style={s.footnote}>

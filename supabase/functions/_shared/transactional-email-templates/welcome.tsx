@@ -4,6 +4,7 @@ import {
 } from 'npm:@react-email/components@0.0.22'
 import type { TemplateEntry } from './registry.ts'
 import { s, SITE_NAME, SITE_URL, SUPPORT_PHONE } from './_styles.ts'
+import { BlogHighlights, ToolsBlock } from './_blocks.tsx'
 
 interface WelcomeProps {
   name?: string
@@ -55,18 +56,8 @@ const WelcomeEmail = ({ name, role }: WelcomeProps) => {
               3. {isHost ? 'Connect Stripe to receive payouts.' : 'Verify your identity for instant booking.'}
             </Text>
 
-            <Hr style={s.hr} />
-
-            <Text style={s.smallHeader}>EXPLORE VENDIBOOK</Text>
-            <Text style={s.listItem}>
-              → <a href={`${SITE_URL}/dashboard`} style={{ color: '#FF5124', textDecoration: 'none', fontWeight: 600 }}>Your dashboard</a> — bookings, listings, messages
-            </Text>
-            <Text style={s.listItem}>
-              → <a href={`${SITE_URL}/browse`} style={{ color: '#FF5124', textDecoration: 'none', fontWeight: 600 }}>Browse the marketplace</a> — trucks, trailers, vendor lots
-            </Text>
-            <Text style={s.listItem}>
-              → <a href={`${SITE_URL}/blog`} style={{ color: '#FF5124', textDecoration: 'none', fontWeight: 600 }}>Read the blog</a> — tips, guides, and operator stories
-            </Text>
+            <ToolsBlock role={role} />
+            <BlogHighlights role={role} />
           </Section>
 
           <Text style={s.footnote}>

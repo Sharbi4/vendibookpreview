@@ -2,6 +2,7 @@ import * as React from 'npm:react@18.3.1'
 import { Body, Button, Container, Head, Heading, Html, Preview, Section, Text } from 'npm:@react-email/components@0.0.22'
 import type { TemplateEntry } from './registry.ts'
 import { s, SITE_URL } from './_styles.ts'
+import { BlogHighlights, ToolsBlock } from './_blocks.tsx'
 
 interface Props { sellerName?: string; listingTitle?: string; salePrice?: number; buyerName?: string; orderNumber?: string }
 
@@ -17,6 +18,8 @@ const E = ({ sellerName, listingTitle, salePrice, buyerName, orderNumber }: Prop
         {orderNumber ? <Section style={s.accentRow}><Text style={s.accentLabel}>ORDER</Text><Text style={s.accentValuePlain}>{orderNumber}</Text></Section> : null}
         <Text style={s.text}>Funds are released to your Stripe account after fulfillment confirmation.</Text>
         <Section style={s.ctaWrap}><Button href={`${SITE_URL}/dashboard`} style={s.button}>View transaction</Button></Section>
+        <ToolsBlock role="seller" />
+        <BlogHighlights role="seller" />
       </Section>
     </Container></Body></Html>
 )
