@@ -8,8 +8,24 @@
 // code has to know which articles or tools to feature.
 
 import * as React from 'npm:react@18.3.1'
-import { Button, Hr, Section, Text } from 'npm:@react-email/components@0.0.22'
-import { s, SITE_URL } from './_styles.ts'
+import { Button, Hr, Img, Section, Text } from 'npm:@react-email/components@0.0.22'
+import { s, SITE_URL, LOGO_URL } from './_styles.ts'
+
+// Shared brand header used at the top of every email. Renders the same wordmark
+// as the homepage hero, sized for inbox visibility (~180px wide).
+export const BrandHeader = () => (
+  <Section style={{ padding: '0 0 22px', textAlign: 'center' as const }}>
+    <a href={SITE_URL} style={{ textDecoration: 'none', display: 'inline-block' }}>
+      <Img
+        src={LOGO_URL}
+        alt="Vendibook"
+        width="180"
+        height="120"
+        style={{ display: 'block', margin: '0 auto', border: 0, outline: 'none', maxWidth: '180px', height: 'auto' }}
+      />
+    </a>
+  </Section>
+)
 
 export type Role = 'host' | 'shopper' | 'seller' | 'guest' | string | undefined
 
