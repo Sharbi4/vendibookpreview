@@ -21,12 +21,12 @@ const HOST_PICKS: BlogPick[] = [
   { slug: 'parked-food-truck-losing-money-rent-it-out', eyebrow: 'Earn more', title: 'Parked truck losing money? Rent it out the right way' },
 ]
 const SELLER_PICKS: BlogPick[] = [
-  { slug: 'sell-my-food-truck-valuation-guide-2026', eyebrow: 'Selling guide', title: 'What\u2019s my food truck actually worth? A 2026 valuation guide' },
+  { slug: 'sell-my-food-truck-valuation-guide-2026', eyebrow: 'Selling guide', title: 'What’s my food truck actually worth? A 2026 valuation guide' },
   { slug: 'sell-vs-rent-food-trailer-truck-ghost-kitchen', eyebrow: 'Strategy',  title: 'Sell vs. rent: which makes you more money?' },
 ]
 const SHOPPER_PICKS: BlogPick[] = [
   { slug: 'how-to-start-food-truck-business-2025', eyebrow: 'Getting started', title: 'How to start a food truck business in 2026' },
-  { slug: 'food-truck-vs-food-trailer-which-is-right', eyebrow: 'Buyer\u2019s guide', title: 'Food truck vs. food trailer \u2014 which is right for you?' },
+  { slug: 'food-truck-vs-food-trailer-which-is-right', eyebrow: 'Buyer’s guide', title: 'Food truck vs. food trailer — which is right for you?' },
 ]
 const GENERAL_PICKS: BlogPick[] = [
   { slug: 'new-exit-plan-food-truck-after-layoffs', eyebrow: 'Featured', title: 'The new exit plan: a food truck, a recipe, a fresh start' },
@@ -58,14 +58,14 @@ export const BlogHighlights = ({ role, posts }: { role?: Role; posts?: BlogPick[
           </Text>
           <Text style={{ fontSize: '12px', margin: 0 }}>
             <a href={`${SITE_URL}/blog/${p.slug}`} style={{ color: '#FF5124', textDecoration: 'none', fontWeight: 600 }}>
-              Read article \u2192
+              Read article →
             </a>
           </Text>
         </Section>
       ))}
       <Text style={{ fontSize: '12px', margin: '6px 0 0' }}>
         <a href={`${SITE_URL}/blog`} style={{ color: '#a3a3a3', textDecoration: 'none' }}>
-          Browse all articles \u2192
+          Browse all articles →
         </a>
       </Text>
     </>
@@ -86,7 +86,7 @@ const SELLER_TOOLS: Tool[] = [
 ]
 const SHOPPER_TOOLS: Tool[] = [
   { label: 'Browse Marketplace', href: `${SITE_URL}/browse`,                         desc: 'Trucks, trailers, ghost kitchens, vendor lots.' },
-  { label: 'Match Me',           href: `${SITE_URL}/browse?intent=match`,            desc: 'Tell us what you need \u2014 we surface the best matches.' },
+  { label: 'Match Me',           href: `${SITE_URL}/browse?intent=match`,            desc: 'Tell us what you need — we surface the best matches.' },
   { label: 'Startup Guide',      href: `${SITE_URL}/tools/startup-guide`,            desc: 'Free playbook for first-time food entrepreneurs.' },
 ]
 
@@ -105,8 +105,8 @@ export const ToolsBlock = ({ role, tools }: { role?: Role; tools?: Tool[] }) => 
       <Text style={s.smallHeader}>TOOLS BUILT FOR YOU</Text>
       {list.slice(0, 3).map((t) => (
         <Text key={t.label} style={s.listItem}>
-          \u2192 <a href={t.href} style={{ color: '#FF5124', textDecoration: 'none', fontWeight: 600 }}>{t.label}</a>
-          <span style={{ color: '#a3a3a3' }}> \u2014 {t.desc}</span>
+          → <a href={t.href} style={{ color: '#FF5124', textDecoration: 'none', fontWeight: 600 }}>{t.label}</a>
+          <span style={{ color: '#a3a3a3' }}> — {t.desc}</span>
         </Text>
       ))}
       <Section style={{ margin: '14px 0 0' }}>
