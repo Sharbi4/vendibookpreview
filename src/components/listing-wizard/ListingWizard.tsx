@@ -785,6 +785,12 @@ export const ListingWizard: React.FC = () => {
         };
 
         // Send listing live email (fire and forget)
+        // Map listing mode → email kind so we promote Instant Book (rentals) vs Featured Boost (sales).
+        const emailListingType =
+          formData.mode === 'rent' ? 'rental' :
+          formData.mode === 'sale' ? 'sale' :
+          formData.mode === 'both' ? 'both' : 'rental';
+
         supabase.functions.invoke('send-listing-live-email', {
           body: {
             hostEmail: user.email,
@@ -792,8 +798,10 @@ export const ListingWizard: React.FC = () => {
             listingTitle: formData.title,
             listingId: listing.id,
             listingImageUrl: coverImageUrl,
+            coverImageUrl,
             listingPrice: formatPrice(),
             category: CATEGORY_LABELS[formData.category as keyof typeof CATEGORY_LABELS] || formData.category,
+            listingType: emailListingType,
           },
         }).then(({ error }) => {
           if (error) console.error('Failed to send listing live email:', error);

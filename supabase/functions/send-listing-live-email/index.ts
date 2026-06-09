@@ -28,6 +28,8 @@ Deno.serve(async (req) => {
           listingId: b.listingId,
           category: b.category,
           city: b.city || (b.address ? String(b.address).split(',')[0] : undefined),
+          coverImageUrl: b.coverImageUrl,
+          listingType: b.listingType, // 'rental' | 'sale' | 'both'
         },
       },
     });

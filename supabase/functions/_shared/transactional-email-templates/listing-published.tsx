@@ -13,6 +13,8 @@ interface Props {
   category?: string
   city?: string
   coverImageUrl?: string
+  // 'rental' → push Instant Book. 'sale' → push Featured Boost. 'both' → show both. Defaults to 'rental'.
+  listingType?: 'rental' | 'sale' | 'both'
   // Optional — if absent, the referral section is hidden (no broken placeholders).
   referralCode?: string
   referralUrl?: string
@@ -21,13 +23,21 @@ interface Props {
 // "Launch kit" listing-published email. Designed to feel like a celebration +
 // a toolkit so the host immediately knows how to drive their first booking.
 const E = ({
-  hostName, listingTitle, listingId, category, city, coverImageUrl, referralCode, referralUrl,
+  hostName, listingTitle, listingId, category, city, coverImageUrl, listingType, referralCode, referralUrl,
 }: Props) => {
   const liveUrl = listingId ? `${SITE_URL}/listing/${listingId}` : `${SITE_URL}/dashboard?tab=listings`
   const shareUrl = listingId ? liveUrl : `${SITE_URL}/dashboard?tab=share`
   const shareKitDashUrl = `${SITE_URL}/dashboard?tab=share`
-  const boostUrl = `${SITE_URL}/dashboard?tab=listings`
+  const boostUrl = listingId
+    ? `${SITE_URL}/dashboard?tab=listings&boost=${listingId}`
+    : `${SITE_URL}/dashboard?tab=listings`
+  const instantBookUrl = listingId
+    ? `${SITE_URL}/edit-listing/${listingId}?focus=instant-book`
+    : `${SITE_URL}/dashboard?tab=listings`
   const editUrl = listingId ? `${SITE_URL}/edit-listing/${listingId}` : `${SITE_URL}/dashboard?tab=listings`
+  const kind: 'rental' | 'sale' | 'both' = listingType || 'rental'
+  const showInstantBook = kind === 'rental' || kind === 'both'
+  const showFeaturedBoost = kind === 'sale' || kind === 'both'
 
   const title = listingTitle || 'Your listing'
   const subjectLine = listingTitle ? `“${listingTitle}” is live` : 'Your listing is live'
@@ -242,14 +252,38 @@ const E = ({
               <a href={editUrl} style={{ color: '#FF5124', textDecoration: 'none', fontWeight: 600 }}>Edit photos →</a>
             </Text>
             <Text style={s.listItem}>
-              <strong style={{ color: '#fafafa' }}>3. Enable Instant Book.</strong> Lifts conversion ~30% by letting
-              vetted vendors book without a back-and-forth.
+              <strong style={{ color: '#fafafa' }}>3. {showInstantBook ? 'Enable Instant Book.' : 'Make it a Featured listing.'}</strong>{' '}
+              {showInstantBook ? (
+                <>
+                  Lifts rental conversion ~30% by letting vetted vendors book without back-and-forth.{' '}
+                  <a href={instantBookUrl} style={{ color: '#FF5124', textDecoration: 'none', fontWeight: 600 }}>Turn on Instant Book →</a>
+                </>
+              ) : (
+                <>
+                  Boosted items sell faster — your listing pins to the top of search and category pages for 30 days.{' '}
+                  <a href={boostUrl} style={{ color: '#FF5124', textDecoration: 'none', fontWeight: 600 }}>Make it Featured →</a>
+                </>
+              )}
             </Text>
-            <Text style={s.listItem}>
-              <strong style={{ color: '#fafafa' }}>4. Pin to the top with Featured Boost.</strong> 30 days at the top
-              of search and category pages.{' '}
-              <a href={boostUrl} style={{ color: '#FF5124', textDecoration: 'none', fontWeight: 600 }}>Boost this listing →</a>
-            </Text>
+            {kind === 'both' ? (
+              <Text style={s.listItem}>
+                <strong style={{ color: '#fafafa' }}>4. Pin to the top with Featured Boost.</strong> 30 days at the top
+                of search and category pages.{' '}
+                <a href={boostUrl} style={{ color: '#FF5124', textDecoration: 'none', fontWeight: 600 }}>Boost this listing →</a>
+              </Text>
+            ) : showInstantBook ? (
+              <Text style={s.listItem}>
+                <strong style={{ color: '#fafafa' }}>4. Pin to the top with Featured Boost.</strong> 30 days at the top
+                of search and category pages.{' '}
+                <a href={boostUrl} style={{ color: '#FF5124', textDecoration: 'none', fontWeight: 600 }}>Boost this listing →</a>
+              </Text>
+            ) : (
+              <Text style={s.listItem}>
+                <strong style={{ color: '#fafafa' }}>4. Answer buyer questions fast.</strong> Sellers who reply within an hour
+                close ~2× more deals.{' '}
+                <a href={`${SITE_URL}/messages`} style={{ color: '#FF5124', textDecoration: 'none', fontWeight: 600 }}>Open messages →</a>
+              </Text>
+            )}
 
             {/* Tools + Blog (role=host) */}
             <ToolsBlock role="host" />
