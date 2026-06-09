@@ -13,6 +13,8 @@ interface Props {
   category?: string
   city?: string
   coverImageUrl?: string
+  // 'rental' → push Instant Book. 'sale' → push Featured Boost. 'both' → show both. Defaults to 'rental'.
+  listingType?: 'rental' | 'sale' | 'both'
   // Optional — if absent, the referral section is hidden (no broken placeholders).
   referralCode?: string
   referralUrl?: string
@@ -21,13 +23,21 @@ interface Props {
 // "Launch kit" listing-published email. Designed to feel like a celebration +
 // a toolkit so the host immediately knows how to drive their first booking.
 const E = ({
-  hostName, listingTitle, listingId, category, city, coverImageUrl, referralCode, referralUrl,
+  hostName, listingTitle, listingId, category, city, coverImageUrl, listingType, referralCode, referralUrl,
 }: Props) => {
   const liveUrl = listingId ? `${SITE_URL}/listing/${listingId}` : `${SITE_URL}/dashboard?tab=listings`
   const shareUrl = listingId ? liveUrl : `${SITE_URL}/dashboard?tab=share`
   const shareKitDashUrl = `${SITE_URL}/dashboard?tab=share`
-  const boostUrl = `${SITE_URL}/dashboard?tab=listings`
+  const boostUrl = listingId
+    ? `${SITE_URL}/dashboard?tab=listings&boost=${listingId}`
+    : `${SITE_URL}/dashboard?tab=listings`
+  const instantBookUrl = listingId
+    ? `${SITE_URL}/edit-listing/${listingId}?focus=instant-book`
+    : `${SITE_URL}/dashboard?tab=listings`
   const editUrl = listingId ? `${SITE_URL}/edit-listing/${listingId}` : `${SITE_URL}/dashboard?tab=listings`
+  const kind: 'rental' | 'sale' | 'both' = listingType || 'rental'
+  const showInstantBook = kind === 'rental' || kind === 'both'
+  const showFeaturedBoost = kind === 'sale' || kind === 'both'
 
   const title = listingTitle || 'Your listing'
   const subjectLine = listingTitle ? `“${listingTitle}” is live` : 'Your listing is live'
