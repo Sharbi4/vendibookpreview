@@ -76,6 +76,9 @@ const BookingConfirmationEmail = ({
           <Text style={s.listItem}>• Message the host directly from your dashboard.</Text>
           <Text style={s.listItem}>• Upload any required documents before your start date.</Text>
           <Text style={s.listItem}>• Precise address unlocks once your booking is fully confirmed.</Text>
+
+          <ToolsBlock role="guest" />
+          <BlogHighlights role="guest" />
         </Section>
 
         <Text style={s.footnote}>
