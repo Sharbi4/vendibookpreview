@@ -133,8 +133,105 @@ const E = ({
 
             <Hr style={s.hr} />
 
+            {/* Where to share — places + why + copy-this examples */}
+            <Text style={s.smallHeader}>WHERE TO PUT YOUR VENDIBOOK LINK</Text>
+            <Text style={s.text}>
+              Your listing gives people one clean place to see photos, pricing, availability,
+              and next steps. Drop your link anywhere people already find you so they can
+              learn more and act faster.
+            </Text>
+
+            {[
+              {
+                where: 'Facebook Marketplace',
+                why: 'Marketplace gets attention, but people need details before they reach out. Your Vendibook link gives them a cleaner place to see the full offer.',
+                copy: 'See full details, photos, pricing, and availability here:\n' + shareUrl,
+              },
+              {
+                where: 'Facebook groups',
+                why: 'Local food truck, vendor, farmers market, commissary, and small business groups are full of people already looking. Your link makes your post easier to trust and act on.',
+                copy: 'I listed this on Vendibook so everything is in one place. View the full details here:\n' + shareUrl,
+              },
+              {
+                where: 'Instagram bio, story, or highlights',
+                why: 'Posts and stories disappear fast. Your listing link gives interested people a next step without making them DM you for basics.',
+                copy: 'Now available on Vendibook. Full listing here:\n' + shareUrl,
+              },
+              {
+                where: 'TikTok bio or caption',
+                why: 'A short video creates interest fast. The listing link turns viewers into real leads instead of comments asking for details.',
+                copy: 'Full details are on Vendibook. Link in bio:\n' + shareUrl,
+              },
+              {
+                where: 'Craigslist & other classifieds',
+                why: 'Classified posts feel limited. Your Vendibook link gives interested people a more professional, complete view of the listing.',
+                copy: 'For more photos, details, pricing, and booking steps, view the Vendibook listing here:\n' + shareUrl,
+              },
+              {
+                where: 'Text messages & DMs',
+                why: 'Instead of typing the same answers over and over, send one clean link that explains the listing clearly.',
+                copy: 'Here\u2019s the full listing with photos, pricing, details, and next steps:\n' + shareUrl,
+              },
+              {
+                where: 'Email signature',
+                why: 'Every email you already send becomes a quiet promotion for your listing.',
+                copy: 'View my Vendibook listing:\n' + shareUrl,
+              },
+              {
+                where: 'Your own website or landing page',
+                why: 'Your site explains who you are. Vendibook organizes the listing details, availability, and booking flow in one tidy place.',
+                copy: 'View availability and listing details on Vendibook:\n' + shareUrl,
+              },
+            ].map((tip) => (
+              <Section
+                key={tip.where}
+                style={{
+                  backgroundColor: '#141414',
+                  border: '1px solid #232323',
+                  borderRadius: '12px',
+                  padding: '16px 18px',
+                  margin: '0 0 12px',
+                }}
+              >
+                <Text style={{ ...s.detailLabel, color: '#FF5124' }}>WHERE TO SHARE</Text>
+                <Text style={{ fontSize: '15px', color: '#fafafa', fontWeight: 600, margin: '0 0 10px' }}>
+                  {tip.where}
+                </Text>
+                <Text style={{ fontSize: '13px', color: '#a3a3a3', lineHeight: 1.55, margin: '0 0 10px' }}>
+                  <strong style={{ color: '#d4d4d4' }}>Why it helps: </strong>{tip.why}
+                </Text>
+                <Text style={{ ...s.detailLabel, margin: '0 0 4px' }}>COPY THIS</Text>
+                <Text
+                  style={{
+                    fontSize: '13px',
+                    color: '#fafafa',
+                    lineHeight: 1.5,
+                    margin: 0,
+                    padding: '10px 12px',
+                    backgroundColor: '#0a0a0a',
+                    border: '1px solid #1f1f1f',
+                    borderRadius: '8px',
+                    whiteSpace: 'pre-wrap' as const,
+                    wordBreak: 'break-word' as const,
+                  }}
+                >
+                  {tip.copy}
+                </Text>
+              </Section>
+            ))}
+
+            <Section style={{ margin: '14px 0 4px' }}>
+              <Button href={shareKitDashUrl} style={s.button}>Copy my listing link</Button>
+            </Section>
+            <Text style={{ ...s.small, textAlign: 'center' as const, margin: '6px 0 0' }}>
+              Opens your Share Kit with one-tap copy + ready-made graphics.
+            </Text>
+
+            <Hr style={s.hr} />
+
             {/* Playbook */}
             <Text style={s.smallHeader}>YOUR 48-HOUR PLAYBOOK</Text>
+
             <Text style={s.listItem}>
               <strong style={{ color: '#fafafa' }}>1. Post on social today.</strong> Listings shared on day one
               get 3× the views of listings that aren't.
