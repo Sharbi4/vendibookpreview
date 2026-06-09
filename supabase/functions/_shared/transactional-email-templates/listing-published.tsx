@@ -2,6 +2,7 @@ import * as React from 'npm:react@18.3.1'
 import { Body, Button, Container, Head, Heading, Html, Preview, Section, Text } from 'npm:@react-email/components@0.0.22'
 import type { TemplateEntry } from './registry.ts'
 import { s, SITE_URL } from './_styles.ts'
+import { BlogHighlights, ToolsBlock } from './_blocks.tsx'
 
 interface Props { hostName?: string; listingTitle?: string; listingId?: string; category?: string; city?: string }
 
@@ -19,6 +20,8 @@ const E = ({ hostName, listingTitle, listingId, category, city }: Props) => (
         <Text style={s.listItem}>• Share the link on social — first 48 hours matter most.</Text>
         <Text style={s.listItem}>• Add 5+ photos to triple your views.</Text>
         <Text style={s.listItem}>• Enable Instant Book to lift conversion ~30%.</Text>
+        <ToolsBlock role="host" />
+        <BlogHighlights role="host" />
       </Section>
     </Container></Body></Html>
 )
