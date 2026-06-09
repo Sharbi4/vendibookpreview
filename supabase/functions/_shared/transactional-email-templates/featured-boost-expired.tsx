@@ -5,6 +5,7 @@ import {
 import type { TemplateEntry } from './registry.ts'
 import { s, SITE_URL, SUPPORT_PHONE } from './_styles.ts'
 
+import { BrandHeader } from './_blocks.tsx'
 interface FeaturedExpiredProps {
   firstName?: string
   listingTitle?: string
@@ -23,7 +24,7 @@ const FeaturedBoostExpiredEmail = ({
     <Preview>Your boost for {listingTitle || 'your listing'} has ended</Preview>
     <Body style={s.main}>
       <Container style={s.container}>
-        <Section style={s.brandBar}><Text style={s.brandMark}>VENDIBOOK</Text></Section>
+        <BrandHeader />
         <Section style={s.card}>
           <Text style={s.kicker}>BOOST ENDED</Text>
           <Heading style={s.h1}>

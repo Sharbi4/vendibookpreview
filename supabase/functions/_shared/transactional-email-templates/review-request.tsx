@@ -3,12 +3,13 @@ import { Body, Button, Container, Head, Heading, Html, Preview, Section, Text } 
 import type { TemplateEntry } from './registry.ts'
 import { s, SITE_URL } from './_styles.ts'
 
+import { BrandHeader } from './_blocks.tsx'
 interface Props { shopperName?: string; listingTitle?: string; hostName?: string; bookingId?: string }
 
 const E = ({ shopperName, listingTitle, hostName, bookingId }: Props) => (
   <Html lang="en" dir="ltr"><Head /><Preview>How was your experience?</Preview>
     <Body style={s.main}><Container style={s.container}>
-      <Section style={s.brandBar}><Text style={s.brandMark}>VENDIBOOK</Text></Section>
+      <BrandHeader />
       <Section style={s.card}>
         <Text style={s.smallHeader}>SHARE YOUR REVIEW</Text>
         <Heading style={s.h1}>{shopperName ? `${shopperName}, ` : ''}how did it go?</Heading>

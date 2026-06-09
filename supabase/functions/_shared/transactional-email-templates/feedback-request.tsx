@@ -3,6 +3,7 @@ import { Body, Button, Container, Head, Heading, Html, Hr, Link, Preview, Sectio
 import type { TemplateEntry } from './registry.ts'
 import { s, SITE_URL } from './_styles.ts'
 
+import { BrandHeader } from './_blocks.tsx'
 interface Props {
   recipientName?: string
   contextLabel?: string
@@ -38,7 +39,7 @@ const E = ({ recipientName, contextLabel, contextType, feedbackToken, aiIntro }:
   return (
     <Html lang="en" dir="ltr"><Head /><Preview>One tap, 0–10. How likely are you to recommend Vendibook?</Preview>
       <Body style={s.main}><Container style={s.container}>
-        <Section style={s.brandBar}><Text style={s.brandMark}>VENDIBOOK</Text></Section>
+        <BrandHeader />
         <Section style={s.card}>
           <Text style={s.smallHeader}>
             {isBroadcast ? 'A QUICK ASK FROM THE FOUNDERS' : isPublish ? 'A QUICK NOTE FROM THE FOUNDERS' : "WE'D LOVE YOUR FEEDBACK"}

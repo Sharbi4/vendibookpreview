@@ -3,6 +3,7 @@ import { Body, Button, Container, Head, Heading, Html, Preview, Section, Text, H
 import type { TemplateEntry } from './registry.ts'
 import { s, SITE_URL } from './_styles.ts'
 
+import { BrandHeader } from './_blocks.tsx'
 interface Listing { id: string; title: string; city?: string; state?: string; price?: number; priceLabel?: string; coverImageUrl?: string }
 interface Props {
   shopperName?: string
@@ -15,7 +16,7 @@ interface Props {
 const E = ({ shopperName, area, listings, aiInsight, tip }: Props) => (
   <Html lang="en" dir="ltr"><Head /><Preview>New listings near you on Vendibook</Preview>
     <Body style={s.main}><Container style={s.container}>
-      <Section style={s.brandBar}><Text style={s.brandMark}>VENDIBOOK</Text></Section>
+      <BrandHeader />
       <Section style={s.card}>
         <Text style={s.smallHeader}>NEW TODAY{area ? ` · ${area.toUpperCase()}` : ''}</Text>
         <Heading style={s.h1}>{shopperName ? `${shopperName}, ` : ''}fresh finds for you.</Heading>

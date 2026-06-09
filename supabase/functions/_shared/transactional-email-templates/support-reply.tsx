@@ -5,6 +5,7 @@ import {
 import type { TemplateEntry } from './registry.ts'
 import { s, SITE_NAME, SUPPORT_PHONE } from './_styles.ts'
 
+import { BrandHeader } from './_blocks.tsx'
 interface SupportReplyProps {
   firstName?: string
   subject?: string
@@ -25,7 +26,7 @@ const SupportReplyEmail = ({
     <Preview>{subject || `A note from ${SITE_NAME} support`}</Preview>
     <Body style={s.main}>
       <Container style={s.container}>
-        <Section style={s.brandBar}><Text style={s.brandMark}>VENDIBOOK</Text></Section>
+        <BrandHeader />
         <Section style={s.card}>
           <Text style={s.kicker}>CUSTOMER SUPPORT</Text>
           <Heading style={s.h1}>

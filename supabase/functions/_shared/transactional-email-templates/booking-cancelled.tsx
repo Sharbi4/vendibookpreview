@@ -3,12 +3,13 @@ import { Body, Container, Head, Heading, Html, Preview, Section, Text } from 'np
 import type { TemplateEntry } from './registry.ts'
 import { s } from './_styles.ts'
 
+import { BrandHeader } from './_blocks.tsx'
 interface Props { recipientName?: string; listingTitle?: string; cancelledBy?: 'host' | 'guest' | string; reason?: string }
 
 const E = ({ recipientName, listingTitle, cancelledBy, reason }: Props) => (
   <Html lang="en" dir="ltr"><Head /><Preview>Booking cancelled</Preview>
     <Body style={s.main}><Container style={s.container}>
-      <Section style={s.brandBar}><Text style={s.brandMark}>VENDIBOOK</Text></Section>
+      <BrandHeader />
       <Section style={s.card}>
         <Text style={s.smallHeader}>BOOKING CANCELLED</Text>
         <Heading style={s.h1}>{recipientName ? `${recipientName}, ` : ''}this booking has been cancelled.</Heading>

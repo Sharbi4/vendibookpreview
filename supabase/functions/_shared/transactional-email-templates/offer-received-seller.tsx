@@ -3,12 +3,13 @@ import { Body, Button, Container, Head, Heading, Html, Preview, Section, Text } 
 import type { TemplateEntry } from './registry.ts'
 import { s, SITE_URL } from './_styles.ts'
 
+import { BrandHeader } from './_blocks.tsx'
 interface Props { sellerName?: string; buyerName?: string; listingTitle?: string; offerAmount?: number; askingPrice?: number; message?: string; offerId?: string; expiresAt?: string }
 
 const E = ({ sellerName, buyerName, listingTitle, offerAmount, askingPrice, message, offerId, expiresAt }: Props) => (
   <Html lang="en" dir="ltr"><Head /><Preview>New offer received</Preview>
     <Body style={s.main}><Container style={s.container}>
-      <Section style={s.brandBar}><Text style={s.brandMark}>VENDIBOOK</Text></Section>
+      <BrandHeader />
       <Section style={s.card}>
         <Text style={s.smallHeader}>NEW OFFER</Text>
         <Heading style={s.h1}>{sellerName ? `${sellerName}, ` : ''}{buyerName || 'a buyer'} made an offer.</Heading>

@@ -3,6 +3,7 @@ import { Body, Button, Container, Head, Heading, Html, Preview, Section, Text, H
 import type { TemplateEntry } from './registry.ts'
 import { s, SITE_URL } from './_styles.ts'
 
+import { BrandHeader } from './_blocks.tsx'
 interface OfferRow { id: string; listingTitle?: string; offerAmount?: number; status?: string }
 interface Props {
   sellerName?: string
@@ -17,7 +18,7 @@ interface Props {
 const E = ({ sellerName, dateLabel, openOffers, salesYesterday, revenueYesterday, aiInsight, tip }: Props) => (
   <Html lang="en" dir="ltr"><Head /><Preview>Open offers and market pulse</Preview>
     <Body style={s.main}><Container style={s.container}>
-      <Section style={s.brandBar}><Text style={s.brandMark}>VENDIBOOK</Text></Section>
+      <BrandHeader />
       <Section style={s.card}>
         <Text style={s.smallHeader}>{dateLabel || 'TODAY'}</Text>
         <Heading style={s.h1}>{sellerName ? `${sellerName}, ` : ''}your sales pulse.</Heading>

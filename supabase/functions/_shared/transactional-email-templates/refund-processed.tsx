@@ -3,6 +3,7 @@ import { Body, Button, Container, Head, Heading, Html, Preview, Section, Text } 
 import type { TemplateEntry } from './registry.ts'
 import { s, SITE_URL } from './_styles.ts'
 
+import { BrandHeader } from './_blocks.tsx'
 interface Props {
   recipientName?: string
   listingTitle?: string
@@ -20,7 +21,7 @@ const E = ({ recipientName, listingTitle, refundAmount, reason, recipientType = 
   return (
     <Html lang="en" dir="ltr"><Head /><Preview>{isShopper ? 'Your refund has been processed' : 'Booking cancelled and refunded'}</Preview>
       <Body style={s.main}><Container style={s.container}>
-        <Section style={s.brandBar}><Text style={s.brandMark}>VENDIBOOK</Text></Section>
+        <BrandHeader />
         <Section style={s.card}>
           <Text style={s.smallHeader}>{isShopper ? 'REFUND PROCESSED' : 'BOOKING CANCELLED'}</Text>
           <Heading style={s.h1}>{recipientName ? `${recipientName}, ` : ''}{isShopper ? 'your refund is on the way' : 'a booking was cancelled'}.</Heading>

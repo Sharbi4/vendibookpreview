@@ -3,12 +3,13 @@ import { Body, Button, Container, Head, Heading, Html, Preview, Section, Text } 
 import type { TemplateEntry } from './registry.ts'
 import { s, SITE_URL } from './_styles.ts'
 
+import { BrandHeader } from './_blocks.tsx'
 interface Props { recipientName?: string; senderName?: string; messagePreview?: string; conversationId?: string; unreadCount?: number }
 
 const E = ({ recipientName, senderName, messagePreview, conversationId, unreadCount }: Props) => (
   <Html lang="en" dir="ltr"><Head /><Preview>{senderName || 'Someone'} sent you a message</Preview>
     <Body style={s.main}><Container style={s.container}>
-      <Section style={s.brandBar}><Text style={s.brandMark}>VENDIBOOK</Text></Section>
+      <BrandHeader />
       <Section style={s.card}>
         <Text style={s.smallHeader}>{unreadCount && unreadCount > 1 ? `${unreadCount} NEW MESSAGES` : 'NEW MESSAGE'}</Text>
         <Heading style={s.h1}>{recipientName ? `${recipientName}, ` : ''}{senderName || 'someone'} reached out.</Heading>

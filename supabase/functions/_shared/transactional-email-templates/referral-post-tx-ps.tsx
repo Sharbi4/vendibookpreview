@@ -3,6 +3,7 @@ import { Body, Container, Head, Html, Link, Preview, Section, Text, Heading } fr
 import type { TemplateEntry } from './registry.ts'
 import { s, SITE_URL, SUPPORT_PHONE } from './_styles.ts'
 
+import { BrandHeader } from './_blocks.tsx'
 interface Props {
   name?: string
   transactionType?: 'purchase' | 'rental' | 'listing'
@@ -17,7 +18,7 @@ const HEADLINES: Record<string, string> = {
 const E = ({ name, transactionType = 'purchase' }: Props) => (
   <Html lang="en" dir="ltr"><Head /><Preview>One quick thing worth knowing.</Preview>
     <Body style={s.main}><Container style={s.container}>
-      <Section style={s.brandBar}><Text style={s.brandMark}>VENDIBOOK</Text></Section>
+      <BrandHeader />
       <Section style={s.card}>
         <Heading style={s.h1}>{name ? `${name}, ` : ''}{HEADLINES[transactionType]}</Heading>
         <Text style={s.text}>

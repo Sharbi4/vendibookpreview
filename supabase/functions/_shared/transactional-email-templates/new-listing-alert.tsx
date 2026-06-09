@@ -3,6 +3,7 @@ import { Body, Button, Container, Head, Heading, Html, Img, Preview, Section, Te
 import type { TemplateEntry } from './registry.ts'
 import { s, SITE_URL } from './_styles.ts'
 
+import { BrandHeader } from './_blocks.tsx'
 interface Props {
   name?: string
   listingTitle?: string
@@ -22,7 +23,7 @@ const E = ({ name, listingTitle, listingId, categoryLabel, modeLabel, priceLabel
   return (
     <Html lang="en" dir="ltr"><Head /><Preview>{listingTitle ? `${listingTitle} just listed near you` : 'A new listing just went live near you'}</Preview>
       <Body style={s.main}><Container style={s.container}>
-        <Section style={s.brandBar}><Text style={s.brandMark}>VENDIBOOK</Text></Section>
+        <BrandHeader />
         <Section style={s.card}>
           <Text style={s.smallHeader}>NEW MATCH NEAR YOU</Text>
           <Heading style={s.h1}>{name ? `${name}, a new listing just dropped.` : 'A new listing just dropped near you.'}</Heading>
