@@ -3,6 +3,7 @@ import {
   Body, Button, Container, Head, Heading, Hr, Html, Preview, Section, Text,
 } from 'npm:@react-email/components@0.0.22'
 import type { TemplateEntry } from './registry.ts'
+import { BrandHeader } from './_blocks.tsx'
 
 const SITE_NAME = 'Vendibook'
 const SITE_URL = 'https://vendibook.com'
@@ -25,9 +26,7 @@ const PaymentReceiptEmail = ({
     <Preview>Receipt from {SITE_NAME} — {amount ?? 'payment received'}</Preview>
     <Body style={main}>
       <Container style={container}>
-        <Section style={brandBar}>
-          <Text style={brandMark}>VENDIBOOK</Text>
-        </Section>
+        <BrandHeader />
 
         <Section style={card}>
           <Text style={kicker}>PAYMENT RECEIPT</Text>
