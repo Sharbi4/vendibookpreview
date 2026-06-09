@@ -3,12 +3,13 @@ import { Body, Button, Container, Head, Heading, Html, Preview, Section, Text } 
 import type { TemplateEntry } from './registry.ts'
 import { s, SITE_URL } from './_styles.ts'
 
+import { BrandHeader } from './_blocks.tsx'
 interface Props { recipientName?: string; documentName?: string; approved?: boolean; reason?: string; bookingId?: string }
 
 const E = ({ recipientName, documentName, approved, reason, bookingId }: Props) => (
   <Html lang="en" dir="ltr"><Head /><Preview>Document {approved ? 'approved' : 'needs attention'}</Preview>
     <Body style={s.main}><Container style={s.container}>
-      <Section style={s.brandBar}><Text style={s.brandMark}>VENDIBOOK</Text></Section>
+      <BrandHeader />
       <Section style={s.card}>
         <Text style={s.smallHeader}>DOCUMENT {approved ? 'APPROVED' : 'REJECTED'}</Text>
         <Heading style={s.h1}>{recipientName ? `${recipientName}, ` : ''}{approved ? 'your document is approved.' : 'we need a new upload.'}</Heading>

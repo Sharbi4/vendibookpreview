@@ -6,6 +6,7 @@ import {
   Body, Button, Container, Head, Heading, Hr, Html, Preview, Section, Text,
 } from 'npm:@react-email/components@0.0.22'
 import type { TemplateEntry } from './registry.ts'
+import { BrandHeader } from './_blocks.tsx'
 
 const SITE_NAME = 'Vendibook'
 const SITE_URL = 'https://vendibook.com'
@@ -52,9 +53,7 @@ const GenericNoticeEmail = ({
       <Preview>{preview || heading || `Update from ${SITE_NAME}`}</Preview>
       <Body style={main}>
         <Container style={container}>
-          <Section style={brandBar}>
-            <Text style={brandMark}>VENDIBOOK</Text>
-          </Section>
+          <BrandHeader />
 
           <Section style={card}>
             {kicker && <Text style={kickerStyle}>{kicker.toUpperCase()}</Text>}

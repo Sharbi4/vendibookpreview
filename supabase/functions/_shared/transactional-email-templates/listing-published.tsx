@@ -2,14 +2,14 @@ import * as React from 'npm:react@18.3.1'
 import { Body, Button, Container, Head, Heading, Html, Preview, Section, Text } from 'npm:@react-email/components@0.0.22'
 import type { TemplateEntry } from './registry.ts'
 import { s, SITE_URL } from './_styles.ts'
-import { BlogHighlights, ToolsBlock } from './_blocks.tsx'
+import {BrandHeader, BlogHighlights, ToolsBlock} from './_blocks.tsx'
 
 interface Props { hostName?: string; listingTitle?: string; listingId?: string; category?: string; city?: string }
 
 const E = ({ hostName, listingTitle, listingId, category, city }: Props) => (
   <Html lang="en" dir="ltr"><Head /><Preview>Your listing is live</Preview>
     <Body style={s.main}><Container style={s.container}>
-      <Section style={s.brandBar}><Text style={s.brandMark}>VENDIBOOK</Text></Section>
+      <BrandHeader />
       <Section style={s.card}>
         <Text style={s.smallHeader}>LISTING PUBLISHED</Text>
         <Heading style={s.h1}>{hostName ? `${hostName}, ` : ''}you're live.</Heading>

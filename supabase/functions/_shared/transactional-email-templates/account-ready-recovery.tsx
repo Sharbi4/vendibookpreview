@@ -5,6 +5,7 @@ import {
 import type { TemplateEntry } from './registry.ts'
 import { s, SITE_NAME, SITE_URL, SUPPORT_PHONE } from './_styles.ts'
 
+import { BrandHeader } from './_blocks.tsx'
 interface AccountReadyRecoveryProps {
   name?: string
 }
@@ -15,7 +16,7 @@ const AccountReadyRecoveryEmail = ({ name }: AccountReadyRecoveryProps) => (
     <Preview>Your {SITE_NAME} account is ready — no verification email needed</Preview>
     <Body style={s.main}>
       <Container style={s.container}>
-        <Section style={s.brandBar}><Text style={s.brandMark}>VENDIBOOK</Text></Section>
+        <BrandHeader />
         <Section style={s.card}>
           <Text style={s.kicker}>YOUR ACCOUNT IS ACTIVE</Text>
           <Heading style={s.h1}>{name ? `${name}, you're all set.` : `You're all set.`}</Heading>

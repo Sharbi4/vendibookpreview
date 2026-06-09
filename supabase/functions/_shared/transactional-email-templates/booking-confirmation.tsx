@@ -4,7 +4,7 @@ import {
 } from 'npm:@react-email/components@0.0.22'
 import type { TemplateEntry } from './registry.ts'
 import { s, SITE_URL, SUPPORT_PHONE } from './_styles.ts'
-import { BlogHighlights, ToolsBlock } from './_blocks.tsx'
+import {BrandHeader, BlogHighlights, ToolsBlock} from './_blocks.tsx'
 
 interface BookingProps {
   guestName?: string
@@ -25,7 +25,7 @@ const BookingConfirmationEmail = ({
     <Preview>Booking confirmed — {listingTitle ?? 'your reservation'}</Preview>
     <Body style={s.main}>
       <Container style={s.container}>
-        <Section style={s.brandBar}><Text style={s.brandMark}>VENDIBOOK</Text></Section>
+        <BrandHeader />
 
         <Section style={s.card}>
           <Text style={s.kicker}>BOOKING CONFIRMED</Text>

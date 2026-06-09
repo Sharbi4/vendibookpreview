@@ -27,7 +27,7 @@ const FeaturedPaymentAdminAlert = ({
     <Preview>New boost payment — {amount} from {hostName || 'a host'}</Preview>
     <Body style={s.main}>
       <Container style={s.container}>
-        <Section style={s.brandBar}><Text style={s.brandMark}>VENDIBOOK · INTERNAL</Text></Section>
+        <BrandHeader />
         <Section style={s.card}>
           <Text style={s.kicker}>NEW BOOST PAYMENT 💰</Text>
           <Heading style={s.h1}>{amount} boost paid</Heading>

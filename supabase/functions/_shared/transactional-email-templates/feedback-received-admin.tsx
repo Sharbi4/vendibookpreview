@@ -18,7 +18,7 @@ interface Props {
 const E = ({ fromEmail, fromName, rating, nps, message, contextType, contextLabel, businessType, canShare }: Props) => (
   <Html lang="en" dir="ltr"><Head /><Preview>New feedback submitted on Vendibook</Preview>
     <Body style={s.main}><Container style={s.container}>
-      <Section style={s.brandBar}><Text style={s.brandMark}>VENDIBOOK · ADMIN</Text></Section>
+      <BrandHeader />
       <Section style={s.card}>
         <Text style={s.smallHeader}>NEW FEEDBACK</Text>
         <Heading style={s.h1}>{rating ? `${rating}★` : 'Feedback'} {nps != null ? `· NPS ${nps}` : ''}</Heading>

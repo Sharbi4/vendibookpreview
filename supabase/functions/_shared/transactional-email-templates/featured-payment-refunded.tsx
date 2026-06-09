@@ -5,6 +5,7 @@ import {
 import type { TemplateEntry } from './registry.ts'
 import { s, SITE_URL, SUPPORT_PHONE } from './_styles.ts'
 
+import { BrandHeader } from './_blocks.tsx'
 interface FeaturedRefundedProps {
   firstName?: string
   listingTitle?: string
@@ -29,7 +30,7 @@ const FeaturedPaymentRefundedEmail = ({
     <Preview>Your boost refund for {listingTitle || 'your listing'} has been processed</Preview>
     <Body style={s.main}>
       <Container style={s.container}>
-        <Section style={s.brandBar}><Text style={s.brandMark}>VENDIBOOK</Text></Section>
+        <BrandHeader />
         <Section style={s.card}>
           <Text style={s.kicker}>BOOST REFUNDED</Text>
           <Heading style={s.h1}>

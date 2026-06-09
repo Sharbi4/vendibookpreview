@@ -2,14 +2,14 @@ import * as React from 'npm:react@18.3.1'
 import { Body, Button, Container, Head, Heading, Html, Preview, Section, Text } from 'npm:@react-email/components@0.0.22'
 import type { TemplateEntry } from './registry.ts'
 import { s, SITE_URL } from './_styles.ts'
-import { BlogHighlights, ToolsBlock } from './_blocks.tsx'
+import {BrandHeader, BlogHighlights, ToolsBlock} from './_blocks.tsx'
 
 interface Props { sellerName?: string; listingTitle?: string; salePrice?: number; buyerName?: string; orderNumber?: string }
 
 const E = ({ sellerName, listingTitle, salePrice, buyerName, orderNumber }: Props) => (
   <Html lang="en" dir="ltr"><Head /><Preview>Sale completed 🎉</Preview>
     <Body style={s.main}><Container style={s.container}>
-      <Section style={s.brandBar}><Text style={s.brandMark}>VENDIBOOK</Text></Section>
+      <BrandHeader />
       <Section style={s.card}>
         <Text style={s.smallHeader}>SALE COMPLETED</Text>
         <Heading style={s.h1}>{sellerName ? `${sellerName}, ` : ''}your sale closed.</Heading>

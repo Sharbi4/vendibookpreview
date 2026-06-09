@@ -4,7 +4,7 @@ import {
 } from 'npm:@react-email/components@0.0.22'
 import type { TemplateEntry } from './registry.ts'
 import { s, SITE_NAME, SITE_URL, SUPPORT_PHONE } from './_styles.ts'
-import { BlogHighlights, ToolsBlock } from './_blocks.tsx'
+import {BrandHeader, BlogHighlights, ToolsBlock} from './_blocks.tsx'
 
 interface WelcomeProps {
   name?: string
@@ -19,7 +19,7 @@ const WelcomeEmail = ({ name, role }: WelcomeProps) => {
       <Preview>Welcome to {SITE_NAME} — your mobile food business marketplace</Preview>
       <Body style={s.main}>
         <Container style={s.container}>
-          <Section style={s.brandBar}><Text style={s.brandMark}>VENDIBOOK</Text></Section>
+          <BrandHeader />
           <Section style={s.card}>
             <Text style={s.kicker}>WELCOME ABOARD</Text>
             <Heading style={s.h1}>{name ? `Welcome, ${name}.` : 'Welcome.'}</Heading>

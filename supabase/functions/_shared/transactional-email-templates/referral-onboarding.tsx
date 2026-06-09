@@ -3,6 +3,7 @@ import { Body, Button, Container, Head, Heading, Html, Preview, Section, Text, H
 import type { TemplateEntry } from './registry.ts'
 import { s, SITE_URL, SITE_NAME, SUPPORT_PHONE } from './_styles.ts'
 
+import { BrandHeader } from './_blocks.tsx'
 interface Props {
   name?: string
 }
@@ -16,7 +17,7 @@ const PROGRAMS = [
 const E = ({ name }: Props) => (
   <Html lang="en" dir="ltr"><Head /><Preview>No listings needed.</Preview>
     <Body style={s.main}><Container style={s.container}>
-      <Section style={s.brandBar}><Text style={s.brandMark}>VENDIBOOK</Text></Section>
+      <BrandHeader />
       <Section style={s.card}>
         <Text style={s.kicker}>REFER &amp; EARN</Text>
         <Heading style={s.h1}>{name ? `${name}, ` : ''}a quick way to earn on {SITE_NAME}.</Heading>

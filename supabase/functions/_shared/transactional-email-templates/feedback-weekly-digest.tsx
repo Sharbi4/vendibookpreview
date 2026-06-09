@@ -20,7 +20,7 @@ const sevColor = (sev?: string) => sev === 'high' ? '#ef4444' : sev === 'medium'
 const E = ({ weekLabel, totalSubmissions = 0, avgNps, promoters = 0, detractors = 0, themes = [], highlightQuotes = [], rawSummary }: Props) => (
   <Html lang="en" dir="ltr"><Head /><Preview>Weekly feedback digest — {totalSubmissions} responses, avg NPS {avgNps ?? '—'}</Preview>
     <Body style={s.main}><Container style={s.container}>
-      <Section style={s.brandBar}><Text style={s.brandMark}>VENDIBOOK · ADMIN</Text></Section>
+      <BrandHeader />
       <Section style={s.card}>
         <Text style={s.kicker}>WEEKLY FEEDBACK DIGEST</Text>
         <Heading style={s.h1}>{weekLabel || 'This week in feedback'}</Heading>

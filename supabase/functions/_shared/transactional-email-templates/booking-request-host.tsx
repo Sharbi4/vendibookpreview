@@ -3,12 +3,13 @@ import { Body, Button, Container, Head, Heading, Html, Preview, Section, Text } 
 import type { TemplateEntry } from './registry.ts'
 import { s, SITE_URL, SUPPORT_PHONE } from './_styles.ts'
 
+import { BrandHeader } from './_blocks.tsx'
 interface Props { hostName?: string; shopperName?: string; listingTitle?: string; startDate?: string; endDate?: string; totalPrice?: number; bookingId?: string; message?: string }
 
 const E = ({ hostName, shopperName, listingTitle, startDate, endDate, totalPrice, bookingId, message }: Props) => (
   <Html lang="en" dir="ltr"><Head /><Preview>New booking request from {shopperName || 'a guest'}</Preview>
     <Body style={s.main}><Container style={s.container}>
-      <Section style={s.brandBar}><Text style={s.brandMark}>VENDIBOOK</Text></Section>
+      <BrandHeader />
       <Section style={s.card}>
         <Text style={s.smallHeader}>NEW BOOKING REQUEST</Text>
         <Heading style={s.h1}>{shopperName || 'A guest'} wants to book {listingTitle ? `“${listingTitle}”` : 'your listing'}.</Heading>

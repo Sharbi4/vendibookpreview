@@ -3,6 +3,7 @@ import { Body, Button, Container, Head, Heading, Html, Preview, Section, Text, H
 import type { TemplateEntry } from './registry.ts'
 import { s, SITE_URL } from './_styles.ts'
 
+import { BrandHeader } from './_blocks.tsx'
 interface Props {
   hostName?: string
   weekLabel?: string
@@ -26,7 +27,7 @@ const REFERRAL_COPY: Record<string, string> = {
 const E = ({ hostName, weekLabel, views, inquiries, bookings, earnings, topListingTitle, topListingId, aiInsight, tip, referralProgram }: Props) => (
   <Html lang="en" dir="ltr"><Head /><Preview>Your weekly Vendibook digest</Preview>
     <Body style={s.main}><Container style={s.container}>
-      <Section style={s.brandBar}><Text style={s.brandMark}>VENDIBOOK</Text></Section>
+      <BrandHeader />
       <Section style={s.card}>
         <Text style={s.smallHeader}>{weekLabel || 'THIS WEEK'}</Text>
         <Heading style={s.h1}>{hostName ? `${hostName}, ` : ''}here's your week.</Heading>
