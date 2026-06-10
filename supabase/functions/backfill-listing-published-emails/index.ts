@@ -43,7 +43,7 @@ Deno.serve(async (req) => {
 
     const results: Array<{ listingId: string; email?: string; status: string; error?: string }> = []
     for (const l of (listings || []) as any[]) {
-      const profile = Array.isArray(l.profiles) ? l.profiles[0] : l.profiles
+      const profile: any = byId.get(l.host_id)
       const email = profile?.email
       if (!email) { results.push({ listingId: l.id, status: 'skipped_no_email' }); continue }
 
