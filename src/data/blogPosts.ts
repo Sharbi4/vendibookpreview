@@ -27,6 +27,247 @@ export const BLOG_CATEGORIES = [
 
 export const BLOG_POSTS: BlogPost[] = [
   {
+    slug: 'texas-mobile-food-vendor-law-2026',
+    title: 'Texas Is Changing Food Truck Licensing: What the New Statewide Mobile Food Vendor Law Means for Owners, Renters, Sellers, and Operators',
+    description: 'Starting July 1, 2026, Texas mobile food vendors move to a statewide DSHS license. Here is what it means for food trailer rentals, fleet owners, sellers, operators, and event hosts.',
+    excerpt: 'On July 1, 2026, Texas replaces its patchwork of local health permits with a single statewide Mobile Food Vendor license through DSHS — a major shift for trailer rentals, fleet operators, sellers, and event organizers.',
+    image: '/images/blog/texas-mobile-food-vendor-law-cover.jpg',
+    content: `
+<p class="text-lg text-muted-foreground mb-6"><em>Published by Vendibook · June 10, 2026</em></p>
+
+<p class="text-lg mb-6">Texas is making a major change to how food trucks, food trailers, catering trucks, roadside vendors, and other mobile food businesses are licensed.</p>
+
+<p class="mb-6">Starting <strong>July 1, 2026</strong>, mobile food vendors in Texas will move under a new statewide licensing system through the <strong>Texas Department of State Health Services (DSHS)</strong>. Instead of needing separate health permits from different cities or counties, qualifying mobile food vendors will be required to obtain a state-issued Mobile Food Vendor license.</p>
+
+<p class="mb-6">For the food truck and food trailer industry, this is a big deal. It could make it easier for operators to work across multiple Texas cities, easier for trailer owners to rent their units, easier for fleet owners to expand, and easier for buyers to understand what kind of food vending vehicle they are actually purchasing.</p>
+
+<p class="mb-6">This article breaks it down in plain English.</p>
+
+<div class="not-prose my-10 rounded-2xl border border-primary/20 bg-primary/5 p-6 md:p-8">
+  <p class="text-xs font-bold uppercase tracking-[0.2em] text-primary mb-2">Reader Guide</p>
+  <h2 class="text-2xl font-bold text-foreground mb-2">Jump to What Matters to You</h2>
+  <p class="text-sm text-muted-foreground mb-6">Texas' new mobile food vendor law affects different people in different ways. Pick the path that fits where you are in the mobile food business.</p>
+  <div class="grid gap-3 md:grid-cols-2">
+    <a href="#food-trailer-rentals" class="block rounded-xl border border-border bg-background p-4 hover:border-primary hover:shadow-sm transition-all no-underline">
+      <p class="font-semibold text-foreground mb-1">Trailer owners renting out a unit</p>
+      <p class="text-sm text-muted-foreground">Why this matters for food trailer rentals and how to prepare →</p>
+    </a>
+    <a href="#fleet-owners" class="block rounded-xl border border-border bg-background p-4 hover:border-primary hover:shadow-sm transition-all no-underline">
+      <p class="font-semibold text-foreground mb-1">Fleet owners</p>
+      <p class="text-sm text-muted-foreground">What changes if you run multiple trailers or trucks →</p>
+    </a>
+    <a href="#buyers-and-sellers" class="block rounded-xl border border-border bg-background p-4 hover:border-primary hover:shadow-sm transition-all no-underline">
+      <p class="font-semibold text-foreground mb-1">Buyers and sellers</p>
+      <p class="text-sm text-muted-foreground">How to document a unit so it actually sells →</p>
+    </a>
+    <a href="#food-service-operators" class="block rounded-xl border border-border bg-background p-4 hover:border-primary hover:shadow-sm transition-all no-underline">
+      <p class="font-semibold text-foreground mb-1">Current Texas operators</p>
+      <p class="text-sm text-muted-foreground">Existing vs. new vendors — what each path looks like →</p>
+    </a>
+    <a href="#license-types" class="block rounded-xl border border-border bg-background p-4 hover:border-primary hover:shadow-sm transition-all no-underline">
+      <p class="font-semibold text-foreground mb-1">New vendors starting out</p>
+      <p class="text-sm text-muted-foreground">The new DSHS license types (I, II, III) and how to prep →</p>
+    </a>
+    <a href="#event-organizers" class="block rounded-xl border border-border bg-background p-4 hover:border-primary hover:shadow-sm transition-all no-underline">
+      <p class="font-semibold text-foreground mb-1">Event organizers &amp; vendor lots</p>
+      <p class="text-sm text-muted-foreground">Markets, breweries, food truck parks — what does not change →</p>
+    </a>
+    <a href="#official-sources" class="block rounded-xl border border-border bg-background p-4 hover:border-primary hover:shadow-sm transition-all no-underline md:col-span-2">
+      <p class="font-semibold text-foreground mb-1">Just the official government links</p>
+      <p class="text-sm text-muted-foreground">DSHS, Texas HSC Chapter 437B, HB 2844, and local notices →</p>
+    </a>
+  </div>
+</div>
+
+<h2 id="what-changed" class="text-2xl font-bold mt-10 mb-4">What Changed in Texas?</h2>
+
+<p class="mb-6">Historically, mobile food vendors in Texas often had to deal with local health permits depending on where they operated. A food trailer working in Houston, Dallas, Austin, San Antonio, Laredo, or smaller surrounding cities could run into different local health department rules, inspections, documents, and fees.</p>
+
+<p class="mb-6">Under the new Texas law, mobile food vendor licensing is moving toward a statewide system. DSHS states that beginning July 1, 2026, all mobile food vendors must be licensed with DSHS to operate a food vending vehicle in Texas.</p>
+
+<p class="mb-6">In simple terms: <strong>Texas is replacing a patchwork of local health permits with one statewide mobile food vendor license.</strong></p>
+
+<p class="mb-6">That does not mean food trucks can park anywhere they want. Local cities may still regulate zoning, parking, fire safety, traffic, noise, and approved operating locations. But the health licensing process itself is becoming more centralized.</p>
+
+<h2 class="text-2xl font-bold mt-10 mb-4">Who Does This Apply To?</h2>
+
+<p class="mb-6">DSHS describes a food vending vehicle as a self-contained food service establishment — including catering trucks, trailers, roadside vendors, or pushcarts — that stores, prepares, displays, serves, or sells food and is designed to be readily movable.</p>
+
+<ul class="list-disc pl-6 mb-6 space-y-2 text-muted-foreground">
+<li>Food truck and food trailer operators</li>
+<li>Catering truck operators</li>
+<li>Roadside food vendors, taco trucks, burger trucks, BBQ trailers</li>
+<li>Mobile coffee trailers, snow cone trailers, ice cream trucks, hot dog carts</li>
+<li>Prepackaged snack vendors</li>
+<li>Fleet owners with multiple food trailers or trucks</li>
+<li>People renting out food trailers to operators</li>
+<li>People buying or selling food trucks and trailers in Texas</li>
+</ul>
+
+<h2 id="food-trailer-rentals" class="text-2xl font-bold mt-10 mb-4">Why This Matters for Food Trailer Rentals</h2>
+
+<p class="mb-6">For trailer owners who rent out food trailers, this change could be one of the most important regulatory shifts in the Texas market.</p>
+
+<p class="mb-6">A major pain point in food trailer rentals has always been uncertainty. A renter may want to test a food concept in one city, pop up at an event in another city, and then try a different market the next weekend. Under a local permitting structure, each new jurisdiction could mean more paperwork, more fees, more waiting, and more confusion.</p>
+
+<p class="mb-6">The new statewide license may make Texas a more rental-friendly market because operators can think beyond one city. A licensed operator may be able to rent a trailer and use it across different Texas markets without starting from scratch with a separate local health permit every time. That could create more demand for well-equipped, compliant rental trailers.</p>
+
+<p class="mb-6">For food trailer owners, this means your rental listing should become more compliance-focused. A strong rental listing should clearly explain:</p>
+
+<ul class="list-disc pl-6 mb-6 space-y-2 text-muted-foreground">
+<li>What type of food trailer it is and what menu it supports</li>
+<li>Whether it has handwashing and warewashing setup</li>
+<li>Refrigeration, hot holding, cold holding, cooking equipment, water tanks</li>
+<li>Whether it has previously passed inspections</li>
+<li>Whether the renter is responsible for their own DSHS license</li>
+<li>Whether a commissary or central preparation facility is required</li>
+<li>Whether fire, propane, insurance, or local location rules still apply</li>
+</ul>
+
+<h2 id="fleet-owners" class="text-2xl font-bold mt-10 mb-4">What This Means for Fleet Owners</h2>
+
+<p class="mb-6">This law may be especially helpful for people who own or want to build a fleet of food trucks or trailers — renting them to operators, leasing to chefs and caterers, upgrading used trailers, or offering event-ready vending units for festivals and markets.</p>
+
+<p class="mb-6">Under a city-by-city permitting system, fleet expansion can become complicated. A statewide DSHS licensing system may make fleet planning more predictable. The license follows the operator, but each vehicle still needs to be inspection-ready, and local fire, zoning, property, and event rules can still matter.</p>
+
+<p class="mb-6">A strong fleet operation should track each trailer's equipment, inspection history, repair history, water and propane systems, electrical load, refrigeration capacity, compatible menu types, photos/video, cleaning turnover, insurance requirements, and operator onboarding documents.</p>
+
+<h2 id="buyers-and-sellers" class="text-2xl font-bold mt-10 mb-4">What This Means for People Selling Food Trucks and Trailers</h2>
+
+<p class="mb-6">If you are selling a food truck or food trailer in Texas, the new law makes documentation even more important. Buyers are not just looking for a trailer that looks good in photos — they want to know whether the unit can actually be used for the type of food business they are planning.</p>
+
+<p class="mb-6">A trailer built for prepackaged ice cream is not the same as a trailer built for BBQ. A coffee trailer is not the same as a full-service taco trailer. Under the DSHS structure, mobile food vendors are assigned license types based on food preparation activities, so buyers will be paying closer attention to how a trailer is equipped.</p>
+
+<p class="mb-6">If you are selling, your listing should include:</p>
+
+<ul class="list-disc pl-6 mb-6 space-y-2 text-muted-foreground">
+<li>Trailer dimensions, year, make, model, VIN/title status</li>
+<li>Full equipment list — cooking, refrigeration, hot/cold holding</li>
+<li>Water tank sizes, wastewater capacity, hand sink, 3-compartment sink</li>
+<li>Fire suppression system, vent hood, generator or shore power, propane setup</li>
+<li>Commissary compatibility and prior inspection records</li>
+<li>Known repairs needed and whether the unit was previously permitted</li>
+<li>What type of food operation the trailer was used for</li>
+</ul>
+
+<h2 id="food-service-operators" class="text-2xl font-bold mt-10 mb-4">What This Means for Food Service Operators</h2>
+
+<p class="mb-6">For operators, the biggest benefit is potentially simpler market expansion. If you run a taco truck in one Texas city and want to test another market, the statewide licensing model may reduce local health permitting friction — making it easier to try new locations, book events, or build a regional route.</p>
+
+<p class="mb-6">But the new license does not eliminate every local rule. You may still need to comply with fire and propane rules, zoning, parking restrictions, property owner permission, event organizer requirements, restroom access, commissary requirements, business registration, taxes, and insurance.</p>
+
+<p class="mb-6">Think of the new law as removing one major barrier — not every rule.</p>
+
+<h3 class="text-xl font-bold mt-8 mb-3">Existing Vendors vs. New Vendors</h3>
+
+<p class="mb-6">DSHS explains that transition rules differ depending on whether a vendor already has a current mobile food unit license from a local Texas health department.</p>
+
+<ul class="list-disc pl-6 mb-6 space-y-2 text-muted-foreground">
+<li><strong>Existing vendors</strong> with a current local license may keep operating during the transition if they provide proof of that license, submit the DSHS application, pay the fees, and keep the application summary on the vehicle.</li>
+<li><strong>New vendors</strong> who do not have a current Texas license cannot operate until the pre-licensing inspection is completed.</li>
+</ul>
+
+<h2 id="license-types" class="text-2xl font-bold mt-10 mb-4">The New Texas Mobile Food Vendor License Types</h2>
+
+<p class="mb-6">DSHS lists three classifications based on food preparation activity:</p>
+
+<ul class="list-disc pl-6 mb-6 space-y-2 text-muted-foreground">
+<li><strong>Type I</strong> — Lower-risk vendors that do not sell time/temperature-controlled-for-safety (TCS) foods. Examples: prepackaged ice cream or prepackaged non-TCS snack vendors.</li>
+<li><strong>Type II</strong> — Limited handling or prep, some prepackaged TCS foods, prepared-to-order items served for immediate consumption. Examples: coffee trucks, snow cone vendors, hot dog vendors.</li>
+<li><strong>Type III</strong> — Vendors that prepare, cook, hold, and serve food from a food vending vehicle. Examples: burger trucks, BBQ trucks, taco trucks.</li>
+</ul>
+
+<h3 class="text-xl font-bold mt-8 mb-3">The New Fee Schedule</h3>
+
+<ul class="list-disc pl-6 mb-6 space-y-2 text-muted-foreground">
+<li><strong>Type I:</strong> application fee</li>
+<li><strong>Type II:</strong> application fee plus pre-licensing inspection fee</li>
+<li><strong>Type III:</strong> application fee plus pre-licensing inspection fee</li>
+</ul>
+
+<p class="mb-6">DSHS also lists routine inspection and complaint/compliance inspection fees that may apply depending on type.</p>
+
+<h3 class="text-xl font-bold mt-8 mb-3">How Operators Should Prepare</h3>
+
+<p class="mb-6">Before renting or buying a trailer, identify your likely DSHS classification:</p>
+
+<ul class="list-disc pl-6 mb-6 space-y-2 text-muted-foreground">
+<li>Will I sell only prepackaged food, drinks/light prep, or cook from the vehicle?</li>
+<li>Will I hot hold, cold hold, thaw, cool, or reheat food?</li>
+<li>Will I need a commissary or central preparation facility?</li>
+<li>Will I operate in multiple cities or at events, private lots, and food truck parks?</li>
+<li>Do I already have a local Texas mobile food permit, or am I a new vendor needing pre-licensing inspection?</li>
+</ul>
+
+<h2 id="event-organizers" class="text-2xl font-bold mt-10 mb-4">What This Means for Event Organizers, Vendor Lots, Breweries, and Food Truck Parks</h2>
+
+<p class="mb-6">This is the part operators and venues need to be careful with. The new Texas law does not mean every mobile food vendor can automatically operate anywhere in Texas without restrictions. Cities and local authorities may still regulate areas not preempted by the state licensing law:</p>
+
+<ul class="list-disc pl-6 mb-6 space-y-2 text-muted-foreground">
+<li>Where a food truck can park</li>
+<li>Operation on private or public property</li>
+<li>Fire and life safety compliance</li>
+<li>Traffic, pedestrian safety, and noise rules</li>
+<li>Event-specific requirements and restroom access</li>
+<li>Property owner permission</li>
+<li>Local business rules unrelated to health licensing</li>
+</ul>
+
+<p class="mb-6">Even with a DSHS license, a vendor still needs property-owner permission to operate on a lot, event organizer rules to follow, and fire inspection approval for propane or cooking equipment.</p>
+
+<h3 class="text-xl font-bold mt-8 mb-3">Why This Could Increase Demand for Food Trailer Rentals in Texas</h3>
+
+<p class="mb-6">Texas has always been one of the strongest states for mobile food businesses — major metros, growing suburbs, year-round outdoor events, festivals, breweries, food truck parks, and a strong small business culture. The new law could increase demand for short-term trailer rentals, long-term leases, event-ready trailers, used trailers for sale, commissary partnerships, and fleet expansion.</p>
+
+<p class="mb-6">For people sitting on an unused food trailer, this could be a moment to turn that asset into income instead of letting it sit in a yard, storage lot, or driveway.</p>
+
+<h3 class="text-xl font-bold mt-8 mb-3">How Trailer Owners Should Prepare</h3>
+
+<p class="mb-6">If you own a food trailer or food truck in Texas and are thinking about renting or selling, gather: interior/exterior photos, equipment list, sink setup, water and wastewater tank info, electrical and generator details, propane and fire suppression info, vent hood specs, prior inspection reports, repair history, title and insurance documents, dimensions and weight, and menu types the trailer has supported.</p>
+
+<p class="mb-6">A vague listing that says "food trailer for rent" is no longer enough. Stronger listings look like: <em>"This is a full cooking trailer previously used for tacos and grilled menu items, with refrigeration, cooking equipment, hand sink, three-compartment sink, hood, and fire suppression."</em></p>
+
+<h2 class="text-2xl font-bold mt-10 mb-4">How Vendibook Helps</h2>
+
+<p class="mb-6">Vendibook connects the mobile food economy in one place — people renting and listing food trucks and trailers, buying and selling units, finding vendor lots, finding commissary or shared kitchen space, and booking mobile vendors for events.</p>
+
+<p class="mb-6">As regulations shift, the industry needs more transparency. Operators need to know what they are renting. Owners need to know what information to provide. Buyers need to know what questions to ask before purchasing.</p>
+
+<h2 class="text-2xl font-bold mt-10 mb-4">Final Takeaway</h2>
+
+<p class="mb-6">Texas' new statewide Mobile Food Vendor licensing system could be a major win for the mobile food industry.</p>
+
+<ul class="list-disc pl-6 mb-6 space-y-2 text-muted-foreground">
+<li>For <strong>operators</strong>, it may make it easier to move across markets.</li>
+<li>For <strong>trailer owners</strong>, it may create more rental demand.</li>
+<li>For <strong>fleet owners</strong>, it may make expansion more predictable.</li>
+<li>For <strong>sellers</strong>, it may increase buyer interest in inspection-ready units.</li>
+<li>For <strong>new food entrepreneurs</strong>, it may lower the confusion of getting started.</li>
+</ul>
+
+<p class="mb-6">Vendors still need the right license, the right inspection, the right equipment, and the right local permissions. Trailer owners and sellers should be clear about what their vehicles are built for. Renters and buyers should verify requirements before they operate.</p>
+
+<p class="mb-6"><em>Disclaimer: This article is for general informational purposes only and is not legal advice. Mobile food vendors should review current DSHS guidance and confirm requirements with the appropriate state and local authorities before operating.</em></p>
+
+<h2 id="official-sources" class="text-2xl font-bold mt-10 mb-4">Official Sources to Reference</h2>
+
+<ul class="list-disc pl-6 mb-6 space-y-2 text-muted-foreground">
+<li><a href="https://www.dshs.texas.gov/retail-food-establishments/permits-retail-food-establishments/mobile-food-vendors" target="_blank" rel="noopener noreferrer">Texas DSHS — Mobile Food Vendors</a> — the official page for the new license, classifications, fees, and application guidance.</li>
+<li><a href="https://capitol.texas.gov/tlodocs/89R/billtext/pdf/HB02844H.pdf" target="_blank" rel="noopener noreferrer">Texas Legislature — HB 2844 (PDF)</a> — the bill text behind the statewide mobile food vendor system.</li>
+<li><a href="https://statutes.capitol.texas.gov/Docs/HS/htm/HS.437B.htm" target="_blank" rel="noopener noreferrer">Texas Health &amp; Safety Code, Chapter 437B</a> — the law defining mobile food vendors, preemption, inspections, and the DSHS database.</li>
+<li><a href="https://www.houstonconsumer.org/services/permits/food-permits/mobile-food-units" target="_blank" rel="noopener noreferrer">Houston Health Department — Mobile Food Units</a> — local confirmation that permitting authority transfers to DSHS on July 1, 2026.</li>
+<li><a href="https://www.denisontx.gov/789/Mobile-Food-Vendors" target="_blank" rel="noopener noreferrer">City of Denison — Mobile Food Vendors / HB 2844</a> — plain-English local summary of what changes and what cities can still regulate.</li>
+</ul>
+    `,
+    author: 'Vendibook Editorial',
+    authorRole: 'Marketplace Insights',
+    datePublished: '2026-06-10',
+    category: 'permits-regulations',
+    tags: ['Texas', 'food truck', 'food trailer', 'DSHS', 'HB 2844', 'mobile food vendor', 'licensing', 'rentals', 'fleet'],
+    readingTime: 12,
+    featured: true,
+  },
+  {
     slug: 'new-exit-plan-food-truck-after-layoffs',
     title: 'The New Exit Plan: A Food Truck, a Recipe, and a Fresh Start After Layoffs',
     description: 'As AI reshapes the workforce, more Americans are turning job loss into ownership through food trucks, trailers, shared kitchens, and mobile food businesses.',
