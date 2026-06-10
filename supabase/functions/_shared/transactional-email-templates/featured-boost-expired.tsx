@@ -69,8 +69,7 @@ export const template = {
   displayName: 'Featured boost expired',
   previewData: {
     firstName: 'Alex',
-    listingTitle: '2023 Food Trailer with Generator', coverImageUrl: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=800&q=80'
-    listingId: 'abc-123',
+    listingTitle: '2023 Food Trailer with Generator', coverImageUrl: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=800&q=80', listingId: 'abc-123',
     expiredAt: 'July 2, 2026',
   },
 } satisfies TemplateEntry

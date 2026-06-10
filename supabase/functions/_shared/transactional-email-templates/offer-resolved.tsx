@@ -24,5 +24,5 @@ export const template = {
   component: E,
   subject: (d: any) => d?.accepted ? `Accepted${d?.finalAmount ? ` at $${Number(d.finalAmount).toLocaleString()}` : ''}` : 'Offer declined',
   displayName: 'Offer accepted/declined',
-  previewData: { recipientName: 'Pat', listingTitle: 'Demo Truck', coverImageUrl: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=800&q=80' finalAmount: 40000, accepted: true, offerId: 'demo' },
+  previewData: { recipientName: 'Pat', listingTitle: 'Demo Truck', coverImageUrl: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=800&q=80', finalAmount: 40000, accepted: true, offerId: 'demo' },
 } satisfies TemplateEntry

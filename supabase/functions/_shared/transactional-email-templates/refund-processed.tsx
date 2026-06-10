@@ -50,5 +50,5 @@ export const template = {
     ? `Booking cancelled & refunded${d?.listingTitle ? `: ${d.listingTitle}` : ''}`
     : `Refund processed${d?.listingTitle ? `: ${d.listingTitle}` : ''}`,
   displayName: 'Refund processed',
-  previewData: { recipientName: 'Jordan', listingTitle: 'Demo Kitchen', coverImageUrl: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=800&q=80' refundAmount: 240, recipientType: 'shopper', bookingId: 'demo1234' },
+  previewData: { recipientName: 'Jordan', listingTitle: 'Demo Kitchen', coverImageUrl: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=800&q=80', refundAmount: 240, recipientType: 'shopper', bookingId: 'demo1234' },
 } satisfies TemplateEntry

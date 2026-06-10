@@ -27,5 +27,5 @@ export const template = {
   component: E,
   subject: (d: any) => `New booking request${d?.listingTitle ? ` — ${d.listingTitle}` : ''}`,
   displayName: 'Booking request (host)',
-  previewData: { hostName: 'Sam', shopperName: 'Maria', listingTitle: 'Downtown Food Truck', coverImageUrl: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=800&q=80' startDate: 'Apr 28, 2026', endDate: 'Apr 30, 2026', totalPrice: 540, bookingId: 'demo', message: 'Looking forward to it!' },
+  previewData: { hostName: 'Sam', shopperName: 'Maria', listingTitle: 'Downtown Food Truck', coverImageUrl: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=800&q=80', startDate: 'Apr 28, 2026', endDate: 'Apr 30, 2026', totalPrice: 540, bookingId: 'demo', message: 'Looking forward to it!' },
 } satisfies TemplateEntry

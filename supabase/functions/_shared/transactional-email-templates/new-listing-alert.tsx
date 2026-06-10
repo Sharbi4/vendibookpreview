@@ -63,8 +63,7 @@ export const template = {
   displayName: 'New listing alert',
   previewData: {
     name: 'Sam',
-    listingTitle: 'Downtown Food Truck', coverImageUrl: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=800&q=80'
-    listingId: 'demo',
+    listingTitle: 'Downtown Food Truck', coverImageUrl: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=800&q=80', listingId: 'demo',
     categoryLabel: 'Food Truck',
     modeLabel: 'For Rent',
     priceLabel: '$250/day',

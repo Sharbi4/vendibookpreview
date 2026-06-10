@@ -24,5 +24,5 @@ export const template = {
   component: E,
   subject: (d: any) => `How was ${d?.listingTitle || 'your booking'}?`,
   displayName: 'Review request',
-  previewData: { shopperName: 'Jordan', listingTitle: 'Demo Kitchen', coverImageUrl: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=800&q=80' hostName: 'Sam', bookingId: 'demo' },
+  previewData: { shopperName: 'Jordan', listingTitle: 'Demo Kitchen', coverImageUrl: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=800&q=80', hostName: 'Sam', bookingId: 'demo' },
 } satisfies TemplateEntry

@@ -31,5 +31,5 @@ export const template = {
   component: E,
   subject: (d: any) => `Approved: ${d?.listingTitle || 'Your booking'}`,
   displayName: 'Booking approved (guest)',
-  previewData: { shopperName: 'Jordan', listingTitle: 'Vendor Lot — Brooklyn', coverImageUrl: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=800&q=80' startDate: 'May 2, 2026', endDate: 'May 4, 2026', totalPrice: 320, bookingId: 'demo', address: 'Brooklyn, NY' },
+  previewData: { shopperName: 'Jordan', listingTitle: 'Vendor Lot — Brooklyn', coverImageUrl: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=800&q=80', startDate: 'May 2, 2026', endDate: 'May 4, 2026', totalPrice: 320, bookingId: 'demo', address: 'Brooklyn, NY' },
 } satisfies TemplateEntry

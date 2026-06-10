@@ -102,8 +102,7 @@ export const template = {
     amount: '$842.00',
     paymentMethod: 'Visa •••• 4242',
     paidAt: 'April 21, 2026',
-    listingTitle: 'Sunset Food Truck — Downtown LA', coverImageUrl: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=800&q=80'
-    description: '2-day rental + service fee',
+    listingTitle: 'Sunset Food Truck — Downtown LA', coverImageUrl: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=800&q=80', description: '2-day rental + service fee',
   },
 } satisfies TemplateEntry
 

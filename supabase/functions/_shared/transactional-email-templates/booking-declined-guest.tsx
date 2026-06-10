@@ -24,5 +24,5 @@ export const template = {
   component: E,
   subject: () => `Your booking request was declined`,
   displayName: 'Booking declined (guest)',
-  previewData: { shopperName: 'Jordan', listingTitle: 'Demo Truck', coverImageUrl: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=800&q=80' reason: 'Already booked for those dates.' },
+  previewData: { shopperName: 'Jordan', listingTitle: 'Demo Truck', coverImageUrl: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=800&q=80', reason: 'Already booked for those dates.' },
 } satisfies TemplateEntry

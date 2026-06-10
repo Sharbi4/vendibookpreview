@@ -328,8 +328,7 @@ export const template = {
   displayName: 'Listing published',
   previewData: {
     hostName: 'Sam',
-    listingTitle: 'Downtown Food Truck', coverImageUrl: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=800&q=80'
-    listingId: 'demo',
+    listingTitle: 'Downtown Food Truck', coverImageUrl: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=800&q=80', listingId: 'demo',
     category: 'Food Truck',
     city: 'Austin',
   },

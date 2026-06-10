@@ -27,5 +27,5 @@ export const template = {
   component: E,
   subject: (d: any) => d?.offerAmount ? `New offer: $${Number(d.offerAmount).toLocaleString()}` : 'New offer received',
   displayName: 'Offer received (seller)',
-  previewData: { sellerName: 'Sam', buyerName: 'Pat', listingTitle: 'Used Food Truck — 2019', coverImageUrl: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=800&q=80' offerAmount: 38000, askingPrice: 42000, offerId: 'demo', expiresAt: 'Apr 28' },
+  previewData: { sellerName: 'Sam', buyerName: 'Pat', listingTitle: 'Used Food Truck — 2019', coverImageUrl: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=800&q=80', offerAmount: 38000, askingPrice: 42000, offerId: 'demo', expiresAt: 'Apr 28' },
 } satisfies TemplateEntry

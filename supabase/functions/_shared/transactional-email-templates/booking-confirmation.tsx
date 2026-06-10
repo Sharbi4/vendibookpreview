@@ -93,8 +93,7 @@ export const template = {
   displayName: 'Booking confirmation',
   previewData: {
     guestName: 'Jordan',
-    listingTitle: 'Sunset Food Truck — Downtown LA', coverImageUrl: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=800&q=80'
-    startDate: 'May 4, 2026',
+    listingTitle: 'Sunset Food Truck — Downtown LA', coverImageUrl: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=800&q=80', startDate: 'May 4, 2026',
     endDate: 'May 6, 2026',
     totalPrice: '$842.00',
     orderNumber: 'VB-9F2A1C4D',

@@ -25,5 +25,5 @@ export const template = {
   component: E,
   subject: () => `Reminder: your booking starts tomorrow`,
   displayName: 'Booking reminder (24h)',
-  previewData: { shopperName: 'Jordan', listingTitle: 'Demo Kitchen', coverImageUrl: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=800&q=80' startDate: 'tomorrow at 9am', address: '123 Main St', bookingId: 'demo', accessInstructions: 'Use the side gate' },
+  previewData: { shopperName: 'Jordan', listingTitle: 'Demo Kitchen', coverImageUrl: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=800&q=80', startDate: 'tomorrow at 9am', address: '123 Main St', bookingId: 'demo', accessInstructions: 'Use the side gate' },
 } satisfies TemplateEntry

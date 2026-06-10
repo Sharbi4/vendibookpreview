@@ -24,5 +24,5 @@ export const template = {
   component: E,
   subject: () => `Finish your listing — 2 minutes left`,
   displayName: 'Draft nudge',
-  previewData: { hostName: 'Sam', listingTitle: 'Downtown Food Truck', coverImageUrl: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=800&q=80' listingId: 'demo' },
+  previewData: { hostName: 'Sam', listingTitle: 'Downtown Food Truck', coverImageUrl: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=800&q=80', listingId: 'demo' },
 } satisfies TemplateEntry

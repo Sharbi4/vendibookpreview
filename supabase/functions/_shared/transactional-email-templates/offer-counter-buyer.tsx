@@ -27,5 +27,5 @@ export const template = {
   component: E,
   subject: (d: any) => d?.counterAmount ? `Counter: $${Number(d.counterAmount).toLocaleString()}` : 'Counter-offer received',
   displayName: 'Counter-offer (buyer)',
-  previewData: { buyerName: 'Pat', sellerName: 'Sam', listingTitle: 'Demo Truck', coverImageUrl: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=800&q=80' counterAmount: 40000, originalOffer: 38000, offerId: 'demo', expiresAt: 'Apr 28' },
+  previewData: { buyerName: 'Pat', sellerName: 'Sam', listingTitle: 'Demo Truck', coverImageUrl: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=800&q=80', counterAmount: 40000, originalOffer: 38000, offerId: 'demo', expiresAt: 'Apr 28' },
 } satisfies TemplateEntry

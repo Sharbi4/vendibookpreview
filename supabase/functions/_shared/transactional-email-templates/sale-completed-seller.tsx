@@ -28,5 +28,5 @@ export const template = {
   component: E,
   subject: (d: any) => d?.salePrice ? `Sold: $${Number(d.salePrice).toLocaleString()}` : 'Your sale completed',
   displayName: 'Sale completed (seller)',
-  previewData: { sellerName: 'Sam', listingTitle: 'Demo Truck', coverImageUrl: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=800&q=80' salePrice: 40000, buyerName: 'Pat', orderNumber: 'VB-12345678' },
+  previewData: { sellerName: 'Sam', listingTitle: 'Demo Truck', coverImageUrl: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=800&q=80', salePrice: 40000, buyerName: 'Pat', orderNumber: 'VB-12345678' },
 } satisfies TemplateEntry

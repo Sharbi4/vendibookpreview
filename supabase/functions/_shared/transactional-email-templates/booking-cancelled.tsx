@@ -23,5 +23,5 @@ export const template = {
   component: E,
   subject: (d: any) => `Cancelled: ${d?.listingTitle || 'your booking'}`,
   displayName: 'Booking cancelled',
-  previewData: { recipientName: 'Sam', listingTitle: 'Demo Lot', coverImageUrl: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=800&q=80' cancelledBy: 'guest', reason: 'Schedule conflict' },
+  previewData: { recipientName: 'Sam', listingTitle: 'Demo Lot', coverImageUrl: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=800&q=80', cancelledBy: 'guest', reason: 'Schedule conflict' },
 } satisfies TemplateEntry

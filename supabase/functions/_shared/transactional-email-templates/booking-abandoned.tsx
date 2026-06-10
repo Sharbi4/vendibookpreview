@@ -55,8 +55,7 @@ export const template = {
   displayName: 'Booking abandoned recovery',
   previewData: {
     shopperName: 'Jordan',
-    listingTitle: 'Downtown Ghost Kitchen', coverImageUrl: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=800&q=80'
-    startDate: 'Apr 28, 2026',
+    listingTitle: 'Downtown Ghost Kitchen', coverImageUrl: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=800&q=80', startDate: 'Apr 28, 2026',
     endDate: 'May 1, 2026',
     resumeUrl: 'https://vendibook.com/listing/demo',
     variant: '2h',

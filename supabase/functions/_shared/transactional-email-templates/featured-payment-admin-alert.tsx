@@ -75,8 +75,7 @@ export const template = {
   previewData: {
     hostName: 'Stephanie Lentz',
     hostEmail: 'smlentz@hotmail.com',
-    listingTitle: '2023 Food Trailer with Generator', coverImageUrl: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=800&q=80'
-    listingId: 'abc-123',
+    listingTitle: '2023 Food Trailer with Generator', coverImageUrl: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=800&q=80', listingId: 'abc-123',
     amount: '$30.00',
     receiptId: 'pi_3TWF84A6Qt4pF0fM1RXYc3H2',
   },
