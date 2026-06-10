@@ -15,10 +15,10 @@ const PREVIEW = "A new statewide mobile food vendor license could make it easier
 const ARTICLE_URL = "https://vendibook.com/blog/texas-mobile-food-vendor-law-2026";
 const HOME_URL = "https://vendibook.com";
 const HOW_IT_WORKS_URL = "https://vendibook.com/how-it-works";
-const ABOUT_URL = "https://vendibook.com/about";
-const REFERRAL_URL = "https://vendibook.com/referrals";
+const ABOUT_URL = "https://vendibook.com/how-it-works";
+const REFERRAL_URL = "https://vendibook.com/referral";
 const BLOG_URL = "https://vendibook.com/blog";
-const LIST_URL = "https://vendibook.com/sell";
+const LIST_URL = "https://vendibook.com/list";
 const TX_SALE_URL = "https://vendibook.com/search?mode=sale&q=food+truck&lat=31&lng=-100&radius=500&location=Texas";
 const TX_RENT_URL = "https://vendibook.com/search?mode=rent&q=food+trailer&lat=31&lng=-100&radius=500&location=Texas";
 const LOGO_IMG = "https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/email-assets/vendibook-email-logo.png";
