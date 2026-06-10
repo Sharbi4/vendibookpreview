@@ -42,16 +42,14 @@ Deno.serve(async (req) => {
     const byId = new Map((profiles || []).map((p: any) => [p.id, p]))
 
     const results: Array<{ listingId: string; email?: string; status: string; error?: string }> = []
-    for (const l of (listings || []) as any[]) {
+
+    async function sendOne(l: any) {
       const profile: any = byId.get(l.host_id)
       const email = profile?.email
-      if (!email) { results.push({ listingId: l.id, status: 'skipped_no_email' }); continue }
-
+      if (!email) return { listingId: l.id, status: 'skipped_no_email' }
       const listingType: 'rental' | 'sale' | 'both' =
         l.mode === 'sale' ? 'sale' : l.mode === 'both' ? 'both' : 'rental'
-
-      if (dryRun) { results.push({ listingId: l.id, email, status: 'dry_run' }); continue }
-
+      if (dryRun) return { listingId: l.id, email, status: 'dry_run' }
       const { error: sendErr } = await supabase.functions.invoke('send-transactional-email', {
         body: {
           templateName: 'listing-published',
@@ -68,11 +66,16 @@ Deno.serve(async (req) => {
           },
         },
       })
-      if (sendErr) {
-        results.push({ listingId: l.id, email, status: 'error', error: String((sendErr as any)?.message || sendErr) })
-      } else {
-        results.push({ listingId: l.id, email, status: 'queued' })
-      }
+      if (sendErr) return { listingId: l.id, email, status: 'error', error: String((sendErr as any)?.message || sendErr) }
+      return { listingId: l.id, email, status: 'queued' }
+    }
+
+    // Parallel in batches of 10 to stay under edge-function timeout.
+    const all = (listings || []) as any[]
+    for (let i = 0; i < all.length; i += 10) {
+      const batch = all.slice(i, i + 10)
+      const batchResults = await Promise.all(batch.map(sendOne))
+      results.push(...batchResults)
     }
 
     const summary = {
