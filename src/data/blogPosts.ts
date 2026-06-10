@@ -264,7 +264,6 @@ export const BLOG_POSTS: BlogPost[] = [
     datePublished: '2026-06-10',
     category: 'permits-regulations',
     tags: ['Texas', 'food truck', 'food trailer', 'DSHS', 'HB 2844', 'mobile food vendor', 'licensing', 'rentals', 'fleet'],
-    image: '/images/blog/texas-mobile-food-vendor-law-cover.jpg',
     readingTime: 12,
     featured: true,
   },
