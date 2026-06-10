@@ -13,24 +13,21 @@ interface FeaturedRefundedProps {
   amount?: string
   refundedAt?: string
   receiptId?: string
-  reason?: string
-}
+  reason?: string; coverImageUrl?: string }
 
-const FeaturedPaymentRefundedEmail = ({
-  firstName,
+const FeaturedPaymentRefundedEmail = ({ firstName,
   listingTitle,
   listingId,
   amount = '$30.00',
   refundedAt,
   receiptId,
-  reason,
-}: FeaturedRefundedProps) => (
+  reason, coverImageUrl }: FeaturedRefundedProps) => (
   <Html lang="en" dir="ltr">
     <Head />
     <Preview>Your boost refund for {listingTitle || 'your listing'} has been processed</Preview>
     <Body style={s.main}>
       <Container style={s.container}>
-        <BrandHeader hero="payment" />
+        <BrandHeader hero="payment" listingImageUrl={coverImageUrl} listingTitle={listingTitle} />
         <Section style={s.card}>
           <Text style={s.kicker}>BOOST REFUNDED</Text>
           <Heading style={s.h1}>
@@ -95,7 +92,7 @@ export const template = {
   displayName: 'Featured boost refunded',
   previewData: {
     firstName: 'Alex',
-    listingTitle: '2023 Food Trailer with Generator',
+    listingTitle: '2023 Food Trailer with Generator', coverImageUrl: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=800&q=80'
     listingId: 'abc-123',
     amount: '$30.00',
     refundedAt: 'June 2, 2026',

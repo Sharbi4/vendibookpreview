@@ -10,21 +10,18 @@ interface FeaturedExpiredProps {
   firstName?: string
   listingTitle?: string
   listingId?: string
-  expiredAt?: string
-}
+  expiredAt?: string; coverImageUrl?: string }
 
-const FeaturedBoostExpiredEmail = ({
-  firstName,
+const FeaturedBoostExpiredEmail = ({ firstName,
   listingTitle,
   listingId,
-  expiredAt,
-}: FeaturedExpiredProps) => (
+  expiredAt, coverImageUrl }: FeaturedExpiredProps) => (
   <Html lang="en" dir="ltr">
     <Head />
     <Preview>Your boost for {listingTitle || 'your listing'} has ended</Preview>
     <Body style={s.main}>
       <Container style={s.container}>
-        <BrandHeader hero="payment" />
+        <BrandHeader hero="payment" listingImageUrl={coverImageUrl} listingTitle={listingTitle} />
         <Section style={s.card}>
           <Text style={s.kicker}>BOOST ENDED</Text>
           <Heading style={s.h1}>
@@ -72,7 +69,7 @@ export const template = {
   displayName: 'Featured boost expired',
   previewData: {
     firstName: 'Alex',
-    listingTitle: '2023 Food Trailer with Generator',
+    listingTitle: '2023 Food Trailer with Generator', coverImageUrl: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=800&q=80'
     listingId: 'abc-123',
     expiredAt: 'July 2, 2026',
   },

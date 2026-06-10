@@ -4,12 +4,12 @@ import type { TemplateEntry } from './registry.ts'
 import { s, SITE_URL } from './_styles.ts'
 
 import { BrandHeader } from './_blocks.tsx'
-interface Props { recipientName?: string; listingTitle?: string; finalAmount?: number; accepted?: boolean; offerId?: string }
+interface Props { recipientName?: string; listingTitle?: string; finalAmount?: number; accepted?: boolean; offerId?: string; coverImageUrl?: string }
 
-const E = ({ recipientName, listingTitle, finalAmount, accepted, offerId }: Props) => (
+const E = ({ recipientName, listingTitle, finalAmount, accepted, offerId, coverImageUrl }: Props) => (
   <Html lang="en" dir="ltr"><Head /><Preview>Offer {accepted ? 'accepted' : 'declined'}</Preview>
     <Body style={s.main}><Container style={s.container}>
-      <BrandHeader hero="message" />
+      <BrandHeader hero="message" listingImageUrl={coverImageUrl} listingTitle={listingTitle} />
       <Section style={s.card}>
         <Text style={s.smallHeader}>OFFER {accepted ? 'ACCEPTED' : 'DECLINED'}</Text>
         <Heading style={s.h1}>{recipientName ? `${recipientName}, ` : ''}{accepted ? 'your offer was accepted.' : 'your offer was declined.'}</Heading>
@@ -24,5 +24,5 @@ export const template = {
   component: E,
   subject: (d: any) => d?.accepted ? `Accepted${d?.finalAmount ? ` at $${Number(d.finalAmount).toLocaleString()}` : ''}` : 'Offer declined',
   displayName: 'Offer accepted/declined',
-  previewData: { recipientName: 'Pat', listingTitle: 'Demo Truck', finalAmount: 40000, accepted: true, offerId: 'demo' },
+  previewData: { recipientName: 'Pat', listingTitle: 'Demo Truck', coverImageUrl: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=800&q=80' finalAmount: 40000, accepted: true, offerId: 'demo' },
 } satisfies TemplateEntry

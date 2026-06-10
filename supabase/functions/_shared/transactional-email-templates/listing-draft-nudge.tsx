@@ -4,12 +4,12 @@ import type { TemplateEntry } from './registry.ts'
 import { s, SITE_URL } from './_styles.ts'
 
 import { BrandHeader } from './_blocks.tsx'
-interface Props { hostName?: string; listingTitle?: string; listingId?: string }
+interface Props { hostName?: string; listingTitle?: string; listingId?: string; coverImageUrl?: string }
 
-const E = ({ hostName, listingTitle, listingId }: Props) => (
+const E = ({ hostName, listingTitle, listingId, coverImageUrl }: Props) => (
   <Html lang="en" dir="ltr"><Head /><Preview>Finish your listing — it's almost ready</Preview>
     <Body style={s.main}><Container style={s.container}>
-      <BrandHeader hero="celebrate" />
+      <BrandHeader hero="celebrate" listingImageUrl={coverImageUrl} listingTitle={listingTitle} />
       <Section style={s.card}>
         <Text style={s.smallHeader}>DRAFT WAITING</Text>
         <Heading style={s.h1}>{hostName ? `${hostName}, ` : ''}you're 2 minutes from earning.</Heading>
@@ -24,5 +24,5 @@ export const template = {
   component: E,
   subject: () => `Finish your listing — 2 minutes left`,
   displayName: 'Draft nudge',
-  previewData: { hostName: 'Sam', listingTitle: 'Downtown Food Truck', listingId: 'demo' },
+  previewData: { hostName: 'Sam', listingTitle: 'Downtown Food Truck', coverImageUrl: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=800&q=80' listingId: 'demo' },
 } satisfies TemplateEntry

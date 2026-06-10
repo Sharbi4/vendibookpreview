@@ -15,18 +15,15 @@ interface ReceiptProps {
   paymentMethod?: string
   paidAt?: string
   listingTitle?: string
-  description?: string
-}
+  description?: string; coverImageUrl?: string }
 
-const PaymentReceiptEmail = ({
-  customerName, orderNumber, amount, paymentMethod, paidAt, listingTitle, description,
-}: ReceiptProps) => (
+const PaymentReceiptEmail = ({ customerName, orderNumber, amount, paymentMethod, paidAt, listingTitle, description, coverImageUrl }: ReceiptProps) => (
   <Html lang="en" dir="ltr">
     <Head />
     <Preview>Receipt from {SITE_NAME} — {amount ?? 'payment received'}</Preview>
     <Body style={main}>
       <Container style={container}>
-        <BrandHeader hero="payment" />
+        <BrandHeader hero="payment" listingImageUrl={coverImageUrl} listingTitle={listingTitle} />
 
         <Section style={card}>
           <Text style={kicker}>PAYMENT RECEIPT</Text>
@@ -105,7 +102,7 @@ export const template = {
     amount: '$842.00',
     paymentMethod: 'Visa •••• 4242',
     paidAt: 'April 21, 2026',
-    listingTitle: 'Sunset Food Truck — Downtown LA',
+    listingTitle: 'Sunset Food Truck — Downtown LA', coverImageUrl: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=800&q=80'
     description: '2-day rental + service fee',
   },
 } satisfies TemplateEntry

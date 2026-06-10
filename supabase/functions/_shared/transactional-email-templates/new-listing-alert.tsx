@@ -23,7 +23,7 @@ const E = ({ name, listingTitle, listingId, categoryLabel, modeLabel, priceLabel
   return (
     <Html lang="en" dir="ltr"><Head /><Preview>{listingTitle ? `${listingTitle} just listed near you` : 'A new listing just went live near you'}</Preview>
       <Body style={s.main}><Container style={s.container}>
-        <BrandHeader hero="celebrate" />
+        <BrandHeader hero="celebrate" listingImageUrl={coverImageUrl} listingTitle={listingTitle} />
         <Section style={s.card}>
           <Text style={s.smallHeader}>NEW MATCH NEAR YOU</Text>
           <Heading style={s.h1}>{name ? `${name}, a new listing just dropped.` : 'A new listing just dropped near you.'}</Heading>
@@ -63,7 +63,7 @@ export const template = {
   displayName: 'New listing alert',
   previewData: {
     name: 'Sam',
-    listingTitle: 'Downtown Food Truck',
+    listingTitle: 'Downtown Food Truck', coverImageUrl: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=800&q=80'
     listingId: 'demo',
     categoryLabel: 'Food Truck',
     modeLabel: 'For Rent',

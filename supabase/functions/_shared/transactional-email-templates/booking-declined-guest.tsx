@@ -4,12 +4,12 @@ import type { TemplateEntry } from './registry.ts'
 import { s, SITE_URL } from './_styles.ts'
 
 import { BrandHeader } from './_blocks.tsx'
-interface Props { shopperName?: string; listingTitle?: string; reason?: string }
+interface Props { shopperName?: string; listingTitle?: string; reason?: string; coverImageUrl?: string }
 
-const E = ({ shopperName, listingTitle, reason }: Props) => (
+const E = ({ shopperName, listingTitle, reason, coverImageUrl }: Props) => (
   <Html lang="en" dir="ltr"><Head /><Preview>Update on your booking request</Preview>
     <Body style={s.main}><Container style={s.container}>
-      <BrandHeader hero="booking" />
+      <BrandHeader hero="booking" listingImageUrl={coverImageUrl} listingTitle={listingTitle} />
       <Section style={s.card}>
         <Text style={s.smallHeader}>BOOKING UPDATE</Text>
         <Heading style={s.h1}>{shopperName ? `${shopperName}, ` : ''}your request wasn't accepted.</Heading>
@@ -24,5 +24,5 @@ export const template = {
   component: E,
   subject: () => `Your booking request was declined`,
   displayName: 'Booking declined (guest)',
-  previewData: { shopperName: 'Jordan', listingTitle: 'Demo Truck', reason: 'Already booked for those dates.' },
+  previewData: { shopperName: 'Jordan', listingTitle: 'Demo Truck', coverImageUrl: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=800&q=80' reason: 'Already booked for those dates.' },
 } satisfies TemplateEntry

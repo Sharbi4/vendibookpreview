@@ -4,12 +4,12 @@ import type { TemplateEntry } from './registry.ts'
 import { s, SITE_URL } from './_styles.ts'
 
 import { BrandHeader } from './_blocks.tsx'
-interface Props { sellerName?: string; buyerName?: string; listingTitle?: string; offerAmount?: number; askingPrice?: number; message?: string; offerId?: string; expiresAt?: string }
+interface Props { sellerName?: string; buyerName?: string; listingTitle?: string; offerAmount?: number; askingPrice?: number; message?: string; offerId?: string; expiresAt?: string; coverImageUrl?: string }
 
-const E = ({ sellerName, buyerName, listingTitle, offerAmount, askingPrice, message, offerId, expiresAt }: Props) => (
+const E = ({ sellerName, buyerName, listingTitle, offerAmount, askingPrice, message, offerId, expiresAt, coverImageUrl }: Props) => (
   <Html lang="en" dir="ltr"><Head /><Preview>New offer received</Preview>
     <Body style={s.main}><Container style={s.container}>
-      <BrandHeader hero="message" />
+      <BrandHeader hero="message" listingImageUrl={coverImageUrl} listingTitle={listingTitle} />
       <Section style={s.card}>
         <Text style={s.smallHeader}>NEW OFFER</Text>
         <Heading style={s.h1}>{sellerName ? `${sellerName}, ` : ''}{buyerName || 'a buyer'} made an offer.</Heading>
@@ -27,5 +27,5 @@ export const template = {
   component: E,
   subject: (d: any) => d?.offerAmount ? `New offer: $${Number(d.offerAmount).toLocaleString()}` : 'New offer received',
   displayName: 'Offer received (seller)',
-  previewData: { sellerName: 'Sam', buyerName: 'Pat', listingTitle: 'Used Food Truck — 2019', offerAmount: 38000, askingPrice: 42000, offerId: 'demo', expiresAt: 'Apr 28' },
+  previewData: { sellerName: 'Sam', buyerName: 'Pat', listingTitle: 'Used Food Truck — 2019', coverImageUrl: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=800&q=80' offerAmount: 38000, askingPrice: 42000, offerId: 'demo', expiresAt: 'Apr 28' },
 } satisfies TemplateEntry

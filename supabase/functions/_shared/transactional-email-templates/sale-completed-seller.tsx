@@ -4,12 +4,12 @@ import type { TemplateEntry } from './registry.ts'
 import { s, SITE_URL } from './_styles.ts'
 import {BrandHeader, BlogHighlights, ToolsBlock} from './_blocks.tsx'
 
-interface Props { sellerName?: string; listingTitle?: string; salePrice?: number; buyerName?: string; orderNumber?: string }
+interface Props { sellerName?: string; listingTitle?: string; salePrice?: number; buyerName?: string; orderNumber?: string; coverImageUrl?: string }
 
-const E = ({ sellerName, listingTitle, salePrice, buyerName, orderNumber }: Props) => (
+const E = ({ sellerName, listingTitle, salePrice, buyerName, orderNumber, coverImageUrl }: Props) => (
   <Html lang="en" dir="ltr"><Head /><Preview>Sale completed 🎉</Preview>
     <Body style={s.main}><Container style={s.container}>
-      <BrandHeader hero="celebrate" />
+      <BrandHeader hero="celebrate" listingImageUrl={coverImageUrl} listingTitle={listingTitle} />
       <Section style={s.card}>
         <Text style={s.smallHeader}>SALE COMPLETED</Text>
         <Heading style={s.h1}>{sellerName ? `${sellerName}, ` : ''}your sale closed.</Heading>
@@ -28,5 +28,5 @@ export const template = {
   component: E,
   subject: (d: any) => d?.salePrice ? `Sold: $${Number(d.salePrice).toLocaleString()}` : 'Your sale completed',
   displayName: 'Sale completed (seller)',
-  previewData: { sellerName: 'Sam', listingTitle: 'Demo Truck', salePrice: 40000, buyerName: 'Pat', orderNumber: 'VB-12345678' },
+  previewData: { sellerName: 'Sam', listingTitle: 'Demo Truck', coverImageUrl: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=800&q=80' salePrice: 40000, buyerName: 'Pat', orderNumber: 'VB-12345678' },
 } satisfies TemplateEntry
