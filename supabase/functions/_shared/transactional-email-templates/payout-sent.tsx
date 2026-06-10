@@ -9,7 +9,7 @@ interface Props { recipientName?: string; amount?: number; transferId?: string; 
 const E = ({ recipientName, amount, transferId, arrivesBy }: Props) => (
   <Html lang="en" dir="ltr"><Head /><Preview>Payout sent to your bank</Preview>
     <Body style={s.main}><Container style={s.container}>
-      <BrandHeader />
+      <BrandHeader hero="payment" />
       <Section style={s.card}>
         <Text style={s.smallHeader}>PAYOUT SENT</Text>
         <Heading style={s.h1}>{recipientName ? `${recipientName}, ` : ''}your payout is on the way.</Heading>

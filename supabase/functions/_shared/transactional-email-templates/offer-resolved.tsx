@@ -9,7 +9,7 @@ interface Props { recipientName?: string; listingTitle?: string; finalAmount?: n
 const E = ({ recipientName, listingTitle, finalAmount, accepted, offerId }: Props) => (
   <Html lang="en" dir="ltr"><Head /><Preview>Offer {accepted ? 'accepted' : 'declined'}</Preview>
     <Body style={s.main}><Container style={s.container}>
-      <BrandHeader />
+      <BrandHeader hero="message" />
       <Section style={s.card}>
         <Text style={s.smallHeader}>OFFER {accepted ? 'ACCEPTED' : 'DECLINED'}</Text>
         <Heading style={s.h1}>{recipientName ? `${recipientName}, ` : ''}{accepted ? 'your offer was accepted.' : 'your offer was declined.'}</Heading>

@@ -30,7 +30,7 @@ const FeaturedPaymentRefundedEmail = ({
     <Preview>Your boost refund for {listingTitle || 'your listing'} has been processed</Preview>
     <Body style={s.main}>
       <Container style={s.container}>
-        <BrandHeader />
+        <BrandHeader hero="payment" />
         <Section style={s.card}>
           <Text style={s.kicker}>BOOST REFUNDED</Text>
           <Heading style={s.h1}>

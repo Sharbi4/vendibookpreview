@@ -11,10 +11,31 @@ import * as React from 'npm:react@18.3.1'
 import { Button, Hr, Img, Section, Text } from 'npm:@react-email/components@0.0.22'
 import { s, SITE_URL, LOGO_URL } from './_styles.ts'
 
-// Shared brand header used at the top of every email. Renders the same wordmark
-// as the homepage hero, sized for inbox visibility (~180px wide).
-export const BrandHeader = () => (
-  <Section style={{ padding: '0 0 22px', textAlign: 'center' as const }}>
+// Editorial spot illustrations — flat hand-drawn, dark charcoal + orange.
+// Hosted on the email-assets bucket so they load in every inbox.
+export type HeroKind = 'celebrate' | 'booking' | 'payment' | 'message' | 'insight' | 'document'
+const HERO_BASE = 'https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/email-assets'
+const HERO_URLS: Record<HeroKind, string> = {
+  celebrate: `${HERO_BASE}/hero-celebrate.png`,
+  booking:   `${HERO_BASE}/hero-booking.png`,
+  payment:   `${HERO_BASE}/hero-payment.png`,
+  message:   `${HERO_BASE}/hero-message.png`,
+  insight:   `${HERO_BASE}/hero-insight.png`,
+  document:  `${HERO_BASE}/hero-document.png`,
+}
+const HERO_ALT: Record<HeroKind, string> = {
+  celebrate: 'Celebration illustration',
+  booking:   'Calendar illustration',
+  payment:   'Receipt illustration',
+  message:   'Speech bubbles illustration',
+  insight:   'Chart illustration',
+  document:  'Document illustration',
+}
+
+// Shared brand header used at the top of every email. Renders the wordmark plus
+// an optional editorial spot illustration that adapts to the email's purpose.
+export const BrandHeader = ({ hero }: { hero?: HeroKind } = {}) => (
+  <Section style={{ padding: '0 0 18px', textAlign: 'center' as const }}>
     <a href={SITE_URL} style={{ textDecoration: 'none', display: 'inline-block' }}>
       <Img
         src={LOGO_URL}
@@ -24,7 +45,35 @@ export const BrandHeader = () => (
         style={{ display: 'block', margin: '0 auto', border: 0, outline: 'none', maxWidth: '180px', height: 'auto' }}
       />
     </a>
+    {hero ? (
+      <Img
+        src={HERO_URLS[hero]}
+        alt={HERO_ALT[hero]}
+        width="160"
+        height="160"
+        style={{ display: 'block', margin: '8px auto 0', border: 0, outline: 'none', maxWidth: '160px', height: 'auto' }}
+      />
+    ) : null}
   </Section>
+)
+
+// Tiny inline-SVG icon set. Inline SVG renders crisply in Apple Mail, Gmail web,
+// iOS Mail, and Outlook.com. Falls back to whitespace in legacy clients (no
+// broken-image icon) because we omit alt text and dimensions on a span wrapper.
+type IconName = 'arrow' | 'star' | 'spark' | 'check' | 'bolt' | 'gift'
+const ICONS: Record<IconName, string> = {
+  arrow: '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>',
+  star:  '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3 7 7 .6-5.4 4.6 1.7 7L12 17.3 5.7 21.2l1.7-7L2 9.6 9 9z"/></svg>',
+  spark: '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.8 6.2L20 10l-6.2 1.8L12 18l-1.8-6.2L4 10l6.2-1.8z"/></svg>',
+  check: '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>',
+  bolt:  '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M13 2L3 14h7l-1 8 10-12h-7z"/></svg>',
+  gift:  '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="13" rx="1"/><path d="M3 12h18M12 8v13M7 8a3 3 0 010-6c2 0 3 2 5 6-3 0-5 0-5 0zM17 8a3 3 0 000-6c-2 0-3 2-5 6 3 0 5 0 5 0z"/></svg>',
+}
+export const Icon = ({ name, color = '#FF5124' }: { name: IconName; color?: string }) => (
+  <span
+    style={{ display: 'inline-block', verticalAlign: '-2px', color, lineHeight: 0, marginRight: '6px' }}
+    dangerouslySetInnerHTML={{ __html: ICONS[name] }}
+  />
 )
 
 export type Role = 'host' | 'shopper' | 'seller' | 'guest' | string | undefined
@@ -61,7 +110,7 @@ export const BlogHighlights = ({ role, posts }: { role?: Role; posts?: BlogPick[
   return (
     <>
       <Hr style={s.hr} />
-      <Text style={s.smallHeader}>FROM THE VENDIBOOK BLOG</Text>
+      <Text style={s.smallHeader}><Icon name="spark" />FROM THE VENDIBOOK BLOG</Text>
       {list.slice(0, 2).map((p) => (
         <Section key={p.slug} style={{ margin: '0 0 14px' }}>
           <Text style={{ fontSize: '10px', letterSpacing: '0.2em', color: '#FF5124', fontWeight: 700, margin: '0 0 4px' }}>
@@ -118,10 +167,10 @@ export const ToolsBlock = ({ role, tools }: { role?: Role; tools?: Tool[] }) => 
   return (
     <>
       <Hr style={s.hr} />
-      <Text style={s.smallHeader}>TOOLS BUILT FOR YOU</Text>
+      <Text style={s.smallHeader}><Icon name="bolt" />TOOLS BUILT FOR YOU</Text>
       {list.slice(0, 3).map((t) => (
         <Text key={t.label} style={s.listItem}>
-          → <a href={t.href} style={{ color: '#FF5124', textDecoration: 'none', fontWeight: 600 }}>{t.label}</a>
+          <Icon name="arrow" /><a href={t.href} style={{ color: '#FF5124', textDecoration: 'none', fontWeight: 600 }}>{t.label}</a>
           <span style={{ color: '#a3a3a3' }}> — {t.desc}</span>
         </Text>
       ))}

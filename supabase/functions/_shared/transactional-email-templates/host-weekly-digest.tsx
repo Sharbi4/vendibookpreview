@@ -27,7 +27,7 @@ const REFERRAL_COPY: Record<string, string> = {
 const E = ({ hostName, weekLabel, views, inquiries, bookings, earnings, topListingTitle, topListingId, aiInsight, tip, referralProgram }: Props) => (
   <Html lang="en" dir="ltr"><Head /><Preview>Your weekly Vendibook digest</Preview>
     <Body style={s.main}><Container style={s.container}>
-      <BrandHeader />
+      <BrandHeader hero="insight" />
       <Section style={s.card}>
         <Text style={s.smallHeader}>{weekLabel || 'THIS WEEK'}</Text>
         <Heading style={s.h1}>{hostName ? `${hostName}, ` : ''}here's your week.</Heading>

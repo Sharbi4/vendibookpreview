@@ -9,7 +9,7 @@ interface Props { recipientName?: string; documentName?: string; approved?: bool
 const E = ({ recipientName, documentName, approved, reason, bookingId }: Props) => (
   <Html lang="en" dir="ltr"><Head /><Preview>Document {approved ? 'approved' : 'needs attention'}</Preview>
     <Body style={s.main}><Container style={s.container}>
-      <BrandHeader />
+      <BrandHeader hero="document" />
       <Section style={s.card}>
         <Text style={s.smallHeader}>DOCUMENT {approved ? 'APPROVED' : 'REJECTED'}</Text>
         <Heading style={s.h1}>{recipientName ? `${recipientName}, ` : ''}{approved ? 'your document is approved.' : 'we need a new upload.'}</Heading>

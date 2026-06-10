@@ -9,7 +9,7 @@ interface Props { shopperName?: string; listingTitle?: string; hostName?: string
 const E = ({ shopperName, listingTitle, hostName, bookingId }: Props) => (
   <Html lang="en" dir="ltr"><Head /><Preview>How was your experience?</Preview>
     <Body style={s.main}><Container style={s.container}>
-      <BrandHeader />
+      <BrandHeader hero="message" />
       <Section style={s.card}>
         <Text style={s.smallHeader}>SHARE YOUR REVIEW</Text>
         <Heading style={s.h1}>{shopperName ? `${shopperName}, ` : ''}how did it go?</Heading>

@@ -17,7 +17,7 @@ const PROGRAMS = [
 const E = ({ name }: Props) => (
   <Html lang="en" dir="ltr"><Head /><Preview>No listings needed.</Preview>
     <Body style={s.main}><Container style={s.container}>
-      <BrandHeader />
+      <BrandHeader hero="celebrate" />
       <Section style={s.card}>
         <Text style={s.kicker}>REFER &amp; EARN</Text>
         <Heading style={s.h1}>{name ? `${name}, ` : ''}a quick way to earn on {SITE_NAME}.</Heading>

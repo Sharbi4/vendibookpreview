@@ -60,7 +60,7 @@ const E = ({
       <Preview>{subjectLine} — your launch kit is inside</Preview>
       <Body style={s.main}>
         <Container style={s.container}>
-          <BrandHeader />
+          <BrandHeader hero="celebrate" />
 
           <Section style={s.card}>
             {/* Celebration block */}

@@ -28,7 +28,7 @@ const FeaturedPaymentReceiptEmail = ({
     <Preview>Your boost is live — {listingTitle || 'your listing'} is now featured</Preview>
     <Body style={s.main}>
       <Container style={s.container}>
-        <BrandHeader />
+        <BrandHeader hero="payment" />
         <Section style={s.card}>
           <Text style={s.kicker}>BOOST ACTIVATED ⭐</Text>
           <Heading style={s.h1}>

@@ -25,7 +25,7 @@ const BookingConfirmationEmail = ({
     <Preview>Booking confirmed — {listingTitle ?? 'your reservation'}</Preview>
     <Body style={s.main}>
       <Container style={s.container}>
-        <BrandHeader />
+        <BrandHeader hero="booking" />
 
         <Section style={s.card}>
           <Text style={s.kicker}>BOOKING CONFIRMED</Text>

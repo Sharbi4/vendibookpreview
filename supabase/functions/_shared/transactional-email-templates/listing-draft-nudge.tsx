@@ -9,7 +9,7 @@ interface Props { hostName?: string; listingTitle?: string; listingId?: string }
 const E = ({ hostName, listingTitle, listingId }: Props) => (
   <Html lang="en" dir="ltr"><Head /><Preview>Finish your listing — it's almost ready</Preview>
     <Body style={s.main}><Container style={s.container}>
-      <BrandHeader />
+      <BrandHeader hero="celebrate" />
       <Section style={s.card}>
         <Text style={s.smallHeader}>DRAFT WAITING</Text>
         <Heading style={s.h1}>{hostName ? `${hostName}, ` : ''}you're 2 minutes from earning.</Heading>

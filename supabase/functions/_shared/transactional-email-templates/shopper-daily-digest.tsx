@@ -16,7 +16,7 @@ interface Props {
 const E = ({ shopperName, area, listings, aiInsight, tip }: Props) => (
   <Html lang="en" dir="ltr"><Head /><Preview>New listings near you on Vendibook</Preview>
     <Body style={s.main}><Container style={s.container}>
-      <BrandHeader />
+      <BrandHeader hero="insight" />
       <Section style={s.card}>
         <Text style={s.smallHeader}>NEW TODAY{area ? ` · ${area.toUpperCase()}` : ''}</Text>
         <Heading style={s.h1}>{shopperName ? `${shopperName}, ` : ''}fresh finds for you.</Heading>

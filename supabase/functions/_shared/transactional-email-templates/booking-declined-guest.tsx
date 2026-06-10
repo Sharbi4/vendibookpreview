@@ -9,7 +9,7 @@ interface Props { shopperName?: string; listingTitle?: string; reason?: string }
 const E = ({ shopperName, listingTitle, reason }: Props) => (
   <Html lang="en" dir="ltr"><Head /><Preview>Update on your booking request</Preview>
     <Body style={s.main}><Container style={s.container}>
-      <BrandHeader />
+      <BrandHeader hero="booking" />
       <Section style={s.card}>
         <Text style={s.smallHeader}>BOOKING UPDATE</Text>
         <Heading style={s.h1}>{shopperName ? `${shopperName}, ` : ''}your request wasn't accepted.</Heading>
