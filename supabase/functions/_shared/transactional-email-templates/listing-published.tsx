@@ -52,7 +52,7 @@ const E = ({
   const smsUrl = `sms:?&body=${smsBody}`
 
   const hasReferral = Boolean(referralUrl || referralCode)
-  const safeReferralUrl = referralUrl || (referralCode ? `${SITE_URL}/r/${referralCode}` : `${SITE_URL}/referrals`)
+  const safeReferralUrl = referralUrl || (referralCode ? `${SITE_URL}/r/${referralCode}` : `${SITE_URL}/referral`)
 
   return (
     <Html lang="en" dir="ltr">
