@@ -25,16 +25,16 @@ interface Props {
 const E = ({
   hostName, listingTitle, listingId, category, city, coverImageUrl, listingType, referralCode, referralUrl,
 }: Props) => {
-  const liveUrl = listingId ? `${SITE_URL}/listing/${listingId}` : `${SITE_URL}/dashboard?tab=listings`
-  const shareUrl = listingId ? liveUrl : `${SITE_URL}/dashboard?tab=share`
-  const shareKitDashUrl = `${SITE_URL}/dashboard?tab=share`
+  const liveUrl = listingId ? `${SITE_URL}/listing/${listingId}` : `${SITE_URL}/host/listings`
+  const shareUrl = listingId ? liveUrl : `${SITE_URL}/host/listings`
+  const shareKitDashUrl = listingId ? `${SITE_URL}/listing-published/${listingId}` : `${SITE_URL}/host/listings`
   const boostUrl = listingId
-    ? `${SITE_URL}/dashboard?tab=listings&boost=${listingId}`
-    : `${SITE_URL}/dashboard?tab=listings`
+    ? `${SITE_URL}/host/listings?boost=${listingId}`
+    : `${SITE_URL}/host/listings`
   const instantBookUrl = listingId
-    ? `${SITE_URL}/edit-listing/${listingId}?focus=instant-book`
-    : `${SITE_URL}/dashboard?tab=listings`
-  const editUrl = listingId ? `${SITE_URL}/edit-listing/${listingId}` : `${SITE_URL}/dashboard?tab=listings`
+    ? `${SITE_URL}/create-listing/${listingId}?focus=instant-book`
+    : `${SITE_URL}/host/listings`
+  const editUrl = listingId ? `${SITE_URL}/create-listing/${listingId}` : `${SITE_URL}/host/listings`
   const kind: 'rental' | 'sale' | 'both' = listingType || 'rental'
   const showInstantBook = kind === 'rental' || kind === 'both'
   const showFeaturedBoost = kind === 'sale' || kind === 'both'
