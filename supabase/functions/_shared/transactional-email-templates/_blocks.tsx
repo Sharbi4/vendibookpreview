@@ -110,7 +110,7 @@ export const BlogHighlights = ({ role, posts }: { role?: Role; posts?: BlogPick[
   return (
     <>
       <Hr style={s.hr} />
-      <Text style={s.smallHeader}>FROM THE VENDIBOOK BLOG</Text>
+      <Text style={s.smallHeader}><Icon name="spark" />FROM THE VENDIBOOK BLOG</Text>
       {list.slice(0, 2).map((p) => (
         <Section key={p.slug} style={{ margin: '0 0 14px' }}>
           <Text style={{ fontSize: '10px', letterSpacing: '0.2em', color: '#FF5124', fontWeight: 700, margin: '0 0 4px' }}>
@@ -167,10 +167,10 @@ export const ToolsBlock = ({ role, tools }: { role?: Role; tools?: Tool[] }) => 
   return (
     <>
       <Hr style={s.hr} />
-      <Text style={s.smallHeader}>TOOLS BUILT FOR YOU</Text>
+      <Text style={s.smallHeader}><Icon name="bolt" />TOOLS BUILT FOR YOU</Text>
       {list.slice(0, 3).map((t) => (
         <Text key={t.label} style={s.listItem}>
-          → <a href={t.href} style={{ color: '#FF5124', textDecoration: 'none', fontWeight: 600 }}>{t.label}</a>
+          <Icon name="arrow" /><a href={t.href} style={{ color: '#FF5124', textDecoration: 'none', fontWeight: 600 }}>{t.label}</a>
           <span style={{ color: '#a3a3a3' }}> — {t.desc}</span>
         </Text>
       ))}
