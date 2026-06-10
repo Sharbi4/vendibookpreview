@@ -27,7 +27,7 @@ const E = ({ shopperName, listingTitle, startDate, endDate, resumeUrl, variant =
       <Preview>{isFollowup ? 'Your booking is still saved' : 'Finish your booking in 60 seconds'}</Preview>
       <Body style={s.main}>
         <Container style={s.container}>
-          <BrandHeader />
+          <BrandHeader hero="booking" />
           <Section style={s.card}>
             <Text style={s.smallHeader}>{isFollowup ? 'STILL AVAILABLE' : 'BOOKING SAVED'}</Text>
             <Heading style={s.h1}>{headline}</Heading>

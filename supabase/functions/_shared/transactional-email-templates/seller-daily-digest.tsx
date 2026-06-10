@@ -18,7 +18,7 @@ interface Props {
 const E = ({ sellerName, dateLabel, openOffers, salesYesterday, revenueYesterday, aiInsight, tip }: Props) => (
   <Html lang="en" dir="ltr"><Head /><Preview>Open offers and market pulse</Preview>
     <Body style={s.main}><Container style={s.container}>
-      <BrandHeader />
+      <BrandHeader hero="insight" />
       <Section style={s.card}>
         <Text style={s.smallHeader}>{dateLabel || 'TODAY'}</Text>
         <Heading style={s.h1}>{sellerName ? `${sellerName}, ` : ''}your sales pulse.</Heading>

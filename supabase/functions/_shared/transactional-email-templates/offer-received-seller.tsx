@@ -9,7 +9,7 @@ interface Props { sellerName?: string; buyerName?: string; listingTitle?: string
 const E = ({ sellerName, buyerName, listingTitle, offerAmount, askingPrice, message, offerId, expiresAt }: Props) => (
   <Html lang="en" dir="ltr"><Head /><Preview>New offer received</Preview>
     <Body style={s.main}><Container style={s.container}>
-      <BrandHeader />
+      <BrandHeader hero="message" />
       <Section style={s.card}>
         <Text style={s.smallHeader}>NEW OFFER</Text>
         <Heading style={s.h1}>{sellerName ? `${sellerName}, ` : ''}{buyerName || 'a buyer'} made an offer.</Heading>

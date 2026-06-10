@@ -26,7 +26,7 @@ const PaymentReceiptEmail = ({
     <Preview>Receipt from {SITE_NAME} — {amount ?? 'payment received'}</Preview>
     <Body style={main}>
       <Container style={container}>
-        <BrandHeader />
+        <BrandHeader hero="payment" />
 
         <Section style={card}>
           <Text style={kicker}>PAYMENT RECEIPT</Text>

@@ -9,7 +9,7 @@ interface Props { hostName?: string }
 const E = ({ hostName }: Props) => (
   <Html lang="en" dir="ltr"><Head /><Preview>Connect Stripe to receive payouts</Preview>
     <Body style={s.main}><Container style={s.container}>
-      <BrandHeader />
+      <BrandHeader hero="booking" />
       <Section style={s.card}>
         <Text style={s.smallHeader}>ACTION REQUIRED</Text>
         <Heading style={s.h1}>{hostName ? `${hostName}, ` : ''}connect Stripe to get paid.</Heading>

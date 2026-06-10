@@ -18,7 +18,7 @@ const HEADLINES: Record<string, string> = {
 const E = ({ name, transactionType = 'purchase' }: Props) => (
   <Html lang="en" dir="ltr"><Head /><Preview>One quick thing worth knowing.</Preview>
     <Body style={s.main}><Container style={s.container}>
-      <BrandHeader />
+      <BrandHeader hero="celebrate" />
       <Section style={s.card}>
         <Heading style={s.h1}>{name ? `${name}, ` : ''}{HEADLINES[transactionType]}</Heading>
         <Text style={s.text}>

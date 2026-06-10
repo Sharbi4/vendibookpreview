@@ -24,7 +24,7 @@ const Row = ({ label, value, accent }: { label: string; value: string | number; 
 const E = ({ dateLabel, newSignups, newListings, newBookings, grossRevenue, openDisputes, pendingPayouts, aiInsight }: Props) => (
   <Html lang="en" dir="ltr"><Head /><Preview>Vendibook ops digest</Preview>
     <Body style={s.main}><Container style={s.container}>
-      <BrandHeader />
+      <BrandHeader hero="insight" />
       <Section style={s.card}>
         <Text style={s.smallHeader}>{dateLabel || 'YESTERDAY'}</Text>
         <Heading style={s.h1}>Marketplace pulse.</Heading>

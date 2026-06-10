@@ -9,7 +9,7 @@ interface Props { recipientName?: string; senderName?: string; messagePreview?: 
 const E = ({ recipientName, senderName, messagePreview, conversationId, unreadCount }: Props) => (
   <Html lang="en" dir="ltr"><Head /><Preview>{senderName || 'Someone'} sent you a message</Preview>
     <Body style={s.main}><Container style={s.container}>
-      <BrandHeader />
+      <BrandHeader hero="message" />
       <Section style={s.card}>
         <Text style={s.smallHeader}>{unreadCount && unreadCount > 1 ? `${unreadCount} NEW MESSAGES` : 'NEW MESSAGE'}</Text>
         <Heading style={s.h1}>{recipientName ? `${recipientName}, ` : ''}{senderName || 'someone'} reached out.</Heading>

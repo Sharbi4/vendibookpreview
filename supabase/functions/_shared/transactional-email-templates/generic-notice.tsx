@@ -53,7 +53,7 @@ const GenericNoticeEmail = ({
       <Preview>{preview || heading || `Update from ${SITE_NAME}`}</Preview>
       <Body style={main}>
         <Container style={container}>
-          <BrandHeader />
+          <BrandHeader hero="document" />
 
           <Section style={card}>
             {kicker && <Text style={kickerStyle}>{kicker.toUpperCase()}</Text>}

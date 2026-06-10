@@ -21,7 +21,7 @@ const E = ({ recipientName, listingTitle, refundAmount, reason, recipientType = 
   return (
     <Html lang="en" dir="ltr"><Head /><Preview>{isShopper ? 'Your refund has been processed' : 'Booking cancelled and refunded'}</Preview>
       <Body style={s.main}><Container style={s.container}>
-        <BrandHeader />
+        <BrandHeader hero="payment" />
         <Section style={s.card}>
           <Text style={s.smallHeader}>{isShopper ? 'REFUND PROCESSED' : 'BOOKING CANCELLED'}</Text>
           <Heading style={s.h1}>{recipientName ? `${recipientName}, ` : ''}{isShopper ? 'your refund is on the way' : 'a booking was cancelled'}.</Heading>

@@ -9,7 +9,7 @@ interface Props { sellerName?: string; listingTitle?: string; salePrice?: number
 const E = ({ sellerName, listingTitle, salePrice, buyerName, orderNumber }: Props) => (
   <Html lang="en" dir="ltr"><Head /><Preview>Sale completed 🎉</Preview>
     <Body style={s.main}><Container style={s.container}>
-      <BrandHeader />
+      <BrandHeader hero="celebrate" />
       <Section style={s.card}>
         <Text style={s.smallHeader}>SALE COMPLETED</Text>
         <Heading style={s.h1}>{sellerName ? `${sellerName}, ` : ''}your sale closed.</Heading>

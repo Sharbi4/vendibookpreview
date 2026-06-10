@@ -16,7 +16,7 @@ const AccountReadyRecoveryEmail = ({ name }: AccountReadyRecoveryProps) => (
     <Preview>Your {SITE_NAME} account is ready — no verification email needed</Preview>
     <Body style={s.main}>
       <Container style={s.container}>
-        <BrandHeader />
+        <BrandHeader hero="celebrate" />
         <Section style={s.card}>
           <Text style={s.kicker}>YOUR ACCOUNT IS ACTIVE</Text>
           <Heading style={s.h1}>{name ? `${name}, you're all set.` : `You're all set.`}</Heading>

@@ -9,7 +9,7 @@ interface Props { buyerName?: string; sellerName?: string; listingTitle?: string
 const E = ({ buyerName, sellerName, listingTitle, counterAmount, originalOffer, message, offerId, expiresAt }: Props) => (
   <Html lang="en" dir="ltr"><Head /><Preview>Counter-offer received</Preview>
     <Body style={s.main}><Container style={s.container}>
-      <BrandHeader />
+      <BrandHeader hero="message" />
       <Section style={s.card}>
         <Text style={s.smallHeader}>COUNTER-OFFER</Text>
         <Heading style={s.h1}>{buyerName ? `${buyerName}, ` : ''}{sellerName || 'the seller'} sent a counter.</Heading>

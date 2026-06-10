@@ -23,7 +23,7 @@ const E = ({ name, listingTitle, listingId, categoryLabel, modeLabel, priceLabel
   return (
     <Html lang="en" dir="ltr"><Head /><Preview>{listingTitle ? `${listingTitle} just listed near you` : 'A new listing just went live near you'}</Preview>
       <Body style={s.main}><Container style={s.container}>
-        <BrandHeader />
+        <BrandHeader hero="celebrate" />
         <Section style={s.card}>
           <Text style={s.smallHeader}>NEW MATCH NEAR YOU</Text>
           <Heading style={s.h1}>{name ? `${name}, a new listing just dropped.` : 'A new listing just dropped near you.'}</Heading>

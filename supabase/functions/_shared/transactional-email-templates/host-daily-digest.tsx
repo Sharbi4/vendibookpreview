@@ -20,7 +20,7 @@ interface Props {
 const E = ({ hostName, dateLabel, views, inquiries, bookings, earnings, topListingTitle, topListingId, aiInsight, tip }: Props) => (
   <Html lang="en" dir="ltr"><Head /><Preview>Your Vendibook day in numbers</Preview>
     <Body style={s.main}><Container style={s.container}>
-      <BrandHeader />
+      <BrandHeader hero="insight" />
       <Section style={s.card}>
         <Text style={s.smallHeader}>{dateLabel || 'YESTERDAY'}</Text>
         <Heading style={s.h1}>{hostName ? `${hostName}, ` : ''}your day in numbers.</Heading>

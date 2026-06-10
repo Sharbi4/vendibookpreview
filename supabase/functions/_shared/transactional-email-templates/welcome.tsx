@@ -19,7 +19,7 @@ const WelcomeEmail = ({ name, role }: WelcomeProps) => {
       <Preview>Welcome to {SITE_NAME} — your mobile food business marketplace</Preview>
       <Body style={s.main}>
         <Container style={s.container}>
-          <BrandHeader />
+          <BrandHeader hero="celebrate" />
           <Section style={s.card}>
             <Text style={s.kicker}>WELCOME ABOARD</Text>
             <Heading style={s.h1}>{name ? `Welcome, ${name}.` : 'Welcome.'}</Heading>

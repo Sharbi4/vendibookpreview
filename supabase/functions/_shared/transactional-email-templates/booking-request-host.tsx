@@ -9,7 +9,7 @@ interface Props { hostName?: string; shopperName?: string; listingTitle?: string
 const E = ({ hostName, shopperName, listingTitle, startDate, endDate, totalPrice, bookingId, message }: Props) => (
   <Html lang="en" dir="ltr"><Head /><Preview>New booking request from {shopperName || 'a guest'}</Preview>
     <Body style={s.main}><Container style={s.container}>
-      <BrandHeader />
+      <BrandHeader hero="booking" />
       <Section style={s.card}>
         <Text style={s.smallHeader}>NEW BOOKING REQUEST</Text>
         <Heading style={s.h1}>{shopperName || 'A guest'} wants to book {listingTitle ? `“${listingTitle}”` : 'your listing'}.</Heading>

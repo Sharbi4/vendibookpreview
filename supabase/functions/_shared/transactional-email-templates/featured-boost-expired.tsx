@@ -24,7 +24,7 @@ const FeaturedBoostExpiredEmail = ({
     <Preview>Your boost for {listingTitle || 'your listing'} has ended</Preview>
     <Body style={s.main}>
       <Container style={s.container}>
-        <BrandHeader />
+        <BrandHeader hero="payment" />
         <Section style={s.card}>
           <Text style={s.kicker}>BOOST ENDED</Text>
           <Heading style={s.h1}>

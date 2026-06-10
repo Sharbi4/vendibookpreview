@@ -26,7 +26,7 @@ const SupportReplyEmail = ({
     <Preview>{subject || `A note from ${SITE_NAME} support`}</Preview>
     <Body style={s.main}>
       <Container style={s.container}>
-        <BrandHeader />
+        <BrandHeader hero="message" />
         <Section style={s.card}>
           <Text style={s.kicker}>CUSTOMER SUPPORT</Text>
           <Heading style={s.h1}>

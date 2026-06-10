@@ -9,7 +9,7 @@ interface Props { recipientName?: string; listingTitle?: string; cancelledBy?: '
 const E = ({ recipientName, listingTitle, cancelledBy, reason }: Props) => (
   <Html lang="en" dir="ltr"><Head /><Preview>Booking cancelled</Preview>
     <Body style={s.main}><Container style={s.container}>
-      <BrandHeader />
+      <BrandHeader hero="booking" />
       <Section style={s.card}>
         <Text style={s.smallHeader}>BOOKING CANCELLED</Text>
         <Heading style={s.h1}>{recipientName ? `${recipientName}, ` : ''}this booking has been cancelled.</Heading>
