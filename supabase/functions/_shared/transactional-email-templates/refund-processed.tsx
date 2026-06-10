@@ -11,17 +11,16 @@ interface Props {
   reason?: string
   recipientType?: 'shopper' | 'host'
   initiatedBy?: 'shopper' | 'host' | 'admin'
-  bookingId?: string
-}
+  bookingId?: string; coverImageUrl?: string }
 
-const E = ({ recipientName, listingTitle, refundAmount, reason, recipientType = 'shopper', initiatedBy, bookingId }: Props) => {
+const E = ({ recipientName, listingTitle, refundAmount, reason, recipientType = 'shopper', initiatedBy, bookingId, coverImageUrl }: Props) => {
   const isShopper = recipientType === 'shopper'
   const amount = typeof refundAmount === 'number' ? `$${refundAmount.toFixed(2)}` : ''
   const initiator = initiatedBy === 'shopper' ? 'the guest' : initiatedBy === 'admin' ? 'our team' : 'you'
   return (
     <Html lang="en" dir="ltr"><Head /><Preview>{isShopper ? 'Your refund has been processed' : 'Booking cancelled and refunded'}</Preview>
       <Body style={s.main}><Container style={s.container}>
-        <BrandHeader hero="payment" />
+        <BrandHeader hero="payment" listingImageUrl={coverImageUrl} listingTitle={listingTitle} />
         <Section style={s.card}>
           <Text style={s.smallHeader}>{isShopper ? 'REFUND PROCESSED' : 'BOOKING CANCELLED'}</Text>
           <Heading style={s.h1}>{recipientName ? `${recipientName}, ` : ''}{isShopper ? 'your refund is on the way' : 'a booking was cancelled'}.</Heading>
@@ -51,5 +50,5 @@ export const template = {
     ? `Booking cancelled & refunded${d?.listingTitle ? `: ${d.listingTitle}` : ''}`
     : `Refund processed${d?.listingTitle ? `: ${d.listingTitle}` : ''}`,
   displayName: 'Refund processed',
-  previewData: { recipientName: 'Jordan', listingTitle: 'Demo Kitchen', refundAmount: 240, recipientType: 'shopper', bookingId: 'demo1234' },
+  previewData: { recipientName: 'Jordan', listingTitle: 'Demo Kitchen', coverImageUrl: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=800&q=80', refundAmount: 240, recipientType: 'shopper', bookingId: 'demo1234' },
 } satisfies TemplateEntry

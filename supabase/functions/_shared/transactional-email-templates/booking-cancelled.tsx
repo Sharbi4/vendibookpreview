@@ -4,12 +4,12 @@ import type { TemplateEntry } from './registry.ts'
 import { s } from './_styles.ts'
 
 import { BrandHeader } from './_blocks.tsx'
-interface Props { recipientName?: string; listingTitle?: string; cancelledBy?: 'host' | 'guest' | string; reason?: string }
+interface Props { recipientName?: string; listingTitle?: string; cancelledBy?: 'host' | 'guest' | string; reason?: string; coverImageUrl?: string }
 
-const E = ({ recipientName, listingTitle, cancelledBy, reason }: Props) => (
+const E = ({ recipientName, listingTitle, cancelledBy, reason, coverImageUrl }: Props) => (
   <Html lang="en" dir="ltr"><Head /><Preview>Booking cancelled</Preview>
     <Body style={s.main}><Container style={s.container}>
-      <BrandHeader hero="booking" />
+      <BrandHeader hero="booking" listingImageUrl={coverImageUrl} listingTitle={listingTitle} />
       <Section style={s.card}>
         <Text style={s.smallHeader}>BOOKING CANCELLED</Text>
         <Heading style={s.h1}>{recipientName ? `${recipientName}, ` : ''}this booking has been cancelled.</Heading>
@@ -23,5 +23,5 @@ export const template = {
   component: E,
   subject: (d: any) => `Cancelled: ${d?.listingTitle || 'your booking'}`,
   displayName: 'Booking cancelled',
-  previewData: { recipientName: 'Sam', listingTitle: 'Demo Lot', cancelledBy: 'guest', reason: 'Schedule conflict' },
+  previewData: { recipientName: 'Sam', listingTitle: 'Demo Lot', coverImageUrl: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=800&q=80', cancelledBy: 'guest', reason: 'Schedule conflict' },
 } satisfies TemplateEntry

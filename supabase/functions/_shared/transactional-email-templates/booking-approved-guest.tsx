@@ -4,12 +4,12 @@ import type { TemplateEntry } from './registry.ts'
 import { s, SITE_URL } from './_styles.ts'
 
 import { BrandHeader } from './_blocks.tsx'
-interface Props { shopperName?: string; listingTitle?: string; startDate?: string; endDate?: string; totalPrice?: number; bookingId?: string; address?: string }
+interface Props { shopperName?: string; listingTitle?: string; startDate?: string; endDate?: string; totalPrice?: number; bookingId?: string; address?: string; coverImageUrl?: string }
 
-const E = ({ shopperName, listingTitle, startDate, endDate, totalPrice, bookingId, address }: Props) => (
+const E = ({ shopperName, listingTitle, startDate, endDate, totalPrice, bookingId, address, coverImageUrl }: Props) => (
   <Html lang="en" dir="ltr"><Head /><Preview>Your booking is approved 🎉</Preview>
     <Body style={s.main}><Container style={s.container}>
-      <BrandHeader hero="booking" />
+      <BrandHeader hero="booking" listingImageUrl={coverImageUrl} listingTitle={listingTitle} />
       <Section style={s.card}>
         <Text style={s.smallHeader}>BOOKING APPROVED</Text>
         <Heading style={s.h1}>{shopperName ? `You're set, ${shopperName}.` : "You're all set."}</Heading>
@@ -31,5 +31,5 @@ export const template = {
   component: E,
   subject: (d: any) => `Approved: ${d?.listingTitle || 'Your booking'}`,
   displayName: 'Booking approved (guest)',
-  previewData: { shopperName: 'Jordan', listingTitle: 'Vendor Lot — Brooklyn', startDate: 'May 2, 2026', endDate: 'May 4, 2026', totalPrice: 320, bookingId: 'demo', address: 'Brooklyn, NY' },
+  previewData: { shopperName: 'Jordan', listingTitle: 'Vendor Lot — Brooklyn', coverImageUrl: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=800&q=80', startDate: 'May 2, 2026', endDate: 'May 4, 2026', totalPrice: 320, bookingId: 'demo', address: 'Brooklyn, NY' },
 } satisfies TemplateEntry

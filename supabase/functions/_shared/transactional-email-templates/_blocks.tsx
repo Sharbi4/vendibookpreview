@@ -33,8 +33,20 @@ const HERO_ALT: Record<HeroKind, string> = {
 }
 
 // Shared brand header used at the top of every email. Renders the wordmark plus
-// an optional editorial spot illustration that adapts to the email's purpose.
-export const BrandHeader = ({ hero }: { hero?: HeroKind } = {}) => (
+// either a real listing thumbnail (when supplied) or an editorial spot illustration.
+// Passing `listingImageUrl` makes the email feel personalized to the recipient's
+// actual listing; falls back to the `hero` illustration when no photo is available.
+export const BrandHeader = ({
+  hero,
+  listingImageUrl,
+  listingTitle,
+  listingHref,
+}: {
+  hero?: HeroKind
+  listingImageUrl?: string
+  listingTitle?: string
+  listingHref?: string
+} = {}) => (
   <Section style={{ padding: '0 0 18px', textAlign: 'center' as const }}>
     <a href={SITE_URL} style={{ textDecoration: 'none', display: 'inline-block' }}>
       <Img
@@ -45,7 +57,32 @@ export const BrandHeader = ({ hero }: { hero?: HeroKind } = {}) => (
         style={{ display: 'block', margin: '0 auto', border: 0, outline: 'none', maxWidth: '180px', height: 'auto' }}
       />
     </a>
-    {hero ? (
+    {listingImageUrl ? (
+      <Section style={{ margin: '6px auto 0', maxWidth: '320px' }}>
+        {listingHref ? (
+          <a href={listingHref} style={{ textDecoration: 'none', display: 'block' }}>
+            <Img
+              src={listingImageUrl}
+              alt={listingTitle || 'Listing photo'}
+              width="320"
+              style={{ display: 'block', margin: '0 auto', border: '1px solid #232323', borderRadius: '14px', width: '100%', maxWidth: '320px', height: 'auto' }}
+            />
+          </a>
+        ) : (
+          <Img
+            src={listingImageUrl}
+            alt={listingTitle || 'Listing photo'}
+            width="320"
+            style={{ display: 'block', margin: '0 auto', border: '1px solid #232323', borderRadius: '14px', width: '100%', maxWidth: '320px', height: 'auto' }}
+          />
+        )}
+        {listingTitle ? (
+          <Text style={{ fontSize: '12px', color: '#a3a3a3', textAlign: 'center' as const, margin: '8px 0 0', letterSpacing: '0.02em' }}>
+            {listingTitle}
+          </Text>
+        ) : null}
+      </Section>
+    ) : hero ? (
       <Img
         src={HERO_URLS[hero]}
         alt={HERO_ALT[hero]}
@@ -56,6 +93,55 @@ export const BrandHeader = ({ hero }: { hero?: HeroKind } = {}) => (
     ) : null}
   </Section>
 )
+
+// Compact listing card used inline in cards/lists. Shows a real thumbnail next
+// to title + meta so emails listing multiple items feel like the marketplace.
+export const ListingPreviewCard = ({
+  imageUrl,
+  title,
+  meta,
+  href,
+  priceLabel,
+}: {
+  imageUrl?: string
+  title?: string
+  meta?: string
+  href?: string
+  priceLabel?: string
+}) => {
+  const inner = (
+    <Section style={{
+      backgroundColor: '#0f0f10',
+      border: '1px solid #232323',
+      borderRadius: '14px',
+      overflow: 'hidden' as const,
+      margin: '0 0 12px',
+    }}>
+      {imageUrl ? (
+        <Img
+          src={imageUrl}
+          alt={title || 'Listing'}
+          width="520"
+          style={{ display: 'block', width: '100%', maxWidth: '100%', height: 'auto', maxHeight: '220px', objectFit: 'cover' as const }}
+        />
+      ) : null}
+      <Section style={{ padding: '14px 16px' }}>
+        {meta ? (
+          <Text style={{ fontSize: '10px', letterSpacing: '0.2em', color: '#FF5124', fontWeight: 700, margin: '0 0 4px' }}>
+            {meta.toUpperCase()}
+          </Text>
+        ) : null}
+        {title ? (
+          <Text style={{ fontSize: '15px', color: '#fafafa', fontWeight: 600, margin: '0 0 4px' }}>{title}</Text>
+        ) : null}
+        {priceLabel ? (
+          <Text style={{ fontSize: '13px', color: '#a3a3a3', margin: 0 }}>{priceLabel}</Text>
+        ) : null}
+      </Section>
+    </Section>
+  )
+  return href ? <a href={href} style={{ textDecoration: 'none', display: 'block' }}>{inner}</a> : inner
+}
 
 // Tiny inline-SVG icon set. Inline SVG renders crisply in Apple Mail, Gmail web,
 // iOS Mail, and Outlook.com. Falls back to whitespace in legacy clients (no

@@ -10,10 +10,9 @@ interface Props {
   startDate?: string
   endDate?: string
   resumeUrl?: string
-  variant?: '2h' | '24h'
-}
+  variant?: '2h' | '24h'; coverImageUrl?: string }
 
-const E = ({ shopperName, listingTitle, startDate, endDate, resumeUrl, variant = '2h' }: Props) => {
+const E = ({ shopperName, listingTitle, startDate, endDate, resumeUrl, variant = '2h', coverImageUrl }: Props) => {
   const isFollowup = variant === '24h'
   const headline = isFollowup
     ? `${shopperName ? shopperName + ', s' : 'S'}till thinking it over?`
@@ -27,7 +26,7 @@ const E = ({ shopperName, listingTitle, startDate, endDate, resumeUrl, variant =
       <Preview>{isFollowup ? 'Your booking is still saved' : 'Finish your booking in 60 seconds'}</Preview>
       <Body style={s.main}>
         <Container style={s.container}>
-          <BrandHeader hero="booking" />
+          <BrandHeader hero="booking" listingImageUrl={coverImageUrl} listingTitle={listingTitle} />
           <Section style={s.card}>
             <Text style={s.smallHeader}>{isFollowup ? 'STILL AVAILABLE' : 'BOOKING SAVED'}</Text>
             <Heading style={s.h1}>{headline}</Heading>
@@ -56,8 +55,7 @@ export const template = {
   displayName: 'Booking abandoned recovery',
   previewData: {
     shopperName: 'Jordan',
-    listingTitle: 'Downtown Ghost Kitchen',
-    startDate: 'Apr 28, 2026',
+    listingTitle: 'Downtown Ghost Kitchen', coverImageUrl: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=800&q=80', startDate: 'Apr 28, 2026',
     endDate: 'May 1, 2026',
     resumeUrl: 'https://vendibook.com/listing/demo',
     variant: '2h',

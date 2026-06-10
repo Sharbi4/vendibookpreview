@@ -4,12 +4,12 @@ import type { TemplateEntry } from './registry.ts'
 import { s, SITE_URL } from './_styles.ts'
 
 import { BrandHeader } from './_blocks.tsx'
-interface Props { buyerName?: string; sellerName?: string; listingTitle?: string; counterAmount?: number; originalOffer?: number; message?: string; offerId?: string; expiresAt?: string }
+interface Props { buyerName?: string; sellerName?: string; listingTitle?: string; counterAmount?: number; originalOffer?: number; message?: string; offerId?: string; expiresAt?: string; coverImageUrl?: string }
 
-const E = ({ buyerName, sellerName, listingTitle, counterAmount, originalOffer, message, offerId, expiresAt }: Props) => (
+const E = ({ buyerName, sellerName, listingTitle, counterAmount, originalOffer, message, offerId, expiresAt, coverImageUrl }: Props) => (
   <Html lang="en" dir="ltr"><Head /><Preview>Counter-offer received</Preview>
     <Body style={s.main}><Container style={s.container}>
-      <BrandHeader hero="message" />
+      <BrandHeader hero="message" listingImageUrl={coverImageUrl} listingTitle={listingTitle} />
       <Section style={s.card}>
         <Text style={s.smallHeader}>COUNTER-OFFER</Text>
         <Heading style={s.h1}>{buyerName ? `${buyerName}, ` : ''}{sellerName || 'the seller'} sent a counter.</Heading>
@@ -27,5 +27,5 @@ export const template = {
   component: E,
   subject: (d: any) => d?.counterAmount ? `Counter: $${Number(d.counterAmount).toLocaleString()}` : 'Counter-offer received',
   displayName: 'Counter-offer (buyer)',
-  previewData: { buyerName: 'Pat', sellerName: 'Sam', listingTitle: 'Demo Truck', counterAmount: 40000, originalOffer: 38000, offerId: 'demo', expiresAt: 'Apr 28' },
+  previewData: { buyerName: 'Pat', sellerName: 'Sam', listingTitle: 'Demo Truck', coverImageUrl: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=800&q=80', counterAmount: 40000, originalOffer: 38000, offerId: 'demo', expiresAt: 'Apr 28' },
 } satisfies TemplateEntry

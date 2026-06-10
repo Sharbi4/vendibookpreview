@@ -60,7 +60,7 @@ const E = ({
       <Preview>{subjectLine} — your launch kit is inside</Preview>
       <Body style={s.main}>
         <Container style={s.container}>
-          <BrandHeader hero="celebrate" />
+          <BrandHeader hero="celebrate" listingImageUrl={coverImageUrl} listingTitle={listingTitle} />
 
           <Section style={s.card}>
             {/* Celebration block */}
@@ -328,8 +328,7 @@ export const template = {
   displayName: 'Listing published',
   previewData: {
     hostName: 'Sam',
-    listingTitle: 'Downtown Food Truck',
-    listingId: 'demo',
+    listingTitle: 'Downtown Food Truck', coverImageUrl: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=800&q=80', listingId: 'demo',
     category: 'Food Truck',
     city: 'Austin',
   },

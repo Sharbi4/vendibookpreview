@@ -14,18 +14,15 @@ interface BookingProps {
   totalPrice?: string
   orderNumber?: string
   bookingId?: string
-  cityState?: string
-}
+  cityState?: string; coverImageUrl?: string }
 
-const BookingConfirmationEmail = ({
-  guestName, listingTitle, startDate, endDate, totalPrice, orderNumber, bookingId, cityState,
-}: BookingProps) => (
+const BookingConfirmationEmail = ({ guestName, listingTitle, startDate, endDate, totalPrice, orderNumber, bookingId, cityState, coverImageUrl }: BookingProps) => (
   <Html lang="en" dir="ltr">
     <Head />
     <Preview>Booking confirmed — {listingTitle ?? 'your reservation'}</Preview>
     <Body style={s.main}>
       <Container style={s.container}>
-        <BrandHeader hero="booking" />
+        <BrandHeader hero="booking" listingImageUrl={coverImageUrl} listingTitle={listingTitle} />
 
         <Section style={s.card}>
           <Text style={s.kicker}>BOOKING CONFIRMED</Text>
@@ -96,8 +93,7 @@ export const template = {
   displayName: 'Booking confirmation',
   previewData: {
     guestName: 'Jordan',
-    listingTitle: 'Sunset Food Truck — Downtown LA',
-    startDate: 'May 4, 2026',
+    listingTitle: 'Sunset Food Truck — Downtown LA', coverImageUrl: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=800&q=80', startDate: 'May 4, 2026',
     endDate: 'May 6, 2026',
     totalPrice: '$842.00',
     orderNumber: 'VB-9F2A1C4D',
