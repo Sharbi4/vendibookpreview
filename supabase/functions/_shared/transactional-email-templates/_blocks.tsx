@@ -91,14 +91,14 @@ export const BlogHighlights = ({ role, posts }: { role?: Role; posts?: BlogPick[
 interface Tool { label: string; href: string; desc: string }
 
 const HOST_TOOLS: Tool[] = [
-  { label: 'Featured Boost',     href: `${SITE_URL}/dashboard?tab=listings`,         desc: 'Pin your listing to the top for 30 days.' },
-  { label: 'Share Kit',          href: `${SITE_URL}/dashboard?tab=share`,            desc: 'Auto-generated social posts, QR signs, and link.' },
-  { label: 'Startup Cost Tool',  href: `${SITE_URL}/tools/food-truck-startup-costs`, desc: 'Benchmark your numbers against the market.' },
+  { label: 'Featured Boost',     href: `${SITE_URL}/host/listings`,                       desc: 'Pin your listing to the top for 30 days.' },
+  { label: 'Share Kit',          href: `${SITE_URL}/host/listings`,                       desc: 'Auto-generated social posts, QR signs, and link.' },
+  { label: 'Startup Cost Tool',  href: `${SITE_URL}/tools/food-truck-startup-costs-2026`, desc: 'Benchmark your numbers against the market.' },
 ]
 const SELLER_TOOLS: Tool[] = [
-  { label: 'Listing Wizard',     href: `${SITE_URL}/dashboard?tab=listings`,         desc: 'Publish a sale listing in under 5 minutes.' },
-  { label: 'Market Research',    href: `${SITE_URL}/tools/food-truck-startup-costs`, desc: 'See what similar trucks sold for recently.' },
-  { label: 'Share Kit',          href: `${SITE_URL}/dashboard?tab=share`,            desc: 'Cross-post to FB Marketplace, IG, and more.' },
+  { label: 'Listing Wizard',     href: `${SITE_URL}/list`,                                desc: 'Publish a sale listing in under 5 minutes.' },
+  { label: 'Market Research',    href: `${SITE_URL}/tools/market-radar`,                  desc: 'See what similar trucks sold for recently.' },
+  { label: 'Share Kit',          href: `${SITE_URL}/host/listings`,                       desc: 'Cross-post to FB Marketplace, IG, and more.' },
 ]
 const SHOPPER_TOOLS: Tool[] = [
   { label: 'Browse Marketplace', href: `${SITE_URL}/browse`,                         desc: 'Trucks, trailers, ghost kitchens, vendor lots.' },
