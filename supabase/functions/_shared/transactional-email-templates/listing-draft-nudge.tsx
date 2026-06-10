@@ -14,7 +14,7 @@ const E = ({ hostName, listingTitle, listingId }: Props) => (
         <Text style={s.smallHeader}>DRAFT WAITING</Text>
         <Heading style={s.h1}>{hostName ? `${hostName}, ` : ''}you're 2 minutes from earning.</Heading>
         <Text style={s.lede}>{listingTitle ? `“${listingTitle}”` : 'Your listing'} is saved as a draft. Publish it now to start receiving inquiries.</Text>
-        <Section style={s.ctaWrap}><Button href={`${SITE_URL}/list/${listingId || ''}`} style={s.button}>Finish & publish</Button></Section>
+        <Section style={s.ctaWrap}><Button href={listingId ? `${SITE_URL}/create-listing/${listingId}` : `${SITE_URL}/list`} style={s.button}>Finish & publish</Button></Section>
         <Text style={s.small}>Hosts who publish within 24 hours get 4× more bookings in the first month.</Text>
       </Section>
     </Container></Body></Html>
