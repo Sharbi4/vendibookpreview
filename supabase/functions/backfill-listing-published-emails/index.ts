@@ -27,12 +27,19 @@ Deno.serve(async (req) => {
 
     const { data: listings, error } = await supabase
       .from('listings')
-      .select('id, title, category, city, cover_image_url, mode, host_id, profiles!listings_host_id_fkey(email, full_name)')
+      .select('id, title, category, city, cover_image_url, mode, host_id')
       .eq('status', 'published')
       .not('title', 'ilike', 'demo%')
       .order('created_at', { ascending: false })
       .limit(limit)
     if (error) throw error
+
+    const hostIds = Array.from(new Set((listings || []).map((l: any) => l.host_id).filter(Boolean)))
+    const { data: profiles } = await supabase
+      .from('profiles')
+      .select('id, email, full_name')
+      .in('id', hostIds)
+    const byId = new Map((profiles || []).map((p: any) => [p.id, p]))
 
     const results: Array<{ listingId: string; email?: string; status: string; error?: string }> = []
     for (const l of (listings || []) as any[]) {
