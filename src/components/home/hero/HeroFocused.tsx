@@ -69,7 +69,7 @@ const HeroFocused = () => {
             transition={{ duration: 0.4, delay: 0.05 }}
           >
             <span className="w-1 h-1 rounded-full bg-primary" />
-            Food trucks and trailers, easier to find and list
+            The marketplace for mobile food assets
           </motion.div>
 
           {/* Headline */}
@@ -90,7 +90,7 @@ const HeroFocused = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.15 }}
           >
-            Search real food trucks and trailers, compare listings, and connect with owners before you commit.
+            Search verified food trucks and trailers, compare real listings, and connect with owners through a safer, more structured marketplace.
           </motion.p>
 
           {/* Search */}
@@ -159,13 +159,13 @@ const HeroFocused = () => {
             transition={{ duration: 0.5, delay: 0.25 }}
           >
             <Button
-              onClick={handlePrimary}
+              onClick={handleSignUp}
               size="lg"
               variant="dark-shine"
               className="rounded-full px-6 gap-2 whitespace-nowrap"
             >
-              <Sparkles className="w-4 h-4" />
-              Tell Vendibook What You Need
+              <UserPlus className="w-4 h-4" />
+              Sign Up Free
             </Button>
             <Button
               onClick={handleBrowse}
