@@ -23,7 +23,6 @@ import {
   Shield,
   Snowflake,
   Home,
-  Sparkles,
   CheckCircle2,
   Circle,
   Info,
@@ -430,8 +429,7 @@ const CHECKLIST_SECTIONS = [
       { id: 'setup-2', text: 'Determine kitchen intensity (heavy cooking vs light prep)', priority: 'high' },
       { id: 'setup-3', text: 'Calculate power requirements (5,000-10,000+ watts)', priority: 'medium' },
       { id: 'setup-4', text: 'Plan ventilation needs (hood system if frying/grilling)', priority: 'high' },
-      { id: 'setup-5', text: 'Research new vs used options', priority: 'medium' },
-    ],
+      { id: 'setup-5', text: 'Research new vs used options', priority: 'medium' }],
     details: {
       title: 'Choosing the Right Setup',
       content: `**Food Trucks** are all-in-one vehicles with built-in kitchens. Upfront costs range from $40,000 to $150,000+ for new, fully equipped trucks. Used step vans can start at $15,000-$25,000 with basic buildout. Benefits include quick mobility and single-unit maintenance. However, engine issues can sideline your entire business.
@@ -460,8 +458,7 @@ const CHECKLIST_SECTIONS = [
       { id: 'cuisine-3', text: 'Plan ingredient cross-utilization', priority: 'medium' },
       { id: 'cuisine-4', text: 'Calculate food costs per item', priority: 'high' },
       { id: 'cuisine-5', text: 'Set pricing strategy (3-4x food cost)', priority: 'high' },
-      { id: 'cuisine-6', text: 'Create menu board design', priority: 'low' },
-    ],
+      { id: 'cuisine-6', text: 'Create menu board design', priority: 'low' }],
     details: {
       title: 'Menu Design & Pricing',
       content: `**Popular Cuisine Types:**
@@ -497,8 +494,7 @@ Price items at 3-4x their food cost, aiming for 25-30% food cost percentage. Res
       { id: 'equip-5', text: 'Purchase generator (5,000-10,000W)', priority: 'high' },
       { id: 'equip-6', text: 'Get POS system and payment processing', priority: 'medium' },
       { id: 'equip-7', text: 'Stock smallwares (pans, utensils, containers)', priority: 'medium' },
-      { id: 'equip-8', text: 'Purchase initial disposables and supplies', priority: 'low' },
-    ],
+      { id: 'equip-8', text: 'Purchase initial disposables and supplies', priority: 'low' }],
     details: {
       title: 'Equipment Categories & Costs',
       content: `**Cooking Appliances** ($500-$5,000 each)
@@ -548,8 +544,7 @@ Price items at 3-4x their food cost, aiming for 25-30% food cost percentage. Res
       { id: 'permit-7', text: 'Obtain food handler certifications', priority: 'high' },
       { id: 'permit-8', text: 'Register vehicle with DMV', priority: 'medium' },
       { id: 'permit-9', text: 'Get sales tax permit', priority: 'medium' },
-      { id: 'permit-10', text: 'Apply for local parking/vending permits', priority: 'medium' },
-    ],
+      { id: 'permit-10', text: 'Apply for local parking/vending permits', priority: 'medium' }],
     details: {
       title: 'Regulatory Requirements',
       content: `**Essential Permits:**
@@ -585,8 +580,7 @@ Price items at 3-4x their food cost, aiming for 25-30% food cost percentage. Res
       { id: 'comm-3', text: 'Sign commissary agreement', priority: 'high' },
       { id: 'comm-4', text: 'Set up storage space for dry goods', priority: 'medium' },
       { id: 'comm-5', text: 'Arrange overnight parking/security', priority: 'medium' },
-      { id: 'comm-6', text: 'Establish daily cleaning routine', priority: 'high' },
-    ],
+      { id: 'comm-6', text: 'Establish daily cleaning routine', priority: 'high' }],
     details: {
       title: 'Commissary Kitchen Basics',
       content: `**What is a Commissary?**
@@ -627,8 +621,7 @@ A licensed commercial kitchen that serves as your "home base" for:
       { id: 'maint-4', text: 'Schedule fire system inspections (every 6 months)', priority: 'high' },
       { id: 'maint-5', text: 'Create propane safety checklist', priority: 'high' },
       { id: 'maint-6', text: 'Set up maintenance log/tracking', priority: 'medium' },
-      { id: 'maint-7', text: 'Identify trusted mechanic and repair contacts', priority: 'medium' },
-    ],
+      { id: 'maint-7', text: 'Identify trusted mechanic and repair contacts', priority: 'medium' }],
     details: {
       title: 'Operational Upkeep',
       content: `**Vehicle Maintenance:**
@@ -671,8 +664,7 @@ A licensed commercial kitchen that serves as your "home base" for:
       { id: 'mkt-5', text: 'List on food truck finder apps', priority: 'medium' },
       { id: 'mkt-6', text: 'Connect with local breweries/venues', priority: 'medium' },
       { id: 'mkt-7', text: 'Plan launch event or soft opening', priority: 'medium' },
-      { id: 'mkt-8', text: 'Set up loyalty/rewards program', priority: 'low' },
-    ],
+      { id: 'mkt-8', text: 'Set up loyalty/rewards program', priority: 'low' }],
     details: {
       title: 'Building Your Brand',
       content: `**Your Truck is a Billboard:**
@@ -719,8 +711,7 @@ A licensed commercial kitchen that serves as your "home base" for:
       { id: 'fin-6', text: 'Choose bookkeeping system', priority: 'medium' },
       { id: 'fin-7', text: 'Calculate break-even point', priority: 'medium' },
       { id: 'fin-8', text: 'Plan for quarterly tax payments', priority: 'medium' },
-      { id: 'fin-9', text: 'Build 2-3 month emergency fund', priority: 'medium' },
-    ],
+      { id: 'fin-9', text: 'Build 2-3 month emergency fund', priority: 'medium' }],
     details: {
       title: 'Financial Planning',
       content: `**Startup Cost Ranges:**
@@ -766,8 +757,7 @@ If monthly costs are $8,000 and you work 20 days, you need $400/day just to brea
       { id: 'hidden-4', text: 'Plan for seasonal/weather downtime', priority: 'medium' },
       { id: 'hidden-5', text: 'Budget for event fees and permits', priority: 'medium' },
       { id: 'hidden-6', text: 'Consider physical demands on your health', priority: 'low' },
-      { id: 'hidden-7', text: 'Build relationships with inspectors', priority: 'low' },
-    ],
+      { id: 'hidden-7', text: 'Build relationships with inspectors', priority: 'low' }],
     details: {
       title: 'Often Overlooked Factors',
       content: `**Generator Power:**
@@ -813,7 +803,6 @@ const StartupGuide = () => {
 
   // Track page views with Google Analytics
   usePageTracking();
-
 
   const toggleItem = (itemId: string) => {
     setCheckedItems(prev => ({ ...prev, [itemId]: !prev[itemId] }));
@@ -1216,25 +1205,21 @@ const StartupGuide = () => {
                   img: heroFoodTruck,
                   alt: 'Food truck parked for mobile food business launch',
                   href: '/search?category=food_truck',
-                  cta: 'Browse Food Trucks',
-                },
+                  cta: 'Browse Food Trucks'},
                 {
                   title: 'Food Trailers',
                   desc: 'Compare commercial food trailers — more kitchen square footage per dollar than a self-propelled truck.',
                   img: trailerOrangeGrill,
                   alt: 'Commercial food trailer used for startup food business',
                   href: '/search?category=food_trailer',
-                  cta: 'Browse Food Trailers',
-                },
+                  cta: 'Browse Food Trailers'},
                 {
                   title: 'Shared Kitchens',
                   desc: 'Find commissary kitchen access for prep, storage, and the mobile vendor permit your city requires.',
                   img: conciergeKitchen,
                   alt: 'Shared kitchen space for food truck prep and commissary use',
                   href: '/search?category=ghost_kitchen',
-                  cta: 'Find Shared Kitchens',
-                },
-              ].map((card) => (
+                  cta: 'Find Shared Kitchens'}].map((card) => (
                 <Card key={card.title} className="overflow-hidden border hover:border-[#ff5124]/40 transition-colors">
                   <div className="aspect-[16/10] overflow-hidden bg-muted">
                     <img
@@ -1274,8 +1259,7 @@ const StartupGuide = () => {
                 { n: 4, title: 'Check permit requirements', desc: 'Every city differs. Look up mobile vendor, health, and fire permits before you commit.', icon: FileCheck, link: { href: '/tools/permitpath', label: 'Use PermitPath' } },
                 { n: 5, title: 'Get insurance & documents', desc: 'Commercial auto, general liability, food handler cards, and your commissary agreement.', icon: ShieldCheck },
                 { n: 6, title: 'Prepare menu & equipment', desc: 'Focus your menu, source NSF equipment, and dial in your buildout and workflow.', icon: ChefHat },
-                { n: 7, title: 'Launch, market, and book', desc: 'Wrap the truck, set up socials, and book your first events. Selling later? List on Vendibook.', icon: Megaphone, link: { href: '/sell-my-food-truck', label: 'Sell my food truck' } },
-              ].map((step) => {
+                { n: 7, title: 'Launch, market, and book', desc: 'Wrap the truck, set up socials, and book your first events. Selling later? List on Vendibook.', icon: Megaphone, link: { href: '/sell-my-food-truck', label: 'Sell my food truck' } }].map((step) => {
                 const Icon = step.icon;
                 return (
                   <Card key={step.n} className="border hover:border-[#ff5124]/40 transition-colors">
@@ -1717,7 +1701,7 @@ const StartupGuide = () => {
                               <Card className="bg-primary/5 border-primary/20">
                                 <CardHeader className="pb-2">
                                   <CardTitle className="text-sm flex items-center gap-2">
-                                    <Sparkles className="h-4 w-4 text-primary" />
+                                    
                                     Pro Tips
                                   </CardTitle>
                                 </CardHeader>

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ChevronDown, ChevronUp, Camera, Calendar, DollarSign, MessageSquare, Sparkles, ArrowRight } from 'lucide-react';
+import { ChevronDown, ChevronUp, Camera, Calendar, DollarSign, MessageSquare, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useHostListings } from '@/hooks/useHostListings';
@@ -37,8 +37,7 @@ export const GetBookedFasterCard = () => {
         description: 'Listings with 5+ photos get 40% more views',
         actionLabel: 'Edit listing',
         actionTo: '/dashboard?tab=listings',
-        priority: 1,
-      });
+        priority: 1});
     }
 
     // Check for rentals without availability set
@@ -56,8 +55,7 @@ export const GetBookedFasterCard = () => {
         description: 'Help shoppers know when your asset is free',
         actionLabel: 'Add dates',
         actionTo: '/dashboard?tab=listings',
-        priority: 2,
-      });
+        priority: 2});
     }
 
     // Check for listings without instant book
@@ -69,13 +67,11 @@ export const GetBookedFasterCard = () => {
     if (noInstantBook) {
       tips.push({
         id: 'instant',
-        icon: Sparkles,
         title: 'Enable Instant Book',
         description: 'Get 2x more bookings with instant confirmations',
         actionLabel: 'Enable now',
         actionTo: '/dashboard?tab=listings',
-        priority: 3,
-      });
+        priority: 3});
     }
 
     // Check response time
@@ -87,8 +83,7 @@ export const GetBookedFasterCard = () => {
         description: `You have ${bookingStats.pending} pending request${bookingStats.pending > 1 ? 's' : ''}`,
         actionLabel: 'View requests',
         actionTo: '/dashboard?tab=bookings',
-        priority: 0,
-      });
+        priority: 0});
     }
 
     // Check for competitive pricing (placeholder - would need market data)
@@ -104,8 +99,7 @@ export const GetBookedFasterCard = () => {
         description: 'Use our AI tool to find the optimal price',
         actionLabel: 'Check pricing',
         actionTo: '/tools/pricepilot',
-        priority: 4,
-      });
+        priority: 4});
     }
 
     return tips.sort((a, b) => a.priority - b.priority).slice(0, 2);
@@ -125,7 +119,7 @@ export const GetBookedFasterCard = () => {
       >
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-2xl bg-primary text-primary-foreground shadow-lg flex items-center justify-center">
-            <Sparkles className="h-5 w-5" />
+            
           </div>
           <div>
             <h3 className="text-sm font-semibold text-foreground">Get booked faster</h3>

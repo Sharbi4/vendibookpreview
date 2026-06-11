@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { 
-  Sparkles, 
   DollarSign, 
   FileCheck, 
   Wrench, 
@@ -32,7 +31,7 @@ const onboardingSteps: OnboardingStep[] = [
   {
     title: 'Welcome to Vendi AI',
     description: 'Your AI-powered toolkit for running a successful mobile food business. Let us show you around!',
-    icon: <Sparkles className="h-8 w-8" />,
+    icon: ,
     tip: 'All tools are free to try—no credit card needed'
   },
   {
@@ -235,7 +234,7 @@ const AIToolsOnboarding = ({ onComplete }: AIToolsOnboardingProps) => {
                       <p className="text-xs text-muted-foreground">30 Sec Results</p>
                     </div>
                     <div className="text-center p-3 bg-muted/50 rounded-lg">
-                      <Sparkles className="h-5 w-5 mx-auto mb-1 text-yellow-500" />
+                      
                       <p className="text-xs text-muted-foreground">Free to Try</p>
                     </div>
                   </motion.div>

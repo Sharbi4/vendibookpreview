@@ -16,7 +16,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
-import { Sparkles, Send, RefreshCw, CheckCircle2, ShieldAlert, Mail, Eye, History } from "lucide-react";
+import { Send, RefreshCw, CheckCircle2, ShieldAlert, Mail, Eye, History } from 'lucide-react';
 
 const INSIGHT_THEMES = [
   "Where we're seeing the most bookings right now",
@@ -24,8 +24,7 @@ const INSIGHT_THEMES = [
   "Tips for first-time food truck buyers",
   "How to price your shared kitchen for maximum bookings",
   "What makes a listing get more inquiries",
-  "Trends in mobile food businesses",
-];
+  "Trends in mobile food businesses"];
 
 const TOOL_CATALOG = [
   { id: "verified", label: "Verified Listings", description: "Every listing reviewed before it goes live." },
@@ -33,14 +32,12 @@ const TOOL_CATALOG = [
   { id: "support", label: "24/7 Support", description: "Real people, real answers, any time." },
   { id: "instant", label: "Instant Booking", description: "Reserve a kitchen or space in minutes." },
   { id: "seller", label: "Seller Dashboard", description: "Track inquiries, views, and offers in one place." },
-  { id: "checked", label: "Background-Checked Hosts", description: "Rent with confidence." },
-];
+  { id: "checked", label: "Background-Checked Hosts", description: "Rent with confidence." }];
 
 const ROTATION_LABELS: Record<string, string> = {
   purchase: "Purchase Rewards ($500)",
   supply: "Supply Rewards ($150)",
-  rental: "Rental Rewards ($50)",
-};
+  rental: "Rental Rewards ($50)"};
 
 function nextRotation(last?: string) {
   const order = ["purchase", "supply", "rental"];
@@ -61,8 +58,7 @@ export default function AdminEmailDashboard() {
     queryFn: async () => {
       const { data } = await supabase.rpc("has_role", { _user_id: user!.id, _role: "admin" });
       return !!data;
-    },
-  });
+    }});
 
   useEffect(() => {
     if (!authLoading && !user) navigate("/login?redirect=/admin/email/dashboard");
@@ -89,8 +85,7 @@ export default function AdminEmailDashboard() {
       const { data, error } = await supabase.functions.invoke("marketing-fetch-content");
       if (error) throw error;
       return data;
-    },
-  });
+    }});
 
   // History
   const { data: history } = useQuery({
@@ -103,8 +98,7 @@ export default function AdminEmailDashboard() {
         .order("created_at", { ascending: false })
         .limit(20);
       return data ?? [];
-    },
-  });
+    }});
 
   // Latest rotation
   const nextRot = useMemo(() => {
@@ -121,15 +115,13 @@ export default function AdminEmailDashboard() {
       // We can't easily count auth.users from client; estimate via profiles if present
       const { count: profilesCount } = await supabase.from("profiles" as any).select("user_id", { count: "exact", head: true });
       return { unsubscribed: unsubs?.length ?? 0, total: profilesCount ?? 0 };
-    },
-  });
+    }});
 
   // Mutations
   const generateHeadlines = useMutation({
     mutationFn: async () => {
       const { data, error } = await supabase.functions.invoke("marketing-compose-assist", {
-        body: { mode: "headlines" },
-      });
+        body: { mode: "headlines" }});
       if (error) throw error;
       return data;
     },
@@ -138,14 +130,12 @@ export default function AdminEmailDashboard() {
       if (!selectedHeadline) setSelectedHeadline(data.headlines[0]);
       toast.success("3 headlines generated");
     },
-    onError: (e: any) => toast.error(e?.message || "Failed to generate headlines"),
-  });
+    onError: (e: any) => toast.error(e?.message || "Failed to generate headlines")});
 
   const generateInsight = useMutation({
     mutationFn: async () => {
       const { data, error } = await supabase.functions.invoke("marketing-compose-assist", {
-        body: { mode: "insight", theme: insightTheme },
-      });
+        body: { mode: "insight", theme: insightTheme }});
       if (error) throw error;
       return data;
     },
@@ -153,8 +143,7 @@ export default function AdminEmailDashboard() {
       setInsight(data);
       toast.success("Insight generated");
     },
-    onError: (e: any) => toast.error(e?.message || "Failed to generate insight"),
-  });
+    onError: (e: any) => toast.error(e?.message || "Failed to generate insight")});
 
   const composeIsReady =
     !!selectedHeadline &&
@@ -174,8 +163,7 @@ export default function AdminEmailDashboard() {
           support: "M18 8h1a4 4 0 010 8h-1M2 8h16v9a4 4 0 01-4 4H6a4 4 0 01-4-4V8z M6 1v3 M10 1v3 M14 1v3",
           instant: "M13 10V3L4 14h7v7l9-11h-7z",
           seller: "M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z",
-          checked: "M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z",
-        };
+          checked: "M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"};
         return { label: t!.label, description: t!.description, icon: iconMap[t!.id] };
       });
 
@@ -183,8 +171,7 @@ export default function AdminEmailDashboard() {
       saleListings: content?.saleListings ?? [],
       featuredRental: content?.featuredRental ?? null,
       tools,
-      insight,
-    };
+      insight};
   };
 
   const saveDraft = useMutation({
@@ -198,8 +185,7 @@ export default function AdminEmailDashboard() {
           status: "draft",
           referral_rotation: nextRot,
           composed_payload: payload,
-          created_by: user!.id,
-        })
+          created_by: user!.id})
         .select()
         .single();
       if (error) throw error;
@@ -210,8 +196,7 @@ export default function AdminEmailDashboard() {
       qc.invalidateQueries({ queryKey: ["email-sends-history"] });
       toast.success(`Draft saved (Issue #${data.issue_number})`);
     },
-    onError: (e: any) => toast.error(e?.message || "Failed to save draft"),
-  });
+    onError: (e: any) => toast.error(e?.message || "Failed to save draft")});
 
   const sendTest = useMutation({
     mutationFn: async () => {
@@ -228,8 +213,7 @@ export default function AdminEmailDashboard() {
       qc.invalidateQueries({ queryKey: ["email-sends-history"] });
       qc.invalidateQueries({ queryKey: ["current-send", currentSendId] });
     },
-    onError: (e: any) => toast.error(e?.message || "Test send failed"),
-  });
+    onError: (e: any) => toast.error(e?.message || "Test send failed")});
 
   const approveTest = useMutation({
     mutationFn: async () => {
@@ -250,14 +234,12 @@ export default function AdminEmailDashboard() {
       qc.invalidateQueries({ queryKey: ["email-sends-history"] });
       toast.success("Send unlocked — broadcast available");
     },
-    onError: (e: any) => toast.error(e?.message),
-  });
+    onError: (e: any) => toast.error(e?.message)});
 
   const broadcast = useMutation({
     mutationFn: async () => {
       const { data, error } = await supabase.functions.invoke("marketing-send-broadcast", {
-        body: { sendId: currentSendId },
-      });
+        body: { sendId: currentSendId }});
       if (error) throw error;
       return data;
     },
@@ -269,8 +251,7 @@ export default function AdminEmailDashboard() {
       setSelectedHeadline("");
       setInsight({ title: "", pullQuote: "", body: "" });
     },
-    onError: (e: any) => toast.error(e?.message || "Broadcast failed"),
-  });
+    onError: (e: any) => toast.error(e?.message || "Broadcast failed")});
 
   const { data: currentSend } = useQuery({
     queryKey: ["current-send", currentSendId],
@@ -279,8 +260,7 @@ export default function AdminEmailDashboard() {
       const { data } = await supabase.from("email_sends").select("*").eq("id", currentSendId!).single();
       return data;
     },
-    refetchInterval: 3000,
-  });
+    refetchInterval: 3000});
 
   // Live preview via re-using the broadcast renderer would require an edge call.
   // Lightweight client preview: show structured cards mirroring the template.
@@ -345,12 +325,12 @@ export default function AdminEmailDashboard() {
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2 text-lg">
-                      <Sparkles className="w-5 h-5" /> Hero Headline
+                       Hero Headline
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-3">
                     <Button onClick={() => generateHeadlines.mutate()} disabled={generateHeadlines.isPending} variant="outline" size="sm">
-                      {generateHeadlines.isPending ? <RefreshCw className="w-4 h-4 mr-2 animate-spin" /> : <Sparkles className="w-4 h-4 mr-2" />}
+                      {generateHeadlines.isPending ? <RefreshCw className="w-4 h-4 mr-2 animate-spin" /> : }
                       Generate 3 options
                     </Button>
                     {headlines.map((h) => (
@@ -436,7 +416,7 @@ export default function AdminEmailDashboard() {
                       </SelectContent>
                     </Select>
                     <Button onClick={() => generateInsight.mutate()} disabled={generateInsight.isPending} variant="outline" size="sm">
-                      {generateInsight.isPending ? <RefreshCw className="w-4 h-4 mr-2 animate-spin" /> : <Sparkles className="w-4 h-4 mr-2" />}
+                      {generateInsight.isPending ? <RefreshCw className="w-4 h-4 mr-2 animate-spin" /> : }
                       Generate
                     </Button>
                     {insight.body && (

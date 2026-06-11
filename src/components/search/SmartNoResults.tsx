@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Sparkles, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import ListingCard from '@/components/listing/ListingCard';
 import { EmptyStateEmailCapture } from './EmptyStateEmailCapture';
@@ -28,8 +28,7 @@ export const SmartNoResults = ({
   onClearFilters,
   category,
   mode,
-  locationText,
-}: SmartNoResultsProps) => {
+  locationText}: SmartNoResultsProps) => {
   const [suggestion, setSuggestion] = useState<Suggestion | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -47,35 +46,30 @@ export const SmartNoResults = ({
       if (searchParams.lat && baseRadius < 100) {
         variations.push({
           params: { ...searchParams, radius_miles: 100, page: 1 },
-          reason: `Expanded to within 100 miles`,
-        });
+          reason: `Expanded to within 100 miles`});
       }
       // 2. Drop category but keep location
       if (category) {
         variations.push({
           params: { ...searchParams, category: undefined, radius_miles: Math.max(baseRadius, 50), page: 1 },
-          reason: `Other categories near you`,
-        });
+          reason: `Other categories near you`});
       }
       // 3. Drop mode (rent vs sale)
       if (mode) {
         variations.push({
           params: { ...searchParams, mode: undefined, page: 1 },
-          reason: mode === 'rent' ? 'Available for sale instead' : 'Available for rent instead',
-        });
+          reason: mode === 'rent' ? 'Available for sale instead' : 'Available for rent instead'});
       }
       // 4. Drop everything except mode/category — show top fresh listings
       variations.push({
         params: { mode, category, page: 1, radius_miles: 250 },
-        reason: 'Popular listings you might like',
-      });
+        reason: 'Popular listings you might like'});
 
       for (const v of variations) {
         if (cancelled) return;
         try {
           const { data, error } = await supabase.functions.invoke('search-listings', {
-            body: v.params,
-          });
+            body: v.params});
           if (error) continue;
           const listings = (data as any)?.listings ?? [];
           if (listings.length > 0) {
@@ -124,7 +118,7 @@ export const SmartNoResults = ({
     <div className="py-8 space-y-8">
       <div className="text-center">
         <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted/60 mb-3">
-          <Sparkles className="h-3.5 w-3.5 text-foreground" />
+          
           <span className="text-xs font-medium text-foreground">{suggestion.reason}</span>
         </div>
         <h3 className="text-xl font-semibold text-foreground">

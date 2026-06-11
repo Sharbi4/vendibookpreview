@@ -18,7 +18,6 @@ import {
   FileText, 
   Loader2, 
   Home,
-  Sparkles,
   ArrowRight,
   Copy,
   Check,
@@ -53,16 +52,14 @@ const ListingStudio = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [copiedField, setCopiedField] = useState<string | null>(null);
   const [descriptionForm, setDescriptionForm] = useState({
-    title: '', category: '', features: '', location: '', condition: '', unique: '',
-  });
+    title: '', category: '', features: '', location: '', condition: '', unique: ''});
   const [descriptionResult, setDescriptionResult] = useState<DescriptionResult | null>(null);
 
   const handleSubmit = async () => {
     setIsLoading(true);
     try {
       const { data: response, error } = await supabase.functions.invoke('ai-tools', {
-        body: { tool: 'description', data: descriptionForm },
-      });
+        body: { tool: 'description', data: descriptionForm }});
       if (error) throw error;
       if (response.error) { toast({ title: 'Error', description: response.error, variant: 'destructive' }); return; }
       setDescriptionResult(response.result);
@@ -258,7 +255,7 @@ const ListingStudio = () => {
                       <Textarea placeholder="Recent upgrades, unique features, success stories..." value={descriptionForm.unique} onChange={(e) => setDescriptionForm({ ...descriptionForm, unique: e.target.value })} rows={2} />
                     </div>
                     <Button onClick={handleSubmit} disabled={isLoading || !descriptionForm.title} className="w-full">
-                      {isLoading ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Generating...</> : <><Sparkles className="h-4 w-4 mr-2" />Generate Listing Copy</>}
+                      {isLoading ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Generating...</> : <>Generate Listing Copy</>}
                     </Button>
                   </CardContent>
                 </Card>

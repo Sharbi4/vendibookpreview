@@ -19,7 +19,6 @@ import {
   Megaphone, 
   Loader2, 
   Home,
-  Sparkles,
   ArrowRight,
   Instagram,
   Mail,
@@ -91,8 +90,7 @@ const MarketingStudio = () => {
 
     try {
       const { data: response, error } = await supabase.functions.invoke('ai-marketing-creator', {
-        body: { type: activeTab, data },
-      });
+        body: { type: activeTab, data }});
       
       if (error) throw error;
       if (response.error) {
@@ -305,7 +303,7 @@ const MarketingStudio = () => {
                         <Input placeholder="e.g., 20% off this weekend" value={socialForm.offer} onChange={(e) => setSocialForm({...socialForm, offer: e.target.value})} />
                       </div>
                       <Button onClick={handleGenerate} disabled={isLoading} className="w-full bg-gradient-to-r from-pink-500 to-purple-600">
-                        {isLoading ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Generating...</> : <><Sparkles className="h-4 w-4 mr-2" />Generate Social Posts</>}
+                        {isLoading ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Generating...</> : <>Generate Social Posts</>}
                       </Button>
                     </CardContent>
                   </Card>
@@ -344,7 +342,7 @@ const MarketingStudio = () => {
                         <Textarea placeholder="What makes this special? e.g., Free samples, live music, kids eat free" value={flyerForm.sellingPoints} onChange={(e) => setFlyerForm({...flyerForm, sellingPoints: e.target.value})} />
                       </div>
                       <Button onClick={handleGenerate} disabled={isLoading} className="w-full bg-gradient-to-r from-orange-500 to-red-500">
-                        {isLoading ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Generating...</> : <><Sparkles className="h-4 w-4 mr-2" />Generate Flyer Copy</>}
+                        {isLoading ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Generating...</> : <>Generate Flyer Copy</>}
                       </Button>
                     </CardContent>
                   </Card>
@@ -387,7 +385,7 @@ const MarketingStudio = () => {
                         <Input placeholder="e.g., Visit us this weekend, Order online, Book catering" value={emailForm.goal} onChange={(e) => setEmailForm({...emailForm, goal: e.target.value})} />
                       </div>
                       <Button onClick={handleGenerate} disabled={isLoading} className="w-full bg-gradient-to-r from-blue-500 to-indigo-600">
-                        {isLoading ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Generating...</> : <><Sparkles className="h-4 w-4 mr-2" />Generate Email</>}
+                        {isLoading ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Generating...</> : <>Generate Email</>}
                       </Button>
                     </CardContent>
                   </Card>
@@ -442,7 +440,7 @@ const MarketingStudio = () => {
                         </div>
                       </div>
                       <Button onClick={handleGenerate} disabled={isLoading} className="w-full bg-gradient-to-r from-green-500 to-emerald-600">
-                        {isLoading ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Generating...</> : <><Sparkles className="h-4 w-4 mr-2" />Generate Descriptions</>}
+                        {isLoading ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Generating...</> : <>Generate Descriptions</>}
                       </Button>
                     </CardContent>
                   </Card>
@@ -498,7 +496,7 @@ const MarketingStudio = () => {
                         <Input placeholder="What makes you different? e.g., Family recipes, locally sourced" value={taglineForm.usp} onChange={(e) => setTaglineForm({...taglineForm, usp: e.target.value})} />
                       </div>
                       <Button onClick={handleGenerate} disabled={isLoading} className="w-full bg-gradient-to-r from-violet-500 to-purple-600">
-                        {isLoading ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Generating...</> : <><Sparkles className="h-4 w-4 mr-2" />Generate Taglines</>}
+                        {isLoading ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Generating...</> : <>Generate Taglines</>}
                       </Button>
                     </CardContent>
                   </Card>
@@ -578,7 +576,7 @@ const MarketingStudio = () => {
                   className="mt-8"
                 >
                   <div className="flex items-center gap-2 mb-4">
-                    <Sparkles className="h-5 w-5 text-primary" />
+                    
                     <h3 className="font-semibold text-lg">Generated Content</h3>
                     <Badge variant="secondary" className="text-xs">AI Generated</Badge>
                   </div>

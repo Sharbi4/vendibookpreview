@@ -1,10 +1,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react'; // v2
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Search, MapPin, SlidersHorizontal, Truck, ChevronRight, Sparkles,
-  Map as MapIcon, X, Plus, UserPlus, Info, ArrowRight, Utensils,
-  Building2, ShoppingBag, Zap, Mic, MicOff, Loader2, Navigation,
-} from 'lucide-react';
+  Search, MapPin, SlidersHorizontal, Truck, ChevronRight, Map as MapIcon, X, Plus, UserPlus, Info, ArrowRight, Utensils,
+  Building2, ShoppingBag, Zap, Mic, MicOff, Loader2, Navigation} from 'lucide-react';
 import AppDropdownMenu from '@/components/layout/AppDropdownMenu';
 import SmartConciergeModal from '@/components/home/SmartConciergeModal';
 import { FilterPanel, FilterValues } from '@/components/search/FilterPanel';
@@ -22,8 +20,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   Pagination, PaginationContent, PaginationEllipsis,
-  PaginationItem, PaginationLink, PaginationNext, PaginationPrevious,
-} from '@/components/ui/pagination';
+  PaginationItem, PaginationLink, PaginationNext, PaginationPrevious} from '@/components/ui/pagination';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import vendibookFavicon from '@/assets/vendibook-favicon.png';
 import vendibookLogo from '@/assets/vendibook-logo.png';
@@ -31,14 +28,12 @@ import TrendingDropdown from '@/components/search/TrendingDropdown';
 import { useScribe } from '@elevenlabs/react';
 import { toast } from '@/hooks/use-toast';
 
-
 const CATEGORIES = [
   { value: '', label: 'All', icon: Zap },
   { value: 'food_truck', label: 'Food Trucks', icon: Truck },
   { value: 'food_trailer', label: 'Trailers', icon: Truck },
   { value: 'ghost_kitchen', label: 'Kitchens', icon: Building2 },
-  { value: 'vendor_lot', label: 'Vendor Spaces', icon: MapPin },
-];
+  { value: 'vendor_lot', label: 'Vendor Spaces', icon: MapPin }];
 
 const PAGE_SIZE = 20;
 
@@ -68,8 +63,7 @@ const Homepage2 = () => {
     featuredOnly: false,
     deliveryCapable: false,
     amenities: [],
-    radiusMiles: '25',
-  });
+    radiusMiles: '25'});
 
   const [listings, setListings] = useState<Listing[]>([]);
   const [totalCount, setTotalCount] = useState(0);
@@ -96,8 +90,7 @@ const Homepage2 = () => {
       if (data.text?.trim()) {
         setQuery((prev: string) => (prev ? prev + ' ' : '') + data.text.trim());
       }
-    },
-  });
+    }});
 
   // Close trending dropdown when clicking outside
   useEffect(() => {
@@ -128,8 +121,7 @@ const Homepage2 = () => {
       const body: Record<string, unknown> = {
         page: pageNum,
         page_size: PAGE_SIZE,
-        sort_by: sortBy,
-      };
+        sort_by: sortBy};
       if (query.trim()) body.query = query.trim();
       if (mode) body.mode = mode;
       if (category) body.category = category;
@@ -188,8 +180,7 @@ const Homepage2 = () => {
       
       await scribe.connect({
         token: data.token,
-        microphone: { echoCancellation: true, noiseSuppression: true },
-      });
+        microphone: { echoCancellation: true, noiseSuppression: true }});
       setIsRecording(true);
     } catch (err) {
       console.error('Voice search error:', err);
@@ -298,8 +289,7 @@ const Homepage2 = () => {
                           setCoordinates([longitude, latitude]);
                           // Reverse geocode for display
                           const { data } = await supabase.functions.invoke('geocode-location', {
-                            body: { query: `${longitude},${latitude}`, limit: 1 },
-                          });
+                            body: { query: `${longitude},${latitude}`, limit: 1 }});
                           if (data?.results?.[0]) {
                             setLocationText(data.results[0].text);
                             setQuery(data.results[0].text);
@@ -626,7 +616,7 @@ const Homepage2 = () => {
                 <div className="flex items-center justify-between p-4 border-b border-white/20">
                   <div className="flex items-center gap-2">
                     <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[hsl(14,100%,57%)]/20 to-[hsl(40,100%,49%)]/20 flex items-center justify-center">
-                      <Sparkles className="h-4 w-4 text-[hsl(14,100%,57%)]" />
+                      
                     </div>
                     <div>
                       <h2 className="font-semibold text-foreground text-base">Quick Start</h2>
@@ -678,8 +668,7 @@ const Homepage2 = () => {
                       {[
                         { icon: Search, title: 'Search', desc: 'Find assets near you' },
                         { icon: MapPin, title: 'Book', desc: 'Reserve instantly or request' },
-                        { icon: Sparkles, title: 'Launch', desc: 'Show up & start serving' },
-                      ].map((step, i) => (
+                        { title: 'Launch', desc: 'Show up & start serving' }].map((step, i) => (
                         <div key={i} className="flex items-start gap-2.5">
                           <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-[hsl(14,100%,57%)]/15 to-[hsl(40,100%,49%)]/15 flex items-center justify-center shrink-0 mt-0.5">
                             <step.icon className="w-3.5 h-3.5 text-[hsl(14,100%,57%)]" />
@@ -705,8 +694,7 @@ const Homepage2 = () => {
                         { value: '500+', label: 'Listings' },
                         { value: '50+', label: 'Cities' },
                         { value: '4.8★', label: 'Rating' },
-                        { value: '24h', label: 'Avg Response' },
-                      ].map((stat, i) => (
+                        { value: '24h', label: 'Avg Response' }].map((stat, i) => (
                         <div key={i} className="text-center">
                           <p className="text-lg font-black bg-gradient-to-r from-[hsl(14,100%,57%)] to-[hsl(40,100%,49%)] bg-clip-text text-transparent">{stat.value}</p>
                           <p className="text-[10px] text-muted-foreground font-medium">{stat.label}</p>

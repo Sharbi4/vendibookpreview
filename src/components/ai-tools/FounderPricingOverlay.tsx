@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { 
-  Sparkles, 
   Clock, 
   Users, 
   Zap, 
@@ -41,8 +40,7 @@ const FounderPricingOverlay = ({ onDismiss, onClaim }: FounderPricingOverlayProp
     { icon: Lock, text: 'Locked-in price forever' },
     { icon: Zap, text: 'Priority access to new tools' },
     { icon: Gift, text: 'Exclusive founder badge' },
-    { icon: TrendingUp, text: 'Early adopter community' },
-  ];
+    { icon: TrendingUp, text: 'Early adopter community' }];
 
   return (
     <div className="relative overflow-hidden">
@@ -99,7 +97,7 @@ const FounderPricingOverlay = ({ onDismiss, onClaim }: FounderPricingOverlayProp
               {/* Header */}
               <div className="flex items-start gap-4 mb-6">
                 <div className="h-14 w-14 rounded-xl bg-gradient-to-br from-primary via-amber-500 to-orange-500 flex items-center justify-center shadow-lg flex-shrink-0">
-                  <Sparkles className="h-7 w-7 text-white" />
+                  
                 </div>
                 <div>
                   <Badge className="mb-2 bg-amber-500/10 text-amber-600 border-amber-500/20">

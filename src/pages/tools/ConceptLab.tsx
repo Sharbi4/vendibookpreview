@@ -18,7 +18,6 @@ import {
   Lightbulb, 
   Loader2, 
   Home,
-  Sparkles,
   ArrowRight,
   TrendingUp,
   Zap,
@@ -52,16 +51,14 @@ const ConceptLab = () => {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [ideaForm, setIdeaForm] = useState({
-    cuisine: '', locationType: '', budget: '', experience: '', interests: '',
-  });
+    cuisine: '', locationType: '', budget: '', experience: '', interests: ''});
   const [ideaResult, setIdeaResult] = useState<BusinessIdeaResult | null>(null);
 
   const handleSubmit = async () => {
     setIsLoading(true);
     try {
       const { data: response, error } = await supabase.functions.invoke('ai-tools', {
-        body: { tool: 'business-idea', data: ideaForm },
-      });
+        body: { tool: 'business-idea', data: ideaForm }});
       if (error) throw error;
       if (response.error) { toast({ title: 'Error', description: response.error, variant: 'destructive' }); return; }
       setIdeaResult(response.result);
@@ -256,7 +253,7 @@ const ConceptLab = () => {
                     <Input placeholder="e.g., sustainability, sports, late-night, families..." value={ideaForm.interests} onChange={(e) => setIdeaForm({ ...ideaForm, interests: e.target.value })} />
                   </div>
                   <Button onClick={handleSubmit} disabled={isLoading} className="w-full">
-                    {isLoading ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Generating Ideas...</> : <><Sparkles className="h-4 w-4 mr-2" />Generate 10 Business Ideas</>}
+                    {isLoading ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Generating Ideas...</> : <>Generate 10 Business Ideas</>}
                   </Button>
                 </CardContent>
               </Card>
@@ -269,7 +266,7 @@ const ConceptLab = () => {
                   className="mt-8"
                 >
                   <div className="flex items-center gap-2 mb-6">
-                    <Sparkles className="h-5 w-5 text-primary" />
+                    
                     <h3 className="font-semibold text-lg">Your Business Concepts</h3>
                     <Badge variant="secondary" className="text-xs">AI Generated</Badge>
                   </div>

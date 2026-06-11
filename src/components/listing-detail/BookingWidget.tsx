@@ -8,7 +8,6 @@ import {
   ArrowRight, 
   Shield, 
   Clock, 
-  Sparkles, 
   Mail,
   Tag,
   Truck,
@@ -16,8 +15,7 @@ import {
   Package,
   ChevronDown,
   Sun,
-  CalendarRange,
-} from 'lucide-react';
+  CalendarRange} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -81,8 +79,7 @@ export const BookingWidget = ({
   fulfillmentType = 'pickup',
   deliveryFee,
   vendibookFreightEnabled = false,
-  freightPayer = 'buyer',
-}: BookingWidgetProps) => {
+  freightPayer = 'buyer'}: BookingWidgetProps) => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { isDateUnavailable, isLoading: datesLoading } = useBlockedDates({ listingId });
@@ -92,8 +89,7 @@ export const BookingWidget = ({
     settings: hourlySettings, 
     getDayAvailabilityInfo,
     getAvailableWindowsForDate,
-    calculateHourlyPrice,
-  } = useHourlyAvailability({ listingId });
+    calculateHourlyPrice} = useHourlyAvailability({ listingId });
   
   // Booking mode: 'daily' or 'hourly'
   const [bookingMode, setBookingMode] = useState<'daily' | 'hourly'>('daily');
@@ -150,8 +146,7 @@ export const BookingWidget = ({
       days: rentalDays,
       basePrice,
       renterFee: fees.renterFee,
-      customerTotal: fees.customerTotal,
-    };
+      customerTotal: fees.customerTotal};
   }, [rentalDays, priceDaily, priceWeekly]);
 
   // Get available time windows for hourly mode
@@ -195,8 +190,7 @@ export const BookingWidget = ({
       hours: selectedDuration,
       basePrice,
       renterFee: fees.renterFee,
-      customerTotal: fees.customerTotal,
-    };
+      customerTotal: fees.customerTotal};
   }, [selectedDuration, priceHourly, bookingMode, calculateHourlyPrice]);
 
   // Calculate end time based on selection
@@ -382,7 +376,7 @@ export const BookingWidget = ({
                   )}
                   {priceWeekly && (
                     <p className="text-sm text-muted-foreground flex items-center gap-1.5">
-                      <Sparkles className="h-3.5 w-3.5 text-primary" />
+                      
                       ${priceWeekly.toLocaleString()}/week for 7+ days
                     </p>
                   )}
@@ -671,8 +665,7 @@ export const BookingWidget = ({
                   trackLeadEvent('check_availability_click', {
                     listing_id: listingId,
                     source: 'booking_widget',
-                    instant_book: instantBook,
-                  });
+                    instant_book: instantBook});
                   handleContinueToBooking();
                 }}
                 disabled={bookingMode === 'daily' ? (!startDate || !endDate) : (!selectedDate || !selectedStartTime)}
@@ -901,7 +894,7 @@ export const BookingWidget = ({
               Secure payment
             </span>
             <span className="flex items-center gap-1.5">
-              <Sparkles className="h-3.5 w-3.5" />
+              
               Buyer protection
             </span>
           </div>

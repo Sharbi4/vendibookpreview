@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Sparkles, Megaphone, Share2, TrendingUp, CheckCircle2, Loader2, Copy, Star, Facebook, Search as GoogleIcon, Instagram, Mail, Zap } from 'lucide-react';
+import { Megaphone, Share2, TrendingUp, CheckCircle2, Loader2, Copy, Star, Facebook, Search as GoogleIcon, Instagram, Mail, Zap } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -16,8 +16,7 @@ const CHANNELS = [
   { id: 'meta', label: 'Meta (FB+IG)', icon: Facebook, color: 'text-blue-600 bg-blue-500/10 border-blue-500/20' },
   { id: 'google', label: 'Google Ads', icon: GoogleIcon, color: 'text-emerald-600 bg-emerald-500/10 border-emerald-500/20' },
   { id: 'instagram', label: 'Instagram', icon: Instagram, color: 'text-pink-600 bg-pink-500/10 border-pink-500/20' },
-  { id: 'email', label: 'Email blast', icon: Mail, color: 'text-purple-600 bg-purple-500/10 border-purple-500/20' },
-];
+  { id: 'email', label: 'Email blast', icon: Mail, color: 'text-purple-600 bg-purple-500/10 border-purple-500/20' }];
 
 interface SeoScore {
   score: number;
@@ -160,8 +159,7 @@ export const PromotionHub = () => {
                   // Hook into existing FeaturedListingModal flow on the listing card
                   toast({
                     title: 'Open the Listings tab',
-                    description: 'Click "Boost" on the listing card to activate.',
-                  });
+                    description: 'Click "Boost" on the listing card to activate.'});
                 }}
               >
                 <Zap className="h-4 w-4 mr-1.5" />
@@ -222,7 +220,7 @@ export const PromotionHub = () => {
           <Card className="border border-border">
             <CardHeader className="pb-3">
               <CardTitle className="text-sm flex items-center gap-2">
-                <Sparkles className="h-4 w-4 text-primary" />
+                
                 AI-generated ad copy
               </CardTitle>
             </CardHeader>
@@ -255,7 +253,7 @@ export const PromotionHub = () => {
                 {generate.isPending ? (
                   <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
                 ) : (
-                  <Sparkles className="h-3.5 w-3.5 mr-1.5" />
+                  
                 )}
                 Generate for all channels
               </Button>

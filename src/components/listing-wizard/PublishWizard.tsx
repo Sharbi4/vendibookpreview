@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
-import { ArrowLeft, Loader2, Send, ExternalLink, Check, Camera, DollarSign, FileText, Calendar, CreditCard, ChevronRight, Save, Sparkles, TrendingUp, TrendingDown, Target, Wallet, Info, Banknote, Zap, RotateCcw, Plus, X, Package, Scale, Ruler, MapPin, Truck, Building2, Eye, AlertCircle, Shield, Clock, ChevronDown, ChevronUp, GripVertical, Star, Type, ListChecks } from 'lucide-react';
+import { ArrowLeft, Loader2, Send, ExternalLink, Check, Camera, DollarSign, FileText, Calendar, CreditCard, ChevronRight, Save, TrendingUp, TrendingDown, Target, Wallet, Info, Banknote, Zap, RotateCcw, Plus, X, Package, Scale, Ruler, MapPin, Truck, Building2, Eye, AlertCircle, Shield, Clock, ChevronDown, ChevronUp, GripVertical, Star, Type, ListChecks } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -15,8 +15,7 @@ import {
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+  AlertDialogTitle} from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { useStripeConnect } from '@/hooks/useStripeConnect';
@@ -31,8 +30,7 @@ import {
   DEADLINE_TYPE_LABELS,
   DEADLINE_TYPE_DESCRIPTIONS,
   DOCUMENT_GROUPS,
-  DEFAULT_DOCUMENTS_BY_CATEGORY,
-} from '@/types/documents';
+  DEFAULT_DOCUMENTS_BY_CATEGORY} from '@/types/documents';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { LocationSearchInput } from '@/components/search/LocationSearchInput';
@@ -53,8 +51,7 @@ import {
   calculateSaleFees,
   formatCurrency,
   RENTAL_HOST_FEE_PERCENT,
-  SALE_SELLER_FEE_PERCENT,
-} from '@/lib/commissions';
+  SALE_SELLER_FEE_PERCENT} from '@/lib/commissions';
 import { isListingFeatured } from '@/lib/featured';
 
 type PublishStep = 'photos' | 'headline' | 'includes' | 'pricing' | 'details' | 'location' | 'availability' | 'documents' | 'stripe' | 'review';
@@ -265,8 +262,7 @@ export const PublishWizard: React.FC = () => {
         length_inches: parseFloat(lengthInches) || listing.length_inches || null,
         width_inches: parseFloat(widthInches) || listing.width_inches || null,
         height_inches: parseFloat(heightInches) || listing.height_inches || null,
-        freight_category: freightCategory || listing.freight_category || null,
-      };
+        freight_category: freightCategory || listing.freight_category || null};
 
       // Add pricing based on mode
       if (listing.mode === 'sale') {
@@ -474,8 +470,7 @@ export const PublishWizard: React.FC = () => {
             is_required: d.is_required,
             deadline_type: d.deadline_type as DocumentDeadlineType,
             deadline_offset_hours: d.deadline_offset_hours || undefined,
-            description: d.description || undefined,
-          }));
+            description: d.description || undefined}));
           setRequiredDocuments(loadedDocs);
           // Set global deadline from first document
           if (docsData[0]) {
@@ -492,8 +487,7 @@ export const PublishWizard: React.FC = () => {
             document_type: docType,
             is_required: defaults.includes(docType),
             deadline_type: 'before_approval' as DocumentDeadlineType,
-            deadline_offset_hours: undefined,
-          }));
+            deadline_offset_hours: undefined}));
           setRequiredDocuments(initialDocs);
         }
       }
@@ -528,8 +522,7 @@ export const PublishWizard: React.FC = () => {
       toast({
         title: 'Please sign in to claim your draft',
         description: "Your account was created, but you're not signed in yet. Please sign in and we'll claim the draft automatically.",
-        variant: 'destructive',
-      });
+        variant: 'destructive'});
       return;
     }
 
@@ -592,8 +585,7 @@ export const PublishWizard: React.FC = () => {
 
         // Existing images (new uploads require auth so we only save existingImages here)
         image_urls: existingImages.length > 0 ? existingImages : (listing.image_urls || []),
-        cover_image_url: existingImages.length > 0 ? existingImages[0] : (listing.cover_image_url || null),
-      };
+        cover_image_url: existingImages.length > 0 ? existingImages[0] : (listing.cover_image_url || null)};
 
       // Add pricing fields based on mode
       if (listing.mode === 'sale') {
@@ -642,15 +634,13 @@ export const PublishWizard: React.FC = () => {
 
       toast({
         title: 'Draft claimed!',
-        description: 'Your listing and all changes are now saved to your account.',
-      });
+        description: 'Your listing and all changes are now saved to your account.'});
     } catch (error) {
       console.error('Error claiming draft:', error);
       toast({
         title: 'Error claiming draft',
         description: error instanceof Error ? error.message : 'Please try again.',
-        variant: 'destructive',
-      });
+        variant: 'destructive'});
     } finally {
       setIsClaimingDraft(false);
     }
@@ -696,8 +686,7 @@ export const PublishWizard: React.FC = () => {
     return {
       daily: dailyPrice > 0 ? calculateRentalFees(dailyPrice) : null,
       weekly: weeklyPrice > 0 ? calculateRentalFees(weeklyPrice) : null,
-      monthly: monthlyPrice > 0 ? calculateRentalFees(monthlyPrice) : null,
-    };
+      monthly: monthlyPrice > 0 ? calculateRentalFees(monthlyPrice) : null};
   }, [priceDaily, priceWeekly, priceMonthly]);
 
   const estimatedFreightCost = 500; // Placeholder
@@ -723,8 +712,7 @@ export const PublishWizard: React.FC = () => {
       toast({
         title: 'Missing information',
         description: 'Please add a title and category first to get pricing suggestions.',
-        variant: 'destructive',
-      });
+        variant: 'destructive'});
       return;
     }
 
@@ -736,9 +724,7 @@ export const PublishWizard: React.FC = () => {
           title: title,
           category: listing.category,
           location: getLocation(),
-          mode: listing.mode,
-        },
-      });
+          mode: listing.mode}});
 
       if (error) throw error;
 
@@ -754,15 +740,13 @@ export const PublishWizard: React.FC = () => {
 
       toast({
         title: 'Suggestions ready!',
-        description: 'AI pricing suggestions have been generated based on your listing details.',
-      });
+        description: 'AI pricing suggestions have been generated based on your listing details.'});
     } catch (error) {
       console.error('Error getting suggestions:', error);
       toast({
         title: 'Could not get suggestions',
         description: error instanceof Error ? error.message : 'Please try again later.',
-        variant: 'destructive',
-      });
+        variant: 'destructive'});
     } finally {
       setIsLoadingSuggestions(false);
     }
@@ -791,8 +775,7 @@ export const PublishWizard: React.FC = () => {
       toast({
         title: 'Description too short',
         description: 'Please write at least 10 characters to optimize.',
-        variant: 'destructive',
-      });
+        variant: 'destructive'});
       return;
     }
 
@@ -805,9 +788,7 @@ export const PublishWizard: React.FC = () => {
           rawDescription: description,
           category: listing?.category,
           mode: listing?.mode,
-          title: title,
-        },
-      });
+          title: title}});
 
       if (error) throw error;
 
@@ -816,16 +797,14 @@ export const PublishWizard: React.FC = () => {
         setShowOptimized(true);
         toast({
           title: 'Description optimized!',
-          description: 'Your listing description has been professionally rewritten.',
-        });
+          description: 'Your listing description has been professionally rewritten.'});
       }
     } catch (error) {
       console.error('Error optimizing description:', error);
       toast({
         title: 'Optimization failed',
         description: error instanceof Error ? error.message : 'Please try again later.',
-        variant: 'destructive',
-      });
+        variant: 'destructive'});
     } finally {
       setIsOptimizing(false);
     }
@@ -838,8 +817,7 @@ export const PublishWizard: React.FC = () => {
       setShowOptimized(false);
       toast({
         title: 'Description reverted',
-        description: 'Your original description has been restored.',
-      });
+        description: 'Your original description has been restored.'});
     }
   };
 
@@ -920,8 +898,7 @@ export const PublishWizard: React.FC = () => {
   const allPhotos = useMemo(() => {
     return [
       ...existingImages.map((url, i) => ({ type: 'existing' as const, url, index: i })),
-      ...images.map((file, i) => ({ type: 'new' as const, file, index: i })),
-    ];
+      ...images.map((file, i) => ({ type: 'new' as const, file, index: i }))];
   }, [existingImages, images]);
 
   const handlePhotoDragStart = (e: React.DragEvent, globalIndex: number) => {
@@ -1026,8 +1003,7 @@ export const PublishWizard: React.FC = () => {
         .upload(fileName, file, {
           cacheControl: '3600',
           upsert: true,
-          contentType: file.type || 'image/jpeg',
-        });
+          contentType: file.type || 'image/jpeg'});
 
       if (uploadError) {
         console.error(`[Upload] Failed to upload ${file.name}:`, uploadError);
@@ -1066,8 +1042,7 @@ export const PublishWizard: React.FC = () => {
         .upload(fileName, file, {
           cacheControl: '3600',
           upsert: true,
-          contentType: file.type || 'video/mp4',
-        });
+          contentType: file.type || 'video/mp4'});
 
       if (uploadError) {
         throw new Error(`Failed to upload ${file.name}: ${uploadError.message}`);
@@ -1100,8 +1075,7 @@ export const PublishWizard: React.FC = () => {
             toast({
               title: 'Sign in required',
               description: 'Please sign in to continue.',
-              variant: 'destructive',
-            });
+              variant: 'destructive'});
             setIsSaving(false);
             return;
           }
@@ -1124,22 +1098,19 @@ export const PublishWizard: React.FC = () => {
           updateData = {
             image_urls: imageUrls,
             cover_image_url: imageUrls[0] || null,
-            video_urls: videoUrls,
-          };
+            video_urls: videoUrls};
         }
         // Allow proceeding without photos (guests can add later after auth)
       } else if (step === 'headline') {
         // Save title and description
         updateData = {
           title,
-          description,
-        };
+          description};
       } else if (step === 'includes') {
         // Save amenities and highlights
         updateData = {
           amenities,
-          highlights,
-        };
+          highlights};
       } else if (step === 'pricing') {
         // Helper function to safely parse price values
         const safeParsePrice = (value: string): number | null => {
@@ -1157,8 +1128,7 @@ export const PublishWizard: React.FC = () => {
             accept_card_payment: acceptCardPayment,
             accept_cash_payment: acceptCashPayment,
             proof_notary_enabled: proofNotaryEnabled,
-            featured_enabled: featuredEnabled,
-          };
+            featured_enabled: featuredEnabled};
         } else {
           updateData = {
             price_daily: safeParsePrice(priceDaily),
@@ -1166,8 +1136,7 @@ export const PublishWizard: React.FC = () => {
             price_monthly: safeParsePrice(priceMonthly),
             instant_book: instantBook,
             deposit_amount: safeParsePrice(depositAmount),
-            featured_enabled: featuredEnabled,
-          };
+            featured_enabled: featuredEnabled};
         }
       } else if (step === 'details') {
         updateData = {
@@ -1179,8 +1148,7 @@ export const PublishWizard: React.FC = () => {
           length_inches: parseFloat(lengthInches) || null,
           width_inches: parseFloat(widthInches) || null,
           height_inches: parseFloat(heightInches) || null,
-          freight_category: freightCategory,
-        };
+          freight_category: freightCategory};
       } else if (step === 'location') {
         // Determine if category-based static or manually toggled
         const categoryIsStatic = isStaticLocationFn(listing.category);
@@ -1200,16 +1168,14 @@ export const PublishWizard: React.FC = () => {
           delivery_instructions: deliveryInstructions || null,
           access_instructions: accessInstructions || null,
           hours_of_access: hoursOfAccess || null,
-          location_notes: locationNotes || null,
-        };
+          location_notes: locationNotes || null};
       } else if (step === 'availability') {
         // Validate hourly schedule if hourly is enabled
         if (hourlyEnabled && !availabilityStepValid) {
           toast({
             title: 'Weekly schedule required',
             description: 'Please add operating hours for at least one day when hourly bookings are enabled.',
-            variant: 'destructive',
-          });
+            variant: 'destructive'});
           setIsSaving(false);
           return;
         }
@@ -1229,8 +1195,7 @@ export const PublishWizard: React.FC = () => {
           min_notice_hours: minNoticeHours,
           hourly_schedule: hourlySchedule,
           rental_min_days: rentalMinDays,
-          hourly_special_pricing: hourlySpecialPricing,
-        };
+          hourly_special_pricing: hourlySpecialPricing};
       } else if (step === 'documents') {
         // Save required documents to the database
         const enabledDocs = requiredDocuments.filter(d => d.is_required);
@@ -1249,8 +1214,7 @@ export const PublishWizard: React.FC = () => {
             is_required: true,
             deadline_type: doc.deadline_type,
             deadline_offset_hours: doc.deadline_offset_hours || null,
-            description: doc.description || null,
-          }));
+            description: doc.description || null}));
 
           const { error: insertError } = await supabase
             .from('listing_required_documents')
@@ -1290,8 +1254,7 @@ export const PublishWizard: React.FC = () => {
       toast({
         title: 'Error saving',
         description: error instanceof Error ? error.message : 'Please try again.',
-        variant: 'destructive',
-      });
+        variant: 'destructive'});
     } finally {
       setIsSaving(false);
     }
@@ -1308,8 +1271,7 @@ export const PublishWizard: React.FC = () => {
       toast({
         title: 'Cannot publish yet',
         description: validationErrors[0], // Show first error
-        variant: 'destructive',
-      });
+        variant: 'destructive'});
       return;
     }
 
@@ -1317,8 +1279,7 @@ export const PublishWizard: React.FC = () => {
       toast({
         title: 'Connect Stripe to accept card payments',
         description: 'Or switch to cash-only (Pay in Person) on the Pricing step to publish now and add Stripe later.',
-        variant: 'destructive',
-      });
+        variant: 'destructive'});
       return;
     }
 
@@ -1344,8 +1305,7 @@ export const PublishWizard: React.FC = () => {
           toast({
             title: 'Sign in to upload media',
             description: 'Please sign in to add photos or videos to this listing.',
-            variant: 'destructive',
-          });
+            variant: 'destructive'});
           return;
         }
 
@@ -1361,8 +1321,7 @@ export const PublishWizard: React.FC = () => {
           toast({
             title: 'Sign in to upload media',
             description: 'Please sign in to add photos or videos to this listing.',
-            variant: 'destructive',
-          });
+            variant: 'destructive'});
           return;
         }
 
@@ -1408,8 +1367,7 @@ export const PublishWizard: React.FC = () => {
 
         // Availability (optional)
         available_from: availableFrom || null,
-        available_to: availableTo || null,
-      };
+        available_to: availableTo || null};
 
       const pricingUpdateData: any = listing.mode === 'sale'
         ? {
@@ -1419,8 +1377,7 @@ export const PublishWizard: React.FC = () => {
             accept_card_payment: acceptCardPayment,
             accept_cash_payment: acceptCashPayment,
             proof_notary_enabled: proofNotaryEnabled,
-            featured_enabled: featuredEnabled,
-          }
+            featured_enabled: featuredEnabled}
         : {
             price_daily: safeParsePrice(priceDaily),
             price_weekly: safeParsePrice(priceWeekly),
@@ -1437,8 +1394,7 @@ export const PublishWizard: React.FC = () => {
             rental_min_days: rentalMinDays,
             instant_book: instantBook,
             deposit_amount: safeParsePrice(depositAmount),
-            featured_enabled: featuredEnabled,
-          };
+            featured_enabled: featuredEnabled};
 
       // If Proof Notary is enabled for a sale listing, redirect to checkout for the $45 fee.
       // IMPORTANT: persist everything first; webhook will publish after payment.
@@ -1459,10 +1415,8 @@ export const PublishWizard: React.FC = () => {
 
         const { data, error } = await supabase.functions.invoke('create-notary-checkout', {
           headers: {
-            Authorization: `Bearer ${sessionData.session.access_token}`,
-          },
-          body: { listing_id: listing.id },
-        });
+            Authorization: `Bearer ${sessionData.session.access_token}`},
+          body: { listing_id: listing.id }});
 
         if (error) throw error;
         if (!data?.url) throw new Error('No checkout URL returned');
@@ -1506,8 +1460,7 @@ export const PublishWizard: React.FC = () => {
             ...baseUpdateData,
             ...pricingUpdateData,
             status: 'published',
-            ...(isFirstTimePublishForBoost ? { published_at: new Date().toISOString() } : {}),
-          })
+            ...(isFirstTimePublishForBoost ? { published_at: new Date().toISOString() } : {})})
           .eq('id', listing.id);
 
         if (persistError) throw persistError;
@@ -1521,10 +1474,8 @@ export const PublishWizard: React.FC = () => {
 
         const { data, error } = await supabase.functions.invoke('create-featured-checkout', {
           headers: {
-            Authorization: `Bearer ${sessionData.session.access_token}`,
-          },
-          body: { listing_id: listing.id },
-        });
+            Authorization: `Bearer ${sessionData.session.access_token}`},
+          body: { listing_id: listing.id }});
 
         if (error) throw error;
         if (!data?.url) throw new Error('No checkout URL returned');
@@ -1562,8 +1513,7 @@ export const PublishWizard: React.FC = () => {
           ...(listingHasPendingFeatured ? { featured_enabled: false } : {}),
           status: 'published',
           // Only set published_at if this is the first time publishing
-          ...(isFirstTimePublish ? { published_at: new Date().toISOString() } : {}),
-        })
+          ...(isFirstTimePublish ? { published_at: new Date().toISOString() } : {})})
         .eq('id', listing.id);
 
       if (error) throw error;
@@ -1586,10 +1536,7 @@ export const PublishWizard: React.FC = () => {
               address: location,
               host_id: user?.id,
               host_name: user?.user_metadata?.full_name || user?.email?.split('@')[0],
-              host_email: user?.email,
-            },
-          },
-        }).catch(err => console.error('Admin notification error:', err));
+              host_email: user?.email}}}).catch(err => console.error('Admin notification error:', err));
       }
 
       setShowSuccessModal(true);
@@ -1598,8 +1545,7 @@ export const PublishWizard: React.FC = () => {
       toast({
         title: 'Error publishing',
         description: error instanceof Error ? error.message : 'Please try again.',
-        variant: 'destructive',
-      });
+        variant: 'destructive'});
     } finally {
       setIsSaving(false);
     }
@@ -1663,8 +1609,7 @@ export const PublishWizard: React.FC = () => {
     descriptionLength: description.trim().length,
     priceSet: listing?.mode === 'sale' 
       ? (isValidPrice(priceSale) ? `$${parseFloat(priceSale.replace(/[^0-9.]/g, '')).toLocaleString()}` : undefined)
-      : (isValidPrice(priceDaily) ? `$${parseFloat(priceDaily.replace(/[^0-9.]/g, ''))}/day` : undefined),
-  };
+      : (isValidPrice(priceDaily) ? `$${parseFloat(priceDaily.replace(/[^0-9.]/g, ''))}/day` : undefined)};
 
   const checklistItems = createChecklistItems(checklistState, step);
   const canPublish = checklistItems.filter(i => i.required).every(i => i.completed);
@@ -1982,7 +1927,7 @@ export const PublishWizard: React.FC = () => {
                       <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-primary/3 animate-pulse pointer-events-none" />
                       <div className="relative flex items-start gap-3">
                         <div className="p-2.5 bg-foreground rounded-xl shadow-md shrink-0">
-                          <Sparkles className="w-5 h-5 text-background" />
+                          
                         </div>
                         <div className="flex-1 min-w-0">
                           <h4 className="font-semibold text-foreground mb-1">AI Writing Assistant</h4>
@@ -2008,7 +1953,7 @@ export const PublishWizard: React.FC = () => {
                               </>
                             ) : (
                               <>
-                                <Sparkles className="w-4 h-4 mr-2" />
+                                
                                 Optimize with AI
                               </>
                             )}
@@ -2182,7 +2127,7 @@ export const PublishWizard: React.FC = () => {
                     <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-primary/3 animate-pulse pointer-events-none" />
                     <div className="relative flex items-start gap-3">
                       <div className="p-2.5 bg-foreground rounded-xl shadow-md">
-                        <Sparkles className="w-5 h-5 text-background" />
+                        
                       </div>
                       <div className="flex-1">
                         <h4 className="font-semibold text-foreground mb-1">AI Pricing Assistant</h4>
@@ -2203,7 +2148,7 @@ export const PublishWizard: React.FC = () => {
                             </>
                           ) : (
                             <>
-                              <Sparkles className="w-4 h-4 mr-2" />
+                              
                               Get AI Suggestions
                             </>
                           )}
@@ -2901,7 +2846,7 @@ export const PublishWizard: React.FC = () => {
                             </>
                           ) : (
                             <>
-                              <Sparkles className="w-3 h-3 mr-1" />
+                              
                               AI Optimize
                             </>
                           )}
@@ -3345,8 +3290,7 @@ export const PublishWizard: React.FC = () => {
                           {[
                             { value: 'pickup' as FulfillmentType, label: 'Pickup Only', icon: <MapPin className="w-5 h-5" />, description: 'Buyer/renter picks up from your location' },
                             { value: 'delivery' as FulfillmentType, label: 'Delivery Only', icon: <Truck className="w-5 h-5" />, description: 'You deliver to their location' },
-                            { value: 'both' as FulfillmentType, label: 'Pickup + Delivery', icon: <Package className="w-5 h-5" />, description: 'Offer both options' },
-                          ].map((option) => (
+                            { value: 'both' as FulfillmentType, label: 'Pickup + Delivery', icon: <Package className="w-5 h-5" />, description: 'Offer both options' }].map((option) => (
                             <button
                               key={option.value}
                               type="button"
@@ -3500,8 +3444,7 @@ export const PublishWizard: React.FC = () => {
                           prev.map(d => ({
                             ...d,
                             deadline_type: deadline,
-                            deadline_offset_hours: deadline === 'after_approval_deadline' ? deadlineHours : undefined,
-                          }))
+                            deadline_offset_hours: deadline === 'after_approval_deadline' ? deadlineHours : undefined}))
                         );
                       }}
                       className="space-y-3"
@@ -3538,8 +3481,7 @@ export const PublishWizard: React.FC = () => {
                             setRequiredDocuments(prev =>
                               prev.map(d => ({
                                 ...d,
-                                deadline_offset_hours: hours,
-                              }))
+                                deadline_offset_hours: hours}))
                             );
                           }}
                           className="w-20"
@@ -3864,8 +3806,7 @@ export const PublishWizard: React.FC = () => {
                                 setAcceptCashPayment(true);
                                 toast({
                                   title: 'Switched to cash-only',
-                                  description: 'You can publish now and add Stripe later from your dashboard.',
-                                });
+                                  description: 'You can publish now and add Stripe later from your dashboard.'});
                               }}
                             >
                               Switch to cash-only & publish
@@ -3908,7 +3849,6 @@ export const PublishWizard: React.FC = () => {
                       onEnabledChange={setFeaturedEnabled}
                     />
                   )}
-
 
                   <div className="flex flex-wrap gap-3">
                     <Button variant="dark-shine" onClick={() => setStep('stripe')}>Back</Button>
@@ -4010,8 +3950,7 @@ export const PublishWizard: React.FC = () => {
           address: listing.address,
           priceDaily: parseFloat(priceDaily) || null,
           priceWeekly: parseFloat(priceWeekly) || null,
-          priceSale: parseFloat(priceSale) || null,
-        } : null}
+          priceSale: parseFloat(priceSale) || null} : null}
         onViewListing={() => navigate(`/listing/${listing?.id}`)}
       />
 
@@ -4054,14 +3993,12 @@ export const PublishWizard: React.FC = () => {
             availableFrom: availableFrom || undefined,
             availableTo: availableTo || undefined,
             acceptCardPayment,
-            acceptCashPayment,
-          }}
+            acceptCashPayment}}
           host={user ? {
             name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'You',
             avatar: user.user_metadata?.avatar_url || null,
             memberSince: user.created_at || new Date().toISOString(),
-            isVerified: false,
-          } : undefined}
+            isVerified: false} : undefined}
         />
       )}
     </div>

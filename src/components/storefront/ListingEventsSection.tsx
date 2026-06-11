@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { CalendarDays, Plus, Sparkles, Megaphone, Edit, Trash2, Clock } from 'lucide-react';
+import { CalendarDays, Plus, Megaphone, Edit, Trash2, Clock } from 'lucide-react';
 import { format } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -36,15 +36,13 @@ interface ListingEventsSectionProps {
 
 const eventTypeIcons: Record<string, React.ComponentType<{ className?: string }>> = {
   event: CalendarDays,
-  update: Sparkles,
-  announcement: Megaphone,
-};
+  update: ,
+  announcement: Megaphone};
 
 const eventTypeBadges: Record<string, { label: string; variant: 'default' | 'secondary' | 'outline' }> = {
   event: { label: 'Event', variant: 'default' },
   update: { label: 'Update', variant: 'secondary' },
-  announcement: { label: 'Announcement', variant: 'outline' },
-};
+  announcement: { label: 'Announcement', variant: 'outline' }};
 
 export const ListingEventsSection = ({ listingId, hostId, isOwner = false }: ListingEventsSectionProps) => {
   const { user } = useAuth();
@@ -67,8 +65,7 @@ export const ListingEventsSection = ({ listingId, hostId, isOwner = false }: Lis
 
       if (error) throw error;
       return data as ListingEvent[];
-    },
-  });
+    }});
 
   const createMutation = useMutation({
     mutationFn: async (formData: EventFormData) => {
@@ -82,8 +79,7 @@ export const ListingEventsSection = ({ listingId, hostId, isOwner = false }: Lis
         start_time: formData.startTime || null,
         end_time: formData.endTime || null,
         is_recurring: formData.isRecurring,
-        recurrence_pattern: formData.recurrencePattern || null,
-      });
+        recurrence_pattern: formData.recurrencePattern || null});
       if (error) throw error;
     },
     onSuccess: () => {
@@ -93,8 +89,7 @@ export const ListingEventsSection = ({ listingId, hostId, isOwner = false }: Lis
     },
     onError: () => {
       toast({ title: 'Error', description: 'Failed to create event.', variant: 'destructive' });
-    },
-  });
+    }});
 
   const updateMutation = useMutation({
     mutationFn: async ({ id, formData }: { id: string; formData: EventFormData }) => {
@@ -108,8 +103,7 @@ export const ListingEventsSection = ({ listingId, hostId, isOwner = false }: Lis
           start_time: formData.startTime || null,
           end_time: formData.endTime || null,
           is_recurring: formData.isRecurring,
-          recurrence_pattern: formData.recurrencePattern || null,
-        })
+          recurrence_pattern: formData.recurrencePattern || null})
         .eq('id', id);
       if (error) throw error;
     },
@@ -121,8 +115,7 @@ export const ListingEventsSection = ({ listingId, hostId, isOwner = false }: Lis
     },
     onError: () => {
       toast({ title: 'Error', description: 'Failed to update event.', variant: 'destructive' });
-    },
-  });
+    }});
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
@@ -135,8 +128,7 @@ export const ListingEventsSection = ({ listingId, hostId, isOwner = false }: Lis
     },
     onError: () => {
       toast({ title: 'Error', description: 'Failed to delete event.', variant: 'destructive' });
-    },
-  });
+    }});
 
   const handleSubmit = (formData: EventFormData) => {
     if (editingEvent) {

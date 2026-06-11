@@ -43,7 +43,6 @@ import {
   GraduationCap,
   Car,
   Store,
-  Sparkles,
   ArrowRight
 } from 'lucide-react';
 
@@ -1049,7 +1048,7 @@ const RegulationsHub = () => {
                 <Card className="bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-950/30 dark:to-blue-950/30 border-purple-200">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
-                      <Sparkles className="h-5 w-5 text-purple-500" />
+                      
                       MEHKO: Microenterprise Home Kitchen Operations
                     </CardTitle>
                     <CardDescription>

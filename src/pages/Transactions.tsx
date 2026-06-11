@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, Navigate, useSearchParams } from 'react-router-dom';
-import { Loader2, Calendar, ShoppingBag, ArrowLeft, Package, Receipt, Sparkles } from 'lucide-react';
+import { Loader2, Calendar, ShoppingBag, ArrowLeft, Package, Receipt} from 'lucide-react';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import SEO from '@/components/SEO';
@@ -40,8 +40,7 @@ const TransactionsPage = () => {
     approveBooking,
     declineBooking,
     cancelBooking: cancelHostBooking,
-    processDepositRefund,
-  } = useHostBookings();
+    processDepositRefund} = useHostBookings();
 
   // Buyer sale transactions
   const {
@@ -51,8 +50,7 @@ const TransactionsPage = () => {
     raiseDispute: raiseBuyerDispute,
     isConfirming: isBuyerConfirming,
     isDisputing: isBuyerDisputing,
-    refetch: refetchBuyerTransactions,
-  } = useBuyerSaleTransactions(user?.id);
+    refetch: refetchBuyerTransactions} = useBuyerSaleTransactions(user?.id);
 
   // Seller sale transactions
   const {
@@ -62,8 +60,7 @@ const TransactionsPage = () => {
     raiseDispute: raiseSellerDispute,
     isConfirming: isSellerConfirming,
     isDisputing: isSellerDisputing,
-    refetch: refetchSellerTransactions,
-  } = useSellerSaleTransactions(user?.id);
+    refetch: refetchSellerTransactions} = useSellerSaleTransactions(user?.id);
 
   // Realtime subscriptions for sale transactions and booking updates
   useEffect(() => {
@@ -77,15 +74,13 @@ const TransactionsPage = () => {
           event: '*',
           schema: 'public',
           table: 'sale_transactions',
-          filter: `buyer_id=eq.${user.id}`,
-        },
+          filter: `buyer_id=eq.${user.id}`},
         (payload) => {
           console.log('[Realtime] Buyer transaction update:', payload.eventType);
           if (payload.eventType === 'INSERT') {
             toast({
               title: '🛒 New Purchase',
-              description: 'Your purchase has been recorded successfully!',
-            });
+              description: 'Your purchase has been recorded successfully!'});
           }
           refetchBuyerTransactions();
         }
@@ -96,15 +91,13 @@ const TransactionsPage = () => {
           event: '*',
           schema: 'public',
           table: 'sale_transactions',
-          filter: `seller_id=eq.${user.id}`,
-        },
+          filter: `seller_id=eq.${user.id}`},
         (payload) => {
           console.log('[Realtime] Seller transaction update:', payload.eventType);
           if (payload.eventType === 'INSERT') {
             toast({
               title: '💰 New Sale',
-              description: 'You have a new sale! Check the details.',
-            });
+              description: 'You have a new sale! Check the details.'});
           }
           refetchSellerTransactions();
         }
@@ -115,16 +108,14 @@ const TransactionsPage = () => {
           event: '*',
           schema: 'public',
           table: 'booking_requests',
-          filter: `shopper_id=eq.${user.id}`,
-        },
+          filter: `shopper_id=eq.${user.id}`},
         (payload) => {
           console.log('[Realtime] Shopper booking update:', payload.eventType);
           const newData = payload.new as any;
           if (payload.eventType === 'UPDATE' && newData?.status === 'completed') {
             toast({
               title: '✅ Booking Completed',
-              description: 'Your rental has been marked as completed!',
-            });
+              description: 'Your rental has been marked as completed!'});
           }
           refetchShopperBookings();
         }
@@ -135,8 +126,7 @@ const TransactionsPage = () => {
           event: '*',
           schema: 'public',
           table: 'booking_requests',
-          filter: `host_id=eq.${user.id}`,
-        },
+          filter: `host_id=eq.${user.id}`},
         (payload) => {
           console.log('[Realtime] Host booking update:', payload.eventType);
           // Refetch handled by useHostBookings but we can add toasts for status changes
@@ -221,11 +211,10 @@ const TransactionsPage = () => {
                 value="charges" 
                 className="flex items-center gap-2 pb-3 px-0 rounded-none bg-transparent data-[state=active]:bg-transparent data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-foreground text-muted-foreground data-[state=active]:text-foreground transition-colors"
               >
-                <Sparkles className="h-4 w-4" />
+                
                 Account Charges
               </TabsTrigger>
             </TabsList>
-
 
             {/* Bookings Tab */}
             <TabsContent value="bookings" className="space-y-8">

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { TrendingUp, Sparkles, Loader2, ChevronRight, Calendar, DollarSign, Zap } from 'lucide-react';
+import { TrendingUp, Loader2, ChevronRight, Calendar, DollarSign, Zap } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -25,8 +25,7 @@ const ICONS: Record<string, any> = {
   pricing: DollarSign,
   capacity: Zap,
   category: TrendingUp,
-  general: Sparkles,
-};
+  general: };
 
 export const PredictiveBookingCard = () => {
   const { session } = useAuth();
@@ -39,8 +38,7 @@ export const PredictiveBookingCard = () => {
     const load = async () => {
       try {
         const { data: res, error: err } = await supabase.functions.invoke('predictive-booking-insights', {
-          headers: { Authorization: `Bearer ${session.access_token}` },
-        });
+          headers: { Authorization: `Bearer ${session.access_token}` }});
         if (err) throw err;
         if (res?.error) throw new Error(res.error);
         setData(res as PredictiveData);
@@ -62,7 +60,7 @@ export const PredictiveBookingCard = () => {
           <div>
             <CardTitle className="flex items-center gap-2 text-base">
               <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center">
-                <Sparkles className="h-3.5 w-3.5 text-primary-foreground" />
+                
               </div>
               Predictive Booking
               <Badge variant="secondary" className="text-[10px]">AI</Badge>
@@ -95,7 +93,7 @@ export const PredictiveBookingCard = () => {
             {data.insights
               .sort((a, b) => a.priority - b.priority)
               .map((insight, i) => {
-                const Icon = ICONS[insight.type] || Sparkles;
+                const Icon = ICONS[insight.type] || ;
                 return (
                   <div key={i} className="group flex items-start gap-3 p-3 rounded-xl border border-border/60 hover:border-primary/40 hover:bg-primary/5 transition-all">
                     <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center shrink-0">

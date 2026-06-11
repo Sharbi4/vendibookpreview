@@ -3,7 +3,6 @@ import { motion } from 'framer-motion';
 import { 
   ShieldCheck, 
   Calculator, 
-  Sparkles, 
   Camera, 
   BadgeCheck, 
   CheckCircle2,
@@ -25,13 +24,11 @@ import {
   Accordion,
   AccordionContent,
   AccordionItem,
-  AccordionTrigger,
-} from '@/components/ui/accordion';
+  AccordionTrigger} from '@/components/ui/accordion';
 import {
   Tooltip,
   TooltipContent,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
+  TooltipTrigger} from '@/components/ui/tooltip';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import SEO from '@/components/SEO';
@@ -350,7 +347,7 @@ const SellMyFoodTruck = () => {
                     <CardContent className="p-6">
                       <div className="flex items-center gap-3 mb-4">
                         <div className="p-2.5 rounded-lg bg-foreground/10">
-                          <Sparkles className="h-5 w-5 text-foreground/70" />
+                          < className="h-5 w-5 text-foreground/70" />
                         </div>
                         <h3 className="font-semibold text-lg">PricePilot (AI Pricing Suggestions)</h3>
                       </div>

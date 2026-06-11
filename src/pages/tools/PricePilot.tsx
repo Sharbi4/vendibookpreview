@@ -19,7 +19,6 @@ import {
   Loader2, 
   Home,
   TrendingUp,
-  Sparkles,
   Target,
   Zap,
   BarChart3,
@@ -70,16 +69,14 @@ const PricePilot = () => {
     mode: '',
     features: '',
     condition: '',
-    additional: '',
-  });
+    additional: ''});
   const [pricingResult, setPricingResult] = useState<PricingResult | null>(null);
 
   const handlePricingSubmit = async () => {
     setIsLoading(true);
     try {
       const { data: response, error } = await supabase.functions.invoke('ai-tools', {
-        body: { tool: 'pricing', data: pricingForm },
-      });
+        body: { tool: 'pricing', data: pricingForm }});
       if (error) throw error;
       if (response.error) {
         toast({ title: 'Error', description: response.error, variant: 'destructive' });
@@ -298,7 +295,7 @@ const PricePilot = () => {
                       <Textarea placeholder="Year, brand, recent upgrades, unique features..." value={pricingForm.additional} onChange={(e) => setPricingForm({ ...pricingForm, additional: e.target.value })} rows={2} />
                     </div>
                     <Button onClick={handlePricingSubmit} disabled={isLoading || !pricingForm.category || !pricingForm.mode} className="w-full">
-                      {isLoading ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Generating...</> : <><Sparkles className="h-4 w-4 mr-2" />Generate Pricing</>}
+                      {isLoading ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Generating...</> : <>Generate Pricing</>}
                     </Button>
                   </CardContent>
                 </Card>

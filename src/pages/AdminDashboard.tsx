@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Shield, AlertTriangle, DollarSign, CheckCircle2, Clock, XCircle, Truck, Package, FileCheck, History, Zap, Headphones, Mail, Users, FileSpreadsheet, Globe, Sparkles } from 'lucide-react';
+import { Shield, AlertTriangle, DollarSign, CheckCircle2, Clock, XCircle, Truck, Package, FileCheck, History, Zap, Headphones, Mail, Users, FileSpreadsheet, Globe} from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAdminTransactions } from '@/hooks/useAdminTransactions';
@@ -30,7 +30,6 @@ import ZendeskBulkSync from '@/components/admin/ZendeskBulkSync';
 import ZendeskContactSync from '@/components/admin/ZendeskContactSync';
 import MarketResearchCard from '@/components/admin/MarketResearchCard';
 
-
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const { user, isLoading: authLoading } = useAuth();
@@ -46,8 +45,7 @@ const AdminDashboard = () => {
     updateTracking,
     isUpdatingTracking,
     stats,
-    shippingStats,
-  } = useAdminTransactions(user?.id);
+    shippingStats} = useAdminTransactions(user?.id);
 
   const { data: pendingDocuments, isLoading: docsLoading } = useAdminPendingDocuments();
   const documentStats = useAdminDocumentStats();
@@ -267,7 +265,7 @@ const AdminDashboard = () => {
               Research
             </TabsTrigger>
             <Link to="/admin/orchestration" className="inline-flex items-center px-3 py-1.5 text-sm rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors">
-              <Sparkles className="h-4 w-4 mr-1" />
+              
               AI Orchestration
             </Link>
           </TabsList>

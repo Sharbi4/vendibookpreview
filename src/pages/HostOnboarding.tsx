@@ -8,14 +8,12 @@ import { Card, CardContent } from '@/components/ui/card';
 import {
   Popover,
   PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
+  PopoverTrigger} from '@/components/ui/popover';
 import {
   Shield,
   CreditCard,
   CheckCircle2,
   ArrowRight,
-  Sparkles,
   Calendar,
   DollarSign,
   Users,
@@ -39,8 +37,7 @@ import {
   Handshake,
   Wallet,
   Lock,
-  Share2,
-} from 'lucide-react';
+  Share2} from 'lucide-react';
 import SEO, { generateOrganizationSchema, generateWebSiteSchema } from '@/components/SEO';
 import { cn } from '@/lib/utils';
 
@@ -73,77 +70,63 @@ const HostOnboarding = () => {
     { icon: <Banknote className="h-6 w-6" />, title: 'Stripe payouts', description: 'Get paid to your bank account through Stripe Connect.' },
     { icon: <Headphones className="h-6 w-6" />, title: '24/7 Zendesk support', description: 'Support for disputes, questions, and account help.' },
     { icon: <Lock className="h-6 w-6" />, title: 'Escrow-style sales', description: 'Funds are held securely until the transaction is confirmed by both parties.' },
-    { icon: <Share2 className="h-6 w-6" />, title: 'Share on social media', description: 'Use our built-in share kit for Facebook, X.com, Instagram, TikTok, and more.' },
-  ];
+    { icon: <Share2 className="h-6 w-6" />, title: 'Share on social media', description: 'Use our built-in share kit for Facebook, X.com, Instagram, TikTok, and more.' }];
 
   const rentalSteps = [
     { step: 1, icon: <Camera className="h-5 w-5" />, title: 'Create listing', description: 'Add photos, rates, availability, delivery options, rules, deposit, and document requirements.' },
     { step: 2, icon: <UserCheck className="h-5 w-5" />, title: 'Get verified', description: 'Complete identity verification to build trust with renters.' },
     { step: 3, icon: <ClipboardCheck className="h-5 w-5" />, title: 'Approve renters', description: 'Review requests, confirm documents, and finalize pickup/delivery details.' },
-    { step: 4, icon: <Wallet className="h-5 w-5" />, title: 'Get paid', description: 'Payouts initiated within 24 hours of rental start via Stripe.' },
-  ];
+    { step: 4, icon: <Wallet className="h-5 w-5" />, title: 'Get paid', description: 'Payouts initiated within 24 hours of rental start via Stripe.' }];
 
   const salesSteps = [
     { step: 1, icon: <Camera className="h-5 w-5" />, title: 'Create listing', description: 'Add photos, price, specs, included equipment, and pickup/delivery preferences.' },
     { step: 2, icon: <UserCheck className="h-5 w-5" />, title: 'Get verified', description: 'Verification builds confidence for serious buyers.' },
     { step: 3, icon: <Handshake className="h-5 w-5" />, title: 'Confirm buyer + terms', description: 'Message securely, confirm details, and proceed to protected checkout.' },
-    { step: 4, icon: <Wallet className="h-5 w-5" />, title: 'Get paid', description: 'Payouts initiated after order confirmation via Stripe.' },
-  ];
+    { step: 4, icon: <Wallet className="h-5 w-5" />, title: 'Get paid', description: 'Payouts initiated after order confirmation via Stripe.' }];
 
   const trustPills = [
     {
       icon: <BadgeCheck className="h-5 w-5" />,
       label: 'Identity verification',
-      content: 'Verified profiles help reduce fraud and increase conversion.',
-    },
+      content: 'Verified profiles help reduce fraud and increase conversion.'},
     {
       icon: <CreditCard className="h-5 w-5" />,
       label: 'Secure online payments',
-      content: 'Protected checkout through Stripe-powered payments.',
-    },
+      content: 'Protected checkout through Stripe-powered payments.'},
     {
       icon: <Shield className="h-5 w-5" />,
       label: 'Deposits & disputes',
-      content: 'Deposits for rentals, documented condition checks, and a clear dispute process.',
-    },
+      content: 'Deposits for rentals, documented condition checks, and a clear dispute process.'},
     {
       icon: <FileCheck className="h-5 w-5" />,
       label: 'Document checks',
-      content: 'Require the right credentials before approving a booking.',
-    },
+      content: 'Require the right credentials before approving a booking.'},
     {
       icon: <Headphones className="h-5 w-5" />,
       label: '24/7 support',
-      content: 'Chat anytime or submit a request for help.',
-    },
-  ];
+      content: 'Chat anytime or submit a request for help.'}];
 
   const tools = [
     { icon: <Calculator className="h-5 w-5" />, title: 'PricePilot', description: 'Market-based rental and sale pricing guidance.' },
     { icon: <FileText className="h-5 w-5" />, title: 'Listing Studio', description: 'High-converting descriptions from your specs and photos.' },
-    { icon: <Lightbulb className="h-5 w-5" />, title: 'PermitPath', description: 'Find required licenses and documents by location.' },
-  ];
+    { icon: <Lightbulb className="h-5 w-5" />, title: 'PermitPath', description: 'Find required licenses and documents by location.' }];
 
   const testimonials = [
     {
       quote: "Finally a platform built for mobile food assets. Document requirements save hours of back-and-forth.",
       author: "Marcus T.",
       role: "Food Truck Owner, Austin",
-      rating: 5,
-    },
+      rating: 5},
     {
       quote: "Sold my trailer in two weeks. Verification made buyers confident and checkout was smooth.",
       author: "Jennifer L.",
       role: "Trailer Seller, Denver",
-      rating: 5,
-    },
+      rating: 5},
     {
       quote: "I rent during slow seasons and keep the sale option open. One listing, two income paths.",
       author: "Carlos M.",
       role: "Operator, Miami",
-      rating: 5,
-    },
-  ];
+      rating: 5}];
 
   const steps = activeTab === 'rentals' ? rentalSteps : salesSteps;
 
@@ -251,7 +234,6 @@ const HostOnboarding = () => {
             </div>
           </div>
         </section>
-
 
         {/* HOW IT WORKS */}
         <section id="how-it-works" className="py-14 md:py-20 bg-muted/30 scroll-mt-20">
@@ -378,7 +360,7 @@ const HostOnboarding = () => {
             <div className="max-w-4xl mx-auto">
               <div className="text-center mb-10">
                 <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-full mb-4">
-                  <Sparkles className="h-4 w-4" />
+                  
                   <span className="text-sm font-medium">Free for all hosts</span>
                 </div>
                 <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-3">

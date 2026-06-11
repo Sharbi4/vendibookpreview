@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { ValidatedInput, useFormValidation, validators } from '@/components/ui/validated-input';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
-import { Phone, Mail, Sparkles, X } from 'lucide-react';
+import { Phone, Mail, X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -23,8 +23,7 @@ export const WhiteGlovePopup = ({ delayMs = 15000 }: WhiteGlovePopupProps) => {
       name: '',
       restaurantName: '',
       phone: '',
-      email: '',
-    },
+      email: ''},
     validators: {
       name: validators.compose(
         validators.required('Please enter your name'),
@@ -47,9 +46,7 @@ export const WhiteGlovePopup = ({ delayMs = 15000 }: WhiteGlovePopupProps) => {
       email: validators.compose(
         validators.required('Please enter your email'),
         validators.email('Please enter a valid email address')
-      ),
-    },
-  });
+      )}});
 
   useEffect(() => {
     // Check if user has already dismissed or submitted
@@ -95,9 +92,7 @@ export const WhiteGlovePopup = ({ delayMs = 15000 }: WhiteGlovePopupProps) => {
           restaurantName: form.values.restaurantName,
           source: 'white-glove-kitchen-popup',
           preferredTime: 'asap',
-          preferredContact,
-        },
-      });
+          preferredContact}});
 
       if (error) throw error;
 
@@ -131,7 +126,7 @@ export const WhiteGlovePopup = ({ delayMs = 15000 }: WhiteGlovePopupProps) => {
           
           <div className="flex items-center gap-3 mb-3">
             <div className="p-2 bg-primary-foreground/20 rounded-full">
-              <Sparkles className="h-5 w-5" />
+              
             </div>
             <span className="text-sm font-medium uppercase tracking-wide opacity-90">
               White Glove Service

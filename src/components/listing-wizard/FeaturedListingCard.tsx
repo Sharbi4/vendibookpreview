@@ -1,5 +1,5 @@
 import React from 'react';
-import { Star, TrendingUp, CheckCircle2, Eye, Zap, Crown, Sparkles, MapPin, BarChart3 } from 'lucide-react';
+import { Star, TrendingUp, CheckCircle2, Eye, Zap, Crown, MapPin, BarChart3 } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
@@ -13,8 +13,7 @@ export const FEATURED_LISTING_FEE = 30;
 
 export const FeaturedListingCard: React.FC<FeaturedListingCardProps> = ({
   enabled,
-  onEnabledChange,
-}) => {
+  onEnabledChange}) => {
   return (
     <div
       className={`relative overflow-hidden rounded-2xl border transition-all ${
@@ -81,7 +80,7 @@ export const FeaturedListingCard: React.FC<FeaturedListingCardProps> = ({
         {/* Benefits grid */}
         <div className="mt-5 grid sm:grid-cols-2 gap-3">
           <Benefit
-            icon={<Sparkles className="w-4 h-4 text-amber-500" />}
+            icon={}
             title="Top of search & homepage"
             desc="Pinned above standard listings everywhere shoppers browse."
           />
@@ -124,8 +123,7 @@ export const FeaturedListingCard: React.FC<FeaturedListingCardProps> = ({
 const Benefit: React.FC<{ icon: React.ReactNode; title: string; desc: string }> = ({
   icon,
   title,
-  desc,
-}) => (
+  desc}) => (
   <div className="flex items-start gap-2.5">
     <div className="mt-0.5 shrink-0">{icon}</div>
     <div>

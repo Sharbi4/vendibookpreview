@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Send, ImagePlus, Loader2, Sparkles, X, Check, Edit3 } from 'lucide-react';
+import { ArrowLeft, Send, ImagePlus, Loader2, X, Check, Edit3 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -27,8 +27,7 @@ function extractPreview(text: string): { preview: ListingPreview | null; ready: 
         return {
           preview: parsed.listing || null,
           ready: parsed.ready === true,
-          confirmed: parsed.confirmed === true,
-        };
+          confirmed: parsed.confirmed === true};
       } catch { /* JSON not complete yet */ }
     }
     return { preview: null, ready: false, confirmed: false };
@@ -41,8 +40,7 @@ function extractPreview(text: string): { preview: ListingPreview | null; ready: 
     return {
       preview: parsed.listing || null,
       ready: parsed.ready === true,
-      confirmed: parsed.confirmed === true,
-    };
+      confirmed: parsed.confirmed === true};
   } catch { return { preview: null, ready: false, confirmed: false }; }
 }
 
@@ -100,11 +98,9 @@ const AIListingCreator: React.FC = () => {
     try {
       const categoryMap: Record<string, string> = {
         food_truck: 'food_truck', food_trailer: 'food_trailer', ghost_kitchen: 'ghost_kitchen',
-        commercial_kitchen: 'ghost_kitchen', vendor_lot: 'vendor_lot', vendor_space: 'vendor_space',
-      };
+        commercial_kitchen: 'ghost_kitchen', vendor_lot: 'vendor_lot', vendor_space: 'vendor_space'};
       const fulfillmentMap: Record<string, string> = {
-        pickup: 'pickup', delivery: 'delivery', both: 'both', on_site: 'on_site',
-      };
+        pickup: 'pickup', delivery: 'delivery', both: 'both', on_site: 'on_site'};
       const insertData: any = {
         host_id: user.id,
         title: listingData.title || 'Untitled Listing',
@@ -141,8 +137,7 @@ const AIListingCreator: React.FC = () => {
         image_urls: uploadedImages.length > 0 ? uploadedImages : null,
         cover_image_url: uploadedImages.length > 0 ? uploadedImages[0] : null,
         accept_card_payment: listingData.accept_card_payment ?? (listingData.mode === 'sale' ? true : null),
-        accept_cash_payment: listingData.accept_cash_payment ?? null,
-      };
+        accept_cash_payment: listingData.accept_cash_payment ?? null};
       const { data, error } = await supabase.from('listings').insert(insertData).select('id').single();
       if (error) throw error;
       await supabase.from('user_roles').upsert({ user_id: user.id, role: 'host' }, { onConflict: 'user_id,role' });
@@ -186,10 +181,8 @@ const AIListingCreator: React.FC = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-        },
-        body: JSON.stringify(body),
-      });
+          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`},
+        body: JSON.stringify(body)});
 
       if (!resp.ok || !resp.body) {
         if (resp.status === 429) toast.error('Rate limited. Please wait a moment.');
@@ -301,7 +294,7 @@ const AIListingCreator: React.FC = () => {
           </Button>
           <div className="flex items-center gap-2 min-w-0 flex-1">
             <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-orange-400 flex items-center justify-center shrink-0">
-              <Sparkles className="h-4 w-4 text-white" />
+              
             </div>
             <div className="min-w-0">
               <h1 className="text-sm font-semibold text-foreground truncate">AI Listing Creator</h1>

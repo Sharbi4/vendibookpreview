@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Sparkles, X } from 'lucide-react';
+import { X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AuthWalkthrough } from '@/components/auth/AuthWalkthrough';
@@ -24,8 +24,7 @@ const HeroRentalSearch = () => {
 
   const handleGoogleLogin = async () => {
     const { error } = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: window.location.origin,
-    });
+      redirect_uri: window.location.origin});
     if (error) console.error('Google login error:', error);
   };
 
@@ -39,15 +38,13 @@ const HeroRentalSearch = () => {
         <motion.div
           className="absolute inset-0"
           style={{
-            background: 'linear-gradient(105deg, transparent 0%, transparent 30%, rgba(255,255,255,0.9) 42%, rgba(255,237,220,0.5) 50%, rgba(255,255,255,0.9) 58%, transparent 70%, transparent 100%)',
-          }}
+            background: 'linear-gradient(105deg, transparent 0%, transparent 30%, rgba(255,255,255,0.9) 42%, rgba(255,237,220,0.5) 50%, rgba(255,255,255,0.9) 58%, transparent 70%, transparent 100%)'}}
           animate={{ x: ['-100%', '100%'] }}
           transition={{
             duration: 6,
             repeat: Infinity,
             ease: 'easeInOut',
-            repeatDelay: 4,
-          }}
+            repeatDelay: 4}}
         />
         
         {/* Warm peach orb */}
@@ -56,8 +53,7 @@ const HeroRentalSearch = () => {
           style={{ background: 'radial-gradient(circle, rgba(255, 200, 160, 0.25), transparent 60%)', filter: 'blur(90px)' }}
           animate={{
             x: ['-10%', '50%', '10%', '-10%'],
-            y: ['-5%', '20%', '-10%', '-5%'],
-          }}
+            y: ['-5%', '20%', '-10%', '-5%']}}
           transition={{ duration: 22, repeat: Infinity, ease: 'easeInOut' }}
         />
         {/* Soft coral accent orb */}
@@ -66,8 +62,7 @@ const HeroRentalSearch = () => {
           style={{ background: 'radial-gradient(circle, rgba(255, 120, 70, 0.1), transparent 60%)', filter: 'blur(80px)' }}
           animate={{
             x: ['40%', '-20%', '30%', '40%'],
-            y: ['10%', '-5%', '25%', '10%'],
-          }}
+            y: ['10%', '-5%', '25%', '10%']}}
           transition={{ duration: 26, repeat: Infinity, ease: 'easeInOut', delay: 3 }}
         />
 
@@ -180,7 +175,7 @@ const HeroRentalSearch = () => {
               <div className="sticky top-0 z-10 flex items-center justify-between p-5 bg-white/60 dark:bg-black/60 backdrop-blur-xl border-b border-border/30">
                 <div className="flex items-center gap-2">
                   <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center">
-                    <Sparkles className="h-4 w-4 text-primary" />
+                    
                   </div>
                   <div>
                     <h2 className="font-semibold text-foreground text-base">Why Vendibook?</h2>

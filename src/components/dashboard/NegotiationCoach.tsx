@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Sparkles, Loader2, Check, Copy, TrendingUp, ArrowRightLeft, ChevronDown } from 'lucide-react';
+import { Loader2, Check, Copy, TrendingUp, ArrowRightLeft, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
@@ -36,8 +36,7 @@ export const NegotiationCoach = ({ offerId, onUseCounter, className }: Negotiati
     setLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke('ai-negotiation-coach', {
-        body: { offerId },
-      });
+        body: { offerId }});
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
       setAdvice(data.advice as Advice);
@@ -68,7 +67,7 @@ export const NegotiationCoach = ({ offerId, onUseCounter, className }: Negotiati
           className="w-full flex items-center justify-between gap-2 px-3 py-2 rounded-lg border border-primary/30 bg-gradient-to-r from-primary/10 to-primary/5 hover:from-primary/15 hover:to-primary/10 text-left transition-all"
         >
           <div className="flex items-center gap-2 min-w-0">
-            <Sparkles className="h-3.5 w-3.5 text-primary shrink-0" />
+            
             <span className="text-xs font-semibold text-foreground">AI Negotiation Coach</span>
             <Badge variant="secondary" className="text-[9px] px-1.5 py-0 h-4">Beta</Badge>
           </div>
@@ -101,8 +100,7 @@ export const NegotiationCoach = ({ offerId, onUseCounter, className }: Negotiati
                 {[
                   { label: 'Aggressive', amt: advice.range_aggressive, hint: 'Max profit' },
                   { label: 'Balanced', amt: advice.range_balanced, hint: 'Recommended', highlight: true },
-                  { label: 'Quick close', amt: advice.range_quick_close, hint: 'Fast deal' },
-                ].map((opt) => (
+                  { label: 'Quick close', amt: advice.range_quick_close, hint: 'Fast deal' }].map((opt) => (
                   <button
                     key={opt.label}
                     type="button"

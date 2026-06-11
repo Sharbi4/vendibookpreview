@@ -11,7 +11,7 @@ import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, Sparkles, Activity, Settings2, AlertTriangle } from "lucide-react";
+import { Loader2, Activity, Settings2, AlertTriangle } from 'lucide-react';
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 
@@ -58,8 +58,7 @@ const AdminOrchestration = () => {
     setLoading(true);
     const [{ data: r }, { data: d }] = await Promise.all([
       supabase.from("orchestration_rules").select("*").order("event_type"),
-      supabase.from("orchestration_decisions").select("*").order("created_at", { ascending: false }).limit(100),
-    ]);
+      supabase.from("orchestration_decisions").select("*").order("created_at", { ascending: false }).limit(100)]);
     setRules((r ?? []) as Rule[]);
     setDecisions((d ?? []) as Decision[]);
     setLoading(false);
@@ -104,7 +103,7 @@ const AdminOrchestration = () => {
       <Header />
       <main className="container mx-auto px-4 py-8 space-y-6">
         <div className="flex items-center gap-3">
-          <Sparkles className="h-6 w-6 text-primary" />
+          
           <div>
             <h1 className="text-2xl font-semibold">AI Orchestration</h1>
             <p className="text-sm text-muted-foreground">Routing rules, decisions, and ROI for Vendi's communications brain.</p>

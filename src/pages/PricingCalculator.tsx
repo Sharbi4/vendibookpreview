@@ -4,7 +4,7 @@ import SEO from '@/components/SEO';
 import JsonLd from '@/components/JsonLd';
 import PricingCalculatorComponent from '@/components/pricing/PricingCalculator';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Sparkles, ShieldCheck, Eye, BadgeCheck, CreditCard, Percent, CheckCircle2 } from 'lucide-react';
+import { ArrowRight, ShieldCheck, Eye, BadgeCheck, CreditCard, Percent, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import affirmLogo from '@/assets/affirm-logo.png';
@@ -56,8 +56,7 @@ const PricingCalculator = () => {
     { icon: Eye, title: "No hidden fees", description: "What you see is what you pay. Period." },
     { icon: Percent, title: "Simple commission", description: "12.9% on sales, 3% host / 12% renter on rentals." },
     { icon: CreditCard, title: "Pay in Person option", description: "Handle payment directly — completely free." },
-    { icon: ShieldCheck, title: "Buyer protection included", description: "Secure checkout protects both parties." },
-  ];
+    { icon: ShieldCheck, title: "Buyer protection included", description: "Secure checkout protects both parties." }];
 
   return (
     <>
@@ -162,7 +161,7 @@ const PricingCalculator = () => {
                   <CardContent className="p-6">
                     <div className="flex flex-col md:flex-row items-center gap-4">
                       <div className="p-3 rounded-full bg-amber-500/10">
-                        <Sparkles className="h-6 w-6 text-amber-600" />
+                        
                       </div>
                       <div className="flex-1 text-center md:text-left">
                         <h3 className="font-semibold mb-1">Not sure what to price it at?</h3>

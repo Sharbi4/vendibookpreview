@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Send, Loader2, CheckCircle2, X, Sparkles } from 'lucide-react';
+import { Send, Loader2, CheckCircle2, X} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -14,8 +14,7 @@ const matchSchema = z.object({
   email: z.string().trim().email("Invalid email").max(255),
   phone: z.string().trim().min(1, "Phone is required").max(20),
   zipCode: z.string().trim().min(3, "Zip code is required").max(10),
-  intent: z.enum(['rent', 'buy', 'sell', 'host'], { required_error: "Please select an option" }),
-});
+  intent: z.enum(['rent', 'buy', 'sell', 'host'], { required_error: "Please select an option" })});
 
 type MatchFormData = z.infer<typeof matchSchema>;
 
@@ -23,8 +22,7 @@ const INTENT_OPTIONS = [
   { value: 'rent' as const, label: 'Rent', emoji: '🔑' },
   { value: 'buy' as const, label: 'Buy', emoji: '🛒' },
   { value: 'sell' as const, label: 'Sell', emoji: '💰' },
-  { value: 'host' as const, label: 'Host', emoji: '📍' },
-];
+  { value: 'host' as const, label: 'Host', emoji: '📍' }];
 
 interface TicketFormDialogProps {
   open: boolean;
@@ -37,8 +35,7 @@ const TicketFormDialog = ({ open, onOpenChange }: TicketFormDialogProps) => {
     email: '',
     phone: '',
     zipCode: '',
-    intent: 'rent',
-  });
+    intent: 'rent'});
   const [errors, setErrors] = useState<Partial<Record<keyof MatchFormData, string>>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
@@ -71,8 +68,7 @@ const TicketFormDialog = ({ open, onOpenChange }: TicketFormDialogProps) => {
 
     try {
       const { error } = await supabase.functions.invoke('vapi-outbound-call', {
-        body: { name: result.data.name, phone: result.data.phone },
-      });
+        body: { name: result.data.name, phone: result.data.phone }});
 
       if (error) throw error;
 
@@ -127,8 +123,7 @@ const TicketFormDialog = ({ open, onOpenChange }: TicketFormDialogProps) => {
             style={{
               background: 'rgba(20, 20, 20, 0.85)',
               backdropFilter: 'blur(40px) saturate(180%)',
-              WebkitBackdropFilter: 'blur(40px) saturate(180%)',
-            }}
+              WebkitBackdropFilter: 'blur(40px) saturate(180%)'}}
           >
             {/* Inner glow */}
             <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-white/10 via-transparent to-transparent pointer-events-none" />
@@ -164,7 +159,7 @@ const TicketFormDialog = ({ open, onOpenChange }: TicketFormDialogProps) => {
                       className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border border-amber-400/30 text-amber-400 text-[10px] sm:text-xs font-semibold uppercase tracking-wider mb-2 sm:mb-3"
                       style={{ background: 'rgba(245, 158, 11, 0.15)' }}
                     >
-                      <Sparkles className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+                      
                       Free Concierge
                     </div>
                     <h2 className="text-xl sm:text-2xl font-bold text-white">Match Me</h2>

@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Truck, Store, Building2, MapPin, Tag, ShoppingBag, MapPinned, Loader2, Check, CheckCircle2, AlertCircle, Sparkles } from 'lucide-react';
+import { Truck, Store, Building2, MapPin, Tag, ShoppingBag, MapPinned, Loader2, Check, CheckCircle2, AlertCircle} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -28,13 +28,11 @@ const categoryOptions = [
   { value: 'food_truck' as ListingCategory, label: 'Food Truck', icon: Truck },
   { value: 'food_trailer' as ListingCategory, label: 'Food Trailer', icon: Truck },
   { value: 'ghost_kitchen' as ListingCategory, label: 'Shared Kitchen', icon: Building2 },
-  { value: 'vendor_lot' as ListingCategory, label: 'Vendor Space', icon: MapPin },
-];
+  { value: 'vendor_lot' as ListingCategory, label: 'Vendor Space', icon: MapPin }];
 
 const modeOptions = [
   { value: 'rent' as ListingMode, label: 'For Rent', icon: Tag, description: 'Rent by day or week' },
-  { value: 'sale' as ListingMode, label: 'For Sale', icon: ShoppingBag, description: 'Sell to a new owner' },
-];
+  { value: 'sale' as ListingMode, label: 'For Sale', icon: ShoppingBag, description: 'Sell to a new owner' }];
 
 export const QuickStartWizard: React.FC = () => {
   const navigate = useNavigate();
@@ -50,8 +48,7 @@ export const QuickStartWizard: React.FC = () => {
     city: '',
     state: '',
     latitude: null,
-    longitude: null,
-  });
+    longitude: null});
   const [isCreating, setIsCreating] = useState(false);
   const [isLookingUpZip, setIsLookingUpZip] = useState(false);
   const [zipError, setZipError] = useState<string | null>(null);
@@ -67,8 +64,7 @@ export const QuickStartWizard: React.FC = () => {
 
     try {
       const { data: geoData, error } = await supabase.functions.invoke('geocode-location', {
-        body: { query: zip, limit: 1 },
-      });
+        body: { query: zip, limit: 1 }});
 
       if (error) throw error;
 
@@ -93,8 +89,7 @@ export const QuickStartWizard: React.FC = () => {
         state,
         latitude: lat,
         longitude: lng,
-        location: `${city}, ${state}`,
-      }));
+        location: `${city}, ${state}`}));
       setZipConfirmed(true);
     } catch (error) {
       console.error('[QuickStartWizard] ZIP lookup failed:', error);
@@ -112,8 +107,7 @@ export const QuickStartWizard: React.FC = () => {
       zipCode: val,
       ...(val.length < 5
         ? { city: '', state: '', latitude: null, longitude: null, location: '' }
-        : {}),
-    }));
+        : {})}));
 
     if (val.length < 5) {
       setZipConfirmed(false);
@@ -189,8 +183,7 @@ export const QuickStartWizard: React.FC = () => {
       toast({
         title: 'Sign in required',
         description: 'Please sign in to create a listing.',
-        variant: 'destructive',
-      });
+        variant: 'destructive'});
       navigate('/auth?redirect=/list');
       return;
     }
@@ -233,8 +226,7 @@ export const QuickStartWizard: React.FC = () => {
           address: data.location || null,
           pickup_location_text: data.location || null,
           latitude,
-          longitude,
-        } as any)
+          longitude} as any)
         .select()
         .single();
 
@@ -251,8 +243,7 @@ export const QuickStartWizard: React.FC = () => {
       toast({
         title: 'Error creating draft',
         description: 'Please try again.',
-        variant: 'destructive',
-      });
+        variant: 'destructive'});
     } finally {
       setIsCreating(false);
     }
@@ -432,7 +423,7 @@ export const QuickStartWizard: React.FC = () => {
                   <p className="text-sm sm:text-base text-muted-foreground">Start with your ZIP code and we’ll instantly place the listing in the right market.</p>
                 </div>
                 <div className="hidden sm:flex items-center gap-2 rounded-full border border-border bg-background/70 px-3 py-1.5 text-xs text-muted-foreground">
-                  <Sparkles className="h-3.5 w-3.5 text-primary" />
+                  
                   Takes about 2 seconds
                 </div>
               </div>

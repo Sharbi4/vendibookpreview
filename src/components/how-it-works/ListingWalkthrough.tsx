@@ -6,7 +6,6 @@ import {
   FileText, 
   MapPin, 
   CheckCircle2,
-  Sparkles,
   ChevronLeft,
   ChevronRight,
   Play,
@@ -70,8 +69,7 @@ const ListingWalkthrough = () => {
             ))}
           </div>
         </div>
-      ),
-    },
+      )},
     {
       id: 2,
       title: 'Add photos & details',
@@ -114,8 +112,7 @@ const ListingWalkthrough = () => {
             </div>
           </motion.div>
         </div>
-      ),
-    },
+      )},
     {
       id: 3,
       title: 'Set your location',
@@ -155,8 +152,7 @@ const ListingWalkthrough = () => {
             <span className="text-xs text-muted-foreground">Vendibook Freight available in your area</span>
           </motion.div>
         </div>
-      ),
-    },
+      )},
     {
       id: 4,
       title: 'Set your price',
@@ -199,13 +195,12 @@ const ListingWalkthrough = () => {
             </div>
           </motion.div>
         </div>
-      ),
-    },
+      )},
     {
       id: 5,
       title: 'Review & publish',
       description: 'Preview your listing and go live!',
-      icon: <Sparkles className="h-5 w-5" />,
+      icon: ,
       mockup: (
         <div className="space-y-3">
           <motion.div
@@ -252,9 +247,7 @@ const ListingWalkthrough = () => {
             </div>
           </motion.div>
         </div>
-      ),
-    },
-  ];
+      )}];
 
   // Auto-advance steps
   useEffect(() => {

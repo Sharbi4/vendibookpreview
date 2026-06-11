@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { z } from 'zod';
-import { Phone, Mail, Clock, Send, Loader2, CheckCircle, Ticket, Headphones, CalendarClock, Sparkles, ArrowRight } from 'lucide-react';
+import { Phone, Mail, Clock, Send, Loader2, CheckCircle, Ticket, Headphones, CalendarClock, ArrowRight } from 'lucide-react';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { Button } from '@/components/ui/button';
@@ -26,8 +26,7 @@ const contactSchema = z.object({
   subject: z.string().trim().min(1, "Subject is required").max(200, "Subject must be less than 200 characters"),
   message: z.string().trim().min(1, "Message is required").max(2000, "Message must be less than 2000 characters"),
   // Honeypot field - should always be empty for real users
-  website: z.string().optional(),
-});
+  website: z.string().optional()});
 
 type ContactFormData = z.infer<typeof contactSchema>;
 
@@ -73,8 +72,7 @@ const Contact = () => {
 
     try {
       const { error } = await supabase.functions.invoke('send-contact-email', {
-        body: result.data,
-      });
+        body: result.data});
 
       if (error) throw error;
 
@@ -83,16 +81,14 @@ const Contact = () => {
       trackFormSubmitConversion({ form_type: 'contact' });
       toast({
         title: 'Message sent!',
-        description: 'We have received your message and will get back to you soon.',
-      });
+        description: 'We have received your message and will get back to you soon.'});
     } catch (error) {
       console.error('Contact form error:', error);
       trackFormSubmit('contact', false, { error: 'submission_failed' });
       toast({
         title: 'Something went wrong',
         description: 'Please try again or email us directly at support@vendibook.com',
-        variant: 'destructive',
-      });
+        variant: 'destructive'});
     } finally {
       setIsSubmitting(false);
     }
@@ -120,7 +116,7 @@ const Contact = () => {
             <div className="text-center mb-12">
               {/* Badge */}
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium mb-6">
-                <Sparkles className="h-4 w-4" />
+                
                 We're here to help
               </div>
               
@@ -474,7 +470,7 @@ const Contact = () => {
                       <Card className="border-0 shadow-lg bg-gradient-to-br from-primary/5 via-primary/10 to-primary/5">
                         <CardContent className="p-6">
                           <h3 className="font-bold text-foreground mb-4 flex items-center gap-2">
-                            <Sparkles className="h-5 w-5 text-primary" />
+                            
                             Why Schedule a Callback?
                           </h3>
                           <ul className="space-y-3">
@@ -544,8 +540,7 @@ const Contact = () => {
                               { color: 'bg-blue-500', label: 'New', desc: 'Received and awaiting review' },
                               { color: 'bg-yellow-500', label: 'Open', desc: 'Agent actively working on it' },
                               { color: 'bg-orange-500', label: 'Pending', desc: 'Waiting for your response' },
-                              { color: 'bg-green-500', label: 'Solved', desc: 'Request has been resolved' },
-                            ].map((status, i) => (
+                              { color: 'bg-green-500', label: 'Solved', desc: 'Request has been resolved' }].map((status, i) => (
                               <li key={i} className="flex items-start gap-4">
                                 <span className={`w-4 h-4 rounded-full ${status.color} mt-0.5 flex-shrink-0 shadow-sm`} />
                                 <div>

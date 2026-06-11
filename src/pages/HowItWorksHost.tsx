@@ -9,18 +9,15 @@ import {
   ShieldCheck,
   TrendingUp,
   ArrowRight,
-  Sparkles,
   CheckCircle2,
   Users,
-  Clock,
-} from 'lucide-react';
+  Clock} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
-  AccordionTrigger,
-} from '@/components/ui/accordion';
+  AccordionTrigger} from '@/components/ui/accordion';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import SEO from '@/components/SEO';
@@ -33,15 +30,13 @@ const steps: WalkthroughStep[] = [
   { number: 2, title: 'Set your availability', description: 'Block dates, set operating hours, define buffer time between rentals. Smart calendar prevents double-bookings.', icon: Calendar, mock: 'calendar' },
   { number: 3, title: 'Require the right documents', description: 'Need insurance, business licenses, or health permits? We collect, verify, and store them automatically.', icon: FileCheck, mock: 'docs' },
   { number: 4, title: 'Approve verified renters', description: 'Every renter is identity-verified. Review profiles and accept with one tap — or enable Instant Book.', icon: MessageSquare, mock: 'message' },
-  { number: 5, title: 'Get paid in 24 hours', description: 'Funds release directly to your bank account 24 hours after the rental ends. Track everything from your dashboard.', icon: DollarSign, mock: 'payout' },
-];
+  { number: 5, title: 'Get paid in 24 hours', description: 'Funds release directly to your bank account 24 hours after the rental ends. Track everything from your dashboard.', icon: DollarSign, mock: 'payout' }];
 
 const pillars: Pillar[] = [
   { icon: ShieldCheck, title: 'Verified renters only', description: 'Every renter passes Stripe Identity verification before booking.' },
   { icon: DollarSign, title: '24-hour payouts', description: 'Direct deposit to your bank within 24 hours of rental completion.' },
   { icon: FileCheck, title: 'Automated docs', description: 'We collect, verify, and store insurance + permit documents.' },
-  { icon: TrendingUp, title: 'AI price optimization', description: 'Vendi suggests rates based on local demand to maximize earnings.' },
-];
+  { icon: TrendingUp, title: 'AI price optimization', description: 'Vendi suggests rates based on local demand to maximize earnings.' }];
 
 const faqs = [
   { q: 'How much does it cost to list?', a: 'Listing is completely free. We take a 12.9% platform fee only when you complete a booking. No subscriptions.' },
@@ -49,8 +44,7 @@ const faqs = [
   { q: 'What if a renter damages my equipment?', a: 'Set a security deposit at the listing level. We collect it at booking and release or refund based on your damage report.' },
   { q: 'Can I choose who rents?', a: 'Yes. Unless you enable Instant Book, you review every booking request and approve or decline manually.' },
   { q: 'How long until my first booking?', a: 'Most hosts with complete listings and competitive pricing receive their first inquiry within 1–2 weeks.' },
-  { q: 'Can I list multiple assets?', a: 'Yes — many top hosts manage 4+ listings from one dashboard. No limit.' },
-];
+  { q: 'Can I list multiple assets?', a: 'Yes — many top hosts manage 4+ listings from one dashboard. No limit.' }];
 
 const HowItWorksHost = () => {
   const reduce = useReducedMotion();
@@ -76,7 +70,7 @@ const HowItWorksHost = () => {
                 transition={{ duration: 0.5 }}
               >
                 <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-xs font-medium text-emerald-700 dark:text-emerald-400 mb-4">
-                  <Sparkles className="w-3.5 h-3.5" />
+                  
                   For hosts
                 </div>
                 <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-foreground mb-5 leading-[1.05]">
@@ -138,8 +132,7 @@ const HowItWorksHost = () => {
                 { v: '$3.2k', l: 'Avg monthly host earnings' },
                 { v: '24hr', l: 'Payout speed' },
                 { v: '100%', l: 'ID-verified renters' },
-                { v: '12.9%', l: 'Platform fee — that\'s it' },
-              ].map((s) => (
+                { v: '12.9%', l: 'Platform fee — that\'s it' }].map((s) => (
                 <div key={s.l}>
                   <div className="text-2xl md:text-3xl font-bold text-foreground">{s.v}</div>
                   <div className="text-xs md:text-sm text-muted-foreground mt-1">{s.l}</div>

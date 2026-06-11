@@ -4,7 +4,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Bell, Mail, Moon, Sparkles } from "lucide-react";
+import { Bell, Mail, Moon} from 'lucide-react';
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -21,8 +21,7 @@ export const CommsPreferencesPanel = () => {
   const [quiet, setQuiet] = useState<QuietHours>({
     quiet_hours_start: "21:00",
     quiet_hours_end: "08:00",
-    quiet_hours_timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-  });
+    quiet_hours_timezone: Intl.DateTimeFormat().resolvedOptions().timeZone});
   const [savingQuiet, setSavingQuiet] = useState(false);
 
   useEffect(() => {
@@ -36,8 +35,7 @@ export const CommsPreferencesPanel = () => {
         if (data) setQuiet({
           quiet_hours_start: (data.quiet_hours_start as string)?.slice(0, 5) || "21:00",
           quiet_hours_end: (data.quiet_hours_end as string)?.slice(0, 5) || "08:00",
-          quiet_hours_timezone: data.quiet_hours_timezone || Intl.DateTimeFormat().resolvedOptions().timeZone,
-        });
+          quiet_hours_timezone: data.quiet_hours_timezone || Intl.DateTimeFormat().resolvedOptions().timeZone});
       });
   }, [user?.id]);
 
@@ -49,8 +47,7 @@ export const CommsPreferencesPanel = () => {
       .update({
         quiet_hours_start: quiet.quiet_hours_start,
         quiet_hours_end: quiet.quiet_hours_end,
-        quiet_hours_timezone: quiet.quiet_hours_timezone,
-      })
+        quiet_hours_timezone: quiet.quiet_hours_timezone})
       .eq("id", user.id);
     setSavingQuiet(false);
     if (error) toast.error(error.message);
@@ -62,7 +59,7 @@ export const CommsPreferencesPanel = () => {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Sparkles className="h-5 w-5 text-primary" />
+            
             How Vendi reaches you
           </CardTitle>
           <CardDescription>

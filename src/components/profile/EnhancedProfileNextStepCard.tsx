@@ -8,7 +8,6 @@ import {
   PlusSquare,
   ChevronRight,
   Loader2,
-  Sparkles,
   ArrowRight
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -46,8 +45,7 @@ const EnhancedProfileNextStepCard = ({
   pendingRequestCount,
   isLoadingStripe,
   onConnectStripe,
-  isConnectingStripe,
-}: EnhancedProfileNextStepCardProps) => {
+  isConnectingStripe}: EnhancedProfileNextStepCardProps) => {
   const allSteps: NextStepConfig[] = [
     {
       id: 'verify',
@@ -58,8 +56,7 @@ const EnhancedProfileNextStepCard = ({
       actionHref: '/identity-verification',
       priority: 1,
       gradient: 'from-amber-500 to-orange-500',
-      iconBg: 'bg-amber-100 dark:bg-amber-900/50',
-    },
+      iconBg: 'bg-amber-100 dark:bg-amber-900/50'},
     {
       id: 'stripe',
       icon: CreditCard,
@@ -69,8 +66,7 @@ const EnhancedProfileNextStepCard = ({
       actionOnClick: onConnectStripe,
       priority: 2,
       gradient: 'from-emerald-500 to-teal-500',
-      iconBg: 'bg-emerald-100 dark:bg-emerald-900/50',
-    },
+      iconBg: 'bg-emerald-100 dark:bg-emerald-900/50'},
     {
       id: 'drafts',
       icon: FileEdit,
@@ -80,8 +76,7 @@ const EnhancedProfileNextStepCard = ({
       actionHref: '/dashboard',
       priority: 3,
       gradient: 'from-blue-500 to-indigo-500',
-      iconBg: 'bg-blue-100 dark:bg-blue-900/50',
-    },
+      iconBg: 'bg-blue-100 dark:bg-blue-900/50'},
     {
       id: 'requests',
       icon: MessageSquare,
@@ -91,8 +86,7 @@ const EnhancedProfileNextStepCard = ({
       actionHref: '/dashboard',
       priority: 4,
       gradient: 'from-violet-500 to-purple-500',
-      iconBg: 'bg-violet-100 dark:bg-violet-900/50',
-    },
+      iconBg: 'bg-violet-100 dark:bg-violet-900/50'},
     {
       id: 'create',
       icon: PlusSquare,
@@ -102,9 +96,7 @@ const EnhancedProfileNextStepCard = ({
       actionHref: '/create',
       priority: 5,
       gradient: 'from-pink-500 to-rose-500',
-      iconBg: 'bg-pink-100 dark:bg-pink-900/50',
-    },
-  ];
+      iconBg: 'bg-pink-100 dark:bg-pink-900/50'}];
 
   const getApplicableStep = (): NextStepConfig | null => {
     if (!isVerified) return allSteps.find(s => s.id === 'verify')!;
@@ -137,8 +129,7 @@ const EnhancedProfileNextStepCard = ({
             step.gradient
           )}
           animate={{ 
-            opacity: [0.05, 0.15, 0.05],
-          }}
+            opacity: [0.05, 0.15, 0.05]}}
           transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
         />
 
@@ -147,11 +138,10 @@ const EnhancedProfileNextStepCard = ({
           className="absolute top-3 right-3"
           animate={{ 
             rotate: [0, 180, 360],
-            scale: [1, 1.2, 1],
-          }}
+            scale: [1, 1.2, 1]}}
           transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
         >
-          <Sparkles className="h-5 w-5 text-primary/30" />
+          < className="h-5 w-5 text-primary/30" />
         </motion.div>
 
         <div className="relative p-5 md:p-6">

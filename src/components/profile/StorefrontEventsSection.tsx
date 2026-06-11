@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Calendar, Clock, MapPin, ArrowRight, Sparkles } from 'lucide-react';
+import { Calendar, Clock, MapPin, ArrowRight} from 'lucide-react';
 import { format, parseISO, isAfter, isSameDay } from 'date-fns';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -67,7 +67,7 @@ const StorefrontEventsSection = ({ events, isLoading }: StorefrontEventsSectionP
         <div className="relative flex items-center justify-between mb-5">
           <div className="flex items-center gap-3">
             <div className="p-2.5 rounded-xl bg-gradient-to-br from-primary/20 to-primary/10 border border-primary/20">
-              <Sparkles className="h-5 w-5 text-primary" />
+              
             </div>
             <div>
               <h3 className="text-lg font-semibold text-foreground">Upcoming Events</h3>

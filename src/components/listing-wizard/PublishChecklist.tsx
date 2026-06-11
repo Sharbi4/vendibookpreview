@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Check, Circle, Camera, DollarSign, Calendar, FileText, CreditCard, MapPin, ChevronRight, ChevronDown, Clock, Sparkles, Shield, Eye } from 'lucide-react';
+import { Check, Circle, Camera, DollarSign, Calendar, FileText, CreditCard, MapPin, ChevronRight, ChevronDown, Clock, Shield, Eye } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
@@ -64,8 +64,7 @@ export const PublishChecklist: React.FC<PublishChecklistProps> = ({
   onPublishClick,
   hidePublishButton = false,
   className,
-  defaultExpanded = false,
-}) => {
+  defaultExpanded = false}) => {
   const [expanded, setExpanded] = useState(defaultExpanded);
   const completedCount = items.filter(i => i.completed).length;
   const requiredItems = items.filter(i => i.required);
@@ -170,7 +169,7 @@ export const PublishChecklist: React.FC<PublishChecklistProps> = ({
                 variant={allRequiredComplete ? "dark-shine" : "secondary"}
                 onClick={onPublishClick}
               >
-                {allRequiredComplete && <Sparkles className="w-4 h-4 mr-2" />}
+                {allRequiredComplete && }
                 Publish Listing
               </Button>
               <p className="text-[10px] text-center text-muted-foreground mt-2">
@@ -260,8 +259,7 @@ export const createChecklistItems = (
       required: true,
       current: currentStep === 'photos',
       statusHint: getPhotoStatusHint(),
-      progress: getPhotoProgress(),
-    },
+      progress: getPhotoProgress()},
     {
       id: 'headline',
       label: 'Headline & Description',
@@ -270,8 +268,7 @@ export const createChecklistItems = (
       required: true,
       current: currentStep === 'headline',
       statusHint: getDetailsStatusHint(),
-      progress: getDescriptionProgress(),
-    },
+      progress: getDescriptionProgress()},
     {
       id: 'includes',
       label: "What's Included",
@@ -280,8 +277,7 @@ export const createChecklistItems = (
       required: false,
       current: currentStep === 'includes',
       statusHint: 'Optional',
-      progress: 1,
-    },
+      progress: 1},
     {
       id: 'pricing',
       label: 'Pricing & Rates',
@@ -290,9 +286,7 @@ export const createChecklistItems = (
       required: true,
       current: currentStep === 'pricing',
       statusHint: getPricingStatusHint(),
-      progress: getPricingProgress(),
-    },
-  ];
+      progress: getPricingProgress()}];
 
   if (formState.isRental) {
     items.push({
@@ -303,8 +297,7 @@ export const createChecklistItems = (
       required: false,
       current: currentStep === 'availability',
       statusHint: formState.hasAvailability ? 'Set' : 'Not set',
-      progress: formState.hasAvailability ? 1 : 0,
-    });
+      progress: formState.hasAvailability ? 1 : 0});
   }
 
   items.push({
@@ -315,8 +308,7 @@ export const createChecklistItems = (
     required: true,
     current: currentStep === 'location',
     statusHint: getLocationStatusHint(),
-    progress: getLocationProgress(),
-  });
+    progress: getLocationProgress()});
 
   // Add documents step for rental listings
   if (formState.isRental) {
@@ -328,8 +320,7 @@ export const createChecklistItems = (
       required: false,
       current: currentStep === 'documents',
       statusHint: formState.documentsCount ? `${formState.documentsCount} required` : 'None set',
-      progress: (formState.hasDocuments ?? true) ? 1 : 0,
-    });
+      progress: (formState.hasDocuments ?? true) ? 1 : 0});
   }
 
   // Only add Stripe requirement if card payment is enabled
@@ -343,8 +334,7 @@ export const createChecklistItems = (
       required: true,
       current: currentStep === 'stripe',
       statusHint: formState.hasStripe ? 'Connected' : 'Not connected',
-      progress: formState.hasStripe ? 1 : 0,
-    });
+      progress: formState.hasStripe ? 1 : 0});
   }
 
   // Add review step at the end - always shown, required, completed when all other required items are done
@@ -357,8 +347,7 @@ export const createChecklistItems = (
     required: true,
     current: currentStep === 'review',
     statusHint: allOtherRequiredComplete ? 'Ready' : 'Pending',
-    progress: allOtherRequiredComplete ? (currentStep === 'review' ? 1 : 0.5) : 0,
-  });
+    progress: allOtherRequiredComplete ? (currentStep === 'review' ? 1 : 0.5) : 0});
 
   return items;
 };

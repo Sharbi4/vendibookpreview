@@ -13,14 +13,12 @@ import {
   Truck,
   FileCheck,
   ArrowRight,
-  Sparkles,
   Star,
   CheckCircle2,
   Clock,
   Users,
   TrendingUp,
-  MapPin,
-} from 'lucide-react';
+  MapPin} from 'lucide-react';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import SEO from '@/components/SEO';
@@ -29,8 +27,7 @@ import {
   Accordion,
   AccordionContent,
   AccordionItem,
-  AccordionTrigger,
-} from '@/components/ui/accordion';
+  AccordionTrigger} from '@/components/ui/accordion';
 import AnimatedHeroScene from '@/components/howitworks/AnimatedHeroScene';
 import ScrollWalkthrough, { WalkthroughStep } from '@/components/howitworks/ScrollWalkthrough';
 import ValuePillars, { Pillar } from '@/components/howitworks/ValuePillars';
@@ -55,21 +52,17 @@ const roleConfig: Record<Role, {
       { number: 2, title: 'Compare verified listings', description: 'Inspect specs, amenities, and reviews. All hosts pass Stripe Identity verification before they can list.', icon: ShieldCheck, mock: 'listing' },
       { number: 3, title: 'Message the host', description: 'Ask about availability, equipment, or access instructions. Most hosts reply within an hour.', icon: MessageSquare, mock: 'message' },
       { number: 4, title: 'Book & pay securely', description: 'Pay by card, ACH, Affirm, Klarna, or Afterpay. Funds are held in escrow — released to the host after handoff.', icon: CreditCard, mock: 'payment' },
-      { number: 5, title: 'Pick up or get it delivered', description: 'Coordinate pickup, on-site setup, or nationwide freight shipping. Hosts share access details once payment clears.', icon: Truck, mock: 'truck' },
-    ],
+      { number: 5, title: 'Pick up or get it delivered', description: 'Coordinate pickup, on-site setup, or nationwide freight shipping. Hosts share access details once payment clears.', icon: Truck, mock: 'truck' }],
     pillars: [
       { icon: ShieldCheck, title: 'Verified hosts only', description: 'Identity-verified via Stripe before any listing goes live.' },
       { icon: CreditCard, title: 'Escrow protection', description: 'Funds are held until you confirm the equipment is as described.' },
       { icon: Clock, title: 'Fast host replies', description: 'Most renters get a response within an hour during business hours.' },
-      { icon: MapPin, title: 'Coast-to-coast inventory', description: 'Trucks, trailers, kitchens, and vendor spaces in every major US city.' },
-    ],
+      { icon: MapPin, title: 'Coast-to-coast inventory', description: 'Trucks, trailers, kitchens, and vendor spaces in every major US city.' }],
     faqs: [
       { q: 'How do I know the listing is real?', a: 'Every host completes Stripe Identity verification before publishing. You\'ll see a verified badge on their profile and listings.' },
       { q: 'What payment methods can I use?', a: 'Card, ACH (for $5K+), Apple/Google Pay, Affirm and Klarna ($35–$30K), and Afterpay (up to $4K). Funds are held in escrow.' },
       { q: 'Can I inspect before paying?', a: 'Yes. Message the host directly to schedule an in-person inspection before booking.' },
-      { q: 'What if the equipment isn\'t as described?', a: 'Open a dispute within 24 hours of handoff. We hold funds and mediate until resolved.' },
-    ],
-  },
+      { q: 'What if the equipment isn\'t as described?', a: 'Open a dispute within 24 hours of handoff. We hold funds and mediate until resolved.' }]},
   buy: {
     label: 'Buy a truck or trailer',
     blurb: 'Shop verified food trucks, trailers, and commercial kitchen equipment with secure escrow payments and optional buyer financing.',
@@ -79,21 +72,17 @@ const roleConfig: Record<Role, {
       { number: 2, title: 'Verify the seller', description: 'Every seller is identity-verified. Review their profile, response rate, and past sales before reaching out.', icon: ShieldCheck, mock: 'verified' },
       { number: 3, title: 'Negotiate or make an offer', description: 'Send the asking price, submit a counter-offer, or message the seller to negotiate terms directly.', icon: MessageSquare, mock: 'message' },
       { number: 4, title: 'Pay securely with escrow', description: 'Pay in full or finance with Affirm/Afterpay/Klarna. We hold the money until you confirm receipt.', icon: CreditCard, mock: 'payment' },
-      { number: 5, title: 'Pickup or nationwide freight', description: 'Pick up locally or use Vendibook freight ($4.50/mile) for door-to-door delivery anywhere in the US.', icon: Truck, mock: 'truck' },
-    ],
+      { number: 5, title: 'Pickup or nationwide freight', description: 'Pick up locally or use Vendibook freight ($4.50/mile) for door-to-door delivery anywhere in the US.', icon: Truck, mock: 'truck' }],
     pillars: [
       { icon: ShieldCheck, title: 'Verified sellers', description: 'Identity verification + sales history visible on every profile.' },
       { icon: CreditCard, title: 'Buyer financing', description: 'Affirm, Klarna, and Afterpay let buyers spread payments over time.' },
       { icon: Truck, title: 'Nationwide freight', description: 'Optional door-to-door delivery — calculated automatically at checkout.' },
-      { icon: CheckCircle2, title: 'Money-back protection', description: 'Funds stay in escrow until you confirm the asset arrives as described.' },
-    ],
+      { icon: CheckCircle2, title: 'Money-back protection', description: 'Funds stay in escrow until you confirm the asset arrives as described.' }],
     faqs: [
       { q: 'How does buyer financing work?', a: 'At checkout, choose Affirm or Klarna for $35–$30K, or Afterpay up to $4K. Soft credit check, instant decision, monthly payments.' },
       { q: 'Can I get freight shipping?', a: 'Yes — sellers can opt into Vendibook Freight. We calculate $4.50/mile automatically and add it to checkout.' },
       { q: 'What if the truck isn\'t as advertised?', a: 'You have 24 hours after delivery to confirm. Open a dispute and we\'ll hold funds while we investigate.' },
-      { q: 'Are inspections allowed before purchase?', a: 'Absolutely. Most serious buyers schedule an in-person inspection — message the seller to coordinate.' },
-    ],
-  },
+      { q: 'Are inspections allowed before purchase?', a: 'Absolutely. Most serious buyers schedule an in-person inspection — message the seller to coordinate.' }]},
   host: {
     label: 'Host / rent out',
     blurb: 'Turn your truck, trailer, kitchen, or parking lot into recurring income. Set your rates, control your calendar, get paid in 24 hours.',
@@ -103,21 +92,17 @@ const roleConfig: Record<Role, {
       { number: 2, title: 'Set your availability', description: 'Block dates, define operating hours, set buffer time between rentals. Smart calendar prevents double-bookings.', icon: Calendar, mock: 'calendar' },
       { number: 3, title: 'Define document requirements', description: 'Require business license, insurance, or health permits before approval. We collect and verify them automatically.', icon: FileCheck, mock: 'docs' },
       { number: 4, title: 'Approve booking requests', description: 'Review verified renter profiles. Accept with one tap — or enable Instant Book for faster turnover.', icon: MessageSquare, mock: 'message' },
-      { number: 5, title: 'Get paid automatically', description: 'Funds release to your bank 24 hours after the rental ends. Track everything from your host dashboard.', icon: DollarSign, mock: 'payout' },
-    ],
+      { number: 5, title: 'Get paid automatically', description: 'Funds release to your bank 24 hours after the rental ends. Track everything from your host dashboard.', icon: DollarSign, mock: 'payout' }],
     pillars: [
       { icon: ShieldCheck, title: 'Verified renters only', description: 'Every renter passes ID verification before they can request to book.' },
       { icon: DollarSign, title: '24-hour payouts', description: 'Direct deposit to your bank within 24 hours of rental completion.' },
       { icon: FileCheck, title: 'Automated docs', description: 'We collect, verify, and store insurance + permit documents for you.' },
-      { icon: TrendingUp, title: 'AI price optimization', description: 'Vendi suggests rates based on local demand to maximize earnings.' },
-    ],
+      { icon: TrendingUp, title: 'AI price optimization', description: 'Vendi suggests rates based on local demand to maximize earnings.' }],
     faqs: [
       { q: 'How much does it cost to list?', a: 'Listing is free. We take a 12.9% platform fee only when you complete a booking. No subscriptions, no upfront cost.' },
       { q: 'How fast do I get paid?', a: 'Funds are released to your bank account 24 hours after the rental ends and the renter confirms.' },
       { q: 'What if a renter damages my equipment?', a: 'Require a security deposit at the listing level. We collect it at booking and release/refund based on damage reports.' },
-      { q: 'Can I list multiple assets?', a: 'Yes — many top hosts manage 4+ listings from a single dashboard. No limit.' },
-    ],
-  },
+      { q: 'Can I list multiple assets?', a: 'Yes — many top hosts manage 4+ listings from a single dashboard. No limit.' }]},
   sell: {
     label: 'Sell a truck/trailer',
     blurb: 'List your food truck, trailer, or equipment for sale. Reach verified buyers nationwide. Free to list, escrow protection included.',
@@ -127,22 +112,17 @@ const roleConfig: Record<Role, {
       { number: 2, title: 'Receive offers', description: 'Verified buyers send full-price purchases or counter-offers. Review, negotiate, or accept with one click.', icon: MessageSquare, mock: 'message' },
       { number: 3, title: 'Accept payment securely', description: 'Buyer pays via card, ACH, or financing. Funds are held in escrow — protecting both parties.', icon: CreditCard, mock: 'payment' },
       { number: 4, title: 'Coordinate handoff', description: 'Local pickup or use Vendibook Freight for nationwide delivery. We handle logistics quotes automatically.', icon: Truck, mock: 'truck' },
-      { number: 5, title: 'Get paid', description: 'Once the buyer confirms receipt, funds release to your bank instantly. Track everything in your dashboard.', icon: DollarSign, mock: 'payout' },
-    ],
+      { number: 5, title: 'Get paid', description: 'Once the buyer confirms receipt, funds release to your bank instantly. Track everything in your dashboard.', icon: DollarSign, mock: 'payout' }],
     pillars: [
       { icon: Users, title: 'Verified buyers', description: 'Every buyer is identity-verified — no spam, no tire-kickers.' },
       { icon: CreditCard, title: 'Buyer financing built-in', description: 'Affirm, Klarna, Afterpay expand your buyer pool overnight.' },
       { icon: ShieldCheck, title: 'Escrow protection', description: 'Funds held until handoff confirmed — fraud protection both ways.' },
-      { icon: DollarSign, title: 'No upfront fees', description: 'Free to list. Pay a small fee only when the sale completes.' },
-    ],
+      { icon: DollarSign, title: 'No upfront fees', description: 'Free to list. Pay a small fee only when the sale completes.' }],
     faqs: [
       { q: 'How much does selling cost?', a: 'Free to list. We charge a small platform fee (typically under 10%) only after the sale closes.' },
       { q: 'Can buyers finance?', a: 'Yes — buyers can finance with Affirm/Klarna ($35–$30K) or Afterpay (up to $4K). You still get paid in full at close.' },
       { q: 'Do you handle shipping?', a: 'Vendibook Freight covers door-to-door US delivery at $4.50/mile, calculated and quoted automatically at checkout.' },
-      { q: 'How long until I get paid?', a: 'Funds release immediately once the buyer confirms receipt — typically same-day for local pickup, 2–5 days for freight.' },
-    ],
-  },
-};
+      { q: 'How long until I get paid?', a: 'Funds release immediately once the buyer confirms receipt — typically same-day for local pickup, 2–5 days for freight.' }]}};
 
 const HowItWorks = () => {
   const reduce = useReducedMotion();
@@ -183,7 +163,7 @@ const HowItWorks = () => {
                 transition={{ duration: 0.5 }}
               >
                 <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-foreground/5 border border-border text-xs font-medium text-foreground mb-4">
-                  <Sparkles className="w-3.5 h-3.5" />
+                  
                   The marketplace for mobile food
                 </div>
                 <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-foreground mb-5 leading-[1.05]">
@@ -369,8 +349,7 @@ const HowItWorks = () => {
                 { v: '12k+', l: 'Verified users' },
                 { v: '$4.2M', l: 'Transacted' },
                 { v: '47 states', l: 'Active inventory' },
-                { v: '4.9★', l: 'Average rating' },
-              ].map((s) => (
+                { v: '4.9★', l: 'Average rating' }].map((s) => (
                 <div key={s.l}>
                   <div className="text-2xl md:text-3xl font-bold text-foreground">{s.v}</div>
                   <div className="text-xs md:text-sm text-muted-foreground mt-1">{s.l}</div>

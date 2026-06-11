@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Sparkles, Bell, Send, Loader2 } from "lucide-react";
+import { Bell, Send, Loader2 } from 'lucide-react';
 import { formatDistanceToNow } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
@@ -40,8 +40,7 @@ export const ConciergeInbox = ({ userId }: Props) => {
     setSending(true);
     try {
       const { error } = await supabase.functions.invoke("concierge-reply", {
-        body: { thread_id: activeId, content: reply.trim() },
-      });
+        body: { thread_id: activeId, content: reply.trim() }});
       if (error) throw error;
       setReply("");
       qc.invalidateQueries({ queryKey: ["concierge-messages", activeId] });
@@ -56,7 +55,7 @@ export const ConciergeInbox = ({ userId }: Props) => {
     <Sheet>
       <SheetTrigger asChild>
         <Button variant="ghost" size="icon" className="relative" aria-label="Open Vendi concierge inbox">
-          <Sparkles className="h-5 w-5" />
+          
           {totalUnread > 0 && (
             <span className="absolute -top-1 -right-1 h-4 min-w-4 rounded-full bg-primary px-1 text-[10px] font-semibold text-primary-foreground flex items-center justify-center">
               {totalUnread > 9 ? "9+" : totalUnread}
@@ -67,7 +66,7 @@ export const ConciergeInbox = ({ userId }: Props) => {
       <SheetContent side="right" className="w-full sm:max-w-md flex flex-col p-0">
         <SheetHeader className="px-5 pt-5 pb-3 border-b">
           <SheetTitle className="flex items-center gap-2">
-            <Sparkles className="h-4 w-4 text-primary" /> Vendi Concierge
+             Vendi Concierge
           </SheetTitle>
         </SheetHeader>
 

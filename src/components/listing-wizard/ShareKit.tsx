@@ -10,7 +10,6 @@ import {
   Pencil,
   Mail,
   Share2,
-  Sparkles,
   TrendingUp,
   MapPin,
   MessageCircle,
@@ -18,8 +17,7 @@ import {
   Send,
   Image as ImageIcon,
   Wand2,
-  Camera,
-} from 'lucide-react';
+  Camera} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { CATEGORY_LABELS, ListingCategory, ListingMode } from '@/types/listing';
@@ -29,8 +27,7 @@ import {
   trackShareLinkCopied,
   trackShareQrDownloaded,
   trackShareImageDownloaded,
-  trackShareKitDismissed,
-} from '@/lib/analytics';
+  trackShareKitDismissed} from '@/lib/analytics';
 
 export interface ShareKitListing {
   id: string;
@@ -151,8 +148,7 @@ export const ShareKit: React.FC<ShareKitProps> = ({ listing, onClose }) => {
       : `Open dates available 🗓️ ${listing.title}${city ? ` · ${city}` : ''}.${priceText ? ` From ${priceText}.` : ''} Book direct, no fees:`,
     listing.mode === 'sale'
       ? `🔥 ${categoryLabel} alert${city ? ` — ${city}` : ''}!\n${listing.title}${priceText ? `\n${priceText}` : ''}\nTap link to see full specs & photos.`
-      : `Looking for a ${categoryLabel.toLowerCase()}${city ? ` in ${city}` : ''}? I just opened bookings for ${listing.title}.${priceText ? ` ${priceText}.` : ''} Lock your date here:`,
-  ];
+      : `Looking for a ${categoryLabel.toLowerCase()}${city ? ` in ${city}` : ''}? I just opened bookings for ${listing.title}.${priceText ? ` ${priceText}.` : ''} Lock your date here:`];
   const currentCaption = captionVariants[captionVariant % captionVariants.length];
   const shareText = currentCaption;
 
@@ -162,16 +158,14 @@ export const ShareKit: React.FC<ShareKitProps> = ({ listing, onClose }) => {
     listing.mode === 'sale' ? 'forsale' : 'booknow',
     categoryLabel.toLowerCase().replace(/\s+/g, ''),
     city ? city.toLowerCase().replace(/\s+/g, '') : '',
-    'smallbusiness',
-  ].filter(Boolean);
+    'smallbusiness'].filter(Boolean);
 
   useEffect(() => {
     trackShareKitViewed();
     QRCode.toDataURL(listingUrl, {
       width: 320,
       margin: 1,
-      color: { dark: '#111111', light: '#FFFFFF' },
-    }).then(setQrCodeDataUrl).catch(console.error);
+      color: { dark: '#111111', light: '#FFFFFF' }}).then(setQrCodeDataUrl).catch(console.error);
   }, [listingUrl]);
 
   const copy = useCallback(async (text: string, setFlag: (b: boolean) => void, msg: string) => {
@@ -203,8 +197,7 @@ export const ShareKit: React.FC<ShareKitProps> = ({ listing, onClose }) => {
         await navigator.share({
           title: listing.title,
           text: currentCaption,
-          url: withUtm('native', 'share'),
-        });
+          url: withUtm('native', 'share')});
         trackShareLinkCopied();
       } catch {
         // user cancelled
@@ -224,8 +217,7 @@ export const ShareKit: React.FC<ShareKitProps> = ({ listing, onClose }) => {
         title: listing.title,
         text: currentCaption,
         url: withUtm('native', 'share-image'),
-        files: [file],
-      };
+        files: [file]};
       // Feature-detect file share
       if (navigator.canShare?.({ files: [file] }) && navigator.share) {
         await navigator.share(shareData);
@@ -242,8 +234,7 @@ export const ShareKit: React.FC<ShareKitProps> = ({ listing, onClose }) => {
         URL.revokeObjectURL(url);
         toast({
           title: 'Image saved + caption copied',
-          description: 'Open Instagram, paste the caption & attach the image.',
-        });
+          description: 'Open Instagram, paste the caption & attach the image.'});
       }
     } catch (e) {
       console.error(e);
@@ -270,16 +261,14 @@ export const ShareKit: React.FC<ShareKitProps> = ({ listing, onClose }) => {
       reddit: `https://www.reddit.com/submit?url=${u}&title=${encodeURIComponent(listing.title)}`,
       pinterest: `https://pinterest.com/pin/create/button/?url=${u}&description=${t}${img ? `&media=${img}` : ''}`,
       email: `mailto:?subject=${encodeURIComponent(listing.title)}&body=${t}%0A%0A${u}`,
-      sms: `sms:?&body=${t}%20${u}`,
-    };
+      sms: `sms:?&body=${t}%20${u}`};
 
     // Instagram has no web share — copy caption + open app
     if (platform === 'instagram') {
       navigator.clipboard.writeText(`${currentCaption}\n\n${listingUrl}\n\n${tagsString}`).catch(() => {});
       toast({
         title: 'Caption copied!',
-        description: 'Opening Instagram — paste it on your post or story.',
-      });
+        description: 'Opening Instagram — paste it on your post or story.'});
       window.open('https://www.instagram.com/', '_blank', 'noopener,noreferrer');
       return;
     }
@@ -374,8 +363,6 @@ const generateShareImageBlob = (
     draw();
   }
 });
-
-
 
   const handleDownloadNowBooking = () => {
     const canvas = document.createElement('canvas');
@@ -506,8 +493,7 @@ const generateShareImageBlob = (
     { id: 'linkedin', label: 'LinkedIn', Icon: LinkedInIcon, color: 'hover:text-[#0A66C2]' },
     { id: 'telegram', label: 'Telegram', Icon: TelegramIcon, color: 'hover:text-[#0088cc]' },
     { id: 'pinterest', label: 'Pinterest', Icon: PinterestIcon, color: 'hover:text-[#E60023]' },
-    { id: 'reddit', label: 'Reddit', Icon: RedditIcon, color: 'hover:text-[#FF4500]' },
-  ];
+    { id: 'reddit', label: 'Reddit', Icon: RedditIcon, color: 'hover:text-[#FF4500]' }];
 
   return (
     <motion.div
@@ -659,7 +645,7 @@ const generateShareImageBlob = (
             onClick={regenerateCaption}
             className="text-xs font-medium text-primary hover:underline flex items-center gap-1"
           >
-            <Sparkles className="w-3 h-3" /> Regenerate
+             Regenerate
           </button>
         </div>
         <div className="px-3.5 py-3 bg-muted/60 rounded-xl text-sm text-foreground/90 whitespace-pre-line leading-relaxed">
@@ -717,7 +703,7 @@ const generateShareImageBlob = (
       {/* PROMOTE — IMAGE GRAPHICS */}
       <div>
         <div className="flex items-center gap-2 mb-3 px-1">
-          <Sparkles className="w-4 h-4 text-primary" />
+          
           <h2 className="text-sm font-semibold uppercase tracking-wide">Branded graphics</h2>
         </div>
 

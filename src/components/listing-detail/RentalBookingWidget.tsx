@@ -15,8 +15,7 @@ import {
   eachDayOfInterval,
   addMonths,
   subMonths,
-  isToday,
-} from 'date-fns';
+  isToday} from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Calendar, 
@@ -24,7 +23,6 @@ import {
   ArrowRight, 
   Shield, 
   Clock, 
-  Sparkles, 
   Sun,
   CalendarRange,
   Minus,
@@ -34,8 +32,7 @@ import {
   Users,
   MapPin,
   CheckCircle,
-  Info,
-} from 'lucide-react';
+  Info} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
@@ -43,8 +40,7 @@ import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
+  TooltipTrigger} from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import { calculateRentalFees, formatCurrency } from '@/lib/commissions';
 import { useBlockedDates } from '@/hooks/useBlockedDates';
@@ -134,16 +130,14 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
   totalSlots = 1,
   slotNames,
   fulfillmentType = 'pickup',
-  deliveryFee,
-}) => {
+  deliveryFee}) => {
   const navigate = useNavigate();
   const { blockedDates, isDateUnavailable } = useBlockedDates({ listingId });
   const { 
     settings: hourlySettings, 
     getDayAvailabilityInfo,
     getAvailableWindowsForDate,
-    getAvailableSlotsForDate,
-  } = useHourlyAvailability({ listingId });
+    getAvailableSlotsForDate} = useHourlyAvailability({ listingId });
 
   // ─────────────────────────────────────────────────────────────────────────────
   // DERIVED: Hourly/Daily availability based on BOTH props AND pricing
@@ -186,7 +180,6 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
   // STATE: UI
   // ─────────────────────────────────────────────────────────────────────────────
   const [isHovered, setIsHovered] = useState(false);
-
 
   // ─────────────────────────────────────────────────────────────────────────────
   // EFFECTS
@@ -426,8 +419,7 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
         breakdown: `$${priceHourly}/hr × ${hours} hrs${selectedSlotCount > 1 ? ` × ${selectedSlotCount} slots` : ''}`,
         basePrice,
         serviceFee: fees.renterFee,
-        total: fees.customerTotal,
-      };
+        total: fees.customerTotal};
     } else {
       if (!startDate || !priceDaily) return null;
       
@@ -446,8 +438,7 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
         breakdown: selectedSlotCount > 1 ? `${breakdown} × ${selectedSlotCount} slots` : breakdown,
         basePrice,
         serviceFee: fees.renterFee,
-        total: fees.customerTotal,
-      };
+        total: fees.customerTotal};
     }
   }, [mode, totalSelectedHours, selectedDatesCount, startDate, endDate, priceHourly, priceDaily, priceWeekly, priceMonthly, selectedSlotCount]);
 
@@ -482,8 +473,7 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
         start: sortedSelectedDates[0],
         end: sortedSelectedDates[sortedSelectedDates.length - 1],
         hours: totalSelectedHours.toString(),
-        hourlyData: hourlyDataParts.join('|'),
-      });
+        hourlyData: hourlyDataParts.join('|')});
       
       // Add slot info for multi-slot
       if (totalSlots > 1 && selectedSlotNumber) {
@@ -502,8 +492,7 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
       
       const params = new URLSearchParams({
         start: startStr,
-        end: endStr,
-      });
+        end: endStr});
       
       // Add slot info for multi-slot
       if (totalSlots > 1 && selectedSlotNumber) {
@@ -645,7 +634,7 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
                   )}
                   {priceWeekly && (
                     <p className="text-sm text-muted-foreground flex items-center gap-1.5">
-                      <Sparkles className="h-3.5 w-3.5 text-primary" />
+                      
                       ${priceWeekly.toLocaleString()}/week for 7+ days
                     </p>
                   )}
@@ -989,8 +978,7 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
               trackLeadEvent('check_availability_click', {
                 listing_id: listingId,
                 source: 'rental_booking_widget',
-                instant_book: instantBook,
-              });
+                instant_book: instantBook});
               handleContinue();
             }}
             disabled={!canContinue}

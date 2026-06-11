@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Mail, CheckCircle, Sparkles } from 'lucide-react';
+import { Mail, CheckCircle} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { supabase } from '@/integrations/supabase/client';
@@ -27,8 +27,7 @@ const InlineNewsletterCard = () => {
     try {
       const { error } = await supabase.from('newsletter_subscribers').insert({
         email: trimmed,
-        source: 'inline_search',
-      });
+        source: 'inline_search'});
 
       if (error) {
         // Handle unique constraint (already subscribed)
@@ -73,7 +72,7 @@ const InlineNewsletterCard = () => {
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
         <div className="flex items-center gap-3 shrink-0">
           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[hsl(14,100%,57%)] to-[hsl(40,100%,49%)] flex items-center justify-center shadow-md">
-            <Sparkles className="w-5 h-5 text-white" />
+            
           </div>
           <div>
             <h3 className="text-sm font-semibold text-foreground">Get deals & new listings</h3>

@@ -1,8 +1,7 @@
 import { Link } from 'react-router-dom';
-import { ExternalLink, Receipt as ReceiptIcon, Sparkles, Gift, FileText, RefreshCcw, Clock } from 'lucide-react';
+import { ExternalLink, Receipt as ReceiptIcon, Gift, FileText, RefreshCcw, Clock } from 'lucide-react';
 import {
-  Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle,
-} from '@/components/ui/dialog';
+  Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle} from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -23,7 +22,7 @@ const statusMeta = (c: BoostCharge) => {
   if (c.status === 'refunded') return { label: 'Refunded', icon: RefreshCcw, className: 'bg-rose-500/15 text-rose-500' };
   if (c.status === 'expired') return { label: 'Expired', icon: Clock, className: 'bg-muted text-muted-foreground' };
   if (c.source === 'comp') return { label: 'Comped', icon: Gift, className: 'bg-primary/15 text-primary' };
-  if (c.isActive) return { label: 'Active', icon: Sparkles, className: 'bg-emerald-500/15 text-emerald-500' };
+  if (c.isActive) return { label: 'Active', className: 'bg-emerald-500/15 text-emerald-500' };
   return { label: 'Ended', icon: Clock, className: 'bg-muted text-muted-foreground' };
 };
 
@@ -39,7 +38,7 @@ const BoostChargeDetailsModal: React.FC<Props> = ({ charge, open, onOpenChange }
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <span className="w-9 h-9 rounded-full bg-amber-500/10 text-amber-500 flex items-center justify-center">
-              <Sparkles className="h-4 w-4" />
+              
             </span>
             Featured Boost
           </DialogTitle>

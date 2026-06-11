@@ -10,9 +10,7 @@ import {
   CreditCard,
   Truck,
   Star,
-  ArrowRight,
-  Sparkles,
-} from 'lucide-react';
+  ArrowRight} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import trustKitchen from '@/assets/home/trust-kitchen.jpg';
 import trustHandoff from '@/assets/home/trust-handoff.jpg';
@@ -21,56 +19,45 @@ import ownersFoodTruck from '@/assets/home/owners-food-truck.jpg';
 const TRUST_PHOTOS = [
   { src: ownersFoodTruck, alt: 'Food truck owners at their truck', label: 'Food trucks' },
   { src: trustHandoff, alt: 'Food trailer hitched to a pickup truck', label: 'Food trailers' },
-  { src: trustKitchen, alt: 'Commercial commissary kitchen in operation', label: 'Real businesses' },
-];
+  { src: trustKitchen, alt: 'Commercial commissary kitchen in operation', label: 'Real businesses' }];
 
 const PILLARS = [
   {
     icon: ShieldCheck,
     title: 'Secure payments',
-    body: 'Funds protected through booking and transfer. Powered by Stripe.',
-  },
+    body: 'Funds protected through booking and transfer. Powered by Stripe.'},
   {
     icon: FileCheck,
     title: 'Document collection',
-    body: 'COI, licenses, permits, and contracts collected before pickup.',
-  },
+    body: 'COI, licenses, permits, and contracts collected before pickup.'},
   {
     icon: UserCheck,
     title: 'Verified profiles',
-    body: 'Identity-verified hosts, sellers, and renters. Built-in trust.',
-  },
+    body: 'Identity-verified hosts, sellers, and renters. Built-in trust.'},
   {
     icon: CalendarCheck,
     title: 'Booking requests',
-    body: 'Calendar sync, instant book, and approval flow built in.',
-  },
+    body: 'Calendar sync, instant book, and approval flow built in.'},
   {
     icon: Wallet,
     title: 'Deposits & payouts',
-    body: 'Hold security deposits. Automatic payouts after the booking.',
-  },
+    body: 'Hold security deposits. Automatic payouts after the booking.'},
   {
     icon: MessageSquare,
     title: 'Messaging',
-    body: 'In-platform messages keep details, files, and history in one place.',
-  },
+    body: 'In-platform messages keep details, files, and history in one place.'},
   {
     icon: CreditCard,
     title: 'Financing options',
-    body: 'Affirm, Afterpay, and SBA-ready paths for qualifying purchases.',
-  },
+    body: 'Affirm, Afterpay, and SBA-ready paths for qualifying purchases.'},
   {
     icon: Truck,
     title: 'Delivery coordination',
-    body: 'Define radius, fees, pickup, and on-site fulfillment in one place.',
-  },
+    body: 'Define radius, fees, pickup, and on-site fulfillment in one place.'},
   {
     icon: Star,
     title: 'Reviews & trust',
-    body: 'Verified post-transaction reviews build long-term reputation.',
-  },
-];
+    body: 'Verified post-transaction reviews build long-term reputation.'}];
 
 const TrustInfrastructure = () => {
   return (
@@ -79,8 +66,7 @@ const TrustInfrastructure = () => {
       <div
         className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[700px] h-[400px] rounded-full blur-[140px] pointer-events-none"
         style={{
-          background: 'radial-gradient(ellipse, rgba(255,255,255,0.02) 0%, transparent 70%)',
-        }}
+          background: 'radial-gradient(ellipse, rgba(255,255,255,0.02) 0%, transparent 70%)'}}
       />
 
       <div className="container max-w-6xl mx-auto px-5 sm:px-6 relative z-10">
@@ -177,8 +163,7 @@ const TrustInfrastructure = () => {
               style={{
                 background:
                   'radial-gradient(circle, rgba(255,81,36,0.12) 0%, rgba(255,186,8,0.05) 40%, transparent 70%)',
-                filter: 'blur(50px)',
-              }}
+                filter: 'blur(50px)'}}
             />
             {/* Subtle shimmer sweep on hover */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none rounded-2xl">
@@ -188,7 +173,7 @@ const TrustInfrastructure = () => {
             <div className="relative flex flex-col sm:flex-row sm:items-center gap-5 sm:gap-7">
               <div className="flex-1 min-w-0">
                 <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] bg-primary/15 text-primary rounded-full mb-3 border border-primary/25">
-                  <Sparkles className="w-2.5 h-2.5" />
+                  
                   Free to join
                 </span>
                 <h3 className="text-xl sm:text-2xl font-bold text-foreground tracking-tight leading-[1.2] mb-2">

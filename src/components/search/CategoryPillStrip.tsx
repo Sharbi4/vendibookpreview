@@ -1,5 +1,5 @@
 import { useRef } from 'react';
-import { ChevronLeft, ChevronRight, Truck, Container, ChefHat, Store, Sparkles, Zap, ShieldCheck } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Truck, Container, ChefHat, Store, Zap, ShieldCheck } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ListingCategory } from '@/types/listing';
 
@@ -10,12 +10,11 @@ interface PillItem {
 }
 
 const CATEGORY_PILLS: PillItem[] = [
-  { key: 'all', label: 'All', icon: Sparkles },
+  { key: 'all', label: 'All'},
   { key: 'food_truck', label: 'Food Trucks', icon: Truck },
   { key: 'food_trailer', label: 'Food Trailers', icon: Container },
   { key: 'ghost_kitchen', label: 'Shared Kitchens', icon: ChefHat },
-  { key: 'vendor_space', label: 'Vendor Spaces', icon: Store },
-];
+  { key: 'vendor_space', label: 'Vendor Spaces', icon: Store }];
 
 interface Props {
   activeCategory: string;
@@ -32,8 +31,7 @@ export const CategoryPillStrip = ({
   instantBookOnly,
   onInstantBookToggle,
   verifiedHostsOnly,
-  onVerifiedToggle,
-}: Props) => {
+  onVerifiedToggle}: Props) => {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const scroll = (dir: 'l' | 'r') => {

@@ -7,8 +7,7 @@ import {
   Accordion,
   AccordionContent,
   AccordionItem,
-  AccordionTrigger,
-} from '@/components/ui/accordion';
+  AccordionTrigger} from '@/components/ui/accordion';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
@@ -23,7 +22,6 @@ import {
   Wallet, 
   Truck, 
   FileCheck, 
-  Sparkles,
   MessageCircle,
   ChevronLeft,
   ChevronRight,
@@ -50,18 +48,13 @@ const faqSections: FAQSection[] = [
     questions: [
       {
         question: 'What is Vendibook?',
-        answer: 'Vendibook is a verified marketplace where you can buy, sell, rent, or book mobile food assets—including food trucks, food trailers, carts, and more—through a secure, end-to-end platform built for trust, transparency, and fast transactions.',
-      },
+        answer: 'Vendibook is a verified marketplace where you can buy, sell, rent, or book mobile food assets—including food trucks, food trailers, carts, and more—through a secure, end-to-end platform built for trust, transparency, and fast transactions.'},
       {
         question: 'Who is Vendibook for?',
-        answer: 'Hosts/Sellers: Owners listing an asset for rent or sale. Renters/Buyers: People booking or purchasing an asset. Manufacturers/Builders (optional): Verified suppliers listing inventory for direct purchase.',
-      },
+        answer: 'Hosts/Sellers: Owners listing an asset for rent or sale. Renters/Buyers: People booking or purchasing an asset. Manufacturers/Builders (optional): Verified suppliers listing inventory for direct purchase.'},
       {
         question: 'Is Vendibook available nationwide?',
-        answer: 'Yes. Listings appear based on what\'s available in your area, and some services (like freight) vary by location.',
-      },
-    ],
-  },
+        answer: 'Yes. Listings appear based on what\'s available in your area, and some services (like freight) vary by location.'}]},
   {
     id: 'fees-commission',
     title: 'Fees & Commission',
@@ -69,34 +62,25 @@ const faqSections: FAQSection[] = [
     questions: [
       {
         question: 'When does Vendibook charge fees?',
-        answer: 'Vendibook only charges fees when a transaction happens on-platform. All fees are shown clearly before checkout.',
-      },
+        answer: 'Vendibook only charges fees when a transaction happens on-platform. All fees are shown clearly before checkout.'},
       {
         question: 'What is the host commission for rentals?',
-        answer: 'Hosts pay a 12.9% commission on the rental amount (excluding any refundable deposit).',
-      },
+        answer: 'Hosts pay a 12.9% commission on the rental amount (excluding any refundable deposit).'},
       {
         question: 'What is the renter service fee?',
-        answer: 'Renters pay a 12.9% platform/service fee at checkout. This covers secure payments, identity and trust safeguards, customer support, dispute handling, and payout routing.',
-      },
+        answer: 'Renters pay a 12.9% platform/service fee at checkout. This covers secure payments, identity and trust safeguards, customer support, dispute handling, and payout routing.'},
       {
         question: 'What is the seller commission for sales?',
-        answer: 'Sellers pay a 12.9% commission on the sale price.',
-      },
+        answer: 'Sellers pay a 12.9% commission on the sale price.'},
       {
         question: 'Do buyers pay a platform fee on sales?',
-        answer: 'No. Buyers do not pay a platform fee on sales.',
-      },
+        answer: 'No. Buyers do not pay a platform fee on sales.'},
       {
         question: 'Are there additional fees for freight or shipping?',
-        answer: 'If a buyer selects buyer-paid freight, a freight/shipping charge may be added at checkout. Freight pricing and timing vary by route and carrier availability.',
-      },
+        answer: 'If a buyer selects buyer-paid freight, a freight/shipping charge may be added at checkout. Freight pricing and timing vary by route and carrier availability.'},
       {
         question: 'Are there payment processing fees?',
-        answer: 'Payment processing costs may apply depending on the payment method and region. Any applicable charges are shown before purchase.',
-      },
-    ],
-  },
+        answer: 'Payment processing costs may apply depending on the payment method and region. Any applicable charges are shown before purchase.'}]},
   {
     id: 'verification',
     title: 'Accounts, Verification, and Trust',
@@ -104,22 +88,16 @@ const faqSections: FAQSection[] = [
     questions: [
       {
         question: 'Why does Vendibook require verification?',
-        answer: 'High-value transactions require a higher trust standard. Verification helps reduce fraud and scams, increase buyer confidence, protect payouts and prevent chargebacks, and create safer transactions for both sides.',
-      },
+        answer: 'High-value transactions require a higher trust standard. Verification helps reduce fraud and scams, increase buyer confidence, protect payouts and prevent chargebacks, and create safer transactions for both sides.'},
       {
         question: 'What does "Verified" mean on Vendibook?',
-        answer: 'A "Verified" badge indicates the user has completed identity and/or account checks required for certain platform actions, such as receiving payouts or listing higher-value assets.',
-      },
+        answer: 'A "Verified" badge indicates the user has completed identity and/or account checks required for certain platform actions, such as receiving payouts or listing higher-value assets.'},
       {
         question: 'Do I need to verify to use Vendibook?',
-        answer: 'You can browse without verification, but verification and a connected payout account may be required to list, transact, or receive funds.',
-      },
+        answer: 'You can browse without verification, but verification and a connected payout account may be required to list, transact, or receive funds.'},
       {
         question: 'Why does Vendibook keep transactions on the platform?',
-        answer: 'Because protection depends on it. On-platform transactions enable secure payments, documentation, support coverage, and dispute handling. Off-platform deals remove these protections.',
-      },
-    ],
-  },
+        answer: 'Because protection depends on it. On-platform transactions enable secure payments, documentation, support coverage, and dispute handling. Off-platform deals remove these protections.'}]},
   {
     id: 'listings',
     title: 'Creating a Listing',
@@ -127,18 +105,13 @@ const faqSections: FAQSection[] = [
     questions: [
       {
         question: 'How do I create a listing?',
-        answer: 'Create your account, connect your payout account (required to get paid), click Create Listing, choose For Rent or For Sale, upload photos, details, and specs, set price, availability, rules, and cancellation terms, then publish.',
-      },
+        answer: 'Create your account, connect your payout account (required to get paid), click Create Listing, choose For Rent or For Sale, upload photos, details, and specs, set price, availability, rules, and cancellation terms, then publish.'},
       {
         question: 'Do I need to connect payouts before listing?',
-        answer: 'Yes. If your payout account isn\'t connected, the system can\'t route earnings correctly. Vendibook requires payout setup before you can publish.',
-      },
+        answer: 'Yes. If your payout account isn\'t connected, the system can\'t route earnings correctly. Vendibook requires payout setup before you can publish.'},
       {
         question: 'What makes a listing perform well?',
-        answer: 'The best performing listings usually include: 8–20 clear photos (interior, exterior, equipment, storage, hookups), exact specs (dimensions, power/water needs, included equipment), transparent rules (pickup, delivery, deposit, cancellation terms), and fast response times with accurate availability.',
-      },
-    ],
-  },
+        answer: 'The best performing listings usually include: 8–20 clear photos (interior, exterior, equipment, storage, hookups), exact specs (dimensions, power/water needs, included equipment), transparent rules (pickup, delivery, deposit, cancellation terms), and fast response times with accurate availability.'}]},
   {
     id: 'payments',
     title: 'Booking, Checkout, and Payments',
@@ -146,30 +119,22 @@ const faqSections: FAQSection[] = [
     questions: [
       {
         question: 'How do payments work?',
-        answer: 'Vendibook processes payments securely online. Funds can be held and released at key milestones (like confirmation, pickup, return confirmation, or delivery confirmation) to protect both parties.',
-      },
+        answer: 'Vendibook processes payments securely online. Funds can be held and released at key milestones (like confirmation, pickup, return confirmation, or delivery confirmation) to protect both parties.'},
       {
         question: 'When am I charged as a renter or buyer?',
-        answer: 'Rentals: Usually charged at checkout (or per the listing\'s payment schedule if enabled). Sales: Charged at checkout when you purchase.',
-      },
+        answer: 'Rentals: Usually charged at checkout (or per the listing\'s payment schedule if enabled). Sales: Charged at checkout when you purchase.'},
       {
         question: 'What payment methods are accepted?',
-        answer: 'Vendibook accepts credit/debit cards, ACH bank transfers (for large sales $5K+), Affirm (monthly payments for $35–$30,000), Afterpay (Pay in 4 installments up to $4,000), and Klarna. Some sellers also offer Pay in Person (cash) for local transactions.',
-      },
+        answer: 'Vendibook accepts credit/debit cards, ACH bank transfers (for large sales $5K+), Affirm (monthly payments for $35–$30,000), Afterpay (Pay in 4 installments up to $4,000), and Klarna. Some sellers also offer Pay in Person (cash) for local transactions.'},
       {
         question: 'What is Affirm and how does it work?',
-        answer: 'Affirm lets you split purchases between $35 and $30,000 into monthly payments. At checkout, select Affirm to see your personalized rates (0–36% APR based on credit). You\'ll know your exact payment before committing—no hidden fees. Affirm does not support recurring subscriptions.',
-      },
+        answer: 'Affirm lets you split purchases between $35 and $30,000 into monthly payments. At checkout, select Affirm to see your personalized rates (0–36% APR based on credit). You\'ll know your exact payment before committing—no hidden fees. Affirm does not support recurring subscriptions.'},
       {
         question: 'What is Afterpay and how does it work?',
-        answer: 'Afterpay lets you split purchases up to $4,000 into 4 interest-free payments, due every 2 weeks. Select Afterpay at checkout, pay the first installment, and receive your asset immediately. Late fees may apply if payments are missed.',
-      },
+        answer: 'Afterpay lets you split purchases up to $4,000 into 4 interest-free payments, due every 2 weeks. Select Afterpay at checkout, pay the first installment, and receive your asset immediately. Late fees may apply if payments are missed.'},
       {
         question: 'Why might funds be delayed or held?',
-        answer: 'Delays can occur when a payout account is newly connected, a transaction is high value, a booking requires confirmation milestones, or a dispute or review is opened. These steps exist to protect both sides and reduce fraud.',
-      },
-    ],
-  },
+        answer: 'Delays can occur when a payout account is newly connected, a transaction is high value, a booking requires confirmation milestones, or a dispute or review is opened. These steps exist to protect both sides and reduce fraud.'}]},
   {
     id: 'offers',
     title: 'Offers & Negotiation',
@@ -177,22 +142,16 @@ const faqSections: FAQSection[] = [
     questions: [
       {
         question: 'Can I make an offer on a listing?',
-        answer: 'Yes! For sale listings, you can click "Make Offer" to submit a price below the asking price. Include a message explaining your offer—sellers are more likely to respond to reasonable, well-explained offers.',
-      },
+        answer: 'Yes! For sale listings, you can click "Make Offer" to submit a price below the asking price. Include a message explaining your offer—sellers are more likely to respond to reasonable, well-explained offers.'},
       {
         question: 'What happens after I submit an offer?',
-        answer: 'The seller is notified immediately. They can accept, decline, or counter your offer. You\'ll receive a notification with their response. Offers expire after 48 hours if the seller doesn\'t respond.',
-      },
+        answer: 'The seller is notified immediately. They can accept, decline, or counter your offer. You\'ll receive a notification with their response. Offers expire after 48 hours if the seller doesn\'t respond.'},
       {
         question: 'What is a counter-offer?',
-        answer: 'If the seller thinks your offer is too low, they can propose a different price. You\'ll have 48 hours to accept or decline their counter-offer. If accepted, you\'ll proceed to checkout at the counter-offer price.',
-      },
+        answer: 'If the seller thinks your offer is too low, they can propose a different price. You\'ll have 48 hours to accept or decline their counter-offer. If accepted, you\'ll proceed to checkout at the counter-offer price.'},
       {
         question: 'Can I negotiate on rentals?',
-        answer: 'Rental prices are typically fixed, but you can message the host to discuss longer-term discounts or special arrangements before booking.',
-      },
-    ],
-  },
+        answer: 'Rental prices are typically fixed, but you can message the host to discuss longer-term discounts or special arrangements before booking.'}]},
   {
     id: 'pay-in-person',
     title: 'Pay in Person (Cash Transactions)',
@@ -200,26 +159,19 @@ const faqSections: FAQSection[] = [
     questions: [
       {
         question: 'What is Pay in Person?',
-        answer: 'Pay in Person allows buyers and sellers to complete transactions with cash at pickup/delivery. The seller must enable this option on their listing. No Stripe account is required for cash-only listings.',
-      },
+        answer: 'Pay in Person allows buyers and sellers to complete transactions with cash at pickup/delivery. The seller must enable this option on their listing. No Stripe account is required for cash-only listings.'},
       {
         question: 'How do cash transactions work?',
-        answer: 'After submitting a purchase request, both parties confirm the transaction in-app: (1) Request Submitted → (2) Seller Confirms → (3) Buyer Confirms → (4) Completed. Payment happens in person at the agreed location.',
-      },
+        answer: 'After submitting a purchase request, both parties confirm the transaction in-app: (1) Request Submitted → (2) Seller Confirms → (3) Buyer Confirms → (4) Completed. Payment happens in person at the agreed location.'},
       {
         question: 'Is Pay in Person safe?',
-        answer: 'Cash transactions carry more risk than platform payments since Vendibook cannot hold funds in escrow. We recommend meeting in public places, bringing a witness, and documenting the exchange with photos. Platform protections are limited for off-platform payments.',
-      },
+        answer: 'Cash transactions carry more risk than platform payments since Vendibook cannot hold funds in escrow. We recommend meeting in public places, bringing a witness, and documenting the exchange with photos. Platform protections are limited for off-platform payments.'},
       {
         question: 'Do I still need to confirm the transaction?',
-        answer: 'Yes. Both the buyer and seller must confirm completion in the app to close the transaction. This creates a record and allows both parties to leave reviews.',
-      },
+        answer: 'Yes. Both the buyer and seller must confirm completion in the app to close the transaction. This creates a record and allows both parties to leave reviews.'},
       {
         question: 'Are there fees for Pay in Person transactions?',
-        answer: 'Vendibook does not charge payment processing fees on cash transactions. However, the standard platform commission still applies to the seller.',
-      },
-    ],
-  },
+        answer: 'Vendibook does not charge payment processing fees on cash transactions. However, the standard platform commission still applies to the seller.'}]},
   {
     id: 'cancellations',
     title: 'Cancellations and Refunds',
@@ -227,30 +179,22 @@ const faqSections: FAQSection[] = [
     questions: [
       {
         question: 'What is Vendibook\'s cancellation policy?',
-        answer: 'Vendibook uses clear cancellation rules that are displayed on every listing page, before checkout, and inside your reservation/order details. Listings may offer different cancellation options depending on asset type and category. Your exact refund amount is always shown before you confirm.',
-      },
+        answer: 'Vendibook uses clear cancellation rules that are displayed on every listing page, before checkout, and inside your reservation/order details. Listings may offer different cancellation options depending on asset type and category. Your exact refund amount is always shown before you confirm.'},
       {
         question: 'Is there a free cancellation window?',
-        answer: 'Some bookings may include a short free-cancellation window after booking, when eligible. If applicable, the eligibility and time window are shown at checkout and in the reservation details.',
-      },
+        answer: 'Some bookings may include a short free-cancellation window after booking, when eligible. If applicable, the eligibility and time window are shown at checkout and in the reservation details.'},
       {
         question: 'How are refunds calculated?',
-        answer: 'Refund amounts depend on the listing\'s cancellation terms, time remaining before the booking start, any non-refundable discounts selected, and amount already paid (for payment schedules).',
-      },
+        answer: 'Refund amounts depend on the listing\'s cancellation terms, time remaining before the booking start, any non-refundable discounts selected, and amount already paid (for payment schedules).'},
       {
         question: 'Can I get a partial refund?',
-        answer: 'Yes—partial refunds may apply when you cancel after the free-cancellation period or outside the full-refund window. Partial refund rules are shown clearly before you book.',
-      },
+        answer: 'Yes—partial refunds may apply when you cancel after the free-cancellation period or outside the full-refund window. Partial refund rules are shown clearly before you book.'},
       {
         question: 'Are fees refundable?',
-        answer: 'Some fees may be refundable depending on the timing of the cancellation and whether a full refund is issued. Your checkout screen and reservation details show what\'s refundable.',
-      },
+        answer: 'Some fees may be refundable depending on the timing of the cancellation and whether a full refund is issued. Your checkout screen and reservation details show what\'s refundable.'},
       {
         question: 'What if the host cancels?',
-        answer: 'If a host cancels, you\'ll typically receive a full refund and we\'ll help you find alternatives when available.',
-      },
-    ],
-  },
+        answer: 'If a host cancels, you\'ll typically receive a full refund and we\'ll help you find alternatives when available.'}]},
   {
     id: 'disputes',
     title: 'Deposits, Damage, and Disputes',
@@ -258,22 +202,16 @@ const faqSections: FAQSection[] = [
     questions: [
       {
         question: 'Does Vendibook charge a security deposit?',
-        answer: 'Some listings require a deposit or deposit-style hold. If a deposit is required, it\'s always shown before checkout.',
-      },
+        answer: 'Some listings require a deposit or deposit-style hold. If a deposit is required, it\'s always shown before checkout.'},
       {
         question: 'What if something gets damaged?',
-        answer: 'If damage occurs, report it through the platform as soon as possible and include photos/videos, dates and timestamps, description of what happened, and any relevant receipts or quotes. We may temporarily pause payout while reviewing.',
-      },
+        answer: 'If damage occurs, report it through the platform as soon as possible and include photos/videos, dates and timestamps, description of what happened, and any relevant receipts or quotes. We may temporarily pause payout while reviewing.'},
       {
         question: 'How does the dispute process work?',
-        answer: 'First, attempt resolution with the other party in-platform. If unresolved, open a dispute with documentation. Vendibook reviews evidence and may request additional info. A decision is issued (refund, partial refund, or denial).',
-      },
+        answer: 'First, attempt resolution with the other party in-platform. If unresolved, open a dispute with documentation. Vendibook reviews evidence and may request additional info. A decision is issued (refund, partial refund, or denial).'},
       {
         question: 'How do I request a refund?',
-        answer: '1) Open the booking from your dashboard. 2) Click "Report an issue" or "Open dispute." 3) Our admin team reviews your case and determines refund eligibility. Once approved, refunds are returned to your original payment method within 5–10 business days, depending on your bank. Disputes between guests and hosts are resolved through admin mediation, where evidence from both parties is reviewed.',
-      },
-    ],
-  },
+        answer: '1) Open the booking from your dashboard. 2) Click "Report an issue" or "Open dispute." 3) Our admin team reviews your case and determines refund eligibility. Once approved, refunds are returned to your original payment method within 5–10 business days, depending on your bank. Disputes between guests and hosts are resolved through admin mediation, where evidence from both parties is reviewed.'}]},
   {
     id: 'payouts',
     title: 'Payouts and Timing',
@@ -281,18 +219,13 @@ const faqSections: FAQSection[] = [
     questions: [
       {
         question: 'When do hosts and sellers get paid?',
-        answer: 'Payout timing depends on your connected payout account settings, banking settlement timelines, and any transaction hold or milestone release rules.',
-      },
+        answer: 'Payout timing depends on your connected payout account settings, banking settlement timelines, and any transaction hold or milestone release rules.'},
       {
         question: 'How long do payouts take to arrive?',
-        answer: 'Most payouts arrive within a few business days after they\'re released. First-time payouts can take longer due to verification and risk review.',
-      },
+        answer: 'Most payouts arrive within a few business days after they\'re released. First-time payouts can take longer due to verification and risk review.'},
       {
         question: 'Can I get faster payouts?',
-        answer: 'If faster payout options are available for your connected account, you\'ll see them in your payout settings.',
-      },
-    ],
-  },
+        answer: 'If faster payout options are available for your connected account, you\'ll see them in your payout settings.'}]},
   {
     id: 'delivery',
     title: 'Delivery, Pickup, and Freight',
@@ -300,18 +233,13 @@ const faqSections: FAQSection[] = [
     questions: [
       {
         question: 'Can a host offer delivery?',
-        answer: 'Yes. A listing may allow pickup by the renter/buyer, delivery arranged by the renter/buyer, or Vendibook-facilitated freight (when available).',
-      },
+        answer: 'Yes. A listing may allow pickup by the renter/buyer, delivery arranged by the renter/buyer, or Vendibook-facilitated freight (when available).'},
       {
         question: 'How does Vendibook-facilitated freight work?',
-        answer: 'If freight is selected, a third-party carrier is scheduled, delivery timing depends on route and carrier availability, and you\'ll receive updates when shipping is scheduled and when it ships.',
-      },
+        answer: 'If freight is selected, a third-party carrier is scheduled, delivery timing depends on route and carrier availability, and you\'ll receive updates when shipping is scheduled and when it ships.'},
       {
         question: 'Who pays for freight?',
-        answer: 'Freight may be paid by the buyer at checkout, or the seller as an incentive (like "free shipping"), deducted from proceeds.',
-      },
-    ],
-  },
+        answer: 'Freight may be paid by the buyer at checkout, or the seller as an incentive (like "free shipping"), deducted from proceeds.'}]},
   {
     id: 'documents',
     title: 'Required Documents and Compliance',
@@ -319,29 +247,20 @@ const faqSections: FAQSection[] = [
     questions: [
       {
         question: 'What documents might be required to list a rental?',
-        answer: 'Depending on category and local requirements, you may be asked for government ID, food handling certifications (where applicable), business/commercial insurance (where applicable), and additional compliance documents tied to the listing type.',
-      },
+        answer: 'Depending on category and local requirements, you may be asked for government ID, food handling certifications (where applicable), business/commercial insurance (where applicable), and additional compliance documents tied to the listing type.'},
       {
         question: 'Why does Vendibook require documents?',
-        answer: 'Because trust and compliance protect your business. Documents reduce bad actors, improve booking confidence, and support dispute resolution.',
-      },
-    ],
-  },
+        answer: 'Because trust and compliance protect your business. Documents reduce bad actors, improve booking confidence, and support dispute resolution.'}]},
   {
     id: 'ai-tools',
     title: 'AI Tools on Vendibook',
-    icon: Sparkles,
     questions: [
       {
         question: 'What does the AI help with?',
-        answer: 'Vendibook AI is designed to reduce friction and increase conversion, including listing creation assistance (copy, structure, clarity), pricing and optimization suggestions (where enabled), faster messaging workflows (suggested replies, summaries), and guided support for shipping, disputes, and documentation.',
-      },
+        answer: 'Vendibook AI is designed to reduce friction and increase conversion, including listing creation assistance (copy, structure, clarity), pricing and optimization suggestions (where enabled), faster messaging workflows (suggested replies, summaries), and guided support for shipping, disputes, and documentation.'},
       {
         question: 'Where do I find the AI tools?',
-        answer: 'Look for AI features inside Create Listing steps (suggestions and improvements), Messages (reply assistance, summaries), and Help Center chat (instant policy and workflow answers).',
-      },
-    ],
-  },
+        answer: 'Look for AI features inside Create Listing steps (suggestions and improvements), Messages (reply assistance, summaries), and Help Center chat (instant policy and workflow answers).'}]},
   {
     id: 'earnings',
     title: 'Earnings and Success on Vendibook',
@@ -349,14 +268,10 @@ const faqSections: FAQSection[] = [
     questions: [
       {
         question: 'How much can I make?',
-        answer: 'Your earnings depend on your asset type, pricing, demand, and availability. The biggest drivers of higher earnings are strong photos + accurate specs, competitive pricing, clear pickup/delivery options, fast response times, and great reviews and reliability.',
-      },
+        answer: 'Your earnings depend on your asset type, pricing, demand, and availability. The biggest drivers of higher earnings are strong photos + accurate specs, competitive pricing, clear pickup/delivery options, fast response times, and great reviews and reliability.'},
       {
         question: 'Can I list multiple assets?',
-        answer: 'Yes. Many hosts grow earnings by listing multiple units and keeping calendars accurate.',
-      },
-    ],
-  },
+        answer: 'Yes. Many hosts grow earnings by listing multiple units and keeping calendars accurate.'}]},
   {
     id: 'safety',
     title: 'Safety and Platform Rules',
@@ -364,14 +279,10 @@ const faqSections: FAQSection[] = [
     questions: [
       {
         question: 'What if someone asks me to pay off-platform?',
-        answer: 'Do not complete off-platform transactions. It removes payment protections and dispute coverage. Report the message so we can take action.',
-      },
+        answer: 'Do not complete off-platform transactions. It removes payment protections and dispute coverage. Report the message so we can take action.'},
       {
         question: 'What if I suspect fraud?',
-        answer: 'Stop communication, don\'t share personal financial details, and contact support through chat immediately.',
-      },
-    ],
-  },
+        answer: 'Stop communication, don\'t share personal financial details, and contact support through chat immediately.'}]},
   {
     id: 'support',
     title: 'Support',
@@ -379,15 +290,10 @@ const faqSections: FAQSection[] = [
     questions: [
       {
         question: 'How do I contact Vendibook support?',
-        answer: 'Use the in-platform chat for 24/7 help. For certain account types, additional support options may appear in your Contact page.',
-      },
+        answer: 'Use the in-platform chat for 24/7 help. For certain account types, additional support options may appear in your Contact page.'},
       {
         question: 'Where can I see my reservation details, refund status, or payout status?',
-        answer: 'You can track everything inside your account: Reservations / Orders for booking and refund status, Payouts for host/seller earnings and transfer timing, Messages for communication history and support documentation.',
-      },
-    ],
-  },
-];
+        answer: 'You can track everything inside your account: Reservations / Orders for booking and refund status, Payouts for host/seller earnings and transfer timing, Messages for communication history and support documentation.'}]}];
 
 // Generate schema.org FAQ structured data
 const generateFAQSchema = () => {
@@ -397,16 +303,13 @@ const generateFAQSchema = () => {
       name: q.question,
       acceptedAnswer: {
         '@type': 'Answer',
-        text: q.answer,
-      },
-    }))
+        text: q.answer}}))
   );
 
   return {
     '@context': 'https://schema.org',
     '@type': 'FAQPage',
-    mainEntity: allQuestions,
-  };
+    mainEntity: allQuestions};
 };
 
 const FAQ = () => {

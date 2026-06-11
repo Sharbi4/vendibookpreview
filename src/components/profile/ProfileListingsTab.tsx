@@ -1,6 +1,6 @@
 import { useState, useMemo, memo } from 'react';
 import { Link } from 'react-router-dom';
-import { MapPin, PlusSquare, Upload, Loader2, Sparkles, Pin } from 'lucide-react';
+import { MapPin, PlusSquare, Upload, Loader2, Pin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import ListingCard from '@/components/listing/ListingCard';
@@ -27,8 +27,7 @@ const CATEGORY_FILTERS = [
   { value: 'food_truck', label: 'Food Truck' },
   { value: 'food_trailer', label: 'Food Trailer' },
   { value: 'ghost_kitchen', label: 'Shared Kitchen' },
-  { value: 'vendor_lot', label: 'Vendor Space' },
-] as const;
+  { value: 'vendor_lot', label: 'Vendor Space' }] as const;
 
 type FilterValue = typeof CATEGORY_FILTERS[number]['value'];
 
@@ -168,7 +167,7 @@ const ProfileListingsTab = ({
       {featuredListings.length > 0 && filter === 'all' && (
         <div className="mb-4">
           <h3 className="text-xs font-semibold text-foreground mb-2 flex items-center gap-1.5">
-            <Sparkles className="h-3.5 w-3.5 text-primary" />
+            
             Featured
           </h3>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">

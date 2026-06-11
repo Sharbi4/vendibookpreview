@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Sparkles, RefreshCw, TrendingUp, AlertTriangle, ChevronDown, ChevronRight, Activity, Loader2 } from 'lucide-react';
+import { RefreshCw, TrendingUp, AlertTriangle, ChevronDown, ChevronRight, Activity, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -14,8 +14,7 @@ const severityStyles: Record<AIRecommendation['severity'], string> = {
   critical: 'bg-destructive/10 text-destructive border-destructive/20',
   high: 'bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/20',
   medium: 'bg-blue-500/10 text-blue-700 dark:text-blue-300 border-blue-500/20',
-  low: 'bg-muted text-muted-foreground border-border',
-};
+  low: 'bg-muted text-muted-foreground border-border'};
 
 const scoreColor = (score: number) => {
   if (score >= 80) return 'text-emerald-600';
@@ -96,7 +95,7 @@ const ListingInsightRow = ({ listingId, title, coverImage, cachedScore }: Listin
                 {generate.isPending && generate.variables === listingId ? (
                   <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
                 ) : (
-                  <Sparkles className="h-3.5 w-3.5 mr-1.5" />
+                  
                 )}
                 Generate AI insights
               </Button>
@@ -187,7 +186,7 @@ export const ListingInsightsPanel = () => {
         <div className="flex items-center justify-between gap-3 flex-wrap">
           <CardTitle className="flex items-center gap-2 text-base">
             <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-primary/70 text-primary-foreground flex items-center justify-center shadow-sm">
-              <Sparkles className="h-4 w-4" />
+              
             </div>
             Listing Health Scores
             <Badge variant="outline" className="ml-1 text-[10px]">AI</Badge>
@@ -209,7 +208,7 @@ export const ListingInsightsPanel = () => {
               {generate.isPending ? (
                 <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
               ) : (
-                <Sparkles className="h-3.5 w-3.5 mr-1.5" />
+                
               )}
               Analyze all
             </Button>

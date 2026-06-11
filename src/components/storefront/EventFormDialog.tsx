@@ -1,12 +1,11 @@
 import { useState, useEffect } from 'react';
-import { CalendarDays, Sparkles, Megaphone } from 'lucide-react';
+import { CalendarDays, Megaphone } from 'lucide-react';
 import { format } from 'date-fns';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
+  DialogTitle} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -50,17 +49,15 @@ interface EventFormDialogProps {
 
 const eventTypes = [
   { value: 'event', label: 'Event', icon: CalendarDays, description: 'A scheduled event or gathering' },
-  { value: 'update', label: 'Update', icon: Sparkles, description: 'News or changes about this location' },
-  { value: 'announcement', label: 'Announcement', icon: Megaphone, description: 'Important notices for vendors' },
-] as const;
+  { value: 'update', label: 'Update', description: 'News or changes about this location' },
+  { value: 'announcement', label: 'Announcement', icon: Megaphone, description: 'Important notices for vendors' }] as const;
 
 export const EventFormDialog = ({
   open,
   onOpenChange,
   onSubmit,
   isLoading = false,
-  editingEvent,
-}: EventFormDialogProps) => {
+  editingEvent}: EventFormDialogProps) => {
   const [formData, setFormData] = useState<EventFormData>({
     title: '',
     description: '',
@@ -69,8 +66,7 @@ export const EventFormDialog = ({
     startTime: '',
     endTime: '',
     isRecurring: false,
-    recurrencePattern: 'weekly',
-  });
+    recurrencePattern: 'weekly'});
 
   // Reset or populate form when dialog opens/closes or editingEvent changes
   useEffect(() => {
@@ -83,8 +79,7 @@ export const EventFormDialog = ({
         startTime: editingEvent.start_time?.slice(0, 5) || '',
         endTime: editingEvent.end_time?.slice(0, 5) || '',
         isRecurring: editingEvent.is_recurring || false,
-        recurrencePattern: editingEvent.recurrence_pattern || 'weekly',
-      });
+        recurrencePattern: editingEvent.recurrence_pattern || 'weekly'});
     } else if (!open) {
       setFormData({
         title: '',
@@ -94,8 +89,7 @@ export const EventFormDialog = ({
         startTime: '',
         endTime: '',
         isRecurring: false,
-        recurrencePattern: 'weekly',
-      });
+        recurrencePattern: 'weekly'});
     }
   }, [open, editingEvent]);
 

@@ -15,7 +15,6 @@ import {
   User,
   Search,
   Shield,
-  Sparkles,
   Megaphone,
   ChefHat,
   Gift
@@ -55,20 +54,18 @@ export const DashboardLayout = ({ children, mode, onModeChange, isHost }: Dashbo
     { title: 'Overview', icon: LayoutGrid, href: '/dashboard?view=host', tab: null },
     { title: 'Listings', icon: Truck, href: '/host/listings', tab: null },
     { title: 'Booking Manager', icon: CalendarDays, href: '/host/bookings', tab: null },
-    { title: 'Insights', icon: Sparkles, href: '/dashboard?view=host&tab=insights', tab: 'insights' },
+    { title: 'Insights', href: '/dashboard?view=host&tab=insights', tab: 'insights' },
     { title: 'Promote', icon: Megaphone, href: '/dashboard?view=host&tab=promote', tab: 'promote' },
     ...(hasGhostKitchen
       ? [{ title: 'Kitchen Pro', icon: ChefHat, href: '/dashboard?view=host&tab=kitchen', tab: 'kitchen' }]
       : []),
     { title: 'Reporting', icon: BarChart3, href: '/host/reporting', tab: null },
     { title: 'Messages', icon: MessageSquare, href: '/messages', tab: null },
-    { title: 'Refer & Earn', icon: Gift, href: '/referral/dashboard?source=sidebar', tab: null },
-  ] : [
+    { title: 'Refer & Earn', icon: Gift, href: '/referral/dashboard?source=sidebar', tab: null }] : [
     { title: 'Bookings', icon: CalendarDays, href: '/dashboard', tab: null },
     { title: 'Favorites', icon: Heart, href: '/favorites', tab: null },
     { title: 'Messages', icon: MessageSquare, href: '/messages', tab: null },
-    { title: 'Refer & Earn', icon: Gift, href: '/referral/dashboard?source=sidebar', tab: null },
-  ];
+    { title: 'Refer & Earn', icon: Gift, href: '/referral/dashboard?source=sidebar', tab: null }];
 
   // Active state logic
   const isActive = (href: string, tab: string | null) => {

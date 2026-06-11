@@ -10,7 +10,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   ChefHat, 
   MapPin, 
-  Sparkles, 
   TrendingUp, 
   DollarSign, 
   Clock, 
@@ -38,8 +37,7 @@ const KITCHEN_TYPES = [
   { value: 'full_commercial', label: 'Full Commercial Kitchen', description: 'Complete commercial setup with all equipment' },
   { value: 'shared_space', label: 'Shared Kitchen Space', description: 'Multi-tenant shared commercial kitchen' },
   { value: 'prep_kitchen', label: 'Prep Kitchen', description: 'Food preparation focused space' },
-  { value: 'commissary', label: 'Commissary Kitchen', description: 'Licensed commercial kitchen for food trucks/caterers' },
-];
+  { value: 'commissary', label: 'Commissary Kitchen', description: 'Licensed commercial kitchen for food trucks/caterers' }];
 
 const COMMON_EQUIPMENT = [
   'Commercial Oven', 'Walk-in Cooler', 'Walk-in Freezer', 'Hood System',
@@ -92,8 +90,7 @@ const KitchenEarningsCalculator = () => {
       kitchenType,
       squareFootage: squareFootage ? parseInt(squareFootage) : undefined,
       equipment: selectedEquipment.length > 0 ? selectedEquipment : undefined,
-      certifications: selectedCertifications.length > 0 ? selectedCertifications : undefined,
-    });
+      certifications: selectedCertifications.length > 0 ? selectedCertifications : undefined});
   };
 
   const handleReset = () => {
@@ -251,7 +248,7 @@ const KitchenEarningsCalculator = () => {
                       </>
                     ) : (
                       <>
-                        <Sparkles className="h-4 w-4" />
+                        
                         Get AI Earnings Estimate
                       </>
                     )}
@@ -294,8 +291,7 @@ const EarningsResults = ({ estimate, onReset, activeTab, setActiveTab, getNetEar
   const confidenceColors = {
     low: 'bg-yellow-500/10 text-yellow-600 border-yellow-500/30',
     medium: 'bg-blue-500/10 text-blue-600 border-blue-500/30',
-    high: 'bg-green-500/10 text-green-600 border-green-500/30',
-  };
+    high: 'bg-green-500/10 text-green-600 border-green-500/30'};
 
   const getTabData = () => {
     switch (activeTab) {
@@ -430,7 +426,7 @@ const EarningsResults = ({ estimate, onReset, activeTab, setActiveTab, getNetEar
         <Card className="border border-amber-500/30 bg-amber-500/5">
           <CardHeader className="pb-3">
             <div className="flex items-center gap-2">
-              <Sparkles className="h-5 w-5 text-amber-600" />
+              
               <CardTitle className="text-lg">Tips to Maximize Earnings</CardTitle>
             </div>
           </CardHeader>

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Sparkles } from 'lucide-react';
+import {} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { TellVendibookModal } from '@/components/lead/TellVendibookModal';
 import { trackLeadEvent } from '@/lib/leadTracking';
@@ -9,8 +9,7 @@ const TRUST_BITS = [
   'Owner profiles',
   'Document collection',
   'Booking requests',
-  'Concierge help',
-];
+  'Concierge help'];
 
 /**
  * Below-hero section (mobile-focused). Hosts the concierge prompt that used
@@ -42,7 +41,7 @@ const HeroBelowFold = () => {
             variant="glass-cta"
             className="rounded-full px-6 gap-2 w-full whitespace-nowrap"
           >
-            <Sparkles className="w-4 h-4" />
+            
             Tell Vendibook What You Need
           </Button>
         </div>

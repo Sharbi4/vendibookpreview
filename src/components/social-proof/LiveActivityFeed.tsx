@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { Eye, Calendar, Heart, MessageSquare, MapPin, Sparkles } from 'lucide-react';
+import { Eye, Calendar, Heart, MessageSquare, MapPin} from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 type Event = {
@@ -19,8 +19,7 @@ const COLORS = {
   booking: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20',
   view: 'text-blue-400 bg-blue-500/10 border-blue-500/20',
   favorite: 'text-rose-400 bg-rose-500/10 border-rose-500/20',
-  inquiry: 'text-amber-400 bg-amber-500/10 border-amber-500/20',
-};
+  inquiry: 'text-amber-400 bg-amber-500/10 border-amber-500/20'};
 
 const pick = <T,>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)];
 
@@ -47,8 +46,7 @@ export const LiveActivityFeed = () => {
         supabase.from('booking_requests').select('id, listing_id, created_at, listings(title, city)').gte('created_at', since24h).limit(15),
         supabase.from('listing_views').select('listing_id, viewed_at, listings(title, city)').gte('viewed_at', since24h).limit(20),
         supabase.from('favorites').select('listing_id, created_at, listings(title, city)').gte('created_at', since24h).limit(10),
-        supabase.from('listings').select('title, city').eq('status', 'published').not('city', 'is', null).limit(40),
-      ]);
+        supabase.from('listings').select('title, city').eq('status', 'published').not('city', 'is', null).limit(40)]);
       if (cancelled) return;
 
       const real: Event[] = [];
@@ -60,8 +58,7 @@ export const LiveActivityFeed = () => {
           message: `${pick(FIRST_NAMES)} booked ${b.listings.title}`,
           city: b.listings.city || 'somewhere',
           ts: new Date(b.created_at).getTime(),
-          synthetic: false,
-        });
+          synthetic: false});
       });
       (views || []).forEach((v: any, i: number) => {
         if (!v.listings?.title) return;
@@ -71,8 +68,7 @@ export const LiveActivityFeed = () => {
           message: `${pick(FIRST_NAMES)} is viewing ${v.listings.title}`,
           city: v.listings.city || 'somewhere',
           ts: new Date(v.viewed_at).getTime(),
-          synthetic: false,
-        });
+          synthetic: false});
       });
       (favs || []).forEach((f: any, i: number) => {
         if (!f.listings?.title) return;
@@ -82,8 +78,7 @@ export const LiveActivityFeed = () => {
           message: `${pick(FIRST_NAMES)} saved ${f.listings.title}`,
           city: f.listings.city || 'somewhere',
           ts: new Date(f.created_at).getTime(),
-          synthetic: false,
-        });
+          synthetic: false});
       });
 
       // Synthetic events from real listings to keep feed lively
@@ -99,16 +94,14 @@ export const LiveActivityFeed = () => {
             booking: `${pick(FIRST_NAMES)} just booked ${l.title}`,
             view: `${Math.floor(Math.random() * 4) + 2} people are viewing ${l.title}`,
             favorite: `${pick(FIRST_NAMES)} saved ${l.title}`,
-            inquiry: `${pick(FIRST_NAMES)} inquired about ${l.title}`,
-          };
+            inquiry: `${pick(FIRST_NAMES)} inquired about ${l.title}`};
           synthetic.push({
             id: `s-${i}-${Date.now()}`,
             type,
             message: messages[type],
             city: l.city,
             ts: Date.now() - Math.floor(Math.random() * 3600000),
-            synthetic: true,
-          });
+            synthetic: true});
         }
       }
 
@@ -133,7 +126,7 @@ export const LiveActivityFeed = () => {
   }, [events.length]);
 
   const current = events[activeIdx];
-  const Icon = current ? ICONS[current.type] : Sparkles;
+  const Icon = current ? ICONS[current.type] : ;
   const colorClass = current ? COLORS[current.type] : '';
 
   const timeAgo = useMemo(() => {

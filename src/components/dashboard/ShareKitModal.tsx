@@ -3,8 +3,7 @@ import QRCode from 'qrcode';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Copy, Check, ExternalLink, Download, Link2, MessageSquare,
-  Zap, Sparkles, X,
-} from 'lucide-react';
+  Zap, X} from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { trackEventToDb } from '@/hooks/useAnalyticsEvents';
 import { CATEGORY_LABELS } from '@/types/listing';
@@ -120,8 +119,7 @@ const ShareKitModal = ({ open, onOpenChange, listing }: ShareKitModalProps) => {
       facebook: `https://www.facebook.com/sharer/sharer.php?u=${encoded}`,
       linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encoded}`,
       x: `https://twitter.com/intent/tweet?text=${text}&url=${encoded}`,
-      sms: `sms:?body=${text}%20${encoded}`,
-    };
+      sms: `sms:?body=${text}%20${encoded}`};
     window.open(urls[platform], '_blank', 'noopener,noreferrer');
   };
 
@@ -140,8 +138,7 @@ const ShareKitModal = ({ open, onOpenChange, listing }: ShareKitModalProps) => {
     { id: 'facebook', label: 'Facebook', icon: FacebookIcon },
     { id: 'linkedin', label: 'LinkedIn', icon: LinkedInIcon },
     { id: 'x', label: 'X', icon: XIcon },
-    { id: 'sms', label: 'Text', icon: null },
-  ];
+    { id: 'sms', label: 'Text', icon: null }];
 
   const dismiss = () => onOpenChange(false);
 
@@ -167,8 +164,7 @@ const ShareKitModal = ({ open, onOpenChange, listing }: ShareKitModalProps) => {
               backdropFilter: 'blur(40px)',
               WebkitBackdropFilter: 'blur(40px)',
               border: '1px solid rgba(255,255,255,0.1)',
-              boxShadow: '0 25px 60px -12px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.08)',
-            }}
+              boxShadow: '0 25px 60px -12px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.08)'}}
           >
             {/* Gradient accent line at top */}
             <div
@@ -235,8 +231,7 @@ const ShareKitModal = ({ open, onOpenChange, listing }: ShareKitModalProps) => {
                     className={glassButtonOutline}
                     style={{
                       background: 'linear-gradient(135deg, #FF5124, #E64A19, #FFB800)',
-                      boxShadow: '0 4px 20px -4px rgba(255,81,36,0.4)',
-                    }}
+                      boxShadow: '0 4px 20px -4px rgba(255,81,36,0.4)'}}
                   >
                     {copiedLink ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
                     {copiedLink ? 'Copied!' : 'Copy Link'}
@@ -366,11 +361,10 @@ const ShareKitModal = ({ open, onOpenChange, listing }: ShareKitModalProps) => {
                 className="rounded-xl p-4 space-y-3"
                 style={{
                   background: 'linear-gradient(135deg, rgba(255,81,36,0.12), rgba(255,184,0,0.06))',
-                  border: '1px solid rgba(255,81,36,0.2)',
-                }}
+                  border: '1px solid rgba(255,81,36,0.2)'}}
               >
                 <div className="flex items-start gap-2">
-                  <Sparkles className="h-4 w-4 text-[#FFB800] shrink-0 mt-0.5" />
+                  
                   <p className="text-xs text-white/70">
                     <span className="font-medium text-white/90">Listings shared within the first 24 hours</span> get significantly more visibility.
                   </p>
@@ -380,8 +374,7 @@ const ShareKitModal = ({ open, onOpenChange, listing }: ShareKitModalProps) => {
                   className="w-full h-10 rounded-lg font-medium text-sm transition-all text-white"
                   style={{
                     background: 'linear-gradient(135deg, #FF5124, #E64A19, #FFB800)',
-                    boxShadow: '0 4px 20px -4px rgba(255,81,36,0.4)',
-                  }}
+                    boxShadow: '0 4px 20px -4px rgba(255,81,36,0.4)'}}
                 >
                   Copy Everything & Close
                 </button>

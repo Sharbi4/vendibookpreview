@@ -1,23 +1,18 @@
-import { Sparkles, ShieldCheck, MapPin } from 'lucide-react';
+import { ShieldCheck, MapPin } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const benefits = [
   {
-    icon: Sparkles,
     title: 'Capital Efficiency',
-    description: "Launch and scale. Don't get locked into a 5-year loan. Whether you need a short-term rental to test a concept or a turnkey asset to own, we provide the inventory to scale on your terms.",
-  },
+    description: "Launch and scale. Don't get locked into a 5-year loan. Whether you need a short-term rental to test a concept or a turnkey asset to own, we provide the inventory to scale on your terms."},
   {
     icon: ShieldCheck,
     title: 'Built-in Trust',
-    description: "Verified & Professional. We've standardized the industry. From Stripe-backed ID verification to secure escrow and digital agreements, we've handled the risk so you can focus on the food.",
-  },
+    description: "Verified & Professional. We've standardized the industry. From Stripe-backed ID verification to secure escrow and digital agreements, we've handled the risk so you can focus on the food."},
   {
     icon: MapPin,
     title: 'Strategic Placement',
-    description: 'A home for your business. A great truck needs a great location. Instantly discover and book verified vendor slots, commissary kitchens, and food truck parks with professional logistics.',
-  },
-];
+    description: 'A home for your business. A great truck needs a great location. Instantly discover and book verified vendor slots, commissary kitchens, and food truck parks with professional logistics.'}];
 
 const RentalBenefits = () => {
   return (

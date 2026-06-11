@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { DollarSign, Sparkles, Loader2, TrendingUp, TrendingDown, Target, Wallet, Info, Zap, Shield, Clock } from 'lucide-react';
+import { DollarSign, Loader2, TrendingUp, TrendingDown, Target, Wallet, Info, Zap, Shield, Clock } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -11,8 +11,7 @@ import { cn } from '@/lib/utils';
 import {
   calculateRentalFees,
   formatCurrency,
-  RENTAL_HOST_FEE_PERCENT,
-} from '@/lib/commissions';
+  RENTAL_HOST_FEE_PERCENT} from '@/lib/commissions';
 
 interface RentalSuggestions {
   daily_low: number;
@@ -70,8 +69,7 @@ export const StepRentalPricing: React.FC<StepRentalPricingProps> = ({
   onDepositAmountChange,
   onInstantBookChange,
   onHourlyEnabledChange,
-  onDailyEnabledChange,
-}) => {
+  onDailyEnabledChange}) => {
   const { toast } = useToast();
   const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
   const [suggestions, setSuggestions] = useState<RentalSuggestions | null>(null);
@@ -101,8 +99,7 @@ export const StepRentalPricing: React.FC<StepRentalPricingProps> = ({
       daily: dailyPrice > 0 ? calculateRentalFees(dailyPrice) : null,
       weekly: weeklyPrice > 0 ? calculateRentalFees(weeklyPrice) : null,
       monthly: monthlyPrice > 0 ? calculateRentalFees(monthlyPrice) : null,
-      hourly: hourlyPrice > 0 ? calculateRentalFees(hourlyPrice) : null,
-    };
+      hourly: hourlyPrice > 0 ? calculateRentalFees(hourlyPrice) : null};
   }, [priceDaily, priceWeekly, priceMonthly, priceHourly]);
 
   const handleGetSuggestions = async () => {
@@ -110,8 +107,7 @@ export const StepRentalPricing: React.FC<StepRentalPricingProps> = ({
       toast({
         title: 'Missing information',
         description: 'Please add a title and category first.',
-        variant: 'destructive',
-      });
+        variant: 'destructive'});
       return;
     }
 
@@ -119,8 +115,7 @@ export const StepRentalPricing: React.FC<StepRentalPricingProps> = ({
 
     try {
       const { data, error } = await supabase.functions.invoke('suggest-pricing', {
-        body: { title, category, location, mode: 'rent', description },
-      });
+        body: { title, category, location, mode: 'rent', description }});
 
       if (error) throw error;
       if (data.error) throw new Error(data.error);
@@ -131,8 +126,7 @@ export const StepRentalPricing: React.FC<StepRentalPricingProps> = ({
       toast({
         title: 'Could not get suggestions',
         description: error instanceof Error ? error.message : 'Please try again.',
-        variant: 'destructive',
-      });
+        variant: 'destructive'});
     } finally {
       setIsLoadingSuggestions(false);
     }
@@ -174,7 +168,7 @@ export const StepRentalPricing: React.FC<StepRentalPricingProps> = ({
             </>
           ) : (
             <>
-              <Sparkles className="w-3.5 h-3.5 mr-1.5" />
+              
               AI Help
             </>
           )}
@@ -193,8 +187,7 @@ export const StepRentalPricing: React.FC<StepRentalPricingProps> = ({
             {[
               { type: 'low' as const, label: 'Budget', icon: TrendingDown },
               { type: 'suggested' as const, label: 'Recommended', icon: Target },
-              { type: 'high' as const, label: 'Premium', icon: TrendingUp },
-            ].map(({ type, label, icon: Icon }) => (
+              { type: 'high' as const, label: 'Premium', icon: TrendingUp }].map(({ type, label, icon: Icon }) => (
               <button
                 key={type}
                 type="button"
@@ -237,8 +230,7 @@ export const StepRentalPricing: React.FC<StepRentalPricingProps> = ({
           {[
             { value: 'daily', label: 'Daily', desc: 'Full day' },
             { value: 'hourly', label: 'Hourly', desc: 'By the hour' },
-            { value: 'both', label: 'Both', desc: 'Both options' },
-          ].map((opt) => (
+            { value: 'both', label: 'Both', desc: 'Both options' }].map((opt) => (
             <Label
               key={opt.value}
               htmlFor={opt.value}

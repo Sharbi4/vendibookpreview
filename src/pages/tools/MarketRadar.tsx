@@ -18,7 +18,6 @@ import {
   Search, 
   Loader2, 
   Home,
-  Sparkles,
   ArrowRight,
   TrendingUp,
   MapPin,
@@ -248,7 +247,7 @@ const MarketRadar = () => {
                     </div>
                   </div>
                   <Button onClick={handleSubmit} disabled={isLoading || !researchForm.query} className="w-full">
-                    {isLoading ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Researching...</> : <><Sparkles className="h-4 w-4 mr-2" />Research This Topic</>}
+                    {isLoading ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Researching...</> : <>Research This Topic</>}
                   </Button>
                 </CardContent>
               </Card>
