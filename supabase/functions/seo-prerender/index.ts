@@ -567,6 +567,90 @@ function buildListingHTML(listing: any, reviews: any[] = []): string {
 </html>`;
 }
 
+function buildBlogHTML(post: BlogPostMeta): string {
+  const categoryLabel = BLOG_CATEGORY_LABELS[post.category] || post.category;
+  const canonicalUrl = `${SITE_URL}/blog/${post.slug}`;
+  const imageUrl = post.image.startsWith("http")
+    ? post.image
+    : post.image
+    ? `${SITE_URL}${post.image}`
+    : `${SITE_URL}/images/vendibook-og-image.jpg`;
+
+  const schema = {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    headline: post.title,
+    description: post.description,
+    url: canonicalUrl,
+    image: imageUrl,
+    author: {
+      "@type": post.author === "Vendibook" || post.author === "Vendibook Team" || post.author === "Vendibook Editorial"
+        ? "Organization"
+        : "Person",
+      name: post.author,
+    },
+    publisher: {
+      "@type": "Organization",
+      name: "Vendibook",
+      logo: {
+        "@type": "ImageObject",
+        url: `${SITE_URL}/images/vendibook-logo.png`,
+      },
+    },
+    datePublished: post.datePublished,
+    dateModified: post.datePublished,
+    mainEntityOfPage: {
+      "@type": "WebPage",
+      "@id": canonicalUrl,
+    },
+    articleSection: categoryLabel,
+  };
+
+  return `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+
+  <title>${escapeHtml(post.title)} | Vendibook</title>
+  <meta name="description" content="${escapeHtml(post.description)}" />
+  <link rel="canonical" href="${canonicalUrl}" />
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="article" />
+  <meta property="og:title" content="${escapeHtml(post.title)}" />
+  <meta property="og:description" content="${escapeHtml(post.description)}" />
+  <meta property="og:url" content="${canonicalUrl}" />
+  <meta property="og:image" content="${imageUrl}" />
+  <meta property="og:site_name" content="Vendibook" />
+  <meta property="og:locale" content="en_US" />
+  <meta property="article:published_time" content="${post.datePublished}" />
+  <meta property="article:author" content="${escapeHtml(post.author)}" />
+  <meta property="article:section" content="${escapeHtml(categoryLabel)}" />
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="${escapeHtml(post.title)}" />
+  <meta name="twitter:description" content="${escapeHtml(post.description)}" />
+  <meta name="twitter:image" content="${imageUrl}" />
+
+  <!-- JSON-LD -->
+  <script type="application/ld+json">${JSON.stringify(schema)}</script>
+
+  <!-- Redirect humans to SPA -->
+  <script>window.location.replace(${JSON.stringify(canonicalUrl)});</script>
+  <noscript>
+    <meta http-equiv="refresh" content="0; url=${canonicalUrl}" />
+  </noscript>
+</head>
+<body>
+  <h1>${escapeHtml(post.title)}</h1>
+  <p>${escapeHtml(post.description)}</p>
+  <p><a href="${canonicalUrl}">Read the full article on Vendibook</a></p>
+</body>
+</html>`;
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
