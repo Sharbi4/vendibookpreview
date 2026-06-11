@@ -2269,8 +2269,9 @@ export function getFeaturedPosts(): BlogPost[] {
   return sortByDateDesc(BLOG_POSTS.filter(post => post.featured));
 }
 
-export function getRecentPosts(limit = 6): BlogPost[] {
-  return sortByDateDesc(BLOG_POSTS).slice(0, limit);
+export function getRecentPosts(limit = 6, excludeSlugs: string[] = []): BlogPost[] {
+  const exclude = new Set(excludeSlugs);
+  return sortByDateDesc(BLOG_POSTS.filter(p => !exclude.has(p.slug))).slice(0, limit);
 }
 
 export function getRelatedPosts(currentSlug: string, limit = 3): BlogPost[] {
