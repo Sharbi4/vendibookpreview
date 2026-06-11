@@ -39,6 +39,7 @@ import CommercialProductBar from '@/components/listing-detail/CommercialProductB
 import SellerTrustPanel from '@/components/listing-detail/SellerTrustPanel';
 import KeySpecsStrip from '@/components/listing-detail/KeySpecsStrip';
 import SaleListingMobile from '@/components/listing-detail/sale/SaleListingMobile';
+import { SaleTrustStrip, SaleProtectionSection, SaleLocationCard, SaleBrowseMore } from '@/components/listing-detail/sale/SaleSharedSections';
 
 import { VendorSlotAvailability } from '@/components/listing-detail/VendorSlotAvailability';
 import { WeeklyHoursDisplay } from '@/components/listing-detail/WeeklyHoursDisplay';
@@ -308,6 +309,9 @@ const ListingDetail = () => {
   // Resolve condition for OG meta
   const listingCondition = ((listing as any).condition as 'new' | 'used' | 'refurbished') || 'used';
 
+  // Glass card styling applied to desktop sale-page sections
+  const saleGlass = !isRental ? 'rounded-[24px] bg-sale-card ring-hairline p-5 sm:p-6' : '';
+
   // Build comprehensive JSON-LD schemas array
   const schemas: object[] = [];
   if (productSchema) schemas.push(productSchema);
@@ -507,6 +511,9 @@ const ListingDetail = () => {
                 </div>
                 </div>
 
+                {/* Trust strip — premium glass, sale listings */}
+                {!isRental && <SaleTrustStrip />}
+
                 {/* Vendibook Concierge Box — soft-conversion above the fold.
                     "Check Availability" opens the TellVendibook concierge modal (low-friction lead);
                     the booking widget further down remains the high-intent secondary path. */}
@@ -522,47 +529,55 @@ const ListingDetail = () => {
 
                 {/* Inline Message Form */}
                 {!isOwner && (
-                  <MessageHostForm
-                    listingId={listing.id}
-                    hostId={listing.host_id}
-                    listingTitle={listing.title}
-                  />
+                  <div className={saleGlass || undefined}>
+                    <MessageHostForm
+                      listingId={listing.id}
+                      hostId={listing.host_id}
+                      listingTitle={listing.title}
+                    />
+                  </div>
                 )}
 
                 {/* Divider */}
-                <div className="border-t border-border" />
+                {isRental && <div className="border-t border-border" />}
 
                 {/* Seller Trust Panel — Why buy from this seller */}
-                <SellerTrustPanel
-                  hostId={listing.host_id}
-                  hostName={host ? getPublicDisplayName(host) : null}
-                  isVerified={host?.identity_verified || false}
-                  memberSince={host?.created_at}
-                  lastActiveAt={host?.last_active_at}
-                  city={listing.city || (host as any)?.public_city}
-                  state={listing.state || (host as any)?.public_state}
-                  averageRating={ratingData?.average}
-                  reviewCount={ratingData?.count}
-                  isRental={isRental}
-                />
+                <div className={saleGlass || undefined}>
+                  <SellerTrustPanel
+                    hostId={listing.host_id}
+                    hostName={host ? getPublicDisplayName(host) : null}
+                    isVerified={host?.identity_verified || false}
+                    memberSince={host?.created_at}
+                    lastActiveAt={host?.last_active_at}
+                    city={listing.city || (host as any)?.public_city}
+                    state={listing.state || (host as any)?.public_state}
+                    averageRating={ratingData?.average}
+                    reviewCount={ratingData?.count}
+                    isRental={isRental}
+                  />
+                </div>
 
                 {/* Host/Seller Detailed Section */}
-                <EnhancedHostCard
-                  hostId={listing.host_id}
-                  listingId={listing.id}
-                  hostName={host ? getPublicDisplayName(host) : null}
-                  hostAvatar={host?.avatar_url}
-                  isVerified={host?.identity_verified || false}
-                  memberSince={host?.created_at}
-                  lastActiveAt={host?.last_active_at}
-                  isRental={isRental}
-                  listingTitle={listing.title}
-                />
+                <div className={saleGlass || undefined}>
+                  <EnhancedHostCard
+                    hostId={listing.host_id}
+                    listingId={listing.id}
+                    hostName={host ? getPublicDisplayName(host) : null}
+                    hostAvatar={host?.avatar_url}
+                    isVerified={host?.identity_verified || false}
+                    memberSince={host?.created_at}
+                    lastActiveAt={host?.last_active_at}
+                    isRental={isRental}
+                    listingTitle={listing.title}
+                  />
+                </div>
 
                 {/* Divider */}
-                <div className="border-t border-border" />
+                {isRental && <div className="border-t border-border" />}
+
 
               {/* Technical Specifications - NEW */}
+              <div className={`${saleGlass} ${!isRental ? 'space-y-5' : 'space-y-5'}`.trim()}>
               <TechSpecsGrid
                 category={listing.category}
                 lengthInches={listing.length_inches}
@@ -629,29 +644,32 @@ const ListingDetail = () => {
                   )}
                 </dl>
               </div>
+              </div>
 
-              <div className="border-t border-border" />
+              {isRental && <div className="border-t border-border" />}
 
               {/* Quick Highlights - Clean grid */}
-              <EnhancedQuickHighlights
-                fulfillmentType={listing.fulfillment_type}
-                category={listing.category}
-                highlights={listing.highlights}
-                instantBook={listing.instant_book || false}
-                deliveryFee={listing.delivery_fee}
-                hoursOfAccess={listing.hours_of_access}
-                weightLbs={listing.weight_lbs}
-                lengthInches={listing.length_inches}
-                widthInches={listing.width_inches}
-                heightInches={listing.height_inches}
-                isRental={isRental}
-              />
+              <div className={saleGlass || undefined}>
+                <EnhancedQuickHighlights
+                  fulfillmentType={listing.fulfillment_type}
+                  category={listing.category}
+                  highlights={listing.highlights}
+                  instantBook={listing.instant_book || false}
+                  deliveryFee={listing.delivery_fee}
+                  hoursOfAccess={listing.hours_of_access}
+                  weightLbs={listing.weight_lbs}
+                  lengthInches={listing.length_inches}
+                  widthInches={listing.width_inches}
+                  heightInches={listing.height_inches}
+                  isRental={isRental}
+                />
+              </div>
 
               {/* Divider */}
-              <div className="border-t border-border" />
+              {isRental && <div className="border-t border-border" />}
 
               {/* About Section */}
-              <div className="space-y-3">
+              <div className={`${saleGlass} space-y-3`.trim()}>
                 <div className="flex items-center justify-between gap-2 flex-wrap">
                   <h2 className="text-lg font-semibold text-foreground">About this listing</h2>
                   <PromoVideoPlayer listingId={listing.id} />
@@ -661,34 +679,38 @@ const ListingDetail = () => {
               </div>
 
               {/* Divider */}
-              <div className="border-t border-border" />
+              {isRental && <div className="border-t border-border" />}
 
               {/* Amenities / What's Included */}
               {listing.amenities && listing.amenities.length > 0 && (
                 <>
-                  <AmenitiesSection
-                    category={listing.category}
-                    amenities={listing.amenities}
-                  />
-                  <div className="border-t border-border" />
+                  <div className={saleGlass || undefined}>
+                    <AmenitiesSection
+                      category={listing.category}
+                      amenities={listing.amenities}
+                    />
+                  </div>
+                  {isRental && <div className="border-t border-border" />}
                 </>
               )}
 
               {/* Pricing Section */}
-              <PricingSection
-                isRental={isRental}
-                priceHourly={listing.price_hourly}
-                priceDaily={listing.price_daily}
-                priceWeekly={listing.price_weekly}
-                priceMonthly={listing.price_monthly}
-                priceSale={listing.price_sale}
-                deliveryFee={listing.delivery_fee}
-                fulfillmentType={listing.fulfillment_type}
-                vendibookFreightEnabled={(listing as any).vendibook_freight_enabled}
-              />
+              <div className={saleGlass || undefined}>
+                <PricingSection
+                  isRental={isRental}
+                  priceHourly={listing.price_hourly}
+                  priceDaily={listing.price_daily}
+                  priceWeekly={listing.price_weekly}
+                  priceMonthly={listing.price_monthly}
+                  priceSale={listing.price_sale}
+                  deliveryFee={listing.delivery_fee}
+                  fulfillmentType={listing.fulfillment_type}
+                  vendibookFreightEnabled={(listing as any).vendibook_freight_enabled}
+                />
+              </div>
 
               {/* Divider */}
-              <div className="border-t border-border" />
+              {isRental && <div className="border-t border-border" />}
 
               {/* Requirements - Rentals only */}
               {isRental && (
@@ -730,27 +752,35 @@ const ListingDetail = () => {
               )}
 
               {/* Divider */}
-              <div className="border-t border-border" />
+              {isRental && <div className="border-t border-border" />}
 
               {/* Reviews Section */}
-              <div className="space-y-2">
+              <div className={`${saleGlass} space-y-2`.trim()}>
                 <h2 className="text-lg font-semibold text-foreground">Reviews</h2>
                 <ReviewsSection listingId={listing.id} />
               </div>
 
-              {/* Location (map removed — was unreliable on detail page) */}
-              {location && locationShort && (
-                <>
-                  <div className="border-t border-border" />
-                  <div className="space-y-1">
-                    <h2 className="text-lg font-semibold text-foreground">{isRental ? "Where you'll be" : 'Location'}</h2>
-                    <p className="text-muted-foreground text-sm flex items-center gap-1.5">
-                      <MapPin className="h-4 w-4" />
-                      {locationShort}
-                    </p>
-                  </div>
-                  <div className="border-t border-border" />
-                </>
+              {/* Location */}
+              {!isRental ? (
+                <SaleLocationCard
+                  city={listing.city}
+                  state={listing.state}
+                  zipCode={(listing as any).zip_code}
+                />
+              ) : (
+                location && locationShort && (
+                  <>
+                    <div className="border-t border-border" />
+                    <div className="space-y-1">
+                      <h2 className="text-lg font-semibold text-foreground">Where you'll be</h2>
+                      <p className="text-muted-foreground text-sm flex items-center gap-1.5">
+                        <MapPin className="h-4 w-4" />
+                        {locationShort}
+                      </p>
+                    </div>
+                    <div className="border-t border-border" />
+                  </>
+                )
               )}
 
               {/* Policies */}
@@ -766,8 +796,16 @@ const ListingDetail = () => {
                 longitude={listing.longitude}
               />
 
+              {/* Purchase protection + browse — sale listings */}
+              {!isRental && (
+                <>
+                  <SaleProtectionSection />
+                  <SaleBrowseMore />
+                </>
+              )}
+
               {/* Trust Section */}
-              <CompactTrustSection />
+              {isRental && <CompactTrustSection />}
             </div>
 
             {/* Right Column - Booking/Inquiry Widget (Desktop) - Sticky */}
