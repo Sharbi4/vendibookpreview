@@ -30,6 +30,7 @@ export type LeadEventName =
   | 'homepage_listing_card_click'
   | 'homepage_concierge_click'
   | 'homepage_final_cta_click'
+  | 'homepage_listing_row_view_more_click'
   // Listing card overlay funnel
   | 'listing_start_purchase_click'
   | 'listing_check_dates_click'
