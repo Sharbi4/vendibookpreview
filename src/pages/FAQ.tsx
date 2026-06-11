@@ -33,7 +33,7 @@ import RoleFeeSection from '@/components/pricing/RoleFeeSection';
 interface FAQSection {
   id: string;
   title: string;
-  icon: React.ComponentType<{ className?: string }>;
+  icon?: React.ComponentType<{ className?: string }>;
   questions: Array<{
     question: string;
     answer: string;

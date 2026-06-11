@@ -12,7 +12,7 @@ interface NextBestActionProps {
 }
 
 interface Action {
-  icon: typeof Plus;
+  icon?: typeof Plus;
   title: string;
   desc: string;
   cta: string;

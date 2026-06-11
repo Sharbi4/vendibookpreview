@@ -6,7 +6,7 @@ type StatusValue = 'pending' | 'ok' | 'skipped' | 'failed';
 
 interface StatusRow {
   key: string;
-  icon: React.ReactNode;
+  icon?: React.ReactNode;
   label: string;
   detail: string;
   status: StatusValue;

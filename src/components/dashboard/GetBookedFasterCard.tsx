@@ -8,7 +8,7 @@ import { useHostBookings } from '@/hooks/useHostBookings';
 
 interface Tip {
   id: string;
-  icon: React.ElementType;
+  icon?: React.ElementType;
   title: string;
   description: string;
   actionLabel: string;
