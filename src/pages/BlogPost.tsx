@@ -1,4 +1,6 @@
 import { useParams, Link, Navigate } from 'react-router-dom';
+import { useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 import { ArrowLeft, Clock, Calendar, Share2, Tag } from 'lucide-react';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
@@ -14,7 +16,30 @@ import { toast } from 'sonner';
 const BlogPost = () => {
   const { slug } = useParams<{ slug: string }>();
   const post = slug ? getBlogPostBySlug(slug) : undefined;
-  
+
+  // Delegated CTA click logger: any anchor with data-cta inside the article
+  // is logged to blog_share_clicks before navigation continues.
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      const target = (e.target as HTMLElement)?.closest('[data-cta]') as HTMLAnchorElement | null;
+      if (!target) return;
+      const label = target.getAttribute('data-cta') || 'unknown';
+      const href = target.getAttribute('href') || '';
+      // Fire-and-forget; do not block navigation
+      supabase.from('blog_share_clicks').insert({
+        article_slug: slug || '',
+        source: 'blog_article',
+        campaign: 'food_truck_fleet_owner_article',
+        cta_label: label,
+        destination_url: href,
+        referrer: document.referrer || null,
+        user_agent: navigator.userAgent,
+      }).then(() => {}, () => {});
+    };
+    document.addEventListener('click', handler);
+    return () => document.removeEventListener('click', handler);
+  }, [slug]);
+
   if (!post) {
     return <Navigate to="/blog" replace />;
   }
