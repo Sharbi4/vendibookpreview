@@ -195,7 +195,7 @@ export const SaleListingMobile = ({
       <div className="px-4 space-y-5">
         {/* GALLERY */}
         <div className="relative">
-          <div className="rounded-2xl overflow-hidden ring-bronze shadow-glow-orange">
+          <div className="rounded-2xl overflow-hidden ring-glass shadow-[0_24px_60px_rgba(0,0,0,0.4)]">
             <EnhancedPhotoGallery images={images} videos={videos} title={listing.title} />
           </div>
           {isFeatured && (
