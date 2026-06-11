@@ -6,7 +6,7 @@ import { ListingCategory } from '@/types/listing';
 interface PillItem {
   key: string;
   label: string;
-  icon?: React.ComponentType<{ className?: string }>;
+  icon: React.ComponentType<{ className?: string }>;
 }
 
 const CATEGORY_PILLS: PillItem[] = [

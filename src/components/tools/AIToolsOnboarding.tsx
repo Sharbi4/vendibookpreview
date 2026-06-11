@@ -23,7 +23,7 @@ const ONBOARDING_KEY = 'vendi_ai_tools_onboarded';
 interface OnboardingStep {
   title: string;
   description: string;
-  icon?: React.ReactNode;
+  icon: React.ReactNode;
   tip: string;
 }
 
