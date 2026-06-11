@@ -348,7 +348,19 @@ const ListingDetail = () => {
         onShare={handleShare}
       />
 
-      <main className="flex-1">
+      {!isRental && (
+        <SaleListingMobile
+          listing={listing}
+          host={host}
+          images={images}
+          videos={videos}
+          isOwner={!!isOwner}
+          ratingData={ratingData}
+          onShare={handleShare}
+        />
+      )}
+
+      <main className={`flex-1 ${!isRental ? 'hidden lg:block' : ''}`}>
         {/* Photo Gallery - Full bleed on mobile, contained on desktop */}
         <div className="md:container md:pt-4">
           <div className="md:px-0">
