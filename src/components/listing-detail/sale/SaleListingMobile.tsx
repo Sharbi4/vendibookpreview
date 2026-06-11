@@ -349,7 +349,8 @@ export const SaleListingMobile = ({
 
         {/* CONCIERGE CARD */}
         {!isOwner && (
-          <SaleCard variant="warm" bronze padding="lg">
+          <SaleCard variant="warm" padding="lg">
+
             <div className="flex items-start gap-3 mb-4">
               <div className="shrink-0 w-10 h-10 rounded-full bg-primary/15 ring-1 ring-primary/30 flex items-center justify-center">
                 <Headphones className="h-5 w-5 text-primary" />
