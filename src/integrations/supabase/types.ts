@@ -322,6 +322,54 @@ export type Database = {
         }
         Relationships: []
       }
+      blog_share_clicks: {
+        Row: {
+          article_slug: string
+          campaign: string | null
+          created_at: string
+          cta_label: string | null
+          destination_url: string | null
+          id: string
+          referrer: string | null
+          source: string
+          user_agent: string | null
+          utm_campaign: string | null
+          utm_content: string | null
+          utm_medium: string | null
+          utm_source: string | null
+        }
+        Insert: {
+          article_slug: string
+          campaign?: string | null
+          created_at?: string
+          cta_label?: string | null
+          destination_url?: string | null
+          id?: string
+          referrer?: string | null
+          source: string
+          user_agent?: string | null
+          utm_campaign?: string | null
+          utm_content?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+        }
+        Update: {
+          article_slug?: string
+          campaign?: string | null
+          created_at?: string
+          cta_label?: string | null
+          destination_url?: string | null
+          id?: string
+          referrer?: string | null
+          source?: string
+          user_agent?: string | null
+          utm_campaign?: string | null
+          utm_content?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+        }
+        Relationships: []
+      }
       blog_subscribers: {
         Row: {
           confirmed: boolean
