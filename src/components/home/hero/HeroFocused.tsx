@@ -1,34 +1,26 @@
-import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowRight, Sparkles, Search, UserPlus } from 'lucide-react';
+import { ArrowRight, Search, UserPlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import HeroBackground from './HeroBackground';
 import HeroSearchInput from './HeroSearchInput';
 import { useHeroSearch } from './useHeroSearch';
-import { TellVendibookModal } from '@/components/lead/TellVendibookModal';
 import { trackLeadEvent } from '@/lib/leadTracking';
 import { useAuth } from '@/contexts/AuthContext';
 import vendibookLogo from '@/assets/vendibook-logo.png';
 
 const TRUST_BITS = [
+  'Verified owners',
   'Secure payments',
-  'Owner profiles',
   'Document collection',
   'Booking requests',
-  'Concierge help',
+  'Owner-approved rentals',
 ];
 
 const HeroFocused = () => {
   const navigate = useNavigate();
   const search = useHeroSearch();
   const { user } = useAuth();
-  const [conciergeOpen, setConciergeOpen] = useState(false);
-
-  const handlePrimary = () => {
-    trackLeadEvent('homepage_concierge_click', { route: '/', source: 'home_hero' });
-    setConciergeOpen(true);
-  };
 
   const handleBrowse = () => {
     trackLeadEvent('homepage_browse_click', { route: '/', source: 'home_hero' });
@@ -69,7 +61,7 @@ const HeroFocused = () => {
             transition={{ duration: 0.4, delay: 0.05 }}
           >
             <span className="w-1 h-1 rounded-full bg-primary" />
-            Food trucks and trailers, easier to find and list
+            The marketplace for mobile food assets
           </motion.div>
 
           {/* Headline */}
@@ -90,7 +82,7 @@ const HeroFocused = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.15 }}
           >
-            Search real food trucks and trailers, compare listings, and connect with owners before you commit.
+            Search verified food trucks and trailers, compare real listings, and connect with owners through a safer, more structured marketplace.
           </motion.p>
 
           {/* Search */}
@@ -159,13 +151,13 @@ const HeroFocused = () => {
             transition={{ duration: 0.5, delay: 0.25 }}
           >
             <Button
-              onClick={handlePrimary}
+              onClick={handleSignUp}
               size="lg"
               variant="dark-shine"
               className="rounded-full px-6 gap-2 whitespace-nowrap"
             >
-              <Sparkles className="w-4 h-4" />
-              Tell Vendibook What You Need
+              <UserPlus className="w-4 h-4" />
+              Sign Up Free
             </Button>
             <Button
               onClick={handleBrowse}
@@ -205,13 +197,6 @@ const HeroFocused = () => {
           </motion.div>
         </div>
       </div>
-
-
-      <TellVendibookModal
-        open={conciergeOpen}
-        onOpenChange={setConciergeOpen}
-        sourcePage="home_hero"
-      />
     </section>
   );
 };
