@@ -62,11 +62,11 @@ export const SaleStickyActionBar = ({
       <div
         className="fixed bottom-0 left-0 right-0 z-40 lg:hidden safe-pb"
         style={{
-          background: 'rgba(8, 8, 8, 0.82)',
-          backdropFilter: 'blur(18px)',
-          WebkitBackdropFilter: 'blur(18px)',
-          borderTop: '1px solid rgba(255,255,255,0.08)',
-          boxShadow: '0 -18px 50px rgba(0,0,0,0.45)',
+          background: 'linear-gradient(180deg, rgba(18,22,28,0.78) 0%, rgba(12,15,19,0.92) 100%)',
+          backdropFilter: 'blur(22px) saturate(140%)',
+          WebkitBackdropFilter: 'blur(22px) saturate(140%)',
+          borderTop: '1px solid rgba(255,255,255,0.10)',
+          boxShadow: '0 -18px 50px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.06)',
         }}
       >
         <div className="px-3 py-3 grid grid-cols-2 gap-2.5 items-center">
@@ -75,7 +75,7 @@ export const SaleStickyActionBar = ({
             size="lg"
             onClick={handleOffer}
             disabled={!isAvailable || !priceSale}
-            className="h-14 text-base font-bold gap-2 rounded-2xl border border-[rgba(255,91,31,0.34)] bg-[rgba(11,15,18,0.85)] hover:bg-[rgba(20,24,28,0.9)] text-white"
+            className="h-14 text-base font-bold gap-2 rounded-2xl border-0 bg-cta-glass hover:bg-white/10 text-white"
           >
             <Tag className="h-4 w-4" />
             Make Offer
@@ -91,6 +91,7 @@ export const SaleStickyActionBar = ({
           </Button>
         </div>
       </div>
+
 
 
       <AuthGateOfferModal

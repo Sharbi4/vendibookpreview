@@ -744,17 +744,19 @@ export const BookingWidget = ({
         transition={{ type: 'spring', stiffness: 100, damping: 20 }}
         onHoverStart={() => setIsHovered(true)}
         onHoverEnd={() => setIsHovered(false)}
-        className="rounded-2xl border-0 shadow-xl bg-card overflow-hidden relative"
+        className="rounded-3xl border-0 bg-sale-card ring-glass overflow-hidden relative"
       >
-        {/* Glow effect */}
+        {/* Subtle warm wash on hover */}
         <motion.div
-          className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/5 opacity-0 pointer-events-none"
+          className="absolute inset-0 pointer-events-none opacity-0"
+          style={{ background: 'radial-gradient(120% 80% at 90% 0%, rgba(255,210,170,0.10), transparent 55%)' }}
           animate={{ opacity: isHovered ? 1 : 0 }}
           transition={{ duration: 0.3 }}
         />
 
         {/* Header */}
-        <div className="bg-gradient-to-br from-muted/50 to-muted/30 border-b border-border px-6 py-5 relative">
+        <div className="px-6 py-5 relative border-b border-white/[0.06]">
+
           <div className="flex items-baseline gap-3 flex-wrap">
             <motion.span 
               className="text-3xl font-bold text-foreground"
@@ -780,20 +782,20 @@ export const BookingWidget = ({
           {/* Fulfillment Options */}
           <div className="space-y-2">
             {(fulfillmentType === 'pickup' || fulfillmentType === 'both') && (
-              <div className="flex items-center gap-3 p-3 rounded-xl bg-muted/30 border border-border">
-                <div className="w-8 h-8 rounded-lg bg-background flex items-center justify-center">
+              <div className="flex items-center gap-3 p-3 rounded-xl bg-white/[0.04] ring-hairline">
+                <div className="w-8 h-8 rounded-lg bg-white/[0.06] flex items-center justify-center">
                   <MapPin className="h-4 w-4 text-foreground" />
                 </div>
                 <div className="flex-1">
                   <span className="text-sm font-medium text-foreground">Local Pickup</span>
-                  <span className="text-xs text-emerald-600 ml-2">Free</span>
+                  <span className="text-xs text-emerald-400 ml-2">Free</span>
                 </div>
               </div>
             )}
             
             {(fulfillmentType === 'delivery' || fulfillmentType === 'both') && (
-              <div className="flex items-center gap-3 p-3 rounded-xl bg-muted/30 border border-border">
-                <div className="w-8 h-8 rounded-lg bg-background flex items-center justify-center">
+              <div className="flex items-center gap-3 p-3 rounded-xl bg-white/[0.04] ring-hairline">
+                <div className="w-8 h-8 rounded-lg bg-white/[0.06] flex items-center justify-center">
                   <Truck className="h-4 w-4 text-foreground" />
                 </div>
                 <div className="flex-1">
@@ -801,37 +803,37 @@ export const BookingWidget = ({
                   {deliveryFee ? (
                     <span className="text-xs text-muted-foreground ml-2">+${deliveryFee}</span>
                   ) : (
-                    <span className="text-xs text-emerald-600 ml-2">Free</span>
+                    <span className="text-xs text-emerald-400 ml-2">Free</span>
                   )}
                 </div>
               </div>
             )}
             
             {vendibookFreightEnabled && (
-              <div className="flex items-center gap-3 p-3 rounded-xl bg-muted/30 border border-border">
-                <div className="w-8 h-8 rounded-lg bg-background flex items-center justify-center">
+              <div className="flex items-center gap-3 p-3 rounded-xl bg-white/[0.04] ring-hairline">
+                <div className="w-8 h-8 rounded-lg bg-white/[0.06] flex items-center justify-center">
                   <Package className="h-4 w-4 text-foreground" />
                 </div>
                 <div className="flex-1">
                   <span className="text-sm font-medium text-foreground">Nationwide Freight</span>
                   {freightPayer === 'seller' ? (
-                    <span className="text-xs text-emerald-600 ml-2">Free</span>
+                    <span className="text-xs text-emerald-400 ml-2">Free</span>
                   ) : (
                     <span className="text-xs text-muted-foreground ml-2">Quote at checkout</span>
                   )}
                 </div>
               </div>
             )}
+
           </div>
 
           {/* Action Buttons */}
           <div className="space-y-3">
             <div className="flex gap-2">
               <motion.div className="flex-1" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                <Button 
+                <Button
                   onClick={handleBuyNow}
-                  variant="dark-shine"
-                  className="w-full h-14 text-base font-semibold shadow-lg" 
+                  className="w-full h-14 text-base font-bold rounded-2xl bg-cta-primary hover:opacity-95 shadow-cta-primary text-white border-0"
                   size="lg"
                   disabled={!priceSale}
                 >
@@ -839,12 +841,11 @@ export const BookingWidget = ({
                   <ArrowRight className="w-5 h-5 ml-2" />
                 </Button>
               </motion.div>
-              
+
               <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                <Button 
+                <Button
                   onClick={handleMakeOffer}
-                  variant="outline"
-                  className="h-14 px-4 border-primary text-primary hover:bg-primary/10" 
+                  className="h-14 px-4 rounded-2xl border-0 bg-cta-glass hover:bg-white/10 text-white font-semibold"
                   size="lg"
                   disabled={!priceSale}
                 >
@@ -852,6 +853,7 @@ export const BookingWidget = ({
                 </Button>
               </motion.div>
             </div>
+
 
             <motion.div whileHover={{ scale: 1.01 }}>
               <Button 

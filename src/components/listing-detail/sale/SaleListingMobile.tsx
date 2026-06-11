@@ -172,7 +172,8 @@ export const SaleListingMobile = ({
   };
 
   return (
-    <div className="lg:hidden bg-background text-foreground pb-[calc(env(safe-area-inset-bottom)+96px)]">
+    <div className="lg:hidden bg-sale-page text-foreground pb-[calc(env(safe-area-inset-bottom)+96px)]">
+
       {/* Breadcrumb */}
       <nav
         aria-label="Breadcrumb"
@@ -194,17 +195,18 @@ export const SaleListingMobile = ({
       <div className="px-4 space-y-5">
         {/* GALLERY */}
         <div className="relative">
-          <div className="rounded-2xl overflow-hidden ring-bronze shadow-glow-orange">
+          <div className="rounded-2xl overflow-hidden ring-glass shadow-[0_24px_60px_rgba(0,0,0,0.4)]">
             <EnhancedPhotoGallery images={images} videos={videos} title={listing.title} />
           </div>
           {isFeatured && (
             <div className="absolute top-3 left-3 z-10">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-background/80 backdrop-blur-md ring-bronze text-xs font-semibold text-primary">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full chip-accent backdrop-blur-md text-xs font-semibold">
                 <Star className="h-3.5 w-3.5 fill-current" />
                 Featured
               </span>
             </div>
           )}
+
           {totalImages > 1 && (
             <div className="absolute top-3 right-3 z-10 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-background/70 backdrop-blur-md ring-hairline text-xs font-medium text-foreground/90">
               1 / {totalImages}
@@ -299,7 +301,8 @@ export const SaleListingMobile = ({
         </div>
 
         {/* TRUST STRIP */}
-        <SaleCard variant="warm" bronze padding="md">
+        <SaleCard variant="default" padding="md">
+
           <div className="grid grid-cols-3 gap-3">
             <TrustItem icon={ShieldCheck} title="Verified Listing" sub="Reviewed for quality" tone="primary" />
             <TrustItem icon={Lock} title="Secure Payments" sub="Protected checkout" tone="primary" />
@@ -325,11 +328,12 @@ export const SaleListingMobile = ({
                 variant="outline"
                 onClick={handleMakeOffer}
                 disabled={!isAvailable || !listing.price_sale}
-                className="h-14 gap-2 rounded-2xl border border-[rgba(255,91,31,0.34)] bg-[rgba(11,15,18,0.85)] hover:bg-[rgba(20,24,28,0.9)] text-base font-bold text-white"
+                className="h-14 gap-2 rounded-2xl border-0 bg-cta-glass hover:bg-white/10 text-base font-bold text-white"
               >
                 <Tag className="h-4 w-4" />
                 Make Offer
               </Button>
+
             </div>
             <Button
               size="lg"
@@ -345,7 +349,8 @@ export const SaleListingMobile = ({
 
         {/* CONCIERGE CARD */}
         {!isOwner && (
-          <SaleCard variant="warm" bronze padding="lg">
+          <SaleCard variant="warm" padding="lg">
+
             <div className="flex items-start gap-3 mb-4">
               <div className="shrink-0 w-10 h-10 rounded-full bg-primary/15 ring-1 ring-primary/30 flex items-center justify-center">
                 <Headphones className="h-5 w-5 text-primary" />
@@ -373,11 +378,12 @@ export const SaleListingMobile = ({
               <Button
                 variant="outline"
                 onClick={handleAskVendibook}
-                className="h-12 gap-2 rounded-xl border border-white/10 bg-[rgba(11,15,18,0.85)] hover:bg-[rgba(20,24,28,0.9)] font-semibold"
+                className="h-12 gap-2 rounded-xl border-0 bg-cta-glass hover:bg-white/10 font-semibold text-white"
               >
                 <MessageSquare className="h-4 w-4" />
                 Ask for Help
               </Button>
+
             </div>
 
             <p className="text-[11px] text-muted-foreground flex items-center gap-1.5">
