@@ -89,7 +89,7 @@ const RotatingHero = () => {
         </AnimatePresence>
 
         {/* Progress dots */}
-        <div className="relative z-20 flex items-center justify-center gap-2 pb-6 sm:pb-8">
+        <div className="relative z-20 flex items-center justify-center gap-2 pt-6 sm:pt-8 pb-6 sm:pb-8">
           {PANELS.map((p, i) => {
             const active = i === index;
             return (
