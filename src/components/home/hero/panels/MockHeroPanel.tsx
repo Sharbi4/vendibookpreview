@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { trackLeadEvent } from '@/lib/leadTracking';
 
 export interface MockCta {
-  /** Top in % of visible (header-cropped) image height */
+  /** Top in % of visible (cropped) image height */
   top: number;
   left: number;
   width: number;
@@ -16,25 +16,39 @@ interface Props {
   imageUrl: string;
   alt: string;
   ctas: MockCta[];
+  /**
+   * Y-pixel in the original 941x1672 image where the visible area should END.
+   * Used to crop the next-section teaser baked into each mockup so the rotator
+   * dots don't overlap unrelated content. Defaults to 1672 (no bottom crop).
+   */
+  visibleBottomPx?: number;
 }
 
+// Native image dimensions (all hero mocks are exported at this size).
+const NATIVE_WIDTH = 941;
+const NATIVE_HEIGHT = 1672;
+// Top crop: site header baked into each mockup that we hide behind the real header.
+const TOP_CROP_PX = 140;
+
 /**
- * Renders an uploaded hero mockup image edge-to-edge.
- * The site header is cropped off the top (~140 / 1672 ≈ 8.37%)
- * so the real sticky header sits seamlessly above it.
- * CTA hot-zones are overlaid as transparent buttons so links keep working.
+ * Renders an uploaded hero mockup image edge-to-edge with the baked-in
+ * header cropped from the top and the next-section teaser cropped from the
+ * bottom. CTA hot-zones overlay as transparent buttons so links keep working.
  */
-const MockHeroPanel = ({ imageUrl, alt, ctas }: Props) => {
+const MockHeroPanel = ({ imageUrl, alt, ctas, visibleBottomPx = NATIVE_HEIGHT }: Props) => {
   const navigate = useNavigate();
-  // Visible image aspect = 941 x (1672 - 140) = 941 x 1532
+  const visibleHeight = visibleBottomPx - TOP_CROP_PX;
+  const aspectRatio = `${NATIVE_WIDTH} / ${visibleHeight}`;
+  const topOffsetPct = -(TOP_CROP_PX / visibleHeight) * 100;
+
   return (
     <div className="relative w-full overflow-hidden bg-background mx-auto max-w-[480px] sm:max-w-[520px] md:max-w-[560px]">
-      <div className="relative w-full" style={{ aspectRatio: '941 / 1532' }}>
+      <div className="relative w-full overflow-hidden" style={{ aspectRatio }}>
         <img
           src={imageUrl}
           alt={alt}
           className="absolute left-0 w-full select-none pointer-events-none"
-          style={{ top: '-9.14%' }}
+          style={{ top: `${topOffsetPct}%` }}
           draggable={false}
         />
         {ctas.map((c) => (
