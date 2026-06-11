@@ -40,6 +40,10 @@ const BlogPost = () => {
     return () => document.removeEventListener('click', handler);
   }, [slug]);
 
+  if (!post) {
+    return <Navigate to="/blog" replace />;
+  }
+
   const relatedPosts = getRelatedPosts(post.slug, 3);
   const categoryLabel = BLOG_CATEGORIES.find(c => c.slug === post.category)?.label || post.category;
 
