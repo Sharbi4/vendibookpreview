@@ -12,11 +12,11 @@ import { useAuth } from '@/contexts/AuthContext';
 import vendibookLogo from '@/assets/vendibook-logo.png';
 
 const TRUST_BITS = [
+  'Verified owners',
   'Secure payments',
-  'Owner profiles',
   'Document collection',
   'Booking requests',
-  'Concierge help',
+  'Owner-approved rentals',
 ];
 
 const HeroFocused = () => {
