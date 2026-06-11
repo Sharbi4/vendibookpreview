@@ -38,6 +38,7 @@ import { TechSpecsGrid } from '@/components/listing-detail/TechSpecsGrid';
 import CommercialProductBar from '@/components/listing-detail/CommercialProductBar';
 import SellerTrustPanel from '@/components/listing-detail/SellerTrustPanel';
 import KeySpecsStrip from '@/components/listing-detail/KeySpecsStrip';
+import SaleListingMobile from '@/components/listing-detail/sale/SaleListingMobile';
 
 import { VendorSlotAvailability } from '@/components/listing-detail/VendorSlotAvailability';
 import { WeeklyHoursDisplay } from '@/components/listing-detail/WeeklyHoursDisplay';
