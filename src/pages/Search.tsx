@@ -177,11 +177,12 @@ const Search = () => {
     max_price: priceRange[1] !== Infinity ? priceRange[1] : undefined,
     instant_book_only: instantBookOnly || undefined,
     verified_hosts_only: verifiedHostsOnly || undefined,
+    featured_only: featuredOnly || undefined,
     delivery_capable: deliveryFilterEnabled || undefined,
     page,
     page_size: 20,
     sort_by: sortBy === 'price-low' ? 'price_low' : sortBy === 'price-high' ? 'price_high' : sortBy,
-  }), [searchQuery, mode, category, locationCoords, searchRadius, dateRange, selectedAmenities, priceRange, instantBookOnly, verifiedHostsOnly, deliveryFilterEnabled, page, sortBy]);
+  }), [searchQuery, mode, category, locationCoords, searchRadius, dateRange, selectedAmenities, priceRange, instantBookOnly, verifiedHostsOnly, featuredOnly, deliveryFilterEnabled, page, sortBy]);
 
   // Fetch listings from edge function
   const { data: searchResults, isLoading: isLoadingListings } = useQuery({
