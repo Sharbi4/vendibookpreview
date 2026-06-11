@@ -613,7 +613,7 @@ export const SaleListingMobile = ({
             <div className="flex items-center justify-between gap-3">
               <h2 className="text-base font-semibold inline-flex items-center gap-2">
                 <MapPin className="h-4 w-4 text-emerald-400" />
-                Where you'll be
+                Location
               </h2>
               <span className="text-[11px] px-2 py-0.5 rounded-full bg-background/60 ring-hairline text-muted-foreground">
                 Approximate area

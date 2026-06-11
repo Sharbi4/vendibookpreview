@@ -743,7 +743,7 @@ const ListingDetail = () => {
                 <>
                   <div className="border-t border-border" />
                   <div className="space-y-1">
-                    <h2 className="text-lg font-semibold text-foreground">Where you'll be</h2>
+                    <h2 className="text-lg font-semibold text-foreground">{isRental ? "Where you'll be" : 'Location'}</h2>
                     <p className="text-muted-foreground text-sm flex items-center gap-1.5">
                       <MapPin className="h-4 w-4" />
                       {locationShort}
