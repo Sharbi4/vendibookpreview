@@ -102,6 +102,13 @@ const HeroPanelShell = ({
         <div className={cn('absolute inset-0 pointer-events-none', accentClassName)} aria-hidden />
       )}
 
+      {/* Glass module overlay layer (z-3): below text (z-10), above bg art */}
+      {glassModules && (
+        <div className="absolute inset-0 z-[3] pointer-events-none" aria-hidden={false}>
+          {glassModules}
+        </div>
+      )}
+
       <div className="relative z-10 px-6 sm:px-10 py-10 sm:py-14 md:py-20 min-h-[560px] flex">
         <div className="w-full max-w-2xl mx-auto md:mx-0 text-left flex flex-col">
           <motion.div
@@ -131,6 +138,8 @@ const HeroPanelShell = ({
           >
             {supportingText}
           </motion.p>
+
+          {belowSupporting && <div className="mb-6">{belowSupporting}</div>}
 
           <motion.div
             initial={{ opacity: 0, y: 12 }}
