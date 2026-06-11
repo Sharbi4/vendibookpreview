@@ -286,6 +286,12 @@ serve(async (req) => {
     const { data: suppressed } = await admin.from("suppressed_emails").select("email");
     const supSet = new Set((suppressed ?? []).map((u: any) => u.email.toLowerCase()));
 
+    const { data: newsletterUnsubs } = await admin
+      .from("newsletter_subscribers")
+      .select("email")
+      .not("unsubscribed_at", "is", null);
+    for (const r of newsletterUnsubs ?? []) unsubSet.add((r as any).email.toLowerCase());
+
     const { data: sent } = await admin
       .from("blog_campaign_sends")
       .select("email")
