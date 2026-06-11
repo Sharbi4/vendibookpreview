@@ -5,9 +5,10 @@ const Panel3HostTools = () => (
   <MockHeroPanel
     imageUrl={mock.url}
     alt="More than listings. Built for food truck hosts."
+    visibleBottomPx={1297}
     ctas={[
-      { top: 55.5, left: 3.7, width: 36.7, height: 6, href: '/list?utm_source=homepage&utm_medium=hero&utm_content=explore_host_tools', label: 'Explore host tools', event: 'homepage_host_list_click' },
-      { top: 62.3, left: 3.7, width: 36.7, height: 5.4, href: '/how-it-works-host', label: 'How hosting works', event: 'homepage_how_it_works_click' },
+      { top: 73.49, left: 3.7, width: 36.7, height: 7.94, href: '/list?utm_source=homepage&utm_medium=hero&utm_content=explore_host_tools', label: 'Explore host tools', event: 'homepage_host_list_click' },
+      { top: 82.49, left: 3.7, width: 36.7, height: 7.15, href: '/how-it-works-host', label: 'How hosting works', event: 'homepage_how_it_works_click' },
     ]}
   />
 );
