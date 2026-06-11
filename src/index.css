@@ -127,8 +127,43 @@
     --sidebar-accent-foreground: 0 0% 95%;
     --sidebar-border: 0 0% 20%;
     --sidebar-ring: 14 100% 57%;
+
+    /* Sale listing premium surfaces */
+    --surface-charcoal: 240 6% 8%;
+    --surface-blueblack: 222 22% 9%;
+    --surface-warm: 24 10% 10%;
+    --bronze: 28 65% 45%;
   }
 }
+
+@layer utilities {
+  .bg-surface-charcoal { background-color: hsl(var(--surface-charcoal)); }
+  .bg-surface-blueblack { background-color: hsl(var(--surface-blueblack)); }
+  .bg-surface-warm { background-color: hsl(var(--surface-warm)); }
+
+  .bg-sale-card {
+    background:
+      linear-gradient(180deg, hsl(0 0% 100% / 0.02), hsl(0 0% 0% / 0.15)),
+      hsl(var(--surface-charcoal));
+  }
+  .bg-sale-card-warm {
+    background:
+      radial-gradient(140% 90% at 100% 0%, hsl(var(--bronze) / 0.22), transparent 55%),
+      linear-gradient(180deg, hsl(0 0% 100% / 0.03), hsl(0 0% 0% / 0.2)),
+      hsl(var(--surface-charcoal));
+  }
+  .ring-hairline { box-shadow: inset 0 0 0 1px hsl(0 0% 100% / 0.06); }
+  .ring-bronze { box-shadow: inset 0 0 0 1px hsl(var(--bronze) / 0.35); }
+  .shadow-glow-orange { box-shadow: 0 0 40px -12px hsl(var(--primary) / 0.35); }
+
+  .safe-pb { padding-bottom: env(safe-area-inset-bottom, 0); }
+
+  body[data-sale-cta-active="true"] .vendi-chat-bubble,
+  body[data-sale-cta-active="true"] [data-vendi-chat-bubble] {
+    bottom: calc(96px + env(safe-area-inset-bottom, 0px) + 12px) !important;
+  }
+}
+
 
 @layer base {
   * {
