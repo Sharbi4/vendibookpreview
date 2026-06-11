@@ -90,4 +90,5 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'referral-post-tx-ps': referralPostTxPs,
   'new-listing-alert': newListingAlert,
   'account-ready-recovery': accountReadyRecovery,
+  'complimentary-featured-boost': complimentaryFeaturedBoost,
 }
