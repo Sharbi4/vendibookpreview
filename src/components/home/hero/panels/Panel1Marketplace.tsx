@@ -6,7 +6,7 @@ const Panel1Marketplace = () => (
     imageUrl={mock.url}
     alt="Find, rent, buy, or sell food trucks and food trailers"
     visibleTopPx={150}
-    visibleBottomPx={1414}
+    visibleBottomPx={1672}
     searchOverlay={{
       top: 71.77,
       left: 3,
