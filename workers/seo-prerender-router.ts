@@ -35,7 +35,7 @@ export default {
     const isCrawler = CRAWLER_RE.test(ua);
     const isPrerenderPath = PRERENDER_PATHS.some((re) => re.test(url.pathname));
 
-    if (isCrawler && isListingPath) {
+    if (isCrawler && isPrerenderPath) {
       // Normalize /share/listing/:id → /listing/:id for the prerender function
       const prerenderPath = url.pathname.replace(/^\/share\/listing\//, "/listing/");
       const target = `${PRERENDER_URL}?path=${encodeURIComponent(prerenderPath)}`;
