@@ -123,6 +123,7 @@ const Subscribe = lazy(() => import("./pages/Subscribe"));
 const EmailFeedbackThanks = lazy(() => import("./pages/EmailFeedbackThanks"));
 const CategoryCityPage = lazy(() => import("./pages/CategoryCityPage"));
 const CategoryIndex = lazy(() => import("./pages/CategoryIndex"));
+const BlogShareRedirect = lazy(() => import("./pages/BlogShareRedirect"));
 import { CATEGORY_INDEX_CONFIGS } from "./data/categoryIndexConfigs";
 import { CITY_CATEGORY_CONFIGS } from "./data/cityCategoryConfigs";
 
