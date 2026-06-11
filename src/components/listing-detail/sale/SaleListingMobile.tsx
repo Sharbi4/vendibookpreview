@@ -301,7 +301,8 @@ export const SaleListingMobile = ({
         </div>
 
         {/* TRUST STRIP */}
-        <SaleCard variant="warm" bronze padding="md">
+        <SaleCard variant="default" padding="md">
+
           <div className="grid grid-cols-3 gap-3">
             <TrustItem icon={ShieldCheck} title="Verified Listing" sub="Reviewed for quality" tone="primary" />
             <TrustItem icon={Lock} title="Secure Payments" sub="Protected checkout" tone="primary" />
