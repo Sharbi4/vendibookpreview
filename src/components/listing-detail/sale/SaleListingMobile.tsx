@@ -328,11 +328,12 @@ export const SaleListingMobile = ({
                 variant="outline"
                 onClick={handleMakeOffer}
                 disabled={!isAvailable || !listing.price_sale}
-                className="h-14 gap-2 rounded-2xl border border-[rgba(255,91,31,0.34)] bg-[rgba(11,15,18,0.85)] hover:bg-[rgba(20,24,28,0.9)] text-base font-bold text-white"
+                className="h-14 gap-2 rounded-2xl border-0 bg-cta-glass hover:bg-white/10 text-base font-bold text-white"
               >
                 <Tag className="h-4 w-4" />
                 Make Offer
               </Button>
+
             </div>
             <Button
               size="lg"
