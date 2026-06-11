@@ -200,12 +200,13 @@ export const SaleListingMobile = ({
           </div>
           {isFeatured && (
             <div className="absolute top-3 left-3 z-10">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-background/80 backdrop-blur-md ring-bronze text-xs font-semibold text-primary">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full chip-accent backdrop-blur-md text-xs font-semibold">
                 <Star className="h-3.5 w-3.5 fill-current" />
                 Featured
               </span>
             </div>
           )}
+
           {totalImages > 1 && (
             <div className="absolute top-3 right-3 z-10 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-background/70 backdrop-blur-md ring-hairline text-xs font-medium text-foreground/90">
               1 / {totalImages}
