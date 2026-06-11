@@ -4,37 +4,57 @@ import { motion } from 'framer-motion';
 import { useLocation } from 'react-router-dom';
 import TicketFormDialog from './home/TicketFormDialog';
 
-const HIDDEN_ROUTES = ['/contact', '/help', '/faq'];
+const HIDDEN_ROUTES = ['/help', '/faq'];
 
 const FloatingConciergeButton = () => {
   const [isHovered, setIsHovered] = useState(false);
   const [isTicketOpen, setIsTicketOpen] = useState(false);
-  const [isMinimized, setIsMinimized] = useState(() => {
-    if (typeof window === 'undefined') return false;
-    return localStorage.getItem('concierge-minimized') === '1';
-  });
   const location = useLocation();
 
-  useEffect(() => {
-    localStorage.setItem('concierge-minimized', isMinimized ? '1' : '0');
-  }, [isMinimized]);
+  // Minimized by default everywhere; expanded only on /contact
+  const [isMinimized, setIsMinimized] = useState(() => {
+    if (typeof window === 'undefined') return true;
+    return location.pathname !== '/contact';
+  });
 
-  const isHiddenRoute = HIDDEN_ROUTES.some(route => 
+  useEffect(() => {
+    // Sync minimization state when route changes
+    setIsMinimized(location.pathname !== '/contact');
+  }, [location.pathname]);
+
+  const isHiddenRoute = HIDDEN_ROUTES.some(route =>
     location.pathname === route || location.pathname.startsWith(`${route}/`)
   );
 
   const handleClick = () => {
     const tawk = (window as any).Tawk_API;
+    if (tawk?.showWidget) {
+      try { tawk.showWidget(); } catch (e) { console.debug('Tawk showWidget:', e); }
+    }
     if (tawk?.maximize) {
       try {
         tawk.maximize();
         return;
       } catch (error) {
-        console.debug('Tawk open:', error);
+        console.debug('Tawk maximize:', error);
       }
     }
     // Fallback: open ticket form if Tawk isn't loaded yet
     setIsTicketOpen(true);
+  };
+
+  const handleMinimize = () => {
+    setIsMinimized(true);
+    const tawk = (window as any).Tawk_API;
+    if (tawk?.minimize) {
+      try { tawk.minimize(); } catch (e) { console.debug('Tawk minimize:', e); }
+    }
+    // Give Tawk.to time to animate closed, then hide the native widget
+    setTimeout(() => {
+      if (tawk?.hideWidget) {
+        try { tawk.hideWidget(); } catch (e) { console.debug('Tawk hideWidget:', e); }
+      }
+    }, 400);
   };
 
   if (isHiddenRoute) return null;
@@ -69,7 +89,7 @@ const FloatingConciergeButton = () => {
         ) : (
           <div className="relative">
             <button
-              onClick={(e) => { e.stopPropagation(); setIsMinimized(true); }}
+              onClick={(e) => { e.stopPropagation(); handleMinimize(); }}
               aria-label="Minimize concierge"
               className="absolute -top-2 -right-2 z-10 flex items-center justify-center w-6 h-6 rounded-full bg-background/90 border border-border shadow-md hover:bg-muted transition-colors"
             >
