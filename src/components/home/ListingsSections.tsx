@@ -156,6 +156,43 @@ const ListingsSections = () => {
 
   const visibleRows = rows.filter((r) => r.listings.length > 0);
 
+  const scrollRefs = useRef<Record<RowKey, HTMLDivElement | null>>({
+    rent: null,
+    sale: null,
+    trucks: null,
+    trailers: null,
+  });
+
+  const [scrollState, setScrollState] = useState<Record<RowKey, { canLeft: boolean; canRight: boolean }>>({
+    rent: { canLeft: false, canRight: true },
+    sale: { canLeft: false, canRight: true },
+    trucks: { canLeft: false, canRight: true },
+    trailers: { canLeft: false, canRight: true },
+  });
+
+  const updateScrollState = useCallback((key: RowKey) => {
+    const el = scrollRefs.current[key];
+    if (!el) return;
+    const canLeft = el.scrollLeft > 2;
+    const canRight = el.scrollLeft + el.clientWidth < el.scrollWidth - 2;
+    setScrollState((prev) => {
+      if (prev[key].canLeft === canLeft && prev[key].canRight === canRight) return prev;
+      return { ...prev, [key]: { canLeft, canRight } };
+    });
+  }, []);
+
+  const scrollRow = useCallback((key: RowKey, direction: 'left' | 'right') => {
+    const el = scrollRefs.current[key];
+    if (!el) return;
+    const scrollAmount = el.clientWidth * 0.75;
+    el.scrollBy({ left: direction === 'left' ? -scrollAmount : scrollAmount, behavior: 'smooth' });
+    setTimeout(() => updateScrollState(key), 350);
+  }, [updateScrollState]);
+
+  useEffect(() => {
+    visibleRows.forEach(({ key }) => updateScrollState(key));
+  }, [visibleRows, updateScrollState]);
+
   const handleViewMore = (key: RowKey) => {
     const meta = ROW_META[key];
     trackLeadEvent('homepage_listing_row_view_more_click', {
@@ -234,6 +271,7 @@ const ListingsSections = () => {
         <div className="space-y-10 sm:space-y-14 pb-28 sm:pb-12">
           {visibleRows.map(({ key, listings }) => {
             const meta = ROW_META[key];
+            const state = scrollState[key];
             return (
               <div key={key}>
                 <div className="container px-4 sm:px-6 flex items-end justify-between gap-3 mb-3 sm:mb-4">
@@ -245,43 +283,72 @@ const ListingsSections = () => {
                       {meta.subtitle}
                     </p>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => handleViewMore(key)}
-                    className="flex-shrink-0 inline-flex items-center gap-1 text-sm font-medium text-primary hover:text-primary/80 transition-colors"
-                  >
-                    View more
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </button>
+                  <div className="flex items-center gap-2">
+                    {/* Desktop arrow buttons */}
+                    <button
+                      type="button"
+                      aria-label={`Scroll ${meta.title} left`}
+                      onClick={() => scrollRow(key, 'left')}
+                      className={`hidden md:inline-flex items-center justify-center w-8 h-8 rounded-full border border-border/70 bg-card/60 hover:bg-card transition-colors ${
+                        state.canLeft ? 'opacity-100 cursor-pointer' : 'opacity-40 cursor-default'
+                      }`}
+                      disabled={!state.canLeft}
+                    >
+                      <ChevronLeft className="w-4 h-4 text-foreground" />
+                    </button>
+                    <button
+                      type="button"
+                      aria-label={`Scroll ${meta.title} right`}
+                      onClick={() => scrollRow(key, 'right')}
+                      className={`hidden md:inline-flex items-center justify-center w-8 h-8 rounded-full border border-border/70 bg-card/60 hover:bg-card transition-colors ${
+                        state.canRight ? 'opacity-100 cursor-pointer' : 'opacity-40 cursor-default'
+                      }`}
+                      disabled={!state.canRight}
+                    >
+                      <ChevronRight className="w-4 h-4 text-foreground" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleViewMore(key)}
+                      className="flex-shrink-0 inline-flex items-center gap-1 text-sm font-medium text-primary hover:text-primary/80 transition-colors"
+                    >
+                      View more
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
                 </div>
 
-                <div
-                  onClickCapture={handleCardClickCapture(key)}
-                  className="flex gap-3 sm:gap-4 overflow-x-auto snap-x snap-mandatory scroll-px-4 sm:scroll-px-6 px-4 sm:px-6 pb-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
-                >
-                  {listings.map((listing, index) => (
-                    <div
-                      key={listing.id}
-                      data-position={index}
-                      className="snap-start flex-shrink-0 w-[72%] sm:w-[42%] md:w-[32%] lg:w-[24%] xl:w-[22%]"
-                    >
-                      <ListingCard
-                        listing={listing}
-                        hostVerified={hostVerificationMap[listing.host_id] ?? false}
-                        compact
-                      />
-                    </div>
-                  ))}
-                  {/* Trailing View more card */}
-                  <button
-                    type="button"
-                    onClick={() => handleViewMore(key)}
-                    className="snap-start flex-shrink-0 w-[40%] sm:w-[24%] md:w-[20%] lg:w-[16%] rounded-xl border border-border/60 bg-card/40 hover:bg-card/70 hover:border-foreground/20 transition-colors flex flex-col items-center justify-center text-center gap-2 p-4 min-h-[180px]"
+                <div className="relative">
+                  <div
+                    ref={(el) => { scrollRefs.current[key] = el; }}
+                    onScroll={() => updateScrollState(key)}
+                    onClickCapture={handleCardClickCapture(key)}
+                    className="flex gap-3 sm:gap-4 overflow-x-auto snap-x snap-mandatory scroll-px-4 sm:scroll-px-6 px-4 sm:px-6 pb-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
                   >
-                    <ArrowRight className="w-5 h-5 text-primary" />
-                    <span className="text-sm font-medium text-foreground">View more</span>
-                    <span className="text-xs text-muted-foreground">{meta.title}</span>
-                  </button>
+                    {listings.map((listing, index) => (
+                      <div
+                        key={listing.id}
+                        data-position={index}
+                        className="snap-start flex-shrink-0 w-[72%] sm:w-[42%] md:w-[32%] lg:w-[24%] xl:w-[22%]"
+                      >
+                        <ListingCard
+                          listing={listing}
+                          hostVerified={hostVerificationMap[listing.host_id] ?? false}
+                          compact
+                        />
+                      </div>
+                    ))}
+                    {/* Trailing View more card */}
+                    <button
+                      type="button"
+                      onClick={() => handleViewMore(key)}
+                      className="snap-start flex-shrink-0 w-[40%] sm:w-[24%] md:w-[20%] lg:w-[16%] rounded-xl border border-border/60 bg-card/40 hover:bg-card/70 hover:border-foreground/20 transition-colors flex flex-col items-center justify-center text-center gap-2 p-4 min-h-[180px]"
+                    >
+                      <ArrowRight className="w-5 h-5 text-primary" />
+                      <span className="text-sm font-medium text-foreground">View more</span>
+                      <span className="text-xs text-muted-foreground">{meta.title}</span>
+                    </button>
+                  </div>
                 </div>
               </div>
             );
