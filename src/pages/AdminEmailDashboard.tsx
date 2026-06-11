@@ -330,7 +330,7 @@ export default function AdminEmailDashboard() {
                   </CardHeader>
                   <CardContent className="space-y-3">
                     <Button onClick={() => generateHeadlines.mutate()} disabled={generateHeadlines.isPending} variant="outline" size="sm">
-                      {generateHeadlines.isPending ? <RefreshCw className="w-4 h-4 mr-2 animate-spin" /> : }
+                      {generateHeadlines.isPending ? <RefreshCw className="w-4 h-4 mr-2 animate-spin" /> : null}
                       Generate 3 options
                     </Button>
                     {headlines.map((h) => (
@@ -416,7 +416,7 @@ export default function AdminEmailDashboard() {
                       </SelectContent>
                     </Select>
                     <Button onClick={() => generateInsight.mutate()} disabled={generateInsight.isPending} variant="outline" size="sm">
-                      {generateInsight.isPending ? <RefreshCw className="w-4 h-4 mr-2 animate-spin" /> : }
+                      {generateInsight.isPending ? <RefreshCw className="w-4 h-4 mr-2 animate-spin" /> : null}
                       Generate
                     </Button>
                     {insight.body && (

@@ -94,9 +94,7 @@ const ListingInsightRow = ({ listingId, title, coverImage, cachedScore }: Listin
               >
                 {generate.isPending && generate.variables === listingId ? (
                   <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
-                ) : (
-                  
-                )}
+                ) : null}
                 Generate AI insights
               </Button>
             </div>
@@ -207,9 +205,7 @@ export const ListingInsightsPanel = () => {
             >
               {generate.isPending ? (
                 <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
-              ) : (
-                
-              )}
+              ) : null}
               Analyze all
             </Button>
           </div>

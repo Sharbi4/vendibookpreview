@@ -39,7 +39,7 @@ export const TellVendibookButton = ({
         onClick={() => setOpen(true)}
         className={className}
       >
-        {showIcon && }
+        {showIcon && null}
         {children || 'Tell Vendibook what you need'}
       </Button>
       <TellVendibookModal

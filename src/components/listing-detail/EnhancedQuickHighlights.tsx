@@ -163,7 +163,7 @@ const EnhancedQuickHighlights = ({
             `}
             whileHover={{ rotate: 5 }}
           >
-            {item.accent ?  : item.icon}
+            {item.accent ? item.icon : item.icon}
           </motion.div>
           <div className="min-w-0 flex-1">
             <p className={`font-medium text-sm ${item.accent ? 'text-emerald-700 dark:text-emerald-300' : 'text-foreground'}`}>

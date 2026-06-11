@@ -174,7 +174,7 @@ const AccountChargesSection: React.FC<{ userId: string }> = ({ userId }) => {
               className="rounded-xl border border-border bg-card p-5 flex items-start gap-4"
             >
               <div className={`shrink-0 w-11 h-11 rounded-full flex items-center justify-center ${isComp ? 'bg-emerald-500/10 text-emerald-500' : 'bg-amber-500/10 text-amber-500'}`}>
-                {isComp ? <Gift className="h-5 w-5" /> : }
+                {isComp ? <Gift className="h-5 w-5" /> : null}
               </div>
 
               <div className="flex-1 min-w-0">

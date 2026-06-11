@@ -169,7 +169,7 @@ export const PublishChecklist: React.FC<PublishChecklistProps> = ({
                 variant={allRequiredComplete ? "dark-shine" : "secondary"}
                 onClick={onPublishClick}
               >
-                {allRequiredComplete && }
+                {allRequiredComplete && null}
                 Publish Listing
               </Button>
               <p className="text-[10px] text-center text-muted-foreground mt-2">
