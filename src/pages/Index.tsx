@@ -7,6 +7,7 @@ import Hero from '@/components/home/Hero';
 
 
 import AnnouncementBanner from '@/components/home/AnnouncementBanner';
+import HeroBelowFold from '@/components/home/HeroBelowFold';
 import VerificationBanner from '@/components/home/VerificationBanner';
 import ConciergeSection from '@/components/home/ConciergeSection';
 
@@ -75,13 +76,18 @@ const Index = () => {
       />
       <JsonLd schema={[generateOrganizationSchema(), generateWebSiteSchema()]} />
       <Header />
-      <AnnouncementBanner />
-      
+
       {showVerificationBanner && <VerificationBanner userId={user.id} />}
       
       <main className="flex-1">
         {/* 1. Hero */}
         <Hero />
+
+        {/* Mobile-only secondary actions + trust strip (moved out of hero) */}
+        <HeroBelowFold />
+
+        {/* Announcement moved below the hero */}
+        <AnnouncementBanner />
 
 
         <Suspense fallback={<SectionSkeleton />}>
