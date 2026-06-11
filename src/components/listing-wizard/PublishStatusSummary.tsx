@@ -76,7 +76,6 @@ export const PublishStatusSummary: React.FC<PublishStatusSummaryProps> = ({ list
       const next: StatusRow[] = [
         {
           key: 'published',
-          icon: ,
           label: 'Listing published',
           detail: isPublished ? 'Live on the marketplace.' : 'Waiting for status to flip to published…',
           status: isPublished ? 'ok' : 'pending'}];
@@ -87,7 +86,6 @@ export const PublishStatusSummary: React.FC<PublishStatusSummaryProps> = ({ list
           : null;
         next.push({
           key: 'featured',
-          icon: ,
           label: '30-day Featured Boost',
           detail: featuredOn && expires ? `Featured until ${expires}.` : 'Activating…',
           status: featuredOn ? 'ok' : 'pending'});

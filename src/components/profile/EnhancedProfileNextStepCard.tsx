@@ -141,7 +141,7 @@ const EnhancedProfileNextStepCard = ({
             scale: [1, 1.2, 1]}}
           transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
         >
-          < className="h-5 w-5 text-primary/30" />
+          
         </motion.div>
 
         <div className="relative p-5 md:p-6">

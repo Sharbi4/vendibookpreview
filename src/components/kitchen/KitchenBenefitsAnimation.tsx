@@ -109,7 +109,7 @@ const KitchenBenefitsAnimation = () => {
                   ease: 'easeInOut'}}
                 className="absolute top-4 right-8 md:right-16"
               >
-                < className="w-6 h-6 text-primary/40" />
+                
               </motion.div>
               <motion.div
                 animate={{
@@ -122,7 +122,7 @@ const KitchenBenefitsAnimation = () => {
                   delay: 0.5}}
                 className="absolute bottom-8 left-8 md:left-16"
               >
-                < className="w-5 h-5 text-primary/30" />
+                
               </motion.div>
             </div>
 
