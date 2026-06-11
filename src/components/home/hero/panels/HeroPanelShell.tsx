@@ -11,6 +11,8 @@ interface Props {
   finePrint?: ReactNode;
   /** Optional accent tint for the satin glow direction (e.g. 'from-amber-200/40'). */
   accentClassName?: string;
+  /** Optional decorative background image (art only — no baked-in UI). */
+  bgImage?: string;
 }
 
 const HeroPanelShell = ({
