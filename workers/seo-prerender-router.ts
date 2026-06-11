@@ -2,7 +2,7 @@
  * Cloudflare Worker: SEO Prerender Router
  *
  * Deploy this Worker on vendibook.com/* to route crawler traffic
- * for listing pages to the seo-prerender edge function.
+ * for listing and blog pages to the seo-prerender edge function.
  *
  * Setup:
  * 1. Create a Cloudflare Worker via dashboard or Wrangler CLI
@@ -11,7 +11,7 @@
  *
  * Verify after deploy:
  *   curl -A "facebookexternalhit/1.1" https://vendibook.com/listing/<id> | head -40
- *   curl -A "Googlebot/2.1" https://vendibook.com/listing/<id> | grep og:title
+ *   curl -A "linkedinbot/1.0" https://vendibook.com/blog/rise-food-truck-fleet-owner | grep og:title
  */
 
 const CRAWLER_RE =
@@ -20,6 +20,7 @@ const CRAWLER_RE =
 const PRERENDER_PATHS = [
   /^\/listing\/[0-9a-f-]{36}$/i,
   /^\/share\/listing\/[0-9a-f-]{36}$/i,
+  /^\/blog\/[a-z0-9-]+$/i,
 ];
 
 const PRERENDER_URL =
@@ -30,11 +31,11 @@ export default {
     const url = new URL(request.url);
     const ua = request.headers.get("user-agent") ?? "";
 
-    // Only intercept if crawler UA AND the path is a listing page
+    // Only intercept if crawler UA AND the path is a supported prerender page
     const isCrawler = CRAWLER_RE.test(ua);
-    const isListingPath = PRERENDER_PATHS.some((re) => re.test(url.pathname));
+    const isPrerenderPath = PRERENDER_PATHS.some((re) => re.test(url.pathname));
 
-    if (isCrawler && isListingPath) {
+    if (isCrawler && isPrerenderPath) {
       // Normalize /share/listing/:id → /listing/:id for the prerender function
       const prerenderPath = url.pathname.replace(/^\/share\/listing\//, "/listing/");
       const target = `${PRERENDER_URL}?path=${encodeURIComponent(prerenderPath)}`;
