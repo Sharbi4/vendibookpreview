@@ -113,6 +113,9 @@ const Search = () => {
   const [deliveryFilterEnabled, setDeliveryFilterEnabled] = useState(false);
   const [instantBookOnly, setInstantBookOnly] = useState(initialInstantBook);
   const [verifiedHostsOnly, setVerifiedHostsOnly] = useState(searchParams.get('verified') === 'true');
+  const [featuredOnly, setFeaturedOnly] = useState(
+    searchParams.get('featured') === '1' || searchParams.get('featured') === 'true'
+  );
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
   const [sortBy, setSortBy] = useState<'newest' | 'price-low' | 'price-high' | 'distance' | 'relevance'>(initialSort);
   const [viewMode, setViewMode] = useState<'grid' | 'map' | 'split' | 'list'>('list');
