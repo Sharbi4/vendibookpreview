@@ -2,9 +2,11 @@ import { Link } from 'react-router-dom';
 import HeroPanelShell from './HeroPanelShell';
 import { Button } from '@/components/ui/button';
 import { trackLeadEvent } from '@/lib/leadTracking';
+import paymentsBg from '@/assets/hero-payments-bg.png.asset.json';
 
 const Panel4Payments = () => (
   <HeroPanelShell
+    bgImage={paymentsBg.url}
     eyebrow="Trusted transaction support"
     headline={<>Accept payments with <span className="text-orange-600">more confidence</span></>}
     supportingText="Support in-person or online payments through Vendibook, with secure checkout, optional escrow-style workflows, and delivery coordination where available."

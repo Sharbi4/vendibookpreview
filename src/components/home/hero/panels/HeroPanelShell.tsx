@@ -11,6 +11,8 @@ interface Props {
   finePrint?: ReactNode;
   /** Optional accent tint for the satin glow direction (e.g. 'from-amber-200/40'). */
   accentClassName?: string;
+  /** Optional decorative background image (art only — no baked-in UI). */
+  bgImage?: string;
 }
 
 const HeroPanelShell = ({
@@ -21,6 +23,7 @@ const HeroPanelShell = ({
   secondaryCta,
   finePrint,
   accentClassName,
+  bgImage,
 }: Props) => {
   return (
     <div className="relative overflow-hidden rounded-3xl ring-1 ring-black/5 shadow-2xl">
@@ -33,6 +36,13 @@ const HeroPanelShell = ({
         }}
         aria-hidden
       />
+      {bgImage && (
+        <div
+          className="absolute inset-0 bg-no-repeat bg-cover bg-center"
+          style={{ backgroundImage: `url(${bgImage})` }}
+          aria-hidden
+        />
+      )}
       {/* Soft orange radial glow top-right */}
       <div
         className="absolute inset-0 pointer-events-none"
