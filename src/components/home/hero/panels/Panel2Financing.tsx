@@ -9,8 +9,8 @@ const Panel2Financing = () => (
     ctas={[
       // TODO: add a real financing/payment-options filter to the Search page.
       // Until then route to browse-all with UTM so the click still converts.
-      { top: 80.65, left: 4, width: 92, height: 6.44, href: '/search?utm_source=homepage&utm_medium=hero&utm_campaign=financing&utm_content=browse_eligible_listings', label: 'Browse eligible listings', event: 'homepage_browse_click' },
-      { top: 89.13, left: 4, width: 92, height: 6.44, href: '/how-it-works?utm_source=homepage&utm_medium=hero&utm_campaign=financing&utm_content=learn_how_it_works', label: 'Learn how it works', event: 'homepage_how_it_works_click' },
+      { top: 82.55, left: 4, width: 92, height: 5.81, href: '/search?utm_source=homepage&utm_medium=hero&utm_campaign=financing&utm_content=browse_eligible_listings', label: 'Browse eligible listings', event: 'homepage_browse_click' },
+      { top: 90.20, left: 4, width: 92, height: 5.81, href: '/how-it-works?utm_source=homepage&utm_medium=hero&utm_campaign=financing&utm_content=learn_how_it_works', label: 'Learn how it works', event: 'homepage_how_it_works_click' },
     ]}
   />
 );
