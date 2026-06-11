@@ -60,16 +60,22 @@ export const SaleStickyActionBar = ({
   return (
     <>
       <div
-        className="fixed bottom-0 left-0 right-0 z-40 lg:hidden bg-background/85 backdrop-blur-xl border-t border-white/10 safe-pb"
-        style={{ boxShadow: '0 -12px 32px -8px rgba(0,0,0,0.5)' }}
+        className="fixed bottom-0 left-0 right-0 z-40 lg:hidden safe-pb"
+        style={{
+          background: 'rgba(8, 8, 8, 0.82)',
+          backdropFilter: 'blur(18px)',
+          WebkitBackdropFilter: 'blur(18px)',
+          borderTop: '1px solid rgba(255,255,255,0.08)',
+          boxShadow: '0 -18px 50px rgba(0,0,0,0.45)',
+        }}
       >
-        <div className="px-3 py-3 grid grid-cols-[1fr_auto] gap-2.5 items-center">
+        <div className="px-3 py-3 grid grid-cols-2 gap-2.5 items-center">
           <Button
             variant="outline"
             size="lg"
             onClick={handleOffer}
             disabled={!isAvailable || !priceSale}
-            className="h-12 text-base font-semibold gap-2 border-primary/40 bg-background/40 hover:bg-background/60"
+            className="h-14 text-base font-bold gap-2 rounded-2xl border border-[rgba(255,91,31,0.34)] bg-[rgba(11,15,18,0.85)] hover:bg-[rgba(20,24,28,0.9)] text-white"
           >
             <Tag className="h-4 w-4" />
             Make Offer
@@ -78,13 +84,14 @@ export const SaleStickyActionBar = ({
             size="lg"
             onClick={handleBuy}
             disabled={!isAvailable}
-            className="h-12 text-base font-semibold gap-2 px-6 bg-gradient-to-r from-primary to-[hsl(14_100%_50%)] hover:opacity-95 shadow-glow-orange"
+            className="h-14 text-base font-bold gap-2 rounded-2xl bg-cta-primary hover:opacity-95 shadow-cta-primary text-white border-0"
           >
             <ShoppingCart className="h-5 w-5" />
             Buy Now
           </Button>
         </div>
       </div>
+
 
       <AuthGateOfferModal
         open={showAuthGate}
