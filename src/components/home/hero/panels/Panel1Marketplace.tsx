@@ -39,7 +39,7 @@ const Panel1Marketplace = () => (
     bgImage={marketplaceBg.url}
     glassModules={<MarketplaceModules />}
     eyebrow="The marketplace for mobile food assets"
-    headline={<>Find, rent, buy, or sell <span className="text-orange-600">food trucks and food trailers</span></>}
+    headline={<>Find, rent, buy, or sell <span style={{ color: '#FF4B1F' }}>food trucks and food trailers</span></>}
     supportingText="Search verified food trucks and trailers, compare real listings, and connect with owners through a safer, more structured marketplace."
     primaryCta={
       <div className="w-full flex flex-col">
