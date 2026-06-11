@@ -3,23 +3,32 @@ import HeroPanelShell from './HeroPanelShell';
 import HeroSearchForm from './HeroSearchForm';
 import { Button } from '@/components/ui/button';
 import { trackLeadEvent } from '@/lib/leadTracking';
-import mock from '@/assets/hero-marketplace-mock.png.asset.json';
 
 const Panel1Marketplace = () => (
   <HeroPanelShell
-    bgImage={mock.url}
     eyebrow="The marketplace for mobile food assets"
-    headline="Find, rent, buy, or sell food trucks and food trailers"
+    headline={<>Find, rent, buy, or sell <span className="text-orange-600">food trucks and food trailers</span></>}
     supportingText="Search verified food trucks and trailers, compare real listings, and connect with owners through a safer, more structured marketplace."
     primaryCta={
       <div className="w-full flex flex-col gap-3">
         <HeroSearchForm />
-        <div className="flex flex-col sm:flex-row gap-2 w-full max-w-xl">
+        <p className="text-sm text-neutral-700 text-center sm:text-left">
+          Have a truck or trailer?{' '}
+          {/* TODO: dedicated /list-your-food-truck route — using /list */}
+          <Link
+            to="/list?utm_source=homepage&utm_medium=hero&utm_campaign=homepage_conversion&utm_content=list_it_free"
+            className="text-orange-600 font-semibold underline underline-offset-4 hover:text-orange-700"
+            onClick={() => trackLeadEvent('homepage_host_list_click' as any, { source: 'home_hero', route: '/' })}
+          >
+            List it free →
+          </Link>
+        </p>
+        <div className="flex flex-col sm:flex-row gap-2 w-full">
           {/* TODO: dedicated /signup route — using /auth?mode=signup */}
           <Button
             asChild
             size="lg"
-            className="flex-1 rounded-full"
+            className="flex-1 rounded-full bg-orange-500 hover:bg-orange-600 text-white shadow-md"
             onClick={() => trackLeadEvent('homepage_primary_cta_click' as any, { source: 'home_hero', route: '/' })}
           >
             <Link to="/auth?mode=signup&utm_source=homepage&utm_medium=hero&utm_campaign=homepage_conversion&utm_content=signup_free">
@@ -29,8 +38,7 @@ const Panel1Marketplace = () => (
           <Button
             asChild
             size="lg"
-            variant="outline"
-            className="flex-1 rounded-full bg-white/5 border-white/20 text-foreground hover:bg-white/10"
+            className="flex-1 rounded-full bg-neutral-900 hover:bg-neutral-800 text-white"
             onClick={() => trackLeadEvent('homepage_browse_click' as any, { source: 'home_hero', route: '/' })}
           >
             <Link to="/search?category=food_truck%2Cfood_trailer&utm_source=homepage&utm_medium=hero&utm_campaign=homepage_conversion&utm_content=browse_trucks_trailers">
@@ -38,14 +46,6 @@ const Panel1Marketplace = () => (
             </Link>
           </Button>
         </div>
-        {/* TODO: dedicated /list-your-food-truck route — using /list */}
-        <Link
-          to="/list?utm_source=homepage&utm_medium=hero&utm_campaign=homepage_conversion&utm_content=list_it_free"
-          className="text-sm text-foreground/70 hover:text-foreground underline-offset-4 hover:underline"
-          onClick={() => trackLeadEvent('homepage_host_list_click' as any, { source: 'home_hero', route: '/' })}
-        >
-          Have a truck or trailer? List it free →
-        </Link>
       </div>
     }
   />
