@@ -1,4 +1,6 @@
+import { useState, KeyboardEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Search } from 'lucide-react';
 import { trackLeadEvent } from '@/lib/leadTracking';
 
 export interface MockCta {
@@ -12,32 +14,51 @@ export interface MockCta {
   event?: string;
 }
 
+export interface SearchOverlay {
+  top: number;
+  left: number;
+  width: number;
+  height: number;
+  placeholder?: string;
+  /** Mode appended to the resulting /search URL. Defaults to 'rent'. */
+  mode?: 'rent' | 'sale' | 'all';
+}
+
 interface Props {
   imageUrl: string;
   alt: string;
   ctas: MockCta[];
-  /**
-   * Y-pixel in the original 941x1672 image where the visible area should END.
-   * Used to crop the next-section teaser baked into each mockup so the rotator
-   * dots don't overlap unrelated content. Defaults to 1672 (no bottom crop).
-   */
+  searchOverlay?: SearchOverlay;
   visibleBottomPx?: number;
 }
 
-// Native image dimensions (all hero mocks are exported at this size).
 const NATIVE_WIDTH = 941;
 const NATIVE_HEIGHT = 1672;
 
-/**
- * Renders an uploaded hero mockup image edge-to-edge. The next-section teaser
- * baked into the bottom of each mock is cropped via `visibleBottomPx`, but the
- * top is preserved so the mockup's own header shows in full and the cream
- * card's natural rounded shape isn't clipped. CTA hot-zones overlay as
- * transparent buttons so links keep working.
- */
-const MockHeroPanel = ({ imageUrl, alt, ctas, visibleBottomPx = NATIVE_HEIGHT }: Props) => {
+const MockHeroPanel = ({ imageUrl, alt, ctas, searchOverlay, visibleBottomPx = NATIVE_HEIGHT }: Props) => {
   const navigate = useNavigate();
+  const [query, setQuery] = useState('');
   const aspectRatio = `${NATIVE_WIDTH} / ${visibleBottomPx}`;
+
+  const submitSearch = () => {
+    const q = query.trim();
+    const params = new URLSearchParams();
+    if (q) params.set('q', q);
+    if (searchOverlay?.mode && searchOverlay.mode !== 'all') params.set('mode', searchOverlay.mode);
+    trackLeadEvent('homepage_search_submit', {
+      route: '/',
+      query: q,
+      source: 'home_hero_mock_search',
+    } as any);
+    navigate(`/search${params.toString() ? `?${params.toString()}` : ''}`);
+  };
+
+  const onKey = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      submitSearch();
+    }
+  };
 
   return (
     <div className="relative w-full mx-auto max-w-[480px] sm:max-w-[520px] md:max-w-[560px] px-2 sm:px-0">
@@ -70,6 +91,38 @@ const MockHeroPanel = ({ imageUrl, alt, ctas, visibleBottomPx = NATIVE_HEIGHT }:
             }}
           />
         ))}
+        {searchOverlay && (
+          <div
+            className="absolute flex items-stretch gap-1 z-10"
+            style={{
+              top: `${searchOverlay.top}%`,
+              left: `${searchOverlay.left}%`,
+              width: `${searchOverlay.width}%`,
+              height: `${searchOverlay.height}%`,
+            }}
+          >
+            <div className="flex-1 flex items-center gap-2 rounded-full bg-white/95 backdrop-blur px-3 sm:px-4 shadow-sm ring-1 ring-black/5">
+              <Search className="w-4 h-4 text-neutral-500 shrink-0" />
+              <input
+                type="text"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                onKeyDown={onKey}
+                placeholder={searchOverlay.placeholder || 'Search food trucks, trailers, kitchens…'}
+                aria-label="Search listings"
+                className="w-full min-w-0 bg-transparent text-[16px] sm:text-sm text-neutral-900 placeholder:text-neutral-500 focus:outline-none"
+              />
+            </div>
+            <button
+              type="button"
+              onClick={submitSearch}
+              aria-label="Search"
+              className="shrink-0 rounded-full bg-primary text-primary-foreground text-xs sm:text-sm font-semibold px-3 sm:px-4 hover:bg-primary/90 active:scale-[0.98] transition-all"
+            >
+              Search
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
