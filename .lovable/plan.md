@@ -1,149 +1,156 @@
 
-# Featured Listings, Search & Dashboard Improvements
+# Premium Mobile Listing Detail Redesign (For-Sale)
 
-Good news from the audit — a lot of the foundation already exists. The plan reuses existing pieces wherever possible and only adds what's truly missing.
+Rebuild the mobile listing page for **sale** listings (food trucks / food trailers) to match the attached Vendibook mockups: premium dark marketplace, warm bronze gradients, glassy cards, generous spacing, conversion-focused CTAs. Desktop layout (sticky right-column purchase widget) stays as-is. Rental listings stay on the current layout.
 
----
+## Scope
 
-## What already exists (will be reused, not rebuilt)
+- Only the for-sale rendering path (`listing.mode === 'sale'`) on mobile + tablet.
+- All data sourced from the existing `listing`, `host`, and `ratingData` queries — no fabricated reviews, verification, or seller photos.
+- Desktop ≥ lg: keep current two-column layout with sticky BookingWidget, just inherit the new section card styling.
 
-- **Featured columns** on `listings`: `featured_enabled`, `featured_at`, `featured_expires_at`, `pending_featured_payment` (JSONB ledger).
-- **Stripe purchase flow**: `create-featured-checkout` + `stripe-webhook` handle activation, idempotency, refunds.
-- **Admin email alerts** for featured purchases are already wired via the `featured-payment-admin-alert` transactional template (sent from `stripe-webhook`). We'll verify delivery and add a parallel in-app channel.
-- **Search ranking**: `search-listings` edge function already sorts featured first across every sort mode and supports a `featured_only` filter — just not exposed in the UI.
-- **Homepage featured row**: `src/components/home/FeaturedListings.tsx` exists but is only used on the alternate `Homepage2.tsx`, never mounted on the live `Index.tsx`.
-- **Featured helper**: `src/lib/featured.ts → isListingFeatured()` correctly checks `featured_enabled` AND non-expired `featured_expires_at`.
+## Architecture
 
----
+Inside `src/pages/ListingDetail.tsx`, when `!isRental`, render a new `<SaleListingMobile>` view as the mobile/tablet layout, and keep the current grid for `lg:` and up. New components live under `src/components/listing-detail/sale/`:
 
-## 1. Premium Featured Badge (replaces tiny star)
-
-- New shared component `src/components/listing/FeaturedBadge.tsx`:
-  - Gradient gold→amber pill with a soft outer glow and a subtle shimmer sweep (matches Satin Lux "glass CTA" memory).
-  - `Crown` icon (lucide-react) + label "Featured".
-  - Variants: `card` (compact pill, top-left corner), `detail` (larger ribbon for listing page hero), `row` (inline for the homepage featured row).
-- Replace the current `Star` in `ListingCard.tsx` (lines 250–259) and add it to:
-  - Listing detail hero (`ListingDetail.tsx`, near title block)
-  - Search result cards (already use `ListingCard`)
-  - Homepage featured row cards
-- Comp/admin-granted featured shows the same badge — there is no visible distinction (per the request, paid vs comp should look identical to users).
-
-## 2. Homepage "Featured Listings" Section
-
-- Mount a new lightweight `HomepageFeaturedRow` near the top of `src/pages/Index.tsx` (right after `AnnouncementBanner`, before `ListingsSections`).
-- Queries `listings` where `featured_enabled = true AND featured_expires_at > now() AND status = 'published'`, ordered by `featured_at desc`, limit 12.
-- Horizontal scroll on mobile, premium grid on desktop.
-- If 0 active featured → section hidden entirely (no awkward empty state).
-- If 1–3 featured → still renders cleanly (left-aligned, no stretched empty slots).
-- We will NOT auto-promote random listings into this slot — instead the admin tool in (5) fills the row with real comp-featured entries so users never see anything mislabeled.
-
-## 3. Featured-First Ranking Everywhere
-
-`search-listings` already does this. Extend the same featured-first ordering to the spots that bypass it today:
-- `src/components/home/ListingsSections.tsx` — add a secondary client-side sort using `isListingFeatured` before rendering each row.
-- `src/pages/Browse.tsx` and `src/pages/CategoryCityPage.tsx` — same treatment.
-- Confirmed: expired featured listings are filtered by the helper, so this is automatic.
-
-## 4. Featured Filter + Sort in UI
-
-- **Filter**: add "Featured listings only" toggle to `src/components/search/FilterPanel.tsx`; wire to existing `featured_only` param on `search-listings`; sync to URL query (`featured=1`).
-- **Sort**: add "Featured first" option to the sort dropdown in `src/pages/Search.tsx`. Since featured-first is already the implicit primary key in every mode, this option will simply pin "newest" as the secondary order and make the behavior explicit/discoverable.
-
-## 5. Admin Notifications for Boost/Featured Purchases
-
-Two-channel fix:
-- **Email path** — already exists, but we'll:
-  - Add a `console.log` + `email_send_log` assertion in `stripe-webhook` so we can confirm whether the `featured-payment-admin-alert` template actually fired for recent purchases.
-  - Verify the admin recipient list and that the template is registered (it is).
-- **In-app/admin dashboard path** — extend `send-admin-notification` with a new `type: 'featured_purchase'` (subject: "Featured listing purchased"), then call it from `stripe-webhook` alongside the existing email. Payload: listing title, listing URL, host name + email, amount, package, start/end dates, Stripe payment intent ID.
-- Idempotency: the webhook already checks `pending_featured_payment.session_id` before activating; we'll reuse that guard to skip the admin notification on retries.
-
-## 6. Complimentary Featured (Comp/Admin/Promo source)
-
-Migration adds:
-- `listings.featured_source TEXT` — values: `'paid' | 'comp' | 'admin' | 'promo'` (nullable; existing paid listings stay null/`paid`).
-- Backfill: rows where `pending_featured_payment->>'source'` exists get `featured_source = 'paid'`.
-
-New admin RPC `admin_grant_complimentary_featured(p_listing_id uuid, p_days int default 30)`:
-- Security definer, `is_admin(auth.uid())` check.
-- Sets `featured_enabled = true`, `featured_at = now()`, `featured_expires_at = now() + p_days days`, `featured_source = 'comp'`.
-- Logs an entry into `admin_notes` for traceability.
-
-Admin UI: small "Grant complimentary featured (30d)" button on the admin listings table (`src/pages/AdminListings.tsx`).
-
-We are **not** auto-promoting random listings into the featured row — the request explicitly warns against mislabeling, and comp-featured fills any inventory gaps cleanly.
-
-## 7. Favorites → Dashboard Crash Fix
-
-Audit didn't find a definitive throw; likely causes:
-- `useFavorites` returning `undefined` during auth hydration when navigating back.
-- `Favorites.tsx` second query lacks a `!!user` guard.
-
-Fixes:
-- Add `enabled: !!user && favorites.length > 0` and a stable `queryKey` including `user?.id` on the listings fetch.
-- Add safe fallbacks (empty array defaults, optional chaining on `listing.images`).
-- Wrap the Favorites and Dashboard routes in an `ErrorBoundary` with a friendly "Something went wrong — back to dashboard" fallback (matches existing global ErrorBoundary memory).
-- Add an empty state to `Favorites.tsx` when the list is empty.
-
-## 8. Remove Map from Listing Detail
-
-In `src/pages/ListingDetail.tsx` (~lines 730–752):
-- Delete the `<ListingLocationMap />` render and its wrapping dividers.
-- Keep the city/state text + `MapPin` line.
-- Remove the now-unused `ListingLocationMap` import.
-- Leaves no visual gap (the surrounding sections close up naturally).
-
-## 9. Technical Details
-
-**Migration (single file):**
-```sql
-ALTER TABLE public.listings
-  ADD COLUMN IF NOT EXISTS featured_source TEXT;
-
-UPDATE public.listings
-  SET featured_source = 'paid'
-  WHERE featured_enabled = true
-    AND pending_featured_payment IS NOT NULL
-    AND featured_source IS NULL;
-
-CREATE OR REPLACE FUNCTION public.admin_grant_complimentary_featured(
-  p_listing_id uuid, p_days int DEFAULT 30
-) RETURNS public.listings
-LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
-DECLARE v_row public.listings;
-BEGIN
-  IF NOT public.is_admin(auth.uid()) THEN
-    RAISE EXCEPTION 'Unauthorized';
-  END IF;
-  UPDATE public.listings SET
-    featured_enabled = true,
-    featured_at = now(),
-    featured_expires_at = now() + (p_days || ' days')::interval,
-    featured_source = 'comp'
-  WHERE id = p_listing_id
-  RETURNING * INTO v_row;
-  RETURN v_row;
-END $$;
+```text
+sale/
+  SaleListingMobile.tsx        // top-level orchestrator (mobile + tablet)
+  SaleBreadcrumb.tsx           // Home > For Sale > {Category} > {Title}
+  SaleHero.tsx                 // gallery + title + subtitle + price + status + badges + share/save
+  SaleBadgeRow.tsx             // In stock / Pickup only / Category / Featured / Verified Seller
+  SaleTrustStrip.tsx           // "Buy with confidence" 3-up bronze-gradient card
+  SaleConciergeCard.tsx        // "Want help with this listing?" w/ Check Availability + Ask Vendibook
+  SaleMessageSellerCard.tsx    // Pre-filled inquiry card with Send Message
+  SaleSellerSummary.tsx        // Sold by + Responds + New seller + Selling since
+  SaleMeetYourSeller.tsx       // Avatar + verification checklist (only true items)
+  SaleSpecsGrid.tsx            // 2-col icon spec cards
+  SalePolicyCard.tsx           // Pickup & Transfer, Return Policy, Pickup Available rows
+  SaleLocationCard.tsx         // "Where you'll be" map (reuse ListingLocationMap) with fallback design
+  SaleAboutCard.tsx            // About + AudioListingPlayer + PromoVideoPlayer + description
+  SaleWhatsIncluded.tsx        // grouped amenity categories with icons
+  SalePricingCard.tsx          // Big price + sale policy
+  SaleReviewsCard.tsx          // "No reviews yet" empty state or list
+  SaleSimilarListings.tsx      // 2-col grid wrapper over RelatedListings data
+  SalePurchaseProtection.tsx   // 4 multi-color trust cards
+  SaleBrowseMore.tsx           // Row links with chevrons
+  SaleStickyActionBar.tsx      // Buy Now + Make Offer (replaces StickyMobileCTA for sale)
 ```
 
-**Edge function changes:**
-- `stripe-webhook` → after successful featured activation, `fetch('/functions/v1/send-admin-notification', { type: 'featured_purchase', data: {...} })`.
-- `send-admin-notification` → add `featured_purchase` to the type union + subject map.
+Shared visual primitive: `SaleCard` (rounded-2xl, `bg-card/60 backdrop-blur`, hairline border `border-white/5`, optional bronze gradient overlay). Used by every section so we replace divider lines with card separation.
 
-**Frontend new/changed files:**
-- New: `src/components/listing/FeaturedBadge.tsx`, `src/components/home/HomepageFeaturedRow.tsx`.
-- Edit: `ListingCard.tsx`, `ListingDetail.tsx`, `Index.tsx`, `ListingsSections.tsx`, `Browse.tsx`, `CategoryCityPage.tsx`, `Search.tsx`, `FilterPanel.tsx`, `Favorites.tsx`, `useFavorites.ts`, `AdminListings.tsx`.
+## Section-by-section behavior
 
-## 10. QA after build
+### Header & breadcrumb
+- Keep global `<Header />` (sticky glass). Add `SaleBreadcrumb` directly under it: `Home › For Sale › {CategoryLabel}s › {Title}`, current crumb in `text-primary`, no heavy divider, contained in a subtle card-area.
 
-I'll verify each of your 12 checklist items in the preview and report back.
+### Hero gallery
+- Reuse `EnhancedPhotoGallery` but wrap in a `rounded-2xl ring-1 ring-primary/20 shadow-[0_0_40px_-12px_hsl(var(--primary)/0.25)]` frame.
+- Top-left: `Featured` pill (only when `is_featured`). Top-right: image counter pill `n / total` from gallery state. Hide arrows + dots when only 1 image.
 
----
+### Listing hero block
+- Title (`text-2xl font-semibold`), subtitle from `headline`/short description, location + active dot row, price aligned right on a flex row. `Share` + `Save` as pill buttons next to title (use existing `handleShare`, `FavoriteButton variant="pill"` new variant).
+- Removes the current "Share & earn a referral reward →" inline text (moves it into the share menu only, never inline).
 
-## Questions before I start
+### Badge row
+- Horizontal scroll-safe flex with `flex-wrap`: In stock (green), Pickup only (icon), Category, Active 1w ago, Featured, Verified Seller (only if `host.identity_verified`). All pill chips, no vertical stacking.
 
-1. **Featured badge color** — gold/amber gradient (premium feel) vs the brand orange (#F97316)? Gold reads "premium" more clearly; orange keeps strict brand consistency. Lean: **gold accent** since orange is reserved for CTAs in the design system.
-2. **Homepage featured row position** — directly under the hero/announcement (most prominent) or after the first "Recently Added for Rent" row (less pushy)? Lean: **directly under**, since that's what you asked for.
-3. **Comp-featured admin UI** — quick button on the existing admin listings table is fastest; a dedicated "Featured manager" page with bulk controls is nicer but more work. Lean: **button now**, dedicated page later if you want.
+### Trust strip ("Buy with confidence")
+- One card with subtle bronze radial gradient. 3-up icons: Verified Listing, Secure Payments, Responsive Seller. Mobile = 3 across with small icons stacked above label.
 
-If those defaults are fine, just say "go" and I'll execute the whole plan in one pass.
+### Primary purchase actions (mobile)
+- Inline `Buy Now` (orange gradient) + `Make Offer` (outline) row at the top of content, then `Check Availability` cream pill, then `Ask Vendibook for Help` dark outline. Also a sticky bottom bar (see Sticky bar section).
+
+### Concierge card
+- Bronze-gradient glass card, headset icon, headline, body, two buttons (Check Availability → opens existing `ListingConciergeBox` modal flow; Ask Vendibook for Help → dispatches `start-vendi-call` event per Vendi trigger pattern). Trust note "Replies within 1 business hour · No commitment".
+
+### Message seller card
+- Wraps existing `MessageHostForm` logic in the new card chrome. Header "Send a message to {sellerFirstName}", Secure & private label, textarea with character count `n/500`, large orange `Send Message`. Pre-fill: `Hi {firstName}, I'm interested in your {categoryLabel.toLowerCase()} and would love to learn more.`
+
+### Seller summary + Meet your seller
+- Summary strip card: Sold by · {Name} · Responds quickly (from `host.last_active_at`) · New seller (only when `ratingData.count === 0`) · Selling on Vendibook since {year of `host.created_at`}.
+- Meet your seller card: avatar (`host.avatar_url` else initials), name, location, rating only if `ratingData.count > 0`, verification checklist where each row only renders when underlying boolean is true (`email_verified`, `phone_verified`, `identity_verified`, `vendishield_protected`). If none verified, show generic "Verification in progress" instead of fake checkmarks.
+
+### Technical specs grid
+- New 2-col card grid using existing spec fields (Hot/Cold Water from amenities, Category, Condition, Listing Type, Brand, Pickup type, Location, Year if exists). Each cell: orange icon left, label muted, value bold. Skip cells with no data.
+
+### Policy card
+- Three rows in one card: Pickup & Transfer, Return Policy, Pickup Available (with city + small map illustration on the right). Each row has icon, title, body, chevron (Pickup/Return open inline collapse, Pickup-available opens directions).
+
+### Location section
+- Render approximate-area map via existing `ListingLocationMap` (already supports 800m approximation per location-privacy memory). Wrap in `SaleCard` with title "Where you'll be", `Approximate area` pill, "Exact location provided after purchase confirmation", `View larger map` ghost button. If map fails to load, render the designed fallback card (no "Map unavailable" box).
+
+### About this listing
+- Section header + existing `PromoVideoPlayer` (Auto-generate promo video) button on the right. `AudioListingPlayer` in its own bronze-bordered card. `CollapsibleDescription` for the actual description text, increased `leading-relaxed`.
+
+### What's included
+- Group `listing.amenities` into Utilities / Kitchen / Cold Storage / Build & Service / Cleaning & Safety using a static amenity→group map (extend the one in `AmenitiesSection`). Each group is its own subsection with a small header, items rendered as rounded icon chips, 2-col on mobile.
+
+### Pricing card
+- Dedicated card with bronze gradient inside; large `$X,XXX` + `USD`, "All sales are final after confirmation" note. Sourced from `listing.price_sale`.
+
+### Reviews
+- Empty state matches mockup when `ratingData.count === 0`: card with star icon, "No reviews yet", "Be the first to review this listing." button. Real reviews via existing `ReviewsSection` when present.
+
+### Similar listings
+- Wrap existing `RelatedListings` data fetch in a 2-col mobile grid renderer. Each card: image, heart, title, location, price, In stock pill. Title "Similar {CategoryLabel}s near {city}" + `View all →` link to `/search?category=...&mode=sale&near={city}`.
+
+### Purchase protection
+- Four cards with mixed accent colors: Verified Users (green), Secure Payments (orange), Document Workflow (blue), Dispute Support (gold). 2-col on mobile.
+
+### Browse more
+- Stacked rows with icon + label + chevron linking to the eight URLs listed in the brief.
+
+### Footer
+- Keep existing `<Footer />`. No structural changes (the brief's footer requirements already match it).
+
+## Sticky bottom bar + chat widget fix
+
+- New `SaleStickyActionBar` replaces `StickyMobileCTA` only when `!isRental`: dark glass background, safe-area inset padding, `Buy Now` (orange) + `Make Offer` (outline) side-by-side, full width.
+- Page wrapper gets `pb-[calc(env(safe-area-inset-bottom)+96px)]` on mobile so content scrolls clear of the bar.
+- Vendi chat bubble: read its global positioner and offset upward by the sticky bar height on this route (publish a `data-sale-cta-active` attribute on `body` and update the chat widget CSS to respect `bottom: calc(96px + env(safe-area-inset-bottom) + 16px)` when present). No covering of Buy Now / Make Offer.
+
+## Theming tokens
+
+Add to `src/index.css` (HSL semantic tokens, no hardcoded colors in components):
+
+- `--surface-charcoal: 240 6% 8%`
+- `--surface-blueblack: 222 22% 9%`
+- `--surface-warm: 24 10% 10%`
+- `--gradient-bronze: radial-gradient(120% 80% at 100% 0%, hsl(28 70% 45% / 0.25), transparent 60%)`
+- `--gradient-bronze-soft: linear-gradient(135deg, hsl(28 70% 30% / 0.18), hsl(240 8% 8% / 0))`
+- `--ring-bronze: 0 0 0 1px hsl(28 60% 40% / 0.35)`
+- `--shadow-glow-orange: 0 0 40px -12px hsl(var(--primary) / 0.35)`
+
+`SaleCard` consumes these via Tailwind utilities mapped in `tailwind.config.ts` (`bg-surface-charcoal`, `bg-gradient-bronze`, `ring-bronze`, `shadow-glow-orange`).
+
+## Data integrity rules
+
+- Verification checklist items each gated on the matching `host.*_verified` boolean. None faked.
+- Seller avatar: only render `host.avatar_url` if present; else initials avatar with bronze ring.
+- Reviews: only show stars/count when `ratingData.count > 0`.
+- Map: only render with `latitude` + `longitude`; else fallback design card.
+- Featured badge: only when `listing.is_featured`.
+- Pickup-only / In-stock pills derived from `fulfillment_type` and `status === 'published'`.
+
+## Technical details
+
+- Branch the render in `ListingDetail.tsx`: when `!isRental`, return `<SaleListingMobile {...props} />` for `<lg` screens (via Tailwind `lg:hidden` wrapper) and keep the existing grid inside `hidden lg:block`. The lg grid reuses the same new card primitives for visual parity.
+- Lift `images`, `videos`, `locationShort`, `categoryLabel`, etc. into the new component via props so we don't duplicate queries.
+- No DB changes, no edge-function changes.
+- Honor existing Vendi triggers (`start-vendi-call`), referral, share-kit, and analytics events already wired in `ListingDetail`.
+- Mobile input font-size remains 16px (per core memory).
+
+## Out of scope
+
+- Rental listing layout (unchanged).
+- Auth, payments, edge functions, schema, SEO/JSON-LD (kept as-is).
+- Header redesign beyond inheriting current sticky glass styling.
+
+## Acceptance
+
+- Visiting a published `mode=sale` listing on mobile renders the new layout matching mockups 1–4 in order: gallery → hero+badges → trust strip → buy/offer → concierge → message seller → seller summary → meet seller → specs → policy → location → about → what's included → pricing → reviews → similar → purchase protection → browse more → footer.
+- Sticky bottom bar shows Buy Now + Make Offer, never overlaps content or chat widget.
+- No fabricated reviews, verification, or seller photos.
+- Page remains dark; no light-theme regressions.
+- Desktop ≥ lg unchanged in layout but inherits new card visuals.
