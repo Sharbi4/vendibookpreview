@@ -8,11 +8,28 @@ async function unsubscribe(email: string) {
     Deno.env.get("SUPABASE_URL")!,
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
   );
-  // upsert into unsubscribes (unique on lower(email))
-  const { error } = await supabase
-    .from("email_unsubscribes")
-    .upsert({ email: email.toLowerCase(), unsubscribed_at: new Date().toISOString() }, { onConflict: "email" });
-  if (error && !error.message.includes("duplicate")) console.error("unsub error", error);
+  const lower = email.toLowerCase();
+  const now = new Date().toISOString();
+
+  // Write to ALL suppression sources so every sender (marketing, transactional,
+  // newsletter, broadcast) will skip this address going forward.
+  const [a, b, c] = await Promise.all([
+    supabase
+      .from("email_unsubscribes")
+      .upsert({ email: lower, unsubscribed_at: now }, { onConflict: "email" }),
+    supabase
+      .from("suppressed_emails")
+      .upsert({ email: lower, reason: "unsubscribe" }, { onConflict: "email" }),
+    supabase
+      .from("newsletter_subscribers")
+      .upsert(
+        { email: lower, source: "unsubscribe", unsubscribed_at: now },
+        { onConflict: "email" }
+      ),
+  ]);
+  if (a.error && !a.error.message.includes("duplicate")) console.error("email_unsubscribes", a.error);
+  if (b.error && !b.error.message.includes("duplicate")) console.error("suppressed_emails", b.error);
+  if (c.error && !c.error.message.includes("duplicate")) console.error("newsletter_subscribers", c.error);
 }
 
 const PAGE = (email: string) => `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Unsubscribed</title>
