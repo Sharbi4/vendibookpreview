@@ -61,7 +61,7 @@ const HeroPanelShell = ({
       {accentClassName && (
         <div className={cn('absolute inset-0 pointer-events-none', accentClassName)} />
       )}
-      <div className="container relative z-10 max-w-6xl mx-auto px-5 py-10 sm:py-16 md:py-20 min-h-[640px] md:min-h-[560px] flex items-center">
+      <div className="container relative z-10 max-w-6xl mx-auto px-5 py-10 sm:py-16 md:py-20 flex items-center">
         <div className={cn('grid gap-10 items-center w-full', visual ? 'md:grid-cols-2' : 'md:grid-cols-1')}>
           <div className="text-center md:text-left">
             <motion.div

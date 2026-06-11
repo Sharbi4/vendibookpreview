@@ -1,28 +1,38 @@
-## Problem
-- Hero panel image is capped at ~560px width — not full width.
-- The "search field" on the image is actually a real `<input>` overlay, but its position percentages were calibrated against a smaller crop (e.g. `visibleBottomPx=1414`). After expanding to the full 1672px native height, the overlay (and CTA hotspots) drifted off the drawn search bar/buttons in the artwork, so it looks fake and unclickable.
-- User wants: full width + full bottom height, keep the top crop, and a real working search field.
+## Refactor hero so the mockup is background-only and all UI is real
 
-## Fix (in `src/components/home/hero/panels/MockHeroPanel.tsx` + 4 panel files)
+Current bug: each panel renders the mockup image as the entire slide via `MockHeroPanel`, so the search bar and buttons inside the image are fake. The fix is to switch panels to the existing `HeroPanelShell` (which already supports a background image + real headline/CTAs) and add a real search component.
 
-1. **Full width:** Remove `max-w-[480px] sm:max-w-[520px] md:max-w-[560px] px-2 sm:px-0` from the outer wrapper so the panel fills its parent. Keep `rounded-3xl ring-1 ring-white/10 shadow-2xl`.
+### Files
 
-2. **Full bottom, keep top crop:** Keep `visibleBottomPx=1672` (already full) and `visibleTopPx=150` (keeps mock browser chrome cropped).
+1. **`src/components/home/hero/panels/Panel1Marketplace.tsx`** — rewrite to use `HeroPanelShell`:
+   - `bgImage` = marketplace mock (decorative, `aria-hidden`).
+   - Eyebrow: "THE MARKETPLACE FOR MOBILE FOOD ASSETS"
+   - Headline: "Find, rent, buy, or sell food trucks and food trailers"
+   - Supporting text per spec.
+   - Render a new `<HeroSearchForm />` (real `<form>` with input + Search button) as `primaryCta`.
+   - Secondary row beneath: "Sign Up Free" → `/auth?mode=signup&...utm`, "Browse Trucks & Trailers" → `/search?category=food_truck,food_trailer&...utm`.
+   - "Have a truck or trailer? List it free →" link → `/list?...utm` (closest existing route; add TODO if `/list-your-food-truck` doesn't exist).
 
-3. **Real, prominent search bar — not an overlay on the image:**
-   - Remove the in-image `searchOverlay` rendering and the CTA hotspot buttons from `MockHeroPanel` (they no longer align with the artwork and feel fake).
-   - Render a real search bar + action buttons **below** the image, inside the same panel container:
-     - White pill input with `Search` icon, 16px font on mobile (no iOS zoom), `Enter` submits.
-     - Primary "Search" button routes to `/search?q=…&mode=<panel mode>`.
-     - Preserve existing analytics: `trackLeadEvent('homepage_search_submit', …)`.
-   - Keep the panel-specific secondary CTAs (e.g. "List it free", "Sign up free", "Browse trucks and trailers") as real buttons rendered below the search bar — same labels, hrefs, and event names that are currently passed via the `ctas` prop.
+2. **`src/components/home/hero/panels/Panel2Financing.tsx`** — use `HeroPanelShell` with financing mock as bg, spec text, CTAs "Browse Eligible Listings" + "Learn How It Works" routing as listed.
 
-4. **Prop cleanup:** `MockHeroPanel` keeps `imageUrl`, `alt`, `visibleTopPx`, `visibleBottomPx`, `searchOverlay` (now just supplies `placeholder` + `mode`), and `ctas` (now rendered as real buttons, `top/left/width/height` ignored / optional). No call-site signature breakage for Panel1–4.
+3. **`src/components/home/hero/panels/Panel3HostTools.tsx`** — use `HeroPanelShell` with host-tools mock as bg, spec text, CTAs "Explore Host Tools" → `/tools` (TODO note for `/host-tools`), "How Hosting Works" → `/how-it-works-host`.
 
-## Files touched
-- `src/components/home/hero/panels/MockHeroPanel.tsx` — width, remove overlays, add real search + CTA stack.
-- `src/components/home/hero/panels/Panel1Marketplace.tsx`, `Panel2Financing.tsx`, `Panel3HostTools.tsx`, `Panel4Payments.tsx` — no prop changes required; coordinate fields on CTAs become inert.
+4. **`src/components/home/hero/panels/Panel4Payments.tsx`** — same pattern: payments mock as bg, spec text, "Learn More" + "Browse Listings" CTAs.
 
-## Out of scope
-- No changes to hero carousel container, headline, or non-hero sections.
-- No new analytics events.
+5. **New `src/components/home/hero/panels/HeroSearchForm.tsx`** — real form: white pill input with `Search` icon, `text-base` (16px) on mobile, Enter submits, button labeled "Search". Empty submit → `/search?utm_source=homepage&utm_medium=hero&utm_campaign=homepage_search&utm_content=empty_marketplace_search`; with query → `/search?q={encoded}&...utm_content=marketplace_panel`. Fires `trackLeadEvent('homepage_search_submit', …)`.
+
+6. **`src/components/home/hero/panels/HeroPanelShell.tsx`** — minor tweak: drop fixed `min-h` so the slide grows with content and the carousel dots in `RotatingHero` sit cleanly below without cutting off the bg image. Keep dots in `RotatingHero` (already outside the slide card).
+
+7. **`src/components/home/hero/panels/MockHeroPanel.tsx`** — delete (no longer referenced) via `rm`.
+
+### Routes used (with TODO when no exact match exists)
+- `/search?q=…&utm…` and `/search?utm…` (exists)
+- `/auth?mode=signup&utm…` (existing signup route) — used in place of `/signup` (TODO note)
+- `/list?utm…` (existing) — used in place of `/list-your-food-truck` (TODO note)
+- `/how-it-works?utm…` (existing)
+- `/tools?utm…` for "Explore Host Tools" (TODO for `/host-tools`)
+- `/how-it-works-host?utm…` for "How Hosting Works"
+
+### Out of scope
+- No changes to `RotatingHero` rotation/swipe logic, header, or non-hero sections.
+- No redesign of other home sections.
