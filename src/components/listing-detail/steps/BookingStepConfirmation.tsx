@@ -1,4 +1,4 @@
-import { CheckCircle2, Calendar, MessageCircle, ArrowRight, Clock, ShieldCheck, Sparkles, PartyPopper, FileText, Upload, AlertCircle } from 'lucide-react';
+import { CheckCircle2, Calendar, MessageCircle, ArrowRight, Clock, ShieldCheck, PartyPopper, FileText, Upload, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { useEffect, useRef } from 'react';
@@ -17,8 +17,7 @@ const BookingStepConfirmation = ({
   instantBook,
   bookingId,
   listingTitle,
-  listingId,
-}: BookingStepConfirmationProps) => {
+  listingId}: BookingStepConfirmationProps) => {
   const confettiFired = useRef(false);
   const { data: requiredDocuments } = useListingRequiredDocuments(listingId);
   const hasDocuments = requiredDocuments && requiredDocuments.length > 0;
@@ -43,8 +42,7 @@ const BookingStepConfirmation = ({
         ...defaults,
         particleCount,
         origin: { x: randomInRange(0.2, 0.8), y: Math.random() - 0.2 },
-        colors: ['#FF5124', '#FFB800', '#22C55E', '#3B82F6', '#A855F7'],
-      });
+        colors: ['#FF5124', '#FFB800', '#22C55E', '#3B82F6', '#A855F7']});
     }, 250);
   }, []);
 
@@ -58,7 +56,7 @@ const BookingStepConfirmation = ({
           <div className="absolute inset-0 flex items-center justify-center">
             <CheckCircle2 className="h-10 w-10 text-emerald-600" />
           </div>
-          <Sparkles className="absolute -top-1 -right-1 h-5 w-5 text-amber-500 animate-bounce" />
+          
         </div>
 
         <h3 className="text-2xl font-bold text-foreground mb-2 flex items-center justify-center gap-2">

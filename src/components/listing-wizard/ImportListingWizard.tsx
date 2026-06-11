@@ -9,7 +9,6 @@ import {
   Loader2, 
   X, 
   Check,
-  Sparkles,
   AlertCircle,
   Video,
   Play
@@ -67,8 +66,7 @@ const initialFormData: ImportFormData = {
   location: '',
   price: '',
   highlights: [],
-  autoFilledFields: new Set(),
-};
+  autoFilledFields: new Set()};
 
 // File validation constants
 const MAX_IMAGE_SIZE = 10 * 1024 * 1024; // 10MB
@@ -94,20 +92,17 @@ const IMPORT_METHODS = [
     label: 'Upload photos & videos', 
     description: 'Start with media, add details later.',
     icon: ImagePlus 
-  },
-];
+  }];
 
 const CATEGORY_OPTIONS: { value: ListingCategory; label: string }[] = [
   { value: 'food_truck', label: 'Food Truck' },
   { value: 'food_trailer', label: 'Food Trailer' },
   { value: 'ghost_kitchen', label: 'Shared Kitchen' },
-  { value: 'vendor_lot', label: 'Vendor Space' },
-];
+  { value: 'vendor_lot', label: 'Vendor Space' }];
 
 const MODE_OPTIONS: { value: ListingMode; label: string }[] = [
   { value: 'rent', label: 'For Rent' },
-  { value: 'sale', label: 'For Sale' },
-];
+  { value: 'sale', label: 'For Sale' }];
 
 export const ImportListingWizard: React.FC = () => {
   const navigate = useNavigate();
@@ -172,8 +167,7 @@ export const ImportListingWizard: React.FC = () => {
       toast({
         title: `${errors.length} file(s) couldn't be added`,
         description: errors.slice(0, 2).join('\n'),
-        variant: 'destructive',
-      });
+        variant: 'destructive'});
     }
     
     if (validFiles.length === 0) return;
@@ -211,8 +205,7 @@ export const ImportListingWizard: React.FC = () => {
       toast({
         title: `${errors.length} video(s) couldn't be added`,
         description: errors.slice(0, 2).join('\n'),
-        variant: 'destructive',
-      });
+        variant: 'destructive'});
     }
     
     if (validFiles.length === 0) return;
@@ -257,8 +250,7 @@ export const ImportListingWizard: React.FC = () => {
 
   const extractInfoFromText = (text: string): Partial<ImportFormData> => {
     const extracted: Partial<ImportFormData> = {
-      autoFilledFields: new Set(),
-    };
+      autoFilledFields: new Set()};
 
     // Extract title (first line or first sentence)
     const lines = text.split('\n').filter(l => l.trim());
@@ -268,9 +260,9 @@ export const ImportListingWizard: React.FC = () => {
     }
 
     // Extract price (look for $ followed by numbers)
-    const priceMatch = text.match(/\$[\d,]+(?:\.\d{2})?/);
+    const priceMatch = text.match(/\$[\d]+(?:\.\d{2})?/);
     if (priceMatch) {
-      extracted.price = priceMatch[0].replace(/[$,]/g, '');
+      extracted.price = priceMatch[0].replace(/[$]/g, '');
       extracted.autoFilledFields?.add('price');
     }
 
@@ -318,8 +310,7 @@ export const ImportListingWizard: React.FC = () => {
       /recently inspected/i,
       /generator included/i,
       /commercial grade/i,
-      /high traffic/i,
-    ];
+      /high traffic/i];
 
     highlightPatterns.forEach(pattern => {
       if (pattern.test(text)) {
@@ -353,8 +344,7 @@ export const ImportListingWizard: React.FC = () => {
     if (!formData.method) {
       toast({
         title: 'Please select an import method',
-        variant: 'destructive',
-      });
+        variant: 'destructive'});
       return;
     }
     
@@ -369,8 +359,7 @@ export const ImportListingWizard: React.FC = () => {
 
     try {
       let extractedData: Partial<ImportFormData> = {
-        autoFilledFields: new Set(),
-      };
+        autoFilledFields: new Set()};
 
       // Process based on method
       if (formData.method === 'url') {
@@ -395,8 +384,7 @@ export const ImportListingWizard: React.FC = () => {
         location: extractedData.location || prev.location || '',
         price: extractedData.price || prev.price || '',
         highlights: extractedData.highlights || prev.highlights || [],
-        autoFilledFields: extractedData.autoFilledFields || new Set(),
-      }));
+        autoFilledFields: extractedData.autoFilledFields || new Set()}));
 
       try {
         trackImportReviewViewed();
@@ -410,8 +398,7 @@ export const ImportListingWizard: React.FC = () => {
       toast({
         title: 'Error processing content',
         description: error instanceof Error ? error.message : 'Please try again or enter details manually.',
-        variant: 'destructive',
-      });
+        variant: 'destructive'});
     } finally {
       setIsProcessing(false);
     }
@@ -437,8 +424,7 @@ export const ImportListingWizard: React.FC = () => {
       toast({
         title: 'Missing required fields',
         description: `Please fill in: ${missingFields.join(', ')}.`,
-        variant: 'destructive',
-      });
+        variant: 'destructive'});
       return;
     }
 
@@ -486,8 +472,7 @@ export const ImportListingWizard: React.FC = () => {
           address: formData.location?.trim() || null,
           pickup_location_text: formData.location?.trim() || null,
           price_daily: priceDaily,
-          price_sale: priceSale,
-        } as any)
+          price_sale: priceSale} as any)
         .select()
         .single();
 
@@ -597,8 +582,7 @@ export const ImportListingWizard: React.FC = () => {
       toast({
         title: 'Error creating draft',
         description: errorMessage,
-        variant: 'destructive',
-      });
+        variant: 'destructive'});
     } finally {
       setIsProcessing(false);
     }
@@ -673,7 +657,7 @@ export const ImportListingWizard: React.FC = () => {
               <Label htmlFor="title">Title</Label>
               {formData.autoFilledFields.has('title') && (
                 <Badge variant="secondary" className="text-xs">
-                  <Sparkles className="w-3 h-3 mr-1" />
+                  
                   Auto-filled
                 </Badge>
               )}
@@ -692,7 +676,7 @@ export const ImportListingWizard: React.FC = () => {
               <Label>Category</Label>
               {formData.autoFilledFields.has('category') && (
                 <Badge variant="secondary" className="text-xs">
-                  <Sparkles className="w-3 h-3 mr-1" />
+                  
                   Auto-filled
                 </Badge>
               )}
@@ -727,7 +711,7 @@ export const ImportListingWizard: React.FC = () => {
               <Label>Listing type</Label>
               {formData.autoFilledFields.has('mode') && (
                 <Badge variant="secondary" className="text-xs">
-                  <Sparkles className="w-3 h-3 mr-1" />
+                  
                   Auto-filled
                 </Badge>
               )}
@@ -762,7 +746,7 @@ export const ImportListingWizard: React.FC = () => {
               <Label htmlFor="location">Location (City, State)</Label>
               {formData.autoFilledFields.has('location') && (
                 <Badge variant="secondary" className="text-xs">
-                  <Sparkles className="w-3 h-3 mr-1" />
+                  
                   Auto-filled
                 </Badge>
               )}
@@ -787,7 +771,7 @@ export const ImportListingWizard: React.FC = () => {
               <Label htmlFor="price">Price (optional)</Label>
               {formData.autoFilledFields.has('price') && (
                 <Badge variant="secondary" className="text-xs">
-                  <Sparkles className="w-3 h-3 mr-1" />
+                  
                   Auto-filled
                 </Badge>
               )}
@@ -810,7 +794,7 @@ export const ImportListingWizard: React.FC = () => {
               <div className="flex items-center gap-2">
                 <Label>Highlights</Label>
                 <Badge variant="secondary" className="text-xs">
-                  <Sparkles className="w-3 h-3 mr-1" />
+                  
                   Auto-filled
                 </Badge>
               </div>

@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
-import { CheckCircle2, Calendar, ArrowRight, Loader2, Home, ShieldCheck, Clock, Sparkles, PartyPopper, Mail, ChevronDown, ChevronUp, Receipt, Download, FileText, Printer, Wallet, BanknoteIcon, MapPin, AlertCircle, RefreshCw } from 'lucide-react';
+import { CheckCircle2, Calendar, ArrowRight, Loader2, Home, ShieldCheck, Clock, PartyPopper, Mail, ChevronDown, ChevronUp, Receipt, Download, FileText, Printer, Wallet, BanknoteIcon, MapPin, AlertCircle, RefreshCw } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -118,14 +118,12 @@ const PaymentSuccess = () => {
         ...defaults,
         particleCount,
         origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 },
-        colors: ['#FF5124', '#FFB800', '#22C55E', '#3B82F6', '#A855F7'],
-      });
+        colors: ['#FF5124', '#FFB800', '#22C55E', '#3B82F6', '#A855F7']});
       confetti({
         ...defaults,
         particleCount,
         origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 },
-        colors: ['#FF5124', '#FFB800', '#22C55E', '#3B82F6', '#A855F7'],
-      });
+        colors: ['#FF5124', '#FFB800', '#22C55E', '#3B82F6', '#A855F7']});
     }, 250);
   };
 
@@ -143,8 +141,7 @@ const PaymentSuccess = () => {
           // The edge function is idempotent - if transaction exists, it returns success
           try {
             await supabase.functions.invoke('create-sale-transaction', {
-              body: { session_id: sessionId },
-            });
+              body: { session_id: sessionId }});
           } catch (createError) {
             // Log but don't fail - transaction might already exist from webhook
             console.log('Create transaction attempt:', createError);
@@ -186,14 +183,11 @@ const PaymentSuccess = () => {
                   item_name: data.listing?.title || 'Purchase',
                   item_category: 'sale',
                   price: data.amount,
-                  quantity: 1,
-                }],
-              });
+                  quantity: 1}]});
               trackCheckoutConversion({
                 transaction_id: data.id,
                 value: data.amount,
-                currency: 'USD',
-              });
+                currency: 'USD'});
             } else {
               if (txError) {
                 console.warn('PaymentSuccess: sale transaction lookup error', txError);
@@ -247,14 +241,11 @@ const PaymentSuccess = () => {
                 item_name: data.listing?.title || 'Booking',
                 item_category: 'rental',
                 price: data.total_price,
-                quantity: 1,
-              }],
-            });
+                quantity: 1}]});
             trackCheckoutConversion({
               transaction_id: data.id,
               value: data.total_price,
-              currency: 'USD',
-            });
+              currency: 'USD'});
           }
         }
 
@@ -350,7 +341,7 @@ const PaymentSuccess = () => {
                     <div className="absolute inset-0 flex items-center justify-center">
                       <ShieldCheck className="h-12 w-12 text-emerald-600" />
                     </div>
-                    <Sparkles className="absolute -top-1 -right-1 h-6 w-6 text-amber-500 animate-bounce" />
+                    
                   </div>
                   
                   <h1 className="text-2xl font-bold text-foreground mb-2 flex items-center justify-center gap-2">
@@ -448,8 +439,7 @@ const PaymentSuccess = () => {
                         { done: true, title: 'Payment Secured', desc: 'Your funds are safely held in escrow' },
                         { done: false, step: 2, title: 'Receive Your Item', desc: 'Coordinate with the seller' },
                         { done: false, step: 3, title: 'Confirm Receipt', desc: 'Verify in your dashboard' },
-                        { done: false, step: 4, title: 'Payment Released', desc: 'Funds go to the seller' },
-                      ].map((item, i) => (
+                        { done: false, step: 4, title: 'Payment Released', desc: 'Funds go to the seller' }].map((item, i) => (
                         <div key={i} className="flex items-start gap-3">
                           <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 ${item.done ? 'bg-emerald-100' : 'bg-muted'}`}>
                             {item.done ? (
@@ -503,8 +493,7 @@ const PaymentSuccess = () => {
                             fulfillmentType: saleTransaction.fulfillment_type,
                             address: saleTransaction.delivery_address,
                             paymentDate: new Date().toISOString(),
-                            recipientName: userProfile?.full_name || 'Valued Customer',
-                          });
+                            recipientName: userProfile?.full_name || 'Valued Customer'});
                         }
                       }}
                     >
@@ -596,7 +585,7 @@ const PaymentSuccess = () => {
                         <CheckCircle2 className="h-12 w-12 text-emerald-600" />
                       )}
                     </div>
-                    <Sparkles className="absolute -top-1 -right-1 h-6 w-6 text-amber-500 animate-bounce" />
+                    
                   </div>
                   
                   <h1 className="text-2xl font-bold text-foreground mb-2 flex items-center justify-center gap-2">
@@ -906,8 +895,7 @@ const PaymentSuccess = () => {
                               fulfillmentType: booking.fulfillment_selected,
                               paymentDate: new Date().toISOString(),
                               recipientName: userProfile?.full_name || 'Valued Customer',
-                              slotName: (booking as any).slot_name || undefined,
-                            });
+                              slotName: (booking as any).slot_name || undefined});
                           }
                         }}
                       >

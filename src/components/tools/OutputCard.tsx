@@ -8,7 +8,6 @@ import { useToast } from '@/hooks/use-toast';
 import { 
   Copy, 
   Check, 
-  Sparkles, 
   Download,
   Share2,
   ChevronDown,
@@ -38,8 +37,7 @@ export const OutputCard = ({
   gradient = 'from-primary/5 to-primary/10',
   actions,
   collapsible = false,
-  defaultExpanded = true,
-}: OutputCardProps) => {
+  defaultExpanded = true}: OutputCardProps) => {
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
 
   return (
@@ -63,7 +61,7 @@ export const OutputCard = ({
                   transition={{ delay: 0.2, type: 'spring', stiffness: 200 }}
                   className="h-10 w-10 rounded-xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center shadow-md"
                 >
-                  <Sparkles className="h-5 w-5 text-primary-foreground" />
+                  
                 </motion.div>
               )}
               <div>
@@ -124,33 +122,28 @@ export const OutputMetric = ({
   variant = 'default',
   size = 'md',
   prefix = '',
-  suffix = '',
-}: OutputMetricProps) => {
+  suffix = ''}: OutputMetricProps) => {
   const variantStyles = {
     default: 'bg-muted/50',
     highlight: 'bg-primary/10 border border-primary/20',
     success: 'bg-green-500/10 border border-green-500/20',
-    warning: 'bg-amber-500/10 border border-amber-500/20',
-  };
+    warning: 'bg-amber-500/10 border border-amber-500/20'};
 
   const valueStyles = {
     default: 'text-foreground',
     highlight: 'text-primary',
     success: 'text-green-600 dark:text-green-400',
-    warning: 'text-amber-600 dark:text-amber-400',
-  };
+    warning: 'text-amber-600 dark:text-amber-400'};
 
   const sizeStyles = {
     sm: 'p-3',
     md: 'p-4',
-    lg: 'p-5',
-  };
+    lg: 'p-5'};
 
   const valueSizes = {
     sm: 'text-lg',
     md: 'text-2xl',
-    lg: 'text-3xl',
-  };
+    lg: 'text-3xl'};
 
   return (
     <motion.div
@@ -241,13 +234,11 @@ export const OutputList = ({
   icon,
   variant = 'check',
   columns = 1,
-  className,
-}: OutputListProps) => {
+  className}: OutputListProps) => {
   const columnStyles = {
     1: 'grid-cols-1',
     2: 'grid-cols-1 sm:grid-cols-2',
-    3: 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3',
-  };
+    3: 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'};
 
   return (
     <ul className={cn('grid gap-2', columnStyles[columns], className)}>
@@ -293,8 +284,7 @@ export const OutputSection = ({
   description,
   children,
   className,
-  collapsible = false,
-}: OutputSectionProps) => {
+  collapsible = false}: OutputSectionProps) => {
   const [isExpanded, setIsExpanded] = useState(true);
 
   return (
@@ -351,8 +341,7 @@ export const OutputActions = ({
   onDownload,
   onShare,
   onPrint,
-  className,
-}: OutputActionsProps) => {
+  className}: OutputActionsProps) => {
   return (
     <div className={cn('flex items-center gap-1', className)}>
       {onCopy && (
@@ -417,8 +406,7 @@ interface OutputHighlightBadgesProps {
 export const OutputHighlightBadges = ({
   items,
   variant = 'secondary',
-  className,
-}: OutputHighlightBadgesProps) => {
+  className}: OutputHighlightBadgesProps) => {
   return (
     <div className={cn('flex flex-wrap gap-2', className)}>
       {items.map((item, i) => (

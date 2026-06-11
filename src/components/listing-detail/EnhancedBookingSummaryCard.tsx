@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { format, differenceInDays } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Calendar, Zap, ArrowRight, Mail, Shield, Clock, Sparkles } from 'lucide-react';
+import { Calendar, Zap, ArrowRight, Mail, Shield, Clock} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import RequestDatesModal, { BookingSelection } from './RequestDatesModal';
@@ -36,8 +36,7 @@ export const EnhancedBookingSummaryCard: React.FC<EnhancedBookingSummaryCardProp
   availableFrom,
   availableTo,
   instantBook = false,
-  coverImage,
-}) => {
+  coverImage}) => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [showDateModal, setShowDateModal] = useState(false);
@@ -110,7 +109,7 @@ export const EnhancedBookingSummaryCard: React.FC<EnhancedBookingSummaryCardProp
               initial={{ opacity: 0.7 }}
               whileHover={{ opacity: 1 }}
             >
-              <Sparkles className="h-3.5 w-3.5 text-primary" />
+              
               ${priceWeekly.toLocaleString()}/week for 7+ days
             </motion.p>
           )}

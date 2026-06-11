@@ -1,7 +1,7 @@
 import { useEffect, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, useReducedMotion } from 'framer-motion';
-import { ArrowRight, Shield, Sparkles, CheckCircle2, CreditCard, ShieldCheck, Users, Heart, BookOpen, Zap, Star } from 'lucide-react';
+import { ArrowRight, Shield, CheckCircle2, CreditCard, ShieldCheck, Users, Heart, BookOpen, Zap, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { trackCityListModuleViewed, trackCityListClicked } from '@/lib/analytics';
 import trailerCafecito from '@/assets/trailer-cafecito.jpg';
@@ -11,8 +11,7 @@ const benefits = [
   { icon: ShieldCheck, text: 'Secure platform to sell or rent your assets' },
   { icon: CreditCard, text: 'Accept payments in-person or through our platform' },
   { icon: Shield, text: 'Spam & scam protection built in' },
-  { icon: Users, text: 'Made by food truck owners, for food truck owners' },
-];
+  { icon: Users, text: 'Made by food truck owners, for food truck owners' }];
 
 const topCities = [
   { name: 'Houston', slug: 'houston' },
@@ -20,8 +19,7 @@ const topCities = [
   { name: 'Dallas', slug: 'dallas' },
   { name: 'Phoenix', slug: 'phoenix' },
   { name: 'Atlanta', slug: 'atlanta' },
-  { name: 'Miami', slug: 'miami' },
-];
+  { name: 'Miami', slug: 'miami' }];
 
 const SupplySection = () => {
   const navigate = useNavigate();
@@ -158,7 +156,7 @@ const SupplySection = () => {
                 whileHover={{ scale: 1.1, rotate: -5 }}
                 transition={{ type: 'spring', stiffness: 400, damping: 15 }}
               >
-                <Sparkles className="h-5 w-5 text-primary-foreground" />
+                
               </motion.div>
               <h3 className="text-xl font-semibold text-foreground">Free AI Tools for Hosts</h3>
             </div>
@@ -171,8 +169,7 @@ const SupplySection = () => {
               {[
                 'PricePilot — Data-backed pricing suggestions',
                 'PermitPath — Find permits for any city',
-                'Listing Studio — Generate pro descriptions',
-              ].map((tool, index) => (
+                'Listing Studio — Generate pro descriptions'].map((tool, index) => (
                 <motion.li 
                   key={index} 
                   className="flex items-start gap-2 text-sm text-foreground"

@@ -1,5 +1,5 @@
 import { useState, ReactNode } from 'react';
-import { Sparkles } from 'lucide-react';
+import {} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { TellVendibookModal, type LeadIntent, type LeadCategory } from './TellVendibookModal';
 
@@ -27,8 +27,7 @@ export const TellVendibookButton = ({
   defaultCity,
   listingId,
   sourcePage,
-  showIcon = true,
-}: TellVendibookButtonProps) => {
+  showIcon = true}: TellVendibookButtonProps) => {
   const [open, setOpen] = useState(false);
 
   return (
@@ -40,7 +39,7 @@ export const TellVendibookButton = ({
         onClick={() => setOpen(true)}
         className={className}
       >
-        {showIcon && <Sparkles className="w-4 h-4" />}
+        {showIcon && }
         {children || 'Tell Vendibook what you need'}
       </Button>
       <TellVendibookModal

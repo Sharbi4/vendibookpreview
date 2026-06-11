@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { CheckCircle2, Loader2, ArrowRight, ArrowLeft, Sparkles } from 'lucide-react';
+import { CheckCircle2, Loader2, ArrowRight, ArrowLeft} from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { z } from 'zod';
@@ -28,47 +28,40 @@ const INTENT_OPTIONS: { value: LeadIntent; label: string; sub: string }[] = [
   { value: 'rent', label: 'Rent', sub: 'A truck, trailer, kitchen, or space' },
   { value: 'buy', label: 'Buy', sub: 'A truck or trailer to own' },
   { value: 'list', label: 'List', sub: 'My asset for rent' },
-  { value: 'sell', label: 'Sell', sub: 'My asset outright' },
-];
+  { value: 'sell', label: 'Sell', sub: 'My asset outright' }];
 
 const CATEGORY_OPTIONS: { value: LeadCategory; label: string }[] = [
   { value: 'food_truck', label: 'Food truck' },
   { value: 'food_trailer', label: 'Food trailer' },
   { value: 'commercial_kitchen', label: 'Commercial kitchen' },
-  { value: 'vendor_space', label: 'Vendor space' },
-];
+  { value: 'vendor_space', label: 'Vendor space' }];
 
 const TIMELINE_OPTIONS = [
   { value: 'asap', label: 'ASAP' },
   { value: '2_weeks', label: 'Within 2 weeks' },
   { value: '1_month', label: 'Within 1 month' },
   { value: '1_3_months', label: '1–3 months' },
-  { value: 'exploring', label: 'Just exploring' },
-];
+  { value: 'exploring', label: 'Just exploring' }];
 
 const BUDGET_RENT = [
   { value: 'lt_500', label: 'Under $500' },
   { value: '500_1500', label: '$500 – $1.5k' },
   { value: '1500_5k', label: '$1.5k – $5k' },
-  { value: 'gt_5k', label: '$5k+' },
-];
+  { value: 'gt_5k', label: '$5k+' }];
 const BUDGET_BUY = [
   { value: 'lt_25k', label: 'Under $25k' },
   { value: '25k_60k', label: '$25k – $60k' },
   { value: '60k_120k', label: '$60k – $120k' },
-  { value: 'gt_120k', label: '$120k+' },
-];
+  { value: 'gt_120k', label: '$120k+' }];
 
 // Step 1 schema — only the essentials: intent, city, and at least one contact channel.
 const step1Schema = z.object({
   intent: z.enum(['rent', 'buy', 'list', 'sell']),
   city: z.string().trim().min(2, 'Enter your city / state').max(120),
   email: z.string().trim().email().max(160).optional().or(z.literal('')),
-  phone: z.string().trim().max(40).optional().or(z.literal('')),
-}).refine((d) => (d.email && d.email.length > 0) || (d.phone && d.phone.length >= 7), {
+  phone: z.string().trim().max(40).optional().or(z.literal(''))}).refine((d) => (d.email && d.email.length > 0) || (d.phone && d.phone.length >= 7), {
   message: 'Add an email or phone so we can reach you',
-  path: ['email'],
-});
+  path: ['email']});
 
 const budgetToRange = (budget: string): { budget_min: number | null; budget_max: number | null } => {
   switch (budget) {
@@ -91,8 +84,7 @@ export const TellVendibookModal = ({
   defaultCategory,
   defaultCity,
   listingId,
-  sourcePage,
-}: TellVendibookModalProps) => {
+  sourcePage}: TellVendibookModalProps) => {
   const { toast } = useToast();
   const [step, setStep] = useState<1 | 2>(1);
   // Step 1 — required
@@ -123,8 +115,7 @@ export const TellVendibookModal = ({
         category: defaultCategory,
         city: defaultCity,
         listing_id: listingId,
-        source: sourcePage,
-      });
+        source: sourcePage});
     }
   }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -148,8 +139,7 @@ export const TellVendibookModal = ({
       char_count: value.trim().length,
       step,
       listing_id: listingId,
-      source: sourcePage,
-    });
+      source: sourcePage});
   };
 
   const handleNext = () => {
@@ -161,8 +151,7 @@ export const TellVendibookModal = ({
         error_message: issue?.message ?? 'invalid',
         step: 1,
         listing_id: listingId,
-        source: sourcePage,
-      });
+        source: sourcePage});
       toast({ title: 'Almost there', description: issue?.message, variant: 'destructive' });
       return;
     }
@@ -181,12 +170,10 @@ export const TellVendibookModal = ({
         error_message: issue?.message ?? 'invalid',
         step,
         listing_id: listingId,
-        source: sourcePage,
-      });
+        source: sourcePage});
       toast({ title: 'Almost there', description: issue?.message, variant: 'destructive' });
       return;
     }
-
 
     setSubmitting(true);
     try {
@@ -207,8 +194,7 @@ export const TellVendibookModal = ({
         notes: notes.trim() || null,
         source_page: sourcePage || (typeof window !== 'undefined' ? window.location.pathname : null),
         listing_id: listingId || null,
-        title: `${intent.toUpperCase()} · ${category ? CATEGORY_OPTIONS.find((c) => c.value === category)?.label : 'Any'} · ${city.trim()}`,
-      });
+        title: `${intent.toUpperCase()} · ${category ? CATEGORY_OPTIONS.find((c) => c.value === category)?.label : 'Any'} · ${city.trim()}`});
 
       if (error) throw error;
 
@@ -220,8 +206,7 @@ export const TellVendibookModal = ({
         source: sourcePage,
         has_email: !!email,
         has_phone: !!phone,
-        completed_step_2: !!(category || timeline || budget || notes || name),
-      });
+        completed_step_2: !!(category || timeline || budget || notes || name)});
 
       // Fire-and-forget confirmation emails (do not block UX)
       const intentLabel = INTENT_OPTIONS.find((o) => o.value === intent)?.label || intent;
@@ -242,13 +227,9 @@ export const TellVendibookModal = ({
               bodyParagraphs: [
                 `Thanks for reaching out — a Vendibook concierge will follow up within 1 business hour (Mon–Fri, 9am–5pm AZ time).`,
                 `Here's what we have on file: ${intentLabel} · ${categoryLabel} · ${city.trim()}${timeline ? ` · ${timeline.replace(/_/g, ' ')}` : ''}${budget ? ` · ${budget.replace(/_/g, ' ')}` : ''}.`,
-                `We'll confirm availability, pricing, and next steps before you commit to anything. Outside business hours? We'll reach out first thing the next business day.`,
-              ],
+                `We'll confirm availability, pricing, and next steps before you commit to anything. Outside business hours? We'll reach out first thing the next business day.`],
               signedBy: 'Vendibook Concierge',
-              signedTitle: 'Concierge Team',
-            },
-          },
-        }).catch((err) => console.warn('[TellVendibook] confirmation email failed', err));
+              signedTitle: 'Concierge Team'}}}).catch((err) => console.warn('[TellVendibook] confirmation email failed', err));
       }
 
       // 2) Internal notification to support
@@ -264,13 +245,9 @@ export const TellVendibookModal = ({
               `New lead from ${sourcePage || (typeof window !== 'undefined' ? window.location.pathname : 'site')}.`,
               `Contact: ${name.trim() || '(no name)'} · ${email.trim() || '(no email)'} · ${phone.trim() || '(no phone)'}`,
               `Intent: ${intentLabel} · Category: ${categoryLabel} · City: ${city.trim()}${timeline ? ` · Timeline: ${timeline}` : ''}${budget ? ` · Budget: ${budget}` : ''}${listingId ? ` · Listing: ${listingId}` : ''}`,
-              notes.trim() ? `Notes: ${notes.trim()}` : 'No notes provided.',
-            ],
+              notes.trim() ? `Notes: ${notes.trim()}` : 'No notes provided.'],
             signedBy: 'Vendibook Lead Router',
-            signedTitle: 'Internal Notification',
-          },
-        },
-      }).catch((err) => console.warn('[TellVendibook] support notify failed', err));
+            signedTitle: 'Internal Notification'}}}).catch((err) => console.warn('[TellVendibook] support notify failed', err));
 
       setSubmitted(true);
       toast({ title: 'We got it — talk soon!', description: 'Vendibook will follow up within 1 business hour.' });
@@ -292,14 +269,12 @@ export const TellVendibookModal = ({
           fields_completed: Array.from(fieldsCompleted),
           step,
           listing_id: listingId,
-          source: sourcePage,
-        });
+          source: sourcePage});
       }
       setTimeout(() => { setSubmitted(false); setStep(1); }, 300);
     }
     onOpenChange(next);
   };
-
 
   const labelCls = 'text-[11px] font-semibold uppercase tracking-[0.14em] text-foreground/60';
   const inputCls = 'bg-white/[0.03] border-white/[0.08] text-[16px]';
@@ -310,7 +285,7 @@ export const TellVendibookModal = ({
         <div className="p-6 pb-4 border-b border-white/[0.06]">
           <DialogHeader className="space-y-2 text-left">
             <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-[10px] font-semibold uppercase tracking-[0.14em] w-fit">
-              <Sparkles className="w-3 h-3" />
+              
               Vendibook Concierge · Step {submitted ? '✓' : step} of 2
             </div>
             <DialogTitle className="text-xl sm:text-2xl font-semibold text-foreground">

@@ -18,7 +18,6 @@ import {
   Wrench, 
   Loader2, 
   Home,
-  Sparkles,
   CheckCircle,
   ArrowRight,
   Clock,
@@ -54,8 +53,7 @@ const POPULAR_EQUIPMENT = [
   { name: 'Commercial Oven', icon: '🔥' }, { name: 'Exhaust Hood System', icon: '💨' },
   { name: 'Refrigerator/Freezer', icon: '🧊' }, { name: 'Commercial Dishwasher', icon: '🍽️' },
   { name: 'Steam Table', icon: '♨️' }, { name: 'Propane System', icon: '⛽' },
-  { name: 'Generator', icon: '⚡' }, { name: 'POS System', icon: '💳' },
-];
+  { name: 'Generator', icon: '⚡' }, { name: 'POS System', icon: '💳' }];
 
 const BuildKit = () => {
   const { toast } = useToast();
@@ -244,7 +242,7 @@ const BuildKit = () => {
                     <Textarea placeholder="Describe any specific problems or concerns..." value={equipmentForm.issue} onChange={(e) => setEquipmentForm({ ...equipmentForm, issue: e.target.value })} rows={2} />
                   </div>
                   <Button onClick={handleSubmit} disabled={isLoading || !equipmentForm.equipment} className="w-full">
-                    {isLoading ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Generating Guide...</> : <><Sparkles className="h-4 w-4 mr-2" />Generate Maintenance Guide</>}
+                    {isLoading ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Generating Guide...</> : <>Generate Maintenance Guide</>}
                   </Button>
                 </CardContent>
               </Card>

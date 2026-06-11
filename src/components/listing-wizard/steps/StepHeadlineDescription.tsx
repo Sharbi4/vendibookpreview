@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Sparkles, Loader2, Check, RotateCcw, Type } from 'lucide-react';
+import { Loader2, Check, RotateCcw, Type } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -23,8 +23,7 @@ export const StepHeadlineDescription: React.FC<StepHeadlineDescriptionProps> = (
   category,
   mode,
   onTitleChange,
-  onDescriptionChange,
-}) => {
+  onDescriptionChange}) => {
   const { toast } = useToast();
   const [isOptimizing, setIsOptimizing] = useState(false);
   const [originalDescription, setOriginalDescription] = useState<string | null>(null);
@@ -35,8 +34,7 @@ export const StepHeadlineDescription: React.FC<StepHeadlineDescriptionProps> = (
       toast({
         title: 'Description too short',
         description: 'Please write at least 10 characters to optimize.',
-        variant: 'destructive',
-      });
+        variant: 'destructive'});
       return;
     }
 
@@ -49,9 +47,7 @@ export const StepHeadlineDescription: React.FC<StepHeadlineDescriptionProps> = (
           rawDescription: description,
           category,
           mode,
-          title,
-        },
-      });
+          title}});
 
       if (error) throw error;
 
@@ -60,16 +56,14 @@ export const StepHeadlineDescription: React.FC<StepHeadlineDescriptionProps> = (
         setShowOptimized(true);
         toast({
           title: 'Description optimized!',
-          description: 'Your listing description has been professionally rewritten.',
-        });
+          description: 'Your listing description has been professionally rewritten.'});
       }
     } catch (error) {
       console.error('Error optimizing description:', error);
       toast({
         title: 'Optimization failed',
         description: error instanceof Error ? error.message : 'Please try again later.',
-        variant: 'destructive',
-      });
+        variant: 'destructive'});
     } finally {
       setIsOptimizing(false);
     }
@@ -82,8 +76,7 @@ export const StepHeadlineDescription: React.FC<StepHeadlineDescriptionProps> = (
       setShowOptimized(false);
       toast({
         title: 'Description reverted',
-        description: 'Your original description has been restored.',
-      });
+        description: 'Your original description has been restored.'});
     }
   };
 
@@ -173,7 +166,7 @@ export const StepHeadlineDescription: React.FC<StepHeadlineDescriptionProps> = (
         <div className="rounded-xl border border-border bg-card p-4 space-y-3">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center shrink-0">
-              <Sparkles className="w-5 h-5 text-primary-foreground" />
+              
             </div>
             <div className="flex-1 min-w-0">
               <h4 className="font-semibold text-sm text-foreground">AI Writing Assistant</h4>
@@ -201,7 +194,7 @@ export const StepHeadlineDescription: React.FC<StepHeadlineDescriptionProps> = (
               </>
             ) : (
               <>
-                <Sparkles className="w-4 h-4 mr-2" />
+                
                 Optimize with AI
               </>
             )}

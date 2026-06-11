@@ -27,9 +27,7 @@ import {
   Calendar,
   DollarSign,
   Shield,
-  Headphones,
-  Sparkles,
-} from 'lucide-react';
+  Headphones} from 'lucide-react';
 
 interface FormData {
   // Contact Info
@@ -79,8 +77,7 @@ const initialFormData: FormData = {
   primaryGoal: '',
   additionalNotes: '',
   agreeToTerms: false,
-  wantsDemoCall: false,
-};
+  wantsDemoCall: false};
 
 const kitchenTypeOptions = [
   { id: 'commercial', label: 'Commercial Kitchen' },
@@ -88,8 +85,7 @@ const kitchenTypeOptions = [
   { id: 'commissary', label: 'Commissary Kitchen' },
   { id: 'shared', label: 'Shared Kitchen Space' },
   { id: 'production', label: 'Production Facility' },
-  { id: 'catering', label: 'Catering Kitchen' },
-];
+  { id: 'catering', label: 'Catering Kitchen' }];
 
 const EnterpriseOnboarding = () => {
   usePageTracking();
@@ -107,8 +103,7 @@ const EnterpriseOnboarding = () => {
       ...prev,
       kitchenTypes: prev.kitchenTypes.includes(typeId)
         ? prev.kitchenTypes.filter(t => t !== typeId)
-        : [...prev.kitchenTypes, typeId],
-    }));
+        : [...prev.kitchenTypes, typeId]}));
   };
 
   const handleListingModeToggle = (mode: string) => {
@@ -116,8 +111,7 @@ const EnterpriseOnboarding = () => {
       ...prev,
       listingMode: prev.listingMode.includes(mode)
         ? prev.listingMode.filter(m => m !== mode)
-        : [...prev.listingMode, mode],
-    }));
+        : [...prev.listingMode, mode]}));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -127,8 +121,7 @@ const EnterpriseOnboarding = () => {
       toast({
         title: 'Missing required fields',
         description: 'Please fill in your name, email, and company name.',
-        variant: 'destructive',
-      });
+        variant: 'destructive'});
       return;
     }
 
@@ -136,8 +129,7 @@ const EnterpriseOnboarding = () => {
       toast({
         title: 'Terms required',
         description: 'Please agree to the terms to continue.',
-        variant: 'destructive',
-      });
+        variant: 'destructive'});
       return;
     }
 
@@ -178,8 +170,7 @@ Wants Demo Call: ${formData.wantsDemoCall ? 'Yes' : 'No'}
 
       if (formData.phone) {
         const { error } = await supabase.functions.invoke('vapi-outbound-call', {
-          body: { name: formData.contactName, phone: formData.phone },
-        });
+          body: { name: formData.contactName, phone: formData.phone }});
         if (error) throw error;
       }
 
@@ -188,15 +179,13 @@ Wants Demo Call: ${formData.wantsDemoCall ? 'Yes' : 'No'}
         title: 'Request submitted!',
         description: formData.phone
           ? "Our enterprise team is calling you now — please answer."
-          : 'Our enterprise team will contact you within 24 hours.',
-      });
+          : 'Our enterprise team will contact you within 24 hours.'});
     } catch (error) {
       console.error('Enterprise form submission error:', error);
       toast({
         title: 'Submission failed',
         description: 'Please try again or contact support@vendibook.com',
-        variant: 'destructive',
-      });
+        variant: 'destructive'});
     } finally {
       setIsSubmitting(false);
     }
@@ -264,10 +253,9 @@ Wants Demo Call: ${formData.wantsDemoCall ? 'Yes' : 'No'}
             <div className="grid md:grid-cols-4 gap-4 mb-12">
               {[
                 { icon: Users, label: 'Dedicated Account Manager' },
-                { icon: Sparkles, label: 'Priority Listing Review' },
+                { label: 'Priority Listing Review' },
                 { icon: DollarSign, label: 'Volume Pricing Available' },
-                { icon: Headphones, label: '24/7 Enterprise Support' },
-              ].map(({ icon: Icon, label }) => (
+                { icon: Headphones, label: '24/7 Enterprise Support' }].map(({ icon: Icon, label }) => (
                 <Card key={label} className="text-center p-4 bg-card/50 backdrop-blur-sm">
                   <Icon className="h-8 w-8 mx-auto mb-2 text-primary" />
                   <p className="text-sm font-medium">{label}</p>
@@ -442,8 +430,7 @@ Wants Demo Call: ${formData.wantsDemoCall ? 'Yes' : 'No'}
                           { id: 'daily', label: 'Daily Rentals' },
                           { id: 'weekly', label: 'Weekly Rentals' },
                           { id: 'monthly', label: 'Monthly Rentals' },
-                          { id: 'membership', label: 'Memberships' },
-                        ].map(({ id, label }) => (
+                          { id: 'membership', label: 'Memberships' }].map(({ id, label }) => (
                           <div
                             key={id}
                             className={`flex items-center gap-2 px-4 py-2 rounded-full border cursor-pointer transition-colors ${

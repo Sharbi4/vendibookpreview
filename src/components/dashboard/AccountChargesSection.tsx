@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Loader2, Sparkles, Receipt, ExternalLink, Gift, RefreshCcw, Clock, FileText, Info } from 'lucide-react';
+import { Loader2, Receipt, ExternalLink, Gift, RefreshCcw, Clock, FileText, Info } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -82,8 +82,7 @@ const AccountChargesSection: React.FC<{ userId: string }> = ({ userId }) => {
             reason: p.reason || null,
             refunded_at: p.refunded_at || null,
             refund_amount: p.refund_amount || null,
-            isActive,
-          };
+            isActive};
         });
         mapped.sort((a, b) => {
           if (a.isActive !== b.isActive) return a.isActive ? -1 : 1;
@@ -175,7 +174,7 @@ const AccountChargesSection: React.FC<{ userId: string }> = ({ userId }) => {
               className="rounded-xl border border-border bg-card p-5 flex items-start gap-4"
             >
               <div className={`shrink-0 w-11 h-11 rounded-full flex items-center justify-center ${isComp ? 'bg-emerald-500/10 text-emerald-500' : 'bg-amber-500/10 text-amber-500'}`}>
-                {isComp ? <Gift className="h-5 w-5" /> : <Sparkles className="h-5 w-5" />}
+                {isComp ? <Gift className="h-5 w-5" /> : }
               </div>
 
               <div className="flex-1 min-w-0">

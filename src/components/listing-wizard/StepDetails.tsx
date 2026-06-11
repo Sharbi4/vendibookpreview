@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, X, Sparkles, Loader2, Check, RotateCcw, Ruler, Grid3X3 } from 'lucide-react';
+import { Plus, X, Loader2, Check, RotateCcw, Ruler, Grid3X3 } from 'lucide-react';
 import { ListingFormData, AMENITIES_BY_CATEGORY, ListingCategory, FREIGHT_CATEGORY_LABELS, FreightCategory } from '@/types/listing';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -19,8 +19,7 @@ interface StepDetailsProps {
 
 export const StepDetails: React.FC<StepDetailsProps> = ({
   formData,
-  updateField,
-}) => {
+  updateField}) => {
   const { toast } = useToast();
   const [newHighlight, setNewHighlight] = useState('');
   const [isOptimizing, setIsOptimizing] = useState(false);
@@ -59,8 +58,7 @@ export const StepDetails: React.FC<StepDetailsProps> = ({
       toast({
         title: 'Description too short',
         description: 'Please write at least 10 characters to optimize.',
-        variant: 'destructive',
-      });
+        variant: 'destructive'});
       return;
     }
 
@@ -73,9 +71,7 @@ export const StepDetails: React.FC<StepDetailsProps> = ({
           rawDescription: formData.description,
           category: formData.category,
           mode: formData.mode,
-          title: formData.title,
-        },
-      });
+          title: formData.title}});
 
       if (error) throw error;
 
@@ -84,16 +80,14 @@ export const StepDetails: React.FC<StepDetailsProps> = ({
         setShowOptimized(true);
         toast({
           title: 'Description optimized!',
-          description: 'Your listing description has been professionally rewritten.',
-        });
+          description: 'Your listing description has been professionally rewritten.'});
       }
     } catch (error) {
       console.error('Error optimizing description:', error);
       toast({
         title: 'Optimization failed',
         description: error instanceof Error ? error.message : 'Please try again later.',
-        variant: 'destructive',
-      });
+        variant: 'destructive'});
     } finally {
       setIsOptimizing(false);
     }
@@ -106,8 +100,7 @@ export const StepDetails: React.FC<StepDetailsProps> = ({
       setShowOptimized(false);
       toast({
         title: 'Description reverted',
-        description: 'Your original description has been restored.',
-      });
+        description: 'Your original description has been restored.'});
     }
   };
 
@@ -199,7 +192,7 @@ export const StepDetails: React.FC<StepDetailsProps> = ({
                 </>
               ) : (
                 <>
-                  <Sparkles className="w-3 h-3 mr-1" />
+                  
                   AI Optimize
                 </>
               )}

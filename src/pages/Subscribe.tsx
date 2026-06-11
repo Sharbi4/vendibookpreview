@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, Check, ArrowRight, BookOpen, Map, Search, Sparkles } from "lucide-react";
+import { Loader2, Check, ArrowRight, BookOpen, Map, Search} from 'lucide-react';
 import { toast } from "sonner";
 
 export default function Subscribe() {
@@ -26,8 +26,7 @@ export default function Subscribe() {
     setLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke("blog-subscribe", {
-        body: { email: email.trim(), name: name.trim() || null, source },
-      });
+        body: { email: email.trim(), name: name.trim() || null, source }});
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
       setAlreadySubscribed(!!data?.alreadySubscribed);
@@ -140,7 +139,7 @@ export default function Subscribe() {
                 to="/search"
               />
               <NextCard
-                icon={<Sparkles className="h-4 w-4" />}
+                icon={}
                 title="List your asset"
                 desc="Start earning on Vendibook."
                 to="/listing-wizard"
@@ -154,8 +153,7 @@ export default function Subscribe() {
 }
 
 function NextCard({
-  icon, title, desc, to,
-}: { icon: React.ReactNode; title: string; desc: string; to: string }) {
+  icon, title, desc, to}: { icon: React.ReactNode; title: string; desc: string; to: string }) {
   return (
     <Link
       to={to}

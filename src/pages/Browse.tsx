@@ -17,9 +17,7 @@ import {
   MapPin,
   Star,
   Clock,
-  CalendarCheck,
-  Sparkles,
-} from 'lucide-react';
+  CalendarCheck} from 'lucide-react';
 import SEO, { generateOrganizationSchema, generateWebSiteSchema } from '@/components/SEO';
 import { TellVendibookButton } from '@/components/lead/TellVendibookButton';
 
@@ -268,7 +266,7 @@ const Browse = () => {
                   className="text-lg px-8 py-6"
                   sourcePage="browse_final_cta"
                 >
-                  <Sparkles className="mr-2 h-5 w-5" />
+                  
                   Tell Vendibook what you need
                 </TellVendibookButton>
               </div>

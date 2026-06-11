@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback } from 'react';
-import { Camera, Sparkles, Loader2, Wand2, X, Check } from 'lucide-react';
+import { Camera, Loader2, Wand2, X, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
@@ -62,8 +62,7 @@ export const VendiVisionDialog = ({ open, onOpenChange, onApply }: VendiVisionDi
     setAnalyzing(true);
     try {
       const { data, error } = await supabase.functions.invoke('vendi-vision', {
-        body: { imageUrl: dataUrl },
-      });
+        body: { imageUrl: dataUrl }});
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
       setResult(data as VisionResult);
@@ -71,8 +70,7 @@ export const VendiVisionDialog = ({ open, onOpenChange, onApply }: VendiVisionDi
       toast({
         title: 'Vision failed',
         description: e?.message || 'Could not analyze image',
-        variant: 'destructive',
-      });
+        variant: 'destructive'});
       setPreview(null);
     } finally {
       setAnalyzing(false);
@@ -94,7 +92,7 @@ export const VendiVisionDialog = ({ open, onOpenChange, onApply }: VendiVisionDi
           <DialogTitle className="flex items-center gap-2">
             <Wand2 className="h-5 w-5 text-primary" />
             Vendi Vision
-            <Badge variant="secondary" className="text-[10px] gap-1"><Sparkles className="h-2.5 w-2.5" />AI</Badge>
+            <Badge variant="secondary" className="text-[10px] gap-1">AI</Badge>
           </DialogTitle>
           <DialogDescription>
             Snap or upload one photo. AI identifies category, condition, value & auto-fills your listing.
@@ -181,7 +179,7 @@ export const VendiVisionDialog = ({ open, onOpenChange, onApply }: VendiVisionDi
                   "text-[11px] flex items-center gap-1.5",
                   result.confidence > 0.7 ? "text-emerald-600 dark:text-emerald-400" : "text-amber-600 dark:text-amber-400"
                 )}>
-                  <Sparkles className="h-3 w-3" />
+                  
                   {Math.round(result.confidence * 100)}% confidence
                   {result.notes && <span className="text-muted-foreground">· {result.notes}</span>}
                 </div>

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MapPin, Truck, Package, ArrowRight, Calendar, Tag, Mail, Shield, Check, Sparkles } from 'lucide-react';
+import { MapPin, Truck, Package, ArrowRight, Calendar, Tag, Mail, Shield, Check} from 'lucide-react';
 import type { FulfillmentType } from '@/types/listing';
 import { AffirmBadge, isAffirmEligible } from '@/components/ui/AffirmBadge';
 import { AfterpayBadge, isAfterpayEligible } from '@/components/ui/AfterpayBadge';
@@ -36,8 +36,7 @@ interface EnhancedInquiryFormProps {
 const fulfillmentIcons = {
   pickup: MapPin,
   delivery: Truck,
-  freight: Package,
-};
+  freight: Package};
 
 const EnhancedInquiryForm = ({ 
   listingId,
@@ -48,8 +47,7 @@ const EnhancedInquiryForm = ({
   deliveryFee,
   deliveryRadiusMiles,
   vendibookFreightEnabled = false,
-  freightPayer = 'buyer',
-}: EnhancedInquiryFormProps) => {
+  freightPayer = 'buyer'}: EnhancedInquiryFormProps) => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [showOfferModal, setShowOfferModal] = useState(false);
@@ -67,8 +65,7 @@ const EnhancedInquiryForm = ({
         icon: MapPin,
         title: 'Local Pickup',
         description: 'Pick up at seller location',
-        free: true,
-      });
+        free: true});
     }
     
     if (fulfillmentType === 'delivery' || fulfillmentType === 'both') {
@@ -78,8 +75,7 @@ const EnhancedInquiryForm = ({
         title: `Local Delivery${deliveryRadiusMiles ? ` (${deliveryRadiusMiles} mi)` : ''}`,
         description: 'We deliver to you',
         price: deliveryFee ? `+$${deliveryFee}` : undefined,
-        free: !deliveryFee,
-      });
+        free: !deliveryFee});
     }
     
     if (vendibookFreightEnabled) {
@@ -90,8 +86,7 @@ const EnhancedInquiryForm = ({
         title: 'Nationwide Freight',
         description: 'Est. 7-10 business days',
         price: isFreightSellerPaid ? undefined : 'Quote at checkout',
-        free: isFreightSellerPaid,
-      });
+        free: isFreightSellerPaid});
     }
     
     return options;

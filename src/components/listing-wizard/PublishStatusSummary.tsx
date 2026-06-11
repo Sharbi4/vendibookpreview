@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { CheckCircle2, Clock, XCircle, Mail, Bell, Smartphone, Sparkles, Loader2 } from 'lucide-react';
+import { CheckCircle2, Clock, XCircle, Mail, Bell, Smartphone, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
 type StatusValue = 'pending' | 'ok' | 'skipped' | 'failed';
@@ -58,8 +58,7 @@ export const PublishStatusSummary: React.FC<PublishStatusSummaryProps> = ({ list
         supabase.from('listings').select('status, featured_enabled, featured_expires_at, pending_featured_payment, title').eq('id', listingId).maybeSingle(),
         supabase.from('notification_preferences').select('push_enabled').eq('user_id', hostId).maybeSingle(),
         supabase.from('notifications').select('id, title, created_at').eq('user_id', hostId).eq('link', `/listing/${listingId}`).order('created_at', { ascending: false }).limit(5),
-        supabase.from('email_send_log').select('status, created_at, error_message').ilike('message_id', `%featured-activated-${listingId}%`).order('created_at', { ascending: false }).limit(1),
-      ]);
+        supabase.from('email_send_log').select('status, created_at, error_message').ilike('message_id', `%featured-activated-${listingId}%`).order('created_at', { ascending: false }).limit(1)]);
 
       if (cancelled) return;
 
@@ -77,12 +76,9 @@ export const PublishStatusSummary: React.FC<PublishStatusSummaryProps> = ({ list
       const next: StatusRow[] = [
         {
           key: 'published',
-          icon: <Sparkles className="w-4 h-4 text-primary" />,
           label: 'Listing published',
           detail: isPublished ? 'Live on the marketplace.' : 'Waiting for status to flip to published…',
-          status: isPublished ? 'ok' : 'pending',
-        },
-      ];
+          status: isPublished ? 'ok' : 'pending'}];
 
       if (hadPendingFeatured || featuredOn) {
         const expires = listing?.featured_expires_at
@@ -90,19 +86,16 @@ export const PublishStatusSummary: React.FC<PublishStatusSummaryProps> = ({ list
           : null;
         next.push({
           key: 'featured',
-          icon: <Sparkles className="w-4 h-4 text-amber-400" />,
           label: '30-day Featured Boost',
           detail: featuredOn && expires ? `Featured until ${expires}.` : 'Activating…',
-          status: featuredOn ? 'ok' : 'pending',
-        });
+          status: featuredOn ? 'ok' : 'pending'});
 
         next.push({
           key: 'inapp',
           icon: <Bell className="w-4 h-4 text-foreground/80" />,
           label: 'In-app notification',
           detail: featuredNotif ? 'Sent to your notification bell.' : 'Queued for delivery…',
-          status: featuredNotif ? 'ok' : 'pending',
-        });
+          status: featuredNotif ? 'ok' : 'pending'});
 
         const emailStatus: StatusValue = emailRow
           ? emailRow.status === 'sent'
@@ -120,8 +113,7 @@ export const PublishStatusSummary: React.FC<PublishStatusSummaryProps> = ({ list
             : emailStatus === 'ok'
               ? 'Sent to your inbox.'
               : 'Queued — typically delivers within a minute.',
-          status: emailStatus,
-        });
+          status: emailStatus});
 
         next.push({
           key: 'push',
@@ -130,8 +122,7 @@ export const PublishStatusSummary: React.FC<PublishStatusSummaryProps> = ({ list
           detail: pushEnabled
             ? 'Sent to your registered devices.'
             : 'Skipped — push notifications are off in your preferences.',
-          status: pushEnabled ? 'ok' : 'skipped',
-        });
+          status: pushEnabled ? 'ok' : 'skipped'});
       }
 
       setRows(next);

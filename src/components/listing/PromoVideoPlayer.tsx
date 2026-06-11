@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Loader2, Sparkles, Wand2 } from "lucide-react";
+import { Loader2, Wand2 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
@@ -42,10 +42,8 @@ export function PromoVideoPlayer({ listingId, buttonClassName }: Props) {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-        },
-        body: JSON.stringify({ listing_id: listingId }),
-      });
+          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`},
+        body: JSON.stringify({ listing_id: listingId })});
       const j = await resp.json();
       if (!resp.ok) {
         if (resp.status === 402) toast.error("AI credits exhausted. Please add funds.");
@@ -95,7 +93,7 @@ export function PromoVideoPlayer({ listingId, buttonClassName }: Props) {
         {loading ? (
           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
         ) : (
-          <Sparkles className="mr-2 h-4 w-4 text-primary" />
+          
         )}
         Auto-generate promo video
       </Button>
@@ -121,8 +119,7 @@ export function PromoVideoPlayer({ listingId, buttonClassName }: Props) {
                         : "scale(1) translateX(0)",
                     transitionProperty: "opacity, transform",
                     transitionDuration: i === activeIdx ? "4500ms" : "1000ms",
-                    transitionTimingFunction: "ease-out",
-                  }}
+                    transitionTimingFunction: "ease-out"}}
                 />
               ))}
               {/* Overlay */}

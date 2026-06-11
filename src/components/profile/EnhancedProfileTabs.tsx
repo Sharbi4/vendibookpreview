@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { MapPin, Star, Image, Sparkles } from 'lucide-react';
+import { MapPin, Star, Image} from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
 import ProfileListingsTab from './ProfileListingsTab';
@@ -31,8 +31,7 @@ const EnhancedProfileTabs = ({
   isOwnProfile,
   hostVerified,
   isHost,
-  stats,
-}: EnhancedProfileTabsProps) => {
+  stats}: EnhancedProfileTabsProps) => {
   const tabs = [
     {
       value: 'listings',
@@ -40,25 +39,21 @@ const EnhancedProfileTabs = ({
       shortLabel: 'List',
       icon: MapPin,
       count: stats?.totalListings || 0,
-      color: 'from-violet-500 to-purple-600',
-    },
+      color: 'from-violet-500 to-purple-600'},
     {
       value: 'reviews',
       label: 'Reviews',
       shortLabel: 'Rev',
       icon: Star,
       count: stats?.totalReviewsReceived || 0,
-      color: 'from-amber-500 to-orange-500',
-    },
+      color: 'from-amber-500 to-orange-500'},
     {
       value: 'photos',
       label: 'Photos',
       shortLabel: 'Photos',
       icon: Image,
       count: null,
-      color: 'from-pink-500 to-rose-500',
-    },
-  ];
+      color: 'from-pink-500 to-rose-500'}];
 
   return (
     <motion.div

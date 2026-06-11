@@ -16,7 +16,6 @@ import {
   Plus,
   Share2,
   ChevronRight,
-  Sparkles,
   Eye,
   Heart
 } from 'lucide-react';
@@ -403,8 +402,7 @@ const Rentals = () => {
                                       priceDaily: listing.price_daily,
                                       priceWeekly: listing.price_weekly,
                                       priceSale: null,
-                                      highlights: listing.highlights as string[] | undefined,
-                                    });
+                                      highlights: listing.highlights as string[] | undefined});
                                   }}
                                 >
                                   <Share2 className="h-4 w-4 sm:mr-1" />

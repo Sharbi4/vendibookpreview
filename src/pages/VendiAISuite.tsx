@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { 
-  Sparkles, 
   Scale, 
   Rocket,
   CheckCircle,
@@ -31,7 +30,7 @@ const VendiAISuite = () => {
           
           <div className="container max-w-4xl mx-auto px-4 text-center relative z-10">
             <Badge className="mb-6 bg-foreground/10 text-foreground border-foreground/15 px-4 py-1.5 text-sm">
-              <Sparkles className="w-3.5 h-3.5 mr-2" />
+              
               Vendor Toolkit
             </Badge>
             

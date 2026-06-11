@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Calendar, DollarSign, Sparkles, Loader2, TrendingUp, TrendingDown, Target, Wallet, Info, Zap, CreditCard, Banknote, Check } from 'lucide-react';
+import { Calendar, DollarSign, Loader2, TrendingUp, TrendingDown, Target, Wallet, Info, Zap, CreditCard, Banknote, Check } from 'lucide-react';
 import { ListingFormData, FreightPayer } from '@/types/listing';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -13,8 +13,7 @@ import {
   calculateSaleFees,
   formatCurrency,
   RENTAL_HOST_FEE_PERCENT,
-  SALE_SELLER_FEE_PERCENT,
-} from '@/lib/commissions';
+  SALE_SELLER_FEE_PERCENT} from '@/lib/commissions';
 import { FreightSettingsCard } from '@/components/freight';
 import { InfoTooltip } from '@/components/ui/info-tooltip';
 import { StripeConnectBanner } from './StripeConnectBanner';
@@ -47,8 +46,7 @@ interface SaleSuggestions {
 
 export const StepPricing: React.FC<StepPricingProps> = ({
   formData,
-  updateField,
-}) => {
+  updateField}) => {
   const isRental = formData.mode === 'rent';
   const { toast } = useToast();
   const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
@@ -64,8 +62,7 @@ export const StepPricing: React.FC<StepPricingProps> = ({
     return {
       daily: dailyPrice > 0 ? calculateRentalFees(dailyPrice) : null,
       weekly: weeklyPrice > 0 ? calculateRentalFees(weeklyPrice) : null,
-      monthly: monthlyPrice > 0 ? calculateRentalFees(monthlyPrice) : null,
-    };
+      monthly: monthlyPrice > 0 ? calculateRentalFees(monthlyPrice) : null};
   }, [formData.price_daily, formData.price_weekly, formData.price_monthly]);
 
   // For sales with seller-paid freight, we need estimated freight cost (placeholder for now)
@@ -92,8 +89,7 @@ export const StepPricing: React.FC<StepPricingProps> = ({
       toast({
         title: 'Missing information',
         description: 'Please add a title and category first to get pricing suggestions.',
-        variant: 'destructive',
-      });
+        variant: 'destructive'});
       return;
     }
 
@@ -113,10 +109,7 @@ export const StepPricing: React.FC<StepPricingProps> = ({
             length: formData.length_inches ? Number(formData.length_inches) : undefined,
             width: formData.width_inches ? Number(formData.width_inches) : undefined,
             height: formData.height_inches ? Number(formData.height_inches) : undefined,
-            weight: formData.weight_lbs ? Number(formData.weight_lbs) : undefined,
-          },
-        },
-      });
+            weight: formData.weight_lbs ? Number(formData.weight_lbs) : undefined}}});
 
       if (error) throw error;
 
@@ -132,15 +125,13 @@ export const StepPricing: React.FC<StepPricingProps> = ({
 
       toast({
         title: 'Suggestions ready!',
-        description: 'AI pricing suggestions have been generated based on your listing details.',
-      });
+        description: 'AI pricing suggestions have been generated based on your listing details.'});
     } catch (error) {
       console.error('Error getting suggestions:', error);
       toast({
         title: 'Could not get suggestions',
         description: error instanceof Error ? error.message : 'Please try again later.',
-        variant: 'destructive',
-      });
+        variant: 'destructive'});
     } finally {
       setIsLoadingSuggestions(false);
     }
@@ -188,7 +179,7 @@ export const StepPricing: React.FC<StepPricingProps> = ({
               </>
             ) : (
               <>
-                <Sparkles className="w-3.5 h-3.5 mr-2" />
+                
                 AI Pricing
               </>
             )}

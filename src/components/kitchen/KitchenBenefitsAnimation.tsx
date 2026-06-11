@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Clock, DollarSign, Shield, CalendarCheck, Sparkles } from 'lucide-react';
+import { Clock, DollarSign, Shield, CalendarCheck} from 'lucide-react';
 
 const benefits = [
   {
@@ -8,30 +8,25 @@ const benefits = [
     title: 'Monetize Idle Hours',
     description: 'Your kitchen sits empty 6-10 hours daily. Turn that into revenue.',
     color: 'text-foreground/70',
-    bgColor: 'bg-foreground/10',
-  },
+    bgColor: 'bg-foreground/10'},
   {
     icon: Shield,
     title: 'Verified Renters Only',
     description: 'We screen every renter with ID verification & document review.',
     color: 'text-foreground/70',
-    bgColor: 'bg-foreground/10',
-  },
+    bgColor: 'bg-foreground/10'},
   {
     icon: DollarSign,
     title: 'Get Paid Upfront',
     description: 'Payment is collected before the booking. No chasing invoices.',
     color: 'text-foreground/70',
-    bgColor: 'bg-foreground/10',
-  },
+    bgColor: 'bg-foreground/10'},
   {
     icon: CalendarCheck,
     title: 'You Stay in Control',
     description: 'Set your hours, rules, and approve every booking request.',
     color: 'text-foreground/70',
-    bgColor: 'bg-foreground/10',
-  },
-];
+    bgColor: 'bg-foreground/10'}];
 
 const KitchenBenefitsAnimation = () => {
   const [activeIndex, setActiveIndex] = useState(0);
@@ -103,35 +98,31 @@ const KitchenBenefitsAnimation = () => {
                 </motion.div>
               </AnimatePresence>
 
-              {/* Floating Sparkles */}
+              {/* Floating  */}
               <motion.div
                 animate={{
                   y: [0, -10, 0],
-                  opacity: [0.5, 1, 0.5],
-                }}
+                  opacity: [0.5, 1, 0.5]}}
                 transition={{
                   duration: 2,
                   repeat: Infinity,
-                  ease: 'easeInOut',
-                }}
+                  ease: 'easeInOut'}}
                 className="absolute top-4 right-8 md:right-16"
               >
-                <Sparkles className="w-6 h-6 text-primary/40" />
+                
               </motion.div>
               <motion.div
                 animate={{
                   y: [0, 10, 0],
-                  opacity: [0.3, 0.7, 0.3],
-                }}
+                  opacity: [0.3, 0.7, 0.3]}}
                 transition={{
                   duration: 2.5,
                   repeat: Infinity,
                   ease: 'easeInOut',
-                  delay: 0.5,
-                }}
+                  delay: 0.5}}
                 className="absolute bottom-8 left-8 md:left-16"
               >
-                <Sparkles className="w-5 h-5 text-primary/30" />
+                
               </motion.div>
             </div>
 

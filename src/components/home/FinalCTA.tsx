@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Sparkles } from 'lucide-react';
+import { Search} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
 import { TellVendibookModal } from '@/components/lead/TellVendibookModal';
@@ -14,8 +14,7 @@ const FinalCTA = () => {
     trackLeadEvent('homepage_final_cta_click', {
       route: '/',
       cta: 'concierge',
-      source: 'home_final_cta',
-    });
+      source: 'home_final_cta'});
     setOpen(true);
   };
 
@@ -23,8 +22,7 @@ const FinalCTA = () => {
     trackLeadEvent('homepage_final_cta_click', {
       route: '/',
       cta: 'browse',
-      source: 'home_final_cta',
-    });
+      source: 'home_final_cta'});
     navigate('/search');
   };
 
@@ -34,8 +32,7 @@ const FinalCTA = () => {
         className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[900px] h-[400px] rounded-full blur-[160px]"
         style={{
           background:
-            'radial-gradient(ellipse, rgba(255,81,36,0.025) 0%, rgba(255,186,8,0.012) 40%, transparent 70%)',
-        }}
+            'radial-gradient(ellipse, rgba(255,81,36,0.025) 0%, rgba(255,186,8,0.012) 40%, transparent 70%)'}}
       />
 
       <div className="container max-w-3xl mx-auto px-5 sm:px-6 text-center relative z-10">
@@ -57,7 +54,7 @@ const FinalCTA = () => {
               onClick={handleConcierge}
               className="rounded-full px-8 gap-2"
             >
-              <Sparkles className="h-4 w-4" />
+              
               Tell Vendibook What You Need
             </Button>
             <Button

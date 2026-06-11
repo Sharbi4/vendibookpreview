@@ -1,4 +1,4 @@
-import { Sparkles, TrendingUp, Lightbulb, Target, AlertCircle, RefreshCw, Loader2 } from 'lucide-react';
+import { TrendingUp, Lightbulb, Target, AlertCircle, RefreshCw, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -27,26 +27,22 @@ export const AIInsightsCard = () => {
         return {
           bg: 'bg-emerald-500/10',
           border: 'border-emerald-500/20',
-          icon: 'text-emerald-600',
-        };
+          icon: 'text-emerald-600'};
       case 'warning':
         return {
           bg: 'bg-amber-500/10',
           border: 'border-amber-500/20',
-          icon: 'text-amber-600',
-        };
+          icon: 'text-amber-600'};
       case 'tip':
         return {
           bg: 'bg-blue-500/10',
           border: 'border-blue-500/20',
-          icon: 'text-blue-600',
-        };
+          icon: 'text-blue-600'};
       case 'opportunity':
         return {
           bg: 'bg-purple-500/10',
           border: 'border-purple-500/20',
-          icon: 'text-purple-600',
-        };
+          icon: 'text-purple-600'};
     }
   };
 
@@ -56,7 +52,7 @@ export const AIInsightsCard = () => {
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2 text-lg">
             <div className="w-10 h-10 rounded-2xl bg-primary text-primary-foreground shadow-lg flex items-center justify-center">
-              <Sparkles className="h-5 w-5" />
+              
             </div>
             AI Insights
             <span className="text-xs font-normal text-primary bg-primary/10 px-2 py-0.5 rounded-full ml-2">
@@ -124,7 +120,7 @@ export const AIInsightsCard = () => {
           </div>
         ) : insights.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-6 gap-3 bg-muted/30 rounded-xl">
-            <Sparkles className="h-8 w-8 text-muted-foreground" />
+            
             <p className="text-sm text-muted-foreground text-center">
               No insights available yet. Create listings to start receiving AI-powered recommendations.
             </p>
@@ -141,8 +137,7 @@ export const AIInsightsCard = () => {
                   styles.border
                 )}
                 style={{
-                  animationDelay: `${index * 100}ms`,
-                }}
+                  animationDelay: `${index * 100}ms`}}
               >
                 <div className="flex gap-3">
                   <div className={cn(

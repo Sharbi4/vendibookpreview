@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { CalendarCheck, Sparkles, ShieldCheck } from 'lucide-react';
+import { CalendarCheck, ShieldCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { TellVendibookModal, type LeadCategory } from '@/components/lead/TellVendibookModal';
 import { trackLeadEvent } from '@/lib/leadTracking';
@@ -32,8 +32,7 @@ export const ListingConciergeBox = ({
   listingTitle,
   city,
   category,
-  isOwner,
-}: ListingConciergeBoxProps) => {
+  isOwner}: ListingConciergeBoxProps) => {
   const [leadOpen, setLeadOpen] = useState(false);
 
   if (isOwner) return null;
@@ -44,8 +43,7 @@ export const ListingConciergeBox = ({
         className="relative overflow-hidden rounded-2xl border border-white/[0.08] bg-gradient-to-br from-[#101013] to-[#0a0a0c] p-5 sm:p-6"
         style={{
           boxShadow:
-            '0 1px 0 0 rgba(255,255,255,0.08) inset, 0 20px 40px -20px rgba(0,0,0,0.6)',
-        }}
+            '0 1px 0 0 rgba(255,255,255,0.08) inset, 0 20px 40px -20px rgba(0,0,0,0.6)'}}
       >
         {/* Decorative warm glow */}
         <div
@@ -54,13 +52,12 @@ export const ListingConciergeBox = ({
           style={{
             background:
               'radial-gradient(ellipse at center, rgba(255,81,36,0.10), transparent 70%)',
-            filter: 'blur(20px)',
-          }}
+            filter: 'blur(20px)'}}
         />
 
         <div className="relative flex items-start gap-3 mb-4">
           <div className="shrink-0 w-9 h-9 rounded-full bg-primary/15 border border-primary/30 flex items-center justify-center">
-            <Sparkles className="w-4 h-4 text-primary" strokeWidth={2.2} />
+            
           </div>
           <div className="flex-1 min-w-0">
             <div className="text-[10px] font-semibold uppercase tracking-[0.16em] text-primary/90 mb-1">
@@ -86,8 +83,7 @@ export const ListingConciergeBox = ({
                 listing_id: listingId,
                 city,
                 category,
-                source: 'listing_concierge_box',
-              });
+                source: 'listing_concierge_box'});
               setLeadOpen(true);
             }}
           >
@@ -100,7 +96,7 @@ export const ListingConciergeBox = ({
             className="flex-1 gap-2 rounded-full"
             onClick={() => setLeadOpen(true)}
           >
-            <Sparkles className="w-4 h-4" />
+            
             Ask Vendibook for Help
           </Button>
         </div>

@@ -8,9 +8,7 @@ import {
   CheckCircle2,
   XCircle,
   ExternalLink,
-  Award,
-  Sparkles
-} from 'lucide-react';
+  Award} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { 
@@ -24,8 +22,7 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
+  DialogTrigger} from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
 
 interface EnhancedProfileTrustSectionProps {
@@ -38,8 +35,7 @@ interface EnhancedProfileTrustSectionProps {
 const EnhancedProfileTrustSection = ({
   isVerified,
   stripeConnected,
-  isHost,
-}: EnhancedProfileTrustSectionProps) => {
+  isHost}: EnhancedProfileTrustSectionProps) => {
   const [isOpen, setIsOpen] = useState(false);
 
   const trustItems = [
@@ -50,8 +46,7 @@ const EnhancedProfileTrustSection = ({
       status: isVerified,
       description: 'Government ID verified via secure verification',
       color: 'from-amber-500 to-orange-500',
-      iconBg: 'bg-amber-100 dark:bg-amber-900/50',
-    },
+      iconBg: 'bg-amber-100 dark:bg-amber-900/50'},
     {
       id: 'payouts',
       icon: CreditCard,
@@ -60,8 +55,7 @@ const EnhancedProfileTrustSection = ({
       description: 'Connected for secure payment processing',
       hideIfNotHost: true,
       color: 'from-emerald-500 to-teal-500',
-      iconBg: 'bg-emerald-100 dark:bg-emerald-900/50',
-    },
+      iconBg: 'bg-emerald-100 dark:bg-emerald-900/50'},
     {
       id: 'secure',
       icon: Lock,
@@ -69,9 +63,7 @@ const EnhancedProfileTrustSection = ({
       status: true,
       description: 'All transactions protected with dispute resolution',
       color: 'from-blue-500 to-indigo-500',
-      iconBg: 'bg-blue-100 dark:bg-blue-900/50',
-    },
-  ];
+      iconBg: 'bg-blue-100 dark:bg-blue-900/50'}];
 
   const visibleItems = trustItems.filter(item => 
     !item.hideIfNotHost || (item.hideIfNotHost && isHost)
@@ -85,19 +77,14 @@ const EnhancedProfileTrustSection = ({
     visible: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.1,
-      },
-    },
-  };
+        staggerChildren: 0.1}}};
 
   const itemVariants = {
     hidden: { opacity: 0, x: -20 },
     visible: {
       opacity: 1,
       x: 0,
-      transition: { type: 'spring' as const, stiffness: 300, damping: 24 },
-    },
-  };
+      transition: { type: 'spring' as const, stiffness: 300, damping: 24 }}};
 
   return (
     <motion.div
@@ -121,7 +108,7 @@ const EnhancedProfileTrustSection = ({
                       animate={{ scale: [1, 1.2, 1] }}
                       transition={{ duration: 2, repeat: Infinity }}
                     >
-                      <Sparkles className="h-3 w-3 text-amber-500" />
+                      
                     </motion.div>
                   )}
                 </div>

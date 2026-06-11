@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Truck, Zap, Users, Clock, Package, Scale, Ruler, Check, Sparkles } from 'lucide-react';
+import { Truck, Zap, Users, Clock, Package, Scale, Ruler, Check} from 'lucide-react';
 import type { FulfillmentType, ListingCategory } from '@/types/listing';
 
 interface EnhancedQuickHighlightsProps {
@@ -22,10 +22,7 @@ const containerVariants = {
     opacity: 1,
     transition: {
       staggerChildren: 0.08,
-      delayChildren: 0.1,
-    },
-  },
-} as const;
+      delayChildren: 0.1}}} as const;
 
 const itemVariants = {
   hidden: { opacity: 0, y: 20, scale: 0.95 },
@@ -36,10 +33,8 @@ const itemVariants = {
     transition: {
       type: 'spring' as const,
       stiffness: 100,
-      damping: 15,
-    }
-  },
-};
+      damping: 15}
+  }};
 
 const EnhancedQuickHighlights = ({
   fulfillmentType,
@@ -52,8 +47,7 @@ const EnhancedQuickHighlights = ({
   lengthInches,
   widthInches,
   heightInches,
-  isRental = true,
-}: EnhancedQuickHighlightsProps) => {
+  isRental = true}: EnhancedQuickHighlightsProps) => {
   const items: { icon: React.ReactNode; title: string; description?: string; accent?: boolean }[] = [];
 
   // Instant book - highlight first for conversions
@@ -62,8 +56,7 @@ const EnhancedQuickHighlights = ({
       icon: <Zap className="h-5 w-5" />,
       title: 'Instant Book',
       description: 'Book without waiting for approval',
-      accent: true,
-    });
+      accent: true});
   }
 
   // Add fulfillment type based on what's available
@@ -71,24 +64,21 @@ const EnhancedQuickHighlights = ({
     items.push({
       icon: <Users className="h-5 w-5" />,
       title: 'On-site access',
-      description: 'Access at the location',
-    });
+      description: 'Access at the location'});
   }
 
   if (fulfillmentType === 'delivery' || fulfillmentType === 'both') {
     items.push({
       icon: <Truck className="h-5 w-5" />,
       title: 'Delivery available',
-      description: deliveryFee ? `Starting at $${deliveryFee}` : 'Free delivery',
-    });
+      description: deliveryFee ? `Starting at $${deliveryFee}` : 'Free delivery'});
   }
 
   if (fulfillmentType === 'pickup' || fulfillmentType === 'both') {
     items.push({
       icon: <Package className="h-5 w-5" />,
       title: 'Pickup available',
-      description: 'Pick up at host location',
-    });
+      description: 'Pick up at host location'});
   }
 
   // Hours of access for static locations
@@ -96,8 +86,7 @@ const EnhancedQuickHighlights = ({
     items.push({
       icon: <Clock className="h-5 w-5" />,
       title: hoursOfAccess,
-      description: 'Hours of access',
-    });
+      description: 'Hours of access'});
   }
 
   // Add dimensions for sale listings
@@ -106,8 +95,7 @@ const EnhancedQuickHighlights = ({
       items.push({
         icon: <Scale className="h-5 w-5" />,
         title: `${weightLbs.toLocaleString()} lbs`,
-        description: 'Total weight',
-      });
+        description: 'Total weight'});
     }
 
     if (lengthInches && widthInches && heightInches) {
@@ -117,15 +105,13 @@ const EnhancedQuickHighlights = ({
       items.push({
         icon: <Ruler className="h-5 w-5" />,
         title: `${lengthFt}' × ${widthFt}' × ${heightFt}'`,
-        description: 'L × W × H',
-      });
+        description: 'L × W × H'});
     } else if (lengthInches) {
       const lengthFt = Math.round(lengthInches / 12);
       items.push({
         icon: <Ruler className="h-5 w-5" />,
         title: `${lengthFt}' long`,
-        description: 'Total length',
-      });
+        description: 'Total length'});
     }
   }
 
@@ -134,8 +120,7 @@ const EnhancedQuickHighlights = ({
     highlights.slice(0, isRental ? 3 : 2).forEach((highlight) => {
       items.push({
         icon: <Check className="h-5 w-5" />,
-        title: highlight,
-      });
+        title: highlight});
     });
   }
 
@@ -178,7 +163,7 @@ const EnhancedQuickHighlights = ({
             `}
             whileHover={{ rotate: 5 }}
           >
-            {item.accent ? <Sparkles className="h-5 w-5" /> : item.icon}
+            {item.accent ?  : item.icon}
           </motion.div>
           <div className="min-w-0 flex-1">
             <p className={`font-medium text-sm ${item.accent ? 'text-emerald-700 dark:text-emerald-300' : 'text-foreground'}`}>

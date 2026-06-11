@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Sparkles, ArrowRight, CheckCircle2, Plus, CreditCard, Shield, Calendar, MessageSquare } from 'lucide-react';
+import { ArrowRight, CheckCircle2, Plus, CreditCard, Shield, Calendar, MessageSquare } from 'lucide-react';
 
 interface NextBestActionProps {
   publishedListings: number;
@@ -27,8 +27,7 @@ export const NextBestAction = ({
   isIdentityVerified,
   pendingRequests,
   pendingOffers,
-  firstName,
-}: NextBestActionProps) => {
+  firstName}: NextBestActionProps) => {
   // Priority-ordered logic
   let action: Action | null = null;
 
@@ -39,8 +38,7 @@ export const NextBestAction = ({
       desc: 'Hosts who reply within 1 hour book up to 40% more often.',
       cta: 'Review requests',
       href: '/host/bookings',
-      urgent: true,
-    };
+      urgent: true};
   } else if (pendingOffers > 0) {
     action = {
       icon: MessageSquare,
@@ -48,24 +46,20 @@ export const NextBestAction = ({
       desc: 'Counter, accept, or decline to keep the deal moving.',
       cta: 'Review offers',
       href: '/dashboard?tab=overview',
-      urgent: true,
-    };
+      urgent: true};
   } else if (publishedListings === 0 && draftListings === 0) {
     action = {
       icon: Plus,
       title: 'Create your first listing',
       desc: 'Get discovered by thousands of buyers and renters in minutes.',
       cta: 'Start listing',
-      href: '/list?start=true',
-    };
+      href: '/list?start=true'};
   } else if (draftListings > 0) {
     action = {
-      icon: Sparkles,
       title: `Finish your draft${draftListings > 1 ? 's' : ''} (${draftListings})`,
       desc: 'Drafts don\'t earn — publish to start getting bookings.',
       cta: 'Resume draft',
-      href: '/host/listings',
-    };
+      href: '/host/listings'};
   } else if (!isStripeConnected) {
     action = {
       icon: CreditCard,
@@ -73,24 +67,21 @@ export const NextBestAction = ({
       desc: 'Required to accept bookings and receive your earnings.',
       cta: 'Connect now',
       href: '/dashboard?tab=financials',
-      urgent: true,
-    };
+      urgent: true};
   } else if (!isIdentityVerified) {
     action = {
       icon: Shield,
       title: 'Verify your identity',
       desc: 'Verified hosts earn the trust badge — and 2x more bookings.',
       cta: 'Verify ID',
-      href: '/verify-identity',
-    };
+      href: '/verify-identity'};
   } else {
     action = {
       icon: CheckCircle2,
       title: `You're all set${firstName ? `, ${firstName}` : ''}!`,
       desc: 'Share your storefront to drive more traffic to your listings.',
       cta: 'View storefront',
-      href: '/account',
-    };
+      href: '/account'};
   }
 
   const Icon = action.icon;

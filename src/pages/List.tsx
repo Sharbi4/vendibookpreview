@@ -14,7 +14,6 @@ import {
   Wallet, 
   Store,
   MapPin,
-  Sparkles,
   Bot,
   Share2,
   Search,
@@ -67,12 +66,10 @@ const ListHero = ({ onStart }: { onStart: () => void }) => (
 const ListingBuildAnimation = () => {
   const containerVariants = {
     hidden: {},
-    visible: { transition: { staggerChildren: 0.3, delayChildren: 0.2 } },
-  };
+    visible: { transition: { staggerChildren: 0.3, delayChildren: 0.2 } }};
   const item = (delay = 0) => ({
     hidden: { opacity: 0, y: 20, scale: 0.95 },
-    visible: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.5, delay, ease: 'easeOut' as const } },
-  });
+    visible: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.5, delay, ease: 'easeOut' as const } }});
 
   return (
     <section className="py-10 sm:py-16 md:py-20 overflow-hidden">
@@ -262,11 +259,10 @@ const ListingBuildAnimation = () => {
 
 const HowItWorks = () => {
   const steps = [
-    { icon: Sparkles, label: 'Create Your Listing', desc: 'Use our step-by-step wizard to build a professional listing. Pick a category, add photos, set your price — done in minutes.' },
+    { label: 'Create Your Listing', desc: 'Use our step-by-step wizard to build a professional listing. Pick a category, add photos, set your price — done in minutes.' },
     { icon: Store, label: 'Go Live', desc: 'Publish a professional storefront. Choose to rent or sell. Accept card payments online or cash in person.' },
     { icon: Share2, label: 'Share & Grow', desc: 'Use the built-in Share Kit to post to social media, generate QR codes, and track who\'s clicking.' },
-    { icon: Wallet, label: 'Get Paid', desc: 'Online payments are held in escrow and released securely. Cash payments are handled directly between you and your customer.' },
-  ];
+    { icon: Wallet, label: 'Get Paid', desc: 'Online payments are held in escrow and released securely. Cash payments are handled directly between you and your customer.' }];
 
   return (
     <section className="py-14 sm:py-20 md:py-28">
@@ -333,8 +329,7 @@ const RentOrSell = () => (
             {[
               { icon: LayoutGrid, text: 'Multi-slot management — no double bookings' },
               { icon: Star, text: 'Collect verified reviews from renters' },
-              { icon: Shield, text: 'Compliance engine for licenses & insurance' },
-            ].map((item, i) => (
+              { icon: Shield, text: 'Compliance engine for licenses & insurance' }].map((item, i) => (
               <div key={i} className="flex items-center gap-3 text-sm text-foreground">
                 <item.icon className="h-4 w-4 text-primary flex-shrink-0" />
                 <span>{item.text}</span>
@@ -360,8 +355,7 @@ const RentOrSell = () => (
             {[
               { icon: ShoppingBag, text: 'Buyer pays online — funds held in escrow' },
               { icon: Banknote, text: 'Or choose "Pay in Person" for cash deals' },
-              { icon: TrendingUp, text: 'Make & receive offers with counter-offers' },
-            ].map((item, i) => (
+              { icon: TrendingUp, text: 'Make & receive offers with counter-offers' }].map((item, i) => (
               <div key={i} className="flex items-center gap-3 text-sm text-foreground">
                 <item.icon className="h-4 w-4 text-accent-foreground flex-shrink-0" />
                 <span>{item.text}</span>
@@ -376,13 +370,12 @@ const RentOrSell = () => (
 
 const ToolsGrid = () => {
   const features = [
-    { icon: Sparkles, label: 'Listing Wizard', desc: 'Use the step-by-step wizard to build a professional listing. Pick a category, add photos, and go live in minutes.' },
+    { label: 'Listing Wizard', desc: 'Use the step-by-step wizard to build a professional listing. Pick a category, add photos, and go live in minutes.' },
     { icon: Search, label: 'Built-In SEO', desc: 'Every listing is optimized for Google. Your storefront gets indexed so buyers and renters find you.' },
     { icon: Share2, label: 'Share Kit', desc: 'Generate social media captions, QR codes, and branded graphics. Track every click.' },
     { icon: QrCode, label: 'Free Signage & QR', desc: 'We send you professional signage. Walk-ins scan the QR code to book or buy instantly.' },
     { icon: Lock, label: 'Safe Escrow', desc: 'Online payments are held securely until the deal is done. Deposits refunded automatically.' },
-    { icon: Megaphone, label: 'Product Listings', desc: 'Showcase your full catalog — kitchens, trucks, equipment, parking — all in one storefront.' },
-  ];
+    { icon: Megaphone, label: 'Product Listings', desc: 'Showcase your full catalog — kitchens, trucks, equipment, parking — all in one storefront.' }];
 
   return (
     <section className="py-14 sm:py-20 md:py-28">
