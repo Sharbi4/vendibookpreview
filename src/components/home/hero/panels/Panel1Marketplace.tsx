@@ -58,7 +58,7 @@ const Panel1Marketplace = () => (
           <Button
             asChild
             size="lg"
-            className="flex-1 rounded-full bg-orange-500 hover:bg-orange-600 text-white shadow-md"
+            className="flex-1 rounded-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/30 h-14 text-base font-semibold"
             onClick={() => trackLeadEvent('homepage_primary_cta_click' as any, { source: 'home_hero', route: '/' })}
           >
             <Link to="/auth?mode=signup&utm_source=homepage&utm_medium=hero&utm_campaign=homepage_conversion&utm_content=signup_free">
@@ -68,7 +68,7 @@ const Panel1Marketplace = () => (
           <Button
             asChild
             size="lg"
-            className="flex-1 rounded-full bg-neutral-900 hover:bg-neutral-800 text-white"
+            className="flex-1 rounded-full bg-neutral-900 hover:bg-neutral-800 text-white h-14 text-base font-semibold shadow-lg"
             onClick={() => trackLeadEvent('homepage_browse_click' as any, { source: 'home_hero', route: '/' })}
           >
             <Link to="/search?category=food_truck%2Cfood_trailer&utm_source=homepage&utm_medium=hero&utm_campaign=homepage_conversion&utm_content=browse_trucks_trailers">

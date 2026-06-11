@@ -30,8 +30,8 @@ const HeroSearchForm = () => {
       aria-label="Search food trucks and trailers"
       className="w-full max-w-xl flex items-stretch gap-2"
     >
-      <div className="flex-1 flex items-center gap-2 rounded-full bg-white/95 backdrop-blur px-4 h-12 shadow-sm ring-1 ring-black/10 focus-within:ring-2 focus-within:ring-primary/60">
-        <Search className="w-4 h-4 text-neutral-500 shrink-0" aria-hidden />
+      <div className="flex-1 flex items-center gap-2 rounded-full bg-white/95 backdrop-blur px-5 h-14 shadow-md ring-1 ring-black/10 focus-within:ring-2 focus-within:ring-primary/60">
+        <Search className="w-5 h-5 text-neutral-500 shrink-0" aria-hidden />
         <input
           type="text"
           value={query}
@@ -43,7 +43,7 @@ const HeroSearchForm = () => {
       </div>
       <button
         type="submit"
-        className="shrink-0 rounded-full bg-primary text-primary-foreground text-sm font-semibold px-5 h-12 hover:bg-primary/90 active:scale-[0.98] transition-all shadow-md"
+        className="shrink-0 rounded-full bg-primary text-primary-foreground text-base font-semibold px-6 h-14 hover:bg-primary/90 active:scale-[0.98] transition-all shadow-lg shadow-primary/30"
       >
         Search
       </button>
