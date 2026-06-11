@@ -1,13 +1,14 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowRight, Sparkles, Search } from 'lucide-react';
+import { ArrowRight, Sparkles, Search, UserPlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import HeroBackground from './HeroBackground';
 import HeroSearchInput from './HeroSearchInput';
 import { useHeroSearch } from './useHeroSearch';
 import { TellVendibookModal } from '@/components/lead/TellVendibookModal';
 import { trackLeadEvent } from '@/lib/leadTracking';
+import { useAuth } from '@/contexts/AuthContext';
 import vendibookLogo from '@/assets/vendibook-logo.png';
 
 const TRUST_BITS = [
@@ -21,10 +22,11 @@ const TRUST_BITS = [
 const HeroFocused = () => {
   const navigate = useNavigate();
   const search = useHeroSearch();
+  const { user } = useAuth();
   const [conciergeOpen, setConciergeOpen] = useState(false);
 
   const handlePrimary = () => {
-    trackLeadEvent('homepage_primary_cta_click', { route: '/', source: 'home_hero' });
+    trackLeadEvent('homepage_concierge_click', { route: '/', source: 'home_hero' });
     setConciergeOpen(true);
   };
 
@@ -33,9 +35,14 @@ const HeroFocused = () => {
     navigate('/search?category=food_truck%2Cfood_trailer');
   };
 
+  const handleSignUp = () => {
+    trackLeadEvent('homepage_primary_cta_click', { route: '/', source: 'home_hero_signup' });
+    navigate('/auth?mode=signup&utm_source=homepage&utm_medium=hero&utm_campaign=homepage_conversion&utm_content=mobile_signup_button');
+  };
+
   const handleHostList = () => {
     trackLeadEvent('homepage_host_list_click', { route: '/', source: 'home_hero_host_link' });
-    navigate('/list');
+    navigate('/list?utm_source=homepage&utm_medium=hero&utm_campaign=homepage_conversion&utm_content=list_it_free_text');
   };
 
   return (
@@ -113,6 +120,36 @@ const HeroFocused = () => {
               <ArrowRight className="w-3.5 h-3.5" />
             </button>
           </motion.div>
+
+          {/* Mobile primary CTAs — Sign Up Free + Browse */}
+          <motion.div
+            className="md:hidden flex flex-col gap-2.5 max-w-xl mx-auto mt-4"
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.25 }}
+          >
+            {!user && (
+              <Button
+                onClick={handleSignUp}
+                size="lg"
+                variant="dark-shine"
+                className="rounded-full px-6 gap-2 w-full whitespace-nowrap"
+              >
+                <UserPlus className="w-4 h-4" />
+                Sign Up Free
+              </Button>
+            )}
+            <Button
+              onClick={handleBrowse}
+              size="lg"
+              variant="glass-cta"
+              className="rounded-full px-6 gap-2 w-full whitespace-nowrap"
+            >
+              <Search className="w-4 h-4" />
+              Browse Trucks &amp; Trailers
+            </Button>
+          </motion.div>
+
 
           {/* Primary CTAs — desktop only */}
           <motion.div

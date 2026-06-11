@@ -462,14 +462,6 @@ const Header = ({ hideSearch = false }: HeaderProps) => {
 
         {/* Mobile & Tablet Actions - hide when search is open */}
         <div className={`flex lg:hidden items-center gap-1 transition-opacity duration-200 ${isMobileSearchOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}> 
-          {!user && (
-            <button
-              onClick={() => navigate('/auth?mode=signup')}
-              className="text-sm font-medium text-primary hover:text-primary/80 transition-colors px-2"
-            >
-              Sign up for free
-            </button>
-          )}
           {user && <ConciergeInbox userId={user.id} />}
           {user && <NotificationCenter />}
           <AppDropdownMenu variant="light" />
