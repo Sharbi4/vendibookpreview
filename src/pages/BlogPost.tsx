@@ -16,10 +16,6 @@ import { toast } from 'sonner';
 const BlogPost = () => {
   const { slug } = useParams<{ slug: string }>();
   const post = slug ? getBlogPostBySlug(slug) : undefined;
-  
-  if (!post) {
-    return <Navigate to="/blog" replace />;
-  }
 
   // Delegated CTA click logger: any anchor with data-cta inside the article
   // is logged to blog_share_clicks before navigation continues.
