@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/button';
 import HeroBackground from './HeroBackground';
 import HeroSearchInput from './HeroSearchInput';
 import { useHeroSearch } from './useHeroSearch';
-import { TellVendibookModal } from '@/components/lead/TellVendibookModal';
 import { trackLeadEvent } from '@/lib/leadTracking';
 import { useAuth } from '@/contexts/AuthContext';
 import vendibookLogo from '@/assets/vendibook-logo.png';
@@ -23,12 +22,6 @@ const HeroFocused = () => {
   const navigate = useNavigate();
   const search = useHeroSearch();
   const { user } = useAuth();
-  const [conciergeOpen, setConciergeOpen] = useState(false);
-
-  const handlePrimary = () => {
-    trackLeadEvent('homepage_concierge_click', { route: '/', source: 'home_hero' });
-    setConciergeOpen(true);
-  };
 
   const handleBrowse = () => {
     trackLeadEvent('homepage_browse_click', { route: '/', source: 'home_hero' });
@@ -205,13 +198,6 @@ const HeroFocused = () => {
           </motion.div>
         </div>
       </div>
-
-
-      <TellVendibookModal
-        open={conciergeOpen}
-        onOpenChange={setConciergeOpen}
-        sourcePage="home_hero"
-      />
     </section>
   );
 };

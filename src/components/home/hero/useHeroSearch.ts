@@ -6,10 +6,10 @@ import { useScribe } from '@elevenlabs/react';
 import { trackLeadEvent } from '@/lib/leadTracking';
 
 const AI_PLACEHOLDERS = [
-  'I need a taco truck in Miami this weekend',
-  'Shared kitchen for rent near Houston',
+  'Search food trucks or trailers...',
+  'Taco truck in Miami this weekend',
   'Food trailer for sale under $30k',
-  'Vendor space in Los Angeles',
+  'Shared kitchen near Houston',
   'Commercial kitchen in New York City',
   'Buy a food truck in Dallas',
 ];
