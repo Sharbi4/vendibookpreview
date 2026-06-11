@@ -32,7 +32,7 @@ const PaymentsBelow = () => (
 const StripeModule = () => (
   <GlassCard className="w-[230px] !p-5" rotate={-2}>
     <div className="text-xs text-neutral-600 mb-1">Powered by</div>
-    <StripeWordmark className="text-4xl block mb-3" />
+    <StripeWordmark className="h-9 mb-3" />
     <div className="flex items-start gap-2 pt-3 border-t border-orange-200/50">
       <ShieldCheck className="w-4 h-4 text-orange-500 mt-0.5 shrink-0" />
       <div className="text-xs text-neutral-700 leading-snug">
