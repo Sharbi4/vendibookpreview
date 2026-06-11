@@ -83,8 +83,7 @@ const HeroFocused = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.15 }}
           >
-            Vendibook helps food entrepreneurs find available trucks and trailers, compare real
-            listings, check availability, and get help with next steps before they commit.
+            Search real food trucks and trailers, compare listings, and connect with owners before you commit.
           </motion.p>
 
           {/* Search */}
@@ -97,39 +96,12 @@ const HeroFocused = () => {
             <HeroSearchInput {...search} />
           </motion.div>
 
-          {/* Primary CTAs */}
+          {/* Host nudge — primary mobile secondary action */}
           <motion.div
-            className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-2.5 sm:gap-3 max-w-xl mx-auto"
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.25 }}
-          >
-            <Button
-              onClick={handlePrimary}
-              size="lg"
-              variant="dark-shine"
-              className="rounded-full px-6 gap-2 flex-1 sm:flex-none whitespace-nowrap"
-            >
-              <Sparkles className="w-4 h-4" />
-              Tell Vendibook What You Need
-            </Button>
-            <Button
-              onClick={handleBrowse}
-              size="lg"
-              variant="glass-cta"
-              className="rounded-full px-6 gap-2 flex-1 sm:flex-none whitespace-nowrap"
-            >
-              <Search className="w-4 h-4" />
-              Browse Trucks &amp; Trailers
-            </Button>
-          </motion.div>
-
-          {/* Host nudge */}
-          <motion.div
-            className="mt-4"
+            className="mb-2"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ duration: 0.4, delay: 0.35 }}
+            transition={{ duration: 0.4, delay: 0.3 }}
           >
             <button
               type="button"
@@ -142,9 +114,36 @@ const HeroFocused = () => {
             </button>
           </motion.div>
 
-          {/* Fine print */}
+          {/* Primary CTAs — desktop only */}
+          <motion.div
+            className="hidden md:flex flex-row items-center justify-center gap-3 max-w-xl mx-auto mt-6"
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.25 }}
+          >
+            <Button
+              onClick={handlePrimary}
+              size="lg"
+              variant="dark-shine"
+              className="rounded-full px-6 gap-2 whitespace-nowrap"
+            >
+              <Sparkles className="w-4 h-4" />
+              Tell Vendibook What You Need
+            </Button>
+            <Button
+              onClick={handleBrowse}
+              size="lg"
+              variant="glass-cta"
+              className="rounded-full px-6 gap-2 whitespace-nowrap"
+            >
+              <Search className="w-4 h-4" />
+              Browse Trucks &amp; Trailers
+            </Button>
+          </motion.div>
+
+          {/* Fine print — desktop only */}
           <motion.p
-            className="mt-4 max-w-xl mx-auto text-[11px] sm:text-xs text-foreground/40 leading-relaxed"
+            className="hidden md:block mt-4 max-w-xl mx-auto text-xs text-foreground/40 leading-relaxed"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.4, delay: 0.4 }}
@@ -153,9 +152,9 @@ const HeroFocused = () => {
             verification status, and final terms.
           </motion.p>
 
-          {/* Trust strip */}
+          {/* Trust strip — desktop only */}
           <motion.div
-            className="mt-6 sm:mt-8 flex flex-wrap items-center justify-center gap-x-2 gap-y-1.5 text-[11px] sm:text-xs text-muted-foreground/80"
+            className="hidden md:flex mt-8 flex-wrap items-center justify-center gap-x-2 gap-y-1.5 text-xs text-muted-foreground/80"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.4, delay: 0.45 }}
@@ -169,6 +168,7 @@ const HeroFocused = () => {
           </motion.div>
         </div>
       </div>
+
 
       <TellVendibookModal
         open={conciergeOpen}
