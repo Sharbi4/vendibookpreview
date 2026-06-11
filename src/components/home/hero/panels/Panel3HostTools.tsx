@@ -1,18 +1,12 @@
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, FileText, Calendar, Sparkle, ShieldCheck } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import HeroPanelShell from './HeroPanelShell';
 import { trackLeadEvent } from '@/lib/leadTracking';
+import bgImage from '@/assets/hero-hosttools-bg.jpg';
 
 const PRIMARY = '/host-tools?utm_source=homepage&utm_medium=hero&utm_campaign=host_tools&utm_content=explore_host_tools';
 const SECONDARY = '/how-it-works/hosting?utm_source=homepage&utm_medium=hero&utm_campaign=host_tools&utm_content=how_hosting_works';
-
-const CARDS = [
-  { icon: Sparkle, label: 'Cleaning workflow' },
-  { icon: FileText, label: 'Document collection' },
-  { icon: Calendar, label: 'Booking requests' },
-  { icon: ShieldCheck, label: 'Owner-approved rentals' },
-];
 
 const Panel3HostTools = () => {
   const navigate = useNavigate();
@@ -28,6 +22,7 @@ const Panel3HostTools = () => {
 
   return (
     <HeroPanelShell
+      bgImage={bgImage}
       eyebrow="Tools for owners and hosts"
       headline={
         <>
@@ -44,19 +39,6 @@ const Panel3HostTools = () => {
         <Button onClick={handleSecondary} size="lg" variant="glass-cta" className="rounded-full px-6 whitespace-nowrap">
           How Hosting Works
         </Button>
-      }
-      visual={
-        <div className="grid grid-cols-2 gap-3 w-full max-w-md">
-          {CARDS.map(({ icon: Icon, label }) => (
-            <div
-              key={label}
-              className="rounded-xl border border-white/10 bg-white/[0.03] p-4 backdrop-blur-sm hover:bg-white/[0.05] transition-colors"
-            >
-              <Icon className="w-5 h-5 text-primary mb-2" />
-              <div className="text-xs font-semibold text-foreground/90">{label}</div>
-            </div>
-          ))}
-        </div>
       }
     />
   );
