@@ -8,6 +8,7 @@ import Hero from '@/components/home/Hero';
 
 import AnnouncementBanner from '@/components/home/AnnouncementBanner';
 import HeroBelowFold from '@/components/home/HeroBelowFold';
+import ReferralPromoCard from '@/components/home/ReferralPromoCard';
 import VerificationBanner from '@/components/home/VerificationBanner';
 import ConciergeSection from '@/components/home/ConciergeSection';
 
@@ -85,6 +86,9 @@ const Index = () => {
 
         {/* Mobile-only secondary actions + trust strip (moved out of hero) */}
         <HeroBelowFold />
+
+        {/* Referral promo — below hero, not in rotation */}
+        <ReferralPromoCard />
 
         {/* Announcement moved below the hero */}
         <AnnouncementBanner />

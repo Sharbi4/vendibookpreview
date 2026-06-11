@@ -31,6 +31,16 @@ export type LeadEventName =
   | 'homepage_concierge_click'
   | 'homepage_final_cta_click'
   | 'homepage_listing_row_view_more_click'
+  | 'hero_panel_viewed'
+  | 'hero_panel_swiped'
+  | 'hero_search_clicked'
+  | 'hero_browse_clicked'
+  | 'hero_list_it_free_clicked'
+  | 'hero_financing_clicked'
+  | 'hero_host_tools_clicked'
+  | 'hero_payments_clicked'
+  | 'referral_card_clicked'
+  | 'concierge_card_clicked'
   // Listing card overlay funnel
   | 'listing_start_purchase_click'
   | 'listing_check_dates_click'
@@ -91,6 +101,16 @@ const EVENT_CATEGORY: Record<LeadEventName, string> = {
   homepage_concierge_click: 'homepage',
   homepage_final_cta_click: 'homepage',
   homepage_listing_row_view_more_click: 'homepage',
+  hero_panel_viewed: 'homepage',
+  hero_panel_swiped: 'homepage',
+  hero_search_clicked: 'homepage',
+  hero_browse_clicked: 'homepage',
+  hero_list_it_free_clicked: 'homepage',
+  hero_financing_clicked: 'homepage',
+  hero_host_tools_clicked: 'homepage',
+  hero_payments_clicked: 'homepage',
+  referral_card_clicked: 'homepage',
+  concierge_card_clicked: 'homepage',
   listing_start_purchase_click: 'discovery',
   listing_check_dates_click: 'discovery',
   listing_view_availability_click: 'discovery',

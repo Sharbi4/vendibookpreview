@@ -1,5 +1,5 @@
-import HeroFocused from './hero/HeroFocused';
+import RotatingHero from './hero/RotatingHero';
 
-const Hero = () => <HeroFocused />;
+const Hero = () => <RotatingHero />;
 
 export default Hero;
