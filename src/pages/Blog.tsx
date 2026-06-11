@@ -11,7 +11,8 @@ import { BLOG_CATEGORIES, getFeaturedPosts, getRecentPosts } from '@/data/blogPo
 
 const Blog = () => {
   const featuredPosts = getFeaturedPosts();
-  const recentPosts = getRecentPosts(6);
+  // Exclude featured posts so newest non-featured articles always surface here
+  const recentPosts = getRecentPosts(9, featuredPosts.map(p => p.slug));
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
