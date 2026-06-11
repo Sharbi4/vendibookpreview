@@ -10,9 +10,9 @@ import financingBg from '@/assets/hero-financing-bg.png.asset.json';
 const LogoRow = () => (
   <GlassCard className="!p-4 max-w-sm">
     <div className="flex items-center justify-around gap-3">
-      <AffirmWordmark className="text-2xl" />
+      <AffirmWordmark className="h-6" />
       <div className="h-7 w-px bg-neutral-300/70" />
-      <AfterpayWordmark className="text-2xl" />
+      <AfterpayWordmark className="h-5" />
     </div>
   </GlassCard>
 );
