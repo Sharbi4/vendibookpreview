@@ -347,7 +347,7 @@ const SellMyFoodTruck = () => {
                     <CardContent className="p-6">
                       <div className="flex items-center gap-3 mb-4">
                         <div className="p-2.5 rounded-lg bg-foreground/10">
-                          < className="h-5 w-5 text-foreground/70" />
+                          <Zap className="h-5 w-5 text-foreground/70" />
                         </div>
                         <h3 className="font-semibold text-lg">PricePilot (AI Pricing Suggestions)</h3>
                       </div>
