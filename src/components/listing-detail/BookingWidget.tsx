@@ -744,17 +744,19 @@ export const BookingWidget = ({
         transition={{ type: 'spring', stiffness: 100, damping: 20 }}
         onHoverStart={() => setIsHovered(true)}
         onHoverEnd={() => setIsHovered(false)}
-        className="rounded-2xl border-0 shadow-xl bg-card overflow-hidden relative"
+        className="rounded-3xl border-0 bg-sale-card ring-glass overflow-hidden relative"
       >
-        {/* Glow effect */}
+        {/* Subtle warm wash on hover */}
         <motion.div
-          className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/5 opacity-0 pointer-events-none"
+          className="absolute inset-0 pointer-events-none opacity-0"
+          style={{ background: 'radial-gradient(120% 80% at 90% 0%, rgba(255,210,170,0.10), transparent 55%)' }}
           animate={{ opacity: isHovered ? 1 : 0 }}
           transition={{ duration: 0.3 }}
         />
 
         {/* Header */}
-        <div className="bg-gradient-to-br from-muted/50 to-muted/30 border-b border-border px-6 py-5 relative">
+        <div className="px-6 py-5 relative border-b border-white/[0.06]">
+
           <div className="flex items-baseline gap-3 flex-wrap">
             <motion.span 
               className="text-3xl font-bold text-foreground"
