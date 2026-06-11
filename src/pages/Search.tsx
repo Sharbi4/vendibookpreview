@@ -572,15 +572,6 @@ const Search = () => {
                   </p>
                 </div>
               </div>
-              <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-border/60 bg-card/80 backdrop-blur-sm">
-                <span className="relative flex h-1.5 w-1.5">
-                  <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75 animate-ping" />
-                  <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                </span>
-                <span className="text-[11px] font-medium text-muted-foreground">
-                  <span className="text-foreground font-semibold">{totalCount}</span> live
-                </span>
-              </div>
             </div>
 
             {/* Row 1: Premium search input + filters */}
