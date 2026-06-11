@@ -1,6 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Sparkles, Search } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { TellVendibookModal } from '@/components/lead/TellVendibookModal';
 import { trackLeadEvent } from '@/lib/leadTracking';
@@ -14,46 +13,42 @@ const TRUST_BITS = [
 ];
 
 /**
- * Mobile-only secondary actions + trust strip that used to live in the hero.
- * Hidden on md+ where the hero itself still shows these.
+ * Below-hero section (mobile-focused). Hosts the concierge prompt that used
+ * to live in the hero, plus a compact trust strip + disclaimer.
  */
 const HeroBelowFold = () => {
-  const navigate = useNavigate();
   const [conciergeOpen, setConciergeOpen] = useState(false);
 
-  const handlePrimary = () => {
-    trackLeadEvent('homepage_primary_cta_click', { route: '/', source: 'home_below_hero' });
+  const handleConcierge = () => {
+    trackLeadEvent('homepage_concierge_click', { route: '/', source: 'home_below_hero' });
     setConciergeOpen(true);
   };
 
-  const handleBrowse = () => {
-    trackLeadEvent('homepage_browse_click', { route: '/', source: 'home_below_hero' });
-    navigate('/search?category=food_truck%2Cfood_trailer');
-  };
-
   return (
-    <section className="md:hidden px-5 pt-2 pb-8 bg-background">
-      <div className="max-w-xl mx-auto flex flex-col gap-3">
-        <Button
-          onClick={handlePrimary}
-          size="lg"
-          variant="dark-shine"
-          className="rounded-full px-6 gap-2 w-full whitespace-nowrap"
-        >
-          <Sparkles className="w-4 h-4" />
-          Tell Vendibook What You Need
-        </Button>
-        <Button
-          onClick={handleBrowse}
-          size="lg"
-          variant="glass-cta"
-          className="rounded-full px-6 gap-2 w-full whitespace-nowrap"
-        >
-          <Search className="w-4 h-4" />
-          Browse Trucks &amp; Trailers
-        </Button>
+    <section className="md:hidden px-5 pt-4 pb-8 bg-background">
+      <div className="max-w-xl mx-auto">
+        {/* Concierge card */}
+        <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-5 text-center">
+          <h2 className="text-base font-semibold text-foreground mb-1.5">
+            Not sure what you need yet?
+          </h2>
+          <p className="text-[13px] text-muted-foreground leading-relaxed mb-4">
+            Tell Vendibook what you’re looking for and we’ll help point you toward the right
+            trucks, trailers, or next steps.
+          </p>
+          <Button
+            onClick={handleConcierge}
+            size="lg"
+            variant="glass-cta"
+            className="rounded-full px-6 gap-2 w-full whitespace-nowrap"
+          >
+            <Sparkles className="w-4 h-4" />
+            Tell Vendibook What You Need
+          </Button>
+        </div>
 
-        <div className="mt-3 flex flex-wrap items-center justify-center gap-x-2 gap-y-1.5 text-[11px] text-muted-foreground/80">
+        {/* Trust strip */}
+        <div className="mt-5 flex flex-wrap items-center justify-center gap-x-2 gap-y-1.5 text-[11px] text-muted-foreground/80">
           {TRUST_BITS.map((bit, i) => (
             <span key={bit} className="inline-flex items-center gap-2">
               {i > 0 && <span className="text-foreground/20">·</span>}
