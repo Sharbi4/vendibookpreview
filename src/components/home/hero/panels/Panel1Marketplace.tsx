@@ -39,42 +39,46 @@ const Panel1Marketplace = () => (
     bgImage={marketplaceBg.url}
     glassModules={<MarketplaceModules />}
     eyebrow="The marketplace for mobile food assets"
-    headline={<>Find, rent, buy, or sell <span className="text-orange-600">food trucks and food trailers</span></>}
+    headline={<>Find, rent, buy, or sell <span style={{ color: '#FF4B1F' }}>food trucks and food trailers</span></>}
     supportingText="Search verified food trucks and trailers, compare real listings, and connect with owners through a safer, more structured marketplace."
     primaryCta={
-      <div className="w-full flex flex-col gap-3">
+      <div className="w-full flex flex-col">
         <HeroSearchForm />
-        <p className="text-sm text-neutral-700 text-center sm:text-left">
+        <p className="mt-[18px] text-[15px] sm:text-base text-[#4A403A] text-left">
           Have a truck or trailer?{' '}
           <Link
             to="/list?utm_source=homepage&utm_medium=hero&utm_campaign=homepage_conversion&utm_content=list_it_free"
-            className="text-orange-600 font-semibold underline underline-offset-4 hover:text-orange-700"
+            className="font-semibold underline underline-offset-4 hover:opacity-80"
+            style={{ color: '#FF4B1F' }}
             onClick={() => trackLeadEvent('homepage_host_list_click' as any, { source: 'home_hero', route: '/' })}
           >
             List it free →
           </Link>
         </p>
-        <div className="flex flex-col sm:flex-row gap-2 w-full">
-          <Button
-            asChild
-            size="lg"
-            className="flex-1 rounded-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/30 h-14 text-base font-semibold"
+        <div className="mt-[18px] flex flex-col gap-3 w-full">
+          <Link
+            to="/auth?mode=signup&utm_source=homepage&utm_medium=hero&utm_campaign=homepage_conversion&utm_content=signup_free"
             onClick={() => trackLeadEvent('homepage_primary_cta_click' as any, { source: 'home_hero', route: '/' })}
+            className="w-full h-[58px] inline-flex items-center justify-center rounded-full text-white text-[18px] font-bold active:scale-[0.98] transition-all"
+            style={{
+              background: 'linear-gradient(135deg, #FF4B1F 0%, #FF6726 100%)',
+              boxShadow: '0 14px 32px rgba(255,75,31,0.32)',
+            }}
           >
-            <Link to="/auth?mode=signup&utm_source=homepage&utm_medium=hero&utm_campaign=homepage_conversion&utm_content=signup_free">
-              Sign Up Free
-            </Link>
-          </Button>
-          <Button
-            asChild
-            size="lg"
-            className="flex-1 rounded-full bg-neutral-900 hover:bg-neutral-800 text-white h-14 text-base font-semibold shadow-lg"
+            Sign Up Free
+          </Link>
+          <Link
+            to="/search?category=food_truck%2Cfood_trailer&utm_source=homepage&utm_medium=hero&utm_campaign=homepage_conversion&utm_content=browse_trucks_trailers"
             onClick={() => trackLeadEvent('homepage_browse_click' as any, { source: 'home_hero', route: '/' })}
+            className="w-full h-[58px] inline-flex items-center justify-center rounded-full text-white text-[18px] font-bold active:scale-[0.98] transition-all"
+            style={{
+              background: '#111111',
+              border: '1px solid rgba(255,255,255,0.12)',
+              boxShadow: '0 10px 24px rgba(0,0,0,0.20)',
+            }}
           >
-            <Link to="/search?category=food_truck%2Cfood_trailer&utm_source=homepage&utm_medium=hero&utm_campaign=homepage_conversion&utm_content=browse_trucks_trailers">
-              Browse Trucks &amp; Trailers
-            </Link>
-          </Button>
+            Browse Trucks &amp; Trailers
+          </Link>
         </div>
       </div>
     }

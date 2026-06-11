@@ -285,17 +285,17 @@ const Header = ({ hideSearch = false }: HeaderProps) => {
         willChange: 'transform',
       }}
     >
-      <div className="container max-w-7xl mx-auto px-4 flex h-16 items-center justify-between">
+      <div className="container max-w-7xl mx-auto pl-4 pr-3 sm:px-4 flex h-[72px] items-center justify-between gap-3">
         {/* Logo - hide when mobile search is open */}
         <Link 
           to="/" 
-          className={`flex items-center transition-opacity duration-200 ${isMobileSearchOpen ? 'opacity-0 pointer-events-none absolute' : 'opacity-100'} md:opacity-100 md:pointer-events-auto md:relative`}
+          className={`flex items-center shrink-0 transition-opacity duration-200 ${isMobileSearchOpen ? 'opacity-0 pointer-events-none absolute' : 'opacity-100'} md:opacity-100 md:pointer-events-auto md:relative`}
         >
-          <div className="flex items-center justify-center">
+          <div className="flex items-center justify-center w-11 h-11">
             <img 
               src={vendibookFavicon} 
               alt="Vendibook" 
-              className="h-7 w-auto brightness-125"
+              className="h-8 w-auto brightness-125 object-contain"
             />
           </div>
         </Link>
@@ -384,15 +384,16 @@ const Header = ({ hideSearch = false }: HeaderProps) => {
           ) : (
             <button
               onClick={() => setIsMobileSearchOpen(true)}
-              className="flex-1 flex items-center gap-3 px-5 h-[52px] rounded-full text-[15px] font-medium text-white/70 transition-all"
+              className="flex items-center gap-2 px-4 h-[46px] rounded-full text-sm font-medium text-white/70 transition-all mx-auto"
               style={{
                 background: 'rgba(18,18,18,0.92)',
                 border: '1px solid rgba(255,255,255,0.08)',
                 boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.04), 0 4px 18px rgba(0,0,0,0.35)',
+                maxWidth: '220px',
               }}
             >
               <Search className="h-4 w-4 text-white/55 shrink-0" />
-              <span className="truncate text-white/55">Search food trucks, trailers, tools...</span>
+              <span className="truncate text-white/55">Search</span>
             </button>
           )}
         </div>}

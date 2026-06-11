@@ -32,36 +32,56 @@ const HeroPanelShell = ({
   belowSupporting,
 }: Props) => {
   return (
-    <div className="relative overflow-hidden rounded-3xl ring-1 ring-black/5 shadow-2xl">
+    <div
+      className="relative overflow-hidden ring-1 ring-black/5 shadow-2xl mx-4 sm:mx-6 mt-6"
+      style={{ borderRadius: 32 }}
+    >
       {/* Base cream gradient */}
       <div
         className="absolute inset-0"
         style={{
           background:
-            'linear-gradient(135deg, #fff7ee 0%, #fde4cc 45%, #f6cfa6 100%)',
+            'linear-gradient(135deg, #FFF8F0 0%, #FFF3E7 45%, #FFE0CC 100%)',
         }}
         aria-hidden
       />
       {bgImage && (
         <div
-          className="absolute inset-0 bg-no-repeat bg-right-bottom bg-contain md:bg-cover md:bg-center"
+          className="absolute inset-0 bg-no-repeat pointer-events-none"
           style={{
             backgroundImage: `url(${bgImage})`,
-            maskImage:
-              'linear-gradient(to right, transparent 0%, transparent 35%, rgba(0,0,0,0.6) 60%, black 80%)',
-            WebkitMaskImage:
-              'linear-gradient(to right, transparent 0%, transparent 35%, rgba(0,0,0,0.6) 60%, black 80%)',
+            backgroundPosition: 'right -10% bottom -10%',
+            backgroundSize: '70% auto',
+            opacity: 0.4,
           }}
           aria-hidden
         />
       )}
-      {/* Left-side legibility wash for text */}
+      {/* Cream wash to keep all text/CTAs readable above the image */}
       {bgImage && (
         <div
-          className="absolute inset-0 pointer-events-none md:hidden"
+          className="absolute inset-0 pointer-events-none"
           style={{
             background:
-              'linear-gradient(to bottom, rgba(255,247,238,0.92) 0%, rgba(255,247,238,0.7) 55%, rgba(255,247,238,0.2) 100%)',
+              'linear-gradient(to bottom, rgba(255,248,240,0.96) 0%, rgba(255,243,231,0.88) 55%, rgba(255,224,204,0.72) 100%)',
+          }}
+          aria-hidden
+        />
+      )}
+      {/* Desktop: keep image visible on the right side only */}
+      {bgImage && (
+        <div
+          className="hidden md:block absolute inset-y-0 right-0 w-1/2 pointer-events-none"
+          style={{
+            backgroundImage: `url(${bgImage})`,
+            backgroundRepeat: 'no-repeat',
+            backgroundPosition: 'right center',
+            backgroundSize: 'cover',
+            opacity: 0.55,
+            maskImage:
+              'linear-gradient(to right, transparent 0%, rgba(0,0,0,0.6) 35%, black 80%)',
+            WebkitMaskImage:
+              'linear-gradient(to right, transparent 0%, rgba(0,0,0,0.6) 35%, black 80%)',
           }}
           aria-hidden
         />
@@ -71,30 +91,7 @@ const HeroPanelShell = ({
         className="absolute inset-0 pointer-events-none"
         style={{
           background:
-            'radial-gradient(60% 50% at 85% 10%, hsla(24, 95%, 60%, 0.35) 0%, transparent 70%)',
-        }}
-        aria-hidden
-      />
-      {/* Satin light trail */}
-      <div
-        className="absolute inset-0 pointer-events-none opacity-70"
-        style={{
-          background:
-            'radial-gradient(120% 40% at 50% 110%, hsla(28, 100%, 70%, 0.45) 0%, transparent 60%)',
-        }}
-        aria-hidden
-      />
-      {/* Subtle dotted noise top-left */}
-      <div
-        className="absolute inset-0 pointer-events-none opacity-30"
-        style={{
-          backgroundImage:
-            'radial-gradient(hsla(20, 30%, 40%, 0.18) 1px, transparent 1px)',
-          backgroundSize: '14px 14px',
-          maskImage:
-            'radial-gradient(50% 40% at 10% 10%, black 0%, transparent 70%)',
-          WebkitMaskImage:
-            'radial-gradient(50% 40% at 10% 10%, black 0%, transparent 70%)',
+            'radial-gradient(60% 50% at 90% 0%, rgba(255,75,31,0.18) 0%, transparent 70%)',
         }}
         aria-hidden
       />
@@ -109,15 +106,24 @@ const HeroPanelShell = ({
         </div>
       )}
 
-      <div className="relative z-10 px-6 sm:px-10 py-10 sm:py-14 md:py-20 min-h-[560px] flex">
+      <div className="relative z-10 px-5 pt-7 pb-8 sm:px-10 sm:py-14 md:px-16 md:py-20 flex">
         <div className="w-full max-w-2xl mx-auto md:mx-0 text-left flex flex-col">
           <motion.div
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4 }}
-            className="inline-flex self-start items-center gap-1.5 px-3 py-1 mb-5 rounded-full border border-orange-500/40 bg-white/60 backdrop-blur-sm text-[10px] sm:text-[11px] font-semibold uppercase tracking-[0.18em] text-neutral-900"
+            className="inline-flex self-start items-center gap-1.5 px-3.5 mb-6 rounded-full text-[11px] sm:text-[12px] font-semibold uppercase text-[#121212]"
+            style={{
+              height: 36,
+              letterSpacing: '0.16em',
+              background: 'rgba(255,255,255,0.55)',
+              border: '1px solid rgba(255, 75, 31, 0.18)',
+              backdropFilter: 'blur(8px)',
+              WebkitBackdropFilter: 'blur(8px)',
+              boxShadow: '0 4px 14px rgba(18,18,18,0.06)',
+            }}
           >
-            <span className="w-1.5 h-1.5 rounded-full bg-orange-500" />
+            <span className="w-1.5 h-1.5 rounded-full" style={{ background: '#FF4B1F' }} />
             {eyebrow}
           </motion.div>
 
@@ -125,7 +131,12 @@ const HeroPanelShell = ({
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.05 }}
-            className="text-[34px] leading-[1.05] sm:text-5xl md:text-6xl font-bold text-neutral-900 tracking-tight mb-4"
+            className="font-bold text-[#121212] mb-4"
+            style={{
+              fontSize: 'clamp(38px, 9.5vw, 60px)',
+              lineHeight: 1.08,
+              letterSpacing: '-0.04em',
+            }}
           >
             {headline}
           </motion.h1>
@@ -134,7 +145,8 @@ const HeroPanelShell = ({
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.1 }}
-            className="text-base md:text-lg text-neutral-700 max-w-xl leading-relaxed mb-6"
+            className="max-w-xl mb-6"
+            style={{ fontSize: 18, lineHeight: 1.65, color: '#4A403A' }}
           >
             {supportingText}
           </motion.p>
@@ -145,7 +157,7 @@ const HeroPanelShell = ({
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.15 }}
-            className="flex flex-col sm:flex-row gap-3 items-stretch w-full max-w-xl"
+            className="flex flex-col gap-3 items-stretch w-full max-w-xl"
           >
             {primaryCta}
             {secondaryCta}
