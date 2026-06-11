@@ -401,6 +401,8 @@ const useGlobalErrorHandler = () => {
   }, []);
 };
 
+const FloatingConciergeButton = lazy(() => import("@/components/FloatingConciergeButton"));
+
 const AppContent = () => {
   useGlobalErrorHandler();
   useOfflineQueueSync();
@@ -419,6 +421,9 @@ const AppContent = () => {
       <MobileBottomNav />
       <Suspense fallback={null}>
         <LiveActivityFeed />
+      </Suspense>
+      <Suspense fallback={null}>
+        <FloatingConciergeButton />
       </Suspense>
     </>
   );
