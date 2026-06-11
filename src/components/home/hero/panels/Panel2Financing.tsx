@@ -2,9 +2,11 @@ import { Link } from 'react-router-dom';
 import HeroPanelShell from './HeroPanelShell';
 import { Button } from '@/components/ui/button';
 import { trackLeadEvent } from '@/lib/leadTracking';
+import financingBg from '@/assets/hero-financing-bg.png.asset.json';
 
 const Panel2Financing = () => (
   <HeroPanelShell
+    bgImage={financingBg.url}
     eyebrow="Flexible starting paths"
     headline={<>Start with the truck before you <span className="text-orange-600">commit to ownership</span></>}
     supportingText="Explore food trucks and trailers with flexible payment options available on eligible listings, including financing support through partners like Affirm or Afterpay where offered."

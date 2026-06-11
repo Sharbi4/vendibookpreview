@@ -3,9 +3,11 @@ import HeroPanelShell from './HeroPanelShell';
 import HeroSearchForm from './HeroSearchForm';
 import { Button } from '@/components/ui/button';
 import { trackLeadEvent } from '@/lib/leadTracking';
+import marketplaceBg from '@/assets/hero-marketplace-bg.png.asset.json';
 
 const Panel1Marketplace = () => (
   <HeroPanelShell
+    bgImage={marketplaceBg.url}
     eyebrow="The marketplace for mobile food assets"
     headline={<>Find, rent, buy, or sell <span className="text-orange-600">food trucks and food trailers</span></>}
     supportingText="Search verified food trucks and trailers, compare real listings, and connect with owners through a safer, more structured marketplace."
