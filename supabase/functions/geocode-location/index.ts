@@ -155,8 +155,11 @@ const handler = async (req: Request): Promise<Response> => {
 
     if (!GOOGLE_MAPS_API_KEY) {
       console.error("GOOGLE_MAPS_API_KEY not configured for non-ZIP geocoding");
-      return buildJsonResponse({ error: "Google Maps API key not configured" }, 500);
+      return buildJsonResponse({ results: [], error: "GEOCODING_UNAVAILABLE", fallback: true });
     }
+
+    const isRefererRestrictionError = (text: string) =>
+      text.includes("API keys with referer restrictions cannot be used with this API");
 
     const latLng = parseLatLngQuery(trimmedQuery);
     if (latLng) {
@@ -164,14 +167,16 @@ const handler = async (req: Request): Promise<Response> => {
       const reverseRes = await fetch(reverseUrl);
 
       if (!reverseRes.ok) {
-        console.error("Google Reverse Geocode API error:", reverseRes.status, await reverseRes.text());
-        return buildJsonResponse({ error: "Geocoding service error" }, 500);
+        const errText = await reverseRes.text();
+        console.error("Google Reverse Geocode API error:", reverseRes.status, errText);
+        return buildJsonResponse({ results: [], error: "GEOCODING_UNAVAILABLE", fallback: true });
       }
 
       const reverseData = await reverseRes.json();
       if (reverseData.status !== "OK" && reverseData.status !== "ZERO_RESULTS") {
         console.error("Google Reverse Geocode API status error:", reverseData.status, reverseData.error_message);
-        return buildJsonResponse({ error: reverseData.error_message || "Geocoding failed" }, 500);
+        const restricted = isRefererRestrictionError(reverseData.error_message || "");
+        return buildJsonResponse({ results: [], error: restricted ? "GEOCODING_KEY_RESTRICTED" : "GEOCODING_UNAVAILABLE", fallback: true });
       }
 
       const first = reverseData.results?.[0];
@@ -196,14 +201,16 @@ const handler = async (req: Request): Promise<Response> => {
 
     const response = await fetch(googleUrl);
     if (!response.ok) {
-      console.error("Google API error:", response.status, await response.text());
-      return buildJsonResponse({ error: "Geocoding service error" }, 500);
+      const errText = await response.text();
+      console.error("Google API error:", response.status, errText);
+      return buildJsonResponse({ results: [], error: "GEOCODING_UNAVAILABLE", fallback: true });
     }
 
     const data = await response.json();
     if (data.status !== "OK" && data.status !== "ZERO_RESULTS") {
       console.error("Google API status error:", data.status, data.error_message);
-      return buildJsonResponse({ error: data.error_message || "Geocoding failed" }, 500);
+      const restricted = isRefererRestrictionError(data.error_message || "");
+      return buildJsonResponse({ results: [], error: restricted ? "GEOCODING_KEY_RESTRICTED" : (data.error_message || "GEOCODING_UNAVAILABLE"), fallback: true });
     }
 
     const predictions = data.predictions?.slice(0, limit) || [];
