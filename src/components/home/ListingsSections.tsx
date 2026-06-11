@@ -62,7 +62,7 @@ const ListingsSections = () => {
         .select('*')
         .eq('status', 'published')
         .eq('mode', 'rent')
-        .in('category', BASE_CATEGORIES)
+        .in('category', RENT_CATEGORIES)
         .not('title', 'ilike', 'Demo%')
         .order('published_at', { ascending: false })
         .limit(ROW_LIMIT);
