@@ -2,9 +2,11 @@ import { Link } from 'react-router-dom';
 import HeroPanelShell from './HeroPanelShell';
 import { Button } from '@/components/ui/button';
 import { trackLeadEvent } from '@/lib/leadTracking';
+import hostToolsBg from '@/assets/hero-hosttools-bg.png.asset.json';
 
 const Panel3HostTools = () => (
   <HeroPanelShell
+    bgImage={hostToolsBg.url}
     eyebrow="Tools for owners and hosts"
     headline={<>More than listings. Built for <span className="text-orange-600">food truck hosts.</span></>}
     supportingText="List your truck, manage renter interest, organize documents, support equipment care, and create a more structured rental process from one place."
