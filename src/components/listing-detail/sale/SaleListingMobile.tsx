@@ -690,8 +690,11 @@ export const SaleListingMobile = ({
       <TellVendibookModal
         open={conciergeOpen}
         onOpenChange={setConciergeOpen}
-        initialCategory={toLeadCategory(listing.category)}
-        context={{ listing_id: listing.id, listing_title: listing.title, city: listing.city }}
+        defaultIntent="buy"
+        defaultCategory={toLeadCategory(listing.category)}
+        defaultCity={listing.city || undefined}
+        listingId={listing.id}
+        sourcePage="listing_detail_sale_mobile"
       />
       <AuthGateOfferModal
         open={showAuthGate}
