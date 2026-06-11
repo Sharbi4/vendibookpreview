@@ -126,7 +126,7 @@ export const LiveActivityFeed = () => {
   }, [events.length]);
 
   const current = events[activeIdx];
-  const Icon = current ? ICONS[current.type] : ;
+  const Icon = current ? ICONS[current.type] : null;
   const colorClass = current ? COLORS[current.type] : '';
 
   const timeAgo = useMemo(() => {

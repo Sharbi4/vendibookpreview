@@ -36,7 +36,7 @@ interface ListingEventsSectionProps {
 
 const eventTypeIcons: Record<string, React.ComponentType<{ className?: string }>> = {
   event: CalendarDays,
-  update: ,
+  update: CalendarDays,
   announcement: Megaphone};
 
 const eventTypeBadges: Record<string, { label: string; variant: 'default' | 'secondary' | 'outline' }> = {

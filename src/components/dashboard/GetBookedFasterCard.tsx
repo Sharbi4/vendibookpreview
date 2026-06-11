@@ -69,6 +69,7 @@ export const GetBookedFasterCard = () => {
         id: 'instant',
         title: 'Enable Instant Book',
         description: 'Get 2x more bookings with instant confirmations',
+        icon: Calendar,
         actionLabel: 'Enable now',
         actionTo: '/dashboard?tab=listings',
         priority: 3});

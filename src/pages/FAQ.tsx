@@ -254,6 +254,7 @@ const faqSections: FAQSection[] = [
   {
     id: 'ai-tools',
     title: 'AI Tools on Vendibook',
+    icon: HelpCircle,
     questions: [
       {
         question: 'What does the AI help with?',

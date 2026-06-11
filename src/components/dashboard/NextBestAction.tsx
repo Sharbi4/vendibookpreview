@@ -56,6 +56,7 @@ export const NextBestAction = ({
       href: '/list?start=true'};
   } else if (draftListings > 0) {
     action = {
+      icon: Plus,
       title: `Finish your draft${draftListings > 1 ? 's' : ''} (${draftListings})`,
       desc: 'Drafts don\'t earn — publish to start getting bookings.',
       cta: 'Resume draft',

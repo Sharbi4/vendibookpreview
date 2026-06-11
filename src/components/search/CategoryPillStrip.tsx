@@ -10,7 +10,7 @@ interface PillItem {
 }
 
 const CATEGORY_PILLS: PillItem[] = [
-  { key: 'all', label: 'All'},
+  { key: 'all', label: 'All', icon: ShieldCheck },
   { key: 'food_truck', label: 'Food Trucks', icon: Truck },
   { key: 'food_trailer', label: 'Food Trailers', icon: Container },
   { key: 'ghost_kitchen', label: 'Shared Kitchens', icon: ChefHat },

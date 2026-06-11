@@ -80,7 +80,7 @@ export const FeaturedListingCard: React.FC<FeaturedListingCardProps> = ({
         {/* Benefits grid */}
         <div className="mt-5 grid sm:grid-cols-2 gap-3">
           <Benefit
-            icon={}
+            icon={<Star className="w-4 h-4 text-amber-500" />}
             title="Top of search & homepage"
             desc="Pinned above standard listings everywhere shoppers browse."
           />

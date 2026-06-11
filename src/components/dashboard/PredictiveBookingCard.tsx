@@ -25,7 +25,7 @@ const ICONS: Record<string, any> = {
   pricing: DollarSign,
   capacity: Zap,
   category: TrendingUp,
-  general: };
+  general: TrendingUp };
 
 export const PredictiveBookingCard = () => {
   const { session } = useAuth();
@@ -93,7 +93,7 @@ export const PredictiveBookingCard = () => {
             {data.insights
               .sort((a, b) => a.priority - b.priority)
               .map((insight, i) => {
-                const Icon = ICONS[insight.type] || ;
+                const Icon = ICONS[insight.type] || TrendingUp;
                 return (
                   <div key={i} className="group flex items-start gap-3 p-3 rounded-xl border border-border/60 hover:border-primary/40 hover:bg-primary/5 transition-all">
                     <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center shrink-0">

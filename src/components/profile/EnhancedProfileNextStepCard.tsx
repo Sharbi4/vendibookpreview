@@ -133,16 +133,6 @@ const EnhancedProfileNextStepCard = ({
           transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
         />
 
-        {/* Decorative sparkle */}
-        <motion.div 
-          className="absolute top-3 right-3"
-          animate={{ 
-            rotate: [0, 180, 360],
-            scale: [1, 1.2, 1]}}
-          transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
-        >
-          
-        </motion.div>
 
         <div className="relative p-5 md:p-6">
           <div className="flex items-center gap-4 md:gap-5">

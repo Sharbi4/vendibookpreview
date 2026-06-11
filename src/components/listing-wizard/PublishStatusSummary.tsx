@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { CheckCircle2, Clock, XCircle, Mail, Bell, Smartphone, Loader2 } from 'lucide-react';
+import { CheckCircle2, Clock, XCircle, Mail, Bell, Smartphone, Loader2, Star } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
 type StatusValue = 'pending' | 'ok' | 'skipped' | 'failed';
@@ -77,6 +77,7 @@ export const PublishStatusSummary: React.FC<PublishStatusSummaryProps> = ({ list
         {
           key: 'published',
           label: 'Listing published',
+          icon: <CheckCircle2 className="w-4 h-4 text-foreground/80" />,
           detail: isPublished ? 'Live on the marketplace.' : 'Waiting for status to flip to published…',
           status: isPublished ? 'ok' : 'pending'}];
 
@@ -87,6 +88,7 @@ export const PublishStatusSummary: React.FC<PublishStatusSummaryProps> = ({ list
         next.push({
           key: 'featured',
           label: '30-day Featured Boost',
+          icon: <Star className="w-4 h-4 text-foreground/80" />,
           detail: featuredOn && expires ? `Featured until ${expires}.` : 'Activating…',
           status: featuredOn ? 'ok' : 'pending'});
 

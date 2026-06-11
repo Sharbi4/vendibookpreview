@@ -49,7 +49,7 @@ interface EventFormDialogProps {
 
 const eventTypes = [
   { value: 'event', label: 'Event', icon: CalendarDays, description: 'A scheduled event or gathering' },
-  { value: 'update', label: 'Update', description: 'News or changes about this location' },
+  { value: 'update', label: 'Update', icon: CalendarDays, description: 'News or changes about this location' },
   { value: 'announcement', label: 'Announcement', icon: Megaphone, description: 'Important notices for vendors' }] as const;
 
 export const EventFormDialog = ({

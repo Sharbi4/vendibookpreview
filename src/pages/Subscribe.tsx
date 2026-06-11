@@ -139,7 +139,7 @@ export default function Subscribe() {
                 to="/search"
               />
               <NextCard
-                icon={}
+                icon={<Search className="h-4 w-4" />}
                 title="List your asset"
                 desc="Start earning on Vendibook."
                 to="/listing-wizard"

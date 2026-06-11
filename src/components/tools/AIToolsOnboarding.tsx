@@ -31,6 +31,7 @@ const onboardingSteps: OnboardingStep[] = [
   {
     title: 'Welcome to Vendi AI',
     description: 'Your AI-powered toolkit for running a successful mobile food business. Let us show you around!',
+    icon: <Rocket className="h-8 w-8" />,
     tip: 'All tools are free to try—no credit card needed'
   },
   {

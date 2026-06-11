@@ -108,9 +108,8 @@ const KitchenBenefitsAnimation = () => {
                   repeat: Infinity,
                   ease: 'easeInOut'}}
                 className="absolute top-4 right-8 md:right-16"
-              >
-                
-              </motion.div>
+              />
+
               <motion.div
                 animate={{
                   y: [0, 10, 0],
@@ -121,9 +120,8 @@ const KitchenBenefitsAnimation = () => {
                   ease: 'easeInOut',
                   delay: 0.5}}
                 className="absolute bottom-8 left-8 md:left-16"
-              >
-                
-              </motion.div>
+              />
+
             </div>
 
             {/* Progress Indicators */}
