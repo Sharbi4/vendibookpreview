@@ -31,6 +31,8 @@ export type LeadEventName =
   | 'homepage_concierge_click'
   | 'homepage_final_cta_click'
   | 'homepage_listing_row_view_more_click'
+  | 'homepage_featured_view_all_click'
+  | 'homepage_featured_card_click'
   | 'hero_panel_viewed'
   | 'hero_panel_swiped'
   | 'hero_search_clicked'
@@ -101,6 +103,8 @@ const EVENT_CATEGORY: Record<LeadEventName, string> = {
   homepage_concierge_click: 'homepage',
   homepage_final_cta_click: 'homepage',
   homepage_listing_row_view_more_click: 'homepage',
+  homepage_featured_view_all_click: 'homepage',
+  homepage_featured_card_click: 'homepage',
   hero_panel_viewed: 'homepage',
   hero_panel_swiped: 'homepage',
   hero_search_clicked: 'homepage',

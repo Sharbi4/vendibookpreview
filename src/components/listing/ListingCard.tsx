@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { MapPin, Plug, Zap, Droplet, Refrigerator, Flame, Wind, Wifi, Car, Shield, Sun, Truck, Star, Calendar, Clock, ArrowRight } from 'lucide-react';
+import { MapPin, Plug, Zap, Droplet, Refrigerator, Flame, Wind, Wifi, Car, Shield, Sun, Truck, Calendar, Clock, ArrowRight } from 'lucide-react';
+import FeaturedBadge from '@/components/listing/FeaturedBadge';
 import ListingCardOverlay from '@/components/listing/ListingCardOverlay';
 import { Listing, CATEGORY_LABELS } from '@/types/listing';
 import { Badge } from '@/components/ui/badge';
@@ -246,18 +247,14 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
             {modeLabel}
           </Badge>
           
-          {/* Featured Badge */}
+          {/* Featured Badge — premium gold ribbon */}
           {isFeatured && (
             <TooltipProvider delayDuration={200}>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Badge className={cn(
-                    "font-medium bg-amber-500 text-white border-0 flex items-center gap-1",
-                    compact ? "text-[10px] px-1.5 py-0.5" : "text-xs"
-                  )}>
-                    <Star className={cn("fill-current", compact ? "h-2.5 w-2.5" : "h-3 w-3")} />
-                    {!compact && "Featured"}
-                  </Badge>
+                  <span>
+                    <FeaturedBadge variant="card" compact={compact} />
+                  </span>
                 </TooltipTrigger>
                 <TooltipContent side="bottom" className="text-xs">
                   Premium listing with priority placement

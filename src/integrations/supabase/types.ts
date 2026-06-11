@@ -2062,6 +2062,7 @@ export type Database = {
           featured_at: string | null
           featured_enabled: boolean | null
           featured_expires_at: string | null
+          featured_source: string | null
           freight_category: string | null
           freight_payer: string | null
           fulfillment_type: Database["public"]["Enums"]["fulfillment_type"]
@@ -2134,6 +2135,7 @@ export type Database = {
           featured_at?: string | null
           featured_enabled?: boolean | null
           featured_expires_at?: string | null
+          featured_source?: string | null
           freight_category?: string | null
           freight_payer?: string | null
           fulfillment_type: Database["public"]["Enums"]["fulfillment_type"]
@@ -2206,6 +2208,7 @@ export type Database = {
           featured_at?: string | null
           featured_enabled?: boolean | null
           featured_expires_at?: string | null
+          featured_source?: string | null
           freight_category?: string | null
           freight_payer?: string | null
           fulfillment_type?: Database["public"]["Enums"]["fulfillment_type"]
@@ -4136,6 +4139,88 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_grant_complimentary_featured: {
+        Args: { p_days?: number; p_listing_id: string }
+        Returns: {
+          accept_card_payment: boolean | null
+          accept_cash_payment: boolean | null
+          access_instructions: string | null
+          address: string | null
+          amenities: string[] | null
+          available_from: string | null
+          available_to: string | null
+          buffer_time_mins: number | null
+          category: Database["public"]["Enums"]["listing_category"]
+          city: string | null
+          cover_image_url: string | null
+          created_at: string
+          daily_enabled: boolean | null
+          delivery_fee: number | null
+          delivery_instructions: string | null
+          delivery_radius_miles: number | null
+          deposit_amount: number | null
+          description: string
+          featured_at: string | null
+          featured_enabled: boolean | null
+          featured_expires_at: string | null
+          featured_source: string | null
+          freight_category: string | null
+          freight_payer: string | null
+          fulfillment_type: Database["public"]["Enums"]["fulfillment_type"]
+          guest_draft_token: string | null
+          height_inches: number | null
+          highlights: string[] | null
+          host_id: string | null
+          hourly_enabled: boolean | null
+          hourly_schedule: Json | null
+          hourly_special_pricing: Json | null
+          hours_of_access: string | null
+          id: string
+          image_urls: string[] | null
+          instant_book: boolean | null
+          latitude: number | null
+          length_inches: number | null
+          location_notes: string | null
+          longitude: number | null
+          max_hours: number | null
+          min_hours: number | null
+          min_notice_hours: number | null
+          mode: Database["public"]["Enums"]["listing_mode"]
+          operating_hours_end: string | null
+          operating_hours_start: string | null
+          pending_featured_payment: Json | null
+          pickup_instructions: string | null
+          pickup_location_text: string | null
+          postal_code: string | null
+          price_daily: number | null
+          price_hourly: number | null
+          price_monthly: number | null
+          price_sale: number | null
+          price_weekly: number | null
+          proof_notary_enabled: boolean | null
+          published_at: string | null
+          rental_buffer_days: number | null
+          rental_min_days: number | null
+          slot_names: string[] | null
+          state: string | null
+          status: Database["public"]["Enums"]["listing_status"]
+          subcategory: string | null
+          title: string
+          total_slots: number | null
+          updated_at: string
+          vendibook_freight_enabled: boolean | null
+          video_urls: string[] | null
+          view_count: number | null
+          weight_lbs: number | null
+          width_inches: number | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "listings"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       admin_update_referral_config: {
         Args: {
           p_hold_days: number

@@ -6,7 +6,7 @@ const corsHeaders = {
 };
 
 interface NotificationRequest {
-  type: "new_user" | "new_booking" | "booking_paid" | "sale_payment" | "newsletter_signup" | "new_listing";
+  type: "new_user" | "new_booking" | "booking_paid" | "sale_payment" | "newsletter_signup" | "new_listing" | "featured_purchase";
   data: Record<string, any>;
 }
 
@@ -24,6 +24,7 @@ serve(async (req) => {
       sale_payment: "Sale payment received",
       newsletter_signup: "New newsletter signup",
       new_listing: "New Vendibook listing published",
+      featured_purchase: "Featured listing purchased ⭐",
     };
 
     const labelMap: Record<string, string> = {
@@ -37,6 +38,7 @@ serve(async (req) => {
       user_id: "User ID",
       listing_id: "Listing ID",
       listing_title: "Listing",
+      listing_url: "Listing URL",
       title: "Title",
       category: "Category",
       mode: "Mode",
@@ -46,6 +48,12 @@ serve(async (req) => {
       host_email: "Owner email",
       host_name: "Owner name",
       published_at: "Published at",
+      amount: "Amount paid",
+      package: "Package",
+      start_date: "Start date",
+      end_date: "End date",
+      stripe_payment_id: "Stripe payment ID",
+      featured_source: "Source",
     };
 
     const details = Object.entries(data || {})

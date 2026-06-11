@@ -359,6 +359,41 @@ serve(async (req) => {
                 logStep("WARNING: Failed to send admin alert email", { error: String(adminErr) });
               }
 
+              // ALSO trigger the generic admin-notification (in-app/email) so the
+              // owner reliably sees a featured purchase regardless of template routing.
+              // Idempotency key reuses session.id so webhook retries don't duplicate.
+              try {
+                await fetch(
+                  `${Deno.env.get("SUPABASE_URL")}/functions/v1/send-admin-notification`,
+                  {
+                    method: "POST",
+                    headers: {
+                      "Content-Type": "application/json",
+                      "Authorization": `Bearer ${Deno.env.get("SUPABASE_ANON_KEY")}`,
+                    },
+                    body: JSON.stringify({
+                      type: 'featured_purchase',
+                      data: {
+                        listing_title: existingListing.title,
+                        listing_url: `https://vendibook.com/listing/${listingId}`,
+                        listing_id: listingId,
+                        host_name: hostProfile?.full_name || 'Unknown',
+                        host_email: hostProfile?.email || '—',
+                        amount: '$30.00',
+                        package: 'Featured Boost · 30 days',
+                        start_date: now.toISOString().slice(0, 10),
+                        end_date: expiresAt.toISOString().slice(0, 10),
+                        stripe_payment_id: paymentIntentId || session.id,
+                        featured_source: 'paid',
+                      },
+                    }),
+                  }
+                );
+                logStep("send-admin-notification fired for featured_purchase");
+              } catch (genericErr) {
+                logStep("WARNING: send-admin-notification failed", { error: String(genericErr) });
+              }
+
               // Trigger listing live email only for first-time publishes
               if (isFirstTimePublish) {
                 try {
