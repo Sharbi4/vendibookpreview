@@ -782,20 +782,20 @@ export const BookingWidget = ({
           {/* Fulfillment Options */}
           <div className="space-y-2">
             {(fulfillmentType === 'pickup' || fulfillmentType === 'both') && (
-              <div className="flex items-center gap-3 p-3 rounded-xl bg-muted/30 border border-border">
-                <div className="w-8 h-8 rounded-lg bg-background flex items-center justify-center">
+              <div className="flex items-center gap-3 p-3 rounded-xl bg-white/[0.04] ring-hairline">
+                <div className="w-8 h-8 rounded-lg bg-white/[0.06] flex items-center justify-center">
                   <MapPin className="h-4 w-4 text-foreground" />
                 </div>
                 <div className="flex-1">
                   <span className="text-sm font-medium text-foreground">Local Pickup</span>
-                  <span className="text-xs text-emerald-600 ml-2">Free</span>
+                  <span className="text-xs text-emerald-400 ml-2">Free</span>
                 </div>
               </div>
             )}
             
             {(fulfillmentType === 'delivery' || fulfillmentType === 'both') && (
-              <div className="flex items-center gap-3 p-3 rounded-xl bg-muted/30 border border-border">
-                <div className="w-8 h-8 rounded-lg bg-background flex items-center justify-center">
+              <div className="flex items-center gap-3 p-3 rounded-xl bg-white/[0.04] ring-hairline">
+                <div className="w-8 h-8 rounded-lg bg-white/[0.06] flex items-center justify-center">
                   <Truck className="h-4 w-4 text-foreground" />
                 </div>
                 <div className="flex-1">
@@ -803,27 +803,28 @@ export const BookingWidget = ({
                   {deliveryFee ? (
                     <span className="text-xs text-muted-foreground ml-2">+${deliveryFee}</span>
                   ) : (
-                    <span className="text-xs text-emerald-600 ml-2">Free</span>
+                    <span className="text-xs text-emerald-400 ml-2">Free</span>
                   )}
                 </div>
               </div>
             )}
             
             {vendibookFreightEnabled && (
-              <div className="flex items-center gap-3 p-3 rounded-xl bg-muted/30 border border-border">
-                <div className="w-8 h-8 rounded-lg bg-background flex items-center justify-center">
+              <div className="flex items-center gap-3 p-3 rounded-xl bg-white/[0.04] ring-hairline">
+                <div className="w-8 h-8 rounded-lg bg-white/[0.06] flex items-center justify-center">
                   <Package className="h-4 w-4 text-foreground" />
                 </div>
                 <div className="flex-1">
                   <span className="text-sm font-medium text-foreground">Nationwide Freight</span>
                   {freightPayer === 'seller' ? (
-                    <span className="text-xs text-emerald-600 ml-2">Free</span>
+                    <span className="text-xs text-emerald-400 ml-2">Free</span>
                   ) : (
                     <span className="text-xs text-muted-foreground ml-2">Quote at checkout</span>
                   )}
                 </div>
               </div>
             )}
+
           </div>
 
           {/* Action Buttons */}
