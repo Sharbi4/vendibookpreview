@@ -384,10 +384,15 @@ const Header = ({ hideSearch = false }: HeaderProps) => {
           ) : (
             <button
               onClick={() => setIsMobileSearchOpen(true)}
-              className="flex-1 flex items-center gap-2 px-3 py-2 rounded-full border border-border bg-secondary/50 text-muted-foreground text-sm transition-colors hover:bg-secondary"
+              className="flex-1 flex items-center gap-3 px-5 h-[52px] rounded-full text-[15px] font-medium text-white/70 transition-all"
+              style={{
+                background: 'rgba(18,18,18,0.92)',
+                border: '1px solid rgba(255,255,255,0.08)',
+                boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.04), 0 4px 18px rgba(0,0,0,0.35)',
+              }}
             >
-              <Search className="h-4 w-4 text-muted-foreground shrink-0" />
-              <span className="truncate">{t('common.search')}</span>
+              <Search className="h-4 w-4 text-white/55 shrink-0" />
+              <span className="truncate text-white/55">Search food trucks, trailers, tools...</span>
             </button>
           )}
         </div>}
@@ -397,10 +402,15 @@ const Header = ({ hideSearch = false }: HeaderProps) => {
           <div className="hidden md:flex flex-1 justify-center max-w-2xl mx-6">
             <button
               onClick={() => navigate('/search')}
-              className="w-full flex items-center gap-4 px-6 py-3.5 rounded-full border border-border bg-secondary/50 hover:bg-secondary text-muted-foreground text-base font-medium shadow-sm transition-all duration-200 group"
+              className="w-full flex items-center gap-4 px-6 h-[52px] rounded-full text-[15px] font-medium text-white/70 transition-all group"
+              style={{
+                background: 'rgba(18,18,18,0.92)',
+                border: '1px solid rgba(255,255,255,0.08)',
+                boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.04), 0 4px 18px rgba(0,0,0,0.35)',
+              }}
             >
               <Search className="h-5 w-5 text-primary transition-transform duration-200 group-hover:scale-105" />
-              <span className="text-muted-foreground group-hover:text-foreground transition-colors">{t('header.searchPlaceholder')}</span>
+              <span className="text-white/55 group-hover:text-white/85 transition-colors">Search food trucks, trailers, tools...</span>
             </button>
           </div>
         )}
