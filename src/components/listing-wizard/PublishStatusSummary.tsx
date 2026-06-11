@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { CheckCircle2, Clock, XCircle, Mail, Bell, Smartphone, Loader2 } from 'lucide-react';
+import { CheckCircle2, Clock, XCircle, Mail, Bell, Smartphone, Loader2, Star } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
 type StatusValue = 'pending' | 'ok' | 'skipped' | 'failed';

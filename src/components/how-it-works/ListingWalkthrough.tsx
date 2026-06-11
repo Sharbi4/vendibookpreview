@@ -200,6 +200,7 @@ const ListingWalkthrough = () => {
       id: 5,
       title: 'Review & publish',
       description: 'Preview your listing and go live!',
+      icon: <CheckCircle2 className="h-5 w-5" />,
       mockup: (
         <div className="space-y-3">
           <motion.div
