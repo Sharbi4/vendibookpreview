@@ -22,22 +22,24 @@ const Favorites = () => {
     }
   }, [user, authLoading, navigate]);
 
-  // Fetch the actual listing data for favorited listings
-  const { data: listings = [], isLoading: listingsLoading } = useQuery({
-    queryKey: ['favorite-listings', favorites],
+  // Fetch the actual listing data for favorited listings.
+  // Guards: only run when user is hydrated AND we have at least one favorite id.
+  // Sort favorites for a stable query key so navigations don't refetch endlessly.
+  const stableFavoriteKey = [...(favorites ?? [])].sort().join(',');
+
+  const { data: listings = [], isLoading: listingsLoading, isError } = useQuery({
+    queryKey: ['favorite-listings', user?.id, stableFavoriteKey],
     queryFn: async () => {
-      if (favorites.length === 0) return [];
-      
+      if (!user || favorites.length === 0) return [];
       const { data, error } = await supabase
         .from('listings')
         .select('*')
         .in('id', favorites)
         .eq('status', 'published');
-      
       if (error) throw error;
-      return data;
+      return data ?? [];
     },
-    enabled: favorites.length > 0,
+    enabled: !!user && favorites.length > 0,
   });
 
   const isLoading = authLoading || favoritesLoading || listingsLoading;
@@ -52,10 +54,12 @@ const Favorites = () => {
 
   if (!user) return null;
 
+  const safeListings = Array.isArray(listings) ? listings : [];
+
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Header />
-      
+
       <main className="flex-1 container py-6 md:py-8 max-w-6xl">
         {/* Back Button & Header */}
         <div className="mb-6">
@@ -70,7 +74,7 @@ const Favorites = () => {
               Back to Dashboard
             </Link>
           </Button>
-          
+
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-rose-500 to-pink-600 flex items-center justify-center shadow-lg">
               <Heart className="h-6 w-6 text-white" />
@@ -89,7 +93,23 @@ const Favorites = () => {
           <div className="flex items-center justify-center py-20">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
           </div>
-        ) : favorites.length === 0 ? (
+        ) : isError ? (
+          <div className="flex flex-col items-center justify-center py-20 text-center">
+            <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
+              <Heart className="h-8 w-8 text-muted-foreground" />
+            </div>
+            <h2 className="text-xl font-semibold text-foreground mb-2">Couldn't load your favorites</h2>
+            <p className="text-muted-foreground mb-6 max-w-md">
+              Something went wrong while fetching your saved listings. Please try again.
+            </p>
+            <Button asChild>
+              <Link to="/dashboard">
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Back to Dashboard
+              </Link>
+            </Button>
+          </div>
+        ) : favorites.length === 0 || safeListings.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
               <Heart className="h-8 w-8 text-muted-foreground" />
@@ -107,13 +127,13 @@ const Favorites = () => {
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {listings.map((listing) => (
+            {safeListings.map((listing) => (
               <ListingCard key={listing.id} listing={listing} />
             ))}
           </div>
         )}
       </main>
-      
+
       <Footer />
     </div>
   );

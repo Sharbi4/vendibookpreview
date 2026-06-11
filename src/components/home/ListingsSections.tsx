@@ -7,6 +7,16 @@ import { supabase } from '@/integrations/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
 import { motion } from 'framer-motion';
 import { trackLeadEvent } from '@/lib/leadTracking';
+import { isListingFeatured } from '@/lib/featured';
+
+// Stable sort that puts active featured listings first, preserves original order otherwise.
+const sortFeaturedFirst = <T extends { featured_enabled?: boolean | null; featured_expires_at?: string | null }>(
+  items: T[],
+): T[] => {
+  const featured = items.filter((i) => isListingFeatured(i as any));
+  const rest = items.filter((i) => !isListingFeatured(i as any));
+  return [...featured, ...rest];
+};
 
 type RowKey = 'rent' | 'sale' | 'trucks' | 'trailers';
 
@@ -148,10 +158,10 @@ const ListingsSections = () => {
   const isLoading = rentLoading || saleLoading || trucksLoading || trailersLoading;
 
   const rows: { key: RowKey; listings: typeof rentListings }[] = [
-    { key: 'rent', listings: rentListings },
-    { key: 'sale', listings: saleListings },
-    { key: 'trucks', listings: truckListings },
-    { key: 'trailers', listings: trailerListings },
+    { key: 'rent', listings: sortFeaturedFirst(rentListings) },
+    { key: 'sale', listings: sortFeaturedFirst(saleListings) },
+    { key: 'trucks', listings: sortFeaturedFirst(truckListings) },
+    { key: 'trailers', listings: sortFeaturedFirst(trailerListings) },
   ];
 
   const visibleRows = rows.filter((r) => r.listings.length > 0);

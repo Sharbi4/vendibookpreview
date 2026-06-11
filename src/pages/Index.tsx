@@ -23,6 +23,7 @@ import { supabase } from '@/integrations/supabase/client';
 
 // Lazy load below-the-fold components for faster initial load
 const ListingsSections = lazy(() => import('@/components/home/ListingsSections'));
+const HomepageFeaturedRow = lazy(() => import('@/components/home/HomepageFeaturedRow'));
 const TrustInfrastructure = lazy(() => import('@/components/home/TrustInfrastructure'));
 const BecomeHostSection = lazy(() => import('@/components/home/BecomeHostSection'));
 const FinalCTA = lazy(() => import('@/components/home/FinalCTA'));
@@ -95,6 +96,9 @@ const Index = () => {
 
 
         <Suspense fallback={<SectionSkeleton />}>
+          {/* 2. Featured Listings — premium row (hidden if none active) */}
+          <HomepageFeaturedRow />
+
           {/* 3. Recently Added Trucks & Trailers */}
           <ListingsSections />
 
