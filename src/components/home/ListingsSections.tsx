@@ -158,7 +158,7 @@ const ListingsSections = () => {
 
   const handleViewMore = (key: RowKey) => {
     const meta = ROW_META[key];
-    trackLeadEvent(meta.viewMoreEvent, {
+    trackLeadEvent('homepage_listing_row_view_more_click', {
       route: '/',
       source: 'home_listing_row_view_more',
       row_name: key,
@@ -172,7 +172,7 @@ const ListingsSections = () => {
     if (!target) return;
     const listingId = target.getAttribute('data-listing-id') || undefined;
     const positionAttr = target.getAttribute('data-position') || undefined;
-    trackLeadEvent('homepage_listing_card_clicked', {
+    trackLeadEvent('homepage_listing_card_click', {
       route: '/',
       source: 'home_listing_row',
       row_name: rowKey,
