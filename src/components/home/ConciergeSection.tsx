@@ -9,6 +9,11 @@ const ConciergeSection = () => {
   const [open, setOpen] = useState(false);
 
   const handleClick = () => {
+    trackLeadEvent('concierge_card_clicked', {
+      cta_label: 'Tell Vendibook What You Need',
+      destination: '/concierge',
+      source: 'home_concierge_section',
+    });
     trackLeadEvent('homepage_concierge_click', { route: '/', source: 'home_concierge_section' });
     setOpen(true);
   };
@@ -32,17 +37,16 @@ const ConciergeSection = () => {
         >
           <div className="rounded-2xl border-2 border-border/60 bg-card/90 p-8 sm:p-12 text-center shadow-2xl shadow-black/20">
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-foreground/10 border-2 border-foreground/20 text-foreground text-[10px] font-semibold uppercase tracking-widest mb-6">
-              
               Concierge
             </div>
 
             <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground mb-4">
-              Get help finding a truck or trailer
+              Not sure what you need yet?
             </h2>
 
             <p className="text-muted-foreground text-base sm:text-lg mb-8 max-w-xl mx-auto leading-relaxed">
-              Share what you're trying to rent, buy, sell, or list. Vendibook can help confirm
-              availability, pricing, owner details, documents, and next steps.
+              Tell Vendibook what you're looking for and we'll help point you toward the right
+              trucks, trailers, owners, or next steps.
             </p>
 
             <div className="flex flex-wrap justify-center gap-2 mb-8">
@@ -64,7 +68,7 @@ const ConciergeSection = () => {
                 className="rounded-full px-8 gap-2"
               >
                 <MessageCircle className="w-4 h-4" />
-                Get Help Finding a Truck or Trailer
+                Tell Vendibook What You Need
               </Button>
             </div>
           </div>
