@@ -725,6 +725,29 @@ serve(async (req) => {
       });
     }
 
+    // Handle blog posts: /blog/:slug
+    const blogMatch = path.match(/^\/blog\/([a-z0-9-]+)$/i);
+    if (blogMatch) {
+      const blogSlug = blogMatch[1];
+      const post = BLOG_POSTS.find((p) => p.slug === blogSlug);
+      if (!post) {
+        return new Response("Not Found", { status: 404, headers: corsHeaders });
+      }
+      const html = buildBlogHTML(post);
+      return new Response(html, {
+        headers: {
+          ...corsHeaders,
+          "Content-Type": "text/html; charset=utf-8",
+          "Cache-Control":
+            "public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800",
+          "CDN-Cache-Control": "public, max-age=86400",
+          "Vercel-CDN-Cache-Control": "public, max-age=86400",
+          "Surrogate-Control": "public, max-age=86400",
+          Vary: "Accept-Encoding",
+        },
+      });
+    }
+
     // Default: return 404 for unsupported paths
     return new Response("Not Found", { status: 404, headers: corsHeaders });
   } catch (e) {
