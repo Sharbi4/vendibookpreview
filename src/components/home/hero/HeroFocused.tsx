@@ -42,13 +42,13 @@ const HeroFocused = () => {
     <section className="relative flex items-center justify-center overflow-hidden bg-background">
       <HeroBackground />
 
-      <div className="container relative z-10 max-w-3xl mx-auto px-5 py-10 sm:py-14 md:py-20">
+      <div className="container relative z-10 max-w-3xl mx-auto px-5 py-8 sm:py-12 md:py-20">
         <div className="text-center">
-          {/* Compact wordmark */}
+          {/* Compact wordmark — desktop only */}
           <motion.img
             src={vendibookLogo}
             alt="Vendibook"
-            className="h-36 sm:h-40 w-auto mx-auto mb-5 sm:mb-6 opacity-90"
+            className="hidden md:block h-40 w-auto mx-auto mb-6 opacity-90"
             initial={{ opacity: 0, y: -6 }}
             animate={{ opacity: 0.9, y: 0 }}
             transition={{ duration: 0.4 }}
