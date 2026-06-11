@@ -724,24 +724,16 @@ const ListingDetail = () => {
                 <ReviewsSection listingId={listing.id} />
               </div>
 
-              {/* Divider */}
-              <div className="border-t border-border" />
-
-              {/* Location Map */}
-              {location && (
+              {/* Location (map removed — was unreliable on detail page) */}
+              {location && locationShort && (
                 <>
-                  <div className="space-y-2">
+                  <div className="border-t border-border" />
+                  <div className="space-y-1">
                     <h2 className="text-lg font-semibold text-foreground">Where you'll be</h2>
-                    <ListingLocationMap
-                      address={listing.address}
-                      className="h-64 md:h-80"
-                    />
-                    {locationShort && (
-                      <p className="text-muted-foreground text-sm flex items-center gap-1.5">
-                        <MapPin className="h-4 w-4" />
-                        {locationShort}
-                      </p>
-                    )}
+                    <p className="text-muted-foreground text-sm flex items-center gap-1.5">
+                      <MapPin className="h-4 w-4" />
+                      {locationShort}
+                    </p>
                   </div>
                   <div className="border-t border-border" />
                 </>
