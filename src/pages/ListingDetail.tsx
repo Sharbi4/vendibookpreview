@@ -843,7 +843,7 @@ const ListingDetail = () => {
       )}
 
       {/* SEO: Crawlable internal links for deep crawl paths */}
-      <nav className="container py-8 border-t border-border" aria-label="Browse more listings">
+      <nav className={`container py-8 border-t border-border ${!isRental ? 'hidden lg:block' : ''}`} aria-label="Browse more listings">
         <h2 className="text-lg font-semibold text-foreground mb-4">Browse More on Vendibook</h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
           <Link to="/search?category=food_truck&mode=sale" className="text-muted-foreground hover:text-primary underline underline-offset-2">Food Trucks for Sale</Link>
