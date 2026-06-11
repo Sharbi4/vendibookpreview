@@ -4,8 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Gift, ArrowRight } from 'lucide-react';
 import { trackLeadEvent } from '@/lib/leadTracking';
 
-const PRIMARY = '/referrals?utm_source=homepage&utm_medium=referral_card&utm_campaign=referral_program&utm_content=learn_about_referrals';
-const SECONDARY = '/referrals?utm_source=homepage&utm_medium=referral_card&utm_campaign=referral_program&utm_content=share_referral';
+const PRIMARY = '/referral?utm_source=homepage&utm_medium=referral_card&utm_campaign=referral_program&utm_content=learn_about_referrals';
+const SECONDARY = '/referral?utm_source=homepage&utm_medium=referral_card&utm_campaign=referral_program&utm_content=share_referral';
 
 const ReferralPromoCard = () => {
   const navigate = useNavigate();

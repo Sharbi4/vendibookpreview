@@ -117,7 +117,7 @@ const AppDropdownMenu = ({ variant = 'dark', className = '' }: AppDropdownMenuPr
                         <Link to="/dashboard" onClick={handleClose} className="relative flex items-center gap-2.5 px-3.5 py-2.5 text-white/90 text-sm font-medium hover:bg-white/8 hover:text-white transition-all border-b border-white/[0.04]">
                           <LayoutDashboard className="w-4 h-4 text-white/50" /> Dashboard
                         </Link>
-                        <Link to="/dashboard?tab=messages" onClick={handleClose} className="relative flex items-center gap-2.5 px-3.5 py-2.5 text-white/90 text-sm font-medium hover:bg-white/8 hover:text-white transition-all border-b border-white/[0.04]">
+                        <Link to="/messages" onClick={handleClose} className="relative flex items-center gap-2.5 px-3.5 py-2.5 text-white/90 text-sm font-medium hover:bg-white/8 hover:text-white transition-all border-b border-white/[0.04]">
                           <MessageSquare className="w-4 h-4 text-white/50" /> Messages
                         </Link>
                         <Link to="/search" onClick={handleClose} className="relative flex items-center gap-2.5 px-3.5 py-2.5 text-white/90 text-sm font-medium hover:bg-white/8 hover:text-white transition-all border-b border-white/[0.04]">

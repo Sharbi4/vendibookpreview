@@ -113,6 +113,9 @@ const Search = () => {
   const [deliveryFilterEnabled, setDeliveryFilterEnabled] = useState(false);
   const [instantBookOnly, setInstantBookOnly] = useState(initialInstantBook);
   const [verifiedHostsOnly, setVerifiedHostsOnly] = useState(searchParams.get('verified') === 'true');
+  const [featuredOnly, setFeaturedOnly] = useState(
+    searchParams.get('featured') === '1' || searchParams.get('featured') === 'true'
+  );
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
   const [sortBy, setSortBy] = useState<'newest' | 'price-low' | 'price-high' | 'distance' | 'relevance'>(initialSort);
   const [viewMode, setViewMode] = useState<'grid' | 'map' | 'split' | 'list'>('list');
@@ -174,11 +177,12 @@ const Search = () => {
     max_price: priceRange[1] !== Infinity ? priceRange[1] : undefined,
     instant_book_only: instantBookOnly || undefined,
     verified_hosts_only: verifiedHostsOnly || undefined,
+    featured_only: featuredOnly || undefined,
     delivery_capable: deliveryFilterEnabled || undefined,
     page,
     page_size: 20,
     sort_by: sortBy === 'price-low' ? 'price_low' : sortBy === 'price-high' ? 'price_high' : sortBy,
-  }), [searchQuery, mode, category, locationCoords, searchRadius, dateRange, selectedAmenities, priceRange, instantBookOnly, verifiedHostsOnly, deliveryFilterEnabled, page, sortBy]);
+  }), [searchQuery, mode, category, locationCoords, searchRadius, dateRange, selectedAmenities, priceRange, instantBookOnly, verifiedHostsOnly, featuredOnly, deliveryFilterEnabled, page, sortBy]);
 
   // Fetch listings from edge function
   const { data: searchResults, isLoading: isLoadingListings } = useQuery({
