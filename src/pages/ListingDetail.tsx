@@ -840,6 +840,7 @@ const ListingDetail = () => {
         totalSlots={listing.total_slots || 1}
         slotNames={listing.slot_names}
       />
+      )}
 
       {/* SEO: Crawlable internal links for deep crawl paths */}
       <nav className="container py-8 border-t border-border" aria-label="Browse more listings">
