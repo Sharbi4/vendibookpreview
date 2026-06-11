@@ -316,7 +316,8 @@ const ListingDetail = () => {
   if (faqSchema) schemas.push(faqSchema);
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <div className={`min-h-screen flex flex-col ${!isRental ? 'bg-sale-page text-foreground' : 'bg-background'}`}>
+
       <SEO
         title={seoTitle}
         description={metaDescription}
