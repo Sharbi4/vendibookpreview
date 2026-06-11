@@ -8,6 +8,7 @@ import HeroSearchInput from './HeroSearchInput';
 import { useHeroSearch } from './useHeroSearch';
 import { TellVendibookModal } from '@/components/lead/TellVendibookModal';
 import { trackLeadEvent } from '@/lib/leadTracking';
+import { useAuth } from '@/contexts/AuthContext';
 import vendibookLogo from '@/assets/vendibook-logo.png';
 
 const TRUST_BITS = [
