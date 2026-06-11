@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
-import HeroBackground from './HeroBackground';
-import HeroFocused from './HeroFocused';
+import Panel1Marketplace from './panels/Panel1Marketplace';
 import Panel2Financing from './panels/Panel2Financing';
 import Panel3HostTools from './panels/Panel3HostTools';
 import Panel4Payments from './panels/Panel4Payments';
@@ -9,7 +8,7 @@ import { trackLeadEvent } from '@/lib/leadTracking';
 import { cn } from '@/lib/utils';
 
 const PANELS = [
-  { key: 'marketplace', name: 'Marketplace Search', Component: HeroFocused },
+  { key: 'marketplace', name: 'Marketplace Search', Component: Panel1Marketplace },
   { key: 'financing', name: 'Flexible Payment Options', Component: Panel2Financing },
   { key: 'host_tools', name: 'Host Tools', Component: Panel3HostTools },
   { key: 'payments', name: 'Secure Payments', Component: Panel4Payments },
@@ -59,7 +58,7 @@ const RotatingHero = () => {
         if (e.key === 'ArrowLeft') go(index - 1, 'key');
       }}
     >
-      <HeroBackground />
+      
 
       <div className="relative z-10">
         <AnimatePresence mode="wait" initial={false}>
