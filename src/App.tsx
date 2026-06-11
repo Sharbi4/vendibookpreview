@@ -194,6 +194,7 @@ const AnimatedRoutes = () => {
           <Route path="/host/reporting" element={<PageTransition><HostReporting /></PageTransition>} />
           <Route path="/host/analytics" element={<PageTransition><HostAnalytics /></PageTransition>} />
           <Route path="/create-listing" element={<Navigate to="/list" replace />} />
+          <Route path="/host" element={<Navigate to="/list" replace />} />
           <Route path="/listing/:id" element={<PageTransition><ListingDetail /></PageTransition>} />
           {/* Share route: pretty URL for social sharing, redirects to /listing/:id */}
           <Route path="/share/listing/:id" element={<ShareRedirect />} />
