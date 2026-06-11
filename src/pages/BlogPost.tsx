@@ -79,6 +79,10 @@ const BlogPost = () => {
         canonical={`/blog/${post.slug}`}
         type="article"
         image={post.image}
+        ogTitle={post.title}
+        ogDescription={post.description}
+        twitterTitle={post.title}
+        twitterDescription={post.description}
         article={{
           publishedTime: post.datePublished,
           modifiedTime: post.dateModified,
