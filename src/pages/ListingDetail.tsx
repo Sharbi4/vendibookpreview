@@ -814,6 +814,8 @@ const ListingDetail = () => {
       </main>
 
       {/* Sticky Mobile CTA Bar */}
+      {/* Sticky Mobile CTA Bar (rental only — sale uses SaleStickyActionBar inside SaleListingMobile) */}
+      {isRental && (
       <StickyMobileCTA
         listingId={listing.id}
         hostId={listing.host_id}
