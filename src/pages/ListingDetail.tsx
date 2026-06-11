@@ -765,7 +765,7 @@ const ListingDetail = () => {
                 <SaleLocationCard
                   city={listing.city}
                   state={listing.state}
-                  zipCode={listing.zip_code}
+                  zipCode={(listing as any).zip_code}
                 />
               ) : (
                 location && locationShort && (
