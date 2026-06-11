@@ -24,6 +24,210 @@ const CATEGORY_LABELS: Record<string, string> = {
 
 const PHYSICAL_CATEGORIES = ["ghost_kitchen", "vendor_lot", "vendor_space"];
 
+const BLOG_CATEGORY_LABELS: Record<string, string> = {
+  "getting-started": "Getting Started",
+  "industry-insights": "Industry Insights",
+  "business-tips": "Business Tips",
+  "success-stories": "Success Stories",
+  "equipment-guides": "Equipment Guides",
+  "permits-regulations": "Permits & Regulations",
+  "selling-guide": "Selling Your Asset",
+};
+
+interface BlogPostMeta {
+  slug: string;
+  title: string;
+  description: string;
+  image: string;
+  author: string;
+  datePublished: string;
+  category: string;
+  readingTime: string;
+}
+
+const BLOG_POSTS: BlogPostMeta[] = [
+  {
+    slug: "texas-mobile-food-vendor-law-2026",
+    title: "Texas Is Changing Food Truck Licensing: What the New Statewide Mobile Food Vendor Law Means for Owners, Renters, Sellers, and Operators",
+    description: "Starting July 1, 2026, Texas mobile food vendors move to a statewide DSHS license. Here is what it means for food trailer rentals, fleet owners, sellers, operators, and event hosts.",
+    image: "/images/blog/texas-mobile-food-vendor-law-cover.jpg",
+    author: "Vendibook Editorial",
+    datePublished: "2026-06-10",
+    category: "permits-regulations",
+    readingTime: "12",
+  },
+  {
+    slug: "new-exit-plan-food-truck-after-layoffs",
+    title: "The New Exit Plan: A Food Truck, a Recipe, and a Fresh Start After Layoffs",
+    description: "As AI reshapes the workforce, more Americans are turning job loss into ownership through food trucks, trailers, shared kitchens, and mobile food businesses.",
+    image: "/images/blog/new-exit-plan-food-truck.png",
+    author: "Brad Pittman",
+    datePublished: "2026-05-31",
+    category: "industry-insights",
+    readingTime: "9",
+  },
+  {
+    slug: "restaurant-proof-of-concept-shared-kitchens",
+    title: "The $250k Gamble: Why Smart Chefs Test Concepts in Shared Kitchens First",
+    description: "Don't sign a lease until you've tested your menu. Learn why the \"Lean Startup\" method using shared kitchens and food trucks is the smartest financial move for new food entrepreneurs.",
+    image: "/images/blog/restaurant-proof-of-concept-cover.png",
+    author: "Brock De Santis",
+    datePublished: "2026-02-07",
+    category: "getting-started",
+    readingTime: "8",
+  },
+  {
+    slug: "sell-vs-rent-food-trailer-truck-ghost-kitchen",
+    title: "Sell vs Rent Your Food Trailer, Truck, or Ghost Kitchen: Why the New Food Business Is Fluid",
+    description: "The modern food entrepreneur doesn't just choose sell or rent—they stay flexible. Learn how to monetize your food trailer, truck, or ghost kitchen the smart way.",
+    image: "/images/blog/sell-vs-rent-food-truck.jpg",
+    author: "Vendibook Team",
+    datePublished: "2026-01-27",
+    category: "business-tips",
+    readingTime: "10",
+  },
+  {
+    slug: "rent-out-vendor-lot-commercial-property-host-guide",
+    title: "How to Rent Out Your Vendor Space or Commercial Property: The Complete Host Guide",
+    description: "Turn your empty lot, parking space, or commercial property into a recurring income stream by hosting food vendors. Learn how to become the kind of host vendors love.",
+    image: "/images/blog/vendor-lot-hosting.webp",
+    author: "Vendibook Team",
+    datePublished: "2026-01-27",
+    category: "business-tips",
+    readingTime: "9",
+  },
+  {
+    slug: "how-to-start-food-truck-business-2025",
+    title: "How to Start a Food Truck Business in 2025: Complete Guide",
+    description: "Everything you need to know about starting a food truck business in 2025, from initial planning to your first day of sales.",
+    image: "/images/taco-truck-hero.png",
+    author: "Vendibook Team",
+    datePublished: "2025-01-15",
+    category: "getting-started",
+    readingTime: "8",
+  },
+  {
+    slug: "food-truck-vs-food-trailer-which-is-right",
+    title: "Food Truck vs Food Trailer: Which Is Right for Your Business?",
+    description: "Compare food trucks and food trailers to determine which mobile kitchen option best fits your business model, budget, and goals.",
+    image: "",
+    author: "Vendibook Team",
+    datePublished: "2025-01-10",
+    category: "equipment-guides",
+    readingTime: "6",
+  },
+  {
+    slug: "ghost-kitchen-startup-guide",
+    title: "Ghost Kitchen Startup Guide: Launch a Delivery-Only Restaurant",
+    description: "Learn how to start a ghost kitchen business, from concept development to delivery platform optimization.",
+    image: "",
+    author: "Vendibook Team",
+    datePublished: "2025-01-05",
+    category: "getting-started",
+    readingTime: "7",
+  },
+  {
+    slug: "vendor-lot-location-tips",
+    title: "10 Tips for Choosing the Perfect Vendor Space Location",
+    description: "Location can make or break your food truck business. Learn how to evaluate and select the best Vendor Space for maximum sales.",
+    image: "",
+    author: "Vendibook Team",
+    datePublished: "2024-12-20",
+    category: "business-tips",
+    readingTime: "5",
+  },
+  {
+    slug: "food-truck-maintenance-checklist",
+    title: "The Complete Food Truck Maintenance Checklist",
+    description: "Keep your food truck running smoothly with this comprehensive maintenance checklist covering daily, weekly, and monthly tasks.",
+    image: "",
+    author: "Vendibook Team",
+    datePublished: "2024-12-15",
+    category: "equipment-guides",
+    readingTime: "6",
+  },
+  {
+    slug: "mobile-food-permit-guide-by-state",
+    title: "Mobile Food Vendor Permits: A State-by-State Guide",
+    description: "Navigate the complex world of mobile food vendor permits with our comprehensive state-by-state breakdown.",
+    image: "",
+    author: "Vendibook Team",
+    datePublished: "2024-12-10",
+    category: "permits-regulations",
+    readingTime: "8",
+  },
+  {
+    slug: "sell-my-food-truck-valuation-guide-2026",
+    title: "How to Sell Your Food Truck in 2026: The Ultimate Valuation & Exit Guide",
+    description: "Stop guessing your truck's value. Discover the 2026 resale market trends, calculate your truck's true worth, and learn why listing on specialized platforms like Vendibook gets you 20% higher offers.",
+    image: "/images/taco-truck-hero.png",
+    author: "Vendibook Team",
+    datePublished: "2026-01-15",
+    category: "equipment-guides",
+    readingTime: "9",
+  },
+  {
+    slug: "sell-my-food-trailer-vs-truck-resale-value",
+    title: "Food Truck vs. Food Trailer: Which Sells Faster? (And How to Price Yours)",
+    description: "Selling a food trailer? It might sell faster than a truck. Learn the pros/cons of selling trailers vs. trucks, specific resale tips for 2026, and how to list on Vendibook.",
+    image: "/images/taco-truck-hero.png",
+    author: "Vendibook Team",
+    datePublished: "2026-01-18",
+    category: "equipment-guides",
+    readingTime: "7",
+  },
+  {
+    slug: "stand-out-food-truck-marketplace-tools",
+    title: "How to Stand Out in a Crowded Food Truck Marketplace (And Keep Your Truck Booked)",
+    description: "Want to rent or sell your food truck faster? Learn how to optimize your marketplace listing using AI tools like PricePilot and Listing Studio to stand out on Vendibook.",
+    image: "/images/food-truck-marketplace-analytics.jpg",
+    author: "Vendibook Team",
+    datePublished: "2026-01-21",
+    category: "business-tips",
+    readingTime: "6",
+  },
+  {
+    slug: "parked-food-truck-losing-money-rent-it-out",
+    title: "Your Parked Food Truck is Losing You Money. Here's How to Rent It Out Safely.",
+    description: "Learn how to rent out your food truck or trailer on Vendibook. Discover best practices for daily vs. monthly rentals, meet your target renters, and turn your idle asset into significant monthly income—even while it's listed for sale.",
+    image: "/images/blog/parked-food-truck-rental.png",
+    author: "Brock De Santis",
+    datePublished: "2026-02-14",
+    category: "business-tips",
+    readingTime: "8",
+  },
+  {
+    slug: "modern-food-truck-marketplace-2026",
+    title: "The Modern Food Truck Marketplace: How to Rent, Buy, or Launch a Mobile Food Business in 2026",
+    description: "Discover how a dedicated food truck marketplace helps entrepreneurs rent, buy, or sell food trucks, lease commercial kitchens, and book vendor spaces — all with secure payments and identity verification.",
+    image: "/images/blog/food-truck-marketplace-2026.png",
+    author: "Vendibook Team",
+    datePublished: "2026-02-16",
+    category: "industry-insights",
+    readingTime: "12",
+  },
+  {
+    slug: "food-truck-financing-options",
+    title: "Food Truck Financing in 2026: Loans, Leases & How to Qualify",
+    description: "Complete 2026 guide to financing a food truck or trailer — SBA loans, equipment leases, in-house financing, and credit-score requirements. Real rates and lender options.",
+    image: "/images/blog/food-truck-financing-options.png",
+    author: "Vendibook Team",
+    datePublished: "2026-04-15",
+    category: "business-tips",
+    readingTime: "9",
+  },
+  {
+    slug: "rise-food-truck-fleet-owner",
+    title: "The Rise of the Food Truck Fleet Owner",
+    description: "Food trucks are becoming rentable mobile business infrastructure. Learn how fleet owners, remote access, tracking, maintenance workflows, and platforms like Vendibook are changing food entrepreneurship.",
+    image: "/__l5e/assets-v1/361dd7e0-9a47-45ed-b87f-9578bf539ccb/rise-food-truck-fleet-owner.png",
+    author: "Vendibook",
+    datePublished: "2026-06-11",
+    category: "industry-insights",
+    readingTime: "11",
+  },
+];
+
 function escapeHtml(str: string): string {
   return str
     .replace(/&/g, "&amp;")

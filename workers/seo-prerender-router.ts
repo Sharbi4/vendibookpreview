@@ -20,6 +20,7 @@ const CRAWLER_RE =
 const PRERENDER_PATHS = [
   /^\/listing\/[0-9a-f-]{36}$/i,
   /^\/share\/listing\/[0-9a-f-]{36}$/i,
+  /^\/blog\/[a-z0-9-]+$/i,
 ];
 
 const PRERENDER_URL =
