@@ -21,6 +21,29 @@ const BlogPost = () => {
     return <Navigate to="/blog" replace />;
   }
 
+  // Delegated CTA click logger: any anchor with data-cta inside the article
+  // is logged to blog_share_clicks before navigation continues.
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      const target = (e.target as HTMLElement)?.closest('[data-cta]') as HTMLAnchorElement | null;
+      if (!target) return;
+      const label = target.getAttribute('data-cta') || 'unknown';
+      const href = target.getAttribute('href') || '';
+      // Fire-and-forget; do not block navigation
+      supabase.from('blog_share_clicks').insert({
+        article_slug: slug || '',
+        source: 'blog_article',
+        campaign: 'food_truck_fleet_owner_article',
+        cta_label: label,
+        destination_url: href,
+        referrer: document.referrer || null,
+        user_agent: navigator.userAgent,
+      }).then(() => {}, () => {});
+    };
+    document.addEventListener('click', handler);
+    return () => document.removeEventListener('click', handler);
+  }, [slug]);
+
   const relatedPosts = getRelatedPosts(post.slug, 3);
   const categoryLabel = BLOG_CATEGORIES.find(c => c.slug === post.category)?.label || post.category;
 
