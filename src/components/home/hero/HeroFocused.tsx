@@ -121,6 +121,36 @@ const HeroFocused = () => {
             </button>
           </motion.div>
 
+          {/* Mobile primary CTAs — Sign Up Free + Browse */}
+          <motion.div
+            className="md:hidden flex flex-col gap-2.5 max-w-xl mx-auto mt-4"
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.25 }}
+          >
+            {!user && (
+              <Button
+                onClick={handleSignUp}
+                size="lg"
+                variant="dark-shine"
+                className="rounded-full px-6 gap-2 w-full whitespace-nowrap"
+              >
+                <UserPlus className="w-4 h-4" />
+                Sign Up Free
+              </Button>
+            )}
+            <Button
+              onClick={handleBrowse}
+              size="lg"
+              variant="glass-cta"
+              className="rounded-full px-6 gap-2 w-full whitespace-nowrap"
+            >
+              <Search className="w-4 h-4" />
+              Browse Trucks &amp; Trailers
+            </Button>
+          </motion.div>
+
+
           {/* Primary CTAs — desktop only */}
           <motion.div
             className="hidden md:flex flex-row items-center justify-center gap-3 max-w-xl mx-auto mt-6"
