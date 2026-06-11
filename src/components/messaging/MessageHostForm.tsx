@@ -108,21 +108,22 @@ const MessageHostForm = ({
         value={message}
         onChange={(e) => setMessage(e.target.value)}
         placeholder="Write a message to the host..."
-        className="min-h-[80px] resize-none text-sm bg-background border-border focus-visible:ring-primary/30"
+        className="min-h-[96px] resize-none text-base bg-[rgba(11,15,18,0.7)] border border-white/10 rounded-2xl px-4 py-3 focus-visible:ring-primary/30"
         disabled={isLoading}
       />
       <Button
         onClick={handleSend}
         disabled={isLoading || !message.trim()}
-        className="w-full h-11 font-medium"
+        className="w-full h-14 font-bold rounded-2xl bg-cta-primary hover:opacity-95 shadow-cta-primary text-white border-0"
       >
         {isLoading ? (
-          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+          <Loader2 className="h-5 w-5 mr-2 animate-spin" />
         ) : (
-          <Send className="h-4 w-4 mr-2" />
+          <Send className="h-5 w-5 mr-2" />
         )}
         Send Message
       </Button>
+
     </div>
   );
 };

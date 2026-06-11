@@ -30,7 +30,7 @@ export const SaleCard = ({
   return (
     <div
       className={cn(
-        'relative rounded-2xl overflow-hidden',
+        'relative rounded-[24px] overflow-hidden',
         variant === 'warm' ? 'bg-sale-card-warm' : 'bg-sale-card',
         bronze ? 'ring-bronze' : 'ring-hairline',
         padMap[padding],

@@ -309,13 +309,13 @@ export const SaleListingMobile = ({
 
         {/* PRIMARY ACTIONS */}
         {!isOwner && (
-          <SaleCard padding="md" className="space-y-2.5">
-            <div className="grid grid-cols-2 gap-2.5">
+          <SaleCard padding="md" className="space-y-3">
+            <div className="grid grid-cols-2 gap-3">
               <Button
                 size="lg"
                 onClick={handleBuyNow}
                 disabled={!isAvailable}
-                className="h-12 gap-2 bg-gradient-to-r from-primary to-[hsl(14_100%_50%)] hover:opacity-95 shadow-glow-orange text-base font-semibold"
+                className="h-14 gap-2 rounded-2xl bg-cta-primary hover:opacity-95 shadow-cta-primary text-base font-bold text-white border-0"
               >
                 <ShoppingCart className="h-5 w-5" />
                 Buy Now
@@ -325,7 +325,7 @@ export const SaleListingMobile = ({
                 variant="outline"
                 onClick={handleMakeOffer}
                 disabled={!isAvailable || !listing.price_sale}
-                className="h-12 gap-2 border-primary/40 bg-background/40 text-base font-semibold"
+                className="h-14 gap-2 rounded-2xl border border-[rgba(255,91,31,0.34)] bg-[rgba(11,15,18,0.85)] hover:bg-[rgba(20,24,28,0.9)] text-base font-bold text-white"
               >
                 <Tag className="h-4 w-4" />
                 Make Offer
@@ -334,12 +334,13 @@ export const SaleListingMobile = ({
             <Button
               size="lg"
               onClick={() => setConciergeOpen(true)}
-              className="w-full h-12 gap-2 bg-[hsl(40_30%_92%)] text-[hsl(0_0%_10%)] hover:bg-[hsl(40_30%_88%)] font-semibold"
+              className="w-full h-14 gap-2 rounded-2xl bg-cta-cream text-[#1a1a1a] hover:brightness-95 font-bold shadow-[0_8px_24px_rgba(0,0,0,0.25)] border-0"
             >
               <CalendarCheck className="h-5 w-5" />
               Check Availability
             </Button>
           </SaleCard>
+
         )}
 
         {/* CONCIERGE CARD */}
@@ -364,7 +365,7 @@ export const SaleListingMobile = ({
             <div className="grid grid-cols-2 gap-2.5 mb-3">
               <Button
                 onClick={() => setConciergeOpen(true)}
-                className="h-11 gap-2 bg-[hsl(40_30%_92%)] text-[hsl(0_0%_10%)] hover:bg-[hsl(40_30%_88%)] font-semibold"
+                className="h-12 gap-2 rounded-xl bg-cta-cream text-[#1a1a1a] hover:brightness-95 font-bold border-0"
               >
                 <CalendarCheck className="h-4 w-4" />
                 Check Availability
@@ -372,12 +373,13 @@ export const SaleListingMobile = ({
               <Button
                 variant="outline"
                 onClick={handleAskVendibook}
-                className="h-11 gap-2 border-white/10 bg-background/40"
+                className="h-12 gap-2 rounded-xl border border-white/10 bg-[rgba(11,15,18,0.85)] hover:bg-[rgba(20,24,28,0.9)] font-semibold"
               >
                 <MessageSquare className="h-4 w-4" />
                 Ask for Help
               </Button>
             </div>
+
             <p className="text-[11px] text-muted-foreground flex items-center gap-1.5">
               <ShieldCheck className="h-3 w-3" />
               Replies within 1 business hour · No commitment
