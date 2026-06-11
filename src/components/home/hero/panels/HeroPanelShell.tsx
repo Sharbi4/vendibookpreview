@@ -38,8 +38,25 @@ const HeroPanelShell = ({
       />
       {bgImage && (
         <div
-          className="absolute inset-0 bg-no-repeat bg-cover bg-center"
-          style={{ backgroundImage: `url(${bgImage})` }}
+          className="absolute inset-0 bg-no-repeat bg-right-bottom bg-contain md:bg-cover md:bg-center"
+          style={{
+            backgroundImage: `url(${bgImage})`,
+            maskImage:
+              'linear-gradient(to right, transparent 0%, transparent 35%, rgba(0,0,0,0.6) 60%, black 80%)',
+            WebkitMaskImage:
+              'linear-gradient(to right, transparent 0%, transparent 35%, rgba(0,0,0,0.6) 60%, black 80%)',
+          }}
+          aria-hidden
+        />
+      )}
+      {/* Left-side legibility wash for text */}
+      {bgImage && (
+        <div
+          className="absolute inset-0 pointer-events-none md:hidden"
+          style={{
+            background:
+              'linear-gradient(to bottom, rgba(255,247,238,0.92) 0%, rgba(255,247,238,0.7) 55%, rgba(255,247,238,0.2) 100%)',
+          }}
           aria-hidden
         />
       )}
