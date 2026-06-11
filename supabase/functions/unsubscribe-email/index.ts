@@ -79,6 +79,19 @@ const handler = async (req: Request): Promise<Response> => {
       }
     }
 
+    // Mirror into the universal suppression sources so every sender
+    // (marketing broadcasts, transactional, etc.) skips this address.
+    const lower = email.toLowerCase();
+    const now = new Date().toISOString();
+    await Promise.all([
+      supabase
+        .from("suppressed_emails")
+        .upsert({ email: lower, reason: "unsubscribe" }, { onConflict: "email" }),
+      supabase
+        .from("email_unsubscribes")
+        .upsert({ email: lower, unsubscribed_at: now }, { onConflict: "email" }),
+    ]);
+
     console.log(`Successfully unsubscribed: ${email}`);
 
     return new Response(
