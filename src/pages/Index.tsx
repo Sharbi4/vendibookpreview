@@ -7,6 +7,7 @@ import Hero from '@/components/home/Hero';
 
 
 import AnnouncementBanner from '@/components/home/AnnouncementBanner';
+import HeroBelowFold from '@/components/home/HeroBelowFold';
 import VerificationBanner from '@/components/home/VerificationBanner';
 import ConciergeSection from '@/components/home/ConciergeSection';
 
