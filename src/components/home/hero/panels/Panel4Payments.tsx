@@ -61,7 +61,7 @@ const Panel4Payments = () => (
       <Button
         asChild
         size="lg"
-        className="flex-1 rounded-full bg-orange-500 hover:bg-orange-600 text-white shadow-md"
+        className="flex-1 rounded-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/30 h-14 text-base font-semibold"
         onClick={() => trackLeadEvent('homepage_how_it_works_click' as any, { source: 'home_hero', route: '/' })}
       >
         <Link to="/how-it-works?utm_source=homepage&utm_medium=hero&utm_campaign=payments&utm_content=learn_more">
@@ -74,7 +74,7 @@ const Panel4Payments = () => (
         asChild
         size="lg"
         variant="outline"
-        className="flex-1 rounded-full border-neutral-900/20 bg-white/70 text-neutral-900 hover:bg-white"
+        className="flex-1 rounded-full border-neutral-900/25 bg-white/80 text-neutral-900 hover:bg-white h-14 text-base font-semibold shadow-md"
         onClick={() => trackLeadEvent('homepage_browse_click' as any, { source: 'home_hero', route: '/' })}
       >
         <Link to="/search?utm_source=homepage&utm_medium=hero&utm_campaign=payments&utm_content=browse_listings">
