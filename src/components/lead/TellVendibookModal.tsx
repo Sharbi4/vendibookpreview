@@ -342,28 +342,6 @@ export const TellVendibookModal = ({
           </div>
         ) : step === 1 ? (
           <div className="p-6 space-y-5">
-            {/* INTENT */}
-            <div className="space-y-2">
-              <Label className={labelCls}>I want to</Label>
-              <div className="grid grid-cols-2 gap-2">
-                {INTENT_OPTIONS.map((opt) => (
-                  <button
-                    key={opt.value}
-                    type="button"
-                    onClick={() => setIntent(opt.value)}
-                    className={`text-left rounded-xl border px-3 py-2.5 transition-all ${
-                      intent === opt.value
-                        ? 'border-primary bg-primary/10 text-foreground'
-                        : 'border-white/[0.08] bg-white/[0.02] text-foreground/80 hover:border-white/20 hover:bg-white/[0.04]'
-                    }`}
-                  >
-                    <div className="text-sm font-semibold">{opt.label}</div>
-                    <div className="text-[11px] text-muted-foreground leading-tight mt-0.5">{opt.sub}</div>
-                  </button>
-                ))}
-              </div>
-            </div>
-
             {/* CITY */}
             <div className="space-y-2">
               <Label htmlFor="tv-city" className={labelCls}>City / State</Label>
