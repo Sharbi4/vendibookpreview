@@ -21,6 +21,7 @@ const sortFeaturedFirst = <T extends { featured_enabled?: boolean | null; featur
 type RowKey = 'rent' | 'sale' | 'trucks' | 'trailers';
 
 const BASE_CATEGORIES = ['food_truck', 'food_trailer'] as const;
+const RENT_CATEGORIES = ['food_truck', 'food_trailer', 'ghost_kitchen'] as const;
 const ROW_LIMIT = 8;
 
 const ROW_META: Record<RowKey, {
@@ -30,8 +31,8 @@ const ROW_META: Record<RowKey, {
 }> = {
   rent: {
     title: 'Recently Added for Rent',
-    subtitle: 'New rental listings from verified owners.',
-    viewMorePath: '/search?mode=rent&category=food_truck%2Cfood_trailer&utm_source=homepage&utm_medium=listing_row&utm_campaign=homepage_browse&utm_content=recent_for_rent_view_more',
+    subtitle: 'Food trucks, trailers, and shared commercial kitchens from verified owners.',
+    viewMorePath: '/search?mode=rent&utm_source=homepage&utm_medium=listing_row&utm_campaign=homepage_browse&utm_content=recent_for_rent_view_more',
   },
   sale: {
     title: 'Recently Added for Sale',
@@ -61,7 +62,7 @@ const ListingsSections = () => {
         .select('*')
         .eq('status', 'published')
         .eq('mode', 'rent')
-        .in('category', BASE_CATEGORIES)
+        .in('category', RENT_CATEGORIES)
         .not('title', 'ilike', 'Demo%')
         .order('published_at', { ascending: false })
         .limit(ROW_LIMIT);
