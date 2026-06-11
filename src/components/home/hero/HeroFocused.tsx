@@ -26,22 +26,22 @@ const HeroFocused = () => {
   const [conciergeOpen, setConciergeOpen] = useState(false);
 
   const handlePrimary = () => {
-    trackLeadEvent('homepage_concierge_clicked', { route: '/', source: 'home_hero' });
+    trackLeadEvent('homepage_concierge_click', { route: '/', source: 'home_hero' });
     setConciergeOpen(true);
   };
 
   const handleBrowse = () => {
-    trackLeadEvent('homepage_browse_clicked', { route: '/', source: 'home_hero' });
+    trackLeadEvent('homepage_browse_click', { route: '/', source: 'home_hero' });
     navigate('/search?category=food_truck%2Cfood_trailer');
   };
 
   const handleSignUp = () => {
-    trackLeadEvent('homepage_signup_clicked', { route: '/', source: 'home_hero' });
+    trackLeadEvent('homepage_primary_cta_click', { route: '/', source: 'home_hero_signup' });
     navigate('/auth?mode=signup&utm_source=homepage&utm_medium=hero&utm_campaign=homepage_conversion&utm_content=mobile_signup_button');
   };
 
   const handleHostList = () => {
-    trackLeadEvent('homepage_list_truck_clicked', { route: '/', source: 'home_hero_host_link' });
+    trackLeadEvent('homepage_host_list_click', { route: '/', source: 'home_hero_host_link' });
     navigate('/list?utm_source=homepage&utm_medium=hero&utm_campaign=homepage_conversion&utm_content=list_it_free_text');
   };
 
