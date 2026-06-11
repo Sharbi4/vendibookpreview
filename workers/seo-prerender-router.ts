@@ -2,7 +2,7 @@
  * Cloudflare Worker: SEO Prerender Router
  *
  * Deploy this Worker on vendibook.com/* to route crawler traffic
- * for listing pages to the seo-prerender edge function.
+ * for listing and blog pages to the seo-prerender edge function.
  *
  * Setup:
  * 1. Create a Cloudflare Worker via dashboard or Wrangler CLI
@@ -11,7 +11,7 @@
  *
  * Verify after deploy:
  *   curl -A "facebookexternalhit/1.1" https://vendibook.com/listing/<id> | head -40
- *   curl -A "Googlebot/2.1" https://vendibook.com/listing/<id> | grep og:title
+ *   curl -A "linkedinbot/1.0" https://vendibook.com/blog/rise-food-truck-fleet-owner | grep og:title
  */
 
 const CRAWLER_RE =
