@@ -83,6 +83,12 @@ const Index = () => {
         {/* 1. Hero */}
         <Hero />
 
+        {/* Mobile-only secondary actions + trust strip (moved out of hero) */}
+        <HeroBelowFold />
+
+        {/* Announcement moved below the hero */}
+        <AnnouncementBanner />
+
 
         <Suspense fallback={<SectionSkeleton />}>
           {/* 3. Recently Added Trucks & Trailers */}
