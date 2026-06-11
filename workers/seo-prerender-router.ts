@@ -31,9 +31,9 @@ export default {
     const url = new URL(request.url);
     const ua = request.headers.get("user-agent") ?? "";
 
-    // Only intercept if crawler UA AND the path is a listing page
+    // Only intercept if crawler UA AND the path is a supported prerender page
     const isCrawler = CRAWLER_RE.test(ua);
-    const isListingPath = PRERENDER_PATHS.some((re) => re.test(url.pathname));
+    const isPrerenderPath = PRERENDER_PATHS.some((re) => re.test(url.pathname));
 
     if (isCrawler && isListingPath) {
       // Normalize /share/listing/:id → /listing/:id for the prerender function
