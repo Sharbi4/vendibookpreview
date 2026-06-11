@@ -172,7 +172,8 @@ export const SaleListingMobile = ({
   };
 
   return (
-    <div className="lg:hidden bg-background text-foreground pb-[calc(env(safe-area-inset-bottom)+96px)]">
+    <div className="lg:hidden bg-sale-page text-foreground pb-[calc(env(safe-area-inset-bottom)+96px)]">
+
       {/* Breadcrumb */}
       <nav
         aria-label="Breadcrumb"
