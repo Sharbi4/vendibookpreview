@@ -48,6 +48,7 @@ import { template as referralOnboarding } from './referral-onboarding.tsx'
 import { template as referralPostTxPs } from './referral-post-tx-ps.tsx'
 import { template as newListingAlert } from './new-listing-alert.tsx'
 import { template as accountReadyRecovery } from './account-ready-recovery.tsx'
+import { template as complimentaryFeaturedBoost } from './complimentary-featured-boost.tsx'
 
 export const TEMPLATES: Record<string, TemplateEntry> = {
   'booking-abandoned': bookingAbandoned,
