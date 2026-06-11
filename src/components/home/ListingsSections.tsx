@@ -17,31 +17,26 @@ const ROW_META: Record<RowKey, {
   title: string;
   subtitle: string;
   viewMorePath: string;
-  viewMoreEvent: string;
 }> = {
   rent: {
     title: 'Recently Added for Rent',
     subtitle: 'New rental listings from verified owners.',
     viewMorePath: '/search?mode=rent&category=food_truck%2Cfood_trailer&utm_source=homepage&utm_medium=listing_row&utm_campaign=homepage_browse&utm_content=recent_for_rent_view_more',
-    viewMoreEvent: 'homepage_recent_for_rent_view_more_clicked',
   },
   sale: {
     title: 'Recently Added for Sale',
     subtitle: 'Browse food trucks and trailers available to buy.',
     viewMorePath: '/search?mode=sale&category=food_truck%2Cfood_trailer&utm_source=homepage&utm_medium=listing_row&utm_campaign=homepage_browse&utm_content=recent_for_sale_view_more',
-    viewMoreEvent: 'homepage_recent_for_sale_view_more_clicked',
   },
   trucks: {
     title: 'Food Trucks',
     subtitle: 'Explore mobile kitchens ready for rent or purchase.',
     viewMorePath: '/search?category=food_truck&utm_source=homepage&utm_medium=listing_row&utm_campaign=homepage_browse&utm_content=food_trucks_view_more',
-    viewMoreEvent: 'homepage_food_trucks_view_more_clicked',
   },
   trailers: {
     title: 'Food Trailers',
     subtitle: 'Find concession trailers, mobile kitchens, and specialty trailers.',
     viewMorePath: '/search?category=food_trailer&utm_source=homepage&utm_medium=listing_row&utm_campaign=homepage_browse&utm_content=food_trailers_view_more',
-    viewMoreEvent: 'homepage_food_trailers_view_more_clicked',
   },
 };
 
