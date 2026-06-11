@@ -93,29 +93,32 @@ const ListingLocationMapInner = memo(({
     );
   }
 
-  // Error state
-  if (loadError || geocodeError || !locationString) {
+  // Error state — render a premium dark fallback panel instead of "Map unavailable"
+  if (loadError || geocodeError || !locationString || !coordinates) {
     return (
-      <div className={cn('rounded-xl border border-border bg-muted/30 flex items-center justify-center', className)}>
-        <div className="flex flex-col items-center gap-2 text-muted-foreground">
-          <MapPin className="h-6 w-6" />
-          <span className="text-sm">Map unavailable</span>
+      <div
+        className={cn('rounded-xl overflow-hidden relative', className)}
+        style={{
+          background:
+            'radial-gradient(circle at 78% 35%, rgba(255,94,31,0.18), transparent 55%), linear-gradient(145deg, rgba(21,24,26,0.96), rgba(8,9,10,0.98))',
+          boxShadow: 'inset 0 0 0 1px rgba(255,91,31,0.28)',
+        }}
+      >
+        <div className="absolute inset-0 flex items-center justify-center text-center px-6">
+          <div className="flex flex-col items-center gap-2">
+            <div className="w-12 h-12 rounded-full bg-primary/15 ring-1 ring-primary/30 flex items-center justify-center">
+              <MapPin className="h-5 w-5 text-primary" />
+            </div>
+            <div className="text-sm font-semibold text-foreground">Approximate area</div>
+            <div className="text-xs text-muted-foreground max-w-[240px]">
+              Exact location shared after purchase confirmation.
+            </div>
+          </div>
         </div>
       </div>
     );
   }
 
-  // No coordinates yet
-  if (!coordinates) {
-    return (
-      <div className={cn('rounded-xl border border-border bg-muted/30 flex items-center justify-center', className)}>
-        <div className="flex flex-col items-center gap-2 text-muted-foreground">
-          <AlertCircle className="h-6 w-6" />
-          <span className="text-sm">Location not found</span>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className={cn('rounded-xl overflow-hidden border border-border', className)}>
@@ -171,14 +174,29 @@ export const ListingLocationMap: React.FC<ListingLocationMapProps> = (props) => 
 
   if (error || !apiKey) {
     return (
-      <div className={cn('rounded-xl border border-border bg-muted/30 flex items-center justify-center', props.className)}>
-        <div className="flex flex-col items-center gap-2 text-muted-foreground">
-          <MapPin className="h-6 w-6" />
-          <span className="text-sm">Map unavailable</span>
+      <div
+        className={cn('rounded-xl overflow-hidden relative', props.className)}
+        style={{
+          background:
+            'radial-gradient(circle at 78% 35%, rgba(255,94,31,0.18), transparent 55%), linear-gradient(145deg, rgba(21,24,26,0.96), rgba(8,9,10,0.98))',
+          boxShadow: 'inset 0 0 0 1px rgba(255,91,31,0.28)',
+        }}
+      >
+        <div className="absolute inset-0 flex items-center justify-center text-center px-6">
+          <div className="flex flex-col items-center gap-2">
+            <div className="w-12 h-12 rounded-full bg-primary/15 ring-1 ring-primary/30 flex items-center justify-center">
+              <MapPin className="h-5 w-5 text-primary" />
+            </div>
+            <div className="text-sm font-semibold text-foreground">Approximate area</div>
+            <div className="text-xs text-muted-foreground max-w-[240px]">
+              Exact location shared after purchase confirmation.
+            </div>
+          </div>
         </div>
       </div>
     );
   }
+
 
   return <ListingLocationMapInner {...props} apiKey={apiKey} />;
 };
