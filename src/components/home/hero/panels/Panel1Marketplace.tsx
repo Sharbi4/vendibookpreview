@@ -5,6 +5,7 @@ const Panel1Marketplace = () => (
   <MockHeroPanel
     imageUrl={mock.url}
     alt="Find, rent, buy, or sell food trucks and food trailers"
+    visibleTopPx={150}
     visibleBottomPx={1414}
     searchOverlay={{
       top: 71.77,

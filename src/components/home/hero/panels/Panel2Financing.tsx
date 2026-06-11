@@ -5,6 +5,7 @@ const Panel2Financing = () => (
   <MockHeroPanel
     imageUrl={mock.url}
     alt="Start with the truck before you commit to ownership"
+    visibleTopPx={150}
     visibleBottomPx={1424}
     ctas={[
       // TODO: add a real financing/payment-options filter to the Search page.
