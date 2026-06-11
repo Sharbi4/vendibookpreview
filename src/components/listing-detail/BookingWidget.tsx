@@ -831,10 +831,9 @@ export const BookingWidget = ({
           <div className="space-y-3">
             <div className="flex gap-2">
               <motion.div className="flex-1" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                <Button 
+                <Button
                   onClick={handleBuyNow}
-                  variant="dark-shine"
-                  className="w-full h-14 text-base font-semibold shadow-lg" 
+                  className="w-full h-14 text-base font-bold rounded-2xl bg-cta-primary hover:opacity-95 shadow-cta-primary text-white border-0"
                   size="lg"
                   disabled={!priceSale}
                 >
@@ -842,12 +841,11 @@ export const BookingWidget = ({
                   <ArrowRight className="w-5 h-5 ml-2" />
                 </Button>
               </motion.div>
-              
+
               <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                <Button 
+                <Button
                   onClick={handleMakeOffer}
-                  variant="outline"
-                  className="h-14 px-4 border-primary text-primary hover:bg-primary/10" 
+                  className="h-14 px-4 rounded-2xl border-0 bg-cta-glass hover:bg-white/10 text-white font-semibold"
                   size="lg"
                   disabled={!priceSale}
                 >
@@ -855,6 +853,7 @@ export const BookingWidget = ({
                 </Button>
               </motion.div>
             </div>
+
 
             <motion.div whileHover={{ scale: 1.01 }}>
               <Button 
