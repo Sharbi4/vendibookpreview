@@ -74,18 +74,18 @@ export const SellerTrustPanel = ({
 
   return (
     <section
-      className="rounded-xl border border-border/60 bg-card/40 backdrop-blur-sm p-4 md:p-5"
+      className="rounded-2xl ring-1 ring-white/[0.06] bg-white/[0.02] backdrop-blur-sm p-5 md:p-7"
       aria-labelledby="seller-trust-heading"
     >
-      {/* Header */}
-      <div className="flex items-start justify-between gap-3 mb-4 pb-4 border-b border-border/50">
+      {/* Header — open layout, no inner box */}
+      <div className="flex items-start justify-between gap-4 mb-6">
         <div className="min-w-0">
-          <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">
+          <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground/80 mb-2">
             {isRental ? 'Hosted by' : 'Sold by'}
           </p>
           <h3
             id="seller-trust-heading"
-            className="text-lg font-semibold text-foreground truncate flex items-center gap-2"
+            className="text-xl font-semibold text-foreground truncate flex items-center gap-2 tracking-tight"
           >
             {hostName || 'Vendibook Seller'}
             {isVerified && (
@@ -95,7 +95,7 @@ export const SellerTrustPanel = ({
           {isVerified && (
             <Badge
               variant="outline"
-              className="mt-1.5 text-[10px] bg-emerald-500/10 text-emerald-300 border-emerald-500/30"
+              className="mt-2 text-[10px] bg-emerald-500/10 text-emerald-300 border-emerald-500/20"
             >
               ID Verified
             </Badge>
@@ -103,40 +103,43 @@ export const SellerTrustPanel = ({
         </div>
         <Link
           to={`/profile/${hostId}`}
-          className="shrink-0 inline-flex items-center gap-1.5 text-xs font-medium text-foreground hover:text-primary transition-colors px-3 py-1.5 rounded-lg border border-border/60 hover:border-primary/40"
+          className="shrink-0 inline-flex items-center gap-1.5 text-xs font-medium text-foreground/90 hover:text-foreground transition-colors px-3.5 py-2 rounded-full ring-1 ring-white/10 hover:ring-white/25 bg-white/[0.03]"
         >
           <MessageCircle className="h-3.5 w-3.5" />
           View shop
         </Link>
       </div>
 
-      {/* Stats grid */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      {/* Hairline separator */}
+      <div className="h-px bg-white/[0.06] -mx-5 md:-mx-7 mb-6" />
+
+      {/* Stats grid — tile-less, generous spacing */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-5">
         {stats.map((s, i) => {
           const Icon = s.icon;
           return (
-            <div
-              key={i}
-              className="rounded-lg bg-background/50 border border-border/40 p-3 hover:border-border transition-colors"
-            >
-              <Icon className={`h-4 w-4 mb-1.5 ${s.iconColor}`} />
-              <p className="text-sm font-semibold text-foreground leading-tight truncate">
+            <div key={i} className="min-w-0">
+              <Icon className={`h-4 w-4 mb-2 ${s.iconColor}`} />
+              <p className="text-sm font-semibold text-foreground leading-snug">
                 {s.label}
               </p>
-              <p className="text-[11px] text-muted-foreground mt-0.5 truncate">{s.sub}</p>
+              <p className="text-[11px] text-muted-foreground/90 mt-1 leading-snug">{s.sub}</p>
             </div>
           );
         })}
       </div>
 
-      {/* Trust footer */}
-      <div className="mt-4 pt-3 border-t border-border/50 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[11px] text-muted-foreground">
-        <span className="flex items-center gap-1">
-          <ShieldCheck className="h-3 w-3 text-emerald-400" />
+      {/* Hairline separator */}
+      <div className="h-px bg-white/[0.06] -mx-5 md:-mx-7 mt-6 mb-4" />
+
+      {/* Trust footer — inline, no framed box */}
+      <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-[11px] text-muted-foreground/90">
+        <span className="flex items-center gap-1.5">
+          <ShieldCheck className="h-3.5 w-3.5 text-emerald-400" />
           Secure payments via Stripe
         </span>
-        <span className="flex items-center gap-1">
-          <Award className="h-3 w-3 text-amber-400" />
+        <span className="flex items-center gap-1.5">
+          <Award className="h-3.5 w-3.5 text-amber-400" />
           Vendibook buyer protection
         </span>
       </div>
