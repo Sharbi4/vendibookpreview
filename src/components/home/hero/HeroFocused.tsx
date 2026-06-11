@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowRight, Sparkles, Search } from 'lucide-react';
+import { ArrowRight, Sparkles, Search, UserPlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import HeroBackground from './HeroBackground';
 import HeroSearchInput from './HeroSearchInput';
