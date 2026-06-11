@@ -6,7 +6,7 @@ const Panel2Financing = () => (
     imageUrl={mock.url}
     alt="Start with the truck before you commit to ownership"
     visibleTopPx={150}
-    visibleBottomPx={1424}
+    visibleBottomPx={1672}
     ctas={[
       // TODO: add a real financing/payment-options filter to the Search page.
       // Until then route to browse-all with UTM so the click still converts.
