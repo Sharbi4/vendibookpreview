@@ -76,8 +76,7 @@ const Index = () => {
       />
       <JsonLd schema={[generateOrganizationSchema(), generateWebSiteSchema()]} />
       <Header />
-      <AnnouncementBanner />
-      
+
       {showVerificationBanner && <VerificationBanner userId={user.id} />}
       
       <main className="flex-1">
