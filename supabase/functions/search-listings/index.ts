@@ -93,9 +93,14 @@ Deno.serve(async (req) => {
       queryBuilder = queryBuilder.eq('mode', mode);
     }
 
-    // Apply category filter
+    // Apply category filter (supports comma-separated list)
     if (category) {
-      queryBuilder = queryBuilder.eq('category', category);
+      const cats = category.split(',').map((c) => c.trim()).filter(Boolean);
+      if (cats.length > 1) {
+        queryBuilder = queryBuilder.in('category', cats);
+      } else if (cats.length === 1) {
+        queryBuilder = queryBuilder.eq('category', cats[0]);
+      }
     }
 
     // Smart query parsing: extract intent, strip filler words, map to categories
