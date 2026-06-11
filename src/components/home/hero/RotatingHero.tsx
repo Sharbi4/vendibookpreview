@@ -60,7 +60,7 @@ const RotatingHero = () => {
     >
       
 
-      <div className="relative z-10">
+      <div className="relative z-10 px-4 sm:px-6">
         <AnimatePresence mode="wait" initial={false}>
           <motion.div
             key={PANELS[index].key}
