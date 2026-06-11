@@ -1,16 +1,41 @@
-import MockHeroPanel from './MockHeroPanel';
+import { Link } from 'react-router-dom';
+import HeroPanelShell from './HeroPanelShell';
+import { Button } from '@/components/ui/button';
+import { trackLeadEvent } from '@/lib/leadTracking';
 import mock from '@/assets/hero-payments-mock.png.asset.json';
 
 const Panel4Payments = () => (
-  <MockHeroPanel
-    imageUrl={mock.url}
-    alt="Accept payments with more confidence"
-    visibleTopPx={150}
-    visibleBottomPx={1672}
-    ctas={[
-      { top: 86.97, left: 4, width: 92, height: 5.04, href: '/how-it-works', label: 'Learn more about payments', event: 'homepage_how_it_works_click' },
-      { top: 93.06, left: 4, width: 92, height: 5.04, href: '/search?category=food_truck%2Cfood_trailer', label: 'Browse listings', event: 'homepage_browse_click' },
-    ]}
+  <HeroPanelShell
+    bgImage={mock.url}
+    eyebrow="Trusted transaction support"
+    headline="Accept payments with more confidence"
+    supportingText="Support in-person or online payments through Vendibook, with secure checkout, optional escrow-style workflows, and delivery coordination where available."
+    finePrint="Features may vary by listing type, transaction flow, eligibility, and availability."
+    primaryCta={
+      <Button
+        asChild
+        size="lg"
+        className="rounded-full"
+        onClick={() => trackLeadEvent('homepage_how_it_works_click' as any, { source: 'home_hero', route: '/' })}
+      >
+        <Link to="/how-it-works?utm_source=homepage&utm_medium=hero&utm_campaign=payments&utm_content=learn_more">
+          Learn More
+        </Link>
+      </Button>
+    }
+    secondaryCta={
+      <Button
+        asChild
+        size="lg"
+        variant="outline"
+        className="rounded-full bg-white/5 border-white/20 text-foreground hover:bg-white/10"
+        onClick={() => trackLeadEvent('homepage_browse_click' as any, { source: 'home_hero', route: '/' })}
+      >
+        <Link to="/search?utm_source=homepage&utm_medium=hero&utm_campaign=payments&utm_content=browse_listings">
+          Browse Listings
+        </Link>
+      </Button>
+    }
   />
 );
 
