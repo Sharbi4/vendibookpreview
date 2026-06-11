@@ -4,23 +4,24 @@ import { Search } from 'lucide-react';
 import { trackLeadEvent } from '@/lib/leadTracking';
 
 export interface MockCta {
-  /** Top in % of visible (cropped) image height */
-  top: number;
-  left: number;
-  width: number;
-  height: number;
+  /** Legacy overlay positioning fields — ignored now that CTAs render as real buttons. */
+  top?: number;
+  left?: number;
+  width?: number;
+  height?: number;
   href: string;
   label: string;
   event?: string;
 }
 
 export interface SearchOverlay {
-  top: number;
-  left: number;
-  width: number;
-  height: number;
+  /** Legacy overlay positioning fields — ignored now that the search bar is real. */
+  top?: number;
+  left?: number;
+  width?: number;
+  height?: number;
   placeholder?: string;
-  /** Mode appended to the resulting /search URL. Defaults to 'rent'. */
+  /** Mode appended to the resulting /search URL. Defaults to 'all'. */
   mode?: 'rent' | 'sale' | 'all';
 }
 
@@ -52,16 +53,6 @@ const MockHeroPanel = ({
 
   const visibleHeight = Math.max(1, visibleBottomPx - visibleTopPx);
   const aspectRatio = `${NATIVE_WIDTH} / ${visibleHeight}`;
-
-  // Existing CTA/overlay percentages are calibrated against visibleBottomPx
-  // from the top of the native image. Re-map them to the cropped frame.
-  const remapTop = (pct: number) =>
-    ((pct / 100) * visibleBottomPx - visibleTopPx) / visibleHeight * 100;
-  const remapHeight = (pct: number) =>
-    (pct / 100) * visibleBottomPx / visibleHeight * 100;
-
-  // Image is rendered at 100% of the frame width; shift it up so the cropped
-  // top falls outside the frame.
   const imageTopOffsetPct = -(visibleTopPx / visibleHeight) * 100;
 
   const submitSearch = () => {
@@ -84,8 +75,16 @@ const MockHeroPanel = ({
     }
   };
 
+  const handleCta = (c: MockCta) => {
+    if (c.event) trackLeadEvent(c.event as any, { source: 'home_hero', route: '/' });
+    if (c.href.startsWith('http')) window.location.href = c.href;
+    else navigate(c.href);
+  };
+
+  const [primaryCta, ...secondaryCtas] = ctas;
+
   return (
-    <div className="relative w-full mx-auto max-w-[480px] sm:max-w-[520px] md:max-w-[560px] px-2 sm:px-0">
+    <div className="relative w-full">
       <div
         className="relative w-full overflow-hidden rounded-3xl ring-1 ring-white/10 shadow-2xl"
         style={{ aspectRatio }}
@@ -97,58 +96,56 @@ const MockHeroPanel = ({
           style={{ top: `${imageTopOffsetPct}%` }}
           draggable={false}
         />
-        {ctas.map((c) => (
+      </div>
+
+      {searchOverlay && (
+        <div className="mt-4 flex items-stretch gap-2">
+          <div className="flex-1 flex items-center gap-2 rounded-full bg-white/95 backdrop-blur px-4 h-12 shadow-sm ring-1 ring-black/10">
+            <Search className="w-4 h-4 text-neutral-500 shrink-0" />
+            <input
+              type="text"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              onKeyDown={onKey}
+              placeholder={searchOverlay.placeholder || 'Search food trucks, trailers, kitchens…'}
+              aria-label="Search listings"
+              className="w-full min-w-0 bg-transparent text-[16px] text-neutral-900 placeholder:text-neutral-500 focus:outline-none"
+            />
+          </div>
           <button
-            key={c.label}
             type="button"
-            aria-label={c.label}
-            onClick={() => {
-              if (c.event) trackLeadEvent(c.event as any, { source: 'home_hero', route: '/' });
-              if (c.href.startsWith('http')) window.location.href = c.href;
-              else navigate(c.href);
-            }}
-            className="absolute rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
-            style={{
-              top: `${remapTop(c.top)}%`,
-              left: `${c.left}%`,
-              width: `${c.width}%`,
-              height: `${remapHeight(c.height)}%`,
-            }}
-          />
-        ))}
-        {searchOverlay && (
-          <div
-            className="absolute flex items-stretch gap-1 z-10"
-            style={{
-              top: `${remapTop(searchOverlay.top)}%`,
-              left: `${searchOverlay.left}%`,
-              width: `${searchOverlay.width}%`,
-              height: `${remapHeight(searchOverlay.height)}%`,
-            }}
+            onClick={submitSearch}
+            aria-label="Search"
+            className="shrink-0 rounded-full bg-primary text-primary-foreground text-sm font-semibold px-5 h-12 hover:bg-primary/90 active:scale-[0.98] transition-all"
           >
-            <div className="flex-1 flex items-center gap-2 rounded-full bg-white/95 backdrop-blur px-3 sm:px-4 shadow-sm ring-1 ring-black/5">
-              <Search className="w-4 h-4 text-neutral-500 shrink-0" />
-              <input
-                type="text"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                onKeyDown={onKey}
-                placeholder={searchOverlay.placeholder || 'Search food trucks, trailers, kitchens…'}
-                aria-label="Search listings"
-                className="w-full min-w-0 bg-transparent text-[16px] sm:text-sm text-neutral-900 placeholder:text-neutral-500 focus:outline-none"
-              />
-            </div>
+            Search
+          </button>
+        </div>
+      )}
+
+      {ctas.length > 0 && (
+        <div className="mt-3 flex flex-col sm:flex-row gap-2">
+          {primaryCta && (
             <button
               type="button"
-              onClick={submitSearch}
-              aria-label="Search"
-              className="shrink-0 rounded-full bg-primary text-primary-foreground text-xs sm:text-sm font-semibold px-3 sm:px-4 hover:bg-primary/90 active:scale-[0.98] transition-all"
+              onClick={() => handleCta(primaryCta)}
+              className="flex-1 h-12 rounded-full bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 active:scale-[0.99] transition-all shadow-md"
             >
-              Search
+              {primaryCta.label}
             </button>
-          </div>
-        )}
-      </div>
+          )}
+          {secondaryCtas.map((c) => (
+            <button
+              key={c.label}
+              type="button"
+              onClick={() => handleCta(c)}
+              className="flex-1 h-12 rounded-full bg-white/10 text-white text-sm font-semibold ring-1 ring-white/20 hover:bg-white/15 active:scale-[0.99] transition-all backdrop-blur"
+            >
+              {c.label}
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 };
