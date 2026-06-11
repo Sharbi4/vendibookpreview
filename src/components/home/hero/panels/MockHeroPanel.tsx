@@ -27,28 +27,28 @@ interface Props {
 // Native image dimensions (all hero mocks are exported at this size).
 const NATIVE_WIDTH = 941;
 const NATIVE_HEIGHT = 1672;
-// Top crop: site header baked into each mockup that we hide behind the real header.
-const TOP_CROP_PX = 140;
 
 /**
- * Renders an uploaded hero mockup image edge-to-edge with the baked-in
- * header cropped from the top and the next-section teaser cropped from the
- * bottom. CTA hot-zones overlay as transparent buttons so links keep working.
+ * Renders an uploaded hero mockup image edge-to-edge. The next-section teaser
+ * baked into the bottom of each mock is cropped via `visibleBottomPx`, but the
+ * top is preserved so the mockup's own header shows in full and the cream
+ * card's natural rounded shape isn't clipped. CTA hot-zones overlay as
+ * transparent buttons so links keep working.
  */
 const MockHeroPanel = ({ imageUrl, alt, ctas, visibleBottomPx = NATIVE_HEIGHT }: Props) => {
   const navigate = useNavigate();
-  const visibleHeight = visibleBottomPx - TOP_CROP_PX;
-  const aspectRatio = `${NATIVE_WIDTH} / ${visibleHeight}`;
-  const topOffsetPct = -(TOP_CROP_PX / visibleHeight) * 100;
+  const aspectRatio = `${NATIVE_WIDTH} / ${visibleBottomPx}`;
 
   return (
-    <div className="relative w-full overflow-hidden bg-background mx-auto max-w-[480px] sm:max-w-[520px] md:max-w-[560px]">
-      <div className="relative w-full overflow-hidden" style={{ aspectRatio }}>
+    <div className="relative w-full mx-auto max-w-[480px] sm:max-w-[520px] md:max-w-[560px] px-2 sm:px-0">
+      <div
+        className="relative w-full overflow-hidden rounded-3xl ring-1 ring-white/10 shadow-2xl"
+        style={{ aspectRatio }}
+      >
         <img
           src={imageUrl}
           alt={alt}
-          className="absolute left-0 w-full select-none pointer-events-none"
-          style={{ top: `${topOffsetPct}%` }}
+          className="absolute inset-x-0 top-0 w-full select-none pointer-events-none"
           draggable={false}
         />
         {ctas.map((c) => (

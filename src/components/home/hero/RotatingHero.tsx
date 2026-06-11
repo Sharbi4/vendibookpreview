@@ -60,7 +60,7 @@ const RotatingHero = () => {
     >
       
 
-      <div className="relative z-10 px-4 sm:px-6">
+      <div className="relative z-10 px-4 sm:px-6 pt-4 sm:pt-6">
         <AnimatePresence mode="wait" initial={false}>
           <motion.div
             key={PANELS[index].key}
@@ -89,7 +89,7 @@ const RotatingHero = () => {
         </AnimatePresence>
 
         {/* Progress dots */}
-        <div className="relative z-20 flex items-center justify-center gap-2 pb-6 sm:pb-8">
+        <div className="relative z-20 flex items-center justify-center gap-2 pt-6 sm:pt-8 pb-6 sm:pb-8">
           {PANELS.map((p, i) => {
             const active = i === index;
             return (
