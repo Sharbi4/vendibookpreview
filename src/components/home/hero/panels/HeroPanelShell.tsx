@@ -13,6 +13,10 @@ interface Props {
   accentClassName?: string;
   /** Optional decorative background image (art only — no baked-in UI). */
   bgImage?: string;
+  /** Optional glassmorphism overlay modules (absolutely positioned, real HTML). */
+  glassModules?: ReactNode;
+  /** Optional inline content rendered below supporting text but above CTAs (e.g. logos row). */
+  belowSupporting?: ReactNode;
 }
 
 const HeroPanelShell = ({
@@ -24,6 +28,8 @@ const HeroPanelShell = ({
   finePrint,
   accentClassName,
   bgImage,
+  glassModules,
+  belowSupporting,
 }: Props) => {
   return (
     <div className="relative overflow-hidden rounded-3xl ring-1 ring-black/5 shadow-2xl">
