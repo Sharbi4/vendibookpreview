@@ -285,17 +285,17 @@ const Header = ({ hideSearch = false }: HeaderProps) => {
         willChange: 'transform',
       }}
     >
-      <div className="container max-w-7xl mx-auto px-4 flex h-16 items-center justify-between">
+      <div className="container max-w-7xl mx-auto pl-4 pr-3 sm:px-4 flex h-[72px] items-center justify-between gap-3">
         {/* Logo - hide when mobile search is open */}
         <Link 
           to="/" 
-          className={`flex items-center transition-opacity duration-200 ${isMobileSearchOpen ? 'opacity-0 pointer-events-none absolute' : 'opacity-100'} md:opacity-100 md:pointer-events-auto md:relative`}
+          className={`flex items-center shrink-0 transition-opacity duration-200 ${isMobileSearchOpen ? 'opacity-0 pointer-events-none absolute' : 'opacity-100'} md:opacity-100 md:pointer-events-auto md:relative`}
         >
-          <div className="flex items-center justify-center">
+          <div className="flex items-center justify-center w-11 h-11">
             <img 
               src={vendibookFavicon} 
               alt="Vendibook" 
-              className="h-7 w-auto brightness-125"
+              className="h-8 w-auto brightness-125 object-contain"
             />
           </div>
         </Link>
