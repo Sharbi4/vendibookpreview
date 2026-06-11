@@ -1,78 +1,149 @@
-# Rotating Hero System
 
-Transform the single static hero into a premium 4-panel rotating hero, with a referral promo card and concierge card placed below it. Keep all existing dark/charcoal + orange Vendibook styling, search-first Panel 1, and the current `HeroBackground` aesthetic.
+# Featured Listings, Search & Dashboard Improvements
 
-## 1. Hero architecture
+Good news from the audit — a lot of the foundation already exists. The plan reuses existing pieces wherever possible and only adds what's truly missing.
 
-Create new files under `src/components/home/hero/`:
+---
 
-- `RotatingHero.tsx` — wrapper. Manages active panel index, auto-rotate timer (8s), pause-on-interaction, swipe (framer-motion drag on mobile), keyboard left/right, and renders progress dots.
-- `panels/Panel1Marketplace.tsx` — wraps existing `HeroFocused` content (search-first). Keeps the search bar as the primary action.
-- `panels/Panel2Financing.tsx` — "Start with the truck before you commit to ownership". Browse Eligible / Learn How It Works CTAs. Satin orange/red sheen background. Includes Stripe + Affirm + Afterpay logos rendered as monochrome white SVGs with a soft metallic sheen overlay (so we don't ship colored partner brand marks — keeps it on-brand and safer). Fine-print eligibility line.
-- `panels/Panel3HostTools.tsx` — "More than listings. Built for food truck hosts." Explore Host Tools / How Hosting Works CTAs. Subtle dashboard-style floating cards (Cleaning workflow, Document collection, Booking requests, Owner-approved rentals).
-- `panels/Panel4Payments.tsx` — "Accept payments with more confidence". Learn More / Browse Listings. Lock + card glyphs, secure-checkout floating chips, eligibility fine print.
-- `panels/HeroPanelShell.tsx` — shared layout shell so every panel has identical height/padding and the page never jumps. Slot props: eyebrow, headline, supporting text, optional searchBar slot, primary CTA, secondary CTA, fine print, right-side visual slot.
+## What already exists (will be reused, not rebuilt)
 
-`Hero.tsx` swaps from `HeroFocused` to `RotatingHero`.
+- **Featured columns** on `listings`: `featured_enabled`, `featured_at`, `featured_expires_at`, `pending_featured_payment` (JSONB ledger).
+- **Stripe purchase flow**: `create-featured-checkout` + `stripe-webhook` handle activation, idempotency, refunds.
+- **Admin email alerts** for featured purchases are already wired via the `featured-payment-admin-alert` transactional template (sent from `stripe-webhook`). We'll verify delivery and add a parallel in-app channel.
+- **Search ranking**: `search-listings` edge function already sorts featured first across every sort mode and supports a `featured_only` filter — just not exposed in the UI.
+- **Homepage featured row**: `src/components/home/FeaturedListings.tsx` exists but is only used on the alternate `Homepage2.tsx`, never mounted on the live `Index.tsx`.
+- **Featured helper**: `src/lib/featured.ts → isListingFeatured()` correctly checks `featured_enabled` AND non-expired `featured_expires_at`.
 
-### Rotation behavior
-- Auto-advance every 8s using `setInterval`, paused when:
-  - User clicks a dot, swipes, hovers (desktop), or focuses any CTA inside the hero.
-  - `prefers-reduced-motion` is set (no auto-rotate, dots still work).
-- Framer-motion `AnimatePresence` with mode="wait", fade + 8px slide.
-- Progress dots: 4 small pills, active dot fills with primary orange via a CSS animation tied to the timer; clicking jumps directly.
-- Swipe: framer-motion `drag="x"` with `dragConstraints={{ left: 0, right: 0 }}`; threshold ~60px to advance.
+---
 
-### Layout stability
-- `HeroPanelShell` uses `min-h-[640px] md:min-h-[560px]` (tuned to current hero) so panel switches don't shift the page.
-- On desktop, split layout: text left, visual slot right. On mobile, stacked, visual slot becomes a compact background accent.
+## 1. Premium Featured Badge (replaces tiny star)
 
-## 2. Copy & routes
-All copy and route strings come straight from the user's spec (eyebrows, headlines, supporting text, primary/secondary CTAs, UTM params, fine print). No placeholder links.
+- New shared component `src/components/listing/FeaturedBadge.tsx`:
+  - Gradient gold→amber pill with a soft outer glow and a subtle shimmer sweep (matches Satin Lux "glass CTA" memory).
+  - `Crown` icon (lucide-react) + label "Featured".
+  - Variants: `card` (compact pill, top-left corner), `detail` (larger ribbon for listing page hero), `row` (inline for the homepage featured row).
+- Replace the current `Star` in `ListingCard.tsx` (lines 250–259) and add it to:
+  - Listing detail hero (`ListingDetail.tsx`, near title block)
+  - Search result cards (already use `ListingCard`)
+  - Homepage featured row cards
+- Comp/admin-granted featured shows the same badge — there is no visible distinction (per the request, paid vs comp should look identical to users).
 
-## 3. Below-the-hero additions
+## 2. Homepage "Featured Listings" Section
 
-In `src/pages/Index.tsx`, between `<HeroBelowFold />` and `<AnnouncementBanner />`, add:
+- Mount a new lightweight `HomepageFeaturedRow` near the top of `src/pages/Index.tsx` (right after `AnnouncementBanner`, before `ListingsSections`).
+- Queries `listings` where `featured_enabled = true AND featured_expires_at > now() AND status = 'published'`, ordered by `featured_at desc`, limit 12.
+- Horizontal scroll on mobile, premium grid on desktop.
+- If 0 active featured → section hidden entirely (no awkward empty state).
+- If 1–3 featured → still renders cleanly (left-aligned, no stretched empty slots).
+- We will NOT auto-promote random listings into this slot — instead the admin tool in (5) fills the row with real comp-featured entries so users never see anything mislabeled.
 
-- `src/components/home/ReferralPromoCard.tsx` — dark card with orange accent glow. "Earn $500 when you refer a buyer", Learn About Referrals / Share a Referral, both to `/referrals` with the spec'd UTMs. Fine print line included.
-- Move `<ConciergeSection />` lower (already lower in current layout — keep it after `ListingsSections`). Update its headline/copy to "Not sure what you need yet?" / "Tell Vendibook what you need" CTA pointing to `/concierge` with the spec'd UTMs.
+## 3. Featured-First Ranking Everywhere
 
-## 4. Analytics
+`search-listings` already does this. Extend the same featured-first ordering to the spots that bypass it today:
+- `src/components/home/ListingsSections.tsx` — add a secondary client-side sort using `isListingFeatured` before rendering each row.
+- `src/pages/Browse.tsx` and `src/pages/CategoryCityPage.tsx` — same treatment.
+- Confirmed: expired featured listings are filtered by the helper, so this is automatic.
 
-Add `trackLeadEvent` calls (existing helper in `src/lib/leadTracking.ts`) for:
-`hero_panel_viewed`, `hero_panel_swiped`, `hero_search_clicked`, `hero_browse_clicked`, `hero_list_it_free_clicked`, `hero_financing_clicked`, `hero_host_tools_clicked`, `hero_payments_clicked`, `referral_card_clicked`, `concierge_card_clicked`.
+## 4. Featured Filter + Sort in UI
 
-Each event includes: `panel_name`, `cta_label`, `destination`, `device` (from `useIsMobile`), `user_id` (from `AuthContext`), `timestamp`, and parsed UTM params.
+- **Filter**: add "Featured listings only" toggle to `src/components/search/FilterPanel.tsx`; wire to existing `featured_only` param on `search-listings`; sync to URL query (`featured=1`).
+- **Sort**: add "Featured first" option to the sort dropdown in `src/pages/Search.tsx`. Since featured-first is already the implicit primary key in every mode, this option will simply pin "newest" as the secondary order and make the behavior explicit/discoverable.
 
-`hero_panel_viewed` fires from `RotatingHero` whenever active index changes.
+## 5. Admin Notifications for Boost/Featured Purchases
 
-## 5. Partner logos
+Two-channel fix:
+- **Email path** — already exists, but we'll:
+  - Add a `console.log` + `email_send_log` assertion in `stripe-webhook` so we can confirm whether the `featured-payment-admin-alert` template actually fired for recent purchases.
+  - Verify the admin recipient list and that the template is registered (it is).
+- **In-app/admin dashboard path** — extend `send-admin-notification` with a new `type: 'featured_purchase'` (subject: "Featured listing purchased"), then call it from `stripe-webhook` alongside the existing email. Payload: listing title, listing URL, host name + email, amount, package, start/end dates, Stripe payment intent ID.
+- Idempotency: the webhook already checks `pending_featured_payment.session_id` before activating; we'll reuse that guard to skip the admin notification on retries.
 
-- Use the existing `src/assets/stripe-icon.png` (already in repo) for Stripe.
-- Generate two new SVG-style monochrome white wordmarks for Affirm + Afterpay via the image-gen tool, saved to `src/assets/affirm-mono.png` and `src/assets/afterpay-mono.png`, displayed at ~24px height with a subtle CSS metallic sheen (linear-gradient mask animation). This avoids shipping the colored brand marks while still signaling the partners. We can swap to official brand assets later if you provide them.
+## 6. Complimentary Featured (Comp/Admin/Promo source)
 
-## 6. Mobile/desktop polish
-- Mobile: 1 primary + 1 secondary CTA per panel max; bottom padding `pb-24` so the bottom nav + chat bubble never overlap.
-- Desktop: richer visuals in the right slot, same 4 messages.
-- Keep `HeroBackground` (grid + orange glow) as the base layer for all panels; per-panel accent layers compose on top.
+Migration adds:
+- `listings.featured_source TEXT` — values: `'paid' | 'comp' | 'admin' | 'promo'` (nullable; existing paid listings stay null/`paid`).
+- Backfill: rows where `pending_featured_payment->>'source'` exists get `featured_source = 'paid'`.
 
-## 7. Files touched
+New admin RPC `admin_grant_complimentary_featured(p_listing_id uuid, p_days int default 30)`:
+- Security definer, `is_admin(auth.uid())` check.
+- Sets `featured_enabled = true`, `featured_at = now()`, `featured_expires_at = now() + p_days days`, `featured_source = 'comp'`.
+- Logs an entry into `admin_notes` for traceability.
 
-New:
-- `src/components/home/hero/RotatingHero.tsx`
-- `src/components/home/hero/HeroPanelShell.tsx`
-- `src/components/home/hero/panels/Panel1Marketplace.tsx`
-- `src/components/home/hero/panels/Panel2Financing.tsx`
-- `src/components/home/hero/panels/Panel3HostTools.tsx`
-- `src/components/home/hero/panels/Panel4Payments.tsx`
-- `src/components/home/ReferralPromoCard.tsx`
-- `src/assets/affirm-mono.png`, `src/assets/afterpay-mono.png` (generated)
+Admin UI: small "Grant complimentary featured (30d)" button on the admin listings table (`src/pages/AdminListings.tsx`).
 
-Edited:
-- `src/components/home/Hero.tsx` (point to `RotatingHero`)
-- `src/components/home/ConciergeSection.tsx` (copy update)
-- `src/pages/Index.tsx` (insert `ReferralPromoCard`)
-- `src/lib/leadTracking.ts` (add new event names to allowed list if it has one)
+We are **not** auto-promoting random listings into the featured row — the request explicitly warns against mislabeling, and comp-featured fills any inventory gaps cleanly.
 
-## Out of scope
-- No new backend, routes, or schema changes. `/host-tools`, `/how-it-works/hosting`, `/concierge`, `/list-your-food-truck`, `/referrals` are linked as-is — if any don't exist as routes today, they'll 404 until added (flag if you want me to wire fallbacks).
+## 7. Favorites → Dashboard Crash Fix
+
+Audit didn't find a definitive throw; likely causes:
+- `useFavorites` returning `undefined` during auth hydration when navigating back.
+- `Favorites.tsx` second query lacks a `!!user` guard.
+
+Fixes:
+- Add `enabled: !!user && favorites.length > 0` and a stable `queryKey` including `user?.id` on the listings fetch.
+- Add safe fallbacks (empty array defaults, optional chaining on `listing.images`).
+- Wrap the Favorites and Dashboard routes in an `ErrorBoundary` with a friendly "Something went wrong — back to dashboard" fallback (matches existing global ErrorBoundary memory).
+- Add an empty state to `Favorites.tsx` when the list is empty.
+
+## 8. Remove Map from Listing Detail
+
+In `src/pages/ListingDetail.tsx` (~lines 730–752):
+- Delete the `<ListingLocationMap />` render and its wrapping dividers.
+- Keep the city/state text + `MapPin` line.
+- Remove the now-unused `ListingLocationMap` import.
+- Leaves no visual gap (the surrounding sections close up naturally).
+
+## 9. Technical Details
+
+**Migration (single file):**
+```sql
+ALTER TABLE public.listings
+  ADD COLUMN IF NOT EXISTS featured_source TEXT;
+
+UPDATE public.listings
+  SET featured_source = 'paid'
+  WHERE featured_enabled = true
+    AND pending_featured_payment IS NOT NULL
+    AND featured_source IS NULL;
+
+CREATE OR REPLACE FUNCTION public.admin_grant_complimentary_featured(
+  p_listing_id uuid, p_days int DEFAULT 30
+) RETURNS public.listings
+LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
+DECLARE v_row public.listings;
+BEGIN
+  IF NOT public.is_admin(auth.uid()) THEN
+    RAISE EXCEPTION 'Unauthorized';
+  END IF;
+  UPDATE public.listings SET
+    featured_enabled = true,
+    featured_at = now(),
+    featured_expires_at = now() + (p_days || ' days')::interval,
+    featured_source = 'comp'
+  WHERE id = p_listing_id
+  RETURNING * INTO v_row;
+  RETURN v_row;
+END $$;
+```
+
+**Edge function changes:**
+- `stripe-webhook` → after successful featured activation, `fetch('/functions/v1/send-admin-notification', { type: 'featured_purchase', data: {...} })`.
+- `send-admin-notification` → add `featured_purchase` to the type union + subject map.
+
+**Frontend new/changed files:**
+- New: `src/components/listing/FeaturedBadge.tsx`, `src/components/home/HomepageFeaturedRow.tsx`.
+- Edit: `ListingCard.tsx`, `ListingDetail.tsx`, `Index.tsx`, `ListingsSections.tsx`, `Browse.tsx`, `CategoryCityPage.tsx`, `Search.tsx`, `FilterPanel.tsx`, `Favorites.tsx`, `useFavorites.ts`, `AdminListings.tsx`.
+
+## 10. QA after build
+
+I'll verify each of your 12 checklist items in the preview and report back.
+
+---
+
+## Questions before I start
+
+1. **Featured badge color** — gold/amber gradient (premium feel) vs the brand orange (#F97316)? Gold reads "premium" more clearly; orange keeps strict brand consistency. Lean: **gold accent** since orange is reserved for CTAs in the design system.
+2. **Homepage featured row position** — directly under the hero/announcement (most prominent) or after the first "Recently Added for Rent" row (less pushy)? Lean: **directly under**, since that's what you asked for.
+3. **Comp-featured admin UI** — quick button on the existing admin listings table is fastest; a dedicated "Featured manager" page with bulk controls is nicer but more work. Lean: **button now**, dedicated page later if you want.
+
+If those defaults are fine, just say "go" and I'll execute the whole plan in one pass.
