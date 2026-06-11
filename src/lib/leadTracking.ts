@@ -30,6 +30,7 @@ export type LeadEventName =
   | 'homepage_listing_card_click'
   | 'homepage_concierge_click'
   | 'homepage_final_cta_click'
+  | 'homepage_listing_row_view_more_click'
   // Listing card overlay funnel
   | 'listing_start_purchase_click'
   | 'listing_check_dates_click'
@@ -89,6 +90,7 @@ const EVENT_CATEGORY: Record<LeadEventName, string> = {
   homepage_listing_card_click: 'homepage',
   homepage_concierge_click: 'homepage',
   homepage_final_cta_click: 'homepage',
+  homepage_listing_row_view_more_click: 'homepage',
   listing_start_purchase_click: 'discovery',
   listing_check_dates_click: 'discovery',
   listing_view_availability_click: 'discovery',

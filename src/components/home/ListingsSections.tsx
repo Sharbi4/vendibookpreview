@@ -1,32 +1,50 @@
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, Truck, ChefHat, Caravan, Tags } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import ListingCard from '@/components/listing/ListingCard';
 import { supabase } from '@/integrations/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Button } from '@/components/ui/button';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { trackLeadEvent } from '@/lib/leadTracking';
 
-type TabKey = 'rent' | 'sale' | 'trucks' | 'trailers';
-
-const tabs: { key: TabKey; label: string; icon: typeof Truck }[] = [
-  { key: 'rent', label: 'For Rent', icon: ChefHat },
-  { key: 'sale', label: 'For Sale', icon: Tags },
-  { key: 'trucks', label: 'Food Trucks', icon: Truck },
-  { key: 'trailers', label: 'Food Trailers', icon: Caravan },
-];
+type RowKey = 'rent' | 'sale' | 'trucks' | 'trailers';
 
 const BASE_CATEGORIES = ['food_truck', 'food_trailer'] as const;
+const ROW_LIMIT = 8;
+
+const ROW_META: Record<RowKey, {
+  title: string;
+  subtitle: string;
+  viewMorePath: string;
+}> = {
+  rent: {
+    title: 'Recently Added for Rent',
+    subtitle: 'New rental listings from verified owners.',
+    viewMorePath: '/search?mode=rent&category=food_truck%2Cfood_trailer&utm_source=homepage&utm_medium=listing_row&utm_campaign=homepage_browse&utm_content=recent_for_rent_view_more',
+  },
+  sale: {
+    title: 'Recently Added for Sale',
+    subtitle: 'Browse food trucks and trailers available to buy.',
+    viewMorePath: '/search?mode=sale&category=food_truck%2Cfood_trailer&utm_source=homepage&utm_medium=listing_row&utm_campaign=homepage_browse&utm_content=recent_for_sale_view_more',
+  },
+  trucks: {
+    title: 'Food Trucks',
+    subtitle: 'Explore mobile kitchens ready for rent or purchase.',
+    viewMorePath: '/search?category=food_truck&utm_source=homepage&utm_medium=listing_row&utm_campaign=homepage_browse&utm_content=food_trucks_view_more',
+  },
+  trailers: {
+    title: 'Food Trailers',
+    subtitle: 'Find concession trailers, mobile kitchens, and specialty trailers.',
+    viewMorePath: '/search?category=food_trailer&utm_source=homepage&utm_medium=listing_row&utm_campaign=homepage_browse&utm_content=food_trailers_view_more',
+  },
+};
 
 const ListingsSections = () => {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<TabKey>('rent');
 
-  // For Rent — trucks + trailers, rent mode
   const { data: rentListings = [], isLoading: rentLoading } = useQuery({
-    queryKey: ['home-rent-trucks-trailers'],
+    queryKey: ['home-row-rent'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('listings')
@@ -36,16 +54,15 @@ const ListingsSections = () => {
         .in('category', BASE_CATEGORIES)
         .not('title', 'ilike', 'Demo%')
         .order('published_at', { ascending: false })
-        .limit(12);
+        .limit(ROW_LIMIT);
       if (error) throw error;
       return data;
     },
     staleTime: 60000,
   });
 
-  // For Sale — trucks + trailers, sale mode
   const { data: saleListings = [], isLoading: saleLoading } = useQuery({
-    queryKey: ['home-sale-trucks-trailers'],
+    queryKey: ['home-row-sale'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('listings')
@@ -55,16 +72,15 @@ const ListingsSections = () => {
         .in('category', BASE_CATEGORIES)
         .not('title', 'ilike', 'Demo%')
         .order('published_at', { ascending: false })
-        .limit(12);
+        .limit(ROW_LIMIT);
       if (error) throw error;
       return data;
     },
     staleTime: 60000,
   });
 
-  // Food Trucks — any mode
   const { data: truckListings = [], isLoading: trucksLoading } = useQuery({
-    queryKey: ['home-trucks-any'],
+    queryKey: ['home-row-trucks'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('listings')
@@ -73,16 +89,15 @@ const ListingsSections = () => {
         .eq('category', 'food_truck')
         .not('title', 'ilike', 'Demo%')
         .order('published_at', { ascending: false })
-        .limit(12);
+        .limit(ROW_LIMIT);
       if (error) throw error;
       return data;
     },
     staleTime: 60000,
   });
 
-  // Food Trailers — any mode
   const { data: trailerListings = [], isLoading: trailersLoading } = useQuery({
-    queryKey: ['home-trailers-any'],
+    queryKey: ['home-row-trailers'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('listings')
@@ -91,7 +106,7 @@ const ListingsSections = () => {
         .eq('category', 'food_trailer')
         .not('title', 'ilike', 'Demo%')
         .order('published_at', { ascending: false })
-        .limit(12);
+        .limit(ROW_LIMIT);
       if (error) throw error;
       return data;
     },
@@ -124,61 +139,68 @@ const ListingsSections = () => {
 
   const hostVerificationMap = useMemo(() => {
     const map: Record<string, boolean> = {};
-    hostProfiles.forEach((profile) => {
-      map[profile.id] = profile.identity_verified ?? false;
+    hostProfiles.forEach((p) => {
+      map[p.id] = p.identity_verified ?? false;
     });
     return map;
   }, [hostProfiles]);
 
   const isLoading = rentLoading || saleLoading || trucksLoading || trailersLoading;
 
-  const activeListings =
-    activeTab === 'rent'
-      ? rentListings
-      : activeTab === 'sale'
-        ? saleListings
-        : activeTab === 'trucks'
-          ? truckListings
-          : trailerListings;
+  const rows: { key: RowKey; listings: typeof rentListings }[] = [
+    { key: 'rent', listings: rentListings },
+    { key: 'sale', listings: saleListings },
+    { key: 'trucks', listings: truckListings },
+    { key: 'trailers', listings: trailerListings },
+  ];
 
-  const viewAllPath =
-    activeTab === 'rent'
-      ? '/search?mode=rent&category=food_truck%2Cfood_trailer'
-      : activeTab === 'sale'
-        ? '/search?mode=sale&category=food_truck%2Cfood_trailer'
-        : activeTab === 'trucks'
-          ? '/search?category=food_truck'
-          : '/search?category=food_trailer';
+  const visibleRows = rows.filter((r) => r.listings.length > 0);
 
-  const onCardClickCapture = (e: React.MouseEvent<HTMLDivElement>) => {
+  const handleViewMore = (key: RowKey) => {
+    const meta = ROW_META[key];
+    trackLeadEvent('homepage_listing_row_view_more_click', {
+      route: '/',
+      source: 'home_listing_row_view_more',
+      row_name: key,
+      destination_url: meta.viewMorePath,
+    });
+    navigate(meta.viewMorePath);
+  };
+
+  const handleCardClickCapture = (rowKey: RowKey) => (e: React.MouseEvent<HTMLDivElement>) => {
     const target = (e.target as HTMLElement).closest('[data-listing-id]') as HTMLElement | null;
-    const listingId = target?.getAttribute('data-listing-id') || undefined;
+    if (!target) return;
+    const listingId = target.getAttribute('data-listing-id') || undefined;
+    const positionAttr = target.getAttribute('data-position') || undefined;
     trackLeadEvent('homepage_listing_card_click', {
       route: '/',
-      source: 'home_recently_added',
-      tab: activeTab,
+      source: 'home_listing_row',
+      row_name: rowKey,
       listing_id: listingId,
+      position_in_row: positionAttr ? Number(positionAttr) : undefined,
     });
   };
 
   if (isLoading) {
     return (
-      <section className="py-8 bg-background">
-        <div className="container">
-          <Skeleton className="h-10 w-64 mx-auto mb-6" />
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
-            {[...Array(6)].map((_, i) => (
-              <div key={i} className="space-y-2">
-                <Skeleton className="aspect-[4/3] w-full rounded-xl" />
-                <Skeleton className="h-4 w-3/4" />
-                <Skeleton className="h-3 w-1/2" />
+      <section className="py-10 sm:py-14 bg-background">
+        <div className="container px-4 sm:px-6 space-y-10">
+          {[...Array(2)].map((_, i) => (
+            <div key={i} className="space-y-3">
+              <Skeleton className="h-6 w-56" />
+              <div className="flex gap-3 overflow-hidden">
+                {[...Array(4)].map((_, j) => (
+                  <Skeleton key={j} className="h-56 w-[70%] sm:w-[42%] lg:w-[28%] flex-shrink-0 rounded-xl" />
+                ))}
               </div>
-            ))}
-          </div>
+            </div>
+          ))}
         </div>
       </section>
     );
   }
+
+  if (visibleRows.length === 0) return null;
 
   return (
     <section className="py-10 sm:py-16 relative overflow-hidden bg-background">
@@ -191,107 +213,80 @@ const ListingsSections = () => {
         aria-hidden="true"
       />
 
-      <div className="container px-4 sm:px-6 relative z-10">
-        <motion.div
-          className="text-center mb-8"
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: '-60px' }}
-          transition={{ duration: 0.6 }}
-        >
-          <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">
-            Recently Added Trucks &amp; Trailers
-          </h2>
-          <p className="text-muted-foreground text-sm">
-            Real listings from verified owners across the US.
-          </p>
-        </motion.div>
-
-        {/* Tab bar */}
-        <div className="flex items-center justify-center flex-wrap gap-1 mb-8">
-          {tabs.map((tab) => (
-            <button
-              key={tab.key}
-              onClick={() => setActiveTab(tab.key)}
-              className={`relative flex items-center gap-2 px-3.5 sm:px-5 py-2.5 rounded-full text-sm font-medium transition-all ${
-                activeTab === tab.key
-                  ? 'text-background'
-                  : 'text-muted-foreground hover:text-foreground hover:bg-accent'
-              }`}
-            >
-              {activeTab === tab.key && (
-                <motion.div
-                  layoutId="active-tab"
-                  className="absolute inset-0 bg-foreground rounded-full shadow-lg shadow-foreground/10"
-                  transition={{ type: 'spring', bounce: 0.2, duration: 0.5 }}
-                />
-              )}
-              <span className="relative flex items-center gap-2">
-                <tab.icon className="w-4 h-4" />
-                <span>{tab.label}</span>
-              </span>
-            </button>
-          ))}
+      <div className="relative z-10">
+        <div className="container px-4 sm:px-6">
+          <motion.div
+            className="mb-8 sm:mb-10"
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-60px' }}
+            transition={{ duration: 0.5 }}
+          >
+            <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">
+              Explore Recent Listings
+            </h2>
+            <p className="text-muted-foreground text-sm">
+              Browse food trucks and trailers by rental, sale, and asset type.
+            </p>
+          </motion.div>
         </div>
 
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={activeTab}
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.3 }}
-          >
-            {activeListings.length > 0 ? (
-              <>
-                <div
-                  onClickCapture={onCardClickCapture}
-                  className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4"
-                >
-                  {activeListings.map((listing) => (
-                    <ListingCard
-                      key={listing.id}
-                      listing={listing}
-                      hostVerified={hostVerificationMap[listing.host_id] ?? false}
-                      compact
-                    />
-                  ))}
-                </div>
-                <div className="flex justify-center mt-8">
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      trackLeadEvent('homepage_browse_click', {
-                        route: '/',
-                        source: 'home_recently_added_view_all',
-                        tab: activeTab,
-                      });
-                      navigate(viewAllPath);
-                    }}
-                    className="rounded-full px-8 border-border hover:border-foreground/20 hover:bg-foreground/5 text-foreground gap-2"
+        <div className="space-y-10 sm:space-y-14 pb-28 sm:pb-12">
+          {visibleRows.map(({ key, listings }) => {
+            const meta = ROW_META[key];
+            return (
+              <div key={key}>
+                <div className="container px-4 sm:px-6 flex items-end justify-between gap-3 mb-3 sm:mb-4">
+                  <div className="min-w-0">
+                    <h3 className="text-lg sm:text-xl font-semibold text-foreground truncate">
+                      {meta.title}
+                    </h3>
+                    <p className="text-xs sm:text-sm text-muted-foreground truncate">
+                      {meta.subtitle}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleViewMore(key)}
+                    className="flex-shrink-0 inline-flex items-center gap-1 text-sm font-medium text-primary hover:text-primary/80 transition-colors"
                   >
-                    View All {tabs.find((t) => t.key === activeTab)?.label}
-                    <ArrowRight className="w-4 h-4" />
-                  </Button>
+                    View more
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
                 </div>
-              </>
-            ) : (
-              <div className="text-center py-12 rounded-2xl border border-border/50 bg-card/30">
-                <div className="text-4xl mb-3">🚚</div>
-                <h3 className="text-lg font-semibold text-foreground mb-1">No listings yet</h3>
-                <p className="text-sm text-muted-foreground mb-4">Be the first to list!</p>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => navigate('/list')}
-                  className="rounded-full"
+
+                <div
+                  onClickCapture={handleCardClickCapture(key)}
+                  className="flex gap-3 sm:gap-4 overflow-x-auto snap-x snap-mandatory scroll-px-4 sm:scroll-px-6 px-4 sm:px-6 pb-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
                 >
-                  List Your Asset
-                </Button>
+                  {listings.map((listing, index) => (
+                    <div
+                      key={listing.id}
+                      data-position={index}
+                      className="snap-start flex-shrink-0 w-[72%] sm:w-[42%] md:w-[32%] lg:w-[24%] xl:w-[22%]"
+                    >
+                      <ListingCard
+                        listing={listing}
+                        hostVerified={hostVerificationMap[listing.host_id] ?? false}
+                        compact
+                      />
+                    </div>
+                  ))}
+                  {/* Trailing View more card */}
+                  <button
+                    type="button"
+                    onClick={() => handleViewMore(key)}
+                    className="snap-start flex-shrink-0 w-[40%] sm:w-[24%] md:w-[20%] lg:w-[16%] rounded-xl border border-border/60 bg-card/40 hover:bg-card/70 hover:border-foreground/20 transition-colors flex flex-col items-center justify-center text-center gap-2 p-4 min-h-[180px]"
+                  >
+                    <ArrowRight className="w-5 h-5 text-primary" />
+                    <span className="text-sm font-medium text-foreground">View more</span>
+                    <span className="text-xs text-muted-foreground">{meta.title}</span>
+                  </button>
+                </div>
               </div>
-            )}
-          </motion.div>
-        </AnimatePresence>
+            );
+          })}
+        </div>
       </div>
     </section>
   );
