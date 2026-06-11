@@ -378,11 +378,12 @@ export const SaleListingMobile = ({
               <Button
                 variant="outline"
                 onClick={handleAskVendibook}
-                className="h-12 gap-2 rounded-xl border border-white/10 bg-[rgba(11,15,18,0.85)] hover:bg-[rgba(20,24,28,0.9)] font-semibold"
+                className="h-12 gap-2 rounded-xl border-0 bg-cta-glass hover:bg-white/10 font-semibold text-white"
               >
                 <MessageSquare className="h-4 w-4" />
                 Ask for Help
               </Button>
+
             </div>
 
             <p className="text-[11px] text-muted-foreground flex items-center gap-1.5">
