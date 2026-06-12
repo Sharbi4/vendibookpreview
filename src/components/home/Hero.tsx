@@ -1,5 +1,5 @@
-import RotatingHero from './hero/RotatingHero';
+import HeroLegacy from './hero/HeroLegacy';
 
-const Hero = () => <RotatingHero />;
+const Hero = () => <HeroLegacy />;
 
 export default Hero;
