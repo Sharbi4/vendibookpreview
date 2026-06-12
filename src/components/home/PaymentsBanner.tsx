@@ -1,7 +1,6 @@
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
-import affirmLogo from '@/assets/affirm-logo.png';
-import afterpayLogo from '@/assets/afterpay-logo.png';
+import { AffirmWordmark, AfterpayWordmark } from '@/components/home/hero/panels/BrandWordmarks';
 
 const PaymentsBanner = () => {
   return (
@@ -12,21 +11,10 @@ const PaymentsBanner = () => {
           <p className="text-sm text-muted-foreground text-center md:text-left">
             <span className="font-medium text-foreground">Buy now, pay later</span> — finance your food truck or trailer with
           </p>
-          <div className="flex items-center gap-6">
-            <img 
-              src={affirmLogo} 
-              alt="Affirm" 
-              width={1286}
-              height={513}
-              className="h-6 w-auto object-contain invert brightness-0 dark:invert dark:brightness-100 opacity-60 hover:opacity-90 transition-opacity" 
-            />
-            <img 
-              src={afterpayLogo} 
-              alt="Afterpay" 
-              width={1920}
-              height={668}
-              className="h-5 w-auto object-contain invert brightness-0 dark:invert dark:brightness-100 opacity-60 hover:opacity-90 transition-opacity" 
-            />
+          <div className="flex items-center gap-6 rounded-full bg-white/95 px-5 py-2.5 shadow-sm ring-1 ring-border/40">
+            <AffirmWordmark className="h-5 w-auto opacity-90" />
+            <span className="h-5 w-px bg-neutral-300" />
+            <AfterpayWordmark className="h-4 w-auto opacity-90" />
           </div>
           <Link 
             to="/payments" 
