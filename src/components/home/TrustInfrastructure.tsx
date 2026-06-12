@@ -123,7 +123,7 @@ const TrustInfrastructure = () => {
             return (
               <motion.div
                 key={pillar.title}
-                className="group relative rounded-2xl p-5 sm:p-6 bg-card/80 border-2 border-border/40 hover:border-foreground/20 hover:bg-card/60 transition-all duration-300"
+                className="glass-premium group relative rounded-2xl p-5 sm:p-6 hover:-translate-y-0.5 transition-all duration-300"
                 initial={{ opacity: 0, y: 16 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: '-40px' }}
