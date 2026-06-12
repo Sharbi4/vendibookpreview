@@ -37,7 +37,8 @@ const ConciergeSection = () => {
             </div>
 
             <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground mb-4">
-              Learn about selling on Vendibook
+              Learn about selling on Vendibook{' '}
+              <span className="text-[#FF6B00]">(it's free!)</span>
             </h2>
 
             <p className="text-muted-foreground text-base sm:text-lg mb-8 max-w-xl mx-auto leading-relaxed">

@@ -1,7 +1,5 @@
-import { useState } from 'react';
-import {} from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { TellVendibookModal } from '@/components/lead/TellVendibookModal';
 import { trackLeadEvent } from '@/lib/leadTracking';
 
 const TRUST_BITS = [
@@ -9,40 +7,42 @@ const TRUST_BITS = [
   'Owner profiles',
   'Document collection',
   'Booking requests',
-  'Concierge help'];
+  'Verified buyers'];
 
 /**
- * Below-hero section (mobile-focused). Hosts the concierge prompt that used
- * to live in the hero, plus a compact trust strip + disclaimer.
+ * Below-hero section (mobile-focused). Sell-focused soft conversion +
+ * compact trust strip + disclaimer.
  */
 const HeroBelowFold = () => {
-  const [conciergeOpen, setConciergeOpen] = useState(false);
-
-  const handleConcierge = () => {
-    trackLeadEvent('homepage_concierge_click', { route: '/', source: 'home_below_hero' });
-    setConciergeOpen(true);
+  const handleClick = () => {
+    trackLeadEvent('homepage_concierge_click', {
+      route: '/',
+      source: 'home_below_hero',
+      destination: '/sell',
+    });
   };
 
   return (
     <section className="md:hidden px-5 pt-4 pb-8 bg-background">
       <div className="max-w-xl mx-auto">
-        {/* Concierge card */}
+        {/* Learn about selling card */}
         <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-5 text-center">
           <h2 className="text-base font-semibold text-foreground mb-1.5">
-            Not sure what you need yet?
+            Learn about selling on Vendibook{' '}
+            <span className="text-[#FF6B00]">(it's free!)</span>
           </h2>
           <p className="text-[13px] text-muted-foreground leading-relaxed mb-4">
-            Tell Vendibook what you’re looking for and we’ll help point you toward the right
-            trucks, trailers, or next steps.
+            See how owners list food trucks, trailers, and concession units — pricing
+            guidance, verified buyers, and payouts handled for you.
           </p>
           <Button
-            onClick={handleConcierge}
+            asChild
             size="lg"
             variant="glass-cta"
             className="rounded-full px-6 gap-2 w-full whitespace-nowrap"
+            onClick={handleClick}
           >
-            
-            Tell Vendibook What You Need
+            <Link to="/sell">Learn About Selling</Link>
           </Button>
         </div>
 
@@ -61,12 +61,6 @@ const HeroBelowFold = () => {
           verification status, and final terms.
         </p>
       </div>
-
-      <TellVendibookModal
-        open={conciergeOpen}
-        onOpenChange={setConciergeOpen}
-        sourcePage="home_below_hero"
-      />
     </section>
   );
 };
