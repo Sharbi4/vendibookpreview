@@ -1,7 +1,7 @@
 import { forwardRef } from 'react';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import afterpayLogo from '@/assets/afterpay-logo.png';
+import { AfterpayWordmark } from '@/components/home/hero/panels/BrandWordmarks';
 
 interface AfterpayBadgeProps {
   price: number;
@@ -23,13 +23,9 @@ const AfterpayBadgeInner = forwardRef<HTMLDivElement, AfterpayBadgeProps & React
     const paymentAmount = Math.round(price / 4);
 
     return (
-      <div ref={ref} className={cn("inline-flex items-center", className)} {...props}>
-        <img 
-          src={afterpayLogo} 
-          alt="Afterpay" 
-          className="h-4 w-auto dark:invert dark:brightness-200"
-        />
-        {showEstimate && <span className="ml-1 text-[11px] font-medium">4 × ${paymentAmount}</span>}
+      <div ref={ref} className={cn("inline-flex items-center rounded-md bg-white/95 px-1.5 py-0.5 ring-1 ring-border/30", className)} {...props}>
+        <AfterpayWordmark className="h-3 w-auto" />
+        {showEstimate && <span className="ml-1 text-[11px] font-medium text-neutral-900">4 × ${paymentAmount}</span>}
       </div>
     );
   }

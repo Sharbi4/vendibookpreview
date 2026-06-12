@@ -1,7 +1,7 @@
 import { forwardRef } from 'react';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import affirmLogo from '@/assets/affirm-logo.png';
+import { AffirmWordmark } from '@/components/home/hero/panels/BrandWordmarks';
 
 interface AffirmBadgeProps {
   price: number;
@@ -23,13 +23,9 @@ const AffirmBadgeInner = forwardRef<HTMLDivElement, AffirmBadgeProps & React.HTM
     const monthlyEstimate = Math.round(price / 12);
 
     return (
-      <div ref={ref} className={cn("inline-flex items-center", className)} {...props}>
-        <img 
-          src={affirmLogo} 
-          alt="Affirm" 
-          className="h-4 w-auto dark:invert dark:brightness-200"
-        />
-        {showEstimate && <span className="ml-1 text-[11px] font-medium">~${monthlyEstimate}/mo</span>}
+      <div ref={ref} className={cn("inline-flex items-center rounded-md bg-white/95 px-1.5 py-0.5 ring-1 ring-border/30", className)} {...props}>
+        <AffirmWordmark className="h-3.5 w-auto" />
+        {showEstimate && <span className="ml-1 text-[11px] font-medium text-neutral-900">~${monthlyEstimate}/mo</span>}
       </div>
     );
   }

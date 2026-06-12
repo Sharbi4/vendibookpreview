@@ -390,7 +390,7 @@ const SellerLandingPage = ({
               <Button asChild size="lg" variant="dark-shine">
                 <Link to={primaryCtaHref}>{primaryCtaLabel ?? `List Your ${asset.charAt(0).toUpperCase() + asset.slice(1)} Free`}</Link>
               </Button>
-              <Button asChild size="lg" variant="outline">
+              <Button asChild size="lg" variant="outline" className="border-foreground/30 bg-transparent text-foreground hover:bg-foreground/10 hover:text-foreground">
                 <Link to={secondaryCtaHref}>{secondaryCtaLabel}</Link>
               </Button>
             </div>
