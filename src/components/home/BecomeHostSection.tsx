@@ -52,7 +52,7 @@ const BecomeHostSection = () => {
       <div className="container max-w-4xl mx-auto px-5 sm:px-6 relative z-10">
         {/* Photo carousel */}
         <motion.div
-          className="relative mx-auto mb-10 max-w-3xl overflow-hidden rounded-3xl border-2 border-border/60 shadow-2xl shadow-black/40"
+          className="glass-premium relative mx-auto mb-10 max-w-3xl overflow-hidden rounded-3xl"
           initial={{ opacity: 0, y: 24 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-80px" }}
