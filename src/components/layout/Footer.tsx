@@ -22,26 +22,37 @@ const footerSections: FooterSection[] = [
     ],
   },
   {
-    title: 'Browse',
+    title: 'Marketplace',
     links: [
-      { label: 'All Listings', href: '/search' },
-      { label: 'Buy a Food Truck', href: '/search?mode=sale' },
+      { label: 'Food Trucks for Sale', href: '/food-trucks-for-sale' },
+      { label: 'Food Trailers for Sale', href: '/food-trailers-for-sale' },
+      { label: 'Food Trucks for Rent', href: '/food-trucks-for-rent' },
+      { label: 'Shared Kitchens', href: '/shared-kitchens' },
       { label: 'Browse by City', href: '/cities' },
-      { label: 'Food Trucks', href: '/search?category=food_truck' },
-      { label: 'Food Trailers', href: '/search?category=food_trailer' },
-      { label: 'Shared Kitchens', href: '/search?category=ghost_kitchen' },
-      { label: 'Vendor Spaces', href: '/search?category=vendor_lot' },
+      { label: 'All Listings', href: '/search' },
     ],
   },
   {
-    title: 'List & Earn',
+    title: 'Sell on Vendibook',
     links: [
+      { label: 'Sell a Food Truck', href: '/sell-food-truck' },
+      { label: 'Sell a Food Trailer', href: '/sell-food-trailer' },
+      { label: 'Sell a Concession Trailer', href: '/sell-concession-trailer' },
       { label: 'Rent My Kitchen', href: '/rent-my-commercial-kitchen' },
-      { label: 'Sell My Food Truck', href: '/sell-my-food-truck' },
       { label: 'Payment Options', href: '/payments' },
-      { label: 'Host FAQ', href: '/faq' },
       { label: 'Insurance Info', href: '/insurance' },
       { label: 'Refer & Earn', href: '/referral' },
+    ],
+  },
+  {
+    title: 'By State',
+    links: [
+      { label: 'Arizona Food Trucks', href: '/food-trucks-for-sale/arizona' },
+      { label: 'Texas Food Trucks', href: '/food-trucks-for-sale/texas' },
+      { label: 'Florida Food Trucks', href: '/food-trucks-for-sale/florida' },
+      { label: 'Georgia Food Trucks', href: '/food-trucks-for-sale/georgia' },
+      { label: 'North Carolina', href: '/food-trucks-for-sale/north-carolina' },
+      { label: 'California', href: '/food-trucks-for-sale/california' },
     ],
   },
   {
@@ -136,7 +147,7 @@ const Footer = () => {
     <footer className="bg-card text-foreground border-t border-border">
       {/* Main Footer Content */}
       <div className="container py-12">
-        <div className="grid grid-cols-1 md:grid-cols-6 gap-0 md:gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-7 gap-0 md:gap-8">
           {/* Brand Column */}
           <div className="col-span-1 mb-8 md:mb-0">
             <Link to="/" className="flex items-center mb-4">
