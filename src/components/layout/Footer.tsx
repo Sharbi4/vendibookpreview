@@ -147,7 +147,7 @@ const Footer = () => {
     <footer className="bg-card text-foreground border-t border-border">
       {/* Main Footer Content */}
       <div className="container py-12">
-        <div className="grid grid-cols-1 md:grid-cols-6 gap-0 md:gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-7 gap-0 md:gap-8">
           {/* Brand Column */}
           <div className="col-span-1 mb-8 md:mb-0">
             <Link to="/" className="flex items-center mb-4">
