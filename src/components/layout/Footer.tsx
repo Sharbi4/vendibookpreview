@@ -15,7 +15,12 @@ const footerSections: FooterSection[] = [
   {
     title: 'Vendibook',
     links: [
+      { label: 'What Is Vendibook?', href: '/what-is-vendibook' },
+      { label: 'Why List on Vendibook?', href: '/why-list-on-vendibook' },
       { label: 'How Vendibook Works', href: '/how-it-works' },
+      { label: 'Best Places to Sell a Food Truck', href: '/best-place-to-sell-a-food-truck' },
+      { label: 'Mobile Food Marketplace Glossary', href: '/resources/mobile-food-marketplace-glossary' },
+      { label: 'Food Truck Selling FAQ', href: '/resources/food-truck-selling-faq' },
       { label: 'Help Center', href: '/help' },
       { label: 'Contact Us', href: '/contact' },
       { label: 'Blog', href: '/blog' },
@@ -35,6 +40,8 @@ const footerSections: FooterSection[] = [
   {
     title: 'Sell on Vendibook',
     links: [
+      { label: 'List Food Truck for Sale', href: '/list-food-truck-for-sale' },
+      { label: 'Rent Out My Food Truck', href: '/rent-out-my-food-truck' },
       { label: 'Sell a Food Truck', href: '/sell-food-truck' },
       { label: 'Sell a Food Trailer', href: '/sell-food-trailer' },
       { label: 'Sell a Concession Trailer', href: '/sell-concession-trailer' },

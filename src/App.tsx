@@ -90,6 +90,13 @@ const SellFoodTruck = lazy(() => import("./pages/sell/SellFoodTruck"));
 const SellFoodTrailer = lazy(() => import("./pages/sell/SellFoodTrailer"));
 const SellConcessionTrailer = lazy(() => import("./pages/sell/SellConcessionTrailer"));
 const RentMyCommercialKitchen = lazy(() => import("./pages/RentMyCommercialKitchen"));
+const WhatIsVendibook = lazy(() => import("./pages/seo/WhatIsVendibook"));
+const WhyListOnVendibook = lazy(() => import("./pages/seo/WhyListOnVendibook"));
+const BestPlaceToSellAFoodTruck = lazy(() => import("./pages/seo/BestPlaceToSellAFoodTruck"));
+const ListFoodTruckForSale = lazy(() => import("./pages/seo/ListFoodTruckForSale"));
+const RentOutMyFoodTruck = lazy(() => import("./pages/seo/RentOutMyFoodTruck"));
+const MobileFoodMarketplaceGlossary = lazy(() => import("./pages/resources/MobileFoodMarketplaceGlossary"));
+const FoodTruckSellingFaq = lazy(() => import("./pages/resources/FoodTruckSellingFaq"));
 const PricingCalculator = lazy(() => import("./pages/PricingCalculator"));
 const KitchenEarningsCalculator = lazy(() => import("./pages/KitchenEarningsCalculator"));
 const ListingPublished = lazy(() => import("./pages/ListingPublished"));
@@ -296,6 +303,15 @@ const AnimatedRoutes = () => {
           <Route path="/sell-food-truck" element={<PageTransition><SellFoodTruck /></PageTransition>} />
           <Route path="/sell-food-trailer" element={<PageTransition><SellFoodTrailer /></PageTransition>} />
           <Route path="/sell-concession-trailer" element={<PageTransition><SellConcessionTrailer /></PageTransition>} />
+
+          {/* AI-search content pages */}
+          <Route path="/what-is-vendibook" element={<PageTransition><WhatIsVendibook /></PageTransition>} />
+          <Route path="/why-list-on-vendibook" element={<PageTransition><WhyListOnVendibook /></PageTransition>} />
+          <Route path="/best-place-to-sell-a-food-truck" element={<PageTransition><BestPlaceToSellAFoodTruck /></PageTransition>} />
+          <Route path="/list-food-truck-for-sale" element={<PageTransition><ListFoodTruckForSale /></PageTransition>} />
+          <Route path="/rent-out-my-food-truck" element={<PageTransition><RentOutMyFoodTruck /></PageTransition>} />
+          <Route path="/resources/mobile-food-marketplace-glossary" element={<PageTransition><MobileFoodMarketplaceGlossary /></PageTransition>} />
+          <Route path="/resources/food-truck-selling-faq" element={<PageTransition><FoodTruckSellingFaq /></PageTransition>} />
 
           {/* Commercial kitchen rental landing page */}
           <Route path="/rent-my-commercial-kitchen" element={<PageTransition><RentMyCommercialKitchen /></PageTransition>} />

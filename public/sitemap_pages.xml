@@ -23,6 +23,15 @@
   <url><loc>https://vendibook.com/blog/food-truck-financing-options</loc><lastmod>2026-05-18</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
   <url><loc>https://vendibook.com/rent-my-commercial-kitchen</loc><lastmod>2026-04-20</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
 
+  <!-- AI-search content pages -->
+  <url><loc>https://vendibook.com/what-is-vendibook</loc><lastmod>2026-06-12</lastmod><changefreq>monthly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://vendibook.com/why-list-on-vendibook</loc><lastmod>2026-06-12</lastmod><changefreq>monthly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://vendibook.com/best-place-to-sell-a-food-truck</loc><lastmod>2026-06-12</lastmod><changefreq>monthly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://vendibook.com/list-food-truck-for-sale</loc><lastmod>2026-06-12</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://vendibook.com/rent-out-my-food-truck</loc><lastmod>2026-06-12</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://vendibook.com/resources/mobile-food-marketplace-glossary</loc><lastmod>2026-06-12</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://vendibook.com/resources/food-truck-selling-faq</loc><lastmod>2026-06-12</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+
   <!-- State-level SEO pages (statewide → nationwide fallback) -->
   <url><loc>https://vendibook.com/food-trucks-for-sale/arizona</loc><lastmod>2026-06-12</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>
   <url><loc>https://vendibook.com/food-trucks-for-sale/texas</loc><lastmod>2026-06-12</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>
