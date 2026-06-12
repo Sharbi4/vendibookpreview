@@ -150,7 +150,7 @@ const TrustInfrastructure = () => {
 
           {/* Featured Sign-up CTA — spans 2 cols on lg, sits beside Reviews & trust */}
           <motion.div
-            className="relative overflow-hidden rounded-2xl p-6 sm:p-8 sm:col-span-2 lg:col-span-2 border-2 border-primary/30 bg-card/90 group hover:border-primary/50 transition-all duration-300"
+            className="glass-premium relative overflow-hidden rounded-3xl p-6 sm:p-8 sm:col-span-2 lg:col-span-2 group transition-all duration-300"
             initial={{ opacity: 0, y: 16 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: '-40px' }}
