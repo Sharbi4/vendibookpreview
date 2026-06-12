@@ -147,7 +147,7 @@ const BecomeHostSection = () => {
 
           {/* Earnings card */}
           <motion.div
-            className="inline-flex items-center gap-4 px-6 py-4 rounded-2xl bg-card border-2 border-border/80 mb-10 shadow-lg shadow-black/20"
+            className="glass-premium inline-flex items-center gap-4 px-6 py-4 rounded-2xl mb-10"
             initial={{ opacity: 0, scale: 0.95 }}
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
