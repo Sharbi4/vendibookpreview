@@ -52,7 +52,7 @@ const BecomeHostSection = () => {
       <div className="container max-w-4xl mx-auto px-5 sm:px-6 relative z-10">
         {/* Photo carousel */}
         <motion.div
-          className="relative mx-auto mb-10 max-w-3xl overflow-hidden rounded-3xl border-2 border-border/60 shadow-2xl shadow-black/40"
+          className="glass-premium relative mx-auto mb-10 max-w-3xl overflow-hidden rounded-3xl"
           initial={{ opacity: 0, y: 24 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-80px" }}
@@ -133,7 +133,7 @@ const BecomeHostSection = () => {
             {benefits.map((item, i) => (
               <motion.div
                 key={i}
-                className="flex items-center gap-2.5 px-4 py-2.5 rounded-full bg-card border-2 border-border/80 text-sm text-muted-foreground"
+                className="glass-premium flex items-center gap-2.5 px-4 py-2.5 rounded-full text-sm text-muted-foreground"
                 initial={{ opacity: 0, y: 12 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
@@ -147,7 +147,7 @@ const BecomeHostSection = () => {
 
           {/* Earnings card */}
           <motion.div
-            className="inline-flex items-center gap-4 px-6 py-4 rounded-2xl bg-card border-2 border-border/80 mb-10 shadow-lg shadow-black/20"
+            className="glass-premium inline-flex items-center gap-4 px-6 py-4 rounded-2xl mb-10"
             initial={{ opacity: 0, scale: 0.95 }}
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}

@@ -26,7 +26,7 @@ const HeroBelowFold = () => {
     <section className="md:hidden px-5 pt-4 pb-8 bg-background">
       <div className="max-w-xl mx-auto">
         {/* Learn about selling card */}
-        <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-5 text-center">
+        <div className="glass-premium rounded-2xl p-5 text-center">
           <h2 className="text-base font-semibold text-foreground mb-1.5">
             Learn about selling on Vendibook{' '}
             <span className="text-[#FF6B00]">(it's free!)</span>

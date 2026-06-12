@@ -31,7 +31,7 @@ const ConciergeSection = () => {
           transition={{ duration: 0.6 }}
           className="max-w-3xl mx-auto"
         >
-          <div className="rounded-2xl border-2 border-border/60 bg-card/90 p-8 sm:p-12 text-center shadow-2xl shadow-black/20">
+          <div className="glass-premium rounded-3xl p-8 sm:p-12 text-center">
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-foreground/10 border-2 border-foreground/20 text-foreground text-[10px] font-semibold uppercase tracking-widest mb-6">
               For Sellers
             </div>
