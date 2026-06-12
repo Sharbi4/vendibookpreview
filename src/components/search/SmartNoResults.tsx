@@ -97,7 +97,7 @@ export const SmartNoResults = ({
       <div className="text-center py-12">
         <div className="inline-flex items-center gap-2 text-muted-foreground">
           <Loader2 className="h-4 w-4 animate-spin" />
-          <span className="text-sm">Looking for similar options…</span>
+          <span className="text-sm">Searching...</span>
         </div>
       </div>
     );
