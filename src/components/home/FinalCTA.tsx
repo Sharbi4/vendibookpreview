@@ -41,6 +41,7 @@ const FinalCTA = () => {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
+          className="glass-premium rounded-3xl p-8 sm:p-12"
         >
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-foreground mb-8 leading-tight">
             Ready to find or list a{' '}
