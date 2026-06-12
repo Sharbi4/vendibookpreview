@@ -19,17 +19,18 @@ const HeroLegacy = () => {
 
       <div className="container relative z-10 max-w-3xl mx-auto px-5 pt-12 pb-16 md:pt-20 md:pb-24">
         <div className="text-center">
-          {/* Eyebrow pill */}
+          {/* Vendibook logo */}
           <motion.div
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4 }}
-            className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-card/40 backdrop-blur px-4 py-1.5 mb-6"
+            className="flex justify-center mb-8"
           >
-            <span className="h-1.5 w-1.5 rounded-full bg-primary shadow-[0_0_8px_hsl(var(--primary)/0.8)]" />
-            <span className="text-[11px] font-semibold tracking-[0.18em] uppercase text-muted-foreground">
-              The marketplace for mobile food assets
-            </span>
+            <img
+              src="/src/assets/vendibook-logo.png"
+              alt="Vendibook"
+              className="h-24 sm:h-32 md:h-40 w-auto"
+            />
           </motion.div>
 
           {/* Headline */}
