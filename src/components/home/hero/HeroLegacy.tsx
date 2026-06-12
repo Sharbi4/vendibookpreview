@@ -28,7 +28,7 @@ const HeroLegacy = () => {
             className="flex justify-center mb-8"
           >
             <img
-              src="/src/assets/vendibook-logo.png"
+              src={vendibookLogo}
               alt="Vendibook"
               className="h-24 sm:h-32 md:h-40 w-auto"
             />
