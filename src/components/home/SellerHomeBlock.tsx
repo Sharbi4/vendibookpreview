@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
  */
 const SellerHomeBlock = () => (
   <section className="container py-10 md:py-14">
-    <div className="relative overflow-hidden rounded-3xl border border-border bg-gradient-to-br from-card via-card to-background p-8 md:p-12">
+    <div className="glass-premium relative overflow-hidden rounded-3xl p-8 md:p-12">
       <div className="absolute inset-0 pointer-events-none opacity-50 [background:radial-gradient(40%_60%_at_90%_0%,hsl(var(--primary)/0.10),transparent_70%)]" />
       <div className="relative grid md:grid-cols-[1.4fr_1fr] gap-6 items-center">
         <div className="space-y-3">
