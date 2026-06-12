@@ -1521,8 +1521,34 @@ export const PublishWizard: React.FC = () => {
       // Track analytics - differentiate between new publish and update
       console.log(`[ANALYTICS] Listing ${isFirstTimePublish ? 'published' : 'updated'}`, { listingId: listing.id });
 
-      // Only send admin notification for first-time publishes, not updates
+      // Only send host confirmation + admin notification for first-time publishes, not updates
       if (isFirstTimePublish) {
+        const emailListingType =
+          listing.mode === 'rent' ? 'rental' :
+          listing.mode === 'sale' ? 'sale' :
+          listing.mode === 'both' ? 'both' : 'rental';
+        const formattedPrice = priceSale
+          ? `$${parseFloat(String(priceSale).replace(/[^0-9.]/g, '')).toLocaleString()}`
+          : priceDaily ? `$${priceDaily}/day`
+          : priceHourly ? `$${priceHourly}/hr`
+          : 'Contact for price';
+
+        // Host "your listing is live" confirmation email (fire and forget)
+        supabase.functions.invoke('send-listing-live-email', {
+          body: {
+            hostEmail: user?.email,
+            hostName: user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'there',
+            listingTitle: title,
+            listingId: listing.id,
+            listingImageUrl: imageUrlsToSave?.[0],
+            coverImageUrl: imageUrlsToSave?.[0],
+            listingPrice: formattedPrice,
+            category: listing.category,
+            address: address,
+            listingType: emailListingType,
+          },
+        }).catch(err => console.error('Listing live email error:', err));
+
         supabase.functions.invoke('send-admin-notification', {
           body: {
             type: 'new_listing',
@@ -1538,6 +1564,7 @@ export const PublishWizard: React.FC = () => {
               host_name: user?.user_metadata?.full_name || user?.email?.split('@')[0],
               host_email: user?.email}}}).catch(err => console.error('Admin notification error:', err));
       }
+
 
       setShowSuccessModal(true);
     } catch (error) {
