@@ -30,7 +30,7 @@ const HeroLegacy = () => {
             <img
               src={vendibookLogo}
               alt="Vendibook"
-              className="h-24 sm:h-32 md:h-40 w-auto"
+              className="h-48 sm:h-64 md:h-80 w-auto"
             />
           </motion.div>
 
@@ -42,7 +42,7 @@ const HeroLegacy = () => {
             className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight text-foreground leading-[1.05] mb-5"
           >
             Find, rent, buy, or sell{' '}
-            <span className="bg-gradient-to-r from-[#ffb199] via-[#ff7a3d] to-[#ffae3a] bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-[#FF7A1A] via-[#FF6B00] to-[#FF9500] bg-clip-text text-transparent">
               food trucks and food trailers
             </span>
           </motion.h1>
