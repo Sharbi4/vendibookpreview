@@ -30,7 +30,7 @@ const SellerHomeBlock = () => (
               List Your Food Truck Free <ArrowRight className="ml-1 h-4 w-4" />
             </Link>
           </Button>
-          <Button asChild size="lg" variant="outline">
+          <Button asChild size="lg" variant="outline" className="border-foreground/30 bg-transparent text-foreground hover:bg-foreground/10 hover:text-foreground">
             <Link to="/how-it-works-seller">Learn How Selling Works</Link>
           </Button>
         </div>
