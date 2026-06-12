@@ -133,7 +133,7 @@ const BecomeHostSection = () => {
             {benefits.map((item, i) => (
               <motion.div
                 key={i}
-                className="flex items-center gap-2.5 px-4 py-2.5 rounded-full bg-card border-2 border-border/80 text-sm text-muted-foreground"
+                className="glass-premium flex items-center gap-2.5 px-4 py-2.5 rounded-full text-sm text-muted-foreground"
                 initial={{ opacity: 0, y: 12 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
