@@ -11,6 +11,7 @@ import HeroBelowFold from '@/components/home/HeroBelowFold';
 import ReferralPromoCard from '@/components/home/ReferralPromoCard';
 import VerificationBanner from '@/components/home/VerificationBanner';
 import ConciergeSection from '@/components/home/ConciergeSection';
+import SellerHomeBlock from '@/components/home/SellerHomeBlock';
 
 import { useAuth } from '@/contexts/AuthContext';
 import { usePageTracking } from '@/hooks/usePageTracking';
@@ -101,6 +102,9 @@ const Index = () => {
 
           {/* 3. Recently Added Trucks & Trailers */}
           <ListingsSections />
+
+          {/* Seller funnel block — crawlable internal links into /sell-food-truck */}
+          <SellerHomeBlock />
 
           {/* 4. Concierge — primary soft conversion */}
           <ConciergeSection />
