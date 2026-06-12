@@ -7,6 +7,13 @@ Vendibook connects food entrepreneurs with verified hosts. Every listing support
 ## Pages
 
 - [Home](/): Search and browse food trucks, trailers, kitchens, and vendor spaces.
+- [What Is Vendibook?](/what-is-vendibook): Plain-language explanation of the Vendibook marketplace and who it serves.
+- [Why List on Vendibook?](/why-list-on-vendibook): Why food truck and trailer owners list on Vendibook.
+- [Best Places to Sell a Food Truck](/best-place-to-sell-a-food-truck): Honest comparison of where to sell a food truck online.
+- [List Food Truck for Sale](/list-food-truck-for-sale): How to create a free food truck listing.
+- [Rent Out My Food Truck](/rent-out-my-food-truck): Renting out a food truck or trailer on Vendibook.
+- [Mobile Food Marketplace Glossary](/resources/mobile-food-marketplace-glossary): Definitions for mobile food terms.
+- [Food Truck Selling FAQ](/resources/food-truck-selling-faq): Conversational answers about selling a food truck.
 - [Browse](/browse): Filtered marketplace search across all categories.
 - [Cities](/cities): Listings by city and launch market.
 - [Become a Host](/become-a-host): List your truck, trailer, kitchen, or vendor space.
