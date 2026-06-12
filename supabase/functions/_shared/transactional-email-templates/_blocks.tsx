@@ -82,14 +82,6 @@ export const BrandHeader = ({
           </Text>
         ) : null}
       </Section>
-    ) : hero ? (
-      <Img
-        src={HERO_URLS[hero]}
-        alt={HERO_ALT[hero]}
-        width="160"
-        height="160"
-        style={{ display: 'block', margin: '8px auto 0', border: 0, outline: 'none', maxWidth: '160px', height: 'auto' }}
-      />
     ) : null}
   </Section>
 )
