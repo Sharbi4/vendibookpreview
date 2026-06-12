@@ -6,7 +6,7 @@ import { trackLeadEvent } from '@/lib/leadTracking';
 
 const ConciergeSection = () => {
   const handleClick = () => {
-    trackLeadEvent('homepage_sell_learn_click', {
+    trackLeadEvent('homepage_concierge_click', {
       route: '/',
       source: 'home_sell_learn_section',
       destination: '/sell',
