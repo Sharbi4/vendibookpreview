@@ -20,17 +20,45 @@ const HeroLegacy = () => {
 
       <div className="container relative z-10 max-w-3xl mx-auto px-5 pt-12 pb-16 md:pt-20 md:pb-24">
         <div className="text-center">
-          {/* Vendibook logo */}
+          {/* Vendibook logo with pulsating spotlight */}
           <motion.div
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4 }}
-            className="flex justify-center mb-8"
+            className="relative flex justify-center mb-8"
           >
+            {/* Outer ambient spotlight glow */}
+            <motion.div
+              aria-hidden
+              className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none"
+              style={{
+                width: '140%',
+                height: '220%',
+                background:
+                  'radial-gradient(ellipse at center, rgba(255,107,0,0.45) 0%, rgba(255,138,0,0.22) 25%, rgba(255,150,0,0.08) 50%, transparent 72%)',
+                filter: 'blur(40px)',
+              }}
+              animate={{ opacity: [0.55, 0.95, 0.55], scale: [1, 1.08, 1] }}
+              transition={{ duration: 4.5, repeat: Infinity, ease: 'easeInOut' }}
+            />
+            {/* Inner concentrated hot spot */}
+            <motion.div
+              aria-hidden
+              className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none"
+              style={{
+                width: '85%',
+                height: '120%',
+                background:
+                  'radial-gradient(ellipse at center, rgba(255,180,80,0.55) 0%, rgba(255,107,0,0.28) 40%, transparent 75%)',
+                filter: 'blur(28px)',
+              }}
+              animate={{ opacity: [0.6, 1, 0.6], scale: [0.95, 1.05, 0.95] }}
+              transition={{ duration: 3.2, repeat: Infinity, ease: 'easeInOut' }}
+            />
             <img
               src={vendibookLogo}
               alt="Vendibook"
-              className="h-48 sm:h-64 md:h-80 w-auto"
+              className="relative h-48 sm:h-64 md:h-80 w-auto"
             />
           </motion.div>
 
