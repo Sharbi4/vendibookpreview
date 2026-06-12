@@ -40,6 +40,8 @@ const footerSections: FooterSection[] = [
   {
     title: 'Sell on Vendibook',
     links: [
+      { label: 'List Food Truck for Sale', href: '/list-food-truck-for-sale' },
+      { label: 'Rent Out My Food Truck', href: '/rent-out-my-food-truck' },
       { label: 'Sell a Food Truck', href: '/sell-food-truck' },
       { label: 'Sell a Food Trailer', href: '/sell-food-trailer' },
       { label: 'Sell a Concession Trailer', href: '/sell-concession-trailer' },
