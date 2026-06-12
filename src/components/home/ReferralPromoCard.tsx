@@ -23,7 +23,7 @@ const ReferralPromoCard = () => {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: '-80px' }}
           transition={{ duration: 0.5 }}
-          className="relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-[#120a07] via-[#0c0807] to-[#08080a] p-6 sm:p-8 shadow-2xl"
+          className="glass-premium relative overflow-hidden rounded-3xl p-6 sm:p-8"
         >
           <div
             className="absolute -top-20 -right-20 w-72 h-72 rounded-full pointer-events-none"
