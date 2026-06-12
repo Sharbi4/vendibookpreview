@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import HeroBackground from './HeroBackground';
 import HeroSearchInput from './HeroSearchInput';
 import { useHeroSearch } from './useHeroSearch';
+import vendibookLogo from '@/assets/vendibook-logo.png';
 
 /**
  * Legacy "Find, rent, buy, or sell" hero — restored from the June 10 layout.
