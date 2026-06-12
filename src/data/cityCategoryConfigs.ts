@@ -169,3 +169,158 @@ CITY_CATEGORY_CONFIGS.push(
     };
   })
 );
+
+// ============================================================================
+// /food-trucks-for-sale/<city-state> and /food-trailers-for-sale/<city-state>
+// City SEO pages with smart fallback (city → state → nationwide) handled by
+// CategoryIndex. These URLs target the exact-match query patterns surfaced in
+// Search Console (e.g. "food trucks for sale tucson az").
+// ============================================================================
+type CitySaleSpec = {
+  citySlug: string;
+  cityName: string;
+  stateCode: string;
+  stateName: string;
+  category: CategoryKey;
+};
+
+const CITY_SALE_SPECS: CitySaleSpec[] = [
+  { citySlug: 'tucson-az',       cityName: 'Tucson',       stateCode: 'AZ', stateName: 'Arizona',       category: 'food_truck' },
+  { citySlug: 'phoenix-az',      cityName: 'Phoenix',      stateCode: 'AZ', stateName: 'Arizona',       category: 'food_truck' },
+  { citySlug: 'houston-tx',      cityName: 'Houston',      stateCode: 'TX', stateName: 'Texas',         category: 'food_truck' },
+  { citySlug: 'austin-tx',       cityName: 'Austin',       stateCode: 'TX', stateName: 'Texas',         category: 'food_truck' },
+  { citySlug: 'dallas-tx',       cityName: 'Dallas',       stateCode: 'TX', stateName: 'Texas',         category: 'food_truck' },
+  { citySlug: 'san-antonio-tx',  cityName: 'San Antonio',  stateCode: 'TX', stateName: 'Texas',         category: 'food_truck' },
+  { citySlug: 'atlanta-ga',      cityName: 'Atlanta',      stateCode: 'GA', stateName: 'Georgia',       category: 'food_truck' },
+  { citySlug: 'miami-fl',        cityName: 'Miami',        stateCode: 'FL', stateName: 'Florida',       category: 'food_truck' },
+  { citySlug: 'tampa-fl',        cityName: 'Tampa',        stateCode: 'FL', stateName: 'Florida',       category: 'food_truck' },
+  { citySlug: 'charlotte-nc',    cityName: 'Charlotte',    stateCode: 'NC', stateName: 'North Carolina',category: 'food_truck' },
+  { citySlug: 'portland-or',     cityName: 'Portland',     stateCode: 'OR', stateName: 'Oregon',        category: 'food_truck' },
+  { citySlug: 'los-angeles-ca',  cityName: 'Los Angeles',  stateCode: 'CA', stateName: 'California',    category: 'food_truck' },
+  // Trailer-specific city pages
+  { citySlug: 'tucson-az',       cityName: 'Tucson',       stateCode: 'AZ', stateName: 'Arizona',       category: 'food_trailer' },
+  { citySlug: 'phoenix-az',      cityName: 'Phoenix',      stateCode: 'AZ', stateName: 'Arizona',       category: 'food_trailer' },
+  { citySlug: 'houston-tx',      cityName: 'Houston',      stateCode: 'TX', stateName: 'Texas',         category: 'food_trailer' },
+];
+
+const citySaleSlug = (c: CategoryKey): string =>
+  c === 'food_trailer' ? 'food-trailers-for-sale' : 'food-trucks-for-sale';
+
+const citySaleLabel = (c: CategoryKey): string =>
+  c === 'food_trailer' ? 'Food Trailers' : 'Food Trucks';
+
+const citySaleFaqs = (cityName: string, stateName: string, cat: CategoryKey) => {
+  const plural = catLabelPlural(cat);
+  return [
+    {
+      q: `Where can I find ${plural} for sale in ${cityName}?`,
+      a: `Vendibook lists ${plural} for sale across ${cityName} and surrounding ${stateName}. When local inventory is limited, the page also surfaces nearby ${stateName} listings and nationwide options so you can compare.`,
+    },
+    {
+      q: `How much do ${plural} cost in ${cityName}?`,
+      a: `Pricing varies based on size, equipment, age, and condition. Use Vendibook's listings to compare current asking prices in ${cityName} and across ${stateName}.`,
+    },
+    {
+      q: `Can I make an offer on a ${cat === 'food_trailer' ? 'food trailer' : 'food truck'} in ${cityName}?`,
+      a: `Yes. Most sellers accept offers through Vendibook — you can negotiate directly with the owner inside the platform.`,
+    },
+    {
+      q: `Do I need permits to operate in ${cityName}?`,
+      a: `Yes. Most cities require a mobile food vendor permit, health-department certification, and a commissary agreement. Vendibook's PermitPath tool can help you find the rules for your city.`,
+    },
+    {
+      q: `Can I list my ${cat === 'food_trailer' ? 'food trailer' : 'food truck'} for sale in ${cityName}?`,
+      a: `Yes — listing on Vendibook is free. Add photos, price, equipment, and availability, then receive offers and messages from buyers in ${cityName} and beyond.`,
+    },
+  ];
+};
+
+CITY_CATEGORY_CONFIGS.push(
+  ...CITY_SALE_SPECS.map((s): CategoryIndexConfig => {
+    const plural = catLabelPlural(s.category);
+    const pluralTitle = citySaleLabel(s.category);
+    const path = `/${citySaleSlug(s.category)}/${s.citySlug}`;
+    return {
+      path,
+      category: s.category,
+      mode: 'sale',
+      city: { name: s.cityName, stateCode: s.stateCode },
+      h1: `${pluralTitle} for Sale in ${s.cityName}, ${s.stateCode}`,
+      title: `${pluralTitle} for Sale in ${s.cityName}, ${s.stateCode} | Vendibook`,
+      description: `Browse ${plural} for sale in ${s.cityName}, ${s.stateCode}. Compare local listings with photos, equipment specs, and pricing. Vendibook also surfaces nearby ${s.stateName} options when local inventory is limited.`,
+      intro: `Browse ${plural} for sale in ${s.cityName}, ${s.stateName}. If local inventory is limited, Vendibook also shows relevant ${pluralTitle.toLowerCase()} across ${s.stateName} and nationwide so buyers can compare more options. Each listing is owner-managed with photos, equipment specs, and direct messaging.`,
+      faqs: citySaleFaqs(s.cityName, s.stateName, s.category),
+      related: [
+        { href: `/${citySaleSlug(s.category)}`, label: `All ${pluralTitle.toLowerCase()} for sale` },
+        { href: `/${citySaleSlug(s.category)}/${slugify(s.stateName)}`, label: `${pluralTitle} for sale in ${s.stateName}` },
+        { href: s.category === 'food_trailer' ? '/sell-food-trailer' : '/sell-food-truck', label: `Sell your ${s.category === 'food_trailer' ? 'food trailer' : 'food truck'}` },
+        { href: `/${citySaleSlug(s.category === 'food_trailer' ? 'food_truck' : 'food_trailer')}/${s.citySlug}`, label: `${s.category === 'food_trailer' ? 'Food trucks' : 'Food trailers'} for sale in ${s.cityName}` },
+      ],
+    };
+  })
+);
+
+// ============================================================================
+// /food-trucks-for-sale/<state-name>  state-level SEO pages with state→nationwide fallback
+// ============================================================================
+type StateSaleSpec = { stateName: string; stateCode: string; category: CategoryKey };
+
+const STATE_SALE_SPECS: StateSaleSpec[] = [
+  { stateName: 'Arizona',        stateCode: 'AZ', category: 'food_truck' },
+  { stateName: 'Texas',          stateCode: 'TX', category: 'food_truck' },
+  { stateName: 'Florida',        stateCode: 'FL', category: 'food_truck' },
+  { stateName: 'Georgia',        stateCode: 'GA', category: 'food_truck' },
+  { stateName: 'North Carolina', stateCode: 'NC', category: 'food_truck' },
+  { stateName: 'Oregon',         stateCode: 'OR', category: 'food_truck' },
+  { stateName: 'California',     stateCode: 'CA', category: 'food_truck' },
+];
+
+function slugify(s: string): string {
+  return s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+}
+
+const stateSaleFaqs = (stateName: string, cat: CategoryKey) => {
+  const plural = catLabelPlural(cat);
+  return [
+    {
+      q: `Where can I find ${plural} for sale in ${stateName}?`,
+      a: `Vendibook lists ${plural} for sale across major ${stateName} cities and small towns alike. Use this page to browse statewide inventory, with nationwide fallback when local listings are limited.`,
+    },
+    {
+      q: `How much do ${plural} cost in ${stateName}?`,
+      a: `Prices vary widely by size, equipment, age, and condition. Use Vendibook's listings to compare current asking prices across ${stateName}.`,
+    },
+    {
+      q: `Can I sell a ${cat === 'food_trailer' ? 'food trailer' : 'food truck'} in ${stateName} on Vendibook?`,
+      a: `Yes — listing on Vendibook is free for ${stateName} owners. Reach buyers actively searching in your city and across the state.`,
+    },
+    {
+      q: `Does Vendibook help match ${stateName} listings with buyers?`,
+      a: `Vendibook may help match strong listings with interested buyers through search, social outreach, and direct buyer inquiries. Strong photos, accurate specs, and fair pricing remain the biggest drivers of inquiries.`,
+    },
+  ];
+};
+
+CITY_CATEGORY_CONFIGS.push(
+  ...STATE_SALE_SPECS.map((s): CategoryIndexConfig => {
+    const plural = catLabelPlural(s.category);
+    const pluralTitle = citySaleLabel(s.category);
+    const path = `/${citySaleSlug(s.category)}/${slugify(s.stateName)}`;
+    return {
+      path,
+      category: s.category,
+      mode: 'sale',
+      state: { name: s.stateName, code: s.stateCode },
+      h1: `${pluralTitle} for Sale in ${s.stateName}`,
+      title: `${pluralTitle} for Sale in ${s.stateName} | Vendibook`,
+      description: `Browse ${plural} for sale across ${s.stateName} on Vendibook. Statewide inventory from owners, with nationwide fallback when local listings are limited.`,
+      intro: `Browse ${plural} for sale across ${s.stateName}. Each listing is owner-managed with photos, equipment specs, and direct messaging. When statewide inventory is limited, Vendibook also surfaces nationwide listings so you can compare more options.`,
+      faqs: stateSaleFaqs(s.stateName, s.category),
+      related: [
+        { href: `/${citySaleSlug(s.category)}`, label: `All ${pluralTitle.toLowerCase()} for sale` },
+        { href: s.category === 'food_trailer' ? '/sell-food-trailer' : '/sell-food-truck', label: `Sell your ${s.category === 'food_trailer' ? 'food trailer' : 'food truck'}` },
+        { href: `/${citySaleSlug(s.category === 'food_trailer' ? 'food_truck' : 'food_trailer')}/${slugify(s.stateName)}`, label: `${s.category === 'food_trailer' ? 'Food trucks' : 'Food trailers'} for sale in ${s.stateName}` },
+      ],
+    };
+  })
+);
