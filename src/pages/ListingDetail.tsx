@@ -378,7 +378,7 @@ const ListingDetail = () => {
           {/* Owner Banner - Show prominently if owner is viewing */}
           {isOwner && (
             <div className="mb-6">
-              <OwnerBanner listingId={listing.id} variant="inline" />
+              <OwnerBanner listingId={listing.id} variant="inline" status={listing.status as any} />
             </div>
           )}
 
