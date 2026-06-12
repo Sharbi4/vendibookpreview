@@ -86,6 +86,9 @@ const Feedback = lazy(() => import("./pages/Feedback"));
 const VendiAISuite = lazy(() => import("./pages/VendiAISuite"));
 const Browse = lazy(() => import("./pages/Browse"));
 const SellMyFoodTruck = lazy(() => import("./pages/SellMyFoodTruck"));
+const SellFoodTruck = lazy(() => import("./pages/sell/SellFoodTruck"));
+const SellFoodTrailer = lazy(() => import("./pages/sell/SellFoodTrailer"));
+const SellConcessionTrailer = lazy(() => import("./pages/sell/SellConcessionTrailer"));
 const RentMyCommercialKitchen = lazy(() => import("./pages/RentMyCommercialKitchen"));
 const PricingCalculator = lazy(() => import("./pages/PricingCalculator"));
 const KitchenEarningsCalculator = lazy(() => import("./pages/KitchenEarningsCalculator"));
@@ -288,9 +291,12 @@ const AnimatedRoutes = () => {
           {/* SEO article page - separate purpose from tools hub */}
           <Route path="/vendi-ai-suite" element={<PageTransition><VendiAISuite /></PageTransition>} />
           
-          {/* Seller landing page */}
+          {/* Seller landing pages */}
           <Route path="/sell-my-food-truck" element={<PageTransition><SellMyFoodTruck /></PageTransition>} />
-          
+          <Route path="/sell-food-truck" element={<PageTransition><SellFoodTruck /></PageTransition>} />
+          <Route path="/sell-food-trailer" element={<PageTransition><SellFoodTrailer /></PageTransition>} />
+          <Route path="/sell-concession-trailer" element={<PageTransition><SellConcessionTrailer /></PageTransition>} />
+
           {/* Commercial kitchen rental landing page */}
           <Route path="/rent-my-commercial-kitchen" element={<PageTransition><RentMyCommercialKitchen /></PageTransition>} />
           
