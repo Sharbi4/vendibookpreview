@@ -59,7 +59,7 @@ const HeroVendiButton = () => (
           <TooltipContent side="bottom" className="max-w-xs text-sm p-3 backdrop-blur-xl bg-card/90 border-border/50">
             <p className="font-semibold mb-1">Meet Vendi 🎙️</p>
             <p className="text-muted-foreground text-xs">
-              Vendi is your AI voice guide. Search listings, create new ones, or get answers about the platform — all by voice.
+              Vendi is your voice guide. Search listings, create new ones, or get answers about the platform — all by voice.
             </p>
           </TooltipContent>
         </Tooltip>

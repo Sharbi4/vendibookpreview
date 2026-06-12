@@ -150,7 +150,7 @@ const PricePilot = () => {
                   Price smarter in minutes, not days.
                 </h1>
                 <p className="text-xl text-foreground/70 mb-8">
-                  Data-backed pricing that helps you book faster and earn more. Let AI analyze your asset and market to suggest optimal rates.
+                  Data-backed pricing that helps you book faster and earn more. We analyze your asset and local market to suggest optimal rates.
                 </p>
                 
                 <div className="flex flex-wrap gap-4">
@@ -170,32 +170,32 @@ const PricePilot = () => {
           <section className="py-16 bg-muted/30">
             <div className="container">
               <div className="grid gap-6 md:grid-cols-3">
-                <Card className="border-0 shadow-lg bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20">
+                <Card className="border-border bg-card shadow-lg">
                   <CardContent className="pt-6">
-                    <div className="w-12 h-12 rounded-xl bg-green-500/10 flex items-center justify-center mb-4">
-                      <TrendingUp className="h-6 w-6 text-green-600" />
+                    <div className="w-12 h-12 rounded-xl bg-green-500/15 flex items-center justify-center mb-4">
+                      <TrendingUp className="h-6 w-6 text-green-500" />
                     </div>
-                    <h3 className="font-bold text-lg mb-2">Increase Bookings</h3>
+                    <h3 className="font-bold text-lg mb-2 text-foreground">Increase Bookings</h3>
                     <p className="text-muted-foreground">Price competitively based on market data to attract more renters and close deals faster.</p>
                   </CardContent>
                 </Card>
                 
-                <Card className="border-0 shadow-lg bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20">
+                <Card className="border-border bg-card shadow-lg">
                   <CardContent className="pt-6">
-                    <div className="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center mb-4">
-                      <Target className="h-6 w-6 text-blue-600" />
+                    <div className="w-12 h-12 rounded-xl bg-blue-500/15 flex items-center justify-center mb-4">
+                      <Target className="h-6 w-6 text-blue-500" />
                     </div>
-                    <h3 className="font-bold text-lg mb-2">Maximize Earnings</h3>
+                    <h3 className="font-bold text-lg mb-2 text-foreground">Maximize Earnings</h3>
                     <p className="text-muted-foreground">Don't leave money on the table. Get pricing that reflects your asset's true value.</p>
                   </CardContent>
                 </Card>
                 
-                <Card className="border-0 shadow-lg bg-gradient-to-br from-purple-50 to-violet-50 dark:from-purple-950/20 dark:to-violet-950/20">
+                <Card className="border-border bg-card shadow-lg">
                   <CardContent className="pt-6">
-                    <div className="w-12 h-12 rounded-xl bg-purple-500/10 flex items-center justify-center mb-4">
-                      <Zap className="h-6 w-6 text-purple-600" />
+                    <div className="w-12 h-12 rounded-xl bg-purple-500/15 flex items-center justify-center mb-4">
+                      <Zap className="h-6 w-6 text-purple-400" />
                     </div>
-                    <h3 className="font-bold text-lg mb-2">Save Research Time</h3>
+                    <h3 className="font-bold text-lg mb-2 text-foreground">Save Research Time</h3>
                     <p className="text-muted-foreground">Skip hours of competitor research. Get instant recommendations backed by market analysis.</p>
                   </CardContent>
                 </Card>
@@ -219,8 +219,8 @@ const PricePilot = () => {
                   <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
                     <span className="text-2xl font-bold text-primary">2</span>
                   </div>
-                  <h3 className="font-bold mb-2">AI Analyzes Market</h3>
-                  <p className="text-muted-foreground text-sm">Our AI compares your asset to market data and generates optimal pricing.</p>
+                  <h3 className="font-bold mb-2">Market Analysis</h3>
+                  <p className="text-muted-foreground text-sm">We compare your asset to comparable market data and generate optimal pricing.</p>
                 </div>
                 <div className="text-center">
                   <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
@@ -304,7 +304,7 @@ const PricePilot = () => {
                 {pricingResult ? (
                   <OutputCard
                     title="Suggested Pricing"
-                    subtitle="AI-optimized rates based on market analysis"
+                    subtitle="Optimized rates based on market analysis"
                     icon={<BarChart3 className="h-5 w-5" />}
                     gradient="from-green-50 to-emerald-50 dark:from-green-950/30 dark:to-emerald-950/30"
                   >
@@ -372,7 +372,7 @@ const PricePilot = () => {
                     <EmptyOutput
                       icon={<DollarSign className="h-16 w-16" />}
                       title="Ready to analyze"
-                      description="Fill in the details to get AI-powered pricing suggestions"
+                      description="Fill in the details to get pricing suggestions"
                     />
                   </Card>
                 )}
@@ -391,7 +391,7 @@ const PricePilot = () => {
               <Accordion type="single" collapsible className="w-full">
                 <AccordionItem value="q1">
                   <AccordionTrigger>How accurate is the pricing?</AccordionTrigger>
-                  <AccordionContent>Our AI analyzes market trends and comparable listings to provide competitive pricing. Results are suggestions—you should always consider local market conditions.</AccordionContent>
+                  <AccordionContent>We analyze market trends and comparable listings to provide competitive pricing. Results are suggestions—you should always consider local market conditions.</AccordionContent>
                 </AccordionItem>
                 <AccordionItem value="q2">
                   <AccordionTrigger>Is PricePilot free?</AccordionTrigger>

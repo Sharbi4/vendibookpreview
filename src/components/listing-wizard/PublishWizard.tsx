@@ -2176,7 +2176,7 @@ export const PublishWizard: React.FC = () => {
                           ) : (
                             <>
                               
-                              Get AI Suggestions
+                              Get Suggestions
                             </>
                           )}
                         </Button>

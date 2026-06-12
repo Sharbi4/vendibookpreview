@@ -130,7 +130,7 @@ export function AudioListingPlayer({ listingId, className, variant = "card" }: P
           Listen to this listing
         </div>
         <div className="text-xs text-muted-foreground">
-          AI-narrated audio tour — about 60 seconds
+          Audio walkthrough — about 60 seconds
         </div>
       </div>
       {state !== "idle" && state !== "loading" && (
