@@ -357,7 +357,7 @@ const SellMyFoodTruck = () => {
                       </p>
                       <Button variant="glass-cta" asChild className="w-full">
                         <Link to="/tools/pricepilot">
-                          Get AI Suggestions
+                          Get Pricing Suggestions
                           <ChevronRight className="ml-1 h-4 w-4" />
                         </Link>
                       </Button>
