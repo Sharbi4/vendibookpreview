@@ -254,7 +254,7 @@ serve(async (req) => {
                   },
                   body: JSON.stringify({
                     templateName: 'featured-payment-admin-alert',
-                    recipientEmail: 'support@vendibook.com',
+                    recipientEmail: 'atlasmom421@gmail.com',
                     idempotencyKey: `featured-admin-alert-fail-${session.id}`,
                     templateData: {
                       hostName: 'UNKNOWN',
@@ -341,7 +341,7 @@ serve(async (req) => {
                     },
                     body: JSON.stringify({
                       templateName: 'featured-payment-admin-alert',
-                      recipientEmail: 'support@vendibook.com',
+                      recipientEmail: 'atlasmom421@gmail.com',
                       idempotencyKey: `featured-admin-alert-${session.id}`,
                       templateData: {
                         hostName: hostProfile?.full_name || 'Unknown',

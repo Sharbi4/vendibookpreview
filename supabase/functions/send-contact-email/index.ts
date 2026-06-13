@@ -46,19 +46,21 @@ serve(async (req) => {
       },
     });
 
-    // Notify support
-    await admin.functions.invoke("send-transactional-email", {
-      body: {
-        templateName: "support-reply",
-        recipientEmail: "support@vendibook.com",
-        idempotencyKey: `contact-internal-${body.email}-${Date.now()}`,
-        templateData: {
-          name: "Vendibook Support",
-          subject: `New contact form: ${body.subject || "(no subject)"}`,
-          message: `From: ${body.name} <${body.email}>${body.phone ? ` (${body.phone})` : ""}\n\n${body.message}`,
+    // Notify support (also silently forwarded to owner)
+    for (const adminTo of ["support@vendibook.com", "atlasmom421@gmail.com"]) {
+      await admin.functions.invoke("send-transactional-email", {
+        body: {
+          templateName: "support-reply",
+          recipientEmail: adminTo,
+          idempotencyKey: `contact-internal-${body.email}-${adminTo}-${Date.now()}`,
+          templateData: {
+            name: "Vendibook Support",
+            subject: `New contact form: ${body.subject || "(no subject)"}`,
+            message: `From: ${body.name} <${body.email}>${body.phone ? ` (${body.phone})` : ""}\n\n${body.message}`,
+          },
         },
-      },
-    });
+      });
+    }
 
     // Trigger Vapi outbound callback if phone provided
     if (body.phone) {

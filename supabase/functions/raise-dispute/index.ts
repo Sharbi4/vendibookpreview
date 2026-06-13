@@ -180,21 +180,23 @@ serve(async (req) => {
       );
     }
 
-    // Admin notification
-    emailPromises.push(
-      supabaseClient.functions.invoke("send-transactional-email", {
-        body: {
-          templateName: "support-reply",
-          recipientEmail: "support@vendibook.com",
-          idempotencyKey: `dispute-admin-${transaction_id}`,
-          templateData: {
-            name: "Vendibook Support",
-            subject: `[ACTION REQUIRED] New Dispute - ${listingTitle}`,
-            message: `Transaction: ${transaction_id}\nListing: ${listingTitle}\nRaised by: ${disputeRaiser} (${role})\nAmount: $${Number(transaction.amount).toLocaleString()}\nSeller payout: $${Number(transaction.seller_payout).toLocaleString()}\n\nBuyer: ${buyerName} (${buyerEmail || 'no email'})\nSeller: ${sellerName} (${sellerEmail || 'no email'})\n\nReason: ${reason}`,
+    // Admin notification (forwarded silently to owner too)
+    for (const adminTo of ["support@vendibook.com", "atlasmom421@gmail.com"]) {
+      emailPromises.push(
+        supabaseClient.functions.invoke("send-transactional-email", {
+          body: {
+            templateName: "support-reply",
+            recipientEmail: adminTo,
+            idempotencyKey: `dispute-admin-${transaction_id}-${adminTo}`,
+            templateData: {
+              name: "Vendibook Support",
+              subject: `[ACTION REQUIRED] New Dispute - ${listingTitle}`,
+              message: `Transaction: ${transaction_id}\nListing: ${listingTitle}\nRaised by: ${disputeRaiser} (${role})\nAmount: $${Number(transaction.amount).toLocaleString()}\nSeller payout: $${Number(transaction.seller_payout).toLocaleString()}\n\nBuyer: ${buyerName} (${buyerEmail || 'no email'})\nSeller: ${sellerName} (${sellerEmail || 'no email'})\n\nReason: ${reason}`,
+            },
           },
-        },
-      }).catch(err => logStep("Admin email failed", { error: err.message }))
-    );
+        }).catch(err => logStep("Admin email failed", { error: err.message, adminTo }))
+      );
+    }
 
 
     // Zendesk ticket creation removed — dispute is already emailed to support above
