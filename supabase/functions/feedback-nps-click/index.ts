@@ -38,24 +38,26 @@ Deno.serve(async (req) => {
         .eq('id', row.id);
 
       // Best-effort instant admin ping — lets us see signal even if no comment follows.
-      supabase.functions.invoke('send-transactional-email', {
-        body: {
-          templateName: 'feedback-received-admin',
-          recipientEmail: 'support@vendibook.com',
-          idempotencyKey: `feedback-admin-nps-${row.id}-${score}`,
-          templateData: {
-            fromEmail: row.email || meta.recipient_email,
-            fromName: meta.recipient_name,
-            rating: null,
-            nps: score,
-            message: '(NPS click from email — no written comment yet)',
-            contextType: 'broadcast_nps',
-            contextLabel: 'One-tap email NPS',
-            businessType: null,
-            canShare: false,
+      for (const adminTo of ['support@vendibook.com', 'atlasmom421@gmail.com']) {
+        supabase.functions.invoke('send-transactional-email', {
+          body: {
+            templateName: 'feedback-received-admin',
+            recipientEmail: adminTo,
+            idempotencyKey: `feedback-admin-nps-${row.id}-${score}-${adminTo}`,
+            templateData: {
+              fromEmail: row.email || meta.recipient_email,
+              fromName: meta.recipient_name,
+              rating: null,
+              nps: score,
+              message: '(NPS click from email — no written comment yet)',
+              contextType: 'broadcast_nps',
+              contextLabel: 'One-tap email NPS',
+              businessType: null,
+              canShare: false,
+            },
           },
-        },
-      }).catch(() => {});
+        }).catch(() => {});
+      }
     }
   } catch (_) {
     // swallow — always redirect somewhere useful

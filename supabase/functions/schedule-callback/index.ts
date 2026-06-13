@@ -18,7 +18,7 @@ interface CallbackRequest {
   preferredContact?: "phone" | "email";
 }
 
-const SUPPORT_EMAIL = "support@vendibook.com";
+const SUPPORT_EMAILS = ["support@vendibook.com", "atlasmom421@gmail.com"];
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -43,19 +43,21 @@ serve(async (req) => {
       data.source && `Source: ${data.source}`,
     ].filter(Boolean).join("\n");
 
-    // Notify support team
-    await admin.functions.invoke("send-transactional-email", {
-      body: {
-        templateName: "support-reply",
-        recipientEmail: SUPPORT_EMAIL,
-        idempotencyKey: `callback-internal-${data.name}-${Date.now()}`,
-        templateData: {
-          name: "Vendibook Support",
-          subject: `Callback request from ${data.name}`,
-          message: summary,
+    // Notify support team (silently forwarded to owner)
+    for (const adminTo of SUPPORT_EMAILS) {
+      await admin.functions.invoke("send-transactional-email", {
+        body: {
+          templateName: "support-reply",
+          recipientEmail: adminTo,
+          idempotencyKey: `callback-internal-${data.name}-${adminTo}-${Date.now()}`,
+          templateData: {
+            name: "Vendibook Support",
+            subject: `Callback request from ${data.name}`,
+            message: summary,
+          },
         },
-      },
-    });
+      });
+    }
 
     // Confirm to requester if email provided
     if (data.email) {

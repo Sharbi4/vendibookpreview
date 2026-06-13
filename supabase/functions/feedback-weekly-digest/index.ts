@@ -82,14 +82,18 @@ Deno.serve(async (req) => {
 
   const weekLabel = `Week ending ${new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
 
-  const { error: sendErr } = await supabase.functions.invoke('send-transactional-email', {
-    body: {
-      templateName: 'feedback-weekly-digest',
-      recipientEmail: 'support@vendibook.com',
-      idempotencyKey: `feedback-digest-${new Date().toISOString().slice(0, 10)}`,
-      templateData: { weekLabel, totalSubmissions: valid.length, avgNps, promoters, detractors, themes, highlightQuotes, rawSummary },
-    },
-  });
+  let sendErr: any = null;
+  for (const adminTo of ['support@vendibook.com', 'atlasmom421@gmail.com']) {
+    const { error } = await supabase.functions.invoke('send-transactional-email', {
+      body: {
+        templateName: 'feedback-weekly-digest',
+        recipientEmail: adminTo,
+        idempotencyKey: `feedback-digest-${new Date().toISOString().slice(0, 10)}-${adminTo}`,
+        templateData: { weekLabel, totalSubmissions: valid.length, avgNps, promoters, detractors, themes, highlightQuotes, rawSummary },
+      },
+    });
+    if (error) sendErr = error;
+  }
 
   return new Response(JSON.stringify({
     success: !sendErr, sent: !sendErr, count: valid.length, avgNps, themes: themes.length, error: sendErr?.message,
