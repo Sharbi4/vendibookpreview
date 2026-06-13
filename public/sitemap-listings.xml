@@ -310,7 +310,7 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/a3ead971-38c7-4c0c-8f3f-2b02185c7c2f</loc>
-    <lastmod>2026-06-12</lastmod>
+    <lastmod>2026-06-13</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
@@ -342,6 +342,17 @@
     </image:image>
   </url>
   <url>
+    <loc>https://vendibook.com/listing/cc3c8214-e327-4670-99ed-e1425494cc8c</loc>
+    <lastmod>2026-06-13</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/f1258300-750f-4bac-8924-2a0194f88e75/cc3c8214-e327-4670-99ed-e1425494cc8c/1780270287384-t5vsna.jpeg</image:loc>
+      <image:title>Food Trailer</image:title>
+      <image:caption>Food Trailer on Vendibook</image:caption>
+    </image:image>
+  </url>
+  <url>
     <loc>https://vendibook.com/listing/9c92006e-fe3c-4e52-9474-51d4a950eb26</loc>
     <lastmod>2026-05-30</lastmod>
     <changefreq>weekly</changefreq>
@@ -350,17 +361,6 @@
       <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/8d9b76c5-c6bd-44cd-bbe6-c5e2a6b3c575/9c92006e-fe3c-4e52-9474-51d4a950eb26/1779912483211-eswm5l.jpg</image:loc>
       <image:title>Turnkey 24 ft Fully Loaded Kitchen Food Trailer – Ready for Serious Business!</image:title>
       <image:caption>Turnkey 24 ft Fully Loaded Kitchen Food Trailer – Ready for Serious Business! on Vendibook</image:caption>
-    </image:image>
-  </url>
-  <url>
-    <loc>https://vendibook.com/listing/cc3c8214-e327-4670-99ed-e1425494cc8c</loc>
-    <lastmod>2026-06-11</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/f1258300-750f-4bac-8924-2a0194f88e75/cc3c8214-e327-4670-99ed-e1425494cc8c/1780270287384-t5vsna.jpeg</image:loc>
-      <image:title>Food Trailer</image:title>
-      <image:caption>Food Trailer on Vendibook</image:caption>
     </image:image>
   </url>
   <url>
@@ -409,7 +409,7 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/24594068-25df-4bbe-b142-7bad96aacf39</loc>
-    <lastmod>2026-06-12</lastmod>
+    <lastmod>2026-06-13</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
