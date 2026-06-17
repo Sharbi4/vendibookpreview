@@ -709,14 +709,24 @@ const BookingCheckout = () => {
                 </div>
               </div>
             ) : (
-              <div className="border border-primary/30 rounded-2xl overflow-hidden bg-primary/5 p-5">
-                <div className="flex items-center justify-between">
-                  <p className="text-sm text-muted-foreground">
-                    Fill out the details below — you'll sign in when you're ready to submit.
-                  </p>
+              <div className="border border-primary/40 rounded-2xl overflow-hidden bg-primary/[0.06] p-5">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-semibold text-foreground">Sign in to complete your booking</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      Sign in now so we keep your details when you return — no need to retype anything.
+                    </p>
+                  </div>
+                  <Link
+                    to={`/auth?redirect=/checkout/${listingId}`}
+                    className="shrink-0 inline-flex items-center justify-center h-10 px-4 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition-opacity"
+                  >
+                    Sign in / Create account
+                  </Link>
                 </div>
               </div>
             )}
+
 
             {/* Step 2: Business Info (for food-related categories) */}
             {requiresBusinessInfo && (
