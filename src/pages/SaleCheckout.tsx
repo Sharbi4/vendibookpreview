@@ -590,6 +590,24 @@ const SaleCheckout = () => {
             Back to listing
           </button>
 
+          {/* Guest sign-in prompt — surfaced BEFORE the wizard so buyers don't lose typed info at the Pay step */}
+          {!user && (
+            <div className="mb-4 rounded-xl border border-primary/40 bg-primary/[0.06] p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <div>
+                <div className="text-sm font-semibold text-foreground">Sign in to complete checkout</div>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  An account is required to pay securely. Sign in now so we can keep your details when you return.
+                </p>
+              </div>
+              <button
+                onClick={() => navigate(`/auth?redirect=/checkout/${listingId}`)}
+                className="shrink-0 h-10 px-4 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition-opacity"
+              >
+                Sign in / Create account
+              </button>
+            </div>
+          )}
+
           <div className="grid lg:grid-cols-5 gap-8">
             {/* Main Wizard - Left Side */}
             <div className="lg:col-span-3">
