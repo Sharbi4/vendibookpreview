@@ -70,10 +70,15 @@ interface LicenseResult {
   businessType: string;
   overview: string;
   disclaimer: string;
+  lastUpdated?: string;
   licenses: Array<{
     name: string; category: string; description: string; issuingAuthority: string;
     estimatedCost: string; renewalPeriod: string; processingTime: string;
-    requirements: string[]; websiteHint: string; priority: string;
+    requirements: string[];
+    officialUrl?: string;
+    websiteHint?: string;
+    sourceIndex?: number | null;
+    priority: string;
   }>;
   insuranceRequirements: Array<{ type: string; minimumCoverage: string; description: string }>;
   inspectionRequirements: Array<{ type: string; frequency: string; authority: string }>;
@@ -81,7 +86,8 @@ interface LicenseResult {
   estimatedTimeline: string;
   tips: string[];
   commonMistakes: string[];
-  helpfulResources: Array<{ name: string; description: string; searchTerm: string }>;
+  sources?: Array<{ index: number; title: string; url: string; agency?: string }>;
+  helpfulResources: Array<{ name: string; description: string; url?: string; searchTerm?: string }>;
 }
 
 const PermitPath = () => {
@@ -362,11 +368,66 @@ const PermitPath = () => {
                                 <span className="text-muted-foreground">Renewal:</span> {license.renewalPeriod}
                               </div>
                             </div>
+                            {license.officialUrl && (
+                              <a
+                                href={license.officialUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1.5 mt-3 text-sm font-medium text-primary hover:underline"
+                              >
+                                <ExternalLink className="h-3.5 w-3.5" />
+                                Open official source
+                              </a>
+                            )}
                           </motion.div>
                         ))}
                       </div>
                     </CardContent>
                   </Card>
+
+                  {/* Live Sources */}
+                  {licenseResult.sources && licenseResult.sources.length > 0 && (
+                    <Card className="border-0 shadow-lg">
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                          <ExternalLink className="h-5 w-5 text-primary" />
+                          Verified Sources
+                          {licenseResult.lastUpdated && (
+                            <Badge variant="secondary" className="ml-2 font-normal">
+                              Updated {licenseResult.lastUpdated}
+                            </Badge>
+                          )}
+                        </CardTitle>
+                        <CardDescription>
+                          Pulled live from official government and industry pages at the time of search.
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <ul className="space-y-2">
+                          {licenseResult.sources.map((s) => (
+                            <li key={s.index} className="flex items-start gap-3 text-sm">
+                              <span className="mt-0.5 inline-flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
+                                {s.index}
+                              </span>
+                              <div className="min-w-0 flex-1">
+                                <a
+                                  href={s.url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="font-medium text-foreground hover:text-primary hover:underline break-words"
+                                >
+                                  {s.title || s.url}
+                                </a>
+                                {s.agency && (
+                                  <p className="text-xs text-muted-foreground">{s.agency}</p>
+                                )}
+                              </div>
+                            </li>
+                          ))}
+                        </ul>
+                      </CardContent>
+                    </Card>
+                  )}
 
                   {/* Government Resources */}
                   <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-primary/10">
