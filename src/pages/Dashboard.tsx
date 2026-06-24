@@ -74,7 +74,7 @@ const Dashboard = () => {
     }
   }, [user, isLoading, navigate]);
 
-  if (isLoading || personaLoading) {
+  if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-4">
@@ -84,6 +84,7 @@ const Dashboard = () => {
       </div>
     );
   }
+
 
   if (!user) return null;
 
