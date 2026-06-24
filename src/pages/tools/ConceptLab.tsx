@@ -28,6 +28,7 @@ import {
 } from 'lucide-react';
 import ToolCrossLinks from '@/components/tools/ToolCrossLinks';
 import { OutputHighlightBadges } from '@/components/tools/OutputCard';
+import { SourcesSection, type ResearchSource } from '@/components/tools/SourcesSection';
 
 const pageJsonLd = {
   "@context": "https://schema.org",
@@ -43,9 +44,15 @@ const pageJsonLd = {
 interface BusinessIdea {
   name: string; concept: string; targetMarket: string;
   menuHighlights: string[]; estimatedStartup: string; uniqueAngle: string;
+  estimatedMargins?: string; trendSignal?: string;
 }
 
-interface BusinessIdeaResult { ideas: BusinessIdea[] }
+interface BusinessIdeaResult {
+  ideas: BusinessIdea[];
+  marketContext?: string;
+  sources?: ResearchSource[];
+  lastUpdated?: string;
+}
 
 const ConceptLab = () => {
   const { toast } = useToast();
@@ -326,6 +333,12 @@ const ConceptLab = () => {
                     ))}
                   </div>
                 </motion.div>
+              )}
+
+              {ideaResult && (
+                <div className="mt-8 max-w-3xl mx-auto">
+                  <SourcesSection sources={ideaResult.sources} lastUpdated={ideaResult.lastUpdated} label="Trend Sources" />
+                </div>
               )}
 
               {ideaResult && (
