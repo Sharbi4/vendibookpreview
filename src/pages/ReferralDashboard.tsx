@@ -37,10 +37,13 @@ const STATUS_STYLE: Record<string, string> = {
   voided: "bg-red-100 text-red-700",
 };
 
+const EMPTY_REFERRALS: any[] = [];
+
 const ReferralDashboard = () => {
   const { user, isLoading: authLoading } = useAuth();
   const { data: code } = useReferralCode();
-  const { data: referrals = [] } = useMyReferrals();
+  const { data: referralsData } = useMyReferrals();
+  const referrals = referralsData ?? EMPTY_REFERRALS;
   const stripe = useStripeConnect();
   const { data: programEnabled = true } = useFeatureFlag("referral_program_enabled", true);
   const acceptTermsMut = useAcceptReferralTerms();
@@ -51,7 +54,6 @@ const ReferralDashboard = () => {
   const [needsTerms, setNeedsTerms] = useState(false);
   const [accepted, setAccepted] = useState(false);
   const [payouts, setPayouts] = useState<any[]>([]);
-  const [stats, setStats] = useState({ total: 0, pending: 0, available: 0 });
 
   // Check terms acceptance
   useEffect(() => {
@@ -81,11 +83,11 @@ const ReferralDashboard = () => {
     })();
   }, [user?.id]);
 
-  useEffect(() => {
+  const stats = useMemo(() => {
     const total = referrals.filter((r: any) => r.status === "paid").reduce((s, r: any) => s + Number(r.reward_amount ?? r.referrer_reward_amount ?? 0), 0);
     const pending = referrals.filter((r: any) => ["qualified", "on_hold", "signed_up"].includes(r.status)).reduce((s, r: any) => s + Number(r.reward_amount ?? r.referrer_reward_amount ?? 0), 0);
     const available = referrals.filter((r: any) => r.status === "qualified" && (!r.on_hold_until || new Date(r.on_hold_until) <= new Date())).reduce((s, r: any) => s + Number(r.reward_amount ?? r.referrer_reward_amount ?? 0), 0);
-    setStats({ total, pending, available });
+    return { total, pending, available };
   }, [referrals]);
 
   const link = useMemo(() => {
