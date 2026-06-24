@@ -37,10 +37,13 @@ const STATUS_STYLE: Record<string, string> = {
   voided: "bg-red-100 text-red-700",
 };
 
+const EMPTY_REFERRALS: any[] = [];
+
 const ReferralDashboard = () => {
   const { user, isLoading: authLoading } = useAuth();
   const { data: code } = useReferralCode();
-  const { data: referrals = [] } = useMyReferrals();
+  const { data: referralsData } = useMyReferrals();
+  const referrals = referralsData ?? EMPTY_REFERRALS;
   const stripe = useStripeConnect();
   const { data: programEnabled = true } = useFeatureFlag("referral_program_enabled", true);
   const acceptTermsMut = useAcceptReferralTerms();
@@ -51,7 +54,6 @@ const ReferralDashboard = () => {
   const [needsTerms, setNeedsTerms] = useState(false);
   const [accepted, setAccepted] = useState(false);
   const [payouts, setPayouts] = useState<any[]>([]);
-  const [stats, setStats] = useState({ total: 0, pending: 0, available: 0 });
 
   // Check terms acceptance
   useEffect(() => {
