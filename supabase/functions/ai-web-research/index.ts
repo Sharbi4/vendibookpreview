@@ -1,8 +1,28 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import {
+  gatherSources,
+  formatSourceContext,
+  sourcesToCitations,
+  todayISO,
+} from "../_shared/firecrawl-research.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
+
+const TODAY = todayISO();
+const YEAR = new Date().getUTCFullYear();
+
+const CATEGORY_CONTEXT: Record<string, string> = {
+  equipment: "commercial kitchen equipment, food truck equipment, food service machinery",
+  maintenance: "equipment maintenance, cleaning procedures, repair guides",
+  safety: "food safety, fire safety, health codes, OSHA regulations",
+  business: "food truck business, mobile food business, restaurant industry",
+  marketing: "food truck marketing, social media, customer engagement",
+  regulations: "food service regulations, permits, licensing, compliance",
+  recipes: "commercial recipes, menu development, food preparation",
+  general: "food truck and mobile food business industry",
 };
 
 serve(async (req) => {
@@ -12,7 +32,6 @@ serve(async (req) => {
 
   try {
     const { query, category } = await req.json();
-
     if (!query || query.trim().length === 0) {
       return new Response(
         JSON.stringify({ error: "Search query is required" }),
@@ -22,68 +41,58 @@ serve(async (req) => {
 
     const trimmedQuery = query.trim().slice(0, 500);
     const trimmedCategory = category?.trim() || "general";
+    const contextHint = CATEGORY_CONTEXT[trimmedCategory] || CATEGORY_CONTEXT.general;
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) {
-      throw new Error("LOVABLE_API_KEY is not configured");
-    }
+    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
-    const categoryContext: Record<string, string> = {
-      equipment: "commercial kitchen equipment, food truck equipment, food service machinery",
-      maintenance: "equipment maintenance, cleaning procedures, repair guides",
-      safety: "food safety, fire safety, health codes, OSHA regulations",
-      business: "food truck business, mobile food business, restaurant industry",
-      marketing: "food truck marketing, social media, customer engagement",
-      regulations: "food service regulations, permits, licensing, compliance",
-      recipes: "commercial recipes, menu development, food preparation",
-      general: "food truck and mobile food business industry",
-    };
+    // 1) Live grounding — pull current sources for the query.
+    const sources = await gatherSources(
+      [
+        `${trimmedQuery} ${YEAR}`,
+        `${trimmedQuery} ${contextHint} ${YEAR}`,
+        `${trimmedQuery} best practices ${YEAR}`,
+      ],
+      4,
+      10,
+    );
+    const sourceContext = formatSourceContext(sources);
 
-    const contextHint = categoryContext[trimmedCategory] || categoryContext.general;
+    const systemPrompt = `You are an expert research analyst for the mobile food industry. Today is ${TODAY}. Synthesize grounded, current answers from the SOURCE MATERIAL provided.
 
-    const systemPrompt = `You are an expert research assistant specializing in the mobile food industry, commercial kitchens, food trucks, and food service businesses. You provide comprehensive, well-researched answers with practical insights.
+Rules:
+- Ground every specific fact, statistic, or rule in the sources. Cite inline with [N] markers matching the Source numbers.
+- If a claim is not in the sources, mark it "(general guidance — verify locally)".
+- Prefer .gov, industry associations, and reputable trade publications over forum posts.
+- Be specific, actionable, and operator-focused — not generic.
 
-Your responses should:
-- Be thorough and well-organized
-- Include practical, actionable information
-- Reference industry best practices
-- Provide tips from experienced operators
-- Include relevant statistics or data when applicable
-- Be formatted for easy reading
-
-Always respond with valid JSON in this exact format:
+Respond ONLY with valid JSON:
 {
-  "query": "The search query",
-  "title": "A clear title for the results",
-  "summary": "A concise summary of findings (2-3 sentences)",
+  "query": "the original query",
+  "title": "clear result title",
+  "summary": "2-3 sentence executive summary with [N] citations",
   "sections": [
-    {
-      "heading": "Section heading",
-      "content": "Detailed content for this section",
-      "keyPoints": ["key point 1", "key point 2"]
-    }
+    { "heading": "section heading", "content": "detail with [N] citations", "keyPoints": ["point 1", "point 2"] }
   ],
-  "quickFacts": [
-    {
-      "label": "Fact label",
-      "value": "Fact value"
-    }
-  ],
-  "actionItems": ["Action 1", "Action 2"],
-  "relatedTopics": ["Related topic 1", "Related topic 2"],
-  "sources": ["Suggested source types to verify information"],
-  "expertTips": ["Pro tip 1", "Pro tip 2"]
+  "quickFacts": [{ "label": "fact label", "value": "fact value" }],
+  "actionItems": ["action 1", "action 2"],
+  "relatedTopics": ["topic 1", "topic 2"],
+  "expertTips": ["tip 1", "tip 2"],
+  "lastUpdated": "${TODAY}"
 }`;
 
-    const userPrompt = `Research and provide comprehensive information about:
+    const userPrompt = `Research and answer comprehensively:
 
 "${trimmedQuery}"
 
-Context: This is related to ${contextHint}.
+Context category: ${contextHint}.
 
-Provide detailed, practical information that would help a food truck operator, commercial kitchen manager, or mobile food business owner. Include best practices, industry insights, and actionable recommendations.`;
+Tailor for a food truck operator, commercial kitchen manager, or mobile food business owner. Include current best practices, industry data, and actionable recommendations.
 
-    console.log("Generating web research for:", trimmedQuery);
+SOURCE MATERIAL (live web results, ${TODAY}):
+${sourceContext}`;
+
+    console.log("ai-web-research grounded query:", trimmedQuery, `(${sources.length} sources)`);
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -92,11 +101,12 @@ Provide detailed, practical information that would help a food truck operator, c
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
+        model: "google/gemini-3-pro-preview",
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt },
         ],
+        response_format: { type: "json_object" },
       }),
     });
 
@@ -120,20 +130,19 @@ Provide detailed, practical information that would help a food truck operator, c
 
     const data = await response.json();
     const content = data.choices?.[0]?.message?.content;
+    if (!content) throw new Error("No content in AI response");
 
-    if (!content) {
-      throw new Error("No content in AI response");
+    let result: any;
+    try {
+      result = JSON.parse(content);
+    } catch {
+      const m = content.match(/\{[\s\S]*\}/);
+      if (!m) throw new Error("Could not parse AI response");
+      result = JSON.parse(m[0]);
     }
 
-    // Parse the JSON response
-    const jsonMatch = content.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) {
-      throw new Error("Could not parse AI response");
-    }
-
-    const result = JSON.parse(jsonMatch[0]);
-
-    console.log("Web research generated successfully");
+    result.sources = sourcesToCitations(sources);
+    if (!result.lastUpdated) result.lastUpdated = TODAY;
 
     return new Response(JSON.stringify({ result }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
