@@ -27,6 +27,7 @@ import {
   Target
 } from 'lucide-react';
 import ToolCrossLinks from '@/components/tools/ToolCrossLinks';
+import { SourcesSection, type ResearchSource } from '@/components/tools/SourcesSection';
 
 const pageJsonLd = {
   "@context": "https://schema.org",
@@ -41,10 +42,14 @@ const pageJsonLd = {
 
 interface EquipmentGuideResult {
   title: string; equipment: string; overview: string;
-  maintenanceSchedule: { daily: string[]; weekly: string[]; monthly: string[]; quarterly: string[] };
+  maintenanceSchedule: { daily: string[]; weekly: string[]; monthly: string[]; quarterly: string[]; annually?: string[] };
   stepByStepGuide: Array<{ step: number; title: string; instructions: string; tips: string; warnings?: string }>;
   troubleshooting: Array<{ problem: string; cause: string; solution: string }>;
   safetyTips: string[]; estimatedTime: string; toolsNeeded: string[]; professionalHelpNeeded: string;
+  complianceNotes?: string[];
+  partsConsumables?: string[];
+  sources?: ResearchSource[];
+  lastUpdated?: string;
 }
 
 const POPULAR_EQUIPMENT = [
@@ -309,6 +314,24 @@ const BuildKit = () => {
                         {equipmentResult.safetyTips.map((tip, i) => <li key={i} className="flex gap-2"><span>•</span>{tip}</li>)}
                       </ul>
                     </div>
+
+                    {equipmentResult.complianceNotes && equipmentResult.complianceNotes.length > 0 && (
+                      <div className="p-4 bg-blue-50 dark:bg-blue-950 rounded-lg">
+                        <h3 className="font-semibold mb-2">Compliance Notes</h3>
+                        <ul className="text-sm space-y-1">
+                          {equipmentResult.complianceNotes.map((n, i) => <li key={i} className="flex gap-2"><span>•</span>{n}</li>)}
+                        </ul>
+                      </div>
+                    )}
+
+                    {equipmentResult.partsConsumables && equipmentResult.partsConsumables.length > 0 && (
+                      <div>
+                        <h3 className="font-semibold mb-2">Parts & Consumables</h3>
+                        <p className="text-sm text-muted-foreground">{equipmentResult.partsConsumables.join(', ')}</p>
+                      </div>
+                    )}
+
+                    <SourcesSection sources={equipmentResult.sources} lastUpdated={equipmentResult.lastUpdated} label="Manufacturer & Code Sources" />
                   </CardContent>
                 </Card>
               )}
