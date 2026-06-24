@@ -70,10 +70,15 @@ interface LicenseResult {
   businessType: string;
   overview: string;
   disclaimer: string;
+  lastUpdated?: string;
   licenses: Array<{
     name: string; category: string; description: string; issuingAuthority: string;
     estimatedCost: string; renewalPeriod: string; processingTime: string;
-    requirements: string[]; websiteHint: string; priority: string;
+    requirements: string[];
+    officialUrl?: string;
+    websiteHint?: string;
+    sourceIndex?: number | null;
+    priority: string;
   }>;
   insuranceRequirements: Array<{ type: string; minimumCoverage: string; description: string }>;
   inspectionRequirements: Array<{ type: string; frequency: string; authority: string }>;
@@ -81,7 +86,8 @@ interface LicenseResult {
   estimatedTimeline: string;
   tips: string[];
   commonMistakes: string[];
-  helpfulResources: Array<{ name: string; description: string; searchTerm: string }>;
+  sources?: Array<{ index: number; title: string; url: string; agency?: string }>;
+  helpfulResources: Array<{ name: string; description: string; url?: string; searchTerm?: string }>;
 }
 
 const PermitPath = () => {
