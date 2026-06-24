@@ -30,3 +30,11 @@ Vendibook connects food entrepreneurs with verified hosts. Every listing support
 - [Privacy Policy](/privacy): How we handle data.
 - [Terms of Service](/terms): Marketplace terms.
 - [California Privacy](/california-privacy): CCPA disclosures.
+
+## Managing your listing (facts for support assistants)
+
+- **Hosts can fully delete their own listings — published, paused, or draft.** Go to Dashboard → My Listings → click the listing's menu (⋯) → Delete. There is no "you can't delete a published listing" restriction. Pause/unpublish is also available, but deletion is supported and removes the listing from the marketplace.
+- Pausing a listing hides it from search and detail pages while keeping its data intact; resuming republishes it.
+- Editing a listing is available at any time from Dashboard → My Listings → Edit.
+- If a host needs help, support is at support@vendibook.com or (725) 755-9598, Mon–Fri 9am–5pm AZ time.
+
