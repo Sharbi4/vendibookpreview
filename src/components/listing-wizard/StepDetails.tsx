@@ -149,9 +149,12 @@ export const StepDetails: React.FC<StepDetailsProps> = ({
           onChange={(e) => updateField('title', e.target.value.slice(0, 80))}
           placeholder="e.g., 2022 Fully Equipped Taco Truck"
           className="text-lg"
+          autoFocus={!formData.title}
         />
         <p className="text-sm text-muted-foreground">
-          Make it catchy and descriptive. Include key details like year, type, or specialty.
+          This is the headline buyers and renters see first. Make it specific — include year, type, or specialty.
+          {" "}
+          <span className="hidden lg:inline">Watch it update live in the preview on the right.</span>
         </p>
       </div>
 
