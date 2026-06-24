@@ -190,7 +190,10 @@ async function main() {
   console.log(`[smoke] Dashboard routes smoke against ${BASE}`);
   console.log(`[smoke] Auth mode: ${HAS_SESSION ? "signed-in" : "anonymous (redirect-to-/auth)"}`);
 
-  const browser = await chromium.launch({ headless: true });
+  const browser = await chromium.launch({
+    headless: true,
+    executablePath: process.env.PLAYWRIGHT_CHROMIUM_PATH || undefined,
+  });
   const ctx = await browser.newContext({ viewport: { width: 1280, height: 1800 } });
   const page = await ctx.newPage();
 
