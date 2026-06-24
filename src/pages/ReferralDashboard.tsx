@@ -83,11 +83,11 @@ const ReferralDashboard = () => {
     })();
   }, [user?.id]);
 
-  useEffect(() => {
+  const stats = useMemo(() => {
     const total = referrals.filter((r: any) => r.status === "paid").reduce((s, r: any) => s + Number(r.reward_amount ?? r.referrer_reward_amount ?? 0), 0);
     const pending = referrals.filter((r: any) => ["qualified", "on_hold", "signed_up"].includes(r.status)).reduce((s, r: any) => s + Number(r.reward_amount ?? r.referrer_reward_amount ?? 0), 0);
     const available = referrals.filter((r: any) => r.status === "qualified" && (!r.on_hold_until || new Date(r.on_hold_until) <= new Date())).reduce((s, r: any) => s + Number(r.reward_amount ?? r.referrer_reward_amount ?? 0), 0);
-    setStats({ total, pending, available });
+    return { total, pending, available };
   }, [referrals]);
 
   const link = useMemo(() => {
