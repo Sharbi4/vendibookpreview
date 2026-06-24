@@ -29,6 +29,7 @@ import {
 } from 'lucide-react';
 import ToolCrossLinks from '@/components/tools/ToolCrossLinks';
 import { OutputCard, OutputSection, OutputList, OutputHighlightBadges } from '@/components/tools/OutputCard';
+import { SourcesSection, type ResearchSource } from '@/components/tools/SourcesSection';
 
 const pageJsonLd = {
   "@context": "https://schema.org",
@@ -45,7 +46,9 @@ interface WebResearchResult {
   query: string; title: string; summary: string;
   sections: Array<{ heading: string; content: string; keyPoints: string[] }>;
   quickFacts: Array<{ label: string; value: string }>;
-  actionItems: string[]; relatedTopics: string[]; sources: string[]; expertTips: string[];
+  actionItems: string[]; relatedTopics: string[]; expertTips: string[];
+  sources?: ResearchSource[];
+  lastUpdated?: string;
 }
 
 const MarketRadar = () => {
@@ -396,6 +399,11 @@ const MarketRadar = () => {
                       </Card>
                     </motion.div>
                   )}
+
+                  {/* Verified Sources */}
+                  <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}>
+                    <SourcesSection sources={researchResult.sources} lastUpdated={researchResult.lastUpdated} />
+                  </motion.div>
                 </motion.div>
               )}
             </div>

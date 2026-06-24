@@ -30,6 +30,7 @@ import {
 } from 'lucide-react';
 import ToolCrossLinks from '@/components/tools/ToolCrossLinks';
 import { OutputCard, OutputMetric, OutputList, OutputSection, EmptyOutput } from '@/components/tools/OutputCard';
+import { SourcesSection, type ResearchSource } from '@/components/tools/SourcesSection';
 
 // JSON-LD structured data for SEO
 const pageJsonLd = {
@@ -58,6 +59,9 @@ interface PricingResult {
   salePrice: number | null;
   reasoning: string;
   tips: string[];
+  marketSignals?: string[];
+  sources?: ResearchSource[];
+  lastUpdated?: string;
 }
 
 const PricePilot = () => {
@@ -358,6 +362,16 @@ const PricePilot = () => {
                           <OutputList items={pricingResult.tips} variant="check" />
                         </OutputSection>
                       )}
+
+                      {/* Market signals */}
+                      {pricingResult.marketSignals && pricingResult.marketSignals.length > 0 && (
+                        <OutputSection title="Market Signals" description="What the live comps are telling us">
+                          <OutputList items={pricingResult.marketSignals} variant="check" />
+                        </OutputSection>
+                      )}
+
+                      <SourcesSection sources={pricingResult.sources} lastUpdated={pricingResult.lastUpdated} label="Pricing Sources" />
+
 
                       <Button variant="dark-shine" className="w-full" asChild>
                         <Link to="/host">

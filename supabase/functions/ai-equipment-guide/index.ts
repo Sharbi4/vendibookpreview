@@ -1,9 +1,18 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import {
+  gatherSources,
+  formatSourceContext,
+  sourcesToCitations,
+  todayISO,
+} from "../_shared/firecrawl-research.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
+
+const TODAY = todayISO();
+const YEAR = new Date().getUTCFullYear();
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -25,61 +34,73 @@ serve(async (req) => {
     const trimmedType = maintenanceType?.trim() || "general";
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) {
-      throw new Error("LOVABLE_API_KEY is not configured");
-    }
+    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
-    const systemPrompt = `You are an expert commercial kitchen equipment technician and maintenance specialist. You provide detailed, practical maintenance guides for food truck, food trailer, and commercial kitchen equipment.
+    // Live grounding — pull manufacturer/manual/maintenance docs.
+    const focusQuery =
+      trimmedType === "troubleshooting"
+        ? `${trimmedEquipment} troubleshooting ${trimmedIssue || "common problems"} ${YEAR}`
+        : trimmedType === "preventive"
+          ? `${trimmedEquipment} preventive maintenance schedule ${YEAR}`
+          : `${trimmedEquipment} maintenance guide manual ${YEAR}`;
 
-Your responses should be:
-- Practical and actionable
-- Safety-focused with proper warnings
-- Include step-by-step instructions
-- Cover preventive maintenance schedules
-- Include troubleshooting tips
-- Reference industry best practices
+    const sources = await gatherSources(
+      [
+        focusQuery,
+        `${trimmedEquipment} commercial kitchen maintenance best practices`,
+        `${trimmedEquipment} safety inspection NFPA OSHA`,
+      ],
+      3,
+      8,
+    );
+    const sourceContext = formatSourceContext(sources);
 
-Always respond with valid JSON in this exact format:
+    const systemPrompt = `You are a master commercial kitchen and mobile food equipment technician. Today is ${TODAY}. You produce accurate, safety-first maintenance guides grounded in manufacturer docs and industry standards (NFPA 96, OSHA, NSF).
+
+Rules:
+- Ground specific intervals, torque specs, voltages, refrigerant types, and code citations in the SOURCE MATERIAL when available; cite with [N] markers.
+- If a spec isn't in the sources, give a conservative general best-practice and mark it "(verify in your unit's manual)".
+- Always include lockout/tagout, gas shut-off, and PPE warnings where relevant.
+- Tell the operator when a licensed technician is required (gas, refrigerant, high-voltage, hood suppression).
+
+Respond ONLY with valid JSON:
 {
-  "title": "Maintenance guide title",
-  "equipment": "Equipment name",
-  "overview": "Brief overview of the equipment and its importance",
+  "title": "guide title",
+  "equipment": "${trimmedEquipment}",
+  "overview": "1-2 sentence equipment role + why maintenance matters",
   "maintenanceSchedule": {
-    "daily": ["task 1", "task 2"],
-    "weekly": ["task 1", "task 2"],
-    "monthly": ["task 1", "task 2"],
-    "quarterly": ["task 1", "task 2"]
+    "daily": ["task 1"],
+    "weekly": ["task 1"],
+    "monthly": ["task 1"],
+    "quarterly": ["task 1"],
+    "annually": ["task 1"]
   },
   "stepByStepGuide": [
-    {
-      "step": 1,
-      "title": "Step title",
-      "instructions": "Detailed instructions",
-      "tips": "Pro tips for this step",
-      "warnings": "Safety warnings if applicable"
-    }
+    { "step": 1, "title": "step title", "instructions": "detailed steps with [N] citations", "tips": "pro tip", "warnings": "safety warning" }
   ],
   "troubleshooting": [
-    {
-      "problem": "Common problem",
-      "cause": "Likely cause",
-      "solution": "How to fix it"
-    }
+    { "problem": "problem", "cause": "likely cause", "solution": "fix with [N] citation if sourced" }
   ],
-  "safetyTips": ["tip 1", "tip 2"],
-  "estimatedTime": "Time estimate",
-  "toolsNeeded": ["tool 1", "tool 2"],
-  "professionalHelpNeeded": "When to call a professional"
+  "safetyTips": ["tip 1"],
+  "complianceNotes": ["NFPA/OSHA/health-code reference if applicable"],
+  "estimatedTime": "time estimate",
+  "toolsNeeded": ["tool 1"],
+  "partsConsumables": ["filter type", "gasket type"],
+  "professionalHelpNeeded": "when to call a licensed tech",
+  "lastUpdated": "${TODAY}"
 }`;
 
-    const userPrompt = `Create a comprehensive maintenance guide for:
+    const userPrompt = `Create a ${YEAR} maintenance guide for:
 Equipment: ${trimmedEquipment}
 ${trimmedIssue ? `Specific Issue/Concern: ${trimmedIssue}` : ""}
 Maintenance Focus: ${trimmedType === "preventive" ? "Preventive maintenance and care" : trimmedType === "troubleshooting" ? "Troubleshooting and repairs" : "General maintenance and care"}
 
-Provide detailed, practical guidance that a food truck operator or commercial kitchen manager can follow. Include safety precautions and when to seek professional help.`;
+Tailor for a food truck operator or commercial kitchen manager working in the field.
 
-    console.log("Generating equipment guide for:", trimmedEquipment);
+SOURCE MATERIAL (live web results, ${TODAY}):
+${sourceContext}`;
+
+    console.log("ai-equipment-guide grounded:", trimmedEquipment, `(${sources.length} sources)`);
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -88,11 +109,12 @@ Provide detailed, practical guidance that a food truck operator or commercial ki
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
+        model: "google/gemini-3-pro-preview",
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt },
         ],
+        response_format: { type: "json_object" },
       }),
     });
 
@@ -116,20 +138,19 @@ Provide detailed, practical guidance that a food truck operator or commercial ki
 
     const data = await response.json();
     const content = data.choices?.[0]?.message?.content;
+    if (!content) throw new Error("No content in AI response");
 
-    if (!content) {
-      throw new Error("No content in AI response");
+    let result: any;
+    try {
+      result = JSON.parse(content);
+    } catch {
+      const m = content.match(/\{[\s\S]*\}/);
+      if (!m) throw new Error("Could not parse AI response");
+      result = JSON.parse(m[0]);
     }
 
-    // Parse the JSON response
-    const jsonMatch = content.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) {
-      throw new Error("Could not parse AI response");
-    }
-
-    const result = JSON.parse(jsonMatch[0]);
-
-    console.log("Equipment guide generated successfully");
+    result.sources = sourcesToCitations(sources);
+    if (!result.lastUpdated) result.lastUpdated = TODAY;
 
     return new Response(JSON.stringify({ result }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
