@@ -277,7 +277,7 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/ff1b1dc3-6815-44fa-bce2-c7dd2ffd73c0</loc>
-    <lastmod>2026-06-23</lastmod>
+    <lastmod>2026-06-24</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
@@ -310,24 +310,13 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/5caa1345-be50-46b0-93bf-ce6f4a6ae8d2</loc>
-    <lastmod>2026-06-23</lastmod>
+    <lastmod>2026-06-24</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
       <image:loc>https://images.unsplash.com/photo-1513104890138-7c749659a591?w=800</image:loc>
       <image:title>Wood-Fired Pizza Trailer</image:title>
       <image:caption>Wood-Fired Pizza Trailer in Dallas, TX on Vendibook</image:caption>
-    </image:image>
-  </url>
-  <url>
-    <loc>https://vendibook.com/listing/a27ad5e3-5260-4af1-beca-2a13b82fd733</loc>
-    <lastmod>2026-06-23</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/ef357256-b346-4d79-8933-66e774692152/a27ad5e3-5260-4af1-beca-2a13b82fd733/1782137923457-zoqabh.jpeg</image:loc>
-      <image:title>My Food Trailer</image:title>
-      <image:caption>My Food Trailer on Vendibook</image:caption>
     </image:image>
   </url>
   <url>
@@ -339,6 +328,17 @@
       <image:loc>https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=800</image:loc>
       <image:title>Gourmet Coffee Cart - Complete Setup</image:title>
       <image:caption>Gourmet Coffee Cart - Complete Setup in Fort Worth, TX on Vendibook</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://vendibook.com/listing/a27ad5e3-5260-4af1-beca-2a13b82fd733</loc>
+    <lastmod>2026-06-24</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/ef357256-b346-4d79-8933-66e774692152/a27ad5e3-5260-4af1-beca-2a13b82fd733/1782137923457-zoqabh.jpeg</image:loc>
+      <image:title>My Food Trailer</image:title>
+      <image:caption>My Food Trailer on Vendibook</image:caption>
     </image:image>
   </url>
   <url>
@@ -405,17 +405,6 @@
       <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/f1258300-750f-4bac-8924-2a0194f88e75/cc3c8214-e327-4670-99ed-e1425494cc8c/1780270287384-t5vsna.jpeg</image:loc>
       <image:title>Food Trailer</image:title>
       <image:caption>Food Trailer on Vendibook</image:caption>
-    </image:image>
-  </url>
-  <url>
-    <loc>https://vendibook.com/listing/05492ba1-7205-491b-aaf4-ccaaa071ee7d</loc>
-    <lastmod>2026-06-24</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/924e1f23-b87d-4b7f-8ff9-30228d196180/05492ba1-7205-491b-aaf4-ccaaa071ee7d/1768968639494-8v03i6.jpg</image:loc>
-      <image:title> 2025 food trailer</image:title>
-      <image:caption> 2025 food trailer in Santa Cruz, CA on Vendibook</image:caption>
     </image:image>
   </url>
   <url>
@@ -584,17 +573,6 @@
     </image:image>
   </url>
   <url>
-    <loc>https://vendibook.com/listing/67b22e91-5540-4c75-a1d7-8d60f04afc22</loc>
-    <lastmod>2026-06-23</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/924e1f23-b87d-4b7f-8ff9-30228d196180/67b22e91-5540-4c75-a1d7-8d60f04afc22/1768968387135-z71ey.jpg</image:loc>
-      <image:title>Hot dogs and burgers cart</image:title>
-      <image:caption>Hot dogs and burgers cart on Vendibook</image:caption>
-    </image:image>
-  </url>
-  <url>
     <loc>https://vendibook.com/listing/e746bd18-cad4-4cbf-9972-176bb8affc56</loc>
     <lastmod>2026-06-24</lastmod>
     <changefreq>weekly</changefreq>
@@ -617,6 +595,28 @@
     </image:image>
   </url>
   <url>
+    <loc>https://vendibook.com/listing/67b22e91-5540-4c75-a1d7-8d60f04afc22</loc>
+    <lastmod>2026-06-24</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/924e1f23-b87d-4b7f-8ff9-30228d196180/67b22e91-5540-4c75-a1d7-8d60f04afc22/1768968387135-z71ey.jpg</image:loc>
+      <image:title>Hot dogs and burgers cart</image:title>
+      <image:caption>Hot dogs and burgers cart on Vendibook</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://vendibook.com/listing/05492ba1-7205-491b-aaf4-ccaaa071ee7d</loc>
+    <lastmod>2026-06-24</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/924e1f23-b87d-4b7f-8ff9-30228d196180/05492ba1-7205-491b-aaf4-ccaaa071ee7d/1768968639494-8v03i6.jpg</image:loc>
+      <image:title> 2025 food trailer</image:title>
+      <image:caption> 2025 food trailer in Santa Cruz, CA on Vendibook</image:caption>
+    </image:image>
+  </url>
+  <url>
     <loc>https://vendibook.com/listing/9d335dc0-71f2-4e1c-ada1-93a4ee2f9d77</loc>
     <lastmod>2026-06-24</lastmod>
     <changefreq>weekly</changefreq>
@@ -629,7 +629,7 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/4e50a07a-6909-411b-a4e0-429fee24c52a</loc>
-    <lastmod>2026-06-23</lastmod>
+    <lastmod>2026-06-24</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
