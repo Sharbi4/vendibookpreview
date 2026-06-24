@@ -27,7 +27,7 @@ const STORAGE_KEY = 'vendibook_persona_override';
 export function useDashboardPersona() {
   const { user } = useAuth();
 
-  const { data, isLoading } = useQuery<PersonaData>({
+  const { data, isLoading, isError } = useQuery<PersonaData>({
     queryKey: ['dashboard-persona', user?.id],
     queryFn: async () => {
       if (!user) {
@@ -41,10 +41,24 @@ export function useDashboardPersona() {
           draftCount: 0,
         };
       }
-      const { data: listings } = await supabase
+      const { data: listings, error } = await supabase
         .from('listings')
         .select('id, status, category')
         .eq('host_id', user.id);
+
+      if (error) {
+        // Don't block the dashboard — log and fall back to a safe default
+        console.error('useDashboardPersona query failed:', error);
+        return {
+          persona: 'pro' as const,
+          hasPublishedListings: false,
+          hasGhostKitchen: false,
+          hasFoodTruckOrTrailer: false,
+          hasVendorSpace: false,
+          publishedCount: 0,
+          draftCount: 0,
+        };
+      }
 
       const publishedCount = listings?.filter((l) => l.status === 'published').length || 0;
       const draftCount = listings?.filter((l) => l.status === 'draft').length || 0;
@@ -74,7 +88,10 @@ export function useDashboardPersona() {
     },
     enabled: !!user,
     staleTime: 60_000,
+    retry: 1,
+    retryDelay: 500,
   });
+
 
   // Apply manual override (localStorage) on top of detected persona
   const override =
