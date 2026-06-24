@@ -211,7 +211,7 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/ede54357-a79d-4325-bb1f-153c75fd89dc</loc>
-    <lastmod>2026-06-21</lastmod>
+    <lastmod>2026-06-24</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
@@ -364,17 +364,6 @@
     </image:image>
   </url>
   <url>
-    <loc>https://vendibook.com/listing/98b799f7-067e-4b11-b912-828ef2878837</loc>
-    <lastmod>2026-06-24</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/77f157af-d5d8-4be4-95d8-a1b755c6c6a1/98b799f7-067e-4b11-b912-828ef2878837/1768891831942-kss0bf.jpg</image:loc>
-      <image:title>2004 Workhorse Food Truck (Fully Functional)</image:title>
-      <image:caption>2004 Workhorse Food Truck (Fully Functional) on Vendibook</image:caption>
-    </image:image>
-  </url>
-  <url>
     <loc>https://vendibook.com/listing/ddb8e4cb-3e16-482e-a9c5-845cd6068e4c</loc>
     <lastmod>2026-05-21</lastmod>
     <changefreq>weekly</changefreq>
@@ -386,6 +375,17 @@
     </image:image>
   </url>
   <url>
+    <loc>https://vendibook.com/listing/98b799f7-067e-4b11-b912-828ef2878837</loc>
+    <lastmod>2026-06-24</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/77f157af-d5d8-4be4-95d8-a1b755c6c6a1/98b799f7-067e-4b11-b912-828ef2878837/1768891831942-kss0bf.jpg</image:loc>
+      <image:title>2004 Workhorse Food Truck (Fully Functional)</image:title>
+      <image:caption>2004 Workhorse Food Truck (Fully Functional) on Vendibook</image:caption>
+    </image:image>
+  </url>
+  <url>
     <loc>https://vendibook.com/listing/9c92006e-fe3c-4e52-9474-51d4a950eb26</loc>
     <lastmod>2026-06-23</lastmod>
     <changefreq>weekly</changefreq>
@@ -394,17 +394,6 @@
       <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/8d9b76c5-c6bd-44cd-bbe6-c5e2a6b3c575/9c92006e-fe3c-4e52-9474-51d4a950eb26/1779912483211-eswm5l.jpg</image:loc>
       <image:title>Turnkey 24 ft Fully Loaded Kitchen Food Trailer – Ready for Serious Business!</image:title>
       <image:caption>Turnkey 24 ft Fully Loaded Kitchen Food Trailer – Ready for Serious Business! on Vendibook</image:caption>
-    </image:image>
-  </url>
-  <url>
-    <loc>https://vendibook.com/listing/cc3c8214-e327-4670-99ed-e1425494cc8c</loc>
-    <lastmod>2026-06-23</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/f1258300-750f-4bac-8924-2a0194f88e75/cc3c8214-e327-4670-99ed-e1425494cc8c/1780270287384-t5vsna.jpeg</image:loc>
-      <image:title>Food Trailer</image:title>
-      <image:caption>Food Trailer on Vendibook</image:caption>
     </image:image>
   </url>
   <url>
@@ -431,7 +420,7 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/24594068-25df-4bbe-b142-7bad96aacf39</loc>
-    <lastmod>2026-06-19</lastmod>
+    <lastmod>2026-06-24</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
@@ -625,6 +614,17 @@
       <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/f559486d-0ccb-4caf-b28d-421b960e0a4b/9d335dc0-71f2-4e1c-ada1-93a4ee2f9d77/1771959901921-4pbsb7.jpeg</image:loc>
       <image:title>FOOD TRAILER - EXP 16X 8 FT</image:title>
       <image:caption>FOOD TRAILER - EXP 16X 8 FT on Vendibook</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://vendibook.com/listing/cc3c8214-e327-4670-99ed-e1425494cc8c</loc>
+    <lastmod>2026-06-24</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/f1258300-750f-4bac-8924-2a0194f88e75/cc3c8214-e327-4670-99ed-e1425494cc8c/1780270287384-t5vsna.jpeg</image:loc>
+      <image:title>Food Trailer</image:title>
+      <image:caption>Food Trailer on Vendibook</image:caption>
     </image:image>
   </url>
   <url>
