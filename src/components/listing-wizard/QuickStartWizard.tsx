@@ -220,7 +220,7 @@ export const QuickStartWizard: React.FC = () => {
           mode: data.mode,
           category: data.category,
           status: 'draft',
-          title: `My ${CATEGORY_LABELS[data.category]}`,
+          title: '',
           description: '',
           fulfillment_type: data.category === 'ghost_kitchen' || data.category === 'vendor_lot' ? 'on_site' : 'pickup',
           address: data.location || null,
