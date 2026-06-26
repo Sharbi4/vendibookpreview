@@ -404,6 +404,7 @@ OUTPUT — return JSON ONLY in this exact shape (no prose, no markdown fences):
           "timeline_estimate": string,
           "official_url": string,
           "why_it_matters": string,
+          "pro_tip": string,
           "commonly_missed": boolean
         }
       ]
