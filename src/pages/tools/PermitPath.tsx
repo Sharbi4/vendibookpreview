@@ -352,7 +352,7 @@ const PermitPath = () => {
                   >
                     <div className="relative inline-block">
                       <PremiumIcon icon={s.icon} accent={s.accent} size="xl" hover={s.hover} delay={0.1 + i * 0.1} />
-                      <span className="absolute -top-1 -right-1 h-6 w-6 rounded-full bg-[#FF5124] text-white text-xs font-bold flex items-center justify-center ring-4 ring-[#08080a] shadow-[0_4px_14px_-2px_rgba(255,81,36,0.7)]">
+                      <span className="absolute -top-1 -right-1 h-6 w-6 rounded-full bg-white/10 border border-white/15 text-white text-xs font-bold flex items-center justify-center ring-4 ring-[#08080a]">
                         {s.n}
                       </span>
                     </div>
