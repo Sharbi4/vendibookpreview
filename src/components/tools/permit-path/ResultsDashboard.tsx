@@ -401,9 +401,10 @@ export default function ResultsDashboard({ result, readOnly = false }: Props) {
               className="rounded-2xl border border-white/10 bg-[#0d0d10] overflow-hidden"
             >
               <div className="flex items-center gap-3 p-4 sm:p-5 border-b border-white/5">
-                <div className="h-9 w-9 rounded-lg bg-[#FF5124]/10 border border-[#FF5124]/20 flex items-center justify-center shrink-0">
-                  <Building2 className="h-4 w-4 text-[#FF5124]" />
-                </div>
+                {(() => {
+                  const cv = categoryVisual(cat.name);
+                  return <PremiumIcon icon={cv.icon} accent={cv.accent} size="sm" hover="lift" />;
+                })()}
                 <div className="flex-1 min-w-0">
                   <div className="font-semibold text-white">{cat.name}</div>
                   <div className="text-xs text-white/50">{catDone} of {cat.nodes.length} complete</div>
