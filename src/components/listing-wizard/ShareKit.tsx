@@ -330,6 +330,7 @@ export const ShareKit: React.FC<ShareKitProps> = ({ listing, onClose }) => {
 const generateShareImageBlob = (
   listing: ShareKitListing,
   city: string,
+  priceText: string = '',
 ): Promise<Blob> => new Promise((resolve, reject) => {
   const canvas = document.createElement('canvas');
   const ctx = canvas.getContext('2d');
@@ -338,9 +339,7 @@ const generateShareImageBlob = (
   canvas.height = 1080;
 
   const draw = (coverImg?: HTMLImageElement) => {
-    // Background
     if (coverImg) {
-      // Cover image with dark gradient overlay
       ctx.drawImage(coverImg, 0, 0, 1080, 1080);
       const grad = ctx.createLinearGradient(0, 540, 0, 1080);
       grad.addColorStop(0, 'rgba(0,0,0,0.1)');
@@ -352,7 +351,6 @@ const generateShareImageBlob = (
       ctx.fillRect(0, 0, 1080, 1080);
     }
 
-    // Top accent
     ctx.fillStyle = '#FF5124';
     ctx.fillRect(0, 0, 1080, 8);
 
@@ -375,12 +373,20 @@ const generateShareImageBlob = (
     ctx.fillStyle = '#FFFFFF';
     ctx.font = 'bold 56px system-ui, -apple-system, sans-serif';
     const titleLines = wrapText(ctx, listing.title, 980, 2);
-    titleLines.forEach((line, i) => ctx.fillText(line, 50, 820 + i * 64));
+    titleLines.forEach((line, i) => ctx.fillText(line, 50, 780 + i * 64));
 
+    let cursorY = 780 + titleLines.length * 64 + 36;
     if (city) {
       ctx.fillStyle = 'rgba(255,255,255,0.85)';
       ctx.font = '32px system-ui, -apple-system, sans-serif';
-      ctx.fillText(`📍 ${city}`, 50, 820 + titleLines.length * 64 + 36);
+      ctx.fillText(`📍 ${city}`, 50, cursorY);
+      cursorY += 48;
+    }
+    // Price block — bold accent
+    if (priceText) {
+      ctx.fillStyle = '#FFB800';
+      ctx.font = 'bold 44px system-ui, -apple-system, sans-serif';
+      ctx.fillText(priceText, 50, cursorY);
     }
 
     // CTA bottom
