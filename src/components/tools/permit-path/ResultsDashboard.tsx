@@ -1,8 +1,8 @@
 import { useMemo, useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  AlertTriangle, ExternalLink, CheckCircle2, Circle, ChevronDown,
-  Download, MapPin, DollarSign, Clock, Sparkles, Lock, X, Mail,
+  ExternalLink, CheckCircle2, Circle, ChevronDown,
+  Download, MapPin, DollarSign, Clock, Sparkles, X, Mail,
   Share2, CalendarPlus, Lightbulb, Building2, Filter, Check, ArrowRight,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
