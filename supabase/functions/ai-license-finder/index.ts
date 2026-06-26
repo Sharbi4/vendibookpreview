@@ -592,9 +592,13 @@ OUTPUT — return JSON ONLY in this exact shape (no prose, no markdown fences):
 
 TONE: Authoritative, plain-language, practical — like an experienced operator who has done this, not a legal textbook.`;
 
-    const userPrompt = `Build a complete ${currentYear} PermitPath checklist for a ${businessLabel} operating in ${locationText}.
+    const userPrompt = `Build a complete ${currentYear} PermitPath roadmap for a ${businessLabel} operating in ${locationText}.
 
-Cover, where applicable: business entity registration (LLC/DBA, EIN, sales tax), food handler / manager certification (ANSI), state mobile food unit license, county/city health permit, fire marshal inspection (LP-gas / suppression), commissary agreement (if the jurisdiction requires it), vehicle registration, zoning / vending district / parking permits, and insurance (general liability, auto, workers comp where applicable).
+VENDOR PROFILE: ${profileSummary(profile)}
+
+Branch your checklist based on the profile above. Compute critical_path realistically (longest dependent chain, not sum). Surface 1–3 risks specific to THIS vendor. Add 1–3 money- or time-saving insights when applicable.
+
+Cover, where applicable: business entity registration (LLC/DBA, EIN, sales tax), food handler / manager certification (ANSI), state mobile food unit license, county/city health permit, fire marshal inspection (LP-gas / suppression / hood if frying), commissary agreement (if the jurisdiction requires it), vehicle registration, zoning / vending district / parking permits, insurance (general liability, auto, workers comp if employees), and alcohol licensing if applicable.
 
 Prefer URLs that appear in the Source Material; if none cover an item, leave official_url as "". Populate "sources" with every source you used.
 
