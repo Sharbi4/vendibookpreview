@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Check, ExternalLink, Share2, MapPin, Facebook, Twitter, Linkedin, Link2, MessageCircle } from 'lucide-react';
+import { Check, ExternalLink, Share2, MapPin, Facebook, Linkedin, Link2, MessageCircle } from 'lucide-react';
 import { CATEGORY_LABELS, MODE_LABELS } from '@/types/listing';
 import { useToast } from '@/hooks/use-toast';
 import confetti from 'canvas-confetti';
@@ -62,6 +62,7 @@ export const PublishSuccessModal: React.FC<PublishSuccessModalProps> = ({
   const { toast } = useToast();
   const [showShareOptions, setShowShareOptions] = useState(false);
   const [hasConfettiFired, setHasConfettiFired] = useState(false);
+  const [linkCopied, setLinkCopied] = useState(false);
 
   // Fire confetti when modal opens
   useEffect(() => {
@@ -99,6 +100,8 @@ export const PublishSuccessModal: React.FC<PublishSuccessModalProps> = ({
   const handleCopyLink = async () => {
     try {
       await navigator.clipboard.writeText(listingUrl);
+      setLinkCopied(true);
+      setTimeout(() => setLinkCopied(false), 2000);
       toast({
         title: 'Link copied!',
         description: 'Listing link copied to clipboard.',
@@ -118,7 +121,7 @@ export const PublishSuccessModal: React.FC<PublishSuccessModalProps> = ({
       case 'facebook':
         url = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(listingUrl)}`;
         break;
-      case 'twitter':
+      case 'x':
         url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(listingUrl)}`;
         break;
       case 'linkedin':
@@ -208,11 +211,12 @@ export const PublishSuccessModal: React.FC<PublishSuccessModalProps> = ({
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => shareToSocial('twitter')}
+                onClick={() => shareToSocial('x')}
                 className="flex flex-col items-center gap-1 h-auto py-3"
+                aria-label="Share on X"
               >
-                <Twitter className="w-5 h-5 text-[#1DA1F2]" />
-                <span className="text-xs">Twitter</span>
+                <span className="w-5 h-5 inline-flex items-center justify-center font-bold text-foreground text-base">𝕏</span>
+                <span className="text-xs">X</span>
               </Button>
               <Button
                 variant="outline"
@@ -240,8 +244,8 @@ export const PublishSuccessModal: React.FC<PublishSuccessModalProps> = ({
               onClick={handleCopyLink}
               className="w-full"
             >
-              <Link2 className="w-4 h-4 mr-2" />
-              Copy Link
+              {linkCopied ? <Check className="w-4 h-4 mr-2" /> : <Link2 className="w-4 h-4 mr-2" />}
+              {linkCopied ? 'Copied!' : 'Copy Link'}
             </Button>
 
             <Button
