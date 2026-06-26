@@ -15,12 +15,15 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
 import {
-  FileCheck, Loader2, Home, Shield, Clock, ArrowRight, DollarSign, AlertCircle,
+  FileCheck, Loader2, Home, ShieldCheck, Clock, ArrowRight, Coins, AlertCircle,
+  MapPin, ListChecks, Download, Route,
 } from 'lucide-react';
 import ToolCrossLinks from '@/components/tools/ToolCrossLinks';
 import ResultsDashboard, { type DashboardResult } from '@/components/tools/permit-path/ResultsDashboard';
 import ResultsSkeleton from '@/components/tools/permit-path/ResultsSkeleton';
 import ResultsError from '@/components/tools/permit-path/ResultsError';
+import PremiumIcon from '@/components/tools/permit-path/PremiumIcon';
+import VendorProfileChips, { type VendorProfile } from '@/components/tools/permit-path/VendorProfileChips';
 
 const pageJsonLd = {
   '@context': 'https://schema.org',
@@ -127,6 +130,7 @@ const PermitPath = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [isLoading, setIsLoading] = useState(false);
   const [form, setForm] = useState({ city: '', state: '', businessType: 'food_truck' });
+  const [profile, setProfile] = useState<VendorProfile>({});
   const [errors, setErrors] = useState<FieldErrors>({});
   const [result, setResult] = useState<DashboardResult | null>(null);
   const [fetchError, setFetchError] = useState<string | null>(null);
@@ -176,7 +180,7 @@ const PermitPath = () => {
     setTimeout(() => document.getElementById('results-section')?.scrollIntoView({ behavior: 'smooth' }), 50);
     try {
       const { data: response, error } = await supabase.functions.invoke('ai-license-finder', {
-        body: { state: parsed.data.state, city: parsed.data.city || '', businessType: parsed.data.businessType },
+        body: { state: parsed.data.state, city: parsed.data.city || '', businessType: parsed.data.businessType, profile },
       });
       if (error) throw error;
       if (response?.error) {
@@ -298,14 +302,14 @@ const PermitPath = () => {
             </div>
           </section>
 
-          {/* Benefit cards — unified dark */}
+          {/* Benefit cards — premium animated icon tiles */}
           <section className="py-12 md:py-16">
             <div className="container">
               <div className="grid gap-4 md:grid-cols-3">
                 {[
-                  { icon: Shield, tint: 'text-emerald-400', bg: 'bg-emerald-500/10 border-emerald-500/20', title: 'Avoid compliance mistakes', body: 'A complete checklist so you don\'t miss critical permits that could shut you down.' },
-                  { icon: Clock, tint: 'text-sky-400', bg: 'bg-sky-500/10 border-sky-500/20', title: 'Save weeks of research', body: 'Skip the endless Googling. Every requirement in one organized, interactive view.' },
-                  { icon: DollarSign, tint: 'text-[#FF5124]', bg: 'bg-[#FF5124]/10 border-[#FF5124]/20', title: 'Know your costs upfront', body: 'Estimated costs and timelines so you can budget your launch with confidence.' },
+                  { icon: ShieldCheck, accent: 'emerald' as const, hover: 'pop'    as const, title: 'Avoid compliance mistakes', body: "A complete checklist so you don't miss critical permits that could shut you down." },
+                  { icon: Clock,       accent: 'sky'     as const, hover: 'tick'   as const, title: 'Save weeks of research',     body: 'Skip the endless Googling. Every requirement in one organized, interactive view.' },
+                  { icon: Coins,       accent: 'green'   as const, hover: 'bounce' as const, title: 'Know your costs upfront',    body: 'Estimated costs and timelines so you can budget your launch with confidence.' },
                 ].map((b, i) => (
                   <motion.div
                     key={b.title}
@@ -313,12 +317,11 @@ const PermitPath = () => {
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
                     transition={{ delay: i * 0.08 }}
-                    className="rounded-2xl border border-white/10 bg-white/[0.02] p-6 hover:border-white/20 hover:bg-white/[0.04] transition-all"
+                    whileHover={{ y: -4 }}
+                    className="group rounded-2xl border border-white/10 bg-white/[0.02] p-6 hover:border-white/25 hover:bg-white/[0.04] transition-all"
                   >
-                    <div className={`w-11 h-11 rounded-xl border ${b.bg} flex items-center justify-center mb-4`}>
-                      <b.icon className={`h-5 w-5 ${b.tint}`} />
-                    </div>
-                    <h3 className="font-semibold text-white text-lg mb-2">{b.title}</h3>
+                    <PremiumIcon icon={b.icon} accent={b.accent} size="lg" hover={b.hover} delay={0.05 + i * 0.08} />
+                    <h3 className="font-semibold text-white text-lg mt-4 mb-2">{b.title}</h3>
                     <p className="text-white/60 text-sm leading-relaxed">{b.body}</p>
                   </motion.div>
                 ))}
@@ -326,19 +329,18 @@ const PermitPath = () => {
             </div>
           </section>
 
-          {/* How it works */}
+          {/* How it works — premium step icons */}
           <section className="py-12 md:py-16">
             <div className="container max-w-4xl">
               <h2 className="text-3xl md:text-4xl font-bold text-center text-white mb-12">
                 How PermitPath works
               </h2>
               <div className="relative grid gap-8 md:grid-cols-3">
-                {/* Connector line desktop */}
                 <div aria-hidden className="hidden md:block absolute top-7 left-[16.66%] right-[16.66%] h-px bg-gradient-to-r from-transparent via-[#FF5124]/40 to-transparent" />
                 {[
-                  { n: 1, title: 'Enter your location', body: 'Tell us your state, city, and business type.' },
-                  { n: 2, title: 'We map your requirements', body: 'Get a complete checklist of permits, licenses, and inspections.' },
-                  { n: 3, title: 'Track & apply', body: 'Check items off, download as PDF, and apply on official sites.' },
+                  { n: 1, icon: MapPin,     accent: 'sky'     as const, hover: 'bounce' as const, title: 'Enter your location',     body: 'Tell us your state, city, and business type.' },
+                  { n: 2, icon: ListChecks, accent: 'orange'  as const, hover: 'draw'   as const, title: 'We map your roadmap',     body: 'A sequenced checklist branched to your specific setup.' },
+                  { n: 3, icon: Download,   accent: 'emerald' as const, hover: 'nudge'  as const, title: 'Track & apply',           body: 'Check items off, set reminders, and apply on official sites.' },
                 ].map((s, i) => (
                   <motion.div
                     key={s.n}
@@ -348,10 +350,13 @@ const PermitPath = () => {
                     transition={{ delay: i * 0.1 }}
                     className="relative text-center"
                   >
-                    <div className="w-14 h-14 rounded-full bg-[#FF5124] flex items-center justify-center mx-auto mb-4 shadow-[0_8px_24px_-8px_rgba(255,81,36,0.7)] ring-4 ring-[#08080a] relative z-10">
-                      <span className="text-xl font-bold text-white">{s.n}</span>
+                    <div className="relative inline-block">
+                      <PremiumIcon icon={s.icon} accent={s.accent} size="xl" hover={s.hover} delay={0.1 + i * 0.1} />
+                      <span className="absolute -top-1 -right-1 h-6 w-6 rounded-full bg-[#FF5124] text-white text-xs font-bold flex items-center justify-center ring-4 ring-[#08080a] shadow-[0_4px_14px_-2px_rgba(255,81,36,0.7)]">
+                        {s.n}
+                      </span>
                     </div>
-                    <h3 className="font-semibold text-white mb-1.5">{s.title}</h3>
+                    <h3 className="font-semibold text-white mt-4 mb-1.5">{s.title}</h3>
                     <p className="text-sm text-white/55">{s.body}</p>
                   </motion.div>
                 ))}
@@ -364,12 +369,10 @@ const PermitPath = () => {
             <div className="container max-w-3xl">
               <div className="rounded-2xl border border-white/10 bg-[#0d0d10] p-6 md:p-8 shadow-2xl">
                 <div className="flex items-center gap-3 mb-6">
-                  <div className="h-10 w-10 rounded-xl bg-[#FF5124]/15 border border-[#FF5124]/30 flex items-center justify-center">
-                    <FileCheck className="h-5 w-5 text-[#FF5124]" />
-                  </div>
+                  <PremiumIcon icon={Route} accent="orange" size="md" hover="lift" />
                   <div>
-                    <h2 className="font-semibold text-white text-lg">Build your checklist</h2>
-                    <p className="text-sm text-white/55">State and business type required. City makes it more accurate.</p>
+                    <h2 className="font-semibold text-white text-lg">Build your roadmap</h2>
+                    <p className="text-sm text-white/55">State and business type required. City + the quick refinements make it sharper.</p>
                   </div>
                 </div>
 
@@ -434,6 +437,10 @@ const PermitPath = () => {
                     )}
                   </div>
                 </div>
+
+                <VendorProfileChips value={profile} onChange={setProfile} />
+
+
 
                 <Button
                   onClick={handleSubmit}

@@ -21,6 +21,9 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import RoadmapSuccess from './RoadmapSuccess';
+import ReasoningPanels, { type CriticalPath, type RiskItem, type InsightItem } from './ReasoningPanels';
+import PremiumIcon from './PremiumIcon';
+import { categoryVisual } from './categoryVisuals';
 
 export interface DashboardResult {
   location: { city?: string; state: string; stateAbbreviation?: string; business_type?: string };
@@ -29,6 +32,9 @@ export interface DashboardResult {
   recent_law_alert?: string | null;
   estimated_total_cost?: { low?: number; high?: number; display?: string };
   estimated_setup_weeks?: { low?: number; high?: number; display?: string };
+  critical_path?: CriticalPath | null;
+  risks?: RiskItem[];
+  insights?: InsightItem[];
   categories: Array<{
     name: string;
     items: Array<{
@@ -330,6 +336,15 @@ export default function ResultsDashboard({ result, readOnly = false }: Props) {
         )}
       </AnimatePresence>
 
+      {/* Reasoning panels: critical path, risks, money-saver insights */}
+      <ReasoningPanels
+        critical_path={result.critical_path}
+        risks={result.risks}
+        insights={result.insights}
+      />
+
+
+
       {/* Don't skip */}
       {dontSkip.length > 0 && !isComplete && (
         <div className="rounded-2xl border border-amber-500/25 bg-amber-500/5 p-5">
@@ -386,9 +401,10 @@ export default function ResultsDashboard({ result, readOnly = false }: Props) {
               className="rounded-2xl border border-white/10 bg-[#0d0d10] overflow-hidden"
             >
               <div className="flex items-center gap-3 p-4 sm:p-5 border-b border-white/5">
-                <div className="h-9 w-9 rounded-lg bg-[#FF5124]/10 border border-[#FF5124]/20 flex items-center justify-center shrink-0">
-                  <Building2 className="h-4 w-4 text-[#FF5124]" />
-                </div>
+                {(() => {
+                  const cv = categoryVisual(cat.name);
+                  return <PremiumIcon icon={cv.icon} accent={cv.accent} size="sm" hover="lift" />;
+                })()}
                 <div className="flex-1 min-w-0">
                   <div className="font-semibold text-white">{cat.name}</div>
                   <div className="text-xs text-white/50">{catDone} of {cat.nodes.length} complete</div>
