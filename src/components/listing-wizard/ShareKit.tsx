@@ -541,6 +541,10 @@ const generateStoryImageBlob = (
       ctx.font = '32px system-ui, -apple-system, sans-serif';
       ctx.fillText(`📍 ${city}`, 540, 420 + titleLines.length * 56 + 50);
     }
+    if (priceText) {
+      ctx.fillStyle = '#1A1A1A';
+      ctx.font = 'bold 48px system-ui, -apple-system, sans-serif';
+      ctx.fillText(priceText, 540, 420 + titleLines.length * 56 + (city ? 110 : 60));
     ctx.fillStyle = '#FF5124';
     ctx.font = '28px system-ui, -apple-system, sans-serif';
     ctx.fillText('Book at vendibook.com', 540, 780);
