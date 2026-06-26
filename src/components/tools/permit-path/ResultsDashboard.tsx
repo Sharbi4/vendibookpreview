@@ -145,15 +145,12 @@ export default function ResultsDashboard({ result, readOnly = false }: Props) {
   }, [roadmap.next_step_id]);
 
   const toggle = useCallback((node: RoadmapNode) => {
-    if (node.status === 'locked') {
-      toast.info(node.unlock_reason || "Complete the earlier steps first.");
-      return;
-    }
+    // Info is never locked — users can check anything in any order.
     setCompleted((prev) => ({ ...prev, [node.id]: !prev[node.id] }));
   }, []);
 
   const markAllInCategory = useCallback((catName: string) => {
-    const nodesInCat = roadmap.nodes.filter((n) => n.category === catName && n.status !== 'locked');
+    const nodesInCat = roadmap.nodes.filter((n) => n.category === catName);
     setCompleted((prev) => {
       const next = { ...prev };
       const allDone = nodesInCat.every((n) => prev[n.id]);
