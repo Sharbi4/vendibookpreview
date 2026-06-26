@@ -83,8 +83,29 @@ function isValidResult(r: any): boolean {
     r.categories.some((c: any) => Array.isArray(c?.items) && c.items.length > 0);
 }
 
+// ---------- Vendor profile ----------
+interface VendorProfile {
+  alcohol?: 'yes' | 'no';
+  frying?: 'yes' | 'no';
+  multi_jurisdiction?: 'yes' | 'no';
+  employees?: 'yes' | 'no';
+  commissary?: 'yes' | 'no' | 'unsure';
+  prep_style?: 'prepackaged' | 'cook_to_order';
+}
+
+function profileSummary(p: VendorProfile): string {
+  const parts: string[] = [];
+  if (p.alcohol) parts.push(`Serves alcohol: ${p.alcohol}`);
+  if (p.frying) parts.push(`Fries / cooks with grease: ${p.frying}`);
+  if (p.multi_jurisdiction) parts.push(`Operates in multiple cities/counties: ${p.multi_jurisdiction}`);
+  if (p.employees) parts.push(`Hires employees: ${p.employees}`);
+  if (p.commissary) parts.push(`Has a commissary already: ${p.commissary}`);
+  if (p.prep_style) parts.push(`Prep style: ${p.prep_style === 'cook_to_order' ? 'cooked-to-order' : 'prepackaged'}`);
+  return parts.length ? parts.join("; ") : "Not provided — assume the safer/stricter requirement.";
+}
+
 // ---------- Baseline fallback checklists ----------
-function baselineChecklist(state: string, city: string, businessType: string): any {
+function baselineChecklist(state: string, city: string, businessType: string, profile: VendorProfile = {}): any {
   const stateName = STATE_NAMES[state] || state;
   const label = businessTypeLabels[businessType] || "Mobile Food Business";
   const loc = city ? `${city}, ${state}` : stateName;
@@ -125,6 +146,30 @@ function baselineChecklist(state: string, city: string, businessType: string): a
     },
   ];
 
+  // Employees branching
+  if (profile.employees === 'yes') {
+    businessReg.push({
+      title: "Workers' Compensation Insurance",
+      issuer: `${stateName} Industrial Commission / private carrier`,
+      level: "state",
+      cost_estimate: "$500–$2,000 / year",
+      timeline_estimate: "Same week to bind",
+      official_url: "",
+      why_it_matters: "Required in nearly every state the moment you hire your first employee.",
+      commonly_missed: true,
+    });
+    businessReg.push({
+      title: "State payroll & unemployment tax registration",
+      issuer: `${stateName} Department of Revenue + Labor`,
+      level: "state",
+      cost_estimate: "Free to register",
+      timeline_estimate: "1–2 weeks",
+      official_url: "",
+      why_it_matters: "Required to legally run payroll, withhold income tax, and pay unemployment insurance.",
+      commonly_missed: true,
+    });
+  }
+
   const foodSafety = [
     {
       title: "Food Handler Card (every employee)",
@@ -148,46 +193,89 @@ function baselineChecklist(state: string, city: string, businessType: string): a
     },
   ];
 
+  if (profile.alcohol === 'yes') {
+    foodSafety.push({
+      title: "ServSafe Alcohol / state TIPS-equivalent training",
+      issuer: state === 'TX' ? "TABC Seller-Server" : "State alcohol regulatory body",
+      level: "state",
+      cost_estimate: "$30–$60 per server",
+      timeline_estimate: "Same day online",
+      official_url: state === 'TX' ? "https://www.tabc.texas.gov/" : "",
+      why_it_matters: "Required for anyone serving alcohol. Without it your liquor license can be denied or suspended.",
+      commonly_missed: true,
+    });
+  }
+
+  // Health permits — prepackaged tier softens, cook-to-order keeps standard
+  const isPrepackaged = profile.prep_style === 'prepackaged';
   const healthPermits = [
     {
-      title: azTucsonFoodTruck ? "Pima County Mobile Food Permit + Plan Review" : `${stateName} Mobile Food Unit Health Permit`,
+      title: azTucsonFoodTruck
+        ? "Pima County Mobile Food Permit + Plan Review"
+        : `${stateName} Mobile Food Unit Health Permit${isPrepackaged ? ' (prepackaged tier)' : ''}`,
       issuer: azTucsonFoodTruck ? "Pima County Health Department, Consumer Health & Food Safety" : `${stateName} Health Department`,
       level: azTucsonFoodTruck ? "county" : "state",
-      cost_estimate: azTucsonFoodTruck ? "$300–$700 (plan review + annual permit)" : "Verify with agency",
-      timeline_estimate: "2–6 weeks (plan review + inspection)",
+      cost_estimate: azTucsonFoodTruck
+        ? (isPrepackaged ? "$150–$400 (lower-risk tier)" : "$300–$700 (plan review + annual permit)")
+        : "Verify with agency",
+      timeline_estimate: isPrepackaged ? "1–3 weeks" : "2–6 weeks (plan review + inspection)",
       official_url: azTucsonFoodTruck ? "https://webcms.pima.gov/government/health_department/food_safety_environmental_services/mobile_food_units/" : "",
-      why_it_matters: "The core operating permit. No legal service of food without an approved unit, plan review, and on-site inspection.",
+      why_it_matters: isPrepackaged
+        ? "Even prepackaged operations need a health permit, but plan review and fees are usually lower because the risk profile is smaller."
+        : "The core operating permit. No legal service of food without an approved unit, plan review, and on-site inspection.",
       commonly_missed: false,
     },
   ];
 
-  const commissary = [
-    {
-      title: "Commissary / Base of Operations Agreement",
+  // Commissary — skipped if vendor already has one
+  const commissary: any[] = [];
+  if (profile.commissary !== 'yes') {
+    commissary.push({
+      title: profile.commissary === 'no'
+        ? "Commissary / Base of Operations Agreement (CRITICAL — not secured yet)"
+        : "Commissary / Base of Operations Agreement",
       issuer: azTucsonFoodTruck ? "Pima County–approved commissary" : "Local approved commissary",
       level: azTucsonFoodTruck ? "county" : "state",
       cost_estimate: "$400–$1,200 / month",
       timeline_estimate: "1–2 weeks to secure agreement",
       official_url: "",
-      why_it_matters: "Most jurisdictions (including Pima County) require a written agreement with a permitted commissary for cleaning, water/waste, and overnight storage.",
+      why_it_matters: "Most jurisdictions require a written agreement with a permitted commissary for cleaning, water/waste, and overnight storage. Without it, your health permit cannot be issued.",
       commonly_missed: true,
-    },
-  ];
+    });
+  }
 
+  // Fire & equipment — frying upgrades to Type I hood requirements
   const fire = [
     {
-      title: "Fire Inspection (LP-gas, suppression, exhaust hood)",
+      title: profile.frying === 'yes'
+        ? "Fire Inspection + Type I Hood & Suppression (frying / open flame)"
+        : "Fire Inspection (LP-gas, exhaust hood)",
       issuer: city ? `${city} Fire Marshal` : `${stateName} Fire Marshal`,
       level: "city",
-      cost_estimate: "$75–$250 per inspection",
-      timeline_estimate: "1–3 weeks scheduling",
+      cost_estimate: profile.frying === 'yes' ? "$150–$400 inspection + $2k–$5k hood/suppression install" : "$75–$250 per inspection",
+      timeline_estimate: profile.frying === 'yes' ? "2–4 weeks (install + inspection)" : "1–3 weeks scheduling",
       official_url: "",
-      why_it_matters: "Trucks with propane, fryers, or cooking equipment must pass a fire inspection — often required before the health permit is issued.",
+      why_it_matters: profile.frying === 'yes'
+        ? "Fryers and grease-producing equipment require a Type I hood with UL-300 suppression. Most first inspections fail here — budget time for a re-inspection."
+        : "Trucks with propane or cooking equipment must pass a fire inspection — often required before the health permit is issued.",
       commonly_missed: true,
     },
   ];
+  if (profile.frying === 'yes') {
+    fire.push({
+      title: "Grease trap / used cooking oil disposal contract",
+      issuer: "Licensed grease hauler",
+      level: "city",
+      cost_estimate: "$30–$100 / month",
+      timeline_estimate: "Same week",
+      official_url: "",
+      why_it_matters: "Frying = grease waste. Most cities require a documented disposal contract — health inspectors ask for proof.",
+      commonly_missed: true,
+    });
+  }
 
-  const local = [
+  // Local & city — alcohol adds liquor license; multi-jurisdiction note
+  const local: any[] = [
     {
       title: city ? `${city} Business License` : `${stateName} Local Business License`,
       issuer: city ? `${city} City Clerk / Business Services` : "Local City Clerk",
@@ -209,6 +297,32 @@ function baselineChecklist(state: string, city: string, businessType: string): a
       commonly_missed: true,
     },
   ];
+
+  if (profile.alcohol === 'yes') {
+    local.push({
+      title: "Liquor License (mobile / catering endorsement)",
+      issuer: state === 'TX' ? "TABC" : `${stateName} Alcohol Beverage Control`,
+      level: "state",
+      cost_estimate: "$300–$1,500+ (state varies widely)",
+      timeline_estimate: "4–12 weeks",
+      official_url: state === 'TX' ? "https://www.tabc.texas.gov/" : "",
+      why_it_matters: "Serving any alcohol requires a state-issued license. This is typically the slowest permit and often gates your launch.",
+      commonly_missed: false,
+    });
+  }
+
+  if (profile.multi_jurisdiction === 'yes') {
+    local.push({
+      title: "Additional business licenses for each city/county you operate in",
+      issuer: "Each local jurisdiction",
+      level: "city",
+      cost_estimate: "$25–$200 each",
+      timeline_estimate: "1–3 weeks each",
+      official_url: "",
+      why_it_matters: "Permits don't stack across borders — each city or county where you regularly operate generally requires its own business license. Some health permits transfer; many do not.",
+      commonly_missed: true,
+    });
+  }
 
   const insurance = [
     {
@@ -244,22 +358,68 @@ function baselineChecklist(state: string, city: string, businessType: string): a
     { name: "Business Registration", items: businessReg },
     { name: "Food Safety Certifications", items: foodSafety },
     { name: "Health Permits", items: healthPermits },
-    { name: "Commissary / Base of Operations", items: commissary },
+    ...(commissary.length ? [{ name: "Commissary / Base of Operations", items: commissary }] : []),
     { name: "Fire & Equipment", items: fire },
     { name: "Local & City-Specific", items: local },
     { name: "Insurance", items: insurance },
   ];
 
+  // Critical path reasoning
+  const bottleneck = profile.alcohol === 'yes'
+    ? "Liquor license issuance"
+    : profile.frying === 'yes'
+      ? "Fire inspection + hood install"
+      : "Health department plan review + inspection";
+  const weeksToOpen = profile.alcohol === 'yes' ? "8–12 weeks"
+    : profile.frying === 'yes' ? "5–8 weeks"
+    : profile.commissary === 'no' ? "5–8 weeks"
+    : "4–6 weeks";
+
+  const risks: Array<{ title: string; why: string }> = [];
+  if (profile.frying === 'yes') {
+    risks.push({ title: "Fire suppression failure on first inspection", why: "Frying triggers UL-300 hood requirements — the single most common first-inspection failure. Budget time for a re-inspection." });
+  }
+  if (profile.commissary === 'no') {
+    risks.push({ title: "Commissary not secured yet", why: "Without a signed commissary agreement, your health permit cannot be issued. This is your most urgent blocker." });
+  }
+  if (profile.alcohol === 'yes') {
+    risks.push({ title: "Liquor license timeline", why: "State alcohol licensing can take 8–12 weeks and often delays launch. Submit it first, in parallel with everything else." });
+  }
+  if (profile.multi_jurisdiction === 'yes') {
+    risks.push({ title: "Permit stacking across cities", why: "Each jurisdiction typically wants its own business license and may not honor another city's fire/health inspection." });
+  }
+  if (risks.length === 0) {
+    risks.push({ title: "Underestimating health inspection scheduling", why: "Most operators assume 1 week — real-world scheduling is often 2–4 weeks. Start it the day your commissary is signed." });
+  }
+
+  const insights: Array<{ title: string; detail: string }> = [];
+  if (state === 'AZ' && city?.toLowerCase().includes('tucson')) {
+    insights.push({ title: "Operating outside Tucson city limits", detail: "Pima County unincorporated areas may not require a separate City of Tucson business license — could save ~$200/year and a permit cycle. Verify with Pima County." });
+  }
+  if (profile.alcohol === 'yes') {
+    insights.push({ title: "Dropping alcohol service", detail: "Skipping alcohol saves ~$300–$1,500 in licensing and shortens your timeline by 4–8 weeks. Worth modeling if margins don't depend on it." });
+  }
+  if (profile.commissary === 'no') {
+    insights.push({ title: "Shared commissary vs. dedicated rental", detail: "A shared commissary often runs $400–$600/mo vs. $1,000+ for dedicated space. Same compliance value." });
+  }
+
   return {
     location: { city, state, stateAbbreviation: state, business_type: label },
     businessType: label,
-    overview: `Baseline ${label.toLowerCase()} compliance checklist for ${loc}. Verify each item with the issuing agency before applying.`,
+    overview: `Baseline ${label.toLowerCase()} compliance checklist for ${loc}, branched to your answers. Verify each item with the issuing agency before applying.`,
     recent_law_alert,
     estimated_total_cost: { low: 1500, high: 4500, display: "$1,500–$4,500" },
     estimated_setup_weeks: { low: 4, high: 10, display: "4–10 weeks" },
+    critical_path: {
+      weeks_to_open: weeksToOpen,
+      bottleneck,
+      rationale: "Computed from the longest dependent step in your roadmap, not the sum of all items running in parallel.",
+    },
+    risks,
+    insights,
     categories,
     sources: [],
-    verify_note: "Showing the baseline checklist for this business type. Live research was unavailable — confirm every item with the issuing agency before applying.",
+    verify_note: "Showing the baseline checklist for this business type and profile. Live research was unavailable — confirm every item with the issuing agency before applying.",
     fallback: true,
   };
 }
