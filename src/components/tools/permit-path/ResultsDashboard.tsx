@@ -247,8 +247,8 @@ export default function ResultsDashboard({ result, readOnly = false }: Props) {
         <div className="rounded-2xl border border-white/10 bg-[#08080a]/90 backdrop-blur-xl p-4 sm:p-5 shadow-2xl">
           <div className="flex flex-col sm:flex-row sm:items-center gap-4">
             <div className="flex items-center gap-3 flex-1 min-w-0">
-              <div className="h-10 w-10 rounded-xl bg-[#FF5124]/15 border border-[#FF5124]/30 flex items-center justify-center shrink-0">
-                <MapPin className="h-5 w-5 text-[#FF5124]" />
+              <div className="h-10 w-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center shrink-0">
+                <MapPin className="h-5 w-5 text-white/70" />
               </div>
               <div className="min-w-0">
                 <div className="text-xs text-white/55 uppercase tracking-wider">
@@ -263,13 +263,13 @@ export default function ResultsDashboard({ result, readOnly = false }: Props) {
             <ProgressRing pct={roadmap.pct} />
             <div className="flex flex-wrap gap-3 text-sm">
               <span className="flex items-center gap-1.5 text-white/80">
-                <Check className="h-4 w-4 text-[#FF5124]" /> {roadmap.done}/{roadmap.total}
+                <Check className="h-4 w-4 text-white/55" /> {roadmap.done}/{roadmap.total}
               </span>
               <span className="flex items-center gap-1.5 text-white/80">
-                <DollarSign className="h-4 w-4 text-[#FF5124]" /> {remainingCost} left
+                <DollarSign className="h-4 w-4 text-white/55" /> {remainingCost} left
               </span>
               <span className="flex items-center gap-1.5 text-white/80">
-                <Clock className="h-4 w-4 text-[#FF5124]" /> {remainingWeeks}
+                <Clock className="h-4 w-4 text-white/55" /> {remainingWeeks}
               </span>
             </div>
             <div className="flex gap-1.5">
@@ -292,7 +292,7 @@ export default function ResultsDashboard({ result, readOnly = false }: Props) {
           {!user && !readOnly && (
             <div className="mt-4 flex flex-col sm:flex-row items-start sm:items-center gap-2 text-xs">
               <span className="text-white/55">Save your progress and pick up where you left off:</span>
-              <Link to="/auth?redirect=/tools/permitpath" className="text-[#FF5124] hover:underline font-medium inline-flex items-center gap-1">
+              <Link to="/auth?redirect=/tools/permitpath" className="text-white hover:underline font-medium inline-flex items-center gap-1">
                 Save to my account <ArrowRight className="h-3 w-3" />
               </Link>
             </div>
