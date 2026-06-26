@@ -856,8 +856,8 @@ const generateStoryImageBlob = (
           <h2 className="text-sm font-semibold uppercase tracking-wide">Branded graphics</h2>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {/* Now Booking */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          {/* Now Booking — 1080×1080 */}
           <button
             onClick={handleDownloadNowBooking}
             className="group text-left rounded-2xl border bg-card overflow-hidden transition-all hover:shadow-md hover:-translate-y-0.5"
@@ -868,6 +868,7 @@ const generateStoryImageBlob = (
               <div className="w-12 h-px bg-primary mt-1.5 mb-2" />
               <div className="text-foreground font-semibold text-[10px] px-3 text-center line-clamp-2">{listing.title}</div>
               {city && <div className="text-muted-foreground text-[8px] mt-1">📍 {city}</div>}
+              {priceText && <div className="text-primary text-[9px] font-bold mt-0.5">{priceText}</div>}
               <div className="absolute bottom-0 inset-x-0 h-4 bg-foreground flex items-center justify-center">
                 <span className="text-white text-[7px] font-bold tracking-widest">VENDIBOOK</span>
               </div>
@@ -875,7 +876,35 @@ const generateStoryImageBlob = (
             <div className="p-3 flex items-center justify-between">
               <div>
                 <div className="font-semibold text-sm">Now Booking</div>
-                <div className="text-xs text-muted-foreground">1080×1080 · Instagram-ready</div>
+                <div className="text-xs text-muted-foreground">1080×1080 · Square</div>
+              </div>
+              <Download className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
+            </div>
+          </button>
+
+          {/* IG / TikTok Story — 1080×1920 */}
+          <button
+            onClick={handleDownloadStory}
+            className="group text-left rounded-2xl border bg-card overflow-hidden transition-all hover:shadow-md hover:-translate-y-0.5"
+          >
+            <div className="aspect-[9/16] bg-foreground relative overflow-hidden flex flex-col justify-end">
+              {listing.coverImageUrl && (
+                <img src={listing.coverImageUrl} alt="" className="absolute inset-0 w-full h-full object-cover opacity-70" />
+              )}
+              <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/85" />
+              <div className="absolute top-2 left-2 px-1.5 py-0.5 rounded-full bg-primary text-white text-[7px] font-bold tracking-widest">
+                {listing.mode === 'sale' ? 'FOR SALE' : 'NOW BOOKING'}
+              </div>
+              <div className="relative px-2.5 pb-3 space-y-0.5">
+                <div className="text-white font-bold text-[10px] leading-tight line-clamp-2">{listing.title}</div>
+                {city && <div className="text-white/80 text-[7px]">📍 {city}</div>}
+                {priceText && <div className="text-[#FFB800] font-bold text-[9px]">{priceText}</div>}
+              </div>
+            </div>
+            <div className="p-3 flex items-center justify-between">
+              <div>
+                <div className="font-semibold text-sm">Story</div>
+                <div className="text-xs text-muted-foreground">1080×1920 · IG / TikTok</div>
               </div>
               <Download className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
             </div>
