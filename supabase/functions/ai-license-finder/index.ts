@@ -456,7 +456,8 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { city, state, businessType } = await req.json().catch(() => ({}));
+    const { city, state, businessType, profile: rawProfile } = await req.json().catch(() => ({}));
+    const profile: VendorProfile = (rawProfile && typeof rawProfile === 'object') ? rawProfile as VendorProfile : {};
 
     const stateRaw = typeof state === "string" ? state.trim().toUpperCase() : "";
     if (!stateRaw || !STATE_CODES.has(stateRaw)) {
