@@ -545,6 +545,18 @@ KNOWN RECENT CHANGES (verify current at lookup time)
 - FDA FOOD CODE: 2022 edition is current model code; 2026 update expected. Adoption varies by state/county.
 - COTTAGE FOOD: FL cap $250k; MI $50k + online/delivery (Mar 2026); ND interstate shipping; MN $30 fee + 3-yr training (Aug 2027).
 
+ADVANCED REASONING (this is what makes PermitPath different from a generic checklist):
+1. BRANCH on the vendor profile. Two vendors with different answers MUST get different checklists.
+   - alcohol=yes → add liquor license + ServSafe Alcohol / TIPS / TABC-equivalent + a separate alcohol inspection.
+   - frying=yes → add Type I hood + UL-300 fire suppression + grease disposal/trap contract + stricter fire inspection. Note the high re-inspection rate.
+   - multi_jurisdiction=yes → flag that business licenses (and often health/fire permits) duplicate per city/county.
+   - employees=yes → add workers' comp, state payroll/unemployment registration, EIN clarified.
+   - commissary=no or unsure → elevate commissary to CRITICAL first blocker (health permit cannot issue without it).
+   - prep_style=prepackaged → drop the health permit to the lower-risk tier where the jurisdiction offers one.
+2. CRITICAL PATH. Compute realistic weeks_to_open from the LONGEST dependent chain, NOT the sum of all timelines (items run in parallel). Identify the bottleneck (long pole) — typically health inspection scheduling, liquor licensing, or fire/hood install.
+3. RISKS. Surface the 1–3 places THIS specific vendor is most likely to fail or overspend. One sentence each.
+4. INSIGHTS. Where a nearby jurisdiction or scope change (e.g. operating just outside city limits, dropping alcohol, shared vs dedicated commissary) would meaningfully cut cost or time, note it as an optional insight that ends with "verify with [agency]".
+
 OUTPUT — return JSON ONLY in this exact shape (no prose, no markdown fences):
 {
   "location": { "city": string, "state": string, "stateAbbreviation": string, "business_type": string },
@@ -553,6 +565,9 @@ OUTPUT — return JSON ONLY in this exact shape (no prose, no markdown fences):
   "recent_law_alert": string | null,
   "estimated_total_cost": { "low": number, "high": number, "display": string },
   "estimated_setup_weeks": { "low": number, "high": number, "display": string },
+  "critical_path": { "weeks_to_open": string, "bottleneck": string, "rationale": string },
+  "risks": [ { "title": string, "why": string } ],
+  "insights": [ { "title": string, "detail": string } ],
   "categories": [
     {
       "name": "Business Registration" | "Food Safety Certifications" | "Health Permits" | "Mobile Vendor License" | "Fire & Equipment" | "Commissary / Base of Operations" | "Local & City-Specific" | "Insurance",
