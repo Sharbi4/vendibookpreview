@@ -328,39 +328,62 @@ const PermitPath = () => {
                 <div className="grid gap-4 sm:grid-cols-3">
                   <div className="space-y-1.5">
                     <Label className="text-white/80 text-sm">State *</Label>
-                    <Select value={form.state} onValueChange={(v) => setForm({ ...form, state: v })}>
-                      <SelectTrigger className="bg-white/[0.03] border-white/10 text-white h-11 text-base">
+                    <Select value={form.state} onValueChange={(v) => updateField('state', v)}>
+                      <SelectTrigger
+                        aria-invalid={!!errors.state}
+                        className={cn(
+                          'bg-white/[0.03] border-white/10 text-white h-11 text-base',
+                          errors.state && 'border-red-500/60 focus:ring-red-500/40',
+                        )}
+                      >
                         <SelectValue placeholder="Select state" />
                       </SelectTrigger>
                       <SelectContent>
                         {US_STATES.map((s) => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
                       </SelectContent>
                     </Select>
+                    {errors.state && (
+                      <p className="flex items-center gap-1 text-xs text-red-400"><AlertCircle className="h-3 w-3" /> {errors.state}</p>
+                    )}
                   </div>
                   <div className="space-y-1.5">
                     <Label className="text-white/80 text-sm">City (optional)</Label>
                     <Input
                       placeholder="e.g., Austin"
                       value={form.city}
-                      onChange={(e) => setForm({ ...form, city: e.target.value })}
-                      className="bg-white/[0.03] border-white/10 text-white placeholder:text-white/30 h-11 text-base"
+                      onChange={(e) => updateField('city', e.target.value)}
+                      maxLength={80}
+                      aria-invalid={!!errors.city}
+                      className={cn(
+                        'bg-white/[0.03] border-white/10 text-white placeholder:text-white/30 h-11 text-base',
+                        errors.city && 'border-red-500/60 focus-visible:ring-red-500/40',
+                      )}
                     />
+                    {errors.city && (
+                      <p className="flex items-center gap-1 text-xs text-red-400"><AlertCircle className="h-3 w-3" /> {errors.city}</p>
+                    )}
                   </div>
                   <div className="space-y-1.5">
                     <Label className="text-white/80 text-sm">Business type</Label>
-                    <Select value={form.businessType} onValueChange={(v) => setForm({ ...form, businessType: v })}>
-                      <SelectTrigger className="bg-white/[0.03] border-white/10 text-white h-11 text-base">
+                    <Select value={form.businessType} onValueChange={(v) => updateField('businessType', v)}>
+                      <SelectTrigger
+                        aria-invalid={!!errors.businessType}
+                        className={cn(
+                          'bg-white/[0.03] border-white/10 text-white h-11 text-base',
+                          errors.businessType && 'border-red-500/60 focus:ring-red-500/40',
+                        )}
+                      >
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="food_truck">Food Truck</SelectItem>
-                        <SelectItem value="food_trailer">Food Trailer</SelectItem>
-                        <SelectItem value="food_cart">Food Cart / Pushcart</SelectItem>
-                        <SelectItem value="ghost_kitchen">Shared / Ghost Kitchen</SelectItem>
-                        <SelectItem value="catering">Catering Business</SelectItem>
-                        <SelectItem value="cottage_food">Cottage Food</SelectItem>
+                        {BUSINESS_TYPES.map((bt) => (
+                          <SelectItem key={bt} value={bt}>{BUSINESS_TYPE_LABELS[bt]}</SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
+                    {errors.businessType && (
+                      <p className="flex items-center gap-1 text-xs text-red-400"><AlertCircle className="h-3 w-3" /> {errors.businessType}</p>
+                    )}
                   </div>
                 </div>
 
