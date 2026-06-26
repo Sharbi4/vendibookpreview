@@ -12,7 +12,7 @@ interface FirecrawlResult {
   markdown?: string;
 }
 
-async function firecrawlSearch(query: string, limit = 5): Promise<FirecrawlResult[]> {
+async function firecrawlSearch(query: string, limit = 4): Promise<FirecrawlResult[]> {
   const apiKey = Deno.env.get("FIRECRAWL_API_KEY");
   if (!apiKey) return [];
   try {
@@ -26,7 +26,7 @@ async function firecrawlSearch(query: string, limit = 5): Promise<FirecrawlResul
       }),
     });
     if (!res.ok) {
-      console.warn("Firecrawl search failed:", res.status, await res.text().catch(() => ""));
+      console.warn("Firecrawl search failed:", res.status);
       return [];
     }
     const json = await res.json();
@@ -35,7 +35,7 @@ async function firecrawlSearch(query: string, limit = 5): Promise<FirecrawlResul
       url: it.url,
       title: it.title,
       description: it.description,
-      markdown: typeof it.markdown === "string" ? it.markdown.slice(0, 4000) : undefined,
+      markdown: typeof it.markdown === "string" ? it.markdown.slice(0, 3500) : undefined,
     }));
   } catch (e) {
     console.warn("Firecrawl error:", e);
@@ -63,9 +63,7 @@ serve(async (req) => {
     const trimmedBusinessType = businessType?.trim() || "food_truck";
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) {
-      throw new Error("LOVABLE_API_KEY is not configured");
-    }
+    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
     const businessTypeLabels: Record<string, string> = {
       food_truck: "Food Truck",
@@ -74,6 +72,7 @@ serve(async (req) => {
       ghost_kitchen: "Ghost Kitchen / Commercial Shared Kitchen",
       vendor_lot: "Mobile Vendor / Street Vendor",
       catering: "Catering Business",
+      cottage_food: "Cottage Food Operation",
     };
     const businessLabel = businessTypeLabels[trimmedBusinessType] || "Mobile Food Business";
 
@@ -81,13 +80,20 @@ serve(async (req) => {
     const currentYear = new Date().getUTCFullYear();
     const today = new Date().toISOString().slice(0, 10);
 
-    // 1) Live web research for current official sources (grounding).
     console.log("PermitPath research:", locationText, businessLabel);
+
+    // Expanded grounding — state, city/county, fire, cottage food, recent law.
     const queries = [
-      `${locationText} mobile food unit permit requirements ${currentYear} site:.gov`,
+      `${trimmedState} mobile food unit permit requirements ${currentYear} site:.gov`,
       `${locationText} ${businessLabel} health department permit ${currentYear}`,
       `${locationText} food truck business license fire inspection commissary ${currentYear}`,
+      `${trimmedState} cottage food law ${currentYear}`,
+      `${trimmedState} food truck law changes ${currentYear - 1} ${currentYear}`,
     ];
+    if (trimmedCity) {
+      queries.push(`${trimmedCity} ${trimmedState} mobile vendor license fire marshal ${currentYear} site:.gov`);
+    }
+
     const searchBatches = await Promise.all(queries.map((q) => firecrawlSearch(q, 4)));
     const seen = new Set<string>();
     const sources: FirecrawlResult[] = [];
@@ -96,9 +102,9 @@ serve(async (req) => {
         if (!r.url || seen.has(r.url)) continue;
         seen.add(r.url);
         sources.push(r);
-        if (sources.length >= 10) break;
+        if (sources.length >= 12) break;
       }
-      if (sources.length >= 10) break;
+      if (sources.length >= 12) break;
     }
 
     const sourceContext = sources.length
@@ -108,53 +114,59 @@ serve(async (req) => {
               `[Source ${i + 1}] ${s.title || s.url}\nURL: ${s.url}\n${s.description ? `Summary: ${s.description}\n` : ""}${s.markdown ? `Excerpt:\n${s.markdown}\n` : ""}`
           )
           .join("\n---\n")
-      : "(No live sources retrieved — rely on your most current training knowledge and clearly mark fields as 'verify locally'.)";
+      : "(No live sources retrieved — rely on most current verified knowledge and clearly mark unverified fields with 'verify with [agency]'.)";
 
-    const systemPrompt = `You are a regulatory compliance researcher for the U.S. mobile food industry. Today is ${today}. You synthesize official, current information about every license, permit, inspection, insurance and tax requirement needed to operate a mobile food business in a specific U.S. jurisdiction.
+    const systemPrompt = `You are PermitPath, a compliance research engine for mobile food businesses (food trucks, trailers, carts, shared kitchens, cottage food) in the United States. Today is ${today}.
 
-Rules:
-- Ground every fact in the Source Material provided. If a fact is not supported by sources, fall back to general state-level guidance and mark estimatedCost / processingTime / renewalPeriod with "Verify with authority".
-- Never invent specific dollar amounts, form numbers, or URLs. Only cite URLs that appear in the Source Material.
-- Prefer .gov, county health department, state agriculture / health department, fire marshal, and municipal clerk sources.
-- Include city, county, state, and federal layers where applicable.
-- Be specific to ${businessLabel}: cite vehicle/cart classifications, commissary rules, water/wastewater, propane/fire, and tax registration as relevant.
-- Output ONLY valid JSON matching the schema. No prose.
+Given a STATE, optional CITY, and BUSINESS TYPE, return a complete, accurate, current checklist of every permit, license, certification, and inspection needed to legally operate at that location.
 
-JSON schema:
+RESEARCH RULES
+- Prioritize official .gov sources: state health departments, city/county clerk and health offices, state business registration portals, fire marshal offices.
+- Cross-check anything that may have changed in the last 12 months. Surface recent law changes prominently in "recent_law_alert".
+- Never invent a permit, fee, or URL. If a fee or link is not in the Source Material, say "verify with [agency]" for cost_estimate and leave official_url as "".
+- Distinguish STATE-level from CITY/COUNTY-level — they stack.
+
+KNOWN RECENT CHANGES (verify each is still current at lookup time using the Source Material)
+- TEXAS: HB 2844 ("Food Truck Freedom Bill"), signed Jun 20, 2025, full effect Jul 1, 2026 — single statewide DSHS license replaces separate city/county permits, no commissary required. Tiered fees (Type I/II/III); a typical Type II truck ≈ $600 application + $400 pre-licensing inspection, then ~$400/yr. SB 1008 (effective Sep 1, 2025) bars cities from regulating food trucks more strictly than the state; local parking/hours/noise rules still apply.
+- FDA FOOD CODE: 2022 edition is current model code (stronger allergen + manager-accountability rules); updated edition expected 2026. Each state/county adopts independently — many still on 2013/2017.
+- COTTAGE FOOD: Florida cap now $250,000/yr. Michigan now $50,000 with online sales + third-party delivery (Mar 2026). North Dakota allows interstate shipping. Minnesota cut fees to $30, training valid 3 yrs (effective Aug 2027).
+
+OUTPUT — return JSON ONLY in this exact shape (no prose):
 {
-  "location": { "city": string, "state": string, "stateAbbreviation": string },
+  "location": { "city": string, "state": string, "stateAbbreviation": string, "business_type": string },
   "businessType": string,
   "overview": string,
-  "disclaimer": string,
-  "lastUpdated": "YYYY-MM-DD",
-  "licenses": [{
-    "name": string,
-    "category": "state"|"city"|"county"|"federal"|"health"|"fire"|"tax"|"other",
-    "description": string,
-    "issuingAuthority": string,
-    "estimatedCost": string,
-    "renewalPeriod": string,
-    "processingTime": string,
-    "requirements": string[],
-    "officialUrl": string,
-    "sourceIndex": number | null,
-    "priority": "required"|"recommended"|"optional"
-  }],
-  "insuranceRequirements": [{ "type": string, "minimumCoverage": string, "description": string }],
-  "inspectionRequirements": [{ "type": string, "frequency": string, "authority": string }],
-  "estimatedTotalCost": string,
-  "estimatedTimeline": string,
-  "tips": string[],
-  "commonMistakes": string[],
+  "recent_law_alert": string | null,
+  "estimated_total_cost": { "low": number, "high": number, "display": string },
+  "estimated_setup_weeks": { "low": number, "high": number, "display": string },
+  "categories": [
+    {
+      "name": "Business Registration" | "Food Safety Certifications" | "Health Permits" | "Mobile Vendor License" | "Fire & Equipment" | "Local & City-Specific" | "Insurance",
+      "items": [
+        {
+          "title": string,
+          "issuer": string,
+          "level": "state" | "county" | "city" | "federal",
+          "cost_estimate": string,
+          "timeline_estimate": string,
+          "official_url": string,
+          "why_it_matters": string,
+          "commonly_missed": boolean
+        }
+      ]
+    }
+  ],
   "sources": [{ "index": number, "title": string, "url": string, "agency": string }],
-  "helpfulResources": [{ "name": string, "description": string, "url": string }]
-}`;
+  "verify_note": "Requirements vary by jurisdiction and change often. Confirm each item with the issuing agency before applying."
+}
 
-    const userPrompt = `Build a complete ${currentYear} permit & licensing guide for a ${businessLabel} operating in ${locationText}.
+TONE: Authoritative, plain-language, practical. "why_it_matters" must be one clear sentence a first-time vendor understands.`;
 
-Cover: state license, local/city business license, county/city health permit (mobile food unit), food handler / manager certification (ANSI), fire marshal inspection (LP-gas / suppression), commissary agreement, vehicle registration & weights where applicable, sales tax / EIN, zoning & vending district rules, and parking/right-of-way permits.
+    const userPrompt = `Build a complete ${currentYear} PermitPath checklist for a ${businessLabel} operating in ${locationText}.
 
-For each license you list, set "officialUrl" to a URL that actually appears in the Source Material below (or "" if none); set "sourceIndex" to the matching [Source N] number (or null). Populate "sources" with every source you used.
+Cover, where applicable: business entity registration (LLC/DBA, EIN, sales tax), food handler / manager certification (ANSI), state mobile food unit license, county/city health permit, fire marshal inspection (LP-gas / suppression), commissary agreement (only if the state requires it), vehicle registration, zoning / vending district / parking permits, and insurance (general liability, auto, workers comp where applicable).
+
+Use only URLs that appear in the Source Material. Populate "sources" with every source you used.
 
 SOURCE MATERIAL (live web results, ${today}):
 ${sourceContext}`;
@@ -190,7 +202,7 @@ ${sourceContext}`;
       }
       const errorText = await aiRes.text();
       console.error("AI gateway error:", aiRes.status, errorText);
-      throw new Error("Failed to generate license guide");
+      throw new Error("Failed to generate permit checklist");
     }
 
     const data = await aiRes.json();
@@ -217,6 +229,9 @@ ${sourceContext}`;
       });
     }
     if (!result.lastUpdated) result.lastUpdated = today;
+    if (!result.verify_note) {
+      result.verify_note = "Requirements vary by jurisdiction and change often. Confirm each item with the issuing agency before applying.";
+    }
 
     return new Response(JSON.stringify({ result }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
