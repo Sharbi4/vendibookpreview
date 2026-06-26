@@ -28,6 +28,7 @@ import {
   trackShareQrDownloaded,
   trackShareImageDownloaded,
   trackShareKitDismissed} from '@/lib/analytics';
+import { useShareKit as useShareKitHook, type ShareChannel } from '@/hooks/useShareKit';
 
 export interface ShareKitListing {
   id: string;
@@ -108,10 +109,22 @@ const TelegramIcon = ({ className }: { className?: string }) => (
     <path d="M11.944 0A12 12 0 000 12a12 12 0 0012 12 12 12 0 0012-12A12 12 0 0012 0a12 12 0 00-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 01.171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z" />
   </svg>
 );
+const TikTokIcon = ({ className }: { className?: string }) => (
+  <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
+    <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5.8 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1.84-.1z" />
+  </svg>
+);
 
 export const ShareKit: React.FC<ShareKitProps> = ({ listing, onClose }) => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { logShare, generate, templates } = useShareKitHook(listing.id);
+
+  // AI-generated captions take precedence when available; falls back to local variants.
+  useEffect(() => {
+    generate().catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [listing.id]);
 
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>('');
   const [linkCopied, setLinkCopied] = useState(false);
@@ -149,7 +162,12 @@ export const ShareKit: React.FC<ShareKitProps> = ({ listing, onClose }) => {
     listing.mode === 'sale'
       ? `🔥 ${categoryLabel} alert${city ? ` — ${city}` : ''}!\n${listing.title}${priceText ? `\n${priceText}` : ''}\nTap link to see full specs & photos.`
       : `Looking for a ${categoryLabel.toLowerCase()}${city ? ` in ${city}` : ''}? I just opened bookings for ${listing.title}.${priceText ? ` ${priceText}.` : ''} Lock your date here:`];
-  const currentCaption = captionVariants[captionVariant % captionVariants.length];
+  // Prefer AI-generated captions when available (matched by variant index modulo).
+  const aiCaptions = templates
+    .map((t) => t.caption)
+    .filter((c): c is string => !!c && c.trim().length > 0);
+  const allCaptions = aiCaptions.length > 0 ? aiCaptions : captionVariants;
+  const currentCaption = allCaptions[captionVariant % allCaptions.length];
   const shareText = currentCaption;
 
   // Hashtags optimized for discovery
@@ -162,17 +180,17 @@ export const ShareKit: React.FC<ShareKitProps> = ({ listing, onClose }) => {
 
   useEffect(() => {
     trackShareKitViewed();
-    QRCode.toDataURL(listingUrl, {
+    // QR encodes a UTM-tagged URL so print/in-person scans are attributable.
+    QRCode.toDataURL(withUtm('qr', 'print'), {
       width: 320,
       margin: 1,
       color: { dark: '#111111', light: '#FFFFFF' }}).then(setQrCodeDataUrl).catch(console.error);
-  }, [listingUrl]);
+  }, [listingUrl, withUtm]);
 
   const copy = useCallback(async (text: string, setFlag: (b: boolean) => void, msg: string) => {
     try {
       await navigator.clipboard.writeText(text);
       setFlag(true);
-      trackShareLinkCopied();
       toast({ title: msg });
       setTimeout(() => setFlag(false), 2000);
     } catch {
@@ -180,10 +198,17 @@ export const ShareKit: React.FC<ShareKitProps> = ({ listing, onClose }) => {
     }
   }, [toast]);
 
-  const handleCopyLink = () => copy(listingUrl, setLinkCopied, 'Link copied!');
+  const handleCopyLink = () => {
+    const url = withUtm('copy_link', 'clipboard');
+    copy(url, setLinkCopied, 'Link copied!');
+    trackShareLinkCopied();
+    logShare('copy' as ShareChannel, { share_url: url });
+  };
   const handleCopyCaption = () => {
-    const fullCaption = `${currentCaption}\n\n${listingUrl}\n\n${hashtags.map(h => `#${h}`).join(' ')}`;
+    const url = withUtm('copy_caption', 'clipboard');
+    const fullCaption = `${currentCaption}\n\n${url}\n\n${hashtags.map(h => `#${h}`).join(' ')}`;
     copy(fullCaption, setCaptionCopied, 'Caption + link + hashtags copied!');
+    logShare('copy' as ShareChannel, { share_url: url, caption: currentCaption, content_type: 'caption' });
   };
   const handleCopyEmailLink = () => copy(listingUrl, setEmailLinkCopied, 'Link copied for email!');
   const handleCopySmsLink = () => {
@@ -194,11 +219,10 @@ export const ShareKit: React.FC<ShareKitProps> = ({ listing, onClose }) => {
   const handleNativeShare = async () => {
     if (navigator.share) {
       try {
-        await navigator.share({
-          title: listing.title,
-          text: currentCaption,
-          url: withUtm('native', 'share')});
+        const url = withUtm('native', 'share');
+        await navigator.share({ title: listing.title, text: currentCaption, url });
         trackShareLinkCopied();
+        logShare('native' as ShareChannel, { share_url: url, caption: currentCaption });
       } catch {
         // user cancelled
       }
@@ -211,27 +235,28 @@ export const ShareKit: React.FC<ShareKitProps> = ({ listing, onClose }) => {
   const handleShareWithImage = async () => {
     setShareWithImageBusy(true);
     try {
-      const blob = await generateShareImageBlob(listing, city);
+      const blob = await generateShareImageBlob(listing, city, priceText);
       const file = new File([blob], `vendibook-${listing.id}.png`, { type: 'image/png' });
+      const shareUrl = withUtm('native', 'share-image');
       const shareData: ShareData = {
         title: listing.title,
         text: currentCaption,
-        url: withUtm('native', 'share-image'),
+        url: shareUrl,
         files: [file]};
-      // Feature-detect file share
       if (navigator.canShare?.({ files: [file] }) && navigator.share) {
         await navigator.share(shareData);
         trackShareImageDownloaded();
+        logShare('native' as ShareChannel, { share_url: shareUrl, caption: currentCaption, content_type: 'image' });
         toast({ title: 'Shared with image!' });
       } else {
-        // Fallback: copy caption + download image so user can attach manually
-        await navigator.clipboard.writeText(`${currentCaption}\n\n${listingUrl}`);
+        await navigator.clipboard.writeText(`${currentCaption}\n\n${shareUrl}`);
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
         a.download = `vendibook-${listing.id}.png`;
         a.click();
         URL.revokeObjectURL(url);
+        logShare('copy' as ShareChannel, { share_url: shareUrl, caption: currentCaption, content_type: 'image' });
         toast({
           title: 'Image saved + caption copied',
           description: 'Open Instagram, paste the caption & attach the image.'});
@@ -241,6 +266,24 @@ export const ShareKit: React.FC<ShareKitProps> = ({ listing, onClose }) => {
       toast({ title: 'Share cancelled', variant: 'destructive' });
     } finally {
       setShareWithImageBusy(false);
+    }
+  };
+
+  const handleDownloadStory = async () => {
+    try {
+      const blob = await generateStoryImageBlob(listing, city, priceText);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `vendibook-story-${listing.id}.png`;
+      a.click();
+      URL.revokeObjectURL(url);
+      trackShareImageDownloaded();
+      logShare('copy' as ShareChannel, { content_type: 'story_image' });
+      toast({ title: 'Story image downloaded (1080×1920)' });
+    } catch (e) {
+      console.error(e);
+      toast({ title: 'Failed to generate story image', variant: 'destructive' });
     }
   };
 
@@ -263,18 +306,24 @@ export const ShareKit: React.FC<ShareKitProps> = ({ listing, onClose }) => {
       email: `mailto:?subject=${encodeURIComponent(listing.title)}&body=${t}%0A%0A${u}`,
       sms: `sms:?&body=${t}%20${u}`};
 
-    // Instagram has no web share — copy caption + open app
-    if (platform === 'instagram') {
-      navigator.clipboard.writeText(`${currentCaption}\n\n${listingUrl}\n\n${tagsString}`).catch(() => {});
+    // Per-channel DB log + GA event with channel label
+    logShare(platform as ShareChannel, { share_url: url, caption: currentCaption });
+    trackShareLinkCopied();
+
+    // Instagram & TikTok have no web share — copy caption + open app
+    if (platform === 'instagram' || platform === 'tiktok') {
+      navigator.clipboard.writeText(`${currentCaption}\n\n${url}\n\n${tagsString}`).catch(() => {});
+      const target = platform === 'instagram'
+        ? 'https://www.instagram.com/'
+        : 'https://www.tiktok.com/upload';
       toast({
         title: 'Caption copied!',
-        description: 'Opening Instagram — paste it on your post or story.'});
-      window.open('https://www.instagram.com/', '_blank', 'noopener,noreferrer');
+        description: `Opening ${platform === 'instagram' ? 'Instagram' : 'TikTok'} — paste it on your post.`});
+      window.open(target, '_blank', 'noopener,noreferrer');
       return;
     }
 
     window.open(urls[platform], '_blank', 'noopener,noreferrer');
-    trackShareLinkCopied();
   };
 
   const regenerateCaption = () => {
@@ -286,6 +335,7 @@ export const ShareKit: React.FC<ShareKitProps> = ({ listing, onClose }) => {
 const generateShareImageBlob = (
   listing: ShareKitListing,
   city: string,
+  priceText: string = '',
 ): Promise<Blob> => new Promise((resolve, reject) => {
   const canvas = document.createElement('canvas');
   const ctx = canvas.getContext('2d');
@@ -294,9 +344,7 @@ const generateShareImageBlob = (
   canvas.height = 1080;
 
   const draw = (coverImg?: HTMLImageElement) => {
-    // Background
     if (coverImg) {
-      // Cover image with dark gradient overlay
       ctx.drawImage(coverImg, 0, 0, 1080, 1080);
       const grad = ctx.createLinearGradient(0, 540, 0, 1080);
       grad.addColorStop(0, 'rgba(0,0,0,0.1)');
@@ -308,7 +356,6 @@ const generateShareImageBlob = (
       ctx.fillRect(0, 0, 1080, 1080);
     }
 
-    // Top accent
     ctx.fillStyle = '#FF5124';
     ctx.fillRect(0, 0, 1080, 8);
 
@@ -331,12 +378,20 @@ const generateShareImageBlob = (
     ctx.fillStyle = '#FFFFFF';
     ctx.font = 'bold 56px system-ui, -apple-system, sans-serif';
     const titleLines = wrapText(ctx, listing.title, 980, 2);
-    titleLines.forEach((line, i) => ctx.fillText(line, 50, 820 + i * 64));
+    titleLines.forEach((line, i) => ctx.fillText(line, 50, 780 + i * 64));
 
+    let cursorY = 780 + titleLines.length * 64 + 36;
     if (city) {
       ctx.fillStyle = 'rgba(255,255,255,0.85)';
       ctx.font = '32px system-ui, -apple-system, sans-serif';
-      ctx.fillText(`📍 ${city}`, 50, 820 + titleLines.length * 64 + 36);
+      ctx.fillText(`📍 ${city}`, 50, cursorY);
+      cursorY += 48;
+    }
+    // Price block — bold accent
+    if (priceText) {
+      ctx.fillStyle = '#FFB800';
+      ctx.font = 'bold 44px system-ui, -apple-system, sans-serif';
+      ctx.fillText(priceText, 50, cursorY);
     }
 
     // CTA bottom
@@ -358,6 +413,99 @@ const generateShareImageBlob = (
     img.crossOrigin = 'anonymous';
     img.onload = () => draw(img);
     img.onerror = () => draw(); // fallback to dark background
+    img.src = listing.coverImageUrl;
+  } else {
+    draw();
+  }
+});
+
+// 1080×1920 Instagram/TikTok Story variant.
+const generateStoryImageBlob = (
+  listing: ShareKitListing,
+  city: string,
+  priceText: string = '',
+): Promise<Blob> => new Promise((resolve, reject) => {
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return reject(new Error('No canvas context'));
+  canvas.width = 1080;
+  canvas.height = 1920;
+
+  const draw = (coverImg?: HTMLImageElement) => {
+    if (coverImg) {
+      // Cover-fit the image, then a deep gradient overlay for legibility.
+      const ratio = Math.max(1080 / coverImg.width, 1920 / coverImg.height);
+      const w = coverImg.width * ratio;
+      const h = coverImg.height * ratio;
+      ctx.drawImage(coverImg, (1080 - w) / 2, (1920 - h) / 2, w, h);
+      const grad = ctx.createLinearGradient(0, 0, 0, 1920);
+      grad.addColorStop(0, 'rgba(0,0,0,0.55)');
+      grad.addColorStop(0.45, 'rgba(0,0,0,0.1)');
+      grad.addColorStop(1, 'rgba(0,0,0,0.92)');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, 1080, 1920);
+    } else {
+      ctx.fillStyle = '#0a0a0c';
+      ctx.fillRect(0, 0, 1080, 1920);
+    }
+
+    // Accent
+    ctx.fillStyle = '#FF5124';
+    ctx.fillRect(0, 0, 1080, 10);
+
+    // Top badge
+    ctx.fillStyle = '#FF5124';
+    const badgeText = listing.mode === 'sale' ? 'FOR SALE' : 'NOW BOOKING';
+    ctx.font = 'bold 34px system-ui, -apple-system, sans-serif';
+    const badgeWidth = ctx.measureText(badgeText).width + 56;
+    ctx.beginPath();
+    (ctx as any).roundRect?.(60, 120, badgeWidth, 64, 32);
+    if (!(ctx as any).roundRect) ctx.rect(60, 120, badgeWidth, 64);
+    ctx.fill();
+    ctx.fillStyle = '#FFFFFF';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(badgeText, 88, 152);
+
+    // Title — bottom third
+    ctx.textBaseline = 'alphabetic';
+    ctx.textAlign = 'left';
+    ctx.fillStyle = '#FFFFFF';
+    ctx.font = 'bold 80px system-ui, -apple-system, sans-serif';
+    const titleLines = wrapText(ctx, listing.title, 960, 3);
+    titleLines.forEach((line, i) => ctx.fillText(line, 60, 1380 + i * 92));
+
+    let cy = 1380 + titleLines.length * 92 + 60;
+    if (city) {
+      ctx.fillStyle = 'rgba(255,255,255,0.85)';
+      ctx.font = '40px system-ui, -apple-system, sans-serif';
+      ctx.fillText(`📍 ${city}`, 60, cy);
+      cy += 60;
+    }
+    if (priceText) {
+      ctx.fillStyle = '#FFB800';
+      ctx.font = 'bold 56px system-ui, -apple-system, sans-serif';
+      ctx.fillText(priceText, 60, cy);
+    }
+
+    // CTA strip
+    ctx.fillStyle = '#FF5124';
+    ctx.fillRect(0, 1840, 1080, 80);
+    ctx.fillStyle = '#FFFFFF';
+    ctx.font = 'bold 30px system-ui, -apple-system, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Book on vendibook.com', 540, 1888);
+
+    canvas.toBlob((blob) => {
+      if (blob) resolve(blob);
+      else reject(new Error('Blob conversion failed'));
+    }, 'image/png');
+  };
+
+  if (listing.coverImageUrl) {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => draw(img);
+    img.onerror = () => draw();
     img.src = listing.coverImageUrl;
   } else {
     draw();
@@ -392,6 +540,11 @@ const generateShareImageBlob = (
       ctx.fillStyle = '#666666';
       ctx.font = '32px system-ui, -apple-system, sans-serif';
       ctx.fillText(`📍 ${city}`, 540, 420 + titleLines.length * 56 + 50);
+    }
+    if (priceText) {
+      ctx.fillStyle = '#1A1A1A';
+      ctx.font = 'bold 48px system-ui, -apple-system, sans-serif';
+      ctx.fillText(priceText, 540, 420 + titleLines.length * 56 + (city ? 110 : 60));
     }
     ctx.fillStyle = '#FF5124';
     ctx.font = '28px system-ui, -apple-system, sans-serif';
@@ -487,6 +640,7 @@ const generateShareImageBlob = (
 
   const socialButtons = [
     { id: 'instagram', label: 'Instagram', Icon: InstagramIcon, color: 'hover:text-[#E4405F]' },
+    { id: 'tiktok', label: 'TikTok', Icon: TikTokIcon, color: 'hover:text-foreground' },
     { id: 'facebook', label: 'Facebook', Icon: FacebookIcon, color: 'hover:text-[#1877F2]' },
     { id: 'x', label: 'X', Icon: XIcon, color: 'hover:text-foreground' },
     { id: 'whatsapp', label: 'WhatsApp', Icon: WhatsAppIcon, color: 'hover:text-[#25D366]' },
@@ -707,8 +861,8 @@ const generateShareImageBlob = (
           <h2 className="text-sm font-semibold uppercase tracking-wide">Branded graphics</h2>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {/* Now Booking */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          {/* Now Booking — 1080×1080 */}
           <button
             onClick={handleDownloadNowBooking}
             className="group text-left rounded-2xl border bg-card overflow-hidden transition-all hover:shadow-md hover:-translate-y-0.5"
@@ -719,6 +873,7 @@ const generateShareImageBlob = (
               <div className="w-12 h-px bg-primary mt-1.5 mb-2" />
               <div className="text-foreground font-semibold text-[10px] px-3 text-center line-clamp-2">{listing.title}</div>
               {city && <div className="text-muted-foreground text-[8px] mt-1">📍 {city}</div>}
+              {priceText && <div className="text-primary text-[9px] font-bold mt-0.5">{priceText}</div>}
               <div className="absolute bottom-0 inset-x-0 h-4 bg-foreground flex items-center justify-center">
                 <span className="text-white text-[7px] font-bold tracking-widest">VENDIBOOK</span>
               </div>
@@ -726,7 +881,35 @@ const generateShareImageBlob = (
             <div className="p-3 flex items-center justify-between">
               <div>
                 <div className="font-semibold text-sm">Now Booking</div>
-                <div className="text-xs text-muted-foreground">1080×1080 · Instagram-ready</div>
+                <div className="text-xs text-muted-foreground">1080×1080 · Square</div>
+              </div>
+              <Download className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
+            </div>
+          </button>
+
+          {/* IG / TikTok Story — 1080×1920 */}
+          <button
+            onClick={handleDownloadStory}
+            className="group text-left rounded-2xl border bg-card overflow-hidden transition-all hover:shadow-md hover:-translate-y-0.5"
+          >
+            <div className="aspect-[9/16] bg-foreground relative overflow-hidden flex flex-col justify-end">
+              {listing.coverImageUrl && (
+                <img src={listing.coverImageUrl} alt="" className="absolute inset-0 w-full h-full object-cover opacity-70" />
+              )}
+              <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/85" />
+              <div className="absolute top-2 left-2 px-1.5 py-0.5 rounded-full bg-primary text-white text-[7px] font-bold tracking-widest">
+                {listing.mode === 'sale' ? 'FOR SALE' : 'NOW BOOKING'}
+              </div>
+              <div className="relative px-2.5 pb-3 space-y-0.5">
+                <div className="text-white font-bold text-[10px] leading-tight line-clamp-2">{listing.title}</div>
+                {city && <div className="text-white/80 text-[7px]">📍 {city}</div>}
+                {priceText && <div className="text-[#FFB800] font-bold text-[9px]">{priceText}</div>}
+              </div>
+            </div>
+            <div className="p-3 flex items-center justify-between">
+              <div>
+                <div className="font-semibold text-sm">Story</div>
+                <div className="text-xs text-muted-foreground">1080×1920 · IG / TikTok</div>
               </div>
               <Download className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
             </div>

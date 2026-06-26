@@ -15,7 +15,7 @@ export const useHostListings = () => {
 
   const fetchListings = async () => {
     if (!user) return;
-    
+
     setIsLoading(true);
     try {
       const { data, error } = await supabase
@@ -42,13 +42,29 @@ export const useHostListings = () => {
     fetchListings();
   }, [user]);
 
-  const updateListingStatus = async (id: string, status: Listing['status']) => {
-    try {
-      const updates: Partial<Listing> = { status };
-      if (status === 'published') {
-        updates.published_at = new Date().toISOString();
-      }
+  /**
+   * Update status with optimistic snapshot/rollback.
+   * If `preservePublishedAt` is true, we don't reset the published_at timestamp
+   * (used when un-pausing, so featured/analytics windows stay intact).
+   */
+  const updateListingStatus = async (
+    id: string,
+    status: Listing['status'],
+    opts: { preservePublishedAt?: boolean } = {},
+  ) => {
+    const snapshot = listings;
+    const target = listings.find((l) => l.id === id);
+    if (!target) return;
 
+    const updates: Partial<Listing> = { status };
+    if (status === 'published' && !opts.preservePublishedAt && !target.published_at) {
+      updates.published_at = new Date().toISOString();
+    }
+
+    // Optimistic
+    setListings((prev) => prev.map((l) => (l.id === id ? { ...l, ...updates } : l)));
+
+    try {
       const { error } = await supabase
         .from('listings')
         .update(updates)
@@ -57,36 +73,42 @@ export const useHostListings = () => {
 
       if (error) throw error;
 
-      setListings(prev => 
-        prev.map(l => l.id === id ? { ...l, ...updates } : l)
-      );
-
-      // Fire AI orchestrator on publish (fire-and-forget)
       if (status === 'published' && user?.id) {
-        const listing = listings.find(l => l.id === id);
         triggerOrchestrator({
           user_id: user.id,
           event_type: 'listing_published',
           entity_id: id,
-          payload: { title: listing?.title, category: listing?.category, city: listing?.city },
+          payload: { title: target.title, category: target.category, city: target.city },
         });
       }
 
       toast({
-        title: 'Success',
-        description: `Listing ${status === 'published' ? 'published' : status === 'paused' ? 'paused' : 'updated'}`,
+        title: 'Saved',
+        description:
+          status === 'published'
+            ? opts.preservePublishedAt
+              ? 'Listing resumed'
+              : 'Listing published'
+            : status === 'paused'
+              ? 'Listing paused'
+              : status === 'archived'
+                ? 'Listing archived'
+                : 'Listing updated',
       });
     } catch (error) {
       console.error('Error updating listing:', error);
+      setListings(snapshot); // rollback
       toast({
         title: 'Error',
-        description: 'Failed to update listing',
+        description: 'Failed to update listing — changes reverted.',
         variant: 'destructive',
       });
     }
   };
 
   const deleteListing = async (id: string) => {
+    const snapshot = listings;
+    setListings((prev) => prev.filter((l) => l.id !== id));
     try {
       const { error } = await supabase
         .from('listings')
@@ -96,35 +118,76 @@ export const useHostListings = () => {
 
       if (error) throw error;
 
-      setListings(prev => prev.filter(l => l.id !== id));
-
-      toast({
-        title: 'Deleted',
-        description: 'Listing has been removed',
-      });
+      toast({ title: 'Deleted', description: 'Listing has been removed' });
     } catch (error) {
       console.error('Error deleting listing:', error);
+      setListings(snapshot); // rollback
       toast({
         title: 'Error',
-        description: 'Failed to delete listing',
+        description: 'Failed to delete listing — restored.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const duplicateListing = async (id: string) => {
+    if (!user?.id) return;
+    try {
+      const { data: original, error: fetchErr } = await supabase
+        .from('listings')
+        .select('*')
+        .eq('id', id)
+        .eq('host_id', user.id)
+        .single();
+      if (fetchErr || !original) throw fetchErr || new Error('Not found');
+
+      const clone: any = { ...original };
+      delete clone.id;
+      delete clone.created_at;
+      delete clone.updated_at;
+      delete clone.published_at;
+      delete clone.featured_enabled;
+      delete clone.featured_at;
+      delete clone.featured_expires_at;
+      delete clone.featured_source;
+      delete clone.pending_featured_payment;
+      delete clone.view_count;
+      clone.status = 'draft';
+      clone.title = `Copy of ${original.title}`.slice(0, 200);
+
+      const { data: inserted, error: insErr } = await supabase
+        .from('listings')
+        .insert(clone)
+        .select('*')
+        .single();
+      if (insErr) throw insErr;
+
+      setListings((prev) => [inserted as Listing, ...prev]);
+      toast({ title: 'Duplicated', description: 'A draft copy was created.' });
+    } catch (error) {
+      console.error('Error duplicating listing:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to duplicate listing',
         variant: 'destructive',
       });
     }
   };
 
   const updateListingPrice = (id: string, newPrice: number) => {
-    setListings(prev => 
-      prev.map(l => l.id === id ? { ...l, price_sale: newPrice } : l)
+    setListings((prev) =>
+      prev.map((l) => (l.id === id ? { ...l, price_sale: newPrice } : l)),
     );
   };
 
   const stats = {
     total: listings.length,
-    published: listings.filter(l => l.status === 'published').length,
-    drafts: listings.filter(l => l.status === 'draft').length,
-    paused: listings.filter(l => l.status === 'paused').length,
-    rentals: listings.filter(l => l.mode === 'rent').length,
-    sales: listings.filter(l => l.mode === 'sale').length,
+    published: listings.filter((l) => l.status === 'published').length,
+    drafts: listings.filter((l) => l.status === 'draft').length,
+    paused: listings.filter((l) => l.status === 'paused').length,
+    archived: listings.filter((l) => l.status === 'archived').length,
+    rentals: listings.filter((l) => l.mode === 'rent').length,
+    sales: listings.filter((l) => l.mode === 'sale').length,
   };
 
   return {
@@ -134,7 +197,11 @@ export const useHostListings = () => {
     refetch: fetchListings,
     pauseListing: (id: string) => updateListingStatus(id, 'paused'),
     publishListing: (id: string) => updateListingStatus(id, 'published'),
+    unpauseListing: (id: string) =>
+      updateListingStatus(id, 'published', { preservePublishedAt: true }),
+    archiveListing: (id: string) => updateListingStatus(id, 'archived'),
     deleteListing,
+    duplicateListing,
     updateListingPrice,
   };
 };

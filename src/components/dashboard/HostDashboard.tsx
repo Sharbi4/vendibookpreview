@@ -81,6 +81,9 @@ const HostDashboard = () => {
     stats,
     pauseListing,
     publishListing,
+    unpauseListing,
+    archiveListing,
+    duplicateListing,
     deleteListing,
     updateListingPrice,
   } = useHostListings();
@@ -311,11 +314,15 @@ const HostDashboard = () => {
                 </div>
               )}
 
-              {listings.length > 6 ? (
+              {listings.filter((l) => l.status !== 'draft').length > 6 ? (
                 <OperationsTable
-                  listings={listings}
+                  listings={listings.filter((l) => l.status !== 'draft')}
                   onPublish={handlePublish}
                   onPause={pauseListing}
+                  onUnpause={unpauseListing}
+                  onDelete={deleteListing}
+                  onDuplicate={duplicateListing}
+                  onArchive={archiveListing}
                 />
               ) : isLoading ? (
                 <div className="flex items-center justify-center py-16">
@@ -349,7 +356,10 @@ const HostDashboard = () => {
                         listing={listing}
                         onPause={pauseListing}
                         onPublish={handlePublish}
+                        onUnpause={unpauseListing}
                         onDelete={deleteListing}
+                        onDuplicate={duplicateListing}
+                        onArchive={archiveListing}
                         onPriceUpdate={updateListingPrice}
                       />
                     ))}

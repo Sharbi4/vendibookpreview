@@ -4,15 +4,8 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Sofia Pro Soft Light - Vendibook Brand Font */
-@font-face {
-  font-family: 'SofiaProSoftLight';
-  src: url('https://vendibook-docs.s3.us-east-1.amazonaws.com/documents/sofiaprosoftlight-webfont.woff') format('woff');
-  font-weight: 300;
-  font-style: normal;
-  font-display: swap;
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
-}
+/* Sofia Pro Soft Light font removed — S3 source returns CORS errors.
+   Falls back to the system font stack defined in tailwind.config.ts. */
 
 @layer base {
   :root {

@@ -1,13 +1,26 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Edit2, Eye, Pause, Play, Trash2, Calendar, Heart, Check, X, DollarSign, Star, Shield, Loader2, Share2 } from 'lucide-react';
+import {
+  Edit2, Eye, Pause, Play, Trash2, Calendar, Heart, Check, X, DollarSign,
+  Star, Shield, Loader2, Share2, MoreHorizontal, Copy as CopyIcon, Archive,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader,
+  AlertDialogTitle, AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem,
+  DropdownMenuSeparator, DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { CATEGORY_LABELS } from '@/types/listing';
 import AvailabilityCalendar from './AvailabilityCalendar';
 import { useListingFavoriteCount } from '@/hooks/useFavorites';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
 import type { Tables } from '@/integrations/supabase/types';
 import { Badge } from '@/components/ui/badge';
 import { FeaturedListingModal } from './FeaturedListingModal';
@@ -20,31 +33,39 @@ interface HostListingCardProps {
   listing: Listing;
   onPause?: (id: string) => void;
   onPublish?: (id: string) => void;
+  onUnpause?: (id: string) => void;
   onDelete?: (id: string) => void;
+  onDuplicate?: (id: string) => void;
+  onArchive?: (id: string) => void;
   onPriceUpdate?: (id: string, newPrice: number) => void;
 }
 
-const StatusPill = ({ status }: { status: Listing['status'] }) => {
-  const styles = {
-    draft: 'bg-muted text-muted-foreground',
-    published: 'bg-emerald-100 text-emerald-700',
-    paused: 'bg-amber-100 text-amber-700',
-  };
-
-  const labels = {
-    draft: 'Draft',
-    published: 'Published',
-    paused: 'Paused',
-  };
-
-  return (
-    <span className={`px-3 py-1 rounded-full text-xs font-medium ${styles[status]}`}>
-      {labels[status]}
-    </span>
-  );
+const STATUS_STYLES: Record<string, string> = {
+  draft: 'bg-muted text-muted-foreground',
+  published: 'bg-emerald-100 text-emerald-700',
+  paused: 'bg-amber-100 text-amber-700',
+  archived: 'bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-300',
+};
+const STATUS_LABELS: Record<string, string> = {
+  draft: 'Draft',
+  published: 'Published',
+  paused: 'Paused',
+  archived: 'Archived',
 };
 
-const HostListingCard = ({ listing, onPause, onPublish, onDelete, onPriceUpdate }: HostListingCardProps) => {
+const StatusPill = ({ status }: { status: Listing['status'] }) => (
+  <span
+    className={`px-3 py-1 rounded-full text-xs font-medium ${
+      STATUS_STYLES[status] ?? 'bg-muted text-muted-foreground'
+    }`}
+  >
+    {STATUS_LABELS[status] ?? status}
+  </span>
+);
+
+const HostListingCard = ({
+  listing, onPause, onPublish, onUnpause, onDelete, onDuplicate, onArchive, onPriceUpdate,
+}: HostListingCardProps) => {
   const [showCalendar, setShowCalendar] = useState(false);
   const [showFeaturedModal, setShowFeaturedModal] = useState(false);
   const [showShareKit, setShowShareKit] = useState(false);
@@ -52,12 +73,13 @@ const HostListingCard = ({ listing, onPause, onPublish, onDelete, onPriceUpdate 
   const [editedPrice, setEditedPrice] = useState(listing.price_sale?.toString() || '');
   const [isSaving, setIsSaving] = useState(false);
   const [isLoadingNotary, setIsLoadingNotary] = useState(false);
-  const [isLoadingFeatured, setIsLoadingFeatured] = useState(false);
   const { data: favoriteCount = 0 } = useListingFavoriteCount(listing.id);
   const { toast } = useToast();
-  
+  const { user } = useAuth();
+
   const isSale = listing.mode === 'sale';
   const isPublished = listing.status === 'published';
+  const isPaused = listing.status === 'paused';
   const isFeatured = isListingFeatured(listing as any);
   const hasNotary = (listing as any).proof_notary_enabled;
 
@@ -82,17 +104,13 @@ const HostListingCard = ({ listing, onPause, onPublish, onDelete, onPriceUpdate 
       });
       return;
     }
-
     setIsLoadingNotary(true);
     try {
       const { data, error } = await supabase.functions.invoke('create-notary-checkout', {
         body: { listing_id: listing.id },
       });
-
       if (error) throw error;
-      if (data?.url) {
-        window.open(data.url, '_blank');
-      }
+      if (data?.url) window.open(data.url, '_blank');
     } catch (error) {
       console.error('Notary checkout error:', error);
       toast({
@@ -104,9 +122,9 @@ const HostListingCard = ({ listing, onPause, onPublish, onDelete, onPriceUpdate 
       setIsLoadingNotary(false);
     }
   };
-  
-  const displayPrice = listing.mode === 'rent' 
-    ? `$${listing.price_daily}/day` 
+
+  const displayPrice = listing.mode === 'rent'
+    ? `$${listing.price_daily}/day`
     : `$${listing.price_sale?.toLocaleString()}`;
 
   const location = listing.address || listing.pickup_location_text || 'No location set';
@@ -122,30 +140,23 @@ const HostListingCard = ({ listing, onPause, onPublish, onDelete, onPriceUpdate 
       });
       return;
     }
-
     setIsSaving(true);
     try {
       const { error } = await supabase
         .from('listings')
         .update({ price_sale: newPrice, updated_at: new Date().toISOString() })
-        .eq('id', listing.id);
-
+        .eq('id', listing.id)
+        .eq('host_id', user?.id ?? ''); // defense-in-depth alongside RLS
       if (error) throw error;
-
       toast({
         title: 'Price updated',
         description: `Sale price updated to $${newPrice.toLocaleString()}`,
       });
-      
       setIsEditingPrice(false);
       onPriceUpdate?.(listing.id, newPrice);
     } catch (error) {
       console.error('Error updating price:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to update price',
-        variant: 'destructive',
-      });
+      toast({ title: 'Error', description: 'Failed to update price', variant: 'destructive' });
     } finally {
       setIsSaving(false);
     }
@@ -160,7 +171,6 @@ const HostListingCard = ({ listing, onPause, onPublish, onDelete, onPriceUpdate 
     <>
       <div className="rounded-2xl border border-border shadow-md bg-card overflow-hidden hover:shadow-lg transition-all">
         <div className="flex flex-col sm:flex-row">
-          {/* Image */}
           <div className="sm:w-48 h-40 sm:h-auto flex-shrink-0">
             <img
               src={listing.cover_image_url || '/placeholder.svg'}
@@ -169,7 +179,6 @@ const HostListingCard = ({ listing, onPause, onPublish, onDelete, onPriceUpdate 
             />
           </div>
 
-          {/* Content */}
           <div className="flex-1 p-4 flex flex-col justify-between">
             <div>
               <div className="flex items-start justify-between gap-2 mb-2">
@@ -208,27 +217,15 @@ const HostListingCard = ({ listing, onPause, onPublish, onDelete, onPriceUpdate 
                         disabled={isSaving}
                       />
                     </div>
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      className="h-7 w-7 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50"
-                      onClick={handleSavePrice}
-                      disabled={isSaving}
-                    >
+                    <Button size="icon" variant="ghost" className="h-7 w-7 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50" onClick={handleSavePrice} disabled={isSaving}>
                       <Check className="h-4 w-4" />
                     </Button>
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      className="h-7 w-7 text-destructive hover:text-destructive hover:bg-destructive/10"
-                      onClick={handleCancelEdit}
-                      disabled={isSaving}
-                    >
+                    <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive hover:text-destructive hover:bg-destructive/10" onClick={handleCancelEdit} disabled={isSaving}>
                       <X className="h-4 w-4" />
                     </Button>
                   </div>
                 ) : (
-                  <span 
+                  <span
                     className={`text-primary font-semibold ${isSale ? 'cursor-pointer hover:underline' : ''}`}
                     onClick={() => isSale && setIsEditingPrice(true)}
                     title={isSale ? 'Click to edit price' : undefined}
@@ -265,9 +262,7 @@ const HostListingCard = ({ listing, onPause, onPublish, onDelete, onPriceUpdate 
               </div>
             </div>
 
-            {/* Actions - Consistent h-9 rounded-xl styling */}
             <div className="flex items-center gap-2 mt-4 pt-4 border-t border-border flex-wrap">
-              {/* Primary Actions - Always visible */}
               <Button variant="outline" size="sm" className="h-9 rounded-xl" asChild>
                 <Link to={`/listing/${listing.id}`}>
                   <Eye className="h-4 w-4 mr-1.5" />
@@ -281,51 +276,26 @@ const HostListingCard = ({ listing, onPause, onPublish, onDelete, onPriceUpdate 
                 </Link>
               </Button>
               {isPublished && (
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  className="h-9 rounded-xl"
-                  onClick={() => setShowShareKit(true)}
-                >
+                <Button variant="outline" size="sm" className="h-9 rounded-xl" onClick={() => setShowShareKit(true)}>
                   <Share2 className="h-4 w-4 mr-1.5" />
                   Share
                 </Button>
               )}
               {isRental && (
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  className="h-9 rounded-xl"
-                  onClick={() => setShowCalendar(true)}
-                >
+                <Button variant="outline" size="sm" className="h-9 rounded-xl" onClick={() => setShowCalendar(true)}>
                   <Calendar className="h-4 w-4 mr-1.5" />
                   Availability
                 </Button>
               )}
-
-              {/* Marketing Upsells */}
               {isPublished && !isFeatured && (
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={handleFeaturedClick}
-                  className="h-9 rounded-xl"
-                >
+                <Button variant="outline" size="sm" onClick={handleFeaturedClick} className="h-9 rounded-xl">
                   <Star className="h-4 w-4 mr-1.5" />
                   Boost
                 </Button>
               )}
               {isPublished && isSale && !hasNotary && (
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={handleNotaryCheckout}
-                  disabled={isLoadingNotary}
-                  className="h-9 rounded-xl"
-                >
-                  {isLoadingNotary ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
+                <Button variant="outline" size="sm" onClick={handleNotaryCheckout} disabled={isLoadingNotary} className="h-9 rounded-xl">
+                  {isLoadingNotary ? <Loader2 className="h-4 w-4 animate-spin" /> : (
                     <>
                       <Shield className="h-4 w-4 mr-1.5" />
                       Notary
@@ -334,56 +304,97 @@ const HostListingCard = ({ listing, onPause, onPublish, onDelete, onPriceUpdate 
                 </Button>
               )}
 
-              {/* Spacer */}
               <div className="flex-1" />
 
-              {/* Status Actions - Right aligned */}
-              {listing.status === 'published' && onPause && (
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  className="h-9 rounded-xl"
-                  onClick={() => onPause(listing.id)}
-                >
+              {/* Status actions */}
+              {isPublished && onPause && (
+                <Button variant="outline" size="sm" className="h-9 rounded-xl" onClick={() => onPause(listing.id)}>
                   <Pause className="h-4 w-4 mr-1.5" />
                   Pause
                 </Button>
               )}
-              {(listing.status === 'draft' || listing.status === 'paused') && onPublish && (
-                <Button 
-                  variant="outline"
-                  size="sm"
-                  className="h-9 rounded-xl"
-                  onClick={() => onPublish(listing.id)}
-                >
+              {isPaused && (onUnpause || onPublish) && (
+                <Button variant="outline" size="sm" className="h-9 rounded-xl" onClick={() => (onUnpause ?? onPublish!)(listing.id)}>
+                  <Play className="h-4 w-4 mr-1.5" />
+                  Resume
+                </Button>
+              )}
+              {listing.status === 'draft' && onPublish && (
+                <Button variant="outline" size="sm" className="h-9 rounded-xl" onClick={() => onPublish(listing.id)}>
                   <Play className="h-4 w-4 mr-1.5" />
                   Publish
                 </Button>
               )}
-              {onDelete && (
-                <Button 
-                  variant="ghost" 
-                  size="icon"
-                  className="h-9 w-9 rounded-xl text-destructive hover:text-destructive hover:bg-destructive/10"
-                  onClick={() => onDelete(listing.id)}
-                >
-                  <Trash2 className="h-4 w-4" />
+              {listing.status === 'archived' && onPublish && (
+                <Button variant="outline" size="sm" className="h-9 rounded-xl" onClick={() => onPublish(listing.id)}>
+                  <Play className="h-4 w-4 mr-1.5" />
+                  Republish
                 </Button>
+              )}
+
+              {/* Overflow menu — duplicate / archive / delete */}
+              {(onDuplicate || onArchive || onDelete) && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl">
+                      <MoreHorizontal className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-44">
+                    {onDuplicate && (
+                      <DropdownMenuItem onClick={() => onDuplicate(listing.id)} className="gap-2">
+                        <CopyIcon className="h-4 w-4" /> Duplicate
+                      </DropdownMenuItem>
+                    )}
+                    {onArchive && listing.status !== 'archived' && (
+                      <DropdownMenuItem onClick={() => onArchive(listing.id)} className="gap-2">
+                        <Archive className="h-4 w-4" /> Archive
+                      </DropdownMenuItem>
+                    )}
+                    {onDelete && (
+                      <>
+                        <DropdownMenuSeparator />
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <DropdownMenuItem
+                              onSelect={(e) => e.preventDefault()}
+                              className="gap-2 text-destructive focus:text-destructive"
+                            >
+                              <Trash2 className="h-4 w-4" /> Delete
+                            </DropdownMenuItem>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Delete this listing?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                "{listing.title}" will be permanently removed. This can't be undone.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={() => onDelete(listing.id)}
+                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                              >
+                                Delete
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </>
+                    )}
+                  </DropdownMenuContent>
+                </DropdownMenu>
               )}
             </div>
           </div>
         </div>
       </div>
 
-      {/* Availability Calendar Modal */}
       {showCalendar && (
-        <AvailabilityCalendar 
-          listing={listing} 
-          onClose={() => setShowCalendar(false)} 
-        />
+        <AvailabilityCalendar listing={listing} onClose={() => setShowCalendar(false)} />
       )}
 
-      {/* Featured Listing Modal */}
       <FeaturedListingModal
         open={showFeaturedModal}
         onOpenChange={setShowFeaturedModal}
@@ -391,12 +402,7 @@ const HostListingCard = ({ listing, onPause, onPublish, onDelete, onPriceUpdate 
         listingTitle={listing.title}
       />
 
-      {/* Share Kit Modal */}
-      <ShareKitModal
-        open={showShareKit}
-        onOpenChange={setShowShareKit}
-        listing={listing}
-      />
+      <ShareKitModal open={showShareKit} onOpenChange={setShowShareKit} listing={listing} />
     </>
   );
 };

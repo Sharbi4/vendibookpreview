@@ -16,7 +16,7 @@ interface StickyMobileCTAProps {
   isRental: boolean;
   priceDaily: number | null;
   priceSale: number | null;
-  status: 'draft' | 'published' | 'paused';
+  status: 'draft' | 'published' | 'paused' | 'archived';
   instantBook?: boolean;
   // Additional props for booking
   category?: ListingCategory;
