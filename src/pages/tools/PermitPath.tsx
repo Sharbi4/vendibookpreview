@@ -5,45 +5,27 @@ import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import SEO from '@/components/SEO';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@/components/ui/breadcrumb';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { 
-  FileCheck, 
-  Loader2, 
-  Home,
-  Shield,
-  Clock,
-  MapPin,
-  AlertTriangle,
-  CheckCircle,
-  ArrowRight,
-  ExternalLink,
-  DollarSign,
-  Calendar,
-  Building,
-  Flame,
-  Heart
+import {
+  FileCheck, Loader2, Home, Shield, Clock, ArrowRight, DollarSign,
 } from 'lucide-react';
 import ToolCrossLinks from '@/components/tools/ToolCrossLinks';
-import { OutputCard, OutputMetric, OutputList, OutputSection } from '@/components/tools/OutputCard';
+import ResultsDashboard, { type DashboardResult } from '@/components/tools/permit-path/ResultsDashboard';
 
-// JSON-LD structured data
 const pageJsonLd = {
-  "@context": "https://schema.org",
-  "@type": "SoftwareApplication",
-  "name": "Vendi PermitPath - License & Permit Finder for Food Trucks",
-  "applicationCategory": "BusinessApplication",
-  "operatingSystem": "Web",
-  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
-  "description": "Find all licenses, permits, and compliance requirements for your mobile food business. Mapped to your city and setup.",
-  "featureList": ["State and city license requirements", "Health department permits", "Fire safety certifications", "Insurance requirements", "Estimated costs and timelines"]
+  '@context': 'https://schema.org',
+  '@type': 'SoftwareApplication',
+  name: 'Vendi PermitPath — Food Truck Permit & License Finder',
+  applicationCategory: 'BusinessApplication',
+  operatingSystem: 'Web',
+  offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+  description: 'Find every license, permit, and inspection required for your mobile food business. Mapped to your city and setup.',
 };
 
 const US_STATES = [
@@ -63,435 +45,293 @@ const US_STATES = [
   { value: 'SC', label: 'South Carolina' }, { value: 'SD', label: 'South Dakota' }, { value: 'TN', label: 'Tennessee' },
   { value: 'TX', label: 'Texas' }, { value: 'UT', label: 'Utah' }, { value: 'VT', label: 'Vermont' },
   { value: 'VA', label: 'Virginia' }, { value: 'WA', label: 'Washington' }, { value: 'WV', label: 'West Virginia' },
-  { value: 'WI', label: 'Wisconsin' }, { value: 'WY', label: 'Wyoming' }, { value: 'DC', label: 'Washington D.C.' }];
+  { value: 'WI', label: 'Wisconsin' }, { value: 'WY', label: 'Wyoming' }, { value: 'DC', label: 'Washington D.C.' },
+];
 
-interface LicenseResult {
-  location: { city: string; state: string; stateAbbreviation: string };
-  businessType: string;
-  overview: string;
-  disclaimer: string;
-  lastUpdated?: string;
-  licenses: Array<{
-    name: string; category: string; description: string; issuingAuthority: string;
-    estimatedCost: string; renewalPeriod: string; processingTime: string;
-    requirements: string[];
-    officialUrl?: string;
-    websiteHint?: string;
-    sourceIndex?: number | null;
-    priority: string;
-  }>;
-  insuranceRequirements: Array<{ type: string; minimumCoverage: string; description: string }>;
-  inspectionRequirements: Array<{ type: string; frequency: string; authority: string }>;
-  estimatedTotalCost: string;
-  estimatedTimeline: string;
-  tips: string[];
-  commonMistakes: string[];
-  sources?: Array<{ index: number; title: string; url: string; agency?: string }>;
-  helpfulResources: Array<{ name: string; description: string; url?: string; searchTerm?: string }>;
+// Adapter — handles both the new schema and any in-flight legacy responses.
+function adaptResult(raw: any): DashboardResult | null {
+  if (!raw) return null;
+  if (Array.isArray(raw.categories) && raw.categories.length) return raw as DashboardResult;
+  // Legacy adapter: group `licenses` into categories
+  if (Array.isArray(raw.licenses)) {
+    const buckets: Record<string, any[]> = {};
+    for (const l of raw.licenses) {
+      const cat =
+        l.category === 'health' ? 'Health Permits' :
+        l.category === 'fire' ? 'Fire & Equipment' :
+        l.category === 'tax' ? 'Business Registration' :
+        l.category === 'city' || l.category === 'county' ? 'Local & City-Specific' :
+        l.category === 'state' ? 'Mobile Vendor License' :
+        l.category === 'federal' ? 'Business Registration' :
+        'Other';
+      (buckets[cat] ||= []).push({
+        title: l.name,
+        issuer: l.issuingAuthority,
+        level: l.category === 'federal' || l.category === 'state' || l.category === 'county' || l.category === 'city'
+          ? l.category
+          : 'state',
+        cost_estimate: l.estimatedCost,
+        timeline_estimate: l.processingTime,
+        official_url: l.officialUrl || '',
+        why_it_matters: l.description,
+        commonly_missed: l.priority === 'required',
+      });
+    }
+    const categories = Object.entries(buckets).map(([name, items]) => ({ name, items }));
+    return {
+      location: { city: raw.location?.city, state: raw.location?.state, stateAbbreviation: raw.location?.stateAbbreviation },
+      businessType: raw.businessType,
+      overview: raw.overview,
+      recent_law_alert: null,
+      estimated_total_cost: { display: raw.estimatedTotalCost },
+      estimated_setup_weeks: { display: raw.estimatedTimeline },
+      categories,
+      sources: raw.sources,
+      verify_note: 'Requirements vary by jurisdiction and change often. Confirm each item with the issuing agency before applying.',
+    };
+  }
+  return null;
 }
 
 const PermitPath = () => {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
-  const [licenseForm, setLicenseForm] = useState({ city: '', state: '', businessType: 'food_truck' });
-  const [licenseResult, setLicenseResult] = useState<LicenseResult | null>(null);
+  const [form, setForm] = useState({ city: '', state: '', businessType: 'food_truck' });
+  const [result, setResult] = useState<DashboardResult | null>(null);
 
   const handleSubmit = async () => {
     setIsLoading(true);
+    setResult(null);
     try {
-      const { data: response, error } = await supabase.functions.invoke('ai-license-finder', { body: licenseForm });
+      const { data: response, error } = await supabase.functions.invoke('ai-license-finder', { body: form });
       if (error) throw error;
-      if (response.error) { toast({ title: 'Error', description: response.error, variant: 'destructive' }); return; }
-      setLicenseResult(response.result);
-    } catch (error) {
+      if (response?.error) {
+        toast({ title: 'Could not build checklist', description: response.error, variant: 'destructive' });
+        return;
+      }
+      const adapted = adaptResult(response?.result);
+      if (!adapted) {
+        toast({ title: 'No results', description: 'We could not parse a checklist. Please try again.', variant: 'destructive' });
+        return;
+      }
+      setResult(adapted);
+      setTimeout(() => document.getElementById('results-section')?.scrollIntoView({ behavior: 'smooth' }), 100);
+    } catch {
       toast({ title: 'Error', description: 'Failed to find requirements. Please try again.', variant: 'destructive' });
-    } finally { setIsLoading(false); }
-  };
-
-  const getPriorityColor = (priority: string) => {
-    switch (priority) { case 'required': return 'destructive'; case 'recommended': return 'default'; default: return 'secondary'; }
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
     <>
       <SEO
         title="Food Truck Permits & Licenses Lookup by City (2026) — Free Tool"
-        description="Free 2026 food truck permit & license finder. Get every health permit, business license, fire inspection, and commissary rule for your city in seconds."
+        description="Free 2026 food truck permit & license finder. Get every health permit, business license, fire inspection, and commissary rule for your city — organized as an interactive checklist."
         canonical="/tools/permitpath"
       />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(pageJsonLd) }} />
-      
-      <div className="min-h-screen flex flex-col bg-background">
+
+      <div className="min-h-screen flex flex-col bg-[#08080a] text-white">
         <Header />
 
         <main className="flex-1">
           {/* Hero */}
           <section className="relative py-16 md:py-24 overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-br from-amber-500/10 via-orange-500/5 to-red-500/10" />
-            <div className="absolute inset-0 overflow-hidden pointer-events-none">
-              <div className="absolute top-10 right-10 w-[400px] h-[400px] bg-gradient-to-br from-amber-500/10 to-orange-500/8 rounded-full blur-3xl animate-pulse" />
-            </div>
-            
+            {/* Orange radial glow */}
+            <div
+              aria-hidden
+              className="pointer-events-none absolute inset-0"
+              style={{
+                background:
+                  'radial-gradient(60% 50% at 30% 30%, rgba(255,81,36,0.18) 0%, rgba(255,81,36,0) 60%)',
+              }}
+            />
             <div className="container relative z-10">
               <Breadcrumb className="mb-6">
                 <BreadcrumbList>
                   <BreadcrumbItem>
                     <BreadcrumbLink asChild>
-                      <Link to="/" className="flex items-center gap-1">
-                        <Home className="h-4 w-4" />
-                        Home
+                      <Link to="/" className="flex items-center gap-1 text-white/60 hover:text-white">
+                        <Home className="h-4 w-4" /> Home
                       </Link>
                     </BreadcrumbLink>
                   </BreadcrumbItem>
                   <BreadcrumbSeparator />
                   <BreadcrumbItem>
                     <BreadcrumbLink asChild>
-                      <Link to="/tools">Host Tools</Link>
+                      <Link to="/tools" className="text-white/60 hover:text-white">Host Tools</Link>
                     </BreadcrumbLink>
                   </BreadcrumbItem>
                   <BreadcrumbSeparator />
                   <BreadcrumbItem>
-                    <BreadcrumbPage>PermitPath</BreadcrumbPage>
+                    <BreadcrumbPage className="text-white">PermitPath</BreadcrumbPage>
                   </BreadcrumbItem>
                 </BreadcrumbList>
               </Breadcrumb>
-              
+
               <div className="max-w-3xl">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-amber-400 to-orange-600 flex items-center justify-center shadow-lg">
-                    <FileCheck className="h-6 w-6 text-white" />
-                  </div>
-                  <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0">
-                    PermitPath
-                  </Badge>
+                <div className="inline-flex items-center gap-2 mb-5 px-3 py-1.5 rounded-full border border-white/10 bg-white/5 backdrop-blur">
+                  <span className="h-1.5 w-1.5 rounded-full bg-[#FF5124] shadow-[0_0_8px_rgba(255,81,36,0.8)]" />
+                  <span className="text-xs font-medium tracking-wider uppercase text-white/80">PermitPath</span>
                 </div>
-                <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-foreground mb-4 leading-tight">
-                  Navigate permits in minutes, not weeks.
+                <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-5 leading-[1.05] tracking-tight">
+                  Navigate permits in minutes,<br className="hidden sm:block" />
+                  <span className="text-[#FF5124]">not weeks.</span>
                 </h1>
-                <p className="text-xl text-foreground/70 mb-8">
-                  Permits, licenses, and compliance—mapped to your city and setup. Know exactly what you need before you start.
+                <p className="text-lg md:text-xl text-white/70 mb-8 max-w-2xl">
+                  Permits, licenses, and compliance — mapped to your city and setup. Built from official sources so you know exactly what you need before you start.
                 </p>
-                <div className="flex flex-wrap gap-4">
-                  <Button size="lg" variant="dark-shine" onClick={() => document.getElementById('tool-section')?.scrollIntoView({ behavior: 'smooth' })}>
-                    Find My Permits<ArrowRight className="h-4 w-4 ml-2" />
-                  </Button>
-                </div>
+                <Button
+                  size="lg"
+                  onClick={() => document.getElementById('tool-section')?.scrollIntoView({ behavior: 'smooth' })}
+                  className="bg-[#FF5124] hover:bg-[#FF5124]/90 text-white font-semibold px-6 h-12 rounded-xl shadow-[0_8px_30px_-8px_rgba(255,81,36,0.6)]"
+                >
+                  Find My Permits <ArrowRight className="h-4 w-4 ml-2" />
+                </Button>
               </div>
             </div>
           </section>
 
-          {/* 3 Outcome Cards */}
-          <section className="py-16 bg-muted/30">
+          {/* Benefit cards — unified dark */}
+          <section className="py-12 md:py-16">
             <div className="container">
-              <div className="grid gap-6 md:grid-cols-3">
-                <Card className="border-0 shadow-lg bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20">
-                  <CardContent className="pt-6">
-                    <div className="w-12 h-12 rounded-xl bg-green-500/10 flex items-center justify-center mb-4">
-                      <Shield className="h-6 w-6 text-green-600" />
+              <div className="grid gap-4 md:grid-cols-3">
+                {[
+                  { icon: Shield, tint: 'text-emerald-400', bg: 'bg-emerald-500/10 border-emerald-500/20', title: 'Avoid compliance mistakes', body: 'A complete checklist so you don\'t miss critical permits that could shut you down.' },
+                  { icon: Clock, tint: 'text-sky-400', bg: 'bg-sky-500/10 border-sky-500/20', title: 'Save weeks of research', body: 'Skip the endless Googling. Every requirement in one organized, interactive view.' },
+                  { icon: DollarSign, tint: 'text-[#FF5124]', bg: 'bg-[#FF5124]/10 border-[#FF5124]/20', title: 'Know your costs upfront', body: 'Estimated costs and timelines so you can budget your launch with confidence.' },
+                ].map((b, i) => (
+                  <motion.div
+                    key={b.title}
+                    initial={{ opacity: 0, y: 16 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: i * 0.08 }}
+                    className="rounded-2xl border border-white/10 bg-white/[0.02] p-6 hover:border-white/20 hover:bg-white/[0.04] transition-all"
+                  >
+                    <div className={`w-11 h-11 rounded-xl border ${b.bg} flex items-center justify-center mb-4`}>
+                      <b.icon className={`h-5 w-5 ${b.tint}`} />
                     </div>
-                    <h3 className="font-bold text-lg mb-2">Avoid Compliance Mistakes</h3>
-                    <p className="text-muted-foreground">Get a complete checklist so you don't miss critical permits that could shut you down.</p>
-                  </CardContent>
-                </Card>
-                <Card className="border-0 shadow-lg bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20">
-                  <CardContent className="pt-6">
-                    <div className="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center mb-4">
-                      <Clock className="h-6 w-6 text-blue-600" />
-                    </div>
-                    <h3 className="font-bold text-lg mb-2">Save Weeks of Research</h3>
-                    <p className="text-muted-foreground">Skip the endless Googling. Get all requirements in one organized view.</p>
-                  </CardContent>
-                </Card>
-                <Card className="border-0 shadow-lg bg-gradient-to-br from-purple-50 to-violet-50 dark:from-purple-950/20 dark:to-violet-950/20">
-                  <CardContent className="pt-6">
-                    <div className="w-12 h-12 rounded-xl bg-purple-500/10 flex items-center justify-center mb-4">
-                      <DollarSign className="h-6 w-6 text-purple-600" />
-                    </div>
-                    <h3 className="font-bold text-lg mb-2">Know Your Costs Upfront</h3>
-                    <p className="text-muted-foreground">Estimated costs and timelines so you can budget properly.</p>
-                  </CardContent>
-                </Card>
+                    <h3 className="font-semibold text-white text-lg mb-2">{b.title}</h3>
+                    <p className="text-white/60 text-sm leading-relaxed">{b.body}</p>
+                  </motion.div>
+                ))}
               </div>
             </div>
           </section>
 
-          {/* How It Works */}
-          <section className="py-16">
-            <div className="container">
-              <h2 className="text-3xl font-bold text-center mb-12">How PermitPath Works</h2>
-              <div className="grid gap-8 md:grid-cols-3 max-w-4xl mx-auto">
-                <div className="text-center">
-                  <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                    <span className="text-2xl font-bold text-primary">1</span>
-                  </div>
-                  <h3 className="font-bold mb-2">Enter Your Location</h3>
-                  <p className="text-muted-foreground text-sm">Tell us your state, city, and business type.</p>
-                </div>
-                <div className="text-center">
-                  <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                    <span className="text-2xl font-bold text-primary">2</span>
-                  </div>
-                  <h3 className="font-bold mb-2">AI Maps Requirements</h3>
-                  <p className="text-muted-foreground text-sm">Get a complete checklist of permits, licenses, and inspections.</p>
-                </div>
-                <div className="text-center">
-                  <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                    <span className="text-2xl font-bold text-primary">3</span>
-                  </div>
-                  <h3 className="font-bold mb-2">Download & Apply</h3>
-                  <p className="text-muted-foreground text-sm">Use official resources to apply for each requirement.</p>
-                </div>
+          {/* How it works */}
+          <section className="py-12 md:py-16">
+            <div className="container max-w-4xl">
+              <h2 className="text-3xl md:text-4xl font-bold text-center text-white mb-12">
+                How PermitPath works
+              </h2>
+              <div className="relative grid gap-8 md:grid-cols-3">
+                {/* Connector line desktop */}
+                <div aria-hidden className="hidden md:block absolute top-7 left-[16.66%] right-[16.66%] h-px bg-gradient-to-r from-transparent via-[#FF5124]/40 to-transparent" />
+                {[
+                  { n: 1, title: 'Enter your location', body: 'Tell us your state, city, and business type.' },
+                  { n: 2, title: 'We map your requirements', body: 'Get a complete checklist of permits, licenses, and inspections.' },
+                  { n: 3, title: 'Track & apply', body: 'Check items off, download as PDF, and apply on official sites.' },
+                ].map((s, i) => (
+                  <motion.div
+                    key={s.n}
+                    initial={{ opacity: 0, y: 16 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: i * 0.1 }}
+                    className="relative text-center"
+                  >
+                    <div className="w-14 h-14 rounded-full bg-[#FF5124] flex items-center justify-center mx-auto mb-4 shadow-[0_8px_24px_-8px_rgba(255,81,36,0.7)] ring-4 ring-[#08080a] relative z-10">
+                      <span className="text-xl font-bold text-white">{s.n}</span>
+                    </div>
+                    <h3 className="font-semibold text-white mb-1.5">{s.title}</h3>
+                    <p className="text-sm text-white/55">{s.body}</p>
+                  </motion.div>
+                ))}
               </div>
             </div>
           </section>
 
-          {/* The Tool */}
-          <section id="tool-section" className="py-16 bg-muted/30">
-            <div className="container max-w-5xl">
-              {/* Disclaimer */}
-              <div className="p-4 bg-amber-50 dark:bg-amber-950/50 border border-amber-200 dark:border-amber-800 rounded-lg mb-6">
-                <div className="flex gap-3">
-                  <AlertTriangle className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" />
+          {/* Tool */}
+          <section id="tool-section" className="py-12 md:py-16">
+            <div className="container max-w-3xl">
+              <div className="rounded-2xl border border-white/10 bg-[#0d0d10] p-6 md:p-8 shadow-2xl">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="h-10 w-10 rounded-xl bg-[#FF5124]/15 border border-[#FF5124]/30 flex items-center justify-center">
+                    <FileCheck className="h-5 w-5 text-[#FF5124]" />
+                  </div>
                   <div>
-                    <h4 className="font-semibold text-amber-800 dark:text-amber-400 mb-1">Important Disclaimer</h4>
-                    <p className="text-sm text-amber-700 dark:text-amber-300">
-                      This AI tool provides general guidance only. <strong>Always verify requirements directly with your local government agencies</strong> before starting your business.
-                    </p>
+                    <h2 className="font-semibold text-white text-lg">Build your checklist</h2>
+                    <p className="text-sm text-white/55">State and business type required. City makes it more accurate.</p>
                   </div>
                 </div>
-              </div>
 
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2"><FileCheck className="h-5 w-5 text-primary" />PermitPath</CardTitle>
-                  <CardDescription>Find all licenses, permits, and requirements for your location.</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid gap-4 sm:grid-cols-3">
-                    <div className="space-y-2">
-                      <Label>State *</Label>
-                      <Select value={licenseForm.state} onValueChange={(v) => setLicenseForm({ ...licenseForm, state: v })}>
-                        <SelectTrigger><SelectValue placeholder="Select state" /></SelectTrigger>
-                        <SelectContent>{US_STATES.map((s) => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}</SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-2">
-                      <Label>City (Optional)</Label>
-                      <Input placeholder="e.g., Austin" value={licenseForm.city} onChange={(e) => setLicenseForm({ ...licenseForm, city: e.target.value })} />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Business Type</Label>
-                      <Select value={licenseForm.businessType} onValueChange={(v) => setLicenseForm({ ...licenseForm, businessType: v })}>
-                        <SelectTrigger><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="food_truck">Food Truck</SelectItem>
-                          <SelectItem value="food_trailer">Food Trailer</SelectItem>
-                          <SelectItem value="food_cart">Food Cart</SelectItem>
-                          <SelectItem value="ghost_kitchen">Shared Kitchen</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
+                <div className="grid gap-4 sm:grid-cols-3">
+                  <div className="space-y-1.5">
+                    <Label className="text-white/80 text-sm">State *</Label>
+                    <Select value={form.state} onValueChange={(v) => setForm({ ...form, state: v })}>
+                      <SelectTrigger className="bg-white/[0.03] border-white/10 text-white h-11 text-base">
+                        <SelectValue placeholder="Select state" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {US_STATES.map((s) => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
                   </div>
-                  <Button onClick={handleSubmit} disabled={isLoading || !licenseForm.state} className="w-full">
-                    {isLoading ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Finding Requirements...</> : <>Find My Permits</>}
-                  </Button>
-                </CardContent>
-              </Card>
+                  <div className="space-y-1.5">
+                    <Label className="text-white/80 text-sm">City (optional)</Label>
+                    <Input
+                      placeholder="e.g., Austin"
+                      value={form.city}
+                      onChange={(e) => setForm({ ...form, city: e.target.value })}
+                      className="bg-white/[0.03] border-white/10 text-white placeholder:text-white/30 h-11 text-base"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-white/80 text-sm">Business type</Label>
+                    <Select value={form.businessType} onValueChange={(v) => setForm({ ...form, businessType: v })}>
+                      <SelectTrigger className="bg-white/[0.03] border-white/10 text-white h-11 text-base">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="food_truck">Food Truck</SelectItem>
+                        <SelectItem value="food_trailer">Food Trailer</SelectItem>
+                        <SelectItem value="food_cart">Food Cart / Pushcart</SelectItem>
+                        <SelectItem value="ghost_kitchen">Shared / Ghost Kitchen</SelectItem>
+                        <SelectItem value="catering">Catering Business</SelectItem>
+                        <SelectItem value="cottage_food">Cottage Food</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <Button
+                  onClick={handleSubmit}
+                  disabled={isLoading || !form.state}
+                  className="w-full mt-6 h-12 bg-[#FF5124] hover:bg-[#FF5124]/90 disabled:bg-white/10 disabled:text-white/40 text-white font-semibold text-base rounded-xl shadow-[0_8px_30px_-8px_rgba(255,81,36,0.6)] transition-all"
+                >
+                  {isLoading ? (
+                    <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Building your checklist…</>
+                  ) : (
+                    <>Find my permits <ArrowRight className="h-4 w-4 ml-2" /></>
+                  )}
+                </Button>
+
+                <p className="text-xs text-white/40 mt-4 text-center">
+                  Requirements are researched from official sources. Always confirm with your local agency before applying.
+                </p>
+              </div>
 
               {/* Results */}
-              {licenseResult && (
-                <motion.div 
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="mt-8 space-y-6"
-                >
-                  {/* Overview */}
-                  <OutputCard
-                    title={`${licenseResult.location.city ? `${licenseResult.location.city}, ` : ''}${licenseResult.location.state}`}
-                    subtitle={licenseResult.overview}
-                    icon={<MapPin className="h-5 w-5" />}
-                    gradient="from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/30"
-                  >
-                    <div className="grid gap-4 sm:grid-cols-2">
-                      <OutputMetric
-                        label="Estimated Total Cost"
-                        value={licenseResult.estimatedTotalCost}
-                        variant="highlight"
-                        icon={<DollarSign className="h-4 w-4" />}
-                      />
-                      <OutputMetric
-                        label="Estimated Timeline"
-                        value={licenseResult.estimatedTimeline}
-                        variant="default"
-                        icon={<Calendar className="h-4 w-4" />}
-                      />
-                    </div>
-                  </OutputCard>
-
-                  {/* Licenses List */}
-                  <Card className="border-0 shadow-lg">
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
-                        <FileCheck className="h-5 w-5 text-primary" />
-                        Required Licenses & Permits
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-4">
-                        {licenseResult.licenses.map((license, i) => (
-                          <motion.div 
-                            key={i} 
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: i * 0.05 }}
-                            className="p-4 border rounded-xl hover:shadow-md transition-shadow bg-gradient-to-r from-background to-muted/20"
-                          >
-                            <div className="flex items-start justify-between gap-4 mb-2">
-                              <div>
-                                <h4 className="font-semibold">{license.name}</h4>
-                                <p className="text-sm text-muted-foreground">{license.issuingAuthority}</p>
-                              </div>
-                              <Badge variant={getPriorityColor(license.priority)}>{license.priority}</Badge>
-                            </div>
-                            <p className="text-sm mb-3">{license.description}</p>
-                            <div className="grid gap-2 sm:grid-cols-3 text-sm">
-                              <div className="flex items-center gap-1.5">
-                                <DollarSign className="h-3.5 w-3.5 text-muted-foreground" />
-                                <span className="text-muted-foreground">Cost:</span> {license.estimatedCost}
-                              </div>
-                              <div className="flex items-center gap-1.5">
-                                <Clock className="h-3.5 w-3.5 text-muted-foreground" />
-                                <span className="text-muted-foreground">Processing:</span> {license.processingTime}
-                              </div>
-                              <div className="flex items-center gap-1.5">
-                                <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
-                                <span className="text-muted-foreground">Renewal:</span> {license.renewalPeriod}
-                              </div>
-                            </div>
-                            {license.officialUrl && (
-                              <a
-                                href={license.officialUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="inline-flex items-center gap-1.5 mt-3 text-sm font-medium text-primary hover:underline"
-                              >
-                                <ExternalLink className="h-3.5 w-3.5" />
-                                Open official source
-                              </a>
-                            )}
-                          </motion.div>
-                        ))}
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  {/* Live Sources */}
-                  {licenseResult.sources && licenseResult.sources.length > 0 && (
-                    <Card className="border-0 shadow-lg">
-                      <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                          <ExternalLink className="h-5 w-5 text-primary" />
-                          Verified Sources
-                          {licenseResult.lastUpdated && (
-                            <Badge variant="secondary" className="ml-2 font-normal">
-                              Updated {licenseResult.lastUpdated}
-                            </Badge>
-                          )}
-                        </CardTitle>
-                        <CardDescription>
-                          Pulled live from official government and industry pages at the time of search.
-                        </CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        <ul className="space-y-2">
-                          {licenseResult.sources.map((s) => (
-                            <li key={s.index} className="flex items-start gap-3 text-sm">
-                              <span className="mt-0.5 inline-flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
-                                {s.index}
-                              </span>
-                              <div className="min-w-0 flex-1">
-                                <a
-                                  href={s.url}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="font-medium text-foreground hover:text-primary hover:underline break-words"
-                                >
-                                  {s.title || s.url}
-                                </a>
-                                {s.agency && (
-                                  <p className="text-xs text-muted-foreground">{s.agency}</p>
-                                )}
-                              </div>
-                            </li>
-                          ))}
-                        </ul>
-                      </CardContent>
-                    </Card>
-                  )}
-
-                  {/* Government Resources */}
-                  <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-primary/10">
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2"><ExternalLink className="h-5 w-5 text-primary" />Official Government Resources</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                        <a href="https://www.sba.gov/business-guide/launch-your-business/apply-licenses-permits" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 p-3 border rounded-lg hover:bg-background transition-colors">
-                          <span className="text-lg">🏛️</span>
-                          <div><p className="font-medium text-sm">U.S. Small Business Administration</p><p className="text-xs text-muted-foreground">Federal licenses & permits</p></div>
-                        </a>
-                        <a href="https://www.fda.gov/food/food-industry/retail-food-protection" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 p-3 border rounded-lg hover:bg-background transition-colors">
-                          <span className="text-lg">🍽️</span>
-                          <div><p className="font-medium text-sm">FDA Food Safety</p><p className="text-xs text-muted-foreground">Retail food protection</p></div>
-                        </a>
-                        <a href="https://www.usa.gov/state-health" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 p-3 border rounded-lg hover:bg-background transition-colors">
-                          <span className="text-lg">🏥</span>
-                          <div><p className="font-medium text-sm">State Health Departments</p><p className="text-xs text-muted-foreground">Find your state agency</p></div>
-                        </a>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              )}
-            </div>
-          </section>
-
-          {/* FAQ */}
-          <section className="py-16">
-            <div className="container max-w-3xl">
-              <Accordion type="single" collapsible>
-                <AccordionItem value="q1">
-                  <AccordionTrigger>Is this legal advice?</AccordionTrigger>
-                  <AccordionContent>No. PermitPath provides general guidance only. Always verify with your local government agencies.</AccordionContent>
-                </AccordionItem>
-                <AccordionItem value="q2">
-                  <AccordionTrigger>How often are requirements updated?</AccordionTrigger>
-                  <AccordionContent>Our AI uses the latest available information, but regulations change frequently. Always check official sources.</AccordionContent>
-                </AccordionItem>
-              </Accordion>
-            </div>
-          </section>
-
-          {/* Cross-Links */}
-          <ToolCrossLinks 
-            currentTool="permitpath" 
-            title="Continue Building Your Business"
-            subtitle="Got your permits sorted? Next, get equipment recommendations, set pricing, and create your listing."
-          />
-
-          {/* Final CTA */}
-          <section className="py-20 bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-red-500/10">
-            <div className="container text-center">
-              <h2 className="text-3xl md:text-4xl font-bold mb-4">Ready to get compliant?</h2>
-              <p className="text-lg text-muted-foreground mb-8 max-w-xl mx-auto">Find your permit requirements now and start your business the right way.</p>
-              <div className="flex flex-wrap gap-4 justify-center">
-                <Button size="lg" variant="dark-shine" onClick={() => document.getElementById('tool-section')?.scrollIntoView({ behavior: 'smooth' })}>
-                  Find My Permits
-                </Button>
-                <Button size="lg" variant="dark-shine" asChild><Link to="/host">List Your Asset</Link></Button>
+              <div id="results-section">
+                {result && <ResultsDashboard result={result} />}
               </div>
             </div>
           </section>
+
+          <ToolCrossLinks currentTool="permitpath" />
         </main>
 
         <Footer />

@@ -1,101 +1,69 @@
-# Plan: Dashboard + Listing Actions + Share Kit Overhaul
+# PermitPath Redesign + Engine Upgrade
 
-Three workstreams, all surfaced by parallel audits. I'll do them in this order so risky bits (schema, route) ship first while you can verify, then layer UX.
+Two workstreams: (1) visual/UX overhaul of `src/pages/tools/PermitPath.tsx`, (2) prompt + JSON-schema upgrade of `supabase/functions/ai-license-finder/index.ts` to power a richer interactive results dashboard.
 
----
+## 1. Visual + UX rebuild (`PermitPath.tsx`)
 
-## 1. Broken pages
+**Fix contrast immediately**
+- Replace the pastel green/blue/purple benefit cards with a single cohesive system: dark `bg-card/60` surface, hairline border, colored icon tile (icon keeps its hue, card stays dark), bold near-white heading, muted body. No light-on-light anywhere.
+- Audit every heading/body line; standardize to `text-foreground` / `text-muted-foreground`.
 
-| Route | Today | Fix |
-|---|---|---|
-| `/settings` | Silently renders homepage (no route) | Add a `<Navigate to="/account" replace />` route entry so `/settings` lands on Account. |
-| `/profile`, `/create-listing` | Already redirect to `/account` / `/list` — fine, but unconfirmed | Verify the redirect entries exist; leave as-is. |
-| S3 font CORS error on every page | Custom font `sofiaprosoftlight` 404/CORS spam | Drop the broken S3 `@font-face` and fall back to the already-loaded system font stack, so the console is clean. |
-| tawk.to CORS error | Third-party widget — out of scope | No change. |
+**Remove "AI" framing (user-facing only)**
+- Drop the big "Important Disclaimer / This AI tool…" banner. Replace with a single small line under results: "Requirements are researched from official sources. Always confirm with your local agency before applying."
+- Rename step 2 from "AI Maps Requirements" → "We Map Your Requirements."
+- Strip any other "AI" labels from copy. Engine keeps working unchanged under the hood.
 
-Then run a Playwright sweep again to confirm zero blocking console errors on the main authenticated routes.
+**Premium polish (Satin Lux, orange-only CTA — matches Core memory)**
+- Hero: keep "Navigate permits in minutes, not weeks." Add a subtle radial `#FF5124` glow behind the headline using a CSS radial-gradient layer. Refine the PermitPath badge (hairline border, tiny dot, tracking).
+- Primary CTA "Find My Permits": solid `bg-[hsl(var(--primary))]` orange-red, white text, right-arrow, shimmer-sweep hover (reuse the existing glass CTA variant from memory).
+- Benefit cards: staggered fade-up on scroll (framer-motion `whileInView`).
+- "How PermitPath Works": orange filled numbered circles + thin vertical connector line on desktop, stacked on mobile. Tighten copy.
+- Mobile-first: 16px inputs (Core rule), 48px tap targets, generous spacing.
 
----
+## 2. Interactive results dashboard
 
-## 2. Host listing actions
+Replace the current flat list with a dashboard rendered from the new JSON schema:
 
-Code is in `src/components/dashboard/HostListingCard.tsx`, `OperationsTable.tsx`, and `src/hooks/useHostListings.ts`. RLS is already correct.
+- **Sticky summary header**: progress bar ("4 of 11 complete"), running cost range, typical setup weeks. Updates live as checkboxes toggle.
+- **"Don't skip these" highlight strip** at the top — auto-populated from `commonly_missed: true` items.
+- **Recent law alert banner** (orange-tinted, dismissible) when `recent_law_alert` is non-null.
+- **Category sections** (Business Registration, Food Safety Certifications, Health Permits, Mobile Vendor License, Fire/Equipment, Local/City, Insurance) rendered as collapsible groups.
+- **Each requirement = expandable card** with: title, issuer + level badge (state/county/city/federal), cost estimate, timeline estimate, "why it matters" plain-language line, official link button, checkbox for progress.
+- **Persistence**: checklist state stored in `localStorage` keyed by `state|city|business_type` so progress survives reloads. Optional "Save to my account" if user is authed (writes to a new lightweight `permit_checklists` table — flag this for a follow-up migration; not in scope for this pass unless approved).
+- **Download as PDF** button using the existing `generateReceiptPdf` pattern (new helper `generatePermitChecklistPdf.ts`).
+- Small inline verify note at the bottom of results, not a banner.
 
-**Schema migration**
-- Extend `listing_status` enum: add `'archived'`.
+New components (kept small, in `src/components/tools/permit-path/`):
+- `ResultsDashboard.tsx`
+- `CategorySection.tsx`
+- `RequirementCard.tsx`
+- `ProgressSummary.tsx`
+- `LawAlertBanner.tsx`
+- `usePermitChecklist.ts` (localStorage hook)
 
-**`useHostListings.ts`**
-- Add `duplicateListing(id)` — clone row, strip `id/published_at/featured_*`, prefix title with "Copy of ", insert as `draft`, prepend to local state.
-- Add `archiveListing(id)` → `updateListingStatus(id, 'archived')`.
-- Add `unpauseListing(id)` — sets status back to `'published'` WITHOUT touching `published_at`, so featured/analytics windows aren't reset.
-- Wrap optimistic updates in snapshot/rollback: capture prior state, restore in `catch`.
+## 3. Engine upgrade (`supabase/functions/ai-license-finder/index.ts`)
 
-**`HostListingCard.tsx`**
-- Wrap the trash button in an `AlertDialog` (match `DraftsSection` pattern) — no more accidental deletes.
-- Add Duplicate + Archive items to the action menu.
-- Add `host_id` guard to `handleSavePrice`'s update chain.
-- Add `archived` style + label to `StatusPill`, with a default fallback so future enum values don't render `className="undefined"`.
+- Replace system + user prompts with the PermitPath spec from the brief: forbids invented fees/links, mandates official-source grounding, separates state vs city/county, bakes in the known recent changes (TX HB 2844 / SB 1008, FDA 2022 Food Code, cottage food shifts in FL/MI/ND/MN) with "verify still current" caveats.
+- Expand Firecrawl `gatherSources` queries to also hit: state DSHS / health dept, city clerk, county environmental health, fire marshal, cottage-food law pages, and recent-news queries filtered to the last 12 months.
+- Switch JSON schema to the new shape the dashboard consumes:
+  ```
+  { location, recent_law_alert, estimated_total_cost{low,high},
+    estimated_setup_weeks{low,high},
+    categories:[{ name, items:[{ title, issuer, level, cost_estimate,
+      timeline_estimate, official_url, why_it_matters, commonly_missed }]}],
+    sources:[…], verify_note }
+  ```
+- Keep model `google/gemini-3-pro-preview`, keep 429/402 handling, keep source backfill.
+- Update the client fetch in `PermitPath.tsx` to consume the new schema (with a small adapter so an in-flight old-shape response degrades gracefully).
 
-**`OperationsTable.tsx`**
-- Accept and wire `onDelete`, `onDuplicate`, `onArchive`, `onUnpause` props.
-- Add Delete (destructive, with confirm), Duplicate, Archive, Unpause menu items.
-- Filter drafts out before the table renders; let `DraftsSection` handle them above (matches the card-view pattern).
+## Files touched
 
-**`HostDashboard.tsx`**
-- Pass the new handlers to `OperationsTable`; filter `listings` to non-drafts before passing.
+- `src/pages/tools/PermitPath.tsx` — rewrite UI shell + wire dashboard
+- `src/components/tools/permit-path/*` — new (5 components + 1 hook)
+- `src/lib/generatePermitChecklistPdf.ts` — new
+- `supabase/functions/ai-license-finder/index.ts` — new prompt + JSON schema + expanded queries
 
----
+## Out of scope (flag for follow-up)
 
-## 3. Share Kit overhaul (post-publish, dashboard, and modal)
-
-Canonical component is `src/components/listing-wizard/ShareKit.tsx`. Two other implementations (`PublishSuccessModal`, `ShareKitModal`) diverged. `BuiltInShareKit.tsx` is dead/stub code.
-
-**A. Tracking & attribution (the "why aren't hosts sharing converting" gap)**
-- Wire `useShareKit.logShare()` into `ShareKit.tsx` so every channel click, copy-link, copy-caption, native share, QR download, and image download writes a row to `share_events` with `channel`, `utm_source`, `utm_medium`.
-- Replace the single GA4 `share_link_copied` event currently fired for every button with per-channel events (`label: channel`).
-- Add UTMs to copy-link, copy-caption, and the QR code (currently raw URL).
-- Default the UTM toggle in `ShareKitModal.tsx` to ON (or remove it — always append).
-
-**B. AI captions actually used**
-- `generate-share-content` edge function + `useShareKit.generate()` already exist but are never called by the publish screen. Trigger `generate()` on mount in `ListingPublished.tsx` and map per-channel templates into the share buttons / caption variant tabs (fall back to today's hardcoded variants if AI fails).
-
-**C. Visual assets**
-- Paint price on the 1080×1080 cover image (currently missing — title + city + badge only).
-- Add a 1080×1920 IG Story variant with photo + title + price + city + CTA, plus a Story download button.
-- Paint price + city on the "Now Booking" plain graphic.
-
-**D. Channels & polish**
-- Add TikTok to the canonical Share Kit (copy caption + open `tiktok.com/upload`, same pattern as Instagram).
-- Rename "Twitter" → "X" in `PublishSuccessModal.tsx`.
-- Add "Copied ✓" feedback to the copy-link button in `PublishSuccessModal.tsx`.
-- Verify `/share/listing/:id` (used by `ShareKitModal`) resolves — add a redirect route to `/listing/:id` if it 404s.
-
-**E. Host-facing analytics readout**
-- Add a compact "Shares" row to `ListingInsightsPanel.tsx`: total shares + top channel, querying `share_events` grouped by channel for that listing.
-
-**F. Cleanup**
-- Remove the unused/stub `BuiltInShareKit.tsx` (or fix it to accept a real `listingId`) — confirm with `rg` it has no live import first.
-
----
-
-## Verification
-
-After each workstream:
-1. Build (auto) clean.
-2. Playwright pass on `/dashboard` (verify delete confirms, pause/unpause sticks, archive appears, duplicate creates a draft) and `/listing-published/<id>` (verify share buttons fire, captions populate, image includes price).
-3. `select count(*), channel from share_events where created_at > now() - interval '1 hour' group by channel` to confirm DB logging works end-to-end.
-
----
-
-## Out of scope
-
-- Tawk.to CORS (third-party config).
-- S3 bucket CORS headers (infra, not in repo).
-- Server-side OG image rendering for `/listing/:id` (separate effort — current static OG works for now).
-
-## Technical notes
-
-- Enum migration: `ALTER TYPE public.listing_status ADD VALUE IF NOT EXISTS 'archived';` (no GRANT needed — type-level change).
-- No new tables, no new RLS policies, no edge-function rewrites — `generate-share-content` already exists.
-- All changes are additive to existing components; nothing in the listing wizard / publish path is restructured, so publication flow is unaffected.
-
+- Account-level checklist persistence table + RLS (only if you want cross-device save). Local progress works without it.
+- Email/share the checklist.
