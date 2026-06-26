@@ -437,4 +437,24 @@ const PermitPath = () => {
   );
 };
 
+              {/* Results */}
+              <div id="results-section">
+                {isLoading && <ResultsSkeleton location={loadingLocationLabel()} />}
+                {!isLoading && fetchError && (
+                  <ResultsError message={fetchError} onRetry={runLookup} />
+                )}
+                {!isLoading && !fetchError && result && <ResultsDashboard result={result} />}
+              </div>
+            </div>
+          </section>
+
+          <ToolCrossLinks currentTool="permitpath" />
+        </main>
+
+        <Footer />
+      </div>
+    </>
+  );
+};
+
 export default PermitPath;
