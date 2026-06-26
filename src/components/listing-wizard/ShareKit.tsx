@@ -414,6 +414,99 @@ const generateShareImageBlob = (
   }
 });
 
+// 1080×1920 Instagram/TikTok Story variant.
+const generateStoryImageBlob = (
+  listing: ShareKitListing,
+  city: string,
+  priceText: string = '',
+): Promise<Blob> => new Promise((resolve, reject) => {
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return reject(new Error('No canvas context'));
+  canvas.width = 1080;
+  canvas.height = 1920;
+
+  const draw = (coverImg?: HTMLImageElement) => {
+    if (coverImg) {
+      // Cover-fit the image, then a deep gradient overlay for legibility.
+      const ratio = Math.max(1080 / coverImg.width, 1920 / coverImg.height);
+      const w = coverImg.width * ratio;
+      const h = coverImg.height * ratio;
+      ctx.drawImage(coverImg, (1080 - w) / 2, (1920 - h) / 2, w, h);
+      const grad = ctx.createLinearGradient(0, 0, 0, 1920);
+      grad.addColorStop(0, 'rgba(0,0,0,0.55)');
+      grad.addColorStop(0.45, 'rgba(0,0,0,0.1)');
+      grad.addColorStop(1, 'rgba(0,0,0,0.92)');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, 1080, 1920);
+    } else {
+      ctx.fillStyle = '#0a0a0c';
+      ctx.fillRect(0, 0, 1080, 1920);
+    }
+
+    // Accent
+    ctx.fillStyle = '#FF5124';
+    ctx.fillRect(0, 0, 1080, 10);
+
+    // Top badge
+    ctx.fillStyle = '#FF5124';
+    const badgeText = listing.mode === 'sale' ? 'FOR SALE' : 'NOW BOOKING';
+    ctx.font = 'bold 34px system-ui, -apple-system, sans-serif';
+    const badgeWidth = ctx.measureText(badgeText).width + 56;
+    ctx.beginPath();
+    (ctx as any).roundRect?.(60, 120, badgeWidth, 64, 32);
+    if (!(ctx as any).roundRect) ctx.rect(60, 120, badgeWidth, 64);
+    ctx.fill();
+    ctx.fillStyle = '#FFFFFF';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(badgeText, 88, 152);
+
+    // Title — bottom third
+    ctx.textBaseline = 'alphabetic';
+    ctx.textAlign = 'left';
+    ctx.fillStyle = '#FFFFFF';
+    ctx.font = 'bold 80px system-ui, -apple-system, sans-serif';
+    const titleLines = wrapText(ctx, listing.title, 960, 3);
+    titleLines.forEach((line, i) => ctx.fillText(line, 60, 1380 + i * 92));
+
+    let cy = 1380 + titleLines.length * 92 + 60;
+    if (city) {
+      ctx.fillStyle = 'rgba(255,255,255,0.85)';
+      ctx.font = '40px system-ui, -apple-system, sans-serif';
+      ctx.fillText(`📍 ${city}`, 60, cy);
+      cy += 60;
+    }
+    if (priceText) {
+      ctx.fillStyle = '#FFB800';
+      ctx.font = 'bold 56px system-ui, -apple-system, sans-serif';
+      ctx.fillText(priceText, 60, cy);
+    }
+
+    // CTA strip
+    ctx.fillStyle = '#FF5124';
+    ctx.fillRect(0, 1840, 1080, 80);
+    ctx.fillStyle = '#FFFFFF';
+    ctx.font = 'bold 30px system-ui, -apple-system, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Book on vendibook.com', 540, 1888);
+
+    canvas.toBlob((blob) => {
+      if (blob) resolve(blob);
+      else reject(new Error('Blob conversion failed'));
+    }, 'image/png');
+  };
+
+  if (listing.coverImageUrl) {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => draw(img);
+    img.onerror = () => draw();
+    img.src = listing.coverImageUrl;
+  } else {
+    draw();
+  }
+});
+
   const handleDownloadNowBooking = () => {
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
