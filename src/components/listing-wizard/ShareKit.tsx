@@ -28,6 +28,7 @@ import {
   trackShareQrDownloaded,
   trackShareImageDownloaded,
   trackShareKitDismissed} from '@/lib/analytics';
+import { useShareKit as useShareKitHook, type ShareChannel } from '@/hooks/useShareKit';
 
 export interface ShareKitListing {
   id: string;
@@ -112,6 +113,13 @@ const TelegramIcon = ({ className }: { className?: string }) => (
 export const ShareKit: React.FC<ShareKitProps> = ({ listing, onClose }) => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { logShare, generate, templates } = useShareKitHook(listing.id);
+
+  // AI-generated captions take precedence when available; falls back to local variants.
+  useEffect(() => {
+    generate().catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [listing.id]);
 
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>('');
   const [linkCopied, setLinkCopied] = useState(false);
