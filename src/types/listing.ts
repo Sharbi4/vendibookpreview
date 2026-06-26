@@ -5,7 +5,7 @@ export type ListingCategory = 'food_truck' | 'food_trailer' | 'ghost_kitchen' | 
 
 export type FulfillmentType = 'pickup' | 'delivery' | 'both' | 'on_site';
 
-export type ListingStatus = 'draft' | 'published' | 'paused';
+export type ListingStatus = 'draft' | 'published' | 'paused' | 'archived';
 
 // Subcategory types for each main category
 export type FoodTruckSubcategory = 
