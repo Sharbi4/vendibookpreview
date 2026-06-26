@@ -631,7 +631,7 @@ ${sourceContext}`;
 
     if (!isValidResult(result)) {
       console.warn("PermitPath: returning baseline fallback");
-      result = baselineChecklist(trimmedState, trimmedCity, trimmedBusinessType);
+      result = baselineChecklist(trimmedState, trimmedCity, trimmedBusinessType, profile);
     } else {
       // Backfill sources
       if ((!Array.isArray(result.sources) || result.sources.length === 0) && sources.length) {
@@ -646,6 +646,14 @@ ${sourceContext}`;
       }
       if (!result.location) result.location = { city: trimmedCity, state: trimmedState, stateAbbreviation: trimmedState, business_type: businessLabel };
       if (!result.businessType) result.businessType = businessLabel;
+
+      // Backfill reasoning fields from a baseline if the model omitted them
+      if (!result.critical_path || !result.risks || !result.insights) {
+        const bl = baselineChecklist(trimmedState, trimmedCity, trimmedBusinessType, profile);
+        if (!result.critical_path) result.critical_path = bl.critical_path;
+        if (!Array.isArray(result.risks) || result.risks.length === 0) result.risks = bl.risks;
+        if (!Array.isArray(result.insights) || result.insights.length === 0) result.insights = bl.insights;
+      }
     }
     result.lastUpdated = today;
 
