@@ -369,7 +369,7 @@ const PermitPath = () => {
             <div className="container max-w-3xl">
               <div className="rounded-2xl border border-white/10 bg-[#0d0d10] p-6 md:p-8 shadow-2xl">
                 <div className="flex items-center gap-3 mb-6">
-                  <PremiumIcon icon={Route} accent="orange" size="md" hover="lift" />
+                  <PremiumIcon icon={Route} accent="sky" size="md" hover="lift" />
                   <div>
                     <h2 className="font-semibold text-white text-lg">Build your roadmap</h2>
                     <p className="text-sm text-white/55">State and business type required. City + the quick refinements make it sharper.</p>
