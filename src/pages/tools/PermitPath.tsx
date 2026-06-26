@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { z } from 'zod';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import SEO from '@/components/SEO';
@@ -8,12 +9,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@/components/ui/breadcrumb';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { cn } from '@/lib/utils';
 import {
-  FileCheck, Loader2, Home, Shield, Clock, ArrowRight, DollarSign,
+  FileCheck, Loader2, Home, Shield, Clock, ArrowRight, DollarSign, AlertCircle,
 } from 'lucide-react';
 import ToolCrossLinks from '@/components/tools/ToolCrossLinks';
 import ResultsDashboard, { type DashboardResult } from '@/components/tools/permit-path/ResultsDashboard';
