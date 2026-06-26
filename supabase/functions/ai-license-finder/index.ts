@@ -669,6 +669,7 @@ ${sourceContext}`;
         (typeof body.state === 'string' ? body.state.toUpperCase() : 'AZ'),
         (typeof body.city === 'string' ? body.city : ''),
         (typeof body.businessType === 'string' ? body.businessType : 'food_truck'),
+        (body.profile && typeof body.profile === 'object') ? body.profile : {},
       );
       return new Response(JSON.stringify({ result: fb }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
