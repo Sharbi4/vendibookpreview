@@ -336,6 +336,15 @@ export default function ResultsDashboard({ result, readOnly = false }: Props) {
         )}
       </AnimatePresence>
 
+      {/* Reasoning panels: critical path, risks, money-saver insights */}
+      <ReasoningPanels
+        critical_path={result.critical_path}
+        risks={result.risks}
+        insights={result.insights}
+      />
+
+
+
       {/* Don't skip */}
       {dontSkip.length > 0 && !isComplete && (
         <div className="rounded-2xl border border-amber-500/25 bg-amber-500/5 p-5">
