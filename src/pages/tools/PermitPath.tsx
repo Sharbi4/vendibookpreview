@@ -253,7 +253,7 @@ const PermitPath = () => {
               className="pointer-events-none absolute inset-0"
               style={{
                 background:
-                  'radial-gradient(60% 50% at 30% 30%, rgba(255,81,36,0.18) 0%, rgba(255,81,36,0) 60%)',
+                  'radial-gradient(60% 50% at 30% 30%, rgba(255,81,36,0.07) 0%, rgba(255,81,36,0) 60%)',
               }}
             />
             <div className="container relative z-10">
@@ -281,12 +281,12 @@ const PermitPath = () => {
 
               <div className="max-w-3xl">
                 <div className="inline-flex items-center gap-2 mb-5 px-3 py-1.5 rounded-full border border-white/10 bg-white/5 backdrop-blur">
-                  <span className="h-1.5 w-1.5 rounded-full bg-[#FF5124] shadow-[0_0_8px_rgba(255,81,36,0.8)]" />
+                  <span className="h-1.5 w-1.5 rounded-full bg-white/70" />
                   <span className="text-xs font-medium tracking-wider uppercase text-white/80">PermitPath</span>
                 </div>
                 <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-5 leading-[1.05] tracking-tight">
                   Navigate permits in minutes,<br className="hidden sm:block" />
-                  <span className="text-[#FF5124]">not weeks.</span>
+                  <span className="text-white/70">not weeks.</span>
                 </h1>
                 <p className="text-lg md:text-xl text-white/70 mb-8 max-w-2xl">
                   Permits, licenses, and compliance — mapped to your city and setup. Built from official sources so you know exactly what you need before you start.
@@ -336,11 +336,11 @@ const PermitPath = () => {
                 How PermitPath works
               </h2>
               <div className="relative grid gap-8 md:grid-cols-3">
-                <div aria-hidden className="hidden md:block absolute top-7 left-[16.66%] right-[16.66%] h-px bg-gradient-to-r from-transparent via-[#FF5124]/40 to-transparent" />
+                <div aria-hidden className="hidden md:block absolute top-7 left-[16.66%] right-[16.66%] h-px bg-gradient-to-r from-transparent via-white/15 to-transparent" />
                 {[
                   { n: 1, icon: MapPin,     accent: 'sky'     as const, hover: 'bounce' as const, title: 'Enter your location',     body: 'Tell us your state, city, and business type.' },
-                  { n: 2, icon: ListChecks, accent: 'orange'  as const, hover: 'draw'   as const, title: 'We map your roadmap',     body: 'A sequenced checklist branched to your specific setup.' },
-                  { n: 3, icon: Download,   accent: 'emerald' as const, hover: 'nudge'  as const, title: 'Track & apply',           body: 'Check items off, set reminders, and apply on official sites.' },
+                  { n: 2, icon: ListChecks, accent: 'emerald' as const, hover: 'draw'   as const, title: 'We map your roadmap',     body: 'A sequenced checklist branched to your specific setup.' },
+                  { n: 3, icon: Download,   accent: 'sky'     as const, hover: 'nudge'  as const, title: 'Track & apply',           body: 'Check items off, set reminders, and apply on official sites.' },
                 ].map((s, i) => (
                   <motion.div
                     key={s.n}
@@ -352,7 +352,7 @@ const PermitPath = () => {
                   >
                     <div className="relative inline-block">
                       <PremiumIcon icon={s.icon} accent={s.accent} size="xl" hover={s.hover} delay={0.1 + i * 0.1} />
-                      <span className="absolute -top-1 -right-1 h-6 w-6 rounded-full bg-[#FF5124] text-white text-xs font-bold flex items-center justify-center ring-4 ring-[#08080a] shadow-[0_4px_14px_-2px_rgba(255,81,36,0.7)]">
+                      <span className="absolute -top-1 -right-1 h-6 w-6 rounded-full bg-white/10 border border-white/15 text-white text-xs font-bold flex items-center justify-center ring-4 ring-[#08080a]">
                         {s.n}
                       </span>
                     </div>
@@ -369,7 +369,7 @@ const PermitPath = () => {
             <div className="container max-w-3xl">
               <div className="rounded-2xl border border-white/10 bg-[#0d0d10] p-6 md:p-8 shadow-2xl">
                 <div className="flex items-center gap-3 mb-6">
-                  <PremiumIcon icon={Route} accent="orange" size="md" hover="lift" />
+                  <PremiumIcon icon={Route} accent="sky" size="md" hover="lift" />
                   <div>
                     <h2 className="font-semibold text-white text-lg">Build your roadmap</h2>
                     <p className="text-sm text-white/55">State and business type required. City + the quick refinements make it sharper.</p>
