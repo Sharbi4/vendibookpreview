@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { z } from 'zod';
@@ -123,11 +124,14 @@ type FieldErrors = Partial<Record<'state' | 'city' | 'businessType', string>>;
 
 const PermitPath = () => {
   const { toast } = useToast();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [isLoading, setIsLoading] = useState(false);
   const [form, setForm] = useState({ city: '', state: '', businessType: 'food_truck' });
   const [errors, setErrors] = useState<FieldErrors>({});
   const [result, setResult] = useState<DashboardResult | null>(null);
   const [fetchError, setFetchError] = useState<string | null>(null);
+  const [isShared, setIsShared] = useState(false);
+  const autoRanRef = useRef(false);
 
   const updateField = <K extends keyof typeof form>(key: K, value: string) => {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -141,12 +145,13 @@ const PermitPath = () => {
     return form.city.trim() ? `${form.city.trim()}, ${stateLabel}` : stateLabel;
   };
 
-  const runLookup = async () => {
-    const parsed = lookupSchema.safeParse({
+  const runLookup = async (override?: { state: string; city: string; businessType: string }) => {
+    const payload = override ?? {
       state: form.state,
       city: form.city.trim(),
       businessType: form.businessType,
-    });
+    };
+    const parsed = lookupSchema.safeParse(payload);
     if (!parsed.success) {
       const fieldErrors: FieldErrors = {};
       for (const issue of parsed.error.issues) {
@@ -154,11 +159,13 @@ const PermitPath = () => {
         if (key && !fieldErrors[key]) fieldErrors[key] = issue.message;
       }
       setErrors(fieldErrors);
-      toast({
-        title: 'Check your details',
-        description: fieldErrors.state || fieldErrors.city || fieldErrors.businessType || 'Please review the highlighted fields.',
-        variant: 'destructive',
-      });
+      if (!override) {
+        toast({
+          title: 'Check your details',
+          description: fieldErrors.state || fieldErrors.city || fieldErrors.businessType || 'Please review the highlighted fields.',
+          variant: 'destructive',
+        });
+      }
       return;
     }
 
@@ -195,7 +202,31 @@ const PermitPath = () => {
     }
   };
 
-  const handleSubmit = runLookup;
+  // Auto-load roadmap from URL params (share links: ?state=AZ&city=Tucson&businessType=food_truck[&shared=1])
+  useEffect(() => {
+    if (autoRanRef.current) return;
+    const state = (searchParams.get('state') || '').toUpperCase();
+    const city = searchParams.get('city') || '';
+    const businessType = searchParams.get('businessType') || 'food_truck';
+    if (state) {
+      autoRanRef.current = true;
+      setForm({ state, city, businessType });
+      setIsShared(searchParams.get('shared') === '1');
+      runLookup({ state, city: city.trim(), businessType });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleSubmit = () => {
+    // Clear share flag if user re-runs the form
+    if (isShared) {
+      setIsShared(false);
+      const next = new URLSearchParams(searchParams);
+      next.delete('shared');
+      setSearchParams(next, { replace: true });
+    }
+    runLookup();
+  };
 
   return (
     <>
@@ -427,7 +458,7 @@ const PermitPath = () => {
                 {!isLoading && fetchError && (
                   <ResultsError message={fetchError} onRetry={runLookup} />
                 )}
-                {!isLoading && !fetchError && result && <ResultsDashboard result={result} />}
+                {!isLoading && !fetchError && result && <ResultsDashboard result={result} readOnly={isShared} />}
               </div>
             </div>
           </section>
