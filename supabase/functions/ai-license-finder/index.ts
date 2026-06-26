@@ -49,22 +49,13 @@ serve(async (req) => {
   }
 
   try {
-    const { city, state, businessType } = await req.json();
+    const { city, state, businessType } = await req.json().catch(() => ({}));
 
-    if (!state || state.trim().length === 0) {
-      return new Response(
-        JSON.stringify({ error: "State is required" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    const trimmedCity = city?.trim().slice(0, 100) || "";
-    const trimmedState = state.trim().slice(0, 50);
-    const trimmedBusinessType = businessType?.trim() || "food_truck";
-
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
-
+    const STATE_CODES = new Set([
+      'AL','AK','AZ','AR','CA','CO','CT','DE','FL','GA','HI','ID','IL','IN','IA','KS','KY','LA',
+      'ME','MD','MA','MI','MN','MS','MO','MT','NE','NV','NH','NJ','NM','NY','NC','ND','OH','OK',
+      'OR','PA','RI','SC','SD','TN','TX','UT','VT','VA','WA','WV','WI','WY','DC',
+    ]);
     const businessTypeLabels: Record<string, string> = {
       food_truck: "Food Truck",
       food_trailer: "Food Trailer",
@@ -74,6 +65,35 @@ serve(async (req) => {
       catering: "Catering Business",
       cottage_food: "Cottage Food Operation",
     };
+
+    const stateRaw = typeof state === "string" ? state.trim().toUpperCase() : "";
+    if (!stateRaw || !STATE_CODES.has(stateRaw)) {
+      return new Response(
+        JSON.stringify({ error: "Please pick a valid U.S. state." }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+    const trimmedBusinessType = typeof businessType === "string" ? businessType.trim() : "food_truck";
+    if (!businessTypeLabels[trimmedBusinessType]) {
+      return new Response(
+        JSON.stringify({ error: "That business type isn't supported yet. Pick one from the list." }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+    const cityRaw = typeof city === "string" ? city.trim() : "";
+    if (cityRaw.length > 80 || (cityRaw && !/^[A-Za-zÀ-ÿ0-9 .'\-]+$/.test(cityRaw))) {
+      return new Response(
+        JSON.stringify({ error: "City name has unsupported characters. Use letters, numbers, spaces, apostrophes, periods, or hyphens." }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const trimmedCity = cityRaw.slice(0, 80);
+    const trimmedState = stateRaw;
+
+    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
+
     const businessLabel = businessTypeLabels[trimmedBusinessType] || "Mobile Food Business";
 
     const locationText = trimmedCity ? `${trimmedCity}, ${trimmedState}` : trimmedState;
