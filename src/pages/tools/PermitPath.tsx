@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { z } from 'zod';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import SEO from '@/components/SEO';
@@ -8,12 +9,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@/components/ui/breadcrumb';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { cn } from '@/lib/utils';
 import {
-  FileCheck, Loader2, Home, Shield, Clock, ArrowRight, DollarSign,
+  FileCheck, Loader2, Home, Shield, Clock, ArrowRight, DollarSign, AlertCircle,
 } from 'lucide-react';
 import ToolCrossLinks from '@/components/tools/ToolCrossLinks';
 import ResultsDashboard, { type DashboardResult } from '@/components/tools/permit-path/ResultsDashboard';
@@ -93,17 +94,73 @@ function adaptResult(raw: any): DashboardResult | null {
   return null;
 }
 
+const STATE_CODES = US_STATES.map((s) => s.value) as [string, ...string[]];
+const BUSINESS_TYPES = ['food_truck', 'food_trailer', 'food_cart', 'ghost_kitchen', 'catering', 'cottage_food'] as const;
+const BUSINESS_TYPE_LABELS: Record<typeof BUSINESS_TYPES[number], string> = {
+  food_truck: 'Food Truck',
+  food_trailer: 'Food Trailer',
+  food_cart: 'Food Cart / Pushcart',
+  ghost_kitchen: 'Shared / Ghost Kitchen',
+  catering: 'Catering Business',
+  cottage_food: 'Cottage Food',
+};
+
+const lookupSchema = z.object({
+  state: z.enum(STATE_CODES, { errorMap: () => ({ message: 'Pick a U.S. state to continue.' }) }),
+  city: z
+    .string()
+    .trim()
+    .max(80, { message: 'City name is too long (max 80 characters).' })
+    .regex(/^[A-Za-zÀ-ÿ0-9 .'\-]*$/, { message: 'City can only contain letters, numbers, spaces, apostrophes, periods, and hyphens.' })
+    .optional()
+    .or(z.literal('')),
+  businessType: z.enum(BUSINESS_TYPES, { errorMap: () => ({ message: 'Choose a supported business type.' }) }),
+});
+
+type FieldErrors = Partial<Record<'state' | 'city' | 'businessType', string>>;
+
 const PermitPath = () => {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [form, setForm] = useState({ city: '', state: '', businessType: 'food_truck' });
+  const [errors, setErrors] = useState<FieldErrors>({});
   const [result, setResult] = useState<DashboardResult | null>(null);
 
+  const updateField = <K extends keyof typeof form>(key: K, value: string) => {
+    setForm((prev) => ({ ...prev, [key]: value }));
+    if (errors[key as keyof FieldErrors]) {
+      setErrors((prev) => ({ ...prev, [key]: undefined }));
+    }
+  };
+
   const handleSubmit = async () => {
+    const parsed = lookupSchema.safeParse({
+      state: form.state,
+      city: form.city.trim(),
+      businessType: form.businessType,
+    });
+    if (!parsed.success) {
+      const fieldErrors: FieldErrors = {};
+      for (const issue of parsed.error.issues) {
+        const key = issue.path[0] as keyof FieldErrors;
+        if (key && !fieldErrors[key]) fieldErrors[key] = issue.message;
+      }
+      setErrors(fieldErrors);
+      toast({
+        title: 'Check your details',
+        description: fieldErrors.state || fieldErrors.city || fieldErrors.businessType || 'Please review the highlighted fields.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setErrors({});
     setIsLoading(true);
     setResult(null);
     try {
-      const { data: response, error } = await supabase.functions.invoke('ai-license-finder', { body: form });
+      const { data: response, error } = await supabase.functions.invoke('ai-license-finder', {
+        body: { state: parsed.data.state, city: parsed.data.city || '', businessType: parsed.data.businessType },
+      });
       if (error) throw error;
       if (response?.error) {
         toast({ title: 'Could not build checklist', description: response.error, variant: 'destructive' });
@@ -117,7 +174,7 @@ const PermitPath = () => {
       setResult(adapted);
       setTimeout(() => document.getElementById('results-section')?.scrollIntoView({ behavior: 'smooth' }), 100);
     } catch {
-      toast({ title: 'Error', description: 'Failed to find requirements. Please try again.', variant: 'destructive' });
+      toast({ title: 'Lookup failed', description: 'Something went wrong reaching our compliance engine. Please try again.', variant: 'destructive' });
     } finally {
       setIsLoading(false);
     }
@@ -271,39 +328,62 @@ const PermitPath = () => {
                 <div className="grid gap-4 sm:grid-cols-3">
                   <div className="space-y-1.5">
                     <Label className="text-white/80 text-sm">State *</Label>
-                    <Select value={form.state} onValueChange={(v) => setForm({ ...form, state: v })}>
-                      <SelectTrigger className="bg-white/[0.03] border-white/10 text-white h-11 text-base">
+                    <Select value={form.state} onValueChange={(v) => updateField('state', v)}>
+                      <SelectTrigger
+                        aria-invalid={!!errors.state}
+                        className={cn(
+                          'bg-white/[0.03] border-white/10 text-white h-11 text-base',
+                          errors.state && 'border-red-500/60 focus:ring-red-500/40',
+                        )}
+                      >
                         <SelectValue placeholder="Select state" />
                       </SelectTrigger>
                       <SelectContent>
                         {US_STATES.map((s) => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
                       </SelectContent>
                     </Select>
+                    {errors.state && (
+                      <p className="flex items-center gap-1 text-xs text-red-400"><AlertCircle className="h-3 w-3" /> {errors.state}</p>
+                    )}
                   </div>
                   <div className="space-y-1.5">
                     <Label className="text-white/80 text-sm">City (optional)</Label>
                     <Input
                       placeholder="e.g., Austin"
                       value={form.city}
-                      onChange={(e) => setForm({ ...form, city: e.target.value })}
-                      className="bg-white/[0.03] border-white/10 text-white placeholder:text-white/30 h-11 text-base"
+                      onChange={(e) => updateField('city', e.target.value)}
+                      maxLength={80}
+                      aria-invalid={!!errors.city}
+                      className={cn(
+                        'bg-white/[0.03] border-white/10 text-white placeholder:text-white/30 h-11 text-base',
+                        errors.city && 'border-red-500/60 focus-visible:ring-red-500/40',
+                      )}
                     />
+                    {errors.city && (
+                      <p className="flex items-center gap-1 text-xs text-red-400"><AlertCircle className="h-3 w-3" /> {errors.city}</p>
+                    )}
                   </div>
                   <div className="space-y-1.5">
                     <Label className="text-white/80 text-sm">Business type</Label>
-                    <Select value={form.businessType} onValueChange={(v) => setForm({ ...form, businessType: v })}>
-                      <SelectTrigger className="bg-white/[0.03] border-white/10 text-white h-11 text-base">
+                    <Select value={form.businessType} onValueChange={(v) => updateField('businessType', v)}>
+                      <SelectTrigger
+                        aria-invalid={!!errors.businessType}
+                        className={cn(
+                          'bg-white/[0.03] border-white/10 text-white h-11 text-base',
+                          errors.businessType && 'border-red-500/60 focus:ring-red-500/40',
+                        )}
+                      >
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="food_truck">Food Truck</SelectItem>
-                        <SelectItem value="food_trailer">Food Trailer</SelectItem>
-                        <SelectItem value="food_cart">Food Cart / Pushcart</SelectItem>
-                        <SelectItem value="ghost_kitchen">Shared / Ghost Kitchen</SelectItem>
-                        <SelectItem value="catering">Catering Business</SelectItem>
-                        <SelectItem value="cottage_food">Cottage Food</SelectItem>
+                        {BUSINESS_TYPES.map((bt) => (
+                          <SelectItem key={bt} value={bt}>{BUSINESS_TYPE_LABELS[bt]}</SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
+                    {errors.businessType && (
+                      <p className="flex items-center gap-1 text-xs text-red-400"><AlertCircle className="h-3 w-3" /> {errors.businessType}</p>
+                    )}
                   </div>
                 </div>
 
