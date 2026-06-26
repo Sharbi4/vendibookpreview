@@ -483,8 +483,9 @@ interface ItemProps {
 
 function RoadmapItem({ node, expanded, onToggleExpand, onToggleDone, onCalendar, readOnly, state }: ItemProps) {
   const isNext = node.status === 'next';
-  const isLocked = node.status === 'locked';
   const isDone = node.status === 'done';
+  // "locked" no longer hides info — it's a soft sequence hint.
+  const isSequenceHint = node.status === 'locked';
 
   // Commissary action: deep-link to kitchen search
   const showCommissaryAction = node.key === 'commissary' && !isDone && !readOnly;
@@ -494,24 +495,21 @@ function RoadmapItem({ node, expanded, onToggleExpand, onToggleDone, onCalendar,
       layout
       className={cn(
         'rounded-xl border transition-all',
-        isDone && 'border-[#FF5124]/20 bg-[#FF5124]/5',
-        isNext && 'border-[#FF5124]/40 bg-[#FF5124]/[0.06] shadow-[0_0_0_1px_rgba(255,81,36,0.3),0_12px_40px_-12px_rgba(255,81,36,0.4)]',
-        !isDone && !isNext && !isLocked && 'border-white/10 bg-white/[0.02] hover:border-white/20',
-        isLocked && 'border-white/[0.06] bg-white/[0.01] opacity-60',
+        isDone && 'border-white/15 bg-white/[0.04]',
+        isNext && 'border-[#FF5124]/40 bg-[#FF5124]/[0.05] shadow-[0_0_0_1px_rgba(255,81,36,0.25)]',
+        !isDone && !isNext && 'border-white/10 bg-white/[0.02] hover:border-white/20',
       )}
     >
       <div className="p-4">
         <div className="flex items-start gap-3">
           <button
             onClick={onToggleDone}
-            className={cn('mt-0.5 shrink-0', isLocked && 'cursor-not-allowed')}
+            className="mt-0.5 shrink-0"
             aria-label={isDone ? 'Mark incomplete' : 'Mark complete'}
             disabled={readOnly}
           >
             {isDone ? (
-              <CheckCircle2 className="h-5 w-5 text-[#FF5124]" />
-            ) : isLocked ? (
-              <Lock className="h-5 w-5 text-white/25" />
+              <CheckCircle2 className="h-5 w-5 text-white/80" />
             ) : (
               <Circle className={cn('h-5 w-5', isNext ? 'text-[#FF5124]' : 'text-white/30 hover:text-white/60')} />
             )}
@@ -524,7 +522,12 @@ function RoadmapItem({ node, expanded, onToggleExpand, onToggleDone, onCalendar,
             <div className="flex flex-wrap items-center gap-2 mb-1">
               {isNext && (
                 <Badge className="text-[10px] uppercase tracking-wider bg-[#FF5124] text-white border-transparent hover:bg-[#FF5124]">
-                  ◆ Your next step
+                  Start here
+                </Badge>
+              )}
+              {isSequenceHint && (
+                <Badge variant="outline" className="text-[10px] uppercase tracking-wider bg-white/5 text-white/55 border-white/10">
+                  Do after earlier steps
                 </Badge>
               )}
               <h4 className={cn('font-semibold text-white', isDone && 'line-through opacity-60')}>
@@ -542,28 +545,20 @@ function RoadmapItem({ node, expanded, onToggleExpand, onToggleDone, onCalendar,
               )}
             </div>
 
-            {isLocked && node.unlock_reason && (
-              <p className="text-xs text-white/50 italic">{node.unlock_reason}</p>
-            )}
+            <p className="text-sm text-white/65 mb-1.5">{node.why_it_matters}</p>
 
-            {!isLocked && (
-              <p className="text-sm text-white/65 mb-1.5">{node.why_it_matters}</p>
-            )}
-
-            {!isLocked && (
-              <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-white/55">
-                <span><span className="text-white/40">By</span> {node.issuer}</span>
-                {node.cost_estimate && <span><span className="text-white/40">Cost</span> {node.cost_estimate}</span>}
-                {node.timeline_estimate && <span><span className="text-white/40">Time</span> {node.timeline_estimate}</span>}
-              </div>
-            )}
+            <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-white/55">
+              <span><span className="text-white/40">By</span> {node.issuer}</span>
+              {node.cost_estimate && <span><span className="text-white/40">Cost</span> {node.cost_estimate}</span>}
+              {node.timeline_estimate && <span><span className="text-white/40">Time</span> {node.timeline_estimate}</span>}
+            </div>
           </button>
 
           <ChevronDown className={cn('h-4 w-4 text-white/30 transition-transform shrink-0 mt-1', expanded && 'rotate-180')} />
         </div>
 
         <AnimatePresence initial={false}>
-          {expanded && !isLocked && (
+          {expanded && (
             <motion.div
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: 'auto', opacity: 1 }}
@@ -572,11 +567,15 @@ function RoadmapItem({ node, expanded, onToggleExpand, onToggleDone, onCalendar,
               className="overflow-hidden"
             >
               <div className="pt-4 pl-8 space-y-3">
+                {isSequenceHint && node.unlock_reason && (
+                  <p className="text-xs text-white/55 italic">{node.unlock_reason}</p>
+                )}
+
                 {node.pro_tip && (
-                  <div className="rounded-lg border border-[#FF5124]/15 bg-[#FF5124]/5 p-3 flex gap-2.5">
-                    <Lightbulb className="h-4 w-4 text-[#FF5124] shrink-0 mt-0.5" />
+                  <div className="rounded-lg border border-white/10 bg-white/[0.03] p-3 flex gap-2.5">
+                    <Lightbulb className="h-4 w-4 text-amber-300 shrink-0 mt-0.5" />
                     <div>
-                      <div className="text-[10px] uppercase tracking-wider text-[#FF5124] font-semibold mb-0.5">Operator tip</div>
+                      <div className="text-[10px] uppercase tracking-wider text-white/55 font-semibold mb-0.5">Operator tip</div>
                       <p className="text-sm text-white/80 leading-relaxed">{node.pro_tip}</p>
                     </div>
                   </div>
@@ -588,7 +587,7 @@ function RoadmapItem({ node, expanded, onToggleExpand, onToggleDone, onCalendar,
                       href={node.official_url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 text-sm font-medium text-[#FF5124] hover:text-[#FF5124]/80 bg-[#FF5124]/10 hover:bg-[#FF5124]/15 border border-[#FF5124]/30 px-3 py-1.5 rounded-lg"
+                      className="inline-flex items-center gap-1.5 text-sm font-medium text-white hover:text-white bg-white/5 hover:bg-white/10 border border-white/15 px-3 py-1.5 rounded-lg"
                     >
                       Apply on official site <ExternalLink className="h-3.5 w-3.5" />
                     </a>
