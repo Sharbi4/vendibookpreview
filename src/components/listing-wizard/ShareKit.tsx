@@ -214,11 +214,10 @@ export const ShareKit: React.FC<ShareKitProps> = ({ listing, onClose }) => {
   const handleNativeShare = async () => {
     if (navigator.share) {
       try {
-        await navigator.share({
-          title: listing.title,
-          text: currentCaption,
-          url: withUtm('native', 'share')});
+        const url = withUtm('native', 'share');
+        await navigator.share({ title: listing.title, text: currentCaption, url });
         trackShareLinkCopied();
+        logShare('native' as ShareChannel, { share_url: url, caption: currentCaption });
       } catch {
         // user cancelled
       }
@@ -231,27 +230,28 @@ export const ShareKit: React.FC<ShareKitProps> = ({ listing, onClose }) => {
   const handleShareWithImage = async () => {
     setShareWithImageBusy(true);
     try {
-      const blob = await generateShareImageBlob(listing, city);
+      const blob = await generateShareImageBlob(listing, city, priceText);
       const file = new File([blob], `vendibook-${listing.id}.png`, { type: 'image/png' });
+      const shareUrl = withUtm('native', 'share-image');
       const shareData: ShareData = {
         title: listing.title,
         text: currentCaption,
-        url: withUtm('native', 'share-image'),
+        url: shareUrl,
         files: [file]};
-      // Feature-detect file share
       if (navigator.canShare?.({ files: [file] }) && navigator.share) {
         await navigator.share(shareData);
         trackShareImageDownloaded();
+        logShare('native' as ShareChannel, { share_url: shareUrl, caption: currentCaption, content_type: 'image' });
         toast({ title: 'Shared with image!' });
       } else {
-        // Fallback: copy caption + download image so user can attach manually
-        await navigator.clipboard.writeText(`${currentCaption}\n\n${listingUrl}`);
+        await navigator.clipboard.writeText(`${currentCaption}\n\n${shareUrl}`);
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
         a.download = `vendibook-${listing.id}.png`;
         a.click();
         URL.revokeObjectURL(url);
+        logShare('copy' as ShareChannel, { share_url: shareUrl, caption: currentCaption, content_type: 'image' });
         toast({
           title: 'Image saved + caption copied',
           description: 'Open Instagram, paste the caption & attach the image.'});
@@ -261,6 +261,24 @@ export const ShareKit: React.FC<ShareKitProps> = ({ listing, onClose }) => {
       toast({ title: 'Share cancelled', variant: 'destructive' });
     } finally {
       setShareWithImageBusy(false);
+    }
+  };
+
+  const handleDownloadStory = async () => {
+    try {
+      const blob = await generateStoryImageBlob(listing, city, priceText);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `vendibook-story-${listing.id}.png`;
+      a.click();
+      URL.revokeObjectURL(url);
+      trackShareImageDownloaded();
+      logShare('copy' as ShareChannel, { content_type: 'story_image' });
+      toast({ title: 'Story image downloaded (1080×1920)' });
+    } catch (e) {
+      console.error(e);
+      toast({ title: 'Failed to generate story image', variant: 'destructive' });
     }
   };
 
@@ -283,18 +301,24 @@ export const ShareKit: React.FC<ShareKitProps> = ({ listing, onClose }) => {
       email: `mailto:?subject=${encodeURIComponent(listing.title)}&body=${t}%0A%0A${u}`,
       sms: `sms:?&body=${t}%20${u}`};
 
-    // Instagram has no web share — copy caption + open app
-    if (platform === 'instagram') {
-      navigator.clipboard.writeText(`${currentCaption}\n\n${listingUrl}\n\n${tagsString}`).catch(() => {});
+    // Per-channel DB log + GA event with channel label
+    logShare(platform as ShareChannel, { share_url: url, caption: currentCaption });
+    trackShareLinkCopied();
+
+    // Instagram & TikTok have no web share — copy caption + open app
+    if (platform === 'instagram' || platform === 'tiktok') {
+      navigator.clipboard.writeText(`${currentCaption}\n\n${url}\n\n${tagsString}`).catch(() => {});
+      const target = platform === 'instagram'
+        ? 'https://www.instagram.com/'
+        : 'https://www.tiktok.com/upload';
       toast({
         title: 'Caption copied!',
-        description: 'Opening Instagram — paste it on your post or story.'});
-      window.open('https://www.instagram.com/', '_blank', 'noopener,noreferrer');
+        description: `Opening ${platform === 'instagram' ? 'Instagram' : 'TikTok'} — paste it on your post.`});
+      window.open(target, '_blank', 'noopener,noreferrer');
       return;
     }
 
     window.open(urls[platform], '_blank', 'noopener,noreferrer');
-    trackShareLinkCopied();
   };
 
   const regenerateCaption = () => {
