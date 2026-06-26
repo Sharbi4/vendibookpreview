@@ -438,6 +438,10 @@ const PermitPath = () => {
                   </div>
                 </div>
 
+                <VendorProfileChips value={profile} onChange={setProfile} />
+
+
+
                 <Button
                   onClick={handleSubmit}
                   disabled={isLoading || !form.state}
