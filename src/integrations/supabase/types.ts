@@ -4534,7 +4534,7 @@ export type Database = {
         | "vendor_lot"
         | "vendor_space"
       listing_mode: "rent" | "sale"
-      listing_status: "draft" | "published" | "paused"
+      listing_status: "draft" | "published" | "paused" | "archived"
       marketing_event_type:
         | "delivered"
         | "opened"
@@ -4716,7 +4716,7 @@ export const Constants = {
         "vendor_space",
       ],
       listing_mode: ["rent", "sale"],
-      listing_status: ["draft", "published", "paused"],
+      listing_status: ["draft", "published", "paused", "archived"],
       marketing_event_type: [
         "delivered",
         "opened",
