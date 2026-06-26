@@ -336,11 +336,11 @@ const PermitPath = () => {
                 How PermitPath works
               </h2>
               <div className="relative grid gap-8 md:grid-cols-3">
-                <div aria-hidden className="hidden md:block absolute top-7 left-[16.66%] right-[16.66%] h-px bg-gradient-to-r from-transparent via-[#FF5124]/40 to-transparent" />
+                <div aria-hidden className="hidden md:block absolute top-7 left-[16.66%] right-[16.66%] h-px bg-gradient-to-r from-transparent via-white/15 to-transparent" />
                 {[
                   { n: 1, icon: MapPin,     accent: 'sky'     as const, hover: 'bounce' as const, title: 'Enter your location',     body: 'Tell us your state, city, and business type.' },
-                  { n: 2, icon: ListChecks, accent: 'orange'  as const, hover: 'draw'   as const, title: 'We map your roadmap',     body: 'A sequenced checklist branched to your specific setup.' },
-                  { n: 3, icon: Download,   accent: 'emerald' as const, hover: 'nudge'  as const, title: 'Track & apply',           body: 'Check items off, set reminders, and apply on official sites.' },
+                  { n: 2, icon: ListChecks, accent: 'emerald' as const, hover: 'draw'   as const, title: 'We map your roadmap',     body: 'A sequenced checklist branched to your specific setup.' },
+                  { n: 3, icon: Download,   accent: 'sky'     as const, hover: 'nudge'  as const, title: 'Track & apply',           body: 'Check items off, set reminders, and apply on official sites.' },
                 ].map((s, i) => (
                   <motion.div
                     key={s.n}
