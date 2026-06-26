@@ -253,7 +253,7 @@ const PermitPath = () => {
               className="pointer-events-none absolute inset-0"
               style={{
                 background:
-                  'radial-gradient(60% 50% at 30% 30%, rgba(255,81,36,0.18) 0%, rgba(255,81,36,0) 60%)',
+                  'radial-gradient(60% 50% at 30% 30%, rgba(255,81,36,0.07) 0%, rgba(255,81,36,0) 60%)',
               }}
             />
             <div className="container relative z-10">
