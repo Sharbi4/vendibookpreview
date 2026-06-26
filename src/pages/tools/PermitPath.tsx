@@ -94,17 +94,73 @@ function adaptResult(raw: any): DashboardResult | null {
   return null;
 }
 
+const STATE_CODES = US_STATES.map((s) => s.value) as [string, ...string[]];
+const BUSINESS_TYPES = ['food_truck', 'food_trailer', 'food_cart', 'ghost_kitchen', 'catering', 'cottage_food'] as const;
+const BUSINESS_TYPE_LABELS: Record<typeof BUSINESS_TYPES[number], string> = {
+  food_truck: 'Food Truck',
+  food_trailer: 'Food Trailer',
+  food_cart: 'Food Cart / Pushcart',
+  ghost_kitchen: 'Shared / Ghost Kitchen',
+  catering: 'Catering Business',
+  cottage_food: 'Cottage Food',
+};
+
+const lookupSchema = z.object({
+  state: z.enum(STATE_CODES, { errorMap: () => ({ message: 'Pick a U.S. state to continue.' }) }),
+  city: z
+    .string()
+    .trim()
+    .max(80, { message: 'City name is too long (max 80 characters).' })
+    .regex(/^[A-Za-zÀ-ÿ0-9 .'\-]*$/, { message: 'City can only contain letters, numbers, spaces, apostrophes, periods, and hyphens.' })
+    .optional()
+    .or(z.literal('')),
+  businessType: z.enum(BUSINESS_TYPES, { errorMap: () => ({ message: 'Choose a supported business type.' }) }),
+});
+
+type FieldErrors = Partial<Record<'state' | 'city' | 'businessType', string>>;
+
 const PermitPath = () => {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [form, setForm] = useState({ city: '', state: '', businessType: 'food_truck' });
+  const [errors, setErrors] = useState<FieldErrors>({});
   const [result, setResult] = useState<DashboardResult | null>(null);
 
+  const updateField = <K extends keyof typeof form>(key: K, value: string) => {
+    setForm((prev) => ({ ...prev, [key]: value }));
+    if (errors[key as keyof FieldErrors]) {
+      setErrors((prev) => ({ ...prev, [key]: undefined }));
+    }
+  };
+
   const handleSubmit = async () => {
+    const parsed = lookupSchema.safeParse({
+      state: form.state,
+      city: form.city.trim(),
+      businessType: form.businessType,
+    });
+    if (!parsed.success) {
+      const fieldErrors: FieldErrors = {};
+      for (const issue of parsed.error.issues) {
+        const key = issue.path[0] as keyof FieldErrors;
+        if (key && !fieldErrors[key]) fieldErrors[key] = issue.message;
+      }
+      setErrors(fieldErrors);
+      toast({
+        title: 'Check your details',
+        description: fieldErrors.state || fieldErrors.city || fieldErrors.businessType || 'Please review the highlighted fields.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setErrors({});
     setIsLoading(true);
     setResult(null);
     try {
-      const { data: response, error } = await supabase.functions.invoke('ai-license-finder', { body: form });
+      const { data: response, error } = await supabase.functions.invoke('ai-license-finder', {
+        body: { state: parsed.data.state, city: parsed.data.city || '', businessType: parsed.data.businessType },
+      });
       if (error) throw error;
       if (response?.error) {
         toast({ title: 'Could not build checklist', description: response.error, variant: 'destructive' });
@@ -118,7 +174,7 @@ const PermitPath = () => {
       setResult(adapted);
       setTimeout(() => document.getElementById('results-section')?.scrollIntoView({ behavior: 'smooth' }), 100);
     } catch {
-      toast({ title: 'Error', description: 'Failed to find requirements. Please try again.', variant: 'destructive' });
+      toast({ title: 'Lookup failed', description: 'Something went wrong reaching our compliance engine. Please try again.', variant: 'destructive' });
     } finally {
       setIsLoading(false);
     }
