@@ -317,10 +317,10 @@ export default function ResultsDashboard({ result, readOnly = false }: Props) {
             initial={{ opacity: 0, y: -8 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, height: 0 }}
-            className="rounded-2xl border border-[#FF5124]/30 bg-[#FF5124]/10 p-4 sm:p-5 flex gap-3"
+            className="rounded-2xl border border-amber-500/25 bg-amber-500/[0.06] p-4 sm:p-5 flex gap-3"
           >
-            <div className="h-9 w-9 rounded-lg bg-[#FF5124]/20 flex items-center justify-center shrink-0">
-              <Sparkles className="h-5 w-5 text-[#FF5124]" />
+            <div className="h-9 w-9 rounded-lg bg-amber-500/15 flex items-center justify-center shrink-0">
+              <Sparkles className="h-5 w-5 text-amber-300" />
             </div>
             <div className="flex-1 min-w-0">
               <div className="font-semibold text-white mb-1">Recent law change worth knowing</div>
@@ -340,26 +340,6 @@ export default function ResultsDashboard({ result, readOnly = false }: Props) {
         insights={result.insights}
       />
 
-
-
-      {/* Don't skip */}
-      {dontSkip.length > 0 && !isComplete && (
-        <div className="rounded-2xl border border-amber-500/25 bg-amber-500/5 p-5">
-          <div className="flex items-center gap-2 mb-3">
-            <AlertTriangle className="h-4 w-4 text-amber-400" />
-            <h3 className="font-semibold text-white text-sm uppercase tracking-wider">Don't skip these</h3>
-          </div>
-          <div className="grid gap-2 sm:grid-cols-2">
-            {dontSkip.map((i) => (
-              <div key={i.id} className="text-sm text-white/80 flex items-start gap-2">
-                <span className="text-amber-400 mt-0.5">•</span>
-                <span><span className="font-medium text-white">{i.title}</span> <span className="text-white/50">— {i.issuer}</span></span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
       {/* Filter pills */}
       <div className="flex flex-wrap items-center gap-2">
         <Filter className="h-4 w-4 text-white/40" />
@@ -374,7 +354,7 @@ export default function ResultsDashboard({ result, readOnly = false }: Props) {
             className={cn(
               'text-xs px-3 py-1.5 rounded-full border transition-colors',
               filter === k
-                ? 'bg-[#FF5124] border-[#FF5124] text-white'
+                ? 'bg-white/15 border-white/25 text-white'
                 : 'bg-white/5 border-white/10 text-white/65 hover:text-white hover:border-white/20',
             )}
           >
