@@ -281,12 +281,12 @@ const PermitPath = () => {
 
               <div className="max-w-3xl">
                 <div className="inline-flex items-center gap-2 mb-5 px-3 py-1.5 rounded-full border border-white/10 bg-white/5 backdrop-blur">
-                  <span className="h-1.5 w-1.5 rounded-full bg-[#FF5124] shadow-[0_0_8px_rgba(255,81,36,0.8)]" />
+                  <span className="h-1.5 w-1.5 rounded-full bg-white/70" />
                   <span className="text-xs font-medium tracking-wider uppercase text-white/80">PermitPath</span>
                 </div>
                 <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-5 leading-[1.05] tracking-tight">
                   Navigate permits in minutes,<br className="hidden sm:block" />
-                  <span className="text-[#FF5124]">not weeks.</span>
+                  <span className="text-white/70">not weeks.</span>
                 </h1>
                 <p className="text-lg md:text-xl text-white/70 mb-8 max-w-2xl">
                   Permits, licenses, and compliance — mapped to your city and setup. Built from official sources so you know exactly what you need before you start.
