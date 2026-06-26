@@ -157,7 +157,12 @@ export const ShareKit: React.FC<ShareKitProps> = ({ listing, onClose }) => {
     listing.mode === 'sale'
       ? `🔥 ${categoryLabel} alert${city ? ` — ${city}` : ''}!\n${listing.title}${priceText ? `\n${priceText}` : ''}\nTap link to see full specs & photos.`
       : `Looking for a ${categoryLabel.toLowerCase()}${city ? ` in ${city}` : ''}? I just opened bookings for ${listing.title}.${priceText ? ` ${priceText}.` : ''} Lock your date here:`];
-  const currentCaption = captionVariants[captionVariant % captionVariants.length];
+  // Prefer AI-generated captions when available (matched by variant index modulo).
+  const aiCaptions = templates
+    .map((t) => t.caption)
+    .filter((c): c is string => !!c && c.trim().length > 0);
+  const allCaptions = aiCaptions.length > 0 ? aiCaptions : captionVariants;
+  const currentCaption = allCaptions[captionVariant % allCaptions.length];
   const shareText = currentCaption;
 
   // Hashtags optimized for discovery
@@ -170,17 +175,17 @@ export const ShareKit: React.FC<ShareKitProps> = ({ listing, onClose }) => {
 
   useEffect(() => {
     trackShareKitViewed();
-    QRCode.toDataURL(listingUrl, {
+    // QR encodes a UTM-tagged URL so print/in-person scans are attributable.
+    QRCode.toDataURL(withUtm('qr', 'print'), {
       width: 320,
       margin: 1,
       color: { dark: '#111111', light: '#FFFFFF' }}).then(setQrCodeDataUrl).catch(console.error);
-  }, [listingUrl]);
+  }, [listingUrl, withUtm]);
 
   const copy = useCallback(async (text: string, setFlag: (b: boolean) => void, msg: string) => {
     try {
       await navigator.clipboard.writeText(text);
       setFlag(true);
-      trackShareLinkCopied();
       toast({ title: msg });
       setTimeout(() => setFlag(false), 2000);
     } catch {
@@ -188,10 +193,17 @@ export const ShareKit: React.FC<ShareKitProps> = ({ listing, onClose }) => {
     }
   }, [toast]);
 
-  const handleCopyLink = () => copy(listingUrl, setLinkCopied, 'Link copied!');
+  const handleCopyLink = () => {
+    const url = withUtm('copy_link', 'clipboard');
+    copy(url, setLinkCopied, 'Link copied!');
+    trackShareLinkCopied();
+    logShare('copy' as ShareChannel, { share_url: url });
+  };
   const handleCopyCaption = () => {
-    const fullCaption = `${currentCaption}\n\n${listingUrl}\n\n${hashtags.map(h => `#${h}`).join(' ')}`;
+    const url = withUtm('copy_caption', 'clipboard');
+    const fullCaption = `${currentCaption}\n\n${url}\n\n${hashtags.map(h => `#${h}`).join(' ')}`;
     copy(fullCaption, setCaptionCopied, 'Caption + link + hashtags copied!');
+    logShare('copy' as ShareChannel, { share_url: url, caption: currentCaption, content_type: 'caption' });
   };
   const handleCopyEmailLink = () => copy(listingUrl, setEmailLinkCopied, 'Link copied for email!');
   const handleCopySmsLink = () => {
