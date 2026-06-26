@@ -458,7 +458,7 @@ const PermitPath = () => {
                 {!isLoading && fetchError && (
                   <ResultsError message={fetchError} onRetry={runLookup} />
                 )}
-                {!isLoading && !fetchError && result && <ResultsDashboard result={result} />}
+                {!isLoading && !fetchError && result && <ResultsDashboard result={result} readOnly={isShared} />}
               </div>
             </div>
           </section>
