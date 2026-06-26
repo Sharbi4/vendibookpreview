@@ -130,6 +130,7 @@ const PermitPath = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [isLoading, setIsLoading] = useState(false);
   const [form, setForm] = useState({ city: '', state: '', businessType: 'food_truck' });
+  const [profile, setProfile] = useState<VendorProfile>({});
   const [errors, setErrors] = useState<FieldErrors>({});
   const [result, setResult] = useState<DashboardResult | null>(null);
   const [fetchError, setFetchError] = useState<string | null>(null);
