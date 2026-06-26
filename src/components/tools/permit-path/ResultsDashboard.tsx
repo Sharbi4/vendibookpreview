@@ -1,8 +1,8 @@
 import { useMemo, useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  AlertTriangle, ExternalLink, CheckCircle2, Circle, ChevronDown,
-  Download, MapPin, DollarSign, Clock, Sparkles, Lock, X, Mail,
+  ExternalLink, CheckCircle2, Circle, ChevronDown,
+  Download, MapPin, DollarSign, Clock, Sparkles, X, Mail,
   Share2, CalendarPlus, Lightbulb, Building2, Filter, Check, ArrowRight,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -145,15 +145,12 @@ export default function ResultsDashboard({ result, readOnly = false }: Props) {
   }, [roadmap.next_step_id]);
 
   const toggle = useCallback((node: RoadmapNode) => {
-    if (node.status === 'locked') {
-      toast.info(node.unlock_reason || "Complete the earlier steps first.");
-      return;
-    }
+    // Info is never locked — users can check anything in any order.
     setCompleted((prev) => ({ ...prev, [node.id]: !prev[node.id] }));
   }, []);
 
   const markAllInCategory = useCallback((catName: string) => {
-    const nodesInCat = roadmap.nodes.filter((n) => n.category === catName && n.status !== 'locked');
+    const nodesInCat = roadmap.nodes.filter((n) => n.category === catName);
     setCompleted((prev) => {
       const next = { ...prev };
       const allDone = nodesInCat.every((n) => prev[n.id]);
@@ -250,8 +247,8 @@ export default function ResultsDashboard({ result, readOnly = false }: Props) {
         <div className="rounded-2xl border border-white/10 bg-[#08080a]/90 backdrop-blur-xl p-4 sm:p-5 shadow-2xl">
           <div className="flex flex-col sm:flex-row sm:items-center gap-4">
             <div className="flex items-center gap-3 flex-1 min-w-0">
-              <div className="h-10 w-10 rounded-xl bg-[#FF5124]/15 border border-[#FF5124]/30 flex items-center justify-center shrink-0">
-                <MapPin className="h-5 w-5 text-[#FF5124]" />
+              <div className="h-10 w-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center shrink-0">
+                <MapPin className="h-5 w-5 text-white/70" />
               </div>
               <div className="min-w-0">
                 <div className="text-xs text-white/55 uppercase tracking-wider">
@@ -266,13 +263,13 @@ export default function ResultsDashboard({ result, readOnly = false }: Props) {
             <ProgressRing pct={roadmap.pct} />
             <div className="flex flex-wrap gap-3 text-sm">
               <span className="flex items-center gap-1.5 text-white/80">
-                <Check className="h-4 w-4 text-[#FF5124]" /> {roadmap.done}/{roadmap.total}
+                <Check className="h-4 w-4 text-white/55" /> {roadmap.done}/{roadmap.total}
               </span>
               <span className="flex items-center gap-1.5 text-white/80">
-                <DollarSign className="h-4 w-4 text-[#FF5124]" /> {remainingCost} left
+                <DollarSign className="h-4 w-4 text-white/55" /> {remainingCost} left
               </span>
               <span className="flex items-center gap-1.5 text-white/80">
-                <Clock className="h-4 w-4 text-[#FF5124]" /> {remainingWeeks}
+                <Clock className="h-4 w-4 text-white/55" /> {remainingWeeks}
               </span>
             </div>
             <div className="flex gap-1.5">
@@ -295,7 +292,7 @@ export default function ResultsDashboard({ result, readOnly = false }: Props) {
           {!user && !readOnly && (
             <div className="mt-4 flex flex-col sm:flex-row items-start sm:items-center gap-2 text-xs">
               <span className="text-white/55">Save your progress and pick up where you left off:</span>
-              <Link to="/auth?redirect=/tools/permitpath" className="text-[#FF5124] hover:underline font-medium inline-flex items-center gap-1">
+              <Link to="/auth?redirect=/tools/permitpath" className="text-white hover:underline font-medium inline-flex items-center gap-1">
                 Save to my account <ArrowRight className="h-3 w-3" />
               </Link>
             </div>
@@ -320,10 +317,10 @@ export default function ResultsDashboard({ result, readOnly = false }: Props) {
             initial={{ opacity: 0, y: -8 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, height: 0 }}
-            className="rounded-2xl border border-[#FF5124]/30 bg-[#FF5124]/10 p-4 sm:p-5 flex gap-3"
+            className="rounded-2xl border border-amber-500/25 bg-amber-500/[0.06] p-4 sm:p-5 flex gap-3"
           >
-            <div className="h-9 w-9 rounded-lg bg-[#FF5124]/20 flex items-center justify-center shrink-0">
-              <Sparkles className="h-5 w-5 text-[#FF5124]" />
+            <div className="h-9 w-9 rounded-lg bg-amber-500/15 flex items-center justify-center shrink-0">
+              <Sparkles className="h-5 w-5 text-amber-300" />
             </div>
             <div className="flex-1 min-w-0">
               <div className="font-semibold text-white mb-1">Recent law change worth knowing</div>
@@ -343,26 +340,6 @@ export default function ResultsDashboard({ result, readOnly = false }: Props) {
         insights={result.insights}
       />
 
-
-
-      {/* Don't skip */}
-      {dontSkip.length > 0 && !isComplete && (
-        <div className="rounded-2xl border border-amber-500/25 bg-amber-500/5 p-5">
-          <div className="flex items-center gap-2 mb-3">
-            <AlertTriangle className="h-4 w-4 text-amber-400" />
-            <h3 className="font-semibold text-white text-sm uppercase tracking-wider">Don't skip these</h3>
-          </div>
-          <div className="grid gap-2 sm:grid-cols-2">
-            {dontSkip.map((i) => (
-              <div key={i.id} className="text-sm text-white/80 flex items-start gap-2">
-                <span className="text-amber-400 mt-0.5">•</span>
-                <span><span className="font-medium text-white">{i.title}</span> <span className="text-white/50">— {i.issuer}</span></span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
       {/* Filter pills */}
       <div className="flex flex-wrap items-center gap-2">
         <Filter className="h-4 w-4 text-white/40" />
@@ -377,7 +354,7 @@ export default function ResultsDashboard({ result, readOnly = false }: Props) {
             className={cn(
               'text-xs px-3 py-1.5 rounded-full border transition-colors',
               filter === k
-                ? 'bg-[#FF5124] border-[#FF5124] text-white'
+                ? 'bg-white/15 border-white/25 text-white'
                 : 'bg-white/5 border-white/10 text-white/65 hover:text-white hover:border-white/20',
             )}
           >
@@ -506,8 +483,9 @@ interface ItemProps {
 
 function RoadmapItem({ node, expanded, onToggleExpand, onToggleDone, onCalendar, readOnly, state }: ItemProps) {
   const isNext = node.status === 'next';
-  const isLocked = node.status === 'locked';
   const isDone = node.status === 'done';
+  // "locked" no longer hides info — it's a soft sequence hint.
+  const isSequenceHint = node.status === 'locked';
 
   // Commissary action: deep-link to kitchen search
   const showCommissaryAction = node.key === 'commissary' && !isDone && !readOnly;
@@ -517,24 +495,21 @@ function RoadmapItem({ node, expanded, onToggleExpand, onToggleDone, onCalendar,
       layout
       className={cn(
         'rounded-xl border transition-all',
-        isDone && 'border-[#FF5124]/20 bg-[#FF5124]/5',
-        isNext && 'border-[#FF5124]/40 bg-[#FF5124]/[0.06] shadow-[0_0_0_1px_rgba(255,81,36,0.3),0_12px_40px_-12px_rgba(255,81,36,0.4)]',
-        !isDone && !isNext && !isLocked && 'border-white/10 bg-white/[0.02] hover:border-white/20',
-        isLocked && 'border-white/[0.06] bg-white/[0.01] opacity-60',
+        isDone && 'border-white/15 bg-white/[0.04]',
+        isNext && 'border-[#FF5124]/40 bg-[#FF5124]/[0.05] shadow-[0_0_0_1px_rgba(255,81,36,0.25)]',
+        !isDone && !isNext && 'border-white/10 bg-white/[0.02] hover:border-white/20',
       )}
     >
       <div className="p-4">
         <div className="flex items-start gap-3">
           <button
             onClick={onToggleDone}
-            className={cn('mt-0.5 shrink-0', isLocked && 'cursor-not-allowed')}
+            className="mt-0.5 shrink-0"
             aria-label={isDone ? 'Mark incomplete' : 'Mark complete'}
             disabled={readOnly}
           >
             {isDone ? (
-              <CheckCircle2 className="h-5 w-5 text-[#FF5124]" />
-            ) : isLocked ? (
-              <Lock className="h-5 w-5 text-white/25" />
+              <CheckCircle2 className="h-5 w-5 text-white/80" />
             ) : (
               <Circle className={cn('h-5 w-5', isNext ? 'text-[#FF5124]' : 'text-white/30 hover:text-white/60')} />
             )}
@@ -547,7 +522,12 @@ function RoadmapItem({ node, expanded, onToggleExpand, onToggleDone, onCalendar,
             <div className="flex flex-wrap items-center gap-2 mb-1">
               {isNext && (
                 <Badge className="text-[10px] uppercase tracking-wider bg-[#FF5124] text-white border-transparent hover:bg-[#FF5124]">
-                  ◆ Your next step
+                  Start here
+                </Badge>
+              )}
+              {isSequenceHint && (
+                <Badge variant="outline" className="text-[10px] uppercase tracking-wider bg-white/5 text-white/55 border-white/10">
+                  Do after earlier steps
                 </Badge>
               )}
               <h4 className={cn('font-semibold text-white', isDone && 'line-through opacity-60')}>
@@ -565,28 +545,20 @@ function RoadmapItem({ node, expanded, onToggleExpand, onToggleDone, onCalendar,
               )}
             </div>
 
-            {isLocked && node.unlock_reason && (
-              <p className="text-xs text-white/50 italic">{node.unlock_reason}</p>
-            )}
+            <p className="text-sm text-white/65 mb-1.5">{node.why_it_matters}</p>
 
-            {!isLocked && (
-              <p className="text-sm text-white/65 mb-1.5">{node.why_it_matters}</p>
-            )}
-
-            {!isLocked && (
-              <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-white/55">
-                <span><span className="text-white/40">By</span> {node.issuer}</span>
-                {node.cost_estimate && <span><span className="text-white/40">Cost</span> {node.cost_estimate}</span>}
-                {node.timeline_estimate && <span><span className="text-white/40">Time</span> {node.timeline_estimate}</span>}
-              </div>
-            )}
+            <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-white/55">
+              <span><span className="text-white/40">By</span> {node.issuer}</span>
+              {node.cost_estimate && <span><span className="text-white/40">Cost</span> {node.cost_estimate}</span>}
+              {node.timeline_estimate && <span><span className="text-white/40">Time</span> {node.timeline_estimate}</span>}
+            </div>
           </button>
 
           <ChevronDown className={cn('h-4 w-4 text-white/30 transition-transform shrink-0 mt-1', expanded && 'rotate-180')} />
         </div>
 
         <AnimatePresence initial={false}>
-          {expanded && !isLocked && (
+          {expanded && (
             <motion.div
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: 'auto', opacity: 1 }}
@@ -595,11 +567,15 @@ function RoadmapItem({ node, expanded, onToggleExpand, onToggleDone, onCalendar,
               className="overflow-hidden"
             >
               <div className="pt-4 pl-8 space-y-3">
+                {isSequenceHint && node.unlock_reason && (
+                  <p className="text-xs text-white/55 italic">{node.unlock_reason}</p>
+                )}
+
                 {node.pro_tip && (
-                  <div className="rounded-lg border border-[#FF5124]/15 bg-[#FF5124]/5 p-3 flex gap-2.5">
-                    <Lightbulb className="h-4 w-4 text-[#FF5124] shrink-0 mt-0.5" />
+                  <div className="rounded-lg border border-white/10 bg-white/[0.03] p-3 flex gap-2.5">
+                    <Lightbulb className="h-4 w-4 text-amber-300 shrink-0 mt-0.5" />
                     <div>
-                      <div className="text-[10px] uppercase tracking-wider text-[#FF5124] font-semibold mb-0.5">Operator tip</div>
+                      <div className="text-[10px] uppercase tracking-wider text-white/55 font-semibold mb-0.5">Operator tip</div>
                       <p className="text-sm text-white/80 leading-relaxed">{node.pro_tip}</p>
                     </div>
                   </div>
@@ -611,7 +587,7 @@ function RoadmapItem({ node, expanded, onToggleExpand, onToggleDone, onCalendar,
                       href={node.official_url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 text-sm font-medium text-[#FF5124] hover:text-[#FF5124]/80 bg-[#FF5124]/10 hover:bg-[#FF5124]/15 border border-[#FF5124]/30 px-3 py-1.5 rounded-lg"
+                      className="inline-flex items-center gap-1.5 text-sm font-medium text-white hover:text-white bg-white/5 hover:bg-white/10 border border-white/15 px-3 py-1.5 rounded-lg"
                     >
                       Apply on official site <ExternalLink className="h-3.5 w-3.5" />
                     </a>
