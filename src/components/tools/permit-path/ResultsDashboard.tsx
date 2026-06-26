@@ -21,6 +21,9 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import RoadmapSuccess from './RoadmapSuccess';
+import ReasoningPanels, { type CriticalPath, type RiskItem, type InsightItem } from './ReasoningPanels';
+import PremiumIcon from './PremiumIcon';
+import { categoryVisual } from './categoryVisuals';
 
 export interface DashboardResult {
   location: { city?: string; state: string; stateAbbreviation?: string; business_type?: string };
@@ -29,6 +32,9 @@ export interface DashboardResult {
   recent_law_alert?: string | null;
   estimated_total_cost?: { low?: number; high?: number; display?: string };
   estimated_setup_weeks?: { low?: number; high?: number; display?: string };
+  critical_path?: CriticalPath | null;
+  risks?: RiskItem[];
+  insights?: InsightItem[];
   categories: Array<{
     name: string;
     items: Array<{
