@@ -212,6 +212,7 @@ const AnimatedRoutes = () => {
           {/* Profile routes */}
           <Route path="/profile" element={<Navigate to="/account" replace />} />
           <Route path="/profile/edit" element={<Navigate to="/account" replace />} />
+          <Route path="/settings" element={<Navigate to="/account" replace />} />
           <Route path="/profile/:id" element={<Navigate to={`/u/${window.location.pathname.split('/').pop()}`} replace />} />
           {/* Private account route - owner only */}
           <Route path="/account" element={<PageTransition><Account /></PageTransition>} />
