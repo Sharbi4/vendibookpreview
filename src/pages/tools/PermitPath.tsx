@@ -18,6 +18,8 @@ import {
 } from 'lucide-react';
 import ToolCrossLinks from '@/components/tools/ToolCrossLinks';
 import ResultsDashboard, { type DashboardResult } from '@/components/tools/permit-path/ResultsDashboard';
+import ResultsSkeleton from '@/components/tools/permit-path/ResultsSkeleton';
+import ResultsError from '@/components/tools/permit-path/ResultsError';
 
 const pageJsonLd = {
   '@context': 'https://schema.org',
@@ -125,6 +127,7 @@ const PermitPath = () => {
   const [form, setForm] = useState({ city: '', state: '', businessType: 'food_truck' });
   const [errors, setErrors] = useState<FieldErrors>({});
   const [result, setResult] = useState<DashboardResult | null>(null);
+  const [fetchError, setFetchError] = useState<string | null>(null);
 
   const updateField = <K extends keyof typeof form>(key: K, value: string) => {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -133,7 +136,12 @@ const PermitPath = () => {
     }
   };
 
-  const handleSubmit = async () => {
+  const loadingLocationLabel = () => {
+    const stateLabel = US_STATES.find((s) => s.value === form.state)?.label || form.state || 'your area';
+    return form.city.trim() ? `${form.city.trim()}, ${stateLabel}` : stateLabel;
+  };
+
+  const runLookup = async () => {
     const parsed = lookupSchema.safeParse({
       state: form.state,
       city: form.city.trim(),
@@ -155,30 +163,39 @@ const PermitPath = () => {
     }
 
     setErrors({});
+    setFetchError(null);
     setIsLoading(true);
     setResult(null);
+    setTimeout(() => document.getElementById('results-section')?.scrollIntoView({ behavior: 'smooth' }), 50);
     try {
       const { data: response, error } = await supabase.functions.invoke('ai-license-finder', {
         body: { state: parsed.data.state, city: parsed.data.city || '', businessType: parsed.data.businessType },
       });
       if (error) throw error;
       if (response?.error) {
-        toast({ title: 'Could not build checklist', description: response.error, variant: 'destructive' });
+        setFetchError(response.error);
         return;
       }
       const adapted = adaptResult(response?.result);
       if (!adapted) {
-        toast({ title: 'No results', description: 'We could not parse a checklist. Please try again.', variant: 'destructive' });
+        setFetchError('We could not parse a checklist. Please try again.');
         return;
       }
       setResult(adapted);
-      setTimeout(() => document.getElementById('results-section')?.scrollIntoView({ behavior: 'smooth' }), 100);
-    } catch {
-      toast({ title: 'Lookup failed', description: 'Something went wrong reaching our compliance engine. Please try again.', variant: 'destructive' });
+      if ((response?.result as any)?.fallback) {
+        toast({
+          title: 'Showing baseline checklist',
+          description: 'Live research was thin — we rendered the standard checklist for this business type. Verify each item locally.',
+        });
+      }
+    } catch (e: any) {
+      setFetchError(e?.message || 'Something went wrong reaching our compliance engine.');
     } finally {
       setIsLoading(false);
     }
   };
+
+  const handleSubmit = runLookup;
 
   return (
     <>
@@ -406,7 +423,11 @@ const PermitPath = () => {
 
               {/* Results */}
               <div id="results-section">
-                {result && <ResultsDashboard result={result} />}
+                {isLoading && <ResultsSkeleton location={loadingLocationLabel()} />}
+                {!isLoading && fetchError && (
+                  <ResultsError message={fetchError} onRetry={runLookup} />
+                )}
+                {!isLoading && !fetchError && result && <ResultsDashboard result={result} />}
               </div>
             </div>
           </section>
