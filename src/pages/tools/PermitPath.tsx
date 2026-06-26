@@ -180,7 +180,7 @@ const PermitPath = () => {
     setTimeout(() => document.getElementById('results-section')?.scrollIntoView({ behavior: 'smooth' }), 50);
     try {
       const { data: response, error } = await supabase.functions.invoke('ai-license-finder', {
-        body: { state: parsed.data.state, city: parsed.data.city || '', businessType: parsed.data.businessType },
+        body: { state: parsed.data.state, city: parsed.data.city || '', businessType: parsed.data.businessType, profile },
       });
       if (error) throw error;
       if (response?.error) {
