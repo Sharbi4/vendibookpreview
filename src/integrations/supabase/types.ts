@@ -2568,6 +2568,42 @@ export type Database = {
         }
         Relationships: []
       }
+      permit_progress: {
+        Row: {
+          business_type: string | null
+          city: string | null
+          completed: Json
+          created_at: string
+          id: string
+          roadmap_key: string
+          state_code: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          business_type?: string | null
+          city?: string | null
+          completed?: Json
+          created_at?: string
+          id?: string
+          roadmap_key: string
+          state_code: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          business_type?: string | null
+          city?: string | null
+          completed?: Json
+          created_at?: string
+          id?: string
+          roadmap_key?: string
+          state_code?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           address1: string | null
