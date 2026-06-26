@@ -485,7 +485,7 @@ serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
       // No AI key — return baseline immediately
-      return new Response(JSON.stringify({ result: baselineChecklist(trimmedState, trimmedCity, trimmedBusinessType) }),
+      return new Response(JSON.stringify({ result: baselineChecklist(trimmedState, trimmedCity, trimmedBusinessType, profile) }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
