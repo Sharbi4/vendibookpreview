@@ -1,17 +1,26 @@
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   AlertTriangle, ExternalLink, CheckCircle2, Circle, ChevronDown,
-  Download, MapPin, DollarSign, Clock, Sparkles, Building, X,
+  Download, MapPin, DollarSign, Clock, Sparkles, Lock, X, Mail,
+  Share2, CalendarPlus, Lightbulb, Building2, Filter, Check, ArrowRight,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
+import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
 import {
   downloadPermitChecklistPdf,
   type PermitChecklistData,
 } from '@/lib/generatePermitChecklistPdf';
+import {
+  buildRoadmap, buildIcs, downloadIcs, buildMailto,
+  type RoadmapNode,
+} from '@/lib/permitRoadmap';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+import RoadmapSuccess from './RoadmapSuccess';
 
 export interface DashboardResult {
   location: { city?: string; state: string; stateAbbreviation?: string; business_type?: string };
@@ -30,6 +39,7 @@ export interface DashboardResult {
       timeline_estimate: string;
       official_url: string;
       why_it_matters: string;
+      pro_tip?: string;
       commonly_missed?: boolean;
     }>;
   }>;
@@ -44,11 +54,17 @@ const levelStyles: Record<string, string> = {
   federal: 'bg-violet-500/15 text-violet-300 border-violet-500/30',
 };
 
+type Filter = 'all' | 'remaining' | 'commonly_missed';
+
 interface Props {
   result: DashboardResult;
+  /** Read-only mode: hide save/share affordances when viewing somebody else's shared roadmap. */
+  readOnly?: boolean;
 }
 
-export default function ResultsDashboard({ result }: Props) {
+export default function ResultsDashboard({ result, readOnly = false }: Props) {
+  const { user } = useAuth();
+
   const storageKey = useMemo(
     () =>
       `permitpath:${result.location.state}|${result.location.city || ''}|${
@@ -59,12 +75,11 @@ export default function ResultsDashboard({ result }: Props) {
 
   const [completed, setCompleted] = useState<Record<string, boolean>>({});
   const [alertDismissed, setAlertDismissed] = useState(false);
-  const [openCats, setOpenCats] = useState<Record<string, boolean>>(() => {
-    const map: Record<string, boolean> = {};
-    (result.categories || []).forEach((c, i) => { map[c.name] = i < 2; });
-    return map;
-  });
+  const [filter, setFilter] = useState<Filter>('all');
+  const [loadedRemote, setLoadedRemote] = useState(false);
+  const [expanded, setExpanded] = useState<Record<string, boolean>>({});
 
+  // 1) localStorage load
   useEffect(() => {
     try {
       const raw = localStorage.getItem(storageKey);
@@ -72,25 +87,76 @@ export default function ResultsDashboard({ result }: Props) {
     } catch { /* ignore */ }
   }, [storageKey]);
 
+  // 2) remote load (signed-in users override local with remote)
+  useEffect(() => {
+    if (!user || readOnly) { setLoadedRemote(true); return; }
+    let cancelled = false;
+    (async () => {
+      try {
+        const { data } = await (supabase as any)
+          .from('permit_progress')
+          .select('completed')
+          .eq('user_id', user.id)
+          .eq('roadmap_key', storageKey)
+          .maybeSingle();
+        if (!cancelled && data?.completed && typeof data.completed === 'object') {
+          setCompleted(data.completed as Record<string, boolean>);
+        }
+      } catch { /* table may not exist yet */ }
+      if (!cancelled) setLoadedRemote(true);
+    })();
+    return () => { cancelled = true; };
+  }, [user, storageKey, readOnly]);
+
+  // 3) save: localStorage always, remote when signed-in (debounced)
   useEffect(() => {
     try { localStorage.setItem(storageKey, JSON.stringify(completed)); } catch { /* ignore */ }
-  }, [storageKey, completed]);
+    if (!user || readOnly || !loadedRemote) return;
+    const t = setTimeout(() => {
+      (supabase as any)
+        .from('permit_progress')
+        .upsert({
+          user_id: user.id,
+          roadmap_key: storageKey,
+          state_code: result.location.state,
+          city: result.location.city || null,
+          business_type: result.businessType || result.location.business_type || null,
+          completed,
+        }, { onConflict: 'user_id,roadmap_key' })
+        .then(() => { /* silent */ }, () => { /* silent */ });
+    }, 600);
+    return () => clearTimeout(t);
+  }, [completed, storageKey, user, readOnly, loadedRemote, result]);
 
-  const allItems = useMemo(
-    () => (result.categories || []).flatMap((c) => c.items.map((i) => ({ cat: c.name, ...i }))),
-    [result],
-  );
-  const totalCount = allItems.length;
-  const doneCount = allItems.filter((i) => completed[`${i.cat}::${i.title}`]).length;
-  const pct = totalCount ? Math.round((doneCount / totalCount) * 100) : 0;
+  const roadmap = useMemo(() => buildRoadmap(result, completed), [result, completed]);
+  const isComplete = roadmap.total > 0 && roadmap.done === roadmap.total;
 
-  const dontSkip = allItems.filter((i) => i.commonly_missed).slice(0, 5);
+  // Auto-expand the "next" item
+  useEffect(() => {
+    if (roadmap.next_step_id) {
+      setExpanded((p) => ({ ...p, [roadmap.next_step_id!]: p[roadmap.next_step_id!] ?? true }));
+    }
+  }, [roadmap.next_step_id]);
 
-  const toggle = (catName: string, title: string) => {
-    const key = `${catName}::${title}`;
-    setCompleted((prev) => ({ ...prev, [key]: !prev[key] }));
-  };
+  const toggle = useCallback((node: RoadmapNode) => {
+    if (node.status === 'locked') {
+      toast.info(node.unlock_reason || "Complete the earlier steps first.");
+      return;
+    }
+    setCompleted((prev) => ({ ...prev, [node.id]: !prev[node.id] }));
+  }, []);
 
+  const markAllInCategory = useCallback((catName: string) => {
+    const nodesInCat = roadmap.nodes.filter((n) => n.category === catName && n.status !== 'locked');
+    setCompleted((prev) => {
+      const next = { ...prev };
+      const allDone = nodesInCat.every((n) => prev[n.id]);
+      for (const n of nodesInCat) next[n.id] = !allDone;
+      return next;
+    });
+  }, [roadmap.nodes]);
+
+  // ---------- Actions ----------
   const handleDownload = () => {
     const data: PermitChecklistData = {
       location: result.location,
@@ -106,20 +172,74 @@ export default function ResultsDashboard({ result }: Props) {
     downloadPermitChecklistPdf(data, `permitpath-${loc}.pdf`);
   };
 
-  const costDisplay =
-    result.estimated_total_cost?.display ||
-    (result.estimated_total_cost?.low != null && result.estimated_total_cost?.high != null
-      ? `$${result.estimated_total_cost.low.toLocaleString()}–$${result.estimated_total_cost.high.toLocaleString()}`
-      : '—');
-  const weeksDisplay =
-    result.estimated_setup_weeks?.display ||
-    (result.estimated_setup_weeks?.low != null && result.estimated_setup_weeks?.high != null
-      ? `${result.estimated_setup_weeks.low}–${result.estimated_setup_weeks.high} weeks`
-      : '—');
+  const handleEmailMe = () => {
+    window.location.href = buildMailto(result, roadmap);
+  };
+
+  const handleShare = async () => {
+    const params = new URLSearchParams({
+      state: result.location.state,
+      ...(result.location.city ? { city: result.location.city } : {}),
+      businessType: result.businessType || result.location.business_type || 'food_truck',
+      shared: '1',
+    });
+    const url = `${window.location.origin}/tools/permitpath?${params.toString()}`;
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: 'My PermitPath roadmap', url });
+      } else {
+        await navigator.clipboard.writeText(url);
+        toast.success('Roadmap link copied to clipboard');
+      }
+    } catch { /* user cancelled */ }
+  };
+
+  const handleCalendarReminder = (node: RoadmapNode) => {
+    const ics = buildIcs({
+      title: `PermitPath: ${node.title}`,
+      description: `${node.why_it_matters}\n\nIssuer: ${node.issuer}\nCost: ${node.cost_estimate}\nTimeline: ${node.timeline_estimate}${node.pro_tip ? `\n\nPro tip: ${node.pro_tip}` : ''}`,
+      url: node.official_url,
+      daysFromNow: 3,
+    });
+    const safe = node.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 60);
+    downloadIcs(`permitpath-${safe}.ics`, ics);
+    toast.success('Reminder downloaded — add it to your calendar');
+  };
+
+  // ---------- Display values ----------
+  const locationLabel = result.location.city
+    ? `${result.location.city}, ${result.location.state}`
+    : result.location.state;
+
+  const remainingCost =
+    roadmap.remaining_cost_high > 0
+      ? `$${roadmap.remaining_cost_low.toLocaleString()}–$${roadmap.remaining_cost_high.toLocaleString()}`
+      : '—';
+  const remainingWeeks =
+    roadmap.remaining_weeks_high > 0
+      ? `${roadmap.remaining_weeks_low}–${roadmap.remaining_weeks_high} wks`
+      : '—';
+
+  // Filter nodes
+  const visibleNodes = roadmap.nodes.filter((n) => {
+    if (filter === 'remaining') return !n.done;
+    if (filter === 'commonly_missed') return n.commonly_missed;
+    return true;
+  });
+
+  // Group by category preserving sequence
+  const grouped: Array<{ name: string; nodes: RoadmapNode[] }> = [];
+  for (const n of visibleNodes) {
+    const last = grouped[grouped.length - 1];
+    if (last && last.name === n.category) last.nodes.push(n);
+    else grouped.push({ name: n.category, nodes: [n] });
+  }
+
+  const dontSkip = roadmap.nodes.filter((n) => n.commonly_missed && !n.done).slice(0, 4);
 
   return (
     <div className="mt-8 space-y-6">
-      {/* Sticky summary */}
+      {/* Sticky summary bar */}
       <div className="sticky top-16 z-20 -mx-2 sm:mx-0">
         <div className="rounded-2xl border border-white/10 bg-[#08080a]/90 backdrop-blur-xl p-4 sm:p-5 shadow-2xl">
           <div className="flex flex-col sm:flex-row sm:items-center gap-4">
@@ -128,38 +248,64 @@ export default function ResultsDashboard({ result }: Props) {
                 <MapPin className="h-5 w-5 text-[#FF5124]" />
               </div>
               <div className="min-w-0">
-                <div className="text-sm text-white/60">Your checklist</div>
+                <div className="text-xs text-white/55 uppercase tracking-wider">
+                  {user && !readOnly ? 'Welcome back — your roadmap' : 'Your roadmap'}
+                </div>
                 <div className="font-semibold text-white truncate">
-                  {result.location.city ? `${result.location.city}, ` : ''}{result.location.state}
+                  {locationLabel}
+                  {result.businessType && <span className="text-white/50 font-normal"> · {result.businessType}</span>}
                 </div>
               </div>
             </div>
-            <div className="flex items-center gap-4 text-sm">
-              <div className="flex items-center gap-1.5 text-white/80">
-                <DollarSign className="h-4 w-4 text-[#FF5124]" /> {costDisplay}
-              </div>
-              <div className="flex items-center gap-1.5 text-white/80">
-                <Clock className="h-4 w-4 text-[#FF5124]" /> {weeksDisplay}
-              </div>
+            <ProgressRing pct={roadmap.pct} />
+            <div className="flex flex-wrap gap-3 text-sm">
+              <span className="flex items-center gap-1.5 text-white/80">
+                <Check className="h-4 w-4 text-[#FF5124]" /> {roadmap.done}/{roadmap.total}
+              </span>
+              <span className="flex items-center gap-1.5 text-white/80">
+                <DollarSign className="h-4 w-4 text-[#FF5124]" /> {remainingCost} left
+              </span>
+              <span className="flex items-center gap-1.5 text-white/80">
+                <Clock className="h-4 w-4 text-[#FF5124]" /> {remainingWeeks}
+              </span>
             </div>
-            <Button
-              onClick={handleDownload}
-              size="sm"
-              className="bg-[#FF5124] hover:bg-[#FF5124]/90 text-white font-medium"
-            >
-              <Download className="h-4 w-4 mr-1.5" /> PDF
-            </Button>
+            <div className="flex gap-1.5">
+              {!readOnly && (
+                <Button onClick={handleEmailMe} size="sm" variant="outline" className="bg-white/5 border-white/15 text-white hover:bg-white/10 h-9">
+                  <Mail className="h-4 w-4" />
+                </Button>
+              )}
+              {!readOnly && (
+                <Button onClick={handleShare} size="sm" variant="outline" className="bg-white/5 border-white/15 text-white hover:bg-white/10 h-9">
+                  <Share2 className="h-4 w-4" />
+                </Button>
+              )}
+              <Button onClick={handleDownload} size="sm" className="bg-[#FF5124] hover:bg-[#FF5124]/90 text-white h-9">
+                <Download className="h-4 w-4 mr-1.5" /> PDF
+              </Button>
+            </div>
           </div>
 
-          <div className="mt-4 flex items-center gap-3">
-            <div className="text-xs text-white/60 shrink-0">
-              {doneCount} of {totalCount} complete
+          {!user && !readOnly && (
+            <div className="mt-4 flex flex-col sm:flex-row items-start sm:items-center gap-2 text-xs">
+              <span className="text-white/55">Save your progress and pick up where you left off:</span>
+              <Link to="/auth?redirect=/tools/permitpath" className="text-[#FF5124] hover:underline font-medium inline-flex items-center gap-1">
+                Save to my account <ArrowRight className="h-3 w-3" />
+              </Link>
             </div>
-            <Progress value={pct} className="h-1.5 bg-white/10" />
-            <div className="text-xs font-semibold text-[#FF5124] shrink-0">{pct}%</div>
-          </div>
+          )}
         </div>
       </div>
+
+      {/* 100% celebration */}
+      <AnimatePresence>
+        {isComplete && (
+          <RoadmapSuccess
+            location={locationLabel}
+            totalCost={result.estimated_total_cost?.display || ''}
+          />
+        )}
+      </AnimatePresence>
 
       {/* Recent law alert */}
       <AnimatePresence>
@@ -177,11 +323,7 @@ export default function ResultsDashboard({ result }: Props) {
               <div className="font-semibold text-white mb-1">Recent law change worth knowing</div>
               <p className="text-sm text-white/75 leading-relaxed">{result.recent_law_alert}</p>
             </div>
-            <button
-              onClick={() => setAlertDismissed(true)}
-              className="text-white/40 hover:text-white/80 shrink-0"
-              aria-label="Dismiss"
-            >
+            <button onClick={() => setAlertDismissed(true)} className="text-white/40 hover:text-white/80 shrink-0" aria-label="Dismiss">
               <X className="h-4 w-4" />
             </button>
           </motion.div>
@@ -189,17 +331,15 @@ export default function ResultsDashboard({ result }: Props) {
       </AnimatePresence>
 
       {/* Don't skip */}
-      {dontSkip.length > 0 && (
+      {dontSkip.length > 0 && !isComplete && (
         <div className="rounded-2xl border border-amber-500/25 bg-amber-500/5 p-5">
           <div className="flex items-center gap-2 mb-3">
             <AlertTriangle className="h-4 w-4 text-amber-400" />
-            <h3 className="font-semibold text-white text-sm uppercase tracking-wider">
-              Don't skip these
-            </h3>
+            <h3 className="font-semibold text-white text-sm uppercase tracking-wider">Don't skip these</h3>
           </div>
           <div className="grid gap-2 sm:grid-cols-2">
             {dontSkip.map((i) => (
-              <div key={i.title} className="text-sm text-white/80 flex items-start gap-2">
+              <div key={i.id} className="text-sm text-white/80 flex items-start gap-2">
                 <span className="text-amber-400 mt-0.5">•</span>
                 <span><span className="font-medium text-white">{i.title}</span> <span className="text-white/50">— {i.issuer}</span></span>
               </div>
@@ -208,121 +348,75 @@ export default function ResultsDashboard({ result }: Props) {
         </div>
       )}
 
-      {/* Categories */}
+      {/* Filter pills */}
+      <div className="flex flex-wrap items-center gap-2">
+        <Filter className="h-4 w-4 text-white/40" />
+        {([
+          ['all', `All (${roadmap.total})`],
+          ['remaining', `Remaining (${roadmap.total - roadmap.done})`],
+          ['commonly_missed', `Commonly missed (${roadmap.nodes.filter((n) => n.commonly_missed).length})`],
+        ] as const).map(([k, label]) => (
+          <button
+            key={k}
+            onClick={() => setFilter(k as Filter)}
+            className={cn(
+              'text-xs px-3 py-1.5 rounded-full border transition-colors',
+              filter === k
+                ? 'bg-[#FF5124] border-[#FF5124] text-white'
+                : 'bg-white/5 border-white/10 text-white/65 hover:text-white hover:border-white/20',
+            )}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {/* Sequenced roadmap, grouped by category in order */}
       <div className="space-y-3">
-        {(result.categories || []).map((cat, idx) => {
-          const catDone = cat.items.filter((i) => completed[`${cat.name}::${i.title}`]).length;
-          const isOpen = openCats[cat.name];
+        {grouped.map((cat, idx) => {
+          const catDone = cat.nodes.filter((n) => n.done).length;
+          const catActionable = cat.nodes.filter((n) => n.status !== 'locked').length;
+          const allMarked = catActionable > 0 && cat.nodes.filter((n) => n.status !== 'locked').every((n) => n.done);
           return (
             <motion.div
-              key={cat.name}
-              initial={{ opacity: 0, y: 12 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: idx * 0.04 }}
+              key={`${cat.name}-${idx}`}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: idx * 0.03 }}
               className="rounded-2xl border border-white/10 bg-[#0d0d10] overflow-hidden"
             >
-              <button
-                onClick={() => setOpenCats((p) => ({ ...p, [cat.name]: !p[cat.name] }))}
-                className="w-full flex items-center gap-3 p-4 sm:p-5 hover:bg-white/[0.02] transition-colors"
-              >
+              <div className="flex items-center gap-3 p-4 sm:p-5 border-b border-white/5">
                 <div className="h-9 w-9 rounded-lg bg-[#FF5124]/10 border border-[#FF5124]/20 flex items-center justify-center shrink-0">
-                  <Building className="h-4 w-4 text-[#FF5124]" />
+                  <Building2 className="h-4 w-4 text-[#FF5124]" />
                 </div>
-                <div className="flex-1 text-left min-w-0">
+                <div className="flex-1 min-w-0">
                   <div className="font-semibold text-white">{cat.name}</div>
-                  <div className="text-xs text-white/50">
-                    {catDone} of {cat.items.length} complete
-                  </div>
+                  <div className="text-xs text-white/50">{catDone} of {cat.nodes.length} complete</div>
                 </div>
-                <ChevronDown
-                  className={cn('h-5 w-5 text-white/40 transition-transform', isOpen && 'rotate-180')}
-                />
-              </button>
-
-              <AnimatePresence initial={false}>
-                {isOpen && (
-                  <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: 'auto', opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    transition={{ duration: 0.2 }}
-                    className="overflow-hidden"
+                {!readOnly && catActionable > 0 && (
+                  <button
+                    onClick={() => markAllInCategory(cat.name)}
+                    className="text-xs text-white/60 hover:text-white px-2.5 py-1 rounded-md hover:bg-white/5"
                   >
-                    <div className="px-4 sm:px-5 pb-5 space-y-2 border-t border-white/5">
-                      {cat.items.map((item) => {
-                        const key = `${cat.name}::${item.title}`;
-                        const done = !!completed[key];
-                        return (
-                          <div
-                            key={item.title}
-                            className={cn(
-                              'rounded-xl border p-4 transition-colors',
-                              done
-                                ? 'border-[#FF5124]/20 bg-[#FF5124]/5'
-                                : 'border-white/10 bg-white/[0.02] hover:border-white/20',
-                            )}
-                          >
-                            <div className="flex items-start gap-3">
-                              <button
-                                onClick={() => toggle(cat.name, item.title)}
-                                className="mt-0.5 shrink-0"
-                                aria-label={done ? 'Mark incomplete' : 'Mark complete'}
-                              >
-                                {done ? (
-                                  <CheckCircle2 className="h-5 w-5 text-[#FF5124]" />
-                                ) : (
-                                  <Circle className="h-5 w-5 text-white/30 hover:text-white/60" />
-                                )}
-                              </button>
-                              <div className="flex-1 min-w-0">
-                                <div className="flex flex-wrap items-center gap-2 mb-1">
-                                  <h4 className={cn('font-semibold text-white', done && 'line-through opacity-60')}>
-                                    {item.title}
-                                  </h4>
-                                  {item.level && (
-                                    <Badge
-                                      variant="outline"
-                                      className={cn('text-[10px] uppercase tracking-wider border', levelStyles[item.level] || 'bg-white/5 text-white/60 border-white/10')}
-                                    >
-                                      {item.level}
-                                    </Badge>
-                                  )}
-                                  {item.commonly_missed && (
-                                    <Badge variant="outline" className="text-[10px] uppercase tracking-wider bg-amber-500/10 text-amber-300 border-amber-500/30">
-                                      Often missed
-                                    </Badge>
-                                  )}
-                                </div>
-                                <p className="text-sm text-white/65 mb-2">{item.why_it_matters}</p>
-                                <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-white/55">
-                                  <span><span className="text-white/40">Issued by</span> {item.issuer}</span>
-                                  {item.cost_estimate && (
-                                    <span><span className="text-white/40">Cost</span> {item.cost_estimate}</span>
-                                  )}
-                                  {item.timeline_estimate && (
-                                    <span><span className="text-white/40">Timeline</span> {item.timeline_estimate}</span>
-                                  )}
-                                </div>
-                                {item.official_url && (
-                                  <a
-                                    href={item.official_url}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="inline-flex items-center gap-1 mt-3 text-sm font-medium text-[#FF5124] hover:text-[#FF5124]/80"
-                                  >
-                                    Apply on official site <ExternalLink className="h-3.5 w-3.5" />
-                                  </a>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </motion.div>
+                    {allMarked ? 'Uncheck all' : 'Mark all'}
+                  </button>
                 )}
-              </AnimatePresence>
+              </div>
+
+              <div className="px-4 sm:px-5 py-3 space-y-2">
+                {cat.nodes.map((node) => (
+                  <RoadmapItem
+                    key={node.id}
+                    node={node}
+                    expanded={!!expanded[node.id]}
+                    onToggleExpand={() => setExpanded((p) => ({ ...p, [node.id]: !p[node.id] }))}
+                    onToggleDone={() => toggle(node)}
+                    onCalendar={() => handleCalendarReminder(node)}
+                    readOnly={readOnly}
+                    state={result.location.state}
+                  />
+                ))}
+              </div>
             </motion.div>
           );
         })}
@@ -342,12 +436,7 @@ export default function ResultsDashboard({ result }: Props) {
           <ul className="space-y-1.5">
             {result.sources.map((s) => (
               <li key={s.index} className="text-sm">
-                <a
-                  href={s.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-white/70 hover:text-[#FF5124] inline-flex items-center gap-1"
-                >
+                <a href={s.url} target="_blank" rel="noopener noreferrer" className="text-white/70 hover:text-[#FF5124] inline-flex items-center gap-1">
                   <span className="text-white/40">[{s.index}]</span> {s.title}
                   {s.agency && <span className="text-white/40">— {s.agency}</span>}
                   <ExternalLink className="h-3 w-3" />
@@ -358,5 +447,181 @@ export default function ResultsDashboard({ result }: Props) {
         </div>
       )}
     </div>
+  );
+}
+
+// ---------- ProgressRing ----------
+function ProgressRing({ pct }: { pct: number }) {
+  const r = 16;
+  const c = 2 * Math.PI * r;
+  const offset = c - (pct / 100) * c;
+  return (
+    <div className="relative h-12 w-12 shrink-0">
+      <svg className="h-12 w-12 -rotate-90" viewBox="0 0 40 40">
+        <circle cx="20" cy="20" r={r} stroke="rgba(255,255,255,0.08)" strokeWidth="3.5" fill="none" />
+        <motion.circle
+          cx="20" cy="20" r={r}
+          stroke="#FF5124"
+          strokeWidth="3.5"
+          strokeLinecap="round"
+          fill="none"
+          strokeDasharray={c}
+          animate={{ strokeDashoffset: offset }}
+          transition={{ duration: 0.6, ease: 'easeOut' }}
+        />
+      </svg>
+      <div className="absolute inset-0 flex items-center justify-center text-[11px] font-semibold text-white">
+        {pct}%
+      </div>
+    </div>
+  );
+}
+
+// ---------- RoadmapItem ----------
+interface ItemProps {
+  node: RoadmapNode;
+  expanded: boolean;
+  onToggleExpand: () => void;
+  onToggleDone: () => void;
+  onCalendar: () => void;
+  readOnly: boolean;
+  state: string;
+}
+
+function RoadmapItem({ node, expanded, onToggleExpand, onToggleDone, onCalendar, readOnly, state }: ItemProps) {
+  const isNext = node.status === 'next';
+  const isLocked = node.status === 'locked';
+  const isDone = node.status === 'done';
+
+  // Commissary action: deep-link to kitchen search
+  const showCommissaryAction = node.key === 'commissary' && !isDone && !readOnly;
+
+  return (
+    <motion.div
+      layout
+      className={cn(
+        'rounded-xl border transition-all',
+        isDone && 'border-[#FF5124]/20 bg-[#FF5124]/5',
+        isNext && 'border-[#FF5124]/40 bg-[#FF5124]/[0.06] shadow-[0_0_0_1px_rgba(255,81,36,0.3),0_12px_40px_-12px_rgba(255,81,36,0.4)]',
+        !isDone && !isNext && !isLocked && 'border-white/10 bg-white/[0.02] hover:border-white/20',
+        isLocked && 'border-white/[0.06] bg-white/[0.01] opacity-60',
+      )}
+    >
+      <div className="p-4">
+        <div className="flex items-start gap-3">
+          <button
+            onClick={onToggleDone}
+            className={cn('mt-0.5 shrink-0', isLocked && 'cursor-not-allowed')}
+            aria-label={isDone ? 'Mark incomplete' : 'Mark complete'}
+            disabled={readOnly}
+          >
+            {isDone ? (
+              <CheckCircle2 className="h-5 w-5 text-[#FF5124]" />
+            ) : isLocked ? (
+              <Lock className="h-5 w-5 text-white/25" />
+            ) : (
+              <Circle className={cn('h-5 w-5', isNext ? 'text-[#FF5124]' : 'text-white/30 hover:text-white/60')} />
+            )}
+          </button>
+
+          <button
+            onClick={onToggleExpand}
+            className="flex-1 min-w-0 text-left"
+          >
+            <div className="flex flex-wrap items-center gap-2 mb-1">
+              {isNext && (
+                <Badge className="text-[10px] uppercase tracking-wider bg-[#FF5124] text-white border-transparent hover:bg-[#FF5124]">
+                  ◆ Your next step
+                </Badge>
+              )}
+              <h4 className={cn('font-semibold text-white', isDone && 'line-through opacity-60')}>
+                {node.title}
+              </h4>
+              {node.level && (
+                <Badge variant="outline" className={cn('text-[10px] uppercase tracking-wider border', levelStyles[node.level] || 'bg-white/5 text-white/60 border-white/10')}>
+                  {node.level}
+                </Badge>
+              )}
+              {node.commonly_missed && !isDone && (
+                <Badge variant="outline" className="text-[10px] uppercase tracking-wider bg-amber-500/10 text-amber-300 border-amber-500/30">
+                  Often missed
+                </Badge>
+              )}
+            </div>
+
+            {isLocked && node.unlock_reason && (
+              <p className="text-xs text-white/50 italic">{node.unlock_reason}</p>
+            )}
+
+            {!isLocked && (
+              <p className="text-sm text-white/65 mb-1.5">{node.why_it_matters}</p>
+            )}
+
+            {!isLocked && (
+              <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-white/55">
+                <span><span className="text-white/40">By</span> {node.issuer}</span>
+                {node.cost_estimate && <span><span className="text-white/40">Cost</span> {node.cost_estimate}</span>}
+                {node.timeline_estimate && <span><span className="text-white/40">Time</span> {node.timeline_estimate}</span>}
+              </div>
+            )}
+          </button>
+
+          <ChevronDown className={cn('h-4 w-4 text-white/30 transition-transform shrink-0 mt-1', expanded && 'rotate-180')} />
+        </div>
+
+        <AnimatePresence initial={false}>
+          {expanded && !isLocked && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.18 }}
+              className="overflow-hidden"
+            >
+              <div className="pt-4 pl-8 space-y-3">
+                {node.pro_tip && (
+                  <div className="rounded-lg border border-[#FF5124]/15 bg-[#FF5124]/5 p-3 flex gap-2.5">
+                    <Lightbulb className="h-4 w-4 text-[#FF5124] shrink-0 mt-0.5" />
+                    <div>
+                      <div className="text-[10px] uppercase tracking-wider text-[#FF5124] font-semibold mb-0.5">Operator tip</div>
+                      <p className="text-sm text-white/80 leading-relaxed">{node.pro_tip}</p>
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex flex-wrap gap-2">
+                  {node.official_url && (
+                    <a
+                      href={node.official_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 text-sm font-medium text-[#FF5124] hover:text-[#FF5124]/80 bg-[#FF5124]/10 hover:bg-[#FF5124]/15 border border-[#FF5124]/30 px-3 py-1.5 rounded-lg"
+                    >
+                      Apply on official site <ExternalLink className="h-3.5 w-3.5" />
+                    </a>
+                  )}
+                  {!readOnly && (
+                    <button
+                      onClick={onCalendar}
+                      className="inline-flex items-center gap-1.5 text-sm text-white/75 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 px-3 py-1.5 rounded-lg"
+                    >
+                      <CalendarPlus className="h-3.5 w-3.5" /> Set a reminder
+                    </button>
+                  )}
+                  {showCommissaryAction && (
+                    <Link
+                      to={`/search?type=kitchen&state=${state}`}
+                      className="inline-flex items-center gap-1.5 text-sm text-white/75 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 px-3 py-1.5 rounded-lg"
+                    >
+                      <Building2 className="h-3.5 w-3.5" /> Find a commissary near you
+                    </Link>
+                  )}
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    </motion.div>
   );
 }
