@@ -15,12 +15,15 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
 import {
-  FileCheck, Loader2, Home, Shield, Clock, ArrowRight, DollarSign, AlertCircle,
+  FileCheck, Loader2, Home, ShieldCheck, Clock, ArrowRight, Coins, AlertCircle,
+  MapPin, ListChecks, Download, Route,
 } from 'lucide-react';
 import ToolCrossLinks from '@/components/tools/ToolCrossLinks';
 import ResultsDashboard, { type DashboardResult } from '@/components/tools/permit-path/ResultsDashboard';
 import ResultsSkeleton from '@/components/tools/permit-path/ResultsSkeleton';
 import ResultsError from '@/components/tools/permit-path/ResultsError';
+import PremiumIcon from '@/components/tools/permit-path/PremiumIcon';
+import VendorProfileChips, { type VendorProfile } from '@/components/tools/permit-path/VendorProfileChips';
 
 const pageJsonLd = {
   '@context': 'https://schema.org',
