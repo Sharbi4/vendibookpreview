@@ -230,15 +230,29 @@ export default function ResultsDashboard({ result, readOnly = false }: Props) {
     return true;
   });
 
-  // Group by category preserving sequence
-  const grouped: Array<{ name: string; nodes: RoadmapNode[] }> = [];
-  for (const n of visibleNodes) {
-    const last = grouped[grouped.length - 1];
-    if (last && last.name === n.category) last.nodes.push(n);
-    else grouped.push({ name: n.category, nodes: [n] });
-  }
+  // Group by category, then sort by OPERATING PRIORITY (what gates legal service first;
+  // routine business registration always last). Dependency logic still drives "next step".
+  const CATEGORY_PRIORITY: Record<string, number> = {
+    'Health Permits': 10,
+    'Mobile Vendor License': 20,
+    'Local & City-Specific': 30,
+    'Commissary / Base of Operations': 40,
+    'Fire & Equipment': 50,
+    'Food Safety Certifications': 60,
+    'Insurance': 70,
+    'Business Registration': 99,
+  };
+  const catScore = (name: string) => CATEGORY_PRIORITY[name] ?? 80;
 
-  const dontSkip = roadmap.nodes.filter((n) => n.commonly_missed && !n.done).slice(0, 4);
+  const groupedMap = new Map<string, RoadmapNode[]>();
+  for (const n of visibleNodes) {
+    const arr = groupedMap.get(n.category) || [];
+    arr.push(n);
+    groupedMap.set(n.category, arr);
+  }
+  const grouped: Array<{ name: string; nodes: RoadmapNode[] }> = Array.from(groupedMap.entries())
+    .map(([name, nodes]) => ({ name, nodes }))
+    .sort((a, b) => catScore(a.name) - catScore(b.name));
 
   return (
     <div className="mt-8 space-y-6">
