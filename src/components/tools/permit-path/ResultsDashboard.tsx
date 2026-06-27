@@ -520,7 +520,7 @@ export default function ResultsDashboard({ result, readOnly = false }: Props) {
                     <li key={n.id} className="flex items-start gap-2.5">
                       <div className={cn(
                         'h-2 w-2 rounded-full mt-1.5 shrink-0',
-                        isOwned ? 'bg-emerald-400' : 'bg-[#FF5124]',
+                        isOwned ? 'bg-white/80' : 'bg-white/45',
                       )} />
                       <div className="flex-1 min-w-0">
                         <div className="text-sm text-white font-medium truncate">{n.title}</div>
