@@ -113,7 +113,7 @@ function baselineChecklist(state: string, city: string, businessType: string, pr
   // Tucson/AZ-specific augmentation for food trucks
   const azTucsonFoodTruck = state === 'AZ' && businessType === 'food_truck';
 
-  const businessReg = [
+  const businessReg: any[] = [
     {
       title: "Register your business entity (LLC or DBA)",
       issuer: `${stateName} Corporation Commission / Secretary of State`,
@@ -123,6 +123,7 @@ function baselineChecklist(state: string, city: string, businessType: string, pr
       official_url: state === 'AZ' ? "https://ecorp.azcc.gov/" : "",
       why_it_matters: "Legally separates you and your business and is required before applying for most permits.",
       commonly_missed: false,
+      requirement_status: "required",
     },
     {
       title: "Apply for a Federal EIN",
@@ -133,6 +134,7 @@ function baselineChecklist(state: string, city: string, businessType: string, pr
       official_url: "https://www.irs.gov/businesses/small-businesses-self-employed/apply-for-an-employer-identification-number-ein-online",
       why_it_matters: "Required to open a business bank account, hire staff, and file taxes.",
       commonly_missed: false,
+      requirement_status: "required",
     },
     {
       title: "Register for state sales / transaction privilege tax (TPT)",
@@ -143,6 +145,7 @@ function baselineChecklist(state: string, city: string, businessType: string, pr
       official_url: state === 'AZ' ? "https://azdor.gov/business" : "",
       why_it_matters: "You must collect and remit sales tax on prepared food in nearly every jurisdiction.",
       commonly_missed: true,
+      requirement_status: "required",
     },
   ];
 
@@ -157,6 +160,7 @@ function baselineChecklist(state: string, city: string, businessType: string, pr
       official_url: "",
       why_it_matters: "Required in nearly every state the moment you hire your first employee.",
       commonly_missed: true,
+      requirement_status: "required",
     });
     businessReg.push({
       title: "State payroll & unemployment tax registration",
@@ -167,10 +171,11 @@ function baselineChecklist(state: string, city: string, businessType: string, pr
       official_url: "",
       why_it_matters: "Required to legally run payroll, withhold income tax, and pay unemployment insurance.",
       commonly_missed: true,
+      requirement_status: "required",
     });
   }
 
-  const foodSafety = [
+  const foodSafety: any[] = [
     {
       title: "Food Handler Card (every employee)",
       issuer: azTucsonFoodTruck ? "Pima County Health Department (accredited training)" : `${stateName} accredited food handler program`,
@@ -180,6 +185,7 @@ function baselineChecklist(state: string, city: string, businessType: string, pr
       official_url: azTucsonFoodTruck ? "https://webcms.pima.gov/government/health_department/food_safety_environmental_services/food_employee_handler_information/" : "",
       why_it_matters: "Required by health code before any employee handles food. Pima and Maricopa counties require an accredited course.",
       commonly_missed: true,
+      requirement_status: "required",
     },
     {
       title: "Certified Food Protection Manager (ANSI-accredited)",
@@ -190,6 +196,7 @@ function baselineChecklist(state: string, city: string, businessType: string, pr
       official_url: "https://www.servsafe.com/",
       why_it_matters: "At least one manager per operation must hold an ANSI-accredited certification under the FDA Food Code adopted by most states.",
       commonly_missed: false,
+      requirement_status: "required",
     },
   ];
 
@@ -203,12 +210,14 @@ function baselineChecklist(state: string, city: string, businessType: string, pr
       official_url: state === 'TX' ? "https://www.tabc.texas.gov/" : "",
       why_it_matters: "Required for anyone serving alcohol. Without it your liquor license can be denied or suspended.",
       commonly_missed: true,
+      requirement_status: "conditional",
+      requirement_trigger: "Only if serving alcohol",
     });
   }
 
   // Health permits — prepackaged tier softens, cook-to-order keeps standard
   const isPrepackaged = profile.prep_style === 'prepackaged';
-  const healthPermits = [
+  const healthPermits: any[] = [
     {
       title: azTucsonFoodTruck
         ? "Pima County Mobile Food Permit + Plan Review"
@@ -224,6 +233,7 @@ function baselineChecklist(state: string, city: string, businessType: string, pr
         ? "Even prepackaged operations need a health permit, but plan review and fees are usually lower because the risk profile is smaller."
         : "The core operating permit. No legal service of food without an approved unit, plan review, and on-site inspection.",
       commonly_missed: false,
+      requirement_status: "required",
     },
   ];
 
@@ -241,11 +251,12 @@ function baselineChecklist(state: string, city: string, businessType: string, pr
       official_url: "",
       why_it_matters: "Most jurisdictions require a written agreement with a permitted commissary for cleaning, water/waste, and overnight storage. Without it, your health permit cannot be issued.",
       commonly_missed: true,
+      requirement_status: "required",
     });
   }
 
   // Fire & equipment — frying upgrades to Type I hood requirements
-  const fire = [
+  const fire: any[] = [
     {
       title: profile.frying === 'yes'
         ? "Fire Inspection + Type I Hood & Suppression (frying / open flame)"
@@ -259,6 +270,7 @@ function baselineChecklist(state: string, city: string, businessType: string, pr
         ? "Fryers and grease-producing equipment require a Type I hood with UL-300 suppression. Most first inspections fail here — budget time for a re-inspection."
         : "Trucks with propane or cooking equipment must pass a fire inspection — often required before the health permit is issued.",
       commonly_missed: true,
+      requirement_status: "required",
     },
   ];
   if (profile.frying === 'yes') {
@@ -271,6 +283,8 @@ function baselineChecklist(state: string, city: string, businessType: string, pr
       official_url: "",
       why_it_matters: "Frying = grease waste. Most cities require a documented disposal contract — health inspectors ask for proof.",
       commonly_missed: true,
+      requirement_status: "conditional",
+      requirement_trigger: "Only if frying or producing grease waste",
     });
   }
 
@@ -285,9 +299,10 @@ function baselineChecklist(state: string, city: string, businessType: string, pr
       official_url: state === 'AZ' && city?.toLowerCase().includes('tucson') ? "https://www.tucsonaz.gov/business-license" : "",
       why_it_matters: "Almost every city requires a business license to operate within city limits, separate from your state registration.",
       commonly_missed: false,
+      requirement_status: "required",
     },
     {
-      title: "Vending / Right-of-Way Permit (if vending on public property)",
+      title: "Vending / Right-of-Way Permit",
       issuer: city ? `${city} Transportation or Parks Department` : "Local Vending Authority",
       level: "city",
       cost_estimate: "Varies — verify with city",
@@ -295,6 +310,8 @@ function baselineChecklist(state: string, city: string, businessType: string, pr
       official_url: "",
       why_it_matters: "Required if you sell from a public sidewalk, park, or street. Private property events usually do not require this.",
       commonly_missed: true,
+      requirement_status: "conditional",
+      requirement_trigger: "Only if vending on public sidewalk, park, or street",
     },
   ];
 
@@ -308,6 +325,8 @@ function baselineChecklist(state: string, city: string, businessType: string, pr
       official_url: state === 'TX' ? "https://www.tabc.texas.gov/" : "",
       why_it_matters: "Serving any alcohol requires a state-issued license. This is typically the slowest permit and often gates your launch.",
       commonly_missed: false,
+      requirement_status: "conditional",
+      requirement_trigger: "Only if serving alcohol",
     });
   }
 
@@ -321,10 +340,12 @@ function baselineChecklist(state: string, city: string, businessType: string, pr
       official_url: "",
       why_it_matters: "Permits don't stack across borders — each city or county where you regularly operate generally requires its own business license. Some health permits transfer; many do not.",
       commonly_missed: true,
+      requirement_status: "conditional",
+      requirement_trigger: "Only if operating in multiple cities/counties",
     });
   }
 
-  const insurance = [
+  const insurance: any[] = [
     {
       title: "General Liability Insurance ($1M minimum)",
       issuer: "Private insurer (FLIP, Insure My Food Truck, Next, etc.)",
@@ -334,6 +355,7 @@ function baselineChecklist(state: string, city: string, businessType: string, pr
       official_url: "https://www.fliprogram.com/",
       why_it_matters: "Required by most event organizers, commissaries, and city permits. Protects against customer injury and food-related claims.",
       commonly_missed: false,
+      requirement_status: "required",
     },
     {
       title: "Commercial Auto Insurance",
@@ -344,6 +366,7 @@ function baselineChecklist(state: string, city: string, businessType: string, pr
       official_url: "",
       why_it_matters: "A personal auto policy will not cover a vehicle used commercially. Required to register the truck for business use.",
       commonly_missed: true,
+      requirement_status: "required",
     },
   ];
 
@@ -559,6 +582,19 @@ ADVANCED REASONING (this is what makes PermitPath different from a generic check
 3. RISKS. Surface the 1–3 places THIS specific vendor is most likely to fail or overspend. One sentence each.
 4. INSIGHTS. Where a nearby jurisdiction or scope change (e.g. operating just outside city limits, dropping alcohol, shared vs dedicated commissary) would meaningfully cut cost or time, note it as an optional insight that ends with "verify with [agency]".
 
+REQUIREMENT CLASSIFICATION (MANDATORY — accuracy is the priority):
+For EVERY item, set "requirement_status" to one of: "required", "conditional", or "optional".
+- "required": legally mandatory to operate this business type at this state/county/city. Operating without it risks fines or shutdown.
+- "conditional": only required if a specific factor applies to this vendor. ALWAYS state the trigger in "requirement_trigger" (e.g. "Only if serving alcohol", "Only if frying / using a Type I hood", "Only if hiring employees", "Only if vending on public property").
+- "optional": genuinely not legally required, but recommended; explain the benefit in why_it_matters and do NOT imply it's mandatory.
+
+ACCURACY RULES (do not violate):
+- Base "required" only on the actual law/regulation for that state, county, and city. Do not assume.
+- If a permit's necessity depends on a factor you don't know about this vendor, mark it "conditional" and name the trigger — do NOT default it to optional.
+- If you cannot verify whether something is required for that specific jurisdiction, set requirement_status to "required" and append " – verify with [agency]" to the title rather than calling it optional. ERR TOWARD CAUTION so a vendor never skips something mandatory based on our tool.
+- Never label a core operating permit (health permit, mobile food license, required local business license, fire inspection where required, commercial auto, workers' comp when employees=yes, liquor when alcohol=yes) as optional.
+- When a recent law changed a requirement (e.g. removed a city permit, created a single state license), reflect the CURRENT status and note the change in why_it_matters.
+
 OUTPUT — return JSON ONLY in this exact shape (no prose, no markdown fences):
 {
   "location": { "city": string, "state": string, "stateAbbreviation": string, "business_type": string },
@@ -583,7 +619,9 @@ OUTPUT — return JSON ONLY in this exact shape (no prose, no markdown fences):
           "official_url": string,
           "why_it_matters": string,
           "pro_tip": string,
-          "commonly_missed": boolean
+          "commonly_missed": boolean,
+          "requirement_status": "required" | "conditional" | "optional",
+          "requirement_trigger": string
         }
       ]
     }
@@ -657,6 +695,32 @@ ${sourceContext}`;
         if (!result.critical_path) result.critical_path = bl.critical_path;
         if (!Array.isArray(result.risks) || result.risks.length === 0) result.risks = bl.risks;
         if (!Array.isArray(result.insights) || result.insights.length === 0) result.insights = bl.insights;
+      }
+    }
+    // Normalize requirement_status across every item — err toward caution.
+    // If the model omitted it, treat it as "required – verify" rather than optional.
+    if (Array.isArray(result.categories)) {
+      for (const cat of result.categories) {
+        if (!Array.isArray(cat.items)) continue;
+        for (const it of cat.items) {
+          const raw = typeof it.requirement_status === 'string' ? it.requirement_status.toLowerCase().trim() : '';
+          if (raw === 'required' || raw === 'conditional' || raw === 'optional') {
+            it.requirement_status = raw;
+          } else {
+            it.requirement_status = 'required';
+            if (typeof it.title === 'string' && !/verify with/i.test(it.title)) {
+              it.title = it.title + ' – verify with issuing agency';
+            }
+          }
+          if (it.requirement_status !== 'conditional') {
+            // Strip stray trigger on non-conditional items
+            if (typeof it.requirement_trigger !== 'string' || !it.requirement_trigger.trim()) {
+              delete it.requirement_trigger;
+            }
+          } else if (typeof it.requirement_trigger !== 'string' || !it.requirement_trigger.trim()) {
+            it.requirement_trigger = 'Only if it applies to your operation — verify with issuing agency';
+          }
+        }
       }
     }
     result.lastUpdated = today;

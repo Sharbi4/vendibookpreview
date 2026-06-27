@@ -16,7 +16,7 @@ import {
 } from '@/lib/generatePermitChecklistPdf';
 import {
   buildRoadmap, buildIcs, downloadIcs, buildMailto,
-  type RoadmapNode,
+  type RoadmapNode, type RequirementStatus,
 } from '@/lib/permitRoadmap';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -47,6 +47,8 @@ export interface DashboardResult {
       why_it_matters: string;
       pro_tip?: string;
       commonly_missed?: boolean;
+      requirement_status?: 'required' | 'conditional' | 'optional';
+      requirement_trigger?: string;
     }>;
   }>;
   sources?: Array<{ index: number; title: string; url: string; agency?: string }>;
@@ -286,9 +288,30 @@ export default function ResultsDashboard({ result, readOnly = false, renderItemE
     arr.push(n);
     groupedMap.set(n.category, arr);
   }
+  // Within each category, sort Required → Conditional → Optional so mandatory
+  // items always sit on top and nothing optional can hide a required item.
+  const REQ_RANK: Record<string, number> = { required: 0, conditional: 1, optional: 2 };
   const grouped: Array<{ name: string; nodes: RoadmapNode[] }> = Array.from(groupedMap.entries())
-    .map(([name, nodes]) => ({ name, nodes }))
+    .map(([name, nodes]) => ({
+      name,
+      nodes: [...nodes].sort(
+        (a, b) =>
+          (REQ_RANK[a.requirement_status] ?? 0) - (REQ_RANK[b.requirement_status] ?? 0),
+      ),
+    }))
     .sort((a, b) => catScore(a.name) - catScore(b.name));
+
+  // Required / Conditional / Optional counts across the whole roadmap.
+  const reqCounts = roadmap.nodes.reduce(
+    (acc, n) => {
+      acc[n.requirement_status] = (acc[n.requirement_status] || 0) + 1;
+      return acc;
+    },
+    { required: 0, conditional: 0, optional: 0 } as Record<RequirementStatus, number>,
+  );
+  const requiredNodes = roadmap.nodes.filter((n) => n.requirement_status === 'required');
+  const requiredDone = requiredNodes.filter((n) => n.done).length;
+  const allRequiredComplete = requiredNodes.length > 0 && requiredDone === requiredNodes.length;
 
   // Stats for top tiles
   const now = Date.now();
@@ -415,6 +438,44 @@ export default function ResultsDashboard({ result, readOnly = false, renderItemE
             insights={result.insights}
           />
 
+          {/* Requirement summary — required first, then conditional, then optional */}
+          <div className="rounded-2xl border-2 border-white/15 bg-[#101013] p-4 sm:p-5">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-[11px] uppercase tracking-[0.18em] text-white/55 font-semibold">
+                Your obligations
+              </span>
+              <span className="flex-1" />
+              <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#FF5124]">
+                <span className="h-1.5 w-1.5 rounded-full bg-[#FF5124]" />
+                {reqCounts.required} required
+              </span>
+              <span className="text-white/25">·</span>
+              <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-white/85">
+                <span className="h-1.5 w-1.5 rounded-full bg-white/70" />
+                {reqCounts.conditional} conditional
+              </span>
+              <span className="text-white/25">·</span>
+              <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-white/55">
+                <span className="h-1.5 w-1.5 rounded-full bg-white/35" />
+                {reqCounts.optional} optional
+              </span>
+            </div>
+            {requiredNodes.length > 0 && (
+              <div className="mt-3 text-xs text-white/65 leading-relaxed">
+                {allRequiredComplete ? (
+                  <span className="text-[#FF5124] font-semibold">
+                    ✓ All required permits complete — you're legally clear to operate. Optional items may remain.
+                  </span>
+                ) : (
+                  <>
+                    <span className="text-white font-semibold">{requiredDone}/{requiredNodes.length}</span>{' '}
+                    required permits complete. Finish these to be legally clear to operate.
+                  </>
+                )}
+              </div>
+            )}
+          </div>
+
           {/* Filter pills */}
           <div className="flex flex-wrap items-center gap-2">
             <Filter className="h-4 w-4 text-white/40" />
@@ -444,6 +505,9 @@ export default function ResultsDashboard({ result, readOnly = false, renderItemE
               const catDone = cat.nodes.filter((n) => n.done).length;
               const catTotal = cat.nodes.length;
               const allMarked = catTotal > 0 && cat.nodes.every((n) => n.done);
+              const mandatory = cat.nodes.filter((n) => n.requirement_status !== 'optional');
+              const optionalNodes = cat.nodes.filter((n) => n.requirement_status === 'optional');
+              const catRequired = cat.nodes.filter((n) => n.requirement_status === 'required').length;
               return (
                 <motion.section
                   key={`${cat.name}-${idx}`}
@@ -463,6 +527,11 @@ export default function ResultsDashboard({ result, readOnly = false, renderItemE
                         <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-white/10 border border-white/15 text-white/85">
                           {catDone}/{catTotal}
                         </span>
+                        {catRequired > 0 && (
+                          <span className="text-[10px] uppercase tracking-wider font-semibold px-2 py-0.5 rounded-full bg-[#FF5124]/15 border border-[#FF5124]/40 text-[#FF5124]">
+                            {catRequired} required
+                          </span>
+                        )}
                       </div>
                     </div>
                     {!readOnly && catTotal > 0 && (
@@ -476,7 +545,7 @@ export default function ResultsDashboard({ result, readOnly = false, renderItemE
                   </div>
 
                   <div className="px-3 sm:px-4 py-4 space-y-3">
-                    {cat.nodes.map((node) => (
+                    {mandatory.map((node) => (
                       <RoadmapItem
                         key={node.id}
                         node={node}
@@ -493,12 +562,35 @@ export default function ResultsDashboard({ result, readOnly = false, renderItemE
                         extra={renderItemExtra ? renderItemExtra(node) : null}
                       />
                     ))}
+                    {optionalNodes.length > 0 && (
+                      <OptionalSubsection
+                        nodes={optionalNodes}
+                        renderNode={(node) => (
+                          <RoadmapItem
+                            key={node.id}
+                            node={node}
+                            expanded={!!expanded[node.id]}
+                            onToggleExpand={() => setExpanded((p) => ({ ...p, [node.id]: !p[node.id] }))}
+                            onToggleDone={() => toggle(node)}
+                            onCalendar={() => handleCalendarReminder(node)}
+                            readOnly={readOnly}
+                            state={result.location.state}
+                            owned={!!owned[node.id]}
+                            expiresOn={owned[node.id]?.expires}
+                            onToggleOwned={() => toggleOwned(node.id)}
+                            onSetExpires={(d) => setOwnedExpiration(node.id, d)}
+                            extra={renderItemExtra ? renderItemExtra(node) : null}
+                          />
+                        )}
+                      />
+                    )}
                   </div>
                 </motion.section>
               );
             })}
           </div>
         </div>
+
 
         {/* RIGHT: sticky sidebar */}
         <aside className="space-y-4 lg:sticky lg:top-20 lg:self-start">
@@ -700,6 +792,7 @@ function RoadmapItem({ node, expanded, onToggleExpand, onToggleDone, onCalendar,
             className="flex-1 min-w-0 text-left"
           >
             <div className="flex flex-wrap items-center gap-2 mb-1">
+              <RequirementBadge status={node.requirement_status} title={node.title} />
               {isNext && (
                 <Badge className="text-[10px] uppercase tracking-[0.14em] bg-white/[0.12] text-white border border-white/25 hover:bg-white/[0.12]">
                   Start here
@@ -740,6 +833,11 @@ function RoadmapItem({ node, expanded, onToggleExpand, onToggleDone, onCalendar,
               )}
             </div>
 
+            {node.requirement_status === 'conditional' && node.requirement_trigger && (
+              <p className="text-xs text-white/75 mb-1.5">
+                <span className="text-white/50">Required if:</span> {node.requirement_trigger}
+              </p>
+            )}
             <p className="text-sm text-white/65 mb-1.5">{node.why_it_matters}</p>
 
             <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-white/55">
@@ -1022,6 +1120,74 @@ function StatChip({ icon: Icon, label, value }: { icon: any; label: string; valu
         <span className="text-[10px] uppercase tracking-wider text-white/55 font-medium">{label}</span>
         <span className="text-sm font-semibold text-white">{value}</span>
       </div>
+    </div>
+  );
+}
+
+// ---------- RequirementBadge ----------
+function RequirementBadge({ status, title }: { status: RequirementStatus; title: string }) {
+  if (status === 'required') {
+    const verify = /verify with/i.test(title);
+    return (
+      <Badge
+        className={cn(
+          'text-[10px] uppercase tracking-[0.14em] font-bold border inline-flex items-center gap-1',
+          verify
+            ? 'bg-[#FF5124]/15 text-[#FF5124] border-[#FF5124]/50 hover:bg-[#FF5124]/15'
+            : 'bg-[#FF5124] text-white border-[#FF5124] hover:bg-[#FF5124]',
+        )}
+      >
+        Required{verify ? ' · verify' : ''}
+      </Badge>
+    );
+  }
+  if (status === 'conditional') {
+    return (
+      <Badge
+        variant="outline"
+        className="text-[10px] uppercase tracking-[0.14em] font-semibold bg-white/[0.08] text-white/85 border-white/30"
+      >
+        Conditional
+      </Badge>
+    );
+  }
+  return (
+    <Badge
+      variant="outline"
+      className="text-[10px] uppercase tracking-[0.14em] font-medium bg-white/[0.03] text-white/50 border-white/15"
+    >
+      Optional
+    </Badge>
+  );
+}
+
+// ---------- OptionalSubsection ----------
+function OptionalSubsection({
+  nodes,
+  renderNode,
+}: {
+  nodes: RoadmapNode[];
+  renderNode: (node: RoadmapNode) => React.ReactNode;
+}) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="mt-2 rounded-xl border border-dashed border-white/15 bg-white/[0.02]">
+      <button
+        type="button"
+        onClick={() => setOpen((p) => !p)}
+        className="w-full flex items-center justify-between gap-2 px-4 py-2.5 text-left hover:bg-white/[0.03] rounded-xl"
+      >
+        <div className="flex items-center gap-2">
+          <span className="text-[10px] uppercase tracking-[0.14em] font-medium text-white/50">
+            Recommended (not required)
+          </span>
+          <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-white/[0.05] border border-white/10 text-white/55">
+            {nodes.length}
+          </span>
+        </div>
+        <ChevronDown className={cn('h-4 w-4 text-white/40 transition-transform', open && 'rotate-180')} />
+      </button>
+      {open && <div className="px-3 pb-3 space-y-3">{nodes.map((n) => renderNode(n))}</div>}
     </div>
   );
 }

@@ -8,6 +8,7 @@ import {
 import type { DashboardResult } from '@/components/tools/permit-path/ResultsDashboard';
 
 export type RoadmapStatus = 'done' | 'next' | 'available' | 'locked';
+export type RequirementStatus = 'required' | 'conditional' | 'optional';
 
 export interface RoadmapNode {
   id: string; // `${category}::${title}`
@@ -25,6 +26,8 @@ export interface RoadmapNode {
   status: RoadmapStatus;
   unlock_reason?: string;
   done: boolean;
+  requirement_status: RequirementStatus;
+  requirement_trigger?: string;
 }
 
 export interface RoadmapSummary {
@@ -79,6 +82,10 @@ export function buildRoadmap(
     c.items.map((item) => {
       const id = `${c.name}::${item.title}`;
       const key = classifyPermit(item.title, c.name);
+      const rs = (item as any).requirement_status;
+      const requirement_status: RequirementStatus =
+        rs === 'optional' || rs === 'conditional' ? rs : 'required';
+      const trigger = (item as any).requirement_trigger;
       return {
         id,
         category: c.name,
@@ -93,6 +100,8 @@ export function buildRoadmap(
         commonly_missed: !!item.commonly_missed,
         key,
         done: !!completed[id],
+        requirement_status,
+        requirement_trigger: typeof trigger === 'string' && trigger.trim() ? trigger : undefined,
       };
     }),
   );
