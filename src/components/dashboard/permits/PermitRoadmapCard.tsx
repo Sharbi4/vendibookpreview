@@ -1,5 +1,6 @@
+import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { MapPin, ArrowRight, Trash2 } from 'lucide-react';
+import { MapPin, ArrowRight, Trash2, Pencil, Check, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import type { SavedRoadmap, PermitItem } from '@/lib/permitsApi';
 
@@ -10,6 +11,7 @@ interface Props {
   requiredCount?: number;
   onOpen: () => void;
   onDelete: () => void;
+  onRename: (label: string) => Promise<void> | void;
 }
 
 function MiniRing({ pct }: { pct: number }) {
