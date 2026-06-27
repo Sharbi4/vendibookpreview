@@ -2,7 +2,7 @@ import { useMemo, useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ExternalLink, CheckCircle2, Circle, ChevronDown,
-  Download, DollarSign, Clock, Sparkles, X, Mail,
+  Download, DollarSign, Clock, Sparkles, X, Mail, BadgeCheck, CalendarClock,
   Share2, CalendarPlus, Lightbulb, Building2, Filter, Check, ArrowRight,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
