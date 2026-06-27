@@ -101,14 +101,69 @@ export default function PermitsTab() {
     setSearchParams(next);
   }, [searchParams, setSearchParams]);
 
-  const handleDelete = useCallback(async (id: string) => {
-    if (!confirm('Delete this saved roadmap and all uploaded documents?')) return;
+  const [deletedDrawerOpen, setDeletedDrawerOpen] = useState(false);
+  const [deletedRoadmaps, setDeletedRoadmaps] = useState<SavedRoadmap[]>([]);
+  const [deletedLoading, setDeletedLoading] = useState(false);
+
+  const refreshDeleted = useCallback(async () => {
+    if (!user) return;
+    setDeletedLoading(true);
     try {
-      await deleteRoadmap(id);
-      setRoadmaps((p) => p.filter((r) => r.id !== id));
-      toast.success('Roadmap deleted');
+      const rs = await listDeletedRoadmaps(user.id);
+      setDeletedRoadmaps(rs);
     } catch (e: any) {
+      toast.error(e?.message || 'Could not load recently deleted');
+    } finally {
+      setDeletedLoading(false);
+    }
+  }, [user]);
+
+  const handleDelete = useCallback(async (r: SavedRoadmap) => {
+    // Optimistic remove + undo toast
+    setRoadmaps((p) => p.filter((x) => x.id !== r.id));
+    try {
+      await softDeleteRoadmap(r.id);
+      toast('Roadmap deleted', {
+        description: 'Recoverable for 7 days from "Recently deleted".',
+        action: {
+          label: 'Undo',
+          onClick: async () => {
+            try {
+              const restored = await restoreRoadmap(r.id);
+              setRoadmaps((p) => [restored, ...p.filter((x) => x.id !== restored.id)]);
+              toast.success('Roadmap restored');
+            } catch (e: any) {
+              toast.error(e?.message || 'Restore failed');
+            }
+          },
+        },
+      });
+    } catch (e: any) {
+      // Roll back
+      setRoadmaps((p) => [r, ...p.filter((x) => x.id !== r.id)]);
       toast.error(e?.message || 'Delete failed');
+    }
+  }, []);
+
+  const handleRename = useCallback(async (id: string, label: string) => {
+    try {
+      const updated = await renameRoadmap(id, label);
+      setRoadmaps((p) => p.map((x) => (x.id === id ? updated : x)));
+      toast.success('Roadmap renamed');
+    } catch (e: any) {
+      toast.error(e?.message || 'Rename failed');
+      throw e;
+    }
+  }, []);
+
+  const handleRestore = useCallback(async (id: string) => {
+    try {
+      const restored = await restoreRoadmap(id);
+      setRoadmaps((p) => [restored, ...p.filter((x) => x.id !== restored.id)]);
+      setDeletedRoadmaps((p) => p.filter((x) => x.id !== id));
+      toast.success('Roadmap restored');
+    } catch (e: any) {
+      toast.error(e?.message || 'Restore failed');
     }
   }, []);
 
