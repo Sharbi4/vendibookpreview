@@ -3,11 +3,12 @@ import { motion } from 'framer-motion';
 import { CalendarClock, BadgeCheck, Building2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
-  upsertItem,
+  mergeItemFields,
   type PermitItem,
   type PermitItemStatus,
 } from '@/lib/permitsApi';
 import PermitDocumentUploader from './PermitDocumentUploader';
+
 
 interface Props {
   userId: string;
