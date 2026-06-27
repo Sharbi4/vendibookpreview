@@ -835,10 +835,40 @@ function StatTile({ label, value, sub, tone }: { label: string; value: string; s
 function BigComplianceRing({ pct }: { pct: number }) {
   const r = 64;
   const c = 2 * Math.PI * r;
-  const offset = c - (pct / 100) * c;
+  const clamped = Math.max(0, Math.min(100, pct));
+
+  // Animate a single motion value; derive both ring offset and the displayed number from it.
+  const progress = useMotionValue(0);
+  const offset = useTransform(progress, (v) => c - (v / 100) * c);
+  const displayPct = useTransform(progress, (v) => Math.round(v));
+  const [shown, setShown] = useState(0);
+
+  useEffect(() => {
+    const controls = animate(progress, clamped, {
+      duration: 0.9,
+      ease: [0.22, 1, 0.36, 1], // springy ease-out
+    });
+    const unsub = displayPct.on('change', (v) => setShown(v));
+    return () => {
+      controls.stop();
+      unsub();
+    };
+  }, [clamped, progress, displayPct]);
+
+  const isComplete = clamped >= 100;
+
   return (
     <div className="relative h-44 w-44">
-      <svg className="h-44 w-44 -rotate-90" viewBox="0 0 160 160">
+      {/* Soft pulsing glow that strengthens with progress */}
+      <motion.div
+        aria-hidden
+        className="absolute inset-2 rounded-full blur-2xl"
+        style={{ background: 'radial-gradient(circle, rgba(255,81,36,0.45), transparent 70%)' }}
+        animate={{ opacity: [0.25, 0.55, 0.25], scale: [0.95, 1.05, 0.95] }}
+        transition={{ duration: 3.2, repeat: Infinity, ease: 'easeInOut' }}
+      />
+
+      <svg className="relative h-44 w-44 -rotate-90" viewBox="0 0 160 160">
         <circle cx="80" cy="80" r={r} stroke="rgba(255,255,255,0.08)" strokeWidth="10" fill="none" />
         <motion.circle
           cx="80" cy="80" r={r}
@@ -847,19 +877,30 @@ function BigComplianceRing({ pct }: { pct: number }) {
           strokeLinecap="round"
           fill="none"
           strokeDasharray={c}
-          animate={{ strokeDashoffset: offset }}
-          transition={{ duration: 0.8, ease: 'easeOut' }}
+          style={{ strokeDashoffset: offset, filter: 'drop-shadow(0 0 8px rgba(255,81,36,0.55))' }}
         />
         <defs>
           <linearGradient id="bigRingGrad" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stopColor="#FF7A45" />
+            <stop offset="0%" stopColor="#FFB07A" />
+            <stop offset="60%" stopColor="#FF7A45" />
             <stop offset="100%" stopColor="#FF5124" />
           </linearGradient>
         </defs>
       </svg>
+
       <div className="absolute inset-0 flex flex-col items-center justify-center leading-none">
-        <span className="text-4xl font-bold text-white">{pct}%</span>
-        <span className="text-[10px] uppercase tracking-[0.18em] text-white/55 font-semibold mt-2">On Track</span>
+        <motion.span
+          key={isComplete ? 'done' : 'progress'}
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ duration: 0.4, ease: 'easeOut' }}
+          className="text-4xl font-bold text-white tabular-nums"
+        >
+          {shown}%
+        </motion.span>
+        <span className="text-[10px] uppercase tracking-[0.18em] text-white/55 font-semibold mt-2">
+          {isComplete ? 'Complete' : 'On Track'}
+        </span>
       </div>
     </div>
   );
