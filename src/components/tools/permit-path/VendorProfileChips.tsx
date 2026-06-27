@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, ChevronDown } from 'lucide-react';
+import { SlidersHorizontal, ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
 
@@ -42,7 +42,7 @@ export default function VendorProfileChips({ value, onChange }: Props) {
         className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-white/[0.03] transition-colors"
       >
         <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-[#FF5124]/30 to-[#FF5124]/5 border border-[#FF5124]/30 flex items-center justify-center">
-          <Sparkles className="h-4 w-4 text-[#FF7A52]" />
+          <SlidersHorizontal className="h-4 w-4 text-[#FF7A52]" />
         </div>
         <div className="flex-1">
           <div className="text-sm font-medium text-white">Refine your roadmap (optional)</div>

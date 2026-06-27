@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Check, ShieldCheck, MessageSquare, Camera, Handshake, Tag, Sparkles, ArrowRight, Star, Calendar } from 'lucide-react';
+import { Check, ShieldCheck, MessageSquare, Camera, Handshake, Tag, ArrowRight, Star, Calendar } from 'lucide-react';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import SEO from '@/components/SEO';
@@ -154,7 +154,7 @@ const SellerLandingPage = ({
             <div className="absolute inset-0 pointer-events-none opacity-40 [background:radial-gradient(60%_50%_at_80%_0%,hsl(var(--primary)/0.12),transparent_70%)]" />
             <div className="relative max-w-3xl space-y-5">
               <span className="inline-flex items-center gap-2 rounded-full border border-border bg-card/60 px-3 py-1 text-xs uppercase tracking-wide text-muted-foreground backdrop-blur">
-                <Sparkles className="h-3.5 w-3.5 text-primary" />
+                <Tag className="h-3.5 w-3.5 text-primary" />
                 {asset.charAt(0).toUpperCase() + asset.slice(1)} marketplace
               </span>
               <h1 className="text-3xl md:text-5xl font-bold tracking-tight text-foreground">

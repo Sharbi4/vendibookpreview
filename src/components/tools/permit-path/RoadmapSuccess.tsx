@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { CheckCircle2, ArrowRight, Sparkles } from 'lucide-react';
+import { CheckCircle2, ArrowRight, Award } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 
@@ -23,7 +23,7 @@ export default function RoadmapSuccess({ location, totalCost }: Props) {
           <CheckCircle2 className="h-7 w-7 text-white" />
         </div>
         <div className="inline-flex items-center gap-1.5 text-xs font-medium tracking-wider uppercase text-[#FF5124] mb-2">
-          <Sparkles className="h-3 w-3" /> Cleared to roll
+          <Award className="h-3 w-3" /> Cleared to roll
         </div>
         <h3 className="text-2xl sm:text-3xl font-bold text-white mb-2">
           You're permit-ready in {location}
