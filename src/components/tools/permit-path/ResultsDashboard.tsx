@@ -334,14 +334,7 @@ export default function ResultsDashboard({ result, readOnly = false }: Props) {
         <StatTile label="Renewal" value={String(renewalNeededCount)} sub={renewalNeededCount > 0 ? 'Action required' : 'All current'} tone="red" />
       </div>
 
-      {!user && !readOnly && (
-        <div className="rounded-xl border border-white/10 bg-white/[0.03] px-4 py-2.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
-          <span className="text-white/70">Save your progress and pick up where you left off:</span>
-          <Link to="/auth?redirect=/tools/permitpath" className="text-white hover:underline font-medium inline-flex items-center gap-1">
-            Save to my account <ArrowRight className="h-3 w-3" />
-          </Link>
-        </div>
-      )}
+      {!user && !readOnly && <SignInToSavePrompt />}
 
       {/* 100% celebration */}
       <AnimatePresence>
