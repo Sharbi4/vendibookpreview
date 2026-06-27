@@ -792,6 +792,7 @@ function RoadmapItem({ node, expanded, onToggleExpand, onToggleDone, onCalendar,
             className="flex-1 min-w-0 text-left"
           >
             <div className="flex flex-wrap items-center gap-2 mb-1">
+              <RequirementBadge status={node.requirement_status} title={node.title} />
               {isNext && (
                 <Badge className="text-[10px] uppercase tracking-[0.14em] bg-white/[0.12] text-white border border-white/25 hover:bg-white/[0.12]">
                   Start here
