@@ -388,7 +388,7 @@ export default function ResultsDashboard({ result, readOnly = false }: Props) {
               className="rounded-2xl border border-white/15 bg-[#101013] overflow-hidden shadow-[0_8px_24px_-12px_rgba(0,0,0,0.6)]"
             >
               {/* Sticky category header — anchor as you scroll */}
-              <div className="sticky top-[88px] z-10 flex items-center gap-3 px-4 sm:px-5 py-3.5 bg-[#101013]/95 backdrop-blur-md border-b border-white/15">
+              <div className="flex items-center gap-3 px-4 sm:px-5 py-3.5 bg-[#101013] border-b border-white/15">
                 {(() => {
                   const cv = categoryVisual(cat.name);
                   return <PremiumIcon icon={cv.icon} accent={cv.accent} size="sm" hover="lift" />;
