@@ -155,21 +155,49 @@ const PermitPath = () => {
   const autoRanRef = useRef(false);
   const resumeRanRef = useRef(false);
 
-  const persistSave = useCallback(async (r: DashboardResult) => {
-    if (!user) return null;
-    setSaving(true);
-    try {
-      const saved = await saveRoadmap(user.id, r);
-      setSavedRoadmapId(saved.id);
-      sonnerToast.success('Saved to your dashboard');
-      return saved;
-    } catch (e: any) {
-      sonnerToast.error(e?.message || 'Could not save roadmap');
-      return null;
-    } finally {
-      setSaving(false);
-    }
-  }, [user]);
+  const [saveDialogOpen, setSaveDialogOpen] = useState(false);
+  const [saveMatches, setSaveMatches] = useState<SavedRoadmap[]>([]);
+  const refreshTargetRef = useRef<string | null>(
+    searchParams.get('refreshRoadmap'),
+  );
+
+  const persistSaveNew = useCallback(
+    async (r: DashboardResult, label?: string) => {
+      if (!user) return null;
+      setSaving(true);
+      try {
+        const saved = await saveRoadmap(user.id, r, label);
+        setSavedRoadmapId(saved.id);
+        sonnerToast.success('Saved to your dashboard');
+        return saved;
+      } catch (e: any) {
+        sonnerToast.error(e?.message || 'Could not save roadmap');
+        return null;
+      } finally {
+        setSaving(false);
+      }
+    },
+    [user],
+  );
+
+  const persistRefresh = useCallback(
+    async (roadmapId: string, r: DashboardResult) => {
+      if (!user) return null;
+      setSaving(true);
+      try {
+        const saved = await refreshRoadmap(roadmapId, r);
+        setSavedRoadmapId(saved.id);
+        sonnerToast.success('Roadmap refreshed — your progress is preserved');
+        return saved;
+      } catch (e: any) {
+        sonnerToast.error(e?.message || 'Could not refresh roadmap');
+        return null;
+      } finally {
+        setSaving(false);
+      }
+    },
+    [user],
+  );
 
   const handleSaveToDashboard = useCallback(async () => {
     if (!result) return;
@@ -178,8 +206,33 @@ const PermitPath = () => {
       navigate(`/auth?redirect=${encodeURIComponent('/tools/permitpath?resumeSave=1')}`);
       return;
     }
-    await persistSave(result);
-  }, [result, user, navigate, persistSave]);
+    // If we arrived via "Refresh requirements" from the dashboard, skip the dialog
+    // and refresh the targeted roadmap directly.
+    if (refreshTargetRef.current) {
+      const id = refreshTargetRef.current;
+      refreshTargetRef.current = null;
+      const next = new URLSearchParams(searchParams);
+      next.delete('refreshRoadmap');
+      setSearchParams(next, { replace: true });
+      const saved = await persistRefresh(id, result);
+      if (saved) {
+        navigate(`/dashboard?view=host&tab=permits&roadmap=${saved.id}`);
+      }
+      return;
+    }
+    // Otherwise check for similar saved roadmaps and let the user pick.
+    try {
+      const matches = await findSimilarRoadmaps(user.id, result);
+      if (matches.length > 0) {
+        setSaveMatches(matches);
+        setSaveDialogOpen(true);
+        return;
+      }
+    } catch {
+      // If match lookup fails, fall through to a plain save.
+    }
+    await persistSaveNew(result);
+  }, [result, user, navigate, persistSaveNew, persistRefresh, searchParams, setSearchParams]);
 
   // Resume save after sign-in
   useEffect(() => {
@@ -191,16 +244,24 @@ const PermitPath = () => {
     resumeRanRef.current = true;
     setResult(pending);
     (async () => {
-      const saved = await persistSave(pending);
-      // Clear ?resumeSave and redirect into the dashboard.
+      // Same dialog flow now runs post-auth — defer one tick so result is in state.
       const next = new URLSearchParams(searchParams);
       next.delete('resumeSave');
       setSearchParams(next, { replace: true });
+      try {
+        const matches = await findSimilarRoadmaps(user.id, pending);
+        if (matches.length > 0) {
+          setSaveMatches(matches);
+          setSaveDialogOpen(true);
+          return;
+        }
+      } catch { /* ignore */ }
+      const saved = await persistSaveNew(pending);
       if (saved) {
         navigate(`/dashboard?view=host&tab=permits&roadmap=${saved.id}`);
       }
     })();
-  }, [user, searchParams, persistSave, navigate, setSearchParams]);
+  }, [user, searchParams, persistSaveNew, navigate, setSearchParams]);
 
 
   const updateField = <K extends keyof typeof form>(key: K, value: string) => {
@@ -209,6 +270,7 @@ const PermitPath = () => {
       setErrors((prev) => ({ ...prev, [key]: undefined }));
     }
   };
+
 
   const loadingLocationLabel = () => {
     const stateLabel = US_STATES.find((s) => s.value === form.state)?.label || form.state || 'your area';
