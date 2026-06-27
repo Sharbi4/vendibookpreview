@@ -234,6 +234,7 @@ const PermitPath = () => {
     setFetchError(null);
     setIsLoading(true);
     setResult(null);
+    setSavedRoadmapId(null);
     setTimeout(() => document.getElementById('results-section')?.scrollIntoView({ behavior: 'smooth' }), 50);
     try {
       const { data: response, error } = await supabase.functions.invoke('ai-license-finder', {
