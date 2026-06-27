@@ -660,7 +660,7 @@ function RoadmapItem({ node, expanded, onToggleExpand, onToggleDone, onCalendar,
             {isDone ? (
               <CheckCircle2 className="h-5 w-5 text-white/80" />
             ) : (
-              <Circle className={cn('h-5 w-5', isNext ? 'text-[#FF5124]' : 'text-white/30 hover:text-white/60')} />
+              <Circle className={cn('h-5 w-5', isNext ? 'text-white/85' : 'text-white/30 hover:text-white/60')} />
             )}
           </button>
 
