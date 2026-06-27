@@ -810,6 +810,62 @@ function RoadmapItem({ node, expanded, onToggleExpand, onToggleDone, onCalendar,
 }
 
 // ---------- StatChip ----------
+// ---------- StatTile ----------
+function StatTile({ label, value, sub, tone }: { label: string; value: string; sub: string; tone: 'orange' | 'amber' | 'emerald' | 'red' }) {
+  const toneMap = {
+    orange: { ring: 'border-[#FF5124]/30', dot: 'bg-[#FF5124]', text: 'text-[#FF8a5b]' },
+    amber: { ring: 'border-amber-500/30', dot: 'bg-amber-400', text: 'text-amber-300' },
+    emerald: { ring: 'border-emerald-500/30', dot: 'bg-emerald-400', text: 'text-emerald-300' },
+    red: { ring: 'border-red-500/30', dot: 'bg-red-400', text: 'text-red-300' },
+  }[tone];
+  return (
+    <div className={cn('relative rounded-2xl border-2 bg-[#101013] p-4 sm:p-5 shadow-[0_8px_24px_-12px_rgba(0,0,0,0.6)] overflow-hidden', toneMap.ring)}>
+      <div className={cn('absolute -top-8 -right-8 h-20 w-20 rounded-full blur-2xl opacity-30', toneMap.dot)} />
+      <div className="text-[11px] uppercase tracking-[0.14em] text-white/55 font-semibold">{label}</div>
+      <div className="text-3xl sm:text-4xl font-bold text-white mt-1.5 leading-none">{value}</div>
+      <div className={cn('mt-2 text-[11px] font-semibold uppercase tracking-wider inline-flex items-center gap-1.5', toneMap.text)}>
+        <span className={cn('h-1.5 w-1.5 rounded-full', toneMap.dot)} />
+        {sub}
+      </div>
+    </div>
+  );
+}
+
+// ---------- BigComplianceRing ----------
+function BigComplianceRing({ pct }: { pct: number }) {
+  const r = 64;
+  const c = 2 * Math.PI * r;
+  const offset = c - (pct / 100) * c;
+  return (
+    <div className="relative h-44 w-44">
+      <svg className="h-44 w-44 -rotate-90" viewBox="0 0 160 160">
+        <circle cx="80" cy="80" r={r} stroke="rgba(255,255,255,0.08)" strokeWidth="10" fill="none" />
+        <motion.circle
+          cx="80" cy="80" r={r}
+          stroke="url(#bigRingGrad)"
+          strokeWidth="10"
+          strokeLinecap="round"
+          fill="none"
+          strokeDasharray={c}
+          animate={{ strokeDashoffset: offset }}
+          transition={{ duration: 0.8, ease: 'easeOut' }}
+        />
+        <defs>
+          <linearGradient id="bigRingGrad" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stopColor="#FF7A45" />
+            <stop offset="100%" stopColor="#FF5124" />
+          </linearGradient>
+        </defs>
+      </svg>
+      <div className="absolute inset-0 flex flex-col items-center justify-center leading-none">
+        <span className="text-4xl font-bold text-white">{pct}%</span>
+        <span className="text-[10px] uppercase tracking-[0.18em] text-white/55 font-semibold mt-2">On Track</span>
+      </div>
+    </div>
+  );
+}
+
+// ---------- StatChip ----------
 function StatChip({ icon: Icon, label, value }: { icon: any; label: string; value: string }) {
   return (
     <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white/[0.06] border-2 border-white/15">
