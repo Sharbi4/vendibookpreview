@@ -670,7 +670,7 @@ function RoadmapItem({ node, expanded, onToggleExpand, onToggleDone, onCalendar,
           >
             <div className="flex flex-wrap items-center gap-2 mb-1">
               {isNext && (
-                <Badge className="text-[10px] uppercase tracking-wider bg-[#FF5124] text-white border-transparent hover:bg-[#FF5124]">
+                <Badge className="text-[10px] uppercase tracking-[0.14em] bg-white/[0.12] text-white border border-white/25 hover:bg-white/[0.12]">
                   Start here
                 </Badge>
               )}
