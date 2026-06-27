@@ -1,5 +1,5 @@
 import { useMemo, useState, useEffect, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useMotionValue, useTransform, animate } from 'framer-motion';
 import {
   ExternalLink, CheckCircle2, Circle, ChevronDown,
   Download, DollarSign, Clock, Sparkles, X, Mail, BadgeCheck, CalendarClock,
