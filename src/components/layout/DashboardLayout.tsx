@@ -56,6 +56,7 @@ export const DashboardLayout = ({ children, mode, onModeChange, isHost }: Dashbo
     { title: 'Listings', icon: Truck, href: '/host/listings', tab: null },
     { title: 'Booking Manager', icon: CalendarDays, href: '/host/bookings', tab: null },
     { title: 'Insights', icon: BarChart3, href: '/dashboard?view=host&tab=insights', tab: 'insights' },
+    { title: 'Permits', icon: FileCheck, href: '/dashboard?view=host&tab=permits', tab: 'permits' },
     { title: 'Promote', icon: Megaphone, href: '/dashboard?view=host&tab=promote', tab: 'promote' },
     ...(hasGhostKitchen
       ? [{ title: 'Kitchen Pro', icon: ChefHat, href: '/dashboard?view=host&tab=kitchen', tab: 'kitchen' }]
