@@ -75,7 +75,7 @@ interface Props {
 }
 
 
-export default function ResultsDashboard({ result, readOnly = false }: Props) {
+export default function ResultsDashboard({ result, readOnly = false, renderItemExtra, onSaveToDashboard, savedRoadmapId }: Props) {
   const { user } = useAuth();
 
   const storageKey = useMemo(
