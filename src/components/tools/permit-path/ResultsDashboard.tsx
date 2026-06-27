@@ -836,13 +836,13 @@ function SignInToSavePrompt() {
     <motion.div
       initial={{ opacity: 0, y: -6 }}
       animate={{ opacity: 1, y: 0 }}
-      className="relative overflow-hidden rounded-2xl border-2 border-[#FF5124]/30 bg-gradient-to-br from-[#1a0f08] via-[#101013] to-[#101013] p-4 sm:p-5"
+      className="relative overflow-hidden rounded-2xl border border-white/15 bg-gradient-to-b from-white/[0.06] via-[#141418] to-[#101013] p-4 sm:p-5 shadow-[0_8px_28px_-14px_rgba(0,0,0,0.7)]"
     >
-      <div className="absolute -top-12 -right-12 h-40 w-40 rounded-full bg-[#FF5124]/20 blur-3xl pointer-events-none" />
+      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/30 to-transparent pointer-events-none" />
       <div className="relative flex flex-col sm:flex-row sm:items-center gap-4">
         <div className="flex items-start gap-3 flex-1 min-w-0">
-          <div className="h-10 w-10 rounded-xl bg-[#FF5124]/15 border border-[#FF5124]/30 flex items-center justify-center shrink-0">
-            <Sparkles className="h-5 w-5 text-[#FF8a5b]" />
+          <div className="h-10 w-10 rounded-xl bg-white/[0.06] border border-white/20 flex items-center justify-center shrink-0">
+            <Sparkles className="h-5 w-5 text-white/85" />
           </div>
           <div className="min-w-0">
             <div className="font-bold text-white text-[15px] sm:text-base leading-tight">
