@@ -54,10 +54,10 @@ export interface DashboardResult {
 }
 
 const levelStyles: Record<string, string> = {
-  state: 'bg-orange-500/15 text-orange-300 border-orange-500/30',
-  county: 'bg-amber-500/15 text-amber-300 border-amber-500/30',
-  city: 'bg-blue-500/15 text-blue-300 border-blue-500/30',
-  federal: 'bg-violet-500/15 text-violet-300 border-violet-500/30',
+  state: 'bg-white/[0.08] text-white/80 border-white/20',
+  county: 'bg-white/[0.06] text-white/70 border-white/15',
+  city: 'bg-white/[0.06] text-white/70 border-white/15',
+  federal: 'bg-white/[0.08] text-white/80 border-white/20',
 };
 
 type Filter = 'all' | 'remaining' | 'commonly_missed';
