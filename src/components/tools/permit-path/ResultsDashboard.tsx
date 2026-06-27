@@ -645,9 +645,10 @@ interface ItemProps {
   expiresOn?: string;
   onToggleOwned: () => void;
   onSetExpires: (date: string) => void;
+  extra?: React.ReactNode;
 }
 
-function RoadmapItem({ node, expanded, onToggleExpand, onToggleDone, onCalendar, readOnly, state, owned, expiresOn, onToggleOwned, onSetExpires }: ItemProps) {
+function RoadmapItem({ node, expanded, onToggleExpand, onToggleDone, onCalendar, readOnly, state, owned, expiresOn, onToggleOwned, onSetExpires, extra }: ItemProps) {
   const isNext = node.status === 'next';
   const isDone = node.status === 'done';
   // "locked" no longer hides info — it's a soft sequence hint.
