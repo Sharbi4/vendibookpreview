@@ -354,14 +354,16 @@ function baselineChecklist(state: string, city: string, businessType: string, pr
     recent_law_alert = "Arizona regulates mobile food vendors at the county level. In Pima County (Tucson), you need a county mobile food permit plus an accredited food handler card — the statewide license you may have read about does not exist here.";
   }
 
+  // Display order = OPERATING PRIORITY (what gates legal service first).
+  // Routine business-entity paperwork goes LAST.
   const categories = [
-    { name: "Business Registration", items: businessReg },
-    { name: "Food Safety Certifications", items: foodSafety },
     { name: "Health Permits", items: healthPermits },
+    { name: "Local & City-Specific", items: local },
     ...(commissary.length ? [{ name: "Commissary / Base of Operations", items: commissary }] : []),
     { name: "Fire & Equipment", items: fire },
-    { name: "Local & City-Specific", items: local },
+    { name: "Food Safety Certifications", items: foodSafety },
     { name: "Insurance", items: insurance },
+    { name: "Business Registration", items: businessReg },
   ];
 
   // Critical path reasoning
@@ -599,6 +601,8 @@ VENDOR PROFILE: ${profileSummary(profile)}
 Branch your checklist based on the profile above. Compute critical_path realistically (longest dependent chain, not sum). Surface 1–3 risks specific to THIS vendor. Add 1–3 money- or time-saving insights when applicable.
 
 Cover, where applicable: business entity registration (LLC/DBA, EIN, sales tax), food handler / manager certification (ANSI), state mobile food unit license, county/city health permit, fire marshal inspection (LP-gas / suppression / hood if frying), commissary agreement (if the jurisdiction requires it), vehicle registration, zoning / vending district / parking permits, insurance (general liability, auto, workers comp if employees), and alcohol licensing if applicable.
+
+DISPLAY ORDER — order the "categories" array by OPERATING PRIORITY, not alphabetically or by dependency. Lead with the permits and local rules that legally gate food service and where vendors get shut down: (1) Health Permits, (2) Mobile Vendor License, (3) Local & City-Specific (city business license, zoning, vending/parking rules, local fire), (4) Commissary / Base of Operations, (5) Fire & Equipment, (6) Food Safety Certifications, (7) Insurance, and put (8) Business Registration LAST. Still flag prerequisites inside why_it_matters, but the array order is by urgency to operate.
 
 Prefer URLs that appear in the Source Material; if none cover an item, leave official_url as "". Populate "sources" with every source you used.
 

@@ -230,56 +230,66 @@ export default function ResultsDashboard({ result, readOnly = false }: Props) {
     return true;
   });
 
-  // Group by category preserving sequence
-  const grouped: Array<{ name: string; nodes: RoadmapNode[] }> = [];
-  for (const n of visibleNodes) {
-    const last = grouped[grouped.length - 1];
-    if (last && last.name === n.category) last.nodes.push(n);
-    else grouped.push({ name: n.category, nodes: [n] });
-  }
+  // Group by category, then sort by OPERATING PRIORITY (what gates legal service first;
+  // routine business registration always last). Dependency logic still drives "next step".
+  const CATEGORY_PRIORITY: Record<string, number> = {
+    'Health Permits': 10,
+    'Mobile Vendor License': 20,
+    'Local & City-Specific': 30,
+    'Commissary / Base of Operations': 40,
+    'Fire & Equipment': 50,
+    'Food Safety Certifications': 60,
+    'Insurance': 70,
+    'Business Registration': 99,
+  };
+  const catScore = (name: string) => CATEGORY_PRIORITY[name] ?? 80;
 
-  const dontSkip = roadmap.nodes.filter((n) => n.commonly_missed && !n.done).slice(0, 4);
+  const groupedMap = new Map<string, RoadmapNode[]>();
+  for (const n of visibleNodes) {
+    const arr = groupedMap.get(n.category) || [];
+    arr.push(n);
+    groupedMap.set(n.category, arr);
+  }
+  const grouped: Array<{ name: string; nodes: RoadmapNode[] }> = Array.from(groupedMap.entries())
+    .map(([name, nodes]) => ({ name, nodes }))
+    .sort((a, b) => catScore(a.name) - catScore(b.name));
 
   return (
-    <div className="mt-8 space-y-6">
-      {/* Sticky summary bar */}
+    <div className="mt-8 space-y-8">
+      {/* Sticky summary bar — high contrast */}
       <div className="sticky top-16 z-20 -mx-2 sm:mx-0">
-        <div className="rounded-2xl border border-white/10 bg-[#08080a]/90 backdrop-blur-xl p-4 sm:p-5 shadow-2xl">
+        <div className="rounded-2xl border border-white/20 bg-[#0a0a0d]/95 backdrop-blur-xl p-4 sm:p-5 shadow-[0_20px_60px_-20px_rgba(0,0,0,0.8)]">
           <div className="flex flex-col sm:flex-row sm:items-center gap-4">
             <div className="flex items-center gap-3 flex-1 min-w-0">
-              <div className="h-10 w-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center shrink-0">
-                <MapPin className="h-5 w-5 text-white/70" />
+              <div className="h-11 w-11 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center shrink-0">
+                <MapPin className="h-5 w-5 text-white" />
               </div>
               <div className="min-w-0">
-                <div className="text-xs text-white/55 uppercase tracking-wider">
+                <div className="text-[11px] text-white/70 uppercase tracking-wider font-medium">
                   {user && !readOnly ? 'Welcome back — your roadmap' : 'Your roadmap'}
                 </div>
-                <div className="font-semibold text-white truncate">
+                <div className="font-bold text-white text-lg leading-tight break-words">
                   {locationLabel}
-                  {result.businessType && <span className="text-white/50 font-normal"> · {result.businessType}</span>}
                 </div>
+                {result.businessType && (
+                  <div className="text-xs text-white/65 mt-0.5">{result.businessType}</div>
+                )}
               </div>
             </div>
             <ProgressRing pct={roadmap.pct} />
-            <div className="flex flex-wrap gap-3 text-sm">
-              <span className="flex items-center gap-1.5 text-white/80">
-                <Check className="h-4 w-4 text-white/55" /> {roadmap.done}/{roadmap.total}
-              </span>
-              <span className="flex items-center gap-1.5 text-white/80">
-                <DollarSign className="h-4 w-4 text-white/55" /> {remainingCost} left
-              </span>
-              <span className="flex items-center gap-1.5 text-white/80">
-                <Clock className="h-4 w-4 text-white/55" /> {remainingWeeks}
-              </span>
+            <div className="flex flex-wrap gap-2">
+              <StatChip icon={Check} label="Done" value={`${roadmap.done}/${roadmap.total}`} />
+              <StatChip icon={DollarSign} label="Cost left" value={remainingCost} />
+              <StatChip icon={Clock} label="Time" value={remainingWeeks} />
             </div>
             <div className="flex gap-1.5">
               {!readOnly && (
-                <Button onClick={handleEmailMe} size="sm" variant="outline" className="bg-white/5 border-white/15 text-white hover:bg-white/10 h-9">
+                <Button onClick={handleEmailMe} size="sm" variant="outline" className="bg-white/5 border-white/20 text-white hover:bg-white/10 h-9">
                   <Mail className="h-4 w-4" />
                 </Button>
               )}
               {!readOnly && (
-                <Button onClick={handleShare} size="sm" variant="outline" className="bg-white/5 border-white/15 text-white hover:bg-white/10 h-9">
+                <Button onClick={handleShare} size="sm" variant="outline" className="bg-white/5 border-white/20 text-white hover:bg-white/10 h-9">
                   <Share2 className="h-4 w-4" />
                 </Button>
               )}
@@ -291,7 +301,7 @@ export default function ResultsDashboard({ result, readOnly = false }: Props) {
 
           {!user && !readOnly && (
             <div className="mt-4 flex flex-col sm:flex-row items-start sm:items-center gap-2 text-xs">
-              <span className="text-white/55">Save your progress and pick up where you left off:</span>
+              <span className="text-white/70">Save your progress and pick up where you left off:</span>
               <Link to="/auth?redirect=/tools/permitpath" className="text-white hover:underline font-medium inline-flex items-center gap-1">
                 Save to my account <ArrowRight className="h-3 w-3" />
               </Link>
@@ -363,40 +373,45 @@ export default function ResultsDashboard({ result, readOnly = false }: Props) {
         ))}
       </div>
 
-      {/* Sequenced roadmap, grouped by category in order */}
-      <div className="space-y-3">
+      {/* Categories — ordered by operating priority */}
+      <div className="space-y-6">
         {grouped.map((cat, idx) => {
           const catDone = cat.nodes.filter((n) => n.done).length;
-          const catActionable = cat.nodes.filter((n) => n.status !== 'locked').length;
-          const allMarked = catActionable > 0 && cat.nodes.filter((n) => n.status !== 'locked').every((n) => n.done);
+          const catTotal = cat.nodes.length;
+          const allMarked = catTotal > 0 && cat.nodes.every((n) => n.done);
           return (
-            <motion.div
+            <motion.section
               key={`${cat.name}-${idx}`}
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: idx * 0.03 }}
-              className="rounded-2xl border border-white/10 bg-[#0d0d10] overflow-hidden"
+              className="rounded-2xl border border-white/15 bg-[#101013] overflow-hidden shadow-[0_8px_24px_-12px_rgba(0,0,0,0.6)]"
             >
-              <div className="flex items-center gap-3 p-4 sm:p-5 border-b border-white/5">
+              {/* Sticky category header — anchor as you scroll */}
+              <div className="sticky top-[88px] z-10 flex items-center gap-3 px-4 sm:px-5 py-3.5 bg-[#101013]/95 backdrop-blur-md border-b border-white/15">
                 {(() => {
                   const cv = categoryVisual(cat.name);
                   return <PremiumIcon icon={cv.icon} accent={cv.accent} size="sm" hover="lift" />;
                 })()}
                 <div className="flex-1 min-w-0">
-                  <div className="font-semibold text-white">{cat.name}</div>
-                  <div className="text-xs text-white/50">{catDone} of {cat.nodes.length} complete</div>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h3 className="font-bold text-white text-base">{cat.name}</h3>
+                    <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-white/10 border border-white/15 text-white/85">
+                      {catDone}/{catTotal}
+                    </span>
+                  </div>
                 </div>
-                {!readOnly && catActionable > 0 && (
+                {!readOnly && catTotal > 0 && (
                   <button
                     onClick={() => markAllInCategory(cat.name)}
-                    className="text-xs text-white/60 hover:text-white px-2.5 py-1 rounded-md hover:bg-white/5"
+                    className="text-xs font-medium text-white/75 hover:text-white px-2.5 py-1 rounded-md border border-white/10 hover:border-white/25 hover:bg-white/5"
                   >
                     {allMarked ? 'Uncheck all' : 'Mark all'}
                   </button>
                 )}
               </div>
 
-              <div className="px-4 sm:px-5 py-3 space-y-2">
+              <div className="px-3 sm:px-4 py-4 space-y-3">
                 {cat.nodes.map((node) => (
                   <RoadmapItem
                     key={node.id}
@@ -410,7 +425,7 @@ export default function ResultsDashboard({ result, readOnly = false }: Props) {
                   />
                 ))}
               </div>
-            </motion.div>
+            </motion.section>
           );
         })}
       </div>
@@ -494,13 +509,13 @@ function RoadmapItem({ node, expanded, onToggleExpand, onToggleDone, onCalendar,
     <motion.div
       layout
       className={cn(
-        'rounded-xl border transition-all',
-        isDone && 'border-white/15 bg-white/[0.04]',
-        isNext && 'border-[#FF5124]/40 bg-[#FF5124]/[0.05] shadow-[0_0_0_1px_rgba(255,81,36,0.25)]',
-        !isDone && !isNext && 'border-white/10 bg-white/[0.02] hover:border-white/20',
+        'rounded-xl border-[1.5px] transition-all',
+        isDone && 'border-white/20 bg-white/[0.05]',
+        isNext && 'border-[#FF5124]/60 bg-[#FF5124]/[0.06] shadow-[0_0_0_1px_rgba(255,81,36,0.35),0_8px_24px_-12px_rgba(255,81,36,0.4)]',
+        !isDone && !isNext && 'border-white/[0.14] bg-[#16161a] hover:border-white/30 hover:bg-[#1a1a1f]',
       )}
     >
-      <div className="p-4">
+      <div className="p-5">
         <div className="flex items-start gap-3">
           <button
             onClick={onToggleDone}
@@ -615,5 +630,18 @@ function RoadmapItem({ node, expanded, onToggleExpand, onToggleDone, onCalendar,
         </AnimatePresence>
       </div>
     </motion.div>
+  );
+}
+
+// ---------- StatChip ----------
+function StatChip({ icon: Icon, label, value }: { icon: any; label: string; value: string }) {
+  return (
+    <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white/[0.06] border border-white/15">
+      <Icon className="h-4 w-4 text-white/75 shrink-0" />
+      <div className="flex flex-col leading-tight">
+        <span className="text-[10px] uppercase tracking-wider text-white/55 font-medium">{label}</span>
+        <span className="text-sm font-semibold text-white">{value}</span>
+      </div>
+    </div>
   );
 }
