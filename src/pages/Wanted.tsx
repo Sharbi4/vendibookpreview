@@ -59,10 +59,9 @@ const Wanted = () => {
 
   const load = async () => {
     setLoading(true);
-    let q = supabase
-      .from('asset_requests')
+    let q = (supabase as any)
+      .from('asset_requests_public')
       .select('id, asset_type, city, state, budget_min, budget_max, start_date, end_date, notes, title, created_at')
-      .eq('is_public', true)
       .order('created_at', { ascending: false })
       .limit(100);
     if (filterType !== 'all') q = q.eq('asset_type', filterType);

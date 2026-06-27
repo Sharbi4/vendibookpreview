@@ -4311,7 +4311,51 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      asset_requests_public: {
+        Row: {
+          asset_type: string | null
+          budget_max: number | null
+          budget_min: number | null
+          city: string | null
+          created_at: string | null
+          end_date: string | null
+          id: string | null
+          is_public: boolean | null
+          notes: string | null
+          start_date: string | null
+          state: string | null
+          title: string | null
+        }
+        Insert: {
+          asset_type?: string | null
+          budget_max?: number | null
+          budget_min?: number | null
+          city?: string | null
+          created_at?: string | null
+          end_date?: string | null
+          id?: string | null
+          is_public?: boolean | null
+          notes?: string | null
+          start_date?: string | null
+          state?: string | null
+          title?: string | null
+        }
+        Update: {
+          asset_type?: string | null
+          budget_max?: number | null
+          budget_min?: number | null
+          city?: string | null
+          created_at?: string | null
+          end_date?: string | null
+          id?: string | null
+          is_public?: boolean | null
+          notes?: string | null
+          start_date?: string | null
+          state?: string | null
+          title?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       admin_grant_complimentary_featured: {
