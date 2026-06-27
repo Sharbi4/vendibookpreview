@@ -19,9 +19,11 @@ export interface SavedRoadmap {
   business_type: string | null;
   label: string | null;
   result_payload: DashboardResult;
+  refreshed_at: string | null;
   created_at: string;
   updated_at: string;
 }
+
 
 export interface PermitItem {
   id: string;
