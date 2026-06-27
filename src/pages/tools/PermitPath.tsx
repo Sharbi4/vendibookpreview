@@ -434,12 +434,12 @@ const PermitPath = () => {
                   initial={{ opacity: 0, y: 20, scale: 0.96 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   transition={{ duration: 0.7, ease: 'easeOut' }}
-                  className="relative hidden lg:flex justify-center items-center"
+                  className="relative flex justify-center items-center"
                 >
                   <motion.img
                     src={heroMockup}
                     alt="PermitPath results dashboard preview"
-                    className="w-full max-w-[540px] rounded-2xl border border-white/10 shadow-[0_24px_80px_-20px_rgba(255,81,36,0.25)]"
+                    className="w-full max-w-[360px] md:max-w-[480px] lg:max-w-[540px] rounded-2xl border border-white/10 shadow-[0_24px_80px_-20px_rgba(255,81,36,0.25)]"
                     animate={{ y: [0, -10, 0] }}
                     transition={{
                       duration: 4,
