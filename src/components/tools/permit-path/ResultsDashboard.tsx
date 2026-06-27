@@ -540,14 +540,27 @@ function RoadmapItem({ node, expanded, onToggleExpand, onToggleDone, onCalendar,
   // Commissary action: deep-link to kitchen search
   const showCommissaryAction = node.key === 'commissary' && !isDone && !readOnly;
 
+  // Expiration status
+  const expiryInfo = (() => {
+    if (!owned || !expiresOn) return null;
+    const d = new Date(expiresOn);
+    if (isNaN(d.getTime())) return null;
+    const days = Math.ceil((d.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+    const fmt = d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+    if (days < 0) return { label: `Expired ${fmt}`, tone: 'red' as const };
+    if (days <= 30) return { label: `Expires ${fmt} (${days}d)`, tone: 'amber' as const };
+    return { label: `Valid through ${fmt}`, tone: 'emerald' as const };
+  })();
+
   return (
     <motion.div
       layout
       className={cn(
         'rounded-xl border-[1.5px] transition-all',
-        isDone && 'border-white/20 bg-white/[0.05]',
-        isNext && 'border-[#FF5124]/60 bg-[#FF5124]/[0.06] shadow-[0_0_0_1px_rgba(255,81,36,0.35),0_8px_24px_-12px_rgba(255,81,36,0.4)]',
-        !isDone && !isNext && 'border-white/[0.14] bg-[#16161a] hover:border-white/30 hover:bg-[#1a1a1f]',
+        owned && 'border-emerald-500/40 bg-emerald-500/[0.05]',
+        !owned && isDone && 'border-white/20 bg-white/[0.05]',
+        !owned && isNext && 'border-[#FF5124]/60 bg-[#FF5124]/[0.06] shadow-[0_0_0_1px_rgba(255,81,36,0.35),0_8px_24px_-12px_rgba(255,81,36,0.4)]',
+        !owned && !isDone && !isNext && 'border-white/[0.14] bg-[#16161a] hover:border-white/30 hover:bg-[#1a1a1f]',
       )}
     >
       <div className="p-5">
