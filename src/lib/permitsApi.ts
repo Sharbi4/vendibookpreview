@@ -187,7 +187,22 @@ export async function listRoadmaps(userId: string): Promise<SavedRoadmap[]> {
     .from('saved_permit_roadmaps')
     .select('*')
     .eq('user_id', userId)
+    .is('deleted_at', null)
     .order('updated_at', { ascending: false });
+  if (error) throw error;
+  return (data || []) as SavedRoadmap[];
+}
+
+/** Roadmaps soft-deleted in the last 7 days — recoverable. */
+export async function listDeletedRoadmaps(userId: string): Promise<SavedRoadmap[]> {
+  const cutoff = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+  const { data, error } = await sb
+    .from('saved_permit_roadmaps')
+    .select('*')
+    .eq('user_id', userId)
+    .not('deleted_at', 'is', null)
+    .gte('deleted_at', cutoff)
+    .order('deleted_at', { ascending: false });
   if (error) throw error;
   return (data || []) as SavedRoadmap[];
 }
@@ -202,9 +217,30 @@ export async function getRoadmap(id: string): Promise<SavedRoadmap | null> {
   return (data as SavedRoadmap) || null;
 }
 
-export async function deleteRoadmap(id: string): Promise<void> {
-  const { error } = await sb.from('saved_permit_roadmaps').delete().eq('id', id);
+/** Soft-delete: roadmap (and its documents) stays recoverable for 7 days. */
+export async function softDeleteRoadmap(id: string): Promise<void> {
+  const { error } = await sb.rpc('soft_delete_permit_roadmap', { p_roadmap_id: id });
   if (error) throw error;
+}
+
+/** Back-compat alias — kept so existing callers continue to work. */
+export const deleteRoadmap = softDeleteRoadmap;
+
+/** Restore a soft-deleted roadmap within the 7-day window. */
+export async function restoreRoadmap(id: string): Promise<SavedRoadmap> {
+  const { data, error } = await sb.rpc('restore_permit_roadmap', { p_roadmap_id: id });
+  if (error) throw error;
+  return data as SavedRoadmap;
+}
+
+/** Rename the roadmap label. */
+export async function renameRoadmap(id: string, label: string): Promise<SavedRoadmap> {
+  const { data, error } = await sb.rpc('rename_permit_roadmap', {
+    p_roadmap_id: id,
+    p_label: label,
+  });
+  if (error) throw error;
+  return data as SavedRoadmap;
 }
 
 // ---------------- Items ----------------
