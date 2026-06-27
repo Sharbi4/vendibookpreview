@@ -66,6 +66,7 @@ export const DashboardLayout = ({ children, mode, onModeChange, isHost }: Dashbo
     { title: 'Refer & Earn', icon: Gift, href: '/referral/dashboard?source=sidebar', tab: null }] : [
     { title: 'Bookings', icon: CalendarDays, href: '/dashboard', tab: null },
     { title: 'Favorites', icon: Heart, href: '/favorites', tab: null },
+    { title: 'Permits', icon: FileCheck, href: '/dashboard?view=shopper&tab=permits', tab: 'permits' },
     { title: 'Messages', icon: MessageSquare, href: '/messages', tab: null },
     { title: 'Refer & Earn', icon: Gift, href: '/referral/dashboard?source=sidebar', tab: null }];
 
