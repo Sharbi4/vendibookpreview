@@ -80,6 +80,7 @@ export default function ResultsDashboard({ result, readOnly = false }: Props) {
   );
 
   const [completed, setCompleted] = useState<Record<string, boolean>>({});
+  const [owned, setOwned] = useState<Record<string, { expires?: string }>>({});
   const [alertDismissed, setAlertDismissed] = useState(false);
   const [filter, setFilter] = useState<Filter>('all');
   const [loadedRemote, setLoadedRemote] = useState(false);
@@ -90,8 +91,30 @@ export default function ResultsDashboard({ result, readOnly = false }: Props) {
     try {
       const raw = localStorage.getItem(storageKey);
       if (raw) setCompleted(JSON.parse(raw));
+      const rawOwn = localStorage.getItem(`${storageKey}::owned`);
+      if (rawOwn) setOwned(JSON.parse(rawOwn));
     } catch { /* ignore */ }
   }, [storageKey]);
+
+  // Persist owned to localStorage only (no schema change needed)
+  useEffect(() => {
+    try { localStorage.setItem(`${storageKey}::owned`, JSON.stringify(owned)); } catch { /* ignore */ }
+  }, [owned, storageKey]);
+
+  const toggleOwned = useCallback((id: string) => {
+    setOwned((p) => {
+      const next = { ...p };
+      if (next[id]) delete next[id];
+      else next[id] = {};
+      return next;
+    });
+    // marking "I have it" also counts as done
+    setCompleted((prev) => ({ ...prev, [id]: !owned[id] ? true : prev[id] }));
+  }, [owned]);
+
+  const setOwnedExpiration = useCallback((id: string, expires: string) => {
+    setOwned((p) => ({ ...p, [id]: { ...(p[id] || {}), expires: expires || undefined } }));
+  }, []);
 
   // 2) remote load (signed-in users override local with remote)
   useEffect(() => {
