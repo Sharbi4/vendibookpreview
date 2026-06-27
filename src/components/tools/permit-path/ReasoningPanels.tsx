@@ -28,7 +28,7 @@ export default function ReasoningPanels({ critical_path, risks, insights }: Prop
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          className="rounded-2xl border-[1.5px] border-[#FF5124]/40 bg-gradient-to-br from-[#FF5124]/10 via-[#101013] to-[#101013] p-5 relative overflow-hidden h-full flex flex-col"
+          className="rounded-2xl border-2 border-[#FF5124]/40 bg-gradient-to-br from-[#FF5124]/10 via-[#101013] to-[#101013] p-5 relative overflow-hidden h-full flex flex-col"
         >
           <div className="absolute -top-10 -right-10 h-32 w-32 rounded-full bg-[#FF5124]/20 blur-3xl pointer-events-none" />
           <div className="relative flex items-start gap-3">
@@ -57,7 +57,7 @@ export default function ReasoningPanels({ critical_path, risks, insights }: Prop
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.05 }}
-          className="rounded-2xl border-[1.5px] border-rose-500/35 bg-gradient-to-br from-rose-500/10 via-[#101013] to-[#101013] p-5 relative overflow-hidden h-full flex flex-col"
+          className="rounded-2xl border-2 border-rose-500/35 bg-gradient-to-br from-rose-500/10 via-[#101013] to-[#101013] p-5 relative overflow-hidden h-full flex flex-col"
         >
           <div className="absolute -top-10 -right-10 h-32 w-32 rounded-full bg-rose-500/15 blur-3xl pointer-events-none" />
           <div className="relative flex items-start gap-3 mb-3">
@@ -83,7 +83,7 @@ export default function ReasoningPanels({ critical_path, risks, insights }: Prop
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="rounded-2xl border-[1.5px] border-emerald-500/35 bg-gradient-to-br from-emerald-500/10 via-[#101013] to-[#101013] p-5 relative overflow-hidden h-full flex flex-col"
+          className="rounded-2xl border-2 border-emerald-500/35 bg-gradient-to-br from-emerald-500/10 via-[#101013] to-[#101013] p-5 relative overflow-hidden h-full flex flex-col"
         >
           <div className="absolute -top-10 -right-10 h-32 w-32 rounded-full bg-emerald-500/15 blur-3xl pointer-events-none" />
           <div className="relative flex items-start gap-3 mb-3">
