@@ -35,8 +35,17 @@ const Section = ({
 const ShopperDashboard = () => {
   const { bookings, isLoading, stats, cancelBooking, refetch } = useShopperBookings();
   const { hasRole, profile } = useAuth();
+  const [searchParams] = useSearchParams();
   const isHost = hasRole('host');
   const firstName = profile?.full_name?.split(' ')[0];
+
+  if (searchParams.get('tab') === 'permits') {
+    return (
+      <div className="max-w-[1320px] mx-auto">
+        <PermitsTab />
+      </div>
+    );
+  }
 
   const pendingBookings = bookings.filter((b) => b.status === 'pending');
   const approvedBookings = bookings.filter((b) => b.status === 'approved');
