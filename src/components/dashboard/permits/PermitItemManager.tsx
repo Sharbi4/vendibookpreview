@@ -58,7 +58,19 @@ export default function PermitItemManager({
   const [saving, setSaving] = useState<'idle' | 'saving' | 'saved'>('idle');
   const firstRun = useRef(true);
 
-  // Debounced save
+  // Track the initial values we hydrated from, so we only send fields the
+  // user actually touched on THIS device. Combined with the server's per-field
+  // timestamps, this gives us per-field merge across devices.
+  const baseline = useRef({
+    status: initial?.status ?? 'not_started',
+    permit_number: initial?.permit_number ?? '',
+    issuing_agency: initial?.issuing_agency ?? (defaultIssuer ?? ''),
+    issue_date: initial?.issue_date ?? '',
+    expires_on: initial?.expires_on ?? '',
+    notes: initial?.notes ?? '',
+  });
+
+  // Debounced save — per-field merge
   useEffect(() => {
     if (firstRun.current) {
       firstRun.current = false;
@@ -67,14 +79,29 @@ export default function PermitItemManager({
     setSaving('saving');
     const t = setTimeout(async () => {
       try {
-        const next = await upsertItem(userId, roadmapId, itemKey, {
-          status,
-          permit_number: permitNumber.trim() || null,
-          issuing_agency: issuingAgency.trim() || null,
-          notes: notes.trim() || null,
-          issue_date: issueDate || null,
-          expires_on: expiresOn || null,
-        });
+        const patch: Record<string, string | null> = {};
+        if (status !== baseline.current.status) patch.status = status;
+        if (permitNumber !== baseline.current.permit_number)
+          patch.permit_number = permitNumber.trim() || null;
+        if (issuingAgency !== baseline.current.issuing_agency)
+          patch.issuing_agency = issuingAgency.trim() || null;
+        if (notes !== baseline.current.notes) patch.notes = notes.trim() || null;
+        if (issueDate !== baseline.current.issue_date) patch.issue_date = issueDate || null;
+        if (expiresOn !== baseline.current.expires_on) patch.expires_on = expiresOn || null;
+        if (Object.keys(patch).length === 0) {
+          setSaving('idle');
+          return;
+        }
+        const next = await mergeItemFields(roadmapId, itemKey, patch as any);
+        // Update baseline so unchanged fields aren't resent next tick.
+        baseline.current = {
+          status: next.status,
+          permit_number: next.permit_number ?? '',
+          issuing_agency: next.issuing_agency ?? '',
+          issue_date: next.issue_date ?? '',
+          expires_on: next.expires_on ?? '',
+          notes: next.notes ?? '',
+        };
         onChange?.(next);
         setSaving('saved');
         setTimeout(() => setSaving('idle'), 1200);
@@ -85,6 +112,7 @@ export default function PermitItemManager({
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status, permitNumber, issuingAgency, issueDate, expiresOn, notes]);
+
 
   const expiryHint = (() => {
     if (!expiresOn) return null;
