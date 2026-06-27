@@ -1,69 +1,103 @@
-# PermitPath Redesign + Engine Upgrade
+# Permits in Dashboard — Save, Manage, Upload
 
-Two workstreams: (1) visual/UX overhaul of `src/pages/tools/PermitPath.tsx`, (2) prompt + JSON-schema upgrade of `supabase/functions/ai-license-finder/index.ts` to power a richer interactive results dashboard.
+Adds a signed-in "Permits" area to the dashboard that mirrors the PermitPath results UI, persists roadmaps + per-item permit data + uploaded documents, and routes signed-out users through sign-in without losing their roadmap.
 
-## 1. Visual + UX rebuild (`PermitPath.tsx`)
+---
 
-**Fix contrast immediately**
-- Replace the pastel green/blue/purple benefit cards with a single cohesive system: dark `bg-card/60` surface, hairline border, colored icon tile (icon keeps its hue, card stays dark), bold near-white heading, muted body. No light-on-light anywhere.
-- Audit every heading/body line; standardize to `text-foreground` / `text-muted-foreground`.
+## 1. Data model (one migration)
 
-**Remove "AI" framing (user-facing only)**
-- Drop the big "Important Disclaimer / This AI tool…" banner. Replace with a single small line under results: "Requirements are researched from official sources. Always confirm with your local agency before applying."
-- Rename step 2 from "AI Maps Requirements" → "We Map Your Requirements."
-- Strip any other "AI" labels from copy. Engine keeps working unchanged under the hood.
+New tables in `public`, all RLS-scoped to `auth.uid() = user_id`, with `GRANT` to authenticated + service_role.
 
-**Premium polish (Satin Lux, orange-only CTA — matches Core memory)**
-- Hero: keep "Navigate permits in minutes, not weeks." Add a subtle radial `#FF5124` glow behind the headline using a CSS radial-gradient layer. Refine the PermitPath badge (hairline border, tiny dot, tracking).
-- Primary CTA "Find My Permits": solid `bg-[hsl(var(--primary))]` orange-red, white text, right-arrow, shimmer-sweep hover (reuse the existing glass CTA variant from memory).
-- Benefit cards: staggered fade-up on scroll (framer-motion `whileInView`).
-- "How PermitPath Works": orange filled numbered circles + thin vertical connector line on desktop, stacked on mobile. Tighten copy.
-- Mobile-first: 16px inputs (Core rule), 48px tap targets, generous spacing.
+- **`saved_permit_roadmaps`** — one row per saved roadmap
+  - `user_id`, `roadmap_key` (state|city|business_type), `state_code`, `city`, `business_type`
+  - `label` (user-editable, defaults to "City, ST · Business Type")
+  - `result_payload jsonb` (full DashboardResult snapshot so the saved view never breaks if the source changes)
+  - unique `(user_id, roadmap_key)` — saving the same search updates in place
 
-## 2. Interactive results dashboard
+- **`permit_items`** — one row per requirement the user is tracking
+  - `roadmap_id` FK → `saved_permit_roadmaps`
+  - `user_id`, `item_key` (stable id from `permitRoadmap.ts`)
+  - `status` text: `not_started | in_progress | submitted | approved | expired`
+  - `permit_number`, `issuing_agency`, `notes` text
+  - `issue_date`, `expires_on` date
+  - unique `(roadmap_id, item_key)`
 
-Replace the current flat list with a dashboard rendered from the new JSON schema:
+- **`permit_documents`** — one row per uploaded file
+  - `roadmap_id`, `item_key`, `user_id`
+  - `storage_path` (object key inside the private bucket)
+  - `file_name`, `mime_type`, `size_bytes`, `uploaded_at`
 
-- **Sticky summary header**: progress bar ("4 of 11 complete"), running cost range, typical setup weeks. Updates live as checkboxes toggle.
-- **"Don't skip these" highlight strip** at the top — auto-populated from `commonly_missed: true` items.
-- **Recent law alert banner** (orange-tinted, dismissible) when `recent_law_alert` is non-null.
-- **Category sections** (Business Registration, Food Safety Certifications, Health Permits, Mobile Vendor License, Fire/Equipment, Local/City, Insurance) rendered as collapsible groups.
-- **Each requirement = expandable card** with: title, issuer + level badge (state/county/city/federal), cost estimate, timeline estimate, "why it matters" plain-language line, official link button, checkbox for progress.
-- **Persistence**: checklist state stored in `localStorage` keyed by `state|city|business_type` so progress survives reloads. Optional "Save to my account" if user is authed (writes to a new lightweight `permit_checklists` table — flag this for a follow-up migration; not in scope for this pass unless approved).
-- **Download as PDF** button using the existing `generateReceiptPdf` pattern (new helper `generatePermitChecklistPdf.ts`).
-- Small inline verify note at the bottom of results, not a banner.
+Reuse the existing `permit_progress` table for the lightweight checked/owned map (already wired into `ResultsDashboard`). The new tables layer real permit data + documents on top.
 
-New components (kept small, in `src/components/tools/permit-path/`):
-- `ResultsDashboard.tsx`
-- `CategorySection.tsx`
-- `RequirementCard.tsx`
-- `ProgressSummary.tsx`
-- `LawAlertBanner.tsx`
-- `usePermitChecklist.ts` (localStorage hook)
+## 2. Storage
 
-## 3. Engine upgrade (`supabase/functions/ai-license-finder/index.ts`)
+- Private bucket **`permit-documents`** (not public).
+- RLS on `storage.objects`: a user can `SELECT/INSERT/UPDATE/DELETE` only when the object path starts with their `auth.uid()/...`.
+- Path convention: `{user_id}/{roadmap_id}/{item_key}/{uuid}-{filename}`.
+- Files served via short-lived signed URLs for view/download (no public links).
 
-- Replace system + user prompts with the PermitPath spec from the brief: forbids invented fees/links, mandates official-source grounding, separates state vs city/county, bakes in the known recent changes (TX HB 2844 / SB 1008, FDA 2022 Food Code, cottage food shifts in FL/MI/ND/MN) with "verify still current" caveats.
-- Expand Firecrawl `gatherSources` queries to also hit: state DSHS / health dept, city clerk, county environmental health, fire marshal, cottage-food law pages, and recent-news queries filtered to the last 12 months.
-- Switch JSON schema to the new shape the dashboard consumes:
-  ```
-  { location, recent_law_alert, estimated_total_cost{low,high},
-    estimated_setup_weeks{low,high},
-    categories:[{ name, items:[{ title, issuer, level, cost_estimate,
-      timeline_estimate, official_url, why_it_matters, commonly_missed }]}],
-    sources:[…], verify_note }
-  ```
-- Keep model `google/gemini-3-pro-preview`, keep 429/402 handling, keep source backfill.
-- Update the client fetch in `PermitPath.tsx` to consume the new schema (with a small adapter so an in-flight old-shape response degrades gracefully).
+## 3. Auth gating + roadmap preservation
 
-## Files touched
+- "Save to my dashboard" on PermitPath results:
+  - Signed in → upsert into `saved_permit_roadmaps` (with full `result_payload`), toast "Saved" + "View in dashboard" link.
+  - Signed out → stash the current `result` into `sessionStorage` under `permitpath:pendingSave`, then `navigate('/auth?redirect=/tools/permitpath?resumeSave=1')`.
+- After auth, `PermitPath` checks `?resumeSave=1`, pulls the stashed payload, runs the save, clears the key, and redirects to `/dashboard?view=host&tab=permits&roadmap={id}`.
+- `/dashboard?tab=permits` and the detail view require auth; unauthenticated visits redirect to `/auth?redirect=...` and return after sign-in (same pattern already used elsewhere).
 
-- `src/pages/tools/PermitPath.tsx` — rewrite UI shell + wire dashboard
-- `src/components/tools/permit-path/*` — new (5 components + 1 hook)
-- `src/lib/generatePermitChecklistPdf.ts` — new
-- `supabase/functions/ai-license-finder/index.ts` — new prompt + JSON schema + expanded queries
+## 4. Dashboard Permits surface (mirrors PermitPath visuals)
 
-## Out of scope (flag for follow-up)
+New tab in the existing `DashboardLayout` (added to both Host and Shopper variants), routed via `?tab=permits`.
 
-- Account-level checklist persistence table + RLS (only if you want cross-device save). Local progress works without it.
-- Email/share the checklist.
+- **List view** (`PermitsList.tsx`):
+  - Header: "Permits & Licenses" + "Start a new permit search" → `/tools/permitpath`.
+  - "Renewals coming up" strip across the top — collects items from any roadmap with `expires_on` ≤ 60 days (silver/grey card, single subtle warning chip; no loud red).
+  - Grid of saved roadmap cards: location, business type, mini compliance ring, `X / N complete`, last updated, "Renewals due" badge if any.
+
+- **Detail view** (`PermitsDetail.tsx`):
+  - Reuses `ResultsDashboard` as the base for header, stat tiles, big compliance ring, category grouping, sticky sidebar, premium silver/grey palette — orange reserved for the ring + primary CTA only.
+  - Each requirement card is an enhanced `RoadmapItem` (`ManagedPermitItem.tsx`) with the existing expand/collapse, plus a "Manage" panel:
+    - Status select (5 states), permit number, issuing agency (prefilled), issue date, expiration date, notes.
+    - Saves to `permit_items` with 600ms debounce; status changes animate the card border (still on-palette).
+    - Expiration chip: silver by default, warm-grey "Renews in 23d" ≤ 60d, restrained amber "Expired" past due.
+  - **Document area** per card (`PermitDocumentUploader.tsx`):
+    - Drag-and-drop + file picker (PDF + images, ≤ 10 MB).
+    - Uploaded files render as chips with filename + date + view (signed URL, opens in new tab) + download + delete.
+    - Empty state: "No document uploaded yet — add your permit copy here."
+    - Allows multiple files per item.
+
+## 5. PermitPath results page changes
+
+- Replace the inline `SignInToSavePrompt` save action with a single "Save to my dashboard" button (primary orange) in the header action row.
+- After save, swap the button for a quiet "Saved · View in dashboard →" link.
+- The existing per-item check/own behavior continues syncing through `permit_progress` so progress survives even without an explicit save.
+
+## 6. Files
+
+**Migration**
+- `supabase/migrations/<ts>_permits_dashboard.sql` — three tables, RLS, storage bucket + policies, indexes, updated_at trigger.
+
+**New components**
+- `src/pages/PermitsDetail.tsx` (route or nested via dashboard tab)
+- `src/components/dashboard/PermitsTab.tsx` (list + entry)
+- `src/components/dashboard/permits/PermitRoadmapCard.tsx`
+- `src/components/dashboard/permits/RenewalsStrip.tsx`
+- `src/components/dashboard/permits/ManagedPermitItem.tsx`
+- `src/components/dashboard/permits/PermitDocumentUploader.tsx`
+- `src/lib/permitsApi.ts` (CRUD helpers + signed-URL fetcher)
+
+**Edits**
+- `src/components/tools/permit-path/ResultsDashboard.tsx` — add `onSaveToDashboard` + saved-state UI; preserve roadmap to sessionStorage on signed-out save.
+- `src/pages/tools/PermitPath.tsx` — resume save after auth, navigate to dashboard on success.
+- `src/components/dashboard/HostDashboard.tsx` + `ShopperDashboard.tsx` — add "Permits" tab.
+- `src/App.tsx` — only if a dedicated `/dashboard/permits/:id` route is preferred over `?tab=permits&roadmap=`; default is the tab approach (no new route needed).
+
+## 7. Out of scope (callouts)
+
+- No email/SMS renewal reminders are wired in this pass — the UI surfaces upcoming renewals; sending notifications can be a follow-up using the existing `notifications` infra.
+- Document OCR / auto-extraction is not included.
+- Sharing a saved roadmap with another user is not included.
+
+## 8. Open questions
+
+- Confirm the **dashboard tab** approach (Permits as a tab inside the existing dashboard) vs. a dedicated `/dashboard/permits` route. Plan defaults to a tab so it slots into the current `?tab=` pattern.
+- Confirm **file limits**: 10 MB per file, up to 5 files per requirement, PDF + JPG + PNG + HEIC. Adjust before build if you want different limits.
