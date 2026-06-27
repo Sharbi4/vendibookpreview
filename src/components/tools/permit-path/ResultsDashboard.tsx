@@ -830,6 +830,7 @@ function RoadmapItem({ node, expanded, onToggleExpand, onToggleDone, onCalendar,
                     </Link>
                   )}
                 </div>
+                {extra}
               </div>
             </motion.div>
           )}
