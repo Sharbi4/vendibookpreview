@@ -313,3 +313,78 @@ export function takePendingSave(): DashboardResult | null {
     return null;
   }
 }
+
+// ---------------- Item keys / refresh ----------------
+
+/** Mirror of how ResultsDashboard / buildRoadmap derive each requirement's stable id. */
+export function extractItemKeys(result: DashboardResult): string[] {
+  const out: string[] = [];
+  for (const c of result.categories || []) {
+    for (const it of c.items || []) {
+      out.push(`${c.name}::${it.title}`);
+    }
+  }
+  return out;
+}
+
+/**
+ * Re-run produced new requirements for an existing saved roadmap.
+ * - Swaps in the new payload.
+ * - Archives items whose item_key disappears (progress + uploads preserved, hidden from %).
+ * - Un-archives items that reappear (e.g. a permit briefly removed then added back).
+ */
+export async function refreshRoadmap(
+  roadmapId: string,
+  newResult: DashboardResult,
+): Promise<SavedRoadmap> {
+  const newKeys = extractItemKeys(newResult);
+  const { data, error } = await sb.rpc('refresh_permit_roadmap', {
+    p_roadmap_id: roadmapId,
+    p_new_payload: newResult as any,
+    p_new_item_keys: newKeys,
+  });
+  if (error) throw error;
+  return data as SavedRoadmap;
+}
+
+// ---------------- Per-field merge (cross-device LWW per field) ----------------
+
+const ITEM_FIELDS = [
+  'status',
+  'permit_number',
+  'issuing_agency',
+  'notes',
+  'issue_date',
+  'expires_on',
+] as const;
+type ItemField = (typeof ITEM_FIELDS)[number];
+
+/**
+ * Merge an item edit using per-field timestamps so two devices editing the same
+ * roadmap don't clobber each other — each field independently keeps the most
+ * recent client write.
+ */
+export async function mergeItemFields(
+  roadmapId: string,
+  itemKey: string,
+  patch: Partial<Record<ItemField, string | null>>,
+): Promise<PermitItem> {
+  const ts = new Date().toISOString();
+  const cleanPatch: Record<string, any> = {};
+  const fieldTs: Record<string, string> = {};
+  for (const f of ITEM_FIELDS) {
+    if (Object.prototype.hasOwnProperty.call(patch, f)) {
+      cleanPatch[f] = patch[f] ?? null;
+      fieldTs[f] = ts;
+    }
+  }
+  const { data, error } = await sb.rpc('merge_permit_item', {
+    p_roadmap_id: roadmapId,
+    p_item_key: itemKey,
+    p_patch: cleanPatch,
+    p_field_ts: fieldTs,
+  });
+  if (error) throw error;
+  return data as PermitItem;
+}
+
