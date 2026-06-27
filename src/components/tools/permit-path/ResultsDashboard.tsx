@@ -124,12 +124,17 @@ export default function ResultsDashboard({ result, readOnly = false }: Props) {
       try {
         const { data } = await (supabase as any)
           .from('permit_progress')
-          .select('completed')
+          .select('completed, owned')
           .eq('user_id', user.id)
           .eq('roadmap_key', storageKey)
           .maybeSingle();
-        if (!cancelled && data?.completed && typeof data.completed === 'object') {
-          setCompleted(data.completed as Record<string, boolean>);
+        if (!cancelled && data) {
+          if (data.completed && typeof data.completed === 'object') {
+            setCompleted(data.completed as Record<string, boolean>);
+          }
+          if (data.owned && typeof data.owned === 'object') {
+            setOwned(data.owned as Record<string, { expires?: string }>);
+          }
         }
       } catch { /* table may not exist yet */ }
       if (!cancelled) setLoadedRemote(true);
@@ -151,11 +156,12 @@ export default function ResultsDashboard({ result, readOnly = false }: Props) {
           city: result.location.city || null,
           business_type: result.businessType || result.location.business_type || null,
           completed,
+          owned,
         }, { onConflict: 'user_id,roadmap_key' })
         .then(() => { /* silent */ }, () => { /* silent */ });
     }, 600);
     return () => clearTimeout(t);
-  }, [completed, storageKey, user, readOnly, loadedRemote, result]);
+  }, [completed, owned, storageKey, user, readOnly, loadedRemote, result]);
 
   const roadmap = useMemo(() => buildRoadmap(result, completed), [result, completed]);
   const isComplete = roadmap.total > 0 && roadmap.done === roadmap.total;

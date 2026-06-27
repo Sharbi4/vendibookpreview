@@ -2575,6 +2575,7 @@ export type Database = {
           completed: Json
           created_at: string
           id: string
+          owned: Json
           roadmap_key: string
           state_code: string
           updated_at: string
@@ -2586,6 +2587,7 @@ export type Database = {
           completed?: Json
           created_at?: string
           id?: string
+          owned?: Json
           roadmap_key: string
           state_code: string
           updated_at?: string
@@ -2597,6 +2599,7 @@ export type Database = {
           completed?: Json
           created_at?: string
           id?: string
+          owned?: Json
           roadmap_key?: string
           state_code?: string
           updated_at?: string
