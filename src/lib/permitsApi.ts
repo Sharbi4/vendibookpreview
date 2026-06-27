@@ -296,6 +296,7 @@ export async function listDocuments(roadmapId: string): Promise<PermitDocument[]
     .from('permit_documents')
     .select('*')
     .eq('roadmap_id', roadmapId)
+    .is('deleted_at', null)
     .order('uploaded_at', { ascending: false });
   if (error) throw error;
   return (data || []) as PermitDocument[];
