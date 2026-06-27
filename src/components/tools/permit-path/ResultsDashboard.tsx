@@ -373,40 +373,45 @@ export default function ResultsDashboard({ result, readOnly = false }: Props) {
         ))}
       </div>
 
-      {/* Sequenced roadmap, grouped by category in order */}
-      <div className="space-y-3">
+      {/* Categories — ordered by operating priority */}
+      <div className="space-y-6">
         {grouped.map((cat, idx) => {
           const catDone = cat.nodes.filter((n) => n.done).length;
-          const catActionable = cat.nodes.filter((n) => n.status !== 'locked').length;
-          const allMarked = catActionable > 0 && cat.nodes.filter((n) => n.status !== 'locked').every((n) => n.done);
+          const catTotal = cat.nodes.length;
+          const allMarked = catTotal > 0 && cat.nodes.every((n) => n.done);
           return (
-            <motion.div
+            <motion.section
               key={`${cat.name}-${idx}`}
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: idx * 0.03 }}
-              className="rounded-2xl border border-white/10 bg-[#0d0d10] overflow-hidden"
+              className="rounded-2xl border border-white/15 bg-[#101013] overflow-hidden shadow-[0_8px_24px_-12px_rgba(0,0,0,0.6)]"
             >
-              <div className="flex items-center gap-3 p-4 sm:p-5 border-b border-white/5">
+              {/* Sticky category header — anchor as you scroll */}
+              <div className="sticky top-[88px] z-10 flex items-center gap-3 px-4 sm:px-5 py-3.5 bg-[#101013]/95 backdrop-blur-md border-b border-white/15">
                 {(() => {
                   const cv = categoryVisual(cat.name);
                   return <PremiumIcon icon={cv.icon} accent={cv.accent} size="sm" hover="lift" />;
                 })()}
                 <div className="flex-1 min-w-0">
-                  <div className="font-semibold text-white">{cat.name}</div>
-                  <div className="text-xs text-white/50">{catDone} of {cat.nodes.length} complete</div>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h3 className="font-bold text-white text-base">{cat.name}</h3>
+                    <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-white/10 border border-white/15 text-white/85">
+                      {catDone}/{catTotal}
+                    </span>
+                  </div>
                 </div>
-                {!readOnly && catActionable > 0 && (
+                {!readOnly && catTotal > 0 && (
                   <button
                     onClick={() => markAllInCategory(cat.name)}
-                    className="text-xs text-white/60 hover:text-white px-2.5 py-1 rounded-md hover:bg-white/5"
+                    className="text-xs font-medium text-white/75 hover:text-white px-2.5 py-1 rounded-md border border-white/10 hover:border-white/25 hover:bg-white/5"
                   >
                     {allMarked ? 'Uncheck all' : 'Mark all'}
                   </button>
                 )}
               </div>
 
-              <div className="px-4 sm:px-5 py-3 space-y-2">
+              <div className="px-3 sm:px-4 py-4 space-y-3">
                 {cat.nodes.map((node) => (
                   <RoadmapItem
                     key={node.id}
@@ -420,7 +425,7 @@ export default function ResultsDashboard({ result, readOnly = false }: Props) {
                   />
                 ))}
               </div>
-            </motion.div>
+            </motion.section>
           );
         })}
       </div>
