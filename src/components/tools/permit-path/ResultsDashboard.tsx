@@ -659,7 +659,7 @@ function RoadmapItem({ node, expanded, onToggleExpand, onToggleDone, onCalendar,
                   </div>
                 )}
 
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-2 items-center">
                   {node.official_url && (
                     <a
                       href={node.official_url}
@@ -669,6 +669,32 @@ function RoadmapItem({ node, expanded, onToggleExpand, onToggleDone, onCalendar,
                     >
                       Apply on official site <ExternalLink className="h-3.5 w-3.5" />
                     </a>
+                  )}
+                  {!readOnly && (
+                    <button
+                      onClick={onToggleOwned}
+                      className={cn(
+                        'inline-flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-lg border transition-colors',
+                        owned
+                          ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-200 hover:bg-emerald-500/20'
+                          : 'bg-white/5 hover:bg-white/10 border-white/15 text-white/85',
+                      )}
+                    >
+                      <BadgeCheck className="h-3.5 w-3.5" />
+                      {owned ? "I have this — clear" : "I already have this"}
+                    </button>
+                  )}
+                  {!readOnly && owned && (
+                    <label className="inline-flex items-center gap-2 text-xs text-white/70 bg-white/[0.04] border border-white/15 rounded-lg px-2.5 py-1.5">
+                      <CalendarClock className="h-3.5 w-3.5 text-white/55" />
+                      <span>Expires</span>
+                      <input
+                        type="date"
+                        value={expiresOn || ''}
+                        onChange={(e) => onSetExpires(e.target.value)}
+                        className="bg-transparent text-white text-xs outline-none [color-scheme:dark] min-w-[130px]"
+                      />
+                    </label>
                   )}
                   {!readOnly && (
                     <button
