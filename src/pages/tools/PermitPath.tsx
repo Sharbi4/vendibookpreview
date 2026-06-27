@@ -14,7 +14,16 @@ import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbP
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { saveRoadmap, stashPendingSave, takePendingSave } from '@/lib/permitsApi';
+import {
+  saveRoadmap,
+  refreshRoadmap,
+  findSimilarRoadmaps,
+  stashPendingSave,
+  takePendingSave,
+  type SavedRoadmap,
+} from '@/lib/permitsApi';
+import SaveRoadmapDialog from '@/components/tools/permit-path/SaveRoadmapDialog';
+
 import { toast as sonnerToast } from 'sonner';
 import { cn } from '@/lib/utils';
 import {
