@@ -697,6 +697,32 @@ ${sourceContext}`;
         if (!Array.isArray(result.insights) || result.insights.length === 0) result.insights = bl.insights;
       }
     }
+    // Normalize requirement_status across every item — err toward caution.
+    // If the model omitted it, treat it as "required – verify" rather than optional.
+    if (Array.isArray(result.categories)) {
+      for (const cat of result.categories) {
+        if (!Array.isArray(cat.items)) continue;
+        for (const it of cat.items) {
+          const raw = typeof it.requirement_status === 'string' ? it.requirement_status.toLowerCase().trim() : '';
+          if (raw === 'required' || raw === 'conditional' || raw === 'optional') {
+            it.requirement_status = raw;
+          } else {
+            it.requirement_status = 'required';
+            if (typeof it.title === 'string' && !/verify with/i.test(it.title)) {
+              it.title = it.title + ' – verify with issuing agency';
+            }
+          }
+          if (it.requirement_status !== 'conditional') {
+            // Strip stray trigger on non-conditional items
+            if (typeof it.requirement_trigger !== 'string' || !it.requirement_trigger.trim()) {
+              delete it.requirement_trigger;
+            }
+          } else if (typeof it.requirement_trigger !== 'string' || !it.requirement_trigger.trim()) {
+            it.requirement_trigger = 'Only if it applies to your operation — verify with issuing agency';
+          }
+        }
+      }
+    }
     result.lastUpdated = today;
 
     return new Response(JSON.stringify({ result }), {
