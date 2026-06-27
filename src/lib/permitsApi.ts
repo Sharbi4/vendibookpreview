@@ -20,6 +20,7 @@ export interface SavedRoadmap {
   label: string | null;
   result_payload: DashboardResult;
   refreshed_at: string | null;
+  deleted_at: string | null;
   created_at: string;
   updated_at: string;
 }
