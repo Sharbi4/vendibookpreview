@@ -1,5 +1,6 @@
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { Calendar, CheckCircle2, Clock, XCircle, Loader2, Search, Heart, MessageSquare } from 'lucide-react';
+import PermitsTab from './PermitsTab';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import ShopperBookingCard from './ShopperBookingCard';
