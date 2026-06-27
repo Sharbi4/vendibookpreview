@@ -256,28 +256,28 @@ export default function ResultsDashboard({ result, readOnly = false }: Props) {
 
   return (
     <div className="mt-8 space-y-8">
-      {/* Sticky summary bar — high contrast */}
+      {/* Sticky summary bar — compact, high contrast */}
       <div className="sticky top-16 z-20 -mx-2 sm:mx-0">
-        <div className="rounded-2xl border border-white/20 bg-[#0a0a0d]/95 backdrop-blur-xl p-4 sm:p-5 shadow-[0_20px_60px_-20px_rgba(0,0,0,0.8)]">
-          <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-            <div className="flex items-center gap-3 flex-1 min-w-0">
-              <div className="h-11 w-11 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center shrink-0">
-                <MapPin className="h-5 w-5 text-white" />
+        <div className="rounded-2xl border border-white/20 bg-[#0a0a0d]/95 backdrop-blur-xl px-4 sm:px-5 py-3 shadow-[0_20px_60px_-20px_rgba(0,0,0,0.8)]">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-3">
+            <div className="flex items-center gap-3 min-w-0 flex-1">
+              <div className="h-10 w-10 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center shrink-0">
+                <MapPin className="h-4 w-4 text-white" />
               </div>
-              <div className="min-w-0">
-                <div className="text-[11px] text-white/70 uppercase tracking-wider font-medium">
+              <div className="min-w-0 leading-tight">
+                <div className="text-[10px] text-white/70 uppercase tracking-wider font-medium truncate">
                   {user && !readOnly ? 'Welcome back — your roadmap' : 'Your roadmap'}
                 </div>
-                <div className="font-bold text-white text-lg leading-tight break-words">
+                <div className="font-bold text-white text-[15px] sm:text-base truncate">
                   {locationLabel}
                 </div>
                 {result.businessType && (
-                  <div className="text-xs text-white/65 mt-0.5">{result.businessType}</div>
+                  <div className="text-[11px] text-white/65 truncate">{result.businessType}</div>
                 )}
               </div>
             </div>
-            <ProgressRing pct={roadmap.pct} />
-            <div className="flex flex-wrap gap-2">
+            <ProgressRing pct={roadmap.pct} done={roadmap.done} total={roadmap.total} />
+            <div className="flex flex-wrap gap-1.5">
               <StatChip icon={Check} label="Done" value={`${roadmap.done}/${roadmap.total}`} />
               <StatChip icon={DollarSign} label="Cost left" value={remainingCost} />
               <StatChip icon={Clock} label="Time" value={remainingWeeks} />
@@ -300,7 +300,7 @@ export default function ResultsDashboard({ result, readOnly = false }: Props) {
           </div>
 
           {!user && !readOnly && (
-            <div className="mt-4 flex flex-col sm:flex-row items-start sm:items-center gap-2 text-xs">
+            <div className="mt-2.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
               <span className="text-white/70">Save your progress and pick up where you left off:</span>
               <Link to="/auth?redirect=/tools/permitpath" className="text-white hover:underline font-medium inline-flex items-center gap-1">
                 Save to my account <ArrowRight className="h-3 w-3" />
@@ -388,7 +388,7 @@ export default function ResultsDashboard({ result, readOnly = false }: Props) {
               className="rounded-2xl border border-white/15 bg-[#101013] overflow-hidden shadow-[0_8px_24px_-12px_rgba(0,0,0,0.6)]"
             >
               {/* Sticky category header — anchor as you scroll */}
-              <div className="sticky top-[88px] z-10 flex items-center gap-3 px-4 sm:px-5 py-3.5 bg-[#101013]/95 backdrop-blur-md border-b border-white/15">
+              <div className="flex items-center gap-3 px-4 sm:px-5 py-3.5 bg-[#101013] border-b border-white/15">
                 {(() => {
                   const cv = categoryVisual(cat.name);
                   return <PremiumIcon icon={cv.icon} accent={cv.accent} size="sm" hover="lift" />;
@@ -459,27 +459,36 @@ export default function ResultsDashboard({ result, readOnly = false }: Props) {
 }
 
 // ---------- ProgressRing ----------
-function ProgressRing({ pct }: { pct: number }) {
-  const r = 16;
+function ProgressRing({ pct, done, total }: { pct: number; done: number; total: number }) {
+  const r = 20;
   const c = 2 * Math.PI * r;
   const offset = c - (pct / 100) * c;
+  const isComplete = total > 0 && done === total;
+  const label = isComplete ? 'Done' : 'Complete';
   return (
-    <div className="relative h-12 w-12 shrink-0">
-      <svg className="h-12 w-12 -rotate-90" viewBox="0 0 40 40">
-        <circle cx="20" cy="20" r={r} stroke="rgba(255,255,255,0.08)" strokeWidth="3.5" fill="none" />
-        <motion.circle
-          cx="20" cy="20" r={r}
-          stroke="#FF5124"
-          strokeWidth="3.5"
-          strokeLinecap="round"
-          fill="none"
-          strokeDasharray={c}
-          animate={{ strokeDashoffset: offset }}
-          transition={{ duration: 0.6, ease: 'easeOut' }}
-        />
-      </svg>
-      <div className="absolute inset-0 flex items-center justify-center text-[11px] font-semibold text-white">
-        {pct}%
+    <div className="flex items-center gap-2 shrink-0" aria-label={`${pct}% complete, ${done} of ${total}`}>
+      <div className="relative h-14 w-14">
+        <svg className="h-14 w-14 -rotate-90" viewBox="0 0 48 48">
+          <circle cx="24" cy="24" r={r} stroke="rgba(255,255,255,0.08)" strokeWidth="4" fill="none" />
+          <motion.circle
+            cx="24" cy="24" r={r}
+            stroke="#FF5124"
+            strokeWidth="4"
+            strokeLinecap="round"
+            fill="none"
+            strokeDasharray={c}
+            animate={{ strokeDashoffset: offset }}
+            transition={{ duration: 0.6, ease: 'easeOut' }}
+          />
+        </svg>
+        <div className="absolute inset-0 flex flex-col items-center justify-center leading-none">
+          <span className="text-[12px] font-bold text-white">{pct}%</span>
+          <span className="text-[8px] uppercase tracking-wider text-white/55 font-semibold mt-0.5">{label}</span>
+        </div>
+      </div>
+      <div className="hidden md:flex flex-col leading-tight">
+        <span className="text-[10px] uppercase tracking-wider text-white/55 font-medium">Progress</span>
+        <span className="text-sm font-semibold text-white">{done} of {total}</span>
       </div>
     </div>
   );
