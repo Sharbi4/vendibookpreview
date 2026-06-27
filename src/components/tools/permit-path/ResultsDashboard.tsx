@@ -2,7 +2,7 @@ import { useMemo, useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ExternalLink, CheckCircle2, Circle, ChevronDown,
-  Download, DollarSign, Clock, Sparkles, X, Mail,
+  Download, DollarSign, Clock, Sparkles, X, Mail, BadgeCheck, CalendarClock,
   Share2, CalendarPlus, Lightbulb, Building2, Filter, Check, ArrowRight,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -80,6 +80,7 @@ export default function ResultsDashboard({ result, readOnly = false }: Props) {
   );
 
   const [completed, setCompleted] = useState<Record<string, boolean>>({});
+  const [owned, setOwned] = useState<Record<string, { expires?: string }>>({});
   const [alertDismissed, setAlertDismissed] = useState(false);
   const [filter, setFilter] = useState<Filter>('all');
   const [loadedRemote, setLoadedRemote] = useState(false);
@@ -90,8 +91,30 @@ export default function ResultsDashboard({ result, readOnly = false }: Props) {
     try {
       const raw = localStorage.getItem(storageKey);
       if (raw) setCompleted(JSON.parse(raw));
+      const rawOwn = localStorage.getItem(`${storageKey}::owned`);
+      if (rawOwn) setOwned(JSON.parse(rawOwn));
     } catch { /* ignore */ }
   }, [storageKey]);
+
+  // Persist owned to localStorage only (no schema change needed)
+  useEffect(() => {
+    try { localStorage.setItem(`${storageKey}::owned`, JSON.stringify(owned)); } catch { /* ignore */ }
+  }, [owned, storageKey]);
+
+  const toggleOwned = useCallback((id: string) => {
+    setOwned((p) => {
+      const next = { ...p };
+      if (next[id]) delete next[id];
+      else next[id] = {};
+      return next;
+    });
+    // marking "I have it" also counts as done
+    setCompleted((prev) => ({ ...prev, [id]: !owned[id] ? true : prev[id] }));
+  }, [owned]);
+
+  const setOwnedExpiration = useCallback((id: string, expires: string) => {
+    setOwned((p) => ({ ...p, [id]: { ...(p[id] || {}), expires: expires || undefined } }));
+  }, []);
 
   // 2) remote load (signed-in users override local with remote)
   useEffect(() => {
@@ -417,6 +440,10 @@ export default function ResultsDashboard({ result, readOnly = false }: Props) {
                     onCalendar={() => handleCalendarReminder(node)}
                     readOnly={readOnly}
                     state={result.location.state}
+                    owned={!!owned[node.id]}
+                    expiresOn={owned[node.id]?.expires}
+                    onToggleOwned={() => toggleOwned(node.id)}
+                    onSetExpires={(d) => setOwnedExpiration(node.id, d)}
                   />
                 ))}
               </div>
@@ -498,9 +525,13 @@ interface ItemProps {
   onCalendar: () => void;
   readOnly: boolean;
   state: string;
+  owned: boolean;
+  expiresOn?: string;
+  onToggleOwned: () => void;
+  onSetExpires: (date: string) => void;
 }
 
-function RoadmapItem({ node, expanded, onToggleExpand, onToggleDone, onCalendar, readOnly, state }: ItemProps) {
+function RoadmapItem({ node, expanded, onToggleExpand, onToggleDone, onCalendar, readOnly, state, owned, expiresOn, onToggleOwned, onSetExpires }: ItemProps) {
   const isNext = node.status === 'next';
   const isDone = node.status === 'done';
   // "locked" no longer hides info — it's a soft sequence hint.
@@ -509,14 +540,27 @@ function RoadmapItem({ node, expanded, onToggleExpand, onToggleDone, onCalendar,
   // Commissary action: deep-link to kitchen search
   const showCommissaryAction = node.key === 'commissary' && !isDone && !readOnly;
 
+  // Expiration status
+  const expiryInfo = (() => {
+    if (!owned || !expiresOn) return null;
+    const d = new Date(expiresOn);
+    if (isNaN(d.getTime())) return null;
+    const days = Math.ceil((d.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+    const fmt = d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+    if (days < 0) return { label: `Expired ${fmt}`, tone: 'red' as const };
+    if (days <= 30) return { label: `Expires ${fmt} (${days}d)`, tone: 'amber' as const };
+    return { label: `Valid through ${fmt}`, tone: 'emerald' as const };
+  })();
+
   return (
     <motion.div
       layout
       className={cn(
         'rounded-xl border-[1.5px] transition-all',
-        isDone && 'border-white/20 bg-white/[0.05]',
-        isNext && 'border-[#FF5124]/60 bg-[#FF5124]/[0.06] shadow-[0_0_0_1px_rgba(255,81,36,0.35),0_8px_24px_-12px_rgba(255,81,36,0.4)]',
-        !isDone && !isNext && 'border-white/[0.14] bg-[#16161a] hover:border-white/30 hover:bg-[#1a1a1f]',
+        owned && 'border-emerald-500/40 bg-emerald-500/[0.05]',
+        !owned && isDone && 'border-white/20 bg-white/[0.05]',
+        !owned && isNext && 'border-[#FF5124]/60 bg-[#FF5124]/[0.06] shadow-[0_0_0_1px_rgba(255,81,36,0.35),0_8px_24px_-12px_rgba(255,81,36,0.4)]',
+        !owned && !isDone && !isNext && 'border-white/[0.14] bg-[#16161a] hover:border-white/30 hover:bg-[#1a1a1f]',
       )}
     >
       <div className="p-5">
@@ -557,9 +601,24 @@ function RoadmapItem({ node, expanded, onToggleExpand, onToggleDone, onCalendar,
                   {node.level}
                 </Badge>
               )}
-              {node.commonly_missed && !isDone && (
+              {node.commonly_missed && !isDone && !owned && (
                 <Badge variant="outline" className="text-[10px] uppercase tracking-wider bg-amber-500/10 text-amber-300 border-amber-500/30">
                   Often missed
+                </Badge>
+              )}
+              {owned && (
+                <Badge variant="outline" className="text-[10px] uppercase tracking-wider bg-emerald-500/15 text-emerald-300 border-emerald-500/40 inline-flex items-center gap-1">
+                  <BadgeCheck className="h-3 w-3" /> I have this
+                </Badge>
+              )}
+              {expiryInfo && (
+                <Badge variant="outline" className={cn(
+                  'text-[10px] uppercase tracking-wider inline-flex items-center gap-1',
+                  expiryInfo.tone === 'red' && 'bg-red-500/15 text-red-300 border-red-500/40',
+                  expiryInfo.tone === 'amber' && 'bg-amber-500/15 text-amber-300 border-amber-500/40',
+                  expiryInfo.tone === 'emerald' && 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30',
+                )}>
+                  <CalendarClock className="h-3 w-3" /> {expiryInfo.label}
                 </Badge>
               )}
             </div>
@@ -600,7 +659,7 @@ function RoadmapItem({ node, expanded, onToggleExpand, onToggleDone, onCalendar,
                   </div>
                 )}
 
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-2 items-center">
                   {node.official_url && (
                     <a
                       href={node.official_url}
@@ -610,6 +669,32 @@ function RoadmapItem({ node, expanded, onToggleExpand, onToggleDone, onCalendar,
                     >
                       Apply on official site <ExternalLink className="h-3.5 w-3.5" />
                     </a>
+                  )}
+                  {!readOnly && (
+                    <button
+                      onClick={onToggleOwned}
+                      className={cn(
+                        'inline-flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-lg border transition-colors',
+                        owned
+                          ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-200 hover:bg-emerald-500/20'
+                          : 'bg-white/5 hover:bg-white/10 border-white/15 text-white/85',
+                      )}
+                    >
+                      <BadgeCheck className="h-3.5 w-3.5" />
+                      {owned ? "I have this — clear" : "I already have this"}
+                    </button>
+                  )}
+                  {!readOnly && owned && (
+                    <label className="inline-flex items-center gap-2 text-xs text-white/70 bg-white/[0.04] border border-white/15 rounded-lg px-2.5 py-1.5">
+                      <CalendarClock className="h-3.5 w-3.5 text-white/55" />
+                      <span>Expires</span>
+                      <input
+                        type="date"
+                        value={expiresOn || ''}
+                        onChange={(e) => onSetExpires(e.target.value)}
+                        className="bg-transparent text-white text-xs outline-none [color-scheme:dark] min-w-[130px]"
+                      />
+                    </label>
                   )}
                   {!readOnly && (
                     <button
