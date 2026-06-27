@@ -632,3 +632,16 @@ function RoadmapItem({ node, expanded, onToggleExpand, onToggleDone, onCalendar,
     </motion.div>
   );
 }
+
+// ---------- StatChip ----------
+function StatChip({ icon: Icon, label, value }: { icon: any; label: string; value: string }) {
+  return (
+    <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white/[0.06] border border-white/15">
+      <Icon className="h-4 w-4 text-white/75 shrink-0" />
+      <div className="flex flex-col leading-tight">
+        <span className="text-[10px] uppercase tracking-wider text-white/55 font-medium">{label}</span>
+        <span className="text-sm font-semibold text-white">{value}</span>
+      </div>
+    </div>
+  );
+}
