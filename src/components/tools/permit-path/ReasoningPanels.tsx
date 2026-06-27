@@ -23,7 +23,7 @@ export default function ReasoningPanels({ critical_path, risks, insights }: Prop
   if (!hasCP && !hasRisks && !hasInsights) return null;
 
   return (
-    <div className="grid gap-3 md:grid-cols-3">
+    <div className="grid gap-3 md:grid-cols-3 items-stretch">
       {hasCP && (
         <motion.div
           initial={{ opacity: 0, y: 12 }}
