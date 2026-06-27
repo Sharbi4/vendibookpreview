@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { z } from 'zod';
@@ -13,6 +13,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@/components/ui/breadcrumb';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+import { saveRoadmap, stashPendingSave, takePendingSave } from '@/lib/permitsApi';
+import { toast as sonnerToast } from 'sonner';
 import { cn } from '@/lib/utils';
 import {
   FileCheck, Loader2, Home, ShieldCheck, Clock, ArrowRight, Coins, AlertCircle,
