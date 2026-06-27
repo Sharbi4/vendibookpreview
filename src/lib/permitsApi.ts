@@ -271,13 +271,9 @@ export async function uploadDocument(
   itemKey: string,
   file: File,
 ): Promise<PermitDocument> {
-  if (file.size > PERMIT_DOC_MAX_BYTES) {
-    throw new Error(`File too large (max ${Math.round(PERMIT_DOC_MAX_BYTES / 1024 / 1024)} MB).`);
-  }
-  if (file.type && !PERMIT_DOC_ALLOWED_MIME.includes(file.type)) {
-    // Allow unknown types (e.g. HEIC sometimes empty) but warn known disallowed
-    // by not rejecting silently here. Keep permissive for resilience.
-  }
+  const reason = validatePermitFile(file);
+  if (reason) throw new Error(reason);
+
   const safeName = file.name.replace(/[^a-zA-Z0-9._-]+/g, '_').slice(0, 80);
   const objectKey = `${userId}/${roadmapId}/${encodeURIComponent(itemKey)}/${crypto.randomUUID()}-${safeName}`;
 
@@ -304,17 +300,33 @@ export async function uploadDocument(
     .select('*')
     .single();
   if (error) {
-    // Best-effort cleanup
     await supabase.storage.from(PERMIT_DOC_BUCKET).remove([objectKey]).catch(() => {});
     throw error;
   }
   return data as PermitDocument;
 }
 
-export async function deleteDocument(doc: PermitDocument): Promise<void> {
-  await supabase.storage.from(PERMIT_DOC_BUCKET).remove([doc.storage_path]).catch(() => {});
-  const { error } = await sb.from('permit_documents').delete().eq('id', doc.id);
+/** Soft-delete a document (recoverable for 7 days). Storage object is kept. */
+export async function softDeleteDocument(doc: PermitDocument): Promise<void> {
+  const { error } = await sb.rpc('soft_delete_permit_document', { p_document_id: doc.id });
   if (error) throw error;
+}
+
+/** Restore a soft-deleted document within the 7-day window. */
+export async function restoreDocument(documentId: string): Promise<PermitDocument> {
+  const { data, error } = await sb.rpc('restore_permit_document', { p_document_id: documentId });
+  if (error) throw error;
+  return data as PermitDocument;
+}
+
+/** Rename a document's display file name. */
+export async function renameDocument(documentId: string, fileName: string): Promise<PermitDocument> {
+  const { data, error } = await sb.rpc('rename_permit_document', {
+    p_document_id: documentId,
+    p_file_name: fileName,
+  });
+  if (error) throw error;
+  return data as PermitDocument;
 }
 
 export async function getSignedDocUrl(storagePath: string, expiresInSec = 60 * 5): Promise<string> {
