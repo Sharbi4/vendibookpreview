@@ -833,6 +833,11 @@ function RoadmapItem({ node, expanded, onToggleExpand, onToggleDone, onCalendar,
               )}
             </div>
 
+            {node.requirement_status === 'conditional' && node.requirement_trigger && (
+              <p className="text-xs text-white/75 mb-1.5">
+                <span className="text-white/50">Required if:</span> {node.requirement_trigger}
+              </p>
+            )}
             <p className="text-sm text-white/65 mb-1.5">{node.why_it_matters}</p>
 
             <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-white/55">
