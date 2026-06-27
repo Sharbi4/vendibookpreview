@@ -113,7 +113,7 @@ function baselineChecklist(state: string, city: string, businessType: string, pr
   // Tucson/AZ-specific augmentation for food trucks
   const azTucsonFoodTruck = state === 'AZ' && businessType === 'food_truck';
 
-  const businessReg = [
+  const businessReg: any[] = [
     {
       title: "Register your business entity (LLC or DBA)",
       issuer: `${stateName} Corporation Commission / Secretary of State`,
@@ -123,6 +123,7 @@ function baselineChecklist(state: string, city: string, businessType: string, pr
       official_url: state === 'AZ' ? "https://ecorp.azcc.gov/" : "",
       why_it_matters: "Legally separates you and your business and is required before applying for most permits.",
       commonly_missed: false,
+      requirement_status: "required",
     },
     {
       title: "Apply for a Federal EIN",
@@ -133,6 +134,7 @@ function baselineChecklist(state: string, city: string, businessType: string, pr
       official_url: "https://www.irs.gov/businesses/small-businesses-self-employed/apply-for-an-employer-identification-number-ein-online",
       why_it_matters: "Required to open a business bank account, hire staff, and file taxes.",
       commonly_missed: false,
+      requirement_status: "required",
     },
     {
       title: "Register for state sales / transaction privilege tax (TPT)",
@@ -143,6 +145,7 @@ function baselineChecklist(state: string, city: string, businessType: string, pr
       official_url: state === 'AZ' ? "https://azdor.gov/business" : "",
       why_it_matters: "You must collect and remit sales tax on prepared food in nearly every jurisdiction.",
       commonly_missed: true,
+      requirement_status: "required",
     },
   ];
 
