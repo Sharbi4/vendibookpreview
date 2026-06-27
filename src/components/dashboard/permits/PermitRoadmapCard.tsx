@@ -7,6 +7,7 @@ interface Props {
   roadmap: SavedRoadmap;
   items: PermitItem[];
   totalRequirements: number;
+  requiredCount?: number;
   onOpen: () => void;
   onDelete: () => void;
 }
