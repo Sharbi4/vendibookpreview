@@ -509,13 +509,13 @@ function RoadmapItem({ node, expanded, onToggleExpand, onToggleDone, onCalendar,
     <motion.div
       layout
       className={cn(
-        'rounded-xl border transition-all',
-        isDone && 'border-white/15 bg-white/[0.04]',
-        isNext && 'border-[#FF5124]/40 bg-[#FF5124]/[0.05] shadow-[0_0_0_1px_rgba(255,81,36,0.25)]',
-        !isDone && !isNext && 'border-white/10 bg-white/[0.02] hover:border-white/20',
+        'rounded-xl border-[1.5px] transition-all',
+        isDone && 'border-white/20 bg-white/[0.05]',
+        isNext && 'border-[#FF5124]/60 bg-[#FF5124]/[0.06] shadow-[0_0_0_1px_rgba(255,81,36,0.35),0_8px_24px_-12px_rgba(255,81,36,0.4)]',
+        !isDone && !isNext && 'border-white/[0.14] bg-[#16161a] hover:border-white/30 hover:bg-[#1a1a1f]',
       )}
     >
-      <div className="p-4">
+      <div className="p-5">
         <div className="flex items-start gap-3">
           <button
             onClick={onToggleDone}
