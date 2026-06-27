@@ -288,9 +288,30 @@ export default function ResultsDashboard({ result, readOnly = false, renderItemE
     arr.push(n);
     groupedMap.set(n.category, arr);
   }
+  // Within each category, sort Required → Conditional → Optional so mandatory
+  // items always sit on top and nothing optional can hide a required item.
+  const REQ_RANK: Record<string, number> = { required: 0, conditional: 1, optional: 2 };
   const grouped: Array<{ name: string; nodes: RoadmapNode[] }> = Array.from(groupedMap.entries())
-    .map(([name, nodes]) => ({ name, nodes }))
+    .map(([name, nodes]) => ({
+      name,
+      nodes: [...nodes].sort(
+        (a, b) =>
+          (REQ_RANK[a.requirement_status] ?? 0) - (REQ_RANK[b.requirement_status] ?? 0),
+      ),
+    }))
     .sort((a, b) => catScore(a.name) - catScore(b.name));
+
+  // Required / Conditional / Optional counts across the whole roadmap.
+  const reqCounts = roadmap.nodes.reduce(
+    (acc, n) => {
+      acc[n.requirement_status] = (acc[n.requirement_status] || 0) + 1;
+      return acc;
+    },
+    { required: 0, conditional: 0, optional: 0 } as Record<RequirementStatus, number>,
+  );
+  const requiredNodes = roadmap.nodes.filter((n) => n.requirement_status === 'required');
+  const requiredDone = requiredNodes.filter((n) => n.done).length;
+  const allRequiredComplete = requiredNodes.length > 0 && requiredDone === requiredNodes.length;
 
   // Stats for top tiles
   const now = Date.now();
