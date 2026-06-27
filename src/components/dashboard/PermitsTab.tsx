@@ -19,6 +19,18 @@ function totalRequirements(r: SavedRoadmap) {
   return (r.result_payload?.categories || []).reduce((s, c) => s + (c.items?.length || 0), 0);
 }
 
+function requiredCount(r: SavedRoadmap) {
+  return (r.result_payload?.categories || []).reduce(
+    (s, c) =>
+      s +
+      (c.items || []).filter((it: any) => {
+        const rs = typeof it?.requirement_status === 'string' ? it.requirement_status : 'required';
+        return rs !== 'optional' && rs !== 'conditional';
+      }).length,
+    0,
+  );
+}
+
 export default function PermitsTab() {
   const { user } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
