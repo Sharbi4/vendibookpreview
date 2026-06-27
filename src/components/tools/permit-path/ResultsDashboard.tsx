@@ -2,7 +2,7 @@ import { useMemo, useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence, useMotionValue, useTransform, animate } from 'framer-motion';
 import {
   ExternalLink, CheckCircle2, Circle, ChevronDown,
-  Download, DollarSign, Clock, Sparkles, X, Mail, BadgeCheck, CalendarClock,
+  Download, DollarSign, Clock, TriangleAlert, Bookmark, X, Mail, BadgeCheck, CalendarClock,
   Share2, CalendarPlus, Lightbulb, Building2, Filter, Check, ArrowRight, BookmarkPlus,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -395,7 +395,7 @@ export default function ResultsDashboard({ result, readOnly = false, renderItemE
                 className="rounded-2xl border-2 border-amber-500/25 bg-amber-500/[0.06] p-4 sm:p-5 flex gap-3"
               >
                 <div className="h-9 w-9 rounded-lg bg-amber-500/15 flex items-center justify-center shrink-0">
-                  <Sparkles className="h-5 w-5 text-amber-300" />
+                  <TriangleAlert className="h-5 w-5 text-amber-300" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="font-semibold text-white mb-1">Recent law change worth knowing</div>
@@ -874,7 +874,7 @@ function SignInToSavePrompt() {
       <div className="relative flex flex-col sm:flex-row sm:items-center gap-4">
         <div className="flex items-start gap-3 flex-1 min-w-0">
           <div className="h-10 w-10 rounded-xl bg-white/[0.06] border border-white/20 flex items-center justify-center shrink-0">
-            <Sparkles className="h-5 w-5 text-white/85" />
+            <Bookmark className="h-5 w-5 text-white/85" />
           </div>
           <div className="min-w-0">
             <div className="font-bold text-white text-[15px] sm:text-base leading-tight">
