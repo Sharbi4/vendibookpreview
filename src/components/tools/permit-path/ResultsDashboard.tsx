@@ -438,6 +438,44 @@ export default function ResultsDashboard({ result, readOnly = false, renderItemE
             insights={result.insights}
           />
 
+          {/* Requirement summary — required first, then conditional, then optional */}
+          <div className="rounded-2xl border-2 border-white/15 bg-[#101013] p-4 sm:p-5">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-[11px] uppercase tracking-[0.18em] text-white/55 font-semibold">
+                Your obligations
+              </span>
+              <span className="flex-1" />
+              <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#FF5124]">
+                <span className="h-1.5 w-1.5 rounded-full bg-[#FF5124]" />
+                {reqCounts.required} required
+              </span>
+              <span className="text-white/25">·</span>
+              <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-white/85">
+                <span className="h-1.5 w-1.5 rounded-full bg-white/70" />
+                {reqCounts.conditional} conditional
+              </span>
+              <span className="text-white/25">·</span>
+              <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-white/55">
+                <span className="h-1.5 w-1.5 rounded-full bg-white/35" />
+                {reqCounts.optional} optional
+              </span>
+            </div>
+            {requiredNodes.length > 0 && (
+              <div className="mt-3 text-xs text-white/65 leading-relaxed">
+                {allRequiredComplete ? (
+                  <span className="text-[#FF5124] font-semibold">
+                    ✓ All required permits complete — you're legally clear to operate. Optional items may remain.
+                  </span>
+                ) : (
+                  <>
+                    <span className="text-white font-semibold">{requiredDone}/{requiredNodes.length}</span>{' '}
+                    required permits complete. Finish these to be legally clear to operate.
+                  </>
+                )}
+              </div>
+            )}
+          </div>
+
           {/* Filter pills */}
           <div className="flex flex-wrap items-center gap-2">
             <Filter className="h-4 w-4 text-white/40" />
@@ -467,6 +505,9 @@ export default function ResultsDashboard({ result, readOnly = false, renderItemE
               const catDone = cat.nodes.filter((n) => n.done).length;
               const catTotal = cat.nodes.length;
               const allMarked = catTotal > 0 && cat.nodes.every((n) => n.done);
+              const mandatory = cat.nodes.filter((n) => n.requirement_status !== 'optional');
+              const optionalNodes = cat.nodes.filter((n) => n.requirement_status === 'optional');
+              const catRequired = cat.nodes.filter((n) => n.requirement_status === 'required').length;
               return (
                 <motion.section
                   key={`${cat.name}-${idx}`}
@@ -486,6 +527,11 @@ export default function ResultsDashboard({ result, readOnly = false, renderItemE
                         <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-white/10 border border-white/15 text-white/85">
                           {catDone}/{catTotal}
                         </span>
+                        {catRequired > 0 && (
+                          <span className="text-[10px] uppercase tracking-wider font-semibold px-2 py-0.5 rounded-full bg-[#FF5124]/15 border border-[#FF5124]/40 text-[#FF5124]">
+                            {catRequired} required
+                          </span>
+                        )}
                       </div>
                     </div>
                     {!readOnly && catTotal > 0 && (
@@ -499,7 +545,7 @@ export default function ResultsDashboard({ result, readOnly = false, renderItemE
                   </div>
 
                   <div className="px-3 sm:px-4 py-4 space-y-3">
-                    {cat.nodes.map((node) => (
+                    {mandatory.map((node) => (
                       <RoadmapItem
                         key={node.id}
                         node={node}
@@ -516,12 +562,35 @@ export default function ResultsDashboard({ result, readOnly = false, renderItemE
                         extra={renderItemExtra ? renderItemExtra(node) : null}
                       />
                     ))}
+                    {optionalNodes.length > 0 && (
+                      <OptionalSubsection
+                        nodes={optionalNodes}
+                        renderNode={(node) => (
+                          <RoadmapItem
+                            key={node.id}
+                            node={node}
+                            expanded={!!expanded[node.id]}
+                            onToggleExpand={() => setExpanded((p) => ({ ...p, [node.id]: !p[node.id] }))}
+                            onToggleDone={() => toggle(node)}
+                            onCalendar={() => handleCalendarReminder(node)}
+                            readOnly={readOnly}
+                            state={result.location.state}
+                            owned={!!owned[node.id]}
+                            expiresOn={owned[node.id]?.expires}
+                            onToggleOwned={() => toggleOwned(node.id)}
+                            onSetExpires={(d) => setOwnedExpiration(node.id, d)}
+                            extra={renderItemExtra ? renderItemExtra(node) : null}
+                          />
+                        )}
+                      />
+                    )}
                   </div>
                 </motion.section>
               );
             })}
           </div>
         </div>
+
 
         {/* RIGHT: sticky sidebar */}
         <aside className="space-y-4 lg:sticky lg:top-20 lg:self-start">
