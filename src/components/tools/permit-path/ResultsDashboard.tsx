@@ -47,6 +47,8 @@ export interface DashboardResult {
       why_it_matters: string;
       pro_tip?: string;
       commonly_missed?: boolean;
+      requirement_status?: 'required' | 'conditional' | 'optional';
+      requirement_trigger?: string;
     }>;
   }>;
   sources?: Array<{ index: number; title: string; url: string; agency?: string }>;
