@@ -109,9 +109,11 @@ export default function PermitRoadmapCard({
           <div className="text-sm font-semibold text-white">{approved}</div>
           <div className="text-[10px] uppercase tracking-wider text-white/45">Approved</div>
         </div>
-        <div className="rounded-lg border border-white/[0.10] bg-white/[0.03] py-2">
-          <div className="text-sm font-semibold text-white">{totalRequirements}</div>
-          <div className="text-[10px] uppercase tracking-wider text-white/45">Required</div>
+        <div className="rounded-lg border border-[#FF5124]/30 bg-[#FF5124]/[0.06] py-2">
+          <div className="text-sm font-semibold text-white">
+            {requiredCount ?? totalRequirements}
+          </div>
+          <div className="text-[10px] uppercase tracking-wider text-[#FF5124]">Required</div>
         </div>
         <div
           className={
