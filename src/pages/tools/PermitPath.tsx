@@ -552,7 +552,14 @@ const PermitPath = () => {
                 {!isLoading && fetchError && (
                   <ResultsError message={fetchError} onRetry={runLookup} />
                 )}
-                {!isLoading && !fetchError && result && <ResultsDashboard result={result} readOnly={isShared} />}
+                {!isLoading && !fetchError && result && (
+                  <ResultsDashboard
+                    result={result}
+                    readOnly={isShared}
+                    onSaveToDashboard={isShared ? undefined : handleSaveToDashboard}
+                    savedRoadmapId={savedRoadmapId}
+                  />
+                )}
               </div>
             </div>
           </section>
