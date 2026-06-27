@@ -198,6 +198,7 @@ export default function PermitsTab() {
               roadmap={r}
               items={items.filter((it) => it.roadmap_id === r.id)}
               totalRequirements={totalRequirements(r)}
+              requiredCount={requiredCount(r)}
               onOpen={() => openRoadmap(r.id)}
               onDelete={() => handleDelete(r.id)}
             />
