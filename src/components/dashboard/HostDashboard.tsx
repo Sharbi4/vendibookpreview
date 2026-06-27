@@ -473,6 +473,12 @@ const HostDashboard = () => {
             <KitchenProSuite />
           </Reveal>
         )}
+
+        {activeTab === 'permits' && (
+          <Reveal>
+            <PermitsTab />
+          </Reveal>
+        )}
       </SectionReveal>
 
       <StripeConnectModal
