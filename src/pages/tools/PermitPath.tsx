@@ -18,6 +18,7 @@ import {
   FileCheck, Loader2, Home, ShieldCheck, Clock, ArrowRight, Coins, AlertCircle,
   MapPin, ListChecks, Download, Route,
 } from 'lucide-react';
+import heroMockup from '@/assets/permitpath-hero-mockup.png';
 import ToolCrossLinks from '@/components/tools/ToolCrossLinks';
 import ResultsDashboard, { type DashboardResult } from '@/components/tools/permit-path/ResultsDashboard';
 import ResultsSkeleton from '@/components/tools/permit-path/ResultsSkeleton';
