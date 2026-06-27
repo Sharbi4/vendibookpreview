@@ -1123,3 +1123,71 @@ function StatChip({ icon: Icon, label, value }: { icon: any; label: string; valu
     </div>
   );
 }
+
+// ---------- RequirementBadge ----------
+function RequirementBadge({ status, title }: { status: RequirementStatus; title: string }) {
+  if (status === 'required') {
+    const verify = /verify with/i.test(title);
+    return (
+      <Badge
+        className={cn(
+          'text-[10px] uppercase tracking-[0.14em] font-bold border inline-flex items-center gap-1',
+          verify
+            ? 'bg-[#FF5124]/15 text-[#FF5124] border-[#FF5124]/50 hover:bg-[#FF5124]/15'
+            : 'bg-[#FF5124] text-white border-[#FF5124] hover:bg-[#FF5124]',
+        )}
+      >
+        Required{verify ? ' · verify' : ''}
+      </Badge>
+    );
+  }
+  if (status === 'conditional') {
+    return (
+      <Badge
+        variant="outline"
+        className="text-[10px] uppercase tracking-[0.14em] font-semibold bg-white/[0.08] text-white/85 border-white/30"
+      >
+        Conditional
+      </Badge>
+    );
+  }
+  return (
+    <Badge
+      variant="outline"
+      className="text-[10px] uppercase tracking-[0.14em] font-medium bg-white/[0.03] text-white/50 border-white/15"
+    >
+      Optional
+    </Badge>
+  );
+}
+
+// ---------- OptionalSubsection ----------
+function OptionalSubsection({
+  nodes,
+  renderNode,
+}: {
+  nodes: RoadmapNode[];
+  renderNode: (node: RoadmapNode) => React.ReactNode;
+}) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="mt-2 rounded-xl border border-dashed border-white/15 bg-white/[0.02]">
+      <button
+        type="button"
+        onClick={() => setOpen((p) => !p)}
+        className="w-full flex items-center justify-between gap-2 px-4 py-2.5 text-left hover:bg-white/[0.03] rounded-xl"
+      >
+        <div className="flex items-center gap-2">
+          <span className="text-[10px] uppercase tracking-[0.14em] font-medium text-white/50">
+            Recommended (not required)
+          </span>
+          <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-white/[0.05] border border-white/10 text-white/55">
+            {nodes.length}
+          </span>
+        </div>
+        <ChevronDown className={cn('h-4 w-4 text-white/40 transition-transform', open && 'rotate-180')} />
+      </button>
+      {open && <div className="px-3 pb-3 space-y-3">{nodes.map((n) => renderNode(n))}</div>}
+    </div>
+  );
+}
