@@ -277,56 +277,71 @@ export default function ResultsDashboard({ result, readOnly = false }: Props) {
     .map(([name, nodes]) => ({ name, nodes }))
     .sort((a, b) => catScore(a.name) - catScore(b.name));
 
-  return (
-    <div className="mt-8 space-y-8">
-      {/* Sticky summary bar — compact, high contrast */}
-      <div className="sticky top-16 z-20 -mx-2 sm:mx-0">
-        <div className="rounded-2xl border-2 border-white/20 bg-[#0a0a0d]/95 backdrop-blur-xl px-4 sm:px-5 py-3 shadow-[0_20px_60px_-20px_rgba(0,0,0,0.8)]">
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-3">
-            <div className="min-w-0 flex-1 leading-tight">
-              <div className="text-[10px] text-white/70 uppercase tracking-wider font-medium truncate">
-                {user && !readOnly ? 'Welcome back — your roadmap' : 'Your roadmap'}
-              </div>
-              <div className="font-bold text-white text-[15px] sm:text-base truncate">
-                {locationLabel}
-              </div>
-              {result.businessType && (
-                <div className="text-[11px] text-white/65 truncate">{result.businessType}</div>
-              )}
-            </div>
-            <ProgressRing pct={roadmap.pct} done={roadmap.done} total={roadmap.total} />
-            <div className="flex flex-wrap gap-1.5">
-              <StatChip icon={Check} label="Done" value={`${roadmap.done}/${roadmap.total}`} />
-              <StatChip icon={DollarSign} label="Cost left" value={remainingCost} />
-              <StatChip icon={Clock} label="Time" value={remainingWeeks} />
-            </div>
-            <div className="flex gap-1.5">
-              {!readOnly && (
-                <Button onClick={handleEmailMe} size="sm" variant="outline" className="bg-white/5 border-white/20 text-white hover:bg-white/10 h-9">
-                  <Mail className="h-4 w-4" />
-                </Button>
-              )}
-              {!readOnly && (
-                <Button onClick={handleShare} size="sm" variant="outline" className="bg-white/5 border-white/20 text-white hover:bg-white/10 h-9">
-                  <Share2 className="h-4 w-4" />
-                </Button>
-              )}
-              <Button onClick={handleDownload} size="sm" className="bg-[#FF5124] hover:bg-[#FF5124]/90 text-white h-9">
-                <Download className="h-4 w-4 mr-1.5" /> PDF
-              </Button>
-            </div>
-          </div>
+  // Stats for top tiles
+  const now = Date.now();
+  const expiringSoonCount = Object.values(owned).filter((o) => {
+    if (!o.expires) return false;
+    const t = new Date(o.expires).getTime();
+    if (isNaN(t)) return false;
+    const days = Math.ceil((t - now) / (1000 * 60 * 60 * 24));
+    return days >= 0 && days <= 60;
+  }).length;
+  const renewalNeededCount = Object.values(owned).filter((o) => {
+    if (!o.expires) return false;
+    const t = new Date(o.expires).getTime();
+    if (isNaN(t)) return false;
+    return t < now;
+  }).length;
 
-          {!user && !readOnly && (
-            <div className="mt-2.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
-              <span className="text-white/70">Save your progress and pick up where you left off:</span>
-              <Link to="/auth?redirect=/tools/permitpath" className="text-white hover:underline font-medium inline-flex items-center gap-1">
-                Save to my account <ArrowRight className="h-3 w-3" />
-              </Link>
-            </div>
+  // Recent activity: latest completed/owned
+  const recentNodes = roadmap.nodes.filter((n) => n.done || owned[n.id]).slice(0, 4);
+
+  return (
+    <div className="mt-8 space-y-6">
+      {/* Header row — title + actions */}
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <div className="text-[11px] text-white/55 uppercase tracking-[0.18em] font-semibold mb-1">
+            {user && !readOnly ? 'Welcome back' : 'Your roadmap'}
+          </div>
+          <h2 className="text-2xl sm:text-3xl font-bold text-white leading-tight">Permits &amp; Licenses</h2>
+          <p className="text-sm text-white/60 mt-1">
+            Track, manage, and maintain your compliance{result.businessType ? ` — ${result.businessType}` : ''} · {locationLabel}
+          </p>
+        </div>
+        <div className="flex gap-2">
+          {!readOnly && (
+            <Button onClick={handleEmailMe} size="sm" variant="outline" className="bg-white/5 border-white/15 text-white hover:bg-white/10 h-9">
+              <Mail className="h-4 w-4" />
+            </Button>
           )}
+          {!readOnly && (
+            <Button onClick={handleShare} size="sm" variant="outline" className="bg-white/5 border-white/15 text-white hover:bg-white/10 h-9">
+              <Share2 className="h-4 w-4" />
+            </Button>
+          )}
+          <Button onClick={handleDownload} size="sm" className="bg-[#FF5124] hover:bg-[#FF5124]/90 text-white h-9">
+            <Download className="h-4 w-4 mr-1.5" /> PDF
+          </Button>
         </div>
       </div>
+
+      {/* 4 stat tiles */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <StatTile label="Total Permits" value={String(roadmap.total)} sub="Active" tone="orange" />
+        <StatTile label="Expiring Soon" value={String(expiringSoonCount)} sub="Next 60 days" tone="amber" />
+        <StatTile label="Completed" value={String(roadmap.done)} sub="This year" tone="emerald" />
+        <StatTile label="Renewal" value={String(renewalNeededCount)} sub={renewalNeededCount > 0 ? 'Action required' : 'All current'} tone="red" />
+      </div>
+
+      {!user && !readOnly && (
+        <div className="rounded-xl border border-white/10 bg-white/[0.03] px-4 py-2.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
+          <span className="text-white/70">Save your progress and pick up where you left off:</span>
+          <Link to="/auth?redirect=/tools/permitpath" className="text-white hover:underline font-medium inline-flex items-center gap-1">
+            Save to my account <ArrowRight className="h-3 w-3" />
+          </Link>
+        </div>
+      )}
 
       {/* 100% celebration */}
       <AnimatePresence>
@@ -338,119 +353,191 @@ export default function ResultsDashboard({ result, readOnly = false }: Props) {
         )}
       </AnimatePresence>
 
-      {/* Recent law alert */}
-      <AnimatePresence>
-        {result.recent_law_alert && !alertDismissed && (
-          <motion.div
-            initial={{ opacity: 0, y: -8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, height: 0 }}
-            className="rounded-2xl border-2 border-amber-500/25 bg-amber-500/[0.06] p-4 sm:p-5 flex gap-3"
-          >
-            <div className="h-9 w-9 rounded-lg bg-amber-500/15 flex items-center justify-center shrink-0">
-              <Sparkles className="h-5 w-5 text-amber-300" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="font-semibold text-white mb-1">Recent law change worth knowing</div>
-              <p className="text-sm text-white/75 leading-relaxed">{result.recent_law_alert}</p>
-            </div>
-            <button onClick={() => setAlertDismissed(true)} className="text-white/40 hover:text-white/80 shrink-0" aria-label="Dismiss">
-              <X className="h-4 w-4" />
-            </button>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Reasoning panels: critical path, risks, money-saver insights */}
-      <ReasoningPanels
-        critical_path={result.critical_path}
-        risks={result.risks}
-        insights={result.insights}
-      />
-
-      {/* Filter pills */}
-      <div className="flex flex-wrap items-center gap-2">
-        <Filter className="h-4 w-4 text-white/40" />
-        {([
-          ['all', `All (${roadmap.total})`],
-          ['remaining', `Remaining (${roadmap.total - roadmap.done})`],
-          ['commonly_missed', `Commonly missed (${roadmap.nodes.filter((n) => n.commonly_missed).length})`],
-        ] as const).map(([k, label]) => (
-          <button
-            key={k}
-            onClick={() => setFilter(k as Filter)}
-            className={cn(
-              'text-xs px-3 py-1.5 rounded-full border transition-colors',
-              filter === k
-                ? 'bg-white/15 border-white/25 text-white'
-                : 'bg-white/5 border-white/10 text-white/65 hover:text-white hover:border-white/20',
-            )}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
-
-      {/* Categories — ordered by operating priority */}
-      <div className="space-y-6">
-        {grouped.map((cat, idx) => {
-          const catDone = cat.nodes.filter((n) => n.done).length;
-          const catTotal = cat.nodes.length;
-          const allMarked = catTotal > 0 && cat.nodes.every((n) => n.done);
-          return (
-            <motion.section
-              key={`${cat.name}-${idx}`}
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: idx * 0.03 }}
-              className="rounded-2xl border-2 border-white/15 bg-[#101013] overflow-hidden shadow-[0_8px_24px_-12px_rgba(0,0,0,0.6)]"
-            >
-              {/* Sticky category header — anchor as you scroll */}
-              <div className="flex items-center gap-3 px-4 sm:px-5 py-3.5 bg-[#101013] border-b-2 border-white/15">
-                {(() => {
-                  const cv = categoryVisual(cat.name);
-                  return <PremiumIcon icon={cv.icon} accent={cv.accent} size="sm" hover="lift" />;
-                })()}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <h3 className="font-bold text-white text-base">{cat.name}</h3>
-                    <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-white/10 border border-white/15 text-white/85">
-                      {catDone}/{catTotal}
-                    </span>
-                  </div>
+      {/* Two-column layout: permits left, sidebar right */}
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6">
+        {/* LEFT: permits */}
+        <div className="space-y-6 min-w-0">
+          {/* Recent law alert */}
+          <AnimatePresence>
+            {result.recent_law_alert && !alertDismissed && (
+              <motion.div
+                initial={{ opacity: 0, y: -8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, height: 0 }}
+                className="rounded-2xl border-2 border-amber-500/25 bg-amber-500/[0.06] p-4 sm:p-5 flex gap-3"
+              >
+                <div className="h-9 w-9 rounded-lg bg-amber-500/15 flex items-center justify-center shrink-0">
+                  <Sparkles className="h-5 w-5 text-amber-300" />
                 </div>
-                {!readOnly && catTotal > 0 && (
-                  <button
-                    onClick={() => markAllInCategory(cat.name)}
-                    className="text-xs font-medium text-white/75 hover:text-white px-2.5 py-1 rounded-md border border-white/10 hover:border-white/25 hover:bg-white/5"
-                  >
-                    {allMarked ? 'Uncheck all' : 'Mark all'}
-                  </button>
-                )}
-              </div>
+                <div className="flex-1 min-w-0">
+                  <div className="font-semibold text-white mb-1">Recent law change worth knowing</div>
+                  <p className="text-sm text-white/75 leading-relaxed">{result.recent_law_alert}</p>
+                </div>
+                <button onClick={() => setAlertDismissed(true)} className="text-white/40 hover:text-white/80 shrink-0" aria-label="Dismiss">
+                  <X className="h-4 w-4" />
+                </button>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
-              <div className="px-3 sm:px-4 py-4 space-y-3">
-                {cat.nodes.map((node) => (
-                  <RoadmapItem
-                    key={node.id}
-                    node={node}
-                    expanded={!!expanded[node.id]}
-                    onToggleExpand={() => setExpanded((p) => ({ ...p, [node.id]: !p[node.id] }))}
-                    onToggleDone={() => toggle(node)}
-                    onCalendar={() => handleCalendarReminder(node)}
-                    readOnly={readOnly}
-                    state={result.location.state}
-                    owned={!!owned[node.id]}
-                    expiresOn={owned[node.id]?.expires}
-                    onToggleOwned={() => toggleOwned(node.id)}
-                    onSetExpires={(d) => setOwnedExpiration(node.id, d)}
-                  />
-                ))}
+          {/* Reasoning panels */}
+          <ReasoningPanels
+            critical_path={result.critical_path}
+            risks={result.risks}
+            insights={result.insights}
+          />
+
+          {/* Filter pills */}
+          <div className="flex flex-wrap items-center gap-2">
+            <Filter className="h-4 w-4 text-white/40" />
+            {([
+              ['all', `All (${roadmap.total})`],
+              ['remaining', `Remaining (${roadmap.total - roadmap.done})`],
+              ['commonly_missed', `Commonly missed (${roadmap.nodes.filter((n) => n.commonly_missed).length})`],
+            ] as const).map(([k, label]) => (
+              <button
+                key={k}
+                onClick={() => setFilter(k as Filter)}
+                className={cn(
+                  'text-xs px-3 py-1.5 rounded-full border transition-colors',
+                  filter === k
+                    ? 'bg-white/15 border-white/25 text-white'
+                    : 'bg-white/5 border-white/10 text-white/65 hover:text-white hover:border-white/20',
+                )}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+
+          {/* Categories */}
+          <div className="space-y-6">
+            {grouped.map((cat, idx) => {
+              const catDone = cat.nodes.filter((n) => n.done).length;
+              const catTotal = cat.nodes.length;
+              const allMarked = catTotal > 0 && cat.nodes.every((n) => n.done);
+              return (
+                <motion.section
+                  key={`${cat.name}-${idx}`}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: idx * 0.03 }}
+                  className="rounded-2xl border-2 border-white/15 bg-[#101013] overflow-hidden shadow-[0_8px_24px_-12px_rgba(0,0,0,0.6)]"
+                >
+                  <div className="flex items-center gap-3 px-4 sm:px-5 py-3.5 bg-[#101013] border-b-2 border-white/15">
+                    {(() => {
+                      const cv = categoryVisual(cat.name);
+                      return <PremiumIcon icon={cv.icon} accent={cv.accent} size="sm" hover="lift" />;
+                    })()}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h3 className="font-bold text-white text-base">{cat.name}</h3>
+                        <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-white/10 border border-white/15 text-white/85">
+                          {catDone}/{catTotal}
+                        </span>
+                      </div>
+                    </div>
+                    {!readOnly && catTotal > 0 && (
+                      <button
+                        onClick={() => markAllInCategory(cat.name)}
+                        className="text-xs font-medium text-white/75 hover:text-white px-2.5 py-1 rounded-md border border-white/10 hover:border-white/25 hover:bg-white/5"
+                      >
+                        {allMarked ? 'Uncheck all' : 'Mark all'}
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="px-3 sm:px-4 py-4 space-y-3">
+                    {cat.nodes.map((node) => (
+                      <RoadmapItem
+                        key={node.id}
+                        node={node}
+                        expanded={!!expanded[node.id]}
+                        onToggleExpand={() => setExpanded((p) => ({ ...p, [node.id]: !p[node.id] }))}
+                        onToggleDone={() => toggle(node)}
+                        onCalendar={() => handleCalendarReminder(node)}
+                        readOnly={readOnly}
+                        state={result.location.state}
+                        owned={!!owned[node.id]}
+                        expiresOn={owned[node.id]?.expires}
+                        onToggleOwned={() => toggleOwned(node.id)}
+                        onSetExpires={(d) => setOwnedExpiration(node.id, d)}
+                      />
+                    ))}
+                  </div>
+                </motion.section>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* RIGHT: sticky sidebar */}
+        <aside className="space-y-4 lg:sticky lg:top-20 lg:self-start">
+          {/* Overall compliance ring */}
+          <div className="rounded-2xl border-2 border-white/15 bg-[#101013] p-5 shadow-[0_8px_24px_-12px_rgba(0,0,0,0.6)]">
+            <div className="text-[11px] uppercase tracking-[0.18em] text-white/55 font-semibold mb-4">Overall Compliance</div>
+            <div className="flex flex-col items-center">
+              <BigComplianceRing pct={roadmap.pct} />
+              <p className="text-xs text-white/55 mt-3 text-center leading-relaxed">
+                {isComplete
+                  ? "You're fully compliant — nice work."
+                  : roadmap.pct >= 50
+                  ? "You're being great — keep it up"
+                  : "Let's build your compliance momentum."}
+              </p>
+            </div>
+          </div>
+
+          {/* Cost overview */}
+          <div className="rounded-2xl border-2 border-white/15 bg-[#101013] p-5 shadow-[0_8px_24px_-12px_rgba(0,0,0,0.6)]">
+            <div className="text-[11px] uppercase tracking-[0.18em] text-white/55 font-semibold mb-3">Cost Overview</div>
+            <div className="text-2xl font-bold text-white">{result.estimated_total_cost?.display || '—'}</div>
+            <div className="mt-4 space-y-2 text-sm">
+              <div className="flex justify-between text-white/70">
+                <span>Remaining</span>
+                <span className="text-white font-semibold">{remainingCost}</span>
               </div>
-            </motion.section>
-          );
-        })}
+              <div className="flex justify-between text-white/70">
+                <span>Time left</span>
+                <span className="text-white font-semibold">{remainingWeeks}</span>
+              </div>
+              <div className="flex justify-between text-white/70">
+                <span>Complete</span>
+                <span className="text-white font-semibold">{roadmap.done}/{roadmap.total}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Recent activity */}
+          <div className="rounded-2xl border-2 border-white/15 bg-[#101013] p-5 shadow-[0_8px_24px_-12px_rgba(0,0,0,0.6)]">
+            <div className="text-[11px] uppercase tracking-[0.18em] text-white/55 font-semibold mb-3">Recent Activity</div>
+            {recentNodes.length === 0 ? (
+              <p className="text-xs text-white/45 italic">Mark a permit done or "I have this" to track activity here.</p>
+            ) : (
+              <ul className="space-y-2.5">
+                {recentNodes.map((n) => {
+                  const isOwned = !!owned[n.id];
+                  return (
+                    <li key={n.id} className="flex items-start gap-2.5">
+                      <div className={cn(
+                        'h-2 w-2 rounded-full mt-1.5 shrink-0',
+                        isOwned ? 'bg-emerald-400' : 'bg-[#FF5124]',
+                      )} />
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm text-white font-medium truncate">{n.title}</div>
+                        <div className="text-[11px] text-white/50">
+                          {isOwned ? 'Marked as held' : 'Marked complete'}
+                        </div>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </div>
+        </aside>
       </div>
+
 
       {/* Verify note */}
       {result.verify_note && (
