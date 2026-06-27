@@ -212,11 +212,22 @@ export default function PermitsTab() {
             Track progress, store permit numbers, and keep documents in one place.
           </p>
         </div>
-        <Button asChild size="sm" className="bg-[#FF5124] hover:bg-[#FF5124]/90 text-white h-9 font-semibold">
-          <Link to="/tools/permitpath">
-            <Plus className="h-4 w-4 mr-1.5" /> Start a new permit search
-          </Link>
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            className="h-9 text-xs border-white/15 bg-white/[0.04] hover:bg-white/[0.08] text-white/85"
+            onClick={() => { void refreshDeleted(); setDeletedDrawerOpen(true); }}
+          >
+            <Trash2 className="h-3.5 w-3.5 mr-1.5" /> Recently deleted
+          </Button>
+          <Button asChild size="sm" className="bg-[#FF5124] hover:bg-[#FF5124]/90 text-white h-9 font-semibold">
+            <Link to="/tools/permitpath">
+              <Plus className="h-4 w-4 mr-1.5" /> Start a new permit search
+            </Link>
+          </Button>
+        </div>
       </div>
 
       {renewalRows.length > 0 && (
@@ -257,12 +268,88 @@ export default function PermitsTab() {
               totalRequirements={totalRequirements(r)}
               requiredCount={requiredCount(r)}
               onOpen={() => openRoadmap(r.id)}
-              onDelete={() => handleDelete(r.id)}
+              onDelete={() => handleDelete(r)}
+              onRename={(label) => handleRename(r.id, label)}
             />
           ))}
         </div>
       )}
+
+      <RecentlyDeletedDialog
+        open={deletedDrawerOpen}
+        onClose={() => setDeletedDrawerOpen(false)}
+        rows={deletedRoadmaps}
+        loading={deletedLoading}
+        onRestore={handleRestore}
+      />
     </div>
+  );
+}
+
+function RecentlyDeletedDialog({
+  open,
+  onClose,
+  rows,
+  loading,
+  onRestore,
+}: {
+  open: boolean;
+  onClose: () => void;
+  rows: SavedRoadmap[];
+  loading: boolean;
+  onRestore: (id: string) => Promise<void>;
+}) {
+  return (
+    <Dialog open={open} onOpenChange={(v) => { if (!v) onClose(); }}>
+      <DialogContent className="max-w-lg bg-[#0f0f12] border-white/12 text-white">
+        <DialogHeader>
+          <DialogTitle className="text-white">Recently deleted</DialogTitle>
+          <DialogDescription className="text-white/55">
+            Roadmaps deleted in the last 7 days. After 7 days they're permanently removed.
+          </DialogDescription>
+        </DialogHeader>
+        {loading ? (
+          <div className="flex items-center justify-center py-10">
+            <Loader2 className="h-5 w-5 animate-spin text-white/60" />
+          </div>
+        ) : rows.length === 0 ? (
+          <p className="text-sm text-white/55 py-8 text-center">
+            Nothing here. Anything you delete will appear here for 7 days.
+          </p>
+        ) : (
+          <ul className="space-y-2 max-h-[60vh] overflow-y-auto -mx-2 px-2">
+            {rows.map((r) => {
+              const deletedAt = r.deleted_at ? new Date(r.deleted_at) : null;
+              const daysLeft = deletedAt
+                ? Math.max(0, 7 - Math.floor((Date.now() - deletedAt.getTime()) / (1000 * 60 * 60 * 24)))
+                : 0;
+              const label = r.label || (r.city ? `${r.city}, ${r.state_code}` : r.state_code);
+              return (
+                <li
+                  key={r.id}
+                  className="flex items-center justify-between gap-3 rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2.5"
+                >
+                  <div className="min-w-0">
+                    <div className="text-sm text-white truncate">{label}</div>
+                    <div className="text-[11px] text-white/45">
+                      Deleted {deletedAt?.toLocaleDateString()} · {daysLeft}d left
+                    </div>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-8 border-white/20 bg-white/[0.05] hover:bg-white/[0.10] text-white"
+                    onClick={() => void onRestore(r.id)}
+                  >
+                    <RotateCcw className="h-3.5 w-3.5 mr-1.5" /> Restore
+                  </Button>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </DialogContent>
+    </Dialog>
   );
 }
 
