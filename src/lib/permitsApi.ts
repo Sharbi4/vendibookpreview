@@ -34,9 +34,14 @@ export interface PermitItem {
   notes: string | null;
   issue_date: string | null;
   expires_on: string | null;
+  archived: boolean;
+  archived_at: string | null;
+  archived_reason: string | null;
+  field_updated_at: Record<string, string>;
   created_at: string;
   updated_at: string;
 }
+
 
 export interface PermitDocument {
   id: string;
