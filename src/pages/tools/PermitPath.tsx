@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { z } from 'zod';
@@ -13,6 +13,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@/components/ui/breadcrumb';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+import { saveRoadmap, stashPendingSave, takePendingSave } from '@/lib/permitsApi';
+import { toast as sonnerToast } from 'sonner';
 import { cn } from '@/lib/utils';
 import {
   FileCheck, Loader2, Home, ShieldCheck, Clock, ArrowRight, Coins, AlertCircle,
@@ -128,6 +131,8 @@ type FieldErrors = Partial<Record<'state' | 'city' | 'businessType', string>>;
 
 const PermitPath = () => {
   const { toast } = useToast();
+  const navigate = useNavigate();
+  const { user } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const [isLoading, setIsLoading] = useState(false);
   const [form, setForm] = useState({ city: '', state: '', businessType: 'food_truck' });
@@ -136,7 +141,58 @@ const PermitPath = () => {
   const [result, setResult] = useState<DashboardResult | null>(null);
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [isShared, setIsShared] = useState(false);
+  const [savedRoadmapId, setSavedRoadmapId] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
   const autoRanRef = useRef(false);
+  const resumeRanRef = useRef(false);
+
+  const persistSave = useCallback(async (r: DashboardResult) => {
+    if (!user) return null;
+    setSaving(true);
+    try {
+      const saved = await saveRoadmap(user.id, r);
+      setSavedRoadmapId(saved.id);
+      sonnerToast.success('Saved to your dashboard');
+      return saved;
+    } catch (e: any) {
+      sonnerToast.error(e?.message || 'Could not save roadmap');
+      return null;
+    } finally {
+      setSaving(false);
+    }
+  }, [user]);
+
+  const handleSaveToDashboard = useCallback(async () => {
+    if (!result) return;
+    if (!user) {
+      stashPendingSave(result);
+      navigate(`/auth?redirect=${encodeURIComponent('/tools/permitpath?resumeSave=1')}`);
+      return;
+    }
+    await persistSave(result);
+  }, [result, user, navigate, persistSave]);
+
+  // Resume save after sign-in
+  useEffect(() => {
+    if (resumeRanRef.current) return;
+    if (searchParams.get('resumeSave') !== '1') return;
+    if (!user) return;
+    const pending = takePendingSave();
+    if (!pending) return;
+    resumeRanRef.current = true;
+    setResult(pending);
+    (async () => {
+      const saved = await persistSave(pending);
+      // Clear ?resumeSave and redirect into the dashboard.
+      const next = new URLSearchParams(searchParams);
+      next.delete('resumeSave');
+      setSearchParams(next, { replace: true });
+      if (saved) {
+        navigate(`/dashboard?view=host&tab=permits&roadmap=${saved.id}`);
+      }
+    })();
+  }, [user, searchParams, persistSave, navigate, setSearchParams]);
+
 
   const updateField = <K extends keyof typeof form>(key: K, value: string) => {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -178,6 +234,7 @@ const PermitPath = () => {
     setFetchError(null);
     setIsLoading(true);
     setResult(null);
+    setSavedRoadmapId(null);
     setTimeout(() => document.getElementById('results-section')?.scrollIntoView({ behavior: 'smooth' }), 50);
     try {
       const { data: response, error } = await supabase.functions.invoke('ai-license-finder', {
@@ -496,7 +553,14 @@ const PermitPath = () => {
                 {!isLoading && fetchError && (
                   <ResultsError message={fetchError} onRetry={runLookup} />
                 )}
-                {!isLoading && !fetchError && result && <ResultsDashboard result={result} readOnly={isShared} />}
+                {!isLoading && !fetchError && result && (
+                  <ResultsDashboard
+                    result={result}
+                    readOnly={isShared}
+                    onSaveToDashboard={isShared ? undefined : handleSaveToDashboard}
+                    savedRoadmapId={savedRoadmapId}
+                  />
+                )}
               </div>
             </div>
           </section>

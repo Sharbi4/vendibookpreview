@@ -17,7 +17,8 @@ import {
   Shield,
   Megaphone,
   ChefHat,
-  Gift
+  Gift,
+  FileCheck
 } from 'lucide-react';
 import { useReferralEarnings } from '@/hooks/useReferralEarnings';
 import { useDashboardPersona } from '@/hooks/useDashboardPersona';
@@ -55,6 +56,7 @@ export const DashboardLayout = ({ children, mode, onModeChange, isHost }: Dashbo
     { title: 'Listings', icon: Truck, href: '/host/listings', tab: null },
     { title: 'Booking Manager', icon: CalendarDays, href: '/host/bookings', tab: null },
     { title: 'Insights', icon: BarChart3, href: '/dashboard?view=host&tab=insights', tab: 'insights' },
+    { title: 'Permits', icon: FileCheck, href: '/dashboard?view=host&tab=permits', tab: 'permits' },
     { title: 'Promote', icon: Megaphone, href: '/dashboard?view=host&tab=promote', tab: 'promote' },
     ...(hasGhostKitchen
       ? [{ title: 'Kitchen Pro', icon: ChefHat, href: '/dashboard?view=host&tab=kitchen', tab: 'kitchen' }]
@@ -64,6 +66,7 @@ export const DashboardLayout = ({ children, mode, onModeChange, isHost }: Dashbo
     { title: 'Refer & Earn', icon: Gift, href: '/referral/dashboard?source=sidebar', tab: null }] : [
     { title: 'Bookings', icon: CalendarDays, href: '/dashboard', tab: null },
     { title: 'Favorites', icon: Heart, href: '/favorites', tab: null },
+    { title: 'Permits', icon: FileCheck, href: '/dashboard?view=shopper&tab=permits', tab: 'permits' },
     { title: 'Messages', icon: MessageSquare, href: '/messages', tab: null },
     { title: 'Refer & Earn', icon: Gift, href: '/referral/dashboard?source=sidebar', tab: null }];
 

@@ -3,7 +3,7 @@ import { motion, AnimatePresence, useMotionValue, useTransform, animate } from '
 import {
   ExternalLink, CheckCircle2, Circle, ChevronDown,
   Download, DollarSign, Clock, Sparkles, X, Mail, BadgeCheck, CalendarClock,
-  Share2, CalendarPlus, Lightbulb, Building2, Filter, Check, ArrowRight,
+  Share2, CalendarPlus, Lightbulb, Building2, Filter, Check, ArrowRight, BookmarkPlus,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -66,9 +66,16 @@ interface Props {
   result: DashboardResult;
   /** Read-only mode: hide save/share affordances when viewing somebody else's shared roadmap. */
   readOnly?: boolean;
+  /** When provided, renders inside the expanded panel of each requirement card. */
+  renderItemExtra?: (node: RoadmapNode) => React.ReactNode;
+  /** When provided, replaces the inline sign-in nudge with a primary "Save to my dashboard" button. */
+  onSaveToDashboard?: () => void | Promise<void>;
+  /** When set, shows a "Saved · View in dashboard →" link instead of the save button. */
+  savedRoadmapId?: string | null;
 }
 
-export default function ResultsDashboard({ result, readOnly = false }: Props) {
+
+export default function ResultsDashboard({ result, readOnly = false, renderItemExtra, onSaveToDashboard, savedRoadmapId }: Props) {
   const { user } = useAuth();
 
   const storageKey = useMemo(
@@ -315,7 +322,29 @@ export default function ResultsDashboard({ result, readOnly = false }: Props) {
             Track, manage, and maintain your compliance{result.businessType ? ` — ${result.businessType}` : ''} · {locationLabel}
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
+          {!readOnly && onSaveToDashboard && !savedRoadmapId && (
+            <Button
+              onClick={() => { void onSaveToDashboard(); }}
+              size="sm"
+              className="bg-[#FF5124] hover:bg-[#FF5124]/90 text-white h-9 font-semibold"
+            >
+              <BookmarkPlus className="h-4 w-4 mr-1.5" /> Save to my dashboard
+            </Button>
+          )}
+          {!readOnly && savedRoadmapId && (
+            <Button
+              asChild
+              size="sm"
+              variant="outline"
+              className="bg-white/[0.06] border-white/20 text-white hover:bg-white/[0.10] h-9"
+            >
+              <Link to={`/dashboard?view=host&tab=permits&roadmap=${savedRoadmapId}`}>
+                <CheckCircle2 className="h-4 w-4 mr-1.5 text-white/85" />
+                Saved · View in dashboard
+              </Link>
+            </Button>
+          )}
           {!readOnly && (
             <Button onClick={handleEmailMe} size="sm" variant="outline" className="bg-white/5 border-white/15 text-white hover:bg-white/10 h-9">
               <Mail className="h-4 w-4" />
@@ -326,7 +355,7 @@ export default function ResultsDashboard({ result, readOnly = false }: Props) {
               <Share2 className="h-4 w-4" />
             </Button>
           )}
-          <Button onClick={handleDownload} size="sm" className="bg-[#FF5124] hover:bg-[#FF5124]/90 text-white h-9">
+          <Button onClick={handleDownload} size="sm" variant="outline" className="bg-white/5 border-white/15 text-white hover:bg-white/10 h-9">
             <Download className="h-4 w-4 mr-1.5" /> PDF
           </Button>
         </div>
@@ -461,6 +490,7 @@ export default function ResultsDashboard({ result, readOnly = false }: Props) {
                         expiresOn={owned[node.id]?.expires}
                         onToggleOwned={() => toggleOwned(node.id)}
                         onSetExpires={(d) => setOwnedExpiration(node.id, d)}
+                        extra={renderItemExtra ? renderItemExtra(node) : null}
                       />
                     ))}
                   </div>
@@ -615,9 +645,10 @@ interface ItemProps {
   expiresOn?: string;
   onToggleOwned: () => void;
   onSetExpires: (date: string) => void;
+  extra?: React.ReactNode;
 }
 
-function RoadmapItem({ node, expanded, onToggleExpand, onToggleDone, onCalendar, readOnly, state, owned, expiresOn, onToggleOwned, onSetExpires }: ItemProps) {
+function RoadmapItem({ node, expanded, onToggleExpand, onToggleDone, onCalendar, readOnly, state, owned, expiresOn, onToggleOwned, onSetExpires, extra }: ItemProps) {
   const isNext = node.status === 'next';
   const isDone = node.status === 'done';
   // "locked" no longer hides info — it's a soft sequence hint.
@@ -799,6 +830,7 @@ function RoadmapItem({ node, expanded, onToggleExpand, onToggleDone, onCalendar,
                     </Link>
                   )}
                 </div>
+                {extra}
               </div>
             </motion.div>
           )}
