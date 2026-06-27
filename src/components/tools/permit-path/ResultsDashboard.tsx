@@ -322,7 +322,29 @@ export default function ResultsDashboard({ result, readOnly = false, renderItemE
             Track, manage, and maintain your compliance{result.businessType ? ` — ${result.businessType}` : ''} · {locationLabel}
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
+          {!readOnly && onSaveToDashboard && !savedRoadmapId && (
+            <Button
+              onClick={() => { void onSaveToDashboard(); }}
+              size="sm"
+              className="bg-[#FF5124] hover:bg-[#FF5124]/90 text-white h-9 font-semibold"
+            >
+              <BookmarkPlus className="h-4 w-4 mr-1.5" /> Save to my dashboard
+            </Button>
+          )}
+          {!readOnly && savedRoadmapId && (
+            <Button
+              asChild
+              size="sm"
+              variant="outline"
+              className="bg-white/[0.06] border-white/20 text-white hover:bg-white/[0.10] h-9"
+            >
+              <Link to={`/dashboard?view=host&tab=permits&roadmap=${savedRoadmapId}`}>
+                <CheckCircle2 className="h-4 w-4 mr-1.5 text-white/85" />
+                Saved · View in dashboard
+              </Link>
+            </Button>
+          )}
           {!readOnly && (
             <Button onClick={handleEmailMe} size="sm" variant="outline" className="bg-white/5 border-white/15 text-white hover:bg-white/10 h-9">
               <Mail className="h-4 w-4" />
@@ -333,7 +355,7 @@ export default function ResultsDashboard({ result, readOnly = false, renderItemE
               <Share2 className="h-4 w-4" />
             </Button>
           )}
-          <Button onClick={handleDownload} size="sm" className="bg-[#FF5124] hover:bg-[#FF5124]/90 text-white h-9">
+          <Button onClick={handleDownload} size="sm" variant="outline" className="bg-white/5 border-white/15 text-white hover:bg-white/10 h-9">
             <Download className="h-4 w-4 mr-1.5" /> PDF
           </Button>
         </div>
