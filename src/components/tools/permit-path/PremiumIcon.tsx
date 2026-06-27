@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils';
 import { type ReactNode } from 'react';
 
 export type IconAccent =
-  | 'orange' | 'emerald' | 'sky' | 'amber' | 'violet' | 'rose' | 'teal' | 'blue' | 'green' | 'red';
+  | 'orange' | 'emerald' | 'sky' | 'amber' | 'violet' | 'rose' | 'teal' | 'blue' | 'green' | 'red' | 'silver';
 
 const ACCENT: Record<IconAccent, { from: string; to: string; ring: string; glow: string; icon: string; border: string }> = {
   orange:  { from: 'from-[#FF5124]/35', to: 'to-[#FF5124]/5',   ring: 'ring-[#FF5124]/30', glow: 'rgba(255,81,36,0.55)',  icon: 'text-[#FF7A52]', border: 'border-[#FF5124]/30' },
@@ -17,6 +17,7 @@ const ACCENT: Record<IconAccent, { from: string; to: string; ring: string; glow:
   blue:    { from: 'from-blue-400/35',   to: 'to-blue-500/5',   ring: 'ring-blue-400/30',   glow: 'rgba(96,165,250,0.45)',  icon: 'text-blue-300',   border: 'border-blue-400/30' },
   green:   { from: 'from-green-400/35',  to: 'to-green-500/5',  ring: 'ring-green-400/30',  glow: 'rgba(74,222,128,0.45)',  icon: 'text-green-300',  border: 'border-green-400/30' },
   red:     { from: 'from-red-400/35',    to: 'to-red-500/5',    ring: 'ring-red-400/30',    glow: 'rgba(248,113,113,0.5)',  icon: 'text-red-300',    border: 'border-red-400/30' },
+  silver:  { from: 'from-white/20',      to: 'to-white/[0.03]', ring: 'ring-white/25',      glow: 'rgba(220,225,235,0.25)', icon: 'text-white/85',  border: 'border-white/20' },
 };
 
 const SIZES = {

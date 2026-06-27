@@ -54,10 +54,10 @@ export interface DashboardResult {
 }
 
 const levelStyles: Record<string, string> = {
-  state: 'bg-orange-500/15 text-orange-300 border-orange-500/30',
-  county: 'bg-amber-500/15 text-amber-300 border-amber-500/30',
-  city: 'bg-blue-500/15 text-blue-300 border-blue-500/30',
-  federal: 'bg-violet-500/15 text-violet-300 border-violet-500/30',
+  state: 'bg-white/[0.08] text-white/80 border-white/20',
+  county: 'bg-white/[0.06] text-white/70 border-white/15',
+  city: 'bg-white/[0.06] text-white/70 border-white/15',
+  federal: 'bg-white/[0.08] text-white/80 border-white/20',
 };
 
 type Filter = 'all' | 'remaining' | 'commonly_missed';
@@ -334,7 +334,7 @@ export default function ResultsDashboard({ result, readOnly = false }: Props) {
 
       {/* 4 stat tiles */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <StatTile label="Total Permits" value={String(roadmap.total)} sub="Active" tone="orange" />
+        <StatTile label="Total Permits" value={String(roadmap.total)} sub="Active" tone="silver" />
         <StatTile label="Expiring Soon" value={String(expiringSoonCount)} sub="Next 60 days" tone="amber" />
         <StatTile label="Completed" value={String(roadmap.done)} sub="This year" tone="emerald" />
         <StatTile label="Renewal" value={String(renewalNeededCount)} sub={renewalNeededCount > 0 ? 'Action required' : 'All current'} tone="red" />
@@ -520,7 +520,7 @@ export default function ResultsDashboard({ result, readOnly = false }: Props) {
                     <li key={n.id} className="flex items-start gap-2.5">
                       <div className={cn(
                         'h-2 w-2 rounded-full mt-1.5 shrink-0',
-                        isOwned ? 'bg-emerald-400' : 'bg-[#FF5124]',
+                        isOwned ? 'bg-white/80' : 'bg-white/45',
                       )} />
                       <div className="flex-1 min-w-0">
                         <div className="text-sm text-white font-medium truncate">{n.title}</div>
@@ -552,7 +552,7 @@ export default function ResultsDashboard({ result, readOnly = false }: Props) {
           <ul className="space-y-1.5">
             {result.sources.map((s) => (
               <li key={s.index} className="text-sm">
-                <a href={s.url} target="_blank" rel="noopener noreferrer" className="text-white/70 hover:text-[#FF5124] inline-flex items-center gap-1">
+                <a href={s.url} target="_blank" rel="noopener noreferrer" className="text-white/70 hover:text-white inline-flex items-center gap-1">
                   <span className="text-white/40">[{s.index}]</span> {s.title}
                   {s.agency && <span className="text-white/40">— {s.agency}</span>}
                   <ExternalLink className="h-3 w-3" />
@@ -643,9 +643,9 @@ function RoadmapItem({ node, expanded, onToggleExpand, onToggleDone, onCalendar,
       layout
       className={cn(
         'rounded-xl border-[1.5px] transition-all',
-        owned && 'border-emerald-500/40 bg-emerald-500/[0.05]',
-        !owned && isDone && 'border-white/20 bg-white/[0.05]',
-        !owned && isNext && 'border-[#FF5124]/60 bg-[#FF5124]/[0.06] shadow-[0_0_0_1px_rgba(255,81,36,0.35),0_8px_24px_-12px_rgba(255,81,36,0.4)]',
+        owned && 'border-white/30 bg-white/[0.05]',
+        !owned && isDone && 'border-white/20 bg-white/[0.04]',
+        !owned && isNext && 'border-white/35 bg-white/[0.05] shadow-[0_0_0_1px_rgba(255,255,255,0.12),0_8px_24px_-12px_rgba(0,0,0,0.6)]',
         !owned && !isDone && !isNext && 'border-white/[0.14] bg-[#16161a] hover:border-white/30 hover:bg-[#1a1a1f]',
       )}
     >
@@ -660,7 +660,7 @@ function RoadmapItem({ node, expanded, onToggleExpand, onToggleDone, onCalendar,
             {isDone ? (
               <CheckCircle2 className="h-5 w-5 text-white/80" />
             ) : (
-              <Circle className={cn('h-5 w-5', isNext ? 'text-[#FF5124]' : 'text-white/30 hover:text-white/60')} />
+              <Circle className={cn('h-5 w-5', isNext ? 'text-white/85' : 'text-white/30 hover:text-white/60')} />
             )}
           </button>
 
@@ -670,7 +670,7 @@ function RoadmapItem({ node, expanded, onToggleExpand, onToggleDone, onCalendar,
           >
             <div className="flex flex-wrap items-center gap-2 mb-1">
               {isNext && (
-                <Badge className="text-[10px] uppercase tracking-wider bg-[#FF5124] text-white border-transparent hover:bg-[#FF5124]">
+                <Badge className="text-[10px] uppercase tracking-[0.14em] bg-white/[0.12] text-white border border-white/25 hover:bg-white/[0.12]">
                   Start here
                 </Badge>
               )}
@@ -836,13 +836,13 @@ function SignInToSavePrompt() {
     <motion.div
       initial={{ opacity: 0, y: -6 }}
       animate={{ opacity: 1, y: 0 }}
-      className="relative overflow-hidden rounded-2xl border-2 border-[#FF5124]/30 bg-gradient-to-br from-[#1a0f08] via-[#101013] to-[#101013] p-4 sm:p-5"
+      className="relative overflow-hidden rounded-2xl border border-white/15 bg-gradient-to-b from-white/[0.06] via-[#141418] to-[#101013] p-4 sm:p-5 shadow-[0_8px_28px_-14px_rgba(0,0,0,0.7)]"
     >
-      <div className="absolute -top-12 -right-12 h-40 w-40 rounded-full bg-[#FF5124]/20 blur-3xl pointer-events-none" />
+      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/30 to-transparent pointer-events-none" />
       <div className="relative flex flex-col sm:flex-row sm:items-center gap-4">
         <div className="flex items-start gap-3 flex-1 min-w-0">
-          <div className="h-10 w-10 rounded-xl bg-[#FF5124]/15 border border-[#FF5124]/30 flex items-center justify-center shrink-0">
-            <Sparkles className="h-5 w-5 text-[#FF8a5b]" />
+          <div className="h-10 w-10 rounded-xl bg-white/[0.06] border border-white/20 flex items-center justify-center shrink-0">
+            <Sparkles className="h-5 w-5 text-white/85" />
           </div>
           <div className="min-w-0">
             <div className="font-bold text-white text-[15px] sm:text-base leading-tight">
@@ -885,12 +885,13 @@ function SignInToSavePrompt() {
 }
 
 // ---------- StatTile ----------
-function StatTile({ label, value, sub, tone }: { label: string; value: string; sub: string; tone: 'orange' | 'amber' | 'emerald' | 'red' }) {
+function StatTile({ label, value, sub, tone }: { label: string; value: string; sub: string; tone: 'orange' | 'amber' | 'emerald' | 'red' | 'silver' }) {
   const toneMap = {
     orange: { ring: 'border-[#FF5124]/30', dot: 'bg-[#FF5124]', text: 'text-[#FF8a5b]' },
-    amber: { ring: 'border-amber-500/30', dot: 'bg-amber-400', text: 'text-amber-300' },
-    emerald: { ring: 'border-emerald-500/30', dot: 'bg-emerald-400', text: 'text-emerald-300' },
-    red: { ring: 'border-red-500/30', dot: 'bg-red-400', text: 'text-red-300' },
+    amber: { ring: 'border-white/15', dot: 'bg-white/60', text: 'text-white/70' },
+    emerald: { ring: 'border-white/15', dot: 'bg-white/60', text: 'text-white/70' },
+    red: { ring: 'border-white/15', dot: 'bg-white/60', text: 'text-white/70' },
+    silver: { ring: 'border-white/15', dot: 'bg-white/70', text: 'text-white/75' },
   }[tone];
   return (
     <div className={cn('relative rounded-2xl border-2 bg-[#101013] p-4 sm:p-5 shadow-[0_8px_24px_-12px_rgba(0,0,0,0.6)] overflow-hidden', toneMap.ring)}>
