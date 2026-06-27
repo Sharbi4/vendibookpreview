@@ -459,27 +459,36 @@ export default function ResultsDashboard({ result, readOnly = false }: Props) {
 }
 
 // ---------- ProgressRing ----------
-function ProgressRing({ pct }: { pct: number }) {
-  const r = 16;
+function ProgressRing({ pct, done, total }: { pct: number; done: number; total: number }) {
+  const r = 20;
   const c = 2 * Math.PI * r;
   const offset = c - (pct / 100) * c;
+  const isComplete = total > 0 && done === total;
+  const label = isComplete ? 'Done' : 'Complete';
   return (
-    <div className="relative h-12 w-12 shrink-0">
-      <svg className="h-12 w-12 -rotate-90" viewBox="0 0 40 40">
-        <circle cx="20" cy="20" r={r} stroke="rgba(255,255,255,0.08)" strokeWidth="3.5" fill="none" />
-        <motion.circle
-          cx="20" cy="20" r={r}
-          stroke="#FF5124"
-          strokeWidth="3.5"
-          strokeLinecap="round"
-          fill="none"
-          strokeDasharray={c}
-          animate={{ strokeDashoffset: offset }}
-          transition={{ duration: 0.6, ease: 'easeOut' }}
-        />
-      </svg>
-      <div className="absolute inset-0 flex items-center justify-center text-[11px] font-semibold text-white">
-        {pct}%
+    <div className="flex items-center gap-2 shrink-0" aria-label={`${pct}% complete, ${done} of ${total}`}>
+      <div className="relative h-14 w-14">
+        <svg className="h-14 w-14 -rotate-90" viewBox="0 0 48 48">
+          <circle cx="24" cy="24" r={r} stroke="rgba(255,255,255,0.08)" strokeWidth="4" fill="none" />
+          <motion.circle
+            cx="24" cy="24" r={r}
+            stroke="#FF5124"
+            strokeWidth="4"
+            strokeLinecap="round"
+            fill="none"
+            strokeDasharray={c}
+            animate={{ strokeDashoffset: offset }}
+            transition={{ duration: 0.6, ease: 'easeOut' }}
+          />
+        </svg>
+        <div className="absolute inset-0 flex flex-col items-center justify-center leading-none">
+          <span className="text-[12px] font-bold text-white">{pct}%</span>
+          <span className="text-[8px] uppercase tracking-wider text-white/55 font-semibold mt-0.5">{label}</span>
+        </div>
+      </div>
+      <div className="hidden md:flex flex-col leading-tight">
+        <span className="text-[10px] uppercase tracking-wider text-white/55 font-medium">Progress</span>
+        <span className="text-sm font-semibold text-white">{done} of {total}</span>
       </div>
     </div>
   );
