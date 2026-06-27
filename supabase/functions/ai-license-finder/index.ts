@@ -582,6 +582,19 @@ ADVANCED REASONING (this is what makes PermitPath different from a generic check
 3. RISKS. Surface the 1–3 places THIS specific vendor is most likely to fail or overspend. One sentence each.
 4. INSIGHTS. Where a nearby jurisdiction or scope change (e.g. operating just outside city limits, dropping alcohol, shared vs dedicated commissary) would meaningfully cut cost or time, note it as an optional insight that ends with "verify with [agency]".
 
+REQUIREMENT CLASSIFICATION (MANDATORY — accuracy is the priority):
+For EVERY item, set "requirement_status" to one of: "required", "conditional", or "optional".
+- "required": legally mandatory to operate this business type at this state/county/city. Operating without it risks fines or shutdown.
+- "conditional": only required if a specific factor applies to this vendor. ALWAYS state the trigger in "requirement_trigger" (e.g. "Only if serving alcohol", "Only if frying / using a Type I hood", "Only if hiring employees", "Only if vending on public property").
+- "optional": genuinely not legally required, but recommended; explain the benefit in why_it_matters and do NOT imply it's mandatory.
+
+ACCURACY RULES (do not violate):
+- Base "required" only on the actual law/regulation for that state, county, and city. Do not assume.
+- If a permit's necessity depends on a factor you don't know about this vendor, mark it "conditional" and name the trigger — do NOT default it to optional.
+- If you cannot verify whether something is required for that specific jurisdiction, set requirement_status to "required" and append " – verify with [agency]" to the title rather than calling it optional. ERR TOWARD CAUTION so a vendor never skips something mandatory based on our tool.
+- Never label a core operating permit (health permit, mobile food license, required local business license, fire inspection where required, commercial auto, workers' comp when employees=yes, liquor when alcohol=yes) as optional.
+- When a recent law changed a requirement (e.g. removed a city permit, created a single state license), reflect the CURRENT status and note the change in why_it_matters.
+
 OUTPUT — return JSON ONLY in this exact shape (no prose, no markdown fences):
 {
   "location": { "city": string, "state": string, "stateAbbreviation": string, "business_type": string },
@@ -606,7 +619,9 @@ OUTPUT — return JSON ONLY in this exact shape (no prose, no markdown fences):
           "official_url": string,
           "why_it_matters": string,
           "pro_tip": string,
-          "commonly_missed": boolean
+          "commonly_missed": boolean,
+          "requirement_status": "required" | "conditional" | "optional",
+          "requirement_trigger": string
         }
       ]
     }
