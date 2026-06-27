@@ -19,9 +19,11 @@ export interface SavedRoadmap {
   business_type: string | null;
   label: string | null;
   result_payload: DashboardResult;
+  refreshed_at: string | null;
   created_at: string;
   updated_at: string;
 }
+
 
 export interface PermitItem {
   id: string;
@@ -34,9 +36,14 @@ export interface PermitItem {
   notes: string | null;
   issue_date: string | null;
   expires_on: string | null;
+  archived: boolean;
+  archived_at: string | null;
+  archived_reason: string | null;
+  field_updated_at: Record<string, string>;
   created_at: string;
   updated_at: string;
 }
+
 
 export interface PermitDocument {
   id: string;
@@ -79,7 +86,16 @@ export function defaultRoadmapLabel(result: DashboardResult) {
 
 // ---------------- Roadmaps ----------------
 
-export async function saveRoadmap(userId: string, result: DashboardResult): Promise<SavedRoadmap> {
+/**
+ * Save the roadmap as a brand-new record. Multiple roadmaps with the same
+ * (state, city, businessType) are now allowed — the user picks "refresh existing"
+ * vs "save new" via SaveRoadmapDialog before we get here.
+ */
+export async function saveRoadmap(
+  userId: string,
+  result: DashboardResult,
+  label?: string,
+): Promise<SavedRoadmap> {
   const roadmap_key = buildRoadmapKey(
     result.location.state,
     result.location.city,
@@ -91,17 +107,48 @@ export async function saveRoadmap(userId: string, result: DashboardResult): Prom
     state_code: result.location.state,
     city: result.location.city || null,
     business_type: result.businessType || result.location.business_type || null,
-    label: defaultRoadmapLabel(result),
+    label: (label && label.trim()) || defaultRoadmapLabel(result),
     result_payload: result as any,
   };
   const { data, error } = await sb
     .from('saved_permit_roadmaps')
-    .upsert(payload, { onConflict: 'user_id,roadmap_key' })
+    .insert(payload)
     .select('*')
     .single();
   if (error) throw error;
   return data as SavedRoadmap;
 }
+
+/** Roadmaps that could be a duplicate of the result the user is about to save. */
+export async function findSimilarRoadmaps(
+  userId: string,
+  result: DashboardResult,
+): Promise<SavedRoadmap[]> {
+  const state = result.location.state;
+  const city = (result.location.city || '').trim().toLowerCase();
+  const bt = (result.businessType || result.location.business_type || '').toLowerCase();
+  const { data, error } = await sb
+    .from('saved_permit_roadmaps')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('state_code', state)
+    .order('updated_at', { ascending: false });
+  if (error) throw error;
+  const rows = (data || []) as SavedRoadmap[];
+  return rows
+    .map((r) => {
+      const rCity = (r.city || '').trim().toLowerCase();
+      const rBt = (r.business_type || '').toLowerCase();
+      const cityMatch = city && rCity ? rCity === city : !city && !rCity;
+      const btMatch = bt && rBt ? rBt === bt : !bt && !rBt;
+      const score = (cityMatch ? 2 : 0) + (btMatch ? 1 : 0);
+      return { r, score };
+    })
+    .filter((x) => x.score >= 1) // at least same city OR same business type
+    .sort((a, b) => b.score - a.score)
+    .map((x) => x.r);
+}
+
 
 export async function listRoadmaps(userId: string): Promise<SavedRoadmap[]> {
   const { data, error } = await sb
@@ -266,3 +313,78 @@ export function takePendingSave(): DashboardResult | null {
     return null;
   }
 }
+
+// ---------------- Item keys / refresh ----------------
+
+/** Mirror of how ResultsDashboard / buildRoadmap derive each requirement's stable id. */
+export function extractItemKeys(result: DashboardResult): string[] {
+  const out: string[] = [];
+  for (const c of result.categories || []) {
+    for (const it of c.items || []) {
+      out.push(`${c.name}::${it.title}`);
+    }
+  }
+  return out;
+}
+
+/**
+ * Re-run produced new requirements for an existing saved roadmap.
+ * - Swaps in the new payload.
+ * - Archives items whose item_key disappears (progress + uploads preserved, hidden from %).
+ * - Un-archives items that reappear (e.g. a permit briefly removed then added back).
+ */
+export async function refreshRoadmap(
+  roadmapId: string,
+  newResult: DashboardResult,
+): Promise<SavedRoadmap> {
+  const newKeys = extractItemKeys(newResult);
+  const { data, error } = await sb.rpc('refresh_permit_roadmap', {
+    p_roadmap_id: roadmapId,
+    p_new_payload: newResult as any,
+    p_new_item_keys: newKeys,
+  });
+  if (error) throw error;
+  return data as SavedRoadmap;
+}
+
+// ---------------- Per-field merge (cross-device LWW per field) ----------------
+
+const ITEM_FIELDS = [
+  'status',
+  'permit_number',
+  'issuing_agency',
+  'notes',
+  'issue_date',
+  'expires_on',
+] as const;
+type ItemField = (typeof ITEM_FIELDS)[number];
+
+/**
+ * Merge an item edit using per-field timestamps so two devices editing the same
+ * roadmap don't clobber each other — each field independently keeps the most
+ * recent client write.
+ */
+export async function mergeItemFields(
+  roadmapId: string,
+  itemKey: string,
+  patch: Partial<Record<ItemField, string | null>>,
+): Promise<PermitItem> {
+  const ts = new Date().toISOString();
+  const cleanPatch: Record<string, any> = {};
+  const fieldTs: Record<string, string> = {};
+  for (const f of ITEM_FIELDS) {
+    if (Object.prototype.hasOwnProperty.call(patch, f)) {
+      cleanPatch[f] = patch[f] ?? null;
+      fieldTs[f] = ts;
+    }
+  }
+  const { data, error } = await sb.rpc('merge_permit_item', {
+    p_roadmap_id: roadmapId,
+    p_item_key: itemKey,
+    p_patch: cleanPatch,
+    p_field_ts: fieldTs,
+  });
+  if (error) throw error;
+  return data as PermitItem;
+}
+
