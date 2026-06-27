@@ -641,6 +641,29 @@ const PermitPath = () => {
 
         <Footer />
       </div>
+
+      <SaveRoadmapDialog
+        open={saveDialogOpen}
+        matches={saveMatches}
+        defaultLabel={result?.location.city
+          ? `${result.location.city}, ${result.location.state}${result.businessType ? ' · ' + result.businessType.replace(/_/g, ' ') : ''}`
+          : result?.location.state || ''}
+        busy={saving}
+        onClose={() => setSaveDialogOpen(false)}
+        onRefresh={async (m) => {
+          if (!result) return;
+          const saved = await persistRefresh(m.id, result);
+          setSaveDialogOpen(false);
+          if (saved) navigate(`/dashboard?view=host&tab=permits&roadmap=${saved.id}`);
+        }}
+        onSaveNew={async (label) => {
+          if (!result) return;
+          const saved = await persistSaveNew(result, label);
+          setSaveDialogOpen(false);
+          if (saved) navigate(`/dashboard?view=host&tab=permits&roadmap=${saved.id}`);
+        }}
+      />
+
     </>
   );
 };
