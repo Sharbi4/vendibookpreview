@@ -525,9 +525,13 @@ interface ItemProps {
   onCalendar: () => void;
   readOnly: boolean;
   state: string;
+  owned: boolean;
+  expiresOn?: string;
+  onToggleOwned: () => void;
+  onSetExpires: (date: string) => void;
 }
 
-function RoadmapItem({ node, expanded, onToggleExpand, onToggleDone, onCalendar, readOnly, state }: ItemProps) {
+function RoadmapItem({ node, expanded, onToggleExpand, onToggleDone, onCalendar, readOnly, state, owned, expiresOn, onToggleOwned, onSetExpires }: ItemProps) {
   const isNext = node.status === 'next';
   const isDone = node.status === 'done';
   // "locked" no longer hides info — it's a soft sequence hint.
