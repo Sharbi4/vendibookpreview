@@ -334,7 +334,7 @@ export default function ResultsDashboard({ result, readOnly = false }: Props) {
 
       {/* 4 stat tiles */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <StatTile label="Total Permits" value={String(roadmap.total)} sub="Active" tone="orange" />
+        <StatTile label="Total Permits" value={String(roadmap.total)} sub="Active" tone="silver" />
         <StatTile label="Expiring Soon" value={String(expiringSoonCount)} sub="Next 60 days" tone="amber" />
         <StatTile label="Completed" value={String(roadmap.done)} sub="This year" tone="emerald" />
         <StatTile label="Renewal" value={String(renewalNeededCount)} sub={renewalNeededCount > 0 ? 'Action required' : 'All current'} tone="red" />
