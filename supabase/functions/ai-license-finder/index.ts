@@ -354,14 +354,16 @@ function baselineChecklist(state: string, city: string, businessType: string, pr
     recent_law_alert = "Arizona regulates mobile food vendors at the county level. In Pima County (Tucson), you need a county mobile food permit plus an accredited food handler card — the statewide license you may have read about does not exist here.";
   }
 
+  // Display order = OPERATING PRIORITY (what gates legal service first).
+  // Routine business-entity paperwork goes LAST.
   const categories = [
-    { name: "Business Registration", items: businessReg },
-    { name: "Food Safety Certifications", items: foodSafety },
     { name: "Health Permits", items: healthPermits },
+    { name: "Local & City-Specific", items: local },
     ...(commissary.length ? [{ name: "Commissary / Base of Operations", items: commissary }] : []),
     { name: "Fire & Equipment", items: fire },
-    { name: "Local & City-Specific", items: local },
+    { name: "Food Safety Certifications", items: foodSafety },
     { name: "Insurance", items: insurance },
+    { name: "Business Registration", items: businessReg },
   ];
 
   // Critical path reasoning
