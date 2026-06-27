@@ -885,12 +885,13 @@ function SignInToSavePrompt() {
 }
 
 // ---------- StatTile ----------
-function StatTile({ label, value, sub, tone }: { label: string; value: string; sub: string; tone: 'orange' | 'amber' | 'emerald' | 'red' }) {
+function StatTile({ label, value, sub, tone }: { label: string; value: string; sub: string; tone: 'orange' | 'amber' | 'emerald' | 'red' | 'silver' }) {
   const toneMap = {
     orange: { ring: 'border-[#FF5124]/30', dot: 'bg-[#FF5124]', text: 'text-[#FF8a5b]' },
-    amber: { ring: 'border-amber-500/30', dot: 'bg-amber-400', text: 'text-amber-300' },
-    emerald: { ring: 'border-emerald-500/30', dot: 'bg-emerald-400', text: 'text-emerald-300' },
-    red: { ring: 'border-red-500/30', dot: 'bg-red-400', text: 'text-red-300' },
+    amber: { ring: 'border-white/15', dot: 'bg-white/60', text: 'text-white/70' },
+    emerald: { ring: 'border-white/15', dot: 'bg-white/60', text: 'text-white/70' },
+    red: { ring: 'border-white/15', dot: 'bg-white/60', text: 'text-white/70' },
+    silver: { ring: 'border-white/15', dot: 'bg-white/70', text: 'text-white/75' },
   }[tone];
   return (
     <div className={cn('relative rounded-2xl border-2 bg-[#101013] p-4 sm:p-5 shadow-[0_8px_24px_-12px_rgba(0,0,0,0.6)] overflow-hidden', toneMap.ring)}>
