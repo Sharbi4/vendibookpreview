@@ -55,11 +55,15 @@ export interface PermitDocument {
   file_name: string;
   mime_type: string | null;
   size_bytes: number | null;
+  deleted_at: string | null;
   uploaded_at: string;
 }
 
 export const PERMIT_DOC_BUCKET = 'permit-documents';
 export const PERMIT_DOC_MAX_BYTES = 10 * 1024 * 1024; // 10 MB
+export const PERMIT_DOC_MAX_PER_ITEM = 5;
+
+// Hard MIME allowlist. Anything not on this list is rejected before upload.
 export const PERMIT_DOC_ALLOWED_MIME = [
   'application/pdf',
   'image/jpeg',
@@ -67,7 +71,34 @@ export const PERMIT_DOC_ALLOWED_MIME = [
   'image/heic',
   'image/heif',
   'image/webp',
-];
+] as const;
+
+// Backstop by extension for browsers that don't set a MIME (some iOS HEIC pickers).
+const ALLOWED_EXT = ['pdf', 'jpg', 'jpeg', 'png', 'heic', 'heif', 'webp'];
+
+export interface UploadValidationError {
+  file: string;
+  reason: string;
+}
+
+/** Returns null when valid, or a human-readable rejection reason. */
+export function validatePermitFile(file: File): string | null {
+  if (!file || file.size === 0) {
+    return 'File is empty or unreadable. Try re-exporting it and uploading again.';
+  }
+  if (file.size > PERMIT_DOC_MAX_BYTES) {
+    const mb = (file.size / 1024 / 1024).toFixed(1);
+    return `Too large at ${mb} MB. Max is 10 MB — compress the PDF or screenshot the page.`;
+  }
+  const mime = (file.type || '').toLowerCase();
+  const ext = (file.name.split('.').pop() || '').toLowerCase();
+  const mimeOk = mime ? (PERMIT_DOC_ALLOWED_MIME as readonly string[]).includes(mime) : false;
+  const extOk = ext ? ALLOWED_EXT.includes(ext) : false;
+  if (!mimeOk && !extOk) {
+    return `Unsupported file type${ext ? ` (.${ext})` : ''}. Use PDF, JPG, PNG, HEIC, or WEBP.`;
+  }
+  return null;
+}
 
 export function buildRoadmapKey(
   state: string,
