@@ -490,6 +490,7 @@ export default function ResultsDashboard({ result, readOnly = false, renderItemE
                         expiresOn={owned[node.id]?.expires}
                         onToggleOwned={() => toggleOwned(node.id)}
                         onSetExpires={(d) => setOwnedExpiration(node.id, d)}
+                        extra={renderItemExtra ? renderItemExtra(node) : null}
                       />
                     ))}
                   </div>
