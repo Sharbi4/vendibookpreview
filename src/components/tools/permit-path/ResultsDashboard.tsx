@@ -66,7 +66,14 @@ interface Props {
   result: DashboardResult;
   /** Read-only mode: hide save/share affordances when viewing somebody else's shared roadmap. */
   readOnly?: boolean;
+  /** When provided, renders inside the expanded panel of each requirement card. */
+  renderItemExtra?: (node: RoadmapNode) => React.ReactNode;
+  /** When provided, replaces the inline sign-in nudge with a primary "Save to my dashboard" button. */
+  onSaveToDashboard?: () => void | Promise<void>;
+  /** When set, shows a "Saved · View in dashboard →" link instead of the save button. */
+  savedRoadmapId?: string | null;
 }
+
 
 export default function ResultsDashboard({ result, readOnly = false }: Props) {
   const { user } = useAuth();
