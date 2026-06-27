@@ -1,5 +1,6 @@
+import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { MapPin, ArrowRight, Trash2 } from 'lucide-react';
+import { MapPin, ArrowRight, Trash2, Pencil, Check, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import type { SavedRoadmap, PermitItem } from '@/lib/permitsApi';
 
@@ -10,6 +11,7 @@ interface Props {
   requiredCount?: number;
   onOpen: () => void;
   onDelete: () => void;
+  onRename: (label: string) => Promise<void> | void;
 }
 
 function MiniRing({ pct }: { pct: number }) {
@@ -51,7 +53,12 @@ export default function PermitRoadmapCard({
   requiredCount,
   onOpen,
   onDelete,
+  onRename,
 }: Props) {
+  const [isRenaming, setIsRenaming] = useState(false);
+  const [renameValue, setRenameValue] = useState('');
+  const [saving, setSaving] = useState(false);
+
   const approved = items.filter((i) => i.status === 'approved').length;
   const denom = requiredCount && requiredCount > 0 ? requiredCount : totalRequirements;
   const pct = denom > 0 ? (approved / denom) * 100 : 0;
@@ -69,6 +76,28 @@ export default function PermitRoadmapCard({
     ? `${roadmap.city}, ${roadmap.state_code}`
     : roadmap.state_code;
 
+  const displayLabel = roadmap.label || location;
+
+  const startRename = () => {
+    setRenameValue(displayLabel);
+    setIsRenaming(true);
+  };
+
+  const submitRename = async () => {
+    const v = renameValue.trim();
+    if (!v || v === displayLabel) {
+      setIsRenaming(false);
+      return;
+    }
+    setSaving(true);
+    try {
+      await onRename(v);
+      setIsRenaming(false);
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return (
     <motion.div
       layout
@@ -84,24 +113,70 @@ export default function PermitRoadmapCard({
           <div className="text-[10px] uppercase tracking-[0.18em] text-white/45 font-semibold mb-1 inline-flex items-center gap-1.5">
             <MapPin className="h-3 w-3" /> Saved roadmap
           </div>
-          <div className="font-semibold text-white text-[16px] leading-snug truncate">
-            {location}
-          </div>
+          {isRenaming ? (
+            <div className="flex items-center gap-1.5">
+              <input
+                value={renameValue}
+                onChange={(e) => setRenameValue(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') void submitRename();
+                  if (e.key === 'Escape') setIsRenaming(false);
+                }}
+                autoFocus
+                maxLength={120}
+                disabled={saving}
+                className="flex-1 min-w-0 bg-white/[0.06] border border-white/20 rounded px-2 py-1 text-[15px] font-semibold text-white outline-none focus:border-[#FF5124]/60"
+                style={{ fontSize: '16px' }}
+              />
+              <button
+                type="button"
+                onClick={() => void submitRename()}
+                disabled={saving}
+                className="text-white/80 hover:text-white p-1 rounded"
+                aria-label="Save name"
+              >
+                <Check className="h-4 w-4" />
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsRenaming(false)}
+                disabled={saving}
+                className="text-white/55 hover:text-white p-1 rounded"
+                aria-label="Cancel rename"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={startRename}
+              className="text-left group/name w-full"
+              title="Click to rename"
+            >
+              <div className="font-semibold text-white text-[16px] leading-snug truncate inline-flex items-center gap-1.5">
+                {displayLabel}
+                <Pencil className="h-3 w-3 text-white/30 group-hover/name:text-white/70 transition-colors" />
+              </div>
+            </button>
+          )}
           {roadmap.business_type && (
-            <div className="text-sm text-white/65 capitalize truncate">
+            <div className="text-sm text-white/65 capitalize truncate mt-0.5">
               {roadmap.business_type.replace(/_/g, ' ')}
             </div>
           )}
         </div>
-        <button
-          type="button"
-          onClick={onDelete}
-          className="text-white/35 hover:text-white p-1.5 rounded-md hover:bg-white/[0.06]"
-          aria-label="Delete saved roadmap"
-          title="Delete"
-        >
-          <Trash2 className="h-3.5 w-3.5" />
-        </button>
+        {!isRenaming && (
+          <button
+            type="button"
+            onClick={onDelete}
+            className="text-white/35 hover:text-white p-1.5 rounded-md hover:bg-white/[0.06]"
+            aria-label="Delete saved roadmap"
+            title="Delete"
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+          </button>
+        )}
       </div>
 
       <div className="mt-4 grid grid-cols-3 gap-2 text-center">

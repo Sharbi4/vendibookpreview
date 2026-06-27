@@ -1,18 +1,20 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, FileCheck, Plus, Loader2, RefreshCw, Archive } from 'lucide-react';
+import { ArrowLeft, FileCheck, Plus, Loader2, RefreshCw, Archive, Trash2, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import {
-  listRoadmaps, getRoadmap, deleteRoadmap, listItemsForUser,
+  listRoadmaps, getRoadmap, softDeleteRoadmap, restoreRoadmap, renameRoadmap,
+  listDeletedRoadmaps, listItemsForUser,
   type SavedRoadmap, type PermitItem,
 } from '@/lib/permitsApi';
 import ResultsDashboard from '@/components/tools/permit-path/ResultsDashboard';
 import PermitItemManager from './permits/PermitItemManager';
 import RenewalsStrip from './permits/RenewalsStrip';
 import PermitRoadmapCard from './permits/PermitRoadmapCard';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 
 
 function totalRequirements(r: SavedRoadmap) {
@@ -99,14 +101,69 @@ export default function PermitsTab() {
     setSearchParams(next);
   }, [searchParams, setSearchParams]);
 
-  const handleDelete = useCallback(async (id: string) => {
-    if (!confirm('Delete this saved roadmap and all uploaded documents?')) return;
+  const [deletedDrawerOpen, setDeletedDrawerOpen] = useState(false);
+  const [deletedRoadmaps, setDeletedRoadmaps] = useState<SavedRoadmap[]>([]);
+  const [deletedLoading, setDeletedLoading] = useState(false);
+
+  const refreshDeleted = useCallback(async () => {
+    if (!user) return;
+    setDeletedLoading(true);
     try {
-      await deleteRoadmap(id);
-      setRoadmaps((p) => p.filter((r) => r.id !== id));
-      toast.success('Roadmap deleted');
+      const rs = await listDeletedRoadmaps(user.id);
+      setDeletedRoadmaps(rs);
     } catch (e: any) {
+      toast.error(e?.message || 'Could not load recently deleted');
+    } finally {
+      setDeletedLoading(false);
+    }
+  }, [user]);
+
+  const handleDelete = useCallback(async (r: SavedRoadmap) => {
+    // Optimistic remove + undo toast
+    setRoadmaps((p) => p.filter((x) => x.id !== r.id));
+    try {
+      await softDeleteRoadmap(r.id);
+      toast('Roadmap deleted', {
+        description: 'Recoverable for 7 days from "Recently deleted".',
+        action: {
+          label: 'Undo',
+          onClick: async () => {
+            try {
+              const restored = await restoreRoadmap(r.id);
+              setRoadmaps((p) => [restored, ...p.filter((x) => x.id !== restored.id)]);
+              toast.success('Roadmap restored');
+            } catch (e: any) {
+              toast.error(e?.message || 'Restore failed');
+            }
+          },
+        },
+      });
+    } catch (e: any) {
+      // Roll back
+      setRoadmaps((p) => [r, ...p.filter((x) => x.id !== r.id)]);
       toast.error(e?.message || 'Delete failed');
+    }
+  }, []);
+
+  const handleRename = useCallback(async (id: string, label: string) => {
+    try {
+      const updated = await renameRoadmap(id, label);
+      setRoadmaps((p) => p.map((x) => (x.id === id ? updated : x)));
+      toast.success('Roadmap renamed');
+    } catch (e: any) {
+      toast.error(e?.message || 'Rename failed');
+      throw e;
+    }
+  }, []);
+
+  const handleRestore = useCallback(async (id: string) => {
+    try {
+      const restored = await restoreRoadmap(id);
+      setRoadmaps((p) => [restored, ...p.filter((x) => x.id !== restored.id)]);
+      setDeletedRoadmaps((p) => p.filter((x) => x.id !== id));
+      toast.success('Roadmap restored');
+    } catch (e: any) {
+      toast.error(e?.message || 'Restore failed');
     }
   }, []);
 
@@ -155,11 +212,22 @@ export default function PermitsTab() {
             Track progress, store permit numbers, and keep documents in one place.
           </p>
         </div>
-        <Button asChild size="sm" className="bg-[#FF5124] hover:bg-[#FF5124]/90 text-white h-9 font-semibold">
-          <Link to="/tools/permitpath">
-            <Plus className="h-4 w-4 mr-1.5" /> Start a new permit search
-          </Link>
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            className="h-9 text-xs border-white/15 bg-white/[0.04] hover:bg-white/[0.08] text-white/85"
+            onClick={() => { void refreshDeleted(); setDeletedDrawerOpen(true); }}
+          >
+            <Trash2 className="h-3.5 w-3.5 mr-1.5" /> Recently deleted
+          </Button>
+          <Button asChild size="sm" className="bg-[#FF5124] hover:bg-[#FF5124]/90 text-white h-9 font-semibold">
+            <Link to="/tools/permitpath">
+              <Plus className="h-4 w-4 mr-1.5" /> Start a new permit search
+            </Link>
+          </Button>
+        </div>
       </div>
 
       {renewalRows.length > 0 && (
@@ -200,12 +268,88 @@ export default function PermitsTab() {
               totalRequirements={totalRequirements(r)}
               requiredCount={requiredCount(r)}
               onOpen={() => openRoadmap(r.id)}
-              onDelete={() => handleDelete(r.id)}
+              onDelete={() => handleDelete(r)}
+              onRename={(label) => handleRename(r.id, label)}
             />
           ))}
         </div>
       )}
+
+      <RecentlyDeletedDialog
+        open={deletedDrawerOpen}
+        onClose={() => setDeletedDrawerOpen(false)}
+        rows={deletedRoadmaps}
+        loading={deletedLoading}
+        onRestore={handleRestore}
+      />
     </div>
+  );
+}
+
+function RecentlyDeletedDialog({
+  open,
+  onClose,
+  rows,
+  loading,
+  onRestore,
+}: {
+  open: boolean;
+  onClose: () => void;
+  rows: SavedRoadmap[];
+  loading: boolean;
+  onRestore: (id: string) => Promise<void>;
+}) {
+  return (
+    <Dialog open={open} onOpenChange={(v) => { if (!v) onClose(); }}>
+      <DialogContent className="max-w-lg bg-[#0f0f12] border-white/12 text-white">
+        <DialogHeader>
+          <DialogTitle className="text-white">Recently deleted</DialogTitle>
+          <DialogDescription className="text-white/55">
+            Roadmaps deleted in the last 7 days. After 7 days they're permanently removed.
+          </DialogDescription>
+        </DialogHeader>
+        {loading ? (
+          <div className="flex items-center justify-center py-10">
+            <Loader2 className="h-5 w-5 animate-spin text-white/60" />
+          </div>
+        ) : rows.length === 0 ? (
+          <p className="text-sm text-white/55 py-8 text-center">
+            Nothing here. Anything you delete will appear here for 7 days.
+          </p>
+        ) : (
+          <ul className="space-y-2 max-h-[60vh] overflow-y-auto -mx-2 px-2">
+            {rows.map((r) => {
+              const deletedAt = r.deleted_at ? new Date(r.deleted_at) : null;
+              const daysLeft = deletedAt
+                ? Math.max(0, 7 - Math.floor((Date.now() - deletedAt.getTime()) / (1000 * 60 * 60 * 24)))
+                : 0;
+              const label = r.label || (r.city ? `${r.city}, ${r.state_code}` : r.state_code);
+              return (
+                <li
+                  key={r.id}
+                  className="flex items-center justify-between gap-3 rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2.5"
+                >
+                  <div className="min-w-0">
+                    <div className="text-sm text-white truncate">{label}</div>
+                    <div className="text-[11px] text-white/45">
+                      Deleted {deletedAt?.toLocaleDateString()} · {daysLeft}d left
+                    </div>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-8 border-white/20 bg-white/[0.05] hover:bg-white/[0.10] text-white"
+                    onClick={() => void onRestore(r.id)}
+                  >
+                    <RotateCcw className="h-3.5 w-3.5 mr-1.5" /> Restore
+                  </Button>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </DialogContent>
+    </Dialog>
   );
 }
 

@@ -20,6 +20,7 @@ export interface SavedRoadmap {
   label: string | null;
   result_payload: DashboardResult;
   refreshed_at: string | null;
+  deleted_at: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -54,11 +55,15 @@ export interface PermitDocument {
   file_name: string;
   mime_type: string | null;
   size_bytes: number | null;
+  deleted_at: string | null;
   uploaded_at: string;
 }
 
 export const PERMIT_DOC_BUCKET = 'permit-documents';
 export const PERMIT_DOC_MAX_BYTES = 10 * 1024 * 1024; // 10 MB
+export const PERMIT_DOC_MAX_PER_ITEM = 5;
+
+// Hard MIME allowlist. Anything not on this list is rejected before upload.
 export const PERMIT_DOC_ALLOWED_MIME = [
   'application/pdf',
   'image/jpeg',
@@ -66,7 +71,34 @@ export const PERMIT_DOC_ALLOWED_MIME = [
   'image/heic',
   'image/heif',
   'image/webp',
-];
+] as const;
+
+// Backstop by extension for browsers that don't set a MIME (some iOS HEIC pickers).
+const ALLOWED_EXT = ['pdf', 'jpg', 'jpeg', 'png', 'heic', 'heif', 'webp'];
+
+export interface UploadValidationError {
+  file: string;
+  reason: string;
+}
+
+/** Returns null when valid, or a human-readable rejection reason. */
+export function validatePermitFile(file: File): string | null {
+  if (!file || file.size === 0) {
+    return 'File is empty or unreadable. Try re-exporting it and uploading again.';
+  }
+  if (file.size > PERMIT_DOC_MAX_BYTES) {
+    const mb = (file.size / 1024 / 1024).toFixed(1);
+    return `Too large at ${mb} MB. Max is 10 MB — compress the PDF or screenshot the page.`;
+  }
+  const mime = (file.type || '').toLowerCase();
+  const ext = (file.name.split('.').pop() || '').toLowerCase();
+  const mimeOk = mime ? (PERMIT_DOC_ALLOWED_MIME as readonly string[]).includes(mime) : false;
+  const extOk = ext ? ALLOWED_EXT.includes(ext) : false;
+  if (!mimeOk && !extOk) {
+    return `Unsupported file type${ext ? ` (.${ext})` : ''}. Use PDF, JPG, PNG, HEIC, or WEBP.`;
+  }
+  return null;
+}
 
 export function buildRoadmapKey(
   state: string,
@@ -155,7 +187,22 @@ export async function listRoadmaps(userId: string): Promise<SavedRoadmap[]> {
     .from('saved_permit_roadmaps')
     .select('*')
     .eq('user_id', userId)
+    .is('deleted_at', null)
     .order('updated_at', { ascending: false });
+  if (error) throw error;
+  return (data || []) as SavedRoadmap[];
+}
+
+/** Roadmaps soft-deleted in the last 7 days — recoverable. */
+export async function listDeletedRoadmaps(userId: string): Promise<SavedRoadmap[]> {
+  const cutoff = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+  const { data, error } = await sb
+    .from('saved_permit_roadmaps')
+    .select('*')
+    .eq('user_id', userId)
+    .not('deleted_at', 'is', null)
+    .gte('deleted_at', cutoff)
+    .order('deleted_at', { ascending: false });
   if (error) throw error;
   return (data || []) as SavedRoadmap[];
 }
@@ -170,9 +217,30 @@ export async function getRoadmap(id: string): Promise<SavedRoadmap | null> {
   return (data as SavedRoadmap) || null;
 }
 
-export async function deleteRoadmap(id: string): Promise<void> {
-  const { error } = await sb.from('saved_permit_roadmaps').delete().eq('id', id);
+/** Soft-delete: roadmap (and its documents) stays recoverable for 7 days. */
+export async function softDeleteRoadmap(id: string): Promise<void> {
+  const { error } = await sb.rpc('soft_delete_permit_roadmap', { p_roadmap_id: id });
   if (error) throw error;
+}
+
+/** Back-compat alias — kept so existing callers continue to work. */
+export const deleteRoadmap = softDeleteRoadmap;
+
+/** Restore a soft-deleted roadmap within the 7-day window. */
+export async function restoreRoadmap(id: string): Promise<SavedRoadmap> {
+  const { data, error } = await sb.rpc('restore_permit_roadmap', { p_roadmap_id: id });
+  if (error) throw error;
+  return data as SavedRoadmap;
+}
+
+/** Rename the roadmap label. */
+export async function renameRoadmap(id: string, label: string): Promise<SavedRoadmap> {
+  const { data, error } = await sb.rpc('rename_permit_roadmap', {
+    p_roadmap_id: id,
+    p_label: label,
+  });
+  if (error) throw error;
+  return data as SavedRoadmap;
 }
 
 // ---------------- Items ----------------
@@ -228,6 +296,7 @@ export async function listDocuments(roadmapId: string): Promise<PermitDocument[]
     .from('permit_documents')
     .select('*')
     .eq('roadmap_id', roadmapId)
+    .is('deleted_at', null)
     .order('uploaded_at', { ascending: false });
   if (error) throw error;
   return (data || []) as PermitDocument[];
@@ -239,13 +308,9 @@ export async function uploadDocument(
   itemKey: string,
   file: File,
 ): Promise<PermitDocument> {
-  if (file.size > PERMIT_DOC_MAX_BYTES) {
-    throw new Error(`File too large (max ${Math.round(PERMIT_DOC_MAX_BYTES / 1024 / 1024)} MB).`);
-  }
-  if (file.type && !PERMIT_DOC_ALLOWED_MIME.includes(file.type)) {
-    // Allow unknown types (e.g. HEIC sometimes empty) but warn known disallowed
-    // by not rejecting silently here. Keep permissive for resilience.
-  }
+  const reason = validatePermitFile(file);
+  if (reason) throw new Error(reason);
+
   const safeName = file.name.replace(/[^a-zA-Z0-9._-]+/g, '_').slice(0, 80);
   const objectKey = `${userId}/${roadmapId}/${encodeURIComponent(itemKey)}/${crypto.randomUUID()}-${safeName}`;
 
@@ -272,17 +337,33 @@ export async function uploadDocument(
     .select('*')
     .single();
   if (error) {
-    // Best-effort cleanup
     await supabase.storage.from(PERMIT_DOC_BUCKET).remove([objectKey]).catch(() => {});
     throw error;
   }
   return data as PermitDocument;
 }
 
-export async function deleteDocument(doc: PermitDocument): Promise<void> {
-  await supabase.storage.from(PERMIT_DOC_BUCKET).remove([doc.storage_path]).catch(() => {});
-  const { error } = await sb.from('permit_documents').delete().eq('id', doc.id);
+/** Soft-delete a document (recoverable for 7 days). Storage object is kept. */
+export async function softDeleteDocument(doc: PermitDocument): Promise<void> {
+  const { error } = await sb.rpc('soft_delete_permit_document', { p_document_id: doc.id });
   if (error) throw error;
+}
+
+/** Restore a soft-deleted document within the 7-day window. */
+export async function restoreDocument(documentId: string): Promise<PermitDocument> {
+  const { data, error } = await sb.rpc('restore_permit_document', { p_document_id: documentId });
+  if (error) throw error;
+  return data as PermitDocument;
+}
+
+/** Rename a document's display file name. */
+export async function renameDocument(documentId: string, fileName: string): Promise<PermitDocument> {
+  const { data, error } = await sb.rpc('rename_permit_document', {
+    p_document_id: documentId,
+    p_file_name: fileName,
+  });
+  if (error) throw error;
+  return data as PermitDocument;
 }
 
 export async function getSignedDocUrl(storagePath: string, expiresInSec = 60 * 5): Promise<string> {

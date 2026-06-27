@@ -2570,6 +2570,7 @@ export type Database = {
       }
       permit_documents: {
         Row: {
+          deleted_at: string | null
           file_name: string
           id: string
           item_key: string
@@ -2581,6 +2582,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          deleted_at?: string | null
           file_name: string
           id?: string
           item_key: string
@@ -2592,6 +2594,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          deleted_at?: string | null
           file_name?: string
           id?: string
           item_key?: string
@@ -3793,6 +3796,7 @@ export type Database = {
           business_type: string | null
           city: string | null
           created_at: string
+          deleted_at: string | null
           id: string
           label: string | null
           refreshed_at: string | null
@@ -3806,6 +3810,7 @@ export type Database = {
           business_type?: string | null
           city?: string | null
           created_at?: string
+          deleted_at?: string | null
           id?: string
           label?: string | null
           refreshed_at?: string | null
@@ -3819,6 +3824,7 @@ export type Database = {
           business_type?: string | null
           city?: string | null
           created_at?: string
+          deleted_at?: string | null
           id?: string
           label?: string | null
           refreshed_at?: string | null
@@ -4725,6 +4731,139 @@ export type Database = {
           business_type: string | null
           city: string | null
           created_at: string
+          deleted_at: string | null
+          id: string
+          label: string | null
+          refreshed_at: string | null
+          result_payload: Json
+          roadmap_key: string
+          state_code: string
+          updated_at: string
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "saved_permit_roadmaps"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      rename_permit_document: {
+        Args: { p_document_id: string; p_file_name: string }
+        Returns: {
+          deleted_at: string | null
+          file_name: string
+          id: string
+          item_key: string
+          mime_type: string | null
+          roadmap_id: string
+          size_bytes: number | null
+          storage_path: string
+          uploaded_at: string
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "permit_documents"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      rename_permit_roadmap: {
+        Args: { p_label: string; p_roadmap_id: string }
+        Returns: {
+          business_type: string | null
+          city: string | null
+          created_at: string
+          deleted_at: string | null
+          id: string
+          label: string | null
+          refreshed_at: string | null
+          result_payload: Json
+          roadmap_key: string
+          state_code: string
+          updated_at: string
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "saved_permit_roadmaps"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      restore_permit_document: {
+        Args: { p_document_id: string }
+        Returns: {
+          deleted_at: string | null
+          file_name: string
+          id: string
+          item_key: string
+          mime_type: string | null
+          roadmap_id: string
+          size_bytes: number | null
+          storage_path: string
+          uploaded_at: string
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "permit_documents"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      restore_permit_roadmap: {
+        Args: { p_roadmap_id: string }
+        Returns: {
+          business_type: string | null
+          city: string | null
+          created_at: string
+          deleted_at: string | null
+          id: string
+          label: string | null
+          refreshed_at: string | null
+          result_payload: Json
+          roadmap_key: string
+          state_code: string
+          updated_at: string
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "saved_permit_roadmaps"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      soft_delete_permit_document: {
+        Args: { p_document_id: string }
+        Returns: {
+          deleted_at: string | null
+          file_name: string
+          id: string
+          item_key: string
+          mime_type: string | null
+          roadmap_id: string
+          size_bytes: number | null
+          storage_path: string
+          uploaded_at: string
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "permit_documents"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      soft_delete_permit_roadmap: {
+        Args: { p_roadmap_id: string }
+        Returns: {
+          business_type: string | null
+          city: string | null
+          created_at: string
+          deleted_at: string | null
           id: string
           label: string | null
           refreshed_at: string | null
