@@ -258,7 +258,7 @@ export default function ResultsDashboard({ result, readOnly = false }: Props) {
     <div className="mt-8 space-y-8">
       {/* Sticky summary bar — compact, high contrast */}
       <div className="sticky top-16 z-20 -mx-2 sm:mx-0">
-        <div className="rounded-2xl border border-white/20 bg-[#0a0a0d]/95 backdrop-blur-xl px-4 sm:px-5 py-3 shadow-[0_20px_60px_-20px_rgba(0,0,0,0.8)]">
+        <div className="rounded-2xl border-2 border-white/20 bg-[#0a0a0d]/95 backdrop-blur-xl px-4 sm:px-5 py-3 shadow-[0_20px_60px_-20px_rgba(0,0,0,0.8)]">
           <div className="flex flex-wrap items-center gap-x-4 gap-y-3">
             <div className="min-w-0 flex-1 leading-tight">
               <div className="text-[10px] text-white/70 uppercase tracking-wider font-medium truncate">
@@ -322,7 +322,7 @@ export default function ResultsDashboard({ result, readOnly = false }: Props) {
             initial={{ opacity: 0, y: -8 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, height: 0 }}
-            className="rounded-2xl border border-amber-500/25 bg-amber-500/[0.06] p-4 sm:p-5 flex gap-3"
+            className="rounded-2xl border-2 border-amber-500/25 bg-amber-500/[0.06] p-4 sm:p-5 flex gap-3"
           >
             <div className="h-9 w-9 rounded-lg bg-amber-500/15 flex items-center justify-center shrink-0">
               <Sparkles className="h-5 w-5 text-amber-300" />
@@ -380,10 +380,10 @@ export default function ResultsDashboard({ result, readOnly = false }: Props) {
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: idx * 0.03 }}
-              className="rounded-2xl border border-white/15 bg-[#101013] overflow-hidden shadow-[0_8px_24px_-12px_rgba(0,0,0,0.6)]"
+              className="rounded-2xl border-2 border-white/15 bg-[#101013] overflow-hidden shadow-[0_8px_24px_-12px_rgba(0,0,0,0.6)]"
             >
               {/* Sticky category header — anchor as you scroll */}
-              <div className="flex items-center gap-3 px-4 sm:px-5 py-3.5 bg-[#101013] border-b border-white/15">
+              <div className="flex items-center gap-3 px-4 sm:px-5 py-3.5 bg-[#101013] border-b-2 border-white/15">
                 {(() => {
                   const cv = categoryVisual(cat.name);
                   return <PremiumIcon icon={cv.icon} accent={cv.accent} size="sm" hover="lift" />;
@@ -434,7 +434,7 @@ export default function ResultsDashboard({ result, readOnly = false }: Props) {
 
       {/* Sources */}
       {result.sources && result.sources.length > 0 && (
-        <div className="rounded-2xl border border-white/10 bg-[#0d0d10] p-5">
+        <div className="rounded-2xl border-2 border-white/10 bg-[#0d0d10] p-5">
           <h3 className="text-xs font-semibold uppercase tracking-wider text-white/60 mb-3">Sources</h3>
           <ul className="space-y-1.5">
             {result.sources.map((s) => (
@@ -640,7 +640,7 @@ function RoadmapItem({ node, expanded, onToggleExpand, onToggleDone, onCalendar,
 // ---------- StatChip ----------
 function StatChip({ icon: Icon, label, value }: { icon: any; label: string; value: string }) {
   return (
-    <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white/[0.06] border border-white/15">
+    <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white/[0.06] border-2 border-white/15">
       <Icon className="h-4 w-4 text-white/75 shrink-0" />
       <div className="flex flex-col leading-tight">
         <span className="text-[10px] uppercase tracking-wider text-white/55 font-medium">{label}</span>
