@@ -2614,8 +2614,12 @@ export type Database = {
       }
       permit_items: {
         Row: {
+          archived: boolean
+          archived_at: string | null
+          archived_reason: string | null
           created_at: string
           expires_on: string | null
+          field_updated_at: Json
           id: string
           issue_date: string | null
           issuing_agency: string | null
@@ -2628,8 +2632,12 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          archived?: boolean
+          archived_at?: string | null
+          archived_reason?: string | null
           created_at?: string
           expires_on?: string | null
+          field_updated_at?: Json
           id?: string
           issue_date?: string | null
           issuing_agency?: string | null
@@ -2642,8 +2650,12 @@ export type Database = {
           user_id: string
         }
         Update: {
+          archived?: boolean
+          archived_at?: string | null
+          archived_reason?: string | null
           created_at?: string
           expires_on?: string | null
+          field_updated_at?: Json
           id?: string
           issue_date?: string | null
           issuing_agency?: string | null
@@ -3783,6 +3795,7 @@ export type Database = {
           created_at: string
           id: string
           label: string | null
+          refreshed_at: string | null
           result_payload: Json
           roadmap_key: string
           state_code: string
@@ -3795,6 +3808,7 @@ export type Database = {
           created_at?: string
           id?: string
           label?: string | null
+          refreshed_at?: string | null
           result_payload?: Json
           roadmap_key: string
           state_code: string
@@ -3807,6 +3821,7 @@ export type Database = {
           created_at?: string
           id?: string
           label?: string | null
+          refreshed_at?: string | null
           result_payload?: Json
           roadmap_key?: string
           state_code?: string
@@ -4651,6 +4666,38 @@ export type Database = {
           owner_id: string
         }[]
       }
+      merge_permit_item: {
+        Args: {
+          p_field_ts: Json
+          p_item_key: string
+          p_patch: Json
+          p_roadmap_id: string
+        }
+        Returns: {
+          archived: boolean
+          archived_at: string | null
+          archived_reason: string | null
+          created_at: string
+          expires_on: string | null
+          field_updated_at: Json
+          id: string
+          issue_date: string | null
+          issuing_agency: string | null
+          item_key: string
+          notes: string | null
+          permit_number: string | null
+          roadmap_id: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "permit_items"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       move_to_dlq: {
         Args: {
           dlq_name: string
@@ -4667,6 +4714,32 @@ export type Database = {
           msg_id: number
           read_ct: number
         }[]
+      }
+      refresh_permit_roadmap: {
+        Args: {
+          p_new_item_keys: string[]
+          p_new_payload: Json
+          p_roadmap_id: string
+        }
+        Returns: {
+          business_type: string | null
+          city: string | null
+          created_at: string
+          id: string
+          label: string | null
+          refreshed_at: string | null
+          result_payload: Json
+          roadmap_key: string
+          state_code: string
+          updated_at: string
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "saved_permit_roadmaps"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       submit_feedback_by_token: {
         Args: {
