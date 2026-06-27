@@ -28,6 +28,7 @@ import { ListingInsightsPanel } from './ListingInsightsPanel';
 import { PromotionHub } from './PromotionHub';
 import { BoostListingPrompt } from './BoostListingPrompt';
 import { KitchenProSuite } from './KitchenProSuite';
+import PermitsTab from './PermitsTab';
 import { ConversionFunnel } from '@/components/analytics/ConversionFunnel';
 import { RevenueChart } from '@/components/analytics/RevenueChart';
 import { TrafficSourcesCard } from '@/components/analytics/TrafficSourcesCard';
