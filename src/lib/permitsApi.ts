@@ -86,7 +86,16 @@ export function defaultRoadmapLabel(result: DashboardResult) {
 
 // ---------------- Roadmaps ----------------
 
-export async function saveRoadmap(userId: string, result: DashboardResult): Promise<SavedRoadmap> {
+/**
+ * Save the roadmap as a brand-new record. Multiple roadmaps with the same
+ * (state, city, businessType) are now allowed — the user picks "refresh existing"
+ * vs "save new" via SaveRoadmapDialog before we get here.
+ */
+export async function saveRoadmap(
+  userId: string,
+  result: DashboardResult,
+  label?: string,
+): Promise<SavedRoadmap> {
   const roadmap_key = buildRoadmapKey(
     result.location.state,
     result.location.city,
@@ -98,17 +107,48 @@ export async function saveRoadmap(userId: string, result: DashboardResult): Prom
     state_code: result.location.state,
     city: result.location.city || null,
     business_type: result.businessType || result.location.business_type || null,
-    label: defaultRoadmapLabel(result),
+    label: (label && label.trim()) || defaultRoadmapLabel(result),
     result_payload: result as any,
   };
   const { data, error } = await sb
     .from('saved_permit_roadmaps')
-    .upsert(payload, { onConflict: 'user_id,roadmap_key' })
+    .insert(payload)
     .select('*')
     .single();
   if (error) throw error;
   return data as SavedRoadmap;
 }
+
+/** Roadmaps that could be a duplicate of the result the user is about to save. */
+export async function findSimilarRoadmaps(
+  userId: string,
+  result: DashboardResult,
+): Promise<SavedRoadmap[]> {
+  const state = result.location.state;
+  const city = (result.location.city || '').trim().toLowerCase();
+  const bt = (result.businessType || result.location.business_type || '').toLowerCase();
+  const { data, error } = await sb
+    .from('saved_permit_roadmaps')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('state_code', state)
+    .order('updated_at', { ascending: false });
+  if (error) throw error;
+  const rows = (data || []) as SavedRoadmap[];
+  return rows
+    .map((r) => {
+      const rCity = (r.city || '').trim().toLowerCase();
+      const rBt = (r.business_type || '').toLowerCase();
+      const cityMatch = city && rCity ? rCity === city : !city && !rCity;
+      const btMatch = bt && rBt ? rBt === bt : !bt && !rBt;
+      const score = (cityMatch ? 2 : 0) + (btMatch ? 1 : 0);
+      return { r, score };
+    })
+    .filter((x) => x.score >= 1) // at least same city OR same business type
+    .sort((a, b) => b.score - a.score)
+    .map((x) => x.r);
+}
+
 
 export async function listRoadmaps(userId: string): Promise<SavedRoadmap[]> {
   const { data, error } = await sb
