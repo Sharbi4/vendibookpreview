@@ -160,6 +160,7 @@ function baselineChecklist(state: string, city: string, businessType: string, pr
       official_url: "",
       why_it_matters: "Required in nearly every state the moment you hire your first employee.",
       commonly_missed: true,
+      requirement_status: "required",
     });
     businessReg.push({
       title: "State payroll & unemployment tax registration",
@@ -170,10 +171,11 @@ function baselineChecklist(state: string, city: string, businessType: string, pr
       official_url: "",
       why_it_matters: "Required to legally run payroll, withhold income tax, and pay unemployment insurance.",
       commonly_missed: true,
+      requirement_status: "required",
     });
   }
 
-  const foodSafety = [
+  const foodSafety: any[] = [
     {
       title: "Food Handler Card (every employee)",
       issuer: azTucsonFoodTruck ? "Pima County Health Department (accredited training)" : `${stateName} accredited food handler program`,
@@ -183,6 +185,7 @@ function baselineChecklist(state: string, city: string, businessType: string, pr
       official_url: azTucsonFoodTruck ? "https://webcms.pima.gov/government/health_department/food_safety_environmental_services/food_employee_handler_information/" : "",
       why_it_matters: "Required by health code before any employee handles food. Pima and Maricopa counties require an accredited course.",
       commonly_missed: true,
+      requirement_status: "required",
     },
     {
       title: "Certified Food Protection Manager (ANSI-accredited)",
@@ -193,6 +196,7 @@ function baselineChecklist(state: string, city: string, businessType: string, pr
       official_url: "https://www.servsafe.com/",
       why_it_matters: "At least one manager per operation must hold an ANSI-accredited certification under the FDA Food Code adopted by most states.",
       commonly_missed: false,
+      requirement_status: "required",
     },
   ];
 
@@ -206,12 +210,14 @@ function baselineChecklist(state: string, city: string, businessType: string, pr
       official_url: state === 'TX' ? "https://www.tabc.texas.gov/" : "",
       why_it_matters: "Required for anyone serving alcohol. Without it your liquor license can be denied or suspended.",
       commonly_missed: true,
+      requirement_status: "conditional",
+      requirement_trigger: "Only if serving alcohol",
     });
   }
 
   // Health permits — prepackaged tier softens, cook-to-order keeps standard
   const isPrepackaged = profile.prep_style === 'prepackaged';
-  const healthPermits = [
+  const healthPermits: any[] = [
     {
       title: azTucsonFoodTruck
         ? "Pima County Mobile Food Permit + Plan Review"
@@ -227,6 +233,7 @@ function baselineChecklist(state: string, city: string, businessType: string, pr
         ? "Even prepackaged operations need a health permit, but plan review and fees are usually lower because the risk profile is smaller."
         : "The core operating permit. No legal service of food without an approved unit, plan review, and on-site inspection.",
       commonly_missed: false,
+      requirement_status: "required",
     },
   ];
 
@@ -244,11 +251,12 @@ function baselineChecklist(state: string, city: string, businessType: string, pr
       official_url: "",
       why_it_matters: "Most jurisdictions require a written agreement with a permitted commissary for cleaning, water/waste, and overnight storage. Without it, your health permit cannot be issued.",
       commonly_missed: true,
+      requirement_status: "required",
     });
   }
 
   // Fire & equipment — frying upgrades to Type I hood requirements
-  const fire = [
+  const fire: any[] = [
     {
       title: profile.frying === 'yes'
         ? "Fire Inspection + Type I Hood & Suppression (frying / open flame)"
@@ -262,6 +270,7 @@ function baselineChecklist(state: string, city: string, businessType: string, pr
         ? "Fryers and grease-producing equipment require a Type I hood with UL-300 suppression. Most first inspections fail here — budget time for a re-inspection."
         : "Trucks with propane or cooking equipment must pass a fire inspection — often required before the health permit is issued.",
       commonly_missed: true,
+      requirement_status: "required",
     },
   ];
   if (profile.frying === 'yes') {
@@ -274,6 +283,8 @@ function baselineChecklist(state: string, city: string, businessType: string, pr
       official_url: "",
       why_it_matters: "Frying = grease waste. Most cities require a documented disposal contract — health inspectors ask for proof.",
       commonly_missed: true,
+      requirement_status: "conditional",
+      requirement_trigger: "Only if frying or producing grease waste",
     });
   }
 
@@ -288,9 +299,10 @@ function baselineChecklist(state: string, city: string, businessType: string, pr
       official_url: state === 'AZ' && city?.toLowerCase().includes('tucson') ? "https://www.tucsonaz.gov/business-license" : "",
       why_it_matters: "Almost every city requires a business license to operate within city limits, separate from your state registration.",
       commonly_missed: false,
+      requirement_status: "required",
     },
     {
-      title: "Vending / Right-of-Way Permit (if vending on public property)",
+      title: "Vending / Right-of-Way Permit",
       issuer: city ? `${city} Transportation or Parks Department` : "Local Vending Authority",
       level: "city",
       cost_estimate: "Varies — verify with city",
@@ -298,6 +310,8 @@ function baselineChecklist(state: string, city: string, businessType: string, pr
       official_url: "",
       why_it_matters: "Required if you sell from a public sidewalk, park, or street. Private property events usually do not require this.",
       commonly_missed: true,
+      requirement_status: "conditional",
+      requirement_trigger: "Only if vending on public sidewalk, park, or street",
     },
   ];
 
@@ -311,6 +325,8 @@ function baselineChecklist(state: string, city: string, businessType: string, pr
       official_url: state === 'TX' ? "https://www.tabc.texas.gov/" : "",
       why_it_matters: "Serving any alcohol requires a state-issued license. This is typically the slowest permit and often gates your launch.",
       commonly_missed: false,
+      requirement_status: "conditional",
+      requirement_trigger: "Only if serving alcohol",
     });
   }
 
@@ -324,10 +340,12 @@ function baselineChecklist(state: string, city: string, businessType: string, pr
       official_url: "",
       why_it_matters: "Permits don't stack across borders — each city or county where you regularly operate generally requires its own business license. Some health permits transfer; many do not.",
       commonly_missed: true,
+      requirement_status: "conditional",
+      requirement_trigger: "Only if operating in multiple cities/counties",
     });
   }
 
-  const insurance = [
+  const insurance: any[] = [
     {
       title: "General Liability Insurance ($1M minimum)",
       issuer: "Private insurer (FLIP, Insure My Food Truck, Next, etc.)",
@@ -337,6 +355,7 @@ function baselineChecklist(state: string, city: string, businessType: string, pr
       official_url: "https://www.fliprogram.com/",
       why_it_matters: "Required by most event organizers, commissaries, and city permits. Protects against customer injury and food-related claims.",
       commonly_missed: false,
+      requirement_status: "required",
     },
     {
       title: "Commercial Auto Insurance",
@@ -347,6 +366,7 @@ function baselineChecklist(state: string, city: string, businessType: string, pr
       official_url: "",
       why_it_matters: "A personal auto policy will not cover a vehicle used commercially. Required to register the truck for business use.",
       commonly_missed: true,
+      requirement_status: "required",
     },
   ];
 
