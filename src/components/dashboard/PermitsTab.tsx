@@ -1,18 +1,19 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, FileCheck, Plus, Loader2 } from 'lucide-react';
+import { ArrowLeft, FileCheck, Plus, Loader2, RefreshCw, Archive } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import {
-  listRoadmaps, getRoadmap, deleteRoadmap, listItemsForUser, upsertItem,
+  listRoadmaps, getRoadmap, deleteRoadmap, listItemsForUser,
   type SavedRoadmap, type PermitItem,
 } from '@/lib/permitsApi';
 import ResultsDashboard from '@/components/tools/permit-path/ResultsDashboard';
 import PermitItemManager from './permits/PermitItemManager';
 import RenewalsStrip from './permits/RenewalsStrip';
 import PermitRoadmapCard from './permits/PermitRoadmapCard';
+
 
 function totalRequirements(r: SavedRoadmap) {
   return (r.result_payload?.categories || []).reduce((s, c) => s + (c.items?.length || 0), 0);
