@@ -643,9 +643,9 @@ function RoadmapItem({ node, expanded, onToggleExpand, onToggleDone, onCalendar,
       layout
       className={cn(
         'rounded-xl border-[1.5px] transition-all',
-        owned && 'border-emerald-500/40 bg-emerald-500/[0.05]',
-        !owned && isDone && 'border-white/20 bg-white/[0.05]',
-        !owned && isNext && 'border-[#FF5124]/60 bg-[#FF5124]/[0.06] shadow-[0_0_0_1px_rgba(255,81,36,0.35),0_8px_24px_-12px_rgba(255,81,36,0.4)]',
+        owned && 'border-white/30 bg-white/[0.05]',
+        !owned && isDone && 'border-white/20 bg-white/[0.04]',
+        !owned && isNext && 'border-white/35 bg-white/[0.05] shadow-[0_0_0_1px_rgba(255,255,255,0.12),0_8px_24px_-12px_rgba(0,0,0,0.6)]',
         !owned && !isDone && !isNext && 'border-white/[0.14] bg-[#16161a] hover:border-white/30 hover:bg-[#1a1a1f]',
       )}
     >
