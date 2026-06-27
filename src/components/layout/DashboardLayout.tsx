@@ -17,7 +17,8 @@ import {
   Shield,
   Megaphone,
   ChefHat,
-  Gift
+  Gift,
+  FileCheck
 } from 'lucide-react';
 import { useReferralEarnings } from '@/hooks/useReferralEarnings';
 import { useDashboardPersona } from '@/hooks/useDashboardPersona';
