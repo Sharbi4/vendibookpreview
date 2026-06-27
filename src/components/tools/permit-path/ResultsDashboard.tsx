@@ -552,7 +552,7 @@ export default function ResultsDashboard({ result, readOnly = false }: Props) {
           <ul className="space-y-1.5">
             {result.sources.map((s) => (
               <li key={s.index} className="text-sm">
-                <a href={s.url} target="_blank" rel="noopener noreferrer" className="text-white/70 hover:text-[#FF5124] inline-flex items-center gap-1">
+                <a href={s.url} target="_blank" rel="noopener noreferrer" className="text-white/70 hover:text-white inline-flex items-center gap-1">
                   <span className="text-white/40">[{s.index}]</span> {s.title}
                   {s.agency && <span className="text-white/40">— {s.agency}</span>}
                   <ExternalLink className="h-3 w-3" />
