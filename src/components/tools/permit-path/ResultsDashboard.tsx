@@ -16,7 +16,7 @@ import {
 } from '@/lib/generatePermitChecklistPdf';
 import {
   buildRoadmap, buildIcs, downloadIcs, buildMailto,
-  type RoadmapNode,
+  type RoadmapNode, type RequirementStatus,
 } from '@/lib/permitRoadmap';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
