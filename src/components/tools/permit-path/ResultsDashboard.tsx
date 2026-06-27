@@ -601,9 +601,24 @@ function RoadmapItem({ node, expanded, onToggleExpand, onToggleDone, onCalendar,
                   {node.level}
                 </Badge>
               )}
-              {node.commonly_missed && !isDone && (
+              {node.commonly_missed && !isDone && !owned && (
                 <Badge variant="outline" className="text-[10px] uppercase tracking-wider bg-amber-500/10 text-amber-300 border-amber-500/30">
                   Often missed
+                </Badge>
+              )}
+              {owned && (
+                <Badge variant="outline" className="text-[10px] uppercase tracking-wider bg-emerald-500/15 text-emerald-300 border-emerald-500/40 inline-flex items-center gap-1">
+                  <BadgeCheck className="h-3 w-3" /> I have this
+                </Badge>
+              )}
+              {expiryInfo && (
+                <Badge variant="outline" className={cn(
+                  'text-[10px] uppercase tracking-wider inline-flex items-center gap-1',
+                  expiryInfo.tone === 'red' && 'bg-red-500/15 text-red-300 border-red-500/40',
+                  expiryInfo.tone === 'amber' && 'bg-amber-500/15 text-amber-300 border-amber-500/40',
+                  expiryInfo.tone === 'emerald' && 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30',
+                )}>
+                  <CalendarClock className="h-3 w-3" /> {expiryInfo.label}
                 </Badge>
               )}
             </div>
