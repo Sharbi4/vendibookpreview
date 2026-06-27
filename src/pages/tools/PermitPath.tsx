@@ -18,6 +18,7 @@ import {
   FileCheck, Loader2, Home, ShieldCheck, Clock, ArrowRight, Coins, AlertCircle,
   MapPin, ListChecks, Download, Route,
 } from 'lucide-react';
+import heroMockup from '@/assets/permitpath-hero-mockup.png';
 import ToolCrossLinks from '@/components/tools/ToolCrossLinks';
 import ResultsDashboard, { type DashboardResult } from '@/components/tools/permit-path/ResultsDashboard';
 import ResultsSkeleton from '@/components/tools/permit-path/ResultsSkeleton';
@@ -279,25 +280,55 @@ const PermitPath = () => {
                 </BreadcrumbList>
               </Breadcrumb>
 
-              <div className="max-w-3xl">
-                <div className="inline-flex items-center gap-2 mb-5 px-3 py-1.5 rounded-full border border-white/10 bg-white/5 backdrop-blur">
-                  <span className="h-1.5 w-1.5 rounded-full bg-white/70" />
-                  <span className="text-xs font-medium tracking-wider uppercase text-white/80">PermitPath</span>
+              <div className="grid lg:grid-cols-2 gap-10 lg:gap-6 items-center">
+                <div className="max-w-3xl">
+                  <div className="inline-flex items-center gap-2 mb-5 px-3 py-1.5 rounded-full border border-white/10 bg-white/5 backdrop-blur">
+                    <span className="h-1.5 w-1.5 rounded-full bg-white/70" />
+                    <span className="text-xs font-medium tracking-wider uppercase text-white/80">PermitPath</span>
+                  </div>
+                  <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-5 leading-[1.05] tracking-tight">
+                    Navigate permits in minutes,<br className="hidden sm:block" />
+                    <span className="text-white/70">not weeks.</span>
+                  </h1>
+                  <p className="text-lg md:text-xl text-white/70 mb-8 max-w-2xl">
+                    Permits, licenses, and compliance — mapped to your city and setup. Built from official sources so you know exactly what you need before you start.
+                  </p>
+                  <Button
+                    size="lg"
+                    onClick={() => document.getElementById('tool-section')?.scrollIntoView({ behavior: 'smooth' })}
+                    className="bg-[#FF5124] hover:bg-[#FF5124]/90 text-white font-semibold px-6 h-12 rounded-xl shadow-[0_8px_30px_-8px_rgba(255,81,36,0.6)]"
+                  >
+                    Find My Permits <ArrowRight className="h-4 w-4 ml-2" />
+                  </Button>
                 </div>
-                <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-5 leading-[1.05] tracking-tight">
-                  Navigate permits in minutes,<br className="hidden sm:block" />
-                  <span className="text-white/70">not weeks.</span>
-                </h1>
-                <p className="text-lg md:text-xl text-white/70 mb-8 max-w-2xl">
-                  Permits, licenses, and compliance — mapped to your city and setup. Built from official sources so you know exactly what you need before you start.
-                </p>
-                <Button
-                  size="lg"
-                  onClick={() => document.getElementById('tool-section')?.scrollIntoView({ behavior: 'smooth' })}
-                  className="bg-[#FF5124] hover:bg-[#FF5124]/90 text-white font-semibold px-6 h-12 rounded-xl shadow-[0_8px_30px_-8px_rgba(255,81,36,0.6)]"
+
+                <motion.div
+                  initial={{ opacity: 0, y: 20, scale: 0.96 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  transition={{ duration: 0.7, ease: 'easeOut' }}
+                  className="relative hidden lg:flex justify-center items-center"
                 >
-                  Find My Permits <ArrowRight className="h-4 w-4 ml-2" />
-                </Button>
+                  <motion.img
+                    src={heroMockup}
+                    alt="PermitPath results dashboard preview"
+                    className="w-full max-w-[540px] rounded-2xl border border-white/10 shadow-[0_24px_80px_-20px_rgba(255,81,36,0.25)]"
+                    animate={{ y: [0, -10, 0] }}
+                    transition={{
+                      duration: 4,
+                      repeat: Infinity,
+                      ease: 'easeInOut',
+                    }}
+                  />
+                  {/* Ambient glow behind image */}
+                  <div
+                    aria-hidden
+                    className="absolute inset-0 -z-10 pointer-events-none"
+                    style={{
+                      background:
+                        'radial-gradient(50% 50% at 50% 50%, rgba(255,81,36,0.12) 0%, rgba(255,81,36,0) 70%)',
+                    }}
+                  />
+                </motion.div>
               </div>
             </div>
           </section>
