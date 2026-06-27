@@ -102,6 +102,7 @@ export default function PermitsTab() {
     if (!items.length || !roadmaps.length) return [];
     const byId = new Map(roadmaps.map((r) => [r.id, r] as const));
     return items
+      .filter((it) => !it.archived)
       .filter((it) => {
         if (!it.expires_on) return false;
         const t = new Date(it.expires_on).getTime();
@@ -113,6 +114,7 @@ export default function PermitsTab() {
       .filter((r) => !!r.roadmap)
       .sort((a, b) => (a.item.expires_on || '').localeCompare(b.item.expires_on || ''));
   }, [items, roadmaps]);
+
 
   if (!user) return null;
 
