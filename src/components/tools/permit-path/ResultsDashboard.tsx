@@ -3,7 +3,7 @@ import { motion, AnimatePresence, useMotionValue, useTransform, animate } from '
 import {
   ExternalLink, CheckCircle2, Circle, ChevronDown,
   Download, DollarSign, Clock, Sparkles, X, Mail, BadgeCheck, CalendarClock,
-  Share2, CalendarPlus, Lightbulb, Building2, Filter, Check, ArrowRight,
+  Share2, CalendarPlus, Lightbulb, Building2, Filter, Check, ArrowRight, BookmarkPlus,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
