@@ -260,21 +260,16 @@ export default function ResultsDashboard({ result, readOnly = false }: Props) {
       <div className="sticky top-16 z-20 -mx-2 sm:mx-0">
         <div className="rounded-2xl border border-white/20 bg-[#0a0a0d]/95 backdrop-blur-xl px-4 sm:px-5 py-3 shadow-[0_20px_60px_-20px_rgba(0,0,0,0.8)]">
           <div className="flex flex-wrap items-center gap-x-4 gap-y-3">
-            <div className="flex items-center gap-3 min-w-0 flex-1">
-              <div className="h-10 w-10 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center shrink-0">
-                <MapPin className="h-4 w-4 text-white" />
+            <div className="min-w-0 flex-1 leading-tight">
+              <div className="text-[10px] text-white/70 uppercase tracking-wider font-medium truncate">
+                {user && !readOnly ? 'Welcome back — your roadmap' : 'Your roadmap'}
               </div>
-              <div className="min-w-0 leading-tight">
-                <div className="text-[10px] text-white/70 uppercase tracking-wider font-medium truncate">
-                  {user && !readOnly ? 'Welcome back — your roadmap' : 'Your roadmap'}
-                </div>
-                <div className="font-bold text-white text-[15px] sm:text-base truncate">
-                  {locationLabel}
-                </div>
-                {result.businessType && (
-                  <div className="text-[11px] text-white/65 truncate">{result.businessType}</div>
-                )}
+              <div className="font-bold text-white text-[15px] sm:text-base truncate">
+                {locationLabel}
               </div>
+              {result.businessType && (
+                <div className="text-[11px] text-white/65 truncate">{result.businessType}</div>
+              )}
             </div>
             <ProgressRing pct={roadmap.pct} done={roadmap.done} total={roadmap.total} />
             <div className="flex flex-wrap gap-1.5">
