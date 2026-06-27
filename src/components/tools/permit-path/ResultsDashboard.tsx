@@ -440,6 +440,10 @@ export default function ResultsDashboard({ result, readOnly = false }: Props) {
                     onCalendar={() => handleCalendarReminder(node)}
                     readOnly={readOnly}
                     state={result.location.state}
+                    owned={!!owned[node.id]}
+                    expiresOn={owned[node.id]?.expires}
+                    onToggleOwned={() => toggleOwned(node.id)}
+                    onSetExpires={(d) => setOwnedExpiration(node.id, d)}
                   />
                 ))}
               </div>
