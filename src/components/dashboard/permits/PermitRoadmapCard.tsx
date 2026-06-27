@@ -48,11 +48,13 @@ export default function PermitRoadmapCard({
   roadmap,
   items,
   totalRequirements,
+  requiredCount,
   onOpen,
   onDelete,
 }: Props) {
   const approved = items.filter((i) => i.status === 'approved').length;
-  const pct = totalRequirements > 0 ? (approved / totalRequirements) * 100 : 0;
+  const denom = requiredCount && requiredCount > 0 ? requiredCount : totalRequirements;
+  const pct = denom > 0 ? (approved / denom) * 100 : 0;
 
   const now = Date.now();
   const renewalsDue = items.filter((i) => {
