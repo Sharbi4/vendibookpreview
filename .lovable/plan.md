@@ -1,103 +1,101 @@
-# Permits in Dashboard — Save, Manage, Upload
+# PermitPath: Completion Plan
 
-Adds a signed-in "Permits" area to the dashboard that mirrors the PermitPath results UI, persists roadmaps + per-item permit data + uploaded documents, and routes signed-out users through sign-in without losing their roadmap.
+Three phases, sequenced by user impact and dependency. Each phase is independently shippable.
 
 ---
 
-## 1. Data model (one migration)
+## Phase 1 — Foundations (data control + safe uploads + auth completeness)
 
-New tables in `public`, all RLS-scoped to `auth.uid() = user_id`, with `GRANT` to authenticated + service_role.
+The "I can't manage my own data" gap. Highest risk: users feel stuck or lose work.
 
-- **`saved_permit_roadmaps`** — one row per saved roadmap
-  - `user_id`, `roadmap_key` (state|city|business_type), `state_code`, `city`, `business_type`
-  - `label` (user-editable, defaults to "City, ST · Business Type")
-  - `result_payload jsonb` (full DashboardResult snapshot so the saved view never breaks if the source changes)
-  - unique `(user_id, roadmap_key)` — saving the same search updates in place
+**Roadmap management**
+- Rename roadmap (inline edit on dashboard card + dialog)
+- Delete roadmap with **7-day soft delete** (`deleted_at` column, hidden from list, restorable from a "Recently deleted" drawer)
+- Auto-purge job: cron deletes rows where `deleted_at < now() - 7 days`
+- "Undo" toast after delete (immediate restore, 10s window) + persistent recovery via drawer
 
-- **`permit_items`** — one row per requirement the user is tracking
-  - `roadmap_id` FK → `saved_permit_roadmaps`
-  - `user_id`, `item_key` (stable id from `permitRoadmap.ts`)
-  - `status` text: `not_started | in_progress | submitted | approved | expired`
-  - `permit_number`, `issuing_agency`, `notes` text
-  - `issue_date`, `expires_on` date
-  - unique `(roadmap_id, item_key)`
+**File / document management**
+- Delete uploaded permit file (with confirm) — soft-delete the storage object reference, hard-purge after 7 days
+- Per-file rename
+- Replace file (versioning: keep last version for 7 days)
 
-- **`permit_documents`** — one row per uploaded file
-  - `roadmap_id`, `item_key`, `user_id`
-  - `storage_path` (object key inside the private bucket)
-  - `file_name`, `mime_type`, `size_bytes`, `uploaded_at`
+**Upload validation (client + edge function)**
+- Allowlist: PDF, JPG, PNG, **HEIC** (auto-converted server-side to JPG via existing `heic-convert` pattern)
+- Max 10 MB per file, max 5 files per permit item
+- Reject on MIME mismatch, oversize, or zero-byte
+- Resumable upload via `tus` if file > 5 MB; clear progress + retry on interrupted upload
+- Toast errors that name the actual problem ("HEIC files over 10 MB — try compressing")
+- Antivirus: Supabase Storage's built-in scan flag; quarantine bucket for flagged files
 
-Reuse the existing `permit_progress` table for the lightweight checked/owned map (already wired into `ResultsDashboard`). The new tables layer real permit data + documents on top.
+**Auth completeness**
+- Forgot password → `/auth/reset-password` page (recovery token flow)
+- Email verification banner if `email_confirmed_at` is null
+- Session expiry: silent refresh; if refresh fails mid-edit, stash draft to `localStorage` + show "Sign back in to save" modal that restores the draft post-login
+- Email-mismatch reconciliation: if a signed-in email differs from a pending-save email, prompt "Claim this roadmap under your account?" before merging
 
-## 2. Storage
+**Effort:** ~2 days. No new third-party services.
 
-- Private bucket **`permit-documents`** (not public).
-- RLS on `storage.objects`: a user can `SELECT/INSERT/UPDATE/DELETE` only when the object path starts with their `auth.uid()/...`.
-- Path convention: `{user_id}/{roadmap_id}/{item_key}/{uuid}-{filename}`.
-- Files served via short-lived signed URLs for view/download (no public links).
+---
 
-## 3. Auth gating + roadmap preservation
+## Phase 2 — Renewal reminders + notifications center (the business driver)
 
-- "Save to my dashboard" on PermitPath results:
-  - Signed in → upsert into `saved_permit_roadmaps` (with full `result_payload`), toast "Saved" + "View in dashboard" link.
-  - Signed out → stash the current `result` into `sessionStorage` under `permitpath:pendingSave`, then `navigate('/auth?redirect=/tools/permitpath?resumeSave=1')`.
-- After auth, `PermitPath` checks `?resumeSave=1`, pulls the stashed payload, runs the save, clears the key, and redirects to `/dashboard?view=host&tab=permits&roadmap={id}`.
-- `/dashboard?tab=permits` and the detail view require auth; unauthenticated visits redirect to `/auth?redirect=...` and return after sign-in (same pattern already used elsewhere).
+Drives return visits. Uses expiration dates already stored on permit items.
 
-## 4. Dashboard Permits surface (mirrors PermitPath visuals)
+**Renewal reminder emails**
+- New edge function `send-renewal-reminders` (cron, daily 9am AZ)
+- Queries `permit_items` where `expires_at` is in {30d, 7d, 1d}
+- Sends branded app email per item (uses existing `send-transactional-email` infrastructure)
+- New template: `permit-renewal-reminder` with permit name, days remaining, agency link, "snooze 7 days" + "mark renewed" actions
+- Deduped via `email_send_log` idempotency key `renewal-{permit_id}-{bucket}`
+- Honors `notification_preferences.renewal_email` (new column)
 
-New tab in the existing `DashboardLayout` (added to both Host and Shopper variants), routed via `?tab=permits`.
+**Notification center (bell icon)**
+- New notification types: `permit_renewal_due`, `roadmap_updated_by_law`, `document_expiring`
+- Bell dropdown groups by type, shows unread count, "Mark all read"
+- Tapping a renewal notif jumps to the permit item in the dashboard
+- Server-side: trigger on `permit_items` insert if `expires_at` is set; cron also creates in-app notifications mirroring emails
 
-- **List view** (`PermitsList.tsx`):
-  - Header: "Permits & Licenses" + "Start a new permit search" → `/tools/permitpath`.
-  - "Renewals coming up" strip across the top — collects items from any roadmap with `expires_on` ≤ 60 days (silver/grey card, single subtle warning chip; no loud red).
-  - Grid of saved roadmap cards: location, business type, mini compliance ring, `X / N complete`, last updated, "Renewals due" badge if any.
+**Effort:** ~1.5 days. Reuses email infra (already provisioned).
 
-- **Detail view** (`PermitsDetail.tsx`):
-  - Reuses `ResultsDashboard` as the base for header, stat tiles, big compliance ring, category grouping, sticky sidebar, premium silver/grey palette — orange reserved for the ring + primary CTA only.
-  - Each requirement card is an enhanced `RoadmapItem` (`ManagedPermitItem.tsx`) with the existing expand/collapse, plus a "Manage" panel:
-    - Status select (5 states), permit number, issuing agency (prefilled), issue date, expiration date, notes.
-    - Saves to `permit_items` with 600ms debounce; status changes animate the card border (still on-palette).
-    - Expiration chip: silver by default, warm-grey "Renews in 23d" ≤ 60d, restrained amber "Expired" past due.
-  - **Document area** per card (`PermitDocumentUploader.tsx`):
-    - Drag-and-drop + file picker (PDF + images, ≤ 10 MB).
-    - Uploaded files render as chips with filename + date + view (signed URL, opens in new tab) + download + delete.
-    - Empty state: "No document uploaded yet — add your permit copy here."
-    - Allows multiple files per item.
+---
 
-## 5. PermitPath results page changes
+## Phase 3 — Mobile camera + sharing/team access (field-vendor + 2-person ops)
 
-- Replace the inline `SignInToSavePrompt` save action with a single "Save to my dashboard" button (primary orange) in the header action row.
-- After save, swap the button for a quiet "Saved · View in dashboard →" link.
-- The existing per-item check/own behavior continues syncing through `permit_progress` so progress survives even without an explicit save.
+**Mobile camera upload**
+- File input gets `capture="environment"` attribute on mobile detection
+- "Take photo" button alongside "Upload file" on every document-upload surface
+- Auto-rotate via EXIF, auto-compress to <2MB before upload
 
-## 6. Files
+**Sharing / team access**
+- New table `roadmap_collaborators (roadmap_id, user_id, role, invited_email, accepted_at)`
+- Owner invites by email; pending invite emails (new template `roadmap-invite`)
+- Roles: `viewer` (read-only), `editor` (can upload docs + mark complete, cannot delete roadmap)
+- RLS extended: `has_roadmap_access(roadmap_id, uid)` security-definer function
+- Shared dashboard view shows "Shared with you" section
+- Activity feed on the roadmap shows who did what (foundation for Phase 4 audit trail)
 
-**Migration**
-- `supabase/migrations/<ts>_permits_dashboard.sql` — three tables, RLS, storage bucket + policies, indexes, updated_at trigger.
+**Effort:** ~2 days.
 
-**New components**
-- `src/pages/PermitsDetail.tsx` (route or nested via dashboard tab)
-- `src/components/dashboard/PermitsTab.tsx` (list + entry)
-- `src/components/dashboard/permits/PermitRoadmapCard.tsx`
-- `src/components/dashboard/permits/RenewalsStrip.tsx`
-- `src/components/dashboard/permits/ManagedPermitItem.tsx`
-- `src/components/dashboard/permits/PermitDocumentUploader.tsx`
-- `src/lib/permitsApi.ts` (CRUD helpers + signed-URL fetcher)
+---
 
-**Edits**
-- `src/components/tools/permit-path/ResultsDashboard.tsx` — add `onSaveToDashboard` + saved-state UI; preserve roadmap to sessionStorage on signed-out save.
-- `src/pages/tools/PermitPath.tsx` — resume save after auth, navigate to dashboard on success.
-- `src/components/dashboard/HostDashboard.tsx` + `ShopperDashboard.tsx` — add "Permits" tab.
-- `src/App.tsx` — only if a dedicated `/dashboard/permits/:id` route is preferred over `?tab=permits&roadmap=`; default is the tab approach (no new route needed).
+## Backlog (decide later, not in this plan)
 
-## 7. Out of scope (callouts)
+- Empty-state onboarding flow for zero-roadmap users
+- Search / filter on dashboard once user has 3+ roadmaps
+- Full audit trail (extends Phase 3 activity feed)
 
-- No email/SMS renewal reminders are wired in this pass — the UI surfaces upcoming renewals; sending notifications can be a follow-up using the existing `notifications` infra.
-- Document OCR / auto-extraction is not included.
-- Sharing a saved roadmap with another user is not included.
+---
 
-## 8. Open questions
+## Technical notes
 
-- Confirm the **dashboard tab** approach (Permits as a tab inside the existing dashboard) vs. a dedicated `/dashboard/permits` route. Plan defaults to a tab so it slots into the current `?tab=` pattern.
-- Confirm **file limits**: 10 MB per file, up to 5 files per requirement, PDF + JPG + PNG + HEIC. Adjust before build if you want different limits.
+- **Migrations:** 4 total (soft-delete columns; renewal prefs column; collaborators table; activity_log table for Phase 3)
+- **New edge functions:** `send-renewal-reminders`, `purge-soft-deleted` (cron); `roadmap-invite-accept`
+- **New email templates:** `permit-renewal-reminder`, `roadmap-invite`, plus password-reset already exists
+- **Storage:** existing `permit-documents` bucket; add `quarantine` bucket for AV-flagged files
+- **No new dependencies beyond what's installed** (heic-convert, tus-js-client already in use elsewhere)
+
+---
+
+**Recommended:** ship Phase 1 first (it unblocks user trust), then Phase 2 (drives the business metric), then Phase 3 (expands TAM to multi-person operations).
+
+Tell me which phase to start, or say "Phase 1" to begin.
