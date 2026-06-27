@@ -200,25 +200,49 @@ export default function PermitsTab() {
 function PermitsDetail({ roadmap, onBack }: { roadmap: SavedRoadmap; onBack: () => void }) {
   const { user } = useAuth();
   const [items, setItems] = useState<Record<string, PermitItem>>({});
+  const [archived, setArchived] = useState<PermitItem[]>([]);
 
-  useEffect(() => {
+  const reload = useCallback(async () => {
     if (!user) return;
-    let cancelled = false;
-    (async () => {
-      try {
-        const its = await listItemsForUser(user.id);
-        if (cancelled) return;
-        const map: Record<string, PermitItem> = {};
-        for (const it of its) {
-          if (it.roadmap_id === roadmap.id) map[it.item_key] = it;
-        }
-        setItems(map);
-      } catch { /* ignore */ }
-    })();
-    return () => { cancelled = true; };
+    try {
+      const its = await listItemsForUser(user.id);
+      const map: Record<string, PermitItem> = {};
+      const arch: PermitItem[] = [];
+      for (const it of its) {
+        if (it.roadmap_id !== roadmap.id) continue;
+        if (it.archived) arch.push(it);
+        else map[it.item_key] = it;
+      }
+      setItems(map);
+      setArchived(arch);
+    } catch { /* ignore */ }
   }, [user, roadmap.id]);
 
+  useEffect(() => { void reload(); }, [reload]);
+
+  // Cross-device sync: when the tab regains focus, re-pull items so edits made
+  // on a phone (or laptop) show up here. Per-field merge on the server keeps
+  // any in-flight local edits safe.
+  useEffect(() => {
+    const onFocus = () => { void reload(); };
+    window.addEventListener('focus', onFocus);
+    document.addEventListener('visibilitychange', onFocus);
+    return () => {
+      window.removeEventListener('focus', onFocus);
+      document.removeEventListener('visibilitychange', onFocus);
+    };
+  }, [reload]);
+
   if (!user) return null;
+
+  const refreshHref = (() => {
+    const params = new URLSearchParams();
+    params.set('state', roadmap.state_code);
+    if (roadmap.city) params.set('city', roadmap.city);
+    if (roadmap.business_type) params.set('businessType', roadmap.business_type);
+    params.set('refreshRoadmap', roadmap.id);
+    return `/tools/permitpath?${params.toString()}`;
+  })();
 
   return (
     <div className="space-y-4">
@@ -230,8 +254,23 @@ function PermitsDetail({ roadmap, onBack }: { roadmap: SavedRoadmap; onBack: () 
         >
           <ArrowLeft className="h-4 w-4" /> All roadmaps
         </button>
-        <div className="text-[11px] text-white/45">
-          Last updated {new Date(roadmap.updated_at).toLocaleDateString()}
+        <div className="flex items-center gap-2">
+          <Button
+            asChild
+            size="sm"
+            variant="outline"
+            className="h-8 text-xs border-white/20 bg-white/[0.04] hover:bg-white/[0.08] text-white/85"
+            title="Re-runs PermitPath and updates requirements while keeping your status, permit numbers and uploads"
+          >
+            <Link to={refreshHref}>
+              <RefreshCw className="h-3.5 w-3.5 mr-1.5" /> Refresh requirements
+            </Link>
+          </Button>
+          <div className="text-[11px] text-white/45">
+            {roadmap.refreshed_at
+              ? `Refreshed ${new Date(roadmap.refreshed_at).toLocaleDateString()}`
+              : `Updated ${new Date(roadmap.updated_at).toLocaleDateString()}`}
+          </div>
         </div>
       </div>
 
@@ -239,8 +278,6 @@ function PermitsDetail({ roadmap, onBack }: { roadmap: SavedRoadmap; onBack: () 
         result={roadmap.result_payload}
         renderItemExtra={(node) => {
           const itemKey = node.id;
-          // The existing roadmap node has an `issuer` we can prefill into the manager.
-          // We re-render with `initial` once the item loads (if it exists).
           const initial = items[itemKey] || null;
           return (
             <PermitItemManager
@@ -255,6 +292,47 @@ function PermitsDetail({ roadmap, onBack }: { roadmap: SavedRoadmap; onBack: () 
           );
         }}
       />
+
+      {archived.length > 0 && (
+        <div className="rounded-2xl border border-white/12 bg-white/[0.025] p-5">
+          <div className="flex items-center gap-2 mb-1">
+            <Archive className="h-4 w-4 text-white/55" />
+            <div className="text-[11px] uppercase tracking-[0.18em] text-white/55 font-semibold">
+              No longer required
+            </div>
+          </div>
+          <p className="text-xs text-white/55 mb-4 leading-relaxed">
+            These requirements dropped off the latest refresh. We kept your
+            progress, permit numbers, and any uploaded documents in case they
+            come back.
+          </p>
+          <ul className="space-y-2">
+            {archived.map((it) => {
+              const [cat, ...rest] = it.item_key.split('::');
+              const title = rest.join('::') || it.item_key;
+              return (
+                <li
+                  key={it.id}
+                  className="flex items-center justify-between gap-3 rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2"
+                >
+                  <div className="min-w-0">
+                    <div className="text-sm text-white/85 truncate">{title}</div>
+                    <div className="text-[11px] text-white/45 truncate">
+                      {cat}
+                      {it.permit_number ? ` · #${it.permit_number}` : ''}
+                      {it.expires_on ? ` · expires ${it.expires_on}` : ''}
+                    </div>
+                  </div>
+                  <span className="shrink-0 text-[10px] uppercase tracking-[0.14em] font-semibold text-white/55 px-2 py-0.5 rounded-full border border-white/15 bg-white/[0.04]">
+                    Archived
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      )}
     </div>
+
   );
 }
