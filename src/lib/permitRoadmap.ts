@@ -8,6 +8,7 @@ import {
 import type { DashboardResult } from '@/components/tools/permit-path/ResultsDashboard';
 
 export type RoadmapStatus = 'done' | 'next' | 'available' | 'locked';
+export type RequirementStatus = 'required' | 'conditional' | 'optional';
 
 export interface RoadmapNode {
   id: string; // `${category}::${title}`
@@ -25,6 +26,8 @@ export interface RoadmapNode {
   status: RoadmapStatus;
   unlock_reason?: string;
   done: boolean;
+  requirement_status: RequirementStatus;
+  requirement_trigger?: string;
 }
 
 export interface RoadmapSummary {
