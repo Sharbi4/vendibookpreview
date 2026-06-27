@@ -2568,6 +2568,103 @@ export type Database = {
         }
         Relationships: []
       }
+      permit_documents: {
+        Row: {
+          file_name: string
+          id: string
+          item_key: string
+          mime_type: string | null
+          roadmap_id: string
+          size_bytes: number | null
+          storage_path: string
+          uploaded_at: string
+          user_id: string
+        }
+        Insert: {
+          file_name: string
+          id?: string
+          item_key: string
+          mime_type?: string | null
+          roadmap_id: string
+          size_bytes?: number | null
+          storage_path: string
+          uploaded_at?: string
+          user_id: string
+        }
+        Update: {
+          file_name?: string
+          id?: string
+          item_key?: string
+          mime_type?: string | null
+          roadmap_id?: string
+          size_bytes?: number | null
+          storage_path?: string
+          uploaded_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "permit_documents_roadmap_id_fkey"
+            columns: ["roadmap_id"]
+            isOneToOne: false
+            referencedRelation: "saved_permit_roadmaps"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      permit_items: {
+        Row: {
+          created_at: string
+          expires_on: string | null
+          id: string
+          issue_date: string | null
+          issuing_agency: string | null
+          item_key: string
+          notes: string | null
+          permit_number: string | null
+          roadmap_id: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          expires_on?: string | null
+          id?: string
+          issue_date?: string | null
+          issuing_agency?: string | null
+          item_key: string
+          notes?: string | null
+          permit_number?: string | null
+          roadmap_id: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          expires_on?: string | null
+          id?: string
+          issue_date?: string | null
+          issuing_agency?: string | null
+          item_key?: string
+          notes?: string | null
+          permit_number?: string | null
+          roadmap_id?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "permit_items_roadmap_id_fkey"
+            columns: ["roadmap_id"]
+            isOneToOne: false
+            referencedRelation: "saved_permit_roadmaps"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       permit_progress: {
         Row: {
           business_type: string | null
@@ -3676,6 +3773,45 @@ export type Database = {
           updated_at?: string
           user_id?: string
           zip_code?: string | null
+        }
+        Relationships: []
+      }
+      saved_permit_roadmaps: {
+        Row: {
+          business_type: string | null
+          city: string | null
+          created_at: string
+          id: string
+          label: string | null
+          result_payload: Json
+          roadmap_key: string
+          state_code: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          business_type?: string | null
+          city?: string | null
+          created_at?: string
+          id?: string
+          label?: string | null
+          result_payload?: Json
+          roadmap_key: string
+          state_code: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          business_type?: string | null
+          city?: string | null
+          created_at?: string
+          id?: string
+          label?: string | null
+          result_payload?: Json
+          roadmap_key?: string
+          state_code?: string
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
