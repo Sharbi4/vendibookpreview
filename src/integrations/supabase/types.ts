@@ -4663,6 +4663,21 @@ export type Database = {
             }
             Returns: undefined
           }
+      lookup_promo_code: {
+        Args: { p_code: string }
+        Returns: {
+          applies_to: string
+          code: string
+          current_uses: number
+          discount_type: string
+          discount_value: number
+          expires_at: string
+          id: string
+          is_active: boolean
+          max_uses: number
+          min_purchase_amount: number
+        }[]
+      }
       lookup_referral_code: {
         Args: { p_code: string }
         Returns: {
@@ -4713,6 +4728,7 @@ export type Database = {
         }
         Returns: number
       }
+      purge_expired_permit_soft_deletes: { Args: never; Returns: undefined }
       read_email_batch: {
         Args: { batch_size: number; queue_name: string; vt: number }
         Returns: {
