@@ -449,6 +449,104 @@ function baselineChecklist(state: string, city: string, businessType: string, pr
   };
 }
 
+// ---------- URL validation ----------
+// HEAD-checks (with GET fallback) a URL; returns true for 2xx/3xx, false otherwise.
+async function isUrlReachable(url: string, timeoutMs = 5000): Promise<boolean> {
+  if (!url || typeof url !== 'string') return false;
+  try {
+    const u = new URL(url);
+    if (u.protocol !== 'https:' && u.protocol !== 'http:') return false;
+  } catch {
+    return false;
+  }
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), timeoutMs);
+  try {
+    let res = await fetch(url, {
+      method: 'HEAD',
+      redirect: 'follow',
+      signal: ctrl.signal,
+      headers: { 'User-Agent': 'Mozilla/5.0 (PermitPath link check)' },
+    });
+    // Some agency sites reject HEAD — retry with a tiny GET.
+    if (res.status === 405 || res.status === 403 || res.status === 501) {
+      res = await fetch(url, {
+        method: 'GET',
+        redirect: 'follow',
+        signal: ctrl.signal,
+        headers: { 'User-Agent': 'Mozilla/5.0 (PermitPath link check)', Range: 'bytes=0-1024' },
+      });
+    }
+    return res.status >= 200 && res.status < 400;
+  } catch {
+    return false;
+  } finally {
+    clearTimeout(t);
+  }
+}
+
+// Build the domain root (https://host/) for a URL — used as a graceful fallback
+// when the deep link is dead but the agency site itself is alive.
+function domainRoot(url: string): string {
+  try {
+    const u = new URL(url);
+    return `${u.protocol}//${u.host}/`;
+  } catch {
+    return '';
+  }
+}
+
+// Validate every official_url in the roadmap. Replace broken deep links with the
+// reachable domain root, or clear to "" if even the root is unreachable.
+async function validateRoadmapUrls(result: any, sourceUrls: string[]): Promise<{ checked: number; replaced: number; cleared: number }> {
+  const stats = { checked: 0, replaced: 0, cleared: 0 };
+  if (!result || !Array.isArray(result.categories)) return stats;
+
+  // Pre-seed the cache with the firecrawl source URLs we already saw work.
+  const cache = new Map<string, boolean>();
+  for (const u of sourceUrls) cache.set(u, true);
+
+  const check = async (url: string): Promise<boolean> => {
+    if (cache.has(url)) return cache.get(url)!;
+    const ok = await isUrlReachable(url);
+    cache.set(url, ok);
+    return ok;
+  };
+
+  // Collect all items to validate in parallel.
+  const tasks: Promise<void>[] = [];
+  for (const cat of result.categories) {
+    if (!Array.isArray(cat.items)) continue;
+    for (const item of cat.items) {
+      const url = typeof item.official_url === 'string' ? item.official_url.trim() : '';
+      if (!url) continue;
+      stats.checked++;
+      tasks.push((async () => {
+        const ok = await check(url);
+        if (ok) return;
+        // Try the domain root as a graceful fallback.
+        const root = domainRoot(url);
+        if (root && root !== url) {
+          const rootOk = await check(root);
+          if (rootOk) {
+            item.official_url = root;
+            stats.replaced++;
+            return;
+          }
+        }
+        item.official_url = '';
+        stats.cleared++;
+      })());
+    }
+  }
+  // Hard cap total validation work at 12s so we never hang the request.
+  await Promise.race([
+    Promise.all(tasks),
+    new Promise<void>((resolve) => setTimeout(resolve, 12000)),
+  ]);
+  return stats;
+}
+
 async function callAi(systemPrompt: string, userPrompt: string, key: string, strictRetry = false): Promise<string | null> {
   const sys = strictRetry
     ? systemPrompt + "\n\nRESPOND WITH RAW JSON ONLY. No markdown fences. No prose. The first character of your response must be '{' and the last must be '}'."
