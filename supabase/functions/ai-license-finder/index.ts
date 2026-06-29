@@ -642,7 +642,12 @@ Cover, where applicable: business entity registration (LLC/DBA, EIN, sales tax),
 
 DISPLAY ORDER — order the "categories" array by OPERATING PRIORITY, not alphabetically or by dependency. Lead with the permits and local rules that legally gate food service and where vendors get shut down: (1) Health Permits, (2) Mobile Vendor License, (3) Local & City-Specific (city business license, zoning, vending/parking rules, local fire), (4) Commissary / Base of Operations, (5) Fire & Equipment, (6) Food Safety Certifications, (7) Insurance, and put (8) Business Registration LAST. Still flag prerequisites inside why_it_matters, but the array order is by urgency to operate.
 
-Prefer URLs that appear in the Source Material; if none cover an item, leave official_url as "". Populate "sources" with every source you used.
+URL RULES — STRICT (this is the most common bug to avoid):
+- The "official_url" field MUST be a URL that appears VERBATIM in the SOURCE MATERIAL below, OR a well-known stable agency homepage (e.g. https://www.irs.gov/, https://www.servsafe.com/). Do not paraphrase, do not "fix" paths, do not invent slugs.
+- If you cannot find a matching URL in the SOURCE MATERIAL and there is no well-known stable homepage you are certain of, set "official_url" to "" (empty string). The UI handles empty gracefully.
+- NEVER fabricate a URL just because it "looks right" (e.g. guessing /permits/mobile-food/ paths). A broken link is worse than no link.
+- Prefer the agency homepage or top-level program page over a deep PDF or session-bound URL — those rot fastest.
+- Populate "sources" with every URL you actually used. Items whose "official_url" is empty are still valid roadmap items.
 
 SOURCE MATERIAL (live web results, ${today}):
 ${sourceContext}`;
