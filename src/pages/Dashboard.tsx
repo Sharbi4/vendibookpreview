@@ -95,7 +95,7 @@ const Dashboard = () => {
       onModeChange={handleModeChange}
       isHost={isHost}
     >
-      
+      <EmailVerificationBanner />
       {currentMode === 'host' ? <HostDashboard /> : <ShopperDashboard />}
 
       {showOnboarding && (
