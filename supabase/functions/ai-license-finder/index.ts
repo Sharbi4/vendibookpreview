@@ -828,6 +828,15 @@ ${sourceContext}`;
     }
     result.lastUpdated = today;
 
+    // Validate every official_url so we never ship broken links to the vendor.
+    try {
+      const validation = await validateRoadmapUrls(result, sources.map((s) => s.url));
+      console.log('PermitPath URL validation:', validation);
+      result.url_validation = validation;
+    } catch (e) {
+      console.warn('PermitPath URL validation failed:', e);
+    }
+
     return new Response(JSON.stringify({ result }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
