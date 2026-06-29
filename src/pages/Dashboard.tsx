@@ -7,6 +7,7 @@ import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import HostDashboard from '@/components/dashboard/HostDashboard';
 import ShopperDashboard from '@/components/dashboard/ShopperDashboard';
 import DashboardOnboarding from '@/components/onboarding/DashboardOnboarding';
+import EmailVerificationBanner from '@/components/auth/EmailVerificationBanner';
 
 import { Loader2 } from 'lucide-react';
 
