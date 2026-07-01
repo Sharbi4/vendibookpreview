@@ -50,8 +50,7 @@ export const CategoryPillStrip = ({
 
       <div
         ref={scrollRef}
-        className="flex gap-2 overflow-x-auto scrollbar-hide py-1 px-1 md:px-10"
-        style={{ scrollbarWidth: 'none' }}
+        className="snap-rail snap-rail-center scrollbar-hide flex gap-2 overflow-x-auto py-1 px-1 md:px-10 gpu-layer"
       >
         {CATEGORY_PILLS.map(({ key, label, icon: Icon }) => {
           const active = activeCategory === key;
