@@ -189,7 +189,7 @@ export const StickyMobileCTA = ({
                 size="lg"
                 onClick={handleBuyNow}
                 disabled={!isAvailable}
-                className="gap-2 h-12 sm:h-14 px-6 sm:px-8 text-base sm:text-lg font-bold shadow-xl animate-pulse-subtle"
+                className="gap-2 h-12 sm:h-14 px-6 sm:px-8 text-base sm:text-lg font-bold shadow-xl no-tap-highlight"
               >
                 <ShoppingCart className="h-5 w-5 sm:h-6 sm:w-6" />
                 Buy Now
