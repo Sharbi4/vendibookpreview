@@ -8,6 +8,7 @@ import {
   DrawerTrigger,
 } from '@/components/ui/drawer';
 import { cn } from '@/lib/utils';
+import { useHideOnScroll } from '@/hooks/useHideOnScroll';
 
 interface MobileStickyBarProps {
   activeFiltersCount: number;
