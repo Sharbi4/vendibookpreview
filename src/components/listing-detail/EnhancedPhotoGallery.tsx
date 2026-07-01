@@ -4,6 +4,7 @@ import { ChevronLeft, ChevronRight, X, Play, Video, Grid3X3, Images, Maximize2 }
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
+import { MobileSnapCarousel } from './MobileSnapCarousel';
 
 interface EnhancedPhotoGalleryProps {
   images: string[];
