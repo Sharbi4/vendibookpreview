@@ -4,6 +4,7 @@ import { ChevronLeft, ChevronRight, X, Play, Video, Grid3X3, Images, Maximize2 }
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
+import { MobileSnapCarousel } from './MobileSnapCarousel';
 
 interface EnhancedPhotoGalleryProps {
   images: string[];
@@ -210,74 +211,16 @@ const EnhancedPhotoGallery = ({ images, videos = [], title }: EnhancedPhotoGalle
           ))}
         </div>
 
-        {/* Mobile: Swipeable carousel */}
-        <div
-          className="md:hidden relative aspect-[4/3] touch-pan-y"
-          {...mobileSwipe}
-        >
-          <AnimatePresence mode="wait" initial={false}>
-            <motion.div
-              key={mobileIndex}
-              initial={{ opacity: 0, x: swipeDirection === 'left' ? 80 : -80 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: swipeDirection === 'left' ? -80 : 80 }}
-              transition={{ duration: 0.25, ease: 'easeInOut' }}
-              className="absolute inset-0 cursor-pointer"
-              onClick={() => openLightbox(mobileIndex)}
-            >
-              {renderMediaThumbnail(displayItems[mobileIndex], true, mobileIndex)}
-            </motion.div>
-          </AnimatePresence>
-
-          {/* Navigation arrows on mobile */}
-          {hasMultipleMedia && (
-            <>
-              <button
-                onClick={(e) => { e.stopPropagation(); prevMobile(); }}
-                className="absolute left-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center text-white"
-              >
-                <ChevronLeft className="w-5 h-5" />
-              </button>
-              <button
-                onClick={(e) => { e.stopPropagation(); nextMobile(); }}
-                className="absolute right-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center text-white"
-              >
-                <ChevronRight className="w-5 h-5" />
-              </button>
-            </>
-          )}
-          
-          {/* Dot indicators */}
-          {hasMultipleMedia && (
-            <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5 z-10">
-              {displayItems.map((_, idx) => (
-                <button
-                  key={idx}
-                  onClick={(e) => { e.stopPropagation(); setMobileIndex(idx); }}
-                  className={cn(
-                    "rounded-full transition-all duration-200",
-                    idx === mobileIndex
-                      ? "w-6 h-2 bg-white"
-                      : "w-2 h-2 bg-white/50"
-                  )}
-                />
-              ))}
-            </div>
-          )}
-
-          {/* Photo count */}
-          {hasMultipleMedia && (
-            <motion.div 
-              className="absolute top-3 right-3 bg-black/60 text-white px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1.5 backdrop-blur-sm z-10"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.3 }}
-            >
-              <Images className="w-3.5 h-3.5" />
-              {mobileIndex + 1} / {totalMedia}
-            </motion.div>
-          )}
-        </div>
+        {/* Mobile: Native scroll-snap carousel (buttery smooth, no framer swaps) */}
+        <MobileSnapCarousel
+          items={displayItems}
+          index={mobileIndex}
+          onIndexChange={setMobileIndex}
+          onOpenLightbox={openLightbox}
+          title={title}
+          totalMedia={totalMedia}
+          hasMultipleMedia={hasMultipleMedia}
+        />
 
         {/* Show All Photos Button - Desktop */}
         {hasMultipleMedia && (

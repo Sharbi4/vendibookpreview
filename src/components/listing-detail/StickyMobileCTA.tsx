@@ -145,7 +145,7 @@ export const StickyMobileCTA = ({
 
   return (
     <>
-      <div className="fixed bottom-0 left-0 right-0 z-50 lg:hidden bg-background/98 backdrop-blur-lg border-t-2 border-primary/20 shadow-2xl safe-area-pb">
+      <div className="fixed bottom-0 left-0 right-0 z-50 lg:hidden bg-background/98 border-t-2 border-primary/20 shadow-2xl safe-area-pb gpu-layer">
         <div className="container py-4 flex items-center justify-between gap-4">
           {/* Price Display - Enhanced */}
           <div className="flex-shrink-0">
@@ -189,7 +189,7 @@ export const StickyMobileCTA = ({
                 size="lg"
                 onClick={handleBuyNow}
                 disabled={!isAvailable}
-                className="gap-2 h-12 sm:h-14 px-6 sm:px-8 text-base sm:text-lg font-bold shadow-xl animate-pulse-subtle"
+                className="gap-2 h-12 sm:h-14 px-6 sm:px-8 text-base sm:text-lg font-bold shadow-xl no-tap-highlight"
               >
                 <ShoppingCart className="h-5 w-5 sm:h-6 sm:w-6" />
                 Buy Now

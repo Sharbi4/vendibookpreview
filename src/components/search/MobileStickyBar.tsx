@@ -8,6 +8,7 @@ import {
   DrawerTrigger,
 } from '@/components/ui/drawer';
 import { cn } from '@/lib/utils';
+import { useHideOnScroll } from '@/hooks/useHideOnScroll';
 
 interface MobileStickyBarProps {
   activeFiltersCount: number;
@@ -40,14 +41,19 @@ export const MobileStickyBar = ({
 
   const currentSortLabel = sortOptions.find(opt => opt.value === sortBy)?.label || 'Newest';
 
+  const hidden = useHideOnScroll(48);
+
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-40 md:hidden bg-background border-t border-border shadow-[0_-2px_10px_rgba(0,0,0,0.1)] safe-area-bottom">
+    <div
+      data-hidden={hidden}
+      className="sticky-autohide gpu-layer fixed bottom-0 left-0 right-0 z-40 md:hidden bg-background/95 border-t border-border shadow-[0_-2px_10px_rgba(0,0,0,0.12)] safe-area-bottom"
+    >
       <div className="flex items-center gap-2 p-3 pb-safe">
         {/* Filters Button */}
         <Button
           variant="outline"
           size="sm"
-          className="flex-1 h-10 rounded-lg gap-2 relative"
+          className="flex-1 h-11 rounded-lg gap-2 relative no-tap-highlight"
           onClick={onFiltersClick}
         >
           <SlidersHorizontal className="h-4 w-4" />
@@ -65,7 +71,7 @@ export const MobileStickyBar = ({
             <Button
               variant="outline"
               size="sm"
-              className="flex-1 h-10 rounded-lg gap-2"
+              className="flex-1 h-11 rounded-lg gap-2 no-tap-highlight"
             >
               <ArrowUpDown className="h-4 w-4" />
               <span className="truncate">{currentSortLabel}</span>

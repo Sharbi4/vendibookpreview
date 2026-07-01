@@ -214,6 +214,45 @@
   body[data-sale-cta-active="true"] [data-vendi-chat-bubble] {
     bottom: calc(96px + env(safe-area-inset-bottom, 0px) + 12px) !important;
   }
+
+  /* ── Mobile smoothness & tap utilities ─────────────────────────────── */
+  /* Hide native scrollbars on horizontal rails while keeping scroll UX */
+  .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+  .scrollbar-hide::-webkit-scrollbar { display: none; }
+
+  /* Native momentum + snap for horizontal carousels (photos, chips) */
+  .snap-rail {
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x mandatory;
+    overscroll-behavior-x: contain;
+    scroll-behavior: smooth;
+  }
+  .snap-rail > * { scroll-snap-align: start; scroll-snap-stop: always; }
+  .snap-rail-center > * { scroll-snap-align: center; }
+
+  /* Kill the grey iOS tap flash + long-press callouts on buttons/links */
+  .no-tap-highlight,
+  button,
+  a,
+  [role="button"] {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+  }
+
+  /* Minimum comfortable tap target (WCAG 44x44) */
+  .tap-target { min-height: 44px; min-width: 44px; }
+
+  /* Promote sticky/fixed bars to their own GPU layer to prevent
+     scroll-induced repaint jank on iOS Safari */
+  .gpu-layer {
+    transform: translateZ(0);
+    will-change: transform;
+    backface-visibility: hidden;
+  }
+
+  /* Auto-hide sticky bar when scrolling down, re-show on scroll up */
+  .sticky-autohide { transition: transform 240ms cubic-bezier(0.22, 0.61, 0.36, 1); }
+  .sticky-autohide[data-hidden="true"] { transform: translate3d(0, 110%, 0); }
 }
 
 
