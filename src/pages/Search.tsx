@@ -111,6 +111,10 @@ const Search = () => {
   );
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
   const [deliveryFilterEnabled, setDeliveryFilterEnabled] = useState(false);
+  const [fulfillmentTypes, setFulfillmentTypes] = useState<Array<'pickup' | 'delivery' | 'on_site'>>(
+    (searchParams.get('fulfillment')?.split(',').filter(Boolean) as Array<'pickup' | 'delivery' | 'on_site'>) || []
+  );
+
   const [instantBookOnly, setInstantBookOnly] = useState(initialInstantBook);
   const [verifiedHostsOnly, setVerifiedHostsOnly] = useState(searchParams.get('verified') === 'true');
   const [featuredOnly, setFeaturedOnly] = useState(
