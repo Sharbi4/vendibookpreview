@@ -1414,7 +1414,43 @@ const FilterContent = ({
         </div>
       )}
 
+      {/* Fulfillment Type Filter */}
+      <div className="space-y-2">
+        <Label className="text-sm font-medium flex items-center gap-2">
+          <Truck className="h-4 w-4" />
+          Fulfillment
+        </Label>
+        <div className="flex flex-wrap gap-2">
+          {([
+            { key: 'pickup', label: 'Pickup' },
+            { key: 'delivery', label: 'Delivery' },
+            { key: 'on_site', label: 'On-site' },
+          ] as const).map(({ key, label }) => {
+            const active = fulfillmentTypes.includes(key);
+            return (
+              <button
+                key={key}
+                type="button"
+                onClick={() => onFulfillmentToggle(key)}
+                aria-pressed={active}
+                data-fulfillment-option={key}
+                className={cn(
+                  'px-3 py-1.5 rounded-full text-xs font-medium border transition-colors',
+                  active
+                    ? 'bg-primary text-primary-foreground border-primary'
+                    : 'bg-card border-border text-foreground hover:bg-muted/60',
+                )}
+              >
+                {label}
+              </button>
+            );
+          })}
+        </div>
+        <p className="text-xs text-muted-foreground">Show listings offering any selected option.</p>
+      </div>
+
       {/* Delivery to My Location Filter */}
+
       <div className="space-y-2">
         <Label className="text-sm font-medium flex items-center gap-2">
           <Truck className="h-4 w-4" />
