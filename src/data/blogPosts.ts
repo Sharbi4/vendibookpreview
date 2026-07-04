@@ -499,7 +499,7 @@ export const BLOG_POSTS: BlogPost[] = [
 <li>Do you sell more at lunch or late-night?</li>
 </ul>
 
-<p class="mb-8">By utilizing <a href="/search?category=vendor-space" class="text-primary underline font-medium">Vendor Spaces</a> (rentable parking slots for food units), you can physically move your business to where the demand is, rather than hoping the demand comes to you.</p>
+<p class="mb-8">By utilizing <a href="/search?category=vendor_space" class="text-primary underline font-medium">Vendor Spaces</a> (rentable parking slots for food units), you can physically move your business to where the demand is, rather than hoping the demand comes to you.</p>
 
 <h2 class="text-2xl font-bold mt-10 mb-4">4. The Financials: CapEx vs. OpEx</h2>
 
@@ -565,7 +565,7 @@ export const BLOG_POSTS: BlogPost[] = [
 
 <div class="bg-primary/10 p-6 rounded-lg text-center">
 <h3 class="font-bold text-xl mb-3">Ready to test your concept?</h3>
-<p class="mb-4"><a href="/search?category=shared-kitchen" class="text-primary underline font-medium text-lg">Browse Shared Kitchens & Vendor Spaces Near You →</a></p>
+<p class="mb-4"><a href="/search?category=ghost_kitchen" class="text-primary underline font-medium text-lg">Browse Shared Kitchens & Vendor Spaces Near You →</a></p>
 </div>
     `,
     author: 'Brock De Santis',
@@ -1599,7 +1599,7 @@ Vendibook listings include information about local permit requirements to help y
 
 <p class="mb-4">That description is a deal-killer. Renters and buyers are looking for <strong>potential</strong>, not just specs. They need to envision their business succeeding in your vehicle.</p>
 
-<p class="mb-4"><strong>The Fix:</strong> Tell a story. You don't need to be a copywriter. The <a href="/tools/listingstudio" class="text-primary underline font-medium">Listing Studio</a> on Vendibook uses AI to turn your basic specs (year, make, equipment list) into a compelling sales pitch. It highlights the "Turnkey Ready" nature of your truck and uses keywords that potential renters are actually searching for, boosting your SEO automatically.</p>
+<p class="mb-4"><strong>The Fix:</strong> Tell a story. You don't need to be a copywriter. The <a href="/tools/listing-studio" class="text-primary underline font-medium">Listing Studio</a> on Vendibook uses AI to turn your basic specs (year, make, equipment list) into a compelling sales pitch. It highlights the "Turnkey Ready" nature of your truck and uses keywords that potential renters are actually searching for, boosting your SEO automatically.</p>
 
 <h2 class="text-2xl font-bold mt-10 mb-4">3. Build Trust with Transparency (Use "PermitPath")</h2>
 
@@ -1611,9 +1611,9 @@ Vendibook listings include information about local permit requirements to help y
 
 <p class="mb-4">Sometimes, a truck doesn't rent because the potential buyer can't "see" what to do with it. Maybe you have a specialized pizza trailer, but they want to sell burgers.</p>
 
-<p class="mb-4"><strong>The Fix:</strong> Sell the vision. Use <a href="/tools/conceptlab" class="text-primary underline font-medium">Concept Lab</a> to generate business concepts that fit your specific equipment. In your listing, you can say: "Perfect setup for a Wood-Fired Pizza business or easily converted for a High-Volume Bakery."</p>
+<p class="mb-4"><strong>The Fix:</strong> Sell the vision. Use <a href="/tools/concept-lab" class="text-primary underline font-medium">Concept Lab</a> to generate business concepts that fit your specific equipment. In your listing, you can say: "Perfect setup for a Wood-Fired Pizza business or easily converted for a High-Volume Bakery."</p>
 
-<p class="mb-4">Combine this with <a href="/tools/marketradar" class="text-primary underline font-medium">Market Radar</a> to show them where the demand is. When you sell the business opportunity rather than just the metal and tires, your asset becomes infinitely more valuable.</p>
+<p class="mb-4">Combine this with <a href="/tools/market-radar" class="text-primary underline font-medium">Market Radar</a> to show them where the demand is. When you sell the business opportunity rather than just the metal and tires, your asset becomes infinitely more valuable.</p>
 
 <h2 class="text-2xl font-bold mt-10 mb-4">Conclusion: Don't Just List It, Launch It</h2>
 
