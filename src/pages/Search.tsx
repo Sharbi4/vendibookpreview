@@ -940,6 +940,7 @@ const Search = () => {
                             category={category !== 'all' ? category : undefined}
                             mode={mode !== 'all' ? mode : undefined}
                             locationText={searchQuery || locationText}
+                            activeFiltersCount={activeFiltersCount}
                           />
                         </div>
                       )}
