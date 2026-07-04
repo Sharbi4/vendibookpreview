@@ -1,22 +1,26 @@
 import React, { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { ListingWizard } from '@/components/listing-wizard/ListingWizard';
 
 const CreateListing: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, isLoading, hasRole } = useAuth();
 
   useEffect(() => {
     if (!isLoading) {
       if (!user) {
-        navigate('/auth');
+        // Preserve where the user was so they return here after sign-in
+        // instead of losing their in-progress listing.
+        const redirectTo = `${location.pathname}${location.search}`;
+        navigate(`/auth?redirect=${encodeURIComponent(redirectTo)}`);
       } else if (!hasRole('host')) {
         navigate('/dashboard');
       }
     }
-  }, [user, isLoading, hasRole, navigate]);
+  }, [user, isLoading, hasRole, navigate, location.pathname, location.search]);
 
   if (isLoading) {
     return (
@@ -34,3 +38,4 @@ const CreateListing: React.FC = () => {
 };
 
 export default CreateListing;
+
