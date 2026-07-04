@@ -85,8 +85,10 @@ export const EmptyStateEmailCapture = ({ locationText, category, mode, onClearFi
     }
   };
 
+  const hasActiveFilters = activeFiltersCount > 0;
+
   return (
-    <div className="relative flex flex-col items-center justify-center py-20 px-6 rounded-3xl bg-white/50 backdrop-blur-2xl border border-white/60 shadow-xl">
+    <div className="relative flex flex-col items-center justify-center py-16 px-6 rounded-3xl bg-white/50 backdrop-blur-2xl border border-white/60 shadow-xl">
       {/* Background orbs */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none rounded-3xl">
         <motion.div
@@ -105,33 +107,50 @@ export const EmptyStateEmailCapture = ({ locationText, category, mode, onClearFi
       <motion.div
         animate={{ y: [0, -14, 0] }}
         transition={{ repeat: Infinity, duration: 3, ease: 'easeInOut' }}
-        className="relative mb-4"
+        className="relative mb-5"
       >
         <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-[hsl(14,100%,57%)]/40 to-[hsl(40,100%,49%)]/40 blur-xl scale-150" />
-        <div className="relative w-24 h-24 rounded-2xl bg-gradient-to-br from-[hsl(14,100%,57%)] to-[hsl(40,100%,49%)] flex items-center justify-center shadow-2xl shadow-[hsl(14,100%,57%)]/30">
-          <Truck className="w-12 h-12 text-white" />
+        <div className="relative w-20 h-20 rounded-2xl bg-gradient-to-br from-[hsl(14,100%,57%)] to-[hsl(40,100%,49%)] flex items-center justify-center shadow-2xl shadow-[hsl(14,100%,57%)]/30">
+          <SlidersHorizontal className="w-10 h-10 text-white" />
         </div>
       </motion.div>
 
-      <motion.div
-        animate={{ y: [0, -10, 0] }}
-        transition={{ repeat: Infinity, duration: 3.5, ease: 'easeInOut', delay: 1.2 }}
-        className="absolute top-12 right-16"
-      >
-        <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-[hsl(40,100%,49%)] to-[hsl(14,100%,57%)] flex items-center justify-center shadow-xl shadow-[hsl(40,100%,49%)]/25">
-          <Utensils className="w-7 h-7 text-white" />
-        </div>
-      </motion.div>
-
-      <h3 className="text-2xl font-bold text-foreground mb-2 relative">No listings found here yet</h3>
-      <p className="text-muted-foreground text-center max-w-sm mb-5 text-sm relative">
-        Tell Vendibook what you need — our concierge will text or email you within 1 business hour with verified options.
+      <h3 className="text-xl font-bold text-foreground mb-2 relative text-center">
+        {hasActiveFilters ? 'No listings match your filters' : 'No listings found here yet'}
+      </h3>
+      <p className="text-muted-foreground text-center max-w-sm mb-6 text-sm relative">
+        {hasActiveFilters
+          ? 'Try removing some filters or resetting them to see more results.'
+          : 'Tell Vendibook what you need — our concierge will text or email you within 1 business hour with verified options.'}
       </p>
+
+      {/* Prominent reset when filters are active */}
+      {hasActiveFilters && (
+        <div className="relative w-full max-w-md mb-8">
+          <Button
+            variant="dark-shine"
+            size="lg"
+            onClick={onClearFilters}
+            className="w-full h-12 rounded-xl"
+          >
+            <RotateCcw className="w-4 h-4 mr-2" />
+            Reset all filters
+            {activeFiltersCount > 0 && (
+              <Badge variant="secondary" className="ml-2 bg-background/20 text-background border-0">
+                {activeFiltersCount}
+              </Badge>
+            )}
+          </Button>
+          <p className="text-[11px] text-muted-foreground text-center mt-2">
+            Removes every filter and shows all listings
+          </p>
+        </div>
+      )}
 
       {/* Primary action: Concierge lead */}
       <div className="relative w-full max-w-md mb-4">
         <TellVendibookButton
-          variant="dark-shine"
+          variant={hasActiveFilters ? 'glass-cta' : 'dark-shine'}
           size="lg"
           className="w-full rounded-xl"
           defaultCity={locationText}
@@ -225,11 +244,13 @@ export const EmptyStateEmailCapture = ({ locationText, category, mode, onClearFi
         </motion.div>
       )}
 
-      <div className="flex gap-3 relative">
-        <Button variant="outline" onClick={onClearFilters} className="rounded-xl bg-white/70 backdrop-blur border-border hover:bg-white text-foreground">
-          <X className="w-4 h-4 mr-1" /> Clear Filters
-        </Button>
-      </div>
+      {!hasActiveFilters && (
+        <div className="flex gap-3 relative">
+          <Button variant="outline" onClick={onClearFilters} className="rounded-xl bg-white/70 backdrop-blur border-border hover:bg-white text-foreground">
+            <X className="w-4 h-4 mr-1" /> Clear Filters
+          </Button>
+        </div>
+      )}
     </div>
   );
 };
