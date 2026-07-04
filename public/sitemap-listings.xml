@@ -111,6 +111,17 @@
     </image:image>
   </url>
   <url>
+    <loc>https://vendibook.com/listing/7a273f15-3b68-4319-b6f6-45e04d276d0a</loc>
+    <lastmod>2026-07-04</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://images.unsplash.com/photo-1563805042-7684c019e1cb?w=800</image:loc>
+      <image:title>Ice Cream Truck - Turnkey Business</image:title>
+      <image:caption>Ice Cream Truck - Turnkey Business on Vendibook</image:caption>
+    </image:image>
+  </url>
+  <url>
     <loc>https://vendibook.com/listing/171bf57c-6225-4188-819f-81d4230a9a17</loc>
     <lastmod>2026-07-02</lastmod>
     <changefreq>weekly</changefreq>
@@ -141,17 +152,6 @@
       <image:loc>https://images.unsplash.com/photo-1529193591184-b1d58069ecdd?w=800</image:loc>
       <image:title>BBQ Smoker Trailer - Competition Ready</image:title>
       <image:caption>BBQ Smoker Trailer - Competition Ready on Vendibook</image:caption>
-    </image:image>
-  </url>
-  <url>
-    <loc>https://vendibook.com/listing/7a273f15-3b68-4319-b6f6-45e04d276d0a</loc>
-    <lastmod>2026-07-04</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://images.unsplash.com/photo-1563805042-7684c019e1cb?w=800</image:loc>
-      <image:title>Ice Cream Truck - Turnkey Business</image:title>
-      <image:caption>Ice Cream Truck - Turnkey Business on Vendibook</image:caption>
     </image:image>
   </url>
   <url>
@@ -485,17 +485,6 @@
     </image:image>
   </url>
   <url>
-    <loc>https://vendibook.com/listing/d4e891ae-bbf4-4580-9998-28681e04d2d4</loc>
-    <lastmod>2026-06-25</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/a428d36b-4816-4cc3-9c9f-125c57d54e7f/d4e891ae-bbf4-4580-9998-28681e04d2d4/1781025625049-uzgo9z.jpeg</image:loc>
-      <image:title>INVESTMENT OPPORTUNITY IN HOUSTON</image:title>
-      <image:caption>INVESTMENT OPPORTUNITY IN HOUSTON on Vendibook</image:caption>
-    </image:image>
-  </url>
-  <url>
     <loc>https://vendibook.com/listing/e0ad7bc7-5a18-4534-a849-94501f5bc008</loc>
     <lastmod>2026-07-04</lastmod>
     <changefreq>weekly</changefreq>
@@ -504,6 +493,17 @@
       <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/bc349661-164b-47f4-9f25-808fddad9e16/e0ad7bc7-5a18-4534-a849-94501f5bc008/1776873368621-u00hg.jpeg</image:loc>
       <image:title>Turn Key - Ready to go 16ft Food Trailer!</image:title>
       <image:caption>Turn Key - Ready to go 16ft Food Trailer! on Vendibook</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://vendibook.com/listing/d4e891ae-bbf4-4580-9998-28681e04d2d4</loc>
+    <lastmod>2026-06-25</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/a428d36b-4816-4cc3-9c9f-125c57d54e7f/d4e891ae-bbf4-4580-9998-28681e04d2d4/1781025625049-uzgo9z.jpeg</image:loc>
+      <image:title>INVESTMENT OPPORTUNITY IN HOUSTON</image:title>
+      <image:caption>INVESTMENT OPPORTUNITY IN HOUSTON on Vendibook</image:caption>
     </image:image>
   </url>
   <url>

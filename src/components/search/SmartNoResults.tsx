@@ -10,6 +10,7 @@ interface SmartNoResultsProps {
   category?: string;
   mode?: string;
   locationText?: string;
+  activeFiltersCount?: number;
 }
 
 interface Suggestion {
@@ -28,7 +29,8 @@ export const SmartNoResults = ({
   onClearFilters,
   category,
   mode,
-  locationText}: SmartNoResultsProps) => {
+  locationText,
+  activeFiltersCount}: SmartNoResultsProps) => {
   const [suggestion, setSuggestion] = useState<Suggestion | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -110,6 +112,7 @@ export const SmartNoResults = ({
         category={category}
         mode={mode}
         locationText={locationText}
+        activeFiltersCount={activeFiltersCount}
       />
     );
   }
@@ -144,6 +147,7 @@ export const SmartNoResults = ({
           category={category}
           mode={mode}
           locationText={locationText}
+          activeFiltersCount={activeFiltersCount}
         />
       </div>
     </div>
