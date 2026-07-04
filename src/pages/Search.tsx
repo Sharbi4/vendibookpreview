@@ -1230,6 +1230,8 @@ interface FilterContentProps {
   dateRange: DateRange | undefined;
   selectedAmenities: string[];
   deliveryFilterEnabled: boolean;
+  fulfillmentTypes: Array<'pickup' | 'delivery' | 'on_site'>;
+
   instantBookOnly: boolean;
   verifiedHostsOnly: boolean;
   onModeChange: (value: string) => void;
