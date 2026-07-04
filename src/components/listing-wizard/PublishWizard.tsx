@@ -311,13 +311,23 @@ export const PublishWizard: React.FC = () => {
       updateData.available_from = availableFrom || listing.available_from || null;
       updateData.available_to = availableTo || listing.available_to || null;
 
-      const { error } = await supabase
-        .from('listings')
-        .update(updateData)
-        .eq('id', listingId);
+      // Guest drafts can no longer be updated via direct RLS — route through
+      // the guest-draft-access edge function which validates the token.
+      const guestDraft = getGuestDraft();
+      const { error } = guestDraft && guestDraft.listingId === listingId
+        ? await (async () => {
+            const res = await supabase.functions.invoke('guest-draft-access', {
+              body: { action: 'update', id: listingId, token: guestDraft.token, patch: updateData },
+            });
+            return { error: res.error as any };
+          })()
+        : await supabase
+            .from('listings')
+            .update(updateData)
+            .eq('id', listingId);
 
       if (error) {
-        console.warn('Guest draft auto-save failed:', error.message);
+        console.warn('Guest draft auto-save failed:', (error as any).message);
       } else {
         console.log('Guest draft auto-saved successfully');
       }
