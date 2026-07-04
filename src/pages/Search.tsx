@@ -666,6 +666,8 @@ const Search = () => {
                         onDateRangeChange={handleDateRangeChange}
                         onAmenityToggle={toggleAmenity}
                         onDeliveryFilterChange={setDeliveryFilterEnabled}
+                        onFulfillmentToggle={handleFulfillmentToggle}
+
                         onInstantBookChange={handleInstantBookChange}
                         onVerifiedHostsChange={handleVerifiedHostsChange}
                         onClear={clearFilters}
