@@ -1,0 +1,2 @@
+DROP POLICY IF EXISTS "Service role can insert comments" ON public.zendesk_ticket_comments;
+CREATE POLICY "Service role can insert comments" ON public.zendesk_ticket_comments FOR INSERT TO service_role WITH CHECK (true);
