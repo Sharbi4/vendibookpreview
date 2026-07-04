@@ -27,7 +27,7 @@ async function search(body: Record<string, unknown>) {
       Authorization: `Bearer ${ANON_KEY}`,
       apikey: ANON_KEY,
     },
-    body: JSON.stringify({ mode: "all", page: 1, page_size: 100, ...body }),
+    body: JSON.stringify({ page: 1, page_size: 50, ...body }),
   });
   const json = await res.json();
   assertEquals(res.status, 200, `edge function returned ${res.status}`);
