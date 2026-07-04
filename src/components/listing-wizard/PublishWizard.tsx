@@ -397,7 +397,6 @@ export const PublishWizard: React.FC = () => {
       }
 
       // Check if this is a guest draft (no host_id but has guest_draft_token)
-      const guestDraft = getGuestDraft();
       if (!data.host_id && guestDraft?.listingId === listingId) {
         setIsGuestDraft(true);
       }
