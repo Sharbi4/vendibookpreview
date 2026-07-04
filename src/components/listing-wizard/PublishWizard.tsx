@@ -311,13 +311,23 @@ export const PublishWizard: React.FC = () => {
       updateData.available_from = availableFrom || listing.available_from || null;
       updateData.available_to = availableTo || listing.available_to || null;
 
-      const { error } = await supabase
-        .from('listings')
-        .update(updateData)
-        .eq('id', listingId);
+      // Guest drafts can no longer be updated via direct RLS — route through
+      // the guest-draft-access edge function which validates the token.
+      const guestDraft = getGuestDraft();
+      const { error } = guestDraft && guestDraft.listingId === listingId
+        ? await (async () => {
+            const res = await supabase.functions.invoke('guest-draft-access', {
+              body: { action: 'update', id: listingId, token: guestDraft.token, patch: updateData },
+            });
+            return { error: res.error as any };
+          })()
+        : await supabase
+            .from('listings')
+            .update(updateData)
+            .eq('id', listingId);
 
       if (error) {
-        console.warn('Guest draft auto-save failed:', error.message);
+        console.warn('Guest draft auto-save failed:', (error as any).message);
       } else {
         console.log('Guest draft auto-saved successfully');
       }
@@ -359,11 +369,26 @@ export const PublishWizard: React.FC = () => {
     const fetchListing = async () => {
       if (!listingId) return;
 
-      const { data, error } = await supabase
-        .from('listings')
-        .select('*')
-        .eq('id', listingId)
-        .single();
+      let data: any = null;
+      let error: any = null;
+
+      const guestDraft = getGuestDraft();
+      if (guestDraft && guestDraft.listingId === listingId) {
+        // Guest path: use the token-validated edge function.
+        const res = await supabase.functions.invoke('guest-draft-access', {
+          body: { action: 'get', id: listingId, token: guestDraft.token },
+        });
+        data = (res.data as any)?.listing ?? null;
+        error = res.error ?? (data ? null : new Error('not_found'));
+      } else {
+        const res = await supabase
+          .from('listings')
+          .select('*')
+          .eq('id', listingId)
+          .single();
+        data = res.data;
+        error = res.error;
+      }
 
       if (error || !data) {
         toast({ title: 'Listing not found', variant: 'destructive' });
@@ -372,7 +397,6 @@ export const PublishWizard: React.FC = () => {
       }
 
       // Check if this is a guest draft (no host_id but has guest_draft_token)
-      const guestDraft = getGuestDraft();
       if (!data.host_id && guestDraft?.listingId === listingId) {
         setIsGuestDraft(true);
       }
@@ -615,12 +639,16 @@ export const PublishWizard: React.FC = () => {
         updateData.featured_enabled = featuredEnabled;
       }
 
-      // Claim the draft and persist all in-memory form data
-      const { error } = await supabase
-        .from('listings')
-        .update(updateData)
-        .eq('id', listingId)
-        .eq('guest_draft_token', guestDraft.token);
+      // Claim the draft via the token-validated edge function. host_id and
+      // guest_draft_token clearing are handled server-side; strip them from
+      // the client patch to avoid the allowlist rejecting the field.
+      const { host_id: _hid, guest_draft_token: _gdt, ...patchForClaim } = updateData;
+      const { error } = await (async () => {
+        const res = await supabase.functions.invoke('guest-draft-access', {
+          body: { action: 'claim', id: listingId, token: guestDraft.token, patch: patchForClaim },
+        });
+        return { error: (res.error as any) ?? ((res.data as any)?.error ? new Error((res.data as any).error) : null) };
+      })();
 
       if (error) throw error;
 
