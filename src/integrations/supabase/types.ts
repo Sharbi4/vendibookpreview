@@ -4552,6 +4552,14 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      get_conversation_participant_profile: {
+        Args: { _user_id: string }
+        Returns: {
+          avatar_url: string
+          full_name: string
+          id: string
+        }[]
+      }
       get_feedback_by_token: {
         Args: { _token: string }
         Returns: {
