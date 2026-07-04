@@ -183,10 +183,12 @@ const Search = () => {
     verified_hosts_only: verifiedHostsOnly || undefined,
     featured_only: featuredOnly || undefined,
     delivery_capable: deliveryFilterEnabled || undefined,
+    fulfillment_types: fulfillmentTypes.length > 0 ? fulfillmentTypes : undefined,
     page,
     page_size: 20,
     sort_by: sortBy === 'price-low' ? 'price_low' : sortBy === 'price-high' ? 'price_high' : sortBy,
-  }), [searchQuery, mode, category, locationCoords, searchRadius, dateRange, selectedAmenities, priceRange, instantBookOnly, verifiedHostsOnly, featuredOnly, deliveryFilterEnabled, page, sortBy]);
+  }), [searchQuery, mode, category, locationCoords, searchRadius, dateRange, selectedAmenities, priceRange, instantBookOnly, verifiedHostsOnly, featuredOnly, deliveryFilterEnabled, fulfillmentTypes, page, sortBy]);
+
 
   // Fetch listings from edge function
   const { data: searchResults, isLoading: isLoadingListings } = useQuery({
