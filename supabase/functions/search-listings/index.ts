@@ -37,7 +37,9 @@ interface SearchRequest {
   instant_book_only?: boolean;
   verified_hosts_only?: boolean;
   delivery_capable?: boolean;
+  fulfillment_types?: Array<'pickup' | 'delivery' | 'on_site'>;
   featured_only?: boolean;
+
   page?: number;
   page_size?: number;
   sort_by?: 'newest' | 'price_low' | 'price_high' | 'distance' | 'relevance';
