@@ -3,7 +3,13 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, useLocation, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation, Navigate, useParams } from "react-router-dom";
+
+// Redirects /listings/:id (plural) to the canonical /listing/:id
+const ListingPluralRedirect = () => {
+  const { id } = useParams();
+  return <Navigate to={`/listing/${id}`} replace />;
+};
 import { AuthProvider } from "@/contexts/AuthContext";
 import CookieConsent from "@/components/CookieConsent";
 import ScrollToTop from "@/components/ScrollToTop";
@@ -206,6 +212,8 @@ const AnimatedRoutes = () => {
           <Route path="/create-listing" element={<Navigate to="/list" replace />} />
           <Route path="/host" element={<Navigate to="/list" replace />} />
           <Route path="/listing/:id" element={<PageTransition><ListingDetail /></PageTransition>} />
+          {/* Common typo/plural alias — redirect to canonical singular route */}
+          <Route path="/listings/:id" element={<ListingPluralRedirect />} />
           {/* Share route: pretty URL for social sharing, redirects to /listing/:id */}
           <Route path="/share/listing/:id" element={<ShareRedirect />} />
           <Route path="/share/:source/:slug" element={<BlogShareRedirect />} />
