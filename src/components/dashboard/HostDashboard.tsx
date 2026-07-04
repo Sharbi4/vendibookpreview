@@ -146,17 +146,20 @@ const HostDashboard = () => {
 
   return (
     <div className="max-w-[1320px] mx-auto">
-      {/* Stripe blocker — quiet, only when payouts are not connected */}
-      {!isConnected && !stripeLoading && (
-        <div className="mb-8">
+      {/* Payout status pill — always visible so hosts see Connected vs Not connected */}
+      {!stripeLoading && (
+        <div className="mb-6">
           <StripeNotificationBubble
             isConnected={isConnected}
             isLoading={stripeLoading}
             onConnect={handleConnectStripe}
+            onManage={openStripeDashboard}
             isConnecting={isConnecting}
+            isOpeningDashboard={isOpeningDashboard}
           />
         </div>
       )}
+
 
       <SectionReveal className="space-y-10 sm:space-y-12">
         {/* ── Header strip ───────────────────────────────────── */}
