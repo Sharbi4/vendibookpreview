@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Bell, CheckCircle, Truck, Utensils, X, MapPin, User, Phone } from 'lucide-react';
+import { Bell, CheckCircle, Truck, Utensils, X, MapPin, User, Phone, SlidersHorizontal, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { TellVendibookButton } from '@/components/lead/TellVendibookButton';
