@@ -13,9 +13,10 @@ interface EmptyStateEmailCaptureProps {
   category?: string;
   mode?: string;
   onClearFilters: () => void;
+  activeFiltersCount?: number;
 }
 
-export const EmptyStateEmailCapture = ({ locationText, category, mode, onClearFilters }: EmptyStateEmailCaptureProps) => {
+export const EmptyStateEmailCapture = ({ locationText, category, mode, onClearFilters, activeFiltersCount = 0 }: EmptyStateEmailCaptureProps) => {
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
