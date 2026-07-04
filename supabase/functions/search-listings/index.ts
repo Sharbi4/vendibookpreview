@@ -73,7 +73,9 @@ Deno.serve(async (req) => {
       instant_book_only,
       verified_hosts_only,
       delivery_capable,
+      fulfillment_types,
       featured_only,
+
       page = 1,
       page_size = 20,
       sort_by = 'newest',
