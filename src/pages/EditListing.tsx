@@ -25,17 +25,15 @@ const EditListing: React.FC = () => {
         return;
       }
 
-      // Check if this is a guest draft the user can access
+      // Check if this is a guest draft the user can access.
+      // The guest-draft-access edge function validates the token server-side
+      // (RLS no longer allows anon reads of unclaimed drafts).
       const guestDraft = getGuestDraft();
       if (guestDraft && guestDraft.listingId === listingId) {
-        // Verify the token still exists on the listing
-        const { data, error } = await supabase
-          .from('listings')
-          .select('guest_draft_token')
-          .eq('id', listingId)
-          .single();
-
-        if (!error && data?.guest_draft_token === guestDraft.token) {
+        const { data, error } = await supabase.functions.invoke('guest-draft-access', {
+          body: { action: 'get', id: listingId, token: guestDraft.token },
+        });
+        if (!error && data?.listing) {
           setHasAccess(true);
           return;
         }
