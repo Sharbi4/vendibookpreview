@@ -206,6 +206,8 @@ const AnimatedRoutes = () => {
           <Route path="/create-listing" element={<Navigate to="/list" replace />} />
           <Route path="/host" element={<Navigate to="/list" replace />} />
           <Route path="/listing/:id" element={<PageTransition><ListingDetail /></PageTransition>} />
+          {/* Common typo/plural alias — redirect to canonical singular route */}
+          <Route path="/listings/:id" element={<Navigate to="/listing/:id" replace />} />
           {/* Share route: pretty URL for social sharing, redirects to /listing/:id */}
           <Route path="/share/listing/:id" element={<ShareRedirect />} />
           <Route path="/share/:source/:slug" element={<BlogShareRedirect />} />
