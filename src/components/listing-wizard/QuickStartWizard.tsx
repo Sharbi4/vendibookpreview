@@ -34,13 +34,30 @@ const modeOptions = [
   { value: 'rent' as ListingMode, label: 'For Rent', icon: Tag, description: 'Rent by day or week' },
   { value: 'sale' as ListingMode, label: 'For Sale', icon: ShoppingBag, description: 'Sell to a new owner' }];
 
+const QUICKSTART_STORAGE_KEY = 'vendibook_quickstart_draft';
+const QUICKSTART_RESUME_KEY = 'vendibook_quickstart_resume';
+
+const loadPersistedQuickStart = (): { data: QuickStartData; step: QuickStartStep } | null => {
+  try {
+    const raw = sessionStorage.getItem(QUICKSTART_STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== 'object') return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+};
+
 export const QuickStartWizard: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
-  
-  const [step, setStep] = useState<QuickStartStep>('category');
-  const [data, setData] = useState<QuickStartData>({
+
+  const persisted = typeof window !== 'undefined' ? loadPersistedQuickStart() : null;
+
+  const [step, setStep] = useState<QuickStartStep>(persisted?.step ?? 'category');
+  const [data, setData] = useState<QuickStartData>(persisted?.data ?? {
     category: null,
     mode: null,
     location: '',
@@ -52,8 +69,19 @@ export const QuickStartWizard: React.FC = () => {
   const [isCreating, setIsCreating] = useState(false);
   const [isLookingUpZip, setIsLookingUpZip] = useState(false);
   const [zipError, setZipError] = useState<string | null>(null);
-  const [zipConfirmed, setZipConfirmed] = useState(false);
+  const [zipConfirmed, setZipConfirmed] = useState(!!persisted?.data?.latitude);
   const [createdListingId, setCreatedListingId] = useState<string | null>(null);
+
+  // Persist wizard progress so it survives sign-in redirects and refreshes.
+  useEffect(() => {
+    if (step === 'created') return;
+    try {
+      sessionStorage.setItem(
+        QUICKSTART_STORAGE_KEY,
+        JSON.stringify({ data, step })
+      );
+    } catch {}
+  }, [data, step]);
 
   const lookupZipCode = useCallback(async (zip: string) => {
     if (zip.length !== 5) return;
