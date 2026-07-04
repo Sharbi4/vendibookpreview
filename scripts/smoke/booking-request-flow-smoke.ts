@@ -58,6 +58,19 @@ function futureDateRange(offsetDays: number): { start: string; end: string } {
   };
 }
 
+async function ensureAuthUser(id: string, email: string) {
+  // Idempotent create via admin API; ignore "already registered" errors.
+  const { error } = await supabase.auth.admin.createUser({
+    id,
+    email,
+    email_confirm: true,
+    user_metadata: { smoke: true },
+  } as never);
+  if (error && !/already|exists|registered/i.test(error.message)) {
+    fail(`ensureAuthUser(${email}) failed: ${error.message}`);
+  }
+}
+
 async function cleanup(listingId: string | null) {
   if (listingId) {
     await supabase.from("booking_requests").delete().eq("listing_id", listingId);
@@ -66,6 +79,7 @@ async function cleanup(listingId: string | null) {
   await supabase.from("booking_requests").delete().eq("host_id", SMOKE_HOST_ID);
   await supabase.from("listings").delete().eq("host_id", SMOKE_HOST_ID);
 }
+
 
 async function createRequest(
   listingId: string,
