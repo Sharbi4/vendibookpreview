@@ -29,7 +29,8 @@ export const SmartNoResults = ({
   onClearFilters,
   category,
   mode,
-  locationText}: SmartNoResultsProps) => {
+  locationText,
+  activeFiltersCount}: SmartNoResultsProps) => {
   const [suggestion, setSuggestion] = useState<Suggestion | null>(null);
   const [loading, setLoading] = useState(true);
 
