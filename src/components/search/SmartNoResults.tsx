@@ -147,6 +147,7 @@ export const SmartNoResults = ({
           category={category}
           mode={mode}
           locationText={locationText}
+          activeFiltersCount={activeFiltersCount}
         />
       </div>
     </div>
