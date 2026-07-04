@@ -369,11 +369,26 @@ export const PublishWizard: React.FC = () => {
     const fetchListing = async () => {
       if (!listingId) return;
 
-      const { data, error } = await supabase
-        .from('listings')
-        .select('*')
-        .eq('id', listingId)
-        .single();
+      let data: any = null;
+      let error: any = null;
+
+      const guestDraft = getGuestDraft();
+      if (guestDraft && guestDraft.listingId === listingId) {
+        // Guest path: use the token-validated edge function.
+        const res = await supabase.functions.invoke('guest-draft-access', {
+          body: { action: 'get', id: listingId, token: guestDraft.token },
+        });
+        data = (res.data as any)?.listing ?? null;
+        error = res.error ?? (data ? null : new Error('not_found'));
+      } else {
+        const res = await supabase
+          .from('listings')
+          .select('*')
+          .eq('id', listingId)
+          .single();
+        data = res.data;
+        error = res.error;
+      }
 
       if (error || !data) {
         toast({ title: 'Listing not found', variant: 'destructive' });
