@@ -1243,6 +1243,8 @@ interface FilterContentProps {
   onDateRangeChange: (range: DateRange | undefined) => void;
   onAmenityToggle: (amenityId: string) => void;
   onDeliveryFilterChange: (enabled: boolean) => void;
+  onFulfillmentToggle: (kind: 'pickup' | 'delivery' | 'on_site') => void;
+
   onInstantBookChange: (enabled: boolean) => void;
   onVerifiedHostsChange: (enabled: boolean) => void;
   onClear: () => void;
