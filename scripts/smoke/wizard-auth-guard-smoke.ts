@@ -113,7 +113,7 @@ async function run() {
       await page.evaluate(
         ([id]) => {
           localStorage.setItem(
-            "guest_draft",
+            "vendibook_guest_draft",
             JSON.stringify({
               listingId: id,
               token: "not-a-real-token-should-be-rejected",
@@ -145,7 +145,7 @@ async function run() {
       await page.evaluate(
         ([otherId]) => {
           localStorage.setItem(
-            "guest_draft",
+            "vendibook_guest_draft",
             JSON.stringify({
               listingId: otherId,
               token: "token-for-a-different-draft",
