@@ -12,17 +12,6 @@
     </image:image>
   </url>
   <url>
-    <loc>https://vendibook.com/listing/b88edd57-967c-4036-a5bb-a89d2e18ee88</loc>
-    <lastmod>2026-07-02</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/9aae25c4-8340-4b3d-98f0-d307b91bff9c/b88edd57-967c-4036-a5bb-a89d2e18ee88/1768986603989-knwwpn.jpg</image:loc>
-      <image:title>Mobile Bar Business</image:title>
-      <image:caption>Mobile Bar Business in Atlanta, GA on Vendibook</image:caption>
-    </image:image>
-  </url>
-  <url>
     <loc>https://vendibook.com/listing/ff1b1dc3-6815-44fa-bce2-c7dd2ffd73c0</loc>
     <lastmod>2026-07-04</lastmod>
     <changefreq>weekly</changefreq>
@@ -31,6 +20,17 @@
       <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/9aae25c4-8340-4b3d-98f0-d307b91bff9c/ff1b1dc3-6815-44fa-bce2-c7dd2ffd73c0/1768987840155-rk2cme.jpg</image:loc>
       <image:title>Food Truck</image:title>
       <image:caption>Food Truck on Vendibook</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://vendibook.com/listing/b88edd57-967c-4036-a5bb-a89d2e18ee88</loc>
+    <lastmod>2026-07-02</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/9aae25c4-8340-4b3d-98f0-d307b91bff9c/b88edd57-967c-4036-a5bb-a89d2e18ee88/1768986603989-knwwpn.jpg</image:loc>
+      <image:title>Mobile Bar Business</image:title>
+      <image:caption>Mobile Bar Business in Atlanta, GA on Vendibook</image:caption>
     </image:image>
   </url>
   <url>
@@ -342,17 +342,6 @@
     </image:image>
   </url>
   <url>
-    <loc>https://vendibook.com/listing/349ca02e-d0c1-4298-94f0-c7109c1cc691</loc>
-    <lastmod>2026-07-04</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/77f157af-d5d8-4be4-95d8-a1b755c6c6a1/349ca02e-d0c1-4298-94f0-c7109c1cc691/1768892777901-tw864.jpg</image:loc>
-      <image:title>Food Vending Trailer / Mobile Concession Booth – Dual Windows (Model FT41)</image:title>
-      <image:caption>Food Vending Trailer / Mobile Concession Booth – Dual Windows (Model FT41) in Houston, TX on Vendibook</image:caption>
-    </image:image>
-  </url>
-  <url>
     <loc>https://vendibook.com/listing/5caa1345-be50-46b0-93bf-ce6f4a6ae8d2</loc>
     <lastmod>2026-07-04</lastmod>
     <changefreq>weekly</changefreq>
@@ -361,6 +350,17 @@
       <image:loc>https://images.unsplash.com/photo-1513104890138-7c749659a591?w=800</image:loc>
       <image:title>Wood-Fired Pizza Trailer</image:title>
       <image:caption>Wood-Fired Pizza Trailer in Dallas, TX on Vendibook</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://vendibook.com/listing/349ca02e-d0c1-4298-94f0-c7109c1cc691</loc>
+    <lastmod>2026-07-04</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/77f157af-d5d8-4be4-95d8-a1b755c6c6a1/349ca02e-d0c1-4298-94f0-c7109c1cc691/1768892777901-tw864.jpg</image:loc>
+      <image:title>Food Vending Trailer / Mobile Concession Booth – Dual Windows (Model FT41)</image:title>
+      <image:caption>Food Vending Trailer / Mobile Concession Booth – Dual Windows (Model FT41) in Houston, TX on Vendibook</image:caption>
     </image:image>
   </url>
   <url>
