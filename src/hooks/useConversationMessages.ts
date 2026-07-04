@@ -72,18 +72,14 @@ export const useConversationMessages = (conversationId: string | undefined) => {
         return;
       }
 
-      // Fetch profiles separately
-      const { data: hostProfile } = await supabase
-        .from('profiles')
-        .select('full_name, avatar_url')
-        .eq('id', data.host_id)
-        .single();
+      // Fetch profiles separately (safe fields only via SECURITY DEFINER RPC)
+      const { data: hostProfileRows } = await supabase
+        .rpc('get_conversation_participant_profile', { _user_id: data.host_id });
+      const hostProfile = Array.isArray(hostProfileRows) ? hostProfileRows[0] : null;
 
-      const { data: shopperProfile } = await supabase
-        .from('profiles')
-        .select('full_name, avatar_url')
-        .eq('id', data.shopper_id)
-        .single();
+      const { data: shopperProfileRows } = await supabase
+        .rpc('get_conversation_participant_profile', { _user_id: data.shopper_id });
+      const shopperProfile = Array.isArray(shopperProfileRows) ? shopperProfileRows[0] : null;
 
       setConversation({
         ...data,
