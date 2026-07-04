@@ -1260,6 +1260,8 @@ const FilterContent = ({
   dateRange,
   selectedAmenities,
   deliveryFilterEnabled,
+  fulfillmentTypes,
+
   instantBookOnly,
   verifiedHostsOnly,
   onModeChange,
