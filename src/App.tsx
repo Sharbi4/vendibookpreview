@@ -5,10 +5,11 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useLocation, Navigate, useParams } from "react-router-dom";
 
-// Redirects /listings/:id (plural) to the canonical /listing/:id
+// Redirects /listings/:id (plural) to the canonical /listing/:id, preserving querystring + hash
 const ListingPluralRedirect = () => {
   const { id } = useParams();
-  return <Navigate to={`/listing/${id}`} replace />;
+  const { search, hash } = useLocation();
+  return <Navigate to={`/listing/${id}${search}${hash}`} replace />;
 };
 import { AuthProvider } from "@/contexts/AuthContext";
 import CookieConsent from "@/components/CookieConsent";
