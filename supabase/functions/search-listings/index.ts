@@ -37,7 +37,9 @@ interface SearchRequest {
   instant_book_only?: boolean;
   verified_hosts_only?: boolean;
   delivery_capable?: boolean;
+  fulfillment_types?: Array<'pickup' | 'delivery' | 'on_site'>;
   featured_only?: boolean;
+
   page?: number;
   page_size?: number;
   sort_by?: 'newest' | 'price_low' | 'price_high' | 'distance' | 'relevance';
@@ -71,7 +73,9 @@ Deno.serve(async (req) => {
       instant_book_only,
       verified_hosts_only,
       delivery_capable,
+      fulfillment_types,
       featured_only,
+
       page = 1,
       page_size = 20,
       sort_by = 'newest',
@@ -324,10 +328,24 @@ Deno.serve(async (req) => {
       filteredListings = filteredListings.filter(l => l.host_verified);
     }
 
-    // Filter by delivery capability
+    // Filter by delivery capability (must deliver to searcher's coords)
     if (delivery_capable) {
       filteredListings = filteredListings.filter(l => l.can_deliver);
     }
+
+    // Filter by fulfillment types (any-of). 'both' matches pickup or delivery.
+    if (Array.isArray(fulfillment_types) && fulfillment_types.length > 0) {
+      const wants = new Set(fulfillment_types);
+      filteredListings = filteredListings.filter(l => {
+        const ft = l.fulfillment_type;
+        if (!ft) return false;
+        if (wants.has('pickup') && (ft === 'pickup' || ft === 'both')) return true;
+        if (wants.has('delivery') && (ft === 'delivery' || ft === 'both')) return true;
+        if (wants.has('on_site') && ft === 'on_site') return true;
+        return false;
+      });
+    }
+
 
     // Filter by featured listings
     if (featured_only) {

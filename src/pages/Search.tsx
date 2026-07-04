@@ -111,6 +111,10 @@ const Search = () => {
   );
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
   const [deliveryFilterEnabled, setDeliveryFilterEnabled] = useState(false);
+  const [fulfillmentTypes, setFulfillmentTypes] = useState<Array<'pickup' | 'delivery' | 'on_site'>>(
+    (searchParams.get('fulfillment')?.split(',').filter(Boolean) as Array<'pickup' | 'delivery' | 'on_site'>) || []
+  );
+
   const [instantBookOnly, setInstantBookOnly] = useState(initialInstantBook);
   const [verifiedHostsOnly, setVerifiedHostsOnly] = useState(searchParams.get('verified') === 'true');
   const [featuredOnly, setFeaturedOnly] = useState(
@@ -179,10 +183,12 @@ const Search = () => {
     verified_hosts_only: verifiedHostsOnly || undefined,
     featured_only: featuredOnly || undefined,
     delivery_capable: deliveryFilterEnabled || undefined,
+    fulfillment_types: fulfillmentTypes.length > 0 ? fulfillmentTypes : undefined,
     page,
     page_size: 20,
     sort_by: sortBy === 'price-low' ? 'price_low' : sortBy === 'price-high' ? 'price_high' : sortBy,
-  }), [searchQuery, mode, category, locationCoords, searchRadius, dateRange, selectedAmenities, priceRange, instantBookOnly, verifiedHostsOnly, featuredOnly, deliveryFilterEnabled, page, sortBy]);
+  }), [searchQuery, mode, category, locationCoords, searchRadius, dateRange, selectedAmenities, priceRange, instantBookOnly, verifiedHostsOnly, featuredOnly, deliveryFilterEnabled, fulfillmentTypes, page, sortBy]);
+
 
   // Fetch listings from edge function
   const { data: searchResults, isLoading: isLoadingListings } = useQuery({
@@ -341,6 +347,8 @@ const Search = () => {
     setDateRange(undefined);
     setSelectedAmenities([]);
     setDeliveryFilterEnabled(false);
+    setFulfillmentTypes([]);
+
     setInstantBookOnly(false);
     setVerifiedHostsOnly(false);
     setSortBy('newest');
@@ -397,6 +405,20 @@ const Search = () => {
     setSearchParams(params);
   };
 
+  const handleFulfillmentToggle = (kind: 'pickup' | 'delivery' | 'on_site') => {
+    setPage(1);
+    setFulfillmentTypes(prev => {
+      const next = prev.includes(kind) ? prev.filter(k => k !== kind) : [...prev, kind];
+      const params = new URLSearchParams(searchParams);
+      if (next.length > 0) params.set('fulfillment', next.join(','));
+      else params.delete('fulfillment');
+      params.delete('page');
+      setSearchParams(params);
+      return next;
+    });
+  };
+
+
   const handlePageChange = (newPage: number) => {
     setPage(newPage);
     const params = new URLSearchParams(searchParams);
@@ -433,6 +455,8 @@ const Search = () => {
     dateRange?.from && dateRange?.to,
     selectedAmenities.length > 0,
     deliveryFilterEnabled,
+    fulfillmentTypes.length > 0,
+
     instantBookOnly,
     verifiedHostsOnly,
   ].filter(Boolean).length;
@@ -629,6 +653,8 @@ const Search = () => {
                         dateRange={dateRange}
                         selectedAmenities={selectedAmenities}
                         deliveryFilterEnabled={deliveryFilterEnabled}
+                        fulfillmentTypes={fulfillmentTypes}
+
                         instantBookOnly={instantBookOnly}
                         verifiedHostsOnly={verifiedHostsOnly}
                         onModeChange={handleModeChange}
@@ -640,6 +666,8 @@ const Search = () => {
                         onDateRangeChange={handleDateRangeChange}
                         onAmenityToggle={toggleAmenity}
                         onDeliveryFilterChange={setDeliveryFilterEnabled}
+                        onFulfillmentToggle={handleFulfillmentToggle}
+
                         onInstantBookChange={handleInstantBookChange}
                         onVerifiedHostsChange={handleVerifiedHostsChange}
                         onClear={clearFilters}
@@ -761,6 +789,7 @@ const Search = () => {
                   dateRange={dateRange}
                   selectedAmenities={selectedAmenities}
                   deliveryFilterEnabled={deliveryFilterEnabled}
+                  fulfillmentTypes={fulfillmentTypes}
                   instantBookOnly={instantBookOnly}
                   verifiedHostsOnly={verifiedHostsOnly}
                   onModeChange={handleModeChange}
@@ -772,6 +801,8 @@ const Search = () => {
                   onDateRangeChange={handleDateRangeChange}
                   onAmenityToggle={toggleAmenity}
                   onDeliveryFilterChange={setDeliveryFilterEnabled}
+                  onFulfillmentToggle={handleFulfillmentToggle}
+
                   onInstantBookChange={handleInstantBookChange}
                   onVerifiedHostsChange={handleVerifiedHostsChange}
                   onClear={clearFilters}
@@ -1199,6 +1230,8 @@ interface FilterContentProps {
   dateRange: DateRange | undefined;
   selectedAmenities: string[];
   deliveryFilterEnabled: boolean;
+  fulfillmentTypes: Array<'pickup' | 'delivery' | 'on_site'>;
+
   instantBookOnly: boolean;
   verifiedHostsOnly: boolean;
   onModeChange: (value: string) => void;
@@ -1210,6 +1243,8 @@ interface FilterContentProps {
   onDateRangeChange: (range: DateRange | undefined) => void;
   onAmenityToggle: (amenityId: string) => void;
   onDeliveryFilterChange: (enabled: boolean) => void;
+  onFulfillmentToggle: (kind: 'pickup' | 'delivery' | 'on_site') => void;
+
   onInstantBookChange: (enabled: boolean) => void;
   onVerifiedHostsChange: (enabled: boolean) => void;
   onClear: () => void;
@@ -1225,6 +1260,8 @@ const FilterContent = ({
   dateRange,
   selectedAmenities,
   deliveryFilterEnabled,
+  fulfillmentTypes,
+
   instantBookOnly,
   verifiedHostsOnly,
   onModeChange,
@@ -1236,6 +1273,8 @@ const FilterContent = ({
   onDateRangeChange,
   onAmenityToggle,
   onDeliveryFilterChange,
+  onFulfillmentToggle,
+
   onInstantBookChange,
   onVerifiedHostsChange,
 }: FilterContentProps) => {
@@ -1375,7 +1414,43 @@ const FilterContent = ({
         </div>
       )}
 
+      {/* Fulfillment Type Filter */}
+      <div className="space-y-2">
+        <Label className="text-sm font-medium flex items-center gap-2">
+          <Truck className="h-4 w-4" />
+          Fulfillment
+        </Label>
+        <div className="flex flex-wrap gap-2">
+          {([
+            { key: 'pickup', label: 'Pickup' },
+            { key: 'delivery', label: 'Delivery' },
+            { key: 'on_site', label: 'On-site' },
+          ] as const).map(({ key, label }) => {
+            const active = fulfillmentTypes.includes(key);
+            return (
+              <button
+                key={key}
+                type="button"
+                onClick={() => onFulfillmentToggle(key)}
+                aria-pressed={active}
+                data-fulfillment-option={key}
+                className={cn(
+                  'px-3 py-1.5 rounded-full text-xs font-medium border transition-colors',
+                  active
+                    ? 'bg-primary text-primary-foreground border-primary'
+                    : 'bg-card border-border text-foreground hover:bg-muted/60',
+                )}
+              >
+                {label}
+              </button>
+            );
+          })}
+        </div>
+        <p className="text-xs text-muted-foreground">Show listings offering any selected option.</p>
+      </div>
+
       {/* Delivery to My Location Filter */}
+
       <div className="space-y-2">
         <Label className="text-sm font-medium flex items-center gap-2">
           <Truck className="h-4 w-4" />
