@@ -177,12 +177,13 @@ const PageLoader = () => (
   </div>
 );
 
-// Share redirect: pretty URL → actual listing page
+// Share redirect: pretty URL → actual listing page (preserves query + hash so
+// UTM attribution from shared links survives the client-side redirect).
 const ShareRedirect = () => {
-  const params = new URLSearchParams();
   const pathParts = window.location.pathname.split('/');
   const listingId = pathParts[pathParts.length - 1];
-  return <Navigate to={`/listing/${listingId}`} replace />;
+  const { search, hash } = window.location;
+  return <Navigate to={`/listing/${listingId}${search}${hash}`} replace />;
 };
 
 // Animated Routes wrapper component

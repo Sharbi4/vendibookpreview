@@ -686,8 +686,9 @@ serve(async (req) => {
       });
     }
 
-    // Handle listing detail pages: /listing/UUID
-    const listingMatch = path.match(/^\/listing\/([a-f0-9-]{36})$/i);
+    // Handle listing detail pages: /listing/UUID (and the /share/listing/UUID alias
+    // so social crawlers scraping the pretty share URL still get per-listing OG tags).
+    const listingMatch = path.match(/^\/(?:share\/)?listing\/([a-f0-9-]{36})$/i);
     if (listingMatch) {
       const listingId = listingMatch[1];
       
