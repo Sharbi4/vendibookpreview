@@ -60,19 +60,15 @@ export const useConversations = () => {
       // Fetch profile data separately for each conversation
       const enrichedConversations = await Promise.all(
         (convos || []).map(async (convo) => {
-          // Get host profile
-          const { data: hostProfile } = await supabase
-            .from('profiles')
-            .select('full_name, avatar_url')
-            .eq('id', convo.host_id)
-            .single();
+          // Get host profile (safe fields only via SECURITY DEFINER RPC)
+          const { data: hostProfileRows } = await supabase
+            .rpc('get_conversation_participant_profile', { _user_id: convo.host_id });
+          const hostProfile = Array.isArray(hostProfileRows) ? hostProfileRows[0] : null;
 
-          // Get shopper profile
-          const { data: shopperProfile } = await supabase
-            .from('profiles')
-            .select('full_name, avatar_url')
-            .eq('id', convo.shopper_id)
-            .single();
+          // Get shopper profile (safe fields only)
+          const { data: shopperProfileRows } = await supabase
+            .rpc('get_conversation_participant_profile', { _user_id: convo.shopper_id });
+          const shopperProfile = Array.isArray(shopperProfileRows) ? shopperProfileRows[0] : null;
 
           // Get last message
           const { data: lastMessage } = await supabase
