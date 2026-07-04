@@ -405,6 +405,20 @@ const Search = () => {
     setSearchParams(params);
   };
 
+  const handleFulfillmentToggle = (kind: 'pickup' | 'delivery' | 'on_site') => {
+    setPage(1);
+    setFulfillmentTypes(prev => {
+      const next = prev.includes(kind) ? prev.filter(k => k !== kind) : [...prev, kind];
+      const params = new URLSearchParams(searchParams);
+      if (next.length > 0) params.set('fulfillment', next.join(','));
+      else params.delete('fulfillment');
+      params.delete('page');
+      setSearchParams(params);
+      return next;
+    });
+  };
+
+
   const handlePageChange = (newPage: number) => {
     setPage(newPage);
     const params = new URLSearchParams(searchParams);
