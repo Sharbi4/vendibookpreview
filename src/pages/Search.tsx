@@ -653,6 +653,8 @@ const Search = () => {
                         dateRange={dateRange}
                         selectedAmenities={selectedAmenities}
                         deliveryFilterEnabled={deliveryFilterEnabled}
+                        fulfillmentTypes={fulfillmentTypes}
+
                         instantBookOnly={instantBookOnly}
                         verifiedHostsOnly={verifiedHostsOnly}
                         onModeChange={handleModeChange}
