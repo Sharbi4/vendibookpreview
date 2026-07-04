@@ -129,6 +129,8 @@ async function run() {
   console.log("[smoke] starting booking-request-flow (pending → approved / declined)…");
 
   await cleanup(null);
+  await ensureAuthUser(SMOKE_HOST_ID, "smoke+booking-host@vendibook.com");
+  await ensureAuthUser(SMOKE_SHOPPER_ID, "smoke+booking-shopper@vendibook.com");
   await supabase.from("profiles").upsert(
     [
       { id: SMOKE_HOST_ID, email: "smoke+booking-host@vendibook.com", full_name: "Smoke Booking Host" },
@@ -136,6 +138,7 @@ async function run() {
     ],
     { onConflict: "id" },
   );
+
 
   // Provision a published listing owned by the synthetic host.
   const { data: listing, error: listErr } = await supabase
