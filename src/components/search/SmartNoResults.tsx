@@ -10,6 +10,7 @@ interface SmartNoResultsProps {
   category?: string;
   mode?: string;
   locationText?: string;
+  activeFiltersCount?: number;
 }
 
 interface Suggestion {
