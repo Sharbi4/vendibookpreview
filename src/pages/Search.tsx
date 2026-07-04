@@ -455,6 +455,8 @@ const Search = () => {
     dateRange?.from && dateRange?.to,
     selectedAmenities.length > 0,
     deliveryFilterEnabled,
+    fulfillmentTypes.length > 0,
+
     instantBookOnly,
     verifiedHostsOnly,
   ].filter(Boolean).length;
