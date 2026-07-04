@@ -1273,6 +1273,8 @@ const FilterContent = ({
   onDateRangeChange,
   onAmenityToggle,
   onDeliveryFilterChange,
+  onFulfillmentToggle,
+
   onInstantBookChange,
   onVerifiedHostsChange,
 }: FilterContentProps) => {
