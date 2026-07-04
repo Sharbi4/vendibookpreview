@@ -62,8 +62,7 @@ async function run() {
   console.log(`[smoke] sampled ${samples.length} real listings`);
 
   const browser = await chromium.launch({ headless: true });
-  const context = await browser.new_context?.({ viewport: { width: 1280, height: 1800 } })
-    ?? await browser.newContext({ viewport: { width: 1280, height: 1800 } });
+  const context = await browser.newContext({ viewport: { width: 1280, height: 1800 } });
 
   try {
     for (const sample of samples) {
