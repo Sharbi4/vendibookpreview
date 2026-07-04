@@ -789,6 +789,7 @@ const Search = () => {
                   dateRange={dateRange}
                   selectedAmenities={selectedAmenities}
                   deliveryFilterEnabled={deliveryFilterEnabled}
+                  fulfillmentTypes={fulfillmentTypes}
                   instantBookOnly={instantBookOnly}
                   verifiedHostsOnly={verifiedHostsOnly}
                   onModeChange={handleModeChange}
@@ -800,6 +801,8 @@ const Search = () => {
                   onDateRangeChange={handleDateRangeChange}
                   onAmenityToggle={toggleAmenity}
                   onDeliveryFilterChange={setDeliveryFilterEnabled}
+                  onFulfillmentToggle={handleFulfillmentToggle}
+
                   onInstantBookChange={handleInstantBookChange}
                   onVerifiedHostsChange={handleVerifiedHostsChange}
                   onClear={clearFilters}
