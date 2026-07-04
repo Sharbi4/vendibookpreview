@@ -347,6 +347,8 @@ const Search = () => {
     setDateRange(undefined);
     setSelectedAmenities([]);
     setDeliveryFilterEnabled(false);
+    setFulfillmentTypes([]);
+
     setInstantBookOnly(false);
     setVerifiedHostsOnly(false);
     setSortBy('newest');
