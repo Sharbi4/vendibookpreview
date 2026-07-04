@@ -208,10 +208,11 @@ export const QuickStartWizard: React.FC = () => {
 
     // User must be authenticated to create a listing
     if (!user) {
+      // Mark that we want to auto-resume draft creation after sign-in.
+      try { sessionStorage.setItem(QUICKSTART_RESUME_KEY, '1'); } catch {}
       toast({
-        title: 'Sign in required',
-        description: 'Please sign in to create a listing.',
-        variant: 'destructive'});
+        title: 'Almost there — sign in to save your listing',
+        description: "We saved your progress. Sign in and we'll finish creating your draft."});
       navigate('/auth?redirect=/list');
       return;
     }
@@ -262,10 +263,16 @@ export const QuickStartWizard: React.FC = () => {
 
       setCreatedListingId(listing.id);
       setStep('created');
-      
+
+      // Clear persisted quick-start progress now that the draft is safely on the server.
+      try {
+        sessionStorage.removeItem(QUICKSTART_STORAGE_KEY);
+        sessionStorage.removeItem(QUICKSTART_RESUME_KEY);
+      } catch {}
+
       // Track analytics event
       trackDraftCreated(data.category || undefined);
-      
+
     } catch (error) {
       console.error('Error creating draft:', error);
       toast({
@@ -276,6 +283,21 @@ export const QuickStartWizard: React.FC = () => {
       setIsCreating(false);
     }
   };
+
+  // Auto-resume draft creation after user returns from sign-in with progress intact.
+  useEffect(() => {
+    if (!user) return;
+    let shouldResume = false;
+    try {
+      shouldResume = sessionStorage.getItem(QUICKSTART_RESUME_KEY) === '1';
+    } catch {}
+    if (shouldResume && data.category && data.mode && data.latitude && data.longitude && !isCreating && step !== 'created') {
+      try { sessionStorage.removeItem(QUICKSTART_RESUME_KEY); } catch {}
+      handleCreateDraft();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
+
 
   const handleContinueSetup = () => {
     if (createdListingId) {
