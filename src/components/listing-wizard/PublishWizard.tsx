@@ -639,12 +639,16 @@ export const PublishWizard: React.FC = () => {
         updateData.featured_enabled = featuredEnabled;
       }
 
-      // Claim the draft and persist all in-memory form data
-      const { error } = await supabase
-        .from('listings')
-        .update(updateData)
-        .eq('id', listingId)
-        .eq('guest_draft_token', guestDraft.token);
+      // Claim the draft via the token-validated edge function. host_id and
+      // guest_draft_token clearing are handled server-side; strip them from
+      // the client patch to avoid the allowlist rejecting the field.
+      const { host_id: _hid, guest_draft_token: _gdt, ...patchForClaim } = updateData;
+      const { error } = await (async () => {
+        const res = await supabase.functions.invoke('guest-draft-access', {
+          body: { action: 'claim', id: listingId, token: guestDraft.token, patch: patchForClaim },
+        });
+        return { error: (res.error as any) ?? ((res.data as any)?.error ? new Error((res.data as any).error) : null) };
+      })();
 
       if (error) throw error;
 
