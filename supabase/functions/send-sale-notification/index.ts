@@ -8,7 +8,17 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-type NotificationType = 'payment_received' | 'shipped' | 'delivered' | 'completed' | 'cancelled' | 'sale_completed';
+type NotificationType =
+  | 'payment_received'
+  | 'shipped'
+  | 'delivered'
+  | 'completed'
+  | 'cancelled'
+  | 'sale_completed'
+  | 'cash_purchase_request'
+  | 'seller_confirmed'
+  | 'buyer_confirmed'
+  | 'payout_completed';
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
@@ -38,8 +48,13 @@ Deno.serve(async (req) => {
     const sellerEmail = sellerProfile?.email;
     const buyerName = tx.buyer_name || buyerProfile?.full_name || 'Buyer';
     const sellerName = sellerProfile?.full_name || 'Seller';
+    const buyerFirst = buyerProfile?.first_name || buyerName.split(' ')[0];
+    const sellerFirst = sellerProfile?.first_name || sellerName.split(' ')[0];
     const listingTitle = listing?.title || 'Item';
     const orderNumber = `VB-${String(tx.id).slice(0, 8).toUpperCase()}`;
+
+    // A cash / Pay-in-Person sale is one that never went through Stripe.
+    const isCashSale = !tx.payment_intent_id;
 
     const [{ data: buyerPrefs }, { data: sellerPrefs }] = await Promise.all([
       supabase.from('notification_preferences').select('sale_email').eq('user_id', tx.buyer_id).maybeSingle(),
@@ -49,54 +64,96 @@ Deno.serve(async (req) => {
     const sellerOptedIn = sellerPrefs?.sale_email !== false;
 
     const sends: Promise<any>[] = [];
-
     const enqueue = (templateName: string, recipientEmail: string, key: string, templateData: Record<string, any>) => {
       sends.push(
         supabase.functions.invoke('send-transactional-email', {
           body: { templateName, recipientEmail, idempotencyKey: key, templateData },
-        }).then((r) => ({ recipient: recipientEmail, error: r.error?.message }))
+        }).then((r) => ({ recipient: recipientEmail, template: templateName, error: r.error?.message }))
       );
     };
 
-    // Seller-facing template for any milestone
-    if (sellerOptedIn && sellerEmail) {
-      enqueue(
-        'sale-completed-seller',
-        sellerEmail,
-        `sale-${tx.id}-seller-${notification_type}`,
-        {
-          sellerName: sellerProfile?.first_name || sellerName.split(' ')[0],
-          listingTitle,
-          salePrice: Number(tx.amount) || 0,
-          buyerName,
-          orderNumber,
-        }
-      );
-    }
+    const commonSeller = {
+      sellerName: sellerFirst,
+      listingTitle,
+      salePrice: Number(tx.amount) || 0,
+      buyerName,
+      buyerEmail,
+      buyerPhone: tx.buyer_phone,
+      orderNumber,
+      transactionId: tx.id,
+      fulfillmentType: tx.fulfillment_type,
+    };
+    const commonBuyer = {
+      buyerName: buyerFirst,
+      listingTitle,
+      salePrice: Number(tx.amount) || 0,
+      sellerName: sellerFirst,
+      orderNumber,
+      transactionId: tx.id,
+    };
 
-    // Buyer-facing receipt only on payment_received (other statuses log only)
-    if (buyerOptedIn && buyerEmail && notification_type === 'payment_received') {
-      enqueue(
-        'payment-receipt',
-        buyerEmail,
-        `sale-${tx.id}-buyer-receipt`,
-        {
-          customerName: buyerProfile?.first_name || buyerName.split(' ')[0],
-          orderNumber,
-          amount: `$${(Number(tx.amount) || 0).toFixed(2)}`,
-          paymentMethod: 'Card',
-          paidAt: new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
-          listingTitle,
-          description: 'Purchase',
-        }
-      );
+    // --- Cash / Pay-in-Person flow ---
+    if (notification_type === 'cash_purchase_request') {
+      if (sellerOptedIn && sellerEmail) {
+        enqueue('cash-purchase-request-seller', sellerEmail, `sale-${tx.id}-seller-cashreq`, commonSeller);
+      }
+      if (buyerOptedIn && buyerEmail) {
+        enqueue('cash-purchase-request-buyer', buyerEmail, `sale-${tx.id}-buyer-cashreq`, commonBuyer);
+      }
+    } else if (isCashSale && notification_type === 'seller_confirmed') {
+      // Cash: seller just confirmed → nudge buyer to confirm receipt
+      if (buyerOptedIn && buyerEmail) {
+        enqueue('cash-seller-confirmed-buyer', buyerEmail, `sale-${tx.id}-buyer-sellerconfirm`, commonBuyer);
+      }
+    } else if (isCashSale && (notification_type === 'buyer_confirmed' || notification_type === 'completed')) {
+      // Cash: buyer confirmed receipt → notify seller of close
+      if (sellerOptedIn && sellerEmail) {
+        enqueue('cash-buyer-confirmed-seller', sellerEmail, `sale-${tx.id}-seller-buyerconfirm-${notification_type}`, {
+          ...commonSeller,
+          bothConfirmed: notification_type === 'completed' || (!!tx.seller_confirmed_at && !!tx.buyer_confirmed_at),
+        });
+      }
+    } else {
+      // --- Stripe / non-cash flow (existing behavior) ---
+      // Seller-facing template for any milestone
+      if (sellerOptedIn && sellerEmail) {
+        enqueue(
+          'sale-completed-seller',
+          sellerEmail,
+          `sale-${tx.id}-seller-${notification_type}`,
+          {
+            sellerName: sellerFirst,
+            listingTitle,
+            salePrice: Number(tx.amount) || 0,
+            buyerName,
+            orderNumber,
+          }
+        );
+      }
+      // Buyer-facing receipt only on payment_received
+      if (buyerOptedIn && buyerEmail && notification_type === 'payment_received') {
+        enqueue(
+          'payment-receipt',
+          buyerEmail,
+          `sale-${tx.id}-buyer-receipt`,
+          {
+            customerName: buyerFirst,
+            orderNumber,
+            amount: `$${(Number(tx.amount) || 0).toFixed(2)}`,
+            paymentMethod: 'Card',
+            paidAt: new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
+            listingTitle,
+            description: 'Purchase',
+          }
+        );
+      }
     }
 
     const results = await Promise.all(sends);
     const errors = results.filter((r) => r?.error);
     if (errors.length) console.error('[send-sale-notification] errors', errors);
 
-    return new Response(JSON.stringify({ success: true, sent: results.length - errors.length, errors }), {
+    return new Response(JSON.stringify({ success: true, sent: results.length - errors.length, errors, isCashSale, notification_type }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (e) {
