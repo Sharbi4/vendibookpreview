@@ -37,12 +37,18 @@ export function calculateRentalFees(basePrice: number, deliveryFee: number = 0) 
 
 /**
  * Calculate sale fees (seller-side only)
- * Seller pays 15%, Buyer pays nothing extra
+ * Seller pays 12.9%, Buyer pays nothing extra
  * Optional freight cost for seller-paid shipping
+ * Pay-in-Person (cash) sales are 100% free — no commission collected.
  */
-export function calculateSaleFees(salePrice: number, freightCost: number = 0, isSellerPaidFreight: boolean = false) {
-  // Seller fee (deducted from their payout) - on sale price only, not freight
-  const sellerFee = salePrice * (SALE_SELLER_FEE_PERCENT / 100);
+export function calculateSaleFees(
+  salePrice: number,
+  freightCost: number = 0,
+  isSellerPaidFreight: boolean = false,
+  isCashSale: boolean = false,
+) {
+  // Seller fee waived entirely for Pay-in-Person / cash sales
+  const sellerFee = isCashSale ? 0 : salePrice * (SALE_SELLER_FEE_PERCENT / 100);
   
   // What the buyer pays - if buyer pays freight, add it; if seller pays, no freight in total
   const customerTotal = isSellerPaidFreight ? salePrice : salePrice + freightCost;
@@ -61,6 +67,7 @@ export function calculateSaleFees(salePrice: number, freightCost: number = 0, is
     sellerReceives: Math.round(sellerReceives * 100) / 100,
   };
 }
+
 
 /**
  * Format currency for display
