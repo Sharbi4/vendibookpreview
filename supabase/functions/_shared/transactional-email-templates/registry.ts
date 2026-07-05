@@ -96,4 +96,9 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'new-listing-alert': newListingAlert,
   'account-ready-recovery': accountReadyRecovery,
   'complimentary-featured-boost': complimentaryFeaturedBoost,
+  'cash-purchase-request-seller': cashPurchaseRequestSeller,
+  'cash-purchase-request-buyer': cashPurchaseRequestBuyer,
+  'cash-seller-confirmed-buyer': cashSellerConfirmedBuyer,
+  'cash-buyer-confirmed-seller': cashBuyerConfirmedSeller,
 }
+
