@@ -171,7 +171,8 @@ const faqSections: FAQSection[] = [
         answer: 'Yes. Both the buyer and seller must confirm completion in the app to close the transaction. This creates a record and allows both parties to leave reviews.'},
       {
         question: 'Are there fees for Pay in Person transactions?',
-        answer: 'Vendibook does not charge payment processing fees on cash transactions. However, the standard platform commission still applies to the seller.'}]},
+        answer: 'No. Pay in Person sales are completely free — Vendibook does not collect a commission or processing fee. The buyer pays the seller the full agreed amount at handoff.'}]},
+
   {
     id: 'cancellations',
     title: 'Cancellations and Refunds',
