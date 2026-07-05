@@ -49,6 +49,11 @@ import { template as referralPostTxPs } from './referral-post-tx-ps.tsx'
 import { template as newListingAlert } from './new-listing-alert.tsx'
 import { template as accountReadyRecovery } from './account-ready-recovery.tsx'
 import { template as complimentaryFeaturedBoost } from './complimentary-featured-boost.tsx'
+import { template as cashPurchaseRequestSeller } from './cash-purchase-request-seller.tsx'
+import { template as cashPurchaseRequestBuyer } from './cash-purchase-request-buyer.tsx'
+import { template as cashSellerConfirmedBuyer } from './cash-seller-confirmed-buyer.tsx'
+import { template as cashBuyerConfirmedSeller } from './cash-buyer-confirmed-seller.tsx'
+
 
 export const TEMPLATES: Record<string, TemplateEntry> = {
   'booking-abandoned': bookingAbandoned,
