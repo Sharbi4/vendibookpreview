@@ -14,8 +14,19 @@ import { trackSignupCompleted, trackLoginAttempt, trackLoginSuccess, trackLoginE
 import { trackSignupConversion } from '@/lib/gtagConversions';
 import { trackGA4SignUp, trackGA4Login } from '@/lib/ga4Conversions';
 import { Separator } from '@/components/ui/separator';
+import { Checkbox } from '@/components/ui/checkbox';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
+import {
+  CURRENT_VERSIONS,
+  DOCUMENT_TYPES,
+  CONSENT_TRIGGERS,
+} from '@/lib/legalDocuments';
+
+const SIGNUP_TOS_ACCEPTANCE_TEXT =
+  'I agree to the Vendibook Terms of Service and acknowledge the Privacy Policy.';
+const SIGNUP_MARKETING_TEXT =
+  'Send me occasional Vendibook updates and marketing emails. I can unsubscribe anytime.';
 
 const authSchema = z.object({
   email: z.string().trim().email('Please enter a valid email').max(255, 'Email is too long'),
@@ -60,6 +71,8 @@ export const AuthFormPanel = ({ mode, setMode }: AuthFormPanelProps) => {
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [resendingEmail, setResendingEmail] = useState(false);
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
+  const [marketingOptIn, setMarketingOptIn] = useState(false);
 
   const { signIn, signUp, resetPassword } = useAuth();
   const navigate = useNavigate();
