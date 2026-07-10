@@ -56,7 +56,7 @@ BEGIN
   IF v_listing.status <> 'published' THEN
     RAISE EXCEPTION 'FAIL: listing status changed to %', v_listing.status;
   END IF;
-  IF v_listing.price_sale <> 349.98 THEN
+  IF v_listing.price_sale <> 34998 THEN
     RAISE EXCEPTION 'FAIL: listing price_sale changed to %', v_listing.price_sale;
   END IF;
   IF v_listing.host_id <> v_tx.seller_id THEN
