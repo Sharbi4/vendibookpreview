@@ -28,6 +28,9 @@ import { calculateRentalFees, RENTAL_RENTER_FEE_PERCENT } from '@/lib/commission
 import type { TablesInsert } from '@/integrations/supabase/types';
 import { CategoryTooltip } from '@/components/categories/CategoryGuide';
 import { SlotSelector } from '@/components/booking';
+import { FinalReviewSheet } from '@/components/transaction/FinalReviewSheet';
+import { useTermsGate } from '@/hooks/useTermsGate';
+import { buildTerms } from '@/lib/transactionTerms';
 
 interface QuickBookingModalProps {
   listing: Listing | null;
