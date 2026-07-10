@@ -384,12 +384,14 @@ function buildRentRequest(fulfillment: FulfillmentContext): WalkthroughConfig {
 
 type EventName =
   | 'guidance_prompt_viewed'
+  | 'guidance_auto_opened_first_visit'
   | 'purchase_steps_opened'
   | 'rental_steps_opened'
   | 'pay_in_person_steps_opened'
   | 'walkthrough_closed'
   | 'final_cta_clicked'
   | 'report_issue_opened_from_guidance';
+
 
 function trackWalkthrough(event: EventName, variant: WalkthroughVariant, listingId: string) {
   try {
