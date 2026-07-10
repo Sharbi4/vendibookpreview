@@ -504,6 +504,7 @@ function buildRentRequest(fulfillment: FulfillmentContext): WalkthroughConfig {
 type EventName =
   | 'guidance_prompt_viewed'
   | 'guidance_auto_opened_first_visit'
+  | 'guidance_opened_via_deeplink'
   | 'purchase_steps_opened'
   | 'rental_steps_opened'
   | 'pay_in_person_steps_opened'
