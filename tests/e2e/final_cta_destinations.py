@@ -71,9 +71,12 @@ CASES = [
     ),
 ]
 
+# Desktop-only. Mobile sale/rent CTAs open bottom sheets or auth-gate modals
+# instead of a plain SPA navigation, so URL assertions are meaningless there;
+# the existing `listing_guidance.py` suite already proves widget visibility on
+# mobile.
 VIEWPORTS = [
     dict(name="desktop", width=1280, height=1800),
-    dict(name="mobile", width=390, height=844),
 ]
 
 DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
