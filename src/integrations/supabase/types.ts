@@ -1174,6 +1174,7 @@ export type Database = {
           created_at: string
           error_message: string | null
           id: string
+          idempotency_key: string | null
           message_id: string | null
           metadata: Json | null
           recipient_email: string
@@ -1184,6 +1185,7 @@ export type Database = {
           created_at?: string
           error_message?: string | null
           id?: string
+          idempotency_key?: string | null
           message_id?: string | null
           metadata?: Json | null
           recipient_email: string
@@ -1194,6 +1196,7 @@ export type Database = {
           created_at?: string
           error_message?: string | null
           id?: string
+          idempotency_key?: string | null
           message_id?: string | null
           metadata?: Json | null
           recipient_email?: string
