@@ -181,6 +181,28 @@ Deno.test("e2e: rental listing publishes with daily pricing", async () => {
   assert(Number(row?.price_daily) > 0, "expected daily rental price");
 });
 
+Deno.test("e2e: standard for-sale listing publishes with cash + card enabled", async () => {
+  requireCreds();
+  const { client, token } = await authedClient();
+  const id = await createDraft(token, {
+    mode: "sale",
+    category: "food_truck",
+    city: "Phoenix",
+    state: "AZ",
+  });
+  const row = await fillAndPublish(client, id, {
+    price_sale: 42000,
+    accept_card_payment: true,
+    accept_cash_payment: true,
+  });
+  assertEquals(row?.mode, "sale");
+  assertEquals(row?.accept_card_payment, true);
+  assertEquals(row?.accept_cash_payment, true);
+  assert(Number(row?.price_sale) > 0, "expected sale price to be set");
+});
+
+
+
 Deno.test("e2e: cleanup — remove listings created by this run", async () => {
   if (CREATED_LISTING_IDS.length === 0) return;
   const { client } = await authedClient();
