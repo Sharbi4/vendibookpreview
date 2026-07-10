@@ -430,6 +430,16 @@ export const AuthFormPanel = ({ mode, setMode }: AuthFormPanelProps) => {
           transition={{ duration: 0.4 }}
           className="space-y-6"
         >
+          {/* Back to home */}
+          <button
+            type="button"
+            onClick={() => navigate('/')}
+            className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back to home
+          </button>
+
           {/* Header */}
           <div className="text-center lg:text-left">
             <h2 className="text-2xl font-bold text-foreground">
