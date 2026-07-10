@@ -206,13 +206,96 @@ Deno.test("e2e: standard for-sale listing publishes with cash + card enabled", a
 
 
 
-Deno.test("e2e: cleanup — remove listings created by this run", async () => {
-  if (CREATED_LISTING_IDS.length === 0) return;
+Deno.test("e2e: rental listing accepts a renter booking request end-to-end", async () => {
+  requireCreds();
+  if (!RENTER_EMAIL || !RENTER_PASSWORD) {
+    console.warn(
+      "Skipping renter booking e2e — set TEST_RENTER_EMAIL / TEST_RENTER_PASSWORD to enable.",
+    );
+    return;
+  }
+
+  // 1. Host publishes a rental listing
+  const { client: hostClient, token: hostToken, userId: hostId } =
+    await authedClient();
+  const listingId = await createDraft(hostToken, {
+    mode: "rent",
+    category: "food_truck",
+    city: "Phoenix",
+    state: "AZ",
+  });
+  const listing = await fillAndPublish(hostClient, listingId, {
+    price_daily: 275,
+    price_hourly: 55,
+    instant_book: false,
+  });
+  assertEquals(listing?.status, "published");
+  assertEquals(listing?.mode, "rent");
+
+  // 2. Renter signs in with a distinct account (ownership rule forbids self-booking)
+  const renterClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+  const { data: renterAuth, error: renterErr } = await renterClient.auth
+    .signInWithPassword({ email: RENTER_EMAIL, password: RENTER_PASSWORD });
+  if (renterErr) throw new Error(`Renter sign-in failed: ${renterErr.message}`);
+  const renterId = renterAuth.user!.id;
+  assert(renterId !== hostId, "Renter must differ from host");
+
+  // 3. Renter submits a booking request
+  const start = new Date();
+  start.setDate(start.getDate() + 14);
+  const end = new Date(start);
+  end.setDate(end.getDate() + 2);
+  const startDate = start.toISOString().slice(0, 10);
+  const endDate = end.toISOString().slice(0, 10);
+
+  const { data: booking, error: bookingErr } = await renterClient
+    .from("booking_requests")
+    .insert({
+      listing_id: listingId,
+      shopper_id: renterId,
+      host_id: hostId,
+      start_date: startDate,
+      end_date: endDate,
+      total_price: 550,
+      status: "pending",
+      message: "Automated e2e booking request — safe to ignore.",
+      fulfillment_selected: "pickup",
+    })
+    .select("id, status, shopper_id, host_id, listing_id, total_price")
+    .single();
+  assertEquals(bookingErr, null, `booking insert failed: ${bookingErr?.message}`);
+  assertExists(booking?.id, "booking row returned no id");
+  CREATED_BOOKING_IDS.push(booking!.id);
+
+  // 4. Verify the persisted row via the host's session (RLS: host can read)
+  const { data: hostView, error: hostViewErr } = await hostClient
+    .from("booking_requests")
+    .select("id, status, shopper_id, host_id, listing_id")
+    .eq("id", booking!.id)
+    .single();
+  assertEquals(hostViewErr, null, hostViewErr?.message);
+  assertEquals(hostView?.status, "pending");
+  assertEquals(hostView?.shopper_id, renterId);
+  assertEquals(hostView?.host_id, hostId);
+  assertEquals(hostView?.listing_id, listingId);
+});
+
+Deno.test("e2e: cleanup — remove listings and bookings created by this run", async () => {
   const { client } = await authedClient();
-  const { error } = await client
-    .from("listings")
-    .delete()
-    .in("id", CREATED_LISTING_IDS);
-  // Cleanup failure shouldn't fail the whole suite loudly, but surface it.
-  if (error) console.warn(`Cleanup warning: ${error.message}`);
+  if (CREATED_BOOKING_IDS.length > 0) {
+    const { error } = await client
+      .from("booking_requests")
+      .delete()
+      .in("id", CREATED_BOOKING_IDS);
+    if (error) console.warn(`Booking cleanup warning: ${error.message}`);
+  }
+  if (CREATED_LISTING_IDS.length > 0) {
+    const { error } = await client
+      .from("listings")
+      .delete()
+      .in("id", CREATED_LISTING_IDS);
+    if (error) console.warn(`Listing cleanup warning: ${error.message}`);
+  }
 });
