@@ -51,6 +51,7 @@ import { trackLeadEvent } from '@/lib/leadTracking';
 import { resolveListingBrand, getBrandFieldLabel } from '@/lib/resolveListingBrand';
 import { SaleCard } from './SaleCard';
 import { SaleStickyActionBar } from './SaleStickyActionBar';
+import ListingHowItWorks from '@/components/listing-detail/ListingHowItWorks';
 
 interface SaleListingMobileProps {
   listing: any;
@@ -719,6 +720,11 @@ export const SaleListingMobile = ({
           askingPrice={listing.price_sale}
         />
       )}
+
+      {/* Contextual walkthrough — informational, no state changes */}
+      <div className="px-4 pb-24">
+        <ListingHowItWorks listing={listing as any} isOwner={isOwner} />
+      </div>
 
       {/* Sticky action bar */}
       <SaleStickyActionBar
