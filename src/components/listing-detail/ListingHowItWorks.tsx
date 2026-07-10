@@ -55,7 +55,7 @@ export type WalkthroughVariant =
   | 'rent_instant'
   | 'rent_request';
 
-type FulfillmentContext = 'pickup' | 'delivery' | 'on_site_kitchen' | 'on_site_lot';
+type FulfillmentContext = 'pickup' | 'delivery' | 'pickup_or_delivery' | 'on_site_kitchen' | 'on_site_lot';
 
 export interface WalkthroughStep {
   icon: LucideIcon;
