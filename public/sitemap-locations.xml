@@ -2,6 +2,7 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url><loc>https://vendibook.com/albuquerque</loc><lastmod>2026-07-10</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://vendibook.com/atlanta</loc><lastmod>2026-07-10</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://vendibook.com/aurora</loc><lastmod>2026-07-10</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://vendibook.com/austin</loc><lastmod>2026-07-10</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://vendibook.com/baton-rouge</loc><lastmod>2026-07-10</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://vendibook.com/boaz</loc><lastmod>2026-07-10</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
@@ -50,6 +51,8 @@
   <url><loc>https://vendibook.com/buy/food-trailer/tucson-az</loc><lastmod>2026-07-10</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
   <url><loc>https://vendibook.com/rent/food-truck/albuquerque-nm</loc><lastmod>2026-07-10</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
   <url><loc>https://vendibook.com/buy/food-truck/albuquerque-nm</loc><lastmod>2026-07-10</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
+  <url><loc>https://vendibook.com/rent/food-truck/aurora-co</loc><lastmod>2026-07-10</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
+  <url><loc>https://vendibook.com/buy/food-truck/aurora-co</loc><lastmod>2026-07-10</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
   <url><loc>https://vendibook.com/rent/food-truck/austin-tx</loc><lastmod>2026-07-10</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
   <url><loc>https://vendibook.com/buy/food-truck/austin-tx</loc><lastmod>2026-07-10</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
   <url><loc>https://vendibook.com/rent/food-truck/denver-co</loc><lastmod>2026-07-10</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
