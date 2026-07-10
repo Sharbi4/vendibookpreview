@@ -421,14 +421,23 @@ const PermitPath = () => {
                   <p className="text-lg md:text-xl text-white/70 mb-8 max-w-2xl">
                     Permits, licenses, and compliance — mapped to your city and setup. Built from official sources so you know exactly what you need before you start.
                   </p>
-                  <Button
-                    size="lg"
-                    onClick={() => document.getElementById('tool-section')?.scrollIntoView({ behavior: 'smooth' })}
-                    className="bg-[#FF5124] hover:bg-[#FF5124]/90 text-white font-semibold px-6 h-12 rounded-xl shadow-[0_8px_30px_-8px_rgba(255,81,36,0.6)]"
-                  >
-                    Find My Permits <ArrowRight className="h-4 w-4 ml-2" />
-                  </Button>
+                  <div className="flex flex-wrap items-center gap-3">
+                    <Button
+                      size="lg"
+                      onClick={() => document.getElementById('tool-section')?.scrollIntoView({ behavior: 'smooth' })}
+                      className="bg-[#FF5124] hover:bg-[#FF5124]/90 text-white font-semibold px-6 h-12 rounded-xl shadow-[0_8px_30px_-8px_rgba(255,81,36,0.6)]"
+                    >
+                      Find My Permits <ArrowRight className="h-4 w-4 ml-2" />
+                    </Button>
+                    <ReportIssueButton
+                      variant="outline"
+                      label="Report an issue"
+                      className="border-white/20 bg-white/5 text-white hover:bg-white/10 h-12"
+                      context={{ featureArea: "permit_path" }}
+                    />
+                  </div>
                 </div>
+
 
                 <motion.div
                   initial={{ opacity: 0, y: 20, scale: 0.96 }}
