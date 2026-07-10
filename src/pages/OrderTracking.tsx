@@ -689,10 +689,25 @@ const OrderTracking = () => {
                 </Badge>
               )}
             </div>
-            <p className="text-muted-foreground">
-              Order placed on {format(new Date(transaction.created_at), 'MMMM d, yyyy')}
-            </p>
+            <div className="flex items-center justify-between gap-2 flex-wrap">
+              <p className="text-muted-foreground">
+                Order placed on {format(new Date(transaction.created_at), 'MMMM d, yyyy')}
+              </p>
+              <ReportIssueButton
+                variant="outline"
+                context={{
+                  featureArea: "purchase",
+                  transactionStatus: transaction.status,
+                  paymentMethod: isCashTransaction ? "pay_in_person" : "stripe",
+                  related: {
+                    sale_transaction_id: transaction.id,
+                    listing_id: transaction.listing_id,
+                  },
+                }}
+              />
+            </div>
           </div>
+
 
           {/* Status Card */}
           <Card className="mb-6">
