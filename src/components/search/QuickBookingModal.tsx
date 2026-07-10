@@ -286,6 +286,7 @@ const QuickBookingModal = ({
             mode: 'rent',
             amount: fees.subtotal,
             delivery_fee: currentDeliveryFee,
+            terms_id: termsGate.termsId,
           },
         });
 
