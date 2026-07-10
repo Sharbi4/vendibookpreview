@@ -90,13 +90,18 @@ export function resolveWalkthrough(listing: ListingLike): WalkthroughConfig {
   const onSiteLot = category === 'vendor_lot' || category === 'vendor_space';
   const fulfillmentType = (listing.fulfillment_type || '').toLowerCase();
 
+  const hasDelivery = fulfillmentType.includes('deliver') || fulfillmentType === 'both';
+  const hasPickup = fulfillmentType.includes('pickup') || fulfillmentType === 'both' || fulfillmentType === '';
+
   const fulfillment: FulfillmentContext = onSiteKitchen
     ? 'on_site_kitchen'
     : onSiteLot
       ? 'on_site_lot'
-      : fulfillmentType.includes('deliver')
-        ? 'delivery'
-        : 'pickup';
+      : hasDelivery && hasPickup && (fulfillmentType === 'both' || (fulfillmentType.includes('deliver') && fulfillmentType.includes('pickup')))
+        ? 'pickup_or_delivery'
+        : hasDelivery
+          ? 'delivery'
+          : 'pickup';
 
   // Sale variants
   if (isSale) {
