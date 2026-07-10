@@ -114,6 +114,8 @@ const BookingConfirmationEmail = ({ guestName, listingTitle, startDate, endDate,
           <Text style={s.listItem}>• Upload any required documents before your start date.</Text>
           <Text style={s.listItem}>• Precise address unlocks once your booking is fully confirmed.</Text>
 
+          <TermsBlock snap={termsSnapshot} version={termsVersion} />
+
           <ToolsBlock role="guest" />
           <BlogHighlights role="guest" />
         </Section>
