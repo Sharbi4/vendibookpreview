@@ -371,60 +371,43 @@ const SaleCheckout = () => {
       return;
     }
 
-    // Handle cash payment
+    // Handle cash payment — routed through create-cash-sale so a
+    // transaction_terms snapshot is always written alongside the sale row.
     if (paymentMethod === 'cash') {
       setIsPurchasing(true);
       try {
         const isVendibookFreight = fulfillmentSelected === 'vendibook_freight';
-        
-        const { data: txData, error: txError } = await supabase
-          .from('sale_transactions')
-          .insert({
-            listing_id: listingId,
-            buyer_id: user.id,
-            seller_id: listing.host_id,
-            amount: priceSale,
-            delivery_fee: fulfillmentSelected === 'delivery' ? deliveryFee : 0,
-            freight_cost: isVendibookFreight ? freightCost : 0,
-            fulfillment_type: isVendibookFreight ? 'vendibook_freight' : fulfillmentSelected,
-            delivery_address: (fulfillmentSelected === 'delivery' || isVendibookFreight) ? deliveryAddress.trim() : null,
-            delivery_instructions: (fulfillmentSelected === 'delivery' || isVendibookFreight) ? deliveryInstructions.trim() : null,
-            buyer_name: `${buyerInfo.firstName} ${buyerInfo.lastName}`.trim(),
-            buyer_email: buyerInfo.email.trim(),
-            buyer_phone: buyerInfo.phone.trim() || null,
-            status: 'pending_cash',
-            platform_fee: 0,
-            seller_payout: priceSale,
-          })
-          .select('id')
-          .single();
+
+        const { data: txData, error: txError } = await supabase.functions.invoke(
+          'create-cash-sale',
+          {
+            body: {
+              listing_id: listingId,
+              amount: priceSale,
+              fulfillment_type: isVendibookFreight ? 'vendibook_freight' : fulfillmentSelected,
+              delivery_fee: fulfillmentSelected === 'delivery' ? deliveryFee : 0,
+              freight_cost: isVendibookFreight ? freightCost : 0,
+              delivery_address:
+                fulfillmentSelected === 'delivery' || isVendibookFreight
+                  ? deliveryAddress.trim()
+                  : null,
+              delivery_instructions:
+                fulfillmentSelected === 'delivery' || isVendibookFreight
+                  ? deliveryInstructions.trim()
+                  : null,
+              buyer_name: `${buyerInfo.firstName} ${buyerInfo.lastName}`.trim(),
+              buyer_email: buyerInfo.email.trim(),
+              buyer_phone: buyerInfo.phone.trim() || null,
+            },
+          },
+        );
 
         if (txError) throw txError;
-
-        try {
-          await supabase.functions.invoke('send-sale-notification', {
-            body: { transaction_id: txData.id, notification_type: 'cash_purchase_request' },
-          });
-        } catch (notifError) {
-          console.error('Failed to send notification:', notifError);
-        }
-
-        // In-app notification for the seller — emails alone aren't enough; the bell badge
-        // needs to surface cash purchase requests immediately.
-        try {
-          await supabase.from('notifications').insert({
-            user_id: listing.host_id,
-            type: 'sale',
-            title: '💵 New Cash Purchase Request',
-            message: `${buyerInfo.firstName || 'A buyer'} wants to buy "${listing.title}" for $${priceSale.toFixed(2)} in cash. Review and confirm in your dashboard.`,
-            link: `/order-tracking/${txData.id}`,
-          });
-        } catch (notifError) {
-          console.error('Failed to create seller in-app notification:', notifError);
-        }
+        const transactionId = (txData as { transaction_id?: string } | null)?.transaction_id;
+        if (!transactionId) throw new Error('Cash sale did not return a transaction id');
 
         trackFormSubmitConversion({ form_type: 'purchase_cash', listing_id: listingId });
-        
+
         // Track Facebook CAPI Purchase event for cash
         trackPurchase({
           value: priceSale,
@@ -438,9 +421,9 @@ const SaleCheckout = () => {
             lastName: buyerInfo.lastName || undefined,
           },
         });
-        
+
         toast({ title: 'Purchase request submitted!', description: 'The seller will contact you.' });
-        navigate(`/order-tracking/${txData.id}`);
+        navigate(`/order-tracking/${transactionId}`);
       } catch (error) {
         console.error('Error:', error);
         toast({

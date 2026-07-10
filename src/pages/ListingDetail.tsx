@@ -46,6 +46,7 @@ import { WeeklyHoursDisplay } from '@/components/listing-detail/WeeklyHoursDispl
 import { RentalBookingWidget } from '@/components/listing-detail/RentalBookingWidget';
 import { BookingWidget } from '@/components/listing-detail/BookingWidget';
 import ListingHowItWorks from '@/components/listing-detail/ListingHowItWorks';
+import { ListingHighlightsCard } from '@/components/transaction';
 import OwnerBanner from '@/components/listing-detail/OwnerBanner';
 import { useListing } from '@/hooks/useListing';
 import { useListingAverageRating, useListingReviews } from '@/hooks/useReviews';
@@ -717,6 +718,7 @@ const ListingDetail = () => {
                   fulfillmentType={listing.fulfillment_type}
                   vendibookFreightEnabled={(listing as any).vendibook_freight_enabled}
                 />
+                <ListingHighlightsCard listing={listing as any} />
               </div>
 
               {/* Divider */}
