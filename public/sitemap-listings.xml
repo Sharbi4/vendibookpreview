@@ -1,17 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
   <url>
-    <loc>https://vendibook.com/listing/4e50a07a-6909-411b-a4e0-429fee24c52a</loc>
-    <lastmod>2026-07-10</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/7825c02f-90ed-4e89-b173-dfae547ab1c8/4e50a07a-6909-411b-a4e0-429fee24c52a/1780430632481-ow7rui.jpg</image:loc>
-      <image:title>Immaculate Custom 2018 Ford F59 Food Truck by Prestige (Only 5,100 Miles!) </image:title>
-      <image:caption>Immaculate Custom 2018 Ford F59 Food Truck by Prestige (Only 5,100 Miles!)  on Vendibook</image:caption>
-    </image:image>
-  </url>
-  <url>
     <loc>https://vendibook.com/listing/b88edd57-967c-4036-a5bb-a89d2e18ee88</loc>
     <lastmod>2026-07-10</lastmod>
     <changefreq>weekly</changefreq>
@@ -20,6 +9,17 @@
       <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/9aae25c4-8340-4b3d-98f0-d307b91bff9c/b88edd57-967c-4036-a5bb-a89d2e18ee88/1768986603989-knwwpn.jpg</image:loc>
       <image:title>Mobile Bar Business</image:title>
       <image:caption>Mobile Bar Business in Atlanta, GA on Vendibook</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://vendibook.com/listing/208387b2-6318-4488-963f-3741be63d929</loc>
+    <lastmod>2026-07-10</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/3a50f35c-f05e-49b8-8603-0cd7533e5ddf/208387b2-6318-4488-963f-3741be63d929/1783706767535-fuouu.jpg</image:loc>
+      <image:title>2024 8.5&apos;x16&apos; Red Mobile Food Kitchen Trailer with Pro Fire System </image:title>
+      <image:caption>2024 8.5&apos;x16&apos; Red Mobile Food Kitchen Trailer with Pro Fire System  in Huntsville, TN on Vendibook</image:caption>
     </image:image>
   </url>
   <url>
@@ -56,17 +56,6 @@
     </image:image>
   </url>
   <url>
-    <loc>https://vendibook.com/listing/d93c53cb-f440-4672-ba6c-912c8266cda8</loc>
-    <lastmod>2026-07-10</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/f559486d-0ccb-4caf-b28d-421b960e0a4b/d93c53cb-f440-4672-ba6c-912c8266cda8/1775752366530-nw9ey9.jpeg</image:loc>
-      <image:title>2025 8.5&apos; X 16&apos; FOOD TRAILER CALIFORNIA</image:title>
-      <image:caption>2025 8.5&apos; X 16&apos; FOOD TRAILER CALIFORNIA on Vendibook</image:caption>
-    </image:image>
-  </url>
-  <url>
     <loc>https://vendibook.com/listing/154df4be-3102-44c9-b014-b36bafce8391</loc>
     <lastmod>2026-06-23</lastmod>
     <changefreq>weekly</changefreq>
@@ -97,17 +86,6 @@
       <image:loc>https://images.unsplash.com/photo-1529193591184-b1d58069ecdd?w=800</image:loc>
       <image:title>BBQ Smoker Trailer - Competition Ready</image:title>
       <image:caption>BBQ Smoker Trailer - Competition Ready on Vendibook</image:caption>
-    </image:image>
-  </url>
-  <url>
-    <loc>https://vendibook.com/listing/cc3c8214-e327-4670-99ed-e1425494cc8c</loc>
-    <lastmod>2026-07-10</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/f1258300-750f-4bac-8924-2a0194f88e75/cc3c8214-e327-4670-99ed-e1425494cc8c/1780270287384-t5vsna.jpeg</image:loc>
-      <image:title>Food Trailer</image:title>
-      <image:caption>Food Trailer on Vendibook</image:caption>
     </image:image>
   </url>
   <url>
@@ -167,7 +145,7 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/fec458ae-0672-4073-ac92-c120de896c8a</loc>
-    <lastmod>2026-07-09</lastmod>
+    <lastmod>2026-07-10</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
@@ -398,7 +376,7 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/9c92006e-fe3c-4e52-9474-51d4a950eb26</loc>
-    <lastmod>2026-07-07</lastmod>
+    <lastmod>2026-07-10</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
@@ -427,6 +405,17 @@
       <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/bf4754c8-46ce-472e-8a71-2b8a7769a833/24594068-25df-4bbe-b142-7bad96aacf39/1770302856730-he0b8f.jpg</image:loc>
       <image:title>Commissary Kitchen For Rent</image:title>
       <image:caption>Commissary Kitchen For Rent in Charlotte, NC on Vendibook</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://vendibook.com/listing/4e50a07a-6909-411b-a4e0-429fee24c52a</loc>
+    <lastmod>2026-07-10</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/7825c02f-90ed-4e89-b173-dfae547ab1c8/4e50a07a-6909-411b-a4e0-429fee24c52a/1780430632481-ow7rui.jpg</image:loc>
+      <image:title>Immaculate Custom 2018 Ford F59 Food Truck by Prestige (Only 5,100 Miles!) </image:title>
+      <image:caption>Immaculate Custom 2018 Ford F59 Food Truck by Prestige (Only 5,100 Miles!)  on Vendibook</image:caption>
     </image:image>
   </url>
   <url>
@@ -617,6 +606,28 @@
     </image:image>
   </url>
   <url>
+    <loc>https://vendibook.com/listing/d93c53cb-f440-4672-ba6c-912c8266cda8</loc>
+    <lastmod>2026-07-10</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/f559486d-0ccb-4caf-b28d-421b960e0a4b/d93c53cb-f440-4672-ba6c-912c8266cda8/1775752366530-nw9ey9.jpeg</image:loc>
+      <image:title>2025 8.5&apos; X 16&apos; FOOD TRAILER CALIFORNIA</image:title>
+      <image:caption>2025 8.5&apos; X 16&apos; FOOD TRAILER CALIFORNIA on Vendibook</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://vendibook.com/listing/cc3c8214-e327-4670-99ed-e1425494cc8c</loc>
+    <lastmod>2026-07-10</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/f1258300-750f-4bac-8924-2a0194f88e75/cc3c8214-e327-4670-99ed-e1425494cc8c/1780270287384-t5vsna.jpeg</image:loc>
+      <image:title>Food Trailer</image:title>
+      <image:caption>Food Trailer on Vendibook</image:caption>
+    </image:image>
+  </url>
+  <url>
     <loc>https://vendibook.com/listing/a3ead971-38c7-4c0c-8f3f-2b02185c7c2f</loc>
     <lastmod>2026-07-10</lastmod>
     <changefreq>weekly</changefreq>
@@ -640,7 +651,7 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/5534f230-99a7-4ff6-a2b4-f495cdac1946</loc>
-    <lastmod>2026-07-09</lastmod>
+    <lastmod>2026-07-10</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
