@@ -815,6 +815,8 @@ const ListingHowItWorks = ({ listing, isOwner, className }: Props) => {
       <section
         ref={rootRef}
         aria-labelledby={`howitworks-heading-${listing.id}`}
+        data-testid="howitworks-section"
+        data-variant={config.variant}
         className={cn(
           'rounded-2xl border border-border bg-card/70 p-4 sm:p-5 shadow-sm',
           className,
@@ -827,6 +829,7 @@ const ListingHowItWorks = ({ listing, isOwner, className }: Props) => {
           <div className="min-w-0">
             <h3
               id={`howitworks-heading-${listing.id}`}
+              data-testid="howitworks-heading"
               className="text-base font-semibold text-foreground"
             >
               {config.heading}
@@ -859,6 +862,7 @@ const ListingHowItWorks = ({ listing, isOwner, className }: Props) => {
           className="w-full rounded-xl"
           onClick={handleOpen}
           aria-haspopup="dialog"
+          data-testid="howitworks-open-cta"
         >
           {config.cta}
           <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
