@@ -258,3 +258,46 @@ export const ToolsBlock = ({ role, tools }: { role?: Role; tools?: Tool[] }) => 
     </>
   )
 }
+
+// ─────────────────────────────────────────────────────────────
+// TermsBlock — renders the immutable transaction_terms snapshot
+// (pricing lines, cancellation policy, acknowledgements, version).
+// Shared by booking + cash sale templates so every confirmation
+// email shows the exact same policy/total snapshot the user agreed to.
+// ─────────────────────────────────────────────────────────────
+export interface TermsLine { label: string; amountCents: number; kind?: string; hint?: string }
+export interface TermsSnapshot {
+  termsVersion?: string
+  pricing?: { lines?: TermsLine[]; total?: number }
+  policies?: { cancellation?: string; acknowledgements?: string[] }
+}
+
+const termsMoney = (c: number) => `$${(Number(c || 0) / 100).toFixed(2)}`
+
+export const TermsBlock = ({ snap, version }: { snap?: TermsSnapshot; version?: string }) => {
+  const lines = snap?.pricing?.lines ?? []
+  const acks = snap?.policies?.acknowledgements ?? []
+  const cancellation = snap?.policies?.cancellation
+  const v = version || snap?.termsVersion
+  if (!lines.length && !cancellation && !acks.length) return null
+  return (
+    <Section style={{ border: '1px solid #e5e7eb', borderRadius: 12, padding: 16, margin: '16px 0', background: '#ffffff' }}>
+      <Text style={{ fontWeight: 600, color: '#111827', margin: '0 0 8px' }}>What you agreed to</Text>
+      {lines.map((l, i) => (
+        <Text key={i} style={{ margin: '4px 0', color: l.kind === 'total' ? '#111827' : '#374151', fontWeight: l.kind === 'total' ? 600 : 400, fontSize: 14 }}>
+          {l.label}: {termsMoney(l.amountCents)}
+        </Text>
+      ))}
+      {cancellation && (
+        <>
+          <Text style={{ fontWeight: 600, color: '#111827', margin: '12px 0 4px', fontSize: 13 }}>Cancellation policy</Text>
+          <Text style={{ color: '#374151', fontSize: 13, margin: 0 }}>{cancellation}</Text>
+        </>
+      )}
+      {acks.length > 0 && acks.map((a, i) => (
+        <Text key={`ack-${i}`} style={{ color: '#374151', fontSize: 13, margin: '4px 0 0' }}>• {a}</Text>
+      ))}
+      {v ? <Text style={{ color: '#6b7280', fontSize: 12, margin: '12px 0 0' }}>Terms version {v}</Text> : null}
+    </Section>
+  )
+}
