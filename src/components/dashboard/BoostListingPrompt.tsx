@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { isListingFeatured } from '@/lib/featured';
+import { reportError } from '@/lib/errorReporter';
 
 interface BoostCandidate {
   id: string;
