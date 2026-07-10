@@ -148,6 +148,28 @@ serve(async (req) => {
     const raiserEmail = isBuyer ? buyerEmail : sellerEmail;
     const otherEmail = isBuyer ? sellerEmail : buyerEmail;
 
+    // Resolve the immutable terms snapshot for this sale (primary
+    // lookup by sale.terms_id, fallback by sale_transaction_id). Both
+    // parties + admin will see the same numbers they agreed to.
+    const terms = await resolveSaleTerms(supabaseClient, transaction);
+    const termsBlock = formatTermsForEmail(terms);
+    if (terms) {
+      logStep("Resolved agreed terms", { terms_id: terms.id, via: terms.resolvedVia });
+    } else {
+      logStep("No agreed terms snapshot found for sale");
+    }
+
+    // The support-reply template renders `firstName` + `bodyParagraphs`
+    // (previous version passed `name`/`message`, which the template
+    // ignored — leaving the body blank). Fixed while we're here so the
+    // agreed-terms block actually reaches the recipient.
+    const raiserParagraphs = [
+      `Your dispute for ${listingTitle} has been submitted and is under review.`,
+      `Your reason: ${reason}`,
+      `Payment will remain in escrow until the dispute is resolved. We've notified ${otherParty} and our team will review within 3–5 business days.`,
+      ...(termsBlock ? [termsBlock] : []),
+    ];
+
     if (raiserEmail) {
       emailPromises.push(
         supabaseClient.functions.invoke("send-transactional-email", {
@@ -156,14 +178,21 @@ serve(async (req) => {
             recipientEmail: raiserEmail,
             idempotencyKey: `dispute-raiser-${transaction_id}`,
             templateData: {
-              name: disputeRaiser,
+              firstName: disputeRaiser?.split(' ')[0],
               subject: `Dispute Submitted - ${listingTitle}`,
-              message: `Your dispute for ${listingTitle} has been submitted and is under review.\n\nYour reason: ${reason}\n\nPayment will remain in escrow until the dispute is resolved. We've notified ${otherParty} and our team will review within 3–5 business days.`,
+              bodyParagraphs: raiserParagraphs,
             },
           },
         }).catch(err => logStep("Raiser email failed", { error: err.message }))
       );
     }
+
+    const otherParagraphs = [
+      `${disputeRaiser} has raised a dispute for the transaction involving ${listingTitle}.`,
+      `Reason: ${reason}`,
+      `Payment is now held pending resolution. Our team may contact you for more information.`,
+      ...(termsBlock ? [termsBlock] : []),
+    ];
 
     if (otherEmail) {
       emailPromises.push(
@@ -173,9 +202,9 @@ serve(async (req) => {
             recipientEmail: otherEmail,
             idempotencyKey: `dispute-other-${transaction_id}`,
             templateData: {
-              name: otherParty,
+              firstName: otherParty?.split(' ')[0],
               subject: `Dispute Raised - ${listingTitle}`,
-              message: `${disputeRaiser} has raised a dispute for the transaction involving ${listingTitle}.\n\nReason: ${reason}\n\nPayment is now held pending resolution. Our team may contact you for more information.`,
+              bodyParagraphs: otherParagraphs,
             },
           },
         }).catch(err => logStep("Other party email failed", { error: err.message }))
@@ -183,6 +212,18 @@ serve(async (req) => {
     }
 
     // Admin notification (forwarded silently to owner too)
+    const adminParagraphs = [
+      `Transaction: ${transaction_id}`,
+      `Listing: ${listingTitle}`,
+      `Raised by: ${disputeRaiser} (${role})`,
+      `Amount: $${Number(transaction.amount).toLocaleString()}`,
+      `Seller payout: $${Number(transaction.seller_payout).toLocaleString()}`,
+      `Buyer: ${buyerName} (${buyerEmail || 'no email'})`,
+      `Seller: ${sellerName} (${sellerEmail || 'no email'})`,
+      `Reason: ${reason}`,
+      ...(termsBlock ? [termsBlock] : ['(No transaction_terms snapshot linked to this sale.)']),
+    ];
+
     for (const adminTo of ["support@vendibook.com", "atlasmom421@gmail.com"]) {
       emailPromises.push(
         supabaseClient.functions.invoke("send-transactional-email", {
@@ -191,14 +232,15 @@ serve(async (req) => {
             recipientEmail: adminTo,
             idempotencyKey: `dispute-admin-${transaction_id}-${adminTo}`,
             templateData: {
-              name: "Vendibook Support",
+              firstName: "Vendibook Support",
               subject: `[ACTION REQUIRED] New Dispute - ${listingTitle}`,
-              message: `Transaction: ${transaction_id}\nListing: ${listingTitle}\nRaised by: ${disputeRaiser} (${role})\nAmount: $${Number(transaction.amount).toLocaleString()}\nSeller payout: $${Number(transaction.seller_payout).toLocaleString()}\n\nBuyer: ${buyerName} (${buyerEmail || 'no email'})\nSeller: ${sellerName} (${sellerEmail || 'no email'})\n\nReason: ${reason}`,
+              bodyParagraphs: adminParagraphs,
             },
           },
         }).catch(err => logStep("Admin email failed", { error: err.message, adminTo }))
       );
     }
+
 
 
     // Zendesk ticket creation removed — dispute is already emailed to support above
