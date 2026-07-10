@@ -4367,6 +4367,9 @@ export type Database = {
       }
       transaction_terms: {
         Row: {
+          acknowledged_at: string | null
+          acknowledged_ip: unknown
+          acknowledged_user_agent: string | null
           booking_id: string | null
           buyer_id: string | null
           commission_cents: number
@@ -4387,6 +4390,9 @@ export type Database = {
           transaction_mode: string
         }
         Insert: {
+          acknowledged_at?: string | null
+          acknowledged_ip?: unknown
+          acknowledged_user_agent?: string | null
           booking_id?: string | null
           buyer_id?: string | null
           commission_cents?: number
@@ -4407,6 +4413,9 @@ export type Database = {
           transaction_mode: string
         }
         Update: {
+          acknowledged_at?: string | null
+          acknowledged_ip?: unknown
+          acknowledged_user_agent?: string | null
           booking_id?: string | null
           buyer_id?: string | null
           commission_cents?: number
@@ -4670,6 +4679,10 @@ export type Database = {
       }
     }
     Functions: {
+      acknowledge_transaction_terms: {
+        Args: { _ip: unknown; _terms_id: string; _ua: string }
+        Returns: undefined
+      }
       admin_grant_complimentary_featured: {
         Args: { p_days?: number; p_listing_id: string }
         Returns: {
