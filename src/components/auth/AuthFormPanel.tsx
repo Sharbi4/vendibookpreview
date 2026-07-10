@@ -287,6 +287,24 @@ export const AuthFormPanel = ({ mode, setMode }: AuthFormPanelProps) => {
             trackSignupConversion({ method: 'email', user_type: 'shopper' });
           }
 
+          // Always stash the acceptance snapshot up-front. If a session
+          // already exists we still record inline below and then clear the
+          // stash; if not (email verification required), the stash is
+          // drained on the first authenticated action post-verify by
+          // drainPendingSignupConsent() inside AuthContext.
+          stashPendingSignupConsent({
+            email: trimmedEmail,
+            role: selectedRole,
+            marketingOptIn,
+            tosVersion: CURRENT_VERSIONS[DOCUMENT_TYPES.TERMS_OF_SERVICE],
+            privacyVersion: CURRENT_VERSIONS[DOCUMENT_TYPES.PRIVACY_POLICY],
+            acceptanceText: SIGNUP_TOS_ACCEPTANCE_TEXT,
+            route: '/auth?mode=signup',
+            locale: navigator.language,
+            userAgent: navigator.userAgent,
+            capturedAt: new Date().toISOString(),
+          });
+
           // Detect whether the user already has an active session
           // (auto-confirm enabled) vs needs to verify their email.
           let hasSession = false;
@@ -294,10 +312,10 @@ export const AuthFormPanel = ({ mode, setMode }: AuthFormPanelProps) => {
             const { data: { session: newSession } } = await supabase.auth.getSession();
             hasSession = !!newSession?.user;
             if (newSession?.user?.id) {
-              // Record the signup consent server-side. If auto-confirm is off
-              // (email verify required) the user has no session yet — we then
-              // record the consent on their first authenticated action; the
-              // orchestrator + toast tell them to check email.
+              // Record the signup consent server-side immediately. If
+              // auto-confirm is off (email verify required) there's no
+              // session yet — the stash above will be replayed on the
+              // first authenticated action post-verify.
               try {
                 await supabase.rpc('record_user_consent', {
                   _document_type: DOCUMENT_TYPES.TERMS_OF_SERVICE,
@@ -333,6 +351,8 @@ export const AuthFormPanel = ({ mode, setMode }: AuthFormPanelProps) => {
                       { onConflict: 'email' },
                     );
                 }
+                // Inline write succeeded — no need for the deferred drain.
+                clearPendingSignupConsent();
               } catch (consentErr) {
                 console.error('Failed to record signup consent', consentErr);
               }
