@@ -99,31 +99,22 @@ async def _shot(page, name):
 
 
 async def _pick_first_available_day(page) -> bool:
-    """Click the first non-disabled day-cell inside the visible calendar
-    grid. Returns True on success. Walks forward up to 3 months if needed."""
+    """Click the first enabled day cell inside the rental calendar. Uses the
+    stable `rental-calendar-day` testid — no DOM-structure assumptions. Walks
+    up to 3 months forward if the current month is fully booked/past."""
     for attempt in range(4):
-        # `.grid.grid-cols-7 > button` is the day-cell pattern used by the
-        # rental widget. Filter to only truly visible + enabled buttons.
-        cells = page.locator(
-            ".grid.grid-cols-7 > button:not([disabled])"
-        ).locator("visible=true")
+        cells = page.locator(visible(TID["calendar_day_enabled"]))
         n = await cells.count()
-        for i in range(n):
-            btn = cells.nth(i)
-            try:
-                text = (await btn.inner_text()).strip()
-            except Exception:
-                continue
-            # Day cells are numeric ("1".."31") — skip nav arrows that may
-            # also lack [disabled].
-            if not text or not text.splitlines()[0].strip().isdigit():
-                continue
+        if n:
+            btn = cells.first
             await btn.scroll_into_view_if_needed()
             await btn.click()
             return True
 
         # No enabled day this month — try next-month arrow.
-        next_btn = page.get_by_role("button", name=re.compile(r"next month|›|chevron.?right", re.I)).locator("visible=true").first
+        next_btn = page.get_by_role(
+            "button", name=re.compile(r"next month|›|chevron.?right", re.I)
+        ).locator("visible=true").first
         try:
             await next_btn.click(timeout=1500)
             await page.wait_for_timeout(300)
@@ -132,7 +123,7 @@ async def _pick_first_available_day(page) -> bool:
     return False
 
 
-async def _assert_sale_destination(page, listing_id, cta_regex, label) -> str:
+async def _assert_sale_destination(page, listing_id, cta_selector, label) -> str:
     """Signed-out shoppers hit one of three legitimate outcomes when they
     click Buy Now — each proves the CTA is wired to the checkout intent:
 
@@ -140,11 +131,9 @@ async def _assert_sale_destination(page, listing_id, cta_regex, label) -> str:
       2. Redirect to /auth (with or without ?redirect=/checkout/{id}).
       3. An auth-gate dialog opens in place (AuthGateOfferModal), which then
          hands the shopper off to /checkout/{id} after sign-in.
+    """
 
-    We assert exactly one of those three outcomes AND, when the URL changed,
-    we inspect the payload."""
-
-    btn = page.locator("button:visible").filter(has_text=cta_regex).first
+    btn = page.locator(cta_selector).first
     await btn.wait_for(state="visible", timeout=10000)
     try:
         await btn.scroll_into_view_if_needed(timeout=4000)
@@ -157,8 +146,7 @@ async def _assert_sale_destination(page, listing_id, cta_regex, label) -> str:
         await btn.click(timeout=6000)
     except PWTimeout:
         # Something (sticky footer, cookie banner, live-preview overlay) may
-        # be intercepting the pointer. Fall back to a JS-level click, which
-        # still exercises the same onClick handler.
+        # be intercepting the pointer. Fall back to a JS-level click.
         await btn.evaluate("el => el.click()")
     await page.wait_for_timeout(1500)
     final = page.url
@@ -166,12 +154,9 @@ async def _assert_sale_destination(page, listing_id, cta_regex, label) -> str:
 
     parsed = urlparse(final)
 
-    # (1) Direct checkout navigation.
     if parsed.path == f"/checkout/{listing_id}":
         return final
 
-    # (2) Auth wall — accept /auth with the checkout redirect payload if
-    #     present, otherwise require the auth page.
     if parsed.path == "/auth":
         qs = parse_qs(parsed.query)
         if "redirect" in qs:
@@ -180,7 +165,6 @@ async def _assert_sale_destination(page, listing_id, cta_regex, label) -> str:
             )
         return final
 
-    # (3) In-page auth-gate dialog with sign-in intent.
     if final == start_url:
         dialog = page.get_by_role("dialog").locator("visible=true").first
         try:
@@ -190,8 +174,6 @@ async def _assert_sale_destination(page, listing_id, cta_regex, label) -> str:
                 f"Buy Now click produced no navigation and no auth-gate dialog. "
                 f"Still at {final}"
             )
-        # Dialog must offer sign-in (proves it's the auth gate, not a random
-        # modal).
         sign_in = dialog.locator(
             "text=/sign in|log in|continue with|create account/i"
         ).first
@@ -203,7 +185,7 @@ async def _assert_sale_destination(page, listing_id, cta_regex, label) -> str:
     )
 
 
-async def _assert_rent_destination(page, listing_id, cta_regex, label) -> str:
+async def _assert_rent_destination(page, listing_id, cta_selector, label) -> str:
     # 1. Pick a date so the CTA becomes enabled.
     picked = await _pick_first_available_day(page)
     if not picked:
@@ -211,10 +193,9 @@ async def _assert_rent_destination(page, listing_id, cta_regex, label) -> str:
         raise AssertionError("no available day cell found in calendar")
     await page.wait_for_timeout(400)
 
-    # 2. Fire the CTA.
-    btn = page.locator("button:visible").filter(has_text=cta_regex).first
+    # 2. Fire the CTA (testid, not text).
+    btn = page.locator(cta_selector).first
     await btn.wait_for(state="visible", timeout=10000)
-    # Wait for the button to become enabled.
     for _ in range(20):
         if await btn.is_enabled():
             break
@@ -238,7 +219,6 @@ async def _assert_rent_destination(page, listing_id, cta_regex, label) -> str:
     final = page.url
     await _shot(page, f"{label}_after_click")
 
-    # 3. Validate payload.
     parsed = urlparse(final)
     assert parsed.path == f"/book/{listing_id}", f"unexpected path {parsed.path!r}"
     qs = parse_qs(parsed.query)
