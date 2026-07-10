@@ -41,19 +41,25 @@ import { cn } from '@/lib/utils';
 
 type ListingLike = {
   id: string;
-  mode: 'rent' | 'sale' | string | null | undefined;
+  mode: 'rent' | 'sale' | 'both' | string | null | undefined;
   category?: string | null;
   instant_book?: boolean | null;
   accept_card_payment?: boolean | null;
   accept_cash_payment?: boolean | null;
   fulfillment_type?: string | null;
+  price_sale?: number | null;
+  price_hourly?: number | null;
+  price_daily?: number | null;
+  price_weekly?: number | null;
+  price_monthly?: number | null;
 };
 
 export type WalkthroughVariant =
   | 'sale_card'
   | 'sale_pay_in_person'
   | 'rent_instant'
-  | 'rent_request';
+  | 'rent_request'
+  | 'sale_and_rent';
 
 type FulfillmentContext = 'pickup' | 'delivery' | 'pickup_or_delivery' | 'on_site_kitchen' | 'on_site_lot';
 
