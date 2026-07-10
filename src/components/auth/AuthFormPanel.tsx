@@ -615,6 +615,64 @@ export const AuthFormPanel = ({ mode, setMode }: AuthFormPanelProps) => {
                 </div>
               )}
 
+              {mode === 'signup' && (
+                <div className="space-y-3">
+                  <label className="flex items-start gap-3 cursor-pointer">
+                    <Checkbox
+                      checked={agreedToTerms}
+                      onCheckedChange={(v) => {
+                        setAgreedToTerms(v === true);
+                        setErrors((prev) => {
+                          const next = { ...prev };
+                          delete next.terms;
+                          return next;
+                        });
+                      }}
+                      aria-label={SIGNUP_TOS_ACCEPTANCE_TEXT}
+                      data-testid="signup-tos-checkbox"
+                      aria-invalid={!!errors.terms}
+                    />
+                    <span className="text-sm text-muted-foreground leading-snug">
+                      I agree to the{' '}
+                      <a
+                        href="/legal/terms"
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-foreground underline underline-offset-4 hover:text-primary"
+                      >
+                        Vendibook Terms of Service
+                      </a>{' '}
+                      and acknowledge the{' '}
+                      <a
+                        href="/legal/privacy"
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-foreground underline underline-offset-4 hover:text-primary"
+                      >
+                        Privacy Policy
+                      </a>.
+                    </span>
+                  </label>
+                  {errors.terms && (
+                    <p className="text-sm text-destructive" role="alert">
+                      {errors.terms}
+                    </p>
+                  )}
+                  <label className="flex items-start gap-3 cursor-pointer">
+                    <Checkbox
+                      checked={marketingOptIn}
+                      onCheckedChange={(v) => setMarketingOptIn(v === true)}
+                      aria-label={SIGNUP_MARKETING_TEXT}
+                      data-testid="signup-marketing-checkbox"
+                    />
+                    <span className="text-xs text-muted-foreground leading-snug">
+                      {SIGNUP_MARKETING_TEXT}
+                    </span>
+                  </label>
+                </div>
+              )}
+
+
               <Button 
                 type="submit" 
                 variant="dark-shine"
