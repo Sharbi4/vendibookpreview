@@ -389,6 +389,14 @@ const FAQ = () => {
             <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto">
               Everything you need to know about using Vendibook
             </p>
+            <div className="mt-6 flex items-center justify-center gap-3">
+              <ReportIssueButton
+                variant="outline"
+                label="Can't find your answer? Report an issue"
+                context={{ featureArea: "other" }}
+              />
+            </div>
+
           </div>
         </section>
 
