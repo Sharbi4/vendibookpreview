@@ -3,6 +3,7 @@ import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useActivityTracker } from '@/hooks/useActivityTracker';
+import { drainPendingSignupConsent } from '@/lib/drainPendingSignupConsent';
 
 type AppRole = 'host' | 'shopper';
 
@@ -193,7 +194,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
               } catch (e) {
                 console.warn('[Analytics] session_user_link failed', e);
               }
+
+              // Drain any session-deferred signup consent (Terms + Privacy)
+              // captured before email verification. No-op if the stash is
+              // empty or belongs to a different email.
+              drainPendingSignupConsent(session.user).catch((e) =>
+                console.warn('[Auth] deferred consent drain failed', e),
+              );
             }
+
 
             const [profileData, rolesData] = await Promise.all([
               fetchProfile(session.user.id),
@@ -222,6 +231,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         if (session.user.app_metadata?.provider === 'google') {
           await syncGoogleProfile(session.user.id, session.user.user_metadata);
         }
+
+        // Drain deferred signup consent for cases where the verify redirect
+        // rehydrates the session without emitting a fresh SIGNED_IN event.
+        drainPendingSignupConsent(session.user).catch((e) =>
+          console.warn('[Auth] deferred consent drain failed', e),
+        );
 
         const [profileData, rolesData] = await Promise.all([
           fetchProfile(session.user.id),
