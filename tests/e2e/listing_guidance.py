@@ -5,16 +5,15 @@ For every active listing configuration currently in production and on both
 desktop and mobile viewports, this suite:
 
     1. Loads the listing detail page.
-    2. Locates the visible "How This Listing Works" guidance section.
-    3. Opens the walkthrough modal via the inline CTA.
-    4. Clicks the final CTA inside the modal.
-    5. Asserts the correct primary transaction button for that variant becomes
-       visible after the CTA runs — proving the guidance routes into the real
-       existing purchase / booking flow.
+    2. Locates the visible "How This Listing Works" guidance section by its
+       stable `data-testid` hook (NOT copy).
+    3. Opens the walkthrough modal via the inline testid CTA.
+    4. Clicks the final CTA inside the modal via its testid hook.
+    5. Asserts the correct primary transaction control for that variant
+       becomes visible after the CTA runs — again keyed on testids, not on
+       user-facing text.
 
-The `sale_and_rent` (dual mode) variant has no production listings today, so
-it is covered by the resolver unit tests; this E2E suite iterates the four
-live variants.
+Copy or DOM refactors that keep the same hooks should not break this suite.
 
 Run:
     python3 tests/e2e/listing_guidance.py
@@ -23,50 +22,45 @@ Run:
 
 import asyncio
 import os
-import re
 import sys
 from pathlib import Path
 from playwright.async_api import async_playwright
+
+sys.path.insert(0, str(Path(__file__).parent))
+from _selectors import TID, visible, any_buy_now, any_rent_cta  # noqa: E402
 
 SHOTS = Path(__file__).parent / "screenshots"
 SHOTS.mkdir(parents=True, exist_ok=True)
 
 BASE = os.environ.get("E2E_BASE_URL", "http://localhost:8080")
 
-# One listing per active variant, taken from live published data.
-# Replace an id if a listing is unpublished; keep it in the same variant bucket.
+# Live listing per variant. `variant` matches the `data-variant` attribute
+# rendered on the guidance section.  `txn_selector` matches the primary txn
+# control that should be reachable after the walkthrough's final CTA runs.
 CASES = [
     dict(
         variant="sale_card",
-        listing_id="ee20ce79-1fbc-4885-aaf8-61f4c3a5cc25",
-        heading="Buying on Vendibook",
-        open_cta="See the Purchase Steps",
-        final_cta="Continue to purchase",
-        txn_button=re.compile(r"buy now", re.I),
+        listing_id="d93c53cb-f440-4672-ba6c-912c8266cda8",
+        txn_selector=any_buy_now(),
     ),
     dict(
         variant="sale_pay_in_person",
         listing_id="cc3c8214-e327-4670-99ed-e1425494cc8c",
-        heading="Paying the Seller in Person",
-        open_cta="See How Pay in Person Works",
-        final_cta="Contact the seller",
-        txn_button=re.compile(r"buy now", re.I),
+        txn_selector=any_buy_now(),
     ),
     dict(
         variant="rent_instant",
         listing_id="b88edd57-967c-4036-a5bb-a89d2e18ee88",
-        heading="Book This Listing Instantly",
-        open_cta="See the Booking Steps",
-        final_cta="Book available dates",
-        txn_button=re.compile(r"book now", re.I),
+        txn_selector=f'{visible(TID["rental_cta"])}[data-instant-book="true"],'
+                     f'{visible(TID["rent_cta_widget"])}[data-instant-book="true"],'
+                     f'{visible(TID["sticky_mobile_rent"])}[data-instant-book="true"]',
     ),
     dict(
         variant="rent_request",
         listing_id="d94836ba-10fa-44e0-8b5b-046b0bf7d01b",
-        heading="Requesting This Listing",
-        open_cta="See What Happens Next",
-        final_cta="Request to book",
-        txn_button=re.compile(r"request to book", re.I),
+        txn_selector=f'{visible(TID["rental_cta"])}[data-instant-book="false"],'
+                     f'{visible(TID["rent_cta_widget"])}[data-instant-book="false"],'
+                     f'{visible(TID["sticky_mobile_rent"])}[data-instant-book="false"]',
     ),
 ]
 
@@ -76,17 +70,8 @@ VIEWPORTS = [
 ]
 
 
-def visible_locator(page, css_selector, text):
-    """Return the first *visible* element matching css_selector whose text
-    contains ``text``. Playwright's :visible pseudo skips display:none nodes,
-    which we need because the listing detail page mounts the guidance twice
-    (mobile-only + desktop-only wrappers)."""
-    return page.locator(f"{css_selector}:visible").filter(has_text=text).first
-
-
 async def run_case(browser, case, vp):
     context = await browser.new_context(viewport={"width": vp["width"], "height": vp["height"]})
-    # Suppress the first-visit auto-open so we exercise the inline CTA explicitly.
     await context.add_init_script(
         "try { localStorage.setItem('vb_howitworks_seen_global', new Date().toISOString()); } catch (e) {}"
     )
@@ -100,30 +85,33 @@ async def run_case(browser, case, vp):
             pass
 
     try:
-        url = f"{BASE}/listing/{case['listing_id']}"
-        await page.goto(url, wait_until="domcontentloaded", timeout=30000)
+        await page.goto(f"{BASE}/listing/{case['listing_id']}", wait_until="domcontentloaded", timeout=30000)
         try:
             await page.wait_for_load_state("networkidle", timeout=15000)
         except Exception:
             pass
 
-        # 1. Visible guidance heading is present.
-        heading = visible_locator(page, "h3", case["heading"])
-        await heading.wait_for(state="visible", timeout=15000)
-        result["passed"].append("inline_heading")
-        await shot("01_heading")
+        # 1. Guidance section for the expected variant is present + visible.
+        section_sel = f'{visible(TID["section"])}[data-variant="{case["variant"]}"]'
+        section = page.locator(section_sel).first
+        await section.wait_for(state="visible", timeout=15000)
+        # Heading must render inside that section (no text matching needed).
+        await section.locator(TID["heading"]).first.wait_for(state="visible", timeout=5000)
+        result["passed"].append("inline_section")
+        await shot("01_section")
 
-        # 2. Open the modal via the inline "See ..." CTA (visible copy).
-        open_btn = visible_locator(page, "button", case["open_cta"])
+        # 2. Open the modal via the inline testid CTA.
+        open_btn = section.locator(TID["open_cta"]).first
         await open_btn.scroll_into_view_if_needed()
         await open_btn.click()
-        dialog = page.get_by_role("dialog")
+        dialog_sel = f'{TID["dialog"]}[data-variant="{case["variant"]}"]'
+        dialog = page.locator(dialog_sel).first
         await dialog.wait_for(state="visible", timeout=5000)
         result["passed"].append("modal_open")
         await shot("02_modal")
 
-        # 3. Click the final CTA inside the dialog.
-        final_btn = dialog.get_by_role("button", name=case["final_cta"]).first
+        # 3. Click the final CTA inside the dialog by testid.
+        final_btn = dialog.locator(TID["final_cta"]).first
         await final_btn.wait_for(state="visible", timeout=5000)
         await final_btn.click()
         result["passed"].append("final_cta_clicked")
@@ -132,17 +120,11 @@ async def run_case(browser, case, vp):
         await dialog.wait_for(state="hidden", timeout=5000)
         result["passed"].append("modal_closed")
 
-        # 5. The correct transaction button for this variant is visible on
-        #    the page after the CTA — proving the guidance routes the user
-        #    into the real purchase / booking flow.
-        #    Desktop: inside #booking-widget; mobile: inside a fixed sticky bar.
+        # 5. The transaction control for this variant is visible on the page.
         await page.wait_for_timeout(800)  # let smooth scroll settle
-        txn = page.locator("button:visible").filter(has_text=case["txn_button"]).first
+        txn = page.locator(case["txn_selector"]).first
         await txn.wait_for(state="visible", timeout=10000)
-        # Presence + visibility proves the guidance routed into the real flow.
-        # The button may be disabled until the user selects dates / signs in —
-        # that's the expected next step of the flow, not a failure of routing.
-        result["passed"].append("txn_button_visible")
+        result["passed"].append("txn_control_visible")
         await shot("03_after_cta")
 
     except Exception as e:

@@ -15,10 +15,12 @@ scrolled into view (desktop `#booking-widget` or mobile fixed sticky).
 
 import asyncio
 import os
-import re
 import sys
 from pathlib import Path
 from playwright.async_api import async_playwright
+
+sys.path.insert(0, str(Path(__file__).parent))
+from _selectors import TID  # noqa: E402
 
 SHOTS = Path(__file__).parent / "screenshots"
 SHOTS.mkdir(parents=True, exist_ok=True)
@@ -33,25 +35,25 @@ CASES = [
         label="rent_deeplink_open",
         listing_id="d94836ba-10fa-44e0-8b5b-046b0bf7d01b",
         query="?walkthrough=open",
-        dialog_title=re.compile(r"what happens after you request", re.I),
+        expected_variant="rent_request",
     ),
     dict(
         label="rent_deeplink_rent",
         listing_id="d94836ba-10fa-44e0-8b5b-046b0bf7d01b",
         query="?walkthrough=rent",
-        dialog_title=re.compile(r"what happens after you request", re.I),
+        expected_variant="rent_request",
     ),
     dict(
         label="sale_deeplink_buy",
         listing_id="ee20ce79-1fbc-4885-aaf8-61f4c3a5cc25",
         query="?walkthrough=buy",
-        dialog_title=re.compile(r"what happens after you buy", re.I),
+        expected_variant="sale_card",
     ),
     dict(
         label="sale_hash_alias",
         listing_id="ee20ce79-1fbc-4885-aaf8-61f4c3a5cc25",
         query="#howitworks=buy",
-        dialog_title=re.compile(r"what happens after you buy", re.I),
+        expected_variant="sale_card",
     ),
 ]
 
@@ -86,12 +88,17 @@ async def run_case(browser, case, vp):
             pass
 
         # Modal auto-opens from the deep link — no click required.
-        dialog = page.get_by_role("dialog")
+        # Use the testid hook so copy refactors do not break the assertion.
+        dialog = page.locator(TID["dialog"]).first
         await dialog.wait_for(state="visible", timeout=8000)
         result["passed"].append("modal_auto_opened")
 
-        title = dialog.locator("h2, [role='heading']").filter(has_text=case["dialog_title"]).first
-        await title.wait_for(state="visible", timeout=3000)
+        # The dialog's data-variant must match the expected walkthrough variant
+        # for this listing — proves the deep link resolved to the right copy.
+        variant_ok = page.locator(
+            f'{TID["dialog"]}[data-variant="{case["expected_variant"]}"]'
+        ).first
+        await variant_ok.wait_for(state="visible", timeout=3000)
         result["passed"].append("correct_variant_shown")
         await shot("01_modal")
     except Exception as e:

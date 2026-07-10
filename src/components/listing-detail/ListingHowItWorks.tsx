@@ -815,6 +815,8 @@ const ListingHowItWorks = ({ listing, isOwner, className }: Props) => {
       <section
         ref={rootRef}
         aria-labelledby={`howitworks-heading-${listing.id}`}
+        data-testid="howitworks-section"
+        data-variant={config.variant}
         className={cn(
           'rounded-2xl border border-border bg-card/70 p-4 sm:p-5 shadow-sm',
           className,
@@ -827,6 +829,7 @@ const ListingHowItWorks = ({ listing, isOwner, className }: Props) => {
           <div className="min-w-0">
             <h3
               id={`howitworks-heading-${listing.id}`}
+              data-testid="howitworks-heading"
               className="text-base font-semibold text-foreground"
             >
               {config.heading}
@@ -859,6 +862,7 @@ const ListingHowItWorks = ({ listing, isOwner, className }: Props) => {
           className="w-full rounded-xl"
           onClick={handleOpen}
           aria-haspopup="dialog"
+          data-testid="howitworks-open-cta"
         >
           {config.cta}
           <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
@@ -870,6 +874,8 @@ const ListingHowItWorks = ({ listing, isOwner, className }: Props) => {
         <DialogContent
           className="max-w-lg max-h-[85vh] overflow-y-auto motion-reduce:transition-none motion-reduce:animate-none"
           aria-describedby={`howitworks-desc-${listing.id}`}
+          data-testid="howitworks-dialog"
+          data-variant={config.variant}
         >
           <DialogHeader>
             <DialogTitle>{config.modalTitle}</DialogTitle>
@@ -897,13 +903,17 @@ const ListingHowItWorks = ({ listing, isOwner, className }: Props) => {
               >
                 Use the Left and Right arrow keys to move between choices, then press Enter to select.
               </p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div
+                className="grid grid-cols-1 sm:grid-cols-2 gap-3"
+                data-testid="howitworks-branch-selector"
+              >
                 <button
                   ref={(el) => { branchBtnRefs.current.sale = el; }}
                   type="button"
                   onClick={() => handleBranchPick('sale')}
                   onKeyDown={(e) => handleBranchKeyDown(e, 'sale')}
                   aria-label="Buy this listing. Own it outright. See the purchase steps and protections."
+                  data-testid="howitworks-branch-sale"
                   className="text-left rounded-xl border border-border bg-card/70 hover:bg-muted/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background p-4 transition"
                 >
                   <div className="flex items-center gap-2 mb-1">
@@ -920,6 +930,7 @@ const ListingHowItWorks = ({ listing, isOwner, className }: Props) => {
                   onClick={() => handleBranchPick('rent')}
                   onKeyDown={(e) => handleBranchKeyDown(e, 'rent')}
                   aria-label="Rent this listing. Book it for a period. See how availability, deposits, and returns work."
+                  data-testid="howitworks-branch-rent"
                   className="text-left rounded-xl border border-border bg-card/70 hover:bg-muted/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background p-4 transition"
                 >
                   <div className="flex items-center gap-2 mb-1">
@@ -1013,6 +1024,8 @@ const ListingHowItWorks = ({ listing, isOwner, className }: Props) => {
               type="button"
               onClick={handleFinalCta}
               className="rounded-xl"
+              data-testid="howitworks-final-cta"
+              data-branch={pickedBranch ?? 'none'}
               aria-label={
                 isDual && pickedBranch === 'sale'
                   ? `${config.finalCtaLabel} to the buy widget`

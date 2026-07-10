@@ -165,6 +165,8 @@ export const StickyMobileCTA = ({
               size="lg"
               onClick={handleRentalCTA}
               disabled={!isAvailable}
+              data-testid="sticky-mobile-rent-cta"
+              data-instant-book={instantBook ? 'true' : 'false'}
               className={`gap-2 min-w-[140px] h-12 text-base font-semibold ${instantBook ? 'shadow-lg' : 'border-primary/40'}`}
             >
               {instantBook ? <Zap className="h-5 w-5" /> : <Calendar className="h-5 w-5" />}
@@ -189,6 +191,7 @@ export const StickyMobileCTA = ({
                 size="lg"
                 onClick={handleBuyNow}
                 disabled={!isAvailable}
+                data-testid="sticky-mobile-buy-now"
                 className="gap-2 h-12 sm:h-14 px-6 sm:px-8 text-base sm:text-lg font-bold shadow-xl no-tap-highlight"
               >
                 <ShoppingCart className="h-5 w-5 sm:h-6 sm:w-6" />

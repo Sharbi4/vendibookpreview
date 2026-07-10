@@ -669,6 +669,8 @@ export const BookingWidget = ({
                   handleContinueToBooking();
                 }}
                 disabled={bookingMode === 'daily' ? (!startDate || !endDate) : (!selectedDate || !selectedStartTime)}
+                data-testid="booking-widget-rent-cta"
+                data-instant-book={instantBook ? 'true' : 'false'}
               >
                 {instantBook ? (
                   <>
@@ -836,6 +838,7 @@ export const BookingWidget = ({
                   className="w-full h-14 text-base font-bold rounded-2xl bg-cta-primary hover:opacity-95 shadow-cta-primary text-white border-0"
                   size="lg"
                   disabled={!priceSale}
+                  data-testid="booking-widget-buy-now"
                 >
                   Buy Now
                   <ArrowRight className="w-5 h-5 ml-2" />
