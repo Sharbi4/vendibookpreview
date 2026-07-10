@@ -74,6 +74,7 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'payout-sent': payoutSent,
   'listing-published': listingPublished,
   'listing-draft-nudge': listingDraftNudge,
+  'listing-recovery-cs': listingRecoveryCs,
   'stripe-onboarding-nudge': stripeOnboardingNudge,
   'document-status': documentStatus,
   'new-message': newMessage,
