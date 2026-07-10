@@ -254,17 +254,6 @@
     </image:image>
   </url>
   <url>
-    <loc>https://vendibook.com/listing/29db594a-1746-4d42-954a-16673d9ff875</loc>
-    <lastmod>2026-07-07</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/0512c2fe-7f8c-4e29-b7b2-5e48e16e1b11/29db594a-1746-4d42-954a-16673d9ff875/1769467123029-llx81q.jpeg</image:loc>
-      <image:title>NEAR NEW TURNKEY Mobile Tap Trailer - Motivated Seller</image:title>
-      <image:caption>NEAR NEW TURNKEY Mobile Tap Trailer - Motivated Seller in Lawrenceville, GA on Vendibook</image:caption>
-    </image:image>
-  </url>
-  <url>
     <loc>https://vendibook.com/listing/feb5267f-8bd6-47c7-8a47-95a68dabeec5</loc>
     <lastmod>2026-07-01</lastmod>
     <changefreq>weekly</changefreq>
@@ -273,6 +262,17 @@
       <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/9aae25c4-8340-4b3d-98f0-d307b91bff9c/feb5267f-8bd6-47c7-8a47-95a68dabeec5/1768985837720-svi73.jpg</image:loc>
       <image:title>2026 food trailer</image:title>
       <image:caption>2026 food trailer in Atlanta, GA on Vendibook</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://vendibook.com/listing/29db594a-1746-4d42-954a-16673d9ff875</loc>
+    <lastmod>2026-07-10</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/0512c2fe-7f8c-4e29-b7b2-5e48e16e1b11/29db594a-1746-4d42-954a-16673d9ff875/1769467123029-llx81q.jpeg</image:loc>
+      <image:title>NEAR NEW TURNKEY Mobile Tap Trailer - Motivated Seller</image:title>
+      <image:caption>NEAR NEW TURNKEY Mobile Tap Trailer - Motivated Seller in Lawrenceville, GA on Vendibook</image:caption>
     </image:image>
   </url>
   <url>
@@ -471,17 +471,6 @@
       <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/863d4cc1-7581-4d3c-8d73-6b33740931cf/f5582bd0-afac-44f1-9f85-3acf24c279f5/1781472783823-3n5lzg.jpeg</image:loc>
       <image:title>Vintage (1955) one-of-a-kind fully restored Chevy all-purpose food truck</image:title>
       <image:caption>Vintage (1955) one-of-a-kind fully restored Chevy all-purpose food truck on Vendibook</image:caption>
-    </image:image>
-  </url>
-  <url>
-    <loc>https://vendibook.com/listing/c649440f-d3df-4f3a-a622-e118767efb4d</loc>
-    <lastmod>2026-07-10</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/20434a7d-a365-4d4a-ab9b-5cff26815f33/c649440f-d3df-4f3a-a622-e118767efb4d/1773684471904-n7qn7c.jpeg</image:loc>
-      <image:title>My Food Trailer</image:title>
-      <image:caption>My Food Trailer on Vendibook</image:caption>
     </image:image>
   </url>
   <url>
@@ -727,17 +716,6 @@
     </image:image>
   </url>
   <url>
-    <loc>https://vendibook.com/listing/4e50a07a-6909-411b-a4e0-429fee24c52a</loc>
-    <lastmod>2026-07-10</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/7825c02f-90ed-4e89-b173-dfae547ab1c8/4e50a07a-6909-411b-a4e0-429fee24c52a/1780430632481-ow7rui.jpg</image:loc>
-      <image:title>Immaculate Custom 2018 Ford F59 Food Truck by Prestige (Only 5,100 Miles!) </image:title>
-      <image:caption>Immaculate Custom 2018 Ford F59 Food Truck by Prestige (Only 5,100 Miles!)  on Vendibook</image:caption>
-    </image:image>
-  </url>
-  <url>
     <loc>https://vendibook.com/listing/71a0c64a-89fb-4761-9081-d905b7c8e799</loc>
     <lastmod>2026-05-30</lastmod>
     <changefreq>weekly</changefreq>
@@ -749,6 +727,28 @@
     </image:image>
   </url>
   <url>
+    <loc>https://vendibook.com/listing/c649440f-d3df-4f3a-a622-e118767efb4d</loc>
+    <lastmod>2026-07-10</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/20434a7d-a365-4d4a-ab9b-5cff26815f33/c649440f-d3df-4f3a-a622-e118767efb4d/1773684471904-n7qn7c.jpeg</image:loc>
+      <image:title>My Food Trailer</image:title>
+      <image:caption>My Food Trailer on Vendibook</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://vendibook.com/listing/4e50a07a-6909-411b-a4e0-429fee24c52a</loc>
+    <lastmod>2026-07-10</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/7825c02f-90ed-4e89-b173-dfae547ab1c8/4e50a07a-6909-411b-a4e0-429fee24c52a/1780430632481-ow7rui.jpg</image:loc>
+      <image:title>Immaculate Custom 2018 Ford F59 Food Truck by Prestige (Only 5,100 Miles!) </image:title>
+      <image:caption>Immaculate Custom 2018 Ford F59 Food Truck by Prestige (Only 5,100 Miles!)  on Vendibook</image:caption>
+    </image:image>
+  </url>
+  <url>
     <loc>https://vendibook.com/listing/f4d5e5ae-31eb-4ba0-9d2b-13df7279d020</loc>
     <lastmod>2026-07-10</lastmod>
     <changefreq>weekly</changefreq>
@@ -757,6 +757,17 @@
       <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/f2865e60-125e-4921-b7c5-898ba1675045/f4d5e5ae-31eb-4ba0-9d2b-13df7279d020/1769084137377-0pz8o6.jpg</image:loc>
       <image:title>🔥 TURNKEY SHIPPING CONTAINER KITCHEN🔥</image:title>
       <image:caption>🔥 TURNKEY SHIPPING CONTAINER KITCHEN🔥 in Atlanta, GA on Vendibook</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://vendibook.com/listing/f2b2d970-8715-4cb3-83fc-7245d2af61bd</loc>
+    <lastmod>2026-07-10</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://images.unsplash.com/photo-1533900298318-6b8da08a523e?w=800</image:loc>
+      <image:title>E2E Test e80cbece</image:title>
+      <image:caption>E2E Test e80cbece in Phoenix, AZ on Vendibook</image:caption>
     </image:image>
   </url>
 </urlset>
