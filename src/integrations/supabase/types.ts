@@ -1572,6 +1572,57 @@ export type Database = {
         }
         Relationships: []
       }
+      legal_documents: {
+        Row: {
+          body_markdown: string
+          change_summary: string | null
+          content_hash: string
+          created_at: string
+          created_by: string | null
+          document_type: string
+          effective_at: string
+          id: string
+          requires_reacceptance: boolean
+          slug: string
+          status: string
+          summary: string | null
+          title: string
+          version: string
+        }
+        Insert: {
+          body_markdown: string
+          change_summary?: string | null
+          content_hash: string
+          created_at?: string
+          created_by?: string | null
+          document_type: string
+          effective_at?: string
+          id?: string
+          requires_reacceptance?: boolean
+          slug: string
+          status?: string
+          summary?: string | null
+          title: string
+          version: string
+        }
+        Update: {
+          body_markdown?: string
+          change_summary?: string | null
+          content_hash?: string
+          created_at?: string
+          created_by?: string | null
+          document_type?: string
+          effective_at?: string
+          id?: string
+          requires_reacceptance?: boolean
+          slug?: string
+          status?: string
+          summary?: string | null
+          title?: string
+          version?: string
+        }
+        Relationships: []
+      }
       listing_ai_insights: {
         Row: {
           competitor_summary: Json | null
@@ -4466,6 +4517,77 @@ export type Database = {
           },
         ]
       }
+      user_consents: {
+        Row: {
+          acceptance_text: string
+          application_version: string | null
+          created_at: string
+          document_id: string | null
+          document_type: string
+          document_version: string
+          environment: string | null
+          id: string
+          ip: unknown
+          locale: string | null
+          method: string
+          related_ids: Json
+          revocation_reason: string | null
+          revoked_at: string | null
+          route: string | null
+          trigger_action: string
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          acceptance_text: string
+          application_version?: string | null
+          created_at?: string
+          document_id?: string | null
+          document_type: string
+          document_version: string
+          environment?: string | null
+          id?: string
+          ip?: unknown
+          locale?: string | null
+          method?: string
+          related_ids?: Json
+          revocation_reason?: string | null
+          revoked_at?: string | null
+          route?: string | null
+          trigger_action: string
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          acceptance_text?: string
+          application_version?: string | null
+          created_at?: string
+          document_id?: string | null
+          document_type?: string
+          document_version?: string
+          environment?: string | null
+          id?: string
+          ip?: unknown
+          locale?: string | null
+          method?: string
+          related_ids?: Json
+          revocation_reason?: string | null
+          revoked_at?: string | null
+          route?: string | null
+          trigger_action?: string
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_consents_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "legal_documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_journey_state: {
         Row: {
           bookings_as_guest: number
@@ -4811,6 +4933,31 @@ export type Database = {
         Args: { p_referrer_id: string }
         Returns: number
       }
+      current_legal_document: {
+        Args: { _document_type: string }
+        Returns: {
+          body_markdown: string
+          change_summary: string | null
+          content_hash: string
+          created_at: string
+          created_by: string | null
+          document_type: string
+          effective_at: string
+          id: string
+          requires_reacceptance: boolean
+          slug: string
+          status: string
+          summary: string | null
+          title: string
+          version: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "legal_documents"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       delete_email: {
         Args: { message_id: number; queue_name: string }
         Returns: boolean
@@ -5050,6 +5197,21 @@ export type Database = {
           read_ct: number
         }[]
       }
+      record_user_consent: {
+        Args: {
+          _acceptance_text: string
+          _application_version?: string
+          _document_type: string
+          _document_version: string
+          _ip?: unknown
+          _locale?: string
+          _related_ids?: Json
+          _route?: string
+          _trigger_action: string
+          _user_agent?: string
+        }
+        Returns: string
+      }
       refresh_permit_roadmap: {
         Args: {
           p_new_item_keys: string[]
@@ -5164,6 +5326,10 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      revoke_user_consent: {
+        Args: { _consent_id: string; _reason: string }
+        Returns: undefined
       }
       soft_delete_permit_document: {
         Args: { p_document_id: string }
