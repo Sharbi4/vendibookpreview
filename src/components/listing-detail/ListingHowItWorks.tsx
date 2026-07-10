@@ -171,6 +171,14 @@ function fulfillmentStepForSale(f: FulfillmentContext): WalkthroughStep {
         'Arrange delivery, local drop-off, or freight in Messages. If freight is offered, it is calculated at $4.50/mile.',
     };
   }
+  if (f === 'pickup_or_delivery') {
+    return {
+      icon: Truck,
+      title: 'Choose pickup, delivery, or freight',
+      description:
+        'This seller offers both pickup and delivery. Confirm which you want in Messages. Freight, when offered, is calculated at $4.50/mile. The seller\'s full address unlocks after purchase.',
+    };
+  }
   return {
     icon: Package,
     title: 'Coordinate pickup',
