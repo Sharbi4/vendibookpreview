@@ -17,6 +17,8 @@ import { useOrderTracking } from '@/hooks/useOrderTracking';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import SEO from '@/components/SEO';
+import { ReportIssueButton } from '@/components/support/ReportIssueButton';
+
 
 const SHIPPING_STATUS_CONFIG = {
   pending: { 
