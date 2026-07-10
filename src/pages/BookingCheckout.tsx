@@ -302,8 +302,8 @@ const BookingCheckout = () => {
       },
       buyer: {
         id: user?.id ?? null,
-        email: userInfo?.email ?? user?.email ?? null,
-        name: userInfo?.fullName ?? null,
+        email: user?.email ?? null,
+        name: userInfo ? `${userInfo.firstName} ${userInfo.lastName}`.trim() || null : null,
       },
     });
   };
