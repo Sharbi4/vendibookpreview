@@ -326,6 +326,7 @@ const QuickBookingModal = ({
       });
     } finally {
       setIsSubmitting(false);
+      termsGate.reset();
     }
   };
 
