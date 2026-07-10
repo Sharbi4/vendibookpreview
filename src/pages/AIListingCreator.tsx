@@ -50,7 +50,7 @@ function cleanMessageForDisplay(text: string): string {
 
 const AIListingCreator: React.FC = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, refreshProfile } = useAuth();
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -156,6 +156,7 @@ const AIListingCreator: React.FC = () => {
         accept_cash_payment: listingData.accept_cash_payment ?? null};
       const { error } = await supabase.from('listings').update(updateData).eq('id', draft.id);
       if (error) throw error;
+      await refreshProfile();
       toast.success('Draft saved! Redirecting to your dashboard...');
       // Add a next-steps message to the chat before redirecting
       setMessages(prev => [...prev, {
@@ -168,7 +169,7 @@ const AIListingCreator: React.FC = () => {
       toast.error('Failed to save listing. Please try again.');
     }
     setIsSaving(false);
-  }, [user, uploadedImages, navigate]);
+  }, [user, uploadedImages, navigate, refreshProfile]);
 
   const streamChat = useCallback(async (msgs: Msg[], isInitial = false, imgUrls?: string[]) => {
     setIsLoading(true);

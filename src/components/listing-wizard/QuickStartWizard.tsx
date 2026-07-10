@@ -52,7 +52,7 @@ const loadPersistedQuickStart = (): { data: QuickStartData; step: QuickStartStep
 export const QuickStartWizard: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user, refreshProfile } = useAuth();
 
   const persisted = typeof window !== 'undefined' ? loadPersistedQuickStart() : null;
 
@@ -244,6 +244,7 @@ export const QuickStartWizard: React.FC = () => {
 
       if (error) throw error;
       if (!listing?.id) throw new Error('Draft was not created. Please try again.');
+      await refreshProfile();
 
       setCreatedListingId(listing.id);
       setStep('created');
