@@ -41,7 +41,38 @@ TID = {
     "calendar_day_enabled": '[data-testid="rental-calendar-day"][data-day-disabled="false"]',
     "sale_sticky_buy": '[data-testid="sale-sticky-buy-now"]',
     "sale_mobile_buy": '[data-testid="sale-mobile-buy-now"]',
+    "sticky_mobile_buy": '[data-testid="sticky-mobile-buy-now"]',
+    "sticky_mobile_rent": '[data-testid="sticky-mobile-rent-cta"]',
 }
+
+
+def visible(sel: str) -> str:
+    """Return a Playwright selector that pins ``sel`` to a visible element.
+    Guidance renders twice (mobile + desktop wrappers) so :visible is a must."""
+    return f"{sel}:visible"
+
+
+def any_buy_now() -> str:
+    """Union selector matching a Buy Now button in any listing surface —
+    desktop widget, sale mobile detail page, or sticky mobile CTA bar."""
+    return ",".join(
+        visible(TID[k]) for k in (
+            "buy_now_widget",
+            "sale_sticky_buy",
+            "sale_mobile_buy",
+            "sticky_mobile_buy",
+        )
+    )
+
+
+def any_rent_cta() -> str:
+    """Union selector for the primary rent CTA across all rental surfaces —
+    desktop widgets and the mobile sticky bar. Callers can add an
+    `[data-instant-book="true|false"]` suffix to pin the flavour."""
+    return ",".join(
+        visible(TID[k]) for k in ("rental_cta", "rent_cta_widget", "sticky_mobile_rent")
+    )
+
 
 
 def visible(sel: str) -> str:
