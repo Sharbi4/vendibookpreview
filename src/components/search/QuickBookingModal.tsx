@@ -679,6 +679,17 @@ const QuickBookingModal = ({
           </div>
         )}
       </DialogContent>
+      {termsGate.terms ? (
+        <FinalReviewSheet
+          terms={termsGate.terms}
+          termsId={termsGate.termsId}
+          open={termsGate.open}
+          onOpenChange={termsGate.setOpen}
+          onConfirm={runSubmit}
+          submitting={isSubmitting || termsGate.preparing}
+          confirmLabel="Continue to secure payment"
+        />
+      ) : null}
     </Dialog>
   );
 };
