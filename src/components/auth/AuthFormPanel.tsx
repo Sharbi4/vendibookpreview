@@ -22,6 +22,7 @@ import {
   DOCUMENT_TYPES,
   CONSENT_TRIGGERS,
 } from '@/lib/legalDocuments';
+import { stashPendingSignupConsent, clearPendingSignupConsent } from '@/lib/pendingSignupConsent';
 
 const SIGNUP_TOS_ACCEPTANCE_TEXT =
   'I agree to the Vendibook Terms of Service and acknowledge the Privacy Policy.';
