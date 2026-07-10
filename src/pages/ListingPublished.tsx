@@ -8,6 +8,7 @@ import { ListingCategory, ListingMode } from '@/types/listing';
 import { useToast } from '@/hooks/use-toast';
 import BoostListingPrompt from '@/components/dashboard/BoostListingPrompt';
 import PublishStatusSummary from '@/components/listing-wizard/PublishStatusSummary';
+import { reportError } from '@/lib/errorReporter';
 
 const ListingPublished: React.FC = () => {
   const [searchParams] = useSearchParams();
