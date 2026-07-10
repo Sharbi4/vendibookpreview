@@ -14,8 +14,19 @@ import { trackSignupCompleted, trackLoginAttempt, trackLoginSuccess, trackLoginE
 import { trackSignupConversion } from '@/lib/gtagConversions';
 import { trackGA4SignUp, trackGA4Login } from '@/lib/ga4Conversions';
 import { Separator } from '@/components/ui/separator';
+import { Checkbox } from '@/components/ui/checkbox';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
+import {
+  CURRENT_VERSIONS,
+  DOCUMENT_TYPES,
+  CONSENT_TRIGGERS,
+} from '@/lib/legalDocuments';
+
+const SIGNUP_TOS_ACCEPTANCE_TEXT =
+  'I agree to the Vendibook Terms of Service and acknowledge the Privacy Policy.';
+const SIGNUP_MARKETING_TEXT =
+  'Send me occasional Vendibook updates and marketing emails. I can unsubscribe anytime.';
 
 const authSchema = z.object({
   email: z.string().trim().email('Please enter a valid email').max(255, 'Email is too long'),
@@ -60,6 +71,8 @@ export const AuthFormPanel = ({ mode, setMode }: AuthFormPanelProps) => {
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [resendingEmail, setResendingEmail] = useState(false);
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
+  const [marketingOptIn, setMarketingOptIn] = useState(false);
 
   const { signIn, signUp, resetPassword } = useAuth();
   const navigate = useNavigate();
@@ -195,6 +208,22 @@ export const AuthFormPanel = ({ mode, setMode }: AuthFormPanelProps) => {
     
     if (!validateForm()) return;
 
+    // Non-preselected consent gate — signup cannot proceed without an
+    // affirmative acceptance of the Terms + Privacy Policy (spec §6 / §26).
+    if (mode === 'signup' && !agreedToTerms) {
+      setErrors((prev) => ({
+        ...prev,
+        terms: 'Please agree to the Terms of Service to create your account.',
+      }));
+      toast({
+        title: 'Terms acceptance required',
+        description:
+          'Please review and accept the Vendibook Terms of Service before creating your account.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -264,6 +293,49 @@ export const AuthFormPanel = ({ mode, setMode }: AuthFormPanelProps) => {
             const { data: { session: newSession } } = await supabase.auth.getSession();
             hasSession = !!newSession?.user;
             if (newSession?.user?.id) {
+              // Record the signup consent server-side. If auto-confirm is off
+              // (email verify required) the user has no session yet — we then
+              // record the consent on their first authenticated action; the
+              // orchestrator + toast tell them to check email.
+              try {
+                await supabase.rpc('record_user_consent', {
+                  _document_type: DOCUMENT_TYPES.TERMS_OF_SERVICE,
+                  _document_version: CURRENT_VERSIONS[DOCUMENT_TYPES.TERMS_OF_SERVICE],
+                  _trigger_action: CONSENT_TRIGGERS.SIGNUP,
+                  _acceptance_text: SIGNUP_TOS_ACCEPTANCE_TEXT,
+                  _related_ids: { role: selectedRole },
+                  _route: '/auth?mode=signup',
+                  _ip: null,
+                  _user_agent: navigator.userAgent,
+                  _locale: navigator.language,
+                  _application_version: null,
+                });
+                await supabase.rpc('record_user_consent', {
+                  _document_type: DOCUMENT_TYPES.PRIVACY_POLICY,
+                  _document_version: CURRENT_VERSIONS[DOCUMENT_TYPES.PRIVACY_POLICY],
+                  _trigger_action: CONSENT_TRIGGERS.SIGNUP,
+                  _acceptance_text: SIGNUP_TOS_ACCEPTANCE_TEXT,
+                  _related_ids: { role: selectedRole },
+                  _route: '/auth?mode=signup',
+                  _ip: null,
+                  _user_agent: navigator.userAgent,
+                  _locale: navigator.language,
+                  _application_version: null,
+                });
+                if (marketingOptIn) {
+                  // Marketing opt-in is a separate, revocable consent —
+                  // never bundled into the required platform acceptance.
+                  await supabase
+                    .from('newsletter_subscribers')
+                    .upsert(
+                      { email: trimmedEmail, source: 'signup_opt_in' },
+                      { onConflict: 'email' },
+                    );
+                }
+              } catch (consentErr) {
+                console.error('Failed to record signup consent', consentErr);
+              }
+
               triggerOrchestrator({
                 user_id: newSession.user.id,
                 event_type: 'user_signup',
@@ -542,6 +614,64 @@ export const AuthFormPanel = ({ mode, setMode }: AuthFormPanelProps) => {
                   </div>
                 </div>
               )}
+
+              {mode === 'signup' && (
+                <div className="space-y-3">
+                  <label className="flex items-start gap-3 cursor-pointer">
+                    <Checkbox
+                      checked={agreedToTerms}
+                      onCheckedChange={(v) => {
+                        setAgreedToTerms(v === true);
+                        setErrors((prev) => {
+                          const next = { ...prev };
+                          delete next.terms;
+                          return next;
+                        });
+                      }}
+                      aria-label={SIGNUP_TOS_ACCEPTANCE_TEXT}
+                      data-testid="signup-tos-checkbox"
+                      aria-invalid={!!errors.terms}
+                    />
+                    <span className="text-sm text-muted-foreground leading-snug">
+                      I agree to the{' '}
+                      <a
+                        href="/legal/terms"
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-foreground underline underline-offset-4 hover:text-primary"
+                      >
+                        Vendibook Terms of Service
+                      </a>{' '}
+                      and acknowledge the{' '}
+                      <a
+                        href="/legal/privacy"
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-foreground underline underline-offset-4 hover:text-primary"
+                      >
+                        Privacy Policy
+                      </a>.
+                    </span>
+                  </label>
+                  {errors.terms && (
+                    <p className="text-sm text-destructive" role="alert">
+                      {errors.terms}
+                    </p>
+                  )}
+                  <label className="flex items-start gap-3 cursor-pointer">
+                    <Checkbox
+                      checked={marketingOptIn}
+                      onCheckedChange={(v) => setMarketingOptIn(v === true)}
+                      aria-label={SIGNUP_MARKETING_TEXT}
+                      data-testid="signup-marketing-checkbox"
+                    />
+                    <span className="text-xs text-muted-foreground leading-snug">
+                      {SIGNUP_MARKETING_TEXT}
+                    </span>
+                  </label>
+                </div>
+              )}
+
 
               <Button 
                 type="submit" 
