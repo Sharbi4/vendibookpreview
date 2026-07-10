@@ -47,6 +47,8 @@ import { FreightSettingsCard } from '@/components/freight';
 import { FeaturedListingCard } from './FeaturedListingCard';
 import { InfoTooltip } from '@/components/ui/info-tooltip';
 import stripeIcon from '@/assets/stripe-icon.png';
+import { ConsentModal } from '@/components/consent/ConsentModal';
+import { DOCUMENT_TYPES, CONSENT_TRIGGERS } from '@/lib/legalDocuments';
 import {
   calculateRentalFees,
   calculateSaleFees,
