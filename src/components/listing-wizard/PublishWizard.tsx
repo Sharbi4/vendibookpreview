@@ -1687,6 +1687,7 @@ export const PublishWizard: React.FC = () => {
 
   const checklistItems = createChecklistItems(checklistState, step);
   const canPublish = checklistItems.filter(i => i.required).every(i => i.completed);
+  const displayAddress = buildStructuredAddress() || address;
 
   // Collect validation errors for publish attempt
   const getValidationErrors = (): string[] => {
@@ -3801,10 +3802,10 @@ export const PublishWizard: React.FC = () => {
                       </div>
 
                       {/* Location */}
-                      {(address || pickupLocationText) && (
+                      {(displayAddress || pickupLocationText) && (
                         <div className="flex items-center gap-2 text-muted-foreground">
                           <MapPin className="w-4 h-4" />
-                          <span className="text-sm">{address || pickupLocationText}</span>
+                          <span className="text-sm">{displayAddress || pickupLocationText}</span>
                         </div>
                       )}
 
@@ -4029,7 +4030,7 @@ export const PublishWizard: React.FC = () => {
           coverImageUrl: existingImages[0] || null,
           category: listing.category,
           mode: listing.mode,
-          address: listing.address,
+          address: displayAddress,
           priceDaily: parseFloat(priceDaily) || null,
           priceWeekly: parseFloat(priceWeekly) || null,
           priceSale: parseFloat(priceSale) || null} : null}
@@ -4058,7 +4059,7 @@ export const PublishWizard: React.FC = () => {
             priceDaily,
             priceWeekly,
             priceSale,
-        address: buildStructuredAddress() || address,
+            address: displayAddress,
             pickupLocationText,
             highlights,
             amenities,
