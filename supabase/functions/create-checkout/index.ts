@@ -373,32 +373,63 @@ serve(async (req) => {
       },
     };
 
-    const { data: termsRow, error: termsError } = await supabaseClient
-      .from('transaction_terms')
-      .insert({
-        listing_id,
-        booking_id: booking_id || null,
-        buyer_id: user.id,
-        host_id: listing.host_id,
-        snapshot,
-        total_cents: customerTotal,
-        subtotal_cents: centsFrom(amount),
-        deposit_cents: centsFrom(deposit_amount),
-        commission_cents: snapshot.pricing.commissionCents,
-        renter_fee_cents: snapshot.pricing.renterFeeCents,
-        terms_version: TERMS_VERSION,
-        payment_method: 'stripe_card',
-        transaction_mode: mode,
-      })
-      .select('id')
-      .single();
-
-    if (termsError || !termsRow) {
-      logStep('Terms snapshot insert failed', { error: termsError?.message });
-      throw new Error(`Failed to record transaction terms: ${termsError?.message || 'unknown'}`);
+    // If the client passed a draft terms_id from FinalReviewSheet, reuse it
+    // (flip status → active) so the acknowledged_at stamp is preserved.
+    // Otherwise insert a fresh authoritative row.
+    let terms_id: string;
+    if (draftTermsId) {
+      const { data: updated, error: updErr } = await supabaseClient
+        .from('transaction_terms')
+        .update({
+          status: 'active',
+          booking_id: booking_id || null,
+          total_cents: customerTotal,
+          subtotal_cents: centsFrom(amount),
+          deposit_cents: centsFrom(deposit_amount),
+          commission_cents: snapshot.pricing.commissionCents,
+          renter_fee_cents: snapshot.pricing.renterFeeCents,
+          snapshot,
+        })
+        .eq('id', draftTermsId)
+        .eq('buyer_id', user.id)
+        .eq('listing_id', listing_id)
+        .select('id')
+        .maybeSingle();
+      if (updErr || !updated) {
+        logStep('Draft terms activation failed', { error: updErr?.message, draftTermsId });
+        throw new Error(`Failed to activate draft terms: ${updErr?.message || 'not found'}`);
+      }
+      terms_id = updated.id;
+      logStep('Terms snapshot activated from draft', { terms_id });
+    } else {
+      const { data: termsRow, error: termsError } = await supabaseClient
+        .from('transaction_terms')
+        .insert({
+          listing_id,
+          booking_id: booking_id || null,
+          buyer_id: user.id,
+          host_id: listing.host_id,
+          snapshot,
+          total_cents: customerTotal,
+          subtotal_cents: centsFrom(amount),
+          deposit_cents: centsFrom(deposit_amount),
+          commission_cents: snapshot.pricing.commissionCents,
+          renter_fee_cents: snapshot.pricing.renterFeeCents,
+          terms_version: TERMS_VERSION,
+          payment_method: 'stripe_card',
+          transaction_mode: mode,
+          status: 'active',
+        })
+        .select('id')
+        .single();
+      if (termsError || !termsRow) {
+        logStep('Terms snapshot insert failed', { error: termsError?.message });
+        throw new Error(`Failed to record transaction terms: ${termsError?.message || 'unknown'}`);
+      }
+      terms_id = termsRow.id;
+      logStep('Terms snapshot written', { terms_id });
     }
-    const terms_id: string = termsRow.id;
-    logStep('Terms snapshot written', { terms_id });
+
 
 
     // Check if customer already exists in Stripe
