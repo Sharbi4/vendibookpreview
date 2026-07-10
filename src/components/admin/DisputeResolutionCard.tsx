@@ -47,6 +47,7 @@ import {
 import { SaleTransaction } from '@/hooks/useSaleTransactions';
 import { CATEGORY_LABELS } from '@/types/listing';
 import { useZendeskComments } from '@/hooks/useZendeskComments';
+import AgreedTermsPanel from '@/components/transaction/AgreedTermsPanel';
 
 interface DisputeResolutionCardProps {
   transaction: SaleTransaction;
@@ -184,6 +185,18 @@ const DisputeResolutionCard = ({
               </div>
             </div>
           )}
+
+          {/* Agreed terms snapshot — resolved via sale.terms_id.
+              Both parties agreed to these numbers + cancellation copy
+              at checkout; the row is immutable. */}
+          <div className="mt-4">
+            <AgreedTermsPanel
+              saleId={transaction.id}
+              termsId={transaction.terms_id}
+              compact
+            />
+          </div>
+
 
           {/* Zendesk Support Comments */}
           {zendeskComments && zendeskComments.length > 0 && (
@@ -325,6 +338,22 @@ const DisputeResolutionCard = ({
                   </div>
 
                   <Separator />
+
+                  {/* Full agreed-terms snapshot for admin review.
+                      Resolved via sale.terms_id → transaction_terms. */}
+                  <div>
+                    <Label className="text-muted-foreground mb-2 block">
+                      Agreed Terms (immutable snapshot)
+                    </Label>
+                    <AgreedTermsPanel
+                      saleId={transaction.id}
+                      termsId={transaction.terms_id}
+                    />
+                  </div>
+
+                  <Separator />
+
+
 
                   {/* Dispute Reason */}
                   {transaction.message && (
