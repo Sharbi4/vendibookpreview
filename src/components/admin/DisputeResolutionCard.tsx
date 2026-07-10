@@ -186,6 +186,18 @@ const DisputeResolutionCard = ({
             </div>
           )}
 
+          {/* Agreed terms snapshot — resolved via sale.terms_id.
+              Both parties agreed to these numbers + cancellation copy
+              at checkout; the row is immutable. */}
+          <div className="mt-4">
+            <AgreedTermsPanel
+              saleId={transaction.id}
+              termsId={transaction.terms_id}
+              compact
+            />
+          </div>
+
+
           {/* Zendesk Support Comments */}
           {zendeskComments && zendeskComments.length > 0 && (
             <Collapsible open={commentsOpen} onOpenChange={setCommentsOpen} className="mt-4">
