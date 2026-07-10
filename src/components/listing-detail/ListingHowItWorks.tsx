@@ -855,41 +855,68 @@ const ListingHowItWorks = ({ listing, isOwner, className }: Props) => {
           </DialogHeader>
 
           {isDual && !pickedBranch && (
-            <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <button
-                type="button"
-                onClick={() => handleBranchPick('sale')}
-                className="text-left rounded-xl border border-border bg-card/70 hover:bg-muted/60 focus:outline-none focus:ring-2 focus:ring-primary p-4 transition"
+            <div
+              role="group"
+              aria-labelledby={`howitworks-branch-label-${listing.id}`}
+              aria-describedby={`howitworks-branch-hint-${listing.id}`}
+              className="mt-2"
+            >
+              <h4
+                id={`howitworks-branch-label-${listing.id}`}
+                className="text-sm font-semibold text-foreground mb-1"
               >
-                <div className="flex items-center gap-2 mb-1">
-                  <CreditCard className="h-5 w-5 text-primary" aria-hidden="true" />
-                  <span className="font-semibold text-foreground">Buy this listing</span>
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  Own it outright. See the purchase steps and protections.
-                </p>
-              </button>
-              <button
-                type="button"
-                onClick={() => handleBranchPick('rent')}
-                className="text-left rounded-xl border border-border bg-card/70 hover:bg-muted/60 focus:outline-none focus:ring-2 focus:ring-primary p-4 transition"
+                Choose your path
+              </h4>
+              <p
+                id={`howitworks-branch-hint-${listing.id}`}
+                className="text-xs text-muted-foreground mb-3"
               >
-                <div className="flex items-center gap-2 mb-1">
-                  <ClipboardCheck className="h-5 w-5 text-primary" aria-hidden="true" />
-                  <span className="font-semibold text-foreground">Rent this listing</span>
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  Book it for a period. See how availability, deposits, and returns work.
-                </p>
-              </button>
+                Use the Left and Right arrow keys to move between choices, then press Enter to select.
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <button
+                  ref={(el) => { branchBtnRefs.current.sale = el; }}
+                  type="button"
+                  onClick={() => handleBranchPick('sale')}
+                  onKeyDown={(e) => handleBranchKeyDown(e, 'sale')}
+                  aria-label="Buy this listing. Own it outright. See the purchase steps and protections."
+                  className="text-left rounded-xl border border-border bg-card/70 hover:bg-muted/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background p-4 transition"
+                >
+                  <div className="flex items-center gap-2 mb-1">
+                    <CreditCard className="h-5 w-5 text-primary" aria-hidden="true" />
+                    <span className="font-semibold text-foreground">Buy this listing</span>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Own it outright. See the purchase steps and protections.
+                  </p>
+                </button>
+                <button
+                  ref={(el) => { branchBtnRefs.current.rent = el; }}
+                  type="button"
+                  onClick={() => handleBranchPick('rent')}
+                  onKeyDown={(e) => handleBranchKeyDown(e, 'rent')}
+                  aria-label="Rent this listing. Book it for a period. See how availability, deposits, and returns work."
+                  className="text-left rounded-xl border border-border bg-card/70 hover:bg-muted/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background p-4 transition"
+                >
+                  <div className="flex items-center gap-2 mb-1">
+                    <ClipboardCheck className="h-5 w-5 text-primary" aria-hidden="true" />
+                    <span className="font-semibold text-foreground">Rent this listing</span>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Book it for a period. See how availability, deposits, and returns work.
+                  </p>
+                </button>
+              </div>
             </div>
           )}
 
           {isDual && pickedBranch && (
             <button
+              ref={backBtnRef}
               type="button"
-              onClick={() => setPickedBranch(null)}
-              className="mt-1 text-xs text-muted-foreground hover:text-foreground underline underline-offset-2 self-start"
+              onClick={handleBackToSelector}
+              aria-label="Back to the buy or rent selector"
+              className="mt-1 text-xs text-muted-foreground hover:text-foreground underline underline-offset-2 self-start rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background"
             >
               ← Back to buy or rent
             </button>
