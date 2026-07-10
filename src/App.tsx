@@ -36,6 +36,7 @@ const Index = lazy(() => import("./pages/Index"));
 const Auth = lazy(() => import("./pages/Auth"));
 const Activation = lazy(() => import("./pages/Activation"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
+const LegalDocumentPage = lazy(() => import("./pages/LegalDocumentPage"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const CreateListing = lazy(() => import("./pages/CreateListing"));
 const EditListing = lazy(() => import("./pages/EditListing"));
@@ -235,6 +236,7 @@ const AnimatedRoutes = () => {
           <Route path="/privacy" element={<PageTransition><Privacy /></PageTransition>} />
           <Route path="/terms" element={<PageTransition><Terms /></PageTransition>} />
           <Route path="/insurance" element={<PageTransition><Insurance /></PageTransition>} />
+          <Route path="/legal/:slug" element={<PageTransition><LegalDocumentPage /></PageTransition>} />
           <Route path="/how-it-works" element={<PageTransition><HowItWorks /></PageTransition>} />
           <Route path="/how-it-works-host" element={<PageTransition><HowItWorksHost /></PageTransition>} />
           <Route path="/how-it-works-seller" element={<PageTransition><HowItWorksSeller /></PageTransition>} />
