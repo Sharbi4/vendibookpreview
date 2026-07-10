@@ -580,6 +580,17 @@ const ListingHowItWorks = ({ listing, isOwner, className }: Props) => {
     ? rootConfig.branches![pickedBranch]
     : rootConfig;
   const [open, setOpen] = useState(false);
+  // Live region text announced to screen-reader users when the branch changes.
+  const [srAnnouncement, setSrAnnouncement] = useState('');
+  // Refs to the two branch selector buttons so we can implement roving
+  // arrow-key navigation and auto-focus the first option when the selector
+  // becomes visible.
+  const branchBtnRefs = useRef<Record<'sale' | 'rent', HTMLButtonElement | null>>({
+    sale: null,
+    rent: null,
+  });
+  const backBtnRef = useRef<HTMLButtonElement | null>(null);
+  const finalCtaRef = useRef<HTMLButtonElement | null>(null);
   // Ref on the outer inline section. The page mounts this component twice
   // (mobile-only wrapper and desktop-only wrapper); only the visible copy
   // should auto-open the modal, otherwise the deep-link path stacks two
@@ -651,6 +662,30 @@ const ListingHowItWorks = ({ listing, isOwner, className }: Props) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [listing.id]);
 
+  // When the modal opens on a dual-mode listing and no branch has been
+  // preselected via deep link, move focus to the first branch option so
+  // keyboard-only users land on the actionable choice, not the dialog
+  // close button.
+  useEffect(() => {
+    if (!open) return;
+    if (!isDual) return;
+    if (pickedBranch) return;
+    const t = window.setTimeout(() => {
+      branchBtnRefs.current.sale?.focus();
+    }, 60);
+    return () => window.clearTimeout(t);
+  }, [open, isDual, pickedBranch]);
+
+  // Clear the live-region announcement shortly after it fires so repeated
+  // selections re-trigger the announcement.
+  useEffect(() => {
+    if (!srAnnouncement) return;
+    const t = window.setTimeout(() => setSrAnnouncement(''), 1200);
+    return () => window.clearTimeout(t);
+  }, [srAnnouncement]);
+
+
+
 
 
 
@@ -694,7 +729,60 @@ const ListingHowItWorks = ({ listing, isOwner, className }: Props) => {
       target.variant,
       listing.id,
     );
+    setSrAnnouncement(
+      branch === 'sale'
+        ? 'Buy path selected. Showing purchase steps. Press the Continue button to jump to the buy widget, or use the Back button to change your choice.'
+        : 'Rent path selected. Showing rental steps. Press the Continue button to jump to the booking widget, or use the Back button to change your choice.',
+    );
     if (!open) setOpen(true);
+    // Move keyboard focus onto the Back button so users can immediately
+    // reverse the choice or Tab forward through the newly revealed steps.
+    window.setTimeout(() => {
+      backBtnRef.current?.focus();
+    }, 30);
+  };
+
+  // Arrow-key navigation between the two branch buttons (a11y: matches the
+  // WAI-ARIA "grouped buttons" pattern — Left/Up moves to the previous
+  // option, Right/Down to the next, Home/End jump to the ends).
+  const handleBranchKeyDown = (
+    event: React.KeyboardEvent<HTMLButtonElement>,
+    current: 'sale' | 'rent',
+  ) => {
+    const order: Array<'sale' | 'rent'> = ['sale', 'rent'];
+    const idx = order.indexOf(current);
+    let nextIdx: number | null = null;
+    switch (event.key) {
+      case 'ArrowRight':
+      case 'ArrowDown':
+        nextIdx = (idx + 1) % order.length;
+        break;
+      case 'ArrowLeft':
+      case 'ArrowUp':
+        nextIdx = (idx - 1 + order.length) % order.length;
+        break;
+      case 'Home':
+        nextIdx = 0;
+        break;
+      case 'End':
+        nextIdx = order.length - 1;
+        break;
+      default:
+        return;
+    }
+    event.preventDefault();
+    if (nextIdx !== null) {
+      branchBtnRefs.current[order[nextIdx]]?.focus();
+    }
+  };
+
+  const handleBackToSelector = () => {
+    setPickedBranch(null);
+    setSrAnnouncement('Returned to the buy or rent selector. Use the arrow keys to move between choices.');
+    // Focus the first branch button so keyboard users can reselect immediately.
+    window.setTimeout(() => {
+      branchBtnRefs.current.sale?.focus();
+    }, 30);
   };
 
   const handleFinalCta = () => {
@@ -791,41 +879,68 @@ const ListingHowItWorks = ({ listing, isOwner, className }: Props) => {
           </DialogHeader>
 
           {isDual && !pickedBranch && (
-            <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <button
-                type="button"
-                onClick={() => handleBranchPick('sale')}
-                className="text-left rounded-xl border border-border bg-card/70 hover:bg-muted/60 focus:outline-none focus:ring-2 focus:ring-primary p-4 transition"
+            <div
+              role="group"
+              aria-labelledby={`howitworks-branch-label-${listing.id}`}
+              aria-describedby={`howitworks-branch-hint-${listing.id}`}
+              className="mt-2"
+            >
+              <h4
+                id={`howitworks-branch-label-${listing.id}`}
+                className="text-sm font-semibold text-foreground mb-1"
               >
-                <div className="flex items-center gap-2 mb-1">
-                  <CreditCard className="h-5 w-5 text-primary" aria-hidden="true" />
-                  <span className="font-semibold text-foreground">Buy this listing</span>
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  Own it outright. See the purchase steps and protections.
-                </p>
-              </button>
-              <button
-                type="button"
-                onClick={() => handleBranchPick('rent')}
-                className="text-left rounded-xl border border-border bg-card/70 hover:bg-muted/60 focus:outline-none focus:ring-2 focus:ring-primary p-4 transition"
+                Choose your path
+              </h4>
+              <p
+                id={`howitworks-branch-hint-${listing.id}`}
+                className="text-xs text-muted-foreground mb-3"
               >
-                <div className="flex items-center gap-2 mb-1">
-                  <ClipboardCheck className="h-5 w-5 text-primary" aria-hidden="true" />
-                  <span className="font-semibold text-foreground">Rent this listing</span>
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  Book it for a period. See how availability, deposits, and returns work.
-                </p>
-              </button>
+                Use the Left and Right arrow keys to move between choices, then press Enter to select.
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <button
+                  ref={(el) => { branchBtnRefs.current.sale = el; }}
+                  type="button"
+                  onClick={() => handleBranchPick('sale')}
+                  onKeyDown={(e) => handleBranchKeyDown(e, 'sale')}
+                  aria-label="Buy this listing. Own it outright. See the purchase steps and protections."
+                  className="text-left rounded-xl border border-border bg-card/70 hover:bg-muted/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background p-4 transition"
+                >
+                  <div className="flex items-center gap-2 mb-1">
+                    <CreditCard className="h-5 w-5 text-primary" aria-hidden="true" />
+                    <span className="font-semibold text-foreground">Buy this listing</span>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Own it outright. See the purchase steps and protections.
+                  </p>
+                </button>
+                <button
+                  ref={(el) => { branchBtnRefs.current.rent = el; }}
+                  type="button"
+                  onClick={() => handleBranchPick('rent')}
+                  onKeyDown={(e) => handleBranchKeyDown(e, 'rent')}
+                  aria-label="Rent this listing. Book it for a period. See how availability, deposits, and returns work."
+                  className="text-left rounded-xl border border-border bg-card/70 hover:bg-muted/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background p-4 transition"
+                >
+                  <div className="flex items-center gap-2 mb-1">
+                    <ClipboardCheck className="h-5 w-5 text-primary" aria-hidden="true" />
+                    <span className="font-semibold text-foreground">Rent this listing</span>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Book it for a period. See how availability, deposits, and returns work.
+                  </p>
+                </button>
+              </div>
             </div>
           )}
 
           {isDual && pickedBranch && (
             <button
+              ref={backBtnRef}
               type="button"
-              onClick={() => setPickedBranch(null)}
-              className="mt-1 text-xs text-muted-foreground hover:text-foreground underline underline-offset-2 self-start"
+              onClick={handleBackToSelector}
+              aria-label="Back to the buy or rent selector"
+              className="mt-1 text-xs text-muted-foreground hover:text-foreground underline underline-offset-2 self-start rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background"
             >
               ← Back to buy or rent
             </button>
@@ -893,11 +1008,30 @@ const ListingHowItWorks = ({ listing, isOwner, className }: Props) => {
                 Report an issue
               </Link>
             </div>
-            <Button type="button" onClick={handleFinalCta} className="rounded-xl">
+            <Button
+              ref={finalCtaRef}
+              type="button"
+              onClick={handleFinalCta}
+              className="rounded-xl"
+              aria-label={
+                isDual && pickedBranch === 'sale'
+                  ? `${config.finalCtaLabel} to the buy widget`
+                  : isDual && pickedBranch === 'rent'
+                    ? `${config.finalCtaLabel} to the booking widget`
+                    : config.finalCtaLabel
+              }
+            >
               {config.finalCtaLabel}
               <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
             </Button>
           </DialogFooter>
+
+          {/* Polite live region: announces branch changes to screen readers
+              without stealing focus. Kept inside the dialog so Radix mounts
+              and unmounts it in step with the modal lifecycle. */}
+          <div role="status" aria-live="polite" className="sr-only">
+            {srAnnouncement}
+          </div>
         </DialogContent>
       </Dialog>
     </>
