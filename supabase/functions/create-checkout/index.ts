@@ -37,6 +37,11 @@ interface CheckoutRequest {
   freight_cost?: number; // Estimated freight cost in dollars
   // Referral attribution (manual code entered at checkout; cookie attribution is on the user's profile)
   referral_code?: string;
+  // Optional draft transaction_terms id from create-transaction-terms-draft.
+  // When present we reuse it (flip status → active) instead of inserting a
+  // fresh terms row, preserving the acknowledgement stamp written by
+  // acknowledge-terms in the FinalReviewSheet flow.
+  terms_id?: string | null;
 }
 
 serve(async (req) => {
