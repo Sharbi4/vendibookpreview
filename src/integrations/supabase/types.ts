@@ -4365,6 +4365,98 @@ export type Database = {
         }
         Relationships: []
       }
+      transaction_terms: {
+        Row: {
+          booking_id: string | null
+          buyer_id: string | null
+          commission_cents: number
+          created_at: string
+          deposit_cents: number
+          host_id: string
+          id: string
+          listing_id: string
+          payment_method: string
+          previous_terms_id: string | null
+          renter_fee_cents: number
+          sale_transaction_id: string | null
+          snapshot: Json
+          stripe_session_id: string | null
+          subtotal_cents: number
+          terms_version: string
+          total_cents: number
+          transaction_mode: string
+        }
+        Insert: {
+          booking_id?: string | null
+          buyer_id?: string | null
+          commission_cents?: number
+          created_at?: string
+          deposit_cents?: number
+          host_id: string
+          id?: string
+          listing_id: string
+          payment_method: string
+          previous_terms_id?: string | null
+          renter_fee_cents?: number
+          sale_transaction_id?: string | null
+          snapshot: Json
+          stripe_session_id?: string | null
+          subtotal_cents: number
+          terms_version?: string
+          total_cents: number
+          transaction_mode: string
+        }
+        Update: {
+          booking_id?: string | null
+          buyer_id?: string | null
+          commission_cents?: number
+          created_at?: string
+          deposit_cents?: number
+          host_id?: string
+          id?: string
+          listing_id?: string
+          payment_method?: string
+          previous_terms_id?: string | null
+          renter_fee_cents?: number
+          sale_transaction_id?: string | null
+          snapshot?: Json
+          stripe_session_id?: string | null
+          subtotal_cents?: number
+          terms_version?: string
+          total_cents?: number
+          transaction_mode?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transaction_terms_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "booking_requests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transaction_terms_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transaction_terms_previous_terms_id_fkey"
+            columns: ["previous_terms_id"]
+            isOneToOne: false
+            referencedRelation: "transaction_terms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transaction_terms_sale_transaction_id_fkey"
+            columns: ["sale_transaction_id"]
+            isOneToOne: false
+            referencedRelation: "sale_transactions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_journey_state: {
         Row: {
           bookings_as_guest: number
