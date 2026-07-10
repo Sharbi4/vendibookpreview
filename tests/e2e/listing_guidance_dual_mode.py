@@ -144,9 +144,9 @@ async def run_case(pw, case: dict, viewport: dict) -> None:
     # Each branch runs in its own browser context because the injected `mode`
     # value must match the branch under test so the correct transaction widget
     # actually renders on the page.
-    for branch, expected_button, force_mode in [
-        ("sale", re.compile(r"buy now", re.I), "sale"),
-        ("rent", case["rent_button"], "rent"),
+    for branch, expected_txn_selector, force_mode in [
+        ("sale", BUY_TXN, "sale"),
+        ("rent", case["rent_txn"], "rent"),
     ]:
         browser = await pw.chromium.launch(headless=True)
         context = await browser.new_context(
@@ -162,39 +162,40 @@ async def run_case(pw, case: dict, viewport: dict) -> None:
             await page.goto(url, wait_until="domcontentloaded")
             await page.wait_for_timeout(1500)
 
-            # 1. Inline dual-mode heading should be present & visible.
-            heading = page.get_by_role("heading", name="How This Listing Works").locator("visible=true").first
-            await heading.wait_for(state="visible", timeout=15000)
-            await page.screenshot(path=str(SHOTS / f"dual_{label}_{branch}_01_heading.png"))
+            # 1. Guidance section is present + visible (testid; copy-agnostic).
+            section = page.locator(visible(TID["section"])).first
+            await section.wait_for(state="visible", timeout=15000)
+            await page.screenshot(path=str(SHOTS / f"dual_{label}_{branch}_01_section.png"))
 
-            # 2. Open the modal via "See Your Options".
-            open_cta = page.get_by_role("button", name=re.compile(r"see your options", re.I)).locator("visible=true").first
-            await open_cta.click()
-            dialog = page.get_by_role("dialog").locator("visible=true").first
+            # 2. Open the modal via the inline testid CTA.
+            await section.locator(TID["open_cta"]).first.click()
+            dialog = page.locator(TID["dialog"]).first
             await dialog.wait_for(state="visible", timeout=8000)
+            # Branch selector should be visible for a dual listing.
+            await dialog.locator(TID["branch_selector"]).first.wait_for(
+                state="visible", timeout=5000
+            )
             await page.screenshot(path=str(SHOTS / f"dual_{label}_{branch}_02_selector.png"))
 
-            # 3. Pick the branch (buy or rent).
-            pick_label = "Buy this listing" if branch == "sale" else "Rent this listing"
-            branch_button = dialog.get_by_role("button", name=re.compile(pick_label, re.I))
-            await branch_button.click()
+            # 3. Pick the branch by testid.
+            branch_tid = TID["branch_sale"] if branch == "sale" else TID["branch_rent"]
+            await dialog.locator(branch_tid).first.click()
             await page.wait_for_timeout(400)
             await page.screenshot(path=str(SHOTS / f"dual_{label}_{branch}_03_branch.png"))
 
-            # 4. Click the branch's final CTA.
-            final_cta_names = re.compile(
-                r"(continue to purchase|book available dates|request to book|contact the seller|continue)",
-                re.I,
-            )
-            final_cta = dialog.get_by_role("button", name=final_cta_names).last
+            # 4. Click the branch's final CTA and confirm data-branch matches.
+            final_cta = dialog.locator(
+                f'{TID["final_cta"]}[data-branch="{branch}"]'
+            ).first
+            await final_cta.wait_for(state="visible", timeout=5000)
             await final_cta.click()
             await page.wait_for_timeout(1000)
 
-            # 5. Assert the correct transaction button appears in a visible widget.
-            txn = page.get_by_role("button", name=expected_button).locator("visible=true").first
+            # 5. Assert the correct transaction control appears.
+            txn = page.locator(expected_txn_selector).first
             await txn.wait_for(state="visible", timeout=10000)
             await page.screenshot(path=str(SHOTS / f"dual_{label}_{branch}_04_after_cta.png"))
-            print(f"  ✓ {branch}: transaction button /{expected_button.pattern}/ visible")
+            print(f"  ✓ {branch}: txn control visible via testid")
 
             await page.close()
         finally:
