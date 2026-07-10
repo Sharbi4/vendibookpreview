@@ -580,13 +580,25 @@ const ListingHowItWorks = ({ listing, isOwner, className }: Props) => {
     ? rootConfig.branches![pickedBranch]
     : rootConfig;
   const [open, setOpen] = useState(false);
+  // Ref on the outer inline section. The page mounts this component twice
+  // (mobile-only wrapper and desktop-only wrapper); only the visible copy
+  // should auto-open the modal, otherwise the deep-link path stacks two
+  // dialogs.
+  const rootRef = useRef<HTMLElement | null>(null);
+  const isVisibleInstance = () =>
+    typeof window !== 'undefined' &&
+    rootRef.current !== null &&
+    rootRef.current.offsetParent !== null;
 
   // Fire an impression exactly once per listing view, and auto-open the
   // walkthrough on the visitor's FIRST listing detail view (global, device-scoped).
   // A deep link (?walkthrough=…) always wins and overrides the first-visit gate.
   useEffect(() => {
     if (isOwner) return;
+    // Only the visible instance fires impressions + auto-opens.
+    if (!isVisibleInstance()) return;
     trackWalkthrough('guidance_prompt_viewed', rootConfig.variant, listing.id);
+
 
     const deepLink = parseWalkthroughDeepLink();
     if (deepLink.open) {
