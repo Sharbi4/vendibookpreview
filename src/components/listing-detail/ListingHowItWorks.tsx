@@ -226,6 +226,68 @@ function fulfillmentStepForSale(f: FulfillmentContext): WalkthroughStep {
 
 // ---------- Variant builders ----------
 
+function buildSaleAndRent(
+  fulfillment: FulfillmentContext,
+  sale: WalkthroughConfig,
+  rent: WalkthroughConfig,
+): WalkthroughConfig {
+  // Combined inline preview — first step from each branch, plus a shared close.
+  const inline: WalkthroughStep[] = [
+    { icon: HelpCircle, title: 'Pick buy or rent', description: '' },
+    { icon: CreditCard, title: 'Buy: pay & coordinate handoff', description: '' },
+    { icon: ClipboardCheck, title: 'Rent: book dates & confirm', description: '' },
+    { icon: CheckCircle2, title: 'Complete the transaction on Vendibook', description: '' },
+  ];
+  // Full steps are only shown if the user opens the wrapper modal directly
+  // without picking a branch — they get an overview of both paths.
+  const full: WalkthroughStep[] = [
+    {
+      icon: HelpCircle,
+      title: 'Choose how you want to use this listing',
+      description:
+        'This host offers this listing for BOTH purchase and rental. Pick the path that fits your plan — you can always come back and pick the other later.',
+    },
+    {
+      icon: CreditCard,
+      title: 'Buying: own it outright',
+      description: sale.subhead,
+    },
+    {
+      icon: ClipboardCheck,
+      title: 'Renting: book it for a period',
+      description: rent.subhead,
+    },
+    {
+      icon: CheckCircle2,
+      title: 'Vendibook protects the transaction either way',
+      description:
+        'Payments, messaging, disputes, and reviews all run through Vendibook whether you buy or rent.',
+    },
+  ];
+  return {
+    variant: 'sale_and_rent',
+    fulfillment,
+    heading: 'How This Listing Works',
+    subhead:
+      'This listing is available to buy OR rent. Pick the option that fits your plan to see the exact steps.',
+    cta: 'See Your Options',
+    modalTitle: 'Buy or rent this listing',
+    inlineSteps: inline,
+    fullSteps: full,
+    trustPoints: [
+      'Buy or rent — the same Vendibook protections apply',
+      'Messages, payments, and disputes stay on-platform',
+      'Owner and title info is verified for purchases',
+      'Rentals include damage and cancellation protection',
+    ],
+    finalCtaLabel: 'Continue',
+    finalCtaTargetId: 'booking-widget',
+    branches: { sale, rent },
+  };
+}
+
+
+
 function buildSaleCard(fulfillment: FulfillmentContext): WalkthroughConfig {
   const inline: WalkthroughStep[] = [
     { icon: MessageCircle, title: 'Review the listing', description: '' },
