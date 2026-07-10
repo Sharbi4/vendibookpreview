@@ -718,6 +718,20 @@ export const PublishWizard: React.FC = () => {
   }, [priceDaily, priceWeekly, priceMonthly]);
 
   const estimatedFreightCost = 500; // Placeholder
+
+  const buildStructuredAddress = useCallback(() => {
+    const stateZip = [locState.trim(), locZipCode.trim()].filter(Boolean).join(' ');
+    return [streetAddress.trim(), aptSuite.trim(), locCity.trim(), stateZip]
+      .filter(Boolean)
+      .join(', ');
+  }, [streetAddress, aptSuite, locCity, locState, locZipCode]);
+
+  const hasCompleteStructuredAddress = !!(
+    streetAddress.trim() &&
+    locCity.trim() &&
+    locState.trim() &&
+    locZipCode.trim()
+  );
   
   const salePayoutEstimate = useMemo(() => {
     const salePriceNum = parseFloat(priceSale) || 0;
@@ -1184,8 +1198,7 @@ export const PublishWizard: React.FC = () => {
         const effectiveFulfillmentType = (categoryIsStatic || isStaticLocation) ? 'on_site' : (fulfillmentType || 'pickup');
 
         // Build structured address string
-        const addressParts = [streetAddress, locCity, `${locState} ${locZipCode}`].filter(Boolean);
-        const fullAddress = addressParts.join(', ');
+        const fullAddress = buildStructuredAddress();
 
         updateData = {
           fulfillment_type: effectiveFulfillmentType,
@@ -1363,6 +1376,8 @@ export const PublishWizard: React.FC = () => {
       const effectiveFulfillmentType = (categoryIsStatic || isStaticLocation)
         ? 'on_site'
         : (fulfillmentType || 'pickup');
+      const fullAddress = buildStructuredAddress() || address;
+      const pickupText = locPhoneNumber || pickupLocationText;
 
       const baseUpdateData: any = {
         // Media
@@ -1383,8 +1398,8 @@ export const PublishWizard: React.FC = () => {
 
         // Location
         fulfillment_type: effectiveFulfillmentType,
-        pickup_location_text: pickupLocationText || null,
-        address: address || null,
+        pickup_location_text: pickupText || null,
+        address: fullAddress || null,
         delivery_fee: parseFloat(deliveryFee) || null,
         delivery_radius_miles: parseFloat(deliveryRadiusMiles) || null,
         pickup_instructions: pickupInstructions || null,
@@ -1572,7 +1587,7 @@ export const PublishWizard: React.FC = () => {
             coverImageUrl: imageUrlsToSave?.[0],
             listingPrice: formattedPrice,
             category: listing.category,
-            address: address,
+            address: fullAddress,
             listingType: emailListingType,
           },
         }).catch(err => console.error('Listing live email error:', err));
@@ -1587,7 +1602,7 @@ export const PublishWizard: React.FC = () => {
               mode: listing.mode,
               price_daily: priceDaily ? parseFloat(priceDaily.replace(/[^0-9.]/g, '')) : null,
               price_sale: priceSale ? parseFloat(priceSale.replace(/[^0-9.]/g, '')) : null,
-              address: address,
+              address: fullAddress,
               host_id: user?.id,
               host_name: user?.user_metadata?.full_name || user?.email?.split('@')[0],
               host_email: user?.email}}}).catch(err => console.error('Admin notification error:', err));
@@ -1656,8 +1671,8 @@ export const PublishWizard: React.FC = () => {
     hasDescription,
     hasLocation: listing ? (
       isStaticLocationFn(listing.category) || isStaticLocation
-        ? !!(address && accessInstructions)
-        : !!(fulfillmentType && pickupLocationText)
+        ? !!(hasCompleteStructuredAddress && accessInstructions)
+        : !!(hasCompleteStructuredAddress && fulfillmentType)
     ) : false,
     hasStripe: isOnboardingComplete,
     isRental: listing?.mode === 'rent',
@@ -4043,7 +4058,7 @@ export const PublishWizard: React.FC = () => {
             priceDaily,
             priceWeekly,
             priceSale,
-            address,
+        address: buildStructuredAddress() || address,
             pickupLocationText,
             highlights,
             amenities,
