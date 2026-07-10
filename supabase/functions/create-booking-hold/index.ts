@@ -22,6 +22,10 @@ interface HoldRequest {
   amount: number; // Base rental price in dollars
   delivery_fee?: number;
   deposit_amount?: number;
+  // Optional draft transaction_terms id from create-transaction-terms-draft.
+  // When present we flip its status to 'active' and set booking_id so the
+  // acknowledged_at stamp written by acknowledge-terms is preserved.
+  terms_id?: string | null;
 }
 
 serve(async (req) => {
