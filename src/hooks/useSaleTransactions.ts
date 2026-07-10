@@ -35,6 +35,9 @@ export interface SaleTransaction {
   estimated_delivery_date: string | null;
   delivered_at: string | null;
   shipping_notes: string | null;
+  // Link to the immutable transaction_terms snapshot the buyer/seller
+  // agreed to at checkout. Used by dispute + refund flows.
+  terms_id: string | null;
   // Joined fields
   listing?: {
     id: string;
