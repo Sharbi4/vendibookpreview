@@ -56,25 +56,27 @@ CASES = [
         # click assertion below will (correctly) fail.
         listing_id="d93c53cb-f440-4672-ba6c-912c8266cda8",
         kind="sale",
-        cta=re.compile(r"buy now", re.I),
+        cta_selector=any_buy_now(),
     ),
     dict(
         variant="sale_pay_in_person",
         listing_id="cc3c8214-e327-4670-99ed-e1425494cc8c",
         kind="sale",
-        cta=re.compile(r"buy now", re.I),
+        cta_selector=any_buy_now(),
     ),
     dict(
         variant="rent_instant",
         listing_id="b88edd57-967c-4036-a5bb-a89d2e18ee88",
         kind="rent",
-        cta=re.compile(r"^\s*book now", re.I),
+        cta_selector=f'{visible(TID["rental_cta"])}[data-instant-book="true"],'
+                     f'{visible(TID["rent_cta_widget"])}[data-instant-book="true"]',
     ),
     dict(
         variant="rent_request",
         listing_id="d94836ba-10fa-44e0-8b5b-046b0bf7d01b",
         kind="rent",
-        cta=re.compile(r"request to book", re.I),
+        cta_selector=f'{visible(TID["rental_cta"])}[data-instant-book="false"],'
+                     f'{visible(TID["rent_cta_widget"])}[data-instant-book="false"]',
     ),
 ]
 
