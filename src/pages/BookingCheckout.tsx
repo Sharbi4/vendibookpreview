@@ -551,6 +551,7 @@ const BookingCheckout = () => {
       });
     } finally {
       setIsSubmitting(false);
+      termsGate.reset();
     }
   };
 
