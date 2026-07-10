@@ -930,6 +930,7 @@ const ListingHowItWorks = ({ listing, isOwner, className }: Props) => {
                   onClick={() => handleBranchPick('rent')}
                   onKeyDown={(e) => handleBranchKeyDown(e, 'rent')}
                   aria-label="Rent this listing. Book it for a period. See how availability, deposits, and returns work."
+                  data-testid="howitworks-branch-rent"
                   className="text-left rounded-xl border border-border bg-card/70 hover:bg-muted/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background p-4 transition"
                 >
                   <div className="flex items-center gap-2 mb-1">
