@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, Loader2, CheckCircle2, Stamp } from 'lucide-react';
+import { ArrowLeft, Loader2, CheckCircle2, Stamp, AlertCircle as AlertCircleIcon } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { ShareKit, ShareKitListing } from '@/components/listing-wizard/ShareKit';
@@ -8,6 +8,7 @@ import { ListingCategory, ListingMode } from '@/types/listing';
 import { useToast } from '@/hooks/use-toast';
 import BoostListingPrompt from '@/components/dashboard/BoostListingPrompt';
 import PublishStatusSummary from '@/components/listing-wizard/PublishStatusSummary';
+import { reportError } from '@/lib/errorReporter';
 
 const ListingPublished: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -143,6 +144,8 @@ const ListingPublished: React.FC = () => {
   }, [listingId, user, authLoading, navigate, featuredPaid]);
 
   // Poll for featured activation after returning from Stripe (webhook may lag)
+  const [featuredWebhookStuck, setFeaturedWebhookStuck] = useState(false);
+  const [featuredStuckRef, setFeaturedStuckRef] = useState<string | null>(null);
   useEffect(() => {
     if (!featuredPaid || featuredActive || !listingId || !user?.id) return;
     let cancelled = false;
@@ -169,6 +172,22 @@ const ListingPublished: React.FC = () => {
       }
       if (attempts >= maxAttempts) {
         setFeaturedSyncing(false);
+        // Webhook didn't update within 30s — surface actionable error state.
+        const { referenceCode } = await reportError({
+          action: 'boost.webhook.timeout',
+          endpoint: '/functions/v1/stripe-webhook',
+          errorType: 'FeaturedActivationTimeout',
+          errorMessage: 'featured_enabled did not become true within 30s after Stripe redirect',
+          listingId,
+          metadata: { pollAttempts: attempts },
+        });
+        setFeaturedStuckRef(referenceCode);
+        setFeaturedWebhookStuck(true);
+        toast({
+          title: "Payment received, activation delayed",
+          description: `Stripe confirmed your payment but your boost hasn't activated yet. Our team was notified — no need to pay again. Reference: ${referenceCode}`,
+          variant: 'destructive',
+        });
         return;
       }
       setTimeout(tick, 2000);
@@ -249,14 +268,32 @@ const ListingPublished: React.FC = () => {
         </div>
       )}
 
-      {/* Featured Boost Success / Syncing Banner */}
+      {/* Featured Boost Success / Syncing / Stuck Banner */}
       {featuredPaid && (
-        <div className={`border-b ${featuredActive ? 'bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800' : 'bg-muted/40 border-border'}`}>
+        <div
+          className={`border-b ${
+            featuredActive
+              ? 'bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800'
+              : featuredWebhookStuck
+                ? 'bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-800'
+                : 'bg-muted/40 border-border'
+          }`}
+        >
           <div className="container max-w-2xl mx-auto px-4 py-4">
-            <div className="flex items-center gap-3">
-              <div className={`p-2 rounded-full ${featuredActive ? 'bg-amber-100 dark:bg-amber-900' : 'bg-muted'}`}>
+            <div className="flex items-start gap-3">
+              <div
+                className={`p-2 rounded-full ${
+                  featuredActive
+                    ? 'bg-amber-100 dark:bg-amber-900'
+                    : featuredWebhookStuck
+                      ? 'bg-red-100 dark:bg-red-900'
+                      : 'bg-muted'
+                }`}
+              >
                 {featuredSyncing ? (
                   <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+                ) : featuredWebhookStuck ? (
+                  <AlertCircleIcon className="w-5 h-5 text-red-600 dark:text-red-400" />
                 ) : (
                   <CheckCircle2 className="w-5 h-5 text-amber-600 dark:text-amber-400" />
                 )}
@@ -265,15 +302,42 @@ const ListingPublished: React.FC = () => {
                 <p className="font-medium">
                   {featuredActive
                     ? 'Featured Boost Activated ⭐'
-                    : featuredSyncing
-                      ? 'Finalizing your Featured Boost…'
-                      : 'Payment received — boost will activate shortly'}
+                    : featuredWebhookStuck
+                      ? 'Payment received — activation delayed'
+                      : featuredSyncing
+                        ? 'Finalizing your Featured Boost…'
+                        : 'Payment received — boost will activate shortly'}
                 </p>
                 <p className="text-sm text-muted-foreground">
                   {featuredActive
                     ? `Your listing is now published and featured at the top of search for 30 days.`
-                    : 'Your payment was successful. Your listing is published and the boost will appear within a minute.'}
+                    : featuredWebhookStuck
+                      ? `Stripe confirmed your payment, but your boost hasn't activated yet. You haven't been charged twice — our team was notified and will finish activation.`
+                      : 'Your payment was successful. Your listing is published and the boost will appear within a minute.'}
                 </p>
+                {featuredWebhookStuck && (
+                  <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
+                    {featuredStuckRef && (
+                      <span className="font-mono px-2 py-0.5 rounded bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200">
+                        Reference: {featuredStuckRef}
+                      </span>
+                    )}
+                    <a
+                      href="tel:+17257559598"
+                      className="underline text-red-700 dark:text-red-300 hover:no-underline"
+                    >
+                      Call (725) 755-9598
+                    </a>
+                    <a
+                      href={`mailto:support@vendibook.com?subject=Featured%20boost%20not%20active%20${
+                        featuredStuckRef ?? ''
+                      }&body=Listing%20ID%3A%20${listingId}`}
+                      className="underline text-red-700 dark:text-red-300 hover:no-underline"
+                    >
+                      Email support
+                    </a>
+                  </div>
+                )}
               </div>
               {isPublished && (
                 <span className="text-xs px-2 py-1 rounded-full bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-300 whitespace-nowrap">

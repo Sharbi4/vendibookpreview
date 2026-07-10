@@ -10,6 +10,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { reportError } from '@/lib/errorReporter';
 
 interface FeaturedListingModalProps {
   open: boolean;
@@ -57,16 +58,61 @@ export const FeaturedListingModal = ({
         body: { listing_id: listingId },
       });
 
-      if (error) throw error;
-      if (data?.url) {
-        window.open(data.url, '_blank');
-        onOpenChange(false);
+      if (error) {
+        const { referenceCode } = await reportError({
+          action: 'boost.checkout.init',
+          endpoint: '/functions/v1/create-featured-checkout',
+          errorType: 'StripeCheckoutInitFailed',
+          errorMessage: (error as any)?.message ?? String(error),
+          status: (error as any)?.status,
+          listingId,
+        });
+        toast({
+          title: "Couldn't start Stripe Checkout",
+          description: `We couldn't reach payments right now. Please try again in a moment, or contact support at (725) 755-9598. Reference: ${referenceCode}`,
+          variant: 'destructive',
+        });
+        return;
       }
-    } catch (error) {
-      console.error('Featured checkout error:', error);
+      if (!data?.url) {
+        const { referenceCode } = await reportError({
+          action: 'boost.checkout.init',
+          endpoint: '/functions/v1/create-featured-checkout',
+          errorType: 'StripeCheckoutMissingUrl',
+          errorMessage: 'No checkout URL returned',
+          listingId,
+        });
+        toast({
+          title: 'Checkout unavailable',
+          description: `Stripe didn't return a checkout link. Please try again. Reference: ${referenceCode}`,
+          variant: 'destructive',
+        });
+        return;
+      }
+      const popup = window.open(data.url, '_blank');
+      if (!popup || popup.closed) {
+        toast({
+          title: 'Popup blocked',
+          description:
+            'Your browser blocked the Stripe Checkout tab. Allow popups for Vendibook, then click "Add Now" again.',
+          variant: 'destructive',
+        });
+        return;
+      }
+      onOpenChange(false);
+    } catch (err) {
+      const { referenceCode } = await reportError({
+        action: 'boost.checkout.init',
+        endpoint: '/functions/v1/create-featured-checkout',
+        errorType: 'UnhandledCheckoutError',
+        errorMessage: err instanceof Error ? err.message : String(err),
+        stack: err instanceof Error ? err.stack : undefined,
+        listingId,
+      });
+      console.error('Featured checkout error:', err);
       toast({
-        title: 'Error',
-        description: 'Failed to start checkout. Please try again.',
+        title: 'Something went wrong',
+        description: `We couldn't start your Featured Boost checkout. Please try again or contact support. Reference: ${referenceCode}`,
         variant: 'destructive',
       });
     } finally {
