@@ -141,8 +141,6 @@ serve(async (req) => {
       logStep("Found existing Stripe customer", { customerId });
     }
 
-    const origin = req.headers.get("origin") || req.headers.get("referer")?.replace(/\/$/, '').split('/').slice(0, 3).join('/') || "https://vendibook.com";
-    logStep("Origin determined", { origin });
 
     // Create checkout session for the featured listing fee.
     // Idempotency key scopes to (user, listing, hour) — bursty double-clicks return the SAME session
