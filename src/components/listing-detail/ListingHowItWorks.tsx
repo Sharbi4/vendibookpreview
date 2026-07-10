@@ -1024,6 +1024,8 @@ const ListingHowItWorks = ({ listing, isOwner, className }: Props) => {
               type="button"
               onClick={handleFinalCta}
               className="rounded-xl"
+              data-testid="howitworks-final-cta"
+              data-branch={pickedBranch ?? 'none'}
               aria-label={
                 isDual && pickedBranch === 'sale'
                   ? `${config.finalCtaLabel} to the buy widget`
