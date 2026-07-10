@@ -90,6 +90,7 @@ serve(async (req) => {
       freight_payer = 'buyer',
       freight_cost: rawFreightCost,
       referral_code: rawReferralCode,
+      terms_id: draftTermsId,
     } = body;
     const referral_code = rawReferralCode ? String(rawReferralCode).trim().toUpperCase().slice(0, 32) : '';
     
