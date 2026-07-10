@@ -144,6 +144,13 @@ function fulfillmentStepForRental(f: FulfillmentContext): WalkthroughStep {
         description:
           'Use Messages to confirm the delivery window and drop-off spot. The host will meet you as agreed.',
       };
+    case 'pickup_or_delivery':
+      return {
+        icon: Truck,
+        title: 'Choose pickup or delivery',
+        description:
+          'This host offers both pickup and delivery. Use Messages to pick one, then confirm the time and place. The full pickup address unlocks once the booking is confirmed.',
+      };
     case 'pickup':
     default:
       return {
