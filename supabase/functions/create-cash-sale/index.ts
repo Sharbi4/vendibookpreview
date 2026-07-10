@@ -1,8 +1,18 @@
 // create-cash-sale — writes a Pay-in-Person sale with an immutable
 // transaction_terms snapshot in one atomic path, and enqueues the seller
-// notification. This is the ONLY server-side entry point for cash sales;
-// SaleCheckout.tsx must call this instead of inserting sale_transactions
-// directly so the audit trail is guaranteed.
+// notification.
+//
+// Guarantees enforced here (and re-checked by the DB trigger
+// `trg_enforce_sale_terms_link`):
+//   1. `terms_id` is REQUIRED. Callers must pre-create a snapshot via
+//      `create-transaction-terms-draft` and acknowledge it in
+//      `FinalReviewSheet` before the buyer clicks "Buy now".
+//   2. The referenced terms row must belong to this buyer + listing + host.
+//   3. Retries or double-clicks that pass the same `idempotency_key` reuse
+//      the existing sale + terms rows instead of duplicating them.
+//
+// Legacy row 7c95ac1c-5163-45cd-a48f-b6ec50747cda predates this contract
+// and is grandfathered at the DB level via `legacy_terms_unavailable`.
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.4';
 
 const corsHeaders = {
@@ -22,11 +32,17 @@ interface Body {
   buyer_name: string;
   buyer_email: string;
   buyer_phone?: string | null;
-  // Optional: id of a pre-created draft transaction_terms row
-  // (from create-transaction-terms-draft, acknowledged in FinalReviewSheet).
-  // When present we reuse it instead of inserting a fresh terms row so the
-  // acknowledged_at/ip/ua stamps written by acknowledge-terms are preserved.
-  terms_id?: string | null;
+  // REQUIRED: id of a pre-created transaction_terms row (draft or active).
+  terms_id: string;
+  // Optional dedupe key so retries/double-clicks reuse the same row pair.
+  idempotency_key?: string | null;
+}
+
+function json(body: unknown, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+  });
 }
 
 Deno.serve(async (req) => {
@@ -34,12 +50,7 @@ Deno.serve(async (req) => {
 
   try {
     const authHeader = req.headers.get('Authorization');
-    if (!authHeader) {
-      return new Response(JSON.stringify({ error: 'unauthorized' }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
+    if (!authHeader) return json({ error: 'unauthorized' }, 401);
 
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
@@ -47,24 +58,34 @@ Deno.serve(async (req) => {
       { global: { headers: { Authorization: authHeader } } },
     );
 
-    // Identify caller from the JWT
     const {
       data: { user },
       error: userErr,
     } = await supabase.auth.getUser();
-    if (userErr || !user) {
-      return new Response(JSON.stringify({ error: 'unauthorized' }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
+    if (userErr || !user) return json({ error: 'unauthorized' }, 401);
 
     const body = (await req.json()) as Body;
     if (!body?.listing_id || !body?.amount || !body?.buyer_email) {
-      return new Response(JSON.stringify({ error: 'invalid_body' }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return json({ error: 'invalid_body' }, 400);
+    }
+    if (!body?.terms_id) {
+      // Hard requirement — never insert a cash sale without an acknowledged
+      // terms snapshot. The DB trigger enforces the same rule as a backstop.
+      return json({ error: 'terms_id_required' }, 400);
+    }
+
+    // Idempotency short-circuit — if the same (user, action, key) has already
+    // succeeded, return the cached response. Prevents duplicate sales from
+    // retries or double-clicks.
+    if (body.idempotency_key) {
+      const { data: cached } = await supabase
+        .from('edge_action_idempotency')
+        .select('response')
+        .eq('action', 'create-cash-sale')
+        .eq('idempotency_key', body.idempotency_key)
+        .eq('user_id', user.id)
+        .maybeSingle();
+      if (cached?.response) return json(cached.response);
     }
 
     const { data: listing, error: listingErr } = await supabase
@@ -75,80 +96,42 @@ Deno.serve(async (req) => {
       .eq('id', body.listing_id)
       .maybeSingle();
 
-    if (listingErr || !listing) {
-      return new Response(JSON.stringify({ error: 'listing_not_found' }), {
-        status: 404,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+    if (listingErr || !listing) return json({ error: 'listing_not_found' }, 404);
+    if (listing.host_id === user.id) return json({ error: 'cannot_buy_own_listing' }, 403);
+    if (!listing.accept_cash_payment) return json({ error: 'cash_not_accepted' }, 400);
+
+    // Validate the caller-supplied terms row before we touch sale_transactions.
+    // The DB trigger will re-check all of this, but doing it here yields
+    // clearer 4xx errors to the client than a raw Postgres exception.
+    const { data: terms, error: termsFetchErr } = await supabase
+      .from('transaction_terms')
+      .select('id, buyer_id, host_id, listing_id, transaction_mode, sale_transaction_id, status')
+      .eq('id', body.terms_id)
+      .maybeSingle();
+
+    if (termsFetchErr) throw termsFetchErr;
+    if (!terms) return json({ error: 'terms_not_found' }, 404);
+    if (terms.buyer_id !== user.id) return json({ error: 'terms_owner_mismatch' }, 403);
+    if (terms.listing_id !== listing.id) return json({ error: 'terms_listing_mismatch' }, 400);
+    if (terms.host_id !== listing.host_id) return json({ error: 'terms_host_mismatch' }, 400);
+    if (terms.transaction_mode !== 'sale') return json({ error: 'terms_mode_mismatch' }, 400);
+
+    // If this terms row is already linked to a sale (from a prior successful
+    // call), return that sale so the retry stays idempotent even without a key.
+    if (terms.sale_transaction_id) {
+      const response = { transaction_id: terms.sale_transaction_id, terms_id: terms.id };
+      if (body.idempotency_key) {
+        await supabase.from('edge_action_idempotency').upsert({
+          action: 'create-cash-sale',
+          idempotency_key: body.idempotency_key,
+          user_id: user.id,
+          response,
+        });
+      }
+      return json(response);
     }
 
-    // Ownership rule (memory: no self-transacting)
-    if (listing.host_id === user.id) {
-      return new Response(JSON.stringify({ error: 'cannot_buy_own_listing' }), {
-        status: 403,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
-    if (!listing.accept_cash_payment) {
-      return new Response(JSON.stringify({ error: 'cash_not_accepted' }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
-    // 1) Snapshot terms first so we always have a paired ledger row.
-    // Pay-in-Person: 100% free — no commission, no buyer fee, seller keeps full amount.
-    const TERMS_VERSION = 'v1';
-    const totalCents = Math.round(Number(body.amount) * 100);
-    const cancellation =
-      (listing.cancellation_policy && String(listing.cancellation_policy).trim()) ||
-      'Pay-in-Person sales are between buyer and seller. Vendibook does not hold funds or process refunds for cash transactions — inspect the item in person before you pay.';
-
-    const location = [listing.city, listing.state].filter(Boolean).join(', ') || null;
-
-    const termsSnapshot = {
-      version: TERMS_VERSION,
-      mode: 'sale',
-      payment_method: 'pay_in_person',
-      listing: {
-        id: listing.id,
-        title: listing.title,
-        cover_image_url: listing.cover_image_url,
-        host_id: listing.host_id,
-        location,
-      },
-      buyer: { id: user.id, email: body.buyer_email, name: body.buyer_name },
-      pricing: {
-        subtotal_cents: totalCents,
-        delivery_cents: Math.round(Number(body.delivery_fee ?? 0) * 100),
-        renter_fee_cents: 0,
-        commission_cents: 0,
-        deposit_cents: 0,
-        total_cents: totalCents,
-        currency: 'usd',
-        lines: [
-          { label: 'Item price', amount_cents: totalCents, kind: 'base' },
-          {
-            label: 'Buyer fee',
-            amount_cents: 0,
-            kind: 'fee',
-            hint: 'Pay-in-Person sales are 100% free — no buyer fee, no commission.',
-          },
-          { label: 'Total due today', amount_cents: totalCents, kind: 'total' },
-        ],
-      },
-      policies: {
-        cancellation,
-        acknowledgements: [
-          `You are buying "${listing.title}" from the seller.`,
-          'Vendibook does not process or hold funds for Pay-in-Person transactions. Inspect the item and confirm terms in person before paying.',
-        ],
-      },
-    };
-
-    // 1) Insert the sale_transactions row first — this is the entity the
-    //    terms snapshot references (transaction_terms.sale_transaction_id).
+    // Pay-in-Person is 100% free: no commission, no buyer fee.
     const isFreight = body.fulfillment_type === 'vendibook_freight';
     const { data: tx, error: txErr } = await supabase
       .from('sale_transactions')
@@ -172,84 +155,37 @@ Deno.serve(async (req) => {
         buyer_email: body.buyer_email,
         buyer_phone: body.buyer_phone ?? null,
         status: 'pending_cash',
-        // Pay-in-Person: 100% free — no platform fee, seller keeps full amount.
         platform_fee: 0,
         seller_payout: body.amount,
+        // terms_id set at insert time so the enforcement trigger sees it
+        // atomically — no window where the sale exists without a terms link.
+        terms_id: terms.id,
       })
       .select('id')
       .single();
 
     if (txErr) throw txErr;
 
-    // 2) Attach the immutable terms snapshot to the sale. Two paths:
-    //    (a) client passed a `terms_id` from create-transaction-terms-draft
-    //        (FinalReviewSheet flow) — flip its status to 'active' and set
-    //        sale_transaction_id. This preserves any acknowledged_at stamp
-    //        already written by the acknowledge-terms edge function.
-    //    (b) legacy / direct call — insert a fresh terms row.
-    //    Either way, if the terms write fails we roll back the sale.
-    let terms: { id: string } | null = null;
-    if (body.terms_id) {
-      const { data: updated, error: updErr } = await supabase
-        .from('transaction_terms')
-        .update({ status: 'active', sale_transaction_id: tx.id })
-        .eq('id', body.terms_id)
-        .eq('buyer_id', user.id) // guard: only the buyer's own draft
-        .eq('listing_id', listing.id)
-        .select('id')
-        .maybeSingle();
-      if (updErr || !updated) {
-        await supabase.from('sale_transactions').delete().eq('id', tx.id);
-        throw updErr || new Error('terms_id not found for this buyer/listing');
-      }
-      terms = updated;
-    } else {
-      const { data: inserted, error: termsErr } = await supabase
-        .from('transaction_terms')
-        .insert({
-          terms_version: TERMS_VERSION,
-          transaction_mode: 'sale',
-          payment_method: 'pay_in_person',
-          listing_id: listing.id,
-          host_id: listing.host_id,
-          buyer_id: user.id,
-          sale_transaction_id: tx.id,
-          subtotal_cents: totalCents,
-          renter_fee_cents: 0,
-          commission_cents: 0,
-          deposit_cents: 0,
-          total_cents: totalCents,
-          snapshot: termsSnapshot,
-          status: 'active',
-        })
-        .select('id')
-        .single();
-      if (termsErr || !inserted) {
-        await supabase.from('sale_transactions').delete().eq('id', tx.id);
-        throw termsErr || new Error('failed to insert terms row');
-      }
-      terms = inserted;
+    // Link the terms row back to the sale and mark it active. If this update
+    // fails we roll back the sale so we never leave a sale row without a
+    // fully-linked terms snapshot.
+    const { error: linkErr } = await supabase
+      .from('transaction_terms')
+      .update({ status: 'active', sale_transaction_id: tx.id })
+      .eq('id', terms.id)
+      .eq('buyer_id', user.id);
+
+    if (linkErr) {
+      await supabase.from('sale_transactions').delete().eq('id', tx.id);
+      throw linkErr;
     }
 
-    // 2b) Back-link the terms snapshot onto the sale so downstream code
-    //     (emails, dashboards, disputes) can resolve terms straight from
-    //     the sale row without a reverse lookup. Non-fatal on failure —
-    //     transaction_terms.sale_transaction_id still preserves the pairing.
-    const { error: linkErr } = await supabase
-      .from('sale_transactions')
-      .update({ terms_id: terms.id })
-      .eq('id', tx.id);
-    if (linkErr) console.error('[create-cash-sale] failed to backlink terms_id', linkErr);
-
-
-
-
-    // 3) Fire-and-forget notification + seller bell.
+    // Fire-and-forget notifications.
     try {
       await supabase.functions.invoke('send-sale-notification', {
         body: { transaction_id: tx.id, notification_type: 'cash_purchase_request' },
       });
-    } catch (_) { /* email failures do not block the checkout */ }
+    } catch (_) { /* email failures do not block checkout */ }
 
     try {
       await supabase.from('notifications').insert({
@@ -261,16 +197,23 @@ Deno.serve(async (req) => {
       });
     } catch (_) { /* non-fatal */ }
 
+    const response = { transaction_id: tx.id, terms_id: terms.id };
 
-    return new Response(
-      JSON.stringify({ transaction_id: tx.id, terms_id: terms.id }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
-    );
+    if (body.idempotency_key) {
+      await supabase.from('edge_action_idempotency').upsert({
+        action: 'create-cash-sale',
+        idempotency_key: body.idempotency_key,
+        user_id: user.id,
+        response,
+      });
+    }
+
+    return json(response);
   } catch (err) {
     console.error('create-cash-sale error', err);
-    return new Response(
-      JSON.stringify({ error: err instanceof Error ? err.message : 'unknown_error' }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+    return json(
+      { error: err instanceof Error ? err.message : 'unknown_error' },
+      500,
     );
   }
 });
