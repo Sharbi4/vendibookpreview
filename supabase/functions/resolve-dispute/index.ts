@@ -323,11 +323,50 @@ serve(async (req) => {
         ? "A full refund has been issued to the buyer."
         : "The payment has been released to the seller.";
       const tone = resolution === "refund_buyer" ? "success" : "info";
-      const details = admin_notes ? [{ label: "Admin notes", value: admin_notes }] : [];
       const dashboardUrl = "https://vendibook.com/dashboard";
+
+      // Resolve the immutable terms snapshot the buyer/seller agreed
+      // to at checkout. Rendered inline so both parties see the exact
+      // pricing (and cancellation policy) the resolution acts on.
+      const terms = await resolveSaleTerms(supabaseClient, transaction);
+      const termsBlock = formatTermsForEmail(terms);
+      if (terms) {
+        logStep("Resolved agreed terms for resolution email", {
+          terms_id: terms.id, via: terms.resolvedVia,
+        });
+      }
+
+      const baseDetails: Array<{ label: string; value: string }> = [
+        { label: "Listing", value: listingTitle },
+      ];
+      if (terms?.total_cents != null) {
+        baseDetails.push({
+          label: "Total agreed",
+          value: `$${(Number(terms.total_cents) / 100).toFixed(2)}`,
+        });
+      }
+      if (terms?.payment_method) {
+        baseDetails.push({
+          label: "Payment method",
+          value: terms.payment_method.replace(/_/g, ' '),
+        });
+      }
+      if (terms?.terms_version) {
+        baseDetails.push({ label: "Terms version", value: terms.terms_version });
+      }
+      if (admin_notes) {
+        baseDetails.push({ label: "Admin notes", value: admin_notes });
+      }
 
       const send = async (to: string, name: string | undefined, audience: "buyer" | "seller") => {
         try {
+          const paragraphs = [
+            audience === "buyer"
+              ? "Our team has reviewed your dispute and made a decision."
+              : "Our team has reviewed the dispute on one of your transactions and made a decision.",
+            resolutionText,
+            ...(termsBlock ? [termsBlock] : []),
+          ];
           const { error } = await supabaseClient.functions.invoke("send-transactional-email", {
             body: {
               templateName: "generic-notice",
@@ -340,16 +379,8 @@ serve(async (req) => {
                   ? "Your dispute has been resolved"
                   : "A dispute has been resolved",
                 greeting: `Hi ${name || "there"},`,
-                paragraphs: [
-                  audience === "buyer"
-                    ? "Our team has reviewed your dispute and made a decision."
-                    : "Our team has reviewed the dispute on one of your transactions and made a decision.",
-                  resolutionText,
-                ],
-                details: [
-                  { label: "Listing", value: listingTitle },
-                  ...details,
-                ],
+                paragraphs,
+                details: baseDetails,
                 alert: {
                   tone,
                   title: "Resolution",
@@ -370,6 +401,7 @@ serve(async (req) => {
       await send(transaction.buyer.email, transaction.buyer.full_name, "buyer");
       await send(transaction.seller.email, transaction.seller.full_name, "seller");
       logStep("Dispute resolution emails enqueued via Lovable Emails");
+
     }
 
     // Create in-app notifications for both parties
