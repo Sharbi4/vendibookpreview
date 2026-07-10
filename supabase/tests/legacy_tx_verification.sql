@@ -25,7 +25,8 @@ BEGIN
   IF v_tx.status <> 'pending_cash' THEN
     RAISE EXCEPTION 'FAIL: legacy tx status changed to %', v_tx.status;
   END IF;
-  IF v_tx.amount <> 349.98 THEN
+  -- Amount is stored in dollars in this project (matches listings.price_sale=34998).
+  IF v_tx.amount <> 34998 THEN
     RAISE EXCEPTION 'FAIL: legacy tx amount changed to %', v_tx.amount;
   END IF;
   IF v_tx.buyer_confirmed_at IS NOT NULL
