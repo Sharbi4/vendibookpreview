@@ -142,30 +142,8 @@ Deno.serve(async (req) => {
       },
     };
 
-    const { data: terms, error: termsErr } = await supabase
-      .from('transaction_terms')
-      .insert({
-        terms_version: TERMS_VERSION,
-        mode: 'sale',
-        payment_method: 'pay_in_person',
-        listing_id: listing.id,
-        host_id: listing.host_id,
-        buyer_id: user.id,
-        subtotal_cents: totalCents,
-        delivery_cents: Math.round(Number(body.delivery_fee ?? 0) * 100),
-        renter_fee_cents: 0,
-        commission_cents: 0,
-        deposit_cents: 0,
-        total_cents: totalCents,
-        currency: 'usd',
-        snapshot: termsSnapshot,
-      })
-      .select('id')
-      .single();
-
-    if (termsErr) throw termsErr;
-
-    // 2) Sale transaction row, referencing the terms snapshot.
+    // 1) Insert the sale_transactions row first — this is the entity the
+    //    terms snapshot references (transaction_terms.sale_transaction_id).
     const isFreight = body.fulfillment_type === 'vendibook_freight';
     const { data: tx, error: txErr } = await supabase
       .from('sale_transactions')
@@ -189,15 +167,43 @@ Deno.serve(async (req) => {
         buyer_email: body.buyer_email,
         buyer_phone: body.buyer_phone ?? null,
         status: 'pending_cash',
-        payment_method: 'pay_in_person',
+        // Pay-in-Person: 100% free — no platform fee, seller keeps full amount.
         platform_fee: 0,
         seller_payout: body.amount,
-        terms_id: terms.id,
       })
       .select('id')
       .single();
 
     if (txErr) throw txErr;
+
+    // 2) Write the immutable terms snapshot linked to the sale.
+    //    If this fails we roll back the sale so the ledger never has a
+    //    cash sale without a paired terms row.
+    const { data: terms, error: termsErr } = await supabase
+      .from('transaction_terms')
+      .insert({
+        terms_version: TERMS_VERSION,
+        transaction_mode: 'sale',
+        payment_method: 'pay_in_person',
+        listing_id: listing.id,
+        host_id: listing.host_id,
+        buyer_id: user.id,
+        sale_transaction_id: tx.id,
+        subtotal_cents: totalCents,
+        renter_fee_cents: 0,
+        commission_cents: 0,
+        deposit_cents: 0,
+        total_cents: totalCents,
+        snapshot: termsSnapshot,
+      })
+      .select('id')
+      .single();
+
+    if (termsErr) {
+      // Rollback — service_role can hard-delete since RLS is bypassed.
+      await supabase.from('sale_transactions').delete().eq('id', tx.id);
+      throw termsErr;
+    }
 
     // 3) Fire-and-forget notification + seller bell.
     try {
@@ -215,6 +221,7 @@ Deno.serve(async (req) => {
         link: `/order-tracking/${tx.id}`,
       });
     } catch (_) { /* non-fatal */ }
+
 
     return new Response(
       JSON.stringify({ transaction_id: tx.id, terms_id: terms.id }),
