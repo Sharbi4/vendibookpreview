@@ -332,3 +332,113 @@ export function renderTermsEmailBlock(terms: TransactionTerms): string {
   <div style="font-size:12px;color:#6b7280;margin-top:12px;">Terms version ${esc(terms.termsVersion)}</div>
 </div>`;
 }
+
+// ---------- Listing-page "Good to Know" bullets (spec §4) ----------
+
+export interface HighlightsListing {
+  title?: string | null;
+  mode?: string | null;
+  category?: string | null;
+  city?: string | null;
+  state?: string | null;
+  instant_book?: boolean | null;
+  accept_card_payment?: boolean | null;
+  accept_cash_payment?: boolean | null;
+  deposit_amount?: number | null;
+  security_deposit?: number | null;
+  fulfillment_type?: string | null;
+  delivery_fee?: number | null;
+  cancellation_policy?: string | null;
+  vendibook_freight_enabled?: boolean | null;
+}
+
+export interface ListingHighlights {
+  heading: string;
+  linkLabel: string;
+  bullets: string[];
+}
+
+const CATEGORY_KIND = (
+  category?: string | null,
+): 'kitchen' | 'vendor' | 'default' => {
+  const c = (category ?? '').toLowerCase();
+  if (c === 'ghost_kitchen') return 'kitchen';
+  if (c === 'vendor_lot' || c === 'vendor_space' || c === 'food_truck' || c === 'food_trailer') return 'vendor';
+  return 'default';
+};
+
+const cityLine = (l: HighlightsListing): string | null => {
+  const loc = [l.city, l.state].filter(Boolean).join(', ');
+  return loc || null;
+};
+
+/**
+ * Build the 2–4 short bullets shown on the listing detail page.
+ * Emits ONLY items whose underlying data is present (spec §4 relevance rule).
+ */
+export function buildListingHighlights(listing: HighlightsListing): ListingHighlights {
+  const isRent = (listing.mode ?? '').toLowerCase() === 'rent';
+  const isSale = (listing.mode ?? '').toLowerCase() === 'sale';
+  const kind = CATEGORY_KIND(listing.category);
+
+  let heading: string;
+  let linkLabel: string;
+  if (isSale) {
+    heading = 'Before You Buy';
+    linkLabel = 'View Purchase Details';
+  } else if (kind === 'kitchen' || kind === 'vendor') {
+    heading = 'Booking Details';
+    linkLabel = 'View Booking Details';
+  } else {
+    heading = 'Good to Know';
+    linkLabel = 'View Rental Details';
+  }
+
+  const bullets: string[] = [];
+
+  // 1. Approval vs Instant Book (rentals & bookings only — spec §11)
+  if (isRent || kind !== 'default') {
+    if (listing.instant_book) {
+      bullets.push('Instant Book — confirmed after payment');
+    } else {
+      bullets.push('Host approval required before payment is charged');
+    }
+  }
+
+  // 2. Payment posture (spec §7, §10)
+  if (isSale) {
+    if (listing.accept_cash_payment && !listing.accept_card_payment) {
+      bullets.push('Pay in Person — Vendibook records the transaction but does not hold funds');
+    } else if (listing.accept_cash_payment && listing.accept_card_payment) {
+      bullets.push('Pay online or in person');
+    } else {
+      bullets.push('Payment is completed securely at checkout');
+    }
+  }
+
+  // 3. Deposit (rentals only, only if configured — spec §12)
+  const deposit = Number(listing.deposit_amount ?? listing.security_deposit ?? 0);
+  if (isRent && deposit > 0) {
+    bullets.push(`Refundable deposit: $${deposit.toLocaleString()}`);
+  }
+
+  // 4. Fulfillment / pickup / delivery (spec §13)
+  const ft = (listing.fulfillment_type ?? '').toLowerCase();
+  const loc = cityLine(listing);
+  if (isSale && listing.vendibook_freight_enabled) {
+    bullets.push('Vendibook Freight available for delivery');
+  } else if (ft === 'delivery') {
+    bullets.push(loc ? `Delivery available from ${loc}` : 'Delivery available');
+  } else if (ft === 'both' && loc) {
+    bullets.push(`Pickup or delivery in ${loc}`);
+  } else if (loc && kind === 'default') {
+    bullets.push(isSale ? `Located in ${loc}` : `Pickup in ${loc}`);
+  } else if (loc && kind === 'kitchen') {
+    bullets.push(`On-site use in ${loc}`);
+  } else if (loc && kind === 'vendor') {
+    bullets.push(`Vendor space in ${loc}`);
+  }
+
+  // Cap at 4 for spec §4
+  return { heading, linkLabel, bullets: bullets.slice(0, 4) };
+}
