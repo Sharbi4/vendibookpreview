@@ -268,14 +268,32 @@ const ListingPublished: React.FC = () => {
         </div>
       )}
 
-      {/* Featured Boost Success / Syncing Banner */}
+      {/* Featured Boost Success / Syncing / Stuck Banner */}
       {featuredPaid && (
-        <div className={`border-b ${featuredActive ? 'bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800' : 'bg-muted/40 border-border'}`}>
+        <div
+          className={`border-b ${
+            featuredActive
+              ? 'bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800'
+              : featuredWebhookStuck
+                ? 'bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-800'
+                : 'bg-muted/40 border-border'
+          }`}
+        >
           <div className="container max-w-2xl mx-auto px-4 py-4">
-            <div className="flex items-center gap-3">
-              <div className={`p-2 rounded-full ${featuredActive ? 'bg-amber-100 dark:bg-amber-900' : 'bg-muted'}`}>
+            <div className="flex items-start gap-3">
+              <div
+                className={`p-2 rounded-full ${
+                  featuredActive
+                    ? 'bg-amber-100 dark:bg-amber-900'
+                    : featuredWebhookStuck
+                      ? 'bg-red-100 dark:bg-red-900'
+                      : 'bg-muted'
+                }`}
+              >
                 {featuredSyncing ? (
                   <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+                ) : featuredWebhookStuck ? (
+                  <AlertCircleIcon className="w-5 h-5 text-red-600 dark:text-red-400" />
                 ) : (
                   <CheckCircle2 className="w-5 h-5 text-amber-600 dark:text-amber-400" />
                 )}
@@ -284,15 +302,42 @@ const ListingPublished: React.FC = () => {
                 <p className="font-medium">
                   {featuredActive
                     ? 'Featured Boost Activated ⭐'
-                    : featuredSyncing
-                      ? 'Finalizing your Featured Boost…'
-                      : 'Payment received — boost will activate shortly'}
+                    : featuredWebhookStuck
+                      ? 'Payment received — activation delayed'
+                      : featuredSyncing
+                        ? 'Finalizing your Featured Boost…'
+                        : 'Payment received — boost will activate shortly'}
                 </p>
                 <p className="text-sm text-muted-foreground">
                   {featuredActive
                     ? `Your listing is now published and featured at the top of search for 30 days.`
-                    : 'Your payment was successful. Your listing is published and the boost will appear within a minute.'}
+                    : featuredWebhookStuck
+                      ? `Stripe confirmed your payment, but your boost hasn't activated yet. You haven't been charged twice — our team was notified and will finish activation.`
+                      : 'Your payment was successful. Your listing is published and the boost will appear within a minute.'}
                 </p>
+                {featuredWebhookStuck && (
+                  <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
+                    {featuredStuckRef && (
+                      <span className="font-mono px-2 py-0.5 rounded bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200">
+                        Reference: {featuredStuckRef}
+                      </span>
+                    )}
+                    <a
+                      href="tel:+17257559598"
+                      className="underline text-red-700 dark:text-red-300 hover:no-underline"
+                    >
+                      Call (725) 755-9598
+                    </a>
+                    <a
+                      href={`mailto:support@vendibook.com?subject=Featured%20boost%20not%20active%20${
+                        featuredStuckRef ?? ''
+                      }&body=Listing%20ID%3A%20${listingId}`}
+                      className="underline text-red-700 dark:text-red-300 hover:no-underline"
+                    >
+                      Email support
+                    </a>
+                  </div>
+                )}
               </div>
               {isPublished && (
                 <span className="text-xs px-2 py-1 rounded-full bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-300 whitespace-nowrap">
