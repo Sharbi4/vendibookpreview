@@ -494,6 +494,129 @@ Deno.test("e2e: pay-in-person sale completes buyer + seller confirmation flow", 
   assertEquals(buyerView?.status, "completed");
 });
 
+Deno.test("e2e: pay-in-person cash sale routed through confirm-sale edge function", async () => {
+  requireCreds();
+  if (!RENTER_EMAIL || !RENTER_PASSWORD) {
+    console.warn(
+      "Skipping cash-sale edge-function e2e — set TEST_RENTER_EMAIL / TEST_RENTER_PASSWORD to enable.",
+    );
+    return;
+  }
+
+  // 1. Seller publishes a cash-only sale listing.
+  const { client: sellerClient, token: sellerToken, userId: sellerId } =
+    await authedClient();
+  const listingId = await createDraft(sellerToken, {
+    mode: "sale",
+    category: "food_truck",
+    city: "Phoenix",
+    state: "AZ",
+  });
+  await fillAndPublish(sellerClient, listingId, {
+    price_sale: 8000,
+    accept_card_payment: false,
+    accept_cash_payment: true,
+  });
+
+  // 2. Buyer signs in.
+  const buyerClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+  const { data: buyerAuth, error: buyerErr } = await buyerClient.auth
+    .signInWithPassword({ email: RENTER_EMAIL, password: RENTER_PASSWORD });
+  if (buyerErr) throw new Error(`Buyer sign-in failed: ${buyerErr.message}`);
+  const buyerId = buyerAuth.user!.id;
+  const buyerToken = buyerAuth.session!.access_token;
+  assert(buyerId !== sellerId, "Buyer must differ from seller");
+
+  // 3. DB-level invariant: buyer_id != seller_id enforced by CHECK constraint.
+  const { error: selfBuyErr } = await sellerClient
+    .from("sale_transactions")
+    .insert({
+      listing_id: listingId,
+      buyer_id: sellerId,
+      seller_id: sellerId,
+      amount: 8000,
+      platform_fee: 0,
+      seller_payout: 8000,
+      status: "pending_cash",
+    });
+  assertExists(selfBuyErr, "Self-buy insert should be rejected");
+
+  // 4. Buyer creates a valid pending_cash transaction.
+  const { data: tx, error: txErr } = await buyerClient
+    .from("sale_transactions")
+    .insert({
+      listing_id: listingId,
+      buyer_id: buyerId,
+      seller_id: sellerId,
+      amount: 8000,
+      platform_fee: 0,
+      seller_payout: 8000,
+      status: "pending_cash",
+      fulfillment_type: "pickup",
+      buyer_name: "E2E Cash Buyer 2",
+      buyer_email: RENTER_EMAIL,
+    })
+    .select("id")
+    .single();
+  assertEquals(txErr, null, txErr?.message);
+  assertExists(tx?.id);
+  CREATED_SALE_TX_IDS.push(tx!.id);
+
+  // Helper to invoke confirm-sale as an authenticated user.
+  const invokeConfirm = async (token: string, role: "buyer" | "seller") => {
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/confirm-sale`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`,
+        "apikey": SUPABASE_ANON_KEY,
+      },
+      body: JSON.stringify({ transaction_id: tx!.id, role }),
+    });
+    const json = await res.json();
+    return { status: res.status, json };
+  };
+
+  // 5. Seller confirms via edge function — pending_cash -> seller_confirmed.
+  const sellerRes = await invokeConfirm(sellerToken, "seller");
+  assertEquals(sellerRes.status, 200, JSON.stringify(sellerRes.json));
+  assertEquals(sellerRes.json.status, "seller_confirmed");
+
+  // 6. Idempotency: second seller confirmation is rejected cleanly (not a duplicate write).
+  const sellerDupe = await invokeConfirm(sellerToken, "seller");
+  assert(
+    sellerDupe.status >= 400 || sellerDupe.json?.error,
+    "duplicate seller confirmation should be rejected",
+  );
+
+  // 7. Authorization: buyer cannot invoke as 'seller'.
+  const wrongRole = await invokeConfirm(buyerToken, "seller");
+  assert(
+    wrongRole.status >= 400 || wrongRole.json?.error,
+    "buyer invoking role=seller must be rejected",
+  );
+
+  // 8. Buyer confirms via edge function — completes the transaction.
+  const buyerRes = await invokeConfirm(buyerToken, "buyer");
+  assertEquals(buyerRes.status, 200, JSON.stringify(buyerRes.json));
+  assertEquals(buyerRes.json.status, "completed");
+
+  // 9. Final row is completed for both parties.
+  const { data: finalRow } = await sellerClient
+    .from("sale_transactions")
+    .select("status, buyer_confirmed_at, seller_confirmed_at, payment_intent_id")
+    .eq("id", tx!.id)
+    .single();
+  assertEquals(finalRow?.status, "completed");
+  assertExists(finalRow?.buyer_confirmed_at);
+  assertExists(finalRow?.seller_confirmed_at);
+  assertEquals(finalRow?.payment_intent_id, null, "cash sale must not have a Stripe payment intent");
+});
+
+
+
 Deno.test("e2e: cleanup — remove listings, bookings, and sale transactions created by this run", async () => {
   const { client } = await authedClient();
   if (CREATED_SALE_TX_IDS.length > 0) {
