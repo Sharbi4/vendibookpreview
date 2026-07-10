@@ -319,6 +319,7 @@ export const SaleListingMobile = ({
                 size="lg"
                 onClick={handleBuyNow}
                 disabled={!isAvailable}
+                data-testid="sale-mobile-buy-now"
                 className="h-14 gap-2 rounded-2xl bg-cta-primary hover:opacity-95 shadow-cta-primary text-base font-bold text-white border-0"
               >
                 <ShoppingCart className="h-5 w-5" />
