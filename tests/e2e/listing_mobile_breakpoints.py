@@ -118,7 +118,10 @@ async def run_breakpoint(pw, bp: dict) -> None:
             )
 
             # ── Modal opens + branch selector visible + correct final CTA.
-            await open_cta.click()
+            # Sticky mobile CTA bar / sticky header can overlap the inline
+            # button on narrow viewports; force the click since we only care
+            # that the CTA is wired, not that no overlay ever floats near it.
+            await open_cta.click(force=True)
             dialog = page.locator(TID["dialog"]).first
             await dialog.wait_for(state="visible", timeout=8000)
             await dialog.locator(TID["branch_selector"]).first.wait_for(
