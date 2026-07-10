@@ -19,40 +19,6 @@ function fmtDate(d?: string) {
   return dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
-function esc(s: string) {
-  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-}
-
-/**
- * Render the "What you agreed to" block from a persisted transaction_terms
- * snapshot. Mirrors renderTermsEmailBlock in src/lib/transactionTerms.ts.
- */
-function renderTermsBlock(snap: any, version: string) {
-  if (!snap || !Array.isArray(snap?.pricing?.lines)) return '';
-  const money = (c: number) => `$${(Number(c || 0) / 100).toFixed(2)}`;
-  const rows = snap.pricing.lines
-    .map((l: any) => {
-      const bold = l.kind === 'total' ? 600 : 400;
-      const color = l.kind === 'total' ? '#111827' : '#374151';
-      return `<tr><td style="padding:4px 0;color:#374151;">${esc(String(l.label ?? ''))}</td>` +
-        `<td style="padding:4px 0;text-align:right;color:${color};font-weight:${bold};">${money(Number(l.amountCents || 0))}</td></tr>`;
-    })
-    .join('');
-  const acks = Array.isArray(snap.policies?.acknowledgements)
-    ? snap.policies.acknowledgements.map((a: string) => `<li style="margin:4px 0;">${esc(String(a))}</li>`).join('')
-    : '';
-  return `
-<div style="border:1px solid #e5e7eb;border-radius:12px;padding:16px;margin:16px 0;background:#ffffff;">
-  <div style="font-weight:600;color:#111827;margin-bottom:8px;">What you agreed to</div>
-  <table style="width:100%;font-size:14px;border-collapse:collapse;">${rows}</table>
-  <div style="font-size:13px;color:#374151;margin-top:12px;">
-    <div style="font-weight:600;margin-bottom:4px;">Cancellation policy</div>
-    <div>${esc(String(snap.policies?.cancellation ?? ''))}</div>
-  </div>
-  ${acks ? `<ul style="font-size:13px;color:#374151;margin-top:12px;padding-left:18px;">${acks}</ul>` : ''}
-  <div style="font-size:12px;color:#6b7280;margin-top:12px;">Terms version ${esc(String(version || 'v1'))}</div>
-</div>`;
-}
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
