@@ -712,6 +712,48 @@ const ListingHowItWorks = ({ listing, isOwner, className }: Props) => {
             </DialogDescription>
           </DialogHeader>
 
+          {isDual && !pickedBranch && (
+            <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => handleBranchPick('sale')}
+                className="text-left rounded-xl border border-border bg-card/70 hover:bg-muted/60 focus:outline-none focus:ring-2 focus:ring-primary p-4 transition"
+              >
+                <div className="flex items-center gap-2 mb-1">
+                  <CreditCard className="h-5 w-5 text-primary" aria-hidden="true" />
+                  <span className="font-semibold text-foreground">Buy this listing</span>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Own it outright. See the purchase steps and protections.
+                </p>
+              </button>
+              <button
+                type="button"
+                onClick={() => handleBranchPick('rent')}
+                className="text-left rounded-xl border border-border bg-card/70 hover:bg-muted/60 focus:outline-none focus:ring-2 focus:ring-primary p-4 transition"
+              >
+                <div className="flex items-center gap-2 mb-1">
+                  <ClipboardCheck className="h-5 w-5 text-primary" aria-hidden="true" />
+                  <span className="font-semibold text-foreground">Rent this listing</span>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Book it for a period. See how availability, deposits, and returns work.
+                </p>
+              </button>
+            </div>
+          )}
+
+          {isDual && pickedBranch && (
+            <button
+              type="button"
+              onClick={() => setPickedBranch(null)}
+              className="mt-1 text-xs text-muted-foreground hover:text-foreground underline underline-offset-2 self-start"
+            >
+              ← Back to buy or rent
+            </button>
+          )}
+
+
           <ol className="mt-2 space-y-4" aria-label="Full step-by-step guide">
             {config.fullSteps.map((step, i) => {
               const Icon = step.icon;
