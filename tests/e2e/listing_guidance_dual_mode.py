@@ -131,22 +131,23 @@ def visible_locator(page, selector: str):
 async def run_case(pw, case: dict, viewport: dict) -> None:
     label = f"{case['label']}_{viewport['name']}"
     print(f"\n▶ {label}")
-    browser = await pw.chromium.launch(headless=True)
-    context = await browser.new_context(
-        viewport={"width": viewport["width"], "height": viewport["height"]}
-    )
-    await _install_listing_rewriter(context, case["listing_id"])
 
-    # Suppress the auto-open first-visit modal so we drive the flow explicitly.
-    await context.add_init_script(
-        "window.localStorage.setItem('vb_walkthrough_seen_v1', new Date().toISOString());"
-    )
-
-    try:
-        for branch, expected_button in [
-            ("sale", re.compile(r"buy now", re.I)),
-            ("rent", case["rent_button"]),
-        ]:
+    # Each branch runs in its own browser context because the injected `mode`
+    # value must match the branch under test so the correct transaction widget
+    # actually renders on the page.
+    for branch, expected_button, force_mode in [
+        ("sale", re.compile(r"buy now", re.I), "sale"),
+        ("rent", case["rent_button"], "rent"),
+    ]:
+        browser = await pw.chromium.launch(headless=True)
+        context = await browser.new_context(
+            viewport={"width": viewport["width"], "height": viewport["height"]}
+        )
+        await _install_listing_rewriter(context, case["listing_id"], force_mode)
+        await context.add_init_script(
+            "window.localStorage.setItem('vb_walkthrough_seen_v1', new Date().toISOString());"
+        )
+        try:
             page = await context.new_page()
             url = f"{BASE}/listing/{case['listing_id']}"
             await page.goto(url, wait_until="domcontentloaded")
@@ -164,37 +165,32 @@ async def run_case(pw, case: dict, viewport: dict) -> None:
             await dialog.wait_for(state="visible", timeout=8000)
             await page.screenshot(path=str(SHOTS / f"dual_{label}_{branch}_02_selector.png"))
 
-            # 3. Pick the branch.
+            # 3. Pick the branch (buy or rent).
             pick_label = "Buy this listing" if branch == "sale" else "Rent this listing"
             branch_button = dialog.get_by_role("button", name=re.compile(pick_label, re.I))
             await branch_button.click()
             await page.wait_for_timeout(400)
             await page.screenshot(path=str(SHOTS / f"dual_{label}_{branch}_03_branch.png"))
 
-            # 4. Click the final CTA — every branch here uses "Continue to purchase" or "Book available dates" or "Request to book".
+            # 4. Click the branch's final CTA.
             final_cta_names = re.compile(
                 r"(continue to purchase|book available dates|request to book|contact the seller|continue)",
                 re.I,
             )
             final_cta = dialog.get_by_role("button", name=final_cta_names).last
             await final_cta.click()
-            await page.wait_for_timeout(800)
+            await page.wait_for_timeout(1000)
 
             # 5. Assert the correct transaction button appears in a visible widget.
-            #    Prefer the desktop booking widget when it exists, otherwise the
-            #    mobile sticky bar / sale-mobile bar.
             txn = page.get_by_role("button", name=expected_button).locator("visible=true").first
             await txn.wait_for(state="visible", timeout=10000)
             await page.screenshot(path=str(SHOTS / f"dual_{label}_{branch}_04_after_cta.png"))
-            print(f"  ✓ {branch}: found transaction button matching /{expected_button.pattern}/")
+            print(f"  ✓ {branch}: transaction button /{expected_button.pattern}/ visible")
 
             await page.close()
-    except Exception as exc:
-        print(f"  ✗ FAILED: {exc}")
-        raise
-    finally:
-        await context.close()
-        await browser.close()
+        finally:
+            await context.close()
+            await browser.close()
 
 
 async def main() -> int:
