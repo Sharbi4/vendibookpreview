@@ -4142,6 +4142,205 @@ export type Database = {
         }
         Relationships: []
       }
+      support_ticket_attachments: {
+        Row: {
+          content_type: string | null
+          created_at: string
+          file_name: string
+          id: string
+          size_bytes: number | null
+          storage_path: string
+          ticket_id: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          content_type?: string | null
+          created_at?: string
+          file_name: string
+          id?: string
+          size_bytes?: number | null
+          storage_path: string
+          ticket_id: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          content_type?: string | null
+          created_at?: string
+          file_name?: string
+          id?: string
+          size_bytes?: number | null
+          storage_path?: string
+          ticket_id?: string
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_ticket_attachments_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "support_tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      support_ticket_messages: {
+        Row: {
+          author_id: string | null
+          author_role: string
+          body: string
+          created_at: string
+          id: string
+          is_internal_note: boolean
+          ticket_id: string
+        }
+        Insert: {
+          author_id?: string | null
+          author_role: string
+          body: string
+          created_at?: string
+          id?: string
+          is_internal_note?: boolean
+          ticket_id: string
+        }
+        Update: {
+          author_id?: string | null
+          author_role?: string
+          body?: string
+          created_at?: string
+          id?: string
+          is_internal_note?: boolean
+          ticket_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_ticket_messages_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "support_tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      support_tickets: {
+        Row: {
+          app_version: string | null
+          assigned_to: string | null
+          browser_info: string | null
+          category: string
+          closed_at: string | null
+          created_at: string
+          description: string
+          device_type: string | null
+          feature_area: string
+          id: string
+          is_blocking: boolean
+          last_error_category: string | null
+          last_error_id: string | null
+          page_url: string | null
+          payment_method: string | null
+          priority: string
+          reference_code: string
+          related_booking_id: string | null
+          related_conversation_id: string | null
+          related_draft_id: string | null
+          related_listing_id: string | null
+          related_permit_roadmap_id: string | null
+          related_reported_user_id: string | null
+          related_review_id: string | null
+          related_sale_transaction_id: string | null
+          reply_email: string | null
+          request_id: string | null
+          resolution_notes: string | null
+          resolved_at: string | null
+          status: string
+          title: string
+          transaction_status: string | null
+          updated_at: string
+          user_id: string | null
+          what_happened_instead: string | null
+          what_i_was_doing: string | null
+          wizard_step: string | null
+        }
+        Insert: {
+          app_version?: string | null
+          assigned_to?: string | null
+          browser_info?: string | null
+          category: string
+          closed_at?: string | null
+          created_at?: string
+          description: string
+          device_type?: string | null
+          feature_area: string
+          id?: string
+          is_blocking?: boolean
+          last_error_category?: string | null
+          last_error_id?: string | null
+          page_url?: string | null
+          payment_method?: string | null
+          priority?: string
+          reference_code?: string
+          related_booking_id?: string | null
+          related_conversation_id?: string | null
+          related_draft_id?: string | null
+          related_listing_id?: string | null
+          related_permit_roadmap_id?: string | null
+          related_reported_user_id?: string | null
+          related_review_id?: string | null
+          related_sale_transaction_id?: string | null
+          reply_email?: string | null
+          request_id?: string | null
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          status?: string
+          title: string
+          transaction_status?: string | null
+          updated_at?: string
+          user_id?: string | null
+          what_happened_instead?: string | null
+          what_i_was_doing?: string | null
+          wizard_step?: string | null
+        }
+        Update: {
+          app_version?: string | null
+          assigned_to?: string | null
+          browser_info?: string | null
+          category?: string
+          closed_at?: string | null
+          created_at?: string
+          description?: string
+          device_type?: string | null
+          feature_area?: string
+          id?: string
+          is_blocking?: boolean
+          last_error_category?: string | null
+          last_error_id?: string | null
+          page_url?: string | null
+          payment_method?: string | null
+          priority?: string
+          reference_code?: string
+          related_booking_id?: string | null
+          related_conversation_id?: string | null
+          related_draft_id?: string | null
+          related_listing_id?: string | null
+          related_permit_roadmap_id?: string | null
+          related_reported_user_id?: string | null
+          related_review_id?: string | null
+          related_sale_transaction_id?: string | null
+          reply_email?: string | null
+          request_id?: string | null
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          status?: string
+          title?: string
+          transaction_status?: string | null
+          updated_at?: string
+          user_id?: string | null
+          what_happened_instead?: string | null
+          what_i_was_doing?: string | null
+          wizard_step?: string | null
+        }
+        Relationships: []
+      }
       suppressed_emails: {
         Row: {
           created_at: string

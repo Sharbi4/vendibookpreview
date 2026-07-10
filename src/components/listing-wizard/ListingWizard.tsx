@@ -34,6 +34,8 @@ import { StripeConnectBanner } from './StripeConnectBanner';
 import { ListingPreviewModal } from './ListingPreviewModal';
 import { WizardPreviewSidebar } from './WizardPreviewSidebar';
 import { trackLeadEvent } from '@/lib/leadTracking';
+import { ReportIssueButton } from '@/components/support/ReportIssueButton';
+
 
 const STEPS = ['Type', 'Details', 'Pricing', 'Location', 'Documents', 'Media', 'Review'];
 
@@ -1017,7 +1019,18 @@ export const ListingWizard: React.FC = () => {
                 </div>
               )}
               <h1 className="font-semibold">Create Listing</h1>
+              <ReportIssueButton
+                variant="ghost"
+                size="sm"
+                label="Report issue"
+                context={{
+                  featureArea: "listing_wizard",
+                  wizardStep: String(STEPS[currentStep] ?? currentStep),
+                  related: { draft_id: draftId ?? undefined },
+                }}
+              />
             </div>
+
           </div>
           {/* Stripe Connect Status Banner - Only show when online payment is needed */}
           {(formData.mode === 'rent' || formData.accept_card_payment) && (
