@@ -443,6 +443,10 @@ const SaleCheckout = () => {
               buyer_email: buyerInfo.email.trim(),
               buyer_phone: buyerInfo.phone.trim() || null,
               terms_id: termsId,
+              // Retry/double-click safety: reuse the terms_id (already
+              // acknowledged & scoped to this buyer + listing) as the
+              // idempotency key. Same click → same sale + same snapshot.
+              idempotency_key: termsId ? `cash-sale:${termsId}` : undefined,
             },
           },
         );
