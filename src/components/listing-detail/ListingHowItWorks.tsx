@@ -545,20 +545,27 @@ const DISMISS_KEY_PREFIX = 'vb_howitworks_seen_';
 const GLOBAL_SEEN_KEY = 'vb_howitworks_seen_global';
 
 const ListingHowItWorks = ({ listing, isOwner, className }: Props) => {
-  const config = useMemo(() => resolveWalkthrough(listing), [listing]);
+  const rootConfig = useMemo(() => resolveWalkthrough(listing), [listing]);
+  const isDual = !!rootConfig.branches;
+  // For dual-mode listings, this tracks which branch the user picked.
+  // null = show the wrapper (branch selector) inside the modal.
+  const [pickedBranch, setPickedBranch] = useState<'sale' | 'rent' | null>(null);
+  const config: WalkthroughConfig = isDual && pickedBranch
+    ? rootConfig.branches![pickedBranch]
+    : rootConfig;
   const [open, setOpen] = useState(false);
 
   // Fire an impression exactly once per listing view, and auto-open the
   // walkthrough on the visitor's FIRST listing detail view (global, device-scoped).
   useEffect(() => {
     if (isOwner) return;
-    trackWalkthrough('guidance_prompt_viewed', config.variant, listing.id);
+    trackWalkthrough('guidance_prompt_viewed', rootConfig.variant, listing.id);
     try {
       localStorage.setItem(`${DISMISS_KEY_PREFIX}${listing.id}`, '1');
       const seenGlobal = localStorage.getItem(GLOBAL_SEEN_KEY);
       if (!seenGlobal) {
         localStorage.setItem(GLOBAL_SEEN_KEY, new Date().toISOString());
-        trackWalkthrough('guidance_auto_opened_first_visit', config.variant, listing.id);
+        trackWalkthrough('guidance_auto_opened_first_visit', rootConfig.variant, listing.id);
         // Defer slightly so the page has a chance to paint before the modal appears.
         const t = window.setTimeout(() => setOpen(true), 600);
         return () => window.clearTimeout(t);
@@ -578,7 +585,9 @@ const ListingHowItWorks = ({ listing, isOwner, className }: Props) => {
       ? 'purchase_steps_opened'
       : config.variant === 'sale_pay_in_person'
         ? 'pay_in_person_steps_opened'
-        : 'rental_steps_opened';
+        : config.variant === 'sale_and_rent'
+          ? 'guidance_prompt_viewed'
+          : 'rental_steps_opened';
 
   const handleOpen = () => {
     trackWalkthrough(openEvent, config.variant, listing.id);
@@ -586,13 +595,35 @@ const ListingHowItWorks = ({ listing, isOwner, className }: Props) => {
   };
 
   const handleClose = (next: boolean) => {
-    if (!next) trackWalkthrough('walkthrough_closed', config.variant, listing.id);
+    if (!next) {
+      trackWalkthrough('walkthrough_closed', config.variant, listing.id);
+      // Reset branch pick when the modal fully closes so the selector is
+      // shown again the next time the user opens it.
+      setPickedBranch(null);
+    }
     setOpen(next);
+  };
+
+  const handleBranchPick = (branch: 'sale' | 'rent') => {
+    setPickedBranch(branch);
+    const target = rootConfig.branches![branch];
+    trackWalkthrough('dual_mode_branch_selected', target.variant, listing.id);
+    trackWalkthrough(
+      branch === 'sale'
+        ? target.variant === 'sale_pay_in_person'
+          ? 'pay_in_person_steps_opened'
+          : 'purchase_steps_opened'
+        : 'rental_steps_opened',
+      target.variant,
+      listing.id,
+    );
+    if (!open) setOpen(true);
   };
 
   const handleFinalCta = () => {
     trackWalkthrough('final_cta_clicked', config.variant, listing.id);
     setOpen(false);
+    setPickedBranch(null);
     // Scroll the primary booking/inquiry widget into view — never triggers a transaction.
     // Falls back to the mobile sticky CTA / top of page when the desktop widget is hidden.
     if (typeof document !== 'undefined') {
@@ -611,6 +642,7 @@ const ListingHowItWorks = ({ listing, isOwner, className }: Props) => {
   const handleReportIssue = () => {
     trackWalkthrough('report_issue_opened_from_guidance', config.variant, listing.id);
   };
+
 
   return (
     <>
