@@ -58,7 +58,9 @@ DUAL_LISTINGS = [
 ]
 
 BUY_TXN = ",".join(
-    visible(TID[k]) for k in ("buy_now_widget", "sale_sticky_buy", "sale_mobile_buy")
+    visible(TID[k]) for k in (
+        "buy_now_widget", "sale_sticky_buy", "sale_mobile_buy", "sticky_mobile_buy",
+    )
 )
 
 VIEWPORTS = [
