@@ -12,7 +12,7 @@ export interface SaleTransaction {
   seller_payout: number;
   payment_intent_id: string | null;
   checkout_session_id: string | null;
-  status: 'pending' | 'paid' | 'buyer_confirmed' | 'seller_confirmed' | 'completed' | 'disputed' | 'refunded' | 'cancelled';
+  status: 'pending' | 'pending_cash' | 'paid' | 'buyer_confirmed' | 'seller_confirmed' | 'completed' | 'disputed' | 'refunded' | 'cancelled';
   buyer_confirmed_at: string | null;
   seller_confirmed_at: string | null;
   payout_completed_at: string | null;
@@ -156,11 +156,12 @@ export const useBuyerSaleTransactions = (userId: string | undefined) => {
 
   const stats = {
     total: transactions.length,
-    awaitingConfirmation: transactions.filter(t => ['paid', 'seller_confirmed'].includes(t.status)).length,
+    awaitingConfirmation: transactions.filter(t => ['pending_cash', 'paid', 'seller_confirmed'].includes(t.status)).length,
     confirmed: transactions.filter(t => t.buyer_confirmed_at !== null).length,
     completed: transactions.filter(t => t.status === 'completed').length,
     disputed: transactions.filter(t => t.status === 'disputed').length,
   };
+
 
   return {
     transactions,
@@ -272,12 +273,13 @@ export const useSellerSaleTransactions = (userId: string | undefined) => {
 
   const stats = {
     total: transactions.length,
-    awaitingConfirmation: transactions.filter(t => ['paid', 'buyer_confirmed'].includes(t.status)).length,
+    awaitingConfirmation: transactions.filter(t => ['pending_cash', 'paid', 'buyer_confirmed'].includes(t.status)).length,
     confirmed: transactions.filter(t => t.seller_confirmed_at !== null).length,
     completed: transactions.filter(t => t.status === 'completed').length,
     pendingPayout: transactions.filter(t => t.status === 'completed' && !t.payout_completed_at).length,
     disputed: transactions.filter(t => t.status === 'disputed').length,
   };
+
 
   return {
     transactions,

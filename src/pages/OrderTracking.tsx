@@ -556,70 +556,55 @@ const OrderTracking = () => {
     }
   };
 
-  // Handle confirmation for cash transactions
+  // Handle confirmation for cash transactions.
+  // Routes through the confirm-sale edge function so that all state transitions,
+  // auth checks, and notifications flow through one server-controlled path
+  // instead of client-side direct DB updates.
   const handleCashConfirm = async () => {
     if (!transaction || !user) return;
-    
+
+    const isBuyer = user.id === transaction.buyer_id;
+    const isSeller = user.id === transaction.seller_id;
+
+    if (!isBuyer && !isSeller) return;
+    if (isBuyer && transaction.buyer_confirmed_at) {
+      toast({ title: 'Already confirmed', description: 'You have already confirmed this transaction.' });
+      return;
+    }
+    if (isSeller && transaction.seller_confirmed_at) {
+      toast({ title: 'Already confirmed', description: 'You have already confirmed this transaction.' });
+      return;
+    }
+
     setIsConfirming(true);
     try {
-      const isBuyer = user.id === transaction.buyer_id;
-      const isSeller = user.id === transaction.seller_id;
-      
-      const updateData: Record<string, unknown> = {};
-      
-      if (isSeller && !transaction.seller_confirmed_at) {
-        updateData.seller_confirmed_at = new Date().toISOString();
-        // For cash+freight, don't complete until freight is paid and buyer confirms
-        // For regular cash, complete if buyer already confirmed
-        if (transaction.buyer_confirmed_at && transaction.fulfillment_type !== 'vendibook_freight') {
-          updateData.status = 'completed';
-        }
-      } else if (isBuyer && !transaction.buyer_confirmed_at) {
-        updateData.buyer_confirmed_at = new Date().toISOString();
-        // For cash+freight, only complete if freight is paid
-        // For regular cash, complete if seller already confirmed
-        if (transaction.seller_confirmed_at) {
-          if (transaction.fulfillment_type === 'vendibook_freight') {
-            if (transaction.freight_payment_status === 'paid') {
-              updateData.status = 'completed';
-            }
-          } else {
-            updateData.status = 'completed';
-          }
-        }
-      }
-      
-      if (Object.keys(updateData).length === 0) {
-        toast({ title: 'Already confirmed', description: 'You have already confirmed this transaction.' });
-        return;
-      }
-      
-      const { error: updateError } = await supabase
-        .from('sale_transactions')
-        .update(updateData)
-        .eq('id', transaction.id);
-        
-      if (updateError) throw updateError;
-      
-      toast({ 
-        title: 'Confirmed!', 
-        description: updateData.status === 'completed' 
-          ? 'Transaction completed successfully!' 
-          : 'Your confirmation has been recorded.'
+      const role: 'buyer' | 'seller' = isBuyer ? 'buyer' : 'seller';
+
+      const { data, error: fnError } = await supabase.functions.invoke('confirm-sale', {
+        body: { transaction_id: transaction.id, role },
       });
-      
+
+      if (fnError) throw fnError;
+      if (data?.error) throw new Error(data.error);
+
+      toast({
+        title: 'Confirmed!',
+        description: data?.message ?? 'Your confirmation has been recorded.',
+      });
+
       refetch();
     } catch (err) {
       console.error('Confirmation error:', err);
-      toast({ 
-        title: 'Error', 
-        description: 'Failed to confirm transaction. Please try again.',
-        variant: 'destructive'
+      toast({
+        title: 'Error',
+        description: err instanceof Error ? err.message : 'Failed to confirm transaction. Please try again.',
+        variant: 'destructive',
       });
     } finally {
       setIsConfirming(false);
     }
   };
+
 
   if (authLoading || isLoading) {
     return (
