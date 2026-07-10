@@ -1013,8 +1013,8 @@ const ListingHowItWorks = ({ listing, isOwner, className }: Props) => {
     </>
   );
 };
-    </>
-  );
-};
+
+export default ListingHowItWorks;
+
 
 export default ListingHowItWorks;
