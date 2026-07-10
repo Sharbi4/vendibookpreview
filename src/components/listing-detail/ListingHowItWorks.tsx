@@ -509,7 +509,8 @@ type EventName =
   | 'pay_in_person_steps_opened'
   | 'walkthrough_closed'
   | 'final_cta_clicked'
-  | 'report_issue_opened_from_guidance';
+  | 'report_issue_opened_from_guidance'
+  | 'dual_mode_branch_selected';
 
 
 function trackWalkthrough(event: EventName, variant: WalkthroughVariant, listingId: string) {
