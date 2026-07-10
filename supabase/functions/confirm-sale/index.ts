@@ -84,8 +84,10 @@ serve(async (req) => {
       throw new Error("Seller has already confirmed");
     }
 
-    // Valid statuses for confirmation
-    const validStatuses = ['paid', 'buyer_confirmed', 'seller_confirmed'];
+    // Valid statuses for confirmation. `pending_cash` is included so Pay-in-Person
+    // (cash) sales can also progress through this function; they never enter the
+    // 'paid' state because no online payment was collected.
+    const validStatuses = ['pending_cash', 'paid', 'buyer_confirmed', 'seller_confirmed'];
     if (!validStatuses.includes(transaction.status)) {
       throw new Error(`Cannot confirm transaction with status: ${transaction.status}`);
     }
