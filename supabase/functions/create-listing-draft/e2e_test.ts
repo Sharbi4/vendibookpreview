@@ -35,7 +35,8 @@ function requireCreds() {
   }
 }
 
-async function authedClient() {
+// deno-lint-ignore no-explicit-any
+async function authedClient(): Promise<{ client: any; token: string; userId: string }> {
   const client = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
     auth: { persistSession: false, autoRefreshToken: false },
   });
