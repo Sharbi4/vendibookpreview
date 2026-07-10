@@ -81,6 +81,15 @@ export interface WalkthroughConfig {
   trustPoints: string[];
   finalCtaLabel: string;
   finalCtaTargetId: string;
+  /**
+   * When present, this listing supports two transaction paths (buy AND rent).
+   * The component renders a branch selector; each branch reuses the standard
+   * modal walkthrough for the picked path.
+   */
+  branches?: {
+    sale: WalkthroughConfig;
+    rent: WalkthroughConfig;
+  };
 }
 
 /**
@@ -88,8 +97,19 @@ export interface WalkthroughConfig {
  * Kept exported so it can be unit-tested independently of React.
  */
 export function resolveWalkthrough(listing: ListingLike): WalkthroughConfig {
-  const isSale = listing.mode === 'sale';
-  const isRental = listing.mode === 'rent';
+  const modeRaw = (listing.mode || '').toString().toLowerCase();
+  const hasSalePrice = (listing.price_sale ?? 0) > 0;
+  const hasRentalPrice =
+    (listing.price_hourly ?? 0) > 0 ||
+    (listing.price_daily ?? 0) > 0 ||
+    (listing.price_weekly ?? 0) > 0 ||
+    (listing.price_monthly ?? 0) > 0;
+
+  // A listing is dual-mode when mode === 'both' OR both a sale price and a
+  // rental price are set (regardless of the stored mode enum).
+  const isDual = modeRaw === 'both' || (hasSalePrice && hasRentalPrice);
+  const isSale = !isDual && (modeRaw === 'sale' || (hasSalePrice && !hasRentalPrice));
+  const isRental = !isDual && !isSale;
 
   const category = (listing.category || '').toLowerCase();
   const onSiteKitchen = category === 'ghost_kitchen';
@@ -109,6 +129,17 @@ export function resolveWalkthrough(listing: ListingLike): WalkthroughConfig {
           ? 'delivery'
           : 'pickup';
 
+  // Dual-mode: build a wrapper config with both branches available.
+  if (isDual) {
+    const acceptsCard = listing.accept_card_payment !== false;
+    const saleBranch = acceptsCard ? buildSaleCard(fulfillment) : buildSalePayInPerson(fulfillment);
+    const rentBranch = listing.instant_book
+      ? buildRentInstant(fulfillment)
+      : buildRentRequest(fulfillment);
+
+    return buildSaleAndRent(fulfillment, saleBranch, rentBranch);
+  }
+
   // Sale variants
   if (isSale) {
     const acceptsCard = listing.accept_card_payment !== false; // default to card if flag absent
@@ -116,7 +147,7 @@ export function resolveWalkthrough(listing: ListingLike): WalkthroughConfig {
   }
 
   // Rental variants (default when mode is missing or unusual)
-  if (isRental || !isSale) {
+  if (isRental) {
     return listing.instant_book
       ? buildRentInstant(fulfillment)
       : buildRentRequest(fulfillment);
