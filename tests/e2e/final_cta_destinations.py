@@ -260,9 +260,9 @@ async def run_case(browser, case, vp):
             pass
 
         if case["kind"] == "sale":
-            result["url"] = await _assert_sale_destination(page, case["listing_id"], case["cta"], label)
+            result["url"] = await _assert_sale_destination(page, case["listing_id"], case["cta_selector"], label)
         else:
-            result["url"] = await _assert_rent_destination(page, case["listing_id"], case["cta"], label)
+            result["url"] = await _assert_rent_destination(page, case["listing_id"], case["cta_selector"], label)
     except Exception as e:
         result["err"] = f"{type(e).__name__}: {str(e).splitlines()[0][:240]}"
         await _shot(page, f"{label}_99_error")
