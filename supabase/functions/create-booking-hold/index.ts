@@ -63,10 +63,28 @@ serve(async (req) => {
       amount, 
       delivery_fee = 0,
     } = body;
+    const draftTermsId = body.terms_id ?? null;
     
     // Handle null deposit_amount explicitly (null can be passed from frontend)
     const deposit_amount = body.deposit_amount ?? 0;
     const referral_code = body.referral_code ? String(body.referral_code).trim().toUpperCase().slice(0, 32) : '';
+
+    // Activate the client-created draft terms row so its acknowledged_at
+    // stamp is preserved and the booking is linked. Best-effort — a hold
+    // must not fail because of a stale draft id, but we log for audit.
+    if (draftTermsId) {
+      const { error: termsErr } = await supabaseClient
+        .from('transaction_terms')
+        .update({ status: 'active', booking_id })
+        .eq('id', draftTermsId)
+        .eq('buyer_id', user.id)
+        .eq('listing_id', listing_id);
+      if (termsErr) {
+        logStep('Failed to activate draft terms', { error: termsErr.message, draftTermsId });
+      } else {
+        logStep('Draft terms activated', { terms_id: draftTermsId, booking_id });
+      }
+    }
     
     logStep("Request received", { booking_id, listing_id, amount, delivery_fee, deposit_amount, referral_code });
 
