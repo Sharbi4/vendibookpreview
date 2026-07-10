@@ -388,8 +388,121 @@ Deno.test("e2e: rental listing accepts a renter booking request end-to-end", asy
   assertEquals(hostView?.listing_id, listingId);
 });
 
-Deno.test("e2e: cleanup — remove listings and bookings created by this run", async () => {
+Deno.test("e2e: pay-in-person sale completes buyer + seller confirmation flow", async () => {
+  requireCreds();
+  if (!RENTER_EMAIL || !RENTER_PASSWORD) {
+    console.warn(
+      "Skipping cash-sale confirmation e2e — set TEST_RENTER_EMAIL / TEST_RENTER_PASSWORD to enable.",
+    );
+    return;
+  }
+
+  // 1. Seller publishes a cash-only sale listing.
+  const { client: sellerClient, token: sellerToken, userId: sellerId } =
+    await authedClient();
+  const listingId = await createDraft(sellerToken, {
+    mode: "sale",
+    category: "food_truck",
+    city: "Phoenix",
+    state: "AZ",
+  });
+  const listing = await fillAndPublish(sellerClient, listingId, {
+    price_sale: 12500,
+    accept_card_payment: false,
+    accept_cash_payment: true,
+  });
+  assertEquals(listing?.status, "published");
+  assertEquals(listing?.mode, "sale");
+  assertEquals(listing?.accept_cash_payment, true);
+
+  // 2. Buyer signs in as a distinct account (ownership rule forbids self-buying).
+  const buyerClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+  const { data: buyerAuth, error: buyerErr } = await buyerClient.auth
+    .signInWithPassword({ email: RENTER_EMAIL, password: RENTER_PASSWORD });
+  if (buyerErr) throw new Error(`Buyer sign-in failed: ${buyerErr.message}`);
+  const buyerId = buyerAuth.user!.id;
+  assert(buyerId !== sellerId, "Buyer must differ from seller");
+
+  // 3. Buyer creates a pending_cash sale transaction (mirrors SaleCheckout).
+  const { data: tx, error: txErr } = await buyerClient
+    .from("sale_transactions")
+    .insert({
+      listing_id: listingId,
+      buyer_id: buyerId,
+      seller_id: sellerId,
+      amount: 12500,
+      platform_fee: 0,
+      seller_payout: 12500,
+      status: "pending_cash",
+      fulfillment_type: "pickup",
+      buyer_name: "E2E Cash Buyer",
+      buyer_email: RENTER_EMAIL,
+    })
+    .select("id, status, payment_intent_id")
+    .single();
+  assertEquals(txErr, null, `cash tx insert failed: ${txErr?.message}`);
+  assertExists(tx?.id);
+  assertEquals(tx?.status, "pending_cash");
+  assertEquals(tx?.payment_intent_id, null);
+  CREATED_SALE_TX_IDS.push(tx!.id);
+
+  // 4. Seller confirms — direct UPDATE, which requires the RLS fix that admits
+  //    the 'pending_cash' status into the seller's update policy.
+  const { data: sellerUpd, error: sellerUpdErr } = await sellerClient
+    .from("sale_transactions")
+    .update({ seller_confirmed_at: new Date().toISOString() })
+    .eq("id", tx!.id)
+    .select("id, seller_confirmed_at, status")
+    .single();
+  assertEquals(sellerUpdErr, null, sellerUpdErr?.message);
+  assertExists(
+    sellerUpd?.seller_confirmed_at,
+    "seller_confirmed_at should be set — RLS is dropping the update if this is null",
+  );
+  assertEquals(sellerUpd?.status, "pending_cash");
+
+  // 5. Buyer confirms receipt and completes the transaction in a single update.
+  const { data: buyerUpd, error: buyerUpdErr } = await buyerClient
+    .from("sale_transactions")
+    .update({
+      buyer_confirmed_at: new Date().toISOString(),
+      status: "completed",
+    })
+    .eq("id", tx!.id)
+    .select("id, status, buyer_confirmed_at, seller_confirmed_at")
+    .single();
+  assertEquals(buyerUpdErr, null, buyerUpdErr?.message);
+  assertEquals(buyerUpd?.status, "completed");
+  assertExists(buyerUpd?.buyer_confirmed_at);
+  assertExists(buyerUpd?.seller_confirmed_at);
+
+  // 6. Both parties can read the final row via their own RLS-scoped clients.
+  const { data: sellerView } = await sellerClient
+    .from("sale_transactions")
+    .select("id, status")
+    .eq("id", tx!.id)
+    .single();
+  assertEquals(sellerView?.status, "completed");
+
+  const { data: buyerView } = await buyerClient
+    .from("sale_transactions")
+    .select("id, status")
+    .eq("id", tx!.id)
+    .single();
+  assertEquals(buyerView?.status, "completed");
+});
+
+Deno.test("e2e: cleanup — remove listings, bookings, and sale transactions created by this run", async () => {
   const { client } = await authedClient();
+  if (CREATED_SALE_TX_IDS.length > 0) {
+    const { error } = await client
+      .from("sale_transactions")
+      .delete()
+      .in("id", CREATED_SALE_TX_IDS);
+    if (error) console.warn(`Sale tx cleanup warning: ${error.message}`);
+  }
   if (CREATED_BOOKING_IDS.length > 0) {
     const { error } = await client
       .from("booking_requests")
