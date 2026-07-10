@@ -1,112 +1,77 @@
-# Lightweight Transaction Details — Full Rollout
+## Goal
 
-Ship the "quiet clarity" transaction-details experience across listing pages, checkout, booking, wizard, dashboard, and emails, using the already-built primitives as the foundation. No new visual system — extend the existing Satin Lux tokens.
+Every payment or booking submit routes through `FinalReviewSheet` so a versioned `record_user_consent` row (and an `acknowledged_at` stamp on `transaction_terms`) is written *before* the money-moving edge function runs. UX pattern is **intercept**: existing Submit buttons open the sheet, sheet's `onConfirm` runs the original handler.
 
-## Scope decisions (from your answers)
-- Ship all three slices in one push.
-- Acknowledgment is recorded server-side on `transaction_terms` (`acknowledged_at`, `acknowledged_ip`, `acknowledged_user_agent`).
-- Copy lives in `transactionTerms.ts` / template components (no admin copy table).
+## New backend piece
 
-## What already exists (reuse, don't rebuild)
-- `src/lib/transactionTerms.ts` — `buildTerms`, `renderTermsEmailBlock`
-- `src/components/transaction/TransactionSummary.tsx` — "Good to Know" block
-- `src/components/transaction/TransactionDetailsAccordion.tsx` — expanded sections
-- `src/components/transaction/PriceDetailsModal.tsx` — "See Price Details"
-- `src/components/transaction/FinalReviewSheet.tsx` — final review + checkbox
-- `public.transaction_terms` table + RLS
-- `create-checkout` writes snapshot for Stripe rentals/sales
-- `booking-confirmation.tsx` email renders `TermsBlock`
+**Edge function `create-transaction-terms-draft`** (auth required, verify_jwt = false + validate in code).
 
-## What's missing / broken (this push closes it)
+Input: `{ listing_id, mode: 'rent'|'sale', selection: {...}, buyer?: {...} }`.
 
-### 1. Wiring (read-side)
-- Listing detail (`ListingDetailPage` / booking widget / sale widget): render `TransactionSummary` under the price block with 2–4 filtered bullets and the correct labeled link ("View Rental Details" / "View Purchase Details" / "View Booking Details" / "See Price Details" / "View Cancellation Policy").
-- Rent checkout / Buy checkout / Commercial-kitchen booking: mount `FinalReviewSheet` as the last step before Stripe redirect / cash confirm, with the acknowledgment checkbox.
-- Dashboard order/booking detail: render `TransactionDetailsAccordion` from the stored snapshot so post-purchase view matches pre-purchase view.
-- All copy driven by `buildTerms(listing, selection)` — no hard-coded strings in the widgets.
+Steps:
+1. Validate caller is authenticated (`getUser` from access token).
+2. Load listing, run the same `buildTerms(...)` resolver as the client / downstream edge functions (import `_shared/transactionTerms.ts` — will need to create shared copy of `src/lib/transactionTerms.ts` under `supabase/functions/_shared/`).
+3. Insert one row into `public.transaction_terms` with `status = 'draft'`, `sale_transaction_id = null`, `booking_request_id = null`, `snapshot`, `terms_version`, `transaction_mode`, `payment_method`, pricing cents columns.
+4. Return `{ terms_id, snapshot, terms_version }`.
 
-### 2. Relevance filter (spec §4, §17)
-- Extend `buildTerms` so each section is emitted only when its underlying data is present: no deposit → no deposit line; no delivery → no delivery line; no mileage → no mileage line; no insurance requirement → no insurance line; PIP sale → no Stripe wording; Instant Book → suppress "host approval" wording, and vice versa.
-- Add unit-test cases per config in `transactionTerms.test.ts` (rental base only, rental + deposit, rental + auth hold, rental + insurance, rental + mileage, rental + late return, approval, instant book, PIP sale, online sale, commercial kitchen, vendor lot).
-
-### 3. Pay-in-Person snapshot (write-side, closes prior audit fail)
-- New edge function `create-cash-sale`: validates ownership rule, runs `buildTerms`, inserts `transaction_terms` row, then inserts `sale_transactions` row with `terms_id`, `payment_method='pay_in_person'`, `platform_fee=0`, `seller_payout=amount`. Single transaction, idempotent on `(listing_id, buyer_email, created_at bucket)`.
-- Update `src/pages/SaleCheckout.tsx` cash branch to call the new function instead of inserting directly.
-- Update `send-sale-notification` to fetch the linked `transaction_terms` and pass a `terms` prop to both cash email templates; add `TermsBlock` render.
-- Assert in a test that no `create-checkout` network call fires on the cash path.
-
-### 4. Acknowledgment ledger (spec §21)
-- Migration adds `acknowledged_at timestamptz`, `acknowledged_ip inet`, `acknowledged_user_agent text` to `public.transaction_terms`.
-- New edge function `acknowledge-terms` (JWT-validated): body `{ terms_id }`, writes the three fields for a row the caller owns; returns 200. Called by `FinalReviewSheet` submit before proceeding.
-- RLS: owner can update only these three fields via a `SECURITY DEFINER` function; direct UPDATE on the columns stays denied.
-
-### 5. Host-wizard structured fields (spec §20)
-- Audit `listings` columns against the required set. Add only what's missing (deposit_amount, auth_hold_amount, mileage_included, mileage_overage_rate_cents, late_return_fee_cents, insurance_required, cleaning_expectation, fuel_expectation, cancellation_policy_key, required_documents jsonb, access_hours, etc. — only columns not already present).
-- Update the listing wizard fee-editor to force `{ name, amount|calc, category: mandatory|optional|conditional|refundable, short_description }`. Blank name or missing category disables Save.
-- Wizard microcopy: "Add only charges the renter may actually be responsible for."
-
-### 6. Copy pass (spec §2, §7, §10, §11, §12, §17, §19)
-- Centralize the exact strings in `transactionTerms.ts` constants: heading variants ("Good to Know" / "Before You Buy" / "Booking Details"), payment-timing phrases, PIP wording, approval vs Instant Book phrasing, deposit vs auth-hold phrasing, insurance/permit wording, Vendibook role paragraph.
-- Remove any duplicate strings from checkout/widget files.
-
-### 7. Design/accessibility (spec §3, §22, §23, §24)
-- `TransactionSummary` text at `text-sm` (14px) `text-muted-foreground`, hairline top border, no accent color, no icon-only info without `aria-label`.
-- Links use existing text-link style, not buttons.
-- Mobile: `TransactionDetailsAccordion` opens in a bottom sheet (Radix Dialog with `data-state` breakpoint) so main CTA stays visible.
-- All accordion triggers keyboard-operable; `aria-expanded` bound; `aria-live="polite"` on expanded state.
-
-### 8. Tests
-- Extend `src/components/transaction/transaction-views.test.tsx` with every config in spec §26 (rental base, +service fee, +required host fee, +optional delivery, +deposit, +auth hold, +insurance, +docs, +cleaning, +mileage, +late return, approval, instant book, PIP sale, online sale, commercial kitchen, vendor lot).
-- New Playwright suite `tests/e2e/transaction_details_flow.py`:
-  - Listing page shows 2–4 bullets, expandable details, price details modal.
-  - Rent flow: FinalReviewSheet shows checkbox; submit disabled until checked; on submit, `acknowledge-terms` fires exactly once, then Stripe.
-  - Buy-online flow: same.
-  - Buy-cash flow: no `/create-checkout` call, exactly one `/create-cash-sale` call, `transaction_terms` row exists linked to the sale.
-  - Dashboard for each of the above renders the same accordion from the snapshot after refresh.
-  - Mobile viewport: CTA stays above fold; details open in bottom sheet.
-
-## Technical details
-
-### Migration
+Add a `status` column if missing:
 ```sql
 ALTER TABLE public.transaction_terms
-  ADD COLUMN acknowledged_at timestamptz,
-  ADD COLUMN acknowledged_ip inet,
-  ADD COLUMN acknowledged_user_agent text;
-
-CREATE OR REPLACE FUNCTION public.acknowledge_transaction_terms(
-  _terms_id uuid, _ip inet, _ua text
-) RETURNS void
-LANGUAGE plpgsql SECURITY DEFINER SET search_path=public AS $$
-BEGIN
-  UPDATE public.transaction_terms
-     SET acknowledged_at = COALESCE(acknowledged_at, now()),
-         acknowledged_ip = COALESCE(acknowledged_ip, _ip),
-         acknowledged_user_agent = COALESCE(acknowledged_user_agent, _ua)
-   WHERE id = _terms_id
-     AND (renter_id = auth.uid() OR buyer_id = auth.uid());
-END $$;
-GRANT EXECUTE ON FUNCTION public.acknowledge_transaction_terms(uuid,inet,text) TO authenticated;
+  ADD COLUMN IF NOT EXISTS status text NOT NULL DEFAULT 'active'
+    CHECK (status IN ('draft','active','superseded'));
+CREATE INDEX IF NOT EXISTS idx_transaction_terms_status ON public.transaction_terms(status);
 ```
-Plus a listing-column audit migration for any missing structured fields.
 
-### File touch list (approx)
-- edit: `src/pages/ListingDetailPage.tsx`, `src/components/listing-detail/BookingWidget.tsx`, `src/components/listing-detail/SaleWidget.tsx`, `src/pages/SaleCheckout.tsx`, `src/pages/RentCheckout.tsx`, `src/pages/BookingCheckout.tsx`, dashboard order/booking detail pages, `src/lib/transactionTerms.ts`, `src/lib/transactionTerms.test.ts`, `src/components/transaction/*.tsx`, `src/components/transaction/transaction-views.test.tsx`, `supabase/functions/send-sale-notification/index.ts`, cash email templates, listing-wizard fee editor.
-- create: `supabase/functions/create-cash-sale/index.ts`, `supabase/functions/acknowledge-terms/index.ts`, `tests/e2e/transaction_details_flow.py`, one schema migration.
+## Modify existing money-moving edge functions
 
-### Also fix (auto-flagged security)
-- Storage policy `booking-documents` cross-host leak: tighten the host-view policy to match on the specific `booking_id` folder tied to a booking where `br.host_id = auth.uid()`, matching the sibling policy already scoped correctly. Included in the same migration.
+Each accepts an optional `terms_id` on the request body; when present, **reuse** that row (update `status → 'active'`, set `sale_transaction_id` / `booking_request_id` after the sale/booking row exists, and re-run `buildTerms` server-side and assert `snapshot` matches — if it drifts, the request is rejected as tampered). When absent, keep current behavior (insert fresh row) for backward compat.
 
-## Non-goals
-- No admin copy CMS.
-- No new visual system — same tokens.
-- No changes to fee math or Stripe amounts.
-- No changes to the ownership rule, PIP commission-free rule, or payout timing.
-- No new signup/marketing consent flows (out of scope of this ticket — audit noted separately).
+- `supabase/functions/create-cash-sale/index.ts` — replace the current "insert sale, insert terms, backlink" block with the reuse path when `terms_id` present.
+- `supabase/functions/create-checkout/index.ts` — same, guard the terms insertion.
+- `supabase/functions/create-booking-hold/index.ts` — same for the rent request-to-book branch.
 
-## Verification before finishing
-1. `tsgo` clean.
-2. `bunx vitest run` — all new/updated unit + integration tests pass.
-3. Playwright `transaction_details_flow.py` passes on desktop + mobile viewports.
-4. DB check: at least one cash order in the test seed has a linked `transaction_terms` row; at least one card order has both `stripe_payment_intent_id` and `terms_id`.
-5. Screenshot pass on the live listing page confirms primary CTA is still visually dominant.
+## UI: intercept the submit button in 5 flows
+
+Shared helper `src/hooks/useTermsGate.ts`:
+```ts
+useTermsGate({ listing, mode, selection, buyer }) →
+  { open, setOpen, terms, termsId, prepare(), submitting }
+```
+`prepare()` calls the draft edge function, stores `terms`+`termsId`, opens the sheet. `submitting` covers both the prepare call and the sheet's own state.
+
+Wire into each flow:
+
+| File | Current submit | Change |
+|---|---|---|
+| `src/pages/SaleCheckout.tsx` | `handlePurchase` (line 351) | Rename to `runPurchase`. New `handleSubmit` calls `gate.prepare()`; on sheet `onConfirm`, invoke `runPurchase` (cash + card branches unchanged). |
+| `src/components/purchase-wizard/PurchaseStepReview.tsx` | props `onSubmit` | No change — parent passes new interceptor. |
+| `src/pages/BookingCheckout.tsx` | `handleSubmit` (line 265) | Rename to `runSubmit`. New `handleSubmit` opens the sheet; `onConfirm → runSubmit`. |
+| `src/components/listing-detail/BookingForm.tsx` | `handleSubmit` (line 252) | Same intercept pattern. |
+| `src/components/listing-detail/BookingWizard.tsx` | `handleSubmit` (line 252) | Same intercept pattern. |
+| `src/components/search/QuickBookingModal.tsx` | `handleSubmit` (line 164) | Same intercept pattern. |
+
+Mount `<FinalReviewSheet open={gate.open} onOpenChange={gate.setOpen} terms={gate.terms} termsId={gate.termsId} onConfirm={runSubmit} submitting={submitting} />` at the bottom of each page/component.
+
+The inline "I agree" checkbox stays as a pre-gate — the user still can't click Submit without it — so the sheet is a final confirmation, not the only agree surface.
+
+## Consent write order (contract enforced by the sheet)
+
+1. User clicks Submit → checkbox check → `gate.prepare()` → draft terms row created.
+2. Sheet opens, user re-agrees, clicks confirm.
+3. `FinalReviewSheet.handleConfirm` calls `record_user_consent` RPC.
+4. On success, it best-effort calls `acknowledge-terms` edge function with `termsId`.
+5. On success, `onConfirm()` runs → `create-checkout` / `create-cash-sale` / `create-booking-hold` fires with `terms_id` in the body → server flips status draft→active.
+
+If any step 3–4 fails, no payment/booking submit happens.
+
+## Tests
+
+- `supabase/functions/create-transaction-terms-draft/*_test.ts` — unauthenticated 401, snapshot shape, status='draft'.
+- `src/hooks/useTermsGate.test.ts` — draft-call → sheet open flow; error handling closes gracefully.
+- Extend `tests/e2e/cash_sale_terms_snapshot.py` to assert the sheet opens, consent RPC lands (via network log), and the terms row exists with `status='active'` after submit.
+
+## Scope check
+
+New: 1 edge function, 1 hook, 1 migration.
+Modified: 3 edge functions, 5 UI flow files, 1 shared terms module copy for Deno.
+Total ~11 files.
