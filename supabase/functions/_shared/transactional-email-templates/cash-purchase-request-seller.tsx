@@ -18,7 +18,7 @@ interface Props {
   termsVersion?: string
 }
 
-const E = ({ sellerName, listingTitle, salePrice, buyerName, buyerEmail, buyerPhone, orderNumber, transactionId, fulfillmentType }: Props) => (
+const E = ({ sellerName, listingTitle, salePrice, buyerName, buyerEmail, buyerPhone, orderNumber, transactionId, fulfillmentType, termsSnapshot, termsVersion }: Props) => (
   <Html lang="en" dir="ltr"><Head /><Preview>New Pay-in-Person purchase request 💵</Preview>
     <Body style={s.main}><Container style={s.container}>
       <BrandHeader hero="celebrate" listingTitle={listingTitle} />
