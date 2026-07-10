@@ -78,11 +78,11 @@ def calc_base_price(days: int, price_daily: float, price_weekly: float | None) -
 
 
 def fmt(n: float) -> str:
-    """Match JS Number.prototype.toLocaleString('en-US')."""
+    """Match JS Number.prototype.toLocaleString('en-US') — comma thousands,
+    no trailing zeros beyond the decimals actually present."""
     if float(n).is_integer():
         return f"{int(n):,}"
-    # JS toLocaleString drops trailing zeros beyond decimals present
-    s = f"{n:,.2f}"
+    s = f"{n:,.10f}".rstrip("0").rstrip(".")
     return s
 
 
