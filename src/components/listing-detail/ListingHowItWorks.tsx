@@ -662,6 +662,30 @@ const ListingHowItWorks = ({ listing, isOwner, className }: Props) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [listing.id]);
 
+  // When the modal opens on a dual-mode listing and no branch has been
+  // preselected via deep link, move focus to the first branch option so
+  // keyboard-only users land on the actionable choice, not the dialog
+  // close button.
+  useEffect(() => {
+    if (!open) return;
+    if (!isDual) return;
+    if (pickedBranch) return;
+    const t = window.setTimeout(() => {
+      branchBtnRefs.current.sale?.focus();
+    }, 60);
+    return () => window.clearTimeout(t);
+  }, [open, isDual, pickedBranch]);
+
+  // Clear the live-region announcement shortly after it fires so repeated
+  // selections re-trigger the announcement.
+  useEffect(() => {
+    if (!srAnnouncement) return;
+    const t = window.setTimeout(() => setSrAnnouncement(''), 1200);
+    return () => window.clearTimeout(t);
+  }, [srAnnouncement]);
+
+
+
 
 
 
