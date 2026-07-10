@@ -37,6 +37,9 @@ from pathlib import Path
 from urllib.parse import urlparse, parse_qs
 from playwright.async_api import async_playwright, TimeoutError as PWTimeout
 
+sys.path.insert(0, str(Path(__file__).parent))
+from _selectors import TID, visible, any_buy_now  # noqa: E402
+
 SHOTS = Path(__file__).parent / "screenshots"
 SHOTS.mkdir(parents=True, exist_ok=True)
 
