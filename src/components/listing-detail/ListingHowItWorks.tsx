@@ -874,6 +874,8 @@ const ListingHowItWorks = ({ listing, isOwner, className }: Props) => {
         <DialogContent
           className="max-w-lg max-h-[85vh] overflow-y-auto motion-reduce:transition-none motion-reduce:animate-none"
           aria-describedby={`howitworks-desc-${listing.id}`}
+          data-testid="howitworks-dialog"
+          data-variant={config.variant}
         >
           <DialogHeader>
             <DialogTitle>{config.modalTitle}</DialogTitle>
