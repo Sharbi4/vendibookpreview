@@ -53,6 +53,7 @@ import { template as cashPurchaseRequestSeller } from './cash-purchase-request-s
 import { template as cashPurchaseRequestBuyer } from './cash-purchase-request-buyer.tsx'
 import { template as cashSellerConfirmedBuyer } from './cash-seller-confirmed-buyer.tsx'
 import { template as cashBuyerConfirmedSeller } from './cash-buyer-confirmed-seller.tsx'
+import { template as listingRecoveryCs } from './listing-recovery-cs.tsx'
 
 
 export const TEMPLATES: Record<string, TemplateEntry> = {
@@ -73,6 +74,7 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'payout-sent': payoutSent,
   'listing-published': listingPublished,
   'listing-draft-nudge': listingDraftNudge,
+  'listing-recovery-cs': listingRecoveryCs,
   'stripe-onboarding-nudge': stripeOnboardingNudge,
   'document-status': documentStatus,
   'new-message': newMessage,
