@@ -143,24 +143,26 @@ async def verify_inline_cta_opens_modal(pw, case, viewport):
         await page.goto(f"{BASE}/listing/{case['listing_id']}", wait_until="domcontentloaded")
         await page.wait_for_timeout(1500)
 
-        heading = page.get_by_role("heading", name="How This Listing Works").locator("visible=true").first
-        await heading.wait_for(state="visible", timeout=15000)
+        section = page.locator(visible(TID["section"])).first
+        await section.wait_for(state="visible", timeout=15000)
 
-        cta = page.get_by_role("button", name=re.compile(r"see your options", re.I)).locator("visible=true").first
-        await cta.click()
-        dialog = page.get_by_role("dialog").locator("visible=true").first
+        await section.locator(TID["open_cta"]).first.click()
+        dialog = page.locator(TID["dialog"]).first
         await dialog.wait_for(state="visible", timeout=8000)
         await page.screenshot(path=str(SHOTS / f"dl_dual_{label}_00_inline_modal.png"))
-        # Confirm branch selector is shown (both buttons present).
-        await dialog.get_by_role("button", name=re.compile(r"buy this listing", re.I)).wait_for(state="visible", timeout=5000)
-        await dialog.get_by_role("button", name=re.compile(r"rent this listing", re.I)).wait_for(state="visible", timeout=5000)
+        # Branch selector should be rendered for a dual listing.
+        await dialog.locator(TID["branch_selector"]).first.wait_for(
+            state="visible", timeout=5000
+        )
+        await dialog.locator(TID["branch_sale"]).first.wait_for(state="visible", timeout=3000)
+        await dialog.locator(TID["branch_rent"]).first.wait_for(state="visible", timeout=3000)
         print(f"  ✓ inline CTA opened modal with branch selector")
     finally:
         await context.close()
         await browser.close()
 
 
-async def follow_deeplink(pw, case, viewport, deeplink_suffix, branch, expected_button):
+async def follow_deeplink(pw, case, viewport, deeplink_suffix, branch, expected_txn_selector):
     """Open a fresh context at the shareable deep-link URL and drive the flow."""
     label = f"{case['label']}_{viewport['name']}_{branch}_{deeplink_suffix.replace('?', '').replace('=', '').replace('#', 'h')}"
     force_mode = "sale" if branch == "sale" else "rent"
@@ -172,29 +174,27 @@ async def follow_deeplink(pw, case, viewport, deeplink_suffix, branch, expected_
         await page.wait_for_timeout(1800)
 
         # Modal must auto-open thanks to the deep link.
-        dialog = page.get_by_role("dialog").locator("visible=true").first
+        dialog = page.locator(TID["dialog"]).first
         await dialog.wait_for(state="visible", timeout=10000)
         await page.screenshot(path=str(SHOTS / f"dl_{label}_01_auto_open.png"))
 
-        # Branch selector should already be past — the branch is preselected
-        # for dual listings, so the "Buy this listing" / "Rent this listing"
-        # buttons should NOT be showing.
-        selector_visible = await dialog.get_by_role("button", name=re.compile(r"(buy|rent) this listing", re.I)).count()
+        # Deep link should have preselected the branch — the selector must be
+        # gone. Assert by absence of the testid.
+        selector_visible = await dialog.locator(TID["branch_selector"]).count()
         assert selector_visible == 0, "deep link did not preselect the branch (selector still visible)"
 
-        # Click the branch's final CTA to hand off to the transaction widget.
-        final_cta_names = re.compile(
-            r"(continue to purchase|book available dates|request to book|contact the seller|continue)",
-            re.I,
-        )
-        final_cta = dialog.get_by_role("button", name=final_cta_names).last
+        # Click the branch's final CTA (data-branch must match).
+        final_cta = dialog.locator(
+            f'{TID["final_cta"]}[data-branch="{branch}"]'
+        ).first
+        await final_cta.wait_for(state="visible", timeout=5000)
         await final_cta.click()
         await page.wait_for_timeout(1000)
 
-        txn = page.get_by_role("button", name=expected_button).locator("visible=true").first
+        txn = page.locator(expected_txn_selector).first
         await txn.wait_for(state="visible", timeout=10000)
         await page.screenshot(path=str(SHOTS / f"dl_{label}_02_after_cta.png"))
-        print(f"  ✓ deeplink {deeplink_suffix!r} → {branch} → /{expected_button.pattern}/ visible")
+        print(f"  ✓ deeplink {deeplink_suffix!r} → {branch} → txn control visible")
     finally:
         await context.close()
         await browser.close()
@@ -205,11 +205,11 @@ async def run_case(pw, case, viewport):
     await verify_inline_cta_opens_modal(pw, case, viewport)
 
     for suffix, branch, expected in [
-        ("?walkthrough=buy", "sale", re.compile(r"buy now", re.I)),
-        ("?walkthrough=sale", "sale", re.compile(r"buy now", re.I)),
-        ("?walkthrough=rent", "rent", case["rent_button"]),
-        ("#howitworks=buy", "sale", re.compile(r"buy now", re.I)),
-        ("#howitworks=rent", "rent", case["rent_button"]),
+        ("?walkthrough=buy", "sale", BUY_TXN),
+        ("?walkthrough=sale", "sale", BUY_TXN),
+        ("?walkthrough=rent", "rent", case["rent_txn"]),
+        ("#howitworks=buy", "sale", BUY_TXN),
+        ("#howitworks=rent", "rent", case["rent_txn"]),
     ]:
         await follow_deeplink(pw, case, viewport, suffix, branch, expected)
 
