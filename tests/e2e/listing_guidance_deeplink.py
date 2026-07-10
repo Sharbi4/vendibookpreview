@@ -88,12 +88,17 @@ async def run_case(browser, case, vp):
             pass
 
         # Modal auto-opens from the deep link — no click required.
-        dialog = page.get_by_role("dialog")
+        # Use the testid hook so copy refactors do not break the assertion.
+        dialog = page.locator(TID["dialog"]).first
         await dialog.wait_for(state="visible", timeout=8000)
         result["passed"].append("modal_auto_opened")
 
-        title = dialog.locator("h2, [role='heading']").filter(has_text=case["dialog_title"]).first
-        await title.wait_for(state="visible", timeout=3000)
+        # The dialog's data-variant must match the expected walkthrough variant
+        # for this listing — proves the deep link resolved to the right copy.
+        variant_ok = page.locator(
+            f'{TID["dialog"]}[data-variant="{case["expected_variant"]}"]'
+        ).first
+        await variant_ok.wait_for(state="visible", timeout=3000)
         result["passed"].append("correct_variant_shown")
         await shot("01_modal")
     except Exception as e:
