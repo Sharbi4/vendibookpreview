@@ -93,4 +93,45 @@ describe('resolveWalkthrough', () => {
     });
     expect(c.fulfillment).toBe('pickup_or_delivery');
   });
+
+  it('mode=both → sale_and_rent variant with both branches', () => {
+    const c = resolveWalkthrough({
+      id: '11', mode: 'both', category: 'food_truck',
+      accept_card_payment: true, instant_book: true,
+      price_sale: 40000, price_daily: 300,
+    });
+    expect(c.variant).toBe('sale_and_rent');
+    expect(c.heading).toMatch(/how this listing works/i);
+    expect(c.cta).toMatch(/see your options/i);
+    expect(c.branches).toBeTruthy();
+    expect(c.branches!.sale.variant).toBe('sale_card');
+    expect(c.branches!.rent.variant).toBe('rent_instant');
+  });
+
+  it('both prices present with mode=sale still resolves to dual', () => {
+    const c = resolveWalkthrough({
+      id: '12', mode: 'sale', category: 'food_trailer',
+      accept_card_payment: true, instant_book: false,
+      price_sale: 25000, price_hourly: 50,
+    });
+    expect(c.variant).toBe('sale_and_rent');
+    expect(c.branches!.rent.variant).toBe('rent_request');
+  });
+
+  it('sale price only (no rental price) with mode=sale stays sale_card', () => {
+    const c = resolveWalkthrough({
+      id: '13', mode: 'sale', category: 'food_truck',
+      accept_card_payment: true, price_sale: 25000,
+    });
+    expect(c.variant).toBe('sale_card');
+  });
+
+  it('dual mode with pay-in-person seller uses sale_pay_in_person branch', () => {
+    const c = resolveWalkthrough({
+      id: '14', mode: 'both', category: 'food_truck',
+      accept_card_payment: false, price_sale: 30000, price_daily: 250,
+    });
+    expect(c.variant).toBe('sale_and_rent');
+    expect(c.branches!.sale.variant).toBe('sale_pay_in_person');
+  });
 });
