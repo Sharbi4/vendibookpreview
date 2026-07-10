@@ -580,6 +580,17 @@ const ListingHowItWorks = ({ listing, isOwner, className }: Props) => {
     ? rootConfig.branches![pickedBranch]
     : rootConfig;
   const [open, setOpen] = useState(false);
+  // Live region text announced to screen-reader users when the branch changes.
+  const [srAnnouncement, setSrAnnouncement] = useState('');
+  // Refs to the two branch selector buttons so we can implement roving
+  // arrow-key navigation and auto-focus the first option when the selector
+  // becomes visible.
+  const branchBtnRefs = useRef<Record<'sale' | 'rent', HTMLButtonElement | null>>({
+    sale: null,
+    rent: null,
+  });
+  const backBtnRef = useRef<HTMLButtonElement | null>(null);
+  const finalCtaRef = useRef<HTMLButtonElement | null>(null);
   // Ref on the outer inline section. The page mounts this component twice
   // (mobile-only wrapper and desktop-only wrapper); only the visible copy
   // should auto-open the modal, otherwise the deep-link path stacks two
