@@ -20,6 +20,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { useStripeConnect } from '@/hooks/useStripeConnect';
 import { supabase } from '@/integrations/supabase/client';
+import { reportError } from '@/lib/errorReporter';
 import { CATEGORY_LABELS, ListingCategory, FreightPayer, AMENITIES_BY_CATEGORY, FREIGHT_CATEGORY_LABELS, FreightCategory, FulfillmentType, isMobileAsset, isStaticLocation as isStaticLocationFn, MODE_LABELS } from '@/types/listing';
 import {
   DocumentType,
