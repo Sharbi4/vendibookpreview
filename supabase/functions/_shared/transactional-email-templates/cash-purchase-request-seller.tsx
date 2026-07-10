@@ -57,6 +57,8 @@ const E = ({ sellerName, listingTitle, salePrice, buyerName, buyerEmail, buyerPh
           ) : null}
         </Section>
 
+        <TermsBlock snap={termsSnapshot} version={termsVersion} />
+
         <Text style={s.smallHeader}>YOUR NEXT STEPS</Text>
         <Text style={s.listItem}>1. Contact the buyer to arrange meetup, payment method (cash / cashier's check), and handoff.</Text>
         <Text style={s.listItem}>2. Meet the buyer, collect the full ${salePrice ? salePrice.toLocaleString() : 'agreed amount'}, and hand over the item.</Text>
