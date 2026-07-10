@@ -986,6 +986,8 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
               handleContinue();
             }}
             disabled={!canContinue}
+            data-testid="rental-widget-cta"
+            data-instant-book={instantBook ? 'true' : 'false'}
           >
             {instantBook ? (
               <>
