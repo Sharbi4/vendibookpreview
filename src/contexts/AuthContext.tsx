@@ -194,7 +194,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
               } catch (e) {
                 console.warn('[Analytics] session_user_link failed', e);
               }
+
+              // Drain any session-deferred signup consent (Terms + Privacy)
+              // captured before email verification. No-op if the stash is
+              // empty or belongs to a different email.
+              drainPendingSignupConsent(session.user).catch((e) =>
+                console.warn('[Auth] deferred consent drain failed', e),
+              );
             }
+
 
             const [profileData, rolesData] = await Promise.all([
               fetchProfile(session.user.id),
