@@ -4008,26 +4008,6 @@ export const PublishWizard: React.FC = () => {
                   {listing?.mode === 'rent' ? ' booking requests' : ' purchase inquiries'}.
                 </p>
                 
-                {/* TOS Checkbox */}
-                <div className="relative overflow-hidden rounded-xl p-3 border border-border bg-gradient-to-br from-primary/5 via-primary/3 to-background">
-                  <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-primary/3 animate-pulse" />
-                  <div className="relative flex items-start gap-3">
-                    <Checkbox
-                      id="tos-agreement"
-                      checked={tosAgreed}
-                      onCheckedChange={(checked) => setTosAgreed(checked === true)}
-                      className="mt-0.5"
-                    />
-                    <label htmlFor="tos-agreement" className="text-sm text-foreground cursor-pointer leading-relaxed">
-                      I agree to VendiBook's{' '}
-                      <Link to="/terms" target="_blank" className="text-primary hover:underline font-medium">
-                        Terms of Service
-                      </Link>{' '}
-                      and confirm this listing accurately represents my asset.
-                    </label>
-                  </div>
-                </div>
-
                 {/* Featured charge notice */}
                 {featuredEnabled && !((listing as any)?.featured_at) && (
                   <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 p-3 text-sm text-amber-700 dark:text-amber-300 flex items-start gap-2">
@@ -4038,23 +4018,50 @@ export const PublishWizard: React.FC = () => {
                     </div>
                   </div>
                 )}
+
+                <p className="text-xs text-muted-foreground">
+                  You'll be asked to review and accept VendiBook's{' '}
+                  {listing?.mode === 'rent' ? 'Host / Renter Terms' : 'Seller Terms'} before your listing goes live.
+                </p>
               </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setTosAgreed(false)}>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
             <Button
               variant="dark-shine"
-              onClick={handlePublish}
-              disabled={!tosAgreed || isSaving}
-              className={cn(!tosAgreed && "opacity-50 cursor-not-allowed")}
+              onClick={() => {
+                setShowPublishDialog(false);
+                setShowConsentModal(true);
+              }}
+              disabled={isSaving}
             >
-              {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Send className="w-4 h-4 mr-2" />}
-              Yes, publish
+              <Send className="w-4 h-4 mr-2" />
+              Continue to terms
             </Button>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Terms acceptance (non-preselected) */}
+      <ConsentModal
+        open={showConsentModal}
+        onOpenChange={setShowConsentModal}
+        documentType={listing?.mode === 'rent' ? DOCUMENT_TYPES.RENTER_TERMS : DOCUMENT_TYPES.SELLER_TERMS}
+        trigger={CONSENT_TRIGGERS.PUBLISH_LISTING}
+        acceptanceText={
+          listing?.mode === 'rent'
+            ? "I agree to VendiBook's Host / Renter Terms and confirm this listing accurately represents my asset."
+            : "I agree to VendiBook's Seller Terms and confirm this listing accurately represents my asset."
+        }
+        relatedIds={listing?.id ? { listing_id: listing.id } : undefined}
+        intro="Review the terms that govern this listing. Your acceptance is recorded and dated."
+        primaryLabel={isSaving ? 'Publishing…' : 'Accept and publish'}
+        onAccept={async () => {
+          await handlePublish();
+        }}
+      />
+
 
       <PublishSuccessModal
         open={showSuccessModal}
