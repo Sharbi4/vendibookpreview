@@ -771,7 +771,19 @@ const SaleCheckout = () => {
 
       <Footer />
       <CheckoutOverlay isVisible={showCheckoutOverlay} />
+      {termsGate.terms ? (
+        <FinalReviewSheet
+          terms={termsGate.terms}
+          termsId={termsGate.termsId}
+          open={termsGate.open}
+          onOpenChange={termsGate.setOpen}
+          onConfirm={runPurchase}
+          submitting={isPurchasing || termsGate.preparing}
+          confirmLabel={paymentMethod === 'cash' ? 'Confirm — arrange in person' : 'Continue to secure payment'}
+        />
+      ) : null}
     </div>
+
   );
 };
 
