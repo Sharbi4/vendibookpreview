@@ -47,6 +47,7 @@ import {
 import { SaleTransaction } from '@/hooks/useSaleTransactions';
 import { CATEGORY_LABELS } from '@/types/listing';
 import { useZendeskComments } from '@/hooks/useZendeskComments';
+import AgreedTermsPanel from '@/components/transaction/AgreedTermsPanel';
 
 interface DisputeResolutionCardProps {
   transaction: SaleTransaction;
