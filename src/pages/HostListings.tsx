@@ -32,7 +32,14 @@ const HostListings = () => {
   };
 
   const handlePublish = async (id: string) => {
-    if (!isConnected) {
+    // Stripe is only required for rentals or sales that accept card payments.
+    // Cash-only (Pay in Person) sale listings can publish without Stripe.
+    const listing = listings.find((l) => l.id === id);
+    const needsStripe =
+      listing?.mode === 'rent' ||
+      (listing?.mode === 'sale' && (listing as any)?.accept_card_payment !== false);
+
+    if (needsStripe && !isConnected) {
       setShowStripeModal(true);
       return;
     }
