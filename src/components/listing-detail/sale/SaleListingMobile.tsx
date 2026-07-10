@@ -51,6 +51,7 @@ import { trackLeadEvent } from '@/lib/leadTracking';
 import { resolveListingBrand, getBrandFieldLabel } from '@/lib/resolveListingBrand';
 import { SaleCard } from './SaleCard';
 import { SaleStickyActionBar } from './SaleStickyActionBar';
+import ListingHowItWorks from '@/components/listing-detail/ListingHowItWorks';
 
 interface SaleListingMobileProps {
   listing: any;
