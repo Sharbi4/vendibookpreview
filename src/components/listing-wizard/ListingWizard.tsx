@@ -34,6 +34,8 @@ import { StripeConnectBanner } from './StripeConnectBanner';
 import { ListingPreviewModal } from './ListingPreviewModal';
 import { WizardPreviewSidebar } from './WizardPreviewSidebar';
 import { trackLeadEvent } from '@/lib/leadTracking';
+import { ReportIssueButton } from '@/components/support/ReportIssueButton';
+
 
 const STEPS = ['Type', 'Details', 'Pricing', 'Location', 'Documents', 'Media', 'Review'];
 
@@ -1023,7 +1025,7 @@ export const ListingWizard: React.FC = () => {
                 label="Report issue"
                 context={{
                   featureArea: "listing_wizard",
-                  wizardStep: STEPS[currentStep]?.id ?? String(currentStep),
+                  wizardStep: String(STEPS[currentStep] ?? currentStep),
                   related: { draft_id: draftId ?? undefined },
                 }}
               />
