@@ -54,13 +54,15 @@ Deno.serve(async (req) => {
   let recipientEmail: string
   let idempotencyKey: string
   let messageId: string
+  let providedIdempotencyKey: string | null = null
   let templateData: Record<string, any> = {}
   try {
     const body = await req.json()
     templateName = body.templateName || body.template_name
     recipientEmail = body.recipientEmail || body.recipient_email
+    providedIdempotencyKey = body.idempotencyKey || body.idempotency_key || null
     messageId = crypto.randomUUID()
-    idempotencyKey = body.idempotencyKey || body.idempotency_key || messageId
+    idempotencyKey = providedIdempotencyKey || messageId
     if (body.templateData && typeof body.templateData === 'object') {
       templateData = body.templateData
     }
@@ -73,6 +75,7 @@ Deno.serve(async (req) => {
       }
     )
   }
+
 
   if (!templateName) {
     return new Response(
