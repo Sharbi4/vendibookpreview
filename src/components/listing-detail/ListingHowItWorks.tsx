@@ -55,7 +55,7 @@ export type WalkthroughVariant =
   | 'rent_instant'
   | 'rent_request';
 
-type FulfillmentContext = 'pickup' | 'delivery' | 'on_site_kitchen' | 'on_site_lot';
+type FulfillmentContext = 'pickup' | 'delivery' | 'pickup_or_delivery' | 'on_site_kitchen' | 'on_site_lot';
 
 export interface WalkthroughStep {
   icon: LucideIcon;
@@ -90,13 +90,18 @@ export function resolveWalkthrough(listing: ListingLike): WalkthroughConfig {
   const onSiteLot = category === 'vendor_lot' || category === 'vendor_space';
   const fulfillmentType = (listing.fulfillment_type || '').toLowerCase();
 
+  const hasDelivery = fulfillmentType.includes('deliver') || fulfillmentType === 'both';
+  const hasPickup = fulfillmentType.includes('pickup') || fulfillmentType === 'both' || fulfillmentType === '';
+
   const fulfillment: FulfillmentContext = onSiteKitchen
     ? 'on_site_kitchen'
     : onSiteLot
       ? 'on_site_lot'
-      : fulfillmentType.includes('deliver')
-        ? 'delivery'
-        : 'pickup';
+      : hasDelivery && hasPickup && (fulfillmentType === 'both' || (fulfillmentType.includes('deliver') && fulfillmentType.includes('pickup')))
+        ? 'pickup_or_delivery'
+        : hasDelivery
+          ? 'delivery'
+          : 'pickup';
 
   // Sale variants
   if (isSale) {
@@ -139,6 +144,13 @@ function fulfillmentStepForRental(f: FulfillmentContext): WalkthroughStep {
         description:
           'Use Messages to confirm the delivery window and drop-off spot. The host will meet you as agreed.',
       };
+    case 'pickup_or_delivery':
+      return {
+        icon: Truck,
+        title: 'Choose pickup or delivery',
+        description:
+          'This host offers both pickup and delivery. Use Messages to pick one, then confirm the time and place. The full pickup address unlocks once the booking is confirmed.',
+      };
     case 'pickup':
     default:
       return {
@@ -157,6 +169,14 @@ function fulfillmentStepForSale(f: FulfillmentContext): WalkthroughStep {
       title: 'Coordinate delivery or freight',
       description:
         'Arrange delivery, local drop-off, or freight in Messages. If freight is offered, it is calculated at $4.50/mile.',
+    };
+  }
+  if (f === 'pickup_or_delivery') {
+    return {
+      icon: Truck,
+      title: 'Choose pickup, delivery, or freight',
+      description:
+        'This seller offers both pickup and delivery. Confirm which you want in Messages. Freight, when offered, is calculated at $4.50/mile. The seller\'s full address unlocks after purchase.',
     };
   }
   return {

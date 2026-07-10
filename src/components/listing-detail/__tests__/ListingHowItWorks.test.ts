@@ -65,4 +65,32 @@ describe('resolveWalkthrough', () => {
     const titles = c.fullSteps.map(s => s.title).join(' | ');
     expect(titles).toMatch(/deliver|freight/i);
   });
+
+  it('sale with fulfillment_type=both shows combined pickup+delivery step', () => {
+    const c = resolveWalkthrough({
+      id: '8', mode: 'sale', accept_card_payment: true, category: 'food_truck',
+      fulfillment_type: 'both',
+    });
+    expect(c.fulfillment).toBe('pickup_or_delivery');
+    const step = c.fullSteps.find(s => /pickup.*deliver|deliver.*pickup|choose pickup/i.test(s.title));
+    expect(step).toBeTruthy();
+  });
+
+  it('rent with fulfillment_type=both shows combined pickup+delivery step', () => {
+    const c = resolveWalkthrough({
+      id: '9', mode: 'rent', instant_book: true, category: 'food_trailer',
+      fulfillment_type: 'both',
+    });
+    expect(c.fulfillment).toBe('pickup_or_delivery');
+    const titles = c.fullSteps.map(s => s.title).join(' | ');
+    expect(titles).toMatch(/pickup.*deliver|deliver.*pickup|choose pickup/i);
+  });
+
+  it('rent with fulfillment_type=pickup_delivery treated as combined', () => {
+    const c = resolveWalkthrough({
+      id: '10', mode: 'rent', instant_book: false, category: 'food_trailer',
+      fulfillment_type: 'pickup_delivery',
+    });
+    expect(c.fulfillment).toBe('pickup_or_delivery');
+  });
 });
