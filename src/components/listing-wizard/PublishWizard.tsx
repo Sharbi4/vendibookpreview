@@ -1667,9 +1667,9 @@ export const PublishWizard: React.FC = () => {
     }
   };
 
-  // TOS agreement state for publish confirmation
-  const [tosAgreed, setTosAgreed] = useState(false);
+  // Publish confirmation + terms consent modal state
   const [showPublishDialog, setShowPublishDialog] = useState(false);
+  const [showConsentModal, setShowConsentModal] = useState(false);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
 
   // Checklist state - with proper validation
