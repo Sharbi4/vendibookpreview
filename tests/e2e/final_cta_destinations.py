@@ -47,7 +47,11 @@ BASE = os.environ.get("E2E_BASE_URL", "http://localhost:8080")
 CASES = [
     dict(
         variant="sale_card",
-        listing_id="ee20ce79-1fbc-4885-aaf8-61f4c3a5cc25",
+        # Live "card payment" sale listing with a non-null price_sale so the
+        # Buy Now button is enabled. Do NOT swap for a listing whose
+        # `price_sale` is null — the widget renders Buy Now disabled and the
+        # click assertion below will (correctly) fail.
+        listing_id="d93c53cb-f440-4672-ba6c-912c8266cda8",
         kind="sale",
         cta=re.compile(r"buy now", re.I),
     ),
