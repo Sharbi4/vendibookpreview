@@ -56,23 +56,31 @@ VIEWPORTS = [
 ]
 
 INJECTED_SALE_PRICE = 4500  # dollars — enough to make hasSalePrice truthy
+INJECTED_DAILY_PRICE = 150  # fallback rental rate when the source lacks one
 
 
-def _rewrite_listing_row(row: dict, listing_id: str) -> dict:
+def _rewrite_listing_row(row: dict, listing_id: str, force_mode: str) -> dict:
     if not isinstance(row, dict):
         return row
     if str(row.get("id")) != listing_id:
         return row
     row = dict(row)
+    # Always inject a sale price so hasSalePrice is truthy.
     row["price_sale"] = INJECTED_SALE_PRICE
-    # Ensure card-payment path so dual-mode picks the sale_card branch.
+    # Ensure at least one rental price exists so hasRentalPrice is truthy.
+    if not any(row.get(k) for k in ("price_hourly", "price_daily", "price_weekly", "price_monthly")):
+        row["price_daily"] = INJECTED_DAILY_PRICE
+    # Force the requested mode so the listing detail page renders the matching
+    # transaction widget (sale → Buy Now, rent → Book / Request).
+    row["mode"] = force_mode
     if "accept_card_payment" in row and row["accept_card_payment"] is False:
         row["accept_card_payment"] = True
     return row
 
 
-async def _install_listing_rewriter(context, listing_id: str) -> None:
-    """Intercept Supabase REST responses for `listings` rows and add a sale price."""
+async def _install_listing_rewriter(context, listing_id: str, force_mode: str) -> None:
+    """Intercept Supabase REST responses for `listings` rows and rewrite them
+    into a dual-mode configuration with the requested widget mode."""
 
     async def handler(route: Route, request: Request) -> None:
         try:
@@ -91,13 +99,13 @@ async def _install_listing_rewriter(context, listing_id: str) -> None:
             if isinstance(data, list):
                 new_data = []
                 for row in data:
-                    new_row = _rewrite_listing_row(row, listing_id)
+                    new_row = _rewrite_listing_row(row, listing_id, force_mode)
                     if new_row is not row:
                         changed = True
                     new_data.append(new_row)
                 data = new_data
             elif isinstance(data, dict):
-                new_data = _rewrite_listing_row(data, listing_id)
+                new_data = _rewrite_listing_row(data, listing_id, force_mode)
                 if new_data is not data:
                     changed = True
                     data = new_data
