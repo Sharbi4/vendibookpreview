@@ -762,6 +762,10 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
                       <button
                         onClick={() => handleDateClick(date)}
                         disabled={isDisabled}
+                        data-testid="rental-calendar-day"
+                        data-day-key={dateKey}
+                        data-day-status={status}
+                        data-day-disabled={isDisabled ? 'true' : 'false'}
                         className={cn(
                           "aspect-square p-0.5 rounded-md text-xs font-medium transition-all relative",
                           "flex flex-col items-center justify-center",
