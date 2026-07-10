@@ -69,7 +69,8 @@ Deno.serve(async (req) => {
     // Look up the most recent transaction_terms snapshot for this booking.
     // If we can find one, embed the exact numbers/policies in the email so
     // the buyer sees the same record they agreed to.
-    let termsBlockHtml = '';
+    let termsSnapshot: any = null;
+    let termsVersion = 'v1';
     try {
       const { data: termsRow } = await supabase
         .from('transaction_terms')
@@ -79,7 +80,8 @@ Deno.serve(async (req) => {
         .limit(1)
         .maybeSingle();
       if (termsRow) {
-        termsBlockHtml = renderTermsBlock((termsRow as any).snapshot, (termsRow as any).terms_version);
+        termsSnapshot = (termsRow as any).snapshot;
+        termsVersion = (termsRow as any).terms_version || 'v1';
       }
     } catch (e) {
       console.warn('[send-booking-confirmation] terms lookup failed', e);
@@ -97,7 +99,8 @@ Deno.serve(async (req) => {
       address: b.address,
       deliveryAddress: b.deliveryAddress,
       depositAmount: b.depositAmount ? fmtMoney(b.depositAmount) : undefined,
-      termsBlockHtml,
+      termsSnapshot,
+      termsVersion,
     };
 
     const { error } = await supabase.functions.invoke('send-transactional-email', {
@@ -109,7 +112,7 @@ Deno.serve(async (req) => {
       },
     });
     if (error) throw error;
-    return new Response(JSON.stringify({ success: true, termsIncluded: Boolean(termsBlockHtml) }), {
+    return new Response(JSON.stringify({ success: true, termsIncluded: Boolean(termsSnapshot) }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (e) {
