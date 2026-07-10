@@ -208,6 +208,22 @@ export const AuthFormPanel = ({ mode, setMode }: AuthFormPanelProps) => {
     
     if (!validateForm()) return;
 
+    // Non-preselected consent gate — signup cannot proceed without an
+    // affirmative acceptance of the Terms + Privacy Policy (spec §6 / §26).
+    if (mode === 'signup' && !agreedToTerms) {
+      setErrors((prev) => ({
+        ...prev,
+        terms: 'Please agree to the Terms of Service to create your account.',
+      }));
+      toast({
+        title: 'Terms acceptance required',
+        description:
+          'Please review and accept the Vendibook Terms of Service before creating your account.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -277,7 +293,56 @@ export const AuthFormPanel = ({ mode, setMode }: AuthFormPanelProps) => {
             const { data: { session: newSession } } = await supabase.auth.getSession();
             hasSession = !!newSession?.user;
             if (newSession?.user?.id) {
+              // Record the signup consent server-side. If auto-confirm is off
+              // (email verify required) the user has no session yet — we then
+              // record the consent on their first authenticated action; the
+              // orchestrator + toast tell them to check email.
+              try {
+                await supabase.rpc('record_user_consent', {
+                  _document_type: DOCUMENT_TYPES.TERMS_OF_SERVICE,
+                  _document_version: CURRENT_VERSIONS[DOCUMENT_TYPES.TERMS_OF_SERVICE],
+                  _trigger_action: CONSENT_TRIGGERS.SIGNUP,
+                  _acceptance_text: SIGNUP_TOS_ACCEPTANCE_TEXT,
+                  _related_ids: { role: selectedRole },
+                  _route: '/auth?mode=signup',
+                  _ip: null,
+                  _user_agent: navigator.userAgent,
+                  _locale: navigator.language,
+                  _application_version: null,
+                });
+                await supabase.rpc('record_user_consent', {
+                  _document_type: DOCUMENT_TYPES.PRIVACY_POLICY,
+                  _document_version: CURRENT_VERSIONS[DOCUMENT_TYPES.PRIVACY_POLICY],
+                  _trigger_action: CONSENT_TRIGGERS.SIGNUP,
+                  _acceptance_text: SIGNUP_TOS_ACCEPTANCE_TEXT,
+                  _related_ids: { role: selectedRole },
+                  _route: '/auth?mode=signup',
+                  _ip: null,
+                  _user_agent: navigator.userAgent,
+                  _locale: navigator.language,
+                  _application_version: null,
+                });
+                if (marketingOptIn) {
+                  // Marketing opt-in is a separate, revocable consent —
+                  // never bundled into the required platform acceptance.
+                  await supabase
+                    .from('newsletter_subscribers')
+                    .upsert(
+                      { email: trimmedEmail, source: 'signup_opt_in' },
+                      { onConflict: 'email' },
+                    );
+                }
+              } catch (consentErr) {
+                console.error('Failed to record signup consent', consentErr);
+              }
+
               triggerOrchestrator({
+                user_id: newSession.user.id,
+                event_type: 'user_signup',
+                payload: { role: selectedRole, first_name: trimmedFirstName },
+              });
+            }
+          } catch {}
                 user_id: newSession.user.id,
                 event_type: 'user_signup',
                 payload: { role: selectedRole, first_name: trimmedFirstName },
