@@ -169,6 +169,8 @@ project_id = "nbrehbwfsmedbelzntqs"
     verify_jwt = false
   [functions.twilio-status-callback]
     verify_jwt = false
+  [functions.tawk-webhook]
+    verify_jwt = false
   [functions.send-stripe-onboarding-reminder]
     verify_jwt = false
   [functions.send-welcome-email]
