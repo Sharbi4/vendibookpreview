@@ -53,6 +53,7 @@ import { template as cashPurchaseRequestSeller } from './cash-purchase-request-s
 import { template as cashPurchaseRequestBuyer } from './cash-purchase-request-buyer.tsx'
 import { template as cashSellerConfirmedBuyer } from './cash-seller-confirmed-buyer.tsx'
 import { template as cashBuyerConfirmedSeller } from './cash-buyer-confirmed-seller.tsx'
+import { template as listingRecoveryCs } from './listing-recovery-cs.tsx'
 
 
 export const TEMPLATES: Record<string, TemplateEntry> = {
