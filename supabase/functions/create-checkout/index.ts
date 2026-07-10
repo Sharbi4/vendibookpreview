@@ -105,7 +105,7 @@ serve(async (req) => {
     // Fetch listing to get host's Stripe account and details for checkout display
     const { data: listing, error: listingError } = await supabaseClient
       .from('listings')
-      .select('host_id, title, cover_image_url, address, pickup_location_text')
+      .select('host_id, title, cover_image_url, address, pickup_location_text, city, state, cancellation_policy, rules, category, mode')
       .eq('id', listing_id)
       .single();
 
