@@ -49,6 +49,7 @@ type TicketRow = {
   resolution_notes: string | null;
   created_at: string;
   updated_at: string;
+  source?: "in_app" | "tawkto" | "email" | "system" | null;
 };
 
 type MessageRow = {
