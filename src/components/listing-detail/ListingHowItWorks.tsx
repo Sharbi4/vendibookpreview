@@ -903,13 +903,17 @@ const ListingHowItWorks = ({ listing, isOwner, className }: Props) => {
               >
                 Use the Left and Right arrow keys to move between choices, then press Enter to select.
               </p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div
+                className="grid grid-cols-1 sm:grid-cols-2 gap-3"
+                data-testid="howitworks-branch-selector"
+              >
                 <button
                   ref={(el) => { branchBtnRefs.current.sale = el; }}
                   type="button"
                   onClick={() => handleBranchPick('sale')}
                   onKeyDown={(e) => handleBranchKeyDown(e, 'sale')}
                   aria-label="Buy this listing. Own it outright. See the purchase steps and protections."
+                  data-testid="howitworks-branch-sale"
                   className="text-left rounded-xl border border-border bg-card/70 hover:bg-muted/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background p-4 transition"
                 >
                   <div className="flex items-center gap-2 mb-1">
