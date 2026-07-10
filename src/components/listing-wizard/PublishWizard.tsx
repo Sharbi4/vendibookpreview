@@ -1786,7 +1786,7 @@ export const PublishWizard: React.FC = () => {
                           {/* Cover badge */}
                           {isCover && (
                             <div className="absolute top-2 left-2 px-2 py-1 bg-primary text-primary-foreground rounded-md text-xs font-medium flex items-center gap-1">
-                              <Star className="w-3 h-3" />
+                              <Camera className="w-3 h-3" />
                               Cover
                             </div>
                           )}
@@ -1817,7 +1817,7 @@ export const PublishWizard: React.FC = () => {
                               onClick={() => movePhotoToFirst(globalIndex)}
                               className="absolute bottom-2 left-2 px-2 py-1 bg-black/60 text-white rounded-md text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/80 flex items-center gap-1"
                             >
-                              <Star className="w-3 h-3" />
+                              <Camera className="w-3 h-3" />
                               Cover
                             </button>
                           )}
