@@ -3685,6 +3685,7 @@ export type Database = {
           shipping_notes: string | null
           shipping_status: string | null
           status: string
+          terms_id: string | null
           tracking_number: string | null
           tracking_url: string | null
           transfer_id: string | null
@@ -3727,6 +3728,7 @@ export type Database = {
           shipping_notes?: string | null
           shipping_status?: string | null
           status?: string
+          terms_id?: string | null
           tracking_number?: string | null
           tracking_url?: string | null
           transfer_id?: string | null
@@ -3769,6 +3771,7 @@ export type Database = {
           shipping_notes?: string | null
           shipping_status?: string | null
           status?: string
+          terms_id?: string | null
           tracking_number?: string | null
           tracking_url?: string | null
           transfer_id?: string | null
@@ -3787,6 +3790,13 @@ export type Database = {
             columns: ["promo_code_id"]
             isOneToOne: false
             referencedRelation: "promo_codes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sale_transactions_terms_id_fkey"
+            columns: ["terms_id"]
+            isOneToOne: false
+            referencedRelation: "transaction_terms"
             referencedColumns: ["id"]
           },
         ]
