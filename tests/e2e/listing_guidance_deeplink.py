@@ -33,25 +33,25 @@ CASES = [
         label="rent_deeplink_open",
         listing_id="d94836ba-10fa-44e0-8b5b-046b0bf7d01b",
         query="?walkthrough=open",
-        dialog_title=re.compile(r"what happens after you request", re.I),
+        expected_variant="rent_request",
     ),
     dict(
         label="rent_deeplink_rent",
         listing_id="d94836ba-10fa-44e0-8b5b-046b0bf7d01b",
         query="?walkthrough=rent",
-        dialog_title=re.compile(r"what happens after you request", re.I),
+        expected_variant="rent_request",
     ),
     dict(
         label="sale_deeplink_buy",
         listing_id="ee20ce79-1fbc-4885-aaf8-61f4c3a5cc25",
         query="?walkthrough=buy",
-        dialog_title=re.compile(r"what happens after you buy", re.I),
+        expected_variant="sale_card",
     ),
     dict(
         label="sale_hash_alias",
         listing_id="ee20ce79-1fbc-4885-aaf8-61f4c3a5cc25",
         query="#howitworks=buy",
-        dialog_title=re.compile(r"what happens after you buy", re.I),
+        expected_variant="sale_card",
     ),
 ]
 
