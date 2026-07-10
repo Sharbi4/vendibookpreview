@@ -23,8 +23,11 @@ const SUPABASE_URL = Deno.env.get("VITE_SUPABASE_URL")!;
 const SUPABASE_ANON_KEY = Deno.env.get("VITE_SUPABASE_PUBLISHABLE_KEY")!;
 const TEST_EMAIL = Deno.env.get("TEST_USER_EMAIL");
 const TEST_PASSWORD = Deno.env.get("TEST_USER_PASSWORD");
+const RENTER_EMAIL = Deno.env.get("TEST_RENTER_EMAIL");
+const RENTER_PASSWORD = Deno.env.get("TEST_RENTER_PASSWORD");
 
 const CREATED_LISTING_IDS: string[] = [];
+const CREATED_BOOKING_IDS: string[] = [];
 
 function requireCreds() {
   if (!TEST_EMAIL || !TEST_PASSWORD) {
