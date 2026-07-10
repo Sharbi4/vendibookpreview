@@ -22,7 +22,7 @@ const selectMock = vi.fn(() => ({ eq: eqMock }));
 const fromMock = vi.fn(() => ({ select: selectMock }));
 
 vi.mock('@/integrations/supabase/client', () => ({
-  supabase: { from: (...args: unknown[]) => fromMock(...args) },
+  supabase: { from: (table: string) => fromMock(table) },
 }));
 
 const baseSnapshot = {
