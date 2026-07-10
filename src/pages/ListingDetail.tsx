@@ -811,6 +811,7 @@ const ListingDetail = () => {
             {/* Right Column - Booking/Inquiry Widget (Desktop) - Sticky */}
             <div id="booking-widget" className="hidden lg:block">
               <div className="sticky top-24 space-y-6">
+                <ListingHowItWorks listing={listing as any} isOwner={!!isOwner} />
                 {isRental ? (
                   <RentalBookingWidget
                     listingId={listing.id}
