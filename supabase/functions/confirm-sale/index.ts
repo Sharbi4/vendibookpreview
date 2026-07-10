@@ -132,12 +132,15 @@ serve(async (req) => {
       throw new Error(`Failed to update transaction: ${updateError.message}`);
     }
 
-    // If both parties confirmed, initiate payout
-    // NOTE: Payouts are held until BOTH buyer AND seller confirm, OR 25 days after payment
-    // (auto-release is handled by auto-release-sale-payouts cron job)
-    if (newStatus === 'completed') {
+    // If both parties confirmed, initiate payout.
+    // Cash / Pay-in-Person sales have no online payment (payment_intent_id is null),
+    // so there is nothing to transfer via Stripe — the money is settled off-platform.
+    // In that case we mark the transaction completed and skip the Stripe balance/transfer flow.
+    const isCashSale = !transaction.payment_intent_id;
+
+    if (newStatus === 'completed' && !isCashSale) {
       logStep("Both parties confirmed - initiating payout");
-      
+
       const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
 
       // Get seller's Stripe account
