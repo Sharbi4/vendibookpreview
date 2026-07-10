@@ -276,22 +276,20 @@ Deno.test("payment_method underscores are stripped for human display (pay_in_per
 });
 
 Deno.test("terms fields are omitted (not blank) when transaction_terms row is missing", async () => {
-  const supabase = makeFakeSupabase(null); // primary lookup fails, no fallback row either
+  // Primary lookup returns nothing AND the fallback (sale_transaction_id)
+  // is not stubbed → resolveSaleTerms returns null.
+  const supabase = makeFakeSupabase(null);
   const { terms, buyer } = await buildResolveDisputePayloads(
-    { ...SALE_TX, terms_id: null } as unknown as typeof SALE_TX,
-    "refund_buyer" as unknown as never,
-    // ↑ compile-time noise: TS can't tell we're still calling the same builder
-  ).catch(() => ({ terms: null, buyer: null } as never)) // guard against arg-order mistakes
-    // Re-run with the correct signature:
-    ? await buildResolveDisputePayloads(supabase, { ...SALE_TX, terms_id: null } as any, "refund_buyer")
-    : (null as never);
+    supabase,
+    { ...SALE_TX, terms_id: null } as any,
+    "refund_buyer",
+  );
 
   assertEquals(terms, null, "terms must not resolve when both lookup branches miss");
   const details = buyer.templateData.details;
-  // Only "Listing" survives — no blank total/payment/version rows.
+  // Only "Listing" survives — no blank Total/Payment/Version rows.
   assertEquals(details.length, 1);
   assertEquals(details[0].label, "Listing");
-  // Paragraphs must NOT contain the AGREED TERMS header when terms are absent.
   assert(
     !buyer.templateData.paragraphs.join("\n").includes("AGREED TERMS"),
     "AGREED TERMS block leaked despite unresolved terms",
