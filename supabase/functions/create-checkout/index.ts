@@ -512,6 +512,8 @@ serve(async (req) => {
             platform_fee_cents: applicationFee.toString(),
             host_payout_cents: hostReceives.toString(),
             referral_code,
+            terms_id,
+            terms_version: TERMS_VERSION,
           },
         },
         success_url: `${origin}/payment-success?session_id={CHECKOUT_SESSION_ID}`,
@@ -524,6 +526,8 @@ serve(async (req) => {
           host_id: listing.host_id,
           deposit_amount: deposit_amount.toString(),
           referral_code,
+          terms_id,
+          terms_version: TERMS_VERSION,
         },
       };
     } else {
