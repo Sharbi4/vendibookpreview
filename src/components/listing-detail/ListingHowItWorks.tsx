@@ -725,6 +725,7 @@ const ListingHowItWorks = ({ listing, isOwner, className }: Props) => {
     <>
       {/* Inline prompt (never competes with the primary CTA) */}
       <section
+        ref={rootRef}
         aria-labelledby={`howitworks-heading-${listing.id}`}
         className={cn(
           'rounded-2xl border border-border bg-card/70 p-4 sm:p-5 shadow-sm',
