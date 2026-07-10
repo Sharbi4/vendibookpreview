@@ -9,7 +9,7 @@ import {
   MessageSquare,
   CreditCard,
   Truck,
-  Star,
+  BadgeCheck,
   ArrowRight} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import trustKitchen from '@/assets/home/trust-kitchen.jpg';
@@ -55,7 +55,7 @@ const PILLARS = [
     title: 'Delivery coordination',
     body: 'Define radius, fees, pickup, and on-site fulfillment in one place.'},
   {
-    icon: Star,
+    icon: BadgeCheck,
     title: 'Reviews & trust',
     body: 'Verified post-transaction reviews build long-term reputation.'}];
 
