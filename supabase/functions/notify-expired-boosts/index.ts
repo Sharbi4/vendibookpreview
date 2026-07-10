@@ -26,11 +26,13 @@ serve(async (req) => {
   const now = new Date();
   const nowIso = now.toISOString();
 
-  // Candidate: had a recorded boost payment, expires_at is past, not yet notified, not refunded
+  // Candidate: any listing whose featured window has expired but is still flagged enabled.
+  // Covers both paid boosts (pending_featured_payment set) and admin comp grants
+  // (featured_source='comp', pending_featured_payment NULL).
   const { data: candidates, error } = await supabase
     .from("listings")
-    .select("id, title, host_id, featured_expires_at, pending_featured_payment")
-    .not("pending_featured_payment", "is", null)
+    .select("id, title, host_id, featured_expires_at, featured_enabled, featured_source, pending_featured_payment")
+    .eq("featured_enabled", true)
     .not("featured_expires_at", "is", null)
     .lt("featured_expires_at", nowIso);
 
