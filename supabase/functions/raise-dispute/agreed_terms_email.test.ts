@@ -25,7 +25,7 @@ import {
   formatTermsForEmail,
   resolveSaleTerms,
   type AgreedTerms,
-} from "./resolveSaleTerms.ts";
+} from "../_shared/resolveSaleTerms.ts";
 
 // ---------- Fake supabase client ----------------------------------------
 
