@@ -65,6 +65,8 @@ const AdminDigest = lazy(() => import("./pages/AdminDigest"));
 const AdminOrchestration = lazy(() => import("./pages/AdminOrchestration"));
 const AdminErrors = lazy(() => import("./pages/AdminErrors"));
 const AdminQA = lazy(() => import("./pages/AdminQA"));
+const AdminSupportTickets = lazy(() => import("./pages/AdminSupportTickets"));
+
 const NotificationPreferences = lazy(() => import("./pages/NotificationPreferences"));
 const HelpCenter = lazy(() => import("./pages/HelpCenter"));
 const HelpArticle = lazy(() => import("./pages/HelpArticle"));
@@ -253,6 +255,8 @@ const AnimatedRoutes = () => {
           <Route path="/admin/orchestration" element={<PageTransition><AdminOrchestration /></PageTransition>} />
           <Route path="/admin/errors" element={<PageTransition><AdminErrors /></PageTransition>} />
           <Route path="/admin/qa" element={<PageTransition><AdminQA /></PageTransition>} />
+          <Route path="/admin/support" element={<PageTransition><AdminSupportTickets /></PageTransition>} />
+
           <Route path="/admin/email/dashboard" element={<PageTransition><AdminEmailDashboard /></PageTransition>} />
           <Route path="/admin/campaigns/new-exit-plan" element={<PageTransition><AdminCampaignNewExitPlan /></PageTransition>} />
           <Route path="/email/thanks" element={<PageTransition><EmailFeedbackThanks /></PageTransition>} />
