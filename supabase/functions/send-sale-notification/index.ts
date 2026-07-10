@@ -96,13 +96,27 @@ Deno.serve(async (req) => {
     if (notification_type === 'cash_purchase_request') {
       // Fetch immutable terms snapshot recorded at cash-sale creation so the
       // email shows the same policy + total the buyer/seller agreed to.
-      const { data: terms } = await supabase
-        .from('transaction_terms')
-        .select('snapshot, terms_version')
-        .eq('sale_transaction_id', tx.id)
-        .maybeSingle();
-      const termsSnapshot = (terms as any)?.snapshot ?? undefined;
-      const termsVersion = (terms as any)?.terms_version ?? termsSnapshot?.termsVersion;
+      // Prefer the direct terms_id link on the sale row; fall back to the
+      // reverse lookup for legacy rows created before terms_id existed.
+      let terms: any = null;
+      if ((tx as any).terms_id) {
+        const { data } = await supabase
+          .from('transaction_terms')
+          .select('snapshot, terms_version')
+          .eq('id', (tx as any).terms_id)
+          .maybeSingle();
+        terms = data;
+      }
+      if (!terms) {
+        const { data } = await supabase
+          .from('transaction_terms')
+          .select('snapshot, terms_version')
+          .eq('sale_transaction_id', tx.id)
+          .maybeSingle();
+        terms = data;
+      }
+      const termsSnapshot = terms?.snapshot ?? undefined;
+      const termsVersion = terms?.terms_version ?? termsSnapshot?.termsVersion;
 
       if (sellerOptedIn && sellerEmail) {
         enqueue('cash-purchase-request-seller', sellerEmail, `sale-${tx.id}-seller-cashreq`, { ...commonSeller, termsSnapshot, termsVersion });

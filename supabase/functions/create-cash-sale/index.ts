@@ -205,6 +205,17 @@ Deno.serve(async (req) => {
       throw termsErr;
     }
 
+    // 2b) Back-link the terms snapshot onto the sale so downstream code
+    //     (emails, dashboards, disputes) can resolve terms straight from
+    //     the sale row without a reverse lookup. Non-fatal on failure —
+    //     transaction_terms.sale_transaction_id still preserves the pairing.
+    const { error: linkErr } = await supabase
+      .from('sale_transactions')
+      .update({ terms_id: terms.id })
+      .eq('id', tx.id);
+    if (linkErr) console.error('[create-cash-sale] failed to backlink terms_id', linkErr);
+
+
     // 3) Fire-and-forget notification + seller bell.
     try {
       await supabase.functions.invoke('send-sale-notification', {
