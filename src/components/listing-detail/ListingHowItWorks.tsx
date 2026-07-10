@@ -8,7 +8,7 @@
  * INFORMATIONAL ONLY — it never mutates listing/transaction state.
  * The final CTA is a scroll-to-widget nudge, not a checkout trigger.
  */
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -504,6 +504,7 @@ function buildRentRequest(fulfillment: FulfillmentContext): WalkthroughConfig {
 type EventName =
   | 'guidance_prompt_viewed'
   | 'guidance_auto_opened_first_visit'
+  | 'guidance_opened_via_deeplink'
   | 'purchase_steps_opened'
   | 'rental_steps_opened'
   | 'pay_in_person_steps_opened'
@@ -544,6 +545,31 @@ interface Props {
 const DISMISS_KEY_PREFIX = 'vb_howitworks_seen_';
 const GLOBAL_SEEN_KEY = 'vb_howitworks_seen_global';
 
+/**
+ * Parse the current URL for a walkthrough deep link.
+ * Supported forms (all case-insensitive):
+ *   ?walkthrough=buy     → open modal, preselect buy branch on dual listings
+ *   ?walkthrough=rent    → open modal, preselect rent branch on dual listings
+ *   ?walkthrough=open    → just open the modal (no branch preselect)
+ *   #howitworks          → alias for ?walkthrough=open
+ *   #howitworks=buy      → alias for ?walkthrough=buy
+ *   #howitworks=rent     → alias for ?walkthrough=rent
+ * The branch alias `sale` is accepted as a synonym for `buy`.
+ */
+function parseWalkthroughDeepLink(): { open: boolean; branch: 'sale' | 'rent' | null } {
+  if (typeof window === 'undefined') return { open: false, branch: null };
+  const url = new URL(window.location.href);
+  const raw =
+    (url.searchParams.get('walkthrough') || '').toLowerCase() ||
+    (url.hash.startsWith('#howitworks')
+      ? url.hash.replace(/^#howitworks=?/, '').toLowerCase() || 'open'
+      : '');
+  if (!raw) return { open: false, branch: null };
+  if (raw === 'buy' || raw === 'sale') return { open: true, branch: 'sale' };
+  if (raw === 'rent') return { open: true, branch: 'rent' };
+  return { open: true, branch: null };
+}
+
 const ListingHowItWorks = ({ listing, isOwner, className }: Props) => {
   const rootConfig = useMemo(() => resolveWalkthrough(listing), [listing]);
   const isDual = !!rootConfig.branches;
@@ -554,12 +580,61 @@ const ListingHowItWorks = ({ listing, isOwner, className }: Props) => {
     ? rootConfig.branches![pickedBranch]
     : rootConfig;
   const [open, setOpen] = useState(false);
+  // Ref on the outer inline section. The page mounts this component twice
+  // (mobile-only wrapper and desktop-only wrapper); only the visible copy
+  // should auto-open the modal, otherwise the deep-link path stacks two
+  // dialogs.
+  const rootRef = useRef<HTMLElement | null>(null);
+  const isVisibleInstance = () =>
+    typeof window !== 'undefined' &&
+    rootRef.current !== null &&
+    rootRef.current.offsetParent !== null;
 
   // Fire an impression exactly once per listing view, and auto-open the
   // walkthrough on the visitor's FIRST listing detail view (global, device-scoped).
+  // A deep link (?walkthrough=…) always wins and overrides the first-visit gate.
   useEffect(() => {
     if (isOwner) return;
+    // Only the visible instance fires impressions + auto-opens.
+    if (!isVisibleInstance()) return;
     trackWalkthrough('guidance_prompt_viewed', rootConfig.variant, listing.id);
+
+
+    const deepLink = parseWalkthroughDeepLink();
+    if (deepLink.open) {
+      // Preselect a branch only if the listing actually supports it.
+      const branch = deepLink.branch && isDual ? deepLink.branch : null;
+      if (branch) setPickedBranch(branch);
+      trackWalkthrough(
+        'guidance_opened_via_deeplink',
+        branch ? rootConfig.branches![branch].variant : rootConfig.variant,
+        listing.id,
+      );
+      // Open on the next tick so the initial paint isn't blocked.
+      const t = window.setTimeout(() => {
+        setOpen(true);
+        // Nudge the correct primary widget into view behind the modal so the
+        // scroll is already staged when the user closes / clicks the final CTA.
+        const targetId = branch
+          ? rootConfig.branches![branch].finalCtaTargetId
+          : rootConfig.finalCtaTargetId;
+        try {
+          const el = document.getElementById(targetId);
+          const visible = el && el.getClientRects && el.getClientRects().length > 0;
+          const target = visible
+            ? el!
+            : document.getElementById('mobile-sticky-cta') ||
+              document.getElementById('howitworks-mobile-anchor') ||
+              el;
+          if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        } catch { /* ignore */ }
+      }, 60);
+      // Also mark first-visit as seen so we don't double-open later.
+      try { localStorage.setItem(GLOBAL_SEEN_KEY, new Date().toISOString()); } catch { /* ignore */ }
+      try { localStorage.setItem(`${DISMISS_KEY_PREFIX}${listing.id}`, '1'); } catch { /* ignore */ }
+      return () => window.clearTimeout(t);
+    }
+
     try {
       localStorage.setItem(`${DISMISS_KEY_PREFIX}${listing.id}`, '1');
       const seenGlobal = localStorage.getItem(GLOBAL_SEEN_KEY);
@@ -575,6 +650,8 @@ const ListingHowItWorks = ({ listing, isOwner, className }: Props) => {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [listing.id]);
+
+
 
 
   // Owners don't get walkthrough prompts on their own listings
@@ -648,6 +725,7 @@ const ListingHowItWorks = ({ listing, isOwner, className }: Props) => {
     <>
       {/* Inline prompt (never competes with the primary CTA) */}
       <section
+        ref={rootRef}
         aria-labelledby={`howitworks-heading-${listing.id}`}
         className={cn(
           'rounded-2xl border border-border bg-card/70 p-4 sm:p-5 shadow-sm',
