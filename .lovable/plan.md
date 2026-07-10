@@ -1,48 +1,81 @@
-# Vendibook Full Functional Audit — Scoped Plan
+# Transaction-Details System — End-to-End Build
 
-The request as written is a multi-week engineering + QA program (real multi-account E2E, synthetic prod monitoring, reconciliation jobs, alerting, cross-device mobile testing). I can't credibly execute all 15 sections in one pass inside this sandbox — I have no test buyer/seller/host credentials, no mobile devices, no way to actually complete a Stripe Checkout with a real card, and no way to schedule production monitors that alert your team.
+Goal: one authoritative record of what the guest is agreeing to (item, dates, fees, deposits, policies), rendered as four consistent views, snapshotted at checkout, and echoed by Stripe metadata + receipt emails so it can be audited later.
 
-What I **can** do reliably, and what I propose we do in phases:
+## Scope (in)
+- New DB snapshot table `transaction_terms` written on checkout.
+- Shared pricing/terms resolver used by all four views.
+- Four UI surfaces powered by the resolver:
+  1. **Summary card** (booking widget / sale widget)
+  2. **Expanded details** (accordion under summary)
+  3. **Price details modal** (line-item breakdown)
+  4. **Final review sheet** (last screen before Stripe / Pay-in-Person)
+- Wire snapshot write into: `create-payment` (sale card), `create-rental-payment` (rental card), and the pay-in-person path.
+- Include a compact HTML terms block in the existing booking-confirmation / sale-receipt emails.
+- Playwright E2E: sale card, rental instant, rental request, pay-in-person — verifying that the *same* numbers/policies appear in all four views and in the confirmation email.
 
-## Phase 1 — Static contract + data audit (this session, no user action required)
-Deliverable: a written report + a repair migration for anything deterministic.
-1. **Frontend ↔ DB contract scan** for the highest-risk tables: `listings`, `sale_transactions`, `booking_requests`, `saved_permit_roadmaps`, `support_tickets`, `email_send_log`. Flag: fields written by UI that don't exist, required DB columns not required in UI, status values UI emits that DB CHECK rejects, empty-string → numeric/date coercion sites.
-2. **Status inventory** — enumerate every status literal in `src/` and compare with DB CHECK constraints / enums. Produce one canonical list per entity.
-3. **Data reconciliation queries** (read-only) for the exact "broken record" categories in §14: drafts w/ no owner, published listings w/ no images, featured rows w/ expired dates, sales missing buyer or seller, purchases in `paid` w/ no seller notification row, permit roadmaps w/ no items, DLQ email rows in last 30 days.
-4. **RLS spot-audit** on the six tables above — confirm no policy references its own table (recursion) and that each has a matching GRANT.
-5. **Email event matrix** — for each trigger site in `supabase/functions/`, list (event → template → recipient → idempotency key) and cross-check against `_shared/transactional-email-templates/registry.ts`. Flag orphan templates and unregistered `templateName` invocations.
+## Scope (out)
+- No refactor of fee formulas (uses existing `src/lib/commissions.ts`).
+- No changes to Stripe webhook or payout timing.
+- No admin UI to edit snapshots.
+- Dispute / cancellation flows unchanged (they will read the snapshot but their UI is not being rebuilt here).
 
-## Phase 2 — Deterministic repairs (only after you approve Phase 1 report)
-- One migration for any status/CHECK/constraint mismatches found.
-- One data-repair migration for deterministic broken rows (e.g. clear expired `featured_enabled`, null out `guest_draft_token` on published rows already handled by trigger — verify).
-- Code fixes only where Phase 1 proves a mismatch (no speculative refactors).
+## Data model
+`public.transaction_terms`
+- `listing_id`, `booking_id` (nullable), `sale_transaction_id` (nullable), `buyer_id` (nullable — guest), `host_id`
+- `snapshot jsonb` — the full resolver output: item, dates/slots, fulfillment, pricing lines, fees, deposit, cancellation policy text, required documents list, accepted policies, currency
+- `total_cents`, `subtotal_cents`, `deposit_cents`, `commission_cents`, `renter_fee_cents`
+- `terms_version text`, `stripe_session_id text`, `payment_method` (`stripe_card` | `pay_in_person`)
+- `created_at`
+- RLS: buyer sees own; host sees rows for their listings; service_role full.
 
-## Phase 3 — Automated E2E harness (needs your input)
-Requires: a dedicated buyer test account + seller test account + Stripe test-mode card. I'll add Deno E2E tests under `supabase/functions/*/e2e_test.ts` covering:
-- listing draft → publish → fetch public page
-- Pay-in-Person sale → seller confirm → buyer confirm → completed
-- Permit Path save → resume
-- Support ticket submit → admin list
-Card-sale Stripe Checkout can be smoke-tested only up to redirect; full webhook path needs a Stripe CLI forward that this sandbox can't run — you'd run it locally or in CI.
+## Shared resolver
+`src/lib/transactionTerms.ts` — pure function:
+```
+buildTerms({ listing, selection, promo, buyer }) → TransactionTerms
+```
+Returns the same object used by every view AND persisted verbatim. This is the single source of truth.
 
-## Phase 4 — Production monitoring (out of scope for a single build session)
-Synthetic monitors, alert routing, correlation-ID logging, and CS search tooling are a separate project. I'll scope it after Phases 1–3 land.
+## UI (frontend-only, uses resolver)
+- `src/components/transaction/TransactionSummary.tsx`
+- `src/components/transaction/TransactionDetailsAccordion.tsx`
+- `src/components/transaction/PriceDetailsModal.tsx`
+- `src/components/transaction/FinalReviewSheet.tsx`
 
-## What's explicitly *not* in this plan
-- Real device mobile testing (Android/iPhone camera uploads) — needs a human.
-- Actual Stripe Connect onboarding + card charge from a live buyer — needs a human with a test card in the browser.
-- Alerting integration (PagerDuty/Slack) — needs your channel + policy input.
-- "Repair all workflows" as a blanket claim — I'll only fix what Phase 1 proves broken.
+Each accepts `terms: TransactionTerms` — no independent math. Mounted into:
+- `BookingWidget`, `RentalBookingWidget`, `SaleListingMobile`, `SaleStickyActionBar` → summary + "View details" → accordion / price modal.
+- Booking/sale checkout flow → `FinalReviewSheet` before invoking edge function.
+
+## Backend wiring
+- `create-payment` / `create-rental-payment`: build terms server-side from the same inputs the client sent, write a `transaction_terms` row, attach `terms_id` and `terms_version` to Stripe session `metadata`, return `terms_id`.
+- Pay-in-person path: same write, `payment_method='pay_in_person'`, no Stripe call.
+- Sale/booking confirmation emails include a compact "What you agreed to" block populated from the snapshot.
+
+## Verification
+- Vitest unit tests for `buildTerms` (sale card, sale PIP, rent instant, rent request, promo applied, deposit, freight).
+- Playwright E2E per variant on desktop + mobile:
+  1. Load listing, open summary → capture totals.
+  2. Open price modal → assert same totals + line items.
+  3. Proceed to Final Review → assert same totals, policies, dates.
+  4. Intercept edge-function call → assert payload matches.
+  5. For Stripe flow: intercept `create-payment` response, assert `terms_id` present and DB row matches.
+  6. Trigger confirmation email in preview mode → assert HTML contains the same total + cancellation clause.
+
+## Deliverables order
+1. Migration for `transaction_terms` + RLS/grants.
+2. `src/lib/transactionTerms.ts` + unit tests.
+3. Four UI components + integration into existing widgets.
+4. Edge-function updates + email template block.
+5. Playwright E2E suite.
+6. Run vitest + Playwright, fix, report pass/fail with screenshots.
 
 ## Technical notes
-- All queries in Phase 1 run through `supabase--read_query` (read-only). Nothing mutates data without a separate approved migration.
-- Report will be delivered inline in chat + saved to `.lovable/audit-2026-07-10.md`.
-- Estimated Phase 1 runtime: ~15–25 tool calls, one response.
+- Snapshot is immutable — updates create a new row with an incremented `terms_version` linked back via `previous_terms_id`.
+- Cancellation-policy text is pulled from listing at snapshot time so later policy edits don't retroactively change what a guest agreed to.
+- The resolver returns cents-only integers; UI formats. No floats in the DB.
+- No changes to `src/integrations/supabase/client.ts`, `types.ts`, or `.env`.
 
-## Decision needed from you
-Pick one:
-- **A. Run Phase 1 now** and I'll deliver the audit report + list of proposed repairs. You approve repairs before I touch anything.
-- **B. Run Phase 1 + auto-apply deterministic repairs** (still approval-gated per migration, just batched).
-- **C. Narrow scope** — name the 2–3 workflows you most suspect are broken and I'll deep-dive those instead of the full inventory.
+## Estimate
+~15–20 file changes, one migration, one edge-function edit per payment path, ~8 Playwright scenarios. Realistically one focused build session; I will report at the end which scenarios passed and which are still red rather than claiming blanket success.
 
-C is the fastest path to actual fixes if you already know where users are hitting walls.
+Approve to proceed, or tell me which slice to cut (e.g. skip pay-in-person, skip email block, skip final-review sheet).
