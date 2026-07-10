@@ -2,7 +2,7 @@ import * as React from 'npm:react@18.3.1'
 import { Body, Button, Container, Head, Heading, Html, Preview, Section, Text } from 'npm:@react-email/components@0.0.22'
 import type { TemplateEntry } from './registry.ts'
 import { s, SITE_URL, SUPPORT_PHONE } from './_styles.ts'
-import { BrandHeader } from './_blocks.tsx'
+import { BrandHeader, TermsBlock, type TermsSnapshot } from './_blocks.tsx'
 
 interface Props {
   buyerName?: string
@@ -11,9 +11,11 @@ interface Props {
   sellerName?: string
   orderNumber?: string
   transactionId?: string
+  termsSnapshot?: TermsSnapshot
+  termsVersion?: string
 }
 
-const E = ({ buyerName, listingTitle, salePrice, sellerName, orderNumber, transactionId }: Props) => (
+const E = ({ buyerName, listingTitle, salePrice, sellerName, orderNumber, transactionId, termsSnapshot, termsVersion }: Props) => (
   <Html lang="en" dir="ltr"><Head /><Preview>Your Pay-in-Person request was sent</Preview>
     <Body style={s.main}><Container style={s.container}>
       <BrandHeader hero="celebrate" listingTitle={listingTitle} />
@@ -31,6 +33,8 @@ const E = ({ buyerName, listingTitle, salePrice, sellerName, orderNumber, transa
           </Section>
         ) : null}
         {orderNumber ? <Section style={s.accentRow}><Text style={s.accentLabel}>ORDER</Text><Text style={s.accentValuePlain}>{orderNumber}</Text></Section> : null}
+
+        <TermsBlock snap={termsSnapshot} version={termsVersion} />
 
         <Text style={s.smallHeader}>WHAT HAPPENS NEXT</Text>
         <Text style={s.listItem}>1. The seller will contact you to coordinate the meetup, payment method, and handoff.</Text>

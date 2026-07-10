@@ -94,11 +94,21 @@ Deno.serve(async (req) => {
 
     // --- Cash / Pay-in-Person flow ---
     if (notification_type === 'cash_purchase_request') {
+      // Fetch immutable terms snapshot recorded at cash-sale creation so the
+      // email shows the same policy + total the buyer/seller agreed to.
+      const { data: terms } = await supabase
+        .from('transaction_terms')
+        .select('snapshot, terms_version')
+        .eq('sale_transaction_id', tx.id)
+        .maybeSingle();
+      const termsSnapshot = (terms as any)?.snapshot ?? undefined;
+      const termsVersion = (terms as any)?.terms_version ?? termsSnapshot?.termsVersion;
+
       if (sellerOptedIn && sellerEmail) {
-        enqueue('cash-purchase-request-seller', sellerEmail, `sale-${tx.id}-seller-cashreq`, commonSeller);
+        enqueue('cash-purchase-request-seller', sellerEmail, `sale-${tx.id}-seller-cashreq`, { ...commonSeller, termsSnapshot, termsVersion });
       }
       if (buyerOptedIn && buyerEmail) {
-        enqueue('cash-purchase-request-buyer', buyerEmail, `sale-${tx.id}-buyer-cashreq`, commonBuyer);
+        enqueue('cash-purchase-request-buyer', buyerEmail, `sale-${tx.id}-buyer-cashreq`, { ...commonBuyer, termsSnapshot, termsVersion });
       }
     } else if (isCashSale && notification_type === 'seller_confirmed') {
       // Cash: seller just confirmed → nudge buyer to confirm receipt

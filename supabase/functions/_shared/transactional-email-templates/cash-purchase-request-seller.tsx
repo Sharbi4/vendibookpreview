@@ -2,7 +2,7 @@ import * as React from 'npm:react@18.3.1'
 import { Body, Button, Container, Head, Heading, Html, Preview, Section, Text } from 'npm:@react-email/components@0.0.22'
 import type { TemplateEntry } from './registry.ts'
 import { s, SITE_URL, SUPPORT_PHONE } from './_styles.ts'
-import { BrandHeader } from './_blocks.tsx'
+import { BrandHeader, TermsBlock, type TermsSnapshot } from './_blocks.tsx'
 
 interface Props {
   sellerName?: string
@@ -14,9 +14,11 @@ interface Props {
   orderNumber?: string
   transactionId?: string
   fulfillmentType?: string
+  termsSnapshot?: TermsSnapshot
+  termsVersion?: string
 }
 
-const E = ({ sellerName, listingTitle, salePrice, buyerName, buyerEmail, buyerPhone, orderNumber, transactionId, fulfillmentType }: Props) => (
+const E = ({ sellerName, listingTitle, salePrice, buyerName, buyerEmail, buyerPhone, orderNumber, transactionId, fulfillmentType, termsSnapshot, termsVersion }: Props) => (
   <Html lang="en" dir="ltr"><Head /><Preview>New Pay-in-Person purchase request 💵</Preview>
     <Body style={s.main}><Container style={s.container}>
       <BrandHeader hero="celebrate" listingTitle={listingTitle} />
@@ -54,6 +56,8 @@ const E = ({ sellerName, listingTitle, salePrice, buyerName, buyerEmail, buyerPh
             </>
           ) : null}
         </Section>
+
+        <TermsBlock snap={termsSnapshot} version={termsVersion} />
 
         <Text style={s.smallHeader}>YOUR NEXT STEPS</Text>
         <Text style={s.listItem}>1. Contact the buyer to arrange meetup, payment method (cash / cashier's check), and handoff.</Text>
