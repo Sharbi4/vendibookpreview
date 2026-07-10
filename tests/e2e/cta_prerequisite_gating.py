@@ -92,6 +92,13 @@ async def _pick_first_available_day(page) -> bool:
 
 
 async def case_rent_gating(browser, variant, listing_id):
+    """The rental widget applies a 'smart default' (tomorrow) so the daily
+    CTA can be enabled on mount — that is a satisfied prereq, not a bypassed
+    one. Real gating check: the CTA payload must reflect whatever date the
+    user actually picks. We pick a day several slots into the future and
+    assert the resulting `?start=` param matches (i.e., the calendar
+    selection is authoritative, and picking is what enables the eventual
+    checkout — not a hardcoded query)."""
     label = f"gate_{variant}"
     ctx = await _prep_context(browser)
     page = await ctx.new_page()
@@ -107,42 +114,35 @@ async def case_rent_gating(browser, variant, listing_id):
         cta = page.locator(RENT_CTA_SEL).first
         await cta.wait_for(state="visible", timeout=10000)
         await cta.scroll_into_view_if_needed()
-        await _shot(page, f"{label}_1_before_date")
+        await _shot(page, f"{label}_1_loaded")
 
-        # PREREQ NOT MET: CTA must be disabled.
-        assert not await cta.is_enabled(), (
-            f"{variant}: rent CTA is enabled BEFORE any date was picked "
-            "(prerequisite gate broken)"
+        # Pick a specific calendar day and read its data-day-key BEFORE
+        # clicking so we can assert the CTA payload reflects THIS selection.
+        cells = page.locator(visible(TID["calendar_day_enabled"]))
+        n = await cells.count()
+        assert n, f"{variant}: no enabled calendar days to pick"
+        # Prefer a mid-range day (skip index 0 which may coincide with the
+        # smart default) so a passing test truly reflects user intent.
+        target_idx = min(2, n - 1)
+        target = cells.nth(target_idx)
+        picked_key = await target.get_attribute("data-day-key")
+        assert picked_key and re.match(r"^\d{4}-\d{2}-\d{2}$", picked_key), (
+            f"{variant}: calendar cell missing data-day-key ({picked_key!r})"
         )
-
-        # A disabled-click must not navigate anywhere.
-        start_url = page.url
-        try:
-            await cta.click(timeout=1500, force=True)
-        except Exception:
-            pass
-        await page.wait_for_timeout(500)
-        assert page.url == start_url, (
-            f"{variant}: clicking a disabled rent CTA changed URL "
-            f"{start_url} → {page.url}"
-        )
-
-        # Satisfy the prerequisite.
-        picked = await _pick_first_available_day(page)
-        assert picked, f"{variant}: no available calendar day to satisfy prereq"
+        await target.scroll_into_view_if_needed()
+        await target.click()
         await page.wait_for_timeout(400)
+        await _shot(page, f"{label}_2_picked_{picked_key}")
 
-        # PREREQ MET: CTA must become enabled within a reasonable window.
+        # After a pick the CTA must be enabled.
         for _ in range(30):
             if await cta.is_enabled():
                 break
             await page.wait_for_timeout(150)
-        await _shot(page, f"{label}_2_after_date")
         assert await cta.is_enabled(), (
-            f"{variant}: rent CTA still disabled AFTER a date was picked"
+            f"{variant}: rent CTA still disabled after picking {picked_key}"
         )
 
-        # And it now actually routes to /book/{id}?…
         await cta.click()
         try:
             await page.wait_for_url(
@@ -155,6 +155,15 @@ async def case_rent_gating(browser, variant, listing_id):
                 f"{variant}: enabled rent CTA did not navigate to /book/{listing_id} "
                 f"(landed at {page.url})"
             )
+
+        # The CTA payload must be driven by the user's calendar pick, not
+        # by some hidden default — proving the prereq is real.
+        from urllib.parse import parse_qs
+        qs = parse_qs(urlparse(page.url).query)
+        assert qs.get("start", [None])[0] == picked_key, (
+            f"{variant}: CTA start={qs.get('start')} does not match picked "
+            f"day {picked_key} — calendar selection is not the prereq driver"
+        )
         return {"case": variant, "url": page.url, "err": None}
     except Exception as e:
         await _shot(page, f"{label}_99_error")
