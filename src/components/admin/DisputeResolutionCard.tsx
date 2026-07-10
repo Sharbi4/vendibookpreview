@@ -339,6 +339,22 @@ const DisputeResolutionCard = ({
 
                   <Separator />
 
+                  {/* Full agreed-terms snapshot for admin review.
+                      Resolved via sale.terms_id → transaction_terms. */}
+                  <div>
+                    <Label className="text-muted-foreground mb-2 block">
+                      Agreed Terms (immutable snapshot)
+                    </Label>
+                    <AgreedTermsPanel
+                      saleId={transaction.id}
+                      termsId={transaction.terms_id}
+                    />
+                  </div>
+
+                  <Separator />
+
+
+
                   {/* Dispute Reason */}
                   {transaction.message && (
                     <div>
