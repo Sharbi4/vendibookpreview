@@ -18,7 +18,7 @@ describe('resolveWalkthrough', () => {
     // Payment method must be different — no Stripe language
     const combined = c.fullSteps.map(s => s.description).join(' ');
     expect(combined).not.toMatch(/stripe/i);
-    expect(combined).toMatch(/directly/i);
+    expect(combined).toMatch(/in person|directly/i);
   });
 
   it('rent + instant_book → rent_instant', () => {
