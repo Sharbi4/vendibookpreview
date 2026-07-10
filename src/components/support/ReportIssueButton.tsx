@@ -6,7 +6,7 @@ import { useState } from "react";
 import { Button, type ButtonProps } from "@/components/ui/button";
 import { AlertCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { ReportIssueDialog, type ReportIssueContext } from "./ReportIssueDialog";
 
 interface Props extends Omit<ButtonProps, "onClick"> {
