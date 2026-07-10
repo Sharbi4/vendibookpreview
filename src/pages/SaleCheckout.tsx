@@ -24,6 +24,9 @@ import StickySummary from '@/components/shared/StickySummary';
 // Step components
 import { PurchaseStepDelivery, PurchaseStepInfo, PurchaseStepReview, type BuyerInfo } from '@/components/purchase-wizard';
 import { ReferralCodeField } from '@/components/referrals/ReferralCodeField';
+import { FinalReviewSheet } from '@/components/transaction/FinalReviewSheet';
+import { useTermsGate } from '@/hooks/useTermsGate';
+import { buildTerms } from '@/lib/transactionTerms';
 
 type FulfillmentSelection = 'pickup' | 'delivery' | 'vendibook_freight';
 type CheckoutStep = 'information' | 'delivery' | 'review';
@@ -348,13 +351,50 @@ const SaleCheckout = () => {
     return true;
   };
 
+  // ── FinalReviewSheet interception ───────────────────────────────
+  // handlePurchase now validates + opens the sheet; runPurchase runs
+  // the actual sale/checkout after consent + acknowledge-terms land.
+  const termsGate = useTermsGate();
+
+  const buildCurrentTerms = () => {
+    if (!listing || !listingId) return null;
+    return buildTerms({
+      listing: {
+        id: listingId,
+        title: listing.title,
+        host_id: listing.host_id,
+        cover_image_url: listing.cover_image_url ?? null,
+        mode: 'sale',
+        category: listing.category ?? null,
+        cancellation_policy: (listing as { cancellation_policy?: string | null }).cancellation_policy ?? null,
+        rules: (listing as { rules?: string | null }).rules ?? null,
+        city: listing.city ?? null,
+        state: listing.state ?? null,
+        price_sale: priceSale,
+        accept_card_payment: acceptCardPayment,
+      },
+      selection: {
+        mode: 'sale',
+        paymentMethod: paymentMethod === 'cash' ? 'pay_in_person' : 'stripe_card',
+        basePriceDollars: priceSale,
+        deliveryFeeDollars: fulfillmentSelected === 'delivery' ? deliveryFee : (fulfillmentSelected === 'vendibook_freight' ? freightCost : 0),
+        isSellerPaidFreight: isFreightSellerPaid,
+        isCashSale: paymentMethod === 'cash',
+        fulfillmentType: fulfillmentSelected,
+      },
+      buyer: {
+        id: user?.id ?? null,
+        email: buyerInfo.email.trim() || user?.email || null,
+        name: `${buyerInfo.firstName} ${buyerInfo.lastName}`.trim() || null,
+      },
+    });
+  };
+
   const handlePurchase = async () => {
     if (!user) {
       navigate(`/auth?redirect=/checkout/${listingId}`);
       return;
     }
-
-    // Prevent owners from purchasing their own listings
     if (isOwner) {
       toast({
         title: 'Cannot purchase your own listing',
@@ -363,16 +403,20 @@ const SaleCheckout = () => {
       });
       return;
     }
-
     if (!priceSale || !listingId || !listing?.host_id) return;
-
     if (!agreedToTerms) {
       toast({ title: 'Terms required', description: 'Please agree to the Terms of Service.', variant: 'destructive' });
       return;
     }
+    const t = buildCurrentTerms();
+    if (!t) return;
+    await termsGate.prepare(t);
+  };
 
-    // Handle cash payment — routed through create-cash-sale so a
-    // transaction_terms snapshot is always written alongside the sale row.
+  const runPurchase = async () => {
+    if (!listingId || !listing?.host_id) return;
+    const termsId = termsGate.termsId;
+
     if (paymentMethod === 'cash') {
       setIsPurchasing(true);
       try {
@@ -398,6 +442,7 @@ const SaleCheckout = () => {
               buyer_name: `${buyerInfo.firstName} ${buyerInfo.lastName}`.trim(),
               buyer_email: buyerInfo.email.trim(),
               buyer_phone: buyerInfo.phone.trim() || null,
+              terms_id: termsId,
             },
           },
         );
@@ -407,8 +452,6 @@ const SaleCheckout = () => {
         if (!transactionId) throw new Error('Cash sale did not return a transaction id');
 
         trackFormSubmitConversion({ form_type: 'purchase_cash', listing_id: listingId });
-
-        // Track Facebook CAPI Purchase event for cash
         trackPurchase({
           value: priceSale,
           contentIds: [listingId],
@@ -422,6 +465,7 @@ const SaleCheckout = () => {
           },
         });
 
+        termsGate.reset();
         toast({ title: 'Purchase request submitted!', description: 'The seller will contact you.' });
         navigate(`/order-tracking/${transactionId}`);
       } catch (error) {
@@ -440,10 +484,10 @@ const SaleCheckout = () => {
     // Handle card payment
     setIsPurchasing(true);
     setShowCheckoutOverlay(true);
-    
+
     try {
       const isVendibookFreight = fulfillmentSelected === 'vendibook_freight';
-      
+
       const { data, error } = await supabase.functions.invoke('create-checkout', {
         body: {
           listing_id: listingId,
@@ -460,6 +504,7 @@ const SaleCheckout = () => {
           freight_payer: isVendibookFreight ? freightPayer : 'buyer',
           freight_cost: isVendibookFreight ? freightCost : 0,
           referral_code: referralValid ? referralCode : undefined,
+          terms_id: termsId,
         },
       });
 
@@ -467,8 +512,6 @@ const SaleCheckout = () => {
       if (data.error) throw new Error(data.error);
 
       trackFormSubmitConversion({ form_type: 'purchase', listing_id: listingId });
-      
-      // Track Facebook CAPI InitiateCheckout event for card payment
       trackInitiateCheckout({
         value: totalPrice,
         contentIds: [listingId],
@@ -481,11 +524,10 @@ const SaleCheckout = () => {
           lastName: buyerInfo.lastName || undefined,
         },
       });
-      
-      // Open Stripe checkout in new tab (works better in iframe environments)
+
+      termsGate.reset();
       const stripeWindow = window.open(data.url, '_blank');
       if (!stripeWindow) {
-        // Fallback to redirect if popup blocked
         window.location.href = data.url;
       }
     } catch (error) {
@@ -499,6 +541,8 @@ const SaleCheckout = () => {
       setIsPurchasing(false);
     }
   };
+
+
 
   // Loading state
   if (isListingLoading || isLoadingOffer) {
@@ -727,7 +771,19 @@ const SaleCheckout = () => {
 
       <Footer />
       <CheckoutOverlay isVisible={showCheckoutOverlay} />
+      {termsGate.terms ? (
+        <FinalReviewSheet
+          terms={termsGate.terms}
+          termsId={termsGate.termsId}
+          open={termsGate.open}
+          onOpenChange={termsGate.setOpen}
+          onConfirm={runPurchase}
+          submitting={isPurchasing || termsGate.preparing}
+          confirmLabel={paymentMethod === 'cash' ? 'Confirm — arrange in person' : 'Continue to secure payment'}
+        />
+      ) : null}
     </div>
+
   );
 };
 

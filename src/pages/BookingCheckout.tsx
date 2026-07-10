@@ -38,6 +38,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { calculateRentalFees } from '@/lib/commissions';
 import { trackFormSubmitConversion } from '@/lib/gtagConversions';
 import { trackRequestStarted, trackRequestSubmitted } from '@/lib/analytics';
+import { FinalReviewSheet } from '@/components/transaction/FinalReviewSheet';
+import { useTermsGate } from '@/hooks/useTermsGate';
+import { buildTerms } from '@/lib/transactionTerms';
 import { cn } from '@/lib/utils';
 import { BookingInfoModal, type BookingUserInfo, SlotSelector, BusinessInfoStep, type BusinessInfoData } from '@/components/booking';
 import { BookingDocumentUpload, type StagedDocument } from '@/components/booking/BookingDocumentUpload';
@@ -262,7 +265,68 @@ const BookingCheckout = () => {
     }
   };
 
+  const termsGate = useTermsGate();
+
+  const buildCurrentTerms = () => {
+    if (!listing || !listingId || !startDate || !endDate) return null;
+    return buildTerms({
+      listing: {
+        id: listingId,
+        title: listing.title,
+        host_id: listing.host_id,
+        cover_image_url: listing.cover_image_url ?? null,
+        mode: 'rent',
+        category: listing.category ?? null,
+        cancellation_policy: (listing as { cancellation_policy?: string | null }).cancellation_policy ?? null,
+        rules: (listing as { rules?: string | null }).rules ?? null,
+        city: listing.city ?? null,
+        state: listing.state ?? null,
+        price_daily: listing.price_daily ?? null,
+        price_weekly: listing.price_weekly ?? null,
+        price_hourly: (listing as { price_hourly?: number | null }).price_hourly ?? null,
+        security_deposit: listing.deposit_amount ?? null,
+        accept_card_payment: listing.accept_card_payment ?? true,
+      },
+      selection: {
+        mode: 'rent',
+        paymentMethod: 'stripe_card',
+        basePriceDollars: fees.subtotal - currentDeliveryFee,
+        deliveryFeeDollars: currentDeliveryFee,
+        depositDollars: depositAmount,
+        startDate: format(startDate, 'yyyy-MM-dd'),
+        endDate: format(endDate, 'yyyy-MM-dd'),
+        startTime: isHourlyBooking ? (startTime ?? null) : null,
+        endTime: isHourlyBooking ? (endTime ?? null) : null,
+        fulfillmentType: fulfillmentSelected,
+        slotNumber: hasMultipleSlots && selectedSlot ? selectedSlot : null,
+      },
+      buyer: {
+        id: user?.id ?? null,
+        email: user?.email ?? null,
+        name: userInfo ? `${userInfo.firstName} ${userInfo.lastName}`.trim() || null : null,
+      },
+    });
+  };
+
   const handleSubmit = async () => {
+    if (!user) {
+      setShowAuthModal(true);
+      return;
+    }
+    if (!startDate || !endDate || !userInfo || !listing) {
+      toast({ title: 'Missing information', description: 'Please complete all required fields.', variant: 'destructive' });
+      return;
+    }
+    if (user.id === listing.host_id) {
+      toast({ title: 'Cannot book your own listing', description: 'You cannot rent your own listing.', variant: 'destructive' });
+      return;
+    }
+    const t = buildCurrentTerms();
+    if (!t) return;
+    await termsGate.prepare(t);
+  };
+
+  const runSubmit = async () => {
     if (!user) {
       // Show inline auth modal instead of redirecting
       setShowAuthModal(true);
@@ -413,6 +477,7 @@ const BookingCheckout = () => {
           delivery_fee: currentDeliveryFee,
           deposit_amount: depositAmount,
           referral_code: referralValid ? referralCode : undefined,
+          terms_id: termsGate.termsId,
         },
       });
 
@@ -486,6 +551,7 @@ const BookingCheckout = () => {
       });
     } finally {
       setIsSubmitting(false);
+      termsGate.reset();
     }
   };
 
@@ -1299,6 +1365,17 @@ const BookingCheckout = () => {
           }, 500);
         }}
       />
+      {termsGate.terms ? (
+        <FinalReviewSheet
+          terms={termsGate.terms}
+          termsId={termsGate.termsId}
+          open={termsGate.open}
+          onOpenChange={termsGate.setOpen}
+          onConfirm={runSubmit}
+          submitting={isSubmitting || termsGate.preparing}
+          confirmLabel="Continue to secure payment"
+        />
+      ) : null}
     </div>
   );
 };

@@ -22,6 +22,11 @@ interface Body {
   buyer_name: string;
   buyer_email: string;
   buyer_phone?: string | null;
+  // Optional: id of a pre-created draft transaction_terms row
+  // (from create-transaction-terms-draft, acknowledged in FinalReviewSheet).
+  // When present we reuse it instead of inserting a fresh terms row so the
+  // acknowledged_at/ip/ua stamps written by acknowledge-terms are preserved.
+  terms_id?: string | null;
 }
 
 Deno.serve(async (req) => {
@@ -176,33 +181,54 @@ Deno.serve(async (req) => {
 
     if (txErr) throw txErr;
 
-    // 2) Write the immutable terms snapshot linked to the sale.
-    //    If this fails we roll back the sale so the ledger never has a
-    //    cash sale without a paired terms row.
-    const { data: terms, error: termsErr } = await supabase
-      .from('transaction_terms')
-      .insert({
-        terms_version: TERMS_VERSION,
-        transaction_mode: 'sale',
-        payment_method: 'pay_in_person',
-        listing_id: listing.id,
-        host_id: listing.host_id,
-        buyer_id: user.id,
-        sale_transaction_id: tx.id,
-        subtotal_cents: totalCents,
-        renter_fee_cents: 0,
-        commission_cents: 0,
-        deposit_cents: 0,
-        total_cents: totalCents,
-        snapshot: termsSnapshot,
-      })
-      .select('id')
-      .single();
-
-    if (termsErr) {
-      // Rollback — service_role can hard-delete since RLS is bypassed.
-      await supabase.from('sale_transactions').delete().eq('id', tx.id);
-      throw termsErr;
+    // 2) Attach the immutable terms snapshot to the sale. Two paths:
+    //    (a) client passed a `terms_id` from create-transaction-terms-draft
+    //        (FinalReviewSheet flow) — flip its status to 'active' and set
+    //        sale_transaction_id. This preserves any acknowledged_at stamp
+    //        already written by the acknowledge-terms edge function.
+    //    (b) legacy / direct call — insert a fresh terms row.
+    //    Either way, if the terms write fails we roll back the sale.
+    let terms: { id: string } | null = null;
+    if (body.terms_id) {
+      const { data: updated, error: updErr } = await supabase
+        .from('transaction_terms')
+        .update({ status: 'active', sale_transaction_id: tx.id })
+        .eq('id', body.terms_id)
+        .eq('buyer_id', user.id) // guard: only the buyer's own draft
+        .eq('listing_id', listing.id)
+        .select('id')
+        .maybeSingle();
+      if (updErr || !updated) {
+        await supabase.from('sale_transactions').delete().eq('id', tx.id);
+        throw updErr || new Error('terms_id not found for this buyer/listing');
+      }
+      terms = updated;
+    } else {
+      const { data: inserted, error: termsErr } = await supabase
+        .from('transaction_terms')
+        .insert({
+          terms_version: TERMS_VERSION,
+          transaction_mode: 'sale',
+          payment_method: 'pay_in_person',
+          listing_id: listing.id,
+          host_id: listing.host_id,
+          buyer_id: user.id,
+          sale_transaction_id: tx.id,
+          subtotal_cents: totalCents,
+          renter_fee_cents: 0,
+          commission_cents: 0,
+          deposit_cents: 0,
+          total_cents: totalCents,
+          snapshot: termsSnapshot,
+          status: 'active',
+        })
+        .select('id')
+        .single();
+      if (termsErr || !inserted) {
+        await supabase.from('sale_transactions').delete().eq('id', tx.id);
+        throw termsErr || new Error('failed to insert terms row');
+      }
+      terms = inserted;
     }
 
     // 2b) Back-link the terms snapshot onto the sale so downstream code
@@ -214,6 +240,8 @@ Deno.serve(async (req) => {
       .update({ terms_id: terms.id })
       .eq('id', tx.id);
     if (linkErr) console.error('[create-cash-sale] failed to backlink terms_id', linkErr);
+
+
 
 
     // 3) Fire-and-forget notification + seller bell.

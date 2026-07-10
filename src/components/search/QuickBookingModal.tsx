@@ -28,6 +28,9 @@ import { calculateRentalFees, RENTAL_RENTER_FEE_PERCENT } from '@/lib/commission
 import type { TablesInsert } from '@/integrations/supabase/types';
 import { CategoryTooltip } from '@/components/categories/CategoryGuide';
 import { SlotSelector } from '@/components/booking';
+import { FinalReviewSheet } from '@/components/transaction/FinalReviewSheet';
+import { useTermsGate } from '@/hooks/useTermsGate';
+import { buildTerms } from '@/lib/transactionTerms';
 
 interface QuickBookingModalProps {
   listing: Listing | null;
@@ -161,11 +164,61 @@ const QuickBookingModal = ({
     return null;
   };
 
+  const termsGate = useTermsGate();
+
+  const buildCurrentTerms = () => {
+    if (!listing || !startDate || !endDate) return null;
+    return buildTerms({
+      listing: {
+        id: listing.id,
+        title: listing.title,
+        host_id: listing.host_id,
+        cover_image_url: listing.cover_image_url ?? null,
+        mode: 'rent',
+        category: listing.category ?? null,
+        cancellation_policy: (listing as { cancellation_policy?: string | null }).cancellation_policy ?? null,
+        rules: (listing as { rules?: string | null }).rules ?? null,
+        city: (listing as { city?: string | null }).city ?? null,
+        state: (listing as { state?: string | null }).state ?? null,
+        price_daily: listing.price_daily ?? null,
+        price_weekly: listing.price_weekly ?? null,
+        security_deposit: (listing as { deposit_amount?: number | null }).deposit_amount ?? null,
+        accept_card_payment: listing.accept_card_payment ?? true,
+      },
+      selection: {
+        mode: 'rent',
+        paymentMethod: 'stripe_card',
+        basePriceDollars: fees.subtotal - currentDeliveryFee,
+        deliveryFeeDollars: currentDeliveryFee,
+        startDate: format(startDate, 'yyyy-MM-dd'),
+        endDate: format(endDate, 'yyyy-MM-dd'),
+        fulfillmentType: fulfillmentSelected,
+      },
+      buyer: {
+        id: user?.id ?? null,
+        email: user?.email ?? null,
+        name: null,
+      },
+    });
+  };
+
   const handleSubmit = async () => {
     if (!user) {
       navigate('/auth');
       return;
     }
+    const validationError = validateForm();
+    if (validationError) {
+      toast({ title: 'Missing information', description: validationError, variant: 'destructive' });
+      return;
+    }
+    const t = buildCurrentTerms();
+    if (!t) return;
+    await termsGate.prepare(t);
+  };
+
+  const runSubmit = async () => {
+    if (!user || !listing || !startDate || !endDate) return;
 
     const validationError = validateForm();
     if (validationError) {
@@ -233,6 +286,7 @@ const QuickBookingModal = ({
             mode: 'rent',
             amount: fees.subtotal,
             delivery_fee: currentDeliveryFee,
+            terms_id: termsGate.termsId,
           },
         });
 
@@ -272,6 +326,7 @@ const QuickBookingModal = ({
       });
     } finally {
       setIsSubmitting(false);
+      termsGate.reset();
     }
   };
 
@@ -624,6 +679,17 @@ const QuickBookingModal = ({
           </div>
         )}
       </DialogContent>
+      {termsGate.terms ? (
+        <FinalReviewSheet
+          terms={termsGate.terms}
+          termsId={termsGate.termsId}
+          open={termsGate.open}
+          onOpenChange={termsGate.setOpen}
+          onConfirm={runSubmit}
+          submitting={isSubmitting || termsGate.preparing}
+          confirmLabel="Continue to secure payment"
+        />
+      ) : null}
     </Dialog>
   );
 };

@@ -4562,6 +4562,7 @@ export type Database = {
           renter_fee_cents: number
           sale_transaction_id: string | null
           snapshot: Json
+          status: string
           stripe_session_id: string | null
           subtotal_cents: number
           terms_version: string
@@ -4585,6 +4586,7 @@ export type Database = {
           renter_fee_cents?: number
           sale_transaction_id?: string | null
           snapshot: Json
+          status?: string
           stripe_session_id?: string | null
           subtotal_cents: number
           terms_version?: string
@@ -4608,6 +4610,7 @@ export type Database = {
           renter_fee_cents?: number
           sale_transaction_id?: string | null
           snapshot?: Json
+          status?: string
           stripe_session_id?: string | null
           subtotal_cents?: number
           terms_version?: string
