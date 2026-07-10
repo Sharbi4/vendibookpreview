@@ -143,6 +143,8 @@ const ListingPublished: React.FC = () => {
   }, [listingId, user, authLoading, navigate, featuredPaid]);
 
   // Poll for featured activation after returning from Stripe (webhook may lag)
+  const [featuredWebhookStuck, setFeaturedWebhookStuck] = useState(false);
+  const [featuredStuckRef, setFeaturedStuckRef] = useState<string | null>(null);
   useEffect(() => {
     if (!featuredPaid || featuredActive || !listingId || !user?.id) return;
     let cancelled = false;
@@ -169,6 +171,22 @@ const ListingPublished: React.FC = () => {
       }
       if (attempts >= maxAttempts) {
         setFeaturedSyncing(false);
+        // Webhook didn't update within 30s — surface actionable error state.
+        const { referenceCode } = await reportError({
+          action: 'boost.webhook.timeout',
+          endpoint: '/functions/v1/stripe-webhook',
+          errorType: 'FeaturedActivationTimeout',
+          errorMessage: 'featured_enabled did not become true within 30s after Stripe redirect',
+          listingId,
+          metadata: { pollAttempts: attempts },
+        });
+        setFeaturedStuckRef(referenceCode);
+        setFeaturedWebhookStuck(true);
+        toast({
+          title: "Payment received, activation delayed",
+          description: `Stripe confirmed your payment but your boost hasn't activated yet. Our team was notified — no need to pay again. Reference: ${referenceCode}`,
+          variant: 'destructive',
+        });
         return;
       }
       setTimeout(tick, 2000);
