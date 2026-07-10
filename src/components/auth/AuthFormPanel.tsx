@@ -343,12 +343,6 @@ export const AuthFormPanel = ({ mode, setMode }: AuthFormPanelProps) => {
               });
             }
           } catch {}
-                user_id: newSession.user.id,
-                event_type: 'user_signup',
-                payload: { role: selectedRole, first_name: trimmedFirstName },
-              });
-            }
-          } catch {}
 
           if (hasSession) {
             toast({
