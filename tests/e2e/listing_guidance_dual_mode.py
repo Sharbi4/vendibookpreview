@@ -29,6 +29,9 @@ import sys
 from pathlib import Path
 from playwright.async_api import async_playwright, Route, Request
 
+sys.path.insert(0, str(Path(__file__).parent))
+from _selectors import TID, visible  # noqa: E402
+
 SHOTS = Path(__file__).parent / "screenshots"
 SHOTS.mkdir(parents=True, exist_ok=True)
 
@@ -41,14 +44,20 @@ DUAL_LISTINGS = [
     dict(
         label="instant_book_dual",
         listing_id="b88edd57-967c-4036-a5bb-a89d2e18ee88",
-        rent_button=re.compile(r"book now", re.I),
+        rent_txn=f'{visible(TID["rental_cta"])}[data-instant-book="true"],'
+                 f'{visible(TID["rent_cta_widget"])}[data-instant-book="true"]',
     ),
     dict(
         label="request_book_dual",
         listing_id="d94836ba-10fa-44e0-8b5b-046b0bf7d01b",
-        rent_button=re.compile(r"request to book", re.I),
+        rent_txn=f'{visible(TID["rental_cta"])}[data-instant-book="false"],'
+                 f'{visible(TID["rent_cta_widget"])}[data-instant-book="false"]',
     ),
 ]
+
+BUY_TXN = ",".join(
+    visible(TID[k]) for k in ("buy_now_widget", "sale_sticky_buy", "sale_mobile_buy")
+)
 
 VIEWPORTS = [
     dict(name="desktop", width=1280, height=1800),
