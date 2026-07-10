@@ -2,7 +2,7 @@ import * as React from 'npm:react@18.3.1'
 import { Body, Button, Container, Head, Heading, Html, Preview, Section, Text } from 'npm:@react-email/components@0.0.22'
 import type { TemplateEntry } from './registry.ts'
 import { s, SITE_URL, SUPPORT_PHONE } from './_styles.ts'
-import { BrandHeader } from './_blocks.tsx'
+import { BrandHeader, TermsBlock, type TermsSnapshot } from './_blocks.tsx'
 
 interface Props {
   buyerName?: string
@@ -11,6 +11,8 @@ interface Props {
   sellerName?: string
   orderNumber?: string
   transactionId?: string
+  termsSnapshot?: TermsSnapshot
+  termsVersion?: string
 }
 
 const E = ({ buyerName, listingTitle, salePrice, sellerName, orderNumber, transactionId }: Props) => (
