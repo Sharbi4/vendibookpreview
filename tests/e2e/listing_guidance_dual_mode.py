@@ -192,15 +192,66 @@ async def run_case(pw, case: dict, viewport: dict) -> None:
                 f'{TID["final_cta"]}[data-branch="{branch}"]'
             ).first
             await final_cta.wait_for(state="visible", timeout=5000)
+            url_before = page.url
             await final_cta.click()
-            await page.wait_for_timeout(1000)
+            await page.wait_for_timeout(1200)
 
-            # 5. Assert the correct transaction control appears.
-            txn = page.locator(expected_txn_selector).first
-            await txn.wait_for(state="visible", timeout=10000)
+            # 5. Assert exact URL / route after the final CTA fires.
+            #
+            # Accepted terminal states per branch:
+            #   sale → same /listing/{id} page (in-page scroll to Buy widget),
+            #          OR /checkout/{id}, OR /auth?redirect=/checkout/{id}
+            #   rent → same /listing/{id} page (in-page scroll to booking widget),
+            #          OR /book/{id}[?start=YYYY-MM-DD&end=YYYY-MM-DD]
+            listing_id = case["listing_id"]
+            final_url = page.url
+            from urllib.parse import urlparse, parse_qs
+            parsed = urlparse(final_url)
+            path = parsed.path
+            qs = parse_qs(parsed.query)
+
+            date_re = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+            if branch == "sale":
+                sale_ok = (
+                    path == f"/listing/{listing_id}"
+                    or path == f"/checkout/{listing_id}"
+                    or (path == "/auth" and qs.get("redirect", [""])[0] == f"/checkout/{listing_id}")
+                )
+                assert sale_ok, f"sale CTA landed on unexpected URL: {final_url}"
+            else:
+                rent_path_ok = (
+                    path == f"/listing/{listing_id}"
+                    or path == f"/book/{listing_id}"
+                )
+                assert rent_path_ok, f"rent CTA landed on unexpected URL: {final_url}"
+                if path == f"/book/{listing_id}":
+                    start = qs.get("start", [None])[0]
+                    end = qs.get("end", [None])[0]
+                    if start or end:
+                        assert start and end and date_re.match(start) and date_re.match(end), (
+                            f"rent /book URL missing valid start/end: {final_url}"
+                        )
+                        assert start <= end, f"rent /book start>{end} in {final_url}"
+
+            print(f"  ✓ {branch}: url {url_before} → {final_url}")
+
+            # 6. Assert the correct transaction widget is mounted for the branch.
+            #    On in-page scroll destinations the widget must be visible.
+            #    On navigated destinations (/checkout, /auth, /book) the page has
+            #    changed and the listing-detail widgets no longer apply — instead
+            #    assert we landed on the expected route via the URL check above.
+            if path == f"/listing/{listing_id}":
+                txn = page.locator(expected_txn_selector).first
+                await txn.wait_for(state="visible", timeout=10000)
+                # Extra: for rent, confirm the instant-book flavour lines up
+                # with what the listing exposes (the selector already encodes
+                # data-instant-book, so a match here proves the widget rendered
+                # in the correct mode).
+                print(f"  ✓ {branch}: on-page widget visible via testid")
+            else:
+                print(f"  ✓ {branch}: navigated to {path}, skipping in-page widget check")
+
             await page.screenshot(path=str(SHOTS / f"dual_{label}_{branch}_04_after_cta.png"))
-            print(f"  ✓ {branch}: txn control visible via testid")
-
             await page.close()
         finally:
             await context.close()
