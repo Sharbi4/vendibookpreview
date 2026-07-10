@@ -130,6 +130,12 @@ async def case_rent_gating(browser, variant, listing_id):
             f"{variant}: calendar cell missing data-day-key ({picked_key!r})"
         )
         await target.scroll_into_view_if_needed()
+        # Two clicks: first click (with the smart-default startDate already
+        # set) assigns endDate=target; second click, now that both are set,
+        # triggers the "start fresh" branch → startDate=target, endDate=
+        # undefined. This makes the pick authoritative for the payload.
+        await target.click()
+        await page.wait_for_timeout(150)
         await target.click()
         await page.wait_for_timeout(400)
         await _shot(page, f"{label}_2_picked_{picked_key}")
