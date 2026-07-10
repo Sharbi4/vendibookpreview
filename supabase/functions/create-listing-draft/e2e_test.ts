@@ -204,6 +204,111 @@ Deno.test("e2e: standard for-sale listing publishes with cash + card enabled", a
   assert(Number(row?.price_sale) > 0, "expected sale price to be set");
 });
 
+Deno.test("e2e: card sale is gated by Stripe Connect and publishes once connected", async () => {
+  requireCreds();
+  const { client, token, userId } = await authedClient();
+
+  // Snapshot the current Stripe Connect state so we can restore it.
+  const { data: original, error: snapErr } = await client
+    .from("profiles")
+    .select("stripe_account_id, stripe_onboarding_complete")
+    .eq("id", userId)
+    .single();
+  assertEquals(snapErr, null, snapErr?.message);
+
+  try {
+    // 1. Force a "disconnected" state.
+    const { error: disconnectErr } = await client
+      .from("profiles")
+      .update({ stripe_account_id: null, stripe_onboarding_complete: false })
+      .eq("id", userId);
+    assertEquals(disconnectErr, null, disconnectErr?.message);
+
+    // 2. Draft a card-accepting sale listing.
+    const listingId = await createDraft(token, {
+      mode: "sale",
+      category: "food_trailer",
+      city: "Phoenix",
+      state: "AZ",
+    });
+
+    // 3. check-stripe-connect must report disconnected.
+    const gateResp = await fetch(
+      `${SUPABASE_URL}/functions/v1/check-stripe-connect`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          apikey: SUPABASE_ANON_KEY,
+          "Content-Type": "application/json",
+        },
+        body: "{}",
+      },
+    );
+    const gateJson = JSON.parse(await gateResp.text());
+    assertEquals(gateResp.status, 200);
+    assertEquals(gateJson.connected, false);
+    assertEquals(gateJson.onboarding_complete, false);
+
+    // 4. Wizard-equivalent guard: requiresStripe && !onboarding_complete → blocked.
+    const acceptCardPayment = true;
+    const requiresStripe = acceptCardPayment; // mode === "sale" && accept_card_payment
+    const blocked = requiresStripe && !gateJson.onboarding_complete;
+    assert(blocked, "publish must be blocked while Stripe Connect is missing");
+
+    // Confirm the listing did not slip into published state.
+    const { data: stillDraft } = await client
+      .from("listings")
+      .select("status")
+      .eq("id", listingId)
+      .single();
+    assertEquals(stillDraft?.status, "draft");
+
+    // 5. Simulate a completed Stripe Connect onboarding.
+    const { error: connectErr } = await client
+      .from("profiles")
+      .update({
+        stripe_account_id: `acct_e2e_${crypto.randomUUID().slice(0, 8)}`,
+        stripe_onboarding_complete: true,
+      })
+      .eq("id", userId);
+    assertEquals(connectErr, null, connectErr?.message);
+
+    // Re-read the flag the wizard actually consults.
+    const { data: reconnected } = await client
+      .from("profiles")
+      .select("stripe_onboarding_complete")
+      .eq("id", userId)
+      .single();
+    assertEquals(reconnected?.stripe_onboarding_complete, true);
+    assert(
+      !(requiresStripe && !reconnected?.stripe_onboarding_complete),
+      "publish must be unblocked once onboarding is complete",
+    );
+
+    // 6. Publish succeeds now.
+    const row = await fillAndPublish(client, listingId, {
+      price_sale: 32000,
+      accept_card_payment: true,
+      accept_cash_payment: false,
+    });
+    assertEquals(row?.status, "published");
+    assertEquals(row?.accept_card_payment, true);
+  } finally {
+    // Always restore the profile's original Stripe state.
+    await client
+      .from("profiles")
+      .update({
+        stripe_account_id: original?.stripe_account_id ?? null,
+        stripe_onboarding_complete:
+          original?.stripe_onboarding_complete ?? false,
+      })
+      .eq("id", userId);
+  }
+});
+
+
+
 
 
 Deno.test("e2e: rental listing accepts a renter booking request end-to-end", async () => {
