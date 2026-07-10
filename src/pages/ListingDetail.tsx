@@ -45,6 +45,7 @@ import { VendorSlotAvailability } from '@/components/listing-detail/VendorSlotAv
 import { WeeklyHoursDisplay } from '@/components/listing-detail/WeeklyHoursDisplay';
 import { RentalBookingWidget } from '@/components/listing-detail/RentalBookingWidget';
 import { BookingWidget } from '@/components/listing-detail/BookingWidget';
+import ListingHowItWorks from '@/components/listing-detail/ListingHowItWorks';
 import OwnerBanner from '@/components/listing-detail/OwnerBanner';
 import { useListing } from '@/hooks/useListing';
 import { useListingAverageRating, useListingReviews } from '@/hooks/useReviews';
