@@ -422,23 +422,33 @@ interface Props {
 }
 
 const DISMISS_KEY_PREFIX = 'vb_howitworks_seen_';
+const GLOBAL_SEEN_KEY = 'vb_howitworks_seen_global';
 
 const ListingHowItWorks = ({ listing, isOwner, className }: Props) => {
   const config = useMemo(() => resolveWalkthrough(listing), [listing]);
   const [open, setOpen] = useState(false);
 
-  // Fire an impression exactly once per listing view.
+  // Fire an impression exactly once per listing view, and auto-open the
+  // walkthrough on the visitor's FIRST listing detail view (global, device-scoped).
   useEffect(() => {
     if (isOwner) return;
     trackWalkthrough('guidance_prompt_viewed', config.variant, listing.id);
-    // mark seen so future sessions can show a lighter prompt later if desired
     try {
       localStorage.setItem(`${DISMISS_KEY_PREFIX}${listing.id}`, '1');
+      const seenGlobal = localStorage.getItem(GLOBAL_SEEN_KEY);
+      if (!seenGlobal) {
+        localStorage.setItem(GLOBAL_SEEN_KEY, new Date().toISOString());
+        trackWalkthrough('guidance_auto_opened_first_visit', config.variant, listing.id);
+        // Defer slightly so the page has a chance to paint before the modal appears.
+        const t = window.setTimeout(() => setOpen(true), 600);
+        return () => window.clearTimeout(t);
+      }
     } catch {
       /* ignore quota / privacy-mode errors */
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [listing.id]);
+
 
   // Owners don't get walkthrough prompts on their own listings
   if (isOwner) return null;
