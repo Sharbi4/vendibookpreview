@@ -669,6 +669,8 @@ export const BookingWidget = ({
                   handleContinueToBooking();
                 }}
                 disabled={bookingMode === 'daily' ? (!startDate || !endDate) : (!selectedDate || !selectedStartTime)}
+                data-testid="booking-widget-rent-cta"
+                data-instant-book={instantBook ? 'true' : 'false'}
               >
                 {instantBook ? (
                   <>
