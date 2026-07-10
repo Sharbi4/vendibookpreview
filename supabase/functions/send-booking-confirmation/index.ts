@@ -19,6 +19,7 @@ function fmtDate(d?: string) {
   return dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
   try {
@@ -29,6 +30,27 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: 'email and bookingId required' }), {
         status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
+    }
+
+    // Look up the most recent transaction_terms snapshot for this booking.
+    // If we can find one, embed the exact numbers/policies in the email so
+    // the buyer sees the same record they agreed to.
+    let termsSnapshot: any = null;
+    let termsVersion = 'v1';
+    try {
+      const { data: termsRow } = await supabase
+        .from('transaction_terms')
+        .select('snapshot, terms_version')
+        .eq('booking_id', b.bookingId)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (termsRow) {
+        termsSnapshot = (termsRow as any).snapshot;
+        termsVersion = (termsRow as any).terms_version || 'v1';
+      }
+    } catch (e) {
+      console.warn('[send-booking-confirmation] terms lookup failed', e);
     }
 
     const templateData = {
@@ -43,6 +65,8 @@ Deno.serve(async (req) => {
       address: b.address,
       deliveryAddress: b.deliveryAddress,
       depositAmount: b.depositAmount ? fmtMoney(b.depositAmount) : undefined,
+      termsSnapshot,
+      termsVersion,
     };
 
     const { error } = await supabase.functions.invoke('send-transactional-email', {
@@ -54,7 +78,7 @@ Deno.serve(async (req) => {
       },
     });
     if (error) throw error;
-    return new Response(JSON.stringify({ success: true }), {
+    return new Response(JSON.stringify({ success: true, termsIncluded: Boolean(termsSnapshot) }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (e) {

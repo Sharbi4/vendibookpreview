@@ -105,7 +105,7 @@ serve(async (req) => {
     // Fetch listing to get host's Stripe account and details for checkout display
     const { data: listing, error: listingError } = await supabaseClient
       .from('listings')
-      .select('host_id, title, cover_image_url, address, pickup_location_text')
+      .select('host_id, title, cover_image_url, address, pickup_location_text, city, state, cancellation_policy, rules, category, mode')
       .eq('id', listing_id)
       .single();
 
@@ -267,6 +267,134 @@ serve(async (req) => {
       });
     }
 
+    // -------- Persist immutable transaction-terms snapshot --------
+    // This mirrors src/lib/transactionTerms.ts (buildTerms) so the buyer
+    // sees the same numbers/policies in the summary card, details modal,
+    // price breakdown, final-review sheet, Stripe checkout, and receipt
+    // email.
+    const TERMS_VERSION = 'v1';
+    const centsFrom = (n: number) => Math.round(Math.max(0, Number(n || 0)) * 100);
+    const requiredDocsRes = await supabaseClient
+      .from('listing_required_documents')
+      .select('document_type')
+      .eq('listing_id', listing_id);
+    const requiredDocuments: string[] = (requiredDocsRes.data || [])
+      .map((d) => String((d as { document_type?: string }).document_type || '').trim())
+      .filter(Boolean);
+
+    const snapshotLines: Array<{ label: string; amountCents: number; kind: string; hint?: string }> = [];
+    if (mode === 'rent') {
+      snapshotLines.push({ label: 'Rental', amountCents: centsFrom(amount) - centsFrom(delivery_fee) < 0 ? centsFrom(amount) : centsFrom(amount), kind: 'base' });
+      if (delivery_fee > 0) snapshotLines.push({ label: 'Delivery', amountCents: centsFrom(delivery_fee), kind: 'delivery' });
+      const rSubtotal = amount + delivery_fee;
+      const rFee = rSubtotal * (RENTAL_RENTER_FEE_PERCENT / 100);
+      snapshotLines.push({ label: 'Service fee (12.9%)', amountCents: centsFrom(rFee), kind: 'fee', hint: 'Vendibook marketplace fee. Non-refundable once the booking is confirmed.' });
+      if (deposit_amount > 0) snapshotLines.push({ label: 'Refundable security deposit', amountCents: centsFrom(deposit_amount), kind: 'deposit', hint: 'Held on your card and released within 24 hours after the rental ends if there is no damage or late return.' });
+      snapshotLines.push({ label: 'Total due today', amountCents: customerTotal, kind: 'total' });
+    } else {
+      snapshotLines.push({ label: 'Item price', amountCents: centsFrom(amount), kind: 'base' });
+      const isSellerPaid = Boolean(vendibook_freight_enabled && freight_payer === 'seller');
+      const buyerDelivery = isSellerPaid ? 0 : (delivery_fee || 0);
+      if (buyerDelivery > 0) snapshotLines.push({ label: 'Delivery / freight', amountCents: centsFrom(buyerDelivery), kind: 'delivery' });
+      snapshotLines.push({ label: 'Buyer fee', amountCents: 0, kind: 'fee', hint: 'Vendibook does not charge buyers a fee on card sales.' });
+      snapshotLines.push({ label: 'Total due today', amountCents: customerTotal, kind: 'total' });
+    }
+
+    const defaultCancellation = mode === 'sale'
+      ? 'Sales are escrow-protected. Funds are held by Vendibook and released to the seller 25 days after you confirm the item is as described. Open a dispute from your order page if something is wrong.'
+      : 'Free cancellation is not automatic. Contact the host to request a refund. Deposits are refunded within 24 hours after the rental ends if there is no damage or late return. Platform service fees are non-refundable once a booking is confirmed.';
+
+    const snapshot = {
+      termsVersion: TERMS_VERSION,
+      mode,
+      paymentMethod: 'stripe_card',
+      listing: {
+        id: listing_id,
+        title: listing.title,
+        coverImageUrl: listing.cover_image_url ?? null,
+        hostId: listing.host_id,
+        location: [listing.city, listing.state].filter(Boolean).join(', ') || null,
+      },
+      buyer: { id: user.id, email: user.email, name: buyer_name ?? null },
+      schedule: bookingDetails
+        ? {
+            startDate: bookingDetails.start_date ?? null,
+            endDate: bookingDetails.end_date ?? null,
+            startTime: bookingDetails.start_time ?? null,
+            endTime: bookingDetails.end_time ?? null,
+            hourlySlots: null,
+            slotNumber: null,
+          }
+        : {
+            startDate: null,
+            endDate: null,
+            startTime: null,
+            endTime: null,
+            hourlySlots: null,
+            slotNumber: null,
+          },
+      fulfillment: { type: fulfillment_type ?? null },
+      pricing: {
+        subtotalCents: centsFrom(amount),
+        deliveryCents: centsFrom(delivery_fee),
+        renterFeeCents: mode === 'rent' ? centsFrom((amount + delivery_fee) * (RENTAL_RENTER_FEE_PERCENT / 100)) : 0,
+        commissionCents: mode === 'rent'
+          ? centsFrom((amount + delivery_fee) * (RENTAL_HOST_FEE_PERCENT / 100))
+          : centsFrom(amount * (SALE_SELLER_FEE_PERCENT / 100)),
+        depositCents: centsFrom(deposit_amount),
+        totalCents: customerTotal,
+        currency: 'usd',
+        lines: snapshotLines,
+      },
+      policies: {
+        cancellation: (listing.cancellation_policy || '').trim() || defaultCancellation,
+        rules: listing.rules ?? null,
+        requiredDocuments,
+        acknowledgements: [
+          mode === 'rent'
+            ? `You are booking "${listing.title}" for the dates shown above.`
+            : `You are buying "${listing.title}" from the seller.`,
+          mode === 'rent'
+            ? 'Your card is authorized now; funds are held by Vendibook until 24 hours after the rental ends.'
+            : 'Your card is charged now; funds are held in escrow and released to the seller 25 days after you confirm the item.',
+          ...(mode === 'rent' && deposit_amount > 0
+            ? [`A refundable $${deposit_amount.toFixed(2)} security deposit is included in your total.`]
+            : []),
+          ...(requiredDocuments.length
+            ? [`You will need to provide: ${requiredDocuments.join(', ')}.`]
+            : []),
+        ],
+      },
+    };
+
+    const { data: termsRow, error: termsError } = await supabaseClient
+      .from('transaction_terms')
+      .insert({
+        listing_id,
+        booking_id: booking_id || null,
+        buyer_id: user.id,
+        host_id: listing.host_id,
+        snapshot,
+        total_cents: customerTotal,
+        subtotal_cents: centsFrom(amount),
+        deposit_cents: centsFrom(deposit_amount),
+        commission_cents: snapshot.pricing.commissionCents,
+        renter_fee_cents: snapshot.pricing.renterFeeCents,
+        terms_version: TERMS_VERSION,
+        payment_method: 'stripe_card',
+        transaction_mode: mode,
+      })
+      .select('id')
+      .single();
+
+    if (termsError || !termsRow) {
+      logStep('Terms snapshot insert failed', { error: termsError?.message });
+      throw new Error(`Failed to record transaction terms: ${termsError?.message || 'unknown'}`);
+    }
+    const terms_id: string = termsRow.id;
+    logStep('Terms snapshot written', { terms_id });
+
+
     // Check if customer already exists in Stripe
     const customers = await stripe.customers.list({ email: user.email, limit: 1 });
     let customerId: string | undefined;
@@ -384,6 +512,8 @@ serve(async (req) => {
             platform_fee_cents: applicationFee.toString(),
             host_payout_cents: hostReceives.toString(),
             referral_code,
+            terms_id,
+            terms_version: TERMS_VERSION,
           },
         },
         success_url: `${origin}/payment-success?session_id={CHECKOUT_SESSION_ID}`,
@@ -396,6 +526,8 @@ serve(async (req) => {
           host_id: listing.host_id,
           deposit_amount: deposit_amount.toString(),
           referral_code,
+          terms_id,
+          terms_version: TERMS_VERSION,
         },
       };
     } else {
@@ -484,6 +616,8 @@ serve(async (req) => {
             buyer_freight_cost: buyerFreightCost.toString(),
             seller_freight_deduction: isSellerPaidFreight ? freightAmount.toString() : '0',
             referral_code,
+            terms_id,
+            terms_version: TERMS_VERSION,
           },
         },
         success_url: `${origin}/payment-success?session_id={CHECKOUT_SESSION_ID}&escrow=true`,
@@ -509,6 +643,8 @@ serve(async (req) => {
           buyer_freight_cost: buyerFreightCost.toString(),
           seller_freight_deduction: isSellerPaidFreight ? freightAmount.toString() : '0',
           referral_code,
+          terms_id,
+          terms_version: TERMS_VERSION,
         },
       };
     }
@@ -525,6 +661,8 @@ serve(async (req) => {
         customer_total: customerTotal / 100,
         platform_fee: applicationFee / 100,
         host_receives: hostReceives / 100,
+        terms_id,
+        terms_version: TERMS_VERSION,
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
