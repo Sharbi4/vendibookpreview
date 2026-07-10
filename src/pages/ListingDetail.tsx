@@ -383,9 +383,18 @@ const ListingDetail = () => {
             </div>
           )}
 
+          {/* Mobile-only: contextual How-It-Works guidance for rentals.
+              (Sale mobile mounts its own copy inside SaleListingMobile.) */}
+          {isRental && (
+            <div className="lg:hidden mb-5" id="howitworks-mobile-anchor">
+              <ListingHowItWorks listing={listing as any} isOwner={!!isOwner} />
+            </div>
+          )}
+
           <div className="grid lg:grid-cols-3 gap-6 lg:gap-10">
             {/* Left Column - Details */}
             <div className="lg:col-span-2 space-y-5">
+
               {/* Title Section - Airbnb Style */}
               <div className="space-y-2">
                 {/* Title */}

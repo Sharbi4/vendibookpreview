@@ -461,10 +461,18 @@ const ListingHowItWorks = ({ listing, isOwner, className }: Props) => {
   const handleFinalCta = () => {
     trackWalkthrough('final_cta_clicked', config.variant, listing.id);
     setOpen(false);
-    // Scroll the primary booking/inquiry widget into view — never triggers a transaction
+    // Scroll the primary booking/inquiry widget into view — never triggers a transaction.
+    // Falls back to the mobile sticky CTA / top of page when the desktop widget is hidden.
     if (typeof document !== 'undefined') {
-      const el = document.getElementById(config.finalCtaTargetId);
-      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      const primary = document.getElementById(config.finalCtaTargetId);
+      const desktopVisible =
+        primary && primary.getClientRects && primary.getClientRects().length > 0;
+      const target = desktopVisible
+        ? primary!
+        : document.getElementById('mobile-sticky-cta') ||
+          document.getElementById('howitworks-mobile-anchor') ||
+          primary;
+      if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
   };
 
