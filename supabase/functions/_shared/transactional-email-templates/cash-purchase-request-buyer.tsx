@@ -34,6 +34,8 @@ const E = ({ buyerName, listingTitle, salePrice, sellerName, orderNumber, transa
         ) : null}
         {orderNumber ? <Section style={s.accentRow}><Text style={s.accentLabel}>ORDER</Text><Text style={s.accentValuePlain}>{orderNumber}</Text></Section> : null}
 
+        <TermsBlock snap={termsSnapshot} version={termsVersion} />
+
         <Text style={s.smallHeader}>WHAT HAPPENS NEXT</Text>
         <Text style={s.listItem}>1. The seller will contact you to coordinate the meetup, payment method, and handoff.</Text>
         <Text style={s.listItem}>2. Meet in person, inspect the item, and pay the seller directly (cash / cashier's check).</Text>
