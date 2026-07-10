@@ -28,6 +28,7 @@ const RENTER_PASSWORD = Deno.env.get("TEST_RENTER_PASSWORD");
 
 const CREATED_LISTING_IDS: string[] = [];
 const CREATED_BOOKING_IDS: string[] = [];
+const CREATED_SALE_TX_IDS: string[] = [];
 
 function requireCreds() {
   if (!TEST_EMAIL || !TEST_PASSWORD) {
