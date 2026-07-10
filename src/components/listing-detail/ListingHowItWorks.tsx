@@ -705,7 +705,60 @@ const ListingHowItWorks = ({ listing, isOwner, className }: Props) => {
       target.variant,
       listing.id,
     );
+    setSrAnnouncement(
+      branch === 'sale'
+        ? 'Buy path selected. Showing purchase steps. Press the Continue button to jump to the buy widget, or use the Back button to change your choice.'
+        : 'Rent path selected. Showing rental steps. Press the Continue button to jump to the booking widget, or use the Back button to change your choice.',
+    );
     if (!open) setOpen(true);
+    // Move keyboard focus onto the Back button so users can immediately
+    // reverse the choice or Tab forward through the newly revealed steps.
+    window.setTimeout(() => {
+      backBtnRef.current?.focus();
+    }, 30);
+  };
+
+  // Arrow-key navigation between the two branch buttons (a11y: matches the
+  // WAI-ARIA "grouped buttons" pattern — Left/Up moves to the previous
+  // option, Right/Down to the next, Home/End jump to the ends).
+  const handleBranchKeyDown = (
+    event: React.KeyboardEvent<HTMLButtonElement>,
+    current: 'sale' | 'rent',
+  ) => {
+    const order: Array<'sale' | 'rent'> = ['sale', 'rent'];
+    const idx = order.indexOf(current);
+    let nextIdx: number | null = null;
+    switch (event.key) {
+      case 'ArrowRight':
+      case 'ArrowDown':
+        nextIdx = (idx + 1) % order.length;
+        break;
+      case 'ArrowLeft':
+      case 'ArrowUp':
+        nextIdx = (idx - 1 + order.length) % order.length;
+        break;
+      case 'Home':
+        nextIdx = 0;
+        break;
+      case 'End':
+        nextIdx = order.length - 1;
+        break;
+      default:
+        return;
+    }
+    event.preventDefault();
+    if (nextIdx !== null) {
+      branchBtnRefs.current[order[nextIdx]]?.focus();
+    }
+  };
+
+  const handleBackToSelector = () => {
+    setPickedBranch(null);
+    setSrAnnouncement('Returned to the buy or rent selector. Use the arrow keys to move between choices.');
+    // Focus the first branch button so keyboard users can reselect immediately.
+    window.setTimeout(() => {
+      branchBtnRefs.current.sale?.focus();
+    }, 30);
   };
 
   const handleFinalCta = () => {
