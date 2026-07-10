@@ -1072,6 +1072,30 @@ export type Database = {
           },
         ]
       }
+      edge_action_idempotency: {
+        Row: {
+          action: string
+          created_at: string
+          idempotency_key: string
+          response: Json
+          user_id: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          idempotency_key: string
+          response: Json
+          user_id: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          idempotency_key?: string
+          response?: Json
+          user_id?: string
+        }
+        Relationships: []
+      }
       email_events: {
         Row: {
           event_type: Database["public"]["Enums"]["marketing_event_type"]
@@ -3670,6 +3694,7 @@ export type Database = {
           freight_payment_status: string | null
           fulfillment_type: string | null
           id: string
+          legacy_terms_unavailable: boolean
           listing_id: string
           message: string | null
           payment_intent_id: string | null
@@ -3713,6 +3738,7 @@ export type Database = {
           freight_payment_status?: string | null
           fulfillment_type?: string | null
           id?: string
+          legacy_terms_unavailable?: boolean
           listing_id: string
           message?: string | null
           payment_intent_id?: string | null
@@ -3756,6 +3782,7 @@ export type Database = {
           freight_payment_status?: string | null
           fulfillment_type?: string | null
           id?: string
+          legacy_terms_unavailable?: boolean
           listing_id?: string
           message?: string | null
           payment_intent_id?: string | null
