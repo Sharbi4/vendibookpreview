@@ -1,57 +1,48 @@
-# Pay-in-Person Purchase Flow — Scoped Audit & Repair Plan
+# Vendibook Full Functional Audit — Scoped Plan
 
-Before writing any code, I want to align on scope. The request describes a 22-section rebuild, but two facts change the picture:
+The request as written is a multi-week engineering + QA program (real multi-account E2E, synthetic prod monitoring, reconciliation jobs, alerting, cross-device mobile testing). I can't credibly execute all 15 sections in one pass inside this sandbox — I have no test buyer/seller/host credentials, no mobile devices, no way to actually complete a Stripe Checkout with a real card, and no way to schedule production monitors that alert your team.
 
-- The Cash / Pay-in-Person flow already exists end-to-end: `create-sale-transaction`, `SaleCheckout.tsx`, `PurchaseStepReview.tsx`, `confirm-sale`, `send-sale-notification` with four dedicated cash templates (`cash-purchase-request-{buyer,seller}`, `cash-seller-confirmed-buyer`, `cash-buyer-confirmed-seller`), the `pending_cash` status is already in the DB check constraint, and dashboards already surface it.
-- Live data shows **1 total** `sale_transactions` row (status `pending_cash`, no confirmations yet, ~5 days old). There is no backlog of "broken" cash orders and no failing Stripe cash rows. So the "likely an issue" premise is not visible in the data.
+What I **can** do reliably, and what I propose we do in phases:
 
-Given that, I recommend a targeted audit + repairs rather than a full rebuild, and I want your sign-off on scope before I touch anything.
+## Phase 1 — Static contract + data audit (this session, no user action required)
+Deliverable: a written report + a repair migration for anything deterministic.
+1. **Frontend ↔ DB contract scan** for the highest-risk tables: `listings`, `sale_transactions`, `booking_requests`, `saved_permit_roadmaps`, `support_tickets`, `email_send_log`. Flag: fields written by UI that don't exist, required DB columns not required in UI, status values UI emits that DB CHECK rejects, empty-string → numeric/date coercion sites.
+2. **Status inventory** — enumerate every status literal in `src/` and compare with DB CHECK constraints / enums. Produce one canonical list per entity.
+3. **Data reconciliation queries** (read-only) for the exact "broken record" categories in §14: drafts w/ no owner, published listings w/ no images, featured rows w/ expired dates, sales missing buyer or seller, purchases in `paid` w/ no seller notification row, permit roadmaps w/ no items, DLQ email rows in last 30 days.
+4. **RLS spot-audit** on the six tables above — confirm no policy references its own table (recursion) and that each has a matching GRANT.
+5. **Email event matrix** — for each trigger site in `supabase/functions/`, list (event → template → recipient → idempotency key) and cross-check against `_shared/transactional-email-templates/registry.ts`. Flag orphan templates and unregistered `templateName` invocations.
 
-## What I will do (in this order)
+## Phase 2 — Deterministic repairs (only after you approve Phase 1 report)
+- One migration for any status/CHECK/constraint mismatches found.
+- One data-repair migration for deterministic broken rows (e.g. clear expired `featured_enabled`, null out `guest_draft_token` on published rows already handled by trigger — verify).
+- Code fixes only where Phase 1 proves a mismatch (no speculative refactors).
 
-### 1. Read-only architecture audit (no code changes)
-Enumerate the actual cash path and produce a short written root-cause report covering:
-- `create-sale-transaction` + `SaleCheckout` cash branch (insert shape, status, nullability of Stripe fields).
-- `confirm-sale` state machine for cash (buyer marked paid → seller confirmed → item received → completed).
-- RLS on `sale_transactions` (buyer/seller read, party-scoped updates, admin oversight).
-- Dashboard queries — grep for any inner joins that require `payment_intent_id` / `checkout_session_id`.
-- Notification triggers for each cash transition, and confirm no template says "card charged" / "escrow" / "payout released" on a cash order.
-- Review eligibility — confirm `reviews` gating uses `status = 'completed'` and does not require a Stripe id.
-- Listing reservation behavior on cash creation and cancellation.
-- The single existing `pending_cash` row — verify it is reachable from both dashboards and has valid next actions.
+## Phase 3 — Automated E2E harness (needs your input)
+Requires: a dedicated buyer test account + seller test account + Stripe test-mode card. I'll add Deno E2E tests under `supabase/functions/*/e2e_test.ts` covering:
+- listing draft → publish → fetch public page
+- Pay-in-Person sale → seller confirm → buyer confirm → completed
+- Permit Path save → resume
+- Support ticket submit → admin list
+Card-sale Stripe Checkout can be smoke-tested only up to redirect; full webhook path needs a Stripe CLI forward that this sandbox can't run — you'd run it locally or in CI.
 
-If the audit finds no defect, I will report that and stop. I will not invent problems to fix.
+## Phase 4 — Production monitoring (out of scope for a single build session)
+Synthetic monitors, alert routing, correlation-ID logging, and CS search tooling are a separate project. I'll scope it after Phases 1–3 land.
 
-### 2. Targeted repairs only for defects the audit surfaces
-Likely candidates (only fixed if actually broken):
-- Dashboard/notification queries that inner-join on Stripe columns and drop cash rows.
-- Any status-transition branch in `confirm-sale` that assumes a `payment_intent_id`.
-- Missing idempotency on buyer/seller confirmation buttons.
-- Any email template that uses card/escrow wording on the cash path.
-- RLS gaps where a non-party could update someone else's transaction.
+## What's explicitly *not* in this plan
+- Real device mobile testing (Android/iPhone camera uploads) — needs a human.
+- Actual Stripe Connect onboarding + card charge from a live buyer — needs a human with a test card in the browser.
+- Alerting integration (PagerDuty/Slack) — needs your channel + policy input.
+- "Repair all workflows" as a blanket claim — I'll only fix what Phase 1 proves broken.
 
-Each repair will be a minimal patch — no schema rewrites, no status renames, no rebuild.
+## Technical notes
+- All queries in Phase 1 run through `supabase--read_query` (read-only). Nothing mutates data without a separate approved migration.
+- Report will be delivered inline in chat + saved to `.lovable/audit-2026-07-10.md`.
+- Estimated Phase 1 runtime: ~15–25 tool calls, one response.
 
-### 3. Automated end-to-end test (proof)
-Add a Deno test alongside the existing `create-listing-draft/e2e_test.ts` that, using the existing `TEST_USER_EMAIL` (seller) and `TEST_RENTER_EMAIL` (buyer):
-1. Publishes a cash-only sale listing.
-2. Creates a `pending_cash` sale_transactions row as the buyer.
-3. Advances buyer → seller confirmations via `confirm-sale`.
-4. Asserts status progression, both-party visibility, and completion.
-5. Cleans up.
-Skips gracefully if `TEST_RENTER_EMAIL` is not set (same pattern as the rental booking test).
+## Decision needed from you
+Pick one:
+- **A. Run Phase 1 now** and I'll deliver the audit report + list of proposed repairs. You approve repairs before I touch anything.
+- **B. Run Phase 1 + auto-apply deterministic repairs** (still approval-gated per migration, just batched).
+- **C. Narrow scope** — name the 2–3 workflows you most suspect are broken and I'll deep-dive those instead of the full inventory.
 
-### 4. Report
-Root cause (or "no defect found"), exact files changed, the test's pass output, and a note that no Stripe/online-payment code was touched.
-
-## Explicitly out of scope for this pass
-- No new tables, statuses, or migrations unless a real defect requires it.
-- No mass email refactor.
-- No repair of the one existing `pending_cash` row (it is not stuck — no confirmations yet).
-- No cross-browser manual QA — automated Deno e2e is the proof.
-- No touching Stripe/online payment code paths.
-
-## Reply with one of
-- **"go"** — I run the audit and only patch actual defects, then add the e2e test.
-- **"audit only"** — I produce the audit report and stop before any code changes.
-- **"full rebuild"** — override the above and execute all 22 sections as written (much larger, higher-risk change; I would want to break it into several turns).
+C is the fastest path to actual fixes if you already know where users are hitting walls.
