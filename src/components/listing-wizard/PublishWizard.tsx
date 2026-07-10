@@ -1587,7 +1587,7 @@ export const PublishWizard: React.FC = () => {
               mode: listing.mode,
               price_daily: priceDaily ? parseFloat(priceDaily.replace(/[^0-9.]/g, '')) : null,
               price_sale: priceSale ? parseFloat(priceSale.replace(/[^0-9.]/g, '')) : null,
-              address: location,
+              address: address,
               host_id: user?.id,
               host_name: user?.user_metadata?.full_name || user?.email?.split('@')[0],
               host_email: user?.email}}}).catch(err => console.error('Admin notification error:', err));
