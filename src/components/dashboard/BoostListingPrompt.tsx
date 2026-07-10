@@ -82,16 +82,60 @@ export const BoostListingPrompt = ({ listings, userId }: BoostListingPromptProps
       const { data, error } = await supabase.functions.invoke('create-featured-checkout', {
         body: { listing_id: candidate.id },
       });
-      if (error) throw error;
-      if (data?.url) {
-        window.open(data.url, '_blank');
-        handleDismiss();
+      if (error) {
+        const { referenceCode } = await reportError({
+          action: 'boost.checkout.init',
+          endpoint: '/functions/v1/create-featured-checkout',
+          errorType: 'StripeCheckoutInitFailed',
+          errorMessage: (error as any)?.message ?? String(error),
+          status: (error as any)?.status,
+          listingId: candidate.id,
+        });
+        toast({
+          title: "Couldn't start Stripe Checkout",
+          description: `Payments are temporarily unreachable. Try again, or boost from your listing card. Reference: ${referenceCode}`,
+          variant: 'destructive',
+        });
+        return;
       }
+      if (!data?.url) {
+        const { referenceCode } = await reportError({
+          action: 'boost.checkout.init',
+          endpoint: '/functions/v1/create-featured-checkout',
+          errorType: 'StripeCheckoutMissingUrl',
+          errorMessage: 'No checkout URL returned',
+          listingId: candidate.id,
+        });
+        toast({
+          title: 'Checkout unavailable',
+          description: `Stripe didn't return a link. Please try again. Reference: ${referenceCode}`,
+          variant: 'destructive',
+        });
+        return;
+      }
+      const popup = window.open(data.url, '_blank');
+      if (!popup || popup.closed) {
+        toast({
+          title: 'Popup blocked',
+          description: 'Allow popups for Vendibook, then try again.',
+          variant: 'destructive',
+        });
+        return;
+      }
+      handleDismiss();
     } catch (err) {
+      const { referenceCode } = await reportError({
+        action: 'boost.checkout.init',
+        endpoint: '/functions/v1/create-featured-checkout',
+        errorType: 'UnhandledCheckoutError',
+        errorMessage: err instanceof Error ? err.message : String(err),
+        stack: err instanceof Error ? err.stack : undefined,
+        listingId: candidate.id,
+      });
       console.error('Boost checkout error:', err);
       toast({
         title: 'Could not start checkout',
-        description: 'Please try again or boost from your listing card.',
+        description: `Please try again or contact support. Reference: ${referenceCode}`,
         variant: 'destructive',
       });
     } finally {
