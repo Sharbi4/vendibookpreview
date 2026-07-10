@@ -123,6 +123,67 @@ Deno.serve(async (req) => {
   // Create Supabase client with service role (bypasses RLS)
   const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
+  // 1b. ATOMIC IDEMPOTENCY CLAIM
+  // Insert a 'pending' row keyed by idempotency_key. A partial unique index on
+  // email_send_log (idempotency_key) WHERE status IN ('pending','sent','suppressed',...)
+  // guarantees only ONE concurrent claim can win. On conflict, we return the
+  // existing row's result rather than sending again.
+  {
+    const { error: claimError } = await supabase
+      .from('email_send_log')
+      .insert({
+        message_id: messageId,
+        idempotency_key: idempotencyKey,
+        template_name: templateName,
+        recipient_email: effectiveRecipient,
+        status: 'pending',
+        metadata: providedIdempotencyKey ? { idempotency_source: 'caller' } : { idempotency_source: 'auto' },
+      })
+
+    if (claimError) {
+      // Postgres unique_violation → duplicate logical event
+      const isDup = (claimError as any)?.code === '23505'
+      if (!isDup) {
+        console.error('Idempotency claim insert failed', { claimError, idempotencyKey })
+        return new Response(
+          JSON.stringify({ error: 'Failed to claim email idempotency slot' }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+      }
+
+      // Look up the winning row (latest active row for this key)
+      const { data: existing } = await supabase
+        .from('email_send_log')
+        .select('id, message_id, status, recipient_email, template_name, created_at')
+        .eq('idempotency_key', idempotencyKey)
+        .in('status', ['pending', 'sent', 'suppressed', 'bounced', 'complained'])
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+
+      console.log('Duplicate email send suppressed by idempotency enforcement', {
+        idempotencyKey,
+        templateName,
+        effectiveRecipient,
+        existingStatus: existing?.status,
+        existingMessageId: existing?.message_id,
+      })
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          already_sent: existing?.status === 'sent',
+          duplicate_suppressed: true,
+          status: existing?.status ?? 'unknown',
+          email_event_id: existing?.id ?? null,
+          message_id: existing?.message_id ?? null,
+          idempotency_key: idempotencyKey,
+        }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+  }
+
   // 2. Check suppression list (fail-closed: if we can't verify, don't send)
   const { data: suppressed, error: suppressionError } = await supabase
     .from('suppressed_emails')
@@ -135,6 +196,8 @@ Deno.serve(async (req) => {
       error: suppressionError,
       effectiveRecipient,
     })
+    // Roll back the claim so a fixed retry can succeed
+    await supabase.from('email_send_log').update({ status: 'failed', error_message: 'suppression check failed' }).eq('message_id', messageId).eq('status', 'pending')
     return new Response(
       JSON.stringify({ error: 'Failed to verify suppression status' }),
       {
@@ -145,23 +208,23 @@ Deno.serve(async (req) => {
   }
 
   if (suppressed) {
-    // Log the suppressed attempt
-    await supabase.from('email_send_log').insert({
-      message_id: messageId,
-      template_name: templateName,
-      recipient_email: effectiveRecipient,
-      status: 'suppressed',
-    })
+    // Convert the pending claim to 'suppressed' rather than inserting a new row
+    await supabase.from('email_send_log')
+      .update({ status: 'suppressed' })
+      .eq('message_id', messageId)
+      .eq('status', 'pending')
 
     console.log('Email suppressed', { effectiveRecipient, templateName })
     return new Response(
-      JSON.stringify({ success: false, reason: 'email_suppressed' }),
+      JSON.stringify({ success: false, reason: 'email_suppressed', already_sent: false, idempotency_key: idempotencyKey }),
       {
         status: 200,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       }
     )
   }
+
+
 
   // 3. Get or create unsubscribe token (one token per email address)
   const normalizedEmail = effectiveRecipient.toLowerCase()
