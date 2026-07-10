@@ -52,13 +52,15 @@ CASES = [
         variant="rent_instant",
         listing_id="b88edd57-967c-4036-a5bb-a89d2e18ee88",
         txn_selector=f'{visible(TID["rental_cta"])}[data-instant-book="true"],'
-                     f'{visible(TID["rent_cta_widget"])}[data-instant-book="true"]',
+                     f'{visible(TID["rent_cta_widget"])}[data-instant-book="true"],'
+                     f'{visible(TID["sticky_mobile_rent"])}[data-instant-book="true"]',
     ),
     dict(
         variant="rent_request",
         listing_id="d94836ba-10fa-44e0-8b5b-046b0bf7d01b",
         txn_selector=f'{visible(TID["rental_cta"])}[data-instant-book="false"],'
-                     f'{visible(TID["rent_cta_widget"])}[data-instant-book="false"]',
+                     f'{visible(TID["rent_cta_widget"])}[data-instant-book="false"],'
+                     f'{visible(TID["sticky_mobile_rent"])}[data-instant-book="false"]',
     ),
 ]
 
