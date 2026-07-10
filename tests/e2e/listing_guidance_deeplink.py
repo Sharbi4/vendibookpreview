@@ -15,10 +15,12 @@ scrolled into view (desktop `#booking-widget` or mobile fixed sticky).
 
 import asyncio
 import os
-import re
 import sys
 from pathlib import Path
 from playwright.async_api import async_playwright
+
+sys.path.insert(0, str(Path(__file__).parent))
+from _selectors import TID  # noqa: E402
 
 SHOTS = Path(__file__).parent / "screenshots"
 SHOTS.mkdir(parents=True, exist_ok=True)
