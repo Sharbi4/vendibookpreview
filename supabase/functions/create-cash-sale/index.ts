@@ -22,6 +22,11 @@ interface Body {
   buyer_name: string;
   buyer_email: string;
   buyer_phone?: string | null;
+  // Optional: id of a pre-created draft transaction_terms row
+  // (from create-transaction-terms-draft, acknowledged in FinalReviewSheet).
+  // When present we reuse it instead of inserting a fresh terms row so the
+  // acknowledged_at/ip/ua stamps written by acknowledge-terms are preserved.
+  terms_id?: string | null;
 }
 
 Deno.serve(async (req) => {
