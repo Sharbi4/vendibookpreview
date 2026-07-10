@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
-import { ArrowLeft, Loader2, Send, ExternalLink, Check, Camera, DollarSign, FileText, Calendar, CreditCard, ChevronRight, Save, TrendingUp, TrendingDown, Target, Wallet, Info, Banknote, Zap, RotateCcw, Plus, X, Package, Scale, Ruler, MapPin, Truck, Building2, Eye, AlertCircle, Shield, Clock, ChevronDown, ChevronUp, GripVertical, Star, Type, ListChecks } from 'lucide-react';
+import { ArrowLeft, Loader2, Send, ExternalLink, Check, Camera, DollarSign, FileText, Calendar, CreditCard, ChevronRight, Save, TrendingUp, TrendingDown, Target, Wallet, Info, Banknote, Zap, RotateCcw, Plus, X, Package, Scale, Ruler, MapPin, Truck, Building2, Eye, AlertCircle, Shield, Clock, ChevronDown, ChevronUp, GripVertical, Type, ListChecks } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -725,9 +725,10 @@ export const PublishWizard: React.FC = () => {
     
     const isSellerPaidFreight = vendibookFreightEnabled && freightPayer === 'seller';
     const freightCost = vendibookFreightEnabled ? estimatedFreightCost : 0;
+    const isCashOnlySale = listing?.mode === 'sale' && acceptCashPayment && !acceptCardPayment;
     
-    return calculateSaleFees(salePriceNum, freightCost, isSellerPaidFreight);
-  }, [priceSale, vendibookFreightEnabled, freightPayer]);
+    return calculateSaleFees(salePriceNum, freightCost, isSellerPaidFreight, isCashOnlySale);
+  }, [priceSale, vendibookFreightEnabled, freightPayer, listing?.mode, acceptCashPayment, acceptCardPayment]);
 
   const getLocation = () => {
     if (listing?.address) return listing.address;
@@ -1289,9 +1290,8 @@ export const PublishWizard: React.FC = () => {
   };
 
   const handlePublish = async () => {
-    // Stripe is only required if card payment is enabled
-    const stripeRequired = acceptCardPayment;
     if (!listing) return;
+    const stripeRequired = listing.mode === 'rent' || (listing.mode === 'sale' && acceptCardPayment);
 
     // Validate all required fields before publishing
     const validationErrors = getValidationErrors();
@@ -1621,8 +1621,8 @@ export const PublishWizard: React.FC = () => {
 
   // Checklist state - with proper validation
   const totalPhotoCount = existingImages.length + images.length;
-  // Stripe is only required if card payment is enabled (not cash-only)
-  const requiresStripe = acceptCardPayment;
+  // Stripe is required for rentals and for sale listings that accept card payment.
+  const requiresStripe = listing?.mode === 'rent' || (listing?.mode === 'sale' && acceptCardPayment);
   const enabledDocsCount = requiredDocuments.filter(d => d.is_required).length;
 
   // Helper to properly validate price input
@@ -1637,8 +1637,12 @@ export const PublishWizard: React.FC = () => {
   const MIN_DESCRIPTION_LENGTH = 50;
   const MIN_TITLE_LENGTH = 5;
 
-  const hasPricing = listing?.mode === 'sale' 
-    ? isValidPrice(priceSale) 
+  const hasSalePaymentMethod = listing?.mode !== 'sale' || acceptCardPayment || acceptCashPayment;
+  const hasPriceAmount = listing?.mode === 'sale'
+    ? isValidPrice(priceSale)
+    : isValidPrice(priceDaily);
+  const hasPricing = listing?.mode === 'sale'
+    ? hasPriceAmount && hasSalePaymentMethod
     : isValidPrice(priceDaily);
   
   const hasValidTitle = title.trim().length >= MIN_TITLE_LENGTH;
@@ -1673,7 +1677,8 @@ export const PublishWizard: React.FC = () => {
   const getValidationErrors = (): string[] => {
     const errors: string[] = [];
     if (totalPhotoCount < 3) errors.push(`Add at least 3 photos (currently ${totalPhotoCount})`);
-    if (!hasPricing) errors.push(listing?.mode === 'sale' ? 'Set a sale price greater than $0' : 'Set a daily rate greater than $0');
+    if (!hasPriceAmount) errors.push(listing?.mode === 'sale' ? 'Set a sale price greater than $0' : 'Set a daily rate greater than $0');
+    if (listing?.mode === 'sale' && !hasSalePaymentMethod) errors.push('Select at least one payment method: Pay by Card or Pay in Person');
     if (!hasValidTitle) errors.push(`Title must be at least ${MIN_TITLE_LENGTH} characters`);
     if (!hasValidDescription) errors.push(`Description must be at least ${MIN_DESCRIPTION_LENGTH} characters (currently ${description.trim().length})`);
     if (!checklistState.hasLocation) errors.push('Complete the location and logistics section');
@@ -2315,8 +2320,11 @@ export const PublishWizard: React.FC = () => {
                               
                               <div className="flex items-center justify-between mt-1">
                                 <span className="text-sm text-muted-foreground">Platform commission:</span>
-                                <span className="text-sm text-destructive">
-                                  -{formatCurrency(salePayoutEstimate.sellerFee)}
+                                <span className={cn(
+                                  "text-sm",
+                                  salePayoutEstimate.sellerFee > 0 ? "text-destructive" : "text-foreground"
+                                )}>
+                                  {salePayoutEstimate.sellerFee > 0 ? '-' : ''}{formatCurrency(salePayoutEstimate.sellerFee)}
                                 </span>
                               </div>
                               
@@ -2338,7 +2346,11 @@ export const PublishWizard: React.FC = () => {
                               
                               <div className="flex items-start gap-1.5 mt-3 text-xs text-muted-foreground">
                                 <Info className="w-3 h-3 mt-0.5 shrink-0" />
-                                <span>Platform fee is {SALE_SELLER_FEE_PERCENT}% of the sale price</span>
+                                <span>
+                                  {acceptCashPayment && !acceptCardPayment
+                                    ? 'Pay in Person sales have no platform commission.'
+                                    : `Platform fee is ${SALE_SELLER_FEE_PERCENT}% of the sale price for card payments`}
+                                </span>
                               </div>
                             </div>
                           </div>
@@ -3882,7 +3894,7 @@ export const PublishWizard: React.FC = () => {
                   )}
 
                   {/* Ready to Publish Message */}
-                  {canPublish && isOnboardingComplete && (
+                  {canPublish && (!requiresStripe || isOnboardingComplete) && (
                     <div className="relative overflow-hidden rounded-xl p-4 border border-border bg-gradient-to-br from-primary/5 via-primary/3 to-background">
                       <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-primary/3 animate-pulse" />
                       <div className="relative flex items-center gap-3">
@@ -3906,7 +3918,7 @@ export const PublishWizard: React.FC = () => {
                   )}
 
                   <div className="flex flex-wrap gap-3">
-                    <Button variant="dark-shine" onClick={() => setStep('stripe')}>Back</Button>
+                    <Button variant="dark-shine" onClick={() => setStep(requiresStripe ? 'stripe' : 'location')}>Back</Button>
                     <Button
                       variant="dark-shine"
                       onClick={() => setShowPreviewModal(true)}
@@ -3965,7 +3977,7 @@ export const PublishWizard: React.FC = () => {
                 {/* Featured charge notice */}
                 {featuredEnabled && !((listing as any)?.featured_at) && (
                   <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 p-3 text-sm text-amber-700 dark:text-amber-300 flex items-start gap-2">
-                    <Star className="w-4 h-4 mt-0.5 shrink-0" />
+                    <TrendingUp className="w-4 h-4 mt-0.5 shrink-0" />
                     <div>
                       You'll be redirected to Stripe to pay <strong>$30</strong> for the Featured add-on.
                       Your listing publishes automatically the moment payment clears.
