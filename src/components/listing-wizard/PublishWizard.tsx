@@ -1521,8 +1521,37 @@ export const PublishWizard: React.FC = () => {
             Authorization: `Bearer ${sessionData.session.access_token}`},
           body: { listing_id: listing.id }});
 
-        if (error) throw error;
-        if (!data?.url) throw new Error('No checkout URL returned');
+        if (error) {
+          const { referenceCode } = await reportError({
+            action: 'publish.boost.checkout.init',
+            endpoint: '/functions/v1/create-featured-checkout',
+            errorType: 'StripeCheckoutInitFailed',
+            errorMessage: (error as any)?.message ?? String(error),
+            status: (error as any)?.status,
+            listingId: listing.id,
+          });
+          toast({
+            title: "Couldn't start Stripe Checkout",
+            description: `Your listing is saved. Payments are temporarily unreachable — try publishing again in a moment, or contact support at (725) 755-9598. Reference: ${referenceCode}`,
+            variant: 'destructive',
+          });
+          return;
+        }
+        if (!data?.url) {
+          const { referenceCode } = await reportError({
+            action: 'publish.boost.checkout.init',
+            endpoint: '/functions/v1/create-featured-checkout',
+            errorType: 'StripeCheckoutMissingUrl',
+            errorMessage: 'No checkout URL returned',
+            listingId: listing.id,
+          });
+          toast({
+            title: 'Checkout unavailable',
+            description: `Stripe didn't return a checkout link. Please try again. Reference: ${referenceCode}`,
+            variant: 'destructive',
+          });
+          return;
+        }
 
         // Set up listener for cross-tab communication before opening checkout
         const handleCheckoutComplete = (event: MessageEvent) => {
@@ -1540,7 +1569,13 @@ export const PublishWizard: React.FC = () => {
         }
         
         const newWindow = window.open(data.url, '_blank');
-        if (!newWindow) window.location.href = data.url;
+        if (!newWindow) {
+          toast({
+            title: 'Opening Stripe Checkout…',
+            description: 'Your browser blocked the popup, so we\'re redirecting this tab instead.',
+          });
+          window.location.href = data.url;
+        }
 
         return; // Exit early - webhook will handle publishing after payment
       }
