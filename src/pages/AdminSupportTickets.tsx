@@ -49,6 +49,7 @@ type TicketRow = {
   resolution_notes: string | null;
   created_at: string;
   updated_at: string;
+  source?: "in_app" | "tawkto" | "email" | "system" | null;
 };
 
 type MessageRow = {
@@ -314,7 +315,12 @@ export default function AdminSupportTickets() {
                 >
                   <div className="flex items-center justify-between gap-2 mb-1">
                     <span className="font-mono text-xs text-muted-foreground">{t.reference_code}</span>
-                    <Badge variant="outline" className={PRIORITY_STYLE[t.priority]}>{t.priority}</Badge>
+                    <div className="flex items-center gap-1">
+                      {t.source === "tawkto" && (
+                        <Badge variant="outline" className="bg-cyan-500/15 text-cyan-600 border-cyan-500/30 text-[10px]">Tawk</Badge>
+                      )}
+                      <Badge variant="outline" className={PRIORITY_STYLE[t.priority]}>{t.priority}</Badge>
+                    </div>
                   </div>
                   <p className="text-sm font-medium line-clamp-1">{t.title}</p>
                   <div className="flex items-center justify-between mt-1">

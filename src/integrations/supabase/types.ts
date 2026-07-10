@@ -4234,6 +4234,53 @@ export type Database = {
           },
         ]
       }
+      support_ticket_audit_events: {
+        Row: {
+          actor_id: string | null
+          actor_type: string
+          created_at: string
+          details: Json
+          event_type: string
+          external_ref: string | null
+          id: string
+          new_status: string | null
+          previous_status: string | null
+          ticket_id: string
+        }
+        Insert: {
+          actor_id?: string | null
+          actor_type?: string
+          created_at?: string
+          details?: Json
+          event_type: string
+          external_ref?: string | null
+          id?: string
+          new_status?: string | null
+          previous_status?: string | null
+          ticket_id: string
+        }
+        Update: {
+          actor_id?: string | null
+          actor_type?: string
+          created_at?: string
+          details?: Json
+          event_type?: string
+          external_ref?: string | null
+          id?: string
+          new_status?: string | null
+          previous_status?: string | null
+          ticket_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_ticket_audit_events_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "support_tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       support_ticket_messages: {
         Row: {
           author_id: string | null
@@ -4272,6 +4319,53 @@ export type Database = {
           },
         ]
       }
+      support_ticket_webhook_events: {
+        Row: {
+          created_at: string
+          event_type: string
+          external_event_id: string
+          id: string
+          payload: Json
+          processed_at: string | null
+          processing_error: string | null
+          property_id: string | null
+          source: string
+          ticket_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          event_type: string
+          external_event_id: string
+          id?: string
+          payload: Json
+          processed_at?: string | null
+          processing_error?: string | null
+          property_id?: string | null
+          source: string
+          ticket_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          event_type?: string
+          external_event_id?: string
+          id?: string
+          payload?: Json
+          processed_at?: string | null
+          processing_error?: string | null
+          property_id?: string | null
+          source?: string
+          ticket_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_ticket_webhook_events_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "support_tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       support_tickets: {
         Row: {
           app_version: string | null
@@ -4280,9 +4374,13 @@ export type Database = {
           category: string
           closed_at: string | null
           created_at: string
+          customer_email: string | null
+          customer_name: string | null
           description: string
           device_type: string | null
           feature_area: string
+          first_response_at: string | null
+          first_response_due_at: string | null
           id: string
           is_blocking: boolean
           last_error_category: string | null
@@ -4303,7 +4401,11 @@ export type Database = {
           request_id: string | null
           resolution_notes: string | null
           resolved_at: string | null
+          source: string
           status: string
+          tawk_chat_id: string | null
+          tawk_property_id: string | null
+          tawk_ticket_id: string | null
           title: string
           transaction_status: string | null
           updated_at: string
@@ -4319,9 +4421,13 @@ export type Database = {
           category: string
           closed_at?: string | null
           created_at?: string
+          customer_email?: string | null
+          customer_name?: string | null
           description: string
           device_type?: string | null
           feature_area: string
+          first_response_at?: string | null
+          first_response_due_at?: string | null
           id?: string
           is_blocking?: boolean
           last_error_category?: string | null
@@ -4342,7 +4448,11 @@ export type Database = {
           request_id?: string | null
           resolution_notes?: string | null
           resolved_at?: string | null
+          source?: string
           status?: string
+          tawk_chat_id?: string | null
+          tawk_property_id?: string | null
+          tawk_ticket_id?: string | null
           title: string
           transaction_status?: string | null
           updated_at?: string
@@ -4358,9 +4468,13 @@ export type Database = {
           category?: string
           closed_at?: string | null
           created_at?: string
+          customer_email?: string | null
+          customer_name?: string | null
           description?: string
           device_type?: string | null
           feature_area?: string
+          first_response_at?: string | null
+          first_response_due_at?: string | null
           id?: string
           is_blocking?: boolean
           last_error_category?: string | null
@@ -4381,7 +4495,11 @@ export type Database = {
           request_id?: string | null
           resolution_notes?: string | null
           resolved_at?: string | null
+          source?: string
           status?: string
+          tawk_chat_id?: string | null
+          tawk_property_id?: string | null
+          tawk_ticket_id?: string | null
           title?: string
           transaction_status?: string | null
           updated_at?: string
