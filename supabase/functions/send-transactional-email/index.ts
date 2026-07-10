@@ -242,13 +242,7 @@ Deno.serve(async (req) => {
       error: tokenLookupError,
       email: normalizedEmail,
     })
-    await supabase.from('email_send_log').insert({
-      message_id: messageId,
-      template_name: templateName,
-      recipient_email: effectiveRecipient,
-      status: 'failed',
-      error_message: 'Failed to look up unsubscribe token',
-    })
+    await supabase.from('email_send_log').update({ status: 'failed', error_message: 'Failed to look up unsubscribe token' }).eq('message_id', messageId).eq('status', 'pending')
     return new Response(
       JSON.stringify({ error: 'Failed to prepare email' }),
       {
@@ -275,13 +269,7 @@ Deno.serve(async (req) => {
       console.error('Failed to create unsubscribe token', {
         error: tokenError,
       })
-      await supabase.from('email_send_log').insert({
-        message_id: messageId,
-        template_name: templateName,
-        recipient_email: effectiveRecipient,
-        status: 'failed',
-        error_message: 'Failed to create unsubscribe token',
-      })
+      await supabase.from('email_send_log').update({ status: 'failed', error_message: 'Failed to create unsubscribe token' }).eq('message_id', messageId).eq('status', 'pending')
       return new Response(
         JSON.stringify({ error: 'Failed to prepare email' }),
         {
@@ -304,13 +292,7 @@ Deno.serve(async (req) => {
         error: reReadError,
         email: normalizedEmail,
       })
-      await supabase.from('email_send_log').insert({
-        message_id: messageId,
-        template_name: templateName,
-        recipient_email: effectiveRecipient,
-        status: 'failed',
-        error_message: 'Failed to confirm unsubscribe token storage',
-      })
+      await supabase.from('email_send_log').update({ status: 'failed', error_message: 'Failed to confirm unsubscribe token storage' }).eq('message_id', messageId).eq('status', 'pending')
       return new Response(
         JSON.stringify({ error: 'Failed to prepare email' }),
         {
@@ -326,14 +308,7 @@ Deno.serve(async (req) => {
     console.warn('Unsubscribe token already used but email not suppressed', {
       email: normalizedEmail,
     })
-    await supabase.from('email_send_log').insert({
-      message_id: messageId,
-      template_name: templateName,
-      recipient_email: effectiveRecipient,
-      status: 'suppressed',
-      error_message:
-        'Unsubscribe token used but email missing from suppressed list',
-    })
+    await supabase.from('email_send_log').update({ status: 'suppressed', error_message: 'Unsubscribe token used but email missing from suppressed list' }).eq('message_id', messageId).eq('status', 'pending')
     return new Response(
       JSON.stringify({ success: false, reason: 'email_suppressed' }),
       {
