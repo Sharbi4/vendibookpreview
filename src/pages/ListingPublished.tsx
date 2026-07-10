@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, Loader2, CheckCircle2, Stamp } from 'lucide-react';
+import { ArrowLeft, Loader2, CheckCircle2, Stamp, AlertCircle as AlertCircleIcon } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { ShareKit, ShareKitListing } from '@/components/listing-wizard/ShareKit';
