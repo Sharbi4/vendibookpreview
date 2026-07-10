@@ -984,13 +984,35 @@ const ListingHowItWorks = ({ listing, isOwner, className }: Props) => {
                 Report an issue
               </Link>
             </div>
-            <Button type="button" onClick={handleFinalCta} className="rounded-xl">
+            <Button
+              ref={finalCtaRef}
+              type="button"
+              onClick={handleFinalCta}
+              className="rounded-xl"
+              aria-label={
+                isDual && pickedBranch === 'sale'
+                  ? `${config.finalCtaLabel} to the buy widget`
+                  : isDual && pickedBranch === 'rent'
+                    ? `${config.finalCtaLabel} to the booking widget`
+                    : config.finalCtaLabel
+              }
+            >
               {config.finalCtaLabel}
               <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
             </Button>
           </DialogFooter>
+
+          {/* Polite live region: announces branch changes to screen readers
+              without stealing focus. Kept inside the dialog so Radix mounts
+              and unmounts it in step with the modal lifecycle. */}
+          <div role="status" aria-live="polite" className="sr-only">
+            {srAnnouncement}
+          </div>
         </DialogContent>
       </Dialog>
+    </>
+  );
+};
     </>
   );
 };
