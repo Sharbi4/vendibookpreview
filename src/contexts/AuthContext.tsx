@@ -232,6 +232,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           await syncGoogleProfile(session.user.id, session.user.user_metadata);
         }
 
+        // Drain deferred signup consent for cases where the verify redirect
+        // rehydrates the session without emitting a fresh SIGNED_IN event.
+        drainPendingSignupConsent(session.user).catch((e) =>
+          console.warn('[Auth] deferred consent drain failed', e),
+        );
+
         const [profileData, rolesData] = await Promise.all([
           fetchProfile(session.user.id),
           fetchRoles(session.user.id),
