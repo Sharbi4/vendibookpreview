@@ -720,6 +720,11 @@ export const SaleListingMobile = ({
         />
       )}
 
+      {/* Contextual walkthrough — informational, no state changes */}
+      <div className="px-4 pb-24">
+        <ListingHowItWorks listing={listing as any} isOwner={isOwner} />
+      </div>
+
       {/* Sticky action bar */}
       <SaleStickyActionBar
         listingId={listing.id}
