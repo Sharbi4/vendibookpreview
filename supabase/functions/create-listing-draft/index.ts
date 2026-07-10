@@ -1,0 +1,95 @@
+import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { createClient } from "npm:@supabase/supabase-js@2";
+import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
+import { z } from "npm:zod@3.23.8";
+
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
+const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+
+const BodySchema = z.object({
+  mode: z.enum(["rent", "sale"]),
+  category: z.enum(["food_truck", "food_trailer", "ghost_kitchen", "vendor_lot", "vendor_space"]),
+  location: z.string().trim().max(255).optional().nullable(),
+  city: z.string().trim().max(120).optional().nullable(),
+  state: z.string().trim().max(40).optional().nullable(),
+  zipCode: z.string().trim().max(20).optional().nullable(),
+  latitude: z.number().finite().optional().nullable(),
+  longitude: z.number().finite().optional().nullable(),
+});
+
+const json = (body: unknown, status = 200) =>
+  new Response(JSON.stringify(body), {
+    status,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+
+serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  if (req.method !== "POST") return json({ error: "method_not_allowed" }, 405);
+
+  try {
+    const parsed = BodySchema.safeParse(await req.json());
+    if (!parsed.success) {
+      return json({ error: "invalid_request", details: parsed.error.flatten().fieldErrors }, 400);
+    }
+
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) return json({ error: "unauthenticated" }, 401);
+
+    const userClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      global: { headers: { Authorization: authHeader } },
+      auth: { persistSession: false },
+    });
+    const token = authHeader.replace("Bearer ", "");
+    const { data: userData, error: userError } = await userClient.auth.getUser(token);
+    const user = userData.user;
+    if (userError || !user?.id) return json({ error: "unauthenticated" }, 401);
+
+    const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+      auth: { persistSession: false },
+    });
+
+    const { mode, category, location, city, state, zipCode, latitude, longitude } = parsed.data;
+    const normalizedLocation = location || [city, state].filter(Boolean).join(", ") || null;
+    const fulfillmentType = category === "ghost_kitchen" || category === "vendor_lot" || category === "vendor_space"
+      ? "on_site"
+      : "pickup";
+
+    const { error: roleError } = await admin
+      .from("user_roles")
+      .upsert({ user_id: user.id, role: "host" }, { onConflict: "user_id,role" });
+    if (roleError) return json({ error: roleError.message }, 400);
+
+    const { data: listing, error: listingError } = await admin
+      .from("listings")
+      .insert({
+        host_id: user.id,
+        guest_draft_token: null,
+        mode,
+        category,
+        status: "draft",
+        title: "",
+        description: "",
+        fulfillment_type: fulfillmentType,
+        address: normalizedLocation,
+        pickup_location_text: normalizedLocation,
+        city: city || null,
+        state: state || null,
+        postal_code: zipCode || null,
+        latitude: latitude ?? null,
+        longitude: longitude ?? null,
+        accept_card_payment: mode === "sale" ? true : null,
+        accept_cash_payment: mode === "sale" ? false : null,
+      })
+      .select("id")
+      .single();
+
+    if (listingError) return json({ error: listingError.message }, 400);
+
+    return json({ id: listing.id });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "unknown_error";
+    return json({ error: message }, 500);
+  }
+});

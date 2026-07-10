@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
-import { ArrowLeft, Loader2, Send, ExternalLink, Check, Camera, DollarSign, FileText, Calendar, CreditCard, ChevronRight, Save, TrendingUp, TrendingDown, Target, Wallet, Info, Banknote, Zap, RotateCcw, Plus, X, Package, Scale, Ruler, MapPin, Truck, Building2, Eye, AlertCircle, Shield, Clock, ChevronDown, ChevronUp, GripVertical, Star, Type, ListChecks } from 'lucide-react';
+import { ArrowLeft, Loader2, Send, ExternalLink, Check, Camera, DollarSign, FileText, Calendar, CreditCard, ChevronRight, Save, TrendingUp, TrendingDown, Target, Wallet, Info, Banknote, Zap, RotateCcw, Plus, X, Package, Scale, Ruler, MapPin, Truck, Building2, Eye, AlertCircle, Shield, Clock, ChevronDown, ChevronUp, GripVertical, Type, ListChecks } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -718,6 +718,20 @@ export const PublishWizard: React.FC = () => {
   }, [priceDaily, priceWeekly, priceMonthly]);
 
   const estimatedFreightCost = 500; // Placeholder
+
+  const buildStructuredAddress = useCallback(() => {
+    const stateZip = [locState.trim(), locZipCode.trim()].filter(Boolean).join(' ');
+    return [streetAddress.trim(), aptSuite.trim(), locCity.trim(), stateZip]
+      .filter(Boolean)
+      .join(', ');
+  }, [streetAddress, aptSuite, locCity, locState, locZipCode]);
+
+  const hasCompleteStructuredAddress = !!(
+    streetAddress.trim() &&
+    locCity.trim() &&
+    locState.trim() &&
+    locZipCode.trim()
+  );
   
   const salePayoutEstimate = useMemo(() => {
     const salePriceNum = parseFloat(priceSale) || 0;
@@ -725,9 +739,10 @@ export const PublishWizard: React.FC = () => {
     
     const isSellerPaidFreight = vendibookFreightEnabled && freightPayer === 'seller';
     const freightCost = vendibookFreightEnabled ? estimatedFreightCost : 0;
+    const isCashOnlySale = listing?.mode === 'sale' && acceptCashPayment && !acceptCardPayment;
     
-    return calculateSaleFees(salePriceNum, freightCost, isSellerPaidFreight);
-  }, [priceSale, vendibookFreightEnabled, freightPayer]);
+    return calculateSaleFees(salePriceNum, freightCost, isSellerPaidFreight, isCashOnlySale);
+  }, [priceSale, vendibookFreightEnabled, freightPayer, listing?.mode, acceptCashPayment, acceptCardPayment]);
 
   const getLocation = () => {
     if (listing?.address) return listing.address;
@@ -1183,8 +1198,7 @@ export const PublishWizard: React.FC = () => {
         const effectiveFulfillmentType = (categoryIsStatic || isStaticLocation) ? 'on_site' : (fulfillmentType || 'pickup');
 
         // Build structured address string
-        const addressParts = [streetAddress, locCity, `${locState} ${locZipCode}`].filter(Boolean);
-        const fullAddress = addressParts.join(', ');
+        const fullAddress = buildStructuredAddress();
 
         updateData = {
           fulfillment_type: effectiveFulfillmentType,
@@ -1289,9 +1303,8 @@ export const PublishWizard: React.FC = () => {
   };
 
   const handlePublish = async () => {
-    // Stripe is only required if card payment is enabled
-    const stripeRequired = acceptCardPayment;
     if (!listing) return;
+    const stripeRequired = listing.mode === 'rent' || (listing.mode === 'sale' && acceptCardPayment);
 
     // Validate all required fields before publishing
     const validationErrors = getValidationErrors();
@@ -1363,6 +1376,8 @@ export const PublishWizard: React.FC = () => {
       const effectiveFulfillmentType = (categoryIsStatic || isStaticLocation)
         ? 'on_site'
         : (fulfillmentType || 'pickup');
+      const fullAddress = buildStructuredAddress() || address;
+      const pickupText = locPhoneNumber || pickupLocationText;
 
       const baseUpdateData: any = {
         // Media
@@ -1383,8 +1398,8 @@ export const PublishWizard: React.FC = () => {
 
         // Location
         fulfillment_type: effectiveFulfillmentType,
-        pickup_location_text: pickupLocationText || null,
-        address: address || null,
+        pickup_location_text: pickupText || null,
+        address: fullAddress || null,
         delivery_fee: parseFloat(deliveryFee) || null,
         delivery_radius_miles: parseFloat(deliveryRadiusMiles) || null,
         pickup_instructions: pickupInstructions || null,
@@ -1572,7 +1587,7 @@ export const PublishWizard: React.FC = () => {
             coverImageUrl: imageUrlsToSave?.[0],
             listingPrice: formattedPrice,
             category: listing.category,
-            address: address,
+            address: fullAddress,
             listingType: emailListingType,
           },
         }).catch(err => console.error('Listing live email error:', err));
@@ -1587,7 +1602,7 @@ export const PublishWizard: React.FC = () => {
               mode: listing.mode,
               price_daily: priceDaily ? parseFloat(priceDaily.replace(/[^0-9.]/g, '')) : null,
               price_sale: priceSale ? parseFloat(priceSale.replace(/[^0-9.]/g, '')) : null,
-              address: address,
+              address: fullAddress,
               host_id: user?.id,
               host_name: user?.user_metadata?.full_name || user?.email?.split('@')[0],
               host_email: user?.email}}}).catch(err => console.error('Admin notification error:', err));
@@ -1621,8 +1636,8 @@ export const PublishWizard: React.FC = () => {
 
   // Checklist state - with proper validation
   const totalPhotoCount = existingImages.length + images.length;
-  // Stripe is only required if card payment is enabled (not cash-only)
-  const requiresStripe = acceptCardPayment;
+  // Stripe is required for rentals and for sale listings that accept card payment.
+  const requiresStripe = listing?.mode === 'rent' || (listing?.mode === 'sale' && acceptCardPayment);
   const enabledDocsCount = requiredDocuments.filter(d => d.is_required).length;
 
   // Helper to properly validate price input
@@ -1637,8 +1652,12 @@ export const PublishWizard: React.FC = () => {
   const MIN_DESCRIPTION_LENGTH = 50;
   const MIN_TITLE_LENGTH = 5;
 
-  const hasPricing = listing?.mode === 'sale' 
-    ? isValidPrice(priceSale) 
+  const hasSalePaymentMethod = listing?.mode !== 'sale' || acceptCardPayment || acceptCashPayment;
+  const hasPriceAmount = listing?.mode === 'sale'
+    ? isValidPrice(priceSale)
+    : isValidPrice(priceDaily);
+  const hasPricing = listing?.mode === 'sale'
+    ? hasPriceAmount && hasSalePaymentMethod
     : isValidPrice(priceDaily);
   
   const hasValidTitle = title.trim().length >= MIN_TITLE_LENGTH;
@@ -1652,8 +1671,8 @@ export const PublishWizard: React.FC = () => {
     hasDescription,
     hasLocation: listing ? (
       isStaticLocationFn(listing.category) || isStaticLocation
-        ? !!(address && accessInstructions)
-        : !!(fulfillmentType && pickupLocationText)
+        ? !!(hasCompleteStructuredAddress && accessInstructions)
+        : !!(hasCompleteStructuredAddress && fulfillmentType)
     ) : false,
     hasStripe: isOnboardingComplete,
     isRental: listing?.mode === 'rent',
@@ -1668,12 +1687,14 @@ export const PublishWizard: React.FC = () => {
 
   const checklistItems = createChecklistItems(checklistState, step);
   const canPublish = checklistItems.filter(i => i.required).every(i => i.completed);
+  const displayAddress = buildStructuredAddress() || address;
 
   // Collect validation errors for publish attempt
   const getValidationErrors = (): string[] => {
     const errors: string[] = [];
     if (totalPhotoCount < 3) errors.push(`Add at least 3 photos (currently ${totalPhotoCount})`);
-    if (!hasPricing) errors.push(listing?.mode === 'sale' ? 'Set a sale price greater than $0' : 'Set a daily rate greater than $0');
+    if (!hasPriceAmount) errors.push(listing?.mode === 'sale' ? 'Set a sale price greater than $0' : 'Set a daily rate greater than $0');
+    if (listing?.mode === 'sale' && !hasSalePaymentMethod) errors.push('Select at least one payment method: Pay by Card or Pay in Person');
     if (!hasValidTitle) errors.push(`Title must be at least ${MIN_TITLE_LENGTH} characters`);
     if (!hasValidDescription) errors.push(`Description must be at least ${MIN_DESCRIPTION_LENGTH} characters (currently ${description.trim().length})`);
     if (!checklistState.hasLocation) errors.push('Complete the location and logistics section');
@@ -1781,7 +1802,7 @@ export const PublishWizard: React.FC = () => {
                           {/* Cover badge */}
                           {isCover && (
                             <div className="absolute top-2 left-2 px-2 py-1 bg-primary text-primary-foreground rounded-md text-xs font-medium flex items-center gap-1">
-                              <Star className="w-3 h-3" />
+                              <Camera className="w-3 h-3" />
                               Cover
                             </div>
                           )}
@@ -1812,7 +1833,7 @@ export const PublishWizard: React.FC = () => {
                               onClick={() => movePhotoToFirst(globalIndex)}
                               className="absolute bottom-2 left-2 px-2 py-1 bg-black/60 text-white rounded-md text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/80 flex items-center gap-1"
                             >
-                              <Star className="w-3 h-3" />
+                              <Camera className="w-3 h-3" />
                               Cover
                             </button>
                           )}
@@ -2315,8 +2336,11 @@ export const PublishWizard: React.FC = () => {
                               
                               <div className="flex items-center justify-between mt-1">
                                 <span className="text-sm text-muted-foreground">Platform commission:</span>
-                                <span className="text-sm text-destructive">
-                                  -{formatCurrency(salePayoutEstimate.sellerFee)}
+                                <span className={cn(
+                                  "text-sm",
+                                  salePayoutEstimate.sellerFee > 0 ? "text-destructive" : "text-foreground"
+                                )}>
+                                  {salePayoutEstimate.sellerFee > 0 ? '-' : ''}{formatCurrency(salePayoutEstimate.sellerFee)}
                                 </span>
                               </div>
                               
@@ -2338,7 +2362,11 @@ export const PublishWizard: React.FC = () => {
                               
                               <div className="flex items-start gap-1.5 mt-3 text-xs text-muted-foreground">
                                 <Info className="w-3 h-3 mt-0.5 shrink-0" />
-                                <span>Platform fee is {SALE_SELLER_FEE_PERCENT}% of the sale price</span>
+                                <span>
+                                  {acceptCashPayment && !acceptCardPayment
+                                    ? 'Pay in Person sales have no platform commission.'
+                                    : `Platform fee is ${SALE_SELLER_FEE_PERCENT}% of the sale price for card payments`}
+                                </span>
                               </div>
                             </div>
                           </div>
@@ -3774,10 +3802,10 @@ export const PublishWizard: React.FC = () => {
                       </div>
 
                       {/* Location */}
-                      {(address || pickupLocationText) && (
+                      {(displayAddress || pickupLocationText) && (
                         <div className="flex items-center gap-2 text-muted-foreground">
                           <MapPin className="w-4 h-4" />
-                          <span className="text-sm">{address || pickupLocationText}</span>
+                          <span className="text-sm">{displayAddress || pickupLocationText}</span>
                         </div>
                       )}
 
@@ -3882,7 +3910,7 @@ export const PublishWizard: React.FC = () => {
                   )}
 
                   {/* Ready to Publish Message */}
-                  {canPublish && isOnboardingComplete && (
+                  {canPublish && (!requiresStripe || isOnboardingComplete) && (
                     <div className="relative overflow-hidden rounded-xl p-4 border border-border bg-gradient-to-br from-primary/5 via-primary/3 to-background">
                       <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-primary/3 animate-pulse" />
                       <div className="relative flex items-center gap-3">
@@ -3906,7 +3934,7 @@ export const PublishWizard: React.FC = () => {
                   )}
 
                   <div className="flex flex-wrap gap-3">
-                    <Button variant="dark-shine" onClick={() => setStep('stripe')}>Back</Button>
+                    <Button variant="dark-shine" onClick={() => setStep(requiresStripe ? 'stripe' : 'location')}>Back</Button>
                     <Button
                       variant="dark-shine"
                       onClick={() => setShowPreviewModal(true)}
@@ -3965,7 +3993,7 @@ export const PublishWizard: React.FC = () => {
                 {/* Featured charge notice */}
                 {featuredEnabled && !((listing as any)?.featured_at) && (
                   <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 p-3 text-sm text-amber-700 dark:text-amber-300 flex items-start gap-2">
-                    <Star className="w-4 h-4 mt-0.5 shrink-0" />
+                    <TrendingUp className="w-4 h-4 mt-0.5 shrink-0" />
                     <div>
                       You'll be redirected to Stripe to pay <strong>$30</strong> for the Featured add-on.
                       Your listing publishes automatically the moment payment clears.
@@ -4002,7 +4030,7 @@ export const PublishWizard: React.FC = () => {
           coverImageUrl: existingImages[0] || null,
           category: listing.category,
           mode: listing.mode,
-          address: listing.address,
+          address: displayAddress,
           priceDaily: parseFloat(priceDaily) || null,
           priceWeekly: parseFloat(priceWeekly) || null,
           priceSale: parseFloat(priceSale) || null} : null}
@@ -4031,7 +4059,7 @@ export const PublishWizard: React.FC = () => {
             priceDaily,
             priceWeekly,
             priceSale,
-            address,
+            address: displayAddress,
             pickupLocationText,
             highlights,
             amenities,

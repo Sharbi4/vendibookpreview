@@ -52,7 +52,7 @@ const loadPersistedQuickStart = (): { data: QuickStartData; step: QuickStartStep
 export const QuickStartWizard: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user, refreshProfile } = useAuth();
 
   const persisted = typeof window !== 'undefined' ? loadPersistedQuickStart() : null;
 
@@ -224,42 +224,27 @@ export const QuickStartWizard: React.FC = () => {
       const latitude = data.latitude;
       const longitude = data.longitude;
 
-      // If authenticated user, ensure they have host role before creating listing
-      if (user) {
-        const { data: existingRole } = await supabase
-          .from('user_roles')
-          .select('id')
-          .eq('user_id', user.id)
-          .eq('role', 'host')
-          .maybeSingle();
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (!sessionData.session) throw new Error('Please sign in to create a listing.');
 
-        if (!existingRole) {
-          await supabase
-            .from('user_roles')
-            .insert({ user_id: user.id, role: 'host' });
-        }
-      }
-
-      // Create draft listing (user is authenticated at this point)
-      const { data: listing, error } = await supabase
-        .from('listings')
-        .insert({
-          host_id: user.id,
-          guest_draft_token: null, // No longer supporting guest drafts
+      // Create draft through the backend so new users receive the host role safely.
+      const { data: listing, error } = await supabase.functions.invoke('create-listing-draft', {
+        headers: { Authorization: `Bearer ${sessionData.session.access_token}` },
+        body: {
           mode: data.mode,
           category: data.category,
-          status: 'draft',
-          title: '',
-          description: '',
-          fulfillment_type: data.category === 'ghost_kitchen' || data.category === 'vendor_lot' ? 'on_site' : 'pickup',
-          address: data.location || null,
-          pickup_location_text: data.location || null,
+          location: data.location || null,
+          city: data.city || null,
+          state: data.state || null,
+          zipCode: data.zipCode || null,
           latitude,
-          longitude} as any)
-        .select()
-        .single();
+          longitude,
+        },
+      });
 
       if (error) throw error;
+      if (!listing?.id) throw new Error('Draft was not created. Please try again.');
+      await refreshProfile();
 
       setCreatedListingId(listing.id);
       setStep('created');
