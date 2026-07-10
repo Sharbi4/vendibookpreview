@@ -41,19 +41,25 @@ import { cn } from '@/lib/utils';
 
 type ListingLike = {
   id: string;
-  mode: 'rent' | 'sale' | string | null | undefined;
+  mode: 'rent' | 'sale' | 'both' | string | null | undefined;
   category?: string | null;
   instant_book?: boolean | null;
   accept_card_payment?: boolean | null;
   accept_cash_payment?: boolean | null;
   fulfillment_type?: string | null;
+  price_sale?: number | null;
+  price_hourly?: number | null;
+  price_daily?: number | null;
+  price_weekly?: number | null;
+  price_monthly?: number | null;
 };
 
 export type WalkthroughVariant =
   | 'sale_card'
   | 'sale_pay_in_person'
   | 'rent_instant'
-  | 'rent_request';
+  | 'rent_request'
+  | 'sale_and_rent';
 
 type FulfillmentContext = 'pickup' | 'delivery' | 'pickup_or_delivery' | 'on_site_kitchen' | 'on_site_lot';
 
@@ -75,6 +81,15 @@ export interface WalkthroughConfig {
   trustPoints: string[];
   finalCtaLabel: string;
   finalCtaTargetId: string;
+  /**
+   * When present, this listing supports two transaction paths (buy AND rent).
+   * The component renders a branch selector; each branch reuses the standard
+   * modal walkthrough for the picked path.
+   */
+  branches?: {
+    sale: WalkthroughConfig;
+    rent: WalkthroughConfig;
+  };
 }
 
 /**
@@ -82,8 +97,19 @@ export interface WalkthroughConfig {
  * Kept exported so it can be unit-tested independently of React.
  */
 export function resolveWalkthrough(listing: ListingLike): WalkthroughConfig {
-  const isSale = listing.mode === 'sale';
-  const isRental = listing.mode === 'rent';
+  const modeRaw = (listing.mode || '').toString().toLowerCase();
+  const hasSalePrice = (listing.price_sale ?? 0) > 0;
+  const hasRentalPrice =
+    (listing.price_hourly ?? 0) > 0 ||
+    (listing.price_daily ?? 0) > 0 ||
+    (listing.price_weekly ?? 0) > 0 ||
+    (listing.price_monthly ?? 0) > 0;
+
+  // A listing is dual-mode when mode === 'both' OR both a sale price and a
+  // rental price are set (regardless of the stored mode enum).
+  const isDual = modeRaw === 'both' || (hasSalePrice && hasRentalPrice);
+  const isSale = !isDual && (modeRaw === 'sale' || (hasSalePrice && !hasRentalPrice));
+  const isRental = !isDual && !isSale;
 
   const category = (listing.category || '').toLowerCase();
   const onSiteKitchen = category === 'ghost_kitchen';
@@ -103,6 +129,17 @@ export function resolveWalkthrough(listing: ListingLike): WalkthroughConfig {
           ? 'delivery'
           : 'pickup';
 
+  // Dual-mode: build a wrapper config with both branches available.
+  if (isDual) {
+    const acceptsCard = listing.accept_card_payment !== false;
+    const saleBranch = acceptsCard ? buildSaleCard(fulfillment) : buildSalePayInPerson(fulfillment);
+    const rentBranch = listing.instant_book
+      ? buildRentInstant(fulfillment)
+      : buildRentRequest(fulfillment);
+
+    return buildSaleAndRent(fulfillment, saleBranch, rentBranch);
+  }
+
   // Sale variants
   if (isSale) {
     const acceptsCard = listing.accept_card_payment !== false; // default to card if flag absent
@@ -110,7 +147,7 @@ export function resolveWalkthrough(listing: ListingLike): WalkthroughConfig {
   }
 
   // Rental variants (default when mode is missing or unusual)
-  if (isRental || !isSale) {
+  if (isRental) {
     return listing.instant_book
       ? buildRentInstant(fulfillment)
       : buildRentRequest(fulfillment);
@@ -188,6 +225,68 @@ function fulfillmentStepForSale(f: FulfillmentContext): WalkthroughStep {
 }
 
 // ---------- Variant builders ----------
+
+function buildSaleAndRent(
+  fulfillment: FulfillmentContext,
+  sale: WalkthroughConfig,
+  rent: WalkthroughConfig,
+): WalkthroughConfig {
+  // Combined inline preview — first step from each branch, plus a shared close.
+  const inline: WalkthroughStep[] = [
+    { icon: HelpCircle, title: 'Pick buy or rent', description: '' },
+    { icon: CreditCard, title: 'Buy: pay & coordinate handoff', description: '' },
+    { icon: ClipboardCheck, title: 'Rent: book dates & confirm', description: '' },
+    { icon: CheckCircle2, title: 'Complete the transaction on Vendibook', description: '' },
+  ];
+  // Full steps are only shown if the user opens the wrapper modal directly
+  // without picking a branch — they get an overview of both paths.
+  const full: WalkthroughStep[] = [
+    {
+      icon: HelpCircle,
+      title: 'Choose how you want to use this listing',
+      description:
+        'This host offers this listing for BOTH purchase and rental. Pick the path that fits your plan — you can always come back and pick the other later.',
+    },
+    {
+      icon: CreditCard,
+      title: 'Buying: own it outright',
+      description: sale.subhead,
+    },
+    {
+      icon: ClipboardCheck,
+      title: 'Renting: book it for a period',
+      description: rent.subhead,
+    },
+    {
+      icon: CheckCircle2,
+      title: 'Vendibook protects the transaction either way',
+      description:
+        'Payments, messaging, disputes, and reviews all run through Vendibook whether you buy or rent.',
+    },
+  ];
+  return {
+    variant: 'sale_and_rent',
+    fulfillment,
+    heading: 'How This Listing Works',
+    subhead:
+      'This listing is available to buy OR rent. Pick the option that fits your plan to see the exact steps.',
+    cta: 'See Your Options',
+    modalTitle: 'Buy or rent this listing',
+    inlineSteps: inline,
+    fullSteps: full,
+    trustPoints: [
+      'Buy or rent — the same Vendibook protections apply',
+      'Messages, payments, and disputes stay on-platform',
+      'Owner and title info is verified for purchases',
+      'Rentals include damage and cancellation protection',
+    ],
+    finalCtaLabel: 'Continue',
+    finalCtaTargetId: 'booking-widget',
+    branches: { sale, rent },
+  };
+}
+
+
 
 function buildSaleCard(fulfillment: FulfillmentContext): WalkthroughConfig {
   const inline: WalkthroughStep[] = [
@@ -410,7 +509,8 @@ type EventName =
   | 'pay_in_person_steps_opened'
   | 'walkthrough_closed'
   | 'final_cta_clicked'
-  | 'report_issue_opened_from_guidance';
+  | 'report_issue_opened_from_guidance'
+  | 'dual_mode_branch_selected';
 
 
 function trackWalkthrough(event: EventName, variant: WalkthroughVariant, listingId: string) {
@@ -445,20 +545,27 @@ const DISMISS_KEY_PREFIX = 'vb_howitworks_seen_';
 const GLOBAL_SEEN_KEY = 'vb_howitworks_seen_global';
 
 const ListingHowItWorks = ({ listing, isOwner, className }: Props) => {
-  const config = useMemo(() => resolveWalkthrough(listing), [listing]);
+  const rootConfig = useMemo(() => resolveWalkthrough(listing), [listing]);
+  const isDual = !!rootConfig.branches;
+  // For dual-mode listings, this tracks which branch the user picked.
+  // null = show the wrapper (branch selector) inside the modal.
+  const [pickedBranch, setPickedBranch] = useState<'sale' | 'rent' | null>(null);
+  const config: WalkthroughConfig = isDual && pickedBranch
+    ? rootConfig.branches![pickedBranch]
+    : rootConfig;
   const [open, setOpen] = useState(false);
 
   // Fire an impression exactly once per listing view, and auto-open the
   // walkthrough on the visitor's FIRST listing detail view (global, device-scoped).
   useEffect(() => {
     if (isOwner) return;
-    trackWalkthrough('guidance_prompt_viewed', config.variant, listing.id);
+    trackWalkthrough('guidance_prompt_viewed', rootConfig.variant, listing.id);
     try {
       localStorage.setItem(`${DISMISS_KEY_PREFIX}${listing.id}`, '1');
       const seenGlobal = localStorage.getItem(GLOBAL_SEEN_KEY);
       if (!seenGlobal) {
         localStorage.setItem(GLOBAL_SEEN_KEY, new Date().toISOString());
-        trackWalkthrough('guidance_auto_opened_first_visit', config.variant, listing.id);
+        trackWalkthrough('guidance_auto_opened_first_visit', rootConfig.variant, listing.id);
         // Defer slightly so the page has a chance to paint before the modal appears.
         const t = window.setTimeout(() => setOpen(true), 600);
         return () => window.clearTimeout(t);
@@ -478,7 +585,9 @@ const ListingHowItWorks = ({ listing, isOwner, className }: Props) => {
       ? 'purchase_steps_opened'
       : config.variant === 'sale_pay_in_person'
         ? 'pay_in_person_steps_opened'
-        : 'rental_steps_opened';
+        : config.variant === 'sale_and_rent'
+          ? 'guidance_prompt_viewed'
+          : 'rental_steps_opened';
 
   const handleOpen = () => {
     trackWalkthrough(openEvent, config.variant, listing.id);
@@ -486,13 +595,35 @@ const ListingHowItWorks = ({ listing, isOwner, className }: Props) => {
   };
 
   const handleClose = (next: boolean) => {
-    if (!next) trackWalkthrough('walkthrough_closed', config.variant, listing.id);
+    if (!next) {
+      trackWalkthrough('walkthrough_closed', config.variant, listing.id);
+      // Reset branch pick when the modal fully closes so the selector is
+      // shown again the next time the user opens it.
+      setPickedBranch(null);
+    }
     setOpen(next);
+  };
+
+  const handleBranchPick = (branch: 'sale' | 'rent') => {
+    setPickedBranch(branch);
+    const target = rootConfig.branches![branch];
+    trackWalkthrough('dual_mode_branch_selected', target.variant, listing.id);
+    trackWalkthrough(
+      branch === 'sale'
+        ? target.variant === 'sale_pay_in_person'
+          ? 'pay_in_person_steps_opened'
+          : 'purchase_steps_opened'
+        : 'rental_steps_opened',
+      target.variant,
+      listing.id,
+    );
+    if (!open) setOpen(true);
   };
 
   const handleFinalCta = () => {
     trackWalkthrough('final_cta_clicked', config.variant, listing.id);
     setOpen(false);
+    setPickedBranch(null);
     // Scroll the primary booking/inquiry widget into view — never triggers a transaction.
     // Falls back to the mobile sticky CTA / top of page when the desktop widget is hidden.
     if (typeof document !== 'undefined') {
@@ -511,6 +642,7 @@ const ListingHowItWorks = ({ listing, isOwner, className }: Props) => {
   const handleReportIssue = () => {
     trackWalkthrough('report_issue_opened_from_guidance', config.variant, listing.id);
   };
+
 
   return (
     <>
@@ -579,6 +711,48 @@ const ListingHowItWorks = ({ listing, isOwner, className }: Props) => {
               {config.subhead}
             </DialogDescription>
           </DialogHeader>
+
+          {isDual && !pickedBranch && (
+            <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => handleBranchPick('sale')}
+                className="text-left rounded-xl border border-border bg-card/70 hover:bg-muted/60 focus:outline-none focus:ring-2 focus:ring-primary p-4 transition"
+              >
+                <div className="flex items-center gap-2 mb-1">
+                  <CreditCard className="h-5 w-5 text-primary" aria-hidden="true" />
+                  <span className="font-semibold text-foreground">Buy this listing</span>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Own it outright. See the purchase steps and protections.
+                </p>
+              </button>
+              <button
+                type="button"
+                onClick={() => handleBranchPick('rent')}
+                className="text-left rounded-xl border border-border bg-card/70 hover:bg-muted/60 focus:outline-none focus:ring-2 focus:ring-primary p-4 transition"
+              >
+                <div className="flex items-center gap-2 mb-1">
+                  <ClipboardCheck className="h-5 w-5 text-primary" aria-hidden="true" />
+                  <span className="font-semibold text-foreground">Rent this listing</span>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Book it for a period. See how availability, deposits, and returns work.
+                </p>
+              </button>
+            </div>
+          )}
+
+          {isDual && pickedBranch && (
+            <button
+              type="button"
+              onClick={() => setPickedBranch(null)}
+              className="mt-1 text-xs text-muted-foreground hover:text-foreground underline underline-offset-2 self-start"
+            >
+              ← Back to buy or rent
+            </button>
+          )}
+
 
           <ol className="mt-2 space-y-4" aria-label="Full step-by-step guide">
             {config.fullSteps.map((step, i) => {
