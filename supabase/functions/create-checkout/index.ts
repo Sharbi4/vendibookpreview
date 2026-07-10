@@ -661,6 +661,8 @@ serve(async (req) => {
         customer_total: customerTotal / 100,
         platform_fee: applicationFee / 100,
         host_receives: hostReceives / 100,
+        terms_id,
+        terms_version: TERMS_VERSION,
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
