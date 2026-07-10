@@ -75,7 +75,8 @@ async function createDraft(
 }
 
 async function fillAndPublish(
-  client: ReturnType<typeof createClient>,
+  // deno-lint-ignore no-explicit-any
+  client: any,
   listingId: string,
   fields: Record<string, unknown>,
 ) {
