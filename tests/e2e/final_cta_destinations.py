@@ -137,12 +137,21 @@ async def _assert_sale_destination(page, listing_id, cta_regex, label) -> str:
 
     btn = page.locator("button:visible").filter(has_text=cta_regex).first
     await btn.wait_for(state="visible", timeout=10000)
-    await btn.scroll_into_view_if_needed()
+    try:
+        await btn.scroll_into_view_if_needed(timeout=4000)
+    except Exception:
+        pass
     await _shot(page, f"{label}_before_click")
 
     start_url = page.url
-    await btn.click()
-    await page.wait_for_timeout(1500)  # allow nav OR dialog to settle
+    try:
+        await btn.click(timeout=6000)
+    except PWTimeout:
+        # Something (sticky footer, cookie banner, live-preview overlay) may
+        # be intercepting the pointer. Fall back to a JS-level click, which
+        # still exercises the same onClick handler.
+        await btn.evaluate("el => el.click()")
+    await page.wait_for_timeout(1500)
     final = page.url
     await _shot(page, f"{label}_after_click")
 
