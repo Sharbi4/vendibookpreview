@@ -194,6 +194,54 @@ Deno.serve(async (req) => {
         .limit(1)
         .maybeSingle()
 
+      // COLLISION DETECTION: same key, different logical event → not a duplicate,
+      // it's an accidental key reuse. Do NOT silently suppress; escalate.
+      if (
+        existing &&
+        (existing.template_name !== templateName ||
+          existing.recipient_email?.toLowerCase() !== effectiveRecipient.toLowerCase())
+      ) {
+        console.error('[email-idempotency] COLLISION: key reused across distinct events', {
+          idempotencyKey,
+          existing: {
+            template: existing.template_name,
+            recipient: existing.recipient_email,
+            status: existing.status,
+            message_id: existing.message_id,
+          },
+          incoming: {
+            template: templateName,
+            recipient: effectiveRecipient,
+          },
+        })
+        // Record collision for ops review
+        await supabase.from('email_send_log').insert({
+          message_id: crypto.randomUUID(),
+          template_name: templateName,
+          recipient_email: effectiveRecipient,
+          status: 'failed',
+          error_message: 'idempotency_key_collision',
+          metadata: {
+            idempotency_key_collision: true,
+            attempted_idempotency_key: idempotencyKey,
+            existing_template: existing.template_name,
+            existing_recipient: existing.recipient_email,
+            existing_message_id: existing.message_id,
+          },
+        })
+        return new Response(
+          JSON.stringify({
+            error: 'idempotency_key_collision',
+            message: 'The provided idempotencyKey was already used for a different template or recipient. Refusing to suppress as a duplicate.',
+            existing: {
+              template: existing.template_name,
+              recipient: existing.recipient_email,
+            },
+          }),
+          { status: 409, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+      }
+
       console.log('Duplicate email send suppressed by idempotency enforcement', {
         idempotencyKey,
         templateName,
