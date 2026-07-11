@@ -87,6 +87,39 @@ Deno.serve(async (req) => {
     )
   }
 
+  // CRITICAL TEMPLATE GUARD
+  // For high-risk workflows (payments, purchases, bookings, refunds, disputes,
+  // Stripe/payouts, support escalation, identity verification), an auto-generated
+  // fallback idempotency key provides NO duplicate protection — every retry would
+  // generate a fresh UUID and send again. Reject the request instead.
+  const CRITICAL_TEMPLATE_PATTERNS = [
+    /payment/i, /receipt/i, /purchase/i, /purchas/i, /booking/i, /book-/i,
+    /refund/i, /dispute/i, /payout/i, /stripe/i, /deposit/i, /sale-/i,
+    /cash-/i, /support-/i, /identity/i, /verification/i, /escalat/i,
+  ]
+  const isCriticalTemplate = CRITICAL_TEMPLATE_PATTERNS.some((r) => r.test(templateName))
+  if (!providedIdempotencyKey && isCriticalTemplate) {
+    console.error('[email-idempotency] critical template requires idempotencyKey', {
+      templateName,
+      recipientEmail,
+    })
+    return new Response(
+      JSON.stringify({
+        error: 'idempotencyKey is required for critical transactional templates',
+        template: templateName,
+      }),
+      { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    )
+  }
+  if (!providedIdempotencyKey) {
+    // Non-critical auto-generated fallback — log so ops can alert on it.
+    console.warn('[email-idempotency] using auto-generated idempotency key (no dedup protection)', {
+      templateName,
+      recipientEmail,
+      idempotency_source: 'auto',
+    })
+  }
+
   // 1. Look up template from registry (early — needed to resolve recipient)
   const template = TEMPLATES[templateName]
 
