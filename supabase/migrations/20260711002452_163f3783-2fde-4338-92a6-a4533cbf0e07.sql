@@ -1,0 +1,1 @@
+ALTER VIEW public.stale_pending_email_claims SET (security_invoker = true);

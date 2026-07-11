@@ -87,6 +87,39 @@ Deno.serve(async (req) => {
     )
   }
 
+  // CRITICAL TEMPLATE GUARD
+  // For high-risk workflows (payments, purchases, bookings, refunds, disputes,
+  // Stripe/payouts, support escalation, identity verification), an auto-generated
+  // fallback idempotency key provides NO duplicate protection — every retry would
+  // generate a fresh UUID and send again. Reject the request instead.
+  const CRITICAL_TEMPLATE_PATTERNS = [
+    /payment/i, /receipt/i, /purchase/i, /purchas/i, /booking/i, /book-/i,
+    /refund/i, /dispute/i, /payout/i, /stripe/i, /deposit/i, /sale-/i,
+    /cash-/i, /support-/i, /identity/i, /verification/i, /escalat/i,
+  ]
+  const isCriticalTemplate = CRITICAL_TEMPLATE_PATTERNS.some((r) => r.test(templateName))
+  if (!providedIdempotencyKey && isCriticalTemplate) {
+    console.error('[email-idempotency] critical template requires idempotencyKey', {
+      templateName,
+      recipientEmail,
+    })
+    return new Response(
+      JSON.stringify({
+        error: 'idempotencyKey is required for critical transactional templates',
+        template: templateName,
+      }),
+      { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    )
+  }
+  if (!providedIdempotencyKey) {
+    // Non-critical auto-generated fallback — log so ops can alert on it.
+    console.warn('[email-idempotency] using auto-generated idempotency key (no dedup protection)', {
+      templateName,
+      recipientEmail,
+      idempotency_source: 'auto',
+    })
+  }
+
   // 1. Look up template from registry (early — needed to resolve recipient)
   const template = TEMPLATES[templateName]
 
@@ -160,6 +193,54 @@ Deno.serve(async (req) => {
         .order('created_at', { ascending: false })
         .limit(1)
         .maybeSingle()
+
+      // COLLISION DETECTION: same key, different logical event → not a duplicate,
+      // it's an accidental key reuse. Do NOT silently suppress; escalate.
+      if (
+        existing &&
+        (existing.template_name !== templateName ||
+          existing.recipient_email?.toLowerCase() !== effectiveRecipient.toLowerCase())
+      ) {
+        console.error('[email-idempotency] COLLISION: key reused across distinct events', {
+          idempotencyKey,
+          existing: {
+            template: existing.template_name,
+            recipient: existing.recipient_email,
+            status: existing.status,
+            message_id: existing.message_id,
+          },
+          incoming: {
+            template: templateName,
+            recipient: effectiveRecipient,
+          },
+        })
+        // Record collision for ops review
+        await supabase.from('email_send_log').insert({
+          message_id: crypto.randomUUID(),
+          template_name: templateName,
+          recipient_email: effectiveRecipient,
+          status: 'failed',
+          error_message: 'idempotency_key_collision',
+          metadata: {
+            idempotency_key_collision: true,
+            attempted_idempotency_key: idempotencyKey,
+            existing_template: existing.template_name,
+            existing_recipient: existing.recipient_email,
+            existing_message_id: existing.message_id,
+          },
+        })
+        return new Response(
+          JSON.stringify({
+            error: 'idempotency_key_collision',
+            message: 'The provided idempotencyKey was already used for a different template or recipient. Refusing to suppress as a duplicate.',
+            existing: {
+              template: existing.template_name,
+              recipient: existing.recipient_email,
+            },
+          }),
+          { status: 409, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+      }
 
       console.log('Duplicate email send suppressed by idempotency enforcement', {
         idempotencyKey,

@@ -4960,6 +4960,39 @@ export type Database = {
         }
         Relationships: []
       }
+      stale_pending_email_claims: {
+        Row: {
+          created_at: string | null
+          id: string | null
+          idempotency_key: string | null
+          message_id: string | null
+          metadata: Json | null
+          recipient_email: string | null
+          stuck_for: string | null
+          template_name: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string | null
+          idempotency_key?: string | null
+          message_id?: string | null
+          metadata?: Json | null
+          recipient_email?: string | null
+          stuck_for?: never
+          template_name?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string | null
+          idempotency_key?: string | null
+          message_id?: string | null
+          metadata?: Json | null
+          recipient_email?: string | null
+          stuck_for?: never
+          template_name?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       acknowledge_transaction_terms: {
