@@ -160,6 +160,35 @@ jobs:
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: bun scripts/smoke/booking-request-flow-smoke.ts
 
+  readonly-prod-smoke:
+    name: Read-Only Production Smoke (no writes, no side effects)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - run: bun install --frozen-lockfile
+      - name: Install Playwright browsers
+        run: bunx playwright install --with-deps chromium
+      - name: Build app
+        run: bun run build
+      - name: Preview server
+        run: bunx vite preview --port 8080 --host 127.0.0.1 &
+      - name: Wait for preview
+        run: |
+          for i in $(seq 1 30); do
+            curl -sf http://127.0.0.1:8080 >/dev/null && exit 0
+            sleep 1
+          done
+          echo "preview never came up" && exit 1
+      - name: Run read-only smoke (routes, CTAs, links; no signup/tx/ticket)
+        env:
+          APP_BASE_URL: http://127.0.0.1:8080
+        run: bun scripts/smoke/readonly-prod-smoke.ts
+
+
 
 
 
