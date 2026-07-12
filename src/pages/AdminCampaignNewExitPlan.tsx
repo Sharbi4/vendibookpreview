@@ -24,7 +24,8 @@ export default function AdminCampaignNewExitPlan() {
   const navigate = useNavigate();
   const { user, isLoading } = useAuth();
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
-  const [testEmail, setTestEmail] = useState("atlasmom421@gmail.com");
+  // Do NOT hardcode the internal admin address here — it would end up in the built JS bundle.
+  const [testEmail, setTestEmail] = useState("");
   const [busy, setBusy] = useState<null | "test" | "count" | "broadcast">(null);
   const [eligible, setEligible] = useState<number | null>(null);
   const [lastResult, setLastResult] = useState<Result | null>(null);
