@@ -69,6 +69,7 @@ export default function AdminRevenue() {
   const [purchases, setPurchases] = useState<PurchaseRow[]>([]);
   const [promos, setPromos] = useState<PromoRow[]>([]);
   const [discounts, setDiscounts] = useState<DiscountRow[]>([]);
+  const [subscriptions, setSubscriptions] = useState<HostSubscriptionRow[]>([]);
 
   const load = async () => {
     setLoading(true);
