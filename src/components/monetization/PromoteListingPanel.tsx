@@ -12,6 +12,8 @@ import {
   type ListingPromotion,
   type MonetizationProduct,
 } from '@/lib/monetization/products';
+import { buildCheckoutReturnPaths } from '@/lib/monetization/returnRoutes';
+import { trackLeadEvent } from '@/lib/leadTracking';
 
 interface Props {
   listingId: string;
@@ -74,12 +76,18 @@ export function PromoteListingPanel({ listingId }: Props) {
 
   const buy = async (slug: string) => {
     setBuying(slug);
+    const paths = buildCheckoutReturnPaths(slug, { listingId });
+    trackLeadEvent('checkout_started', {
+      product_slug: slug,
+      listing_id: listingId,
+      surface: 'promote_listing_panel',
+    });
     try {
       const { url } = await startMonetizationCheckout({
         productSlug: slug,
         listingId,
-        successPath: `/dashboard?purchase=success&`,
-        cancelPath: `/dashboard?purchase=cancelled`,
+        successPath: paths.successPath,
+        cancelPath: paths.cancelPath,
       });
       window.location.href = url;
     } catch (e) {
