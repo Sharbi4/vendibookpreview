@@ -28,6 +28,7 @@ import HostSubscriptionCard from '@/components/account/HostSubscriptionCard';
 import { HostPerksCard } from '@/components/host/HostPerksCard';
 import { ReferAHostCard } from '@/components/host/ReferAHostCard';
 import { ReferralActivityCard } from '@/components/host/ReferralActivityCard';
+import ReferralLeaderboardCard from '@/components/referrals/ReferralLeaderboardCard';
 
 // Visibility badge component
 const VisibilityBadge = ({ isPublic }: { isPublic: boolean }) => (
@@ -1353,6 +1354,7 @@ const Account = () => {
           <HostSubscriptionCard />
           <HostPerksCard />
           <ReferAHostCard />
+          <ReferralLeaderboardCard limit={10} />
           <ReferralActivityCard />
 
 
