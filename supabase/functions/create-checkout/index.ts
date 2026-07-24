@@ -664,8 +664,10 @@ serve(async (req) => {
             terms_version: TERMS_VERSION,
           },
         },
-        success_url: `${origin}/payment-success?session_id={CHECKOUT_SESSION_ID}&escrow=true`,
-        cancel_url: `${origin}/payment-cancelled?listing=${listing_id}`,
+        success_url: uiMode === 'hosted' ? `${origin}/payment-success?session_id={CHECKOUT_SESSION_ID}&escrow=true` : undefined,
+        cancel_url: uiMode === 'hosted' ? `${origin}/payment-cancelled?listing=${listing_id}` : undefined,
+        return_url: uiMode === 'elements' ? `${origin}/payment-success?session_id={CHECKOUT_SESSION_ID}&escrow=true` : undefined,
+        ui_mode: uiMode === 'elements' ? 'custom' : undefined,
         metadata: {
           listing_id,
           mode: 'sale',
