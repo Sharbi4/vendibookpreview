@@ -155,7 +155,7 @@ export default function AdminRevenue() {
           )}
           {Object.entries(summary.byCategory).map(([cat, cents]) => (
             <Badge key={cat} variant="outline" className="text-sm">
-              {cat.replaceAll('_', ' ')} · {formatUsd(cents)}
+              {cat.split('_').join(' ')} · {formatUsd(cents)}
             </Badge>
           ))}
         </CardContent>
@@ -189,7 +189,7 @@ export default function AdminRevenue() {
                       <div className="text-xs text-muted-foreground">{p.slug}</div>
                     </td>
                     <td className="px-3 py-2 text-muted-foreground">
-                      {p.category.replaceAll('_', ' ')}
+                      {p.category.split('_').join(' ')}
                     </td>
                     <td className="px-3 py-2 text-right font-semibold">
                       {formatUsd(p.price_cents)}
@@ -278,7 +278,7 @@ export default function AdminRevenue() {
                 {promos.map((p) => (
                   <tr key={p.id} className="border-t border-border">
                     <td className="px-3 py-2 font-mono text-xs">{p.listing_id.slice(0, 8)}…</td>
-                    <td className="px-3 py-2">{p.promo_type.replaceAll('_', ' ')}</td>
+                    <td className="px-3 py-2">{p.promo_type.split('_').join(' ')}</td>
                     <td className="px-3 py-2 text-muted-foreground">
                       {new Date(p.starts_at).toLocaleDateString()}
                     </td>
