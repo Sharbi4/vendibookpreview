@@ -190,10 +190,7 @@ serve(async (req) => {
           } else if (availability && (availability as { available?: boolean }).available === false) {
             const reason = (availability as { error?: string }).error || 'This time is no longer available.';
             logStep("Availability conflict", { reason });
-            return new Response(
-              JSON.stringify({ error: reason, code: 'availability_conflict' }),
-              { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 409 }
-            );
+            return jsonError(409, "availability_conflict", reason);
           }
         }
       }
