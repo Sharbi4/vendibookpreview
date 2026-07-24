@@ -743,6 +743,9 @@ const SaleCheckout = () => {
                             onEditInfo={() => setCurrentStep('information')}
                             onSubmit={handlePurchase}
                           />
+                          {paymentMethod !== 'cash' ? (
+                            <ProtectionOptInCard salePriceCents={Math.round(totalPrice * 100)} />
+                          ) : null}
                         </>
                       )}
                     </motion.div>
