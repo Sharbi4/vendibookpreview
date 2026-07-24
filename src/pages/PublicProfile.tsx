@@ -80,7 +80,7 @@ const usePublicProfile = (identifier: string | undefined, isUsername: boolean = 
       if (isUsername) {
         const { data: profileByUsername, error } = await supabase
           .from('profiles')
-          .select('id, full_name, first_name, last_name, display_name, username, business_name, public_city, public_state, avatar_url, header_image_url, identity_verified, created_at, bio, shop_policies, pinned_listing_id')
+          .select('id, full_name, first_name, last_name, display_name, username, business_name, public_city, public_state, avatar_url, header_image_url, identity_verified, created_at, bio, shop_policies, pinned_listing_id, show_full_name, show_public_location, show_verified_badge, show_member_since, show_listings_count')
           .eq('username', identifier)
           .single();
         
@@ -99,7 +99,7 @@ const usePublicProfile = (identifier: string | undefined, isUsername: boolean = 
       if (!profile) {
         const { data: directData, error: directError } = await supabase
           .from('profiles')
-          .select('id, full_name, first_name, last_name, display_name, username, business_name, public_city, public_state, avatar_url, header_image_url, identity_verified, created_at, bio, shop_policies, pinned_listing_id')
+          .select('id, full_name, first_name, last_name, display_name, username, business_name, public_city, public_state, avatar_url, header_image_url, identity_verified, created_at, bio, shop_policies, pinned_listing_id, show_full_name, show_public_location, show_verified_badge, show_member_since, show_listings_count')
           .eq('id', identifier)
           .single();
         
