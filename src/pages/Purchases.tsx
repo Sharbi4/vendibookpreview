@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { CreditCard, Package, Receipt, ArrowRight, CheckCircle2, ExternalLink, Loader2 } from 'lucide-react';
+import { CreditCard, Package, Zap, Wrench, Receipt, ArrowRight, CheckCircle2, ExternalLink, Loader2, Clock } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { useEntitlements } from '@/hooks/useEntitlements';
+import { useEntitlements, type Entitlement } from '@/hooks/useEntitlements';
 import { PurchaseHistoryCard } from '@/components/monetization/PurchaseHistoryCard';
+import PackagesIntro from '@/components/monetization/PackagesIntro';
 import Header from '@/components/layout/Header';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -29,12 +30,25 @@ function fmtDate(iso?: string | null) {
   }
 }
 
+/** Route the user to the surface where the benefit is actually used. */
+function surfaceFor(e: Entitlement): { label: string; to: string } | null {
+  if (e.source === 'listing_promotion' && e.listingId) return { label: 'View boost', to: `/listing/${e.listingId}` };
+  if (e.listingId) return { label: 'View listing', to: `/listing/${e.listingId}` };
+  const slug = e.productSlug.toLowerCase();
+  if (slug.startsWith('permit')) return { label: 'Open PermitPath', to: '/tools/permitpath' };
+  if (slug.includes('buyer')) return { label: 'Buyer services', to: '/buyer/services' };
+  if (slug.includes('rewrite') || slug.includes('pricing_review') || slug.includes('white')) return { label: 'View request', to: '/services' };
+  return null;
+}
+
 export default function Purchases() {
   const { all, loading, hasActiveSubscription } = useEntitlements();
   const [openingPortal, setOpeningPortal] = useState(false);
 
   const subscriptions = all.filter((e) => e.kind === 'subscription');
-  const oneTimes = all.filter((e) => e.kind === 'one_time');
+  const promotions = all.filter((e) => e.kind === 'promotion');
+  const services = all.filter((e) => e.kind === 'one_time' && (e.status === 'paid' || e.status === 'pending'));
+  const completed = all.filter((e) => e.kind === 'one_time' && (e.status === 'fulfilled' || e.status === 'refunded'));
 
   const openStripePortal = async () => {
     setOpeningPortal(true);
