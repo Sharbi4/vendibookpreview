@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { ReactNode, useEffect, useRef, useState } from 'react';
+import { createContext, ReactNode, useContext, useEffect, useRef, useState } from 'react';
 import {
   Check,
   FileText,
@@ -23,10 +23,21 @@ import {
 const CANVAS_W = 960;
 const CANVAS_H = 540;
 
+/**
+ * MobileRenderContext — set by SceneShell when the actual stage width
+ * (post-scale, in real CSS pixels) is narrow enough that avatars and dense
+ * dashboards would visually disappear. Consumers (Vendi in particular) opt
+ * into simplified layout and elevated z-index rules when this is true.
+ */
+type MobileRenderInfo = { isMobile: boolean; stageWidth: number };
+const MobileRenderContext = createContext<MobileRenderInfo>({ isMobile: false, stageWidth: CANVAS_W });
+export const useMobileRender = () => useContext(MobileRenderContext);
+
 /** Full-bleed scene container with caption bar. */
 export const SceneShell = ({ children, caption }: { children: ReactNode; caption: string }) => {
   const wrapRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(1);
+  const [stageWidth, setStageWidth] = useState(CANVAS_W);
 
   useEffect(() => {
     const el = wrapRef.current;
@@ -36,6 +47,7 @@ export const SceneShell = ({ children, caption }: { children: ReactNode; caption
       if (width === 0 || height === 0) return;
       // Contain: uniform scale so nothing gets clipped or squished.
       setScale(Math.min(width / CANVAS_W, height / CANVAS_H));
+      setStageWidth(width);
     };
     compute();
     const ro = new ResizeObserver(compute);
@@ -43,36 +55,54 @@ export const SceneShell = ({ children, caption }: { children: ReactNode; caption
     return () => ro.disconnect();
   }, []);
 
+  // Treat stages narrower than ~520 CSS px as "mobile render mode" — this
+  // covers phones (portrait & landscape) plus the modal on small tablets.
+  const isMobile = stageWidth < 520;
+
   return (
-    <div
-      ref={wrapRef}
-      className="relative h-full w-full overflow-hidden bg-gradient-to-br from-muted/40 via-background to-muted/20"
-    >
+    <MobileRenderContext.Provider value={{ isMobile, stageWidth }}>
       <div
-        className="absolute left-1/2 top-1/2"
-        style={{
-          width: CANVAS_W,
-          height: CANVAS_H,
-          transform: `translate(-50%, -50%) scale(${scale})`,
-          transformOrigin: 'center center',
-        }}
+        ref={wrapRef}
+        className="relative h-full w-full overflow-hidden bg-gradient-to-br from-muted/40 via-background to-muted/20"
       >
-        {children}
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-background/95 via-background/70 to-transparent px-8 pb-7 pt-16">
-          <motion.p
-            key={caption}
-            initial={{ y: 12, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.4 }}
-            className="mx-auto max-w-2xl text-center text-lg font-semibold leading-snug text-foreground"
+        <div
+          className="absolute left-1/2 top-1/2"
+          style={{
+            width: CANVAS_W,
+            height: CANVAS_H,
+            transform: `translate(-50%, -50%) scale(${scale})`,
+            transformOrigin: 'center center',
+          }}
+        >
+          {/* Scene content sits above the caption gradient so mascots and
+              dashboards are never hidden behind it on small screens. */}
+          <div className="relative z-30 h-full w-full">{children}</div>
+          <div
+            className={
+              // On mobile the caption block is compressed so it never eats
+              // into the mascot's lower half; on desktop we keep the tall
+              // cinematic fade-up.
+              'pointer-events-none absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-background/95 via-background/60 to-transparent px-8 ' +
+              (isMobile ? 'pb-4 pt-6' : 'pb-7 pt-16')
+            }
           >
-            {caption}
-          </motion.p>
+            <motion.p
+              key={caption}
+              initial={{ y: 12, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ duration: 0.4 }}
+              className="mx-auto max-w-2xl text-center text-lg font-semibold leading-snug text-foreground"
+            >
+              {caption}
+            </motion.p>
+          </div>
         </div>
       </div>
-    </div>
+    </MobileRenderContext.Provider>
   );
 };
+
+
 
 
 export const ListingCardMini = ({

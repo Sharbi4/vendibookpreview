@@ -2,6 +2,7 @@ import { motion, useReducedMotion } from 'framer-motion';
 import { Search, Calendar, Camera, LayoutDashboard } from 'lucide-react';
 import mascot from '@/assets/vendi-mascot.png';
 import { cn } from '@/lib/utils';
+import { useMobileRender } from './scenes/primitives';
 
 export type VendiAccessory = 'search' | 'calendar' | 'camera' | 'dashboard' | 'none';
 
@@ -11,6 +12,16 @@ interface VendiProps {
   size?: number;
   /** disable idle animation (e.g. reduced motion or in thumbnails) */
   still?: boolean;
+  /**
+   * Force mobile render mode. When omitted, Vendi auto-detects it from
+   * MobileRenderContext (populated by SceneShell). Mobile mode:
+   *   • elevates z-index so the mascot always sits above caption overlays
+   *   • shrinks the accessory chip to icon-only so it never crops off the
+   *     side of a scaled-down 960×540 canvas on a phone stage
+   *   • boosts the visible size floor so the character stays legible even
+   *     when the scene's scale factor is small
+   */
+  mobileMode?: boolean;
 }
 
 const accessoryMeta: Record<Exclude<VendiAccessory, 'none'>, { Icon: typeof Search; label: string }> = {
@@ -25,22 +36,34 @@ const accessoryMeta: Record<Exclude<VendiAccessory, 'none'>, { Icon: typeof Sear
  * Rendered from a premium mascot illustration with a soft hover/bob loop,
  * a warm ground-glow, and an optional context accessory chip.
  */
-export const Vendi = ({ accessory = 'none', className, size = 180, still = false }: VendiProps) => {
+export const Vendi = ({ accessory = 'none', className, size = 180, still = false, mobileMode }: VendiProps) => {
   const prefersReduced = useReducedMotion();
+  const ctx = useMobileRender();
+  const isMobile = mobileMode ?? ctx.isMobile;
   const animate = !still && !prefersReduced;
   const acc = accessory !== 'none' ? accessoryMeta[accessory] : null;
 
+  // Mobile render mode enforces a legibility floor so the character never
+  // collapses into a dot on tiny phone stages.
+  const rendered = isMobile ? Math.max(size, 200) : size;
+
   return (
     <div
-      className={cn('relative inline-block select-none', className)}
-      style={{ width: size, height: size }}
+      className={cn(
+        'relative inline-block select-none',
+        // Elevated stacking so Vendi is never occluded by scene overlays,
+        // caption gradients, or neighboring dashboard cards on mobile.
+        isMobile ? 'z-40' : 'z-10',
+        className,
+      )}
+      style={{ width: rendered, height: rendered }}
       aria-label="Vendi, Vendibook's guide character"
       role="img"
     >
       {/* warm ground glow */}
       <motion.div
         className="pointer-events-none absolute left-1/2 -translate-x-1/2 rounded-[50%] bg-primary/30 blur-2xl"
-        style={{ bottom: size * 0.04, width: size * 0.72, height: size * 0.12 }}
+        style={{ bottom: rendered * 0.04, width: rendered * 0.72, height: rendered * 0.12 }}
         animate={animate ? { opacity: [0.55, 0.85, 0.55], scaleX: [1, 1.08, 1] } : undefined}
         transition={animate ? { duration: 3.2, repeat: Infinity, ease: 'easeInOut' } : undefined}
       />
@@ -48,7 +71,7 @@ export const Vendi = ({ accessory = 'none', className, size = 180, still = false
       {/* soft floor shadow */}
       <motion.div
         className="pointer-events-none absolute left-1/2 -translate-x-1/2 rounded-[50%] bg-black/30 blur-md"
-        style={{ bottom: size * 0.02, width: size * 0.55, height: size * 0.06 }}
+        style={{ bottom: rendered * 0.02, width: rendered * 0.55, height: rendered * 0.06 }}
         animate={animate ? { scaleX: [1, 0.9, 1], opacity: [0.35, 0.25, 0.35] } : undefined}
         transition={animate ? { duration: 3.2, repeat: Infinity, ease: 'easeInOut' } : undefined}
       />
@@ -64,16 +87,24 @@ export const Vendi = ({ accessory = 'none', className, size = 180, still = false
         transition={animate ? { duration: 3.2, repeat: Infinity, ease: 'easeInOut' } : undefined}
       />
 
-      {/* accessory chip */}
+      {/* accessory chip — icon-only on mobile to avoid overflowing the
+          scaled canvas next to the mascot on a narrow phone stage. */}
       {acc && (
         <motion.div
-          className="absolute right-[6%] top-[4%] flex items-center gap-1 rounded-full border border-border/60 bg-background/95 px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-foreground shadow-lg backdrop-blur"
+          className={cn(
+            'absolute right-[6%] top-[4%] flex items-center rounded-full border border-border/60 bg-background/95 shadow-lg backdrop-blur',
+            isMobile
+              ? 'h-7 w-7 justify-center p-0'
+              : 'gap-1 px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-foreground',
+          )}
           initial={animate ? { scale: 0, rotate: -20 } : undefined}
           animate={animate ? { scale: 1, rotate: 0 } : undefined}
           transition={{ type: 'spring', stiffness: 260, damping: 18, delay: 0.2 }}
+          aria-label={acc.label}
+          title={acc.label}
         >
-          <acc.Icon className="h-3 w-3 text-primary" strokeWidth={2.5} />
-          {acc.label}
+          <acc.Icon className={isMobile ? 'h-3.5 w-3.5 text-primary' : 'h-3 w-3 text-primary'} strokeWidth={2.5} />
+          {!isMobile && acc.label}
         </motion.div>
       )}
     </div>
@@ -81,3 +112,4 @@ export const Vendi = ({ accessory = 'none', className, size = 180, still = false
 };
 
 export default Vendi;
+
