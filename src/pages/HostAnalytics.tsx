@@ -3,6 +3,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { usePageTracking } from '@/hooks/usePageTracking';
 import { Navigate } from 'react-router-dom';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { HostPlanRibbon } from '@/components/host/HostPlanRibbon';
 import { ConversionFunnel } from '@/components/analytics/ConversionFunnel';
 import { RevenueChart } from '@/components/analytics/RevenueChart';
 import { TrafficSourcesCard } from '@/components/analytics/TrafficSourcesCard';
