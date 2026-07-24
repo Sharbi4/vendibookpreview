@@ -15,6 +15,7 @@ export interface SceneDef {
   Component: ComponentType;
   durationMs: number;
   caption: string;
+  chapterLabel: string;
 }
 
 export interface Explainer {
@@ -40,12 +41,14 @@ export interface Explainer {
 const buildScenes = (
   fns: Array<() => JSX.Element>,
   captions: string[],
+  chapterLabels: string[],
   perSceneMs = 10000,
 ): SceneDef[] =>
   fns.map((Component, i) => ({
     Component: Component as ComponentType,
     durationMs: perSceneMs,
     caption: captions[i] ?? '',
+    chapterLabel: chapterLabels[i] ?? captions[i] ?? `Chapter ${i + 1}`,
   }));
 
 export const explainers: Explainer[] = [
