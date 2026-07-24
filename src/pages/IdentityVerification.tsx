@@ -5,6 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { Shield, CheckCircle, Loader2, AlertCircle, ExternalLink } from 'lucide-react';
+import { TrustModule, IDENTITY_TRUST_POINTS, IDENTITY_DISCLAIMER } from '@/components/journey';
 
 const IdentityVerification = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -180,6 +181,13 @@ const IdentityVerification = () => {
             Powered by Stripe Identity. Your data is securely encrypted and protected.
           </p>
         </div>
+
+        <TrustModule
+          className="mt-4"
+          variant="compact"
+          points={IDENTITY_TRUST_POINTS}
+          disclaimer={IDENTITY_DISCLAIMER}
+        />
       </div>
     </div>
   );
