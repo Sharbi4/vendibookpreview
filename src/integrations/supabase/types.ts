@@ -3566,6 +3566,184 @@ export type Database = {
         }
         Relationships: []
       }
+      protected_sale_events: {
+        Row: {
+          actor_id: string | null
+          actor_role: string | null
+          created_at: string
+          event: string
+          id: string
+          ip: string | null
+          payload: Json
+          protected_sale_id: string
+        }
+        Insert: {
+          actor_id?: string | null
+          actor_role?: string | null
+          created_at?: string
+          event: string
+          id?: string
+          ip?: string | null
+          payload?: Json
+          protected_sale_id: string
+        }
+        Update: {
+          actor_id?: string | null
+          actor_role?: string | null
+          created_at?: string
+          event?: string
+          id?: string
+          ip?: string | null
+          payload?: Json
+          protected_sale_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "protected_sale_events_protected_sale_id_fkey"
+            columns: ["protected_sale_id"]
+            isOneToOne: false
+            referencedRelation: "protected_sales"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      protected_sales: {
+        Row: {
+          agreement_signed_at: string | null
+          agreement_signer_ip: string | null
+          agreement_snapshot: Json | null
+          balance_authorized_at: string | null
+          balance_cents: number
+          balance_stripe_payment_intent_id: string | null
+          buyer_id: string
+          buyer_identity_verified_at: string | null
+          cancellation_reason: string | null
+          cancelled_at: string | null
+          created_at: string
+          deposit_cents: number
+          deposit_paid_at: string | null
+          deposit_stripe_session_id: string | null
+          funds_released_at: string | null
+          handoff_confirmed_by_buyer_at: string | null
+          handoff_confirmed_by_seller_at: string | null
+          handoff_location: Json | null
+          handoff_mode:
+            | Database["public"]["Enums"]["protected_sale_handoff_mode"]
+            | null
+          handoff_scheduled_at: string | null
+          id: string
+          listing_id: string
+          metadata: Json
+          protection_fee_cents: number
+          sale_price_cents: number
+          sale_transaction_id: string
+          seller_id: string
+          seller_identity_verified_at: string | null
+          status: Database["public"]["Enums"]["protected_sale_status"]
+          terms_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          agreement_signed_at?: string | null
+          agreement_signer_ip?: string | null
+          agreement_snapshot?: Json | null
+          balance_authorized_at?: string | null
+          balance_cents: number
+          balance_stripe_payment_intent_id?: string | null
+          buyer_id: string
+          buyer_identity_verified_at?: string | null
+          cancellation_reason?: string | null
+          cancelled_at?: string | null
+          created_at?: string
+          deposit_cents: number
+          deposit_paid_at?: string | null
+          deposit_stripe_session_id?: string | null
+          funds_released_at?: string | null
+          handoff_confirmed_by_buyer_at?: string | null
+          handoff_confirmed_by_seller_at?: string | null
+          handoff_location?: Json | null
+          handoff_mode?:
+            | Database["public"]["Enums"]["protected_sale_handoff_mode"]
+            | null
+          handoff_scheduled_at?: string | null
+          id?: string
+          listing_id: string
+          metadata?: Json
+          protection_fee_cents: number
+          sale_price_cents: number
+          sale_transaction_id: string
+          seller_id: string
+          seller_identity_verified_at?: string | null
+          status?: Database["public"]["Enums"]["protected_sale_status"]
+          terms_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          agreement_signed_at?: string | null
+          agreement_signer_ip?: string | null
+          agreement_snapshot?: Json | null
+          balance_authorized_at?: string | null
+          balance_cents?: number
+          balance_stripe_payment_intent_id?: string | null
+          buyer_id?: string
+          buyer_identity_verified_at?: string | null
+          cancellation_reason?: string | null
+          cancelled_at?: string | null
+          created_at?: string
+          deposit_cents?: number
+          deposit_paid_at?: string | null
+          deposit_stripe_session_id?: string | null
+          funds_released_at?: string | null
+          handoff_confirmed_by_buyer_at?: string | null
+          handoff_confirmed_by_seller_at?: string | null
+          handoff_location?: Json | null
+          handoff_mode?:
+            | Database["public"]["Enums"]["protected_sale_handoff_mode"]
+            | null
+          handoff_scheduled_at?: string | null
+          id?: string
+          listing_id?: string
+          metadata?: Json
+          protection_fee_cents?: number
+          sale_price_cents?: number
+          sale_transaction_id?: string
+          seller_id?: string
+          seller_identity_verified_at?: string | null
+          status?: Database["public"]["Enums"]["protected_sale_status"]
+          terms_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "protected_sales_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "protected_sales_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "public_listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "protected_sales_sale_transaction_id_fkey"
+            columns: ["sale_transaction_id"]
+            isOneToOne: true
+            referencedRelation: "sale_transactions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "protected_sales_terms_id_fkey"
+            columns: ["terms_id"]
+            isOneToOne: false
+            referencedRelation: "transaction_terms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       push_subscriptions: {
         Row: {
           auth: string
@@ -6460,6 +6638,19 @@ export type Database = {
         | "refunded"
         | "failed"
         | "cancelled"
+      protected_sale_handoff_mode: "pickup" | "delivery"
+      protected_sale_status:
+        | "initiated"
+        | "id_verified"
+        | "agreement_signed"
+        | "deposit_paid"
+        | "balance_authorized"
+        | "handoff_scheduled"
+        | "funds_released"
+        | "completed"
+        | "disputed"
+        | "cancelled"
+        | "refunded"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -6676,6 +6867,20 @@ export const Constants = {
         "refunded",
         "failed",
         "cancelled",
+      ],
+      protected_sale_handoff_mode: ["pickup", "delivery"],
+      protected_sale_status: [
+        "initiated",
+        "id_verified",
+        "agreement_signed",
+        "deposit_paid",
+        "balance_authorized",
+        "handoff_scheduled",
+        "funds_released",
+        "completed",
+        "disputed",
+        "cancelled",
+        "refunded",
       ],
     },
   },
