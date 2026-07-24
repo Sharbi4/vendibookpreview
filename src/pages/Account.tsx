@@ -1353,6 +1353,7 @@ const Account = () => {
           <HostSubscriptionCard />
           <HostPerksCard />
           <ReferAHostCard />
+          <ReferralActivityCard />
 
 
 
