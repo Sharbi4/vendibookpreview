@@ -4337,6 +4337,53 @@ export type Database = {
           },
         ]
       }
+      sale_transaction_status_history: {
+        Row: {
+          actor: string | null
+          actor_kind: string
+          created_at: string
+          from_status: string | null
+          id: string
+          idempotency_key: string | null
+          metadata: Json
+          reason: string | null
+          to_status: string
+          transaction_id: string
+        }
+        Insert: {
+          actor?: string | null
+          actor_kind?: string
+          created_at?: string
+          from_status?: string | null
+          id?: string
+          idempotency_key?: string | null
+          metadata?: Json
+          reason?: string | null
+          to_status: string
+          transaction_id: string
+        }
+        Update: {
+          actor?: string | null
+          actor_kind?: string
+          created_at?: string
+          from_status?: string | null
+          id?: string
+          idempotency_key?: string | null
+          metadata?: Json
+          reason?: string | null
+          to_status?: string
+          transaction_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sale_transaction_status_history_transaction_id_fkey"
+            columns: ["transaction_id"]
+            isOneToOne: false
+            referencedRelation: "sale_transactions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sale_transactions: {
         Row: {
           amount: number
@@ -4360,6 +4407,7 @@ export type Database = {
           freight_payment_status: string | null
           fulfillment_type: string | null
           id: string
+          last_error: Json | null
           legacy_terms_unavailable: boolean
           listing_id: string
           message: string | null
@@ -4404,6 +4452,7 @@ export type Database = {
           freight_payment_status?: string | null
           fulfillment_type?: string | null
           id?: string
+          last_error?: Json | null
           legacy_terms_unavailable?: boolean
           listing_id: string
           message?: string | null
@@ -4448,6 +4497,7 @@ export type Database = {
           freight_payment_status?: string | null
           fulfillment_type?: string | null
           id?: string
+          last_error?: Json | null
           legacy_terms_unavailable?: boolean
           listing_id?: string
           message?: string | null
@@ -6552,6 +6602,68 @@ export type Database = {
         SetofOptions: {
           from: "*"
           to: "asset_requests"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      update_sale_transaction_status: {
+        Args: {
+          p_actor_kind?: string
+          p_idempotency_key?: string
+          p_last_error?: Json
+          p_metadata?: Json
+          p_reason?: string
+          p_to_status: string
+          p_transaction_id: string
+        }
+        Returns: {
+          amount: number
+          buyer_confirmed_at: string | null
+          buyer_email: string | null
+          buyer_id: string
+          buyer_name: string | null
+          buyer_phone: string | null
+          carrier: string | null
+          checkout_session_id: string | null
+          created_at: string
+          delivered_at: string | null
+          delivery_address: string | null
+          delivery_fee: number | null
+          delivery_instructions: string | null
+          estimated_delivery_date: string | null
+          freight_checkout_session_id: string | null
+          freight_cost: number | null
+          freight_paid_at: string | null
+          freight_payment_intent_id: string | null
+          freight_payment_status: string | null
+          fulfillment_type: string | null
+          id: string
+          last_error: Json | null
+          legacy_terms_unavailable: boolean
+          listing_id: string
+          message: string | null
+          payment_intent_id: string | null
+          payout_completed_at: string | null
+          platform_fee: number
+          promo_code_id: string | null
+          promo_discount: number | null
+          referral_code: string | null
+          seller_confirmed_at: string | null
+          seller_id: string
+          seller_payout: number
+          shipped_at: string | null
+          shipping_notes: string | null
+          shipping_status: string | null
+          status: string
+          terms_id: string | null
+          tracking_number: string | null
+          tracking_url: string | null
+          transfer_id: string | null
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "sale_transactions"
           isOneToOne: true
           isSetofReturn: false
         }
