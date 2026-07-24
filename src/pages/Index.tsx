@@ -13,6 +13,7 @@ import ReferralPromoCard from '@/components/home/ReferralPromoCard';
 import VerificationBanner from '@/components/home/VerificationBanner';
 import ConciergeSection from '@/components/home/ConciergeSection';
 import SellerHomeBlock from '@/components/home/SellerHomeBlock';
+import HowVendibookWorks from '@/components/home/how-it-works/HowVendibookWorks';
 
 import { useAuth } from '@/contexts/AuthContext';
 import { usePageTracking } from '@/hooks/usePageTracking';
