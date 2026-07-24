@@ -45,6 +45,7 @@ import { getGuestDraft, clearGuestDraft } from '@/lib/guestDraft';
 import { cn } from '@/lib/utils';
 import { FreightSettingsCard } from '@/components/freight';
 import { FeaturedListingCard } from './FeaturedListingCard';
+import { AdditionalSellerSupportCards } from '@/components/monetization/AdditionalSellerSupportCards';
 import { InfoTooltip } from '@/components/ui/info-tooltip';
 import stripeIcon from '@/assets/stripe-icon.png';
 import { ConsentModal } from '@/components/consent/ConsentModal';
@@ -3968,6 +3969,14 @@ export const PublishWizard: React.FC = () => {
                     <FeaturedListingCard
                       enabled={featuredEnabled}
                       onEnabledChange={setFeaturedEnabled}
+                    />
+                  )}
+
+                  {/* Seller Pro + White Glove upgrades — surfaced before publish */}
+                  {canPublish && (
+                    <AdditionalSellerSupportCards
+                      listingId={listing?.id}
+                      openInNewTab
                     />
                   )}
 

@@ -24,6 +24,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import type { Tables } from '@/integrations/supabase/types';
 import { Badge } from '@/components/ui/badge';
 import { FeaturedListingModal } from './FeaturedListingModal';
+import { ListingUpgradesDialog } from '@/components/monetization/ListingUpgradesDialog';
 import ShareKitModal from './ShareKitModal';
 import { isListingFeatured } from '@/lib/featured';
 
@@ -292,6 +293,9 @@ const HostListingCard = ({
                   <Star className="h-4 w-4 mr-1.5" />
                   Boost
                 </Button>
+              )}
+              {isPublished && (
+                <ListingUpgradesDialog listingId={listing.id} />
               )}
               {isPublished && isSale && !hasNotary && (
                 <Button variant="outline" size="sm" onClick={handleNotaryCheckout} disabled={isLoadingNotary} className="h-9 rounded-xl">
