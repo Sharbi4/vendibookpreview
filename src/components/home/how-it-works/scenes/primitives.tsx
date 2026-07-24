@@ -11,7 +11,11 @@ import {
   ShieldCheck,
   MessageSquare,
   Calendar as CalendarIcon,
+  Lock,
+  TrendingUp,
+  Activity,
 } from 'lucide-react';
+
 
 /**
  * Safe design canvas: every scene composes at a fixed 960×540 (16:9) so the
