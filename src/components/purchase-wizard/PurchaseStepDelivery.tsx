@@ -134,8 +134,10 @@ const MethodCard = ({ selection, selected, onSelect, priceNode, showRadio, child
   return (
     <div
       className={cn(
-        'rounded-2xl border-2 transition-all overflow-hidden',
-        selected ? 'border-primary bg-primary/[0.04] shadow-lg shadow-primary/5' : 'border-border/60 bg-card/40',
+        'rounded-lg border-2 transition-all overflow-hidden',
+        selected
+          ? 'border-primary bg-primary/[0.05] shadow-[0_0_0_1px_rgba(255,81,36,0.35)]'
+          : 'border-border bg-card/40 hover:border-white/25',
       )}
     >
       <button
@@ -143,7 +145,7 @@ const MethodCard = ({ selection, selected, onSelect, priceNode, showRadio, child
         onClick={onSelect}
         disabled={!showRadio}
         className={cn(
-          'w-full flex items-start gap-4 p-4 text-left',
+          'w-full flex items-start gap-4 p-5 text-left',
           showRadio && 'hover:bg-muted/20 transition-colors cursor-pointer',
           !showRadio && 'cursor-default',
         )}
