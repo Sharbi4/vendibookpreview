@@ -48,13 +48,14 @@ export function searchFaq(
   return typeof opts.limit === "number" ? results.slice(0, opts.limit) : results;
 }
 
-/** Related entries: same category first, then keyword overlap across catalog. */
+/** Related entries: explicit `related` links + keyword overlap + same-category fallback. */
 export function relatedEntries(
   categories: FaqCategory[],
   target: FaqEntry,
   limit = 4,
 ): ScoredEntry[] {
   const targetKws = new Set((target.keywords ?? []).map(normalize));
+  const targetCat = categories.find((c) => c.entries.some((e) => e.id === target.id));
   const scored: ScoredEntry[] = [];
   for (const cat of categories) {
     for (const entry of cat.entries) {
@@ -64,6 +65,8 @@ export function relatedEntries(
         if (targetKws.has(normalize(k))) score += 3;
       }
       if (target.related?.includes(entry.id)) score += 10;
+      // Same-category baseline so related always has something to show.
+      if (targetCat && cat.id === targetCat.id) score += 1;
       if (score > 0) scored.push({ entry, category: cat, score });
     }
   }
