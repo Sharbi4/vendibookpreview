@@ -411,16 +411,17 @@ export const DashboardLayout = ({ children, mode, onModeChange, isHost }: Dashbo
                 to={item.to}
                 className={cn(
                   'flex flex-col items-center gap-1 px-3 py-2 transition-colors relative',
-                  active ? 'text-foreground' : 'text-muted-foreground',
+                  active ? 'text-primary font-semibold' : 'text-muted-foreground',
                 )}
               >
-                {active && <div className="absolute top-0 left-1/2 -translate-x-1/2 w-6 h-0.5 bg-foreground rounded-full" />}
+                {active && <div className="absolute top-0 left-1/2 -translate-x-1/2 w-6 h-0.5 bg-primary rounded-full shadow-[0_0_8px_rgba(255,81,36,0.8)]" />}
                 <div className="relative">
-                  <Icon className="h-6 w-6" />
+                  <Icon className="h-6 w-6" strokeWidth={active ? 2.2 : 1.75} />
                   {item.badge}
                 </div>
                 <span className="text-[10px] font-medium">{item.label}</span>
               </Link>
+
             );
           })}
         </div>
