@@ -3673,6 +3673,11 @@ export type Database = {
           referral_w9_collected: boolean
           referral_ytd_earnings: number
           shop_policies: Json | null
+          show_full_name: boolean
+          show_listings_count: boolean
+          show_member_since: boolean
+          show_public_location: boolean
+          show_verified_badge: boolean
           state: string | null
           stripe_account_id: string | null
           stripe_identity_session_id: string | null
@@ -3714,6 +3719,11 @@ export type Database = {
           referral_w9_collected?: boolean
           referral_ytd_earnings?: number
           shop_policies?: Json | null
+          show_full_name?: boolean
+          show_listings_count?: boolean
+          show_member_since?: boolean
+          show_public_location?: boolean
+          show_verified_badge?: boolean
           state?: string | null
           stripe_account_id?: string | null
           stripe_identity_session_id?: string | null
@@ -3755,6 +3765,11 @@ export type Database = {
           referral_w9_collected?: boolean
           referral_ytd_earnings?: number
           shop_policies?: Json | null
+          show_full_name?: boolean
+          show_listings_count?: boolean
+          show_member_since?: boolean
+          show_public_location?: boolean
+          show_verified_badge?: boolean
           state?: string | null
           stripe_account_id?: string | null
           stripe_identity_session_id?: string | null
