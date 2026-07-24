@@ -62,14 +62,14 @@ serve(async (req) => {
     );
 
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader) throw new Error("No authorization header provided");
+    if (!authHeader) return jsonError(401, "unauthenticated", "You must be signed in to check out.");
 
     const token = authHeader.replace("Bearer ", "");
     const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
-    if (userError) throw new Error(`Authentication error: ${userError.message}`);
-    
+    if (userError) return jsonError(401, "unauthenticated", `Authentication error: ${userError.message}`);
+
     const user = userData.user;
-    if (!user?.email) throw new Error("User not authenticated or email not available");
+    if (!user?.email) return jsonError(401, "unauthenticated", "User not authenticated or email not available");
     logStep("User authenticated", { userId: user.id, email: user.email });
 
     const body: CheckoutRequest = await req.json();
@@ -93,7 +93,8 @@ serve(async (req) => {
       terms_id: draftTermsId,
       ui_mode: uiModeRaw,
     } = body;
-    const uiMode: 'hosted' | 'elements' = uiModeRaw === 'elements' ? 'elements' : 'hosted';
+    // Accept 'elements' as a backward-compatible alias for 'custom'.
+    const uiMode: 'hosted' | 'custom' = (uiModeRaw === 'custom' || uiModeRaw === 'elements') ? 'custom' : 'hosted';
     const referral_code = rawReferralCode ? String(rawReferralCode).trim().toUpperCase().slice(0, 32) : '';
     
     // Handle null values from request body (null !== undefined, so defaults don't apply)
