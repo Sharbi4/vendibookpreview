@@ -486,36 +486,52 @@ export const DashboardMock = ({
     initial={{ y: 20, opacity: 0 }}
     animate={{ y: 0, opacity: 1 }}
     transition={{ duration: 0.5 }}
-    className="w-full max-w-md rounded-2xl border border-border bg-card p-4 shadow-[0_20px_50px_-20px_hsl(var(--primary)/0.35),0_10px_25px_-10px_hsl(var(--foreground)/0.25)] ring-1 ring-border/60"
+    className="w-full max-w-md"
   >
-    <div className="flex items-start justify-between gap-2">
-      <div>
-        <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-          {role} dashboard
+    <AppFrame path={`/${role.toLowerCase()}/transactions`}>
+      <div className="flex items-start justify-between gap-2">
+        <div>
+          <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+            {role} dashboard
+          </div>
+          <div className="mt-0.5 text-sm font-bold leading-tight text-foreground">{title}</div>
+          {subtitle && <div className="text-[11px] text-muted-foreground">{subtitle}</div>}
         </div>
-        <div className="mt-0.5 text-sm font-bold leading-tight text-foreground">{title}</div>
-        {subtitle && <div className="text-[11px] text-muted-foreground">{subtitle}</div>}
+        <div className="flex flex-wrap items-end justify-end gap-1">
+          {statuses.map((s, i) => (
+            <StatusPill key={i} label={s.label} intent={s.intent} />
+          ))}
+        </div>
       </div>
-      <div className="flex flex-wrap items-end justify-end gap-1">
-        {statuses.map((s, i) => (
-          <StatusPill key={i} label={s.label} intent={s.intent} />
-        ))}
-      </div>
-    </div>
 
-    <div className="mt-4">
-      <TransactionTimeline steps={timeline} />
-    </div>
-
-    {nextAction && (
       <div className="mt-4">
-        <NextActionCard label={nextAction.label} cta={nextAction.cta} />
+        <TransactionTimeline steps={timeline} />
       </div>
-    )}
 
-    {footer && <div className="mt-3 border-t border-border pt-3 text-xs text-foreground/80">{footer}</div>}
+      {nextAction && (
+        <div className="mt-4">
+          <NextActionCard label={nextAction.label} cta={nextAction.cta} />
+        </div>
+      )}
+
+      {footer ? (
+        <div className="mt-3 border-t border-border/70 pt-3 text-xs text-foreground/80">{footer}</div>
+      ) : (
+        <div className="mt-3 border-t border-border/70 pt-3">
+          <div className="flex items-center justify-between gap-2">
+            <KPIStat label="Progress" value={Math.round((timeline.filter(s => s.state !== 'pending').length / timeline.length) * 100)} suffix="%" delta="on track" />
+            <KPIStat label="Est. close" value={3} suffix="d" delay={0.15} />
+            <div className="flex-1 pl-1">
+              <div className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">Momentum</div>
+              <Sparkline delay={0.2} />
+            </div>
+          </div>
+        </div>
+      )}
+    </AppFrame>
   </motion.div>
 );
+
 
 /**
  * PaymentOptionsPanel: shows the actual purchase summary and the payment
