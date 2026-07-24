@@ -3,13 +3,17 @@ import { useMonetizationProducts } from '@/hooks/useMonetizationProducts';
 import { ProductPricingCard } from '@/components/monetization/ProductPricingCard';
 import { SectionHeader } from '@/components/journey';
 import { buildCheckoutReturnPaths } from '@/lib/monetization/returnRoutes';
+import PackagesIntro from '@/components/monetization/PackagesIntro';
 
 const PermitPathUpgrades = () => {
   const { products, loading } = useMonetizationProducts('permit_upgrade');
 
   return (
     <div className="min-h-screen bg-background">
-      <section className="mx-auto max-w-5xl px-4 py-14">
+      <section className="mx-auto max-w-5xl px-4 pt-10 pb-4">
+        <PackagesIntro variant="compact" />
+      </section>
+      <section className="mx-auto max-w-5xl px-4 py-10">
         <SectionHeader
           eyebrow="Permit Path"
           title="Optional upgrades for your Permit Path"
