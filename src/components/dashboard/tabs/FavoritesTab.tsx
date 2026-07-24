@@ -5,11 +5,12 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useFavorites } from '@/hooks/useFavorites';
 import EmptyState from '../shared/EmptyState';
 import SharePopover from '../shared/SharePopover';
-import { Loader2, Heart, Image as ImageIcon } from 'lucide-react';
+import { Loader2, Heart, HeartOff, Image as ImageIcon } from 'lucide-react';
+import { toast } from 'sonner';
 
 const FavoritesTab = () => {
   const { user } = useAuth();
-  const { favorites, isLoading: favLoading } = useFavorites();
+  const { favorites, isLoading: favLoading, toggleFavorite } = useFavorites();
   const stableKey = [...(favorites ?? [])].sort().join(',');
 
   const { data: listings = [], isLoading } = useQuery({
@@ -27,6 +28,17 @@ const FavoritesTab = () => {
   });
 
   const loading = favLoading || isLoading;
+
+  const handleUnsave = (id: string, title: string) => {
+    toggleFavorite(id);
+    toast('Removed from favorites', {
+      description: title,
+      action: {
+        label: 'Undo',
+        onClick: () => toggleFavorite(id),
+      },
+    });
+  };
 
   return (
     <div className="max-w-[1200px] mx-auto space-y-6">
@@ -50,8 +62,8 @@ const FavoritesTab = () => {
       ) : (
         <ul className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
           {listings.map((l: any) => (
-            <li key={l.id} className="group rounded-2xl border border-border bg-card overflow-hidden flex flex-col">
-              <Link to={`/listing/${l.id}`} className="block aspect-[4/3] bg-muted overflow-hidden">
+            <li key={l.id} className="group rounded-md border border-border bg-card overflow-hidden flex flex-col">
+              <Link to={`/listing/${l.id}`} className="block aspect-[4/3] bg-muted overflow-hidden relative">
                 {l.cover_image_url ? (
                   <img src={l.cover_image_url} alt={l.title} loading="lazy"
                     className="h-full w-full object-cover group-hover:scale-[1.02] transition-transform" />
@@ -60,6 +72,14 @@ const FavoritesTab = () => {
                     <ImageIcon className="h-6 w-6 text-muted-foreground" />
                   </div>
                 )}
+                <button
+                  type="button"
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleUnsave(l.id, l.title); }}
+                  aria-label={`Remove ${l.title} from favorites`}
+                  className="absolute top-2 right-2 h-8 w-8 rounded-full bg-background/90 backdrop-blur border border-border flex items-center justify-center hover:bg-background transition"
+                >
+                  <HeartOff className="h-3.5 w-3.5 text-destructive" />
+                </button>
               </Link>
               <div className="p-3 flex-1 flex flex-col">
                 <Link to={`/listing/${l.id}`} className="text-sm font-medium text-foreground line-clamp-1">

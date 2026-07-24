@@ -1,15 +1,17 @@
 import { Link } from 'react-router-dom';
-import { Bell, Settings2, Loader2, Check } from 'lucide-react';
+import { Bell, Settings2, Loader2, Check, Trash2, CheckCheck } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNotifications } from '@/hooks/useNotifications';
 import { Button } from '@/components/ui/button';
 import EmptyState from '../shared/EmptyState';
+import RowKebabMenu from '../shared/RowKebabMenu';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
 
 const NotificationsTab = () => {
   const { user } = useAuth();
-  const { notifications, isLoading, unreadCount, markAsRead, markAllAsRead } =
+  const { notifications, isLoading, unreadCount, markAsRead, markAllAsRead, deleteNotification } =
     useNotifications(user?.id) as any;
 
   return (
@@ -23,8 +25,15 @@ const NotificationsTab = () => {
         </div>
         <div className="flex items-center gap-2">
           {unreadCount > 0 && (
-            <Button variant="outline" size="sm" onClick={() => markAllAsRead?.()}>
-              <Check className="h-3.5 w-3.5 mr-1.5" /> Mark all read
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                markAllAsRead?.();
+                toast.success('All notifications marked read');
+              }}
+            >
+              <CheckCheck className="h-3.5 w-3.5 mr-1.5" /> Mark all read
             </Button>
           )}
           <Button asChild variant="outline" size="sm">
@@ -48,10 +57,10 @@ const NotificationsTab = () => {
           ctaHref="/notification-preferences"
         />
       ) : (
-        <ul className="rounded-2xl border border-border bg-card divide-y divide-border overflow-hidden">
+        <ul className="rounded-md border border-border bg-card divide-y divide-border overflow-hidden">
           {notifications.map((n: any) => {
             const unread = !n.read_at;
-            const inner = (
+            const rowContent = (
               <div className={cn('flex items-start gap-3 p-4 hover:bg-muted/40 transition-colors', unread && 'bg-primary/5')}>
                 <div className={cn('mt-1 h-2 w-2 rounded-full shrink-0', unread ? 'bg-primary' : 'bg-transparent')} />
                 <div className="flex-1 min-w-0">
@@ -61,11 +70,32 @@ const NotificationsTab = () => {
                     {n.created_at ? formatDistanceToNow(new Date(n.created_at), { addSuffix: true }) : ''}
                   </p>
                 </div>
+                <RowKebabMenu
+                  actions={[
+                    ...(unread ? [{
+                      id: 'read',
+                      label: 'Mark as read',
+                      icon: Check,
+                      onSelect: () => { markAsRead?.(n.id); toast.success('Marked as read'); },
+                    }] : []),
+                    {
+                      id: 'delete',
+                      label: 'Delete',
+                      icon: Trash2,
+                      destructive: true,
+                      onSelect: () => {
+                        deleteNotification?.(n.id);
+                        toast('Notification deleted');
+                      },
+                    },
+                  ]}
+                />
               </div>
             );
+            const handleRowClick = () => { if (unread) markAsRead?.(n.id); };
             return (
-              <li key={n.id} onClick={() => unread && markAsRead?.(n.id)}>
-                {n.link ? <Link to={n.link}>{inner}</Link> : inner}
+              <li key={n.id} onClick={handleRowClick}>
+                {n.link ? <Link to={n.link} className="block no-underline">{rowContent}</Link> : rowContent}
               </li>
             );
           })}

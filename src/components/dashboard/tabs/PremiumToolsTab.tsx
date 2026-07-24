@@ -1,24 +1,38 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   DollarSign, FileCheck, FileText, Rocket, Megaphone, Search, Wrench, Lightbulb, Building2, ArrowRight, Lock, CheckCircle2,
+  type LucideIcon,
 } from 'lucide-react';
 import { useHostEntitlements } from '@/hooks/useHostEntitlements';
+import LockedToolModal from '../shared/LockedToolModal';
 import { cn } from '@/lib/utils';
 
-const tools = [
-  { name: 'Startup Guide', description: 'A step-by-step launch checklist.', icon: Rocket, href: '/tools/startup-guide', minTier: 'free' as const },
-  { name: 'PermitPath', description: 'Find every license required in your city.', icon: FileCheck, href: '/tools/permitpath', minTier: 'free' as const },
-  { name: 'PricePilot', description: 'Set competitive rates to book faster.', icon: DollarSign, href: '/tools/pricepilot', minTier: 'starter' as const },
-  { name: 'Listing Studio', description: 'Write listings that convert.', icon: FileText, href: '/tools/listing-studio', minTier: 'starter' as const },
-  { name: 'Marketing Studio', description: 'Ad copy, social posts, launch kits.', icon: Megaphone, href: '/tools/marketing-studio', minTier: 'pro' as const },
-  { name: 'Concept Lab', description: 'Validate menu and truck concepts.', icon: Lightbulb, href: '/tools/concept-lab', minTier: 'pro' as const },
-  { name: 'Market Radar', description: 'See demand and competition in your area.', icon: Search, href: '/tools/market-radar', minTier: 'pro' as const },
-  { name: 'BuildKit', description: 'Blueprints and vendor sourcing.', icon: Wrench, href: '/tools/buildkit', minTier: 'premium' as const },
-  { name: 'Regulations Hub', description: 'State-by-state operating rules.', icon: Building2, href: '/tools/regulations-hub', minTier: 'free' as const },
+type Tier = 'free' | 'starter' | 'pro' | 'premium';
+
+interface Tool {
+  name: string;
+  description: string;
+  icon: LucideIcon;
+  href: string;
+  minTier: Tier;
+}
+
+const tools: Tool[] = [
+  { name: 'Startup Guide', description: 'A step-by-step launch checklist.', icon: Rocket, href: '/tools/startup-guide', minTier: 'free' },
+  { name: 'PermitPath', description: 'Find every license required in your city.', icon: FileCheck, href: '/tools/permitpath', minTier: 'free' },
+  { name: 'PricePilot', description: 'Set competitive rates to book faster.', icon: DollarSign, href: '/tools/pricepilot', minTier: 'starter' },
+  { name: 'Listing Studio', description: 'Write listings that convert.', icon: FileText, href: '/tools/listing-studio', minTier: 'starter' },
+  { name: 'Marketing Studio', description: 'Ad copy, social posts, launch kits.', icon: Megaphone, href: '/tools/marketing-studio', minTier: 'pro' },
+  { name: 'Concept Lab', description: 'Validate menu and truck concepts.', icon: Lightbulb, href: '/tools/concept-lab', minTier: 'pro' },
+  { name: 'Market Radar', description: 'See demand and competition in your area.', icon: Search, href: '/tools/market-radar', minTier: 'pro' },
+  { name: 'BuildKit', description: 'Blueprints and vendor sourcing.', icon: Wrench, href: '/tools/buildkit', minTier: 'premium' },
+  { name: 'Regulations Hub', description: 'State-by-state operating rules.', icon: Building2, href: '/tools/regulations-hub', minTier: 'free' },
 ];
 
 const PremiumToolsTab = () => {
   const ent = useHostEntitlements();
+  const [locked, setLocked] = useState<Tool | null>(null);
 
   return (
     <div className="max-w-[1080px] mx-auto space-y-6">
@@ -36,13 +50,13 @@ const PremiumToolsTab = () => {
         {tools.map((t) => {
           const unlocked = ent.hasAtLeast(t.minTier);
           const Icon = t.icon;
-          const inner = (
+          const card = (
             <div className={cn(
-              'group h-full flex flex-col p-5 rounded-2xl border border-border bg-card hover:border-foreground/30 transition-colors',
-              !unlocked && 'opacity-90',
+              'group h-full flex flex-col p-5 rounded-md border border-border bg-card hover:border-foreground/30 transition-colors',
+              !unlocked && 'opacity-95',
             )}>
               <div className="flex items-start justify-between">
-                <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center">
+                <div className="h-10 w-10 rounded-md bg-muted flex items-center justify-center">
                   <Icon className="h-5 w-5 text-foreground" />
                 </div>
                 {unlocked ? (
@@ -58,17 +72,39 @@ const PremiumToolsTab = () => {
               <h3 className="mt-4 text-base font-medium text-foreground">{t.name}</h3>
               <p className="mt-1 text-sm text-muted-foreground flex-1">{t.description}</p>
               <span className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-foreground">
-                {unlocked ? 'Open' : 'View'} <ArrowRight className="h-4 w-4 group-hover:translate-x-0.5 transition-transform" />
+                {unlocked ? 'Open' : 'See what\'s inside'} <ArrowRight className="h-4 w-4 group-hover:translate-x-0.5 transition-transform" />
               </span>
             </div>
           );
           return (
             <li key={t.href}>
-              <Link to={unlocked ? t.href : '/pricing'} className="block h-full no-underline">{inner}</Link>
+              {unlocked ? (
+                <Link to={t.href} className="block h-full no-underline">{card}</Link>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setLocked(t)}
+                  className="block h-full w-full text-left no-underline"
+                  aria-label={`Learn about ${t.name}`}
+                >
+                  {card}
+                </button>
+              )}
             </li>
           );
         })}
       </ul>
+
+      {locked && (
+        <LockedToolModal
+          open={!!locked}
+          onOpenChange={(o) => !o && setLocked(null)}
+          toolName={locked.name}
+          toolIcon={locked.icon}
+          toolDescription={locked.description}
+          requiredTier={locked.minTier as 'starter' | 'pro' | 'premium'}
+        />
+      )}
     </div>
   );
 };
