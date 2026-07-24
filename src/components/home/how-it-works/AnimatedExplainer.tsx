@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, useMemo } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
-import { Play, Pause, ChevronLeft, ChevronRight, Captions, Volume2, VolumeX } from 'lucide-react';
+import { Play, Pause, ChevronLeft, ChevronRight, Download, Volume2, VolumeX } from 'lucide-react';
 import type { Explainer } from './data/explainers';
 import { cn } from '@/lib/utils';
 import { createAmbientBed, type AmbientBed } from './audio/ambientBed';
@@ -65,7 +65,6 @@ export const AnimatedExplainer = ({ explainer, onProgress, onEnded, onSceneChang
     return Number.isFinite(n) && n < totalMs - 500 ? n : 0;
   });
   const [playing, setPlaying] = useState(true);
-  const [captionsOn, setCaptionsOn] = useState(true);
   const [muted, setMuted] = useState(false);
   const [volume, setVolume] = useState<number>(() => {
     if (typeof window === 'undefined') return 1;
