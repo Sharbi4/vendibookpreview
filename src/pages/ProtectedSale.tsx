@@ -12,7 +12,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { JourneyProgress, type JourneyStep } from '@/components/journey';
+import { JourneyProgress, TrustModule, IDENTITY_TRUST_POINTS, DEPOSIT_TRUST_POINTS, type JourneyStep } from '@/components/journey';
 import { ProtectedSaleStatusBadge } from '@/components/protected-sale/ProtectedSaleStatusBadge';
 import { ProtectedSaleTimeline } from '@/components/protected-sale/ProtectedSaleTimeline';
 import { ProtectedSaleFeeCalculator } from '@/components/protected-sale/ProtectedSaleFeeCalculator';
@@ -233,6 +233,11 @@ export default function ProtectedSalePage() {
                 ) : (
                   <p className="text-sm text-emerald-300">Your identity is verified.</p>
                 )}
+                <TrustModule
+                  className="mt-4"
+                  variant="compact"
+                  points={IDENTITY_TRUST_POINTS}
+                />
               </StepCard>
 
               <StepCard
@@ -280,6 +285,12 @@ export default function ProtectedSalePage() {
                 ) : (
                   <p className="text-sm text-white/60">Buyer pays deposit after signing the agreement.</p>
                 )}
+                <TrustModule
+                  className="mt-4"
+                  variant="compact"
+                  title="How your deposit is protected"
+                  points={DEPOSIT_TRUST_POINTS}
+                />
               </StepCard>
 
               <HandoffCard ps={ps} role={role} busy={busy} onSave={callUpdate} />
