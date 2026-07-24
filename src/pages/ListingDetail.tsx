@@ -917,6 +917,23 @@ const ListingDetail = () => {
         </div>
       </nav>
 
+      </nav>
+
+      <div className="container pb-8 flex justify-center">
+        <ReportIssueButton
+          variant="ghost"
+          size="sm"
+          label="Report this listing"
+          showIcon={false}
+          className="text-xs text-muted-foreground hover:text-foreground"
+          context={{
+            featureArea: 'listing_page',
+            defaultCategory: 'listing_report',
+            related: { listing_id: listing.id },
+          }}
+        />
+      </div>
+
       <Footer />
     </div>
   );
