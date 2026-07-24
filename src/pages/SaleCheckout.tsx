@@ -8,9 +8,8 @@ import { useListing } from '@/hooks/useListing';
 import { useToast } from '@/hooks/use-toast';
 import { useFreightEstimate } from '@/hooks/useFreightEstimate';
 import { supabase } from '@/integrations/supabase/client';
-import Header from '@/components/layout/Header';
-import Footer from '@/components/layout/Footer';
 import { CheckoutOverlay, EmbeddedStripeCheckout } from '@/components/checkout';
+import CheckoutChrome from '@/components/checkout/CheckoutChrome';
 import CheckoutOrderSummary from '@/components/checkout/CheckoutOrderSummary';
 import { isEmbeddedCheckoutEnabled } from '@/lib/featureFlags';
 import { parseEdgeError } from '@/lib/edgeErrors';
@@ -22,7 +21,6 @@ import { calculateDistance } from '@/lib/geolocation';
 import SEO from '@/components/SEO';
 
 // Premium shared components
-import WizardHeader, { WizardStep } from '@/components/shared/WizardHeader';
 import StickySummary from '@/components/shared/StickySummary';
 
 // Step components
