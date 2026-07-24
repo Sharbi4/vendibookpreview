@@ -223,7 +223,6 @@ async function handleCheckoutCompleted(
         productName: product?.name ?? "Your upgrade",
         amount: fmtMoney(purchase.amount_cents, purchase.currency ?? "usd"),
         listingId: purchase.listing_id ?? null,
-        receiptUrl: session.receipt_url ?? null,
         purchasesUrl: "/purchases",
       },
       `upgrade-purchased-${session.id}`,
