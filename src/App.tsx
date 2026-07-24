@@ -270,6 +270,12 @@ const AnimatedRoutes = () => {
           <Route path="/admin/qa" element={<PageTransition><AdminQA /></PageTransition>} />
           <Route path="/admin/support" element={<PageTransition><AdminSupportTickets /></PageTransition>} />
           <Route path="/admin/revenue" element={<PageTransition><AdminRevenue /></PageTransition>} />
+          <Route path="/services" element={<PageTransition><ServicesHub /></PageTransition>} />
+          <Route path="/buyer/services" element={<PageTransition><BuyerServicesHub /></PageTransition>} />
+          <Route path="/buyer/services/review/:listingId" element={<PageTransition><ListingPurchaseReviewIntake /></PageTransition>} />
+          <Route path="/host/plans" element={<PageTransition><HostProPlans /></PageTransition>} />
+          <Route path="/tools/permitpath/upgrades" element={<PageTransition><PermitPathUpgrades /></PageTransition>} />
+          <Route path="/partners" element={<PageTransition><Partners /></PageTransition>} />
 
           <Route path="/admin/email/dashboard" element={<PageTransition><AdminEmailDashboard /></PageTransition>} />
           <Route path="/admin/campaigns/new-exit-plan" element={<PageTransition><AdminCampaignNewExitPlan /></PageTransition>} />
