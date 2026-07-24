@@ -868,6 +868,19 @@ export const PublishWizard: React.FC = () => {
       if (data?.optimizedDescription) {
         setDescription(data.optimizedDescription);
         setShowOptimized(true);
+        trackLeadEvent('ai_suggestion_viewed', {
+          listing_id: listing?.id,
+          surface: 'publish_wizard',
+          suggestion_type: 'copy',
+          field: 'description',
+        });
+        trackLeadEvent('ai_suggestion_accepted', {
+          listing_id: listing?.id,
+          surface: 'publish_wizard',
+          suggestion_type: 'copy',
+          field: 'description',
+          auto_applied: true,
+        });
         toast({
           title: 'Description optimized!',
           description: 'Your listing description has been professionally rewritten.'});
@@ -888,6 +901,13 @@ export const PublishWizard: React.FC = () => {
       setDescription(originalDescription);
       setOriginalDescription(null);
       setShowOptimized(false);
+      trackLeadEvent('ai_suggestion_rejected', {
+        listing_id: listing?.id,
+        surface: 'publish_wizard',
+        suggestion_type: 'copy',
+        field: 'description',
+        reason: 'reverted',
+      });
       toast({
         title: 'Description reverted',
         description: 'Your original description has been restored.'});
