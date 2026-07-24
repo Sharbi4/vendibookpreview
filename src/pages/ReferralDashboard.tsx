@@ -278,6 +278,11 @@ const ReferralDashboard = () => {
           </Card>
         )}
 
+        {/* Leaderboard */}
+        <div className="mb-6">
+          <ReferralLeaderboardCard limit={10} />
+        </div>
+
         {/* Referrals table */}
         <Card className="p-6 mb-6">
           <div className="flex items-center justify-between mb-4">
