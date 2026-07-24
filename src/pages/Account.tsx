@@ -1409,6 +1409,18 @@ const Account = () => {
                   </Card>
                 </div>
 
+                {/* Privacy & sharing — controls what your public storefront shows */}
+                {user && (
+                  <div id="section-privacy">
+                    <PrivacySharingSection
+                      userId={user.id}
+                      username={formData.username}
+                    />
+                  </div>
+                )}
+
+
+
                 {/* Desktop Save Button */}
           <div className="hidden md:flex justify-end gap-3 pt-4">
             <Button type="submit" disabled={isSaving || !hasChanges}>
