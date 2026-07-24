@@ -38,12 +38,19 @@ serve(async (req) => {
     return new Response(JSON.stringify({ error: msg }), { status: 400, headers: corsHeaders });
   }
 
-  // Idempotency — never process the same Stripe event twice.
+  // Idempotency — never process the same Stripe event twice at this endpoint.
+  // The uniqueness constraint is (endpoint, stripe_event_id) so the parallel
+  // stripe-webhook endpoint can also record the same event id without colliding.
+  const ENDPOINT = "monetization-webhook";
   const { error: idemErr } = await supabase
     .from("stripe_webhook_events")
-    .insert({ stripe_event_id: event.id, event_type: event.type, payload: event as unknown as Record<string, unknown> });
+    .insert({
+      endpoint: ENDPOINT,
+      stripe_event_id: event.id,
+      event_type: event.type,
+      payload: event as unknown as Record<string, unknown>,
+    });
   if (idemErr) {
-    // Unique violation = already processed. Return 200 so Stripe stops retrying.
     if ((idemErr as { code?: string }).code === "23505") {
       log("duplicate event ignored", { id: event.id });
       return new Response(JSON.stringify({ received: true, duplicate: true }), {
