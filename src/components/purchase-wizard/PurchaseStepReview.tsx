@@ -1,16 +1,16 @@
-import { useState } from 'react';
-import { 
-  ArrowLeft, MapPin, Truck, Package, Pencil, ShieldCheck, 
-  CreditCard, Banknote, Loader2, DollarSign, Handshake, CheckCircle2 
+import {
+  ArrowLeft, MapPin, Truck, Package, Pencil, ShieldCheck,
+  CreditCard, Banknote, Loader2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 import WhatsIncluded from '@/components/shared/WhatsIncluded';
-import WhatHappensNext, { getSalePickupSteps, getSaleFreightSteps, getSaleLocalDeliverySteps } from '@/components/shared/WhatHappensNext';
-import { EscrowInfoPopover, FeesInfoPopover } from '@/components/shared/InfoPopover';
+import { FeesInfoPopover } from '@/components/shared/InfoPopover';
 import { TrustModule, PAYMENT_TRUST_POINTS, PAYMENT_DISCLAIMER } from '@/components/journey';
+import PostPaymentTimeline from '@/components/checkout/PostPaymentTimeline';
+import AffirmMessagingLine from '@/components/checkout/AffirmMessagingLine';
 import type { BuyerInfo } from './PurchaseStepInfo';
 
 type FulfillmentSelection = 'pickup' | 'delivery' | 'vendibook_freight';
@@ -201,62 +201,9 @@ const PurchaseStepReview = ({
         </div>
       </div>
 
-      {/* How It Works - Always Visible Timeline */}
-      <div className="border border-border rounded-xl p-4 bg-muted/30">
-        <h3 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2">
-          How It Works
-          <EscrowInfoPopover />
-        </h3>
-        <div className="space-y-4">
-          <div className="flex gap-3">
-            <div className="flex flex-col items-center">
-              <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                <DollarSign className="h-4 w-4 text-primary" />
-              </div>
-              <div className="w-0.5 flex-1 bg-border mt-2" />
-            </div>
-            <div className="pb-3">
-              <h4 className="font-medium text-foreground text-sm">Payment held securely</h4>
-              <p className="text-xs text-muted-foreground mt-1">
-                Funds are held until the transaction is confirmed.
-              </p>
-            </div>
-          </div>
-          <div className="flex gap-3">
-            <div className="flex flex-col items-center">
-              <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                <Handshake className="h-4 w-4 text-primary" />
-              </div>
-              <div className="w-0.5 flex-1 bg-border mt-2" />
-            </div>
-            <div className="pb-3">
-              <h4 className="font-medium text-foreground text-sm">Inspect / receive the item</h4>
-              <p className="text-xs text-muted-foreground mt-1">
-                Meet for pickup/delivery or receive freight shipment.
-              </p>
-            </div>
-          </div>
-          <div className="flex gap-3">
-            <div className="flex flex-col items-center">
-              <div className="w-8 h-8 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
-                <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-              </div>
-            </div>
-            <div>
-              <h4 className="font-medium text-foreground text-sm">Confirm in your Dashboard</h4>
-              <p className="text-xs text-muted-foreground mt-1">
-                Buyer confirms receipt → funds release to seller.
-              </p>
-              <p className="text-xs text-primary font-medium mt-1">
-                You'll confirm in Dashboard → Purchases card.
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* What Happens Next - Context Aware */}
-      <WhatHappensNext steps={getTimelineSteps()} />
+      {/* Comprehensive "What happens after you pay" — replaces the old
+          escrow-labeled timeline with buyer-facing payment-protection copy. */}
+      <PostPaymentTimeline />
 
       {/* What's Included */}
       <WhatsIncluded mode="checkout" defaultOpen={true} />
@@ -301,6 +248,12 @@ const PurchaseStepReview = ({
           </div>
         </div>
       </div>
+
+      {/* Live Affirm / Afterpay / Klarna promotional messaging so buyers
+          see "as low as $X/mo" before choosing a payment tab in Stripe. */}
+      {paymentMethod !== 'cash' ? (
+        <AffirmMessagingLine amountUsd={totalPrice} />
+      ) : null}
 
       {/* Payment Method Selection */}
       {hasMultiplePaymentOptions && (
@@ -380,7 +333,7 @@ const PurchaseStepReview = ({
 
       <p className="text-xs text-center text-muted-foreground">
         <ShieldCheck className="inline h-3 w-3 mr-1 text-emerald-500" />
-        Protected by VendiBook escrow
+        Protected by Vendibook payment protection
       </p>
     </div>
   );
