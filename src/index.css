@@ -47,11 +47,13 @@
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 0 0% 30%;
-    --input: 0 0% 30%;
+    /* Border/input use white at low alpha via Tailwind's hsl(var(--x) / <alpha-value>) mapping */
+    --border: 0 0% 100%;
+    --input: 0 0% 100%;
     --ring: 14 100% 57%;
 
-    --radius: 1rem;
+    /* Unified radius scale: sm 10px · md 14px · lg 20px (var --radius) · xl 24px · 2xl 28px */
+    --radius: 1.25rem;
 
     --sidebar-background: 0 0% 8%;
     --sidebar-foreground: 0 0% 95%;
