@@ -6572,6 +6572,16 @@ export type Database = {
           updated_at: string
         }[]
       }
+      get_referral_leaderboard: {
+        Args: { p_limit?: number }
+        Returns: {
+          display_name: string
+          is_me: boolean
+          qualified_count: number
+          rank: number
+          referrer_id: string
+        }[]
+      }
       get_safe_host_profile: {
         Args: { host_user_id: string }
         Returns: {

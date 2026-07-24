@@ -15,6 +15,7 @@ import { useStripeConnect } from "@/hooks/useStripeConnect";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Copy, Download, Facebook, MessageCircle, Mail, Share2, Twitter, ExternalLink, AlertCircle, Info } from "lucide-react";
+import ReferralLeaderboardCard from "@/components/referrals/ReferralLeaderboardCard";
 
 const TERMS_VERSION = "2026-05-30";
 const PROGRAMS = [
@@ -276,6 +277,11 @@ const ReferralDashboard = () => {
             </div>
           </Card>
         )}
+
+        {/* Leaderboard */}
+        <div className="mb-6">
+          <ReferralLeaderboardCard limit={10} />
+        </div>
 
         {/* Referrals table */}
         <Card className="p-6 mb-6">
