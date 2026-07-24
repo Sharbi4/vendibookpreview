@@ -1,5 +1,5 @@
 // marketing-send-referral-test — Sends the Vendibook referral program marketing email
-// as a TEST to MARKETING_TEST_EMAIL + atlasmom421@gmail.com. Matches the visual
+// as a TEST to MARKETING_TEST_EMAIL + support@vendibook.com. Matches the visual
 // system used by the most recent Resend transactional email (Vendibook Report).
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import {
@@ -201,7 +201,7 @@ serve(async (req) => {
     } else {
       const testEmail = Deno.env.get("MARKETING_TEST_EMAIL");
       if (testEmail) recipients.add(testEmail);
-      recipients.add("atlasmom421@gmail.com");
+      recipients.add("support@vendibook.com");
     }
 
     const dashboardUrl = `${VENDIBOOK_BASE_URL}/referral/dashboard`;

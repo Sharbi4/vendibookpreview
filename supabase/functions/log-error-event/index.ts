@@ -14,9 +14,8 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-// Per explicit owner override (2026-06-01): high-priority error alerts route to
-// atlasmom421@gmail.com so the operator sees them immediately. Support inbox is CC'd.
-const ADMIN_EMAIL = "atlasmom421@gmail.com";
+// All error alerts route to the support inbox (owner override reverted 2026-07-24).
+const ADMIN_EMAIL = "support@vendibook.com";
 const ADMIN_CC_EMAIL = "support@vendibook.com";
 const ALERT_COOLDOWN_MINUTES = 30;
 
@@ -171,7 +170,7 @@ Deno.serve(async (req) => {
 
       try {
         const idemBucket = Math.floor(Date.now() / (ALERT_COOLDOWN_MINUTES * 60_000));
-        for (const recipient of [ADMIN_EMAIL, ADMIN_CC_EMAIL]) {
+        for (const recipient of Array.from(new Set([ADMIN_EMAIL, ADMIN_CC_EMAIL]))) {
           await admin.functions.invoke("send-transactional-email", {
             body: {
               templateName: "admin-daily-digest",

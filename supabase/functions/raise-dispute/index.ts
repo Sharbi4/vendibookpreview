@@ -224,7 +224,7 @@ serve(async (req) => {
       ...(termsBlock ? [termsBlock] : ['(No transaction_terms snapshot linked to this sale.)']),
     ];
 
-    for (const adminTo of ["support@vendibook.com", "atlasmom421@gmail.com"]) {
+    for (const adminTo of ["support@vendibook.com"]) {
       emailPromises.push(
         supabaseClient.functions.invoke("send-transactional-email", {
           body: {

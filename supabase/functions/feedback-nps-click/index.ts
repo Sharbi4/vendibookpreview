@@ -38,7 +38,7 @@ Deno.serve(async (req) => {
         .eq('id', row.id);
 
       // Best-effort instant admin ping — lets us see signal even if no comment follows.
-      for (const adminTo of ['support@vendibook.com', 'atlasmom421@gmail.com']) {
+      for (const adminTo of ['support@vendibook.com']) {
         supabase.functions.invoke('send-transactional-email', {
           body: {
             templateName: 'feedback-received-admin',

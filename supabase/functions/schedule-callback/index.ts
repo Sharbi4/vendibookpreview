@@ -18,7 +18,7 @@ interface CallbackRequest {
   preferredContact?: "phone" | "email";
 }
 
-const SUPPORT_EMAILS = ["support@vendibook.com", "atlasmom421@gmail.com"];
+const SUPPORT_EMAILS = ["support@vendibook.com"];
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });

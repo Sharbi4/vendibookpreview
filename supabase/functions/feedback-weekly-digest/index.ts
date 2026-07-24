@@ -83,7 +83,7 @@ Deno.serve(async (req) => {
   const weekLabel = `Week ending ${new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
 
   let sendErr: any = null;
-  for (const adminTo of ['support@vendibook.com', 'atlasmom421@gmail.com']) {
+  for (const adminTo of ['support@vendibook.com']) {
     const { error } = await supabase.functions.invoke('send-transactional-email', {
       body: {
         templateName: 'feedback-weekly-digest',

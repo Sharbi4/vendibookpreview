@@ -47,7 +47,7 @@ serve(async (req) => {
     });
 
     // Notify support (also silently forwarded to owner)
-    for (const adminTo of ["support@vendibook.com", "atlasmom421@gmail.com"]) {
+    for (const adminTo of ["support@vendibook.com"]) {
       await admin.functions.invoke("send-transactional-email", {
         body: {
           templateName: "support-reply",
