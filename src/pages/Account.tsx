@@ -27,6 +27,7 @@ import { CommsPreferencesPanel } from '@/components/comms/CommsPreferencesPanel'
 import HostSubscriptionCard from '@/components/account/HostSubscriptionCard';
 import { HostPerksCard } from '@/components/host/HostPerksCard';
 import { ReferAHostCard } from '@/components/host/ReferAHostCard';
+import { ReferralActivityCard } from '@/components/host/ReferralActivityCard';
 
 // Visibility badge component
 const VisibilityBadge = ({ isPublic }: { isPublic: boolean }) => (
@@ -1352,6 +1353,7 @@ const Account = () => {
           <HostSubscriptionCard />
           <HostPerksCard />
           <ReferAHostCard />
+          <ReferralActivityCard />
 
 
 
