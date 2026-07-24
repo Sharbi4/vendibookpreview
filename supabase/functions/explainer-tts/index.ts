@@ -110,8 +110,9 @@ async function synthesize(text: string, voice: string): Promise<Response> {
     headers: {
       ...corsHeaders,
       "Content-Type": "audio/mpeg",
-      // narration-tune: v4-elevenlabs-sarah
+      // narration-tune: v5-elevenlabs-conversational
       "Cache-Control": "public, max-age=86400, immutable",
+
     },
   });
 }
