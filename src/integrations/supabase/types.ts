@@ -839,6 +839,13 @@ export type Database = {
             foreignKeyName: "buyer_service_requests_purchase_id_fkey"
             columns: ["purchase_id"]
             isOneToOne: false
+            referencedRelation: "monetization_pending_reconciliation"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "buyer_service_requests_purchase_id_fkey"
+            columns: ["purchase_id"]
+            isOneToOne: false
             referencedRelation: "monetization_purchases"
             referencedColumns: ["id"]
           },
@@ -1215,6 +1222,13 @@ export type Database = {
             columns: ["code_id"]
             isOneToOne: false
             referencedRelation: "discount_codes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "discount_code_redemptions_purchase_id_fkey"
+            columns: ["purchase_id"]
+            isOneToOne: false
+            referencedRelation: "monetization_pending_reconciliation"
             referencedColumns: ["id"]
           },
           {
@@ -2327,6 +2341,13 @@ export type Database = {
             foreignKeyName: "listing_promotions_purchase_id_fkey"
             columns: ["purchase_id"]
             isOneToOne: false
+            referencedRelation: "monetization_pending_reconciliation"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "listing_promotions_purchase_id_fkey"
+            columns: ["purchase_id"]
+            isOneToOne: false
             referencedRelation: "monetization_purchases"
             referencedColumns: ["id"]
           },
@@ -2958,6 +2979,60 @@ export type Database = {
           },
         ]
       }
+      monetization_refund_events: {
+        Row: {
+          created_at: string
+          currency: string
+          id: string
+          purchase_id: string
+          raw: Json
+          refund_amount_cents: number
+          refund_status: string
+          stripe_charge_id: string | null
+          stripe_event_id: string
+          stripe_refund_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          currency?: string
+          id?: string
+          purchase_id: string
+          raw?: Json
+          refund_amount_cents: number
+          refund_status: string
+          stripe_charge_id?: string | null
+          stripe_event_id: string
+          stripe_refund_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          currency?: string
+          id?: string
+          purchase_id?: string
+          raw?: Json
+          refund_amount_cents?: number
+          refund_status?: string
+          stripe_charge_id?: string | null
+          stripe_event_id?: string
+          stripe_refund_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "monetization_refund_events_purchase_id_fkey"
+            columns: ["purchase_id"]
+            isOneToOne: false
+            referencedRelation: "monetization_pending_reconciliation"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "monetization_refund_events_purchase_id_fkey"
+            columns: ["purchase_id"]
+            isOneToOne: false
+            referencedRelation: "monetization_purchases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       newsletter_subscribers: {
         Row: {
           created_at: string
@@ -3369,6 +3444,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "permit_concierge_requests_purchase_id_fkey"
+            columns: ["purchase_id"]
+            isOneToOne: false
+            referencedRelation: "monetization_pending_reconciliation"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "permit_concierge_requests_purchase_id_fkey"
             columns: ["purchase_id"]
@@ -6054,6 +6136,79 @@ export type Database = {
           title?: string | null
         }
         Relationships: []
+      }
+      monetization_pending_reconciliation: {
+        Row: {
+          age: string | null
+          amount_cents: number | null
+          created_at: string | null
+          fulfillment_status: string | null
+          id: string | null
+          listing_id: string | null
+          paid_at: string | null
+          product_id: string | null
+          status:
+            | Database["public"]["Enums"]["monetization_purchase_status"]
+            | null
+          stripe_payment_intent_id: string | null
+          stripe_session_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          age?: never
+          amount_cents?: number | null
+          created_at?: string | null
+          fulfillment_status?: string | null
+          id?: string | null
+          listing_id?: string | null
+          paid_at?: string | null
+          product_id?: string | null
+          status?:
+            | Database["public"]["Enums"]["monetization_purchase_status"]
+            | null
+          stripe_payment_intent_id?: string | null
+          stripe_session_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          age?: never
+          amount_cents?: number | null
+          created_at?: string | null
+          fulfillment_status?: string | null
+          id?: string | null
+          listing_id?: string | null
+          paid_at?: string | null
+          product_id?: string | null
+          status?:
+            | Database["public"]["Enums"]["monetization_purchase_status"]
+            | null
+          stripe_payment_intent_id?: string | null
+          stripe_session_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "monetization_purchases_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "monetization_purchases_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "public_listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "monetization_purchases_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "monetization_products"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       public_listings: {
         Row: {
