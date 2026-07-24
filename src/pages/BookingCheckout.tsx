@@ -516,7 +516,19 @@ const BookingCheckout = () => {
         return;
       }
 
-      if (checkoutError) throw checkoutError;
+      if (checkoutError || (checkoutData && (checkoutData as { error?: string }).error)) {
+        if (checkoutWindow) checkoutWindow.close();
+        const parsed = await parseEdgeError(
+          checkoutError,
+          (checkoutData as { error?: string; code?: string } | null)?.error
+            ? { error: (checkoutData as { error?: string }).error, code: (checkoutData as { code?: string }).code }
+            : null,
+        );
+        const copy = checkoutErrorCopy(parsed);
+        toast({ title: copy.title, description: copy.description, variant: 'destructive' });
+        setIsSubmitting(false);
+        return;
+      }
       if (useEmbedded && checkoutData?.client_secret) {
         const returnUrl = `${window.location.origin}/payment-success?session_id=${checkoutData.session_id}`;
         setEmbeddedCheckout({ clientSecret: checkoutData.client_secret, returnUrl });
