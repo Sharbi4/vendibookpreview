@@ -32,6 +32,7 @@ import { PromotionHub } from './PromotionHub';
 import { BoostListingPrompt } from './BoostListingPrompt';
 import { KitchenProSuite } from './KitchenProSuite';
 import { ReferAHostCard } from '@/components/host/ReferAHostCard';
+import ReferralLeaderboardCard from '@/components/referrals/ReferralLeaderboardCard';
 import PermitsTab from './PermitsTab';
 import { ConversionFunnel } from '@/components/analytics/ConversionFunnel';
 import { RevenueChart } from '@/components/analytics/RevenueChart';
@@ -483,6 +484,7 @@ const HostDashboard = () => {
             <div className="space-y-6">
               <PromotionHub />
               <ReferAHostCard />
+              <ReferralLeaderboardCard limit={10} />
             </div>
           </Reveal>
         )}
