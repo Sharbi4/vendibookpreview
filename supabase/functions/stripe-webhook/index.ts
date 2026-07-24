@@ -1721,9 +1721,66 @@ serve(async (req) => {
         break;
       }
 
+      case "account.updated": {
+        // Stripe Connect account status sync (Express accounts)
+        const account = event.data.object as Stripe.Account;
+        logStep("Processing account.updated", {
+          accountId: account.id,
+          detailsSubmitted: account.details_submitted,
+          payoutsEnabled: account.payouts_enabled,
+          chargesEnabled: account.charges_enabled,
+        });
+
+        // Look up which user owns this connected account
+        const { data: profile } = await supabaseClient
+          .from("profiles")
+          .select("id, stripe_onboarding_complete, email, display_name, full_name")
+          .eq("stripe_account_id", account.id)
+          .maybeSingle();
+
+        if (!profile) {
+          logStep("account.updated: no matching profile", { accountId: account.id });
+          break;
+        }
+
+        const isComplete = Boolean(account.details_submitted);
+        const wasComplete = Boolean(profile.stripe_onboarding_complete);
+
+        await supabaseClient
+          .from("profiles")
+          .update({ stripe_onboarding_complete: isComplete })
+          .eq("id", profile.id);
+
+        // First-time completion: notify the user their payouts are live
+        if (isComplete && !wasComplete) {
+          await supabaseClient.from("notifications").insert({
+            user_id: profile.id,
+            type: "stripe_connect_complete",
+            title: "Payouts activated",
+            message: "Your Stripe account is verified. You can now receive payouts from Vendibook.",
+            link: "/dashboard",
+          });
+          logStep("Stripe onboarding marked complete", { userId: profile.id });
+        }
+
+        // If Stripe disabled payouts (requirements re-opened), warn the user
+        if (wasComplete && !account.payouts_enabled) {
+          await supabaseClient.from("notifications").insert({
+            user_id: profile.id,
+            type: "stripe_connect_action_required",
+            title: "Stripe needs more info",
+            message: "Stripe temporarily paused your payouts and needs additional information. Open your dashboard to resolve it.",
+            link: "/dashboard",
+          });
+          logStep("Payouts disabled, user notified", { userId: profile.id });
+        }
+        break;
+      }
+
       default:
         logStep("Unhandled event type", { type: event.type });
     }
+
 
     return new Response(JSON.stringify({ received: true }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
