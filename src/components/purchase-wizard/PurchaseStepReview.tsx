@@ -10,6 +10,7 @@ import { cn } from '@/lib/utils';
 import WhatsIncluded from '@/components/shared/WhatsIncluded';
 import WhatHappensNext, { getSalePickupSteps, getSaleFreightSteps, getSaleLocalDeliverySteps } from '@/components/shared/WhatHappensNext';
 import { EscrowInfoPopover, FeesInfoPopover } from '@/components/shared/InfoPopover';
+import { TrustModule, PAYMENT_TRUST_POINTS, PAYMENT_DISCLAIMER } from '@/components/journey';
 import type { BuyerInfo } from './PurchaseStepInfo';
 
 type FulfillmentSelection = 'pickup' | 'delivery' | 'vendibook_freight';
@@ -351,6 +352,13 @@ const PurchaseStepReview = ({
           and understand my payment is held until both parties confirm the transaction.
         </label>
       </div>
+
+      <TrustModule
+        variant="compact"
+        title="What we do to protect your payment"
+        points={PAYMENT_TRUST_POINTS}
+        disclaimer={PAYMENT_DISCLAIMER}
+      />
 
       {/* Submit Button */}
       <Button
