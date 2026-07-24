@@ -276,6 +276,7 @@ const AnimatedRoutes = () => {
           <Route path="/admin/support" element={<PageTransition><AdminSupportTickets /></PageTransition>} />
           <Route path="/admin/revenue" element={<PageTransition><AdminRevenue /></PageTransition>} />
           <Route path="/admin/monetization-ops" element={<PageTransition><AdminMonetizationOps /></PageTransition>} />
+          <Route path="/admin/billing" element={<PageTransition><AdminBilling /></PageTransition>} />
           <Route path="/services" element={<PageTransition><ServicesHub /></PageTransition>} />
           <Route path="/buyer" element={<PageTransition><BuyerDashboard /></PageTransition>} />
           <Route path="/buyer/services" element={<PageTransition><BuyerServicesHub /></PageTransition>} />
