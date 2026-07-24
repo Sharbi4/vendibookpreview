@@ -9,7 +9,11 @@ import {
   Truck,
   BarChart3,
   DollarSign,
+  Clock,
+  Banknote,
+  ShieldAlert,
 } from 'lucide-react';
+import ActionRequiredStack, { type ActionItem } from './shared/ActionRequiredStack';
 import { Button } from '@/components/ui/button';
 import { CommandStatCard } from './CommandStatCard';
 import { CommandHeader } from './CommandHeader';
@@ -243,23 +247,34 @@ const HostDashboard = () => {
         </Reveal>
 
         {activeTab === 'overview' && (() => {
-          const actionItems: import('./shared/ActionRequiredStack').ActionItem[] = [];
+          const actionItems: ActionItem[] = [];
           if (bookingStats.pending > 0) actionItems.push({
-            id: 'pending-bookings', icon: require('lucide-react').Clock, title: `${bookingStats.pending} booking request${bookingStats.pending > 1 ? 's' : ''}`, description: 'Review and reply so guests can plan.', href: '/host/bookings', cta: 'Review', tone: 'warning',
+            id: 'pending-bookings', icon: Clock,
+            title: `${bookingStats.pending} booking request${bookingStats.pending > 1 ? 's' : ''}`,
+            description: 'Review and reply so guests can plan.',
+            href: '/host/bookings', cta: 'Review', tone: 'warning',
           });
           if (!isConnected) actionItems.push({
-            id: 'stripe', icon: require('lucide-react').Banknote, title: 'Finish Stripe onboarding', description: 'Required to accept card payments and receive payouts.', href: '/dashboard?view=host&tab=payouts', cta: 'Set up', tone: 'warning',
+            id: 'stripe', icon: Banknote,
+            title: 'Finish Stripe onboarding',
+            description: 'Required to accept card payments and receive payouts.',
+            href: '/dashboard?view=host&tab=payouts', cta: 'Set up', tone: 'warning',
           });
           if (!isVerified) actionItems.push({
-            id: 'verify', icon: require('lucide-react').ShieldAlert, title: 'Verify your identity', description: 'Required before publishing a listing. Drafts are safe.', href: '/verify-identity', cta: 'Verify', tone: 'warning',
+            id: 'verify', icon: ShieldAlert,
+            title: 'Verify your identity',
+            description: 'Required before publishing a listing. Drafts are safe.',
+            href: '/verify-identity', cta: 'Verify', tone: 'warning',
           });
           if (pendingOffers.length > 0) actionItems.push({
-            id: 'offers', icon: require('lucide-react').DollarSign, title: `${pendingOffers.length} open offer${pendingOffers.length > 1 ? 's' : ''}`, href: '/dashboard?view=host&tab=sales', cta: 'Open',
+            id: 'offers', icon: DollarSign,
+            title: `${pendingOffers.length} open offer${pendingOffers.length > 1 ? 's' : ''}`,
+            href: '/dashboard?view=host&tab=sales', cta: 'Open',
           });
           if (!actionItems.length) return null;
-          const Stack = require('./shared/ActionRequiredStack').default;
-          return <Reveal><Stack items={actionItems} /></Reveal>;
+          return <Reveal><ActionRequiredStack items={actionItems} /></Reveal>;
         })()}
+
 
 
 
