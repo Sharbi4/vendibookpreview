@@ -719,6 +719,8 @@ const SaleCheckout = () => {
                           setIsAddressComplete={setIsAddressComplete}
                           fetchFreightEstimate={fetchFreightEstimate}
                           clearEstimate={clearEstimate}
+                          listingCity={listing.city}
+                          listingState={listing.state}
                           onBack={() => setCurrentStep('information')}
                           onContinue={() => {
                             if (validateStep('delivery')) {
