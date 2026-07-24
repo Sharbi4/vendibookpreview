@@ -14,9 +14,8 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-// Per explicit owner override (2026-06-01): high-priority error alerts route to
-// atlasmom421@gmail.com so the operator sees them immediately. Support inbox is CC'd.
-const ADMIN_EMAIL = "atlasmom421@gmail.com";
+// All error alerts route to the support inbox (owner override reverted 2026-07-24).
+const ADMIN_EMAIL = "support@vendibook.com";
 const ADMIN_CC_EMAIL = "support@vendibook.com";
 const ALERT_COOLDOWN_MINUTES = 30;
 
