@@ -50,7 +50,7 @@ export function HostPlanRibbon({ className = '' }: Props) {
         {isFree ? (
           <Button asChild size="sm" variant="dark-shine" className="rounded-xl">
             <Link to="/host/plans">
-              <Sparkles className="h-3.5 w-3.5 mr-1.5" />
+              <Zap className="h-3.5 w-3.5 mr-1.5" />
               Unlock Host Pro
               <ArrowRight className="h-3.5 w-3.5 ml-1.5" />
             </Link>
