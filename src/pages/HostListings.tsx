@@ -125,6 +125,9 @@ const HostListings = () => {
           </div>
         </div>
 
+        {/* Host plan ribbon */}
+        <HostPlanRibbon />
+
         {/* Drafts Section */}
         {!isLoading && draftListings.length > 0 && (
           <DraftsSection drafts={draftListings} onDelete={deleteListing} />
