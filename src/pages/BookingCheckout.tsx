@@ -576,9 +576,11 @@ const BookingCheckout = () => {
       // Close the pre-opened window if there was an error
       if (checkoutWindow) checkoutWindow.close();
       console.error('Error submitting booking:', error);
+      const parsed = await parseEdgeError(error);
+      const copy = checkoutErrorCopy(parsed);
       toast({
-        title: 'Error',
-        description: 'Failed to submit booking. Please try again.',
+        title: copy.title,
+        description: copy.description,
         variant: 'destructive',
       });
     } finally {
