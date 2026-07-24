@@ -418,12 +418,25 @@ export const AnimatedExplainer = ({ explainer, onProgress, onEnded, onSceneChang
           aria-valuemin={0}
           aria-valuemax={100}
           aria-valuenow={Math.round(progressPct)}
+          aria-valuetext={`${formatTime(elapsedMs)} of ${formatTime(totalMs)}`}
           tabIndex={0}
           onClick={(e) => {
             const rect = e.currentTarget.getBoundingClientRect();
             scrub(Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width)));
           }}
-          className="relative h-1.5 flex-1 cursor-pointer overflow-hidden rounded-full bg-muted"
+          onKeyDown={(e) => {
+            const pct = progressPct / 100;
+            if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+              // Handled globally as scene nav; swallow here so the slider
+              // doesn't double-jump when it holds focus.
+              return;
+            }
+            if (e.key === 'Home') { e.preventDefault(); e.stopPropagation(); scrub(0); }
+            else if (e.key === 'End') { e.preventDefault(); e.stopPropagation(); scrub(1); }
+            else if (e.key === 'PageUp') { e.preventDefault(); e.stopPropagation(); scrub(Math.max(0, pct - 0.1)); }
+            else if (e.key === 'PageDown') { e.preventDefault(); e.stopPropagation(); scrub(Math.min(1, pct + 0.1)); }
+          }}
+          className="relative h-1.5 flex-1 cursor-pointer overflow-hidden rounded-full bg-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background"
         >
           <div
             className="absolute inset-y-0 left-0 bg-primary"
