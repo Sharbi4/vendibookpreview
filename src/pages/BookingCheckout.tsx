@@ -1406,6 +1406,25 @@ const BookingCheckout = () => {
           clientSecret={embeddedCheckout.clientSecret}
           returnUrl={embeddedCheckout.returnUrl}
           onClose={() => setEmbeddedCheckout(null)}
+          summary={
+            <CheckoutOrderSummary
+              variant="rental"
+              coverImageUrl={listing?.cover_image_url || listing?.image_urls?.[0]}
+              title={listing?.title || 'Rental booking'}
+              subtitle={listing?.category ?? undefined}
+              lines={[
+                { label: 'Rental subtotal', amount: fees.subtotal - currentDeliveryFee },
+                ...(currentDeliveryFee > 0
+                  ? [{ label: 'Delivery', amount: currentDeliveryFee }]
+                  : []),
+                { label: 'Service fee', amount: fees.renterFee },
+                ...(depositAmount
+                  ? [{ label: 'Refundable deposit', amount: depositAmount, muted: true }]
+                  : []),
+              ]}
+              total={fees.customerTotal + (depositAmount || 0)}
+            />
+          }
         />
       ) : null}
     </div>
