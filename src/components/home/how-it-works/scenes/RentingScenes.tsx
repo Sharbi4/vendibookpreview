@@ -109,7 +109,7 @@ export const rentingScenes = [
             transition={{ delay: 0.9 }}
             className="mt-3 rounded-md bg-primary px-3 py-1.5 text-center text-xs font-bold text-primary-foreground"
           >
-            Request Sent · Awaiting host response
+            Request Submitted · Awaiting Host Approval
           </motion.div>
 
         </motion.div>
@@ -125,7 +125,7 @@ export const rentingScenes = [
           role="Host"
           title="New request · Marcus BBQ Co."
           subtitle="Sep 12 – Sep 15"
-          statuses={[{ label: 'New Request', intent: 'warning' }]}
+          statuses={[{ label: 'Request Submitted', intent: 'warning' }]}
           timeline={[
             { label: 'Request received', state: 'done' },
             { label: 'Review renter', state: 'active' },
@@ -160,7 +160,7 @@ export const rentingScenes = [
           title="Sprinter kitchen · Sep 12–15"
           subtitle="Host: Andre"
           statuses={[
-            { label: 'Payment Secured · Booking Confirmed', intent: 'success' },
+            { label: 'Payment Completed · Booking Confirmed', intent: 'success' },
           ]}
           timeline={[
             { label: 'Payment', state: 'done' },

@@ -73,8 +73,8 @@ export const hostingScenes = [
           title="Request · Marcus BBQ Co."
           subtitle="Sep 9 – Sep 11 · $540"
           statuses={[
-            { label: 'New Request', intent: 'warning' },
-            { label: 'Verification pending', intent: 'info' },
+            { label: 'Request Submitted', intent: 'warning' },
+            { label: 'Verification Needed', intent: 'info' },
           ]}
           timeline={[
             { label: 'Request received', state: 'done' },
@@ -97,7 +97,7 @@ export const hostingScenes = [
           title="Confirmed booking · Sprinter kitchen"
           subtitle="Renter: Marcus · Sep 9–11"
           statuses={[
-            { label: 'Payment Secured · Booking Confirmed', intent: 'success' },
+            { label: 'Payment Completed · Booking Confirmed', intent: 'success' },
           ]}
           timeline={[
             { label: 'Approved', state: 'done' },
