@@ -1,367 +1,168 @@
-import { useState, useEffect, useRef } from 'react';
-import { Link } from 'react-router-dom';
-import Header from '@/components/layout/Header';
-import Footer from '@/components/layout/Footer';
-import SEO from '@/components/SEO';
-import { ReportIssueButton } from '@/components/support/ReportIssueButton';
-
+import { useMemo, useState, useEffect, useDeferredValue } from "react";
+import { Link } from "react-router-dom";
+import Header from "@/components/layout/Header";
+import Footer from "@/components/layout/Footer";
+import SEO from "@/components/SEO";
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
-  AccordionTrigger} from '@/components/ui/accordion';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent } from '@/components/ui/card';
-import { cn } from '@/lib/utils';
-import { 
-  HelpCircle, 
-  ArrowRight, 
-  UserCheck, 
-  CreditCard, 
-  XCircle, 
-  Shield, 
-  Wallet, 
-  Truck, 
-  FileCheck, 
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
+import {
+  Search as SearchIcon,
+  ArrowRight,
+  HelpCircle,
   MessageCircle,
-  ChevronLeft,
-  ChevronRight,
-  List,
-  Percent
-} from 'lucide-react';
-import RoleFeeSection from '@/components/pricing/RoleFeeSection';
+  X,
+} from "lucide-react";
+import { faqCategories, allFaqEntries, type FaqAction, type FaqEntry, type FaqCategory } from "@/data/faqContent";
+import { searchFaq, relatedEntries } from "@/lib/faq/search";
+import { ReportIssueButton } from "@/components/support/ReportIssueButton";
+import { useAuth } from "@/contexts/AuthContext";
 
-interface FAQSection {
-  id: string;
-  title: string;
-  icon: React.ComponentType<{ className?: string }>;
-  questions: Array<{
-    question: string;
-    answer: string;
-  }>;
-}
+const useQueryParam = (key: string) => {
+  const [value, setValue] = useState<string>(() => {
+    if (typeof window === "undefined") return "";
+    return new URLSearchParams(window.location.search).get(key) ?? "";
+  });
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (value) params.set(key, value);
+    else params.delete(key);
+    const qs = params.toString();
+    const next = `${window.location.pathname}${qs ? `?${qs}` : ""}${window.location.hash}`;
+    window.history.replaceState(null, "", next);
+  }, [key, value]);
+  return [value, setValue] as const;
+};
 
-const faqSections: FAQSection[] = [
-  {
-    id: 'getting-started',
-    title: 'Getting Started',
-    icon: HelpCircle,
-    questions: [
-      {
-        question: 'What is Vendibook?',
-        answer: 'Vendibook is a verified marketplace where you can buy, sell, rent, or book mobile food assets—including food trucks, food trailers, carts, and more—through a secure, end-to-end platform built for trust, transparency, and fast transactions.'},
-      {
-        question: 'Who is Vendibook for?',
-        answer: 'Hosts/Sellers: Owners listing an asset for rent or sale. Renters/Buyers: People booking or purchasing an asset. Manufacturers/Builders (optional): Verified suppliers listing inventory for direct purchase.'},
-      {
-        question: 'Is Vendibook available nationwide?',
-        answer: 'Yes. Listings appear based on what\'s available in your area, and some services (like freight) vary by location.'}]},
-  {
-    id: 'fees-commission',
-    title: 'Fees & Commission',
-    icon: Percent,
-    questions: [
-      {
-        question: 'When does Vendibook charge fees?',
-        answer: 'Vendibook only charges fees when a transaction happens on-platform. All fees are shown clearly before checkout.'},
-      {
-        question: 'What is the host commission for rentals?',
-        answer: 'Hosts pay a 12.9% commission on the rental amount (excluding any refundable deposit).'},
-      {
-        question: 'What is the renter service fee?',
-        answer: 'Renters pay a 12.9% platform/service fee at checkout. This covers secure payments, identity and trust safeguards, customer support, dispute handling, and payout routing.'},
-      {
-        question: 'What is the seller commission for sales?',
-        answer: 'Sellers pay a 12.9% commission on the sale price.'},
-      {
-        question: 'Do buyers pay a platform fee on sales?',
-        answer: 'No. Buyers do not pay a platform fee on sales.'},
-      {
-        question: 'Are there additional fees for freight or shipping?',
-        answer: 'If a buyer selects buyer-paid freight, a freight/shipping charge may be added at checkout. Freight pricing and timing vary by route and carrier availability.'},
-      {
-        question: 'Are there payment processing fees?',
-        answer: 'Payment processing costs may apply depending on the payment method and region. Any applicable charges are shown before purchase.'}]},
-  {
-    id: 'verification',
-    title: 'Accounts, Verification, and Trust',
-    icon: UserCheck,
-    questions: [
-      {
-        question: 'Why does Vendibook require verification?',
-        answer: 'High-value transactions require a higher trust standard. Verification helps reduce fraud and scams, increase buyer confidence, protect payouts and prevent chargebacks, and create safer transactions for both sides.'},
-      {
-        question: 'What does "Verified" mean on Vendibook?',
-        answer: 'A "Verified" badge indicates the user has completed identity and/or account checks required for certain platform actions, such as receiving payouts or listing higher-value assets.'},
-      {
-        question: 'Do I need to verify to use Vendibook?',
-        answer: 'You can browse without verification, but verification and a connected payout account may be required to list, transact, or receive funds.'},
-      {
-        question: 'Why does Vendibook keep transactions on the platform?',
-        answer: 'Because protection depends on it. On-platform transactions enable secure payments, documentation, support coverage, and dispute handling. Off-platform deals remove these protections.'}]},
-  {
-    id: 'listings',
-    title: 'Creating a Listing',
-    icon: FileCheck,
-    questions: [
-      {
-        question: 'How do I create a listing?',
-        answer: 'Create your account, connect your payout account (required to get paid), click Create Listing, choose For Rent or For Sale, upload photos, details, and specs, set price, availability, rules, and cancellation terms, then publish.'},
-      {
-        question: 'Do I need to connect payouts before listing?',
-        answer: 'Yes. If your payout account isn\'t connected, the system can\'t route earnings correctly. Vendibook requires payout setup before you can publish.'},
-      {
-        question: 'What makes a listing perform well?',
-        answer: 'The best performing listings usually include: 8–20 clear photos (interior, exterior, equipment, storage, hookups), exact specs (dimensions, power/water needs, included equipment), transparent rules (pickup, delivery, deposit, cancellation terms), and fast response times with accurate availability.'}]},
-  {
-    id: 'payments',
-    title: 'Booking, Checkout, and Payments',
-    icon: CreditCard,
-    questions: [
-      {
-        question: 'How do payments work?',
-        answer: 'Vendibook processes payments securely online. Funds can be held and released at key milestones (like confirmation, pickup, return confirmation, or delivery confirmation) to protect both parties.'},
-      {
-        question: 'When am I charged as a renter or buyer?',
-        answer: 'Rentals: Usually charged at checkout (or per the listing\'s payment schedule if enabled). Sales: Charged at checkout when you purchase.'},
-      {
-        question: 'What payment methods are accepted?',
-        answer: 'Vendibook accepts credit/debit cards, ACH bank transfers (for large sales $5K+), Affirm (monthly payments for $35–$30,000), Afterpay (Pay in 4 installments up to $4,000), and Klarna. Some sellers also offer Pay in Person (cash) for local transactions.'},
-      {
-        question: 'What is Affirm and how does it work?',
-        answer: 'Affirm lets you split purchases between $35 and $30,000 into monthly payments. At checkout, select Affirm to see your personalized rates (0–36% APR based on credit). You\'ll know your exact payment before committing—no hidden fees. Affirm does not support recurring subscriptions.'},
-      {
-        question: 'What is Afterpay and how does it work?',
-        answer: 'Afterpay lets you split purchases up to $4,000 into 4 interest-free payments, due every 2 weeks. Select Afterpay at checkout, pay the first installment, and receive your asset immediately. Late fees may apply if payments are missed.'},
-      {
-        question: 'Why might funds be delayed or held?',
-        answer: 'Delays can occur when a payout account is newly connected, a transaction is high value, a booking requires confirmation milestones, or a dispute or review is opened. These steps exist to protect both sides and reduce fraud.'}]},
-  {
-    id: 'offers',
-    title: 'Offers & Negotiation',
-    icon: Wallet,
-    questions: [
-      {
-        question: 'Can I make an offer on a listing?',
-        answer: 'Yes! For sale listings, you can click "Make Offer" to submit a price below the asking price. Include a message explaining your offer—sellers are more likely to respond to reasonable, well-explained offers.'},
-      {
-        question: 'What happens after I submit an offer?',
-        answer: 'The seller is notified immediately. They can accept, decline, or counter your offer. You\'ll receive a notification with their response. Offers expire after 48 hours if the seller doesn\'t respond.'},
-      {
-        question: 'What is a counter-offer?',
-        answer: 'If the seller thinks your offer is too low, they can propose a different price. You\'ll have 48 hours to accept or decline their counter-offer. If accepted, you\'ll proceed to checkout at the counter-offer price.'},
-      {
-        question: 'Can I negotiate on rentals?',
-        answer: 'Rental prices are typically fixed, but you can message the host to discuss longer-term discounts or special arrangements before booking.'}]},
-  {
-    id: 'pay-in-person',
-    title: 'Pay in Person (Cash Transactions)',
-    icon: Wallet,
-    questions: [
-      {
-        question: 'What is Pay in Person?',
-        answer: 'Pay in Person allows buyers and sellers to complete transactions with cash at pickup/delivery. The seller must enable this option on their listing. No Stripe account is required for cash-only listings.'},
-      {
-        question: 'How do cash transactions work?',
-        answer: 'After submitting a purchase request, both parties confirm the transaction in-app: (1) Request Submitted → (2) Seller Confirms → (3) Buyer Confirms → (4) Completed. Payment happens in person at the agreed location.'},
-      {
-        question: 'Is Pay in Person safe?',
-        answer: 'Cash transactions carry more risk than platform payments since Vendibook cannot hold funds in escrow. We recommend meeting in public places, bringing a witness, and documenting the exchange with photos. Platform protections are limited for off-platform payments.'},
-      {
-        question: 'Do I still need to confirm the transaction?',
-        answer: 'Yes. Both the buyer and seller must confirm completion in the app to close the transaction. This creates a record and allows both parties to leave reviews.'},
-      {
-        question: 'Are there fees for Pay in Person transactions?',
-        answer: 'No. Pay in Person sales are completely free — Vendibook does not collect a commission or processing fee. The buyer pays the seller the full agreed amount at handoff.'}]},
-
-  {
-    id: 'cancellations',
-    title: 'Cancellations and Refunds',
-    icon: XCircle,
-    questions: [
-      {
-        question: 'What is Vendibook\'s cancellation policy?',
-        answer: 'Vendibook uses clear cancellation rules that are displayed on every listing page, before checkout, and inside your reservation/order details. Listings may offer different cancellation options depending on asset type and category. Your exact refund amount is always shown before you confirm.'},
-      {
-        question: 'Is there a free cancellation window?',
-        answer: 'Some bookings may include a short free-cancellation window after booking, when eligible. If applicable, the eligibility and time window are shown at checkout and in the reservation details.'},
-      {
-        question: 'How are refunds calculated?',
-        answer: 'Refund amounts depend on the listing\'s cancellation terms, time remaining before the booking start, any non-refundable discounts selected, and amount already paid (for payment schedules).'},
-      {
-        question: 'Can I get a partial refund?',
-        answer: 'Yes—partial refunds may apply when you cancel after the free-cancellation period or outside the full-refund window. Partial refund rules are shown clearly before you book.'},
-      {
-        question: 'Are fees refundable?',
-        answer: 'Some fees may be refundable depending on the timing of the cancellation and whether a full refund is issued. Your checkout screen and reservation details show what\'s refundable.'},
-      {
-        question: 'What if the host cancels?',
-        answer: 'If a host cancels, you\'ll typically receive a full refund and we\'ll help you find alternatives when available.'}]},
-  {
-    id: 'disputes',
-    title: 'Deposits, Damage, and Disputes',
-    icon: Shield,
-    questions: [
-      {
-        question: 'Does Vendibook charge a security deposit?',
-        answer: 'Some listings require a deposit or deposit-style hold. If a deposit is required, it\'s always shown before checkout.'},
-      {
-        question: 'What if something gets damaged?',
-        answer: 'If damage occurs, report it through the platform as soon as possible and include photos/videos, dates and timestamps, description of what happened, and any relevant receipts or quotes. We may temporarily pause payout while reviewing.'},
-      {
-        question: 'How does the dispute process work?',
-        answer: 'First, attempt resolution with the other party in-platform. If unresolved, open a dispute with documentation. Vendibook reviews evidence and may request additional info. A decision is issued (refund, partial refund, or denial).'},
-      {
-        question: 'How do I request a refund?',
-        answer: '1) Open the booking from your dashboard. 2) Click "Report an issue" or "Open dispute." 3) Our admin team reviews your case and determines refund eligibility. Once approved, refunds are returned to your original payment method within 5–10 business days, depending on your bank. Disputes between guests and hosts are resolved through admin mediation, where evidence from both parties is reviewed.'}]},
-  {
-    id: 'payouts',
-    title: 'Payouts and Timing',
-    icon: Wallet,
-    questions: [
-      {
-        question: 'When do hosts and sellers get paid?',
-        answer: 'Payout timing depends on your connected payout account settings, banking settlement timelines, and any transaction hold or milestone release rules.'},
-      {
-        question: 'How long do payouts take to arrive?',
-        answer: 'Most payouts arrive within a few business days after they\'re released. First-time payouts can take longer due to verification and risk review.'},
-      {
-        question: 'Can I get faster payouts?',
-        answer: 'If faster payout options are available for your connected account, you\'ll see them in your payout settings.'}]},
-  {
-    id: 'delivery',
-    title: 'Delivery, Pickup, and Freight',
-    icon: Truck,
-    questions: [
-      {
-        question: 'Can a host offer delivery?',
-        answer: 'Yes. A listing may allow pickup by the renter/buyer, delivery arranged by the renter/buyer, or Vendibook-facilitated freight (when available).'},
-      {
-        question: 'How does Vendibook-facilitated freight work?',
-        answer: 'If freight is selected, a third-party carrier is scheduled, delivery timing depends on route and carrier availability, and you\'ll receive updates when shipping is scheduled and when it ships.'},
-      {
-        question: 'Who pays for freight?',
-        answer: 'Freight may be paid by the buyer at checkout, or the seller as an incentive (like "free shipping"), deducted from proceeds.'}]},
-  {
-    id: 'documents',
-    title: 'Required Documents and Compliance',
-    icon: FileCheck,
-    questions: [
-      {
-        question: 'What documents might be required to list a rental?',
-        answer: 'Depending on category and local requirements, you may be asked for government ID, food handling certifications (where applicable), business/commercial insurance (where applicable), and additional compliance documents tied to the listing type.'},
-      {
-        question: 'Why does Vendibook require documents?',
-        answer: 'Because trust and compliance protect your business. Documents reduce bad actors, improve booking confidence, and support dispute resolution.'}]},
-  {
-    id: 'ai-tools',
-    title: 'AI Tools on Vendibook',
-    icon: HelpCircle,
-    questions: [
-      {
-        question: 'What does the AI help with?',
-        answer: 'Vendibook AI is designed to reduce friction and increase conversion, including listing creation assistance (copy, structure, clarity), pricing and optimization suggestions (where enabled), faster messaging workflows (suggested replies, summaries), and guided support for shipping, disputes, and documentation.'},
-      {
-        question: 'Where do I find the AI tools?',
-        answer: 'Look for AI features inside Create Listing steps (suggestions and improvements), Messages (reply assistance, summaries), and Help Center chat (instant policy and workflow answers).'}]},
-  {
-    id: 'earnings',
-    title: 'Earnings and Success on Vendibook',
-    icon: Wallet,
-    questions: [
-      {
-        question: 'How much can I make?',
-        answer: 'Your earnings depend on your asset type, pricing, demand, and availability. The biggest drivers of higher earnings are strong photos + accurate specs, competitive pricing, clear pickup/delivery options, fast response times, and great reviews and reliability.'},
-      {
-        question: 'Can I list multiple assets?',
-        answer: 'Yes. Many hosts grow earnings by listing multiple units and keeping calendars accurate.'}]},
-  {
-    id: 'safety',
-    title: 'Safety and Platform Rules',
-    icon: Shield,
-    questions: [
-      {
-        question: 'What if someone asks me to pay off-platform?',
-        answer: 'Do not complete off-platform transactions. It removes payment protections and dispute coverage. Report the message so we can take action.'},
-      {
-        question: 'What if I suspect fraud?',
-        answer: 'Stop communication, don\'t share personal financial details, and contact support through chat immediately.'}]},
-  {
-    id: 'support',
-    title: 'Support',
-    icon: MessageCircle,
-    questions: [
-      {
-        question: 'How do I contact Vendibook support?',
-        answer: 'Use the in-platform chat for 24/7 help. For certain account types, additional support options may appear in your Contact page.'},
-      {
-        question: 'Where can I see my reservation details, refund status, or payout status?',
-        answer: 'You can track everything inside your account: Reservations / Orders for booking and refund status, Payouts for host/seller earnings and transfer timing, Messages for communication history and support documentation.'}]}];
-
-// Generate schema.org FAQ structured data
-const generateFAQSchema = () => {
-  const allQuestions = faqSections.flatMap((section) =>
-    section.questions.map((q) => ({
-      '@type': 'Question',
-      name: q.question,
-      acceptedAnswer: {
-        '@type': 'Answer',
-        text: q.answer}}))
+const ActionLink = ({ action }: { action: FaqAction }) => {
+  const { user } = useAuth();
+  const isExternal = action.href.startsWith("http") || action.href.startsWith("mailto:") || action.href.startsWith("tel:");
+  const needsAuth = action.requiresAuth && !user;
+  const href = needsAuth ? `/auth?redirect=${encodeURIComponent(action.href)}` : action.href;
+  const label = needsAuth ? `Sign in to ${action.label.toLowerCase()}` : action.label;
+  const cls = "inline-flex items-center gap-1.5 h-8 px-3 rounded-md border border-white/15 bg-white/[0.03] hover:bg-white/[0.08] text-xs text-white/80 hover:text-white transition-colors";
+  if (isExternal) {
+    return (
+      <a href={href} className={cls}>
+        {label}
+        <ArrowRight className="h-3 w-3" />
+      </a>
+    );
+  }
+  return (
+    <Link to={href} className={cls}>
+      {label}
+      <ArrowRight className="h-3 w-3" />
+    </Link>
   );
+};
 
-  return {
-    '@context': 'https://schema.org',
-    '@type': 'FAQPage',
-    mainEntity: allQuestions};
+const EntryCard = ({ entry, category }: { entry: FaqEntry; category: FaqCategory }) => {
+  const related = useMemo(() => relatedEntries(faqCategories, entry, 3), [entry]);
+  return (
+    <AccordionItem value={entry.id} id={entry.id} className="border-white/10">
+      <AccordionTrigger className="text-left text-white hover:no-underline hover:text-primary">
+        <span>{entry.question}</span>
+      </AccordionTrigger>
+      <AccordionContent className="text-white/70 leading-relaxed">
+        <p className="whitespace-pre-line">{entry.answer}</p>
+        {entry.actions && entry.actions.length > 0 && (
+          <div className="mt-4 flex flex-wrap gap-2">
+            {entry.actions.map((a) => (
+              <ActionLink key={a.href} action={a} />
+            ))}
+          </div>
+        )}
+        {related.length > 0 && (
+          <div className="mt-5 pt-4 border-t border-white/10">
+            <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-white/40 mb-2">
+              Related
+            </div>
+            <ul className="space-y-1">
+              {related.map((r) => (
+                <li key={r.entry.id}>
+                  <a
+                    href={`#${r.entry.id}`}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      document.getElementById(r.entry.id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+                    }}
+                    className="text-xs text-white/60 hover:text-white transition-colors inline-flex items-start gap-1.5"
+                  >
+                    <ArrowRight className="h-3 w-3 mt-0.5 shrink-0 text-white/30" />
+                    <span>{r.entry.question}</span>
+                    <span className="text-white/30 ml-1">· {r.category.title}</span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+        <div className="sr-only" aria-hidden>Category: {category.title}</div>
+      </AccordionContent>
+    </AccordionItem>
+  );
 };
 
 const FAQ = () => {
-  const faqSchema = generateFAQSchema();
-  const [activeSection, setActiveSection] = useState<string>('getting-started');
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
-  const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const [query, setQuery] = useQueryParam("q");
+  const [categoryId, setCategoryId] = useQueryParam("cat");
+  const deferredQuery = useDeferredValue(query);
 
-  // Track scroll position to highlight active section
-  useEffect(() => {
-    const handleScroll = () => {
-      const scrollPosition = window.scrollY + 150; // Offset for header
+  const results = useMemo(() => {
+    return searchFaq(faqCategories, deferredQuery, {
+      categoryId: categoryId || undefined,
+    });
+  }, [deferredQuery, categoryId]);
 
-      for (const section of faqSections) {
-        const element = sectionRefs.current[section.id];
-        if (element) {
-          const { offsetTop, offsetHeight } = element;
-          if (scrollPosition >= offsetTop && scrollPosition < offsetTop + offsetHeight) {
-            setActiveSection(section.id);
-            break;
-          }
-        }
-      }
-    };
-
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
-  const scrollToSection = (sectionId: string) => {
-    const element = sectionRefs.current[sectionId];
-    if (element) {
-      const yOffset = -100; // Offset for sticky header
-      const y = element.getBoundingClientRect().top + window.pageYOffset + yOffset;
-      window.scrollTo({ top: y, behavior: 'smooth' });
+  const groupedResults = useMemo(() => {
+    const map = new Map<string, { category: FaqCategory; entries: FaqEntry[] }>();
+    for (const r of results) {
+      const bucket = map.get(r.category.id);
+      if (bucket) bucket.entries.push(r.entry);
+      else map.set(r.category.id, { category: r.category, entries: [r.entry] });
     }
-  };
+    // preserve category source order when not searching
+    if (!deferredQuery) {
+      return faqCategories
+        .filter((c) => map.has(c.id))
+        .map((c) => map.get(c.id)!);
+    }
+    return Array.from(map.values());
+  }, [results, deferredQuery]);
+
+  const faqSchema = useMemo(
+    () => ({
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      mainEntity: allFaqEntries.map((e) => ({
+        "@type": "Question",
+        name: e.question,
+        acceptedAnswer: { "@type": "Answer", text: e.answer },
+      })),
+    }),
+    [],
+  );
+
+  const activeCategory = categoryId
+    ? faqCategories.find((c) => c.id === categoryId)
+    : undefined;
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <div className="min-h-screen flex flex-col bg-[#08080a] text-white">
       <SEO
-        title="Frequently Asked Questions - Vendibook"
-        description="Find answers to common questions about Vendibook - renting, buying, payments, cancellations, refunds, verification, and more."
+        title="Help & FAQ — Vendibook"
+        description="Answers to how Vendibook works: buying, selling, renting, hosting, payments, payouts, deposits, refunds, verification, documents, and more."
         canonical="/faq"
         type="website"
       />
-
-      {/* FAQ Schema */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
@@ -370,230 +171,156 @@ const FAQ = () => {
       <Header />
 
       <main className="flex-1">
-        {/* Hero Section - GRADIENT */}
-          <section className="relative py-16 md:py-24 overflow-hidden">
-          {/* Neutral gradient */}
-          <div className="absolute inset-0 bg-gradient-to-br from-foreground/[0.04] via-foreground/[0.02] to-foreground/[0.03]" />
-          <div className="absolute inset-0 overflow-hidden pointer-events-none">
-            <div className="absolute top-20 right-20 w-96 h-96 bg-foreground/[0.03] rounded-full blur-3xl" />
-            <div className="absolute bottom-20 left-20 w-80 h-80 bg-foreground/[0.02] rounded-full blur-3xl" />
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-foreground/[0.02] rounded-full blur-3xl" />
+        {/* Hero */}
+        <section className="relative pt-12 md:pt-16 pb-8">
+          <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-[500px] overflow-hidden">
+            <div className="absolute top-[-160px] left-1/2 -translate-x-1/2 w-[900px] h-[900px] rounded-full bg-[radial-gradient(circle_at_center,hsl(var(--primary)/0.15),transparent_60%)] blur-3xl" />
           </div>
-
-          <div className="container relative z-10 text-center">
-            <Badge variant="secondary" className="mb-4 bg-foreground/10 border-foreground/15">
+          <div className="container relative z-10 max-w-4xl text-center">
+            <Badge variant="secondary" className="mb-4 bg-white/[0.06] border-white/10 text-white/70">
               <HelpCircle className="h-3 w-3 mr-1" />
-              FAQ
+              Help & FAQ
             </Badge>
-            <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
-              Frequently Asked Questions
+            <h1 className="text-3xl md:text-5xl font-medium tracking-tight">
+              Everything about how Vendibook works.
             </h1>
-            <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto">
-              Everything you need to know about using Vendibook
+            <p className="mt-3 text-white/60 text-sm md:text-base max-w-2xl mx-auto">
+              Search over 100 questions, filter by topic, and jump straight to the action you need.
             </p>
-            <div className="mt-6 flex items-center justify-center gap-3">
-              <ReportIssueButton
-                variant="outline"
-                label="Can't find your answer? Report an issue"
-                context={{ featureArea: "other" }}
-              />
-            </div>
 
-          </div>
-        </section>
-
-        {/* Main Content with Sidebar - NATURAL */}
-        <section className="py-12 md:py-16 bg-background">
-          <div className="container">
-            <div className="flex gap-8">
-              {/* Collapsible Sticky Sidebar - Hidden on mobile */}
-              <aside 
-                className={cn(
-                  "hidden lg:block shrink-0 transition-all duration-300",
-                  isSidebarCollapsed ? "w-14" : "w-64"
-                )}
-              >
-                <div className="sticky top-24">
-                  <div className={cn(
-                    "bg-card border rounded-xl shadow-sm overflow-hidden transition-all duration-300",
-                    isSidebarCollapsed ? "p-2" : "p-4"
-                  )}>
-                    {/* Sidebar Header */}
-                    <div className={cn(
-                      "flex items-center justify-between mb-4",
-                      isSidebarCollapsed && "flex-col gap-2"
-                    )}>
-                      {!isSidebarCollapsed && (
-                        <div className="flex items-center gap-2">
-                          <List className="h-4 w-4 text-foreground/60" />
-                          <span className="font-semibold text-sm text-foreground">Contents</span>
-                        </div>
-                      )}
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 shrink-0"
-                        onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-                        aria-label={isSidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-                      >
-                        {isSidebarCollapsed ? (
-                          <ChevronRight className="h-4 w-4" />
-                        ) : (
-                          <ChevronLeft className="h-4 w-4" />
-                        )}
-                      </Button>
-                    </div>
-
-                    {/* Navigation Links */}
-                    <nav className="space-y-1">
-                      {faqSections.map((section) => {
-                        const isActive = activeSection === section.id;
-                        const Icon = section.icon;
-                        
-                        return (
-                          <button
-                            key={section.id}
-                            onClick={() => scrollToSection(section.id)}
-                            className={cn(
-                              "w-full flex items-center gap-2 rounded-lg transition-all duration-200 text-left",
-                              isSidebarCollapsed 
-                                ? "p-2 justify-center" 
-                                : "px-3 py-2",
-                              isActive 
-                                ? "bg-foreground/10 text-foreground border-l-2 border-foreground" 
-                                : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-                            )}
-                            title={isSidebarCollapsed ? section.title : undefined}
-                          >
-                            <Icon className={cn(
-                              "shrink-0",
-                              isSidebarCollapsed ? "h-5 w-5" : "h-4 w-4"
-                            )} />
-                            {!isSidebarCollapsed && (
-                              <span className="text-sm truncate">{section.title}</span>
-                            )}
-                          </button>
-                        );
-                      })}
-                    </nav>
-
-                    {/* Back to top */}
-                    {!isSidebarCollapsed && (
-                      <div className="mt-4 pt-4 border-t">
-                        <button
-                          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-                          className="text-xs text-muted-foreground hover:text-primary transition-colors flex items-center gap-1"
-                        >
-                          <ArrowRight className="h-3 w-3 rotate-[-90deg]" />
-                          Back to top
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </aside>
-
-              {/* Main FAQ Content */}
-              <div className="flex-1 max-w-4xl">
-                {/* Mobile Table of Contents */}
-                <div className="lg:hidden mb-8 pb-8 border-b">
-                  <div className="flex items-center gap-2 mb-4">
-                    <List className="h-4 w-4 text-foreground/60" />
-                    <span className="font-semibold text-sm text-foreground">Jump to section</span>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {faqSections.map((section) => (
-                      <button
-                        key={section.id}
-                        onClick={() => scrollToSection(section.id)}
-                        className={cn(
-                          "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium border transition-colors",
-                          activeSection === section.id
-                            ? "bg-foreground/10 border-foreground/20 text-foreground"
-                            : "bg-background hover:bg-primary/10 hover:border-primary/30"
-                        )}
-                      >
-                        <section.icon className="h-3.5 w-3.5" />
-                        {section.title}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* FAQ Sections */}
-                {faqSections.map((section, sectionIndex) => (
-                  <div
-                    key={section.id}
-                    id={section.id}
-                    ref={(el) => (sectionRefs.current[section.id] = el)}
-                    className={sectionIndex > 0 ? 'mt-12 pt-12 border-t' : ''}
+            {/* Search bar */}
+            <div className="mt-8 max-w-2xl mx-auto">
+              <label htmlFor="faq-search" className="sr-only">Search FAQ</label>
+              <div className="relative">
+                <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40" />
+                <Input
+                  id="faq-search"
+                  type="search"
+                  inputMode="search"
+                  placeholder="Search payouts, deposits, cancellations, verification…"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  className="h-12 pl-10 pr-10 bg-white/[0.04] border-white/15 text-white placeholder:text-white/40 text-base md:text-sm"
+                />
+                {query && (
+                  <button
+                    type="button"
+                    aria-label="Clear search"
+                    onClick={() => setQuery("")}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-md hover:bg-white/10 flex items-center justify-center text-white/50 hover:text-white"
                   >
-                    <div className="flex items-center gap-3 mb-6">
-                      <div className="p-2 rounded-lg bg-foreground/10">
-                        <section.icon className="h-5 w-5 text-foreground/70" />
-                      </div>
-                      <h2 className="text-2xl font-bold text-foreground">{section.title}</h2>
-                    </div>
+                    <X className="h-4 w-4" />
+                  </button>
+                )}
+              </div>
 
-                    {section.id === 'fees-commission' && (
-                      <div className="mb-8">
-                        <RoleFeeSection />
-                      </div>
+              {/* Category chips */}
+              <div className="mt-4 flex flex-wrap gap-2 justify-center">
+                <button
+                  onClick={() => setCategoryId("")}
+                  className={cn(
+                    "text-[11px] px-3 py-1.5 rounded-full border transition-colors",
+                    !categoryId
+                      ? "bg-primary/90 text-white border-primary"
+                      : "bg-white/[0.03] border-white/10 text-white/60 hover:text-white hover:border-white/25",
+                  )}
+                >
+                  All topics
+                </button>
+                {faqCategories.map((c) => (
+                  <button
+                    key={c.id}
+                    onClick={() => setCategoryId(c.id)}
+                    className={cn(
+                      "text-[11px] px-3 py-1.5 rounded-full border transition-colors",
+                      categoryId === c.id
+                        ? "bg-primary/90 text-white border-primary"
+                        : "bg-white/[0.03] border-white/10 text-white/60 hover:text-white hover:border-white/25",
                     )}
-
-                    <Accordion type="single" collapsible className="w-full">
-                      {section.questions.map((faq, index) => (
-                        <AccordionItem key={index} value={`${section.id}-${index}`}>
-                          <AccordionTrigger className="text-left text-foreground hover:no-underline hover:text-primary">
-                            {faq.question}
-                          </AccordionTrigger>
-                          <AccordionContent className="text-muted-foreground leading-relaxed">
-                            {faq.answer}
-                          </AccordionContent>
-                        </AccordionItem>
-                      ))}
-                    </Accordion>
-                  </div>
+                  >
+                    {c.title}
+                  </button>
                 ))}
+              </div>
+
+              {/* Result summary */}
+              <div className="mt-3 text-xs text-white/40" aria-live="polite">
+                {query || activeCategory
+                  ? `${results.length} answer${results.length === 1 ? "" : "s"}${activeCategory ? ` in ${activeCategory.title}` : ""}${query ? ` for "${query}"` : ""}`
+                  : `${allFaqEntries.length} answers across ${faqCategories.length} topics`}
               </div>
             </div>
           </div>
         </section>
 
-        {/* Still Need Help CTA - GRADIENT */}
-        <section className="relative py-12 md:py-16 overflow-hidden">
-          {/* Neutral gradient */}
-          <div className="absolute inset-0 bg-gradient-to-br from-foreground/[0.03] via-foreground/[0.02] to-foreground/[0.02]" />
-          <div className="absolute inset-0 overflow-hidden pointer-events-none">
-            <div className="absolute top-10 left-20 w-72 h-72 bg-foreground/[0.02] rounded-full blur-3xl" />
-            <div className="absolute bottom-10 right-20 w-80 h-80 bg-foreground/[0.02] rounded-full blur-3xl" />
-          </div>
-          <div className="container max-w-3xl text-center relative z-10">
-            <Card className="border-2 border-foreground/10 bg-card/80 backdrop-blur-xl">
-              <CardContent className="pt-8 pb-8">
-                <div className="p-3 rounded-xl bg-foreground/10 w-fit mx-auto mb-4">
-                  <MessageCircle className="h-6 w-6 text-foreground/70" />
-                </div>
-                <h2 className="text-2xl font-bold text-foreground mb-2">Still Have Questions?</h2>
-                <p className="text-muted-foreground mb-6">
-                  Our support team is available 24/7 to help you with any questions or concerns.
+        {/* Results */}
+        <section className="py-8 md:py-12">
+          <div className="container max-w-4xl">
+            {results.length === 0 ? (
+              <div className="text-center py-16 border border-white/10 rounded-2xl bg-white/[0.02]">
+                <MessageCircle className="h-10 w-10 mx-auto text-white/30 mb-3" />
+                <h2 className="text-lg font-medium">No matching answers</h2>
+                <p className="text-sm text-white/50 mt-1 max-w-md mx-auto">
+                  Try different words, remove the category filter, or ask our support team directly.
                 </p>
-                <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                  <Button asChild variant="dark-shine" size="lg">
-                    <Link to="/contact">
-                      Contact Support
-                      <ArrowRight className="h-4 w-4 ml-2" />
-                    </Link>
+                <div className="mt-5 flex flex-wrap gap-2 justify-center">
+                  <Button asChild variant="outline" size="sm">
+                    <Link to="/contact">Contact support</Link>
                   </Button>
-                  <Button asChild variant="dark-shine" size="lg">
-                    <Link to="/help">
-                      Visit Help Center
-                      <ArrowRight className="h-4 w-4 ml-2" />
-                    </Link>
-                  </Button>
+                  <ReportIssueButton
+                    variant="outline"
+                    label="Report a missing answer"
+                    context={{ featureArea: "other" }}
+                  />
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            ) : (
+              <div className="space-y-10">
+                {groupedResults.map(({ category, entries }) => (
+                  <section key={category.id} id={category.id}>
+                    <div className="flex items-baseline justify-between mb-3">
+                      <h2 className="text-xl md:text-2xl font-medium tracking-tight">{category.title}</h2>
+                      <span className="text-[10px] uppercase tracking-[0.2em] font-mono text-white/30">
+                        {entries.length} answer{entries.length === 1 ? "" : "s"}
+                      </span>
+                    </div>
+                    {category.blurb && (
+                      <p className="text-sm text-white/55 mb-4 max-w-2xl">{category.blurb}</p>
+                    )}
+                    <Accordion type="multiple" className="w-full rounded-xl border border-white/10 bg-white/[0.02] divide-y divide-white/10 px-4">
+                      {entries.map((entry) => (
+                        <EntryCard key={entry.id} entry={entry} category={category} />
+                      ))}
+                    </Accordion>
+                  </section>
+                ))}
+              </div>
+            )}
+          </div>
+        </section>
+
+        {/* Still need help */}
+        <section className="py-12 border-t border-white/[0.06]">
+          <div className="container max-w-3xl text-center">
+            <h2 className="text-2xl font-medium tracking-tight">Still have questions?</h2>
+            <p className="text-white/60 mt-2 mb-6 text-sm">
+              Call (725) 755-9598, email support@vendibook.com, or open a support ticket.
+              Live support is available Mon–Fri, 9am–5pm Arizona time.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <Button asChild size="lg">
+                <Link to="/contact">
+                  Contact support
+                  <ArrowRight className="h-4 w-4 ml-2" />
+                </Link>
+              </Button>
+              <Button asChild variant="outline" size="lg">
+                <Link to="/help">
+                  Visit Help Center
+                  <ArrowRight className="h-4 w-4 ml-2" />
+                </Link>
+              </Button>
+            </div>
           </div>
         </section>
       </main>
