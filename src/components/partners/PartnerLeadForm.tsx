@@ -25,14 +25,14 @@ interface Props {
 }
 
 const schema = z.object({
-  service: z.string().trim().min(2).max(200),
-  location: z.string().trim().max(200).optional(),
-  budget: z.string().trim().max(50).optional(),
-  timeline: z.string().trim().max(80).optional(),
-  notes: z.string().trim().max(1000).optional(),
-  contactName: z.string().trim().max(120).optional(),
-  contactEmail: z.string().trim().email().max(200).optional(),
-  contactPhone: z.string().trim().max(40).optional(),
+  service: z.string().trim().min(2, 'Please describe the service you need.').max(200),
+  location: z.string().trim().max(200).optional().or(z.literal('')),
+  budget: z.string().trim().max(50).optional().or(z.literal('')),
+  timeline: z.string().trim().max(80).optional().or(z.literal('')),
+  notes: z.string().trim().max(1000).optional().or(z.literal('')),
+  contactName: z.string().trim().max(120).optional().or(z.literal('')),
+  contactEmail: z.string().trim().email('Enter a valid email').max(200).optional().or(z.literal('')),
+  contactPhone: z.string().trim().max(40).optional().or(z.literal('')),
 });
 
 /**
