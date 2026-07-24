@@ -27,6 +27,7 @@ import { EnhancedAnalytics } from './EnhancedAnalytics';
 import { RevenueAnalyticsCard } from './RevenueAnalyticsCard';
 import { HostOffersSection } from './HostOffersSection';
 import { ListingInsightsPanel } from './ListingInsightsPanel';
+import { AICopilotLauncher } from './AICopilotLauncher';
 import { PromotionHub } from './PromotionHub';
 import { BoostListingPrompt } from './BoostListingPrompt';
 import { KitchenProSuite } from './KitchenProSuite';
