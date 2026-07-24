@@ -2,6 +2,12 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 
+/**
+ * Canonical host tier used throughout the app for gating.
+ * DB `host_subscriptions.tier` may hold catalog slugs
+ * (`host_starter`, `host_growth`, `host_operator`, `seller_plus_*`, plus
+ * legacy `starter`/`pro`/`premium`); resolveTier() normalises those.
+ */
 export type HostTier = 'free' | 'starter' | 'pro' | 'premium';
 
 const TIER_RANK: Record<HostTier, number> = {
@@ -13,8 +19,39 @@ const TIER_RANK: Record<HostTier, number> = {
 
 const ACTIVE_STATUSES = new Set(['active', 'trialing', 'past_due']);
 
+/**
+ * Map any DB tier string (legacy or new catalog slug) to the canonical rank.
+ * Missing / unknown → 'free'. Annual variants collapse to the same rank as
+ * their monthly counterpart.
+ */
+function resolveTier(raw: string | null | undefined): { tier: HostTier; label: string } {
+  if (!raw) return { tier: 'free', label: 'Free' };
+  const key = raw.toLowerCase().replace(/_annual$/, '').replace(/_monthly$/, '');
+  switch (key) {
+    // Legacy
+    case 'starter': return { tier: 'starter', label: 'Starter' };
+    case 'pro': return { tier: 'pro', label: 'Pro' };
+    case 'premium': return { tier: 'premium', label: 'Premium' };
+    // New catalog
+    case 'seller_plus':
+    case 'seller-plus':
+    case 'host_starter':
+    case 'host-starter':
+      return { tier: 'starter', label: key.startsWith('seller') ? 'Seller Plus' : 'Host Starter' };
+    case 'host_growth':
+    case 'host-growth':
+      return { tier: 'pro', label: 'Host Growth' };
+    case 'host_operator':
+    case 'host-operator':
+      return { tier: 'premium', label: 'Host Operator' };
+    default:
+      return { tier: 'free', label: 'Free' };
+  }
+}
+
 export interface HostEntitlements {
   tier: HostTier;
+  planLabel: string;
   status: string | null;
   isActive: boolean;
   isPastDue: boolean;
@@ -31,6 +68,7 @@ export interface HostEntitlements {
 
 const FREE: HostEntitlements = {
   tier: 'free',
+  planLabel: 'Free',
   status: null,
   isActive: false,
   isPastDue: false,
@@ -64,13 +102,12 @@ export function useHostEntitlements(): HostEntitlements & { isLoading: boolean }
 
       const status = sub.status ?? null;
       const isActive = !!status && ACTIVE_STATUSES.has(status);
-      const tier: HostTier = isActive
-        ? ((sub.tier as HostTier) ?? 'free')
-        : 'free';
+      const { tier, label } = isActive ? resolveTier(sub.tier) : { tier: 'free' as HostTier, label: 'Free' };
       const rank = TIER_RANK[tier] ?? 0;
 
       return {
         tier,
+        planLabel: label,
         status,
         isActive,
         isPastDue: status === 'past_due',

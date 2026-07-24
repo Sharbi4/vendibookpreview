@@ -25,6 +25,7 @@ import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { CommsPreferencesPanel } from '@/components/comms/CommsPreferencesPanel';
 import HostSubscriptionCard from '@/components/account/HostSubscriptionCard';
+import PackagesIntro from '@/components/monetization/PackagesIntro';
 import { HostPerksCard } from '@/components/host/HostPerksCard';
 import { PurchaseHistoryCard } from '@/components/monetization/PurchaseHistoryCard';
 import { ReferAHostCard } from '@/components/host/ReferAHostCard';
@@ -1353,6 +1354,7 @@ const Account = () => {
 
           {/* Host Subscription */}
           <HostSubscriptionCard />
+          <PackagesIntro variant="compact" className="mt-2" />
           <HostPerksCard />
           <PurchaseHistoryCard />
           <ReferAHostCard />
