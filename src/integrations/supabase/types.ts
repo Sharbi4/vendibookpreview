@@ -110,6 +110,13 @@ export type Database = {
             referencedRelation: "listings"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "analytics_events_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "public_listings"
+            referencedColumns: ["id"]
+          },
         ]
       }
       app_feature_flags: {
@@ -227,10 +234,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "asset_requests_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "public_listings"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "asset_requests_matched_listing_id_fkey"
             columns: ["matched_listing_id"]
             isOneToOne: false
             referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "asset_requests_matched_listing_id_fkey"
+            columns: ["matched_listing_id"]
+            isOneToOne: false
+            referencedRelation: "public_listings"
             referencedColumns: ["id"]
           },
         ]
@@ -735,6 +756,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "booking_requests_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "public_listings"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "booking_requests_payout_hold_set_by_fkey"
             columns: ["payout_hold_set_by"]
             isOneToOne: false
@@ -908,6 +936,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "contest_entries_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "public_listings"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "contest_entries_promotion_id_fkey"
             columns: ["promotion_id"]
             isOneToOne: false
@@ -1061,6 +1096,13 @@ export type Database = {
             columns: ["listing_id"]
             isOneToOne: false
             referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conversations_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "public_listings"
             referencedColumns: ["id"]
           },
           {
@@ -1528,6 +1570,13 @@ export type Database = {
             referencedRelation: "listings"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "favorites_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "public_listings"
+            referencedColumns: ["id"]
+          },
         ]
       }
       feedback_email_sent: {
@@ -1728,6 +1777,13 @@ export type Database = {
             referencedRelation: "listings"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "listing_ai_media_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "public_listings"
+            referencedColumns: ["id"]
+          },
         ]
       }
       listing_analytics_daily: {
@@ -1808,6 +1864,13 @@ export type Database = {
             referencedRelation: "listings"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "listing_blocked_dates_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "public_listings"
+            referencedColumns: ["id"]
+          },
         ]
       }
       listing_blocked_times: {
@@ -1847,6 +1910,13 @@ export type Database = {
             columns: ["listing_id"]
             isOneToOne: false
             referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "listing_blocked_times_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "public_listings"
             referencedColumns: ["id"]
           },
         ]
@@ -1911,6 +1981,13 @@ export type Database = {
             referencedRelation: "listings"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "listing_events_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "public_listings"
+            referencedColumns: ["id"]
+          },
         ]
       }
       listing_leads: {
@@ -1955,6 +2032,13 @@ export type Database = {
             referencedRelation: "listings"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "listing_leads_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "public_listings"
+            referencedColumns: ["id"]
+          },
         ]
       }
       listing_required_documents: {
@@ -1997,6 +2081,13 @@ export type Database = {
             columns: ["listing_id"]
             isOneToOne: false
             referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "listing_required_documents_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "public_listings"
             referencedColumns: ["id"]
           },
         ]
@@ -2071,6 +2162,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "listing_rewards_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "public_listings"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "listing_rewards_promotion_id_fkey"
             columns: ["promotion_id"]
             isOneToOne: false
@@ -2113,6 +2211,13 @@ export type Database = {
             columns: ["listing_id"]
             isOneToOne: false
             referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "listing_views_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "public_listings"
             referencedColumns: ["id"]
           },
         ]
@@ -2557,6 +2662,13 @@ export type Database = {
             referencedRelation: "listings"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "offers_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "public_listings"
+            referencedColumns: ["id"]
+          },
         ]
       }
       orchestration_decisions: {
@@ -2927,6 +3039,13 @@ export type Database = {
             columns: ["pinned_listing_id"]
             isOneToOne: false
             referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profiles_pinned_listing_id_fkey"
+            columns: ["pinned_listing_id"]
+            isOneToOne: false
+            referencedRelation: "public_listings"
             referencedColumns: ["id"]
           },
         ]
@@ -3616,6 +3735,13 @@ export type Database = {
             referencedRelation: "listings"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "reviews_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "public_listings"
+            referencedColumns: ["id"]
+          },
         ]
       }
       risk_flags: {
@@ -3670,6 +3796,13 @@ export type Database = {
             columns: ["listing_id"]
             isOneToOne: false
             referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "risk_flags_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "public_listings"
             referencedColumns: ["id"]
           },
         ]
@@ -3813,6 +3946,13 @@ export type Database = {
             columns: ["listing_id"]
             isOneToOne: false
             referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sale_transactions_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "public_listings"
             referencedColumns: ["id"]
           },
           {
@@ -4663,6 +4803,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "transaction_terms_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "public_listings"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "transaction_terms_previous_terms_id_fkey"
             columns: ["previous_terms_id"]
             isOneToOne: false
@@ -4957,6 +5104,234 @@ export type Database = {
           start_date?: string | null
           state?: string | null
           title?: string | null
+        }
+        Relationships: []
+      }
+      public_listings: {
+        Row: {
+          accept_card_payment: boolean | null
+          accept_cash_payment: boolean | null
+          access_instructions: string | null
+          address: string | null
+          amenities: string[] | null
+          available_from: string | null
+          available_to: string | null
+          buffer_time_mins: number | null
+          category: Database["public"]["Enums"]["listing_category"] | null
+          city: string | null
+          cover_image_url: string | null
+          created_at: string | null
+          daily_enabled: boolean | null
+          delivery_fee: number | null
+          delivery_instructions: string | null
+          delivery_radius_miles: number | null
+          deposit_amount: number | null
+          description: string | null
+          featured_at: string | null
+          featured_enabled: boolean | null
+          featured_expires_at: string | null
+          featured_source: string | null
+          freight_category: string | null
+          freight_payer: string | null
+          fulfillment_type:
+            | Database["public"]["Enums"]["fulfillment_type"]
+            | null
+          guest_draft_token: string | null
+          height_inches: number | null
+          highlights: string[] | null
+          host_id: string | null
+          hourly_enabled: boolean | null
+          hourly_schedule: Json | null
+          hourly_special_pricing: Json | null
+          hours_of_access: string | null
+          id: string | null
+          image_urls: string[] | null
+          instant_book: boolean | null
+          latitude: number | null
+          length_inches: number | null
+          location_notes: string | null
+          longitude: number | null
+          max_hours: number | null
+          min_hours: number | null
+          min_notice_hours: number | null
+          mode: Database["public"]["Enums"]["listing_mode"] | null
+          operating_hours_end: string | null
+          operating_hours_start: string | null
+          pending_featured_payment: Json | null
+          pickup_instructions: string | null
+          pickup_location_text: string | null
+          postal_code: string | null
+          price_daily: number | null
+          price_hourly: number | null
+          price_monthly: number | null
+          price_sale: number | null
+          price_weekly: number | null
+          proof_notary_enabled: boolean | null
+          published_at: string | null
+          rental_buffer_days: number | null
+          rental_min_days: number | null
+          slot_names: string[] | null
+          state: string | null
+          status: Database["public"]["Enums"]["listing_status"] | null
+          subcategory: string | null
+          title: string | null
+          total_slots: number | null
+          updated_at: string | null
+          vendibook_freight_enabled: boolean | null
+          video_urls: string[] | null
+          view_count: number | null
+          weight_lbs: number | null
+          width_inches: number | null
+        }
+        Insert: {
+          accept_card_payment?: boolean | null
+          accept_cash_payment?: boolean | null
+          access_instructions?: string | null
+          address?: string | null
+          amenities?: string[] | null
+          available_from?: string | null
+          available_to?: string | null
+          buffer_time_mins?: number | null
+          category?: Database["public"]["Enums"]["listing_category"] | null
+          city?: string | null
+          cover_image_url?: string | null
+          created_at?: string | null
+          daily_enabled?: boolean | null
+          delivery_fee?: number | null
+          delivery_instructions?: string | null
+          delivery_radius_miles?: number | null
+          deposit_amount?: number | null
+          description?: string | null
+          featured_at?: string | null
+          featured_enabled?: boolean | null
+          featured_expires_at?: string | null
+          featured_source?: string | null
+          freight_category?: string | null
+          freight_payer?: string | null
+          fulfillment_type?:
+            | Database["public"]["Enums"]["fulfillment_type"]
+            | null
+          guest_draft_token?: string | null
+          height_inches?: number | null
+          highlights?: string[] | null
+          host_id?: string | null
+          hourly_enabled?: boolean | null
+          hourly_schedule?: Json | null
+          hourly_special_pricing?: Json | null
+          hours_of_access?: string | null
+          id?: string | null
+          image_urls?: string[] | null
+          instant_book?: boolean | null
+          latitude?: number | null
+          length_inches?: number | null
+          location_notes?: string | null
+          longitude?: number | null
+          max_hours?: number | null
+          min_hours?: number | null
+          min_notice_hours?: number | null
+          mode?: Database["public"]["Enums"]["listing_mode"] | null
+          operating_hours_end?: string | null
+          operating_hours_start?: string | null
+          pending_featured_payment?: Json | null
+          pickup_instructions?: string | null
+          pickup_location_text?: string | null
+          postal_code?: string | null
+          price_daily?: number | null
+          price_hourly?: number | null
+          price_monthly?: number | null
+          price_sale?: number | null
+          price_weekly?: number | null
+          proof_notary_enabled?: boolean | null
+          published_at?: string | null
+          rental_buffer_days?: number | null
+          rental_min_days?: number | null
+          slot_names?: string[] | null
+          state?: string | null
+          status?: Database["public"]["Enums"]["listing_status"] | null
+          subcategory?: string | null
+          title?: string | null
+          total_slots?: number | null
+          updated_at?: string | null
+          vendibook_freight_enabled?: boolean | null
+          video_urls?: string[] | null
+          view_count?: number | null
+          weight_lbs?: number | null
+          width_inches?: number | null
+        }
+        Update: {
+          accept_card_payment?: boolean | null
+          accept_cash_payment?: boolean | null
+          access_instructions?: string | null
+          address?: string | null
+          amenities?: string[] | null
+          available_from?: string | null
+          available_to?: string | null
+          buffer_time_mins?: number | null
+          category?: Database["public"]["Enums"]["listing_category"] | null
+          city?: string | null
+          cover_image_url?: string | null
+          created_at?: string | null
+          daily_enabled?: boolean | null
+          delivery_fee?: number | null
+          delivery_instructions?: string | null
+          delivery_radius_miles?: number | null
+          deposit_amount?: number | null
+          description?: string | null
+          featured_at?: string | null
+          featured_enabled?: boolean | null
+          featured_expires_at?: string | null
+          featured_source?: string | null
+          freight_category?: string | null
+          freight_payer?: string | null
+          fulfillment_type?:
+            | Database["public"]["Enums"]["fulfillment_type"]
+            | null
+          guest_draft_token?: string | null
+          height_inches?: number | null
+          highlights?: string[] | null
+          host_id?: string | null
+          hourly_enabled?: boolean | null
+          hourly_schedule?: Json | null
+          hourly_special_pricing?: Json | null
+          hours_of_access?: string | null
+          id?: string | null
+          image_urls?: string[] | null
+          instant_book?: boolean | null
+          latitude?: number | null
+          length_inches?: number | null
+          location_notes?: string | null
+          longitude?: number | null
+          max_hours?: number | null
+          min_hours?: number | null
+          min_notice_hours?: number | null
+          mode?: Database["public"]["Enums"]["listing_mode"] | null
+          operating_hours_end?: string | null
+          operating_hours_start?: string | null
+          pending_featured_payment?: Json | null
+          pickup_instructions?: string | null
+          pickup_location_text?: string | null
+          postal_code?: string | null
+          price_daily?: number | null
+          price_hourly?: number | null
+          price_monthly?: number | null
+          price_sale?: number | null
+          price_weekly?: number | null
+          proof_notary_enabled?: boolean | null
+          published_at?: string | null
+          rental_buffer_days?: number | null
+          rental_min_days?: number | null
+          slot_names?: string[] | null
+          state?: string | null
+          status?: Database["public"]["Enums"]["listing_status"] | null
+          subcategory?: string | null
+          title?: string | null
+          total_slots?: number | null
+          updated_at?: string | null
+          vendibook_freight_enabled?: boolean | null
+          video_urls?: string[] | null
+          view_count?: number | null
+          weight_lbs?: number | null
+          width_inches?: number | null
         }
         Relationships: []
       }
