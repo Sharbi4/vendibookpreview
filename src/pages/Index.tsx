@@ -51,15 +51,17 @@ const Index = () => {
   // Prefetch listings data in parallel with lazy component loading
   useEffect(() => {
     queryClient.prefetchQuery({
-      queryKey: ['home-listings'],
+      queryKey: ['home-listings-v2'],
       queryFn: async () => {
-        const { data, error } = await supabase
-          .from('listings')
-          .select('*')
-          .eq('status', 'published')
+        const { data, error } = await excludeTestListings(
+          supabase
+            .from('listings')
+            .select('*')
+            .eq('status', 'published')
+        )
           .order('published_at', { ascending: false })
           .limit(12);
-        
+
         if (error) throw error;
         return data;
       },

@@ -154,13 +154,14 @@ const CategoryCarousel = ({ config, listings, hostVerificationMap, isLoading }: 
 const CategoryCarousels = () => {
   // Fetch all published listings
   const { data: allListings = [], isLoading: isLoadingListings } = useQuery({
-    queryKey: ['category-carousel-listings'],
+    queryKey: ['category-carousel-listings-v2'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('listings')
-        .select('*')
-        .eq('status', 'published')
-        .order('published_at', { ascending: false });
+      const { data, error } = await excludeTestListings(
+        supabase
+          .from('listings')
+          .select('*')
+          .eq('status', 'published')
+      ).order('published_at', { ascending: false });
 
       if (error) throw error;
       return data;

@@ -55,15 +55,16 @@ const ListingsSections = () => {
   const navigate = useNavigate();
 
   const { data: rentListings = [], isLoading: rentLoading } = useQuery({
-    queryKey: ['home-row-rent'],
+    queryKey: ['home-row-rent-v2'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('listings')
-        .select('*')
-        .eq('status', 'published')
-        .eq('mode', 'rent')
-        .in('category', RENT_CATEGORIES)
-        .not('title', 'ilike', 'Demo%')
+      const { data, error } = await excludeTestListings(
+        supabase
+          .from('listings')
+          .select('*')
+          .eq('status', 'published')
+          .eq('mode', 'rent')
+          .in('category', RENT_CATEGORIES)
+      )
         .order('published_at', { ascending: false })
         .limit(ROW_LIMIT);
       if (error) throw error;
@@ -73,15 +74,16 @@ const ListingsSections = () => {
   });
 
   const { data: saleListings = [], isLoading: saleLoading } = useQuery({
-    queryKey: ['home-row-sale'],
+    queryKey: ['home-row-sale-v2'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('listings')
-        .select('*')
-        .eq('status', 'published')
-        .eq('mode', 'sale')
-        .in('category', BASE_CATEGORIES)
-        .not('title', 'ilike', 'Demo%')
+      const { data, error } = await excludeTestListings(
+        supabase
+          .from('listings')
+          .select('*')
+          .eq('status', 'published')
+          .eq('mode', 'sale')
+          .in('category', BASE_CATEGORIES)
+      )
         .order('published_at', { ascending: false })
         .limit(ROW_LIMIT);
       if (error) throw error;
@@ -91,14 +93,15 @@ const ListingsSections = () => {
   });
 
   const { data: truckListings = [], isLoading: trucksLoading } = useQuery({
-    queryKey: ['home-row-trucks'],
+    queryKey: ['home-row-trucks-v2'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('listings')
-        .select('*')
-        .eq('status', 'published')
-        .eq('category', 'food_truck')
-        .not('title', 'ilike', 'Demo%')
+      const { data, error } = await excludeTestListings(
+        supabase
+          .from('listings')
+          .select('*')
+          .eq('status', 'published')
+          .eq('category', 'food_truck')
+      )
         .order('published_at', { ascending: false })
         .limit(ROW_LIMIT);
       if (error) throw error;
@@ -108,14 +111,15 @@ const ListingsSections = () => {
   });
 
   const { data: trailerListings = [], isLoading: trailersLoading } = useQuery({
-    queryKey: ['home-row-trailers'],
+    queryKey: ['home-row-trailers-v2'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('listings')
-        .select('*')
-        .eq('status', 'published')
-        .eq('category', 'food_trailer')
-        .not('title', 'ilike', 'Demo%')
+      const { data, error } = await excludeTestListings(
+        supabase
+          .from('listings')
+          .select('*')
+          .eq('status', 'published')
+          .eq('category', 'food_trailer')
+      )
         .order('published_at', { ascending: false })
         .limit(ROW_LIMIT);
       if (error) throw error;
