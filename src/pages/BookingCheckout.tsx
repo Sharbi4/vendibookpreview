@@ -366,7 +366,8 @@ const BookingCheckout = () => {
     })();
 
     // Pre-open a blank window BEFORE async calls to avoid popup blockers
-    const checkoutWindow = isInIframe ? window.open('about:blank', '_blank') : null;
+    const wantsEmbedded = isEmbeddedCheckoutEnabled() && (listing?.instant_book ?? false);
+    const checkoutWindow = !wantsEmbedded && isInIframe ? window.open('about:blank', '_blank') : null;
 
     setIsSubmitting(true);
 
@@ -471,7 +472,8 @@ const BookingCheckout = () => {
       // For Instant Book: use regular checkout (immediate capture)
       // For Request to Book: use authorization hold (capture on approval)
       const checkoutFunction = listing.instant_book ? 'create-checkout' : 'create-booking-hold';
-      
+      const useEmbedded = wantsEmbedded && checkoutFunction === 'create-checkout';
+
       const { data: checkoutData, error: checkoutError } = await supabase.functions.invoke(checkoutFunction, {
         body: {
           booking_id: bookingResult.id,
@@ -482,6 +484,7 @@ const BookingCheckout = () => {
           deposit_amount: depositAmount,
           referral_code: referralValid ? referralCode : undefined,
           terms_id: termsGate.termsId,
+          ...(useEmbedded ? { ui_mode: 'elements' } : {}),
         },
       });
 
