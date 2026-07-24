@@ -100,17 +100,6 @@
     </image:image>
   </url>
   <url>
-    <loc>https://vendibook.com/listing/4e50a07a-6909-411b-a4e0-429fee24c52a</loc>
-    <lastmod>2026-07-24</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/7825c02f-90ed-4e89-b173-dfae547ab1c8/4e50a07a-6909-411b-a4e0-429fee24c52a/1780430632481-ow7rui.jpg</image:loc>
-      <image:title>Immaculate Custom 2018 Ford F59 Food Truck by Prestige (Only 5,100 Miles!) </image:title>
-      <image:caption>Immaculate Custom 2018 Ford F59 Food Truck by Prestige (Only 5,100 Miles!)  on Vendibook</image:caption>
-    </image:image>
-  </url>
-  <url>
     <loc>https://vendibook.com/listing/dd552f16-5099-46b9-b7dd-64c44d7bc0c4</loc>
     <lastmod>2026-07-14</lastmod>
     <changefreq>weekly</changefreq>
@@ -130,6 +119,17 @@
       <image:loc>https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=800</image:loc>
       <image:title>Coffee &amp; Espresso Trailer</image:title>
       <image:caption>Coffee &amp; Espresso Trailer on Vendibook</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://vendibook.com/listing/4e50a07a-6909-411b-a4e0-429fee24c52a</loc>
+    <lastmod>2026-07-24</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/7825c02f-90ed-4e89-b173-dfae547ab1c8/4e50a07a-6909-411b-a4e0-429fee24c52a/1780430632481-ow7rui.jpg</image:loc>
+      <image:title>Immaculate Custom 2018 Ford F59 Food Truck by Prestige (Only 5,100 Miles!) </image:title>
+      <image:caption>Immaculate Custom 2018 Ford F59 Food Truck by Prestige (Only 5,100 Miles!)  on Vendibook</image:caption>
     </image:image>
   </url>
   <url>
