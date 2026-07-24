@@ -28,6 +28,22 @@ function shapeForNarration(input: string): string {
   // Real breath at paragraph-scale sentence breaks.
   t = t.replace(/\. +(?=[A-Z])/g, ".\n\n");
 
+  // Marketing hook openers get an energetic lift + pause. These are our
+  // "hey, listen up" beats — they should land, not drift by.
+  t = t.replace(
+    /\b(Hey|Okay|Alright|Now|So|Picture this|Imagine this|Think about this|Here's the thing|Here's the kicker|Here's the money part|Let me walk you through|Let me show you)\b[,—]?/gi,
+    "$1 —",
+  );
+
+  // Numbered step callouts — punchy, presentation cadence.
+  t = t.replace(
+    /\b(Step (?:one|two|three|four|five|six|seven|eight|nine|ten))\b\s*[—-]?\s*/gi,
+    "$1. ",
+  );
+
+  // Rhetorical questions land harder with a beat after them.
+  t = t.replace(/\?\s+(?=[A-Z])/g, "? … ");
+
   // Micro-pause before list intros and clarifiers that otherwise get rushed.
   const clarifiers = [
     "such as", "including", "for example", "for instance",
@@ -39,9 +55,16 @@ function shapeForNarration(input: string): string {
     t = t.replace(re, `, ${phrase}`);
   }
 
-  // Slight lift + pause around key product nouns.
+  // Slight lift + pause around key product nouns — the words we want the
+  // listener to actually remember.
   t = t.replace(
-    /\b(booking calendar|host dashboard|buyer dashboard|renter dashboard|seller dashboard|purchase dashboard|sale dashboard|payout timeline|payment status|next action|next required action|transaction timeline|handoff confirmation|handoff confirmations)\b/g,
+    /\b(booking calendar|host dashboard|buyer dashboard|renter dashboard|seller dashboard|purchase dashboard|sale dashboard|payout timeline|payment status|next action|next required action|transaction timeline|handoff confirmation|handoff confirmations|referrals link|referrals)\b/g,
+    "— $1 —",
+  );
+
+  // Emphasize the value words with a light pause — marketing punch.
+  t = t.replace(
+    /\b(completely free|always free|one-hundred-percent free|no commission|no buyer fee|zero guesswork|clean record|mission control|home base)\b/gi,
     "— $1 —",
   );
 
@@ -54,8 +77,9 @@ function shapeForNarration(input: string): string {
 
   // Normalize ellipses.
   t = t.replace(/\.{3,}/g, "…");
-  // Collapse doubled commas.
+  // Collapse doubled commas / dashes.
   t = t.replace(/,\s*,/g, ",");
+  t = t.replace(/—\s*—/g, "—");
 
   return t;
 }
@@ -81,18 +105,22 @@ async function synthesize(text: string, voice: string): Promise<Response> {
       },
       body: JSON.stringify({
         text: shaped,
-        // eleven_multilingual_v2 — highest-quality narration, great prosody
-        // for long marketing copy.
+        // eleven_multilingual_v2 — highest-quality narration, best prosody
+        // range for long marketing copy.
         model_id: "eleven_multilingual_v2",
+        // Marketing-VO tuning:
+        //  - lower stability = more pitch variety and emotional range
+        //  - high style      = strong inflection, follows punctuation cues
+        //  - speaker boost   = presence / clarity on small speakers
+        //  - speed 0.94      = enough room for the punch to land
         voice_settings: {
-          stability: 0.42,
-          similarity_boost: 0.78,
-          style: 0.55,
+          stability: 0.32,
+          similarity_boost: 0.8,
+          style: 0.72,
           use_speaker_boost: true,
-          speed: 0.96,
+          speed: 0.94,
         },
       }),
-
     },
   );
 
@@ -110,8 +138,10 @@ async function synthesize(text: string, voice: string): Promise<Response> {
     headers: {
       ...corsHeaders,
       "Content-Type": "audio/mpeg",
-      // narration-tune: v5-elevenlabs-conversational
+      // narration-tune: v6-elevenlabs-marketing-vo
       "Cache-Control": "public, max-age=86400, immutable",
+
+
 
     },
   });
