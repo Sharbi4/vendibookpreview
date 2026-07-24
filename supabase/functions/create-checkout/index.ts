@@ -42,6 +42,9 @@ interface CheckoutRequest {
   // fresh terms row, preserving the acknowledgement stamp written by
   // acknowledge-terms in the FinalReviewSheet flow.
   terms_id?: string | null;
+  // When 'elements', create an embedded Payment Element session (client_secret returned).
+  // When 'hosted' (default fallback), create a redirect Checkout session (url returned).
+  ui_mode?: 'hosted' | 'elements';
 }
 
 serve(async (req) => {
@@ -91,7 +94,9 @@ serve(async (req) => {
       freight_cost: rawFreightCost,
       referral_code: rawReferralCode,
       terms_id: draftTermsId,
+      ui_mode: uiModeRaw,
     } = body;
+    const uiMode: 'hosted' | 'elements' = uiModeRaw === 'elements' ? 'elements' : 'hosted';
     const referral_code = rawReferralCode ? String(rawReferralCode).trim().toUpperCase().slice(0, 32) : '';
     
     // Handle null values from request body (null !== undefined, so defaults don't apply)
