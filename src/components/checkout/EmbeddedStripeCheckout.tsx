@@ -223,7 +223,14 @@ const PayForm = ({
           no wallets are available on this device / domain. */}
       <div className={expressAvailable ? 'space-y-3' : 'hidden'}>
         <ExpressCheckoutElement
-          options={{ buttonHeight: 48 }}
+          options={{
+            buttonHeight: 48,
+            buttonTheme: { applePay: 'black', googlePay: 'black' },
+            buttonType: { applePay: 'plain', googlePay: 'plain' },
+            layout: { maxColumns: 3, maxRows: 1, overflow: 'auto' },
+            paymentMethodOrder: ['apple_pay', 'google_pay', 'link'],
+            paymentMethods: { applePay: 'auto', googlePay: 'auto', link: 'auto' },
+          }}
           onReady={(event) => {
             setExpressAvailable(
               Boolean(event.availablePaymentMethods && Object.keys(event.availablePaymentMethods).length > 0),
