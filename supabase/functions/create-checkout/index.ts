@@ -705,29 +705,20 @@ serve(async (req) => {
     });
     logStep("Checkout session created", { sessionId: session.id, url: session.url, idempotencyKey });
 
-    return new Response(
-      JSON.stringify({
-        url: uiMode === 'hosted' ? session.url : null,
-        client_secret: uiMode === 'custom' ? (session as any).client_secret ?? null : null,
-        ui_mode: uiMode,
-        session_id: session.id,
-        customer_total: customerTotal / 100,
-        platform_fee: applicationFee / 100,
-        host_receives: hostReceives / 100,
-        terms_id,
-        terms_version: TERMS_VERSION,
-      }),
-      {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 200,
-      }
-    );
+    return jsonResponse(200, {
+      url: uiMode === 'hosted' ? session.url : null,
+      client_secret: uiMode === 'custom' ? (session as any).client_secret ?? null : null,
+      ui_mode: uiMode,
+      session_id: session.id,
+      customer_total: customerTotal / 100,
+      platform_fee: applicationFee / 100,
+      host_receives: hostReceives / 100,
+      terms_id,
+      terms_version: TERMS_VERSION,
+    });
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     logStep("ERROR", { message: errorMessage });
-    return new Response(JSON.stringify({ error: errorMessage }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 500,
-    });
+    return unknownErrorResponse(error);
   }
 });
