@@ -243,6 +243,15 @@ serve(async (req) => {
           quantity: 1,
         };
 
+    const sessionMetadata: Record<string, string> = {
+      product_id: product.id,
+      product_slug: product.slug,
+      user_id: user.id,
+      listing_id: body.listing_id ?? "",
+      idempotency_key: idempotencyKey,
+    };
+    if (body.consent_id) sessionMetadata.consent_id = body.consent_id;
+
     const session = await stripe.checkout.sessions.create(
       {
         customer: customerId,
@@ -251,13 +260,23 @@ serve(async (req) => {
         mode: product.billing_type === "recurring" ? "subscription" : "payment",
         success_url: successUrl,
         cancel_url: cancelUrl,
-        metadata: {
-          product_id: product.id,
-          product_slug: product.slug,
-          user_id: user.id,
-          listing_id: body.listing_id ?? "",
-          idempotency_key: idempotencyKey,
-        },
+        metadata: sessionMetadata,
+        // Mirror the consent + product context onto the Subscription itself so
+        // handleSubscriptionChange can link host_subscriptions.consent_id even
+        // on downstream events (renewals, updates) where session metadata is
+        // not attached.
+        ...(product.billing_type === "recurring"
+          ? {
+              subscription_data: {
+                metadata: {
+                  product_slug: product.slug,
+                  user_id: user.id,
+                  tier: product.slug,
+                  ...(body.consent_id ? { consent_id: body.consent_id } : {}),
+                },
+              },
+            }
+          : {}),
       },
       { idempotencyKey: `stripe-${idempotencyKey}` },
     );
