@@ -169,48 +169,117 @@ export const ListingCardMini = ({
   variant = 'neutral',
   label,
   large = false,
+  focus = 'sharp',
+  price = '$248',
+  rating = '4.9',
 }: {
   variant?: 'neutral' | 'primary';
   label?: string;
   large?: boolean;
-}) => (
-  <div
-    className={`relative overflow-hidden rounded-2xl border ${
-      variant === 'primary' ? 'border-primary/60 ring-1 ring-primary/30' : 'border-border'
-    } bg-card shadow-[0_10px_30px_-12px_hsl(var(--foreground)/0.35)] ${large ? 'h-40 w-56' : 'h-32 w-40'}`}
-  >
+  /** 'sharp' foreground card, or 'blurred' — used to build DOF stacks behind the hero card. */
+  focus?: 'sharp' | 'blurred';
+  price?: string;
+  rating?: string;
+}) => {
+  const isBlurred = focus === 'blurred';
+  return (
     <div
-      className="relative h-2/3 w-full overflow-hidden"
-      style={{
-        backgroundImage: [
-          'radial-gradient(70% 55% at 30% 25%, hsl(var(--primary) / 0.35), transparent 65%)',
-          'radial-gradient(60% 50% at 80% 90%, hsl(var(--foreground) / 0.22), transparent 70%)',
-          'linear-gradient(135deg, hsl(var(--muted)) 0%, hsl(var(--muted-foreground)/0.18) 100%)',
-        ].join(','),
-      }}
+      className={`relative overflow-hidden rounded-2xl border ${
+        variant === 'primary' ? 'border-primary/60 ring-1 ring-primary/30' : 'border-border'
+      } bg-card shadow-[0_20px_45px_-18px_hsl(var(--primary)/0.35),0_10px_25px_-12px_hsl(var(--foreground)/0.35)] ${
+        large ? 'h-44 w-60' : 'h-36 w-44'
+      }`}
+      style={isBlurred ? { filter: 'blur(6px) saturate(85%)', opacity: 0.55 } : undefined}
     >
-      {/* soft glossy sheen */}
-      <div className="absolute inset-0 bg-gradient-to-b from-white/15 via-transparent to-black/15" />
-      <div className="absolute inset-x-2 bottom-1.5 flex items-center gap-1">
-        <div className="h-1.5 w-1.5 rounded-full bg-white/80" />
-        <div className="h-1.5 w-1.5 rounded-full bg-white/50" />
-        <div className="h-1.5 w-1.5 rounded-full bg-white/30" />
-      </div>
-    </div>
-    <div className="flex items-center justify-between px-3 py-2">
-      <div className="space-y-1">
-        <div className="h-2 w-14 rounded-full bg-foreground/40" />
-        <div className="h-1.5 w-9 rounded-full bg-foreground/15" />
-      </div>
-      {label && (
-        <span
-          className={`rounded-full px-2 py-0.5 text-[10px] font-bold shadow-sm ${
-            variant === 'primary' ? 'bg-primary text-primary-foreground' : 'bg-muted text-foreground'
-          }`}
-        >
-          {label}
+      {/* Photo area: layered mesh + product silhouette + sharpening highlight */}
+      <div
+        className="relative h-[62%] w-full overflow-hidden"
+        style={{
+          backgroundImage: [
+            'radial-gradient(120% 90% at 20% 10%, hsl(var(--primary) / 0.55), transparent 55%)',
+            'radial-gradient(90% 80% at 90% 100%, hsl(var(--foreground) / 0.55), transparent 65%)',
+            'radial-gradient(60% 60% at 65% 40%, hsl(var(--primary) / 0.25), transparent 70%)',
+            'linear-gradient(135deg, hsl(var(--muted-foreground) / 0.35) 0%, hsl(var(--foreground) / 0.55) 100%)',
+          ].join(','),
+        }}
+      >
+        {/* Subject silhouette — reads as a crisp product photo */}
+        <div
+          aria-hidden
+          className="absolute left-1/2 top-[58%] h-20 w-24 -translate-x-1/2 -translate-y-1/2 rounded-[28%_35%_30%_32%/32%_28%_35%_30%] bg-gradient-to-br from-white/30 via-white/10 to-transparent shadow-[inset_0_-8px_16px_hsl(var(--foreground)/0.35),0_6px_18px_hsl(var(--foreground)/0.45)]"
+        />
+        {/* Sharpening top edge highlight */}
+        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/70 to-transparent" />
+        {/* Glossy sheen + soft vignette */}
+        <div className="absolute inset-0 bg-gradient-to-b from-white/20 via-transparent to-black/25" />
+        <div className="absolute inset-0" style={{ boxShadow: 'inset 0 0 30px hsl(var(--foreground)/0.35)' }} />
+        {/* Film-grain style noise via SVG for crispness on retina */}
+        <svg aria-hidden className="absolute inset-0 h-full w-full opacity-[0.12] mix-blend-overlay">
+          <filter id={`lcm-noise-${large ? 'l' : 's'}`}>
+            <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" stitchTiles="stitch" />
+          </filter>
+          <rect width="100%" height="100%" filter={`url(#lcm-noise-${large ? 'l' : 's'})`} />
+        </svg>
+        {/* Pagination dots */}
+        <div className="absolute inset-x-2 bottom-1.5 flex items-center gap-1">
+          <div className="h-1.5 w-1.5 rounded-full bg-white/90 shadow-sm" />
+          <div className="h-1.5 w-1.5 rounded-full bg-white/55" />
+          <div className="h-1.5 w-1.5 rounded-full bg-white/30" />
+        </div>
+        {/* Rating chip */}
+        <span className="absolute right-2 top-2 inline-flex items-center gap-0.5 rounded-full bg-background/90 px-1.5 py-0.5 text-[9px] font-bold text-foreground shadow-sm ring-1 ring-border/60 backdrop-blur">
+          <span className="text-primary">★</span>
+          <span>{rating}</span>
         </span>
-      )}
+      </div>
+      {/* Meta row */}
+      <div className="flex items-center justify-between px-3 py-2">
+        <div className="space-y-1">
+          <div className="h-2 w-16 rounded-full bg-foreground/55" />
+          <div className="text-[11px] font-bold leading-none text-foreground">{price}</div>
+        </div>
+        {label && (
+          <span
+            className={`rounded-full px-2 py-0.5 text-[10px] font-bold shadow-sm ${
+              variant === 'primary' ? 'bg-primary text-primary-foreground' : 'bg-muted text-foreground'
+            }`}
+          >
+            {label}
+          </span>
+        )}
+      </div>
+      {/* Inner 1px highlight ring for crispness */}
+      <div aria-hidden className="pointer-events-none absolute inset-0 rounded-2xl ring-1 ring-inset ring-white/10" />
+    </div>
+  );
+};
+
+/**
+ * ListingCardStack — hero card with soft, out-of-focus twin cards behind it
+ * for depth-of-field. Use in scenes where a "featured" listing needs cinematic
+ * separation from its context (search results, favorites, recommendations).
+ */
+export const ListingCardStack = ({
+  variant = 'primary',
+  label,
+  price,
+  rating,
+}: {
+  variant?: 'neutral' | 'primary';
+  label?: string;
+  price?: string;
+  rating?: string;
+}) => (
+  <div className="relative">
+    {/* DOF ghosts — behind + offset, blurred */}
+    <div className="absolute -left-6 -top-3 rotate-[-6deg]">
+      <ListingCardMini focus="blurred" />
+    </div>
+    <div className="absolute -right-6 -bottom-2 rotate-[5deg]">
+      <ListingCardMini focus="blurred" />
+    </div>
+    <div className="relative">
+      <ListingCardMini variant={variant} label={label} large price={price} rating={rating} />
     </div>
   </div>
 );
@@ -771,26 +840,45 @@ export const AppFrame = ({
   children: ReactNode;
   live?: boolean;
 }) => (
-  <div className="relative w-full max-w-md overflow-hidden rounded-2xl border border-border bg-card/95 shadow-[0_30px_80px_-30px_hsl(var(--primary)/0.45),0_15px_40px_-15px_hsl(var(--foreground)/0.35)] ring-1 ring-border/60 backdrop-blur">
-    {/* Title bar */}
-    <div className="flex items-center gap-2 border-b border-border/70 bg-muted/40 px-3 py-2">
-      <div className="flex items-center gap-1.5">
-        <span className="h-2.5 w-2.5 rounded-full bg-[#ff5f57]" />
-        <span className="h-2.5 w-2.5 rounded-full bg-[#febc2e]" />
-        <span className="h-2.5 w-2.5 rounded-full bg-[#28c840]" />
+  <div className="relative w-full max-w-md">
+    {/* DOF backdrop — soft, blurred, offset ghost frame for cinematic depth. */}
+    <div
+      aria-hidden
+      className="pointer-events-none absolute -inset-3 -z-10 rounded-3xl opacity-70"
+      style={{
+        background:
+          'radial-gradient(60% 55% at 30% 20%, hsl(var(--primary) / 0.35), transparent 70%), radial-gradient(55% 50% at 80% 90%, hsl(var(--foreground) / 0.25), transparent 72%)',
+        filter: 'blur(18px)',
+      }}
+    />
+    <div
+      aria-hidden
+      className="pointer-events-none absolute -right-4 -top-3 h-full w-full -z-10 rounded-2xl border border-border/40 bg-card/60 opacity-60"
+      style={{ filter: 'blur(4px)', transform: 'rotate(2deg) scale(0.96)' }}
+    />
+    <div className="relative overflow-hidden rounded-2xl border border-border bg-card/95 shadow-[0_30px_80px_-30px_hsl(var(--primary)/0.45),0_15px_40px_-15px_hsl(var(--foreground)/0.35)] ring-1 ring-border/60 backdrop-blur">
+      {/* Title bar */}
+      <div className="flex items-center gap-2 border-b border-border/70 bg-muted/40 px-3 py-2">
+        <div className="flex items-center gap-1.5">
+          <span className="h-2.5 w-2.5 rounded-full bg-[#ff5f57]" />
+          <span className="h-2.5 w-2.5 rounded-full bg-[#febc2e]" />
+          <span className="h-2.5 w-2.5 rounded-full bg-[#28c840]" />
+        </div>
+        <div className="mx-2 flex flex-1 items-center gap-1.5 rounded-md bg-background/80 px-2 py-1 text-[10px] font-medium text-muted-foreground ring-1 ring-border/60">
+          <Lock className="h-2.5 w-2.5 text-primary" />
+          <span className="truncate"><span className="text-foreground/70">{url}</span>{path}</span>
+        </div>
+        {live && (
+          <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-primary ring-1 ring-primary/30">
+            <LiveDot />
+            Live
+          </span>
+        )}
       </div>
-      <div className="mx-2 flex flex-1 items-center gap-1.5 rounded-md bg-background/80 px-2 py-1 text-[10px] font-medium text-muted-foreground ring-1 ring-border/60">
-        <Lock className="h-2.5 w-2.5 text-primary" />
-        <span className="truncate"><span className="text-foreground/70">{url}</span>{path}</span>
-      </div>
-      {live && (
-        <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-primary ring-1 ring-primary/30">
-          <LiveDot />
-          Live
-        </span>
-      )}
+      <div className="p-4">{children}</div>
+      {/* Crisp inner highlight for retina sharpness */}
+      <div aria-hidden className="pointer-events-none absolute inset-0 rounded-2xl ring-1 ring-inset ring-white/5" />
     </div>
-    <div className="p-4">{children}</div>
   </div>
 );
 
