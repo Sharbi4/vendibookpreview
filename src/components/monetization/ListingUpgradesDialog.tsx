@@ -15,6 +15,9 @@ interface Props {
   listingId: string;
   /** Optional custom trigger; defaults to a compact outline button. */
   trigger?: React.ReactNode;
+  /** Controlled open state. Omit to let the component manage its own state. */
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
 /**
@@ -22,19 +25,32 @@ interface Props {
  * White Glove) for a specific listing. Each card's CTA hits Stripe Checkout via
  * create-monetization-checkout and returns to the dashboard.
  */
-export function ListingUpgradesDialog({ listingId, trigger }: Props) {
-  const [open, setOpen] = useState(false);
+export function ListingUpgradesDialog({
+  listingId,
+  trigger,
+  open: openProp,
+  onOpenChange,
+}: Props) {
+  const [internalOpen, setInternalOpen] = useState(false);
+  const isControlled = openProp !== undefined;
+  const open = isControlled ? openProp : internalOpen;
+  const setOpen = (next: boolean) => {
+    if (!isControlled) setInternalOpen(next);
+    onOpenChange?.(next);
+  };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        {trigger ?? (
-          <Button variant="outline" size="sm" className="h-9 rounded-xl">
-            <TrendingUp className="mr-2 h-4 w-4" />
-            Upgrades
-          </Button>
-        )}
-      </DialogTrigger>
+      {!isControlled && (
+        <DialogTrigger asChild>
+          {trigger ?? (
+            <Button variant="outline" size="sm" className="h-9 rounded-xl">
+              <TrendingUp className="mr-2 h-4 w-4" />
+              Upgrades
+            </Button>
+          )}
+        </DialogTrigger>
+      )}
       <DialogContent className="max-w-4xl">
         <DialogHeader>
           <DialogTitle>Upgrade this listing</DialogTitle>
