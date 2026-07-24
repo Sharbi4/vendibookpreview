@@ -194,7 +194,7 @@ export default function ProtectedSalePage() {
           </Card>
         ) : (
           <>
-            <JourneyProgress steps={STEPS} currentStep={currentStep} className="mb-6" />
+            <JourneyProgress steps={STEPS} currentIndex={STEP_ORDER.indexOf(currentStep)} className="mb-6" />
 
             <div className="mb-6 grid gap-3 rounded-2xl border border-white/10 bg-white/[0.03] p-5 sm:grid-cols-3">
               <Stat label="Sale price" value={formatCents(ps.sale_price_cents)} />
