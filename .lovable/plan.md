@@ -1,138 +1,46 @@
+## Diagnosis (confirmed)
 
-## See How Vendibook Works — Homepage Section
+Two separate issues combine into what you're hearing:
 
-A new homepage section featuring 4 clickable tiles (Buying, Renting, Selling, Hosting), each opening a premium modal that plays an in-browser animated explainer starring "Vendi", our marketplace guide character.
+1. **The "buzzing" is not audio noise from a broken file** — it's the intentional ambient pad in `src/components/home/how-it-works/audio/ambientBed.ts` (two detuned sine oscillators + slow LFO through a lowpass filter). It's meant to sit *under* the narrator's voice. With no voice on top, it sounds like a hum/buzz on its own.
+2. **The narration is missing** because `explainer-tts` calls the Lovable AI Gateway, which is returning `402 Not enough credits` (verified in the edge function logs). So every scene plays the pad with nothing over it.
 
-### Video approach
+The project already has ElevenLabs wired up (`ELEVENLABS_API_KEY` is used by `supabase/functions/listing-narration/index.ts`), so we can switch the explainer voiceover to ElevenLabs and get natural narration without touching billing.
 
-MP4 rendering isn't practical inline in this app runtime (Remotion is a separate rendering pipeline, not a runtime player). Instead, each explainer is built as a **React + Framer Motion + SVG animated sequence** — same visual quality bar, fully controllable, captioned, and lightweight. The modal API is structured so a future MP4 can drop in without changing the tile grid or section markup (each explainer entry has a `videoSource` field; when present, the modal renders `<video>` instead of `<AnimatedExplainer />`).
+## Fix
 
-### Placement
+### 1. Switch `explainer-tts` to ElevenLabs
 
-Insert on `src/pages/Index.tsx` immediately after `<AnnouncementBanner />` and before `<HomepageFeaturedRow />` — early enough to educate confused visitors, after the value prop.
+Rewrite `supabase/functions/explainer-tts/index.ts` to call ElevenLabs Text‑to‑Speech instead of the Lovable AI Gateway:
 
-### Routes (all verified to already exist)
+- Model: `eleven_multilingual_v2` (highest quality, best for long marketing narration).
+- Voice: **Sarah** (`EXAVITQu4vr4xnSDxMaL`) as the default — warm, neutral, conversational narrator. Allow `?voice=` override.
+- Output: `mp3_44100_128` (query string, per ElevenLabs API contract).
+- Voice settings tuned for narration: `stability: 0.55`, `similarity_boost: 0.75`, `style: 0.35`, `use_speaker_boost: true`, `speed: 0.98`.
+- Keep the existing `shapeForNarration()` prosody shaper (commas, em-dashes, ellipses, paragraph breaks) — it works just as well for ElevenLabs.
+- Keep the CDN cache header (`Cache-Control: public, max-age=86400, immutable`) so repeat plays are instant.
+- Keep the same GET + POST interface so the client (`AnimatedExplainer.tsx`) needs no changes.
+- Surface ElevenLabs errors clearly (401 → misconfigured key, 429 → rate limited, 402 → quota).
 
-| Video | Primary CTA → route | Secondary CTA → route |
-|---|---|---|
-| Buying | Browse Food Trucks & Trailers → `/browse` | Learn About Buying → `/how-it-works` |
-| Renting | Explore Rentals → `/browse?mode=rent` | How Rentals Work → `/how-it-works` |
-| Selling | List for Free → `/list` | Explore Selling Tools → `/how-it-works-seller` |
-| Hosting | Become a Host → `/how-it-works-host` | See Hosting Benefits → `/how-it-works-host#benefits` |
+### 2. Stop the "buzzing" when narration isn't ready
 
-### Component structure
+In `src/components/home/how-it-works/AnimatedExplainer.tsx`:
 
-```text
-src/components/home/how-it-works/
-  HowVendibookWorks.tsx        # section wrapper + heading + tile grid
-  VideoTile.tsx                # thumbnail + play button + hover motion
-  ExplainerVideoModal.tsx      # Radix Dialog, focus trap, ESC/backdrop close, transport controls
-  VideoEndCTA.tsx              # end-of-video primary + secondary CTA
-  AnimatedExplainer.tsx        # scene runner: timeline, captions, progress, play/pause
-  Vendi.tsx                    # the character SVG (accessory prop: search|calendar|camera|dashboard)
-  scenes/
-    buying/Scene1..Scene6.tsx
-    renting/Scene1..Scene6.tsx
-    selling/Scene1..Scene6.tsx
-    hosting/Scene1..Scene6.tsx
-  data/explainers.ts           # single config array (see schema below)
-  scripts/voiceover-scripts.md # full VO + caption + transcript reference doc
-```
+- Only start `AmbientBed` **after** `voiceReady === true`. If narration fetch fails, the pad never starts, so there's no lone hum.
+- If narration later becomes available (e.g. voice toggle re-fetch), start the bed at that point.
+- Lower the default ambient volume from `0.06` → `0.04` so even when it does play under the voice it's less prominent on small mobile speakers.
 
-### Data schema (`data/explainers.ts`)
+### 3. Verify
 
-```ts
-type ExplainerType = 'buying' | 'renting' | 'selling' | 'hosting';
-interface Explainer {
-  id: ExplainerType;
-  title: string;
-  description: string;
-  durationSeconds: number;      // ~60
-  thumbnail: ReactNode;         // animated SVG preview
-  videoSource?: string;         // future MP4 slot; undefined = use AnimatedExplainer
-  captionsVtt?: string;         // future .vtt path
-  transcript: string;
-  ctaLabel: string; ctaRoute: string;
-  secondaryCtaLabel: string; secondaryCtaRoute: string;
-  scenes: SceneDef[];           // { component, durationMs, caption }
-}
-```
+- Check `ELEVENLABS_API_KEY` is present in project secrets (I'll confirm with `fetch_secrets` in build mode; the `listing-narration` function already uses it, so it should be).
+- Reload the homepage, open a "How Vendibook Works" video, confirm:
+  - Sarah's voice plays clearly over each scene.
+  - No standalone hum when audio isn't loaded yet.
+  - Volume slider + mute still work.
 
-### Modal behaviour
+## Technical notes
 
-- Built on existing shadcn `Dialog` (Radix) — inherits focus trap, ESC close, backdrop click close, scroll lock.
-- Fade + scale entrance (existing `animate-scale-in` + `animate-fade-in`).
-- Custom transport bar: play/pause, progress scrubber, mute, CC toggle, fullscreen (requestFullscreen on modal content).
-- Caption toggle on by default; captions are large, readable, mobile-safe.
-- Playback position persisted in `localStorage` per explainer id.
-- Opening a new modal pauses any other running explainer.
-- Respects `prefers-reduced-motion`: skips motion, shows scene stills with captions and manual next/back.
-
-### Tiles
-
-- Desktop: 4-column grid (`lg:grid-cols-4`, `md:grid-cols-2`).
-- Mobile: horizontal snap carousel (`overflow-x-auto snap-x`).
-- Each tile: animated SVG thumbnail (Vendi + scene motif), large centered play button, title, one-line description, duration badge ("≈60s"), "Watch" affordance, hover lift + play-button pulse.
-- Uses existing brand tokens only (no hardcoded colors). Glassmorphism card style matching the rest of the homepage.
-
-### Vendi character
-
-Single reusable SVG component. Rounded food-trailer silhouette body, small display-panel face with two dot eyes, subtle wheels, minimal line details. Accepts an `accessory` prop that renders a small overlaid SVG:
-- `search` (Buyer) — magnifier + clipboard
-- `calendar` (Renter) — calendar + key
-- `camera` (Seller) — camera + price tag
-- `dashboard` (Host) — bar-chart + pin
-
-Idle animation: subtle bob + blink loop (disabled under reduced-motion).
-
-### Scenes (per video)
-
-Each of the 6 scenes per video is its own file rendering an `AbsoluteFill`-style layout with:
-- Background motif (map, listing grid, calendar, messaging, payout)
-- Vendi in role
-- Animated UI props (listing cards sliding, calendar days selecting, badges stamping, payout counter)
-- Caption line synced to scene duration
-
-Scene contents follow the user's brief exactly for Buying/Renting/Selling/Hosting (6 scenes each with the specified beats and on-screen text). No unsupported claims — copy carefully avoids "guaranteed", "risk-free", "instant approval", etc.
-
-### Analytics
-
-New events added to `src/lib/leadTracking.ts` `LeadEventName` union (category `homepage`):
-- `homepage_video_tile_viewed` (IntersectionObserver via existing `ImpressionTracker`)
-- `homepage_video_opened`, `homepage_video_started`
-- `homepage_video_25_percent`, `_50_percent`, `_75_percent`, `_completed`
-- `homepage_video_cta_clicked`
-
-All fire with `{ video_type: 'buying'|'renting'|'selling'|'hosting' }`.
-
-### Performance
-
-- Section itself is imported directly (small); scene components lazy-loaded per explainer via `React.lazy` — only the chosen video's scene bundle downloads on open.
-- Thumbnails are inline SVG (no image download, LCP-safe).
-- Body scroll lock via Radix Dialog default.
-- Reduced-motion honored; still frames rendered instead of animation loops.
-- No autoplay with sound; user must click play inside modal.
-
-### Voiceover scripts
-
-`scripts/voiceover-scripts.md` contains, for each of the 4 videos:
-- Full VO script (~120 words, ~60s at conversational pace)
-- Caption cues (timestamped)
-- Transcript block
-- Production notes (music mood, pacing, brand-voice guardrails)
-
-### Accessibility & QA checklist
-
-- Keyboard: Tab reaches tiles, Enter opens; modal traps focus; ESC closes; Space toggles play; arrow keys scrub.
-- Captions readable on 360px viewport.
-- Reduced-motion path tested.
-- All CTAs use verified existing routes (see table above).
-- Copy reviewed for banned phrases ("guaranteed", "risk-free", "instant approval", "everyone is verified", "Vendibook handles everything").
-- Brand spelling "Vendibook" everywhere.
-- No placeholder video files, no external YouTube embeds, no stock footage.
-
-### Files touched
-
-- **New**: everything under `src/components/home/how-it-works/` (~20 files) + `scripts/voiceover-scripts.md`.
-- **Edit**: `src/pages/Index.tsx` (insert section), `src/lib/leadTracking.ts` (add 8 event names + categories).
-- **No changes** to routing, backend, RLS, edge functions, or unrelated homepage sections.
+- **File changes:** `supabase/functions/explainer-tts/index.ts` (full rewrite), `src/components/home/how-it-works/AnimatedExplainer.tsx` (gate ambient bed on `voiceReady`), `src/components/home/how-it-works/audio/ambientBed.ts` (lower default volume constant only).
+- **Not touching:** the client fetch path, cache keys, analytics, captions, keyboard shortcuts, or volume persistence. The audio element still receives an `audio/mpeg` blob URL exactly as it does today.
+- **Cost:** ElevenLabs is billed to the ElevenLabs account (existing connector), not Lovable AI credits, so this also removes the 402 dependency for narration going forward.
+- **Fallback:** If `ELEVENLABS_API_KEY` isn't set for any reason, the function returns a clean JSON 500 and the client already handles narration failure silently (scenes still animate, captions still show).
