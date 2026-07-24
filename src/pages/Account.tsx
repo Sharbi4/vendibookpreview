@@ -25,6 +25,7 @@ import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { CommsPreferencesPanel } from '@/components/comms/CommsPreferencesPanel';
 import HostSubscriptionCard from '@/components/account/HostSubscriptionCard';
+import { HostPerksCard } from '@/components/host/HostPerksCard';
 
 // Visibility badge component
 const VisibilityBadge = ({ isPublic }: { isPublic: boolean }) => (
@@ -1348,6 +1349,7 @@ const Account = () => {
 
           {/* Host Subscription */}
           <HostSubscriptionCard />
+          <HostPerksCard />
 
 
 
