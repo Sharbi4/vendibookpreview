@@ -26,6 +26,7 @@ import Footer from '@/components/layout/Footer';
 import { CommsPreferencesPanel } from '@/components/comms/CommsPreferencesPanel';
 import HostSubscriptionCard from '@/components/account/HostSubscriptionCard';
 import { HostPerksCard } from '@/components/host/HostPerksCard';
+import { PurchaseHistoryCard } from '@/components/monetization/PurchaseHistoryCard';
 import { ReferAHostCard } from '@/components/host/ReferAHostCard';
 import { ReferralActivityCard } from '@/components/host/ReferralActivityCard';
 import ReferralLeaderboardCard from '@/components/referrals/ReferralLeaderboardCard';
@@ -1353,6 +1354,7 @@ const Account = () => {
           {/* Host Subscription */}
           <HostSubscriptionCard />
           <HostPerksCard />
+          <PurchaseHistoryCard />
           <ReferAHostCard />
           <ReferralLeaderboardCard limit={10} />
           <ReferralActivityCard />
