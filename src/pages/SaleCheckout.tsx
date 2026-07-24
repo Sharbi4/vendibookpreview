@@ -13,6 +13,8 @@ import Footer from '@/components/layout/Footer';
 import { CheckoutOverlay, EmbeddedStripeCheckout } from '@/components/checkout';
 import CheckoutOrderSummary from '@/components/checkout/CheckoutOrderSummary';
 import { isEmbeddedCheckoutEnabled } from '@/lib/featureFlags';
+import { parseEdgeError } from '@/lib/edgeErrors';
+import { checkoutErrorCopy } from '@/lib/checkoutErrorCopy';
 import { validators } from '@/components/ui/validated-input';
 import { trackFormSubmitConversion } from '@/lib/gtagConversions';
 import { trackPurchase, trackInitiateCheckout } from '@/lib/facebookCAPI';
