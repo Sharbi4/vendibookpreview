@@ -12,6 +12,8 @@ import PurchaseReturnBanner from '@/components/monetization/PurchaseReturnBanner
 import { Loader2 } from 'lucide-react';
 
 const BuyerOrdersTab = lazy(() => import('@/components/dashboard/tabs/BuyerOrdersTab'));
+const BuyerBookingsTab = lazy(() => import('@/components/dashboard/tabs/BuyerBookingsTab'));
+const ReferralTab = lazy(() => import('@/components/dashboard/tabs/ReferralTab'));
 const HostSalesTab = lazy(() => import('@/components/dashboard/tabs/HostSalesTab'));
 const NotificationsTab = lazy(() => import('@/components/dashboard/tabs/NotificationsTab'));
 const PremiumToolsTab = lazy(() => import('@/components/dashboard/tabs/PremiumToolsTab'));
@@ -104,9 +106,12 @@ const Dashboard = () => {
     if (currentMode === 'shopper') {
       switch (tab) {
         case 'orders': return <BuyerOrdersTab />;
+        case 'bookings': return <BuyerBookingsTab />;
         case 'favorites': return <FavoritesTab />;
         case 'notifications': return <NotificationsTab />;
+        case 'referral': return <ReferralTab />;
         case 'tools': return <PremiumToolsTab />;
+        case 'membership': return <MembershipTab />;
         case 'permits': return null; // handled inside ShopperDashboard
         default: return <ShopperDashboard />;
       }
