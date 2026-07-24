@@ -9,6 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Navigate } from 'react-router-dom';
 import { formatUsd, type MonetizationProduct } from '@/lib/monetization/products';
+import { SubscriptionRevenueSection, type HostSubscriptionRow } from '@/components/admin/SubscriptionRevenueSection';
 import { toast } from 'sonner';
 
 interface PurchaseRow {
