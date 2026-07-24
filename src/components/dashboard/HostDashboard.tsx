@@ -32,6 +32,7 @@ import { PromotionHub } from './PromotionHub';
 import { BoostListingPrompt } from './BoostListingPrompt';
 import { KitchenProSuite } from './KitchenProSuite';
 import { ReferAHostCard } from '@/components/host/ReferAHostCard';
+import { RecommendedAddOns } from '@/components/monetization/RecommendedAddOns';
 import ReferralLeaderboardCard from '@/components/referrals/ReferralLeaderboardCard';
 import PermitsTab from './PermitsTab';
 import { ConversionFunnel } from '@/components/analytics/ConversionFunnel';
@@ -483,6 +484,11 @@ const HostDashboard = () => {
           <Reveal>
             <div className="space-y-6">
               <PromotionHub />
+              <RecommendedAddOns
+                context="dashboard_home"
+                heading="Recommended for you"
+                subheading="Boosts and services matched to your account. Members see automatic discounts."
+              />
               <ReferAHostCard />
               <ReferralLeaderboardCard limit={10} />
             </div>
