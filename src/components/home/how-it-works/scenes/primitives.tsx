@@ -552,58 +552,65 @@ export const PaymentOptionsPanel = ({
   <motion.div
     initial={{ y: 20, opacity: 0 }}
     animate={{ y: 0, opacity: 1 }}
-    className="w-80 rounded-2xl border border-border bg-card p-4 shadow-[0_20px_50px_-20px_hsl(var(--primary)/0.35),0_10px_25px_-10px_hsl(var(--foreground)/0.25)] ring-1 ring-border/60"
+    className="w-80"
   >
-    <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-      Transaction details
-    </div>
-    <div className="mt-2 space-y-1 text-xs">
-      <div className="flex justify-between"><span className="text-muted-foreground">Listing price</span><span className="font-semibold text-foreground">{price}</span></div>
-      <div className="flex justify-between"><span className="text-muted-foreground">Platform fee</span><span className="font-semibold text-foreground">{fees}</span></div>
-      <div className="mt-2 flex justify-between border-t border-border pt-2 text-sm"><span className="font-bold text-foreground">Total</span><span className="font-bold text-foreground">$—</span></div>
-    </div>
-    <div className="mt-3 space-y-1.5">
-      <motion.div
-        initial={{ opacity: 0, x: -8 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ delay: 0.15 }}
-        className="flex items-center gap-2 rounded-lg border-2 border-primary bg-primary/8 px-2.5 py-2 text-xs"
-      >
-        <CreditCard className="h-4 w-4 text-primary" />
-        <div className="flex-1 font-semibold text-foreground">Pay online (Stripe)</div>
-        <span className="text-[10px] font-bold text-primary">Selected</span>
-      </motion.div>
-      {showAffirm && (
+    <AppFrame path="/checkout" url="secure.vendibook.com">
+      <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+        Transaction details
+      </div>
+      <div className="mt-2 space-y-1 text-xs">
+        <div className="flex justify-between"><span className="text-muted-foreground">Listing price</span><span className="font-semibold text-foreground">{price}</span></div>
+        <div className="flex justify-between"><span className="text-muted-foreground">Platform fee</span><span className="font-semibold text-foreground">{fees}</span></div>
+        <div className="mt-2 flex justify-between border-t border-border/70 pt-2 text-sm"><span className="font-bold text-foreground">Total</span><span className="font-bold text-foreground">$—</span></div>
+      </div>
+      <div className="mt-3 space-y-1.5">
         <motion.div
           initial={{ opacity: 0, x: -8 }}
           animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.3 }}
-          className="flex items-center gap-2 rounded-lg border border-border bg-background px-2.5 py-2 text-xs"
+          transition={{ delay: 0.15 }}
+          className="flex items-center gap-2 rounded-lg border-2 border-primary bg-primary/8 px-2.5 py-2 text-xs"
         >
-          <ShieldCheck className="h-4 w-4 text-foreground/70" />
-          <div className="flex-1">
-            <div className="font-semibold text-foreground">Affirm — monthly payments</div>
-            <div className="text-[10px] text-muted-foreground">Subject to eligibility &amp; approval</div>
-          </div>
+          <CreditCard className="h-4 w-4 text-primary" />
+          <div className="flex-1 font-semibold text-foreground">Pay online (Stripe)</div>
+          <span className="text-[10px] font-bold text-primary">Selected</span>
         </motion.div>
-      )}
-      {showPayInPerson && (
-        <motion.div
-          initial={{ opacity: 0, x: -8 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.45 }}
-          className="flex items-center gap-2 rounded-lg border border-border bg-background px-2.5 py-2 text-xs"
-        >
-          <Banknote className="h-4 w-4 text-foreground/70" />
-          <div className="flex-1">
-            <div className="font-semibold text-foreground">Pay in person</div>
-            <div className="text-[10px] text-muted-foreground">When offered by the seller</div>
-          </div>
-        </motion.div>
-      )}
-    </div>
+        {showAffirm && (
+          <motion.div
+            initial={{ opacity: 0, x: -8 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.3 }}
+            className="flex items-center gap-2 rounded-lg border border-border bg-background px-2.5 py-2 text-xs"
+          >
+            <ShieldCheck className="h-4 w-4 text-foreground/70" />
+            <div className="flex-1">
+              <div className="font-semibold text-foreground">Affirm — monthly payments</div>
+              <div className="text-[10px] text-muted-foreground">Subject to eligibility &amp; approval</div>
+            </div>
+          </motion.div>
+        )}
+        {showPayInPerson && (
+          <motion.div
+            initial={{ opacity: 0, x: -8 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.45 }}
+            className="flex items-center gap-2 rounded-lg border border-border bg-background px-2.5 py-2 text-xs"
+          >
+            <Banknote className="h-4 w-4 text-foreground/70" />
+            <div className="flex-1">
+              <div className="font-semibold text-foreground">Pay in person</div>
+              <div className="text-[10px] text-muted-foreground">When offered by the seller</div>
+            </div>
+          </motion.div>
+        )}
+      </div>
+      <div className="mt-3 flex items-center gap-1.5 border-t border-border/70 pt-2 text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">
+        <Lock className="h-2.5 w-2.5 text-primary" />
+        256-bit TLS · PCI-DSS handled by Stripe
+      </div>
+    </AppFrame>
   </motion.div>
 );
+
 
 /**
  * PayoutTimeline: shows the actual Vendibook payout schedule for hosts —
@@ -613,35 +620,53 @@ export const PayoutTimeline = () => (
   <motion.div
     initial={{ y: 20, opacity: 0 }}
     animate={{ y: 0, opacity: 1 }}
-    className="w-full max-w-md rounded-2xl border border-border bg-card p-4 shadow-[0_20px_50px_-20px_hsl(var(--primary)/0.35),0_10px_25px_-10px_hsl(var(--foreground)/0.25)] ring-1 ring-border/60"
+    className="w-full max-w-md"
   >
-    <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-      <Clock className="h-3.5 w-3.5 text-primary" /> Payout schedule
-    </div>
-    {[
-      { label: 'Renter payment received (Stripe)', when: 'Booking confirmed', done: true },
-      { label: 'Rental in progress', when: 'Pickup → return', done: true },
-      { label: 'Return confirmed by both sides', when: 'End of rental', done: true },
-      { label: 'Host payout released', when: '24 hours after rental ends', done: false, highlight: true },
-    ].map((row, i) => (
-      <motion.div
-        key={i}
-        initial={{ opacity: 0, x: -10 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ delay: 0.15 * i }}
-        className={`mt-2 flex items-center gap-2 rounded-lg border px-2.5 py-1.5 text-xs ${
-          row.highlight ? 'border-primary bg-primary/8' : 'border-border bg-background'
-        }`}
-      >
-        <div className={`flex h-4 w-4 items-center justify-center rounded-full ${row.done ? 'bg-primary text-primary-foreground' : 'border-2 border-primary'}`}>
-          {row.done && <Check className="h-2.5 w-2.5" strokeWidth={4} />}
+    <AppFrame path="/host/payouts">
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+          <Clock className="h-3.5 w-3.5 text-primary" /> Payout schedule
         </div>
-        <div className="flex-1 font-semibold text-foreground">{row.label}</div>
-        <div className="text-[10px] text-muted-foreground">{row.when}</div>
-      </motion.div>
-    ))}
+        <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-primary ring-1 ring-primary/30">
+          Instant escrow
+        </span>
+      </div>
+      {[
+        { label: 'Renter payment received (Stripe)', when: 'Booking confirmed', done: true },
+        { label: 'Rental in progress', when: 'Pickup → return', done: true },
+        { label: 'Return confirmed by both sides', when: 'End of rental', done: true },
+        { label: 'Host payout released', when: '24 hours after rental ends', done: false, highlight: true },
+      ].map((row, i) => (
+        <motion.div
+          key={i}
+          initial={{ opacity: 0, x: -10 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.15 * i }}
+          className={`mt-2 flex items-center gap-2 rounded-lg border px-2.5 py-1.5 text-xs ${
+            row.highlight ? 'border-primary bg-primary/8' : 'border-border bg-background'
+          }`}
+        >
+          <div className={`flex h-4 w-4 items-center justify-center rounded-full ${row.done ? 'bg-primary text-primary-foreground' : 'border-2 border-primary'}`}>
+            {row.done && <Check className="h-2.5 w-2.5" strokeWidth={4} />}
+          </div>
+          <div className="flex-1 font-semibold text-foreground">{row.label}</div>
+          <div className="text-[10px] text-muted-foreground">{row.when}</div>
+        </motion.div>
+      ))}
+      <div className="mt-3 border-t border-border/70 pt-3">
+        <div className="flex items-center justify-between gap-2">
+          <KPIStat label="Payout" value={1240} prefix="$" delta="+18%" />
+          <KPIStat label="Bookings" value={7} suffix=" wk" delay={0.1} />
+          <div className="flex-1 pl-1">
+            <div className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">Trend</div>
+            <Sparkline delay={0.2} />
+          </div>
+        </div>
+      </div>
+    </AppFrame>
   </motion.div>
 );
+
 
 /**
  * PayoutCounter: kept for backward compatibility; used by the closing beat
