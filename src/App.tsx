@@ -68,6 +68,12 @@ const AdminErrors = lazy(() => import("./pages/AdminErrors"));
 const AdminQA = lazy(() => import("./pages/AdminQA"));
 const AdminSupportTickets = lazy(() => import("./pages/AdminSupportTickets"));
 const AdminRevenue = lazy(() => import("./pages/AdminRevenue"));
+const ServicesHub = lazy(() => import("./pages/ServicesHub"));
+const BuyerServicesHub = lazy(() => import("./pages/BuyerServicesHub"));
+const HostProPlans = lazy(() => import("./pages/HostProPlans"));
+const PermitPathUpgrades = lazy(() => import("./pages/PermitPathUpgrades"));
+const Partners = lazy(() => import("./pages/Partners"));
+const ListingPurchaseReviewIntake = lazy(() => import("./pages/ListingPurchaseReviewIntake"));
 const ProtectedSalePage = lazy(() => import("./pages/ProtectedSale"));
 const TransactionDetail = lazy(() => import("./pages/TransactionDetail"));
 
