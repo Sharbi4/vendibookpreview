@@ -794,6 +794,13 @@ const SaleCheckout = () => {
 
       <Footer />
       <CheckoutOverlay isVisible={showCheckoutOverlay} />
+      {embeddedCheckout ? (
+        <EmbeddedStripeCheckout
+          clientSecret={embeddedCheckout.clientSecret}
+          returnUrl={embeddedCheckout.returnUrl}
+          onClose={() => setEmbeddedCheckout(null)}
+        />
+      ) : null}
       {termsGate.terms ? (
         <FinalReviewSheet
           terms={termsGate.terms}
