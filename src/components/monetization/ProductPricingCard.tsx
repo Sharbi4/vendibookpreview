@@ -11,6 +11,7 @@ import {
   type MonetizationProduct,
 } from '@/lib/monetization/products';
 import { trackLeadEvent } from '@/lib/leadTracking';
+import { useSubscriptionConsent } from '@/hooks/useSubscriptionConsent';
 
 interface Props {
   product: MonetizationProduct;
@@ -26,6 +27,7 @@ interface Props {
  * Reusable pricing card. Trust-focused, no dark patterns:
  * - Always shows what the user receives, duration, refund policy, and whether the charge is recurring.
  * - No pre-checked options.
+ * - Recurring plans are gated by SubscriptionConsentDialog (ROSCA / CA AB 2863).
  */
 export function ProductPricingCard({
   product,
@@ -39,6 +41,8 @@ export function ProductPricingCard({
   const [busy, setBusy] = useState(false);
   const price = effectivePriceCents(product);
   const recurring = product.billing_type === 'recurring';
+  const { requestCheckout, dialog: consentDialog, pendingSlug } = useSubscriptionConsent();
+  const activeBusy = busy || pendingSlug === product.slug;
 
   const handleClick = async () => {
     try {
@@ -46,12 +50,16 @@ export function ProductPricingCard({
         const ok = await onBeforeCheckout();
         if (!ok) return;
       }
-      setBusy(true);
       trackLeadEvent('checkout_started', {
         product_slug: product.slug,
         listing_id: listingId,
         surface: 'product_pricing_card',
       });
+      if (recurring) {
+        await requestCheckout(product, { listingId, successPath, cancelPath });
+        return;
+      }
+      setBusy(true);
       const { url } = await startMonetizationCheckout({
         productSlug: product.slug,
         listingId,
