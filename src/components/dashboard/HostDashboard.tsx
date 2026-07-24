@@ -460,6 +460,7 @@ const HostDashboard = () => {
         {activeTab === 'insights' && (
           <Reveal>
             <div className="space-y-10">
+              <AICopilotLauncher />
               <Section title="Listing health">
                 <ListingInsightsPanel />
               </Section>
