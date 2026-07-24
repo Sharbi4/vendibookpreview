@@ -771,6 +771,79 @@ export type Database = {
           },
         ]
       }
+      buyer_service_requests: {
+        Row: {
+          admin_notes: string | null
+          buyer_id: string
+          cancelled_at: string | null
+          created_at: string
+          deliverable: Json
+          fulfilled_at: string | null
+          id: string
+          intake: Json
+          listing_id: string | null
+          product_key: string
+          purchase_id: string | null
+          refunded_at: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          buyer_id: string
+          cancelled_at?: string | null
+          created_at?: string
+          deliverable?: Json
+          fulfilled_at?: string | null
+          id?: string
+          intake?: Json
+          listing_id?: string | null
+          product_key: string
+          purchase_id?: string | null
+          refunded_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          admin_notes?: string | null
+          buyer_id?: string
+          cancelled_at?: string | null
+          created_at?: string
+          deliverable?: Json
+          fulfilled_at?: string | null
+          id?: string
+          intake?: Json
+          listing_id?: string | null
+          product_key?: string
+          purchase_id?: string | null
+          refunded_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "buyer_service_requests_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "buyer_service_requests_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "public_listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "buyer_service_requests_purchase_id_fkey"
+            columns: ["purchase_id"]
+            isOneToOne: false
+            referencedRelation: "monetization_purchases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       concierge_events: {
         Row: {
           created_at: string
@@ -1735,6 +1808,63 @@ export type Database = {
           reviewed_at?: string | null
           reviewed_by?: string | null
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      host_subscriptions: {
+        Row: {
+          cancel_at: string | null
+          cancel_at_period_end: boolean
+          created_at: string
+          current_period_end: string | null
+          current_period_start: string | null
+          id: string
+          last_error: Json | null
+          metadata: Json
+          status: string
+          stripe_customer_id: string | null
+          stripe_price_id: string | null
+          stripe_subscription_id: string | null
+          tier: string
+          trial_end: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          cancel_at?: string | null
+          cancel_at_period_end?: boolean
+          created_at?: string
+          current_period_end?: string | null
+          current_period_start?: string | null
+          id?: string
+          last_error?: Json | null
+          metadata?: Json
+          status?: string
+          stripe_customer_id?: string | null
+          stripe_price_id?: string | null
+          stripe_subscription_id?: string | null
+          tier: string
+          trial_end?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          cancel_at?: string | null
+          cancel_at_period_end?: boolean
+          created_at?: string
+          current_period_end?: string | null
+          current_period_start?: string | null
+          id?: string
+          last_error?: Json | null
+          metadata?: Json
+          status?: string
+          stripe_customer_id?: string | null
+          stripe_price_id?: string | null
+          stripe_subscription_id?: string | null
+          tier?: string
+          trial_end?: string | null
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -3109,6 +3239,151 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      partner_leads: {
+        Row: {
+          admin_notes: string | null
+          budget: string | null
+          consent_at: string | null
+          consent_granted: boolean
+          contact_email: string | null
+          contact_name: string | null
+          contact_phone: string | null
+          created_at: string
+          id: string
+          listing_id: string | null
+          location: string | null
+          notes: string | null
+          partner_id: string | null
+          service: string
+          status: string
+          timeline: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          admin_notes?: string | null
+          budget?: string | null
+          consent_at?: string | null
+          consent_granted?: boolean
+          contact_email?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          id?: string
+          listing_id?: string | null
+          location?: string | null
+          notes?: string | null
+          partner_id?: string | null
+          service: string
+          status?: string
+          timeline?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          admin_notes?: string | null
+          budget?: string | null
+          consent_at?: string | null
+          consent_granted?: boolean
+          contact_email?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          id?: string
+          listing_id?: string | null
+          location?: string | null
+          notes?: string | null
+          partner_id?: string | null
+          service?: string
+          status?: string
+          timeline?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "partner_leads_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partner_leads_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "public_listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partner_leads_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "service_partners"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      permit_concierge_requests: {
+        Row: {
+          admin_notes: string | null
+          completed_at: string | null
+          created_at: string
+          deliverable: Json
+          id: string
+          intake: Json
+          purchase_id: string | null
+          roadmap_id: string | null
+          service_level: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          completed_at?: string | null
+          created_at?: string
+          deliverable?: Json
+          id?: string
+          intake?: Json
+          purchase_id?: string | null
+          roadmap_id?: string | null
+          service_level?: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          admin_notes?: string | null
+          completed_at?: string | null
+          created_at?: string
+          deliverable?: Json
+          id?: string
+          intake?: Json
+          purchase_id?: string | null
+          roadmap_id?: string | null
+          service_level?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "permit_concierge_requests_purchase_id_fkey"
+            columns: ["purchase_id"]
+            isOneToOne: false
+            referencedRelation: "monetization_purchases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "permit_concierge_requests_roadmap_id_fkey"
+            columns: ["roadmap_id"]
+            isOneToOne: false
+            referencedRelation: "saved_permit_roadmaps"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       permit_documents: {
         Row: {
@@ -4704,6 +4979,69 @@ export type Database = {
           radius_miles?: number | null
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      service_partners: {
+        Row: {
+          admin_notes: string | null
+          category: string
+          company_name: string
+          contact_form_url: string | null
+          created_at: string
+          description: string | null
+          display_order: number
+          email: string | null
+          id: string
+          is_active: boolean
+          is_featured: boolean
+          is_sponsored: boolean
+          is_verified: boolean
+          logo_url: string | null
+          phone: string | null
+          service_area: string | null
+          updated_at: string
+          website_url: string | null
+        }
+        Insert: {
+          admin_notes?: string | null
+          category: string
+          company_name: string
+          contact_form_url?: string | null
+          created_at?: string
+          description?: string | null
+          display_order?: number
+          email?: string | null
+          id?: string
+          is_active?: boolean
+          is_featured?: boolean
+          is_sponsored?: boolean
+          is_verified?: boolean
+          logo_url?: string | null
+          phone?: string | null
+          service_area?: string | null
+          updated_at?: string
+          website_url?: string | null
+        }
+        Update: {
+          admin_notes?: string | null
+          category?: string
+          company_name?: string
+          contact_form_url?: string | null
+          created_at?: string
+          description?: string | null
+          display_order?: number
+          email?: string | null
+          id?: string
+          is_active?: boolean
+          is_featured?: boolean
+          is_sponsored?: boolean
+          is_verified?: boolean
+          logo_url?: string | null
+          phone?: string | null
+          service_area?: string | null
+          updated_at?: string
+          website_url?: string | null
         }
         Relationships: []
       }
