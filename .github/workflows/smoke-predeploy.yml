@@ -160,6 +160,28 @@ jobs:
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: bun scripts/smoke/booking-request-flow-smoke.ts
 
+  subscription-lifecycle-smoke:
+    name: Subscription Lifecycle Smoke (Stripe TEST mode, blocks deploy on fail)
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - run: bun install --frozen-lockfile
+      - name: Run subscription-lifecycle smoke (signed test-mode webhook fixtures)
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          STRIPE_MONETIZATION_WEBHOOK_SECRET: ${{ secrets.STRIPE_MONETIZATION_WEBHOOK_SECRET_TEST }}
+          APP_BASE_URL: ${{ secrets.APP_BASE_URL }}
+          SMOKE_SUPABASE_STORAGE_KEY: ${{ secrets.SMOKE_SUPABASE_STORAGE_KEY }}
+          SMOKE_SUPABASE_SESSION_JSON: ${{ secrets.SMOKE_SUPABASE_SESSION_JSON }}
+        run: bun scripts/smoke/subscription-lifecycle-smoke.ts
+
+
+
   readonly-prod-smoke:
     name: Read-Only Production Smoke (no writes, no side effects)
     runs-on: ubuntu-latest
