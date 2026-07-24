@@ -45,6 +45,7 @@ import { getGuestDraft, clearGuestDraft } from '@/lib/guestDraft';
 import { cn } from '@/lib/utils';
 import { FreightSettingsCard } from '@/components/freight';
 import { FeaturedListingCard } from './FeaturedListingCard';
+import { ListingQualityGate } from './ListingQualityGate';
 import { AdditionalSellerSupportCards } from '@/components/monetization/AdditionalSellerSupportCards';
 import { InfoTooltip } from '@/components/ui/info-tooltip';
 import stripeIcon from '@/assets/stripe-icon.png';
@@ -3887,6 +3888,16 @@ export const PublishWizard: React.FC = () => {
                       </div>
                     </div>
                   </div>
+
+                  {/* Publish requirements checklist */}
+                  <ListingQualityGate
+                    hasPhotos={existingImages.length > 0}
+                    photoCount={existingImages.length}
+                    hasTitle={!!title?.trim()}
+                    hasPrice={listing.mode === 'sale' ? parseFloat(priceSale || '0') > 0 : parseFloat(priceDaily || '0') > 0}
+                    hasLocation={!!(displayAddress || pickupLocationText)}
+                    mode={listing.mode as 'rent' | 'sale' | null}
+                  />
 
                   {/* Missing Requirements Warning */}
                   {!canPublish && (
