@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Gift, Copy, Check, Share2, Loader2 } from 'lucide-react';
+import { Gift, Copy, Check, Share2, Loader2, Mail, MessageCircle, Facebook, Twitter } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { useReferralCode, useMyReferrals, buildReferralUrl } from '@/hooks/useReferral';
@@ -87,6 +87,7 @@ export function ReferAHostCard() {
               <Stat label="Qualified" value={qualifiedCount} />
               <Stat label="Earned" value={`$${(refCode?.total_earned ?? 0).toFixed(0)}`} />
             </div>
+            <ShareRow link={link} />
           </>
         ) : (
           <p className="text-sm text-muted-foreground">
@@ -103,6 +104,35 @@ function Stat({ label, value }: { label: string; value: string | number }) {
     <div className="rounded-lg border border-border/60 bg-muted/30 px-3 py-2 text-center">
       <div className="text-sm font-semibold text-foreground">{value}</div>
       <div className="text-[10px] uppercase tracking-wide text-muted-foreground">{label}</div>
+    </div>
+  );
+}
+
+function ShareRow({ link }: { link: string }) {
+  const text = 'List your space on Vendibook and start earning. Join with my link:';
+  const enc = encodeURIComponent;
+  const targets = [
+    { label: 'Email', icon: Mail, href: `mailto:?subject=${enc('Join me on Vendibook')}&body=${enc(`${text} ${link}`)}` },
+    { label: 'SMS', icon: MessageCircle, href: `sms:?&body=${enc(`${text} ${link}`)}` },
+    { label: 'WhatsApp', icon: MessageCircle, href: `https://wa.me/?text=${enc(`${text} ${link}`)}` },
+    { label: 'Facebook', icon: Facebook, href: `https://www.facebook.com/sharer/sharer.php?u=${enc(link)}` },
+    { label: 'X', icon: Twitter, href: `https://twitter.com/intent/tweet?text=${enc(text)}&url=${enc(link)}` },
+  ];
+  return (
+    <div className="flex flex-wrap gap-2 pt-1">
+      {targets.map((t) => (
+        <a
+          key={t.label}
+          href={t.href}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-muted/30 px-3 py-1.5 text-xs text-foreground hover:bg-muted/60 transition-colors"
+          aria-label={`Share via ${t.label}`}
+        >
+          <t.icon className="h-3.5 w-3.5" />
+          {t.label}
+        </a>
+      ))}
     </div>
   );
 }
