@@ -49,7 +49,7 @@ export const AICopilotLauncher = () => {
           >
             <Link to="/list/ai">
               <span className="flex items-center gap-2">
-                <Sparkle className="h-4 w-4" />
+                <PenLine className="h-4 w-4" />
                 Draft a listing with AI
               </span>
               <ArrowRight className="h-4 w-4" />
