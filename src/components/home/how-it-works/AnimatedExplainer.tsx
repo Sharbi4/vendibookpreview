@@ -48,7 +48,7 @@ const fetchNarration = (transcript: string): Promise<string> => {
   return p;
 };
 
-export const AnimatedExplainer = ({ explainer, onProgress, onEnded, storageKey }: Props) => {
+export const AnimatedExplainer = ({ explainer, onProgress, onEnded, onSceneChange, onWatched, storageKey }: Props) => {
   const prefersReduced = useReducedMotion();
   const totalMs = useMemo(
     () => explainer.scenes.reduce((s, sc) => s + sc.durationMs, 0),
@@ -70,6 +70,18 @@ export const AnimatedExplainer = ({ explainer, onProgress, onEnded, storageKey }
   const milestoneRef = useRef<Set<number>>(new Set());
   const narrationRef = useRef<HTMLAudioElement | null>(null);
   const ambientRef = useRef<AmbientBed | null>(null);
+  const watchedMsRef = useRef<number>(0);
+  const lastSceneRef = useRef<number>(-1);
+  const onWatchedRef = useRef(onWatched);
+  useEffect(() => { onWatchedRef.current = onWatched; }, [onWatched]);
+
+  // Report accumulated watch duration on unmount.
+  useEffect(() => {
+    return () => {
+      const ms = Math.round(watchedMsRef.current);
+      if (ms > 250) onWatchedRef.current?.(ms);
+    };
+  }, []);
 
   // Prefetch narration on mount so the first play doesn't stall on the network.
   useEffect(() => {
