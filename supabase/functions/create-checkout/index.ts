@@ -38,9 +38,10 @@ interface CheckoutRequest {
   // fresh terms row, preserving the acknowledgement stamp written by
   // acknowledge-terms in the FinalReviewSheet flow.
   terms_id?: string | null;
-  // When 'elements', create an embedded Payment Element session (client_secret returned).
-  // When 'hosted' (default fallback), create a redirect Checkout session (url returned).
-  ui_mode?: 'hosted' | 'elements';
+  // 'custom' → embedded Stripe Custom Checkout (client_secret returned).
+  // 'hosted' → redirect Checkout Session (url returned).
+  // 'elements' is accepted as a backward-compatible alias for 'custom'.
+  ui_mode?: 'hosted' | 'custom' | 'elements';
 }
 
 serve(async (req) => {
