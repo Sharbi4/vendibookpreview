@@ -270,27 +270,62 @@ export const AnimatedExplainer = ({ explainer, onProgress, onEnded, onSceneChang
     );
   };
 
-  // Keyboard: Space play/pause, arrows scene nav, M mute
+  // Keyboard shortcuts:
+  //   Space / K       play-pause
+  //   ArrowLeft/Right prev / next scene (PageUp / PageDown mirror)
+  //   Home / End      first / last scene
+  //   1-9             jump to chapter N
+  //   M               mute voiceover
+  //   C               toggle captions
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.target instanceof HTMLInputElement) return;
-      if (e.code === 'Space') {
+      const t = e.target as HTMLElement | null;
+      if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
+      const k = e.key;
+      if (e.code === 'Space' || k === 'k' || k === 'K') {
         e.preventDefault();
         setPlaying((p) => !p);
-      } else if (e.code === 'ArrowRight') {
+      } else if (k === 'ArrowRight' || k === 'PageDown') {
+        e.preventDefault();
         jumpToScene(Math.min(sceneIndex + 1, explainer.scenes.length - 1));
-      } else if (e.code === 'ArrowLeft') {
+      } else if (k === 'ArrowLeft' || k === 'PageUp') {
+        e.preventDefault();
         jumpToScene(Math.max(sceneIndex - 1, 0));
-      } else if (e.key?.toLowerCase() === 'm') {
+      } else if (k === 'Home') {
+        e.preventDefault();
+        jumpToScene(0);
+      } else if (k === 'End') {
+        e.preventDefault();
+        jumpToScene(explainer.scenes.length - 1);
+      } else if (/^[1-9]$/.test(k)) {
+        const idx = Number(k) - 1;
+        if (idx < explainer.scenes.length) {
+          e.preventDefault();
+          jumpToChapter(idx, 'chip');
+        }
+      } else if (k === 'm' || k === 'M') {
         setMuted((m) => !m);
+      } else if (k === 'c' || k === 'C') {
+        setCaptionsOn((v) => !v);
       }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sceneIndex, explainer.scenes.length]);
 
   return (
-    <div className="relative flex h-full w-full flex-col bg-background">
+    <div
+      className="relative flex h-full w-full flex-col bg-background"
+      role="region"
+      aria-label={`${explainer.title} explainer video`}
+      aria-keyshortcuts="Space K ArrowLeft ArrowRight Home End 1 2 3 4 5 6 7 8 9 M C"
+    >
+      <p className="sr-only">
+        Keyboard shortcuts: Space or K to play or pause, Left and Right arrows to change scene,
+        Home and End to jump to start or end, number keys 1 through {Math.min(9, explainer.scenes.length)} to jump to a chapter,
+        M to mute the voiceover, C to toggle captions.
+      </p>
       {/* Cinematic stage */}
       <div className="relative aspect-video w-full overflow-hidden bg-foreground">
         {/* backdrop: hero photo, softly blurred & darkened for depth */}
@@ -320,20 +355,29 @@ export const AnimatedExplainer = ({ explainer, onProgress, onEnded, onSceneChang
           </motion.div>
         </AnimatePresence>
 
-        {/* Caption bar */}
-        {captionsOn && caption && (
-          <div className="pointer-events-none absolute inset-x-0 bottom-3 flex justify-center px-4 sm:bottom-5">
+        {/* Caption bar — always mounted so screen readers hear each scene.
+            Visually hidden when the user turns captions off. */}
+        <div
+          className={cn(
+            'pointer-events-none absolute inset-x-0 bottom-3 flex justify-center px-4 sm:bottom-5',
+            !captionsOn && 'sr-only',
+          )}
+          aria-live="polite"
+          aria-atomic="true"
+        >
+          {caption && (
             <motion.div
               key={`cap-${sceneIndex}`}
-              initial={{ opacity: 0, y: 8 }}
+              initial={prefersReduced ? { opacity: 1, y: 0 } : { opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.35, ease: 'easeOut' }}
+              transition={prefersReduced ? { duration: 0 } : { duration: 0.35, ease: 'easeOut' }}
               className="max-w-2xl rounded-lg bg-black/75 px-3 py-1.5 text-center text-sm font-medium leading-snug text-white shadow-lg backdrop-blur sm:px-4 sm:py-2 sm:text-base"
             >
               {caption}
             </motion.div>
-          </div>
-        )}
+          )}
+        </div>
+
 
         {/* Scene counter */}
         <div className="absolute right-3 top-3 rounded-full bg-black/60 px-2 py-0.5 text-[11px] font-semibold text-white backdrop-blur">
@@ -374,12 +418,25 @@ export const AnimatedExplainer = ({ explainer, onProgress, onEnded, onSceneChang
           aria-valuemin={0}
           aria-valuemax={100}
           aria-valuenow={Math.round(progressPct)}
+          aria-valuetext={`${formatTime(elapsedMs)} of ${formatTime(totalMs)}`}
           tabIndex={0}
           onClick={(e) => {
             const rect = e.currentTarget.getBoundingClientRect();
             scrub(Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width)));
           }}
-          className="relative h-1.5 flex-1 cursor-pointer overflow-hidden rounded-full bg-muted"
+          onKeyDown={(e) => {
+            const pct = progressPct / 100;
+            if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+              // Handled globally as scene nav; swallow here so the slider
+              // doesn't double-jump when it holds focus.
+              return;
+            }
+            if (e.key === 'Home') { e.preventDefault(); e.stopPropagation(); scrub(0); }
+            else if (e.key === 'End') { e.preventDefault(); e.stopPropagation(); scrub(1); }
+            else if (e.key === 'PageUp') { e.preventDefault(); e.stopPropagation(); scrub(Math.max(0, pct - 0.1)); }
+            else if (e.key === 'PageDown') { e.preventDefault(); e.stopPropagation(); scrub(Math.min(1, pct + 0.1)); }
+          }}
+          className="relative h-1.5 flex-1 cursor-pointer overflow-hidden rounded-full bg-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background"
         >
           <div
             className="absolute inset-y-0 left-0 bg-primary"
