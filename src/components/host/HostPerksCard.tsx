@@ -7,14 +7,12 @@ import {
   Layers,
   Headphones,
   Rocket,
-  Concierge,
+  LifeBuoy,
   Check,
   Lock,
   ArrowRight,
   Crown,
 } from 'lucide-react';
-// `Concierge` isn't in lucide; swap for `LifeBuoy`.
-import { LifeBuoy } from 'lucide-react';
 import { useHostEntitlements, type HostTier } from '@/hooks/useHostEntitlements';
 
 interface Perk {
