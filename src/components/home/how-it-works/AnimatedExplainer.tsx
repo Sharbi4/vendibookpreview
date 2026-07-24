@@ -385,6 +385,21 @@ export const AnimatedExplainer = ({ explainer, onProgress, onEnded, onSceneChang
             className="absolute inset-y-0 left-0 bg-primary"
             style={{ width: `${progressPct}%` }}
           />
+          {/* Chapter tick marks — skip the first one at 0% */}
+          {chapterOffsets.slice(1).map((c, i) => (
+            <button
+              key={`tick-${i + 1}`}
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                jumpToChapter(i + 1, 'tick');
+              }}
+              aria-label={`Jump to chapter ${i + 2}: ${explainer.scenes[i + 1]?.chapterLabel ?? ''}`}
+              title={explainer.scenes[i + 1]?.chapterLabel}
+              className="absolute top-1/2 h-3 w-0.5 -translate-x-1/2 -translate-y-1/2 rounded-sm bg-background/90 ring-1 ring-foreground/30 transition-colors hover:bg-primary"
+              style={{ left: `${c.percent}%` }}
+            />
+          ))}
         </div>
 
         <span className="hidden text-xs tabular-nums text-muted-foreground sm:inline">
