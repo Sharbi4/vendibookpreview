@@ -1172,3 +1172,171 @@ export const ActivityTicker = ({
     ))}
   </div>
 );
+
+/* ---------------------------------------------------------------------------
+ * High-fidelity motion primitives
+ * -------------------------------------------------------------------------
+ * Small, self-contained motion pieces used as accents inside scenes to lift
+ * the whole set to enterprise-grade production polish without additional
+ * scene-file churn.
+ * ------------------------------------------------------------------------- */
+
+/** Confetti burst — brand-tinted, physics-shaped, one-shot. */
+export const Confetti = ({ count = 26, spread = 220 }: { count?: number; spread?: number }) => {
+  const pieces = useMemo(
+    () =>
+      Array.from({ length: count }).map((_, i) => {
+        const angle = (Math.PI * (i / Math.max(1, count - 1))) - Math.PI / 2;
+        const dist = spread * (0.55 + Math.random() * 0.55);
+        const rand = Math.random();
+        return {
+          i,
+          x: Math.cos(angle) * dist + (Math.random() - 0.5) * 30,
+          y: Math.sin(angle) * dist * 0.7 - Math.random() * 60,
+          rot: (Math.random() - 0.5) * 720,
+          hue: rand < 0.55 ? 'hsl(var(--primary))' : rand < 0.8 ? 'hsl(var(--primary) / 0.55)' : 'hsl(var(--foreground) / 0.8)',
+          size: 4 + Math.random() * 5,
+          shape: rand > 0.6 ? 'square' : 'rect',
+          delay: Math.random() * 0.15,
+          dur: 1.2 + Math.random() * 0.8,
+        };
+      }),
+    [count, spread],
+  );
+  return (
+    <div className="pointer-events-none absolute inset-0 z-40 flex items-center justify-center">
+      <div className="relative h-0 w-0">
+        {pieces.map((p) => (
+          <motion.span
+            key={p.i}
+            aria-hidden
+            className="absolute"
+            style={{
+              width: p.shape === 'square' ? p.size : p.size * 0.6,
+              height: p.size,
+              background: p.hue,
+              borderRadius: 1,
+              boxShadow: '0 2px 6px hsl(var(--foreground) / 0.25)',
+              left: 0,
+              top: 0,
+            }}
+            initial={{ x: 0, y: 0, opacity: 1, rotate: 0 }}
+            animate={{ x: p.x, y: p.y, opacity: [1, 1, 0], rotate: p.rot }}
+            transition={{ delay: p.delay, duration: p.dur, ease: [0.16, 0.84, 0.44, 1] }}
+          />
+        ))}
+      </div>
+    </div>
+  );
+};
+
+/** Animated circular progress ring, draws in on mount. */
+export const ProgressRing = ({
+  value = 0.72,
+  size = 68,
+  stroke = 6,
+  label,
+  sub,
+}: {
+  value?: number;
+  size?: number;
+  stroke?: number;
+  label?: string;
+  sub?: string;
+}) => {
+  const radius = (size - stroke) / 2;
+  const circ = 2 * Math.PI * radius;
+  return (
+    <div className="relative inline-flex items-center justify-center" style={{ width: size, height: size }}>
+      <svg width={size} height={size} className="-rotate-90">
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          fill="none"
+          stroke="hsl(var(--muted))"
+          strokeWidth={stroke}
+        />
+        <motion.circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          fill="none"
+          stroke="hsl(var(--primary))"
+          strokeWidth={stroke}
+          strokeLinecap="round"
+          strokeDasharray={circ}
+          initial={{ strokeDashoffset: circ }}
+          animate={{ strokeDashoffset: circ * (1 - value) }}
+          transition={{ duration: 1.1, ease: 'easeOut' }}
+          style={{ filter: 'drop-shadow(0 0 6px hsl(var(--primary) / 0.55))' }}
+        />
+      </svg>
+      <div className="absolute inset-0 flex flex-col items-center justify-center">
+        {label && <span className="text-xs font-bold tabular-nums text-foreground">{label}</span>}
+        {sub && <span className="text-[8px] font-semibold uppercase tracking-wider text-muted-foreground">{sub}</span>}
+      </div>
+    </div>
+  );
+};
+
+/** Sliding notification toast — appears once, then persists. */
+export const NotificationToast = ({
+  title,
+  body,
+  delay = 0.6,
+}: {
+  title: string;
+  body?: string;
+  delay?: number;
+}) => (
+  <motion.div
+    initial={{ y: -14, x: 14, opacity: 0, scale: 0.96 }}
+    animate={{ y: 0, x: 0, opacity: 1, scale: 1 }}
+    transition={{ delay, type: 'spring', stiffness: 260, damping: 22 }}
+    className="pointer-events-none inline-flex items-start gap-2 rounded-xl border border-primary/40 bg-card/95 px-2.5 py-1.5 shadow-[0_16px_40px_-14px_hsl(var(--primary)/0.55)] ring-1 ring-primary/20 backdrop-blur"
+  >
+    <span className="mt-0.5 inline-flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">
+      <Check className="h-2.5 w-2.5" strokeWidth={4} />
+    </span>
+    <div className="min-w-0">
+      <div className="text-[10px] font-bold leading-tight text-foreground">{title}</div>
+      {body && <div className="mt-0.5 truncate text-[9px] text-muted-foreground">{body}</div>}
+    </div>
+  </motion.div>
+);
+
+/** Three-dot typing indicator. */
+export const TypingDots = () => (
+  <span className="inline-flex items-center gap-1">
+    {[0, 1, 2].map((i) => (
+      <motion.span
+        key={i}
+        className="h-1.5 w-1.5 rounded-full bg-current"
+        animate={{ y: [0, -3, 0], opacity: [0.4, 1, 0.4] }}
+        transition={{ duration: 1, repeat: Infinity, delay: i * 0.15, ease: 'easeInOut' }}
+      />
+    ))}
+  </span>
+);
+
+/** Diagonal scan-line sweep that passes across a card once and repeats. */
+export const Scanline = ({ delay = 0.4, duration = 2.4 }: { delay?: number; duration?: number }) => (
+  <motion.span
+    aria-hidden
+    className="pointer-events-none absolute inset-0 overflow-hidden rounded-[inherit]"
+  >
+    <motion.span
+      className="absolute -inset-y-4 w-1/3"
+      style={{
+        background:
+          'linear-gradient(90deg, transparent, hsl(var(--primary) / 0.22), transparent)',
+        filter: 'blur(2px)',
+      }}
+      initial={{ x: '-120%' }}
+      animate={{ x: '260%' }}
+      transition={{ delay, duration, repeat: Infinity, repeatDelay: 3.5, ease: 'easeInOut' }}
+    />
+  </motion.span>
+);
+
