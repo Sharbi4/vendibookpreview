@@ -12,7 +12,9 @@ import { useStripeConnect } from '@/hooks/useStripeConnect';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePageTracking } from '@/hooks/usePageTracking';
 import { HostPlanRibbon } from '@/components/host/HostPlanRibbon';
+import { ListingQuotaBanner } from '@/components/host/ListingQuotaBanner';
 import { useHostEntitlements } from '@/hooks/useHostEntitlements';
+import { useListingQuota } from '@/hooks/useListingQuota';
 import { Link as RouterLink } from 'react-router-dom';
 import { Lock } from 'lucide-react';
 
@@ -21,6 +23,7 @@ const HostListings = () => {
   const { listings, isLoading, stats, pauseListing, publishListing, deleteListing, updateListingPrice } = useHostListings();
   const { isConnected, connectStripe, isConnecting } = useStripeConnect();
   const { canBulkListings } = useHostEntitlements();
+  const quota = useListingQuota();
   const [showStripeModal, setShowStripeModal] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
 
@@ -115,18 +118,28 @@ const HostListings = () => {
                 </div>
               )}
               
-              <Button asChild variant="dark-shine" className="rounded-xl">
-                <Link to="/list">
-                  <Plus className="h-4 w-4 mr-2" />
-                  New Listing
-                </Link>
-              </Button>
+              {quota.isAtLimit ? (
+                <Button asChild variant="dark-shine" className="rounded-xl" title="Upgrade to add more listings">
+                  <Link to="/host/plans">
+                    <Lock className="h-4 w-4 mr-2" />
+                    Upgrade to add more
+                  </Link>
+                </Button>
+              ) : (
+                <Button asChild variant="dark-shine" className="rounded-xl">
+                  <Link to="/list">
+                    <Plus className="h-4 w-4 mr-2" />
+                    New Listing
+                  </Link>
+                </Button>
+              )}
             </div>
           </div>
         </div>
 
-        {/* Host plan ribbon */}
+        {/* Host plan ribbon + quota */}
         <HostPlanRibbon />
+        <ListingQuotaBanner />
 
         {/* Drafts Section */}
         {!isLoading && draftListings.length > 0 && (
