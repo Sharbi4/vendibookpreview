@@ -130,7 +130,7 @@ export const AnimatedExplainer = ({ explainer, onProgress, onEnded, onSceneChang
   // never plays as a standalone hum when TTS is unavailable.
   useEffect(() => {
     if (!voiceReady) return;
-    const bed = createAmbientBed(0.04);
+    const bed = createAmbientBed(0.06);
     ambientRef.current = bed;
     return () => {
       bed.stop();

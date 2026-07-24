@@ -66,18 +66,18 @@ export const explainers: Explainer[] = [
     secondaryCtaLabel: 'Learn About Buying',
     secondaryCtaRoute: '/how-it-works',
     transcript:
-      "Buying a food truck or trailer should not mean chasing scattered social posts. On Vendibook, you can search food trucks and trailers, apply filters like price, location, condition, and equipment, and compare listings side by side. Open a listing to review photos, included equipment, seller information, available documents, verification indicators, and accepted payment methods. Message the seller directly to ask questions and schedule an inspection. When you're ready, review the full transaction details and pick an available payment method. Online payments are securely processed through Stripe, and eligible purchases may offer Affirm — subject to eligibility and approval. If the seller offers it, you can also pay in person. Once the purchase is created, your buyer dashboard keeps the payment status, agreement, messages, transaction timeline, and the next required action in one place. For pay-in-person purchases, both sides can confirm the handoff and payment through Vendibook. Find the right equipment, choose an available payment option, and manage the whole purchase in one place.",
+      "Hey — thinking about buying a food truck or a trailer? Let me walk you through what that actually looks like on Vendibook, because it's a lot calmer than chasing scattered posts on social media. So, you land on the marketplace, and right away you can search by what actually matters to you — your city, your budget, the type of build, the equipment inside. You compare a few side by side, save the ones you like, and open the listing to really dig in… photos, the equipment list, the seller's info, any documents they've shared, verification badges, and which payment methods they accept. From there, you just message the seller — ask your questions, line up an inspection, get comfortable. When you're ready to move forward, you'll see the full transaction details laid out clearly, and you pick a payment method that's available for that listing. Online payments run securely through Stripe, some purchases may be eligible for Affirm — that's subject to eligibility and approval — and if the seller offers it, you can also pay in person. Once the purchase is created, everything lives in your buyer dashboard — payment status, the agreement, messages, the transaction timeline, and whatever the next step is. And for pay-in-person deals, both sides confirm the handoff right inside Vendibook, so nothing gets lost. That's really it — find the equipment, pick a payment option that fits, and manage the whole thing from one place.",
     scenes: buildScenes(
       buyingScenes,
       [
-        'A marketplace built for food-business equipment.',
-        'Search. Compare. Save your favorites.',
-        'More information before you commit.',
-        'Listing details and conversations together.',
-        'Review your total, then pick an available payment method.',
-        "Know what's complete and what's next.",
-        'Even offline payments stay organized.',
-        'Find it. Finance it when eligible. Manage the purchase.',
+        "So, here's where it starts — a marketplace built just for food-business equipment.",
+        "You search, you compare, you save the ones you like.",
+        "Open a listing and you get the full picture before you commit.",
+        "Message the seller right here — questions, inspections, all of it.",
+        "When you're ready, review the total and pick a payment method that works.",
+        "After you buy, your dashboard tells you exactly what's done and what's next.",
+        "Paying in person? That gets tracked too — both sides confirm the handoff.",
+        "That's the flow — find it, fund it, and manage it, all in one place.",
       ],
       [
         'Marketplace',
@@ -91,6 +91,7 @@ export const explainers: Explainer[] = [
       ],
     ),
   },
+
   {
     id: 'renting',
     title: 'Renting on Vendibook',
@@ -105,18 +106,18 @@ export const explainers: Explainer[] = [
     secondaryCtaLabel: 'How Rentals Work',
     secondaryCtaRoute: '/how-it-works',
     transcript:
-      "Renting on Vendibook helps you test a concept, cover a catering event, or run a weekend pop-up without buying equipment upfront. Search rentals by location, equipment, and price, then open a listing's booking calendar. Available, booked, and selected dates are clearly distinguished, so you can pick your dates and see the rental price and cost breakdown before requesting. Submit your dates, intended use, business information, and any requested documents in one organized booking request. The host reviews your request from their dashboard and, once approved, the calendar updates automatically. Complete the requirements that apply to your booking — identity verification, driver's license, insurance, business info, and the rental agreement. Online rental payments are securely processed through Stripe. Your renter dashboard then shows the payment status, booking details, documents, messages, and the next action required. At pickup and return, both sides confirm the handoff so the rental has a clear record from beginning to end.",
+      "Okay — so maybe you're not looking to buy just yet. Maybe you've got a catering gig, a weekend pop-up, a festival coming up, or you just want to test a concept before you commit. That's exactly what renting on Vendibook is for. Here's how it flows. You start by searching rentals — your location, your dates, the kind of equipment you need — and when a listing catches your eye, you open the booking calendar. You'll see what's available, what's already booked, and what you've picked, all color-coded, so there's no guesswork. Choose your dates, review the price and the full cost breakdown, and send your request — with your intended use, your business info, and any documents the host asked for. The host reviews everything from their dashboard, and once they approve, the calendar updates automatically. From there, you just work through your requirements — identity verification, driver's license, insurance if it applies, business info, and the rental agreement. Online rental payments go through Stripe, safely. Your renter dashboard then keeps the payment status, booking details, documents, messages, and the next step all in one view. At pickup, and again at return, both sides confirm the handoff — so the whole rental has a clean, clear record from start to finish. Start smaller, test the idea, and grow from there.",
     scenes: buildScenes(
       rentingScenes,
       [
-        'Rent the equipment you need.',
-        'Find a rental that fits your business.',
-        'Choose your dates and see your total.',
-        'One organized booking request.',
-        'Approval updates the booking automatically.',
-        'Complete your requirements in one place.',
-        'Payment and booking status together.',
-        'Book it. Manage it. Put it to work.',
+        "Not ready to buy? Renting is how a lot of food businesses get going.",
+        "First step — find a rental that actually fits what you're doing.",
+        "Open the calendar, pick your dates, and see your total upfront.",
+        "Send everything the host needs, in one organized request.",
+        "Once they approve, the calendar updates automatically.",
+        "Then you work through your requirements — verification, docs, the agreement.",
+        "Pay securely through Stripe and track everything in one place.",
+        "Book it, run your event, and you're on your way.",
       ],
       [
         'Why rent',
@@ -130,6 +131,7 @@ export const explainers: Explainer[] = [
       ],
     ),
   },
+
   {
     id: 'selling',
     title: 'Selling on Vendibook',
@@ -144,18 +146,18 @@ export const explainers: Explainer[] = [
     secondaryCtaLabel: 'Explore Selling Tools',
     secondaryCtaRoute: '/how-it-works-seller',
     transcript:
-      "Selling specialized equipment through a general marketplace usually means incomplete listings and repetitive questions. Vendibook guides you through creating a detailed listing with your photos, food truck or trailer type, asking price, location, condition, equipment, specifications, and available documents. Preview and publish for free so buyers searching Vendibook can find you. From your seller dashboard, respond to messages, track listing views and saves, and manage buyer activity in one place. Eligible buyers may see additional ways to complete the purchase: online checkout is processed through Stripe, Affirm may be available for eligible purchases and buyers subject to approval, and you can also enable pay-in-person when appropriate. When a purchase is created, the sale dashboard shows the payment method, payment status, agreement, documents, messages, handoff date, and the next action required from each side. For online transactions your dashboard displays the applicable payment hold and payout timeline; for pay-in-person sales, both sides confirm the handoff and payment through Vendibook. Create your listing, connect with serious buyers, and manage the sale without losing track of payments, documents, or next steps.",
+      "Alright — flip it around for a second. Maybe you've got a truck or a trailer sitting there, and you're ready to sell it. On a general marketplace, that usually means half-answered questions and buyers who don't really know what they're looking at. Vendibook is built differently, because everyone here is shopping for food-business equipment. Here's how selling works. You walk through the listing wizard step by step — your photos, the truck or trailer type, your asking price, location, condition, the equipment inside, specs, and any documents you want to share. You preview, and you publish — and yes, listing is completely free. From that point on, buyers searching Vendibook can actually find you. Your seller dashboard becomes your home base — messages, listing views, saves, buyer activity, all in one place. When a buyer's ready, eligible buyers may see more ways to complete the purchase — online checkout through Stripe, Affirm for eligible purchases subject to approval, and pay-in-person when you enable it. Once a purchase is created, the sale dashboard shows you the payment method, the payment status, the agreement, documents, messages, the handoff date, and what's needed next from each side. For online transactions, you'll see your payment hold and payout timeline right there. For pay-in-person sales, both sides confirm the handoff inside Vendibook. So — list for free, connect with serious buyers, and manage the sale without losing track of anything.",
     scenes: buildScenes(
       sellingScenes,
       [
-        'List where food-business buyers are searching.',
-        'Build a professional listing step by step.',
-        'Always free to list.',
-        'Your listing and buyer activity in one place.',
-        'More ways for eligible buyers to complete the purchase.',
-        'Follow the sale from purchase to completion.',
-        'Pay-in-person sales stay tracked too.',
-        'List for free. Sell with a better process.',
+        "Got a truck or trailer to sell? Here's where the right buyers are already looking.",
+        "The wizard walks you through the listing, step by step.",
+        "And listing is free — always.",
+        "Once you're live, your dashboard shows everything happening around your listing.",
+        "Eligible buyers see more ways to complete the purchase.",
+        "Follow the whole sale from checkout through completion.",
+        "Even cash sales stay organized — both sides confirm the handoff.",
+        "That's it — list free, sell smart, stay on top of every step.",
       ],
       [
         'Where buyers search',
@@ -169,6 +171,7 @@ export const explainers: Explainer[] = [
       ],
     ),
   },
+
   {
     id: 'hosting',
     title: 'Hosting on Vendibook',
@@ -183,18 +186,18 @@ export const explainers: Explainer[] = [
     secondaryCtaLabel: 'See Hosting Benefits',
     secondaryCtaRoute: '/how-it-works-host',
     transcript:
-      "If your food truck, trailer, commercial kitchen, or vendor space is not used every day, Vendibook can help turn that availability into booking opportunities. Create a detailed host listing with your pricing, amenities, rules, required documents, and access instructions. Use your host booking calendar to open available dates, block unavailable dates, and review upcoming bookings, so you can reduce scheduling conflicts. When a request arrives, review the renter, requested dates, intended use, verification status, and documents from your host dashboard before approving. Once approved, manage the booking from one place — messages, agreements, documents, payment status, handoff details, return date, and your upcoming payout. Online rental payments are securely processed through Stripe. Your dashboard shows when payment has been completed, when the rental is in progress, and when your payout is scheduled. You set your rental price. The renter reviews the applicable platform fee at checkout, and your host payout is scheduled 24 hours after the rental ends. Use the same dashboard to complete pickup and return confirmations and build your reputation through reviews. You provide the opportunity — Vendibook organizes the process.",
+      "Now — here's a thought. If your food truck, trailer, commercial kitchen, or vendor space isn't in use every single day, that downtime could actually be earning for you. That's what hosting on Vendibook is about. Let me show you how it works. You start by building your host listing — your pricing, your amenities, your rules, the documents you require, access instructions, all of it. Then you open your host booking calendar — you pick which dates are available, block out the ones that aren't, and see what's coming up, so you're not double-booking yourself. When a request comes in, you review the renter, their dates, what they're using it for, their verification status, and any documents they've submitted — all before you ever say yes. Once you approve, the whole booking lives in one place — messages, agreements, documents, payment status, the handoff, the return date, and your upcoming payout. Renter payments go through Stripe securely. Your dashboard shows you when the renter has paid, when the rental's in progress, and when your payout is scheduled. And here's the part hosts love — you set your rental price, and the renter sees the platform fee at checkout. Your payout is scheduled twenty-four hours after the rental ends. You handle pickup and return confirmations right in the same dashboard, and reviews build up your reputation over time. You bring the opportunity — Vendibook keeps the whole process organized.",
     scenes: buildScenes(
       hostingScenes,
       [
-        'Make available equipment and space work harder.',
-        'Set expectations before the request arrives.',
-        'You control when your listing is available.',
-        'Review the details before you approve.',
-        'One dashboard for your hosting activity.',
-        'See payment and payout status clearly.',
-        'Your listed rental price is what you receive.',
-        'You provide the opportunity. Vendibook organizes the process.',
+        "So — got a truck, trailer, kitchen, or space sitting idle? That's income waiting to happen.",
+        "First, set the expectations — pricing, rules, documents, all of it.",
+        "You stay in control of your calendar, always.",
+        "When a request comes in, you review the details before you approve.",
+        "Everything about your hosting activity lives in one dashboard.",
+        "Payment and payout status are always clearly shown.",
+        "You set the price — that's what you receive, on your payout schedule.",
+        "You bring the opportunity. Vendibook keeps it all organized.",
       ],
       [
         'Why host',
@@ -208,6 +211,7 @@ export const explainers: Explainer[] = [
       ],
     ),
   },
+
 ];
 
 export const getExplainer = (id: ExplainerType) =>

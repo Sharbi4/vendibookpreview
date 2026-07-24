@@ -85,13 +85,14 @@ async function synthesize(text: string, voice: string): Promise<Response> {
         // for long marketing copy.
         model_id: "eleven_multilingual_v2",
         voice_settings: {
-          stability: 0.55,
-          similarity_boost: 0.75,
-          style: 0.35,
+          stability: 0.42,
+          similarity_boost: 0.78,
+          style: 0.55,
           use_speaker_boost: true,
-          speed: 0.98,
+          speed: 0.96,
         },
       }),
+
     },
   );
 
@@ -109,8 +110,9 @@ async function synthesize(text: string, voice: string): Promise<Response> {
     headers: {
       ...corsHeaders,
       "Content-Type": "audio/mpeg",
-      // narration-tune: v4-elevenlabs-sarah
+      // narration-tune: v5-elevenlabs-conversational
       "Cache-Control": "public, max-age=86400, immutable",
+
     },
   });
 }
