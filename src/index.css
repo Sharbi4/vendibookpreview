@@ -269,7 +269,7 @@
     @apply border-border;
   }
 
-  /* Thicker, smoother borders globally */
+  /* Unified border widths — 1.5px default, 2px emphasis (never below 1.5 on interactive surfaces) */
   .border,
   .border-t,
   .border-r,
@@ -279,7 +279,17 @@
   .border-y {
     border-width: 1.5px;
   }
-  .border-2 { border-width: 2.5px; }
+  .border-2 { border-width: 2px; }
+  .border-\[1\.5px\] { border-width: 1.5px; }
+
+  /* Hover / selected border tokens for option-style cards (Turo/Airbnb feel) */
+  .border-hover:hover { border-color: rgba(255,255,255,0.22); }
+  .border-selected,
+  .data-\[state\=on\]\:border-selected[data-state="on"],
+  .aria-selected\:border-selected[aria-selected="true"] {
+    border-color: #FF5124;
+    border-width: 2px;
+  }
 
   body {
     @apply bg-background text-foreground antialiased;
