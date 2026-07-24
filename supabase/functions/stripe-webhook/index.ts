@@ -93,6 +93,41 @@ serve(async (req) => {
         const mode = session.metadata?.mode;
         const isEscrow = session.metadata?.escrow === 'true';
         const paymentType = session.metadata?.type;
+        const protectedSaleKind = session.metadata?.kind;
+
+        // Handle Vendibook Protected Sale deposit
+        if (protectedSaleKind === 'protected_sale_deposit' && session.payment_status === 'paid') {
+          const protectedSaleId = session.metadata?.protected_sale_id;
+          logStep("Processing protected sale deposit", { protectedSaleId, sessionId: session.id });
+          if (protectedSaleId) {
+            const { data: ps } = await supabaseClient
+              .from('protected_sales')
+              .select('id,status,deposit_paid_at')
+              .eq('id', protectedSaleId)
+              .maybeSingle();
+            if (ps && !ps.deposit_paid_at) {
+              const patch: Record<string, unknown> = {
+                deposit_stripe_session_id: session.id,
+                deposit_paid_at: new Date().toISOString(),
+              };
+              // Advance status to deposit_paid unless we've already moved beyond it.
+              const rank = ['initiated','id_verified','agreement_signed','deposit_paid','balance_authorized','handoff_scheduled','funds_released','completed'];
+              if (rank.indexOf(ps.status) < rank.indexOf('deposit_paid')) {
+                patch.status = 'deposit_paid';
+              }
+              await supabaseClient.from('protected_sales').update(patch).eq('id', protectedSaleId);
+              await supabaseClient.from('protected_sale_events').insert({
+                protected_sale_id: protectedSaleId,
+                event: 'deposit_paid',
+                payload: { session_id: session.id, amount_total: session.amount_total },
+              });
+            }
+          }
+          return new Response(JSON.stringify({ received: true, kind: 'protected_sale_deposit' }), {
+            status: 200,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
 
         // Handle freight payment for cash transactions
         if (paymentType === 'freight_payment' && session.payment_status === "paid") {
