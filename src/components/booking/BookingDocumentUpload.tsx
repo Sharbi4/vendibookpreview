@@ -17,6 +17,7 @@ import { cn } from '@/lib/utils';
 import { DOCUMENT_TYPE_LABELS, DOCUMENT_TYPE_DESCRIPTIONS } from '@/types/documents';
 import type { DocumentType } from '@/types/documents';
 import type { ListingRequiredDocument } from '@/hooks/useRequiredDocuments';
+import { TrustModule, DOCUMENT_TRUST_POINTS, DOCUMENT_DISCLAIMER } from '@/components/journey';
 
 export interface StagedDocument {
   documentType: DocumentType;
@@ -349,6 +350,13 @@ export const BookingDocumentUpload = ({
           </div>
         </div>
       </div>
+
+      <TrustModule
+        variant="compact"
+        title="Your documents stay private"
+        points={DOCUMENT_TRUST_POINTS}
+        disclaimer={DOCUMENT_DISCLAIMER}
+      />
 
       {/* Continue button */}
       <Button 
