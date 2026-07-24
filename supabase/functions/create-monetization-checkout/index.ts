@@ -98,6 +98,31 @@ serve(async (req) => {
       }
     }
 
+    // Automatic member discount for active subscribers (only on one-time add-ons, and only
+    // when no explicit discount code already applied — codes and member perks don't stack).
+    let memberDiscountCents = 0;
+    if (
+      discountAppliedCents === 0 &&
+      product.billing_type === "one_time" &&
+      (product.member_discount_pct ?? 0) > 0
+    ) {
+      const { data: activeSub } = await supabase
+        .from("host_subscriptions")
+        .select("status")
+        .eq("user_id", user.id)
+        .in("status", ["active", "trialing"])
+        .limit(1)
+        .maybeSingle();
+      if (activeSub) {
+        memberDiscountCents = Math.floor((priceCents * product.member_discount_pct) / 100);
+        priceCents = Math.max(0, priceCents - memberDiscountCents);
+        log("member discount applied", {
+          pct: product.member_discount_pct,
+          memberDiscountCents,
+        });
+      }
+    }
+
     // Prevent overlapping active same-type promo on this listing
     if (body.listing_id && product.promo_type) {
       const { data: overlap } = await supabase
