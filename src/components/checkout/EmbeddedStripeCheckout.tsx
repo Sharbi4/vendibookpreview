@@ -9,7 +9,7 @@ import { CheckCircle2, Loader2, Lock, ShieldCheck, X } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { getStripe } from '@/lib/stripeClient';
-import { stripeAppearance, stripeFonts } from '@/lib/stripeAppearance';
+import { stripeAppearance, getStripeFonts } from '@/lib/stripeAppearance';
 import { resolveStripeErrorCopy, type StripeErrorCopy } from '@/lib/stripeErrorCopy';
 import { TRUST_COPY } from '@/lib/transactionVocabulary';
 import PaymentFormSkeleton from './PaymentFormSkeleton';
@@ -124,7 +124,7 @@ const EmbeddedStripeCheckout = ({
                   clientSecret,
                   elementsOptions: {
                     appearance: stripeAppearance,
-                    fonts: stripeFonts,
+                    fonts: getStripeFonts(typeof window !== 'undefined' ? window.location.origin : ''),
                     loader: 'auto',
                   },
                 }}
