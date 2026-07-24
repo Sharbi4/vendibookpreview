@@ -428,12 +428,12 @@ const PublicProfile = () => {
         {/* ══ TRUST & SOCIAL PROOF STRIP ══ */}
         <div className="container py-4">
           <StorefrontTrustStrip
-            isVerified={profile.identity_verified || false}
+            isVerified={vis.verifiedBadge && (profile.identity_verified || false)}
             responseTime={responseTimeData?.avgResponseTime}
             completedBookings={completedBookings || 0}
             averageRating={stats?.averageRating}
             totalReviews={stats?.totalReviewsReceived}
-            memberSince={memberSinceText}
+            memberSince={vis.memberSince ? memberSinceText : undefined}
             isTopRated={hostBadges.isTopRated}
             isSuperhost={hostBadges.isSuperhost}
           />
