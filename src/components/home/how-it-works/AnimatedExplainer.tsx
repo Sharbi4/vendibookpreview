@@ -261,10 +261,16 @@ export const AnimatedExplainer = ({ explainer, onProgress, onEnded, onSceneChang
     const a = narrationRef.current;
     if (!a) return;
     try {
-      const target = Math.min(ms / 1000, a.duration || ms / 1000);
+      const dur = a.duration;
+      // When we know both durations, map from video-timeline ms → audio time
+      // so scene jumps land on the corresponding voiceover beat.
+      const target = audioDurationMs > 0 && Number.isFinite(dur)
+        ? (ms / totalMs) * dur
+        : Math.min(ms / 1000, dur || ms / 1000);
       if (Number.isFinite(target)) a.currentTime = Math.max(0, target);
     } catch { /* ignore */ }
   };
+
 
   // Cumulative start offset (ms) for each scene, plus its percent along the
   // total timeline — used by the chapter chips and progress-bar ticks.
