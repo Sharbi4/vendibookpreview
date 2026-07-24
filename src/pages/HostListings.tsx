@@ -20,6 +20,7 @@ const HostListings = () => {
   const { hasRole } = useAuth();
   const { listings, isLoading, stats, pauseListing, publishListing, deleteListing, updateListingPrice } = useHostListings();
   const { isConnected, connectStripe, isConnecting } = useStripeConnect();
+  const { canBulkListings } = useHostEntitlements();
   const [showStripeModal, setShowStripeModal] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
 
@@ -27,6 +28,7 @@ const HostListings = () => {
 
   const isHost = hasRole('host');
   const isPowerUser = listings.length > 2;
+  const canUseTable = isPowerUser && canBulkListings;
 
   const draftListings = listings.filter(l => l.status === 'draft');
   const publishedListings = listings.filter(l => l.status !== 'draft');
