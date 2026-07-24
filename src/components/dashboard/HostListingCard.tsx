@@ -24,6 +24,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import type { Tables } from '@/integrations/supabase/types';
 import { Badge } from '@/components/ui/badge';
 import { FeaturedListingModal } from './FeaturedListingModal';
+import { ListingUpgradesDialog } from '@/components/monetization/ListingUpgradesDialog';
 import ShareKitModal from './ShareKitModal';
 import { isListingFeatured } from '@/lib/featured';
 
