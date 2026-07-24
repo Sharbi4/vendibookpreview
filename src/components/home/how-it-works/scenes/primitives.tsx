@@ -82,9 +82,12 @@ export const SceneShell = ({ children, caption }: { children: ReactNode; caption
             ].join(','),
           }}
         />
-        <svg
+        {/* Parallax grid — slowly drifts to give the scene a living backplate. */}
+        <motion.svg
           aria-hidden
-          className="pointer-events-none absolute inset-0 z-0 h-full w-full opacity-[0.06] mix-blend-overlay"
+          className="pointer-events-none absolute inset-0 z-0 h-full w-full opacity-[0.07] mix-blend-overlay"
+          animate={{ backgroundPositionX: [0, 32], backgroundPositionY: [0, 32] }}
+          transition={{ duration: 30, repeat: Infinity, ease: 'linear' }}
         >
           <defs>
             <pattern id="scene-grid" width="32" height="32" patternUnits="userSpaceOnUse">
@@ -92,7 +95,31 @@ export const SceneShell = ({ children, caption }: { children: ReactNode; caption
             </pattern>
           </defs>
           <rect width="100%" height="100%" fill="url(#scene-grid)" />
-        </svg>
+        </motion.svg>
+        {/* Aurora light-beam sweep — travels diagonally, brand-tinted. */}
+        <motion.div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 z-0"
+          style={{
+            background:
+              'linear-gradient(115deg, transparent 35%, hsl(var(--primary) / 0.14) 46%, hsl(var(--primary) / 0.22) 50%, hsl(var(--primary) / 0.14) 54%, transparent 65%)',
+            mixBlendMode: 'screen',
+          }}
+          animate={{ x: ['-30%', '30%'] }}
+          transition={{ duration: 9, repeat: Infinity, ease: 'easeInOut', repeatType: 'mirror' }}
+        />
+        {/* Scanning horizon line — very faint, adds "systems monitoring" energy. */}
+        <motion.div
+          aria-hidden
+          className="pointer-events-none absolute inset-x-0 z-0 h-px"
+          style={{
+            background:
+              'linear-gradient(90deg, transparent, hsl(var(--primary) / 0.55), transparent)',
+            boxShadow: '0 0 12px hsl(var(--primary) / 0.6)',
+          }}
+          animate={{ top: ['12%', '88%', '12%'] }}
+          transition={{ duration: 11, repeat: Infinity, ease: 'easeInOut' }}
+        />
         <div
           aria-hidden
           className="pointer-events-none absolute inset-0 z-0"
