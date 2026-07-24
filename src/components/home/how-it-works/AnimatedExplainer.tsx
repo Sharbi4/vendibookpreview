@@ -4,6 +4,7 @@ import { Play, Pause, ChevronLeft, ChevronRight, Captions, Volume2, VolumeX } fr
 import type { Explainer } from './data/explainers';
 import { cn } from '@/lib/utils';
 import { createAmbientBed, type AmbientBed } from './audio/ambientBed';
+import { trackLeadEvent } from '@/lib/leadTracking';
 
 interface Props {
   explainer: Explainer;
