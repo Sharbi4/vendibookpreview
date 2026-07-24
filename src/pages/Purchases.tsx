@@ -133,46 +133,121 @@ export default function Purchases() {
             </CardContent>
           </Card>
 
-          {/* One-time entitlements */}
+          {/* Active boosts (time-boxed promotions) */}
           <Card className="rounded-2xl border border-border shadow-sm bg-card">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-lg">
-                <Package className="h-5 w-5" /> Add-ons & services
+                <Zap className="h-5 w-5" /> Active boosts
               </CardTitle>
-              <CardDescription>One-time upgrades and services you've unlocked</CardDescription>
+              <CardDescription>Featured placements and badges running right now</CardDescription>
             </CardHeader>
             <CardContent>
               {loading ? (
                 <p className="text-sm text-muted-foreground py-2">Loading...</p>
-              ) : oneTimes.length === 0 ? (
+              ) : promotions.length === 0 ? (
                 <div className="text-sm text-muted-foreground py-2">
-                  No add-ons yet. <Link to="/pricing" className="text-primary underline">Explore add-ons →</Link>
+                  No active boosts. <Link to="/pricing#upgrades" className="text-primary underline">See listing upgrades →</Link>
                 </div>
               ) : (
                 <ul className="space-y-3">
-                  {oneTimes.map((e, i) => (
-                    <li key={`${e.productSlug}-${i}`} className="flex flex-wrap items-center gap-3 rounded-xl border border-border/60 bg-background/40 px-4 py-3">
-                      <div className="flex-1 min-w-0">
-                        <div className="text-sm font-medium text-foreground truncate">{e.productName}</div>
-                        <div className="text-xs text-muted-foreground">
-                          {e.listingId ? 'Applied to listing' : 'Account-wide'}
-                          {fmtDate(e.since) ? ` · ${fmtDate(e.since)}` : ''}
+                  {promotions.map((e, i) => {
+                    const surface = surfaceFor(e);
+                    return (
+                      <li key={`${e.productSlug}-${i}`} className="flex flex-wrap items-center gap-3 rounded-xl border border-border/60 bg-background/40 px-4 py-3">
+                        <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm font-medium text-foreground truncate">{e.productName}</div>
+                          {e.endsAt && (
+                            <div className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
+                              <Clock className="h-3 w-3" />
+                              Runs through {fmtDate(e.endsAt)}
+                            </div>
+                          )}
                         </div>
-                      </div>
-                      <Badge variant="outline" className={`capitalize ${STATUS_TONE[e.status] || ''}`}>
-                        {e.status}
-                      </Badge>
-                      {e.listingId && (
-                        <Button asChild size="sm" variant="ghost">
-                          <Link to={`/listing/${e.listingId}`}>View listing</Link>
-                        </Button>
-                      )}
-                    </li>
-                  ))}
+                        {surface && (
+                          <Button asChild size="sm" variant="ghost">
+                            <Link to={surface.to}>{surface.label}</Link>
+                          </Button>
+                        )}
+                      </li>
+                    );
+                  })}
                 </ul>
               )}
             </CardContent>
           </Card>
+
+          {/* Services in progress */}
+          <Card className="rounded-2xl border border-border shadow-sm bg-card">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <Wrench className="h-5 w-5" /> Services in progress
+              </CardTitle>
+              <CardDescription>Done-for-you work our team is delivering for you</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {loading ? (
+                <p className="text-sm text-muted-foreground py-2">Loading...</p>
+              ) : services.length === 0 ? (
+                <div className="text-sm text-muted-foreground py-2">
+                  No services in progress. <Link to="/services" className="text-primary underline">Explore services →</Link>
+                </div>
+              ) : (
+                <ul className="space-y-3">
+                  {services.map((e, i) => {
+                    const surface = surfaceFor(e);
+                    return (
+                      <li key={`${e.productSlug}-${i}`} className="flex flex-wrap items-center gap-3 rounded-xl border border-border/60 bg-background/40 px-4 py-3">
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm font-medium text-foreground truncate">{e.productName}</div>
+                          <div className="text-xs text-muted-foreground">
+                            {e.listingId ? 'Applied to listing' : 'Account-wide'}
+                            {fmtDate(e.since) ? ` · ordered ${fmtDate(e.since)}` : ''}
+                          </div>
+                        </div>
+                        <Badge variant="outline" className={`capitalize ${STATUS_TONE[e.status] || ''}`}>
+                          {e.status}
+                        </Badge>
+                        {surface && (
+                          <Button asChild size="sm" variant="ghost">
+                            <Link to={surface.to}>{surface.label}</Link>
+                          </Button>
+                        )}
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Completed / refunded */}
+          {!loading && completed.length > 0 && (
+            <Card className="rounded-2xl border border-border shadow-sm bg-card">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <Package className="h-5 w-5" /> Completed
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-3">
+                  {completed.map((e, i) => (
+                    <li key={`${e.productSlug}-${i}`} className="flex flex-wrap items-center gap-3 rounded-xl border border-border/60 bg-background/40 px-4 py-3">
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-medium text-foreground truncate">{e.productName}</div>
+                        <div className="text-xs text-muted-foreground">{fmtDate(e.since)}</div>
+                      </div>
+                      <Badge variant="outline" className={`capitalize ${STATUS_TONE[e.status] || ''}`}>
+                        {e.status}
+                      </Badge>
+                    </li>
+                  ))}
+                </ul>
+              </CardContent>
+            </Card>
+          )}
+
+          <PackagesIntro variant="compact" className="mt-2" />
 
           {/* History */}
           <PurchaseHistoryCard />
