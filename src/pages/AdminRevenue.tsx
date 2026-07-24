@@ -74,16 +74,18 @@ export default function AdminRevenue() {
   const load = async () => {
     setLoading(true);
     try {
-      const [p, pu, pr, dc] = await Promise.all([
+      const [p, pu, pr, dc, sb] = await Promise.all([
         anyClient.from('monetization_products').select('*').order('display_order'),
         anyClient.from('monetization_purchases').select('*').order('created_at', { ascending: false }).limit(200),
         anyClient.from('listing_promotions').select('*').order('starts_at', { ascending: false }).limit(200),
         anyClient.from('discount_codes').select('*').order('created_at', { ascending: false }),
+        anyClient.from('host_subscriptions').select('*').order('created_at', { ascending: false }).limit(1000),
       ]);
       setProducts(p.data ?? []);
       setPurchases(pu.data ?? []);
       setPromos(pr.data ?? []);
       setDiscounts(dc.data ?? []);
+      setSubscriptions(sb.data ?? []);
     } catch (e) {
       console.error('admin revenue load failed', e);
       toast.error('Failed to load revenue data');
