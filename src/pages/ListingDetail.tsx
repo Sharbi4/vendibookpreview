@@ -26,6 +26,8 @@ import PromoVideoPlayer from '@/components/listing/PromoVideoPlayer';
 import EnhancedQuickHighlights from '@/components/listing-detail/EnhancedQuickHighlights';
 import PricingSection from '@/components/listing-detail/PricingSection';
 import { AmenitiesSection } from '@/components/listing-detail/AmenitiesSection';
+import { ReportIssueButton } from '@/components/support/ReportIssueButton';
+
 import { StickyMobileCTA } from '@/components/listing-detail/StickyMobileCTA';
 import ListingConciergeBox from '@/components/listing-detail/ListingConciergeBox';
 import { FavoriteButton } from '@/components/listing/FavoriteButton';
@@ -914,6 +916,23 @@ const ListingDetail = () => {
           <Link to="/how-it-works" className="text-muted-foreground hover:text-primary underline underline-offset-2">How It Works</Link>
         </div>
       </nav>
+
+
+
+      <div className="container pb-8 flex justify-center">
+        <ReportIssueButton
+          variant="ghost"
+          size="sm"
+          label="Report this listing"
+          showIcon={false}
+          className="text-xs text-muted-foreground hover:text-foreground"
+          context={{
+            featureArea: 'listing_page',
+            defaultCategory: 'listing_report',
+            related: { listing_id: listing.id },
+          }}
+        />
+      </div>
 
       <Footer />
     </div>

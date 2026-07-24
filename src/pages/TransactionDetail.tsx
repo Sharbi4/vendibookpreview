@@ -9,6 +9,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { StatusPillBadge, paymentPill, fulfillmentPill } from '@/components/transaction/statusPills';
 import { buildTransactionTimeline, TransactionTimeline } from '@/components/transaction/TransactionTimeline';
 import { computeNextAction, NextActionCard } from '@/components/transaction/NextActionCard';
+import { GetHelpWithOrder } from '@/components/trust/GetHelpWithOrder';
 
 type Tx = Record<string, any> | null;
 type Listing = { id: string; title: string | null; image_urls: string[] | null; category?: string | null } | null;
@@ -192,6 +193,27 @@ export default function TransactionDetail() {
             </Card>
           </div>
         </div>
+
+        {role && (
+          <GetHelpWithOrder
+            role={role}
+            transactionId={String(tx.id)}
+            listingId={listing?.id ?? tx.listing_id ?? null}
+            orderTotal={total}
+            orderLabel={`#${String(tx.id).slice(0, 8).toUpperCase()}`}
+            refundEligible={
+              role === 'buyer' &&
+              ['paid', 'shipped', 'delivered', 'completed'].includes(String(tx.status ?? '')) &&
+              tx.status !== 'refunded' &&
+              tx.status !== 'disputed'
+            }
+            disputeEligible={
+              ['paid', 'shipped', 'delivered'].includes(String(tx.status ?? '')) ||
+              (role === 'seller' && tx.status === 'disputed')
+            }
+            className="mt-6"
+          />
+        )}
       </main>
       <Footer />
     </div>

@@ -18,6 +18,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import SEO from '@/components/SEO';
 import { ReportIssueButton } from '@/components/support/ReportIssueButton';
+import { GetHelpWithOrder } from '@/components/trust/GetHelpWithOrder';
 
 
 const SHIPPING_STATUS_CONFIG = {
@@ -914,15 +915,26 @@ const OrderTracking = () => {
             </CardContent>
           </Card>
 
-          {/* Help Section */}
-          <div className="mt-6 text-center">
-            <p className="text-sm text-muted-foreground">
-              Need help with your order?{' '}
-              <Link to="/contact" className="text-primary hover:underline">
-                Contact Support
-              </Link>
-            </p>
-          </div>
+          {(isBuyer || isSeller) && (
+            <GetHelpWithOrder
+              role={isBuyer ? 'buyer' : 'seller'}
+              transactionId={transaction.id}
+              listingId={transaction.listing_id}
+              orderTotal={Number((transaction as any).total_amount ?? (transaction as any).amount ?? 0)}
+              orderLabel={`#${String(transaction.id).slice(0, 8).toUpperCase()}`}
+              refundEligible={
+                isBuyer &&
+                ['paid', 'shipped', 'delivered', 'completed'].includes(String(transaction.status ?? '')) &&
+                transaction.status !== 'refunded' &&
+                transaction.status !== 'disputed'
+              }
+              disputeEligible={
+                ['paid', 'shipped', 'delivered'].includes(String(transaction.status ?? '')) ||
+                (isSeller && transaction.status === 'disputed')
+              }
+              className="mt-6"
+            />
+          )}
         </div>
       </main>
       

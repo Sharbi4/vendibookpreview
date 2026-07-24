@@ -27,11 +27,15 @@ const VendiChatWidget = () => {
   const chatIdRef = useRef<string | undefined>(undefined);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Listen for external open trigger
+  // Listen for external open trigger. Optional `detail.prefill` populates the input.
   useEffect(() => {
-    const handler = () => setIsOpen(true);
-    window.addEventListener('open-vendi-chat', handler);
-    return () => window.removeEventListener('open-vendi-chat', handler);
+    const handler = (e: Event) => {
+      setIsOpen(true);
+      const detail = (e as CustomEvent<{ prefill?: string }>).detail;
+      if (detail?.prefill) setInput(detail.prefill);
+    };
+    window.addEventListener('open-vendi-chat', handler as EventListener);
+    return () => window.removeEventListener('open-vendi-chat', handler as EventListener);
   }, []);
 
   // Restore chatId
