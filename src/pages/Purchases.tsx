@@ -1,11 +1,14 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { CreditCard, Package, Receipt, ArrowRight, CheckCircle2 } from 'lucide-react';
+import { CreditCard, Package, Receipt, ArrowRight, CheckCircle2, ExternalLink, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useEntitlements } from '@/hooks/useEntitlements';
 import { PurchaseHistoryCard } from '@/components/monetization/PurchaseHistoryCard';
 import Header from '@/components/layout/Header';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 const STATUS_TONE: Record<string, string> = {
   active: 'bg-emerald-500/15 text-emerald-500 border-emerald-500/30',
@@ -27,10 +30,26 @@ function fmtDate(iso?: string | null) {
 }
 
 export default function Purchases() {
-  const { all, loading } = useEntitlements();
+  const { all, loading, hasActiveSubscription } = useEntitlements();
+  const [openingPortal, setOpeningPortal] = useState(false);
 
   const subscriptions = all.filter((e) => e.kind === 'subscription');
   const oneTimes = all.filter((e) => e.kind === 'one_time');
+
+  const openStripePortal = async () => {
+    setOpeningPortal(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('customer-portal');
+      if (error) throw error;
+      const url = (data as { url?: string })?.url;
+      if (!url) throw new Error('No portal URL returned');
+      window.open(url, '_blank', 'noopener,noreferrer');
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Could not open Stripe billing portal');
+    } finally {
+      setOpeningPortal(false);
+    }
+  };
 
   return (
     <>
@@ -44,12 +63,25 @@ export default function Purchases() {
                 Active plans, add-ons, and transaction history in one place.
               </p>
             </div>
-            <Button asChild variant="outline" size="sm">
-              <Link to="/pricing">
-                Browse plans & add-ons <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
-              </Link>
-            </Button>
+            <div className="flex flex-wrap gap-2">
+              {hasActiveSubscription && (
+                <Button onClick={openStripePortal} variant="outline" size="sm" disabled={openingPortal}>
+                  {openingPortal ? (
+                    <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <ExternalLink className="mr-1.5 h-3.5 w-3.5" />
+                  )}
+                  Manage billing
+                </Button>
+              )}
+              <Button asChild variant="outline" size="sm">
+                <Link to="/pricing">
+                  Browse plans & add-ons <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
+                </Link>
+              </Button>
+            </div>
           </header>
+
 
           {/* Subscriptions */}
           <Card className="rounded-2xl border border-border shadow-sm bg-card">

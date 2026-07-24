@@ -166,17 +166,6 @@
     </image:image>
   </url>
   <url>
-    <loc>https://vendibook.com/listing/b8e79191-e69d-483c-bad1-8ebcfc6fb4b6</loc>
-    <lastmod>2026-07-22</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/14242a2e-3e7f-4794-9aed-fa72a5bbf105/b8e79191-e69d-483c-bad1-8ebcfc6fb4b6/1784040291013-pxs3p.jpg</image:loc>
-      <image:title>Fully equipped food truck, full kitchen, newly built kitchen, Mint condition</image:title>
-      <image:caption>Fully equipped food truck, full kitchen, newly built kitchen, Mint condition in Zephyrhills, FL on Vendibook</image:caption>
-    </image:image>
-  </url>
-  <url>
     <loc>https://vendibook.com/listing/d02ec787-17cb-4e37-b1a7-e70dec639b23</loc>
     <lastmod>2026-07-24</lastmod>
     <changefreq>weekly</changefreq>
@@ -251,6 +240,17 @@
       <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/0b669ac2-7bf0-4013-b671-0576eea77e00/a02adafe-ad00-40cb-90c7-2a8ccc55f469/1768963055920-fywcc.jpg</image:loc>
       <image:title>Coffee Tailer</image:title>
       <image:caption>Coffee Tailer in San Francisco, CA on Vendibook</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://vendibook.com/listing/b8e79191-e69d-483c-bad1-8ebcfc6fb4b6</loc>
+    <lastmod>2026-07-24</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/14242a2e-3e7f-4794-9aed-fa72a5bbf105/b8e79191-e69d-483c-bad1-8ebcfc6fb4b6/1784040291013-pxs3p.jpg</image:loc>
+      <image:title>Fully equipped food truck, full kitchen, newly built kitchen, Mint condition</image:title>
+      <image:caption>Fully equipped food truck, full kitchen, newly built kitchen, Mint condition in Zephyrhills, FL on Vendibook</image:caption>
     </image:image>
   </url>
   <url>
