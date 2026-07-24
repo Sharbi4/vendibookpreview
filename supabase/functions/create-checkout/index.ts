@@ -42,6 +42,9 @@ interface CheckoutRequest {
   // fresh terms row, preserving the acknowledgement stamp written by
   // acknowledge-terms in the FinalReviewSheet flow.
   terms_id?: string | null;
+  // When 'elements', create an embedded Payment Element session (client_secret returned).
+  // When 'hosted' (default fallback), create a redirect Checkout session (url returned).
+  ui_mode?: 'hosted' | 'elements';
 }
 
 serve(async (req) => {
@@ -91,7 +94,9 @@ serve(async (req) => {
       freight_cost: rawFreightCost,
       referral_code: rawReferralCode,
       terms_id: draftTermsId,
+      ui_mode: uiModeRaw,
     } = body;
+    const uiMode: 'hosted' | 'elements' = uiModeRaw === 'elements' ? 'elements' : 'hosted';
     const referral_code = rawReferralCode ? String(rawReferralCode).trim().toUpperCase().slice(0, 32) : '';
     
     // Handle null values from request body (null !== undefined, so defaults don't apply)
@@ -553,8 +558,10 @@ serve(async (req) => {
             terms_version: TERMS_VERSION,
           },
         },
-        success_url: `${origin}/payment-success?session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${origin}/payment-cancelled?listing=${listing_id}`,
+        success_url: uiMode === 'hosted' ? `${origin}/payment-success?session_id={CHECKOUT_SESSION_ID}` : undefined,
+        cancel_url: uiMode === 'hosted' ? `${origin}/payment-cancelled?listing=${listing_id}` : undefined,
+        return_url: uiMode === 'elements' ? `${origin}/payment-success?session_id={CHECKOUT_SESSION_ID}` : undefined,
+        ui_mode: uiMode === 'elements' ? 'custom' : undefined,
         metadata: {
           booking_id: booking_id || '',
           listing_id,
@@ -657,8 +664,10 @@ serve(async (req) => {
             terms_version: TERMS_VERSION,
           },
         },
-        success_url: `${origin}/payment-success?session_id={CHECKOUT_SESSION_ID}&escrow=true`,
-        cancel_url: `${origin}/payment-cancelled?listing=${listing_id}`,
+        success_url: uiMode === 'hosted' ? `${origin}/payment-success?session_id={CHECKOUT_SESSION_ID}&escrow=true` : undefined,
+        cancel_url: uiMode === 'hosted' ? `${origin}/payment-cancelled?listing=${listing_id}` : undefined,
+        return_url: uiMode === 'elements' ? `${origin}/payment-success?session_id={CHECKOUT_SESSION_ID}&escrow=true` : undefined,
+        ui_mode: uiMode === 'elements' ? 'custom' : undefined,
         metadata: {
           listing_id,
           mode: 'sale',
@@ -692,8 +701,10 @@ serve(async (req) => {
     logStep("Checkout session created", { sessionId: session.id, url: session.url, idempotencyKey });
 
     return new Response(
-      JSON.stringify({ 
-        url: session.url,
+      JSON.stringify({
+        url: uiMode === 'hosted' ? session.url : null,
+        client_secret: uiMode === 'elements' ? (session as any).client_secret ?? null : null,
+        ui_mode: uiMode,
         session_id: session.id,
         customer_total: customerTotal / 100,
         platform_fee: applicationFee / 100,

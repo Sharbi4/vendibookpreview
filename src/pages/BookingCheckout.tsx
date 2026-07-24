@@ -38,6 +38,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { calculateRentalFees } from '@/lib/commissions';
 import { trackFormSubmitConversion } from '@/lib/gtagConversions';
 import { trackRequestStarted, trackRequestSubmitted } from '@/lib/analytics';
+import { EmbeddedStripeCheckout } from '@/components/checkout';
+import { isEmbeddedCheckoutEnabled } from '@/lib/featureFlags';
 import { FinalReviewSheet } from '@/components/transaction/FinalReviewSheet';
 import { useTermsGate } from '@/hooks/useTermsGate';
 import { buildTerms } from '@/lib/transactionTerms';
@@ -125,6 +127,7 @@ const BookingCheckout = () => {
   const [userInfo, setUserInfo] = useState<BookingUserInfo | null>(null);
   const [showInfoModal, setShowInfoModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [embeddedCheckout, setEmbeddedCheckout] = useState<{ clientSecret: string; returnUrl: string } | null>(null);
   const [stagedDocuments, setStagedDocuments] = useState<StagedDocument[]>([]);
   const [showAuthModal, setShowAuthModal] = useState(false);
   
@@ -363,7 +366,8 @@ const BookingCheckout = () => {
     })();
 
     // Pre-open a blank window BEFORE async calls to avoid popup blockers
-    const checkoutWindow = isInIframe ? window.open('about:blank', '_blank') : null;
+    const wantsEmbedded = isEmbeddedCheckoutEnabled() && (listing?.instant_book ?? false);
+    const checkoutWindow = !wantsEmbedded && isInIframe ? window.open('about:blank', '_blank') : null;
 
     setIsSubmitting(true);
 
@@ -468,7 +472,8 @@ const BookingCheckout = () => {
       // For Instant Book: use regular checkout (immediate capture)
       // For Request to Book: use authorization hold (capture on approval)
       const checkoutFunction = listing.instant_book ? 'create-checkout' : 'create-booking-hold';
-      
+      const useEmbedded = wantsEmbedded && checkoutFunction === 'create-checkout';
+
       const { data: checkoutData, error: checkoutError } = await supabase.functions.invoke(checkoutFunction, {
         body: {
           booking_id: bookingResult.id,
@@ -479,6 +484,7 @@ const BookingCheckout = () => {
           deposit_amount: depositAmount,
           referral_code: referralValid ? referralCode : undefined,
           terms_id: termsGate.termsId,
+          ...(useEmbedded ? { ui_mode: 'elements' } : {}),
         },
       });
 
@@ -508,6 +514,16 @@ const BookingCheckout = () => {
       }
 
       if (checkoutError) throw checkoutError;
+      if (useEmbedded && checkoutData?.client_secret) {
+        const returnUrl = `${window.location.origin}/payment-success?session_id=${checkoutData.session_id}`;
+        setEmbeddedCheckout({ clientSecret: checkoutData.client_secret, returnUrl });
+        setTimeout(() => {
+          trackFormSubmitConversion({ form_type: 'instant_book', listing_id: listingId });
+          trackRequestSubmitted(listingId || '', true);
+        }, 0);
+        setIsSubmitting(false);
+        return;
+      }
       if (!checkoutData?.url) throw new Error('Failed to create checkout session');
 
 
@@ -1383,6 +1399,13 @@ const BookingCheckout = () => {
           onConfirm={runSubmit}
           submitting={isSubmitting || termsGate.preparing}
           confirmLabel="Continue to secure payment"
+        />
+      ) : null}
+      {embeddedCheckout ? (
+        <EmbeddedStripeCheckout
+          clientSecret={embeddedCheckout.clientSecret}
+          returnUrl={embeddedCheckout.returnUrl}
+          onClose={() => setEmbeddedCheckout(null)}
         />
       ) : null}
     </div>
