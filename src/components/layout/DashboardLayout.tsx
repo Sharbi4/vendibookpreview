@@ -277,15 +277,18 @@ export const DashboardLayout = ({ children, mode, onModeChange, isHost }: Dashbo
     </div>
   );
 
+  // Flatten items for icon rail (workspace section only)
+  const railItems = sections.find((s) => s.id === 'workspace')?.items ?? [];
+
   return (
-    <div className="min-h-screen flex flex-col bg-background">
-      {/* Mobile Header */}
-      <header className="lg:hidden sticky top-0 z-50 bg-background border-b border-border">
+    <div className="dashboard-shell min-h-screen flex flex-col bg-background">
+      {/* Mobile Header — only real mobile, tablets get the icon rail */}
+      <header className="md:hidden sticky top-0 z-50 bg-background/90 backdrop-blur border-b border-white/5">
         <div className="flex items-center justify-between h-14 px-4 gap-2">
           <div className="flex items-center gap-2">
             <Sheet open={isMobileOpen} onOpenChange={setIsMobileOpen}>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-9 w-9">
+                <Button variant="ghost" size="icon" className="h-9 w-9" aria-label="Open menu">
                   <Menu className="h-5 w-5" />
                 </Button>
               </SheetTrigger>
@@ -293,7 +296,7 @@ export const DashboardLayout = ({ children, mode, onModeChange, isHost }: Dashbo
                 <SidebarContent onLinkClick={() => setIsMobileOpen(false)} />
               </SheetContent>
             </Sheet>
-            <Link to="/">
+            <Link to="/" aria-label="Vendibook home">
               <img src={vendibookFavicon} alt="Vendibook" className="h-7 w-7" />
             </Link>
           </div>
@@ -307,12 +310,63 @@ export const DashboardLayout = ({ children, mode, onModeChange, isHost }: Dashbo
       </header>
 
       <div className="flex flex-1">
-        <aside className="hidden lg:flex lg:w-64 flex-col border-r border-border bg-background shrink-0">
+        {/* Full sidebar — lg+ */}
+        <aside className="hidden lg:flex lg:w-64 flex-col border-r border-white/5 bg-background shrink-0">
           <SidebarContent />
         </aside>
 
+        {/* Icon rail — md → lg only. Persistent, no hamburger required. */}
+        <TooltipProvider delayDuration={100}>
+          <aside className="hidden md:flex lg:hidden w-16 flex-col items-center border-r border-white/5 bg-background shrink-0 py-3 gap-1">
+            <Link to="/" className="mb-2" aria-label="Vendibook home">
+              <img src={vendibookFavicon} alt="Vendibook" className="h-8 w-8" />
+            </Link>
+            <button
+              onClick={() => setIsMobileOpen(true)}
+              className="h-10 w-10 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-white/[0.04]"
+              aria-label="Expand sidebar"
+            >
+              <Menu className="h-4 w-4" />
+            </button>
+            <Sheet open={isMobileOpen} onOpenChange={setIsMobileOpen}>
+              <SheetContent side="left" className="w-72 p-0">
+                <SidebarContent onLinkClick={() => setIsMobileOpen(false)} />
+              </SheetContent>
+            </Sheet>
+            <div className="w-8 h-px bg-white/10 my-1" />
+            {railItems.map((item) => {
+              const active = isActive(item.href, item.tab);
+              return (
+                <Tooltip key={item.title}>
+                  <TooltipTrigger asChild>
+                    <Link
+                      to={item.href}
+                      aria-label={item.title}
+                      className={cn(
+                        'relative h-10 w-10 rounded-lg flex items-center justify-center transition-colors',
+                        active
+                          ? 'text-primary bg-white/[0.04]'
+                          : 'text-muted-foreground hover:text-foreground hover:bg-white/[0.04]',
+                      )}
+                    >
+                      {active && (
+                        <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full bg-primary shadow-[0_0_10px_-2px_rgba(255,81,36,0.9)]" />
+                      )}
+                      <item.icon className="h-[18px] w-[18px]" strokeWidth={active ? 2.2 : 1.75} />
+                      {item.badge && (
+                        <span className="absolute -top-0.5 -right-0.5">{item.badge}</span>
+                      )}
+                    </Link>
+                  </TooltipTrigger>
+                  <TooltipContent side="right" className="text-xs">{item.title}</TooltipContent>
+                </Tooltip>
+              );
+            })}
+          </aside>
+        </TooltipProvider>
+
         <main className="flex-1 flex flex-col min-w-0">
-          <div className="hidden lg:flex items-center justify-between gap-3 px-6 py-3 border-b border-border bg-background">
+          <div className="hidden md:flex items-center justify-between gap-3 px-4 lg:px-6 py-3 border-b border-white/5 bg-background">
             <div />
             {isHost && <div className="w-[240px]"><ModeSwitch /></div>}
             <div className="flex items-center gap-3">
@@ -321,11 +375,14 @@ export const DashboardLayout = ({ children, mode, onModeChange, isHost }: Dashbo
               <AppDropdownMenu variant="light" />
             </div>
           </div>
-          <div className="flex-1 p-4 md:p-6 lg:p-8 pb-24 lg:pb-6 overflow-auto">
+          <div className="flex-1 p-4 md:p-6 lg:p-8 pb-24 md:pb-6 overflow-auto">
+            {/* Mobile-only tab pills — every tab discoverable without opening a menu */}
+            <DashboardMobileTabs mode={mode} />
             {children}
           </div>
         </main>
       </div>
+
 
       {/* Mobile Bottom Nav */}
       <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-background border-t border-border z-50 pb-safe">
