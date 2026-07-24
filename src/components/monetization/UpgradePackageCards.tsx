@@ -11,6 +11,8 @@ import {
   startMonetizationCheckout,
   type MonetizationProduct,
 } from '@/lib/monetization/products';
+import { buildCheckoutReturnPaths } from '@/lib/monetization/returnRoutes';
+import { trackLeadEvent } from '@/lib/leadTracking';
 
 interface Props {
   listingId?: string;
@@ -65,14 +67,18 @@ export function UpgradePackageCards({
 
   const buy = async (slug: string) => {
     setBuying(slug);
+    const paths = buildCheckoutReturnPaths(slug, { listingId });
+    trackLeadEvent('checkout_started', {
+      product_slug: slug,
+      listing_id: listingId,
+      surface: 'upgrade_package_cards',
+    });
     try {
       const { url } = await startMonetizationCheckout({
         productSlug: slug,
         listingId,
-        // Preserve the workflow context on return so the dashboard can show
-        // a tailored "what happens next" state instead of a generic view.
-        successPath: `/dashboard?purchase=success&product=${encodeURIComponent(slug)}${listingId ? `&listing=${encodeURIComponent(listingId)}` : ''}&`,
-        cancelPath: `/dashboard?purchase=cancelled&product=${encodeURIComponent(slug)}`,
+        successPath: paths.successPath,
+        cancelPath: paths.cancelPath,
       });
       window.location.href = url;
     } catch (e) {
