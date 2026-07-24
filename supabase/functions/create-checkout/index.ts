@@ -358,8 +358,8 @@ serve(async (req) => {
         lines: snapshotLines,
       },
       policies: {
-        cancellation: (listing.cancellation_policy || '').trim() || defaultCancellation,
-        rules: listing.rules ?? null,
+        cancellation: defaultCancellation,
+        rules: null,
         requiredDocuments,
         acknowledgements: [
           mode === 'rent'
