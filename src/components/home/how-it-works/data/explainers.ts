@@ -4,6 +4,10 @@ import { rentingScenes } from '../scenes/RentingScenes';
 import { sellingScenes } from '../scenes/SellingScenes';
 import { hostingScenes } from '../scenes/HostingScenes';
 import type { VendiAccessory } from '../Vendi';
+import buyingHero from '@/assets/how-buying-hero.jpg';
+import rentingHero from '@/assets/how-renting-hero.jpg';
+import sellingHero from '@/assets/how-selling-hero.jpg';
+import hostingHero from '@/assets/how-hosting-hero.jpg';
 
 export type ExplainerType = 'buying' | 'renting' | 'selling' | 'hosting';
 
@@ -20,6 +24,8 @@ export interface Explainer {
   description: string;
   durationSeconds: number;
   accessory: VendiAccessory;
+  /** Cinematic hero image used behind the tile and as scene backdrop. */
+  heroImage: string;
   /** Future MP4 slot. When set, modal renders <video> instead of AnimatedExplainer. */
   videoSource?: string;
   captionsVtt?: string;

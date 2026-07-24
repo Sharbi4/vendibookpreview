@@ -1,5 +1,7 @@
-import { motion } from 'framer-motion';
-import { useReducedMotion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
+import { Search, Calendar, Camera, LayoutDashboard } from 'lucide-react';
+import mascot from '@/assets/vendi-mascot.png';
+import { cn } from '@/lib/utils';
 
 export type VendiAccessory = 'search' | 'calendar' | 'camera' | 'dashboard' | 'none';
 
@@ -11,100 +13,70 @@ interface VendiProps {
   still?: boolean;
 }
 
+const accessoryMeta: Record<Exclude<VendiAccessory, 'none'>, { Icon: typeof Search; label: string }> = {
+  search: { Icon: Search, label: 'Search' },
+  calendar: { Icon: Calendar, label: 'Calendar' },
+  camera: { Icon: Camera, label: 'Camera' },
+  dashboard: { Icon: LayoutDashboard, label: 'Dashboard' },
+};
+
 /**
- * "Vendi" — Vendibook's friendly marketplace guide character.
- * A rounded food-trailer silhouette with a small display-panel face,
- * two dot eyes, subtle wheels, and an optional context accessory.
+ * "Vendi" — Vendibook's floating marketplace guide character.
+ * Rendered from a premium mascot illustration with a soft hover/bob loop,
+ * a warm ground-glow, and an optional context accessory chip.
  */
-export const Vendi = ({ accessory = 'none', className, size = 160, still = false }: VendiProps) => {
+export const Vendi = ({ accessory = 'none', className, size = 180, still = false }: VendiProps) => {
   const prefersReduced = useReducedMotion();
   const animate = !still && !prefersReduced;
+  const acc = accessory !== 'none' ? accessoryMeta[accessory] : null;
 
   return (
-    <motion.svg
-      viewBox="0 0 200 180"
-      width={size}
-      height={size * (180 / 200)}
-      className={className}
-      role="img"
+    <div
+      className={cn('relative inline-block select-none', className)}
+      style={{ width: size, height: size }}
       aria-label="Vendi, Vendibook's guide character"
-      animate={animate ? { y: [0, -4, 0] } : undefined}
-      transition={animate ? { duration: 3.2, repeat: Infinity, ease: 'easeInOut' } : undefined}
+      role="img"
     >
-      {/* soft shadow */}
-      <ellipse cx="100" cy="162" rx="60" ry="6" fill="hsl(var(--foreground))" opacity="0.08" />
-
-      {/* trailer body */}
-      <rect
-        x="24"
-        y="52"
-        width="152"
-        height="96"
-        rx="22"
-        fill="hsl(var(--card))"
-        stroke="hsl(var(--foreground))"
-        strokeWidth="2.5"
+      {/* warm ground glow */}
+      <motion.div
+        className="pointer-events-none absolute left-1/2 -translate-x-1/2 rounded-[50%] bg-primary/30 blur-2xl"
+        style={{ bottom: size * 0.04, width: size * 0.72, height: size * 0.12 }}
+        animate={animate ? { opacity: [0.55, 0.85, 0.55], scaleX: [1, 1.08, 1] } : undefined}
+        transition={animate ? { duration: 3.2, repeat: Infinity, ease: 'easeInOut' } : undefined}
       />
-      {/* roof accent */}
-      <rect x="24" y="52" width="152" height="14" rx="8" fill="hsl(var(--primary))" opacity="0.9" />
-      {/* antenna */}
-      <line x1="100" y1="52" x2="100" y2="34" stroke="hsl(var(--foreground))" strokeWidth="2" strokeLinecap="round" />
-      <circle cx="100" cy="30" r="4" fill="hsl(var(--primary))" />
 
-      {/* display panel / face */}
-      <rect x="44" y="80" width="112" height="46" rx="12" fill="hsl(var(--background))" stroke="hsl(var(--foreground))" strokeWidth="2" />
-      {/* eyes */}
-      <motion.g
-        animate={animate ? { scaleY: [1, 1, 0.15, 1] } : undefined}
-        transition={animate ? { duration: 4.6, repeat: Infinity, times: [0, 0.9, 0.95, 1], ease: 'easeInOut' } : undefined}
-        style={{ transformOrigin: '100px 103px', transformBox: 'fill-box' }}
-      >
-        <circle cx="82" cy="103" r="5" fill="hsl(var(--foreground))" />
-        <circle cx="118" cy="103" r="5" fill="hsl(var(--foreground))" />
-      </motion.g>
-      {/* smile */}
-      <path d="M 88 115 Q 100 122 112 115" stroke="hsl(var(--foreground))" strokeWidth="2" fill="none" strokeLinecap="round" />
+      {/* soft floor shadow */}
+      <motion.div
+        className="pointer-events-none absolute left-1/2 -translate-x-1/2 rounded-[50%] bg-black/30 blur-md"
+        style={{ bottom: size * 0.02, width: size * 0.55, height: size * 0.06 }}
+        animate={animate ? { scaleX: [1, 0.9, 1], opacity: [0.35, 0.25, 0.35] } : undefined}
+        transition={animate ? { duration: 3.2, repeat: Infinity, ease: 'easeInOut' } : undefined}
+      />
 
-      {/* wheels */}
-      <circle cx="60" cy="150" r="10" fill="hsl(var(--foreground))" />
-      <circle cx="60" cy="150" r="4" fill="hsl(var(--card))" />
-      <circle cx="140" cy="150" r="10" fill="hsl(var(--foreground))" />
-      <circle cx="140" cy="150" r="4" fill="hsl(var(--card))" />
+      {/* mascot */}
+      <motion.img
+        src={mascot}
+        alt=""
+        draggable={false}
+        loading="lazy"
+        className="absolute inset-0 h-full w-full object-contain drop-shadow-2xl"
+        animate={animate ? { y: [0, -8, 0], rotate: [-1.2, 1.2, -1.2] } : undefined}
+        transition={animate ? { duration: 3.2, repeat: Infinity, ease: 'easeInOut' } : undefined}
+      />
 
-      {/* accessory */}
-      {accessory === 'search' && (
-        <g transform="translate(150 42)">
-          <circle cx="0" cy="0" r="14" fill="hsl(var(--background))" stroke="hsl(var(--foreground))" strokeWidth="2" />
-          <circle cx="-2" cy="-2" r="6" fill="none" stroke="hsl(var(--foreground))" strokeWidth="2" />
-          <line x1="3" y1="3" x2="9" y2="9" stroke="hsl(var(--foreground))" strokeWidth="2.5" strokeLinecap="round" />
-        </g>
+      {/* accessory chip */}
+      {acc && (
+        <motion.div
+          className="absolute right-[6%] top-[4%] flex items-center gap-1 rounded-full border border-border/60 bg-background/95 px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-foreground shadow-lg backdrop-blur"
+          initial={animate ? { scale: 0, rotate: -20 } : undefined}
+          animate={animate ? { scale: 1, rotate: 0 } : undefined}
+          transition={{ type: 'spring', stiffness: 260, damping: 18, delay: 0.2 }}
+        >
+          <acc.Icon className="h-3 w-3 text-primary" strokeWidth={2.5} />
+          {acc.label}
+        </motion.div>
       )}
-      {accessory === 'calendar' && (
-        <g transform="translate(148 40)">
-          <rect x="-14" y="-12" width="26" height="22" rx="3" fill="hsl(var(--background))" stroke="hsl(var(--foreground))" strokeWidth="2" />
-          <line x1="-14" y1="-6" x2="12" y2="-6" stroke="hsl(var(--foreground))" strokeWidth="1.5" />
-          <circle cx="-6" cy="2" r="2" fill="hsl(var(--primary))" />
-          <circle cx="0" cy="2" r="2" fill="hsl(var(--primary))" />
-          <circle cx="6" cy="2" r="2" fill="hsl(var(--foreground))" opacity="0.3" />
-        </g>
-      )}
-      {accessory === 'camera' && (
-        <g transform="translate(150 42)">
-          <rect x="-14" y="-10" width="28" height="20" rx="3" fill="hsl(var(--background))" stroke="hsl(var(--foreground))" strokeWidth="2" />
-          <rect x="-4" y="-14" width="10" height="4" rx="1" fill="hsl(var(--background))" stroke="hsl(var(--foreground))" strokeWidth="2" />
-          <circle cx="0" cy="0" r="5" fill="hsl(var(--primary))" />
-          <circle cx="0" cy="0" r="2" fill="hsl(var(--background))" />
-        </g>
-      )}
-      {accessory === 'dashboard' && (
-        <g transform="translate(148 40)">
-          <rect x="-14" y="-12" width="28" height="22" rx="3" fill="hsl(var(--background))" stroke="hsl(var(--foreground))" strokeWidth="2" />
-          <rect x="-10" y="0" width="4" height="8" fill="hsl(var(--primary))" />
-          <rect x="-3" y="-4" width="4" height="12" fill="hsl(var(--primary))" />
-          <rect x="4" y="-8" width="4" height="16" fill="hsl(var(--primary))" />
-        </g>
-      )}
-    </motion.svg>
+    </div>
   );
 };
 
