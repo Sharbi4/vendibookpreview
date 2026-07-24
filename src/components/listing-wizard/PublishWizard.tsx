@@ -3971,6 +3971,14 @@ export const PublishWizard: React.FC = () => {
                     />
                   )}
 
+                  {/* Seller Pro + White Glove upgrades — surfaced before publish */}
+                  {canPublish && (
+                    <AdditionalSellerSupportCards
+                      listingId={listing?.id}
+                      openInNewTab
+                    />
+                  )}
+
                   <div className="flex flex-wrap gap-3">
                     <Button variant="dark-shine" onClick={() => setStep(requiresStripe ? 'stripe' : 'location')}>Back</Button>
                     <Button
