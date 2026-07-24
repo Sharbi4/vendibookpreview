@@ -98,6 +98,32 @@ export const SceneShell = ({ children, caption }: { children: ReactNode; caption
           className="pointer-events-none absolute inset-0 z-0"
           style={{ boxShadow: 'inset 0 0 160px 20px hsl(var(--background) / 0.9)' }}
         />
+        {/* Ambient floating orbs — subtle enterprise "atmosphere" behind
+            every scene without competing with foreground content. */}
+        <div aria-hidden className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
+          {[
+            { size: 240, x: '8%', y: '18%', delay: 0, dur: 14, opacity: 0.16 },
+            { size: 180, x: '78%', y: '12%', delay: 2, dur: 18, opacity: 0.12 },
+            { size: 300, x: '68%', y: '72%', delay: 4, dur: 20, opacity: 0.10 },
+            { size: 140, x: '22%', y: '80%', delay: 1, dur: 16, opacity: 0.14 },
+          ].map((o, i) => (
+            <motion.div
+              key={i}
+              className="absolute rounded-full"
+              style={{
+                width: o.size,
+                height: o.size,
+                left: o.x,
+                top: o.y,
+                background: `radial-gradient(circle at 30% 30%, hsl(var(--primary) / ${o.opacity}), transparent 70%)`,
+                filter: 'blur(2px)',
+              }}
+              animate={{ y: [0, -18, 0], x: [0, 10, 0] }}
+              transition={{ duration: o.dur, delay: o.delay, repeat: Infinity, ease: 'easeInOut' }}
+            />
+          ))}
+        </div>
+
         <div
           className="absolute left-1/2 top-1/2"
           style={{
