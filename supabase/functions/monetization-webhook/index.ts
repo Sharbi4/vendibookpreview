@@ -213,6 +213,20 @@ async function handleCheckoutCompleted(
       message: `${product?.name ?? "Your upgrade"} is now active on your account.`,
       link: purchase.listing_id ? `/listing/${purchase.listing_id}` : "/dashboard",
     });
+
+    // Transactional confirmation email (idempotent per session)
+    await sendSubEmail(
+      supabase,
+      "upgrade-purchased",
+      purchase.user_id,
+      {
+        productName: product?.name ?? "Your upgrade",
+        amount: fmtMoney(purchase.amount_cents, purchase.currency ?? "usd"),
+        listingId: purchase.listing_id ?? null,
+        purchasesUrl: "/purchases",
+      },
+      `upgrade-purchased-${session.id}`,
+    );
   }
 
   log("purchase fulfilled", { id: purchase.id });
@@ -277,8 +291,19 @@ async function handleRefunded(
         type: "purchase",
         title: "Refund Issued 💳",
         message: "A refund has been issued for your recent purchase.",
-        link: "/dashboard",
+        link: "/purchases",
       });
+
+      await sendSubEmail(
+        supabase,
+        "refund-issued",
+        purchase.user_id,
+        {
+          amount: fmtMoney(refundAmount, currency),
+          purchasesUrl: "/purchases",
+        },
+        `refund-issued-${eventId}`,
+      );
     }
   }
 }
