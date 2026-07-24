@@ -46,6 +46,8 @@ import { WeeklyHoursDisplay } from '@/components/listing-detail/WeeklyHoursDispl
 import { RentalBookingWidget } from '@/components/listing-detail/RentalBookingWidget';
 import { BookingWidget } from '@/components/listing-detail/BookingWidget';
 import ListingHowItWorks from '@/components/listing-detail/ListingHowItWorks';
+import ListingExplainerVideo from '@/components/listing-detail/ListingExplainerVideo';
+
 import { ListingHighlightsCard } from '@/components/transaction';
 import OwnerBanner from '@/components/listing-detail/OwnerBanner';
 import { useListing } from '@/hooks/useListing';
@@ -373,7 +375,11 @@ const ListingDetail = () => {
           <div className="md:px-0">
             <EnhancedPhotoGallery images={images} videos={videos} title={listing.title} />
           </div>
+          <div className="px-4 md:px-0">
+            <ListingExplainerVideo mode={listing.mode as 'rent' | 'sale'} listingId={listing.id} />
+          </div>
         </div>
+
 
         {/* Main Content */}
         <div className="container pt-4 pb-24 lg:pb-16">
