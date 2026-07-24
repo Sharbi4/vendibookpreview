@@ -14,6 +14,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { JourneyProgress, type JourneyStep } from '@/components/journey';
 import { ProtectedSaleStatusBadge } from '@/components/protected-sale/ProtectedSaleStatusBadge';
+import { ProtectedSaleTimeline } from '@/components/protected-sale/ProtectedSaleTimeline';
 import { formatCents } from '@/lib/protectedSale/fees';
 import type { Database } from '@/integrations/supabase/types';
 
@@ -195,6 +196,8 @@ export default function ProtectedSalePage() {
         ) : (
           <>
             <JourneyProgress steps={STEPS} currentIndex={STEP_ORDER.indexOf(currentStep)} className="mb-6" />
+
+            <ProtectedSaleTimeline ps={ps} role={role} className="mb-6" />
 
             <div className="mb-6 grid gap-3 rounded-2xl border border-white/10 bg-white/[0.03] p-5 sm:grid-cols-3">
               <Stat label="Sale price" value={formatCents(ps.sale_price_cents)} />
