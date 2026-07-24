@@ -184,7 +184,7 @@ export const ListingInsightsPanel = () => {
         <div className="flex items-center justify-between gap-3 flex-wrap">
           <CardTitle className="flex items-center gap-2 text-base">
             <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-primary/70 text-primary-foreground flex items-center justify-center shadow-sm">
-              
+              <Wand2 className="h-4 w-4" />
             </div>
             Listing Health Scores
             <Badge variant="outline" className="ml-1 text-[10px]">AI</Badge>
