@@ -1,0 +1,83 @@
+import * as React from 'react';
+import { Button, type ButtonProps } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
+
+export interface JourneyAction extends Omit<ButtonProps, 'children'> {
+  label: string;
+  onClick?: () => void;
+}
+
+interface Props {
+  /** The single most-important next action. Rendered as filled primary. */
+  primary: JourneyAction;
+  /** Recommended secondary action (visually available, doesn't compete). */
+  secondary?: JourneyAction;
+  /** Optional low-priority action rendered as a subtle text link. */
+  tertiary?: JourneyAction;
+  /** Short helper text — what happens after primary is clicked. */
+  helper?: React.ReactNode;
+  /** Stick to the bottom on mobile for tap accessibility. */
+  sticky?: boolean;
+  className?: string;
+}
+
+/**
+ * Enforces the "one obvious primary action" hierarchy across guided journeys.
+ * Primary = orange filled. Secondary = outline. Tertiary = ghost/link.
+ */
+export function PrimaryActionBar({
+  primary,
+  secondary,
+  tertiary,
+  helper,
+  sticky = false,
+  className,
+}: Props) {
+  const { label: pLabel, ...pRest } = primary;
+  return (
+    <div
+      className={cn(
+        'w-full',
+        sticky &&
+          'sticky bottom-0 left-0 right-0 z-30 border-t border-border/60 bg-background/85 backdrop-blur-md px-4 py-3 md:static md:border-0 md:bg-transparent md:backdrop-blur-none md:p-0',
+        className,
+      )}
+    >
+      <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-3">
+        {helper ? (
+          <p className="text-xs text-muted-foreground max-w-sm">{helper}</p>
+        ) : (
+          <span aria-hidden />
+        )}
+        <div className="flex flex-col-reverse sm:flex-row sm:items-center gap-2 sm:gap-3 w-full sm:w-auto">
+          {tertiary && (
+            <Button
+              variant="ghost"
+              size="sm"
+              {...tertiary}
+              className={cn('text-muted-foreground', tertiary.className)}
+            >
+              {tertiary.label}
+            </Button>
+          )}
+          {secondary && (
+            <Button variant="outline" {...secondary} className={cn('w-full sm:w-auto', secondary.className)}>
+              {secondary.label}
+            </Button>
+          )}
+          <Button
+            {...pRest}
+            className={cn(
+              'w-full sm:w-auto min-w-[10rem] font-medium',
+              pRest.className,
+            )}
+          >
+            {pLabel}
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default PrimaryActionBar;
