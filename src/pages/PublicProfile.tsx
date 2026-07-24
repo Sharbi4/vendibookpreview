@@ -178,6 +178,14 @@ const PublicProfile = () => {
   // Display name logic - use public display name utility
   const displayName = profile ? getPublicDisplayName(profile) : 'User';
 
+  // Public visibility flags — default to true (legacy behavior) when unset
+  const vis = {
+    location: profile?.show_public_location !== false,
+    verifiedBadge: profile?.show_verified_badge !== false,
+    memberSince: profile?.show_member_since !== false,
+    listingsCount: profile?.show_listings_count !== false,
+  };
+
   // Derive service area from listings if not set in profile
   const serviceArea = (() => {
     const profileLocation = [profile?.public_city, profile?.public_state].filter(Boolean).join(', ');
