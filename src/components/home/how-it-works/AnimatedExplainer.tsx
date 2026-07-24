@@ -5,6 +5,7 @@ import type { Explainer } from './data/explainers';
 import { cn } from '@/lib/utils';
 import { createAmbientBed, type AmbientBed } from './audio/ambientBed';
 import { trackLeadEvent } from '@/lib/leadTracking';
+import { useAdaptiveMediaPolicy } from '@/lib/adaptiveMedia';
 
 interface Props {
   explainer: Explainer;
@@ -51,6 +52,7 @@ const fetchNarration = (transcript: string): Promise<string> => {
 
 export const AnimatedExplainer = ({ explainer, onProgress, onEnded, onSceneChange, onWatched, storageKey }: Props) => {
   const prefersReduced = useReducedMotion();
+  const adaptive = useAdaptiveMediaPolicy();
   const totalMs = useMemo(
     () => explainer.scenes.reduce((s, sc) => s + sc.durationMs, 0),
     [explainer.scenes],
@@ -93,7 +95,10 @@ export const AnimatedExplainer = ({ explainer, onProgress, onEnded, onSceneChang
   const [audioDurationMs, setAudioDurationMs] = useState<number>(0);
 
   // Prefetch narration on mount so the first play doesn't stall on the network.
+  // Skipped entirely on Save-Data / slow-2g so mobile users on metered plans
+  // don't pay the TTS payload cost — scenes still play silently with captions.
   useEffect(() => {
+    if (adaptive.disableTts) return;
     let cancelled = false;
     let localUrl: string | null = null;
     (async () => {
@@ -132,20 +137,20 @@ export const AnimatedExplainer = ({ explainer, onProgress, onEnded, onSceneChang
       // re-opens are instant. Browser will GC it on unload.
       void localUrl;
     };
-  }, [explainer.transcript]);
+  }, [explainer.transcript, adaptive.disableTts]);
 
 
   // Ambient bed lifecycle — only created once narration is ready so it
   // never plays as a standalone hum when TTS is unavailable.
   useEffect(() => {
-    if (!voiceReady) return;
+    if (!voiceReady || adaptive.disableAmbient) return;
     const bed = createAmbientBed(0.06);
     ambientRef.current = bed;
     return () => {
       bed.stop();
       ambientRef.current = null;
     };
-  }, [voiceReady]);
+  }, [voiceReady, adaptive.disableAmbient]);
 
   // Apply volume + mute to narration & ambient in real time.
   useEffect(() => {
@@ -378,13 +383,18 @@ export const AnimatedExplainer = ({ explainer, onProgress, onEnded, onSceneChang
           src={explainer.heroImage}
           alt=""
           aria-hidden
+          loading="lazy"
+          decoding="async"
+          // @ts-expect-error — fetchpriority is valid HTML, React types lag.
+          fetchpriority={adaptive.fetchPriority}
           className="absolute inset-0 h-full w-full object-cover opacity-40"
-          style={{ filter: 'blur(14px) saturate(1.15)' }}
+          style={{ filter: adaptive.dataSaver ? 'blur(6px) saturate(1.1)' : 'blur(14px) saturate(1.15)' }}
           initial={{ scale: 1.06 }}
-          animate={prefersReduced ? undefined : { scale: [1.06, 1.12, 1.06] }}
-          transition={prefersReduced ? undefined : { duration: 22, repeat: Infinity, ease: 'easeInOut' }}
+          animate={prefersReduced || adaptive.disableBackdropAnim ? undefined : { scale: [1.06, 1.12, 1.06] }}
+          transition={prefersReduced || adaptive.disableBackdropAnim ? undefined : { duration: 22, repeat: Infinity, ease: 'easeInOut' }}
         />
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/70 via-black/25 to-black/40" />
+
 
         {/* animated scene */}
         <AnimatePresence mode="wait">
