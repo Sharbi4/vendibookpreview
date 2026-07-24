@@ -40,6 +40,9 @@ import { ConciergeInbox } from '@/components/concierge/ConciergeInbox';
 import vendibookFavicon from '@/assets/vendibook-favicon.png';
 import AppDropdownMenu from './AppDropdownMenu';
 import IdentityChip from '@/components/dashboard/shared/IdentityChip';
+import DashboardMobileTabs from '@/components/dashboard/overview/DashboardMobileTabs';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
