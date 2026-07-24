@@ -10,6 +10,8 @@ import {
   useProductRecommendations,
   type RecommendationContext,
 } from '@/hooks/useProductRecommendations';
+import { useSubscriptionConsent } from '@/hooks/useSubscriptionConsent';
+import type { MonetizationProduct } from '@/lib/monetization/products';
 
 interface Props {
   context: RecommendationContext;
@@ -40,6 +42,7 @@ export function RecommendedAddOns({
   const { data: products, isLoading } = useProductRecommendations({ context, listingType, limit });
   const entitlements = useHostEntitlements();
   const [busy, setBusy] = useState<string | null>(null);
+  const { requestCheckout, dialog: consentDialog, pendingSlug } = useSubscriptionConsent();
 
   if (isLoading) {
     return (
@@ -53,12 +56,21 @@ export function RecommendedAddOns({
 
   if (!products?.length) return null;
 
-  const handleBuy = async (slug: string) => {
-    setBusy(slug);
+  const handleBuy = async (product: MonetizationProduct) => {
+    // Recurring subscriptions must pass through the consent gate; one-time
+    // add-ons continue to invoke the edge function directly.
+    if (product.billing_type === 'recurring') {
+      await requestCheckout(product, {
+        successPath: '/dashboard?purchase=success',
+        cancelPath: window.location.pathname + '?purchase=cancelled',
+      });
+      return;
+    }
+    setBusy(product.slug);
     try {
       const { data, error } = await supabase.functions.invoke('create-monetization-checkout', {
         body: {
-          product_slug: slug,
+          product_slug: product.slug,
           listing_id: listingId,
           success_path: '/dashboard?purchase=success',
           cancel_path: window.location.pathname + '?purchase=cancelled',
@@ -142,14 +154,14 @@ export function RecommendedAddOns({
               <Button
                 size="sm"
                 className="mt-auto gap-2"
-                disabled={busy === p.slug}
-                onClick={() => handleBuy(p.slug)}
+                disabled={busy === p.slug || pendingSlug === p.slug}
+                onClick={() => handleBuy(p as unknown as MonetizationProduct)}
               >
-                {busy === p.slug ? (
+                {busy === p.slug || pendingSlug === p.slug ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
                   <>
-                    Add <ArrowRight className="h-4 w-4" />
+                    {p.billing_type === 'recurring' ? 'Review terms' : 'Add'} <ArrowRight className="h-4 w-4" />
                   </>
                 )}
               </Button>
@@ -157,6 +169,7 @@ export function RecommendedAddOns({
           );
         })}
       </CardContent>
+      {consentDialog}
     </Card>
   );
 }

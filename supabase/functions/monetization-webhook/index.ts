@@ -427,8 +427,9 @@ async function handleSubscriptionChange(
 
   const tier = (sub.metadata?.tier as string) || existing?.tier || null;
   const userId = (sub.metadata?.user_id as string) || existing?.user_id || null;
+  const consentIdMeta = (sub.metadata?.consent_id as string) || null;
 
-  const patch = {
+  const patch: Record<string, unknown> = {
     user_id: userId,
     tier,
     stripe_customer_id: sub.customer as string,
@@ -442,6 +443,9 @@ async function handleSubscriptionChange(
     cancel_at_period_end: !!sub.cancel_at_period_end,
     updated_at: new Date().toISOString(),
   };
+  // Only overwrite consent_id when a fresh one arrived on the event; preserve
+  // the original signup consent on renewal/update events.
+  if (consentIdMeta) patch.consent_id = consentIdMeta;
 
   if (existing) {
     await supabase.from("host_subscriptions").update(patch).eq("id", existing.id);

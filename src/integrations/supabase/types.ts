@@ -1829,6 +1829,7 @@ export type Database = {
         Row: {
           cancel_at: string | null
           cancel_at_period_end: boolean
+          consent_id: string | null
           created_at: string
           current_period_end: string | null
           current_period_start: string | null
@@ -1850,6 +1851,7 @@ export type Database = {
         Insert: {
           cancel_at?: string | null
           cancel_at_period_end?: boolean
+          consent_id?: string | null
           created_at?: string
           current_period_end?: string | null
           current_period_start?: string | null
@@ -1871,6 +1873,7 @@ export type Database = {
         Update: {
           cancel_at?: string | null
           cancel_at_period_end?: boolean
+          consent_id?: string | null
           created_at?: string
           current_period_end?: string | null
           current_period_start?: string | null
@@ -1889,7 +1892,15 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "host_subscriptions_consent_id_fkey"
+            columns: ["consent_id"]
+            isOneToOne: false
+            referencedRelation: "user_consents"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       legal_documents: {
         Row: {

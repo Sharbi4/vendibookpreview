@@ -8,11 +8,11 @@ import {
   effectivePriceCents,
   formatUsd,
   listProductsByCategory,
-  startMonetizationCheckout,
   type MonetizationProduct,
 } from '@/lib/monetization/products';
 import { buildCheckoutReturnPaths } from '@/lib/monetization/returnRoutes';
 import { trackLeadEvent } from '@/lib/leadTracking';
+import { useSubscriptionConsent } from '@/hooks/useSubscriptionConsent';
 
 interface Props {
   listingId?: string;
@@ -39,7 +39,7 @@ export function UpgradePackageCards({
 }: Props) {
   const [products, setProducts] = useState<MonetizationProduct[]>([]);
   const [loading, setLoading] = useState(true);
-  const [buying, setBuying] = useState<string | null>(null);
+  const { requestCheckout, dialog: consentDialog, pendingSlug } = useSubscriptionConsent();
 
   useEffect(() => {
     let alive = true;
@@ -65,27 +65,18 @@ export function UpgradePackageCards({
     };
   }, [slugs]);
 
-  const buy = async (slug: string) => {
-    setBuying(slug);
-    const paths = buildCheckoutReturnPaths(slug, { listingId });
+  const buy = async (product: MonetizationProduct) => {
+    const paths = buildCheckoutReturnPaths(product.slug, { listingId });
     trackLeadEvent('checkout_started', {
-      product_slug: slug,
+      product_slug: product.slug,
       listing_id: listingId,
       surface: 'upgrade_package_cards',
     });
-    try {
-      const { url } = await startMonetizationCheckout({
-        productSlug: slug,
-        listingId,
-        successPath: paths.successPath,
-        cancelPath: paths.cancelPath,
-      });
-      window.location.href = url;
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : 'Checkout failed';
-      toast.error(msg);
-      setBuying(null);
-    }
+    await requestCheckout(product, {
+      listingId,
+      successPath: paths.successPath,
+      cancelPath: paths.cancelPath,
+    });
   };
 
   if (loading) {
@@ -115,8 +106,8 @@ export function UpgradePackageCards({
           const price = effectivePriceCents(p);
           const originalPrice = p.promo_price_cents != null ? p.price_cents : null;
           const isRecommended = idx === recommendedIndex;
-          const busy = buying === p.slug;
-          const anyBusy = buying !== null;
+          const busy = pendingSlug === p.slug;
+          const anyBusy = pendingSlug !== null;
           return (
             <article
               key={p.id}
@@ -176,7 +167,7 @@ export function UpgradePackageCards({
               <Button
                 className="mt-5 w-full font-medium"
                 variant={isRecommended ? 'default' : 'outline'}
-                onClick={() => buy(p.slug)}
+                onClick={() => buy(p)}
                 disabled={anyBusy}
                 aria-busy={busy}
                 aria-label={busy ? `Starting checkout for ${p.name}` : `Get ${p.name} for ${formatUsd(price)}`}
@@ -200,7 +191,7 @@ export function UpgradePackageCards({
 
       {onSkip && (
         <div className="flex justify-center">
-          <Button variant="ghost" onClick={onSkip} disabled={buying !== null}>
+          <Button variant="ghost" onClick={onSkip} disabled={pendingSlug !== null}>
             {skipLabel}
           </Button>
         </div>
@@ -216,6 +207,7 @@ export function UpgradePackageCards({
         ]}
         disclaimer="Upgrades are optional and never required to list on Vendibook. Cancellation and refund terms are shown on every product above."
       />
+      {consentDialog}
     </section>
   );
 }
