@@ -11,6 +11,7 @@ import Footer from '@/components/layout/Footer';
 import { supabase } from '@/integrations/supabase/client';
 
 import { EmailReceiptPreview } from '@/components/checkout';
+import PostPaymentTimeline from '@/components/checkout/PostPaymentTimeline';
 import { PostTransactionReferralCard } from '@/components/referrals/PostTransactionReferralCard';
 import { useAuth } from '@/contexts/AuthContext';
 import { calculateRentalFees } from '@/lib/commissions';
@@ -557,6 +558,10 @@ const PaymentSuccess = () => {
                       )}
                     </CollapsibleContent>
                   </Collapsible>
+
+                  <div className="mt-6">
+                    <PostPaymentTimeline />
+                  </div>
 
                   <p className="text-xs text-muted-foreground mt-4">
                     You can track and confirm your purchase from your dashboard.
