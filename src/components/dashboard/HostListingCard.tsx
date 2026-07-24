@@ -293,6 +293,9 @@ const HostListingCard = ({
                   Boost
                 </Button>
               )}
+              {isPublished && (
+                <ListingUpgradesDialog listingId={listing.id} />
+              )}
               {isPublished && isSale && !hasNotary && (
                 <Button variant="outline" size="sm" onClick={handleNotaryCheckout} disabled={isLoadingNotary} className="h-9 rounded-xl">
                   {isLoadingNotary ? <Loader2 className="h-4 w-4 animate-spin" /> : (
