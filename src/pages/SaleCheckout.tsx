@@ -516,12 +516,23 @@ const SaleCheckout = () => {
           freight_cost: isVendibookFreight ? freightCost : 0,
           referral_code: referralValid ? referralCode : undefined,
           terms_id: termsId,
-          ui_mode: useEmbedded ? 'elements' : 'hosted',
+          ui_mode: useEmbedded ? 'custom' : 'hosted',
         },
       });
 
-      if (error) throw error;
-      if (data.error) throw new Error(data.error);
+      if (error || data?.error) {
+        const parsed = await parseEdgeError(error, data?.error ? { error: data.error, code: data.code } : null);
+        const copy = checkoutErrorCopy(parsed);
+        setShowCheckoutOverlay(false);
+        setEmbeddedCheckout(null);
+        toast({
+          title: copy.title,
+          description: copy.description,
+          variant: 'destructive',
+        });
+        setIsPurchasing(false);
+        return;
+      }
 
       trackFormSubmitConversion({ form_type: 'purchase', listing_id: listingId });
       trackInitiateCheckout({
