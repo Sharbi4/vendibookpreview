@@ -1,5 +1,5 @@
 import { Link, useSearchParams } from 'react-router-dom';
-import { Calendar, CheckCircle2, Clock, XCircle, Loader2, Search, Heart, MessageSquare } from 'lucide-react';
+import { Calendar, CheckCircle2, Clock, XCircle, Loader2, Search, Heart, MessageSquare, ShieldAlert, ShoppingBag, Inbox } from 'lucide-react';
 import PermitsTab from './PermitsTab';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -12,7 +12,9 @@ import { ReferralPanel } from '@/components/referrals/ReferralPanel';
 import { CommandHeader } from './CommandHeader';
 import { CommandStatCard } from './CommandStatCard';
 import { SectionReveal, Reveal } from './SectionReveal';
+import ActionRequiredStack, { ActionItem } from './shared/ActionRequiredStack';
 import { useShopperBookings } from '@/hooks/useShopperBookings';
+import { useUnreadMessageCount } from '@/hooks/useUnreadMessageCount';
 import { useAuth } from '@/contexts/AuthContext';
 
 const Section = ({
@@ -34,10 +36,44 @@ const Section = ({
 
 const ShopperDashboard = () => {
   const { bookings, isLoading, stats, cancelBooking, refetch } = useShopperBookings();
-  const { hasRole, profile } = useAuth();
+  const { hasRole, profile, isVerified } = useAuth();
+  const { count: unreadMessageCount } = useUnreadMessageCount();
   const [searchParams] = useSearchParams();
   const isHost = hasRole('host');
   const firstName = profile?.full_name?.split(' ')[0];
+
+  const actionItems: ActionItem[] = [];
+  if (!isVerified) {
+    actionItems.push({
+      id: 'verify-identity',
+      icon: ShieldAlert,
+      title: 'Verify your identity',
+      description: 'One tap unlocks publishing and higher-trust checkout.',
+      href: '/verify-identity',
+      cta: 'Verify',
+      tone: 'warning',
+    });
+  }
+  if (stats.pending > 0) {
+    actionItems.push({
+      id: 'pending-bookings',
+      icon: Clock,
+      title: `${stats.pending} booking request${stats.pending > 1 ? 's' : ''} awaiting host`,
+      description: 'We\'ll notify you the moment they reply.',
+      href: '/dashboard?view=shopper',
+      cta: 'View',
+    });
+  }
+  if (unreadMessageCount > 0) {
+    actionItems.push({
+      id: 'unread-messages',
+      icon: Inbox,
+      title: `${unreadMessageCount} unread message${unreadMessageCount > 1 ? 's' : ''}`,
+      href: '/messages',
+      cta: 'Open',
+    });
+  }
+
 
   if (searchParams.get('tab') === 'permits') {
     return (
@@ -112,6 +148,13 @@ const ShopperDashboard = () => {
             ]}
           />
         </Reveal>
+
+        {actionItems.length > 0 && (
+          <Reveal>
+            <ActionRequiredStack items={actionItems} />
+          </Reveal>
+        )}
+
 
         {/* Metrics */}
         <Reveal>

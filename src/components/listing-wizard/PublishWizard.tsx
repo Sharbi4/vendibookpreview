@@ -134,7 +134,7 @@ export const PublishWizard: React.FC = () => {
   const { listingId } = useParams<{ listingId: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user, isVerified } = useAuth();
   const { isOnboardingComplete, isLoading: isStripeLoading, connectStripe, isConnecting } = useStripeConnect();
 
   const [step, setStep] = useState<PublishStep>('photos');
@@ -1372,6 +1372,23 @@ export const PublishWizard: React.FC = () => {
         title: 'Connect Stripe to accept card payments',
         description: 'Or switch to cash-only (Pay in Person) on the Pricing step to publish now and add Stripe later.',
         variant: 'destructive'});
+      return;
+    }
+
+    if (!isVerified) {
+      toast({
+        title: 'Verify your identity to publish',
+        description: 'Drafts are safe — publishing needs a quick ID check. It takes about a minute.',
+        variant: 'destructive',
+        action: (
+          <a
+            href="/verify-identity"
+            className="inline-flex items-center rounded-md bg-foreground px-3 py-1.5 text-xs font-medium text-background hover:bg-foreground/90"
+          >
+            Verify now
+          </a>
+        ) as any,
+      });
       return;
     }
 
