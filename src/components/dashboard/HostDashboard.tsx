@@ -31,6 +31,7 @@ import { AICopilotLauncher } from './AICopilotLauncher';
 import { PromotionHub } from './PromotionHub';
 import { BoostListingPrompt } from './BoostListingPrompt';
 import { KitchenProSuite } from './KitchenProSuite';
+import { ReferAHostCard } from '@/components/host/ReferAHostCard';
 import PermitsTab from './PermitsTab';
 import { ConversionFunnel } from '@/components/analytics/ConversionFunnel';
 import { RevenueChart } from '@/components/analytics/RevenueChart';
