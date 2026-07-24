@@ -123,6 +123,7 @@ export type LeadEventName =
   | 'ai_suggestion_accepted'
   | 'ai_suggestion_rejected'
   | 'ai_feedback_submitted'
+  | 'ai_copilot_opened'
   // Human escalation
   | 'human_support_requested';
 
