@@ -45,6 +45,7 @@ import { getGuestDraft, clearGuestDraft } from '@/lib/guestDraft';
 import { cn } from '@/lib/utils';
 import { FreightSettingsCard } from '@/components/freight';
 import { FeaturedListingCard } from './FeaturedListingCard';
+import { AdditionalSellerSupportCards } from '@/components/monetization/AdditionalSellerSupportCards';
 import { InfoTooltip } from '@/components/ui/info-tooltip';
 import stripeIcon from '@/assets/stripe-icon.png';
 import { ConsentModal } from '@/components/consent/ConsentModal';
