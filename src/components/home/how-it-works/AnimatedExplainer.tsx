@@ -52,6 +52,7 @@ const fetchNarration = (transcript: string): Promise<string> => {
 
 export const AnimatedExplainer = ({ explainer, onProgress, onEnded, onSceneChange, onWatched, storageKey }: Props) => {
   const prefersReduced = useReducedMotion();
+  const adaptive = useAdaptiveMediaPolicy();
   const totalMs = useMemo(
     () => explainer.scenes.reduce((s, sc) => s + sc.durationMs, 0),
     [explainer.scenes],
