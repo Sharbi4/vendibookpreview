@@ -118,9 +118,25 @@ serve(async (req) => {
     processed++;
   }
 
-  log("done", { processed, scanned: candidates?.length || 0 });
-  return new Response(JSON.stringify({ ok: true, processed, scanned: candidates?.length || 0 }), {
-    headers: { ...corsHeaders, "Content-Type": "application/json" },
-    status: 200,
-  });
+  // Also deactivate any listing_promotions row whose window has ended.
+  // Placement queries filter on active=true AND ends_at > now(), but keeping
+  // the boolean in sync makes admin views and joins truthful.
+  const { data: promoUpdate, error: promoErr } = await supabase
+    .from("listing_promotions")
+    .update({ active: false })
+    .eq("active", true)
+    .lt("ends_at", nowIso)
+    .select("id");
+  if (promoErr) log("promo deactivation failed", { error: promoErr.message });
+
+  log("done", { processed, scanned: candidates?.length || 0, promos_deactivated: promoUpdate?.length ?? 0 });
+  return new Response(
+    JSON.stringify({
+      ok: true,
+      processed,
+      scanned: candidates?.length || 0,
+      promos_deactivated: promoUpdate?.length ?? 0,
+    }),
+    { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 },
+  );
 });
