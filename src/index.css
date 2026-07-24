@@ -4,8 +4,13 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Sofia Pro Soft Light font removed — S3 source returns CORS errors.
-   Falls back to the system font stack defined in tailwind.config.ts. */
+@font-face {
+  font-family: 'SofiaProSoftLight';
+  src: url('/__l5e/assets-v1/5c9bc164-9241-46f4-98fa-bc6ea22ce45e/SofiaProSoftLight.otf') format('opentype');
+  font-weight: 300 700;
+  font-style: normal;
+  font-display: swap;
+}
 
 @layer base {
   :root {
