@@ -146,18 +146,18 @@ export const explainers: Explainer[] = [
     secondaryCtaLabel: 'Explore Selling Tools',
     secondaryCtaRoute: '/how-it-works-seller',
     transcript:
-      "Selling specialized equipment through a general marketplace usually means incomplete listings and repetitive questions. Vendibook guides you through creating a detailed listing with your photos, food truck or trailer type, asking price, location, condition, equipment, specifications, and available documents. Preview and publish for free so buyers searching Vendibook can find you. From your seller dashboard, respond to messages, track listing views and saves, and manage buyer activity in one place. Eligible buyers may see additional ways to complete the purchase: online checkout is processed through Stripe, Affirm may be available for eligible purchases and buyers subject to approval, and you can also enable pay-in-person when appropriate. When a purchase is created, the sale dashboard shows the payment method, payment status, agreement, documents, messages, handoff date, and the next action required from each side. For online transactions your dashboard displays the applicable payment hold and payout timeline; for pay-in-person sales, both sides confirm the handoff and payment through Vendibook. Create your listing, connect with serious buyers, and manage the sale without losing track of payments, documents, or next steps.",
+      "Alright — flip it around for a second. Maybe you've got a truck or a trailer sitting there, and you're ready to sell it. On a general marketplace, that usually means half-answered questions and buyers who don't really know what they're looking at. Vendibook is built differently, because everyone here is shopping for food-business equipment. Here's how selling works. You walk through the listing wizard step by step — your photos, the truck or trailer type, your asking price, location, condition, the equipment inside, specs, and any documents you want to share. You preview, and you publish — and yes, listing is completely free. From that point on, buyers searching Vendibook can actually find you. Your seller dashboard becomes your home base — messages, listing views, saves, buyer activity, all in one place. When a buyer's ready, eligible buyers may see more ways to complete the purchase — online checkout through Stripe, Affirm for eligible purchases subject to approval, and pay-in-person when you enable it. Once a purchase is created, the sale dashboard shows you the payment method, the payment status, the agreement, documents, messages, the handoff date, and what's needed next from each side. For online transactions, you'll see your payment hold and payout timeline right there. For pay-in-person sales, both sides confirm the handoff inside Vendibook. So — list for free, connect with serious buyers, and manage the sale without losing track of anything.",
     scenes: buildScenes(
       sellingScenes,
       [
-        'List where food-business buyers are searching.',
-        'Build a professional listing step by step.',
-        'Always free to list.',
-        'Your listing and buyer activity in one place.',
-        'More ways for eligible buyers to complete the purchase.',
-        'Follow the sale from purchase to completion.',
-        'Pay-in-person sales stay tracked too.',
-        'List for free. Sell with a better process.',
+        "Got a truck or trailer to sell? Here's where the right buyers are already looking.",
+        "The wizard walks you through the listing, step by step.",
+        "And listing is free — always.",
+        "Once you're live, your dashboard shows everything happening around your listing.",
+        "Eligible buyers see more ways to complete the purchase.",
+        "Follow the whole sale from checkout through completion.",
+        "Even cash sales stay organized — both sides confirm the handoff.",
+        "That's it — list free, sell smart, stay on top of every step.",
       ],
       [
         'Where buyers search',
@@ -171,6 +171,7 @@ export const explainers: Explainer[] = [
       ],
     ),
   },
+
   {
     id: 'hosting',
     title: 'Hosting on Vendibook',
