@@ -15,6 +15,7 @@ import { useStripeConnect } from "@/hooks/useStripeConnect";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Copy, Download, Facebook, MessageCircle, Mail, Share2, Twitter, ExternalLink, AlertCircle, Info } from "lucide-react";
+import ReferralLeaderboardCard from "@/components/referrals/ReferralLeaderboardCard";
 
 const TERMS_VERSION = "2026-05-30";
 const PROGRAMS = [
