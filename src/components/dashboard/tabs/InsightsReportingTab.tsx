@@ -3,7 +3,8 @@ import { Link } from 'react-router-dom';
 import { BarChart3, LineChart, ArrowRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { EnhancedAnalytics } from '../EnhancedAnalytics';
+import { RevenueAnalyticsCard } from '../RevenueAnalyticsCard';
+import { ListingInsightsPanel } from '../ListingInsightsPanel';
 
 type SubView = 'insights' | 'reporting';
 
