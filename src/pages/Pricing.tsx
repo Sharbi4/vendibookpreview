@@ -11,6 +11,9 @@ import { buildCheckoutReturnPaths } from '@/lib/monetization/returnRoutes';
 import { effectivePriceCents, type MonetizationProduct } from '@/lib/monetization/products';
 import { cn } from '@/lib/utils';
 import SEO from '@/components/SEO';
+import PackagesIntro from '@/components/monetization/PackagesIntro';
+import { Link } from 'react-router-dom';
+import { Store, ShoppingBag, Building2, ArrowRight } from 'lucide-react';
 
 type Interval = 'monthly' | 'annual';
 
@@ -63,7 +66,51 @@ const Pricing = () => {
         description="Compare Vendibook host and seller memberships, listing boosts, and expert services. Monthly or annual billing, no hidden fees."
       />
 
-      <section className="mx-auto max-w-6xl px-4 py-14">
+      <section className="mx-auto max-w-6xl px-4 pt-10 pb-4">
+        <PackagesIntro variant="hero" recommendedIndex={0} />
+      </section>
+
+      <section className="mx-auto max-w-6xl px-4 pt-4 pb-6" aria-labelledby="pricing-audiences">
+        <h2 id="pricing-audiences" className="sr-only">Choose your path</h2>
+        <div className="grid gap-4 md:grid-cols-3">
+          {[
+            { icon: Store, title: 'For Sellers', body: 'Boost, price, position, and sell faster.', links: [
+              { to: '/services', label: 'Seller services' },
+              { to: '/pricing#upgrades', label: 'Listing upgrades' },
+              { to: '/host/plans', label: 'Seller Plus' },
+            ] },
+            { icon: ShoppingBag, title: 'For Buyers', body: 'Buy with confidence on high-ticket assets.', links: [
+              { to: '/buyer/services', label: 'Buyer services' },
+              { to: '/tools/permitpath/upgrades', label: 'PermitPath upgrades' },
+              { to: '/partners', label: 'Financing & inspection' },
+            ] },
+            { icon: Building2, title: 'For Hosts', body: 'Placement, analytics, priority support.', links: [
+              { to: '/host/plans', label: 'Host plans' },
+              { to: '/partners', label: 'Trusted partners' },
+              { to: '/pricing#upgrades', label: 'Featured boosts' },
+            ] },
+          ].map(({ icon: Icon, title, body, links }) => (
+            <div key={title} className="rounded-2xl border border-white/10 bg-white/[0.02] p-5 backdrop-blur-md">
+              <div className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-white/[0.03] text-foreground/80">
+                <Icon className="h-4.5 w-4.5" />
+              </div>
+              <h3 className="mt-3 font-display text-lg text-foreground">{title}</h3>
+              <p className="mt-1 text-sm text-muted-foreground">{body}</p>
+              <ul className="mt-3 space-y-1.5">
+                {links.map((l) => (
+                  <li key={l.to}>
+                    <Link to={l.to} className="inline-flex items-center gap-1 text-sm text-primary hover:gap-2 transition-all">
+                      {l.label} <ArrowRight className="h-3 w-3" />
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section id="upgrades" className="mx-auto max-w-6xl px-4 py-10">
         <SectionHeader
           eyebrow="Pricing"
           title="Simple pricing. Real tools."
