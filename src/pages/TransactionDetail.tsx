@@ -11,7 +11,7 @@ import { buildTransactionTimeline, TransactionTimeline } from '@/components/tran
 import { computeNextAction, NextActionCard } from '@/components/transaction/NextActionCard';
 
 type Tx = Record<string, any> | null;
-type Listing = { id: string; title: string | null; images: string[] | null; category?: string | null } | null;
+type Listing = { id: string; title: string | null; image_urls: string[] | null; category?: string | null } | null;
 
 function money(n: number | string | null | undefined): string {
   const v = typeof n === 'string' ? Number.parseFloat(n) : n;
