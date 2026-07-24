@@ -66,30 +66,31 @@ export const explainers: Explainer[] = [
     secondaryCtaLabel: 'Learn About Buying',
     secondaryCtaRoute: '/how-it-works',
     transcript:
-      "Hey — thinking about buying a food truck or a trailer? Let me walk you through what that actually looks like on Vendibook, because it's a lot calmer than chasing scattered posts on social media. So, you land on the marketplace, and right away you can search by what actually matters to you — your city, your budget, the type of build, the equipment inside. You compare a few side by side, save the ones you like, and open the listing to really dig in… photos, the equipment list, the seller's info, any documents they've shared, verification badges, and which payment methods they accept. From there, you just message the seller — ask your questions, line up an inspection, get comfortable. When you're ready to move forward, you'll see the full transaction details laid out clearly, and you pick a payment method that's available for that listing. Online payments run securely through Stripe, some purchases may be eligible for Affirm — that's subject to eligibility and approval — and if the seller offers it, you can also pay in person. Once the purchase is created, everything lives in your buyer dashboard — payment status, the agreement, messages, the transaction timeline, and whatever the next step is. And for pay-in-person deals, both sides confirm the handoff right inside Vendibook, so nothing gets lost. That's really it — find the equipment, pick a payment option that fits, and manage the whole thing from one place.",
+      "Hey — thinking about buying a food truck or trailer? Let me actually walk you through it, step by step, so you can see how this works on Vendibook. Picture this: you're launching a taco concept, and you need a fully-equipped truck under sixty thousand dollars, somewhere near Phoenix. Step one — you open the marketplace and filter by city, price, and equipment, say a flat-top griddle and a three-compartment sink. Boom, you get a real shortlist. Step two — you tap the trucks that look promising, hit save, and now you can compare them side by side. Step three — open one up. You'll see the full photo gallery, the equipment list, the seller's profile, verification badges, any documents they've uploaded, like inspection reports or title info, and which payment methods they accept. Step four — you message the seller right from the listing. Ask about the generator hours, schedule an inspection for Saturday, get a video walkaround — all in one thread. Step five, you're ready. You review the transaction details, pick your payment method: Stripe for card, Affirm if you're eligible and approved, or pay-in-person if the seller enabled it. Step six — the buyer dashboard takes over. You'll see payment status, the signed agreement, your message history, the transaction timeline, and the next required action, right there. And if you paid in person, both you and the seller confirm the handoff inside Vendibook so nothing gets forgotten. That's the whole flow — find it, fund it, and manage it, all in one dashboard.",
     scenes: buildScenes(
       buyingScenes,
       [
-        "So, here's where it starts — a marketplace built just for food-business equipment.",
-        "You search, you compare, you save the ones you like.",
-        "Open a listing and you get the full picture before you commit.",
-        "Message the seller right here — questions, inspections, all of it.",
-        "When you're ready, review the total and pick a payment method that works.",
-        "After you buy, your dashboard tells you exactly what's done and what's next.",
-        "Paying in person? That gets tracked too — both sides confirm the handoff.",
-        "That's the flow — find it, fund it, and manage it, all in one place.",
+        "Say you're launching a taco truck — here's where you start.",
+        "Step one: filter by city, budget, and the equipment you actually need.",
+        "Step two: open a listing and see photos, specs, docs, and verification.",
+        "Step three: message the seller — ask about hours, schedule an inspection.",
+        "Step four: review the total and pick Stripe, Affirm, or pay-in-person.",
+        "Step five: your buyer dashboard shows payment, agreement, and next steps.",
+        "Paying cash? Both sides confirm the handoff inside Vendibook.",
+        "That's it — find it, fund it, and manage it, all in one place.",
       ],
       [
-        'Marketplace',
-        'Search & compare',
+        'Your scenario',
+        'Search & filter',
         'Listing details',
         'Message seller',
-        'Stripe & Affirm checkout',
+        'Checkout options',
         'Buyer dashboard',
         'Handoff confirmation',
         'Wrap-up',
       ],
     ),
+
   },
 
   {
