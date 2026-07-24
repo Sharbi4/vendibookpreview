@@ -270,23 +270,48 @@ export const AnimatedExplainer = ({ explainer, onProgress, onEnded, onSceneChang
     );
   };
 
-  // Keyboard: Space play/pause, arrows scene nav, M mute
+  // Keyboard shortcuts:
+  //   Space / K       play-pause
+  //   ArrowLeft/Right prev / next scene (PageUp / PageDown mirror)
+  //   Home / End      first / last scene
+  //   1-9             jump to chapter N
+  //   M               mute voiceover
+  //   C               toggle captions
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.target instanceof HTMLInputElement) return;
-      if (e.code === 'Space') {
+      const t = e.target as HTMLElement | null;
+      if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
+      const k = e.key;
+      if (e.code === 'Space' || k === 'k' || k === 'K') {
         e.preventDefault();
         setPlaying((p) => !p);
-      } else if (e.code === 'ArrowRight') {
+      } else if (k === 'ArrowRight' || k === 'PageDown') {
+        e.preventDefault();
         jumpToScene(Math.min(sceneIndex + 1, explainer.scenes.length - 1));
-      } else if (e.code === 'ArrowLeft') {
+      } else if (k === 'ArrowLeft' || k === 'PageUp') {
+        e.preventDefault();
         jumpToScene(Math.max(sceneIndex - 1, 0));
-      } else if (e.key?.toLowerCase() === 'm') {
+      } else if (k === 'Home') {
+        e.preventDefault();
+        jumpToScene(0);
+      } else if (k === 'End') {
+        e.preventDefault();
+        jumpToScene(explainer.scenes.length - 1);
+      } else if (/^[1-9]$/.test(k)) {
+        const idx = Number(k) - 1;
+        if (idx < explainer.scenes.length) {
+          e.preventDefault();
+          jumpToChapter(idx, 'chip');
+        }
+      } else if (k === 'm' || k === 'M') {
         setMuted((m) => !m);
+      } else if (k === 'c' || k === 'C') {
+        setCaptionsOn((v) => !v);
       }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sceneIndex, explainer.scenes.length]);
 
   return (
