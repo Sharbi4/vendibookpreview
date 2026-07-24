@@ -77,7 +77,14 @@ export function PartnerLeadForm({ partner, listingId, open, onOpenChange }: Prop
         partnerId: partner.id,
         listingId,
         consentGranted: true,
-        ...parsed.data,
+        service: parsed.data.service ?? form.service,
+        location: parsed.data.location || undefined,
+        budget: parsed.data.budget || undefined,
+        timeline: parsed.data.timeline || undefined,
+        notes: parsed.data.notes || undefined,
+        contactName: parsed.data.contactName || undefined,
+        contactEmail: parsed.data.contactEmail || undefined,
+        contactPhone: parsed.data.contactPhone || undefined,
       });
       toast.success(`Your request was sent to ${partner.company_name}.`);
       onOpenChange(false);
