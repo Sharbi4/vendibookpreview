@@ -393,3 +393,82 @@ function StatCard({
     </Card>
   );
 }
+
+function IssueRefundCard({ onDone }: { onDone: () => void }) {
+  const [purchaseId, setPurchaseId] = useState('');
+  const [amountUsd, setAmountUsd] = useState('');
+  const [note, setNote] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+
+  const submit = async () => {
+    if (!purchaseId.trim()) {
+      toast.error('Enter a purchase ID');
+      return;
+    }
+    const amt = amountUsd.trim() ? Math.round(parseFloat(amountUsd) * 100) : undefined;
+    if (amt !== undefined && (!Number.isFinite(amt) || amt <= 0)) {
+      toast.error('Invalid refund amount');
+      return;
+    }
+    if (!confirm(`Refund ${amt ? `$${(amt / 100).toFixed(2)}` : 'the full charge'} for purchase ${purchaseId.slice(0, 8)}…?`)) return;
+    setSubmitting(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('admin-monetization-refund', {
+        body: { purchase_id: purchaseId.trim(), amount_cents: amt, note: note || undefined },
+      });
+      if (error) throw error;
+      const refundId = (data as { refund_id?: string })?.refund_id;
+      toast.success(`Refund issued${refundId ? ` (${refundId})` : ''}.`);
+      setPurchaseId('');
+      setAmountUsd('');
+      setNote('');
+      onDone();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Refund failed');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <Card>
+      <CardHeader className="pb-2">
+        <CardTitle className="text-sm">Issue refund</CardTitle>
+      </CardHeader>
+      <CardContent className="flex flex-wrap items-end gap-3">
+        <div className="flex-1 min-w-[220px]">
+          <label className="text-xs uppercase tracking-wide text-muted-foreground">Purchase ID</label>
+          <input
+            className="mt-1 w-full rounded border border-border bg-background px-2 py-1 font-mono text-xs"
+            value={purchaseId}
+            onChange={(e) => setPurchaseId(e.target.value)}
+            placeholder="uuid…"
+          />
+        </div>
+        <div className="w-32">
+          <label className="text-xs uppercase tracking-wide text-muted-foreground">Amount (USD)</label>
+          <input
+            className="mt-1 w-full rounded border border-border bg-background px-2 py-1 text-sm"
+            value={amountUsd}
+            onChange={(e) => setAmountUsd(e.target.value)}
+            placeholder="Full"
+            inputMode="decimal"
+          />
+        </div>
+        <div className="flex-1 min-w-[180px]">
+          <label className="text-xs uppercase tracking-wide text-muted-foreground">Note</label>
+          <input
+            className="mt-1 w-full rounded border border-border bg-background px-2 py-1 text-sm"
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            placeholder="Optional"
+          />
+        </div>
+        <Button onClick={submit} size="sm" disabled={submitting}>
+          {submitting ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : null}
+          Refund
+        </Button>
+      </CardContent>
+    </Card>
+  );
+}
