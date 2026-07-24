@@ -132,6 +132,17 @@ export const AnimatedExplainer = ({ explainer, onProgress, onEnded, onSceneChang
     };
   }, []);
 
+  // Apply volume + mute to narration & ambient in real time.
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem('vb:explainer:volume', String(volume));
+    }
+    const a = narrationRef.current;
+    const effective = muted ? 0 : volume;
+    if (a) a.volume = effective;
+    ambientRef.current?.setVolume(effective * 0.35); // ambient sits under narration
+  }, [volume, muted, voiceReady]);
+
   // Sync playback state → audio + ambient bed
   useEffect(() => {
     const audio = narrationRef.current;
