@@ -8,11 +8,11 @@ import {
   effectivePriceCents,
   formatUsd,
   listProductsByCategory,
-  startMonetizationCheckout,
   type MonetizationProduct,
 } from '@/lib/monetization/products';
 import { buildCheckoutReturnPaths } from '@/lib/monetization/returnRoutes';
 import { trackLeadEvent } from '@/lib/leadTracking';
+import { useSubscriptionConsent } from '@/hooks/useSubscriptionConsent';
 
 interface Props {
   listingId?: string;
@@ -39,7 +39,7 @@ export function UpgradePackageCards({
 }: Props) {
   const [products, setProducts] = useState<MonetizationProduct[]>([]);
   const [loading, setLoading] = useState(true);
-  const [buying, setBuying] = useState<string | null>(null);
+  const { requestCheckout, dialog: consentDialog, pendingSlug } = useSubscriptionConsent();
 
   useEffect(() => {
     let alive = true;
@@ -65,27 +65,18 @@ export function UpgradePackageCards({
     };
   }, [slugs]);
 
-  const buy = async (slug: string) => {
-    setBuying(slug);
-    const paths = buildCheckoutReturnPaths(slug, { listingId });
+  const buy = async (product: MonetizationProduct) => {
+    const paths = buildCheckoutReturnPaths(product.slug, { listingId });
     trackLeadEvent('checkout_started', {
-      product_slug: slug,
+      product_slug: product.slug,
       listing_id: listingId,
       surface: 'upgrade_package_cards',
     });
-    try {
-      const { url } = await startMonetizationCheckout({
-        productSlug: slug,
-        listingId,
-        successPath: paths.successPath,
-        cancelPath: paths.cancelPath,
-      });
-      window.location.href = url;
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : 'Checkout failed';
-      toast.error(msg);
-      setBuying(null);
-    }
+    await requestCheckout(product, {
+      listingId,
+      successPath: paths.successPath,
+      cancelPath: paths.cancelPath,
+    });
   };
 
   if (loading) {
