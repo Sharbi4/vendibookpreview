@@ -59,7 +59,7 @@ export function SubscriptionRevenueSection({ subscriptions, products }: Props) {
     }
     // fallback: match by tier slug on product
     const byTier = products.find(
-      (p) => p.billing_type === 'subscription' && (p.slug === row.tier || p.name.toLowerCase().includes(row.tier.toLowerCase())),
+      (p) => p.billing_type === 'recurring' && (p.slug === row.tier || p.name.toLowerCase().includes(row.tier.toLowerCase())),
     );
     return byTier?.price_cents ?? 0;
   };
