@@ -207,6 +207,7 @@ export function UpgradePackageCards({
         ]}
         disclaimer="Upgrades are optional and never required to list on Vendibook. Cancellation and refund terms are shown on every product above."
       />
+      {consentDialog}
     </section>
   );
 }
