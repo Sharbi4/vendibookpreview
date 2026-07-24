@@ -44,6 +44,7 @@ const EmbeddedStripeCheckout = ({
   onClose,
   returnUrl,
   onSuccess,
+  totalUsd,
 }: EmbeddedStripeCheckoutProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
 
