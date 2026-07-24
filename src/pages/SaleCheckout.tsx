@@ -565,9 +565,11 @@ const SaleCheckout = () => {
     } catch (error) {
       setShowCheckoutOverlay(false);
       setEmbeddedCheckout(null);
+      const parsed = await parseEdgeError(error);
+      const copy = checkoutErrorCopy(parsed);
       toast({
-        title: 'Purchase Error',
-        description: error instanceof Error ? error.message : 'Failed to start checkout',
+        title: copy.title,
+        description: copy.description,
         variant: 'destructive',
       });
     } finally {
