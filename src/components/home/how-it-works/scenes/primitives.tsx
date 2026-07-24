@@ -319,7 +319,7 @@ export const DashboardMock = ({
   nextAction,
   footer,
 }: {
-  role: 'Buyer' | 'Seller' | 'Renter' | 'Host';
+  role: 'Buyer' | 'Seller' | 'Renter' | 'Host' | 'Shopper';
   title: string;
   subtitle?: string;
   statuses: Array<{ label: string; intent?: 'info' | 'success' | 'warning' | 'neutral' }>;

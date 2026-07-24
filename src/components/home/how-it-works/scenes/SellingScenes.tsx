@@ -42,14 +42,15 @@ export const sellingScenes = [
     </SceneShell>
   ),
 
-  // 2. Create the listing (wizard)
+  // 2. Create the listing (wizard) — aligned to real PublishWizard steps
   () => (
     <SceneShell caption="Build a professional listing step by step.">
       <div className="flex h-full w-full items-center justify-center px-4">
-        <ListingWizardStrip steps={['Photos', 'Type', 'Price', 'Equipment', 'Specs', 'Docs', 'Payments']} />
+        <ListingWizardStrip steps={['Photos', 'Headline', 'Includes', 'Pricing', 'Location', 'Docs', 'Stripe', 'Review']} />
       </div>
     </SceneShell>
   ),
+
 
   // 3. Publish for free
   () => (
@@ -105,7 +106,7 @@ export const sellingScenes = [
     </SceneShell>
   ),
 
-  // 6. Track the sale (online)
+  // 6. Track the sale (online) — Stripe payout hold shown explicitly
   () => (
     <SceneShell caption="Follow the sale from purchase to completion.">
       <div className="flex h-full w-full items-center justify-center px-6">
@@ -114,20 +115,20 @@ export const sellingScenes = [
           title="Sale · 2018 Ford E-450"
           subtitle="Buyer: Maya R. · Paid via Stripe"
           statuses={[
-            { label: 'Payment Completed', intent: 'success' },
-            { label: 'Payout Scheduled', intent: 'info' },
+            { label: 'Payment Secured', intent: 'success' },
+            { label: 'Payout on hold · releases 25 days after buyer confirms', intent: 'info' },
           ]}
           timeline={[
             { label: 'Purchase created', state: 'done' },
             { label: 'Payment', state: 'done' },
             { label: 'Agreement', state: 'done' },
             { label: 'Handoff', state: 'active' },
-            { label: 'Payout', state: 'pending' },
+            { label: 'Funds Released', state: 'pending' },
           ]}
           nextAction={{ label: 'Confirm the handoff at pickup', cta: 'Confirm' }}
           footer={
             <div className="text-[11px]">
-              <span className="font-semibold">Payout timing:</span> released after handoff confirmation and the applicable hold period shown on your dashboard.
+              <span className="font-semibold">Payout timing:</span> released 25 days after the buyer confirms receipt (standard escrow hold).
             </div>
           }
         />
@@ -135,17 +136,18 @@ export const sellingScenes = [
     </SceneShell>
   ),
 
-  // 7. Pay-in-person sale variant
+
+  // 7. Pay-in-person cash sale — 100% free (no commission, no buyer fee)
   () => (
-    <SceneShell caption="Pay-in-person sales stay tracked too.">
+    <SceneShell caption="Pay-in-person cash sales are 100% free on Vendibook.">
       <div className="flex h-full w-full items-center justify-center px-6">
         <DashboardMock
           role="Seller"
           title="Sale · Concession trailer"
-          subtitle="Buyer: David C. · Cash at handoff"
+          subtitle="Buyer: David C. · Cash at handoff · 0% commission"
           statuses={[
-            { label: 'Payment Pending (in person)', intent: 'warning' },
-            { label: 'Handoff Scheduled', intent: 'info' },
+            { label: 'Payment due in person', intent: 'warning' },
+            { label: 'Handoff scheduled', intent: 'info' },
           ]}
           timeline={[
             { label: 'Agreement', state: 'done' },
@@ -159,6 +161,7 @@ export const sellingScenes = [
       </div>
     </SceneShell>
   ),
+
 
   // 8. Confirm the handoff — closing beat
   () => (

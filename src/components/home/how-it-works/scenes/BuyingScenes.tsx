@@ -138,12 +138,12 @@ export const buyingScenes = [
     <SceneShell caption="Know what's complete and what's next.">
       <div className="flex h-full w-full items-center justify-center px-6">
         <DashboardMock
-          role="Buyer"
+          role="Shopper"
           title="2018 Ford E-450 Food Truck"
           subtitle="Seller: Maria's Kitchen • $34,000"
           statuses={[
-            { label: 'Payment Completed', intent: 'success' },
-            { label: 'Agreement Ready', intent: 'info' },
+            { label: 'Payment Secured', intent: 'success' },
+            { label: 'Agreement ready to sign', intent: 'info' },
           ]}
           timeline={[
             { label: 'Purchase created', state: 'done' },
@@ -163,12 +163,12 @@ export const buyingScenes = [
     <SceneShell caption="Even offline payments stay organized.">
       <div className="flex h-full w-full items-center justify-center px-6">
         <DashboardMock
-          role="Buyer"
+          role="Shopper"
           title="Pay-in-person purchase"
           subtitle="Handoff scheduled Sat 10:00 AM"
           statuses={[
-            { label: 'Payment Pending (in person)', intent: 'warning' },
-            { label: 'Handoff Scheduled', intent: 'info' },
+            { label: 'Payment due in person', intent: 'warning' },
+            { label: 'Handoff scheduled', intent: 'info' },
           ]}
           timeline={[
             { label: 'Agreement signed', state: 'done' },
@@ -182,6 +182,7 @@ export const buyingScenes = [
       </div>
     </SceneShell>
   ),
+
 
   // 8. Complete the handoff
   () => (

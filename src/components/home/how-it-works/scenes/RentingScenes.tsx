@@ -108,8 +108,9 @@ export const rentingScenes = [
             transition={{ delay: 0.9 }}
             className="mt-3 rounded-md bg-primary px-3 py-1.5 text-center text-xs font-bold text-primary-foreground"
           >
-            Request Submitted → Awaiting Host Approval
+            Request Sent · Awaiting host response
           </motion.div>
+
         </motion.div>
       </div>
     </SceneShell>
@@ -123,17 +124,18 @@ export const rentingScenes = [
           role="Host"
           title="New request · Marcus BBQ Co."
           subtitle="Sep 12 – Sep 15"
-          statuses={[{ label: 'Action Required', intent: 'warning' }]}
+          statuses={[{ label: 'New Request', intent: 'warning' }]}
           timeline={[
             { label: 'Request received', state: 'done' },
             { label: 'Review renter', state: 'active' },
             { label: 'Approve', state: 'pending' },
           ]}
-          nextAction={{ label: 'Review profile, dates, and documents', cta: 'Approve' }}
+          nextAction={{ label: 'Action needed: approve or decline', cta: 'Approve' }}
         />
       </div>
     </SceneShell>
   ),
+
 
   // 6. Verification, documents & agreement
   () => (
@@ -147,18 +149,17 @@ export const rentingScenes = [
     </SceneShell>
   ),
 
-  // 7. Stripe payment + renter dashboard
+  // 7. Stripe payment + shopper dashboard (rental view)
   () => (
     <SceneShell caption="Payment and booking status together.">
       <div className="flex h-full w-full items-center justify-center gap-4 px-6">
         <PaymentOptionsPanel price="$720" fees="+ platform fee" showAffirm={false} showPayInPerson={false} />
         <DashboardMock
-          role="Renter"
+          role="Shopper"
           title="Sprinter kitchen · Sep 12–15"
           subtitle="Host: Andre"
           statuses={[
-            { label: 'Payment Completed', intent: 'success' },
-            { label: 'Booking Confirmed', intent: 'success' },
+            { label: 'Payment Secured · Booking Confirmed', intent: 'success' },
           ]}
           timeline={[
             { label: 'Payment', state: 'done' },
@@ -171,6 +172,7 @@ export const rentingScenes = [
       </div>
     </SceneShell>
   ),
+
 
   // 8. Pickup & return
   () => (
