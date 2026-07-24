@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import { BarChart3, LineChart, ArrowRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { RevenueAnalyticsCard } from '../RevenueAnalyticsCard';
 import { ListingInsightsPanel } from '../ListingInsightsPanel';
 
 type SubView = 'insights' | 'reporting';
@@ -43,7 +42,7 @@ const InsightsReportingTab = () => {
       </header>
 
       {view === 'insights' ? (
-        <EnhancedAnalytics />
+        <ListingInsightsPanel />
       ) : (
         <div className="rounded-2xl border border-border bg-card p-6 flex flex-col sm:flex-row sm:items-center gap-4 justify-between">
           <div>
