@@ -315,7 +315,17 @@ export const AnimatedExplainer = ({ explainer, onProgress, onEnded, onSceneChang
   }, [sceneIndex, explainer.scenes.length]);
 
   return (
-    <div className="relative flex h-full w-full flex-col bg-background">
+    <div
+      className="relative flex h-full w-full flex-col bg-background"
+      role="region"
+      aria-label={`${explainer.title} explainer video`}
+      aria-keyshortcuts="Space K ArrowLeft ArrowRight Home End 1 2 3 4 5 6 7 8 9 M C"
+    >
+      <p className="sr-only">
+        Keyboard shortcuts: Space or K to play or pause, Left and Right arrows to change scene,
+        Home and End to jump to start or end, number keys 1 through {Math.min(9, explainer.scenes.length)} to jump to a chapter,
+        M to mute the voiceover, C to toggle captions.
+      </p>
       {/* Cinematic stage */}
       <div className="relative aspect-video w-full overflow-hidden bg-foreground">
         {/* backdrop: hero photo, softly blurred & darkened for depth */}
