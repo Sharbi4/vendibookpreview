@@ -479,7 +479,10 @@ const HostDashboard = () => {
 
         {activeTab === 'promote' && (
           <Reveal>
-            <PromotionHub />
+            <div className="space-y-6">
+              <PromotionHub />
+              <ReferAHostCard />
+            </div>
           </Reveal>
         )}
 
