@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { createContext, ReactNode, useContext, useEffect, useRef, useState } from 'react';
+import { createContext, ReactNode, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Check,
   FileText,
