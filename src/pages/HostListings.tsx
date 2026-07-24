@@ -11,6 +11,10 @@ import { useHostListings } from '@/hooks/useHostListings';
 import { useStripeConnect } from '@/hooks/useStripeConnect';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePageTracking } from '@/hooks/usePageTracking';
+import { HostPlanRibbon } from '@/components/host/HostPlanRibbon';
+import { useHostEntitlements } from '@/hooks/useHostEntitlements';
+import { Link as RouterLink } from 'react-router-dom';
+import { Lock } from 'lucide-react';
 
 const HostListings = () => {
   const { hasRole } = useAuth();
