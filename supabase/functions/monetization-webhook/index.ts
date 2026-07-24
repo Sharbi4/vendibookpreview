@@ -75,6 +75,24 @@ serve(async (req) => {
           .eq("stripe_payment_intent_id", pi.id);
         break;
       }
+      case "customer.subscription.created":
+      case "customer.subscription.updated":
+      case "customer.subscription.deleted": {
+        const sub = event.data.object as Stripe.Subscription;
+        const prev = (event.data as any).previous_attributes ?? {};
+        await handleSubscriptionChange(supabase, sub, event.type, prev);
+        break;
+      }
+      case "invoice.paid": {
+        const inv = event.data.object as Stripe.Invoice;
+        await handleInvoicePaid(supabase, stripe, inv);
+        break;
+      }
+      case "invoice.payment_failed": {
+        const inv = event.data.object as Stripe.Invoice;
+        await handleInvoiceFailed(supabase, inv);
+        break;
+      }
       default:
         log("unhandled event", { type: event.type });
     }
