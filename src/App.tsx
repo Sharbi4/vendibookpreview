@@ -70,6 +70,7 @@ const AdminSupportTickets = lazy(() => import("./pages/AdminSupportTickets"));
 const AdminRevenue = lazy(() => import("./pages/AdminRevenue"));
 const ServicesHub = lazy(() => import("./pages/ServicesHub"));
 const BuyerServicesHub = lazy(() => import("./pages/BuyerServicesHub"));
+const BuyerDashboard = lazy(() => import("./pages/BuyerDashboard"));
 const HostProPlans = lazy(() => import("./pages/HostProPlans"));
 const PermitPathUpgrades = lazy(() => import("./pages/PermitPathUpgrades"));
 const Partners = lazy(() => import("./pages/Partners"));
@@ -271,6 +272,7 @@ const AnimatedRoutes = () => {
           <Route path="/admin/support" element={<PageTransition><AdminSupportTickets /></PageTransition>} />
           <Route path="/admin/revenue" element={<PageTransition><AdminRevenue /></PageTransition>} />
           <Route path="/services" element={<PageTransition><ServicesHub /></PageTransition>} />
+          <Route path="/buyer" element={<PageTransition><BuyerDashboard /></PageTransition>} />
           <Route path="/buyer/services" element={<PageTransition><BuyerServicesHub /></PageTransition>} />
           <Route path="/buyer/services/review/:listingId" element={<PageTransition><ListingPurchaseReviewIntake /></PageTransition>} />
           <Route path="/host/plans" element={<PageTransition><HostProPlans /></PageTransition>} />
