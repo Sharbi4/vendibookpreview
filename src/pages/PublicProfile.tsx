@@ -186,11 +186,13 @@ const PublicProfile = () => {
     listingsCount: profile?.show_listings_count !== false,
   };
 
-  // Derive service area from listings if not set in profile
+  // Derive service area from listings if not set in profile.
+  // Respect the owner's public-location privacy toggle.
   const serviceArea = (() => {
+    if (!vis.location && !isOwnProfile) return null;
     const profileLocation = [profile?.public_city, profile?.public_state].filter(Boolean).join(', ');
     if (profileLocation) return profileLocation;
-    
+
     // Fallback: derive from listings
     if (listings && listings.length > 0) {
       const cities = new Set<string>();
