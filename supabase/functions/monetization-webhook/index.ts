@@ -458,7 +458,7 @@ async function handleSubscriptionChange(
       planName,
       amount: amountStr,
       interval,
-      nextBillingDate: fmtDate(sub.current_period_end),
+      nextBillingDate: fmtDate(periodEndUnix),
       isRenewal: false,
     }, `sub-activated-${sub.id}`);
     return;
@@ -467,7 +467,7 @@ async function handleSubscriptionChange(
   if (eventType === "customer.subscription.deleted") {
     await sendSubEmail(supabase, "subscription-cancelled", userId, {
       planName,
-      accessEndsAt: fmtDate(sub.current_period_end),
+      accessEndsAt: fmtDate(periodEndUnix),
       immediate: true,
     }, `sub-deleted-${sub.id}`);
     return;
@@ -488,7 +488,7 @@ async function handleSubscriptionChange(
       amount: amountStr,
       interval,
       direction,
-      effectiveDate: fmtDate(sub.current_period_start),
+      effectiveDate: fmtDate(periodStartUnix),
     }, `sub-updated-${sub.id}-${priceId}`);
     return;
   }
@@ -496,9 +496,9 @@ async function handleSubscriptionChange(
   if (sub.cancel_at_period_end && prevCancelFlag === false) {
     await sendSubEmail(supabase, "subscription-cancelled", userId, {
       planName,
-      accessEndsAt: fmtDate(sub.current_period_end),
+      accessEndsAt: fmtDate(periodEndUnix),
       immediate: false,
-    }, `sub-cancel-scheduled-${sub.id}-${sub.current_period_end}`);
+    }, `sub-cancel-scheduled-${sub.id}-${periodEndUnix}`);
   }
 }
 
