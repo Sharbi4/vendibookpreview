@@ -71,12 +71,8 @@ const PurchaseStepReview = ({
     : `${buyerInfo.firstName} ${buyerInfo.lastName}`;
   const displayAddress = `${buyerInfo.address1}${buyerInfo.address2 ? ', ' + buyerInfo.address2 : ''}, ${buyerInfo.city}, ${buyerInfo.state} ${buyerInfo.zipCode}`;
   
-  // Get the right timeline based on fulfillment
-  const getTimelineSteps = () => {
-    if (fulfillmentSelected === 'vendibook_freight') return getSaleFreightSteps();
-    if (fulfillmentSelected === 'delivery') return getSaleLocalDeliverySteps();
-    return getSalePickupSteps();
-  };
+  // Timeline is now driven by PostPaymentTimeline (buyer-facing, payment-protection copy).
+
 
   return (
     <div className="space-y-6">
