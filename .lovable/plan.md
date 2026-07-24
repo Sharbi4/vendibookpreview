@@ -1,94 +1,99 @@
-## Findings report
 
-### Current state
-- `/pricing` and `/plans` both render `Pricing.tsx` (already de-duped). `/host/plans` → `HostProPlans`, `/services` → `ServicesHub`, `/buyer/services` → `BuyerServicesHub`, `/tools/permitpath/upgrades` → `PermitPathUpgrades`, `/partners` exists. Ready to unify under one intro.
-- Two entitlement hooks already exist: `useEntitlements` (all purchases + subs, keyed by slug/listing) and `useHostEntitlements` (tier feature flags). Both work but the tier hook only recognises `starter | pro | premium`, while the actual product catalog ships `host_starter`, `host_growth`, `host_operator`, and `seller_plus_*`. This is the biggest enforcement gap.
-- Promotion flow (`listing_promotions`) is enforced end-to-end for boosts with `promo_type + duration_days` set on the product row: webhook + reconciler insert, `notify-expired-boosts` deactivates. `PromoteListingPanel` reads them back correctly.
-- `Purchases.tsx` reads from `useEntitlements` and lists subs + one-times with status badge, but time-boxed items (boosts) never show an `endsAt` because `useEntitlements` does not join `listing_promotions.ends_at`.
-- After a monetization checkout the user lands on a per-slug return path (`returnRoutes.ts`) but there is no unified "what you just unlocked" confirmation.
+# Dashboard Redesign — Airbnb-style Workspace
 
-### Packages sold but not enforced (audit result)
-| Slug | Category | Enforcement gap |
-|---|---|---|
-| `host_starter`, `host_growth`, `host_operator` (+ `_annual`) | host_subscription | `useHostEntitlements` maps only `starter/pro/premium` → these tiers resolve to `free` and unlock nothing. Every `canAdvancedAnalytics`, `canPriorityPlacement`, `canBulkListings`, `canPrioritySupport`, `canDedicatedConcierge` gate fails for paying hosts. **Highest priority fix.** |
-| `seller_plus_monthly`, `seller_plus_annual` | host_subscription | Same tier-mapping problem; also no feature flags defined for a "seller_plus" role. |
-| `seller-pro` | listing_upgrade | No `promo_type` in DB, no listing-level flag set on purchase, no gate reads it. Currently a paid product with no delivered benefit. |
-| `boost-motivated-seller`, `boost-email-campaign`, `boost-social-feature` | listing_upgrade | `listing_promotions` row is created (badge visible in `PromoteListingPanel`), but nothing on the marketing side actually sends the campaign / social post / applies the badge in search. Fulfillment task record is missing. |
-| `buyer_readiness_pass` | buyer_service | Purchased → status flips to `paid` but no `buyer_service_requests` row, no deliverable, no visible unlock in buyer dashboard. (`listing_purchase_review` does have an intake page — good reference.) |
-| `pricing_review` | seller_service | No fulfillment task row, no visible "your review is in progress" surface. |
-| `permit_path_plus`, `permit_path_concierge` | permit_upgrade | Purchase completes but PermitPath premium walls do not read entitlements; user still hits the paywall after paying. |
+## Goal
+Refine the existing DashboardLayout (sidebar, mode switch, mobile bottom nav, 2px indicator) into a calm, photo-forward, progressively disclosed workspace with two clear personas — **Buying** and **Hosting** — and add the missing Orders/Sales Transactions tabs. Navigation + presentation only; no backend, no money logic changes.
 
-Fulfilled correctly today: `featured-listing-30`, `boost-featured-7/30`, `boost-top-of-search`, `boost-highlight` (all drive `listing_promotions`), `white-glove-seller` and `listing_rewrite` (route to intake), `listing_purchase_review` (has intake).
+## Scope Boundaries
+- **Reuse:** `DashboardLayout`, `ShopperDashboard`, `HostDashboard`, `NotificationCenter`, existing hooks (`useShopperBookings`, `useHostListings`, `useEntitlements`, `useHostEntitlements`, `useReferralEarnings`, `useAuth`).
+- **Don't rebuild:** sidebar shell, mode switch mechanics, mobile bottom nav container, framer 2px active indicator, existing routes (`/host/listings`, `/host/bookings`, `/host/reporting`, `/dashboard?tab=…`, `/favorites`, `/messages`, `/referral/dashboard`, `/tools/*`, `/account`, `/purchases`, `/verify-identity`, `/notification-preferences`, `/transactions`).
+- **No backend / money logic changes.**
 
-### Root cause of the tier gap
-`useHostEntitlements` was written for a 3-tier model and never updated when the catalog expanded. Fix once in the hook by normalising the DB tier string to a rank, and every downstream gate + card + quota banner starts working.
+## Deliverables
 
----
+### 1. Terminology + sidebar identity block
+- Relabel the mode switch everywhere to **Buying / Hosting** (desktop sidebar, desktop header bar, mobile header). Keep the Kitchen tab (`hasGhostKitchen`) as a separate host nav item; drop the confusing "Kitchen Pro" toggle label.
+- Sidebar profile block: avatar, name, persona label ("Buying" / "Hosting"), and an **identity chip** — green "Verified" or amber "Verify now" → `/verify-identity` (uses `useAuth().isVerified`).
+- Group nav into sections with subtle uppercase headers (Workspace / Account) and add a bottom **Account group**: Profile & Account, Membership & Billing, Identity Verification. Add a divider before it.
 
-## Proposed plan
+### 2. Sidebar nav — new tabs (both personas)
 
-### 1. `PackagesIntro` component (new)
-`src/components/monetization/PackagesIntro.tsx` — two variants:
-- `variant="hero"` — full section with eyebrow, headline, subhead, 4 pillar cards (Host Plans, Listing Upgrades, Done-for-you Services, Protected Payments & Partners), close line. One ember-glow accent on the "recommended" pillar (prop `recommendedIndex`, defaults to Host Plans).
-- `variant="compact"` — inline horizontal strip: eyebrow + one-line subhead + 4 pill links. For high-intent placements.
-Tokens only: near-black surface (`bg-background/60` + `glass-panel`), flame `#FF5124` for the highlighted pillar, Fredoka on headline, Poppins on body (already global). Uses exact copy from the brief. Ships an `AudienceSegments` sub-component for the "For Sellers / Buyers / Hosts" trio.
+**Buying**
+1. Overview — `/dashboard?view=shopper`
+2. Orders & Transactions — `/dashboard?view=shopper&tab=orders` *(new)*
+3. Bookings & Rentals — `/dashboard?view=shopper&tab=bookings`
+4. Favorites — `/favorites`
+5. Messages — `/messages` (unread badge preserved)
+6. Notifications — `/dashboard?view=shopper&tab=notifications` *(new: NotificationCenter feed + link to `/notification-preferences`)*
+7. Refer & Earn — `/referral/dashboard` (earned badge preserved)
+8. Premium Tools — `/dashboard?view=shopper&tab=tools` *(new: entitlements-aware grid → `/tools/*`)*
+9. Account group: Profile (`/account`), Membership & Billing (`/account/subscription` + `/purchases`), Identity Verification (`/verify-identity`)
 
-### 2. `/pricing` becomes the canonical hub
-- Lead with `<PackagesIntro variant="hero" />`.
-- Insert an `AudienceSegments` block linking: For Sellers → `/services` + `/host/plans` + `/pricing#upgrades`; For Buyers → `/buyer/services` + `/checkout` info; For Hosts → `/host/plans` + `/partners`.
-- Keep existing subscription / upgrade / add-on grids below.
-- `/plans` already aliases to `Pricing`. Add a small deprecation redirect note on `HostProPlans` so its hero shares the same `PackagesIntro compact` variant for consistency, without breaking its plan grid.
+**Hosting**
+1. Overview — `/dashboard?view=host`
+2. Listings — `/host/listings`
+3. Sales & Transactions — `/dashboard?view=host&tab=sales` *(new)*
+4. Booking Manager — `/host/bookings`
+5. Insights & Reporting *(merged)* — `/dashboard?view=host&tab=insights` with sub-tabs (Insights / Reporting) inside the page
+6. Promote & Upgrades — `/dashboard?view=host&tab=promote`
+7. Membership — `/dashboard?view=host&tab=membership` *(new: HostSubscriptionCard + link to `/account/subscription`)*
+8. Permits, Messages, Notifications, Refer & Earn
+9. Kitchen (conditional on `hasGhostKitchen`)
+10. Account group: Profile, Payouts (Stripe Connect status card), Notification Settings, Identity Verification
 
-### 3. Contextual compact placements (high-intent only)
-- `ListingPublished.tsx` — add `<PackagesIntro variant="compact" audience="seller" />` above `PromoteListingPanel`.
-- `HostListings.tsx` + `Dashboard` — inject a single compact strip when the user has at least one non-featured listing OR is on the free tier.
-- `Account.tsx` — compact strip next to `HostSubscriptionCard`.
-- Owner's own `/listing/:id` — "Boost this listing" compact CTA (only if `isOwner` and no active promotion).
-- `SaleCheckout` / `/checkout/:listingId` — compact "Financing & purchase review" strip in the sidebar (buyer audience).
-- `PermitPathUpgrades` premium wall — compact strip.
-- Add one `/pricing` link to `Header` nav and `Footer`.
-No banners anywhere else.
+### 3. Overview redesign (max 4 sections, action-required first)
 
-### 4. Entitlement source of truth
-- Extend `useEntitlements`:
-  - Also fetch `listing_promotions` where `active = true AND ends_at > now()` for the user's listings, and merge as entitlements with `endsAt`.
-  - Add helper `getUnlocked(): { hostTier, activePromotionsByListing, oneTimeServices[] }`.
-- Fix `useHostEntitlements` tier mapping:
-  - Normalise DB `tier` → canonical rank: `host_starter|seller_plus_* → 1`, `host_growth → 2`, `host_operator → 3`. Keep legacy `starter/pro/premium` working.
-  - Update feature-flag thresholds accordingly and export a `planLabel` so cards show the real product name.
-- Server-side: add `supabase/functions/_shared/entitlements.ts` that resolves the same shape from the request's JWT. Have `create-monetization-checkout`, `admin-monetization-grant`, and any PermitPath premium function call it before enabling access. Prevent buying a subscription that is already active (idempotency).
-- Wire a fulfillment task row on webhook success for the currently-orphan products (`buyer_readiness_pass`, `pricing_review`, `seller-pro`, campaign/social boosts) into an existing table pattern — either `buyer_service_requests` (buyer side) or a new `seller_service_requests` mirror (seller side). Assign to `service_partners` or admin queue.
+**Buying Overview**
+- `ActionRequiredStack` (new): unpaid booking, order awaiting confirmation, unverified identity, unread messages — each a compact row with icon + CTA.
+- Active orders: cover thumbnail + title + status timeline pill.
+- Upcoming rentals (approved bookings): cover thumbnail + date range.
+- Recent favorites: photo grid (4 cards) each with **Share** button.
+- One "Start your food business" shortcut card → `/tools/permitpath`.
 
-### 5. "What you unlocked" moment
-- New `src/components/monetization/UnlockedConfirmation.tsx`. Renders after successful purchase (called from `returnRoutes` landing pages or a shared `PurchaseSuccess` route): title, exactly-what-is-active list (pulled from refreshed `useEntitlements`), "where to use it" deep links, and end date for time-boxed items.
-- Update `Purchases.tsx` to:
-  - Show `endsAt` on one-time boosts (now available from the promotion merge).
-  - Group by category (Subscriptions / Active boosts / Services in progress / Completed).
-  - Link each row to the surface where the benefit is used.
+**Hosting Overview**
+- `ActionRequiredStack`: pending booking requests, sales awaiting confirmation, Stripe onboarding incomplete, unverified identity.
+- Earnings snapshot (existing hooks).
+- Listing performance cards with cover photos.
+- Next payout card.
 
-### 6. Copy guardrail
-- Grep all new/changed files for `escrow` — force "payment protection" / "protected payments".
-- Add an ESLint custom rule note in a project doc? Out of scope; use grep in PR instead.
+### 4. New tab pages (thin composers over existing components)
+- `BuyerOrdersTab` — buyer `/transactions` rows with cover images + order-tracking deep links. Sidebar badge = in-progress count.
+- `HostSalesTab` — host `/transactions` rows (mirror composition).
+- `FavoritesTab` — extend Favorites into dashboard as a photo grid with Share.
+- `NotificationsTab` — NotificationCenter feed + prominent link to `/notification-preferences`.
+- `PremiumToolsTab` — grid of `/tools/*` entries; each card shows Unlocked/Premium chip driven by `useHostEntitlements`.
+- `InsightsReportingTab` — single tab with sub-view pills (Insights / Reporting) replacing the two separate entries.
+- `MembershipTab` (host) — `HostSubscriptionCard` + CTA to `/account/subscription`.
+- `PromoteUpgradesTab` — existing PromotionHub + active boosts with expiry from `useEntitlements`.
+- `PayoutsPanel` (host account group) — Stripe Connect status + `/host/payouts` link.
 
-### Files to add
-- `src/components/monetization/PackagesIntro.tsx`
-- `src/components/monetization/AudienceSegments.tsx`
-- `src/components/monetization/UnlockedConfirmation.tsx`
-- `supabase/functions/_shared/entitlements.ts`
+### 5. Shared components
+- `SharePopover` — copy link + native share (`navigator.share` fallback). Reused for listings, favorites, referral link (`/share/listing/:id`, `/referral/dashboard`).
+- `IdentityChip` — Verified / Verify now, tied to `useAuth().isVerified`.
+- `ActionRequiredStack` + `ActionRequiredCard` — one-line row: icon, message, CTA.
+- `EmptyState` — inviting empty (photo + one CTA); replaces bare "No items" blocks.
+- `PhotoListingCard` — small cover-image row (used in orders/bookings/listings tabs).
 
-### Files to edit
-- `src/hooks/useHostEntitlements.ts` (tier mapping fix)
-- `src/hooks/useEntitlements.ts` (merge listing_promotions + endsAt)
-- `src/pages/Pricing.tsx`, `src/pages/HostProPlans.tsx` (share hero)
-- `src/pages/ListingPublished.tsx`, `src/pages/HostListings.tsx`, `src/pages/Dashboard.tsx`, `src/pages/Account.tsx`, `src/pages/SaleCheckout.tsx`, `src/pages/PermitPathUpgrades.tsx`, listing-detail owner header (compact placements)
-- `src/components/layout/Header.tsx`, `src/components/layout/Footer.tsx` (Pricing link)
-- `src/pages/Purchases.tsx` (grouping + endsAt + deep links)
-- `supabase/functions/monetization-webhook/index.ts` (fulfillment task creation for orphan products)
-- `supabase/functions/create-monetization-checkout/index.ts` (idempotency + shared entitlement check)
+### 6. Mobile bottom nav
+- **Buying:** Explore (`/search`), Orders (`?tab=orders`), Bookings (`?tab=bookings`), Inbox, Profile.
+- **Hosting:** Overview, Listings, Manager, Inbox, Profile.
 
-### Out of scope
-- Rebuilding partner directory
-- Restructuring `monetization_products` schema
-- Payment logic in `stripe-webhook` / `create-checkout` for sales — untouched
+### 7. Publish gate
+- In the listing wizard publish step (or `handlePublish`): if `!isVerified`, block publish with a friendly modal ("Verify your identity to publish — drafts are safe") and a "Verify now" CTA to `/verify-identity`. Drafts still save. Verify current enforcement first; add only if missing.
 
-### Wait for approval before editing.
+## Technical Notes
+- All new tab views mount inside `Dashboard.tsx` via `searchParams.get('tab')` switch (same pattern as existing `permits` tab). No new routes needed.
+- Sidebar nav becomes a data-driven list with `section` + `badge` fields; render two sections plus Account group.
+- Identity chip reads `useAuth().isVerified`; no new hooks.
+- Sub-view pills inside `InsightsReportingTab` use local state; no URL churn.
+- Fonts/tokens: use existing `text-foreground`, `text-muted-foreground`, `bg-background`, `bg-muted`, `border-border`. No new colors, no glassmorphism.
+- No edits to `create-checkout`, entitlements resolution, or Stripe functions.
+
+## Verification
+- `bunx tsgo --noEmit` at the end.
+- Manual: load `/dashboard` on both personas, click each new tab, resize to mobile, toggle Buying↔Hosting, confirm identity chip states.
+
+## Out of Scope
+- Backend edits, new edge functions, schema changes.
+- Redesign of `/transactions`, `/favorites`, `/tools/*` pages themselves (dashboard tabs link into or compose existing components).
+- Any pricing / fee / entitlement rule changes.
