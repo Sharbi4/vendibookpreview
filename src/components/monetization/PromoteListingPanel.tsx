@@ -125,7 +125,7 @@ export function PromoteListingPanel({ listingId }: Props) {
               >
                 <div>
                   <div className="font-semibold text-foreground">
-                    {promo.promo_type.replaceAll('_', ' ')}
+                    {promo.promo_type.split('_').join(' ')}
                   </div>
                   <div className="text-xs text-muted-foreground">
                     Ends {new Date(promo.ends_at).toLocaleDateString()} · {daysLeft(promo.ends_at)}{' '}

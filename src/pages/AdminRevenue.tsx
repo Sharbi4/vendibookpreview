@@ -48,7 +48,8 @@ interface DiscountRow {
 const anyClient = supabase as any;
 
 export default function AdminRevenue() {
-  const { user, isAdmin, loading: authLoading } = useAuth();
+  const { user, hasRole, isLoading: authLoading } = useAuth();
+  const isAdmin = hasRole('admin');
   const [loading, setLoading] = useState(true);
   const [products, setProducts] = useState<MonetizationProduct[]>([]);
   const [purchases, setPurchases] = useState<PurchaseRow[]>([]);
