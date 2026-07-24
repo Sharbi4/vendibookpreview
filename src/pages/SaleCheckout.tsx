@@ -787,6 +787,9 @@ const SaleCheckout = () => {
                   title={listing.title}
                   category={listing.category}
                   itemId={listing.id}
+                  sellerName={sellerName}
+                  sellerLabel="Sold by"
+                  locationLabel={locationLabel}
                   priceLines={priceLines}
                   totalToday={totalPrice}
                   fulfillmentType={fulfillmentSelected}
@@ -814,7 +817,7 @@ const SaleCheckout = () => {
               title={listing.title}
               subtitle={listing.category ?? undefined}
               lines={[
-                { label: 'Item price', amount: priceSale },
+                { label: listing.title, amount: priceSale },
                 ...(currentDeliveryFee > 0
                   ? [{
                       label: fulfillmentSelected === 'vendibook_freight' ? 'Freight' : 'Delivery',
