@@ -11,6 +11,11 @@ interface DisplayNameInput {
   last_name?: string | null;
   full_name?: string | null;
   display_name?: string | null;
+  /**
+   * When true, the profile owner has opted in to showing their full last name
+   * publicly. When false or omitted, we fall back to the "FirstName L." format.
+   */
+  show_full_name?: boolean | null;
 }
 
 /**
@@ -33,11 +38,15 @@ export function getPublicDisplayName(profile: DisplayNameInput): string {
     return profile.business_name.trim();
   }
 
-  // Priority 2: FirstName L. format
+  const showFull = profile.show_full_name === true;
+
+  // Priority 2: FirstName L. (or full "First Last" when opted in)
   if (profile.first_name?.trim() && profile.last_name?.trim()) {
     const firstName = profile.first_name.trim();
-    const lastInitial = profile.last_name.trim().charAt(0).toUpperCase();
-    return `${firstName} ${lastInitial}.`;
+    const last = profile.last_name.trim();
+    return showFull
+      ? `${firstName} ${last}`
+      : `${firstName} ${last.charAt(0).toUpperCase()}.`;
   }
 
   // Priority 3: Parse from full_name if available
@@ -45,8 +54,10 @@ export function getPublicDisplayName(profile: DisplayNameInput): string {
     const parts = profile.full_name.trim().split(' ').filter(Boolean);
     if (parts.length >= 2) {
       const firstName = parts[0];
-      const lastInitial = parts[parts.length - 1].charAt(0).toUpperCase();
-      return `${firstName} ${lastInitial}.`;
+      const last = parts[parts.length - 1];
+      return showFull
+        ? profile.full_name.trim()
+        : `${firstName} ${last.charAt(0).toUpperCase()}.`;
     }
     // Single name, return as-is
     if (parts.length === 1) {
