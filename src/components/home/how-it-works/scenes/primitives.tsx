@@ -434,25 +434,45 @@ export const CalendarGrid = ({
       {Array.from({ length: 28 }, (_, i) => i + 1).map((day) => {
         const isSelected = selected.includes(day);
         const isBooked = booked.includes(day);
+        const selectedIdx = selected.indexOf(day);
         return (
           <motion.div
             key={day}
             initial={{ scale: 1 }}
             animate={
               isSelected
-                ? { scale: [1, 1.15, 1], backgroundColor: 'hsl(var(--primary))' }
+                ? { scale: [1, 1.18, 1], backgroundColor: 'hsl(var(--primary))' }
                 : {}
             }
-            transition={{ delay: selected.indexOf(day) * 0.12, duration: 0.4 }}
-            className={`flex aspect-square items-center justify-center rounded-md text-xs font-medium ${
+            transition={{ delay: selectedIdx * 0.12, duration: 0.45, ease: 'easeOut' }}
+            className={`relative flex aspect-square items-center justify-center rounded-md text-xs font-medium ${
               isSelected
-                ? 'text-primary-foreground'
+                ? 'text-primary-foreground shadow-[0_4px_12px_-2px_hsl(var(--primary)/0.6)]'
                 : isBooked
                   ? 'bg-muted-foreground/25 text-muted-foreground line-through'
                   : 'bg-muted text-foreground'
             }`}
           >
-            {day}
+            {isSelected && (
+              <motion.span
+                aria-hidden
+                className="pointer-events-none absolute inset-0 rounded-md border border-primary"
+                initial={{ scale: 1, opacity: 0.75 }}
+                animate={{ scale: 1.7, opacity: 0 }}
+                transition={{ delay: 0.2 + selectedIdx * 0.12, duration: 0.9, ease: 'easeOut' }}
+              />
+            )}
+            {isBooked && (
+              <span
+                aria-hidden
+                className="pointer-events-none absolute inset-0 rounded-md opacity-40"
+                style={{
+                  backgroundImage:
+                    'repeating-linear-gradient(45deg, hsl(var(--muted-foreground) / 0.35) 0 2px, transparent 2px 5px)',
+                }}
+              />
+            )}
+            <span className="relative">{day}</span>
           </motion.div>
         );
       })}
@@ -506,23 +526,67 @@ export const TransactionTimeline = ({
   steps: Array<{ label: string; state: StatusState }>;
 }) => (
   <div className="flex w-full items-start justify-between gap-1.5">
-    {steps.map((s, i) => (
-      <div key={i} className="flex flex-1 flex-col items-center gap-1.5">
-        <div className="flex w-full items-center">
-          <div className={`h-0.5 flex-1 ${i === 0 ? 'bg-transparent' : s.state === 'pending' ? 'bg-muted' : 'bg-primary'}`} />
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ delay: 0.1 * i, type: 'spring', stiffness: 220, damping: 18 }}
-            className={`h-3 w-3 rounded-full ${dot(s.state)}`}
-          />
-          <div className={`h-0.5 flex-1 ${i === steps.length - 1 ? 'bg-transparent' : s.state === 'done' ? 'bg-primary' : 'bg-muted'}`} />
+    {steps.map((s, i) => {
+      const leftFilled = i > 0 && s.state !== 'pending';
+      const rightFilled = i < steps.length - 1 && s.state === 'done';
+      return (
+        <div key={i} className="flex flex-1 flex-col items-center gap-1.5">
+          <div className="relative flex w-full items-center">
+            {/* Left rail */}
+            <div className="relative h-0.5 flex-1 overflow-hidden rounded-full bg-muted">
+              {i > 0 && (
+                <motion.div
+                  className="absolute inset-y-0 left-0 bg-primary"
+                  initial={{ width: '0%' }}
+                  animate={{ width: leftFilled ? '100%' : '0%' }}
+                  transition={{ delay: 0.05 * i, duration: 0.5, ease: 'easeOut' }}
+                />
+              )}
+            </div>
+            {/* Node with concentric ring for active */}
+            <div className="relative flex h-3 w-3 items-center justify-center">
+              {s.state === 'active' && (
+                <>
+                  <motion.span
+                    aria-hidden
+                    className="absolute inset-[-6px] rounded-full border border-primary/50"
+                    animate={{ scale: [1, 1.35, 1], opacity: [0.6, 0, 0.6] }}
+                    transition={{ duration: 1.8, repeat: Infinity, ease: 'easeOut' }}
+                  />
+                  <motion.span
+                    aria-hidden
+                    className="absolute inset-[-3px] rounded-full border border-primary/70"
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 6, repeat: Infinity, ease: 'linear' }}
+                    style={{ borderStyle: 'dashed' }}
+                  />
+                </>
+              )}
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: 0.1 * i, type: 'spring', stiffness: 220, damping: 18 }}
+                className={`h-3 w-3 rounded-full ${dot(s.state)}`}
+              />
+            </div>
+            {/* Right rail */}
+            <div className="relative h-0.5 flex-1 overflow-hidden rounded-full bg-muted">
+              {i < steps.length - 1 && (
+                <motion.div
+                  className="absolute inset-y-0 left-0 bg-primary"
+                  initial={{ width: '0%' }}
+                  animate={{ width: rightFilled ? '100%' : '0%' }}
+                  transition={{ delay: 0.05 * (i + 1), duration: 0.5, ease: 'easeOut' }}
+                />
+              )}
+            </div>
+          </div>
+          <span className={`text-[10px] font-medium leading-tight text-center ${s.state === 'pending' ? 'text-muted-foreground' : 'text-foreground'}`}>
+            {s.label}
+          </span>
         </div>
-        <span className={`text-[10px] font-medium leading-tight text-center ${s.state === 'pending' ? 'text-muted-foreground' : 'text-foreground'}`}>
-          {s.label}
-        </span>
-      </div>
-    ))}
+      );
+    })}
   </div>
 );
 
@@ -1045,6 +1109,37 @@ export const Sparkline = ({
         animate={{ pathLength: 1 }}
         transition={{ delay, duration: 1.2, ease: 'easeOut' }}
       />
+      {/* Pulsing endpoint marker */}
+      {(() => {
+        const lastX = (points.length - 1) * step;
+        const last = points[points.length - 1];
+        const lastY = height - ((last - min) / range) * (height - 4) - 2;
+        return (
+          <g>
+            <motion.circle
+              cx={lastX}
+              cy={lastY}
+              r={5}
+              fill="hsl(var(--primary))"
+              opacity={0.35}
+              initial={{ scale: 0 }}
+              animate={{ scale: [0.8, 1.8, 0.8] }}
+              transition={{ delay: delay + 1.1, duration: 1.6, repeat: Infinity, ease: 'easeInOut' }}
+              style={{ transformOrigin: `${lastX}px ${lastY}px` }}
+            />
+            <motion.circle
+              cx={lastX}
+              cy={lastY}
+              r={2.5}
+              fill="hsl(var(--primary))"
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ delay: delay + 1.1, type: 'spring', stiffness: 260, damping: 14 }}
+              style={{ transformOrigin: `${lastX}px ${lastY}px` }}
+            />
+          </g>
+        );
+      })()}
     </svg>
   );
 };
