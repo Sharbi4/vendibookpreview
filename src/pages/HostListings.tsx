@@ -12,7 +12,9 @@ import { useStripeConnect } from '@/hooks/useStripeConnect';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePageTracking } from '@/hooks/usePageTracking';
 import { HostPlanRibbon } from '@/components/host/HostPlanRibbon';
+import { ListingQuotaBanner } from '@/components/host/ListingQuotaBanner';
 import { useHostEntitlements } from '@/hooks/useHostEntitlements';
+import { useListingQuota } from '@/hooks/useListingQuota';
 import { Link as RouterLink } from 'react-router-dom';
 import { Lock } from 'lucide-react';
 
