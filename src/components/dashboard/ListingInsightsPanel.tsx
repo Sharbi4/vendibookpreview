@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { RefreshCw, TrendingUp, AlertTriangle, ChevronDown, ChevronRight, Activity, Loader2 } from 'lucide-react';
+import { RefreshCw, TrendingUp, AlertTriangle, ChevronDown, ChevronRight, Activity, Loader2, Wand2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
