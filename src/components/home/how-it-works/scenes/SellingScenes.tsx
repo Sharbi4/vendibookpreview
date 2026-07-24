@@ -116,8 +116,8 @@ export const sellingScenes = [
           title="Sale · 2018 Ford E-450"
           subtitle="Buyer: Maya R. · Paid via Stripe"
           statuses={[
-            { label: 'Payment Secured', intent: 'success' },
-            { label: 'Payout on hold · releases 25 days after buyer confirms', intent: 'info' },
+            { label: 'Payment Completed', intent: 'success' },
+            { label: 'Payout Scheduled · releases 25 days after buyer confirms', intent: 'info' },
           ]}
           timeline={[
             { label: 'Purchase created', state: 'done' },
