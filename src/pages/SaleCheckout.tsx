@@ -792,9 +792,8 @@ const SaleCheckout = () => {
             </div>
           </div>
         </div>
-      </main>
+      </CheckoutChrome>
 
-      <Footer />
       <CheckoutOverlay isVisible={showCheckoutOverlay} />
       {embeddedCheckout ? (
         <EmbeddedStripeCheckout
@@ -832,8 +831,7 @@ const SaleCheckout = () => {
           confirmLabel={paymentMethod === 'cash' ? 'Confirm — arrange in person' : 'Continue to secure payment'}
         />
       ) : null}
-    </div>
-
+    </>
   );
 };
 
