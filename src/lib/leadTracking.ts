@@ -160,6 +160,7 @@ const EVENT_CATEGORY: Record<LeadEventName, string> = {
   homepage_video_scene_viewed: 'homepage',
   homepage_video_scene_completed: 'homepage',
   homepage_video_watch_duration: 'homepage',
+  homepage_video_chapter_clicked: 'homepage',
   homepage_video_cta_clicked: 'homepage',
 };
 
