@@ -8,6 +8,7 @@ import {
   DashboardMock,
   PayoutTimeline,
   ListingWizardStrip,
+  Confetti,
 } from './primitives';
 
 /**
@@ -150,7 +151,8 @@ export const hostingScenes = [
   // 8. Handoff, return & review
   () => (
     <SceneShell caption="You provide the opportunity. Vendibook organizes the process.">
-      <div className="flex h-full w-full items-end justify-center gap-6">
+      <div className="relative flex h-full w-full items-end justify-center gap-6">
+        <Confetti />
         <Vendi accessory="none" size={220} />
         <div className="flex flex-col items-center gap-2">
           <BadgeStamp label="Pickup Confirmed" />

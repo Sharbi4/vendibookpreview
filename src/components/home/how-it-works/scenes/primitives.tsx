@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { createContext, ReactNode, useContext, useEffect, useRef, useState } from 'react';
+import { createContext, ReactNode, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Check,
   FileText,
@@ -82,9 +82,12 @@ export const SceneShell = ({ children, caption }: { children: ReactNode; caption
             ].join(','),
           }}
         />
-        <svg
+        {/* Parallax grid — slowly drifts to give the scene a living backplate. */}
+        <motion.svg
           aria-hidden
-          className="pointer-events-none absolute inset-0 z-0 h-full w-full opacity-[0.06] mix-blend-overlay"
+          className="pointer-events-none absolute inset-0 z-0 h-full w-full opacity-[0.07] mix-blend-overlay"
+          animate={{ backgroundPositionX: [0, 32], backgroundPositionY: [0, 32] }}
+          transition={{ duration: 30, repeat: Infinity, ease: 'linear' }}
         >
           <defs>
             <pattern id="scene-grid" width="32" height="32" patternUnits="userSpaceOnUse">
@@ -92,7 +95,31 @@ export const SceneShell = ({ children, caption }: { children: ReactNode; caption
             </pattern>
           </defs>
           <rect width="100%" height="100%" fill="url(#scene-grid)" />
-        </svg>
+        </motion.svg>
+        {/* Aurora light-beam sweep — travels diagonally, brand-tinted. */}
+        <motion.div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 z-0"
+          style={{
+            background:
+              'linear-gradient(115deg, transparent 35%, hsl(var(--primary) / 0.14) 46%, hsl(var(--primary) / 0.22) 50%, hsl(var(--primary) / 0.14) 54%, transparent 65%)',
+            mixBlendMode: 'screen',
+          }}
+          animate={{ x: ['-30%', '30%'] }}
+          transition={{ duration: 9, repeat: Infinity, ease: 'easeInOut', repeatType: 'mirror' }}
+        />
+        {/* Scanning horizon line — very faint, adds "systems monitoring" energy. */}
+        <motion.div
+          aria-hidden
+          className="pointer-events-none absolute inset-x-0 z-0 h-px"
+          style={{
+            background:
+              'linear-gradient(90deg, transparent, hsl(var(--primary) / 0.55), transparent)',
+            boxShadow: '0 0 12px hsl(var(--primary) / 0.6)',
+          }}
+          animate={{ top: ['12%', '88%', '12%'] }}
+          transition={{ duration: 11, repeat: Infinity, ease: 'easeInOut' }}
+        />
         <div
           aria-hidden
           className="pointer-events-none absolute inset-0 z-0"
@@ -286,10 +313,33 @@ export const ListingCardStack = ({
 
 
 export const BadgeStamp = ({ label }: { label: string }) => (
-  <div className="flex items-center gap-2 rounded-full border-2 border-primary bg-primary/10 px-4 py-2 text-primary shadow-lg">
-    <Check className="h-5 w-5" strokeWidth={3} />
+  <motion.div
+    initial={{ scale: 1.35, opacity: 0, rotate: -6 }}
+    animate={{ scale: 1, opacity: 1, rotate: 0 }}
+    transition={{ type: 'spring', stiffness: 260, damping: 16 }}
+    className="relative flex items-center gap-2 rounded-full border-2 border-primary bg-primary/10 px-4 py-2 text-primary shadow-[0_10px_28px_-8px_hsl(var(--primary)/0.55)]"
+  >
+    {/* Impact shockwave rings */}
+    {[0, 0.15].map((d, i) => (
+      <motion.span
+        key={i}
+        aria-hidden
+        className="pointer-events-none absolute inset-0 rounded-full border-2 border-primary/70"
+        initial={{ scale: 1, opacity: 0.7 }}
+        animate={{ scale: 1.75, opacity: 0 }}
+        transition={{ delay: d, duration: 0.9, ease: 'easeOut' }}
+      />
+    ))}
+    <motion.span
+      initial={{ scale: 0 }}
+      animate={{ scale: 1 }}
+      transition={{ delay: 0.18, type: 'spring', stiffness: 300, damping: 14 }}
+      className="inline-flex"
+    >
+      <Check className="h-5 w-5" strokeWidth={3} />
+    </motion.span>
     <span className="text-sm font-bold uppercase tracking-wider">{label}</span>
-  </div>
+  </motion.div>
 );
 
 export const CheckDoc = ({ label }: { label: string }) => (
@@ -384,25 +434,45 @@ export const CalendarGrid = ({
       {Array.from({ length: 28 }, (_, i) => i + 1).map((day) => {
         const isSelected = selected.includes(day);
         const isBooked = booked.includes(day);
+        const selectedIdx = selected.indexOf(day);
         return (
           <motion.div
             key={day}
             initial={{ scale: 1 }}
             animate={
               isSelected
-                ? { scale: [1, 1.15, 1], backgroundColor: 'hsl(var(--primary))' }
+                ? { scale: [1, 1.18, 1], backgroundColor: 'hsl(var(--primary))' }
                 : {}
             }
-            transition={{ delay: selected.indexOf(day) * 0.12, duration: 0.4 }}
-            className={`flex aspect-square items-center justify-center rounded-md text-xs font-medium ${
+            transition={{ delay: selectedIdx * 0.12, duration: 0.45, ease: 'easeOut' }}
+            className={`relative flex aspect-square items-center justify-center rounded-md text-xs font-medium ${
               isSelected
-                ? 'text-primary-foreground'
+                ? 'text-primary-foreground shadow-[0_4px_12px_-2px_hsl(var(--primary)/0.6)]'
                 : isBooked
                   ? 'bg-muted-foreground/25 text-muted-foreground line-through'
                   : 'bg-muted text-foreground'
             }`}
           >
-            {day}
+            {isSelected && (
+              <motion.span
+                aria-hidden
+                className="pointer-events-none absolute inset-0 rounded-md border border-primary"
+                initial={{ scale: 1, opacity: 0.75 }}
+                animate={{ scale: 1.7, opacity: 0 }}
+                transition={{ delay: 0.2 + selectedIdx * 0.12, duration: 0.9, ease: 'easeOut' }}
+              />
+            )}
+            {isBooked && (
+              <span
+                aria-hidden
+                className="pointer-events-none absolute inset-0 rounded-md opacity-40"
+                style={{
+                  backgroundImage:
+                    'repeating-linear-gradient(45deg, hsl(var(--muted-foreground) / 0.35) 0 2px, transparent 2px 5px)',
+                }}
+              />
+            )}
+            <span className="relative">{day}</span>
           </motion.div>
         );
       })}
@@ -456,23 +526,67 @@ export const TransactionTimeline = ({
   steps: Array<{ label: string; state: StatusState }>;
 }) => (
   <div className="flex w-full items-start justify-between gap-1.5">
-    {steps.map((s, i) => (
-      <div key={i} className="flex flex-1 flex-col items-center gap-1.5">
-        <div className="flex w-full items-center">
-          <div className={`h-0.5 flex-1 ${i === 0 ? 'bg-transparent' : s.state === 'pending' ? 'bg-muted' : 'bg-primary'}`} />
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ delay: 0.1 * i, type: 'spring', stiffness: 220, damping: 18 }}
-            className={`h-3 w-3 rounded-full ${dot(s.state)}`}
-          />
-          <div className={`h-0.5 flex-1 ${i === steps.length - 1 ? 'bg-transparent' : s.state === 'done' ? 'bg-primary' : 'bg-muted'}`} />
+    {steps.map((s, i) => {
+      const leftFilled = i > 0 && s.state !== 'pending';
+      const rightFilled = i < steps.length - 1 && s.state === 'done';
+      return (
+        <div key={i} className="flex flex-1 flex-col items-center gap-1.5">
+          <div className="relative flex w-full items-center">
+            {/* Left rail */}
+            <div className="relative h-0.5 flex-1 overflow-hidden rounded-full bg-muted">
+              {i > 0 && (
+                <motion.div
+                  className="absolute inset-y-0 left-0 bg-primary"
+                  initial={{ width: '0%' }}
+                  animate={{ width: leftFilled ? '100%' : '0%' }}
+                  transition={{ delay: 0.05 * i, duration: 0.5, ease: 'easeOut' }}
+                />
+              )}
+            </div>
+            {/* Node with concentric ring for active */}
+            <div className="relative flex h-3 w-3 items-center justify-center">
+              {s.state === 'active' && (
+                <>
+                  <motion.span
+                    aria-hidden
+                    className="absolute inset-[-6px] rounded-full border border-primary/50"
+                    animate={{ scale: [1, 1.35, 1], opacity: [0.6, 0, 0.6] }}
+                    transition={{ duration: 1.8, repeat: Infinity, ease: 'easeOut' }}
+                  />
+                  <motion.span
+                    aria-hidden
+                    className="absolute inset-[-3px] rounded-full border border-primary/70"
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 6, repeat: Infinity, ease: 'linear' }}
+                    style={{ borderStyle: 'dashed' }}
+                  />
+                </>
+              )}
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: 0.1 * i, type: 'spring', stiffness: 220, damping: 18 }}
+                className={`h-3 w-3 rounded-full ${dot(s.state)}`}
+              />
+            </div>
+            {/* Right rail */}
+            <div className="relative h-0.5 flex-1 overflow-hidden rounded-full bg-muted">
+              {i < steps.length - 1 && (
+                <motion.div
+                  className="absolute inset-y-0 left-0 bg-primary"
+                  initial={{ width: '0%' }}
+                  animate={{ width: rightFilled ? '100%' : '0%' }}
+                  transition={{ delay: 0.05 * (i + 1), duration: 0.5, ease: 'easeOut' }}
+                />
+              )}
+            </div>
+          </div>
+          <span className={`text-[10px] font-medium leading-tight text-center ${s.state === 'pending' ? 'text-muted-foreground' : 'text-foreground'}`}>
+            {s.label}
+          </span>
         </div>
-        <span className={`text-[10px] font-medium leading-tight text-center ${s.state === 'pending' ? 'text-muted-foreground' : 'text-foreground'}`}>
-          {s.label}
-        </span>
-      </div>
-    ))}
+      );
+    })}
   </div>
 );
 
@@ -995,6 +1109,37 @@ export const Sparkline = ({
         animate={{ pathLength: 1 }}
         transition={{ delay, duration: 1.2, ease: 'easeOut' }}
       />
+      {/* Pulsing endpoint marker */}
+      {(() => {
+        const lastX = (points.length - 1) * step;
+        const last = points[points.length - 1];
+        const lastY = height - ((last - min) / range) * (height - 4) - 2;
+        return (
+          <g>
+            <motion.circle
+              cx={lastX}
+              cy={lastY}
+              r={5}
+              fill="hsl(var(--primary))"
+              opacity={0.35}
+              initial={{ scale: 0 }}
+              animate={{ scale: [0.8, 1.8, 0.8] }}
+              transition={{ delay: delay + 1.1, duration: 1.6, repeat: Infinity, ease: 'easeInOut' }}
+              style={{ transformOrigin: `${lastX}px ${lastY}px` }}
+            />
+            <motion.circle
+              cx={lastX}
+              cy={lastY}
+              r={2.5}
+              fill="hsl(var(--primary))"
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ delay: delay + 1.1, type: 'spring', stiffness: 260, damping: 14 }}
+              style={{ transformOrigin: `${lastX}px ${lastY}px` }}
+            />
+          </g>
+        );
+      })()}
     </svg>
   );
 };
@@ -1027,3 +1172,171 @@ export const ActivityTicker = ({
     ))}
   </div>
 );
+
+/* ---------------------------------------------------------------------------
+ * High-fidelity motion primitives
+ * -------------------------------------------------------------------------
+ * Small, self-contained motion pieces used as accents inside scenes to lift
+ * the whole set to enterprise-grade production polish without additional
+ * scene-file churn.
+ * ------------------------------------------------------------------------- */
+
+/** Confetti burst — brand-tinted, physics-shaped, one-shot. */
+export const Confetti = ({ count = 26, spread = 220 }: { count?: number; spread?: number }) => {
+  const pieces = useMemo(
+    () =>
+      Array.from({ length: count }).map((_, i) => {
+        const angle = (Math.PI * (i / Math.max(1, count - 1))) - Math.PI / 2;
+        const dist = spread * (0.55 + Math.random() * 0.55);
+        const rand = Math.random();
+        return {
+          i,
+          x: Math.cos(angle) * dist + (Math.random() - 0.5) * 30,
+          y: Math.sin(angle) * dist * 0.7 - Math.random() * 60,
+          rot: (Math.random() - 0.5) * 720,
+          hue: rand < 0.55 ? 'hsl(var(--primary))' : rand < 0.8 ? 'hsl(var(--primary) / 0.55)' : 'hsl(var(--foreground) / 0.8)',
+          size: 4 + Math.random() * 5,
+          shape: rand > 0.6 ? 'square' : 'rect',
+          delay: Math.random() * 0.15,
+          dur: 1.2 + Math.random() * 0.8,
+        };
+      }),
+    [count, spread],
+  );
+  return (
+    <div className="pointer-events-none absolute inset-0 z-40 flex items-center justify-center">
+      <div className="relative h-0 w-0">
+        {pieces.map((p) => (
+          <motion.span
+            key={p.i}
+            aria-hidden
+            className="absolute"
+            style={{
+              width: p.shape === 'square' ? p.size : p.size * 0.6,
+              height: p.size,
+              background: p.hue,
+              borderRadius: 1,
+              boxShadow: '0 2px 6px hsl(var(--foreground) / 0.25)',
+              left: 0,
+              top: 0,
+            }}
+            initial={{ x: 0, y: 0, opacity: 1, rotate: 0 }}
+            animate={{ x: p.x, y: p.y, opacity: [1, 1, 0], rotate: p.rot }}
+            transition={{ delay: p.delay, duration: p.dur, ease: [0.16, 0.84, 0.44, 1] }}
+          />
+        ))}
+      </div>
+    </div>
+  );
+};
+
+/** Animated circular progress ring, draws in on mount. */
+export const ProgressRing = ({
+  value = 0.72,
+  size = 68,
+  stroke = 6,
+  label,
+  sub,
+}: {
+  value?: number;
+  size?: number;
+  stroke?: number;
+  label?: string;
+  sub?: string;
+}) => {
+  const radius = (size - stroke) / 2;
+  const circ = 2 * Math.PI * radius;
+  return (
+    <div className="relative inline-flex items-center justify-center" style={{ width: size, height: size }}>
+      <svg width={size} height={size} className="-rotate-90">
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          fill="none"
+          stroke="hsl(var(--muted))"
+          strokeWidth={stroke}
+        />
+        <motion.circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          fill="none"
+          stroke="hsl(var(--primary))"
+          strokeWidth={stroke}
+          strokeLinecap="round"
+          strokeDasharray={circ}
+          initial={{ strokeDashoffset: circ }}
+          animate={{ strokeDashoffset: circ * (1 - value) }}
+          transition={{ duration: 1.1, ease: 'easeOut' }}
+          style={{ filter: 'drop-shadow(0 0 6px hsl(var(--primary) / 0.55))' }}
+        />
+      </svg>
+      <div className="absolute inset-0 flex flex-col items-center justify-center">
+        {label && <span className="text-xs font-bold tabular-nums text-foreground">{label}</span>}
+        {sub && <span className="text-[8px] font-semibold uppercase tracking-wider text-muted-foreground">{sub}</span>}
+      </div>
+    </div>
+  );
+};
+
+/** Sliding notification toast — appears once, then persists. */
+export const NotificationToast = ({
+  title,
+  body,
+  delay = 0.6,
+}: {
+  title: string;
+  body?: string;
+  delay?: number;
+}) => (
+  <motion.div
+    initial={{ y: -14, x: 14, opacity: 0, scale: 0.96 }}
+    animate={{ y: 0, x: 0, opacity: 1, scale: 1 }}
+    transition={{ delay, type: 'spring', stiffness: 260, damping: 22 }}
+    className="pointer-events-none inline-flex items-start gap-2 rounded-xl border border-primary/40 bg-card/95 px-2.5 py-1.5 shadow-[0_16px_40px_-14px_hsl(var(--primary)/0.55)] ring-1 ring-primary/20 backdrop-blur"
+  >
+    <span className="mt-0.5 inline-flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">
+      <Check className="h-2.5 w-2.5" strokeWidth={4} />
+    </span>
+    <div className="min-w-0">
+      <div className="text-[10px] font-bold leading-tight text-foreground">{title}</div>
+      {body && <div className="mt-0.5 truncate text-[9px] text-muted-foreground">{body}</div>}
+    </div>
+  </motion.div>
+);
+
+/** Three-dot typing indicator. */
+export const TypingDots = () => (
+  <span className="inline-flex items-center gap-1">
+    {[0, 1, 2].map((i) => (
+      <motion.span
+        key={i}
+        className="h-1.5 w-1.5 rounded-full bg-current"
+        animate={{ y: [0, -3, 0], opacity: [0.4, 1, 0.4] }}
+        transition={{ duration: 1, repeat: Infinity, delay: i * 0.15, ease: 'easeInOut' }}
+      />
+    ))}
+  </span>
+);
+
+/** Diagonal scan-line sweep that passes across a card once and repeats. */
+export const Scanline = ({ delay = 0.4, duration = 2.4 }: { delay?: number; duration?: number }) => (
+  <motion.span
+    aria-hidden
+    className="pointer-events-none absolute inset-0 overflow-hidden rounded-[inherit]"
+  >
+    <motion.span
+      className="absolute -inset-y-4 w-1/3"
+      style={{
+        background:
+          'linear-gradient(90deg, transparent, hsl(var(--primary) / 0.22), transparent)',
+        filter: 'blur(2px)',
+      }}
+      initial={{ x: '-120%' }}
+      animate={{ x: '260%' }}
+      transition={{ delay, duration, repeat: Infinity, repeatDelay: 3.5, ease: 'easeInOut' }}
+    />
+  </motion.span>
+);
+
