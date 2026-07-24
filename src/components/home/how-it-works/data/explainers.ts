@@ -186,18 +186,18 @@ export const explainers: Explainer[] = [
     secondaryCtaLabel: 'See Hosting Benefits',
     secondaryCtaRoute: '/how-it-works-host',
     transcript:
-      "If your food truck, trailer, commercial kitchen, or vendor space is not used every day, Vendibook can help turn that availability into booking opportunities. Create a detailed host listing with your pricing, amenities, rules, required documents, and access instructions. Use your host booking calendar to open available dates, block unavailable dates, and review upcoming bookings, so you can reduce scheduling conflicts. When a request arrives, review the renter, requested dates, intended use, verification status, and documents from your host dashboard before approving. Once approved, manage the booking from one place — messages, agreements, documents, payment status, handoff details, return date, and your upcoming payout. Online rental payments are securely processed through Stripe. Your dashboard shows when payment has been completed, when the rental is in progress, and when your payout is scheduled. You set your rental price. The renter reviews the applicable platform fee at checkout, and your host payout is scheduled 24 hours after the rental ends. Use the same dashboard to complete pickup and return confirmations and build your reputation through reviews. You provide the opportunity — Vendibook organizes the process.",
+      "Now — here's a thought. If your food truck, trailer, commercial kitchen, or vendor space isn't in use every single day, that downtime could actually be earning for you. That's what hosting on Vendibook is about. Let me show you how it works. You start by building your host listing — your pricing, your amenities, your rules, the documents you require, access instructions, all of it. Then you open your host booking calendar — you pick which dates are available, block out the ones that aren't, and see what's coming up, so you're not double-booking yourself. When a request comes in, you review the renter, their dates, what they're using it for, their verification status, and any documents they've submitted — all before you ever say yes. Once you approve, the whole booking lives in one place — messages, agreements, documents, payment status, the handoff, the return date, and your upcoming payout. Renter payments go through Stripe securely. Your dashboard shows you when the renter has paid, when the rental's in progress, and when your payout is scheduled. And here's the part hosts love — you set your rental price, and the renter sees the platform fee at checkout. Your payout is scheduled twenty-four hours after the rental ends. You handle pickup and return confirmations right in the same dashboard, and reviews build up your reputation over time. You bring the opportunity — Vendibook keeps the whole process organized.",
     scenes: buildScenes(
       hostingScenes,
       [
-        'Make available equipment and space work harder.',
-        'Set expectations before the request arrives.',
-        'You control when your listing is available.',
-        'Review the details before you approve.',
-        'One dashboard for your hosting activity.',
-        'See payment and payout status clearly.',
-        'Your listed rental price is what you receive.',
-        'You provide the opportunity. Vendibook organizes the process.',
+        "So — got a truck, trailer, kitchen, or space sitting idle? That's income waiting to happen.",
+        "First, set the expectations — pricing, rules, documents, all of it.",
+        "You stay in control of your calendar, always.",
+        "When a request comes in, you review the details before you approve.",
+        "Everything about your hosting activity lives in one dashboard.",
+        "Payment and payout status are always clearly shown.",
+        "You set the price — that's what you receive, on your payout schedule.",
+        "You bring the opportunity. Vendibook keeps it all organized.",
       ],
       [
         'Why host',
@@ -211,6 +211,7 @@ export const explainers: Explainer[] = [
       ],
     ),
   },
+
 ];
 
 export const getExplainer = (id: ExplainerType) =>
