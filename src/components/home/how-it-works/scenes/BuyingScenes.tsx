@@ -143,8 +143,8 @@ export const buyingScenes = [
           title="2018 Ford E-450 Food Truck"
           subtitle="Seller: Maria's Kitchen • $34,000"
           statuses={[
-            { label: 'Payment Secured', intent: 'success' },
-            { label: 'Agreement ready to sign', intent: 'info' },
+            { label: 'Payment Completed', intent: 'success' },
+            { label: 'Agreement Ready', intent: 'info' },
           ]}
           timeline={[
             { label: 'Purchase created', state: 'done' },
