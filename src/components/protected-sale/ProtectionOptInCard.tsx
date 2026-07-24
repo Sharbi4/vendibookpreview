@@ -1,10 +1,12 @@
-import { Shield, Check } from 'lucide-react';
+import { useState } from 'react';
+import { Shield, Check, ChevronDown } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import {
   computeProtectedSaleAmounts,
   formatCents,
   isProtectedSaleEligible,
 } from '@/lib/protectedSale/fees';
+import { ProtectedSaleFeeCalculator } from './ProtectedSaleFeeCalculator';
 
 interface Props {
   salePriceCents: number;
@@ -17,6 +19,7 @@ interface Props {
  * Only shown when the sale meets the protection floor.
  */
 export function ProtectionOptInCard({ salePriceCents, saleTransactionId }: Props) {
+  const [showCalculator, setShowCalculator] = useState(false);
   if (!isProtectedSaleEligible(salePriceCents)) return null;
   const { protectionFeeCents, depositCents, balanceCents } =
     computeProtectedSaleAmounts(salePriceCents);
@@ -56,6 +59,23 @@ export function ProtectionOptInCard({ salePriceCents, saleTransactionId }: Props
               <span>{formatCents(balanceCents)}</span>
             </div>
           </div>
+
+          <button
+            type="button"
+            onClick={() => setShowCalculator((v) => !v)}
+            className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-orange-300 hover:text-orange-200"
+            aria-expanded={showCalculator}
+          >
+            <ChevronDown className={`h-3.5 w-3.5 transition-transform ${showCalculator ? 'rotate-180' : ''}`} />
+            {showCalculator ? 'Hide fee calculator' : 'Preview the fee at other prices'}
+          </button>
+          {showCalculator ? (
+            <ProtectedSaleFeeCalculator
+              initialSalePriceCents={salePriceCents}
+              className="mt-3"
+              compact
+            />
+          ) : null}
 
           {saleTransactionId ? (
             <Link
