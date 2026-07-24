@@ -1349,6 +1349,7 @@ const Account = () => {
 
           {/* Host Subscription */}
           <HostSubscriptionCard />
+          <HostPerksCard />
 
 
 
