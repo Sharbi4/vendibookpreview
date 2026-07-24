@@ -91,11 +91,13 @@ const ListingPurchaseReviewIntake = () => {
           intake: parsed.data,
         });
 
+      const { buildCheckoutReturnPaths } = await import('@/lib/monetization/returnRoutes');
+      const paths = buildCheckoutReturnPaths('listing-purchase-review', { listingId });
       const { url } = await startMonetizationCheckout({
         productSlug: 'listing_purchase_review',
         listingId,
-        successPath: `/dashboard?purchase=success&product=listing_purchase_review`,
-        cancelPath: `/buyer/services/review/${listingId ?? ''}?cancelled=1`,
+        successPath: paths.successPath,
+        cancelPath: paths.cancelPath,
       });
       window.location.href = url;
     } catch (e) {
@@ -108,7 +110,7 @@ const ListingPurchaseReviewIntake = () => {
   return (
     <div className="min-h-screen bg-background">
       <section className="mx-auto max-w-2xl px-4 py-14">
-        <p className="text-sm font-medium uppercase tracking-widest text-orange-400">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
           Listing Purchase Review — $149
         </p>
         <h1 className="mt-3 text-3xl font-bold tracking-tight text-foreground">

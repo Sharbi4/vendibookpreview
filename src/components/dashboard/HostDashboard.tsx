@@ -15,6 +15,8 @@ import { CommandStatCard } from './CommandStatCard';
 import { CommandHeader } from './CommandHeader';
 import { SectionReveal, Reveal } from './SectionReveal';
 import { NextBestAction } from './NextBestAction';
+import { ContinueSetup } from '@/components/journey';
+import { useResumableJourneys } from '@/hooks/useResumableJourneys';
 import { OnboardingChecklist } from './OnboardingChecklist';
 import StripeNotificationBubble from './StripeNotificationBubble';
 import HostListingCard from './HostListingCard';
@@ -102,6 +104,7 @@ const HostDashboard = () => {
   const { pendingOffers } = useHostOffers();
   const { hasGhostKitchen } = useDashboardPersona();
   const [showStripeModal, setShowStripeModal] = useState(false);
+  const { items: resumableItems } = useResumableJourneys();
 
   const activeTab = searchParams.get('tab') || 'overview';
 
@@ -247,6 +250,13 @@ const HostDashboard = () => {
               pendingOffers={pendingOffers.length}
               firstName={firstName}
             />
+          </Reveal>
+        )}
+
+        {/* ── Continue setup ─────────────────────────────────── */}
+        {activeTab === 'overview' && resumableItems.length > 0 && (
+          <Reveal>
+            <ContinueSetup items={resumableItems} />
           </Reveal>
         )}
 

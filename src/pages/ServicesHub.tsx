@@ -85,7 +85,7 @@ const ServicesHub = () => {
     <div className="min-h-screen bg-background">
       <section className="mx-auto max-w-6xl px-4 py-16 sm:py-20">
         <div className="max-w-3xl">
-          <p className="text-sm font-medium uppercase tracking-widest text-orange-400">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
             Services
           </p>
           <h1 className="mt-3 text-4xl font-bold tracking-tight text-foreground sm:text-5xl">
@@ -102,15 +102,15 @@ const ServicesHub = () => {
           {CATEGORIES.map(({ icon: Icon, title, copy, to, cta }) => (
             <div
               key={title}
-              className="group flex flex-col rounded-2xl border border-white/10 bg-white/[0.03] p-6 transition hover:bg-white/[0.06]"
+              className="group flex flex-col rounded-2xl border border-border/70 bg-card/60 backdrop-blur-sm p-6 transition hover:border-border hover:bg-card/80"
             >
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-500/10 text-orange-400">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-foreground/[0.06] text-foreground">
                 <Icon className="h-5 w-5" />
               </div>
               <h3 className="mt-4 text-lg font-semibold text-foreground">{title}</h3>
               <p className="mt-2 text-sm text-muted-foreground">{copy}</p>
               <div className="mt-6">
-                <Button asChild variant="ghost" className="h-auto px-0 text-orange-400 hover:text-orange-300">
+                <Button asChild variant="ghost" className="h-auto px-0 text-primary hover:text-primary/80">
                   <Link to={to}>
                     {cta}
                     <ArrowRight className="ml-1 h-4 w-4" />
