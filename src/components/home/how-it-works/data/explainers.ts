@@ -148,30 +148,31 @@ export const explainers: Explainer[] = [
     secondaryCtaLabel: 'Explore Selling Tools',
     secondaryCtaRoute: '/how-it-works-seller',
     transcript:
-      "Alright — flip it around for a second. Maybe you've got a truck or a trailer sitting there, and you're ready to sell it. On a general marketplace, that usually means half-answered questions and buyers who don't really know what they're looking at. Vendibook is built differently, because everyone here is shopping for food-business equipment. Here's how selling works. You walk through the listing wizard step by step — your photos, the truck or trailer type, your asking price, location, condition, the equipment inside, specs, and any documents you want to share. You preview, and you publish — and yes, listing is completely free. From that point on, buyers searching Vendibook can actually find you. Your seller dashboard becomes your home base — messages, listing views, saves, buyer activity, all in one place. When a buyer's ready, eligible buyers may see more ways to complete the purchase — online checkout through Stripe, Affirm for eligible purchases subject to approval, and pay-in-person when you enable it. Once a purchase is created, the sale dashboard shows you the payment method, the payment status, the agreement, documents, messages, the handoff date, and what's needed next from each side. For online transactions, you'll see your payment hold and payout timeline right there. For pay-in-person sales, both sides confirm the handoff inside Vendibook. So — list for free, connect with serious buyers, and manage the sale without losing track of anything.",
+      "Alright — flip it around. Say you upgraded to a bigger rig and your old twenty-foot trailer is just sitting in the yard. On a general marketplace, you'd get tire-kickers asking questions you already answered in the ad. Vendibook is different, because every buyer here is specifically shopping for food-business equipment. Let me walk you through selling, step by step. Step one — open the listing wizard. It guides you: upload your photos, pick the type — trailer, truck, or concession — set your asking price, drop your location, note the condition, list the equipment inside, add specs like generator hours or fuel type, and attach any documents, like the title or a recent inspection. Step two — preview and publish. Listing is completely free, always. Step three — buyers actively searching Vendibook can now find you, save you, and reach out. Step four — your seller dashboard becomes home base. You'll see messages, listing views, saves, and buyer activity, all in one place, so you know exactly who's serious. Step five — when a buyer's ready, eligible buyers may see more options: online checkout through Stripe, Affirm for eligible purchases subject to approval, and pay-in-person if you enabled it. Step six — once a purchase is created, your sale dashboard shows the payment method, payment status, the signed agreement, documents, messages, the handoff date, and the next required action from each side. For Stripe purchases, you'll see the payment hold and payout timeline right there. For pay-in-person sales, both sides confirm the handoff inside Vendibook. And here's the kicker — pay-in-person sales are one-hundred-percent free, no commission, no buyer fee. List free, sell smart, and stay on top of every step.",
     scenes: buildScenes(
       sellingScenes,
       [
-        "Got a truck or trailer to sell? Here's where the right buyers are already looking.",
-        "The wizard walks you through the listing, step by step.",
-        "And listing is free — always.",
-        "Once you're live, your dashboard shows everything happening around your listing.",
-        "Eligible buyers see more ways to complete the purchase.",
-        "Follow the whole sale from checkout through completion.",
-        "Even cash sales stay organized — both sides confirm the handoff.",
-        "That's it — list free, sell smart, stay on top of every step.",
+        "Got a truck or trailer sitting idle? Serious buyers are already here looking.",
+        "Step one: the wizard walks you through photos, price, equipment, and docs.",
+        "Step two: preview and publish — listing is always free.",
+        "Step three: your seller dashboard shows messages, views, saves, and buyers.",
+        "Step four: eligible buyers see Stripe, Affirm, and pay-in-person options.",
+        "Step five: follow the sale from checkout through completion.",
+        "Step six: cash sales are free — both sides confirm the handoff in-app.",
+        "That's it — list free, sell smart, and manage every step in one place.",
       ],
       [
-        'Where buyers search',
+        'Your scenario',
         'Listing wizard',
         'Free to list',
         'Seller dashboard',
-        'Stripe & Affirm options',
-        'Sale timeline & escrow',
+        'Checkout options',
+        'Sale timeline',
         'Cash sale handoff',
         'Wrap-up',
       ],
     ),
+
   },
 
   {
