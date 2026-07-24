@@ -106,8 +106,8 @@ export function UpgradePackageCards({
           const price = effectivePriceCents(p);
           const originalPrice = p.promo_price_cents != null ? p.price_cents : null;
           const isRecommended = idx === recommendedIndex;
-          const busy = buying === p.slug;
-          const anyBusy = buying !== null;
+          const busy = pendingSlug === p.slug;
+          const anyBusy = pendingSlug !== null;
           return (
             <article
               key={p.id}
@@ -167,7 +167,7 @@ export function UpgradePackageCards({
               <Button
                 className="mt-5 w-full font-medium"
                 variant={isRecommended ? 'default' : 'outline'}
-                onClick={() => buy(p.slug)}
+                onClick={() => buy(p)}
                 disabled={anyBusy}
                 aria-busy={busy}
                 aria-label={busy ? `Starting checkout for ${p.name}` : `Get ${p.name} for ${formatUsd(price)}`}
@@ -191,7 +191,7 @@ export function UpgradePackageCards({
 
       {onSkip && (
         <div className="flex justify-center">
-          <Button variant="ghost" onClick={onSkip} disabled={buying !== null}>
+          <Button variant="ghost" onClick={onSkip} disabled={pendingSlug !== null}>
             {skipLabel}
           </Button>
         </div>
