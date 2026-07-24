@@ -126,11 +126,11 @@ export const DashboardLayout = ({ children, mode, onModeChange, isHost }: Dashbo
           items: [
             { title: 'Overview', icon: LayoutGrid, href: '/dashboard?view=shopper', tab: null },
             { title: 'Orders & Transactions', icon: ShoppingBag, href: '/dashboard?view=shopper&tab=orders', tab: 'orders' },
-            { title: 'Bookings & Rentals', icon: CalendarDays, href: '/dashboard?view=shopper', tab: null },
+            { title: 'Bookings & Rentals', icon: CalendarDays, href: '/dashboard?view=shopper&tab=bookings', tab: 'bookings' },
             { title: 'Favorites', icon: Heart, href: '/dashboard?view=shopper&tab=favorites', tab: 'favorites' },
             { title: 'Messages', icon: MessageSquare, href: '/messages', tab: null, badge: messagesBadge },
             { title: 'Notifications', icon: Bell, href: '/dashboard?view=shopper&tab=notifications', tab: 'notifications' },
-            { title: 'Refer & Earn', icon: Gift, href: '/referral/dashboard?source=sidebar', tab: null, badge: referralBadge },
+            { title: 'Refer & Earn', icon: Gift, href: '/dashboard?view=shopper&tab=referral', tab: 'referral', badge: referralBadge },
             { title: 'Premium Tools', icon: Wrench, href: '/dashboard?view=shopper&tab=tools', tab: 'tools' },
             { title: 'Permits', icon: FileCheck, href: '/dashboard?view=shopper&tab=permits', tab: 'permits' },
           ],
