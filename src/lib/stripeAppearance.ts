@@ -22,6 +22,8 @@ export const stripeAppearance: Appearance = {
     colorIconTab: '#A1A1AA',
     colorIconTabSelected: '#FF5124',
     spacingUnit: '4px',
+    // Express Checkout Element (Apple Pay / Google Pay / Link) button shape
+    buttonBorderRadius: '12px',
   },
   rules: {
     '.Input': {
