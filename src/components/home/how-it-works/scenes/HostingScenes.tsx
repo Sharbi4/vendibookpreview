@@ -72,19 +72,20 @@ export const hostingScenes = [
           title="Request · Marcus BBQ Co."
           subtitle="Sep 9 – Sep 11 · $540"
           statuses={[
-            { label: 'Verification Needed', intent: 'warning' },
-            { label: 'Awaiting Host Approval', intent: 'info' },
+            { label: 'New Request', intent: 'warning' },
+            { label: 'Verification pending', intent: 'info' },
           ]}
           timeline={[
             { label: 'Request received', state: 'done' },
             { label: 'Review renter', state: 'active' },
             { label: 'Approve or decline', state: 'pending' },
           ]}
-          nextAction={{ label: 'Review renter profile, dates, and documents', cta: 'Open' }}
+          nextAction={{ label: 'Action needed: approve or decline this request', cta: 'Open' }}
         />
       </div>
     </SceneShell>
   ),
+
 
   // 5. Manage the booking dashboard
   () => (
@@ -95,8 +96,7 @@ export const hostingScenes = [
           title="Confirmed booking · Sprinter kitchen"
           subtitle="Renter: Marcus · Sep 9–11"
           statuses={[
-            { label: 'Booking Confirmed', intent: 'success' },
-            { label: 'Payment Completed', intent: 'success' },
+            { label: 'Payment Secured · Booking Confirmed', intent: 'success' },
           ]}
           timeline={[
             { label: 'Approved', state: 'done' },
@@ -111,6 +111,7 @@ export const hostingScenes = [
     </SceneShell>
   ),
 
+
   // 6. Stripe payment flow
   () => (
     <SceneShell caption="See payment and payout status clearly.">
@@ -120,9 +121,9 @@ export const hostingScenes = [
     </SceneShell>
   ),
 
-  // 7. Host pricing & payout timing
+  // 7. Host pricing & payout timing — real 12.9% host commission from commissions.ts
   () => (
-    <SceneShell caption="Your listed rental price is what you receive.">
+    <SceneShell caption="You set your price. Vendibook shows exactly how the payout breaks down.">
       <div className="flex h-full w-full items-center justify-center gap-4 px-6">
         <motion.div
           initial={{ y: 20, opacity: 0 }}
@@ -131,18 +132,20 @@ export const hostingScenes = [
         >
           <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Host earnings</div>
           <div className="mt-2 space-y-1.5 text-xs">
-            <div className="flex justify-between"><span className="text-muted-foreground">Your rental price</span><span className="font-semibold text-foreground">$500</span></div>
-            <div className="flex justify-between"><span className="text-muted-foreground">Renter's platform fee</span><span className="text-muted-foreground">shown at checkout</span></div>
-            <div className="mt-1 flex justify-between border-t border-border pt-1.5"><span className="font-bold text-foreground">Your payout</span><span className="font-bold text-primary">$500</span></div>
+            <div className="flex justify-between"><span className="text-muted-foreground">Your rental price</span><span className="font-semibold text-foreground">$500.00</span></div>
+            <div className="flex justify-between"><span className="text-muted-foreground">Host commission (12.9%)</span><span className="text-muted-foreground">− $64.50</span></div>
+            <div className="mt-1 flex justify-between border-t border-border pt-1.5"><span className="font-bold text-foreground">Your payout</span><span className="font-bold text-primary">$435.50</span></div>
+            <div className="pt-1 text-[10px] text-muted-foreground">Renter's 12.9% platform fee shown at their checkout.</div>
           </div>
           <div className="mt-3 rounded-lg border border-primary/40 bg-primary/8 px-3 py-2 text-[11px] font-semibold text-foreground">
-            Payout released 24h after the rental ends.
+            Payout scheduled 24 hours after the rental ends.
           </div>
         </motion.div>
         <ListingCardMini variant="primary" label="$500 / rental" large />
       </div>
     </SceneShell>
   ),
+
 
   // 8. Handoff, return & review
   () => (
