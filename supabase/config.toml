@@ -1,6 +1,8 @@
 project_id = "nbrehbwfsmedbelzntqs"
 
 [functions]
+  [functions.monetization-webhook]
+    verify_jwt = false
   [functions.ai-equipment-guide]
     verify_jwt = false
   [functions.vapi-chat]
