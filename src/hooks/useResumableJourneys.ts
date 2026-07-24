@@ -29,22 +29,23 @@ export function useResumableJourneys() {
       try {
         const { data } = await supabase
           .from('listings')
-          .select('id,title,updated_at,photos,description,price_cents')
+          .select('id,title,updated_at,image_urls,description,price_cents')
           .eq('host_id', user.id)
           .eq('status', 'draft')
           .order('updated_at', { ascending: false })
           .limit(3);
-        (data ?? []).forEach((l: {
-          id: string;
-          title: string | null;
-          updated_at: string | null;
-          photos?: unknown;
-          description?: string | null;
-          price_cents?: number | null;
-        }) => {
-          const hasPhotos = Array.isArray(l.photos) && l.photos.length > 0;
-          const hasDesc = !!l.description && l.description.length > 40;
-          const hasPrice = !!l.price_cents && l.price_cents > 0;
+        (data ?? []).forEach((l) => {
+          const row = l as unknown as {
+            id: string;
+            title: string | null;
+            updated_at: string | null;
+            image_urls: string[] | null;
+            description: string | null;
+            price_cents: number | null;
+          };
+          const hasPhotos = Array.isArray(row.image_urls) && row.image_urls.length > 0;
+          const hasDesc = !!row.description && row.description.length > 40;
+          const hasPrice = !!row.price_cents && row.price_cents > 0;
           const done = [hasPhotos, hasDesc, hasPrice].filter(Boolean).length;
           const nextStep = !hasPhotos
             ? 'Add photos'
@@ -54,16 +55,16 @@ export function useResumableJourneys() {
             ? 'Describe your listing'
             : 'Review and publish';
           collected.push({
-            id: `draft-${l.id}`,
-            title: l.title || 'Untitled listing',
+            id: `draft-${row.id}`,
+            title: row.title || 'Untitled listing',
             nextStep,
-            savedAt: friendlySavedAt(l.updated_at),
-            href: `/list?draft=${l.id}`,
+            savedAt: friendlySavedAt(row.updated_at),
+            href: `/list?draft=${row.id}`,
             priority: 90,
             progress: Math.round((done / 3) * 100),
           });
         });
-      } catch { /* table shape may vary; safe to skip */ }
+      } catch { /* safe to skip if schema differs */ }
 
       // Pending monetization purchases (abandoned checkouts / awaiting webhook)
       try {
