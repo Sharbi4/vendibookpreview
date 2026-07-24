@@ -155,17 +155,6 @@
     </image:image>
   </url>
   <url>
-    <loc>https://vendibook.com/listing/1791e770-182f-4723-a207-59f727e8310e</loc>
-    <lastmod>2026-06-26</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=800</image:loc>
-      <image:title>Asian Fusion Food Truck</image:title>
-      <image:caption>Asian Fusion Food Truck in Los Angeles, CA on Vendibook</image:caption>
-    </image:image>
-  </url>
-  <url>
     <loc>https://vendibook.com/listing/d02ec787-17cb-4e37-b1a7-e70dec639b23</loc>
     <lastmod>2026-07-24</lastmod>
     <changefreq>weekly</changefreq>
@@ -174,6 +163,17 @@
       <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/421aa58f-ac7e-4eaf-92e3-2b6be284fb0a/d02ec787-17cb-4e37-b1a7-e70dec639b23/1784602053546-46lyaf.jpg</image:loc>
       <image:title>Ready-to-Operate Food Trailer in Miami – Fully Equipped</image:title>
       <image:caption>Ready-to-Operate Food Trailer in Miami – Fully Equipped in Miami, FL on Vendibook</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://vendibook.com/listing/1791e770-182f-4723-a207-59f727e8310e</loc>
+    <lastmod>2026-06-26</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=800</image:loc>
+      <image:title>Asian Fusion Food Truck</image:title>
+      <image:caption>Asian Fusion Food Truck in Los Angeles, CA on Vendibook</image:caption>
     </image:image>
   </url>
   <url>
@@ -419,17 +419,6 @@
     </image:image>
   </url>
   <url>
-    <loc>https://vendibook.com/listing/a27ad5e3-5260-4af1-beca-2a13b82fd733</loc>
-    <lastmod>2026-07-24</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/ef357256-b346-4d79-8933-66e774692152/a27ad5e3-5260-4af1-beca-2a13b82fd733/1782137923457-zoqabh.jpeg</image:loc>
-      <image:title>My Food Trailer</image:title>
-      <image:caption>My Food Trailer on Vendibook</image:caption>
-    </image:image>
-  </url>
-  <url>
     <loc>https://vendibook.com/listing/9c92006e-fe3c-4e52-9474-51d4a950eb26</loc>
     <lastmod>2026-07-24</lastmod>
     <changefreq>weekly</changefreq>
@@ -438,6 +427,17 @@
       <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/8d9b76c5-c6bd-44cd-bbe6-c5e2a6b3c575/9c92006e-fe3c-4e52-9474-51d4a950eb26/1779912483211-eswm5l.jpg</image:loc>
       <image:title>Turnkey 24 ft Fully Loaded Kitchen Food Trailer – Ready for Serious Business!</image:title>
       <image:caption>Turnkey 24 ft Fully Loaded Kitchen Food Trailer – Ready for Serious Business! on Vendibook</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://vendibook.com/listing/a27ad5e3-5260-4af1-beca-2a13b82fd733</loc>
+    <lastmod>2026-07-24</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/ef357256-b346-4d79-8933-66e774692152/a27ad5e3-5260-4af1-beca-2a13b82fd733/1782137923457-zoqabh.jpeg</image:loc>
+      <image:title>My Food Trailer</image:title>
+      <image:caption>My Food Trailer on Vendibook</image:caption>
     </image:image>
   </url>
   <url>
