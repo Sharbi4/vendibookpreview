@@ -99,6 +99,8 @@ const Index = () => {
         {/* Announcement moved below the hero */}
         <AnnouncementBanner />
 
+        {/* See How Vendibook Works — 4 in-browser animated explainers */}
+        <HowVendibookWorks />
 
         <Suspense fallback={<SectionSkeleton />}>
           {/* 2. Featured Listings — premium row (hidden if none active) */}
