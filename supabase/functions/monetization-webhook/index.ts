@@ -408,6 +408,15 @@ async function handleSubscriptionChange(
   const currency = price?.currency ?? "usd";
   const interval = price?.recurring?.interval ?? "month";
 
+  // Stripe API 2025-08-27.basil moved current_period_* onto the subscription item.
+  // Prefer item-level fields, fall back to top-level for older payloads.
+  // deno-lint-ignore no-explicit-any
+  const itemAny = item as any;
+  const periodStartUnix: number | null =
+    itemAny?.current_period_start ?? sub.current_period_start ?? null;
+  const periodEndUnix: number | null =
+    itemAny?.current_period_end ?? sub.current_period_end ?? null;
+
   // Look up existing row by subscription id, else by customer id
   // deno-lint-ignore no-explicit-any
   const { data: existing } = await (supabase as any)
@@ -426,8 +435,8 @@ async function handleSubscriptionChange(
     stripe_subscription_id: sub.id,
     stripe_price_id: priceId,
     status: sub.status,
-    current_period_start: sub.current_period_start ? new Date(sub.current_period_start * 1000).toISOString() : null,
-    current_period_end: sub.current_period_end ? new Date(sub.current_period_end * 1000).toISOString() : null,
+    current_period_start: periodStartUnix ? new Date(periodStartUnix * 1000).toISOString() : null,
+    current_period_end: periodEndUnix ? new Date(periodEndUnix * 1000).toISOString() : null,
     trial_end: sub.trial_end ? new Date(sub.trial_end * 1000).toISOString() : null,
     cancel_at: sub.cancel_at ? new Date(sub.cancel_at * 1000).toISOString() : null,
     cancel_at_period_end: !!sub.cancel_at_period_end,
