@@ -8,9 +8,8 @@ import { useListing } from '@/hooks/useListing';
 import { useToast } from '@/hooks/use-toast';
 import { useFreightEstimate } from '@/hooks/useFreightEstimate';
 import { supabase } from '@/integrations/supabase/client';
-import Header from '@/components/layout/Header';
-import Footer from '@/components/layout/Footer';
 import { CheckoutOverlay, EmbeddedStripeCheckout } from '@/components/checkout';
+import CheckoutChrome from '@/components/checkout/CheckoutChrome';
 import CheckoutOrderSummary from '@/components/checkout/CheckoutOrderSummary';
 import { isEmbeddedCheckoutEnabled } from '@/lib/featureFlags';
 import { parseEdgeError } from '@/lib/edgeErrors';
@@ -22,7 +21,6 @@ import { calculateDistance } from '@/lib/geolocation';
 import SEO from '@/components/SEO';
 
 // Premium shared components
-import WizardHeader, { WizardStep } from '@/components/shared/WizardHeader';
 import StickySummary from '@/components/shared/StickySummary';
 
 // Step components
@@ -36,10 +34,10 @@ import { ProtectionOptInCard } from '@/components/protected-sale/ProtectionOptIn
 type FulfillmentSelection = 'pickup' | 'delivery' | 'vendibook_freight';
 type CheckoutStep = 'information' | 'delivery' | 'review';
 
-const CHECKOUT_STEPS: WizardStep[] = [
-  { step: 1, label: 'Your Info', short: 'Info' },
-  { step: 2, label: 'Delivery', short: 'Delivery' },
-  { step: 3, label: 'Review & Pay', short: 'Pay' },
+const CHECKOUT_STEPS = [
+  { step: 1, label: 'Your info', short: 'Info' },
+  { step: 2, label: 'How you\'ll get it', short: 'Delivery' },
+  { step: 3, label: 'Review & pay', short: 'Pay' },
 ];
 
 const getStepNumber = (step: CheckoutStep): number => {
@@ -606,21 +604,23 @@ const SaleCheckout = () => {
   // Block owners from purchasing their own listings
   if (isOwner) {
     return (
-      <div className="min-h-screen flex flex-col bg-background">
-        <Header />
-        <div className="flex-1 flex items-center justify-center p-4">
-          <div className="text-center max-w-md">
-            <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
-              <ArrowLeft className="w-8 h-8 text-muted-foreground" />
-            </div>
-            <h2 className="text-xl font-semibold text-foreground mb-2">You own this listing</h2>
-            <p className="text-muted-foreground mb-4">You cannot purchase your own listing.</p>
-            <button onClick={() => navigate(`/listing/${listingId}`)} className="text-primary hover:underline">
-              Back to listing
-            </button>
+      <CheckoutChrome
+        steps={CHECKOUT_STEPS}
+        currentStep={1}
+        exitHref={`/listing/${listingId}`}
+        exitLabel="Back to listing"
+      >
+        <div className="container max-w-md mx-auto px-4 py-16 text-center">
+          <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
+            <ArrowLeft className="w-8 h-8 text-muted-foreground" />
           </div>
+          <h2 className="text-xl font-semibold text-foreground mb-2">You own this listing</h2>
+          <p className="text-muted-foreground mb-4">You cannot purchase your own listing.</p>
+          <button onClick={() => navigate(`/listing/${listingId}`)} className="text-primary hover:underline">
+            Back to listing
+          </button>
         </div>
-      </div>
+      </CheckoutChrome>
     );
   }
 
@@ -638,21 +638,15 @@ const SaleCheckout = () => {
   ];
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <>
       <SEO title={`Checkout - ${listing.title}`} description={`Complete your purchase of ${listing.title}`} />
-      <Header />
-      
-      <main className="flex-1 py-6">
+      <CheckoutChrome
+        steps={CHECKOUT_STEPS}
+        currentStep={currentStepNumber}
+        exitHref={`/listing/${listingId}`}
+        exitLabel="Back to listing"
+      >
         <div className="container max-w-6xl mx-auto px-4">
-          {/* Back Button */}
-          <button
-            onClick={() => navigate(`/listing/${listingId}`)}
-            className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-4 transition-colors"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Back to listing
-          </button>
-
           {/* Guest sign-in prompt — surfaced BEFORE the wizard so buyers don't lose typed info at the Pay step */}
           {!user && (
             <div className="mb-4 rounded-xl border border-primary/40 bg-primary/[0.06] p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
@@ -674,15 +668,7 @@ const SaleCheckout = () => {
           <div className="grid lg:grid-cols-5 gap-8">
             {/* Main Wizard - Left Side */}
             <div className="lg:col-span-3">
-              <div className="bg-card border-2 border-border rounded-2xl shadow-xl overflow-hidden">
-                {/* Premium Wizard Header */}
-                <WizardHeader
-                  mode="checkout"
-                  currentStep={currentStepNumber}
-                  totalSteps={3}
-                  steps={CHECKOUT_STEPS}
-                />
-
+              <div className="bg-card/70 backdrop-blur-md border border-border/60 rounded-2xl shadow-xl overflow-hidden">
                 {/* Step Content */}
                 <div className="p-6">
                   <AnimatePresence mode="wait">
@@ -733,6 +719,8 @@ const SaleCheckout = () => {
                           setIsAddressComplete={setIsAddressComplete}
                           fetchFreightEstimate={fetchFreightEstimate}
                           clearEstimate={clearEstimate}
+                          listingCity={listing.city}
+                          listingState={listing.state}
                           onBack={() => setCurrentStep('information')}
                           onContinue={() => {
                             if (validateStep('delivery')) {
@@ -806,9 +794,8 @@ const SaleCheckout = () => {
             </div>
           </div>
         </div>
-      </main>
+      </CheckoutChrome>
 
-      <Footer />
       <CheckoutOverlay isVisible={showCheckoutOverlay} />
       {embeddedCheckout ? (
         <EmbeddedStripeCheckout
@@ -846,8 +833,7 @@ const SaleCheckout = () => {
           confirmLabel={paymentMethod === 'cash' ? 'Confirm — arrange in person' : 'Continue to secure payment'}
         />
       ) : null}
-    </div>
-
+    </>
   );
 };
 
