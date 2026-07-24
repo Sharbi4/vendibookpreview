@@ -65,6 +65,12 @@ export const AnimatedExplainer = ({ explainer, onProgress, onEnded, onSceneChang
   const [playing, setPlaying] = useState(true);
   const [captionsOn, setCaptionsOn] = useState(true);
   const [muted, setMuted] = useState(false);
+  const [volume, setVolume] = useState<number>(() => {
+    if (typeof window === 'undefined') return 1;
+    const raw = window.localStorage.getItem('vb:explainer:volume');
+    const n = raw ? Number(raw) : NaN;
+    return Number.isFinite(n) && n >= 0 && n <= 1 ? n : 1;
+  });
   const [voiceReady, setVoiceReady] = useState(false);
   const rafRef = useRef<number | null>(null);
   const lastTickRef = useRef<number | null>(null);
