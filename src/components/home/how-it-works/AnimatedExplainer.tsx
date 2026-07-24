@@ -65,6 +65,12 @@ export const AnimatedExplainer = ({ explainer, onProgress, onEnded, onSceneChang
   const [playing, setPlaying] = useState(true);
   const [captionsOn, setCaptionsOn] = useState(true);
   const [muted, setMuted] = useState(false);
+  const [volume, setVolume] = useState<number>(() => {
+    if (typeof window === 'undefined') return 1;
+    const raw = window.localStorage.getItem('vb:explainer:volume');
+    const n = raw ? Number(raw) : NaN;
+    return Number.isFinite(n) && n >= 0 && n <= 1 ? n : 1;
+  });
   const [voiceReady, setVoiceReady] = useState(false);
   const rafRef = useRef<number | null>(null);
   const lastTickRef = useRef<number | null>(null);
@@ -95,7 +101,7 @@ export const AnimatedExplainer = ({ explainer, onProgress, onEnded, onSceneChang
         localUrl = url;
         const audio = new Audio(url);
         audio.preload = 'auto';
-        audio.volume = 1;
+        audio.volume = muted ? 0 : volume;
         narrationRef.current = audio;
         setVoiceReady(true);
       } catch (err) {
@@ -125,6 +131,17 @@ export const AnimatedExplainer = ({ explainer, onProgress, onEnded, onSceneChang
       ambientRef.current = null;
     };
   }, []);
+
+  // Apply volume + mute to narration & ambient in real time.
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem('vb:explainer:volume', String(volume));
+    }
+    const a = narrationRef.current;
+    const effective = muted ? 0 : volume;
+    if (a) a.volume = effective;
+    ambientRef.current?.setVolume(effective * 0.35); // ambient sits under narration
+  }, [volume, muted, voiceReady]);
 
   // Sync playback state → audio + ambient bed
   useEffect(() => {
@@ -463,21 +480,43 @@ export const AnimatedExplainer = ({ explainer, onProgress, onEnded, onSceneChang
           {formatTime(elapsedMs)} / {formatTime(totalMs)}
         </span>
 
-        <button
-          type="button"
-          onClick={() => setMuted((m) => !m)}
-          className={cn(
-            'flex h-8 w-8 items-center justify-center rounded-md border transition-colors',
-            muted
-              ? 'border-border text-muted-foreground hover:text-foreground'
-              : 'border-primary bg-primary/10 text-primary',
-          )}
-          aria-pressed={!muted}
-          aria-label={muted ? 'Unmute voiceover' : 'Mute voiceover'}
-          title={muted ? 'Unmute voiceover' : 'Mute voiceover'}
-        >
-          {muted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
-        </button>
+        <div className="flex items-center gap-1.5">
+          <button
+            type="button"
+            onClick={() => setMuted((m) => !m)}
+            className={cn(
+              'flex h-8 w-8 items-center justify-center rounded-md border transition-colors',
+              muted
+                ? 'border-border text-muted-foreground hover:text-foreground'
+                : 'border-primary bg-primary/10 text-primary',
+            )}
+            aria-pressed={!muted}
+            aria-label={muted ? 'Unmute voiceover' : 'Mute voiceover'}
+            title={muted ? 'Unmute voiceover' : 'Mute voiceover'}
+          >
+            {muted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+          </button>
+          <input
+            type="range"
+            min={0}
+            max={1}
+            step={0.05}
+            value={muted ? 0 : volume}
+            onChange={(e) => {
+              const v = Number(e.target.value);
+              setVolume(v);
+              if (v > 0 && muted) setMuted(false);
+              if (v === 0 && !muted) setMuted(true);
+            }}
+            aria-label="Voiceover volume"
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-valuenow={Math.round((muted ? 0 : volume) * 100)}
+            aria-valuetext={`${Math.round((muted ? 0 : volume) * 100)} percent`}
+            title={`Volume ${Math.round((muted ? 0 : volume) * 100)}%`}
+            className="hidden h-1.5 w-20 cursor-pointer appearance-none rounded-full bg-muted accent-primary sm:block focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+          />
+        </div>
 
         <button
           type="button"
