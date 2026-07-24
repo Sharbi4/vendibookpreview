@@ -74,6 +74,7 @@ const BuyerServicesHub = lazy(() => import("./pages/BuyerServicesHub"));
 const BuyerDashboard = lazy(() => import("./pages/BuyerDashboard"));
 const HostProPlans = lazy(() => import("./pages/HostProPlans"));
 const Pricing = lazy(() => import("./pages/Pricing"));
+const Purchases = lazy(() => import("./pages/Purchases"));
 const PermitPathUpgrades = lazy(() => import("./pages/PermitPathUpgrades"));
 const Partners = lazy(() => import("./pages/Partners"));
 const ListingPurchaseReviewIntake = lazy(() => import("./pages/ListingPurchaseReviewIntake"));
@@ -281,6 +282,8 @@ const AnimatedRoutes = () => {
           <Route path="/host/plans" element={<PageTransition><HostProPlans /></PageTransition>} />
           <Route path="/pricing" element={<PageTransition><Pricing /></PageTransition>} />
           <Route path="/plans" element={<PageTransition><Pricing /></PageTransition>} />
+          <Route path="/purchases" element={<PageTransition><Purchases /></PageTransition>} />
+          <Route path="/account/purchases" element={<PageTransition><Purchases /></PageTransition>} />
           <Route path="/tools/permitpath/upgrades" element={<PageTransition><PermitPathUpgrades /></PageTransition>} />
           <Route path="/partners" element={<PageTransition><Partners /></PageTransition>} />
 
