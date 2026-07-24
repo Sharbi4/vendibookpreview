@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Crown, Sparkles, ArrowRight } from 'lucide-react';
+import { Crown, Zap, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useHostEntitlements, type HostTier } from '@/hooks/useHostEntitlements';
