@@ -1,25 +1,25 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
   <url>
-    <loc>https://vendibook.com/listing/b88edd57-967c-4036-a5bb-a89d2e18ee88</loc>
-    <lastmod>2026-07-10</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/9aae25c4-8340-4b3d-98f0-d307b91bff9c/b88edd57-967c-4036-a5bb-a89d2e18ee88/1768986603989-knwwpn.jpg</image:loc>
-      <image:title>Mobile Bar Business</image:title>
-      <image:caption>Mobile Bar Business in Atlanta, GA on Vendibook</image:caption>
-    </image:image>
-  </url>
-  <url>
     <loc>https://vendibook.com/listing/c649440f-d3df-4f3a-a622-e118767efb4d</loc>
-    <lastmod>2026-07-18</lastmod>
+    <lastmod>2026-07-24</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
       <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/20434a7d-a365-4d4a-ab9b-5cff26815f33/c649440f-d3df-4f3a-a622-e118767efb4d/1773684471904-n7qn7c.jpeg</image:loc>
       <image:title>My Food Trailer</image:title>
       <image:caption>My Food Trailer on Vendibook</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://vendibook.com/listing/b88edd57-967c-4036-a5bb-a89d2e18ee88</loc>
+    <lastmod>2026-07-24</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/9aae25c4-8340-4b3d-98f0-d307b91bff9c/b88edd57-967c-4036-a5bb-a89d2e18ee88/1768986603989-knwwpn.jpg</image:loc>
+      <image:title>Mobile Bar Business</image:title>
+      <image:caption>Mobile Bar Business in Atlanta, GA on Vendibook</image:caption>
     </image:image>
   </url>
   <url>
@@ -101,7 +101,7 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/4e50a07a-6909-411b-a4e0-429fee24c52a</loc>
-    <lastmod>2026-07-23</lastmod>
+    <lastmod>2026-07-24</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
@@ -155,6 +155,17 @@
     </image:image>
   </url>
   <url>
+    <loc>https://vendibook.com/listing/d02ec787-17cb-4e37-b1a7-e70dec639b23</loc>
+    <lastmod>2026-07-24</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/421aa58f-ac7e-4eaf-92e3-2b6be284fb0a/d02ec787-17cb-4e37-b1a7-e70dec639b23/1784602053546-46lyaf.jpg</image:loc>
+      <image:title>Ready-to-Operate Food Trailer in Miami – Fully Equipped</image:title>
+      <image:caption>Ready-to-Operate Food Trailer in Miami – Fully Equipped in Miami, FL on Vendibook</image:caption>
+    </image:image>
+  </url>
+  <url>
     <loc>https://vendibook.com/listing/1791e770-182f-4723-a207-59f727e8310e</loc>
     <lastmod>2026-06-26</lastmod>
     <changefreq>weekly</changefreq>
@@ -174,6 +185,17 @@
       <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/14242a2e-3e7f-4794-9aed-fa72a5bbf105/b8e79191-e69d-483c-bad1-8ebcfc6fb4b6/1784040291013-pxs3p.jpg</image:loc>
       <image:title>Fully equipped food truck, full kitchen, newly built kitchen, Mint condition</image:title>
       <image:caption>Fully equipped food truck, full kitchen, newly built kitchen, Mint condition in Zephyrhills, FL on Vendibook</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://vendibook.com/listing/779d5773-de60-4075-b92d-32387da86dd3</loc>
+    <lastmod>2026-07-24</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/3b59adbf-20d5-4154-a54e-bf20a1bddbed/779d5773-de60-4075-b92d-32387da86dd3/1770139433353-pqedyd.png</image:loc>
+      <image:title>Pre-Owned Concession Trailer with Deep Freezer – Priced to Sell</image:title>
+      <image:caption>Pre-Owned Concession Trailer with Deep Freezer – Priced to Sell in Baton Rouge, LA on Vendibook</image:caption>
     </image:image>
   </url>
   <url>
@@ -255,7 +277,7 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/10ae96b2-12c7-413a-a612-92110bc2050e</loc>
-    <lastmod>2026-07-22</lastmod>
+    <lastmod>2026-07-24</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
@@ -288,7 +310,7 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/9fa1aac0-10d3-4c75-8e60-d8e16f7a0a47</loc>
-    <lastmod>2026-07-23</lastmod>
+    <lastmod>2026-07-24</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
@@ -299,7 +321,7 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/29db594a-1746-4d42-954a-16673d9ff875</loc>
-    <lastmod>2026-07-22</lastmod>
+    <lastmod>2026-07-24</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
@@ -409,7 +431,7 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/a27ad5e3-5260-4af1-beca-2a13b82fd733</loc>
-    <lastmod>2026-07-23</lastmod>
+    <lastmod>2026-07-24</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
@@ -420,7 +442,7 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/2ba25d57-efae-4246-adef-351e69f4b974</loc>
-    <lastmod>2026-07-21</lastmod>
+    <lastmod>2026-07-24</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
@@ -486,24 +508,13 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/31711bb6-93ed-4ad0-9218-20959c84236c</loc>
-    <lastmod>2026-07-23</lastmod>
+    <lastmod>2026-07-24</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
       <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/273fe043-333c-4359-9ed4-dfbdde4e6f6e/31711bb6-93ed-4ad0-9218-20959c84236c/1784493905285-538p0v.jfif</image:loc>
       <image:title>2025 mobile coffee trailer with Coffee/Espresso machine (and supplies)</image:title>
       <image:caption>2025 mobile coffee trailer with Coffee/Espresso machine (and supplies) in Elgin, SC on Vendibook</image:caption>
-    </image:image>
-  </url>
-  <url>
-    <loc>https://vendibook.com/listing/779d5773-de60-4075-b92d-32387da86dd3</loc>
-    <lastmod>2026-07-22</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/3b59adbf-20d5-4154-a54e-bf20a1bddbed/779d5773-de60-4075-b92d-32387da86dd3/1770139433353-pqedyd.png</image:loc>
-      <image:title>Pre-Owned Concession Trailer with Deep Freezer – Priced to Sell</image:title>
-      <image:caption>Pre-Owned Concession Trailer with Deep Freezer – Priced to Sell in Baton Rouge, LA on Vendibook</image:caption>
     </image:image>
   </url>
   <url>
@@ -529,17 +540,6 @@
     </image:image>
   </url>
   <url>
-    <loc>https://vendibook.com/listing/e51c5a39-b100-475f-bd18-00070354218f</loc>
-    <lastmod>2026-07-22</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/418aa111-b784-42c9-90cb-e566182bd6b1/e51c5a39-b100-475f-bd18-00070354218f/1771227083993-bpj85r.jpeg</image:loc>
-      <image:title>Food Truck - clean, organized, money maker </image:title>
-      <image:caption>Food Truck - clean, organized, money maker  on Vendibook</image:caption>
-    </image:image>
-  </url>
-  <url>
     <loc>https://vendibook.com/listing/1b387bcc-59d1-457a-9dd0-5e3f149f5264</loc>
     <lastmod>2026-07-21</lastmod>
     <changefreq>weekly</changefreq>
@@ -562,8 +562,19 @@
     </image:image>
   </url>
   <url>
+    <loc>https://vendibook.com/listing/e51c5a39-b100-475f-bd18-00070354218f</loc>
+    <lastmod>2026-07-24</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/418aa111-b784-42c9-90cb-e566182bd6b1/e51c5a39-b100-475f-bd18-00070354218f/1771227083993-bpj85r.jpeg</image:loc>
+      <image:title>Food Truck - clean, organized, money maker </image:title>
+      <image:caption>Food Truck - clean, organized, money maker  on Vendibook</image:caption>
+    </image:image>
+  </url>
+  <url>
     <loc>https://vendibook.com/listing/5534f230-99a7-4ff6-a2b4-f495cdac1946</loc>
-    <lastmod>2026-07-22</lastmod>
+    <lastmod>2026-07-24</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
@@ -695,7 +706,7 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/f13ba587-0d95-48f3-9a18-3bb92e540e05</loc>
-    <lastmod>2026-07-23</lastmod>
+    <lastmod>2026-07-24</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
@@ -735,17 +746,6 @@
       <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/00f5eddf-153e-451c-998a-f7a2a410b959/c07375f0-c3c6-4ab4-a353-2deba419773b/1770413583980-o76z5.jpg</image:loc>
       <image:title>The Q — Commercial Kitchen &amp; Commissary (Downtown Boaz, AL)</image:title>
       <image:caption>The Q — Commercial Kitchen &amp; Commissary (Downtown Boaz, AL) in Boaz, AL on Vendibook</image:caption>
-    </image:image>
-  </url>
-  <url>
-    <loc>https://vendibook.com/listing/d02ec787-17cb-4e37-b1a7-e70dec639b23</loc>
-    <lastmod>2026-07-22</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/421aa58f-ac7e-4eaf-92e3-2b6be284fb0a/d02ec787-17cb-4e37-b1a7-e70dec639b23/1784602053546-46lyaf.jpg</image:loc>
-      <image:title>Ready-to-Operate Food Trailer in Miami – Fully Equipped</image:title>
-      <image:caption>Ready-to-Operate Food Trailer in Miami – Fully Equipped in Miami, FL on Vendibook</image:caption>
     </image:image>
   </url>
   <url>
