@@ -138,7 +138,7 @@ const HostListings = () => {
           <div className="flex items-center justify-center py-16">
             <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
           </div>
-        ) : viewMode === 'table' && isPowerUser ? (
+        ) : viewMode === 'table' && canUseTable ? (
           <OperationsTable 
             listings={listings}
             onPublish={handlePublish}
