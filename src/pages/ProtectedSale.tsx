@@ -180,20 +180,23 @@ export default function ProtectedSalePage() {
         </div>
 
         {!ps ? (
-          <Card className="border-white/10 bg-white/[0.03] p-6">
-            <h2 className="text-lg font-semibold">Add protection to this sale</h2>
-            <p className="mt-2 text-sm text-white/70">
-              Vendibook holds the buyer's deposit and balance until both parties confirm the handoff. Identity verification and an immutable agreement are captured on both sides.
-            </p>
-            <Button
-              disabled={busy || !user}
-              onClick={initiate}
-              className="mt-4 bg-orange-500 text-black hover:bg-orange-400"
-            >
-              {busy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-              Start Protected Sale
-            </Button>
-          </Card>
+          <>
+            <ProtectedSaleFeeCalculator className="mb-6" />
+            <Card className="border-white/10 bg-white/[0.03] p-6">
+              <h2 className="text-lg font-semibold">Add protection to this sale</h2>
+              <p className="mt-2 text-sm text-white/70">
+                Vendibook holds the buyer's deposit and balance until both parties confirm the handoff. Identity verification and an immutable agreement are captured on both sides.
+              </p>
+              <Button
+                disabled={busy || !user}
+                onClick={initiate}
+                className="mt-4 bg-orange-500 text-black hover:bg-orange-400"
+              >
+                {busy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                Start Protected Sale
+              </Button>
+            </Card>
+          </>
         ) : (
           <>
             <JourneyProgress steps={STEPS} currentIndex={STEP_ORDER.indexOf(currentStep)} className="mb-6" />
