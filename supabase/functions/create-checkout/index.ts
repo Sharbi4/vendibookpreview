@@ -108,7 +108,7 @@ serve(async (req) => {
     });
 
     if (!listing_id || !mode || !amount) {
-      throw new Error("Missing required fields: listing_id, mode, or amount");
+      return jsonError(400, "missing_fields", "Missing required fields: listing_id, mode, or amount");
     }
 
     // Fetch listing to get host's Stripe account and details for checkout display
@@ -119,9 +119,14 @@ serve(async (req) => {
       .single();
 
     if (listingError || !listing) {
-      throw new Error("Listing not found");
+      return jsonError(404, "listing_not_found", "Listing not found");
     }
     logStep("Listing found", { host_id: listing.host_id, title: listing.title });
+
+    // Owner cannot buy/rent their own listing.
+    if (listing.host_id === user.id) {
+      return jsonError(403, "owner_cannot_buy_own_listing", "You can't purchase your own listing.");
+    }
 
     // Fetch host's Stripe account and display name
     const { data: hostProfile, error: hostError } = await supabaseClient
@@ -130,12 +135,17 @@ serve(async (req) => {
       .eq('id', listing.host_id)
       .single();
 
-    if (hostError || !hostProfile?.stripe_account_id) {
-      throw new Error("Host has not completed Stripe onboarding");
-    }
-
-    if (!hostProfile.stripe_onboarding_complete) {
-      throw new Error("Host's Stripe account is not fully onboarded");
+    if (hostError || !hostProfile?.stripe_account_id || !hostProfile.stripe_onboarding_complete) {
+      logStep("Host not onboarded", {
+        hostError: hostError?.message,
+        hasAccount: !!hostProfile?.stripe_account_id,
+        onboardingComplete: hostProfile?.stripe_onboarding_complete,
+      });
+      return jsonError(
+        409,
+        "host_not_onboarded",
+        "This seller isn't set up to accept online payments yet. We've let them know — please check back soon or message them directly.",
+      );
     }
     logStep("Host Stripe account verified", { stripe_account_id: hostProfile.stripe_account_id });
     
