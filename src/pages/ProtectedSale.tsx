@@ -197,6 +197,8 @@ export default function ProtectedSalePage() {
           <>
             <JourneyProgress steps={STEPS} currentIndex={STEP_ORDER.indexOf(currentStep)} className="mb-6" />
 
+            <ProtectedSaleTimeline ps={ps} role={role} className="mb-6" />
+
             <div className="mb-6 grid gap-3 rounded-2xl border border-white/10 bg-white/[0.03] p-5 sm:grid-cols-3">
               <Stat label="Sale price" value={formatCents(ps.sale_price_cents)} />
               <Stat label="Deposit" value={formatCents(ps.deposit_cents)} />
