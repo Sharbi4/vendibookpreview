@@ -120,12 +120,8 @@ const PayForm = ({
   }
 
   const { checkout } = checkoutState;
-  const total = checkout.total?.total?.amount ?? 0;
-  const currency = (checkout.total?.total?.currency ?? 'usd').toUpperCase();
-  const formattedTotal = new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency,
-  }).format(total / 100);
+  const formattedTotal = checkout.total?.total?.amount ?? '';
+
 
   const handlePay = async () => {
     setErrorMessage(null);
