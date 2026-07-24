@@ -55,7 +55,7 @@ const SaleCheckout = () => {
   const [searchParams] = useSearchParams();
   const { user, profile } = useAuth();
   const { toast } = useToast();
-  const { listing, isLoading: isListingLoading, error: listingError } = useListing(listingId || '');
+  const { listing, host, isLoading: isListingLoading, error: listingError } = useListing(listingId || '');
   const { estimate, isLoading: isEstimating, error: estimateError, getEstimate, clearEstimate } = useFreightEstimate();
   
   // Accepted offer state - price from negotiation
@@ -627,15 +627,20 @@ const SaleCheckout = () => {
   const hasMultiplePaymentOptions = acceptCardPayment && acceptCashPayment;
   const currentStepNumber = getStepNumber(currentStep);
 
-  // Price lines for sticky summary
+  // Price lines for sticky summary — real listing title, never "Item price"
   const priceLines = [
-    { label: 'Item price', amount: priceSale },
+    { label: listing.title, amount: priceSale },
     ...(currentDeliveryFee > 0 ? [{
       label: fulfillmentSelected === 'vendibook_freight' ? 'Freight' : 'Delivery',
       amount: currentDeliveryFee,
       isDelivery: true,
     }] : []),
   ];
+
+  const sellerName =
+    host?.business_name || host?.display_name || host?.full_name ||
+    [host?.first_name, host?.last_name].filter(Boolean).join(' ') || undefined;
+  const locationLabel = [listing.city, listing.state].filter(Boolean).join(', ') || undefined;
 
   return (
     <>
@@ -668,7 +673,7 @@ const SaleCheckout = () => {
           <div className="grid lg:grid-cols-5 gap-8">
             {/* Main Wizard - Left Side */}
             <div className="lg:col-span-3">
-              <div className="bg-card/70 backdrop-blur-md border border-border/60 rounded-2xl shadow-xl overflow-hidden">
+              <div className="glass-panel overflow-hidden">
                 {/* Step Content */}
                 <div className="p-6">
                   <AnimatePresence mode="wait">
@@ -782,6 +787,9 @@ const SaleCheckout = () => {
                   title={listing.title}
                   category={listing.category}
                   itemId={listing.id}
+                  sellerName={sellerName}
+                  sellerLabel="Sold by"
+                  locationLabel={locationLabel}
                   priceLines={priceLines}
                   totalToday={totalPrice}
                   fulfillmentType={fulfillmentSelected}
@@ -802,6 +810,7 @@ const SaleCheckout = () => {
           clientSecret={embeddedCheckout.clientSecret}
           returnUrl={embeddedCheckout.returnUrl}
           onClose={() => setEmbeddedCheckout(null)}
+          totalUsd={totalPrice}
           summary={
             <CheckoutOrderSummary
               variant="sale"
@@ -809,7 +818,7 @@ const SaleCheckout = () => {
               title={listing.title}
               subtitle={listing.category ?? undefined}
               lines={[
-                { label: 'Item price', amount: priceSale },
+                { label: listing.title, amount: priceSale },
                 ...(currentDeliveryFee > 0
                   ? [{
                       label: fulfillmentSelected === 'vendibook_freight' ? 'Freight' : 'Delivery',

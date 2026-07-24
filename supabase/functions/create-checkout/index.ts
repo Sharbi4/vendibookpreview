@@ -308,7 +308,7 @@ serve(async (req) => {
       if (deposit_amount > 0) snapshotLines.push({ label: 'Refundable security deposit', amountCents: centsFrom(deposit_amount), kind: 'deposit', hint: 'Held on your card and released within 24 hours after the rental ends if there is no damage or late return.' });
       snapshotLines.push({ label: 'Total due today', amountCents: customerTotal, kind: 'total' });
     } else {
-      snapshotLines.push({ label: 'Item price', amountCents: centsFrom(amount), kind: 'base' });
+      snapshotLines.push({ label: listing.title || 'Item price', amountCents: centsFrom(amount), kind: 'base' });
       const isSellerPaid = Boolean(vendibook_freight_enabled && freight_payer === 'seller');
       const buyerDelivery = isSellerPaid ? 0 : (delivery_fee || 0);
       if (buyerDelivery > 0) snapshotLines.push({ label: 'Delivery / freight', amountCents: centsFrom(buyerDelivery), kind: 'delivery' });

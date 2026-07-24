@@ -9,10 +9,12 @@ import { CheckCircle2, Loader2, Lock, ShieldCheck, X } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { getStripe } from '@/lib/stripeClient';
-import { stripeAppearance, stripeFonts } from '@/lib/stripeAppearance';
+import { stripeAppearance, getStripeFonts } from '@/lib/stripeAppearance';
 import { resolveStripeErrorCopy, type StripeErrorCopy } from '@/lib/stripeErrorCopy';
 import { TRUST_COPY } from '@/lib/transactionVocabulary';
 import PaymentFormSkeleton from './PaymentFormSkeleton';
+import TrustRow from './TrustRow';
+import AffirmMessagingLine from './AffirmMessagingLine';
 
 interface EmbeddedStripeCheckoutProps {
   clientSecret: string;
@@ -24,6 +26,8 @@ interface EmbeddedStripeCheckoutProps {
   returnUrl?: string;
   /** Called on same-page confirmation success before navigating to return URL. */
   onSuccess?: () => void;
+  /** Total in USD (dollars) — drives Affirm/Afterpay messaging above the tabs. */
+  totalUsd?: number;
 }
 
 const stripePromise = getStripe();
@@ -40,6 +44,7 @@ const EmbeddedStripeCheckout = ({
   onClose,
   returnUrl,
   onSuccess,
+  totalUsd,
 }: EmbeddedStripeCheckoutProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -117,20 +122,24 @@ const EmbeddedStripeCheckout = ({
               <div className="px-6 py-4 border-b border-border/60">{summary}</div>
             ) : null}
 
-            <div className="px-6 py-5">
+            <div className="px-6 py-5 space-y-4">
+              {typeof totalUsd === 'number' && totalUsd >= 50 ? (
+                <AffirmMessagingLine amountUsd={totalUsd} />
+              ) : null}
               <CheckoutElementsProvider
                 stripe={stripePromise}
                 options={{
                   clientSecret,
                   elementsOptions: {
                     appearance: stripeAppearance,
-                    fonts: stripeFonts,
+                    fonts: getStripeFonts(typeof window !== 'undefined' ? window.location.origin : ''),
                     loader: 'auto',
                   },
                 }}
               >
                 <PayForm returnUrl={returnUrl} onSuccess={onSuccess} />
               </CheckoutElementsProvider>
+              <TrustRow />
             </div>
           </div>
         </div>

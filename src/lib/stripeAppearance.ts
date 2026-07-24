@@ -4,13 +4,13 @@
  *
  * Docs: https://docs.stripe.com/elements/appearance-api
  */
-import type { Appearance, CssFontSource } from '@stripe/stripe-js';
+import type { Appearance, CssFontSource, CustomFontSource } from '@stripe/stripe-js';
 
 export const stripeAppearance: Appearance = {
   theme: 'night',
   labels: 'floating',
   variables: {
-    fontFamily: 'Poppins, system-ui, -apple-system, Segoe UI, sans-serif',
+    fontFamily: 'SofiaProSoftLight, Poppins, system-ui, -apple-system, Segoe UI, sans-serif',
     fontSizeBase: '15px',
     borderRadius: '12px',
     colorPrimary: '#FF5124',
@@ -22,7 +22,6 @@ export const stripeAppearance: Appearance = {
     colorIconTab: '#A1A1AA',
     colorIconTabSelected: '#FF5124',
     spacingUnit: '4px',
-    // Express Checkout Element (Apple Pay / Google Pay / Link) button shape
     buttonBorderRadius: '12px',
   },
   rules: {
@@ -81,10 +80,38 @@ export const stripeAppearance: Appearance = {
   },
 };
 
+/** Path to the Sofia Pro Soft Light .otf served by the site. */
+const SOFIA_OTF_PATH = '/__l5e/assets-v1/5c9bc164-9241-46f4-98fa-bc6ea22ce45e/SofiaProSoftLight.otf';
+
 /**
- * Load Poppins inside Stripe's iframe so the Payment Element
- * matches vendibook.com typography.
+ * Load fonts inside Stripe's iframe so the Payment Element matches
+ * vendibook.com typography. We pass an absolute URL for the site's
+ * Sofia Pro Soft Light .otf (Stripe can't resolve relative paths from
+ * inside its iframe) and keep Poppins as a hosted CSS fallback for
+ * first-paint parity.
  */
+export const getStripeFonts = (origin: string): Array<CssFontSource | CustomFontSource> => {
+  const sofiaUrl = `${origin.replace(/\/$/, '')}${SOFIA_OTF_PATH}`;
+  return [
+    {
+      family: 'SofiaProSoftLight',
+      src: `url('${sofiaUrl}') format('opentype')`,
+      weight: '400',
+      style: 'normal',
+    },
+    {
+      family: 'SofiaProSoftLight',
+      src: `url('${sofiaUrl}') format('opentype')`,
+      weight: '600',
+      style: 'normal',
+    },
+    {
+      cssSrc: 'https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap',
+    },
+  ];
+};
+
+/** @deprecated Prefer getStripeFonts(window.location.origin). Kept for back-compat. */
 export const stripeFonts: CssFontSource[] = [
   {
     cssSrc: 'https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap',

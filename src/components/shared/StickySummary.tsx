@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ChevronDown, Package, Calendar, MapPin, Truck } from 'lucide-react';
+import { ChevronDown, Package, Calendar, MapPin, Truck, ShieldCheck } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
@@ -14,31 +14,42 @@ interface PriceLine {
   isFee?: boolean;
 }
 
+interface KeySpec {
+  label: string;
+  value: string;
+}
+
 interface StickySummaryProps {
   // Listing info
   imageUrl?: string | null;
   title: string;
   category?: string;
   itemId?: string;
-  
+
+  // Rich details
+  sellerName?: string;
+  sellerLabel?: string; // "Sold by" | "Hosted by"
+  locationLabel?: string;
+  keySpecs?: KeySpec[];
+
   // Dates (for booking)
   startDate?: Date;
   endDate?: Date;
-  
+
   // Pricing
   priceLines: PriceLine[];
   totalToday: number;
-  totalLater?: number; // For Request to Book
-  
+  totalLater?: number;
+
   // Fulfillment
   fulfillmentType?: 'pickup' | 'delivery' | 'vendibook_freight' | 'on_site';
   deliveryAddress?: string;
-  
+
   // Options
   mode: 'checkout' | 'booking';
   showWhatsIncluded?: boolean;
   className?: string;
-  
+
   // Financing eligibility price (totalToday or base price)
   financingEligiblePrice?: number;
 }
@@ -48,6 +59,10 @@ const StickySummary = ({
   title,
   category,
   itemId,
+  sellerName,
+  sellerLabel = 'Sold by',
+  locationLabel,
+  keySpecs,
   startDate,
   endDate,
   priceLines,
@@ -86,125 +101,154 @@ const StickySummary = ({
   const FulfillmentIcon = getFulfillmentIcon();
 
   return (
-    <div className={cn(
-      "bg-card border-2 border-border rounded-2xl shadow-lg overflow-hidden",
-      className
-    )}>
+    <div className={cn("glass-panel glass-panel--ember overflow-hidden", className)}>
       {/* Header with image */}
-      <div className="p-4 border-b border-border/50">
+      <div className="p-4 border-b border-white/[0.06]">
         <div className="flex gap-4">
           {imageUrl && (
-            <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 border border-border/50">
-              <img 
-                src={imageUrl} 
-                alt={title} 
+            <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 border border-white/10">
+              <img
+                src={imageUrl}
+                alt={title}
                 className="w-full h-full object-cover"
               />
             </div>
           )}
           <div className="flex-1 min-w-0">
-            <h4 className="font-semibold text-foreground truncate">{title}</h4>
+            <h4 className="font-semibold text-[#F5F5F5] truncate">{title}</h4>
             <div className="flex items-center gap-2 mt-1 flex-wrap">
               {category && (
-                <span className="text-xs px-2 py-0.5 rounded-md bg-muted border border-border text-muted-foreground capitalize">
+                <span className="text-xs px-2 py-0.5 rounded-md bg-white/[0.06] border border-white/10 text-[#C7C7CE] capitalize">
                   {category.replace('_', ' ')}
                 </span>
               )}
+              {locationLabel && (
+                <span className="text-xs text-[#C7C7CE] inline-flex items-center gap-1">
+                  <MapPin className="h-3 w-3" />
+                  {locationLabel}
+                </span>
+              )}
               {itemId && (
-                <span className="text-xs text-muted-foreground font-mono">
+                <span className="text-[11px] text-[#8A8A93] font-mono">
                   #{itemId.slice(0, 8).toUpperCase()}
                 </span>
               )}
             </div>
+            {sellerName && (
+              <p className="text-xs text-[#C7C7CE] mt-1">
+                {sellerLabel}{' '}
+                <span className="text-[#F5F5F5] font-medium">{sellerName}</span>
+              </p>
+            )}
           </div>
         </div>
-        
+
+        {keySpecs && keySpecs.length > 0 && (
+          <div className="flex flex-wrap gap-1.5 mt-3">
+            {keySpecs.map((s) => (
+              <span
+                key={`${s.label}-${s.value}`}
+                className="text-[11px] px-2 py-0.5 rounded-md bg-white/[0.04] border border-white/10 text-[#C7C7CE]"
+              >
+                <span className="text-[#8A8A93]">{s.label}: </span>
+                <span className="text-[#F5F5F5]">{s.value}</span>
+              </span>
+            ))}
+          </div>
+        )}
+
         {/* Dates (booking only) */}
         {startDate && endDate && (
           <div className="flex items-center gap-2 mt-3 text-sm">
-            <Calendar className="h-4 w-4 text-muted-foreground" />
-            <span className="text-foreground">
+            <Calendar className="h-4 w-4 text-[#C7C7CE]" />
+            <span className="text-[#F5F5F5]">
               {format(startDate, 'MMM d')} – {format(endDate, 'MMM d, yyyy')}
             </span>
           </div>
         )}
-        
+
         {/* Fulfillment */}
         {fulfillmentType && (
           <div className="flex items-center gap-2 mt-2 text-sm">
-            <FulfillmentIcon className="h-4 w-4 text-muted-foreground" />
-            <span className="text-foreground">{getFulfillmentLabel()}</span>
+            <FulfillmentIcon className="h-4 w-4 text-[#C7C7CE]" />
+            <span className="text-[#F5F5F5]">{getFulfillmentLabel()}</span>
+            {deliveryAddress && fulfillmentType !== 'pickup' && (
+              <span className="text-xs text-[#8A8A93] truncate">· {deliveryAddress}</span>
+            )}
           </div>
         )}
       </div>
-      
+
       {/* Price breakdown */}
       <Collapsible open={showBreakdown} onOpenChange={setShowBreakdown}>
         <div className="p-4">
           <CollapsibleTrigger className="flex items-center justify-between w-full mb-3">
-            <span className="text-sm font-medium text-foreground">Price breakdown</span>
+            <span className="text-sm font-medium text-[#F5F5F5]">Price breakdown</span>
             <ChevronDown className={cn(
-              "h-4 w-4 text-muted-foreground transition-transform",
+              "h-4 w-4 text-[#C7C7CE] transition-transform",
               showBreakdown && "rotate-180"
             )} />
           </CollapsibleTrigger>
-          
+
           <CollapsibleContent>
             <div className="space-y-2 text-sm mb-4">
               {priceLines.map((line, index) => (
-                <div key={index} className="flex justify-between">
+                <div key={index} className="flex justify-between gap-3">
                   <span className={cn(
-                    "text-muted-foreground",
+                    "text-[#C7C7CE] truncate",
                     line.isDelivery && "flex items-center gap-1.5"
                   )}>
-                    {line.isDelivery && <Truck className="h-3.5 w-3.5" />}
+                    {line.isDelivery && <Truck className="h-3.5 w-3.5 shrink-0" />}
                     {line.label}
                   </span>
-                  <span className="text-foreground">
+                  <span className="text-[#F5F5F5] shrink-0">
                     {line.amount > 0 ? `$${line.amount.toLocaleString()}` : 'FREE'}
                   </span>
                 </div>
               ))}
             </div>
           </CollapsibleContent>
-          
+
           {/* Totals */}
-          <div className="pt-3 border-t-2 border-primary/20 space-y-2">
-            <div className="flex justify-between">
-              <span className="font-bold text-lg text-foreground">
+          <div className="pt-3 border-t border-white/10 space-y-2">
+            <div className="flex justify-between items-baseline">
+              <span className="font-bold text-lg text-[#F5F5F5]">
                 {isRequestMode ? 'Total due today' : 'Total'}
               </span>
               <span className={cn(
                 "font-bold text-lg",
-                isRequestMode ? "text-muted-foreground" : "text-primary"
+                isRequestMode ? "text-[#C7C7CE]" : "text-[#FF5124]"
               )}>
                 {isRequestMode ? '$0' : `$${totalToday.toLocaleString()}`}
               </span>
             </div>
-            
+
             {isRequestMode && totalLater && (
               <div className="flex justify-between">
-                <span className="text-sm text-muted-foreground">
+                <span className="text-sm text-[#C7C7CE]">
                   Total after approval
                 </span>
-                <span className="text-sm font-semibold text-foreground">
+                <span className="text-sm font-semibold text-[#F5F5F5]">
                   ${totalLater.toLocaleString()}
                 </span>
               </div>
             )}
-            
-            {/* Financing badges */}
+
             {financingEligiblePrice && (isAfterpayEligible(financingEligiblePrice) || isAffirmEligible(financingEligiblePrice)) && (
               <div className="flex items-center gap-2 pt-2 flex-wrap">
                 <AfterpayBadge price={financingEligiblePrice} showEstimate={false} />
                 <AffirmBadge price={financingEligiblePrice} showEstimate={false} />
               </div>
             )}
+
+            <p className="text-[11px] text-[#8A8A93] flex items-center gap-1.5 pt-2">
+              <ShieldCheck className="h-3 w-3 text-[#FF5124]" />
+              Protected by Vendibook payment protection
+            </p>
           </div>
         </div>
       </Collapsible>
-      
-      {/* What's included */}
+
       {showWhatsIncluded && (
         <div className="px-4 pb-4">
           <WhatsIncluded mode={mode} />
