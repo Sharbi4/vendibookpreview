@@ -787,6 +787,13 @@ export const PublishWizard: React.FC = () => {
         setSaleSuggestions(data as SaleSuggestions);
       }
 
+      trackLeadEvent('ai_suggestion_viewed', {
+        listing_id: listing?.id,
+        surface: 'publish_wizard',
+        suggestion_type: 'pricing',
+        mode: listing?.mode,
+      });
+
       toast({
         title: 'Suggestions ready!',
         description: 'AI pricing suggestions have been generated based on your listing details.'});
