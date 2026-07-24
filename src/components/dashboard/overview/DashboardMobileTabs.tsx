@@ -33,7 +33,9 @@ const DashboardMobileTabs = ({ mode }: Props) => {
     : [
         { label: 'Overview', href: '/dashboard?view=shopper', tab: null },
         { label: 'Orders', href: '/dashboard?view=shopper&tab=orders', tab: 'orders' },
+        { label: 'Bookings', href: '/dashboard?view=shopper&tab=bookings', tab: 'bookings' },
         { label: 'Favorites', href: '/dashboard?view=shopper&tab=favorites', tab: 'favorites' },
+        { label: 'Refer', href: '/dashboard?view=shopper&tab=referral', tab: 'referral' },
         { label: 'Tools', href: '/dashboard?view=shopper&tab=tools', tab: 'tools' },
         { label: 'Notifications', href: '/dashboard?view=shopper&tab=notifications', tab: 'notifications' },
         { label: 'Permits', href: '/dashboard?view=shopper&tab=permits', tab: 'permits' },
