@@ -1,62 +1,135 @@
 
-# Enterprise Polish for Embedded Checkout
+## 1. Root cause of the current "continue to payment" failure
 
-Scoped to the already-built `EmbeddedStripeCheckout` (Custom Checkout via `CheckoutElementsProvider` + `useCheckout` + `PaymentElement`). No backend, webhook, or payment-hold changes. All new copy uses "payment protection" (never "escrow").
+**Verified against live edge logs and DB.** The most recent invocations of `create-checkout` (2026-07-24 22:19:41–22:20:09 UTC) for listing `d02ec787-…` (Ready-to-Operate Food Trailer) all failed with:
 
-## Files changed
+```
+[CREATE-CHECKOUT] ERROR - {"message":"Listing not found"}
+```
 
-**Edit**
-- `src/components/checkout/EmbeddedStripeCheckout.tsx` — add ExpressCheckoutElement row, skeleton loading, success checkmark, mapped decline errors, mobile bottom-sheet layout with sticky pay button + safe-area padding, ESC-close, focus trap.
-- `src/pages/SaleCheckout.tsx` — build and pass `summary` node (cover, title, itemized lines, total, protection block, financing line, trust row) into `<EmbeddedStripeCheckout>`.
-- `src/pages/BookingCheckout.tsx` — same summary integration for rental instant-book path (rental-specific lines: nightly/daily × units, service fee, tax).
-- `src/lib/stripeAppearance.ts` — minor: add Express Checkout Element theme variables (button height/radius) so Apple Pay / Google Pay / Link match Satin Lux.
+That was thrown from this block:
 
-**New**
-- `src/components/checkout/CheckoutOrderSummary.tsx` — reusable summary card (cover image, title, itemized lines, bold total) used by both Sale and Booking checkouts.
-- `src/components/checkout/PaymentProtectionBlock.tsx` — compact assurance card. Sale card copy: "Your payment is protected. Funds are held securely and released to the seller only after you confirm the item is as described." Rental variant tuned for booking.
-- `src/components/checkout/TrustRow.tsx` — stripe-wordmark-blurple, verified-badge, Visa/Mastercard/Amex/Discover glyphs (lucide `CreditCard` + inline SVG or existing PNGs), and a Lock + "256-bit encryption" note.
-- `src/components/checkout/FinancingLine.tsx` — mounts Stripe's `<PaymentMethodMessagingElement>` for Affirm/Klarna/Afterpay near the total; falls back to a static "as low as $X/mo with Affirm" line if the element fails to load.
-- `src/components/checkout/PaymentFormSkeleton.tsx` — shimmer skeleton mimicking Express row + tab strip + input rows.
-- `src/lib/stripeErrorCopy.ts` — maps Stripe decline_code / code / type → `{ title, why, fix }`. Common: `card_declined/generic_decline`, `insufficient_funds`, `expired_card`, `incorrect_cvc`, `incorrect_number`, `processing_error`, `authentication_required`, `card_velocity_exceeded`, `fraudulent`. Fallback: generic calm copy.
+```ts
+const { data: listing, error: listingError } = await supabaseClient
+  .from('listings')
+  .select('host_id, title, cover_image_url, address, pickup_location_text, city, state, category, mode')
+  .eq('id', listing_id).single();
+if (listingError || !listing) throw new Error("Listing not found");
+```
 
-## What each fix does
+The previous session-turn hotfix removed `cancellation_policy` and `rules` from the select, and the next invocation at 22:21:09–22:21:11 **succeeded**: session `cs_live_a1VaO…` created with `url:null` (Stripe `ui_mode:'custom'`) and returned via `client_secret`.
 
-1. **Express row** — Above `PaymentElement`, mount `<ExpressCheckoutElement>` (from `@stripe/react-stripe-js`) inside the existing `CheckoutElementsProvider`. Handle `onConfirm` by calling `checkout.confirm()` (Custom Checkout wires the wallet result automatically). Add a hairline "or pay with card" divider between the row and the tabbed PaymentElement. If Express returns zero available methods (`onReady` reports none), the row hides itself so nothing shows empty.
+So the immediate for-sale error the user hit is already resolved by the deployed `create-checkout`. That listing's host (`421aa58f-…`) has `stripe_account_id = acct_1TvTURPHSH1ohKiG` and `stripe_onboarding_complete = true` — no onboarding block is in play here.
 
-2. **In-modal summary** — Both pages already compute `subtotal`, `deliveryFee`/`freight`, tax estimate, and `total`. Wrap those into a `CheckoutOrderSummary` node and pass via the existing `summary` prop slot. Renders inside the modal above the payment fields on desktop; on mobile it collapses into a sticky header with an expand toggle so total stays visible.
+However, the underlying weaknesses the user asked us to audit are real and should still be fixed. Everything below is scoped to defect / contract / UX fixes — no money-logic changes.
 
-3. **Protection block + trust row** — Rendered below the summary, above the Express row. Uses `stripe-wordmark-blurple.png` and `verified-badge.png` already in `src/assets/`. Sale copy uses "payment protection" wording verbatim; rental variant adapts to booking release timing.
+## 2. `ui_mode` vocabulary reconciliation
 
-4. **Financing** — `<PaymentMethodMessagingElement>` mounted next to the total with `amount`, `currency: 'usd'`, `country: 'US'`, `paymentMethods: ['affirm','klarna','afterpay_clearpay']`. Redirect flow for approval is unchanged.
+Verified end-to-end:
 
-5. **Premium loading + success** — Replace `checkoutState.type === 'loading'` branch with `<PaymentFormSkeleton>`. Add a local `isSuccess` state; when `checkout.confirm()` returns `type: 'success'`, render a full-panel checkmark ("Payment confirmed") for ~900ms, then navigate to `returnUrl`. Entitlement remains webhook-driven — the success view is purely visual.
+| Layer | Value passed | Behavior |
+|---|---|---|
+| `SaleCheckout` / `BookingCheckout` | `ui_mode: 'elements' \| 'hosted'` | based on `isEmbeddedCheckoutEnabled()` |
+| `create-checkout` (server) | maps `'elements' → Stripe ui_mode:'custom'` (`return_url` only, no `success_url`/`cancel_url`); `'hosted' → success_url + cancel_url, no ui_mode` | correct |
+| Return | `{ url: hosted? session.url : null, client_secret: elements? session.client_secret : null, ui_mode, session_id, … }` | matches what `EmbeddedStripeCheckout` and hosted redirect consume |
 
-6. **Calm errors** — On `result.type === 'error'`, look up `stripeErrorCopy.ts` by `error.code` / `error.decline_code` and render a three-line panel (title, why, fix) inline. Modal stays open, PaymentElement state preserved (no remount). Example: `card_declined` → "Your bank declined this card. / Your bank blocked the charge — this can happen for security reasons. / Try another card or contact your bank."
+The mapping is correct; the string `'elements'` in the request just doesn't match the Stripe enum name (`custom`). That's fine because the mapping is centralized. **No functional mismatch, but I'll rename the client-facing token to `'custom'` (keeping `'elements'` as a backward-compatible alias) so the vocabulary is uniform across `SaleCheckout`, `BookingCheckout`, `isEmbeddedCheckoutEnabled`, `create-checkout`, and `EmbeddedStripeCheckout`.**
 
-7. **Mobile bottom sheet** — At `<md`, modal becomes `fixed inset-x-0 bottom-0 top-4 rounded-t-2xl`, body scrolls, sticky footer holds the pay button with `pb-[env(safe-area-inset-bottom)]`. Focus trap via `focus-trap-react` (already available via radix; if not, a small inline trap) and ESC-to-close via existing `onClose`. Summary total pinned to header.
+## 3. Function existence audit
 
-## Apple Pay domain registration (required, one-time)
+All frontend-invoked payment functions exist under `supabase/functions/`:
 
-Apple Pay via ExpressCheckoutElement requires each domain that displays the button to be registered with Stripe. Steps for approval turn:
+`create-checkout`, `get-checkout-session`, `create-cash-sale`, `create-sale-transaction`, `create-notary-checkout`, `customer-portal`, `create-stripe-connect`, `check-stripe-connect`. No missing/orphan references.
 
-1. In Stripe Dashboard → Settings → Payment methods → Apple Pay → **Add new domain**, register:
-   - `vendibook.com`
-   - `www.vendibook.com`
-   - `vendibookpreview.lovable.app`
-2. Stripe returns a verification file per domain. Serve each at `/.well-known/apple-developer-merchantid-domain-association` on that exact host. Options:
-   - Add the file(s) to `public/.well-known/` in the repo (simplest — works for the Lovable preview and both custom domains since all requests hit the same build).
-   - Or use Stripe API `POST /v1/payment_method_domains` to register programmatically and let Stripe host verification.
-3. Click **Verify** in the Dashboard until status = Verified.
-4. Test in Safari on macOS/iOS — the wallet button only renders when the device has a saved card *and* the domain is verified. Google Pay / Link have no per-domain step.
+## 4. Return-contract audit (severity)
 
-I'll wait until you confirm the domains registered before flipping the Express row on for production; behind the scenes ExpressCheckoutElement will simply hide Apple Pay on unverified domains, so there's no user-visible break if we ship code first.
+| Function | Success shape | Error shape today | Severity |
+|---|---|---|---|
+| `create-checkout` | 200 `{url\|client_secret,ui_mode,session_id,customer_total,platform_fee,host_receives,terms_id,terms_version}` | Everything `throw`s → generic 500 `{error:message}`. Only `availability_conflict` returns 409 with `code`. Host-not-onboarded, owner-buying-own-listing, invalid input all leak raw 500. | **High** |
+| `create-sale-transaction` | 200 payload / 200 dedupe | 500 `{error}` for "Payment not completed", "not an escrow sale", etc. — expected user-facing conditions | Medium |
+| `create-notary-checkout` | 200 `{url}` | 500 `{error}` for "Unauthorized: You do not own this listing", "Proof Notary not enabled" | Medium |
+| `customer-portal` | 200 `{url}` | 500 `{error}` for "No Stripe customer found" | Low |
+| `create-stripe-connect` | 200 `{url}` | 500 `{error}` on validation failures | Low |
+| `check-stripe-connect` | 200 status object | 500 `{error}` — currently only Stripe/API failures | Low |
+| `get-checkout-session` | 200 `{session_id,payment_status,…}` | 500 `{error}` for missing `session_id`, non-owner access | Medium |
+| `create-cash-sale` | 200 (uses shared JSON helper) | Currently owner-block / self-transaction / invalid returned as 400 via shared helper — already OK | OK |
 
-## Out of scope (intentionally)
+Cross-cutting gaps:
+- No stable `code` enum — client can't discriminate.
+- Owner-buying-own-listing is **not** enforced server-side in `create-checkout` (frontend-only), which is a real hole.
+- CORS headers present on error responses across all functions (verified) — no changes needed there.
 
-- `create-checkout` edge function, `stripe-webhook`, entitlement grants, Connect payout logic, payment-hold state machine.
-- Feature-flag / hosted-redirect fallback (already in place).
-- Copy rewording elsewhere in the app.
+## 5. Client error handling
 
-## Approval
+`SaleCheckout` (and `BookingCheckout`) do:
 
-Reply "approved" (or with tweaks) and I'll implement in build mode. If Apple Pay domain registration should happen first, say so — I can prep the `.well-known` file drop as step 1.
+```ts
+const { data, error } = await supabase.functions.invoke('create-checkout', { body: … });
+if (error) throw error;
+if (data.error) throw new Error(data.error);
+```
+
+On a non-2xx, `supabase-js` sets `error` (a `FunctionsHttpError`) and `data` is null, so `data.error` is never read and the user sees "Edge function returned a non-2xx status code". We need to (a) read the JSON body off `error.context` and (b) branch on the returned `code` for user-friendly copy.
+
+## Proposed fix plan
+
+### A. `create-checkout` (Deno)
+1. Introduce a `jsonError(status, code, message, extra?)` helper that always returns CORS + `{ error, code, ...extra }`.
+2. Replace `throw new Error(...)` with structured returns for **expected** conditions:
+   - `missing_fields` → 400
+   - `unauthenticated` → 401
+   - `listing_not_found` → 404
+   - `owner_cannot_buy_own_listing` → 403  *(new server-side check: `listing.host_id === user.id`)*
+   - `host_not_onboarded` → 409, message: *"This seller isn't set up to accept online payments yet. We've let them know — please check back soon."*
+   - `availability_conflict` → 409 (already returns code; align shape)
+   - `terms_draft_invalid` → 409
+3. Keep unexpected failures as 500 `{ error, code: 'unknown_error' }`.
+4. Normalize the request field to `ui_mode: 'custom' | 'hosted'` (accept `'elements'` as alias) and echo `ui_mode: 'custom' | 'hosted'` in the success body.
+
+### B. Sibling functions
+Apply the same `jsonError` helper + `code` enum to:
+- `create-sale-transaction` (`session_not_found`, `payment_not_completed`, `not_escrow_sale`)
+- `create-notary-checkout` (`not_owner`, `feature_not_enabled`, `listing_not_found`)
+- `customer-portal` (`no_stripe_customer`)
+- `create-stripe-connect` (`invalid_input`)
+- `get-checkout-session` (`missing_session_id`, `session_not_found`, `not_owner`)
+
+No changes to fee math, hold model, payout timing, escrow logic, or entitlements.
+
+### C. Frontend error handling
+1. Add `src/lib/edgeErrors.ts` with `readEdgeError(error): Promise<{ code?: string; message: string }>` that reads `error.context.body`/`error.context.json()` on `FunctionsHttpError`.
+2. Add `src/lib/checkoutErrorCopy.ts` mapping code → title + description (e.g. `host_not_onboarded`, `availability_conflict`, `owner_cannot_buy_own_listing`, `terms_draft_invalid`, `payment_not_completed`, `unknown_error`).
+3. Update `SaleCheckout.runPurchase` and `BookingCheckout` checkout callers to:
+   - `await readEdgeError(error)` and toast the mapped copy.
+   - On `host_not_onboarded`, additionally surface a small inline notice (not just toast) so the buyer isn't left staring at a dead "Continue to payment" button; offer "Message seller" as the escape hatch.
+4. Rename `ui_mode: 'elements'` → `'custom'` in `SaleCheckout` and `BookingCheckout` callers.
+
+### D. Feature-flag + component naming
+- `isEmbeddedCheckoutEnabled()` return + docstring updated to say "Custom Checkout (Stripe ui_mode: 'custom')" for consistency; no behavior change.
+- `EmbeddedStripeCheckout` stays as-is (already correctly documents `ui_mode: 'custom'`).
+
+### Files touched (no money-logic changes)
+
+```text
+supabase/functions/create-checkout/index.ts        (structured errors + owner check + ui_mode alias)
+supabase/functions/create-sale-transaction/index.ts (structured errors)
+supabase/functions/create-notary-checkout/index.ts  (structured errors)
+supabase/functions/customer-portal/index.ts         (structured errors)
+supabase/functions/create-stripe-connect/index.ts   (structured errors)
+supabase/functions/get-checkout-session/index.ts    (structured errors)
+supabase/functions/_shared/jsonError.ts             (NEW helper)
+
+src/lib/edgeErrors.ts                               (NEW: parse FunctionsHttpError body)
+src/lib/checkoutErrorCopy.ts                        (NEW: code → toast copy)
+src/pages/SaleCheckout.tsx                          (readEdgeError + code branch + inline notice)
+src/pages/BookingCheckout.tsx                       (readEdgeError + code branch)
+src/lib/featureFlags.ts                             (docstring only)
+```
+
+### Tests
+- `supabase/functions/create-checkout/error_contract.test.ts` — asserts each expected `code` returns the right HTTP status and JSON shape.
+- Extend `tests/e2e/cta_signed_in_destinations.py` with a mocked host-not-onboarded case that verifies a friendly toast + inline notice (no raw 500 string).
+
+## Rollout / risks
+- Zero schema changes. Zero money-logic changes. Backwards-compatible on the request side (`'elements'` still accepted). Response adds `code` — existing clients that only read `error`/`url`/`client_secret` continue to work.
+- Verified after deploy: re-invoke `create-checkout` for the failing listing and confirm 200 with `client_secret`.
