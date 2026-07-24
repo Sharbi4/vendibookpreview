@@ -920,7 +920,7 @@ const OrderTracking = () => {
               role={isBuyer ? 'buyer' : 'seller'}
               transactionId={transaction.id}
               listingId={transaction.listing_id}
-              orderTotal={Number(transaction.total_amount ?? transaction.amount ?? 0)}
+              orderTotal={Number((transaction as any).total_amount ?? (transaction as any).amount ?? 0)}
               orderLabel={`#${String(transaction.id).slice(0, 8).toUpperCase()}`}
               refundEligible={
                 isBuyer &&
