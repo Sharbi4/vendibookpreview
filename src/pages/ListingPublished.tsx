@@ -11,6 +11,7 @@ import { UpgradePackageCards } from '@/components/monetization/UpgradePackageCar
 import { PromoteListingPanel } from '@/components/monetization/PromoteListingPanel';
 import { RecommendedAddOns } from '@/components/monetization/RecommendedAddOns';
 import PublishStatusSummary from '@/components/listing-wizard/PublishStatusSummary';
+import PackagesIntro from '@/components/monetization/PackagesIntro';
 import { reportError } from '@/lib/errorReporter';
 
 const ListingPublished: React.FC = () => {
@@ -248,6 +249,12 @@ const ListingPublished: React.FC = () => {
           </div>
         </div>
       </div>
+
+      <div className="container max-w-4xl mx-auto px-4 pt-6">
+        <PackagesIntro variant="compact" />
+      </div>
+
+
 
       {/* Notary Payment Success Banner */}
       {notaryPaid && (
