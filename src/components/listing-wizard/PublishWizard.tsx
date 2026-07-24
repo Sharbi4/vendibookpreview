@@ -816,6 +816,15 @@ export const PublishWizard: React.FC = () => {
     
     setPriceDaily(String(rentalSuggestions[dailyKey]));
     setPriceWeekly(String(rentalSuggestions[weeklyKey]));
+    trackLeadEvent('ai_suggestion_accepted', {
+      listing_id: listing?.id,
+      surface: 'publish_wizard',
+      suggestion_type: 'pricing',
+      variant: type,
+      mode: 'rent',
+      daily: rentalSuggestions[dailyKey],
+      weekly: rentalSuggestions[weeklyKey],
+    });
   };
 
   const applySaleSuggestion = (type: 'low' | 'suggested' | 'high') => {
@@ -823,6 +832,14 @@ export const PublishWizard: React.FC = () => {
     
     const key = `sale_${type}` as keyof SaleSuggestions;
     setPriceSale(String(saleSuggestions[key]));
+    trackLeadEvent('ai_suggestion_accepted', {
+      listing_id: listing?.id,
+      surface: 'publish_wizard',
+      suggestion_type: 'pricing',
+      variant: type,
+      mode: 'sale',
+      price: saleSuggestions[key],
+    });
   };
 
   // AI Description Optimization
