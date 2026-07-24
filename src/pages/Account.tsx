@@ -30,6 +30,9 @@ import { HostPerksCard } from '@/components/host/HostPerksCard';
 import { PurchaseHistoryCard } from '@/components/monetization/PurchaseHistoryCard';
 import { ReferAHostCard } from '@/components/host/ReferAHostCard';
 import { ReferralActivityCard } from '@/components/host/ReferralActivityCard';
+import IdentitySummaryCard from '@/components/account/IdentitySummaryCard';
+import PrivacySharingSection from '@/components/account/PrivacySharingSection';
+import { getDisplayInitials } from '@/lib/displayName';
 import ReferralLeaderboardCard from '@/components/referrals/ReferralLeaderboardCard';
 
 // Visibility badge component
@@ -669,12 +672,35 @@ const Account = () => {
 
         <div className="container max-w-6xl py-8 pb-24 md:pb-8">
           {/* Page Header */}
-          <div className="mb-8">
+          <div className="mb-6">
             <h1 className="text-3xl font-semibold text-foreground">Account</h1>
-            <p className="text-muted-foreground mt-1">
-              <span className="font-medium">{profile?.full_name || formData.full_name}</span> · {formData.email} · <Link to={`/profile/${user?.id}`} className="underline hover:text-foreground">Go to profile</Link>
+            <p className="text-muted-foreground mt-1 text-sm">
+              Manage your profile, security, payouts, and what buyers see.
             </p>
           </div>
+
+          {/* Identity summary — always visible at top */}
+          <div className="mb-8">
+            <IdentitySummaryCard
+              name={formData.full_name || 'Your account'}
+              subtitle={formData.email}
+              avatarUrl={formData.avatar_url}
+              initials={getDisplayInitials({
+                first_name: formData.first_name,
+                last_name: formData.last_name,
+                full_name: formData.full_name,
+              })}
+              verified={formData.identity_verified}
+              onAvatarClick={handleAvatarClick}
+              isUploadingAvatar={isUploadingAvatar}
+              publicProfileHref={
+                formData.username
+                  ? `/u/${formData.username}`
+                  : `/profile/${user?.id}`
+              }
+            />
+          </div>
+
 
           <div className="flex flex-col lg:flex-row gap-8 lg:gap-12">
             {/* Left Sidebar - Desktop Only */}
