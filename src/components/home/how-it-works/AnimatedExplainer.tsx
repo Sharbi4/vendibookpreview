@@ -207,6 +207,16 @@ export const AnimatedExplainer = ({ explainer, onProgress, onEnded, onSceneChang
   const caption = explainer.scenes[sceneIndex].caption;
   const progressPct = totalMs > 0 ? (elapsedMs / totalMs) * 100 : 0;
 
+  // Fire scene view/completion events when the active scene changes.
+  useEffect(() => {
+    const prev = lastSceneRef.current;
+    if (prev === sceneIndex) return;
+    lastSceneRef.current = sceneIndex;
+    onSceneChange?.({ index: sceneIndex, previousIndex: prev >= 0 ? prev : null, total: explainer.scenes.length });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sceneIndex, explainer.scenes.length]);
+
+
   const seekAudio = (ms: number) => {
     const a = narrationRef.current;
     if (!a) return;
