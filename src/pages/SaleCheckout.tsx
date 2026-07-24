@@ -34,10 +34,10 @@ import { ProtectionOptInCard } from '@/components/protected-sale/ProtectionOptIn
 type FulfillmentSelection = 'pickup' | 'delivery' | 'vendibook_freight';
 type CheckoutStep = 'information' | 'delivery' | 'review';
 
-const CHECKOUT_STEPS: WizardStep[] = [
-  { step: 1, label: 'Your Info', short: 'Info' },
-  { step: 2, label: 'Delivery', short: 'Delivery' },
-  { step: 3, label: 'Review & Pay', short: 'Pay' },
+const CHECKOUT_STEPS = [
+  { step: 1, label: 'Your info', short: 'Info' },
+  { step: 2, label: 'How you\'ll get it', short: 'Delivery' },
+  { step: 3, label: 'Review & pay', short: 'Pay' },
 ];
 
 const getStepNumber = (step: CheckoutStep): number => {
