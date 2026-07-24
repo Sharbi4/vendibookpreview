@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useEntitlements } from '@/hooks/useEntitlements';
 import { PurchaseHistoryCard } from '@/components/monetization/PurchaseHistoryCard';
-import { Header } from '@/components/layout/Header';
+import Header from '@/components/layout/Header';
 
 const STATUS_TONE: Record<string, string> = {
   active: 'bg-emerald-500/15 text-emerald-500 border-emerald-500/30',
