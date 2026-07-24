@@ -63,8 +63,37 @@ export const SceneShell = ({ children, caption }: { children: ReactNode; caption
     <MobileRenderContext.Provider value={{ isMobile, stageWidth }}>
       <div
         ref={wrapRef}
-        className="relative h-full w-full overflow-hidden bg-gradient-to-br from-muted/40 via-background to-muted/20"
+        className="relative h-full w-full overflow-hidden bg-[radial-gradient(ellipse_at_top,hsl(var(--background))_0%,hsl(var(--muted)/0.35)_55%,hsl(var(--background))_100%)]"
       >
+        {/* Layered depth: brand-tinted radial glows + subtle grid + vignette.
+            Gives every scene a cinematic backdrop instead of flat gradient. */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 z-0"
+          style={{
+            backgroundImage: [
+              'radial-gradient(60% 45% at 18% 22%, hsl(var(--primary) / 0.18), transparent 70%)',
+              'radial-gradient(50% 40% at 82% 78%, hsl(var(--primary) / 0.12), transparent 72%)',
+              'radial-gradient(40% 35% at 50% 110%, hsl(var(--foreground) / 0.10), transparent 70%)',
+            ].join(','),
+          }}
+        />
+        <svg
+          aria-hidden
+          className="pointer-events-none absolute inset-0 z-0 h-full w-full opacity-[0.06] mix-blend-overlay"
+        >
+          <defs>
+            <pattern id="scene-grid" width="32" height="32" patternUnits="userSpaceOnUse">
+              <path d="M 32 0 L 0 0 0 32" fill="none" stroke="hsl(var(--foreground))" strokeWidth="0.6" />
+            </pattern>
+          </defs>
+          <rect width="100%" height="100%" fill="url(#scene-grid)" />
+        </svg>
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 z-0"
+          style={{ boxShadow: 'inset 0 0 160px 20px hsl(var(--background) / 0.9)' }}
+        />
         <div
           className="absolute left-1/2 top-1/2"
           style={{
@@ -91,7 +120,7 @@ export const SceneShell = ({ children, caption }: { children: ReactNode; caption
               initial={{ y: 12, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ duration: 0.4 }}
-              className="mx-auto max-w-2xl text-center text-lg font-semibold leading-snug text-foreground"
+              className="mx-auto max-w-2xl text-center text-lg font-semibold leading-snug text-foreground drop-shadow-sm"
             >
               {caption}
             </motion.p>
@@ -101,6 +130,7 @@ export const SceneShell = ({ children, caption }: { children: ReactNode; caption
     </MobileRenderContext.Provider>
   );
 };
+
 
 
 
