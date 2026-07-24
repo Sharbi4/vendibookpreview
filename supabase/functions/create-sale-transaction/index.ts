@@ -43,7 +43,7 @@ serve(async (req) => {
     logStep("Request received", { session_id });
 
     if (!session_id) {
-      throw new Error("Missing required field: session_id");
+      return jsonError(400, "missing_session_id", "Missing required field: session_id");
     }
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
@@ -60,12 +60,12 @@ serve(async (req) => {
     });
 
     if (session.payment_status !== 'paid') {
-      throw new Error("Payment not completed");
+      return jsonError(409, "payment_not_completed", "Payment not completed");
     }
 
     // Check if this is an escrow sale
     if (session.metadata?.mode !== 'sale' || session.metadata?.escrow !== 'true') {
-      throw new Error("This is not an escrow sale transaction");
+      return jsonError(409, "not_escrow_sale", "This is not an escrow sale transaction");
     }
 
     // Check if transaction already exists (avoid .single() so "0 rows" doesn't throw)
