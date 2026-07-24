@@ -242,5 +242,9 @@ verify_jwt = false
 [functions.log-error-event]
 verify_jwt = false
 
+[functions.explainer-tts]
+verify_jwt = false
+
+
 
 

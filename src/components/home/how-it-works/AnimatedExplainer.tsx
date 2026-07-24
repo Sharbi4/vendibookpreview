@@ -3,6 +3,7 @@ import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { Play, Pause, ChevronLeft, ChevronRight, Captions, Volume2, VolumeX } from 'lucide-react';
 import type { Explainer } from './data/explainers';
 import { cn } from '@/lib/utils';
+import { createAmbientBed, type AmbientBed } from './audio/ambientBed';
 
 interface Props {
   explainer: Explainer;
@@ -11,32 +12,40 @@ interface Props {
   storageKey?: string;
 }
 
-/**
- * Prefer a warm, natural English voice from the browser's synthesizer.
- * Falls back to whatever's available.
- */
-const pickVoice = (voices: SpeechSynthesisVoice[]): SpeechSynthesisVoice | null => {
-  if (!voices.length) return null;
-  const en = voices.filter((v) => v.lang?.toLowerCase().startsWith('en'));
-  const pool = en.length ? en : voices;
-  const preferred = [
-    /Samantha/i, /Ava/i, /Serena/i, /Karen/i,          // Apple natural voices
-    /Google US English/i, /Google UK English Female/i,  // Chrome
-    /Microsoft Aria/i, /Microsoft Jenny/i,              // Edge neural
-    /Natural/i, /Neural/i,
-  ];
-  for (const rx of preferred) {
-    const hit = pool.find((v) => rx.test(v.name));
-    if (hit) return hit;
-  }
-  return pool[0];
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
+const SUPABASE_ANON =
+  (import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string) ||
+  (import.meta.env.VITE_SUPABASE_ANON_KEY as string);
+
+// Simple in-memory cache so switching modals doesn't re-synthesize the same
+// narration. Blob URLs are safe to reuse across component mounts within a
+// page session.
+const narrationCache = new Map<string, Promise<string>>();
+
+const fetchNarration = (transcript: string): Promise<string> => {
+  const key = transcript.trim();
+  const existing = narrationCache.get(key);
+  if (existing) return existing;
+  const p = (async () => {
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/explainer-tts`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        apikey: SUPABASE_ANON,
+        Authorization: `Bearer ${SUPABASE_ANON}`,
+      },
+      body: JSON.stringify({ text: key }),
+    });
+    if (!res.ok) throw new Error(`tts_failed_${res.status}`);
+    const blob = await res.blob();
+    return URL.createObjectURL(blob);
+  })();
+  narrationCache.set(key, p);
+  // On failure, purge so we can retry later.
+  p.catch(() => narrationCache.delete(key));
+  return p;
 };
 
-/**
- * Frame-driven scene runner. Advances through explainer.scenes over their
- * combined duration, speaks each caption via Web Speech, exposes play/pause/
- * scrub/mute, and emits progress milestones.
- */
 export const AnimatedExplainer = ({ explainer, onProgress, onEnded, storageKey }: Props) => {
   const prefersReduced = useReducedMotion();
   const totalMs = useMemo(
@@ -53,37 +62,87 @@ export const AnimatedExplainer = ({ explainer, onProgress, onEnded, storageKey }
   const [playing, setPlaying] = useState(true);
   const [captionsOn, setCaptionsOn] = useState(true);
   const [muted, setMuted] = useState(false);
+  const [voiceReady, setVoiceReady] = useState(false);
   const rafRef = useRef<number | null>(null);
   const lastTickRef = useRef<number | null>(null);
   const milestoneRef = useRef<Set<number>>(new Set());
-  const voiceRef = useRef<SpeechSynthesisVoice | null>(null);
-  const spokenSceneRef = useRef<number>(-1);
+  const narrationRef = useRef<HTMLAudioElement | null>(null);
+  const ambientRef = useRef<AmbientBed | null>(null);
 
-  // Prime speech voices (async in some browsers)
+  // Prefetch narration on mount so the first play doesn't stall on the network.
   useEffect(() => {
-    if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
-    const load = () => {
-      voiceRef.current = pickVoice(window.speechSynthesis.getVoices());
-    };
-    load();
-    window.speechSynthesis.addEventListener?.('voiceschanged', load);
+    let cancelled = false;
+    let localUrl: string | null = null;
+    (async () => {
+      try {
+        const url = await fetchNarration(explainer.transcript);
+        if (cancelled) return;
+        localUrl = url;
+        const audio = new Audio(url);
+        audio.preload = 'auto';
+        audio.volume = 1;
+        narrationRef.current = audio;
+        setVoiceReady(true);
+      } catch (err) {
+        console.warn('[explainer] narration unavailable:', err);
+      }
+    })();
     return () => {
-      window.speechSynthesis.removeEventListener?.('voiceschanged', load);
-      window.speechSynthesis.cancel();
+      cancelled = true;
+      const a = narrationRef.current;
+      narrationRef.current = null;
+      if (a) {
+        try { a.pause(); } catch { /* ignore */ }
+        a.src = '';
+      }
+      // Don't revoke the cached blob URL — it lives in the module cache so
+      // re-opens are instant. Browser will GC it on unload.
+      void localUrl;
+    };
+  }, [explainer.transcript]);
+
+  // Ambient bed lifecycle
+  useEffect(() => {
+    const bed = createAmbientBed(0.06);
+    ambientRef.current = bed;
+    return () => {
+      bed.stop();
+      ambientRef.current = null;
     };
   }, []);
+
+  // Sync playback state → audio + ambient bed
+  useEffect(() => {
+    const audio = narrationRef.current;
+    const bed = ambientRef.current;
+    if (playing) {
+      bed?.start().catch(() => { /* autoplay policy — user will click again */ });
+      bed?.setMuted(muted);
+      if (audio && !muted) {
+        // Align audio time to the current elapsed position.
+        try {
+          if (Math.abs(audio.currentTime * 1000 - elapsedMs) > 400) {
+            audio.currentTime = Math.min(elapsedMs / 1000, (audio.duration || elapsedMs / 1000));
+          }
+        } catch { /* ignore */ }
+        audio.play().catch(() => { /* blocked until gesture */ });
+      } else if (audio) {
+        audio.pause();
+      }
+    } else {
+      audio?.pause();
+      bed?.setMuted(true);
+    }
+    // Only fire when play/mute changes — elapsed sync during a scrub is handled
+    // in scrub()/jumpToScene() directly.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [playing, muted, voiceReady]);
 
   // playback loop
   useEffect(() => {
     if (!playing) {
       lastTickRef.current = null;
-      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-        window.speechSynthesis.pause();
-      }
       return;
-    }
-    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-      window.speechSynthesis.resume();
     }
     const tick = (t: number) => {
       if (lastTickRef.current == null) lastTickRef.current = t;
@@ -111,9 +170,8 @@ export const AnimatedExplainer = ({ explainer, onProgress, onEnded, storageKey }
         if (m === 1) {
           setPlaying(false);
           onEnded?.();
-          if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-            window.speechSynthesis.cancel();
-          }
+          const a = narrationRef.current;
+          if (a) { try { a.pause(); } catch { /* ignore */ } }
         }
       }
     });
@@ -134,41 +192,20 @@ export const AnimatedExplainer = ({ explainer, onProgress, onEnded, storageKey }
   const caption = explainer.scenes[sceneIndex].caption;
   const progressPct = totalMs > 0 ? (elapsedMs / totalMs) * 100 : 0;
 
-  // Speak the current scene's caption when the scene changes
-  useEffect(() => {
-    if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
-    if (muted || !playing) return;
-    if (spokenSceneRef.current === sceneIndex) return;
-    spokenSceneRef.current = sceneIndex;
+  const seekAudio = (ms: number) => {
+    const a = narrationRef.current;
+    if (!a) return;
     try {
-      window.speechSynthesis.cancel();
-      const u = new SpeechSynthesisUtterance(caption);
-      if (voiceRef.current) u.voice = voiceRef.current;
-      u.rate = 0.98;
-      u.pitch = 1.02;
-      u.volume = 1;
-      window.speechSynthesis.speak(u);
-    } catch {
-      /* speech unsupported — captions still show */
-    }
-  }, [sceneIndex, caption, muted, playing]);
-
-  // Cancel speech on unmount / mute
-  useEffect(() => {
-    if (muted && typeof window !== 'undefined' && 'speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-      spokenSceneRef.current = -1;
-    }
-  }, [muted]);
+      const target = Math.min(ms / 1000, a.duration || ms / 1000);
+      if (Number.isFinite(target)) a.currentTime = Math.max(0, target);
+    } catch { /* ignore */ }
+  };
 
   const jumpToScene = (i: number) => {
     let ms = 0;
     for (let j = 0; j < i; j++) ms += explainer.scenes[j].durationMs;
     setElapsedMs(ms);
-    spokenSceneRef.current = -1;
-    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-    }
+    seekAudio(ms);
     milestoneRef.current = new Set(
       [0.25, 0.5, 0.75, 1].filter((m) => ms / totalMs >= m),
     );
@@ -177,10 +214,7 @@ export const AnimatedExplainer = ({ explainer, onProgress, onEnded, storageKey }
   const scrub = (pct: number) => {
     const ms = pct * totalMs;
     setElapsedMs(ms);
-    spokenSceneRef.current = -1;
-    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-    }
+    seekAudio(ms);
     milestoneRef.current = new Set(
       [0.25, 0.5, 0.75, 1].filter((m) => pct >= m),
     );
