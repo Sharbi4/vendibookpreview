@@ -7,7 +7,7 @@ export type Entitlement = {
   productName: string;
   kind: 'subscription' | 'one_time';
   source: 'host_subscription' | 'monetization_purchase';
-  status: 'active' | 'trialing' | 'past_due' | 'cancelled' | 'completed' | 'refunded';
+  status: 'active' | 'trialing' | 'past_due' | 'cancelled' | 'paid' | 'fulfilled' | 'refunded' | 'failed' | 'pending';
   listingId?: string | null;
   since?: string | null;
   endsAt?: string | null;
