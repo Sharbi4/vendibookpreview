@@ -1,79 +1,174 @@
 import { motion } from 'framer-motion';
 import { Vendi } from '../Vendi';
-import { SceneShell, ListingCardMini, BadgeStamp, CheckDoc, MessageBubble } from './primitives';
+import {
+  SceneShell,
+  ListingCardMini,
+  BadgeStamp,
+  DashboardMock,
+  InboxRow,
+  ListingWizardStrip,
+  PaymentOptionsPanel,
+} from './primitives';
 
+/**
+ * Selling on Vendibook — 8 scenes. Shows scattered social posts vs a
+ * Vendibook listing, the listing wizard, publishing for free, the seller
+ * dashboard, payment options for eligible buyers (Stripe / Affirm / pay in
+ * person), sale tracking with payment status and payout timing, and the
+ * handoff confirmations for both sides.
+ */
 export const sellingScenes = [
+  // 1. Sell to the right audience
   () => (
-    <SceneShell caption="Turn your equipment into your next opportunity.">
-      <div className="flex h-full w-full items-center justify-center">
-        <Vendi accessory="camera" size={220} />
-      </div>
-    </SceneShell>
-  ),
-  () => (
-    <SceneShell caption="Create your listing in a few simple steps.">
-      <div className="flex h-full w-full items-center justify-center gap-4">
-        {['Photos', 'Details', 'Price', 'Preview'].map((label, i) => (
-          <motion.div
-            key={label}
-            initial={{ y: 30, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.2 * i }}
-            className="flex h-24 w-24 flex-col items-center justify-center gap-1.5 rounded-xl border border-border bg-card shadow-sm"
-          >
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground">
-              {i + 1}
-            </div>
-            <div className="text-xs font-semibold text-foreground">{label}</div>
-          </motion.div>
-        ))}
-      </div>
-    </SceneShell>
-  ),
-  () => (
-    <SceneShell caption="Reach buyers actively searching for equipment.">
-      <div className="flex h-full w-full items-center justify-center gap-4">
-        <ListingCardMini variant="primary" label="Your listing" large />
-        <div className="flex flex-col gap-2">
-          {[0, 1, 2].map((i) => (
-            <motion.div
-              key={i}
-              initial={{ x: 20, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              transition={{ delay: 0.3 + 0.2 * i }}
-              className="flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 shadow-sm"
-            >
-              <div className="h-2 w-2 rounded-full bg-primary" />
-              <span className="text-xs font-medium text-foreground">New view</span>
-            </motion.div>
-          ))}
-        </div>
-      </div>
-    </SceneShell>
-  ),
-  () => (
-    <SceneShell caption="Answer questions and schedule inspections.">
-      <div className="flex h-full w-full flex-col items-center justify-center gap-3 px-8">
-        <MessageBubble side="left" text="Can I come see it Saturday?" delay={0.2} />
-        <MessageBubble side="right" text="Absolutely — 10am at the shop." delay={1} />
-        <MessageBubble side="left" text="Great, see you then." delay={1.8} />
-      </div>
-    </SceneShell>
-  ),
-  () => (
-    <SceneShell caption="Review the agreement and complete the sale.">
+    <SceneShell caption="List where food-business buyers are searching.">
       <div className="flex h-full w-full items-center justify-center gap-6">
-        <CheckDoc label="Bill of Sale" />
-        <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.8, type: 'spring' }}>
-          <BadgeStamp label="Sold" />
+        <motion.div
+          initial={{ opacity: 1 }}
+          animate={{ opacity: 0.25, scale: 0.9 }}
+          transition={{ delay: 0.8, duration: 0.6 }}
+          className="flex flex-col gap-1"
+        >
+          {['General FB group', 'Craigslist', 'Text chain'].map((t, i) => (
+            <div key={i} className="rounded-md border border-dashed border-muted-foreground/40 bg-background/70 px-2 py-1 text-[10px] text-muted-foreground">
+              {t}
+            </div>
+          ))}
+        </motion.div>
+        <Vendi accessory="camera" size={180} />
+        <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.9 }}>
+          <ListingCardMini variant="primary" label="On Vendibook" large />
         </motion.div>
       </div>
     </SceneShell>
   ),
+
+  // 2. Create the listing (wizard)
   () => (
-    <SceneShell caption="List for free. Reach serious buyers. Sell smarter.">
-      <div className="flex h-full w-full items-end justify-center">
-        <Vendi accessory="none" size={240} />
+    <SceneShell caption="Build a professional listing step by step.">
+      <div className="flex h-full w-full items-center justify-center px-4">
+        <ListingWizardStrip steps={['Photos', 'Type', 'Price', 'Equipment', 'Specs', 'Docs', 'Payments']} />
+      </div>
+    </SceneShell>
+  ),
+
+  // 3. Publish for free
+  () => (
+    <SceneShell caption="Always free to list.">
+      <div className="flex h-full w-full items-center justify-center gap-6">
+        <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}>
+          <ListingCardMini variant="primary" label="Live" large />
+        </motion.div>
+        <motion.div
+          initial={{ x: 20, opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
+          transition={{ delay: 0.4 }}
+          className="rounded-xl bg-primary px-4 py-3 text-sm font-bold text-primary-foreground shadow-lg"
+        >
+          Published — $0 listing fee
+        </motion.div>
+      </div>
+    </SceneShell>
+  ),
+
+  // 4. Manage buyers & messages
+  () => (
+    <SceneShell caption="Your listing and buyer activity in one place.">
+      <div className="flex h-full w-full items-center justify-center gap-4 px-6">
+        <ListingCardMini variant="primary" label="Your listing" large />
+        <div className="flex w-64 flex-col gap-1.5">
+          <InboxRow from="Maya R." preview="Is the generator included?" unread delay={0.15} />
+          <InboxRow from="David C." preview="Can I schedule an inspection?" unread delay={0.3} />
+          <InboxRow from="Sofia L." preview="Delivery to Phoenix possible?" delay={0.45} />
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.6 }}
+            className="mt-1 rounded-md bg-primary/10 px-2 py-1 text-[10px] font-bold text-primary"
+          >
+            142 views · 8 saves · 3 inquiries
+          </motion.div>
+        </div>
+      </div>
+    </SceneShell>
+  ),
+
+  // 5. Payment options for buyers
+  () => (
+    <SceneShell caption="More ways for eligible buyers to complete the purchase.">
+      <div className="flex h-full w-full items-center justify-center gap-4 px-6">
+        <PaymentOptionsPanel price="$34,000" fees="Buyer's fee shown at checkout" />
+        <div className="max-w-[200px] rounded-xl border border-dashed border-muted-foreground/40 bg-background/70 p-3 text-[10px] leading-relaxed text-muted-foreground">
+          <div className="font-bold text-foreground">Disclosure</div>
+          Affirm is subject to eligibility and approval. Vendibook and Stripe are not lenders. Sellers can also enable pay-in-person.
+        </div>
+      </div>
+    </SceneShell>
+  ),
+
+  // 6. Track the sale (online)
+  () => (
+    <SceneShell caption="Follow the sale from purchase to completion.">
+      <div className="flex h-full w-full items-center justify-center px-6">
+        <DashboardMock
+          role="Seller"
+          title="Sale · 2018 Ford E-450"
+          subtitle="Buyer: Maya R. · Paid via Stripe"
+          statuses={[
+            { label: 'Payment Completed', intent: 'success' },
+            { label: 'Payout Scheduled', intent: 'info' },
+          ]}
+          timeline={[
+            { label: 'Purchase created', state: 'done' },
+            { label: 'Payment', state: 'done' },
+            { label: 'Agreement', state: 'done' },
+            { label: 'Handoff', state: 'active' },
+            { label: 'Payout', state: 'pending' },
+          ]}
+          nextAction={{ label: 'Confirm the handoff at pickup', cta: 'Confirm' }}
+          footer={
+            <div className="text-[11px]">
+              <span className="font-semibold">Payout timing:</span> released after handoff confirmation and the applicable hold period shown on your dashboard.
+            </div>
+          }
+        />
+      </div>
+    </SceneShell>
+  ),
+
+  // 7. Pay-in-person sale variant
+  () => (
+    <SceneShell caption="Pay-in-person sales stay tracked too.">
+      <div className="flex h-full w-full items-center justify-center px-6">
+        <DashboardMock
+          role="Seller"
+          title="Sale · Concession trailer"
+          subtitle="Buyer: David C. · Cash at handoff"
+          statuses={[
+            { label: 'Payment Pending (in person)', intent: 'warning' },
+            { label: 'Handoff Scheduled', intent: 'info' },
+          ]}
+          timeline={[
+            { label: 'Agreement', state: 'done' },
+            { label: 'Handoff scheduled', state: 'done' },
+            { label: 'Buyer receives', state: 'active' },
+            { label: 'Seller confirms payment', state: 'pending' },
+            { label: 'Complete', state: 'pending' },
+          ]}
+          nextAction={{ label: 'Confirm cash payment received at handoff', cta: 'Confirm' }}
+        />
+      </div>
+    </SceneShell>
+  ),
+
+  // 8. Confirm the handoff — closing beat
+  () => (
+    <SceneShell caption="List for free. Sell with a better process.">
+      <div className="flex h-full w-full items-end justify-center gap-6">
+        <Vendi accessory="none" size={220} />
+        <div className="flex flex-col items-center gap-2">
+          <BadgeStamp label="Handoff Confirmed" />
+          <BadgeStamp label="Transaction Completed" />
+        </div>
       </div>
     </SceneShell>
   ),

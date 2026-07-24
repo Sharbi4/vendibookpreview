@@ -1,6 +1,17 @@
 import { motion } from 'framer-motion';
 import { ReactNode } from 'react';
-import { Check, FileText, MapPin } from 'lucide-react';
+import {
+  Check,
+  FileText,
+  MapPin,
+  CreditCard,
+  Banknote,
+  Clock,
+  ArrowRight,
+  ShieldCheck,
+  MessageSquare,
+  Calendar as CalendarIcon,
+} from 'lucide-react';
 
 /** Full-bleed scene container with caption bar. */
 export const SceneShell = ({ children, caption }: { children: ReactNode; caption: string }) => (
@@ -120,26 +131,69 @@ export const MapDots = () => (
   </svg>
 );
 
-export const CalendarGrid = ({ selected = [12, 13, 14, 15] }: { selected?: number[] }) => (
-  <div className="grid w-72 grid-cols-7 gap-1.5 rounded-2xl border border-border bg-card p-4 shadow-md">
-    {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((d) => (
-      <div key={d} className="text-center text-[10px] font-semibold text-muted-foreground">
-        {d}
+/**
+ * Booking calendar with clearly distinct available / booked-out / selected day
+ * states — reused across renting and hosting scenes.
+ */
+export const CalendarGrid = ({
+  selected = [12, 13, 14, 15],
+  booked = [4, 5, 20, 21],
+  title,
+}: {
+  selected?: number[];
+  booked?: number[];
+  title?: string;
+}) => (
+  <div className="w-72 rounded-2xl border border-border bg-card p-4 shadow-md">
+    {title && (
+      <div className="mb-2 flex items-center gap-2 text-xs font-semibold text-foreground">
+        <CalendarIcon className="h-3.5 w-3.5 text-primary" />
+        {title}
       </div>
-    ))}
-    {Array.from({ length: 28 }, (_, i) => i + 1).map((day) => (
-      <motion.div
-        key={day}
-        initial={{ scale: 1 }}
-        animate={selected.includes(day) ? { scale: [1, 1.15, 1], backgroundColor: 'hsl(var(--primary))' } : {}}
-        transition={{ delay: selected.indexOf(day) * 0.15, duration: 0.4 }}
-        className={`flex aspect-square items-center justify-center rounded-md text-xs font-medium ${
-          selected.includes(day) ? 'text-primary-foreground' : 'bg-muted text-foreground'
-        }`}
-      >
-        {day}
-      </motion.div>
-    ))}
+    )}
+    <div className="grid grid-cols-7 gap-1.5">
+      {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((d, i) => (
+        <div key={i} className="text-center text-[10px] font-semibold text-muted-foreground">
+          {d}
+        </div>
+      ))}
+      {Array.from({ length: 28 }, (_, i) => i + 1).map((day) => {
+        const isSelected = selected.includes(day);
+        const isBooked = booked.includes(day);
+        return (
+          <motion.div
+            key={day}
+            initial={{ scale: 1 }}
+            animate={
+              isSelected
+                ? { scale: [1, 1.15, 1], backgroundColor: 'hsl(var(--primary))' }
+                : {}
+            }
+            transition={{ delay: selected.indexOf(day) * 0.12, duration: 0.4 }}
+            className={`flex aspect-square items-center justify-center rounded-md text-xs font-medium ${
+              isSelected
+                ? 'text-primary-foreground'
+                : isBooked
+                  ? 'bg-muted-foreground/25 text-muted-foreground line-through'
+                  : 'bg-muted text-foreground'
+            }`}
+          >
+            {day}
+          </motion.div>
+        );
+      })}
+    </div>
+    <div className="mt-3 flex items-center justify-between text-[10px] font-semibold text-muted-foreground">
+      <span className="flex items-center gap-1">
+        <span className="h-2 w-2 rounded-full bg-muted" /> Available
+      </span>
+      <span className="flex items-center gap-1">
+        <span className="h-2 w-2 rounded-full bg-primary" /> Selected
+      </span>
+      <span className="flex items-center gap-1">
+        <span className="h-2 w-2 rounded-full bg-muted-foreground/40" /> Booked
+      </span>
+    </div>
   </div>
 );
 
@@ -153,31 +207,348 @@ export const PinDrop = ({ delay = 0 }: { delay?: number }) => (
   </motion.div>
 );
 
-export const PayoutCounter = ({ target = 1240 }: { target?: number }) => {
-  return (
-    <motion.div
-      initial={{ scale: 0.9, opacity: 0 }}
-      animate={{ scale: 1, opacity: 1 }}
-      transition={{ duration: 0.5 }}
-      className="rounded-2xl border-2 border-primary/40 bg-card p-5 shadow-lg"
-    >
-      <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Payout received</div>
-      <motion.div
-        className="mt-1 text-3xl font-bold text-foreground"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.3 }}
-      >
-        ${target.toLocaleString()}
-      </motion.div>
-      <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-muted">
-        <motion.div
-          className="h-full bg-primary"
-          initial={{ width: 0 }}
-          animate={{ width: '100%' }}
-          transition={{ duration: 1.2, delay: 0.2 }}
-        />
+/* ---------------------------------------------------------------------------
+ * Product-accurate mocks: dashboards, payment options, timelines, payouts.
+ * These reflect the actual Vendibook workflow — status labels, next-action
+ * prompts, and payment tracking that users see inside the app.
+ * ------------------------------------------------------------------------- */
+
+type StatusState = 'done' | 'active' | 'pending';
+
+const dot = (state: StatusState) =>
+  state === 'done'
+    ? 'bg-primary'
+    : state === 'active'
+      ? 'bg-primary ring-4 ring-primary/25 animate-pulse'
+      : 'bg-muted-foreground/30';
+
+/**
+ * TransactionTimeline: horizontal step tracker with status dots and labels.
+ * Mirrors the buyer / seller / renter / host transaction views inside the app.
+ */
+export const TransactionTimeline = ({
+  steps,
+}: {
+  steps: Array<{ label: string; state: StatusState }>;
+}) => (
+  <div className="flex w-full items-start justify-between gap-1.5">
+    {steps.map((s, i) => (
+      <div key={i} className="flex flex-1 flex-col items-center gap-1.5">
+        <div className="flex w-full items-center">
+          <div className={`h-0.5 flex-1 ${i === 0 ? 'bg-transparent' : s.state === 'pending' ? 'bg-muted' : 'bg-primary'}`} />
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: 0.1 * i, type: 'spring', stiffness: 220, damping: 18 }}
+            className={`h-3 w-3 rounded-full ${dot(s.state)}`}
+          />
+          <div className={`h-0.5 flex-1 ${i === steps.length - 1 ? 'bg-transparent' : s.state === 'done' ? 'bg-primary' : 'bg-muted'}`} />
+        </div>
+        <span className={`text-[10px] font-medium leading-tight text-center ${s.state === 'pending' ? 'text-muted-foreground' : 'text-foreground'}`}>
+          {s.label}
+        </span>
       </div>
-    </motion.div>
+    ))}
+  </div>
+);
+
+/**
+ * StatusPill: one of the actual Vendibook status labels. Colored by intent.
+ */
+export const StatusPill = ({
+  label,
+  intent = 'info',
+}: {
+  label: string;
+  intent?: 'info' | 'success' | 'warning' | 'neutral';
+}) => {
+  const cls = {
+    info: 'bg-primary/12 text-primary border-primary/30',
+    success: 'bg-primary/15 text-primary border-primary/40',
+    warning: 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30',
+    neutral: 'bg-muted text-muted-foreground border-border',
+  }[intent];
+  return (
+    <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-semibold ${cls}`}>
+      <span className="h-1.5 w-1.5 rounded-full bg-current" />
+      {label}
+    </span>
   );
 };
+
+/**
+ * NextActionCard: the "what you need to do next" prompt that appears in the
+ * app's booking and purchase dashboards.
+ */
+export const NextActionCard = ({
+  label,
+  cta,
+}: {
+  label: string;
+  cta: string;
+}) => (
+  <motion.div
+    key={label}
+    initial={{ y: 10, opacity: 0 }}
+    animate={{ y: 0, opacity: 1 }}
+    transition={{ duration: 0.35 }}
+    className="flex items-center gap-3 rounded-xl border border-primary/40 bg-primary/8 px-3 py-2.5 shadow-sm"
+  >
+    <ArrowRight className="h-4 w-4 flex-shrink-0 text-primary" />
+    <div className="flex-1">
+      <div className="text-[10px] font-semibold uppercase tracking-wider text-primary/80">Next action</div>
+      <div className="text-xs font-semibold text-foreground">{label}</div>
+    </div>
+    <span className="rounded-md bg-primary px-2.5 py-1 text-[10px] font-bold text-primary-foreground shadow-sm">
+      {cta}
+    </span>
+  </motion.div>
+);
+
+/**
+ * DashboardMock: role-aware transaction dashboard card. Includes header,
+ * status pills, transaction timeline, and a next-action prompt. Used as the
+ * hero visual in most later scenes.
+ */
+export const DashboardMock = ({
+  role,
+  title,
+  subtitle,
+  statuses,
+  timeline,
+  nextAction,
+  footer,
+}: {
+  role: 'Buyer' | 'Seller' | 'Renter' | 'Host';
+  title: string;
+  subtitle?: string;
+  statuses: Array<{ label: string; intent?: 'info' | 'success' | 'warning' | 'neutral' }>;
+  timeline: Array<{ label: string; state: StatusState }>;
+  nextAction?: { label: string; cta: string };
+  footer?: ReactNode;
+}) => (
+  <motion.div
+    initial={{ y: 20, opacity: 0 }}
+    animate={{ y: 0, opacity: 1 }}
+    transition={{ duration: 0.5 }}
+    className="w-full max-w-md rounded-2xl border border-border bg-card p-4 shadow-xl"
+  >
+    <div className="flex items-start justify-between gap-2">
+      <div>
+        <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+          {role} dashboard
+        </div>
+        <div className="mt-0.5 text-sm font-bold leading-tight text-foreground">{title}</div>
+        {subtitle && <div className="text-[11px] text-muted-foreground">{subtitle}</div>}
+      </div>
+      <div className="flex flex-wrap items-end justify-end gap-1">
+        {statuses.map((s, i) => (
+          <StatusPill key={i} label={s.label} intent={s.intent} />
+        ))}
+      </div>
+    </div>
+
+    <div className="mt-4">
+      <TransactionTimeline steps={timeline} />
+    </div>
+
+    {nextAction && (
+      <div className="mt-4">
+        <NextActionCard label={nextAction.label} cta={nextAction.cta} />
+      </div>
+    )}
+
+    {footer && <div className="mt-3 border-t border-border pt-3 text-xs text-foreground/80">{footer}</div>}
+  </motion.div>
+);
+
+/**
+ * PaymentOptionsPanel: shows the actual purchase summary and the payment
+ * methods available on Vendibook — Stripe, Affirm (when eligible), and
+ * pay-in-person (when offered by the seller/host).
+ */
+export const PaymentOptionsPanel = ({
+  price,
+  fees,
+  showAffirm = true,
+  showPayInPerson = true,
+}: {
+  price: string;
+  fees: string;
+  showAffirm?: boolean;
+  showPayInPerson?: boolean;
+}) => (
+  <motion.div
+    initial={{ y: 20, opacity: 0 }}
+    animate={{ y: 0, opacity: 1 }}
+    className="w-80 rounded-2xl border border-border bg-card p-4 shadow-xl"
+  >
+    <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+      Transaction details
+    </div>
+    <div className="mt-2 space-y-1 text-xs">
+      <div className="flex justify-between"><span className="text-muted-foreground">Listing price</span><span className="font-semibold text-foreground">{price}</span></div>
+      <div className="flex justify-between"><span className="text-muted-foreground">Platform fee</span><span className="font-semibold text-foreground">{fees}</span></div>
+      <div className="mt-2 flex justify-between border-t border-border pt-2 text-sm"><span className="font-bold text-foreground">Total</span><span className="font-bold text-foreground">$—</span></div>
+    </div>
+    <div className="mt-3 space-y-1.5">
+      <motion.div
+        initial={{ opacity: 0, x: -8 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ delay: 0.15 }}
+        className="flex items-center gap-2 rounded-lg border-2 border-primary bg-primary/8 px-2.5 py-2 text-xs"
+      >
+        <CreditCard className="h-4 w-4 text-primary" />
+        <div className="flex-1 font-semibold text-foreground">Pay online (Stripe)</div>
+        <span className="text-[10px] font-bold text-primary">Selected</span>
+      </motion.div>
+      {showAffirm && (
+        <motion.div
+          initial={{ opacity: 0, x: -8 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.3 }}
+          className="flex items-center gap-2 rounded-lg border border-border bg-background px-2.5 py-2 text-xs"
+        >
+          <ShieldCheck className="h-4 w-4 text-foreground/70" />
+          <div className="flex-1">
+            <div className="font-semibold text-foreground">Affirm — monthly payments</div>
+            <div className="text-[10px] text-muted-foreground">Subject to eligibility &amp; approval</div>
+          </div>
+        </motion.div>
+      )}
+      {showPayInPerson && (
+        <motion.div
+          initial={{ opacity: 0, x: -8 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.45 }}
+          className="flex items-center gap-2 rounded-lg border border-border bg-background px-2.5 py-2 text-xs"
+        >
+          <Banknote className="h-4 w-4 text-foreground/70" />
+          <div className="flex-1">
+            <div className="font-semibold text-foreground">Pay in person</div>
+            <div className="text-[10px] text-muted-foreground">When offered by the seller</div>
+          </div>
+        </motion.div>
+      )}
+    </div>
+  </motion.div>
+);
+
+/**
+ * PayoutTimeline: shows the actual Vendibook payout schedule for hosts —
+ * paid on Stripe checkout, host payout released 24h after the rental ends.
+ */
+export const PayoutTimeline = () => (
+  <motion.div
+    initial={{ y: 20, opacity: 0 }}
+    animate={{ y: 0, opacity: 1 }}
+    className="w-full max-w-md rounded-2xl border border-border bg-card p-4 shadow-xl"
+  >
+    <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+      <Clock className="h-3.5 w-3.5 text-primary" /> Payout schedule
+    </div>
+    {[
+      { label: 'Renter payment received (Stripe)', when: 'Booking confirmed', done: true },
+      { label: 'Rental in progress', when: 'Pickup → return', done: true },
+      { label: 'Return confirmed by both sides', when: 'End of rental', done: true },
+      { label: 'Host payout released', when: '24 hours after rental ends', done: false, highlight: true },
+    ].map((row, i) => (
+      <motion.div
+        key={i}
+        initial={{ opacity: 0, x: -10 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ delay: 0.15 * i }}
+        className={`mt-2 flex items-center gap-2 rounded-lg border px-2.5 py-1.5 text-xs ${
+          row.highlight ? 'border-primary bg-primary/8' : 'border-border bg-background'
+        }`}
+      >
+        <div className={`flex h-4 w-4 items-center justify-center rounded-full ${row.done ? 'bg-primary text-primary-foreground' : 'border-2 border-primary'}`}>
+          {row.done && <Check className="h-2.5 w-2.5" strokeWidth={4} />}
+        </div>
+        <div className="flex-1 font-semibold text-foreground">{row.label}</div>
+        <div className="text-[10px] text-muted-foreground">{row.when}</div>
+      </motion.div>
+    ))}
+  </motion.div>
+);
+
+/**
+ * PayoutCounter: kept for backward compatibility; used by the closing beat
+ * of the hosting explainer.
+ */
+export const PayoutCounter = ({ target = 1240 }: { target?: number }) => (
+  <motion.div
+    initial={{ scale: 0.9, opacity: 0 }}
+    animate={{ scale: 1, opacity: 1 }}
+    transition={{ duration: 0.5 }}
+    className="rounded-2xl border-2 border-primary/40 bg-card p-5 shadow-lg"
+  >
+    <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Payout scheduled</div>
+    <motion.div
+      className="mt-1 text-3xl font-bold text-foreground"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ delay: 0.3 }}
+    >
+      ${target.toLocaleString()}
+    </motion.div>
+    <div className="mt-1 text-[11px] text-muted-foreground">Released 24h after rental ends</div>
+    <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-muted">
+      <motion.div
+        className="h-full bg-primary"
+        initial={{ width: 0 }}
+        animate={{ width: '100%' }}
+        transition={{ duration: 1.2, delay: 0.2 }}
+      />
+    </div>
+  </motion.div>
+);
+
+/** ListingWizardStrip: numbered steps for creating a listing. */
+export const ListingWizardStrip = ({ steps }: { steps: string[] }) => (
+  <div className="flex flex-wrap items-center justify-center gap-3">
+    {steps.map((label, i) => (
+      <motion.div
+        key={label}
+        initial={{ y: 20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.15 * i }}
+        className="flex h-20 w-20 flex-col items-center justify-center gap-1 rounded-xl border border-border bg-card shadow-sm"
+      >
+        <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
+          {i + 1}
+        </div>
+        <div className="px-1 text-center text-[10px] font-semibold leading-tight text-foreground">{label}</div>
+      </motion.div>
+    ))}
+  </div>
+);
+
+/** InboxRow: a single messaging thread preview, used inside dashboards. */
+export const InboxRow = ({
+  from,
+  preview,
+  unread = false,
+  delay = 0,
+}: {
+  from: string;
+  preview: string;
+  unread?: boolean;
+  delay?: number;
+}) => (
+  <motion.div
+    initial={{ x: -10, opacity: 0 }}
+    animate={{ x: 0, opacity: 1 }}
+    transition={{ delay }}
+    className="flex items-start gap-2 rounded-lg border border-border bg-card px-2.5 py-2 shadow-sm"
+  >
+    <MessageSquare className="mt-0.5 h-3.5 w-3.5 flex-shrink-0 text-primary" />
+    <div className="min-w-0 flex-1">
+      <div className="flex items-center justify-between gap-2">
+        <div className="text-xs font-semibold text-foreground">{from}</div>
+        {unread && <span className="h-1.5 w-1.5 flex-shrink-0 rounded-full bg-primary" />}
+      </div>
+      <div className="truncate text-[11px] text-muted-foreground">{preview}</div>
+    </div>
+  </motion.div>
+);

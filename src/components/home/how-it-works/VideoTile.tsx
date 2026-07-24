@@ -80,7 +80,7 @@ export const VideoTile = ({ explainer, onOpen }: Props) => {
         <div className="flex flex-1 flex-col gap-1.5 p-4">
           <p className="text-sm text-muted-foreground">{explainer.description}</p>
           <div className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-primary">
-            Watch with voiceover
+            See how it works
             <span aria-hidden className="transition-transform duration-200 group-hover:translate-x-0.5">→</span>
           </div>
         </div>
