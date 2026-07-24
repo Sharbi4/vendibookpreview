@@ -223,10 +223,10 @@ serve(async (req) => {
       amount_cents: priceCents,
       currency: product.currency,
       discount_code_id: discountCodeId,
-      discount_applied_cents: discountAppliedCents,
+      discount_applied_cents: discountAppliedCents + memberDiscountCents,
       status: "pending" as const,
       idempotency_key: idempotencyKey,
-      metadata: { source: "checkout" },
+      metadata: { source: "checkout", member_discount_cents: memberDiscountCents },
     };
     const { data: purchase, error: insErr } = await supabase
       .from("monetization_purchases")
