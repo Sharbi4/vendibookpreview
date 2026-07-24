@@ -10,7 +10,7 @@ interface NotificationRequest {
   data: Record<string, any>;
 }
 
-const ADMIN_EMAILS = ["atlasmom421@gmail.com", "support@vendibook.com"];
+const ADMIN_EMAILS = ["support@vendibook.com"];
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });

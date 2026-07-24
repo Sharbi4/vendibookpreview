@@ -201,7 +201,7 @@ serve(async (req) => {
     } else {
       const testEmail = Deno.env.get("MARKETING_TEST_EMAIL");
       if (testEmail) recipients.add(testEmail);
-      recipients.add("atlasmom421@gmail.com");
+      recipients.add("support@vendibook.com");
     }
 
     const dashboardUrl = `${VENDIBOOK_BASE_URL}/referral/dashboard`;

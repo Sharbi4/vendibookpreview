@@ -237,9 +237,9 @@ serve(async (req) => {
       if (adminEmails.length === 0) {
         adminEmails = ["support@vendibook.com"];
       }
-      // Always silently forward admin doc alerts to owner inbox
-      if (!adminEmails.includes("atlasmom421@gmail.com")) {
-        adminEmails.push("atlasmom421@gmail.com");
+      // Admin doc alerts route to support inbox only
+      if (!adminEmails.includes("support@vendibook.com")) {
+        adminEmails.push("support@vendibook.com");
       }
       
       logStep("Sending document upload notification to admins", { adminEmails });

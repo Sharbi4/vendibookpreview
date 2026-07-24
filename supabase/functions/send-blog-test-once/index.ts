@@ -10,7 +10,7 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const TEST_RECIPIENT = "atlasmom421@gmail.com";
+const TEST_RECIPIENT = "support@vendibook.com";
 const CAMPAIGN_ID = "2026-05-31-new-exit-plan-blog-email";
 const SUBJECT = "[TEST] A Food Truck, a Recipe, and a Fresh Start";
 const PREVIEW = "As AI reshapes work, more people are turning recipes, trucks, trailers, and shared kitchens into a path toward ownership.";

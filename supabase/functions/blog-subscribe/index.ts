@@ -12,7 +12,7 @@ const corsHeaders = {
 
 const FROM = "Vendibook <hello@updates.vendibook.com>";
 const REPLY_TO = "support@vendibook.com";
-const ADMIN_ALERT_TO = ["support@vendibook.com", "atlasmom421@gmail.com"];
+const ADMIN_ALERT_TO = ["support@vendibook.com"];
 const HOME_URL = "https://vendibook.com";
 const BLOG_URL = "https://vendibook.com/blog";
 const LOGO_IMG = "https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/email-assets/vendibook-email-logo.png";
