@@ -4,13 +4,28 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { Shield, CheckCircle, Loader2, AlertCircle, ExternalLink } from 'lucide-react';
-import { TrustModule, IDENTITY_TRUST_POINTS, IDENTITY_DISCLAIMER } from '@/components/journey';
+import {
+  Shield,
+  CheckCircle2,
+  Loader2,
+  Camera,
+  UserRound,
+  IdCard,
+  Lock,
+  ExternalLink,
+  ArrowRight,
+} from 'lucide-react';
+import Header from '@/components/layout/Header';
+import verifiedBadge from '@/assets/verified-badge.png';
+import stripeWordmark from '@/assets/stripe-wordmark-blurple.png';
+import { goBackToOrigin } from '@/lib/originNav';
+
+type Status = 'checking' | 'not_started' | 'pending' | 'processing' | 'verified';
 
 const IdentityVerification = () => {
   const [isLoading, setIsLoading] = useState(false);
-  const [verificationStatus, setVerificationStatus] = useState<string>('checking');
-  const { user, profile, isVerified, refreshProfile, isLoading: authLoading } = useAuth();
+  const [status, setStatus] = useState<Status>('checking');
+  const { user, isVerified, refreshProfile, isLoading: authLoading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -19,65 +34,54 @@ const IdentityVerification = () => {
       navigate('/auth');
       return;
     }
-
     if (isVerified) {
-      setVerificationStatus('verified');
-    } else {
-      checkVerificationStatus();
+      setStatus('verified');
+    } else if (user) {
+      void checkStatus();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, authLoading, isVerified]);
 
-  const checkVerificationStatus = async () => {
-    if (!user) return;
-    
+  const checkStatus = async () => {
     try {
-      const { data, error } = await supabase.functions.invoke('check-identity-verification');
-      
+      const { data, error } = await supabase.functions.invoke(
+        'check-identity-verification',
+      );
       if (error) {
-        console.error('Error checking verification:', error);
-        setVerificationStatus('not_started');
+        setStatus('not_started');
         return;
       }
-
-      setVerificationStatus(data.status || 'not_started');
-      
-      if (data.verified) {
-        await refreshProfile();
-      }
-    } catch (error) {
-      console.error('Error checking verification:', error);
-      setVerificationStatus('not_started');
+      setStatus((data?.status as Status) || 'not_started');
+      if (data?.verified) await refreshProfile();
+    } catch {
+      setStatus('not_started');
     }
   };
 
   const startVerification = async () => {
     setIsLoading(true);
-    
     try {
-      const { data, error } = await supabase.functions.invoke('create-identity-verification');
-      
-      if (error) {
+      const { data, error } = await supabase.functions.invoke(
+        'create-identity-verification',
+      );
+      if (error || !data?.url) {
         toast({
-          title: 'Verification Error',
-          description: 'Could not start identity verification. Please try again.',
+          title: 'Could not start verification',
+          description: 'Please try again in a moment.',
           variant: 'destructive',
         });
         return;
       }
-
-      if (data.url) {
-        // Open Stripe Identity verification in new tab
-        window.open(data.url, '_blank');
-        setVerificationStatus('pending');
-        toast({
-          title: 'Verification Started',
-          description: 'Complete the verification in the new tab, then return here.',
-        });
-      }
-    } catch (error) {
+      window.open(data.url, '_blank');
+      setStatus('pending');
       toast({
-        title: 'Error',
-        description: 'Something went wrong. Please try again.',
+        title: 'Verification opened in a new tab',
+        description: 'Finish the steps, then come back here to check status.',
+      });
+    } catch {
+      toast({
+        title: 'Something went wrong',
+        description: 'Please try again.',
         variant: 'destructive',
       });
     } finally {
@@ -85,112 +89,239 @@ const IdentityVerification = () => {
     }
   };
 
-  const skipForNow = () => {
-    navigate('/');
-  };
-
-  if (authLoading || verificationStatus === 'checking') {
+  if (authLoading || status === 'checking') {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
-
-  if (verificationStatus === 'verified' || isVerified) {
-    return (
-      <div className="min-h-screen bg-gradient-to-b from-vendibook-cream to-background flex items-center justify-center p-4">
-        <div className="w-full max-w-md text-center">
-          <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-emerald-100 mb-6">
-            <CheckCircle className="h-10 w-10 text-emerald-600" />
-          </div>
-          <h1 className="text-2xl font-bold text-foreground mb-3">Identity Verified!</h1>
-          <p className="text-muted-foreground mb-8">
-            Your identity has been successfully verified. You now have full access to Vendibook.
-          </p>
-          <Button onClick={() => navigate('/')} className="rounded-xl">
-            Continue to Vendibook
-          </Button>
+      <div className="min-h-screen flex flex-col bg-background">
+        <Header />
+        <div className="flex-1 flex items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
       </div>
     );
   }
+
+  if (status === 'verified' || isVerified) {
+    return <VerifiedState onDone={() => goBackToOrigin(navigate)} />;
+  }
+
+  const isInProgress = status === 'pending' || status === 'processing';
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-vendibook-cream to-background flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        {/* Card */}
-        <div className="bg-card rounded-2xl shadow-lg p-8 text-center">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 mb-6">
-            <Shield className="h-8 w-8 text-primary" />
-          </div>
+    <div className="min-h-screen flex flex-col bg-background">
+      <Header />
+      <main className="flex-1 flex items-start justify-center px-4 py-10 md:py-16">
+        <div className="w-full max-w-xl">
+          <div className="rounded-lg border border-border bg-card p-6 md:p-8 shadow-sm">
+            {/* Icon + hierarchy */}
+            <div className="flex items-center justify-center w-14 h-14 rounded-full bg-primary/10 mb-5">
+              <Shield className="h-7 w-7 text-primary" />
+            </div>
 
-          <h1 className="text-2xl font-bold text-foreground mb-3">Verify Your Identity</h1>
-          
-          <p className="text-muted-foreground mb-6">
-            To ensure a safe marketplace for everyone, we require identity verification for all users. 
-            This helps protect both hosts and renters.
-          </p>
+            <h1 className="text-2xl md:text-[28px] font-semibold text-foreground leading-tight">
+              Verify your identity
+            </h1>
+            <p className="text-foreground/70 mt-2 text-[15px] leading-relaxed">
+              Verification keeps Vendibook safe for high-value sales and unlocks
+              publishing.
+            </p>
 
-          {verificationStatus === 'pending' || verificationStatus === 'processing' ? (
-            <>
-              <div className="bg-amber-50 border border-foreground rounded-xl p-4 mb-6">
-                <div className="flex items-start gap-3">
-                  <AlertCircle className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" />
-                  <div className="text-left">
-                    <p className="text-sm font-medium text-amber-800">Verification in Progress</p>
-                    <p className="text-sm text-amber-700 mt-1">
-                      Complete the verification in the other tab. Once done, click the button below to check your status.
-                    </p>
-                  </div>
-                </div>
+            {/* What to expect */}
+            <ol className="mt-6 space-y-3">
+              <ExpectStep
+                index={1}
+                icon={IdCard}
+                title="Take a photo of your government ID"
+              />
+              <ExpectStep
+                index={2}
+                icon={UserRound}
+                title="Take a quick selfie"
+              />
+              <ExpectStep
+                index={3}
+                icon={CheckCircle2}
+                title="Get verified — usually under a minute"
+              />
+            </ol>
+
+            {/* In-progress banner */}
+            {isInProgress && (
+              <div className="mt-6 rounded-md border border-amber-500/30 bg-amber-500/10 p-4">
+                <p className="text-sm font-medium text-amber-200">
+                  Verification in progress
+                </p>
+                <p className="text-sm text-amber-100/80 mt-1">
+                  Finish the steps in the other tab, then tap below to refresh
+                  your status.
+                </p>
               </div>
-              <Button
-                onClick={checkVerificationStatus}
-                className="w-full rounded-xl mb-3"
-                disabled={isLoading}
-              >
-                {isLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-                Check Verification Status
-              </Button>
-            </>
-          ) : (
-            <Button
-              onClick={startVerification}
-              className="w-full rounded-xl mb-3"
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+            )}
+
+            {/* Primary CTA */}
+            <div className="mt-7 space-y-3">
+              {isInProgress ? (
+                <Button
+                  onClick={() => {
+                    setIsLoading(true);
+                    void checkStatus().finally(() => setIsLoading(false));
+                  }}
+                  size="lg"
+                  className="w-full"
+                  disabled={isLoading}
+                >
+                  {isLoading ? (
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  ) : null}
+                  Check verification status
+                </Button>
               ) : (
-                <ExternalLink className="h-4 w-4 mr-2" />
+                <Button
+                  onClick={startVerification}
+                  size="lg"
+                  className="w-full"
+                  disabled={isLoading}
+                >
+                  {isLoading ? (
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  ) : (
+                    <ExternalLink className="h-4 w-4 mr-2" />
+                  )}
+                  Start verification
+                </Button>
               )}
-              Start Verification
-            </Button>
-          )}
 
-          <Button
-            variant="ghost"
-            onClick={skipForNow}
-            className="w-full text-muted-foreground"
-          >
-            Skip for now
-          </Button>
+              <button
+                type="button"
+                onClick={() => goBackToOrigin(navigate)}
+                className="w-full text-sm text-foreground/60 hover:text-foreground transition-colors py-2"
+              >
+                Skip for now
+              </button>
+            </div>
 
-          <p className="text-xs text-muted-foreground mt-6">
-            Powered by Stripe Identity. Your data is securely encrypted and protected.
-          </p>
+            {/* Trust row */}
+            <div className="mt-8 pt-6 border-t border-border grid gap-4 md:grid-cols-3">
+              <TrustCell
+                media={
+                  <img
+                    src={stripeWordmark}
+                    alt="Stripe"
+                    className="h-4 w-auto object-contain"
+                  />
+                }
+                title="Powered by Stripe Identity"
+                body="Bank-grade verification, trusted worldwide."
+              />
+              <TrustCell
+                media={<Lock className="h-5 w-5 text-foreground/80" />}
+                title="Encrypted end-to-end"
+                body="Your ID is reviewed by Stripe. Vendibook never stores your document."
+              />
+              <TrustCell
+                media={
+                  <img
+                    src={verifiedBadge}
+                    alt="Verified"
+                    className="h-6 w-6 object-contain"
+                  />
+                }
+                title="Get a Verified badge"
+                body="Buyers can see it — it earns trust and closes deals faster."
+              />
+            </div>
+
+            <p className="text-xs text-foreground/50 mt-6 leading-relaxed">
+              By continuing you agree to share the information required for
+              Stripe Identity to verify you. See our{' '}
+              <a
+                href="/privacy"
+                className="underline underline-offset-2 hover:text-foreground/80"
+              >
+                Privacy Policy
+              </a>
+              .
+            </p>
+          </div>
         </div>
-
-        <TrustModule
-          className="mt-4"
-          variant="compact"
-          points={IDENTITY_TRUST_POINTS}
-          disclaimer={IDENTITY_DISCLAIMER}
-        />
-      </div>
+      </main>
     </div>
   );
 };
 
+const ExpectStep = ({
+  index,
+  icon: Icon,
+  title,
+}: {
+  index: number;
+  icon: React.ComponentType<{ className?: string }>;
+  title: string;
+}) => (
+  <li className="flex items-center gap-3">
+    <div className="flex items-center justify-center h-8 w-8 rounded-md border border-border bg-muted/40 text-sm font-medium text-foreground/80 shrink-0">
+      {index}
+    </div>
+    <Icon className="h-4 w-4 text-foreground/60 shrink-0" />
+    <span className="text-[15px] text-foreground">{title}</span>
+  </li>
+);
+
+const TrustCell = ({
+  media,
+  title,
+  body,
+}: {
+  media: React.ReactNode;
+  title: string;
+  body: string;
+}) => (
+  <div className="flex flex-col gap-2">
+    <div className="h-6 flex items-center">{media}</div>
+    <p className="text-sm font-medium text-foreground leading-snug">{title}</p>
+    <p className="text-xs text-foreground/60 leading-relaxed">{body}</p>
+  </div>
+);
+
+const VerifiedState = ({ onDone }: { onDone: () => void }) => (
+  <div className="min-h-screen flex flex-col bg-background">
+    <Header />
+    <main className="flex-1 flex items-start justify-center px-4 py-10 md:py-16">
+      <div className="w-full max-w-lg rounded-lg border border-border bg-card p-6 md:p-8 shadow-sm text-center">
+        <div className="mx-auto w-20 h-20 flex items-center justify-center">
+          <img
+            src={verifiedBadge}
+            alt="Verified"
+            className="h-20 w-20 object-contain"
+          />
+        </div>
+        <h1 className="text-2xl font-semibold mt-4">You're verified</h1>
+        <p className="text-foreground/70 mt-2">
+          Your Verified badge is now live on your profile and listings.
+        </p>
+
+        <ul className="mt-6 text-left space-y-2 border-t border-border pt-6">
+          <UnlockedRow text="Publish listings without holds" />
+          <UnlockedRow text="Higher visibility in search" />
+          <UnlockedRow text="Buyers see a Verified badge on your profile" />
+        </ul>
+
+        <Button onClick={onDone} size="lg" className="w-full mt-6">
+          Continue
+          <ArrowRight className="h-4 w-4 ml-2" />
+        </Button>
+      </div>
+    </main>
+  </div>
+);
+
+const UnlockedRow = ({ text }: { text: string }) => (
+  <li className="flex items-center gap-2 text-sm text-foreground">
+    <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
+    {text}
+  </li>
+);
+
 export default IdentityVerification;
+
+// unused import guard for tree-shakers keeping the icon in bundle
+export const _kept = Camera;
