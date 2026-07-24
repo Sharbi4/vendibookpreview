@@ -13,8 +13,12 @@ const log = (step: string, details?: unknown) =>
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
-  const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
-  const webhookSecret = Deno.env.get("STRIPE_MONETIZATION_WEBHOOK_SECRET");
+  const stripeKey = Deno.env.get("STRIPE_SECRET_KEY") ?? Deno.env.get("STRIPE_TEST_API_KEY");
+  // Prefer the monetization-specific signing secret; fall back to the shared one
+  // so a single-endpoint Stripe setup still works in test mode.
+  const webhookSecret =
+    Deno.env.get("STRIPE_MONETIZATION_WEBHOOK_SECRET") ??
+    Deno.env.get("STRIPE_WEBHOOK_SECRET");
   if (!stripeKey || !webhookSecret) {
     return new Response("Missing Stripe config", { status: 500, headers: corsHeaders });
   }
