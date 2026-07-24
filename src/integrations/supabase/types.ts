@@ -1114,6 +1114,96 @@ export type Database = {
           },
         ]
       }
+      discount_code_redemptions: {
+        Row: {
+          code_id: string
+          id: string
+          purchase_id: string
+          redeemed_at: string
+          user_id: string | null
+        }
+        Insert: {
+          code_id: string
+          id?: string
+          purchase_id: string
+          redeemed_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          code_id?: string
+          id?: string
+          purchase_id?: string
+          redeemed_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "discount_code_redemptions_code_id_fkey"
+            columns: ["code_id"]
+            isOneToOne: false
+            referencedRelation: "discount_codes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "discount_code_redemptions_purchase_id_fkey"
+            columns: ["purchase_id"]
+            isOneToOne: false
+            referencedRelation: "monetization_purchases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      discount_codes: {
+        Row: {
+          active: boolean
+          amount_off_cents: number | null
+          applicable_categories: Database["public"]["Enums"]["monetization_product_category"][]
+          applicable_product_ids: string[]
+          code: string
+          created_at: string
+          description: string | null
+          ends_at: string | null
+          id: string
+          max_uses: number | null
+          percent_off: number | null
+          starts_at: string | null
+          updated_at: string
+          uses: number
+        }
+        Insert: {
+          active?: boolean
+          amount_off_cents?: number | null
+          applicable_categories?: Database["public"]["Enums"]["monetization_product_category"][]
+          applicable_product_ids?: string[]
+          code: string
+          created_at?: string
+          description?: string | null
+          ends_at?: string | null
+          id?: string
+          max_uses?: number | null
+          percent_off?: number | null
+          starts_at?: string | null
+          updated_at?: string
+          uses?: number
+        }
+        Update: {
+          active?: boolean
+          amount_off_cents?: number | null
+          applicable_categories?: Database["public"]["Enums"]["monetization_product_category"][]
+          applicable_product_ids?: string[]
+          code?: string
+          created_at?: string
+          description?: string | null
+          ends_at?: string | null
+          id?: string
+          max_uses?: number | null
+          percent_off?: number | null
+          starts_at?: string | null
+          updated_at?: string
+          uses?: number
+        }
+        Relationships: []
+      }
       edge_action_idempotency: {
         Row: {
           action: string
@@ -2041,6 +2131,77 @@ export type Database = {
           },
         ]
       }
+      listing_promotions: {
+        Row: {
+          active: boolean
+          created_at: string
+          ends_at: string
+          id: string
+          listing_id: string
+          metrics: Json
+          product_id: string
+          promo_type: Database["public"]["Enums"]["listing_promo_type"]
+          purchase_id: string
+          starts_at: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          ends_at: string
+          id?: string
+          listing_id: string
+          metrics?: Json
+          product_id: string
+          promo_type: Database["public"]["Enums"]["listing_promo_type"]
+          purchase_id: string
+          starts_at?: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          ends_at?: string
+          id?: string
+          listing_id?: string
+          metrics?: Json
+          product_id?: string
+          promo_type?: Database["public"]["Enums"]["listing_promo_type"]
+          purchase_id?: string
+          starts_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "listing_promotions_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "listing_promotions_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "public_listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "listing_promotions_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "monetization_products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "listing_promotions_purchase_id_fkey"
+            columns: ["purchase_id"]
+            isOneToOne: false
+            referencedRelation: "monetization_purchases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       listing_required_documents: {
         Row: {
           created_at: string
@@ -2472,6 +2633,197 @@ export type Database = {
             columns: ["message_id"]
             isOneToOne: false
             referencedRelation: "conversation_messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      monetization_products: {
+        Row: {
+          applicable_listing_types: string[]
+          billing_type: Database["public"]["Enums"]["monetization_billing_type"]
+          category: Database["public"]["Enums"]["monetization_product_category"]
+          created_at: string
+          created_by: string | null
+          currency: string
+          description: string | null
+          display_order: number
+          duration_days: number | null
+          features: Json
+          id: string
+          is_active: boolean
+          metadata: Json
+          name: string
+          price_cents: number
+          promo_ends_at: string | null
+          promo_price_cents: number | null
+          promo_starts_at: string | null
+          promo_type: Database["public"]["Enums"]["listing_promo_type"] | null
+          refund_policy: string | null
+          slug: string
+          stripe_price_id: string | null
+          stripe_product_id: string | null
+          updated_at: string
+          upgrade_eligibility: Json
+        }
+        Insert: {
+          applicable_listing_types?: string[]
+          billing_type?: Database["public"]["Enums"]["monetization_billing_type"]
+          category: Database["public"]["Enums"]["monetization_product_category"]
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          description?: string | null
+          display_order?: number
+          duration_days?: number | null
+          features?: Json
+          id?: string
+          is_active?: boolean
+          metadata?: Json
+          name: string
+          price_cents?: number
+          promo_ends_at?: string | null
+          promo_price_cents?: number | null
+          promo_starts_at?: string | null
+          promo_type?: Database["public"]["Enums"]["listing_promo_type"] | null
+          refund_policy?: string | null
+          slug: string
+          stripe_price_id?: string | null
+          stripe_product_id?: string | null
+          updated_at?: string
+          upgrade_eligibility?: Json
+        }
+        Update: {
+          applicable_listing_types?: string[]
+          billing_type?: Database["public"]["Enums"]["monetization_billing_type"]
+          category?: Database["public"]["Enums"]["monetization_product_category"]
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          description?: string | null
+          display_order?: number
+          duration_days?: number | null
+          features?: Json
+          id?: string
+          is_active?: boolean
+          metadata?: Json
+          name?: string
+          price_cents?: number
+          promo_ends_at?: string | null
+          promo_price_cents?: number | null
+          promo_starts_at?: string | null
+          promo_type?: Database["public"]["Enums"]["listing_promo_type"] | null
+          refund_policy?: string | null
+          slug?: string
+          stripe_price_id?: string | null
+          stripe_product_id?: string | null
+          updated_at?: string
+          upgrade_eligibility?: Json
+        }
+        Relationships: []
+      }
+      monetization_purchases: {
+        Row: {
+          amount_cents: number
+          created_at: string
+          currency: string
+          discount_applied_cents: number
+          discount_code_id: string | null
+          fulfillment_notes: string | null
+          fulfillment_status: string
+          guest_email: string | null
+          id: string
+          idempotency_key: string
+          listing_id: string | null
+          metadata: Json
+          paid_at: string | null
+          product_id: string
+          refund_amount_cents: number | null
+          refund_status: string | null
+          refunded_at: string | null
+          status: Database["public"]["Enums"]["monetization_purchase_status"]
+          stripe_customer_id: string | null
+          stripe_payment_intent_id: string | null
+          stripe_session_id: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          amount_cents: number
+          created_at?: string
+          currency?: string
+          discount_applied_cents?: number
+          discount_code_id?: string | null
+          fulfillment_notes?: string | null
+          fulfillment_status?: string
+          guest_email?: string | null
+          id?: string
+          idempotency_key: string
+          listing_id?: string | null
+          metadata?: Json
+          paid_at?: string | null
+          product_id: string
+          refund_amount_cents?: number | null
+          refund_status?: string | null
+          refunded_at?: string | null
+          status?: Database["public"]["Enums"]["monetization_purchase_status"]
+          stripe_customer_id?: string | null
+          stripe_payment_intent_id?: string | null
+          stripe_session_id?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          amount_cents?: number
+          created_at?: string
+          currency?: string
+          discount_applied_cents?: number
+          discount_code_id?: string | null
+          fulfillment_notes?: string | null
+          fulfillment_status?: string
+          guest_email?: string | null
+          id?: string
+          idempotency_key?: string
+          listing_id?: string | null
+          metadata?: Json
+          paid_at?: string | null
+          product_id?: string
+          refund_amount_cents?: number | null
+          refund_status?: string | null
+          refunded_at?: string | null
+          status?: Database["public"]["Enums"]["monetization_purchase_status"]
+          stripe_customer_id?: string | null
+          stripe_payment_intent_id?: string | null
+          stripe_session_id?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_monetization_purchases_discount"
+            columns: ["discount_code_id"]
+            isOneToOne: false
+            referencedRelation: "discount_codes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "monetization_purchases_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "monetization_purchases_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "public_listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "monetization_purchases_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "monetization_products"
             referencedColumns: ["id"]
           },
         ]
@@ -4373,6 +4725,36 @@ export type Database = {
         }
         Relationships: []
       }
+      stripe_webhook_events: {
+        Row: {
+          error_message: string | null
+          event_type: string
+          id: string
+          payload: Json
+          processed_at: string
+          status: string
+          stripe_event_id: string
+        }
+        Insert: {
+          error_message?: string | null
+          event_type: string
+          id?: string
+          payload: Json
+          processed_at?: string
+          status?: string
+          stripe_event_id: string
+        }
+        Update: {
+          error_message?: string | null
+          event_type?: string
+          id?: string
+          payload?: Json
+          processed_at?: string
+          status?: string
+          stripe_event_id?: string
+        }
+        Relationships: []
+      }
       support_ticket_attachments: {
         Row: {
           content_type: string | null
@@ -6029,6 +6411,14 @@ export type Database = {
         | "vendor_lot"
         | "vendor_space"
       listing_mode: "rent" | "sale"
+      listing_promo_type:
+        | "featured_7"
+        | "featured_30"
+        | "top_of_search"
+        | "highlight"
+        | "motivated_seller"
+        | "email_campaign"
+        | "social_feature"
       listing_status: "draft" | "published" | "paused" | "archived"
       marketing_event_type:
         | "delivered"
@@ -6049,6 +6439,27 @@ export type Database = {
         | "failed"
         | "canceled"
         | "broadcast_failed"
+      monetization_billing_type:
+        | "one_time"
+        | "recurring"
+        | "percentage"
+        | "custom"
+      monetization_product_category:
+        | "listing_upgrade"
+        | "seller_service"
+        | "buyer_service"
+        | "protected_sale"
+        | "host_subscription"
+        | "permit_upgrade"
+        | "partner_service"
+        | "promo_credit"
+      monetization_purchase_status:
+        | "pending"
+        | "paid"
+        | "fulfilled"
+        | "refunded"
+        | "failed"
+        | "cancelled"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -6211,6 +6622,15 @@ export const Constants = {
         "vendor_space",
       ],
       listing_mode: ["rent", "sale"],
+      listing_promo_type: [
+        "featured_7",
+        "featured_30",
+        "top_of_search",
+        "highlight",
+        "motivated_seller",
+        "email_campaign",
+        "social_feature",
+      ],
       listing_status: ["draft", "published", "paused", "archived"],
       marketing_event_type: [
         "delivered",
@@ -6232,6 +6652,30 @@ export const Constants = {
         "failed",
         "canceled",
         "broadcast_failed",
+      ],
+      monetization_billing_type: [
+        "one_time",
+        "recurring",
+        "percentage",
+        "custom",
+      ],
+      monetization_product_category: [
+        "listing_upgrade",
+        "seller_service",
+        "buyer_service",
+        "protected_sale",
+        "host_subscription",
+        "permit_upgrade",
+        "partner_service",
+        "promo_credit",
+      ],
+      monetization_purchase_status: [
+        "pending",
+        "paid",
+        "fulfilled",
+        "refunded",
+        "failed",
+        "cancelled",
       ],
     },
   },
