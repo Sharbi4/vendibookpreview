@@ -42,7 +42,7 @@ export function useEntitlements() {
           .from('monetization_purchases')
           .select('id,status,created_at,listing_id,product_id,monetization_products(slug,name,kind)')
           .eq('user_id', user.id)
-          .in('status', ['completed', 'refunded']),
+          .in('status', ['paid', 'fulfilled', 'refunded']),
       ]);
 
       const all: Entitlement[] = [];
@@ -105,6 +105,6 @@ export function useEntitlements() {
 
 function isBetter(a: Entitlement, b: Entitlement) {
   const rank = (s: Entitlement['status']) =>
-    s === 'active' ? 4 : s === 'trialing' ? 3 : s === 'completed' ? 2 : s === 'past_due' ? 1 : 0;
+    s === 'active' ? 5 : s === 'trialing' ? 4 : s === 'fulfilled' ? 3 : s === 'paid' ? 2 : s === 'past_due' ? 1 : 0;
   return rank(a.status) > rank(b.status);
 }

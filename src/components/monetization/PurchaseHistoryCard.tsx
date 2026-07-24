@@ -13,7 +13,6 @@ type PurchaseRow = {
   amount_cents: number | null;
   currency: string | null;
   stripe_session_id: string | null;
-  stripe_receipt_url: string | null;
   listing_id: string | null;
   monetization_products?: { name?: string | null; slug?: string | null } | null;
 };
@@ -31,7 +30,8 @@ function formatMoney(cents: number | null, currency: string | null) {
 }
 
 const STATUS_VARIANT: Record<string, 'default' | 'secondary' | 'destructive' | 'outline'> = {
-  completed: 'default',
+  paid: 'default',
+  fulfilled: 'default',
   pending: 'secondary',
   refunded: 'outline',
   failed: 'destructive',
@@ -50,7 +50,7 @@ export function PurchaseHistoryCard() {
       setLoading(true);
       const { data, error } = await supabase
         .from('monetization_purchases')
-        .select('id,status,created_at,amount_cents,currency,stripe_session_id,stripe_receipt_url,listing_id,monetization_products(name,slug)')
+        .select('id,status,created_at,amount_cents,currency,stripe_session_id,listing_id,monetization_products(name,slug)')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
         .limit(20);
@@ -99,12 +99,10 @@ export function PurchaseHistoryCard() {
                     {formatMoney(r.amount_cents, r.currency)}
                   </div>
                   <Badge variant={variant} className="capitalize">{r.status}</Badge>
-                  {r.stripe_receipt_url && (
-                    <Button size="sm" variant="ghost" asChild>
-                      <a href={r.stripe_receipt_url} target="_blank" rel="noreferrer noopener">
-                        Receipt <ExternalLink className="ml-1 h-3 w-3" />
-                      </a>
-                    </Button>
+                  {r.stripe_session_id && (
+                    <span className="text-xs text-muted-foreground font-mono">
+                      #{r.stripe_session_id.slice(-8)}
+                    </span>
                   )}
                 </li>
               );
