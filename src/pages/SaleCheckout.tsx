@@ -10,7 +10,8 @@ import { useFreightEstimate } from '@/hooks/useFreightEstimate';
 import { supabase } from '@/integrations/supabase/client';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
-import { CheckoutOverlay } from '@/components/checkout';
+import { CheckoutOverlay, EmbeddedStripeCheckout } from '@/components/checkout';
+import { isEmbeddedCheckoutEnabled } from '@/lib/featureFlags';
 import { validators } from '@/components/ui/validated-input';
 import { trackFormSubmitConversion } from '@/lib/gtagConversions';
 import { trackPurchase, trackInitiateCheckout } from '@/lib/facebookCAPI';
@@ -102,6 +103,7 @@ const SaleCheckout = () => {
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [isPurchasing, setIsPurchasing] = useState(false);
   const [showCheckoutOverlay, setShowCheckoutOverlay] = useState(false);
+  const [embeddedCheckout, setEmbeddedCheckout] = useState<{ clientSecret: string; returnUrl: string } | null>(null);
   
 
   // Validation
@@ -493,6 +495,7 @@ const SaleCheckout = () => {
     try {
       const isVendibookFreight = fulfillmentSelected === 'vendibook_freight';
 
+      const useEmbedded = isEmbeddedCheckoutEnabled();
       const { data, error } = await supabase.functions.invoke('create-checkout', {
         body: {
           listing_id: listingId,
@@ -510,6 +513,7 @@ const SaleCheckout = () => {
           freight_cost: isVendibookFreight ? freightCost : 0,
           referral_code: referralValid ? referralCode : undefined,
           terms_id: termsId,
+          ui_mode: useEmbedded ? 'elements' : 'hosted',
         },
       });
 
@@ -531,12 +535,22 @@ const SaleCheckout = () => {
       });
 
       termsGate.reset();
+
+      if (useEmbedded && data.client_secret) {
+        const returnUrl = `${window.location.origin}/payment-success?session_id=${data.session_id}&escrow=true`;
+        setShowCheckoutOverlay(false);
+        setEmbeddedCheckout({ clientSecret: data.client_secret, returnUrl });
+        return;
+      }
+
+      // Hosted redirect fallback
       const stripeWindow = window.open(data.url, '_blank');
       if (!stripeWindow) {
         window.location.href = data.url;
       }
     } catch (error) {
       setShowCheckoutOverlay(false);
+      setEmbeddedCheckout(null);
       toast({
         title: 'Purchase Error',
         description: error instanceof Error ? error.message : 'Failed to start checkout',
@@ -546,6 +560,7 @@ const SaleCheckout = () => {
       setIsPurchasing(false);
     }
   };
+
 
 
 
