@@ -27,7 +27,7 @@ import EnhancedQuickHighlights from '@/components/listing-detail/EnhancedQuickHi
 import PricingSection from '@/components/listing-detail/PricingSection';
 import { AmenitiesSection } from '@/components/listing-detail/AmenitiesSection';
 import { ReportIssueButton } from '@/components/support/ReportIssueButton';
-import { Flag } from 'lucide-react';
+
 import { StickyMobileCTA } from '@/components/listing-detail/StickyMobileCTA';
 import ListingConciergeBox from '@/components/listing-detail/ListingConciergeBox';
 import { FavoriteButton } from '@/components/listing/FavoriteButton';
