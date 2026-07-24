@@ -155,17 +155,6 @@
     </image:image>
   </url>
   <url>
-    <loc>https://vendibook.com/listing/d02ec787-17cb-4e37-b1a7-e70dec639b23</loc>
-    <lastmod>2026-07-24</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/421aa58f-ac7e-4eaf-92e3-2b6be284fb0a/d02ec787-17cb-4e37-b1a7-e70dec639b23/1784602053546-46lyaf.jpg</image:loc>
-      <image:title>Ready-to-Operate Food Trailer in Miami – Fully Equipped</image:title>
-      <image:caption>Ready-to-Operate Food Trailer in Miami – Fully Equipped in Miami, FL on Vendibook</image:caption>
-    </image:image>
-  </url>
-  <url>
     <loc>https://vendibook.com/listing/1791e770-182f-4723-a207-59f727e8310e</loc>
     <lastmod>2026-06-26</lastmod>
     <changefreq>weekly</changefreq>
@@ -185,6 +174,17 @@
       <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/14242a2e-3e7f-4794-9aed-fa72a5bbf105/b8e79191-e69d-483c-bad1-8ebcfc6fb4b6/1784040291013-pxs3p.jpg</image:loc>
       <image:title>Fully equipped food truck, full kitchen, newly built kitchen, Mint condition</image:title>
       <image:caption>Fully equipped food truck, full kitchen, newly built kitchen, Mint condition in Zephyrhills, FL on Vendibook</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://vendibook.com/listing/d02ec787-17cb-4e37-b1a7-e70dec639b23</loc>
+    <lastmod>2026-07-24</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/421aa58f-ac7e-4eaf-92e3-2b6be284fb0a/d02ec787-17cb-4e37-b1a7-e70dec639b23/1784602053546-46lyaf.jpg</image:loc>
+      <image:title>Ready-to-Operate Food Trailer in Miami – Fully Equipped</image:title>
+      <image:caption>Ready-to-Operate Food Trailer in Miami – Fully Equipped in Miami, FL on Vendibook</image:caption>
     </image:image>
   </url>
   <url>
