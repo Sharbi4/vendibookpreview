@@ -74,6 +74,7 @@ const ServicesHub = lazy(() => import("./pages/ServicesHub"));
 const BuyerServicesHub = lazy(() => import("./pages/BuyerServicesHub"));
 const BuyerDashboard = lazy(() => import("./pages/BuyerDashboard"));
 const HostProPlans = lazy(() => import("./pages/HostProPlans"));
+const AccountSubscription = lazy(() => import("./pages/AccountSubscription"));
 const Pricing = lazy(() => import("./pages/Pricing"));
 const Purchases = lazy(() => import("./pages/Purchases"));
 const PermitPathUpgrades = lazy(() => import("./pages/PermitPathUpgrades"));
