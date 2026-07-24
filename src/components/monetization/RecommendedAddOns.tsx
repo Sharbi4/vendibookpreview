@@ -154,14 +154,14 @@ export function RecommendedAddOns({
               <Button
                 size="sm"
                 className="mt-auto gap-2"
-                disabled={busy === p.slug}
-                onClick={() => handleBuy(p.slug)}
+                disabled={busy === p.slug || pendingSlug === p.slug}
+                onClick={() => handleBuy(p)}
               >
-                {busy === p.slug ? (
+                {busy === p.slug || pendingSlug === p.slug ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
                   <>
-                    Add <ArrowRight className="h-4 w-4" />
+                    {p.billing_type === 'recurring' ? 'Review terms' : 'Add'} <ArrowRight className="h-4 w-4" />
                   </>
                 )}
               </Button>
@@ -169,6 +169,7 @@ export function RecommendedAddOns({
           );
         })}
       </CardContent>
+      {consentDialog}
     </Card>
   );
 }
