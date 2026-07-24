@@ -53,6 +53,7 @@ import type { DocumentType } from '@/types/documents';
 import { AffirmBadge } from '@/components/ui/AffirmBadge';
 import { AfterpayBadge } from '@/components/ui/AfterpayBadge';
 import { AuthGateOfferModal } from '@/components/offers/AuthGateOfferModal';
+import { TrustModule, PAYMENT_TRUST_POINTS, PAYMENT_DISCLAIMER } from '@/components/journey';
 import { trackLeadEvent } from '@/lib/leadTracking';
 import { detectAvailabilityConflict } from '@/lib/availabilityConflict';
 import { ReferralCodeField } from '@/components/referrals/ReferralCodeField';
@@ -1139,6 +1140,14 @@ const BookingCheckout = () => {
                           Your payment is protected by Vendibook
                         </span>
                       </div>
+
+                      {/* Trust reinforcement right before the payment CTA */}
+                      <TrustModule
+                        variant="compact"
+                        title="What we do to protect your payment"
+                        points={PAYMENT_TRUST_POINTS}
+                        disclaimer={PAYMENT_DISCLAIMER}
+                      />
 
                       {/* Submit button */}
                       <Button
