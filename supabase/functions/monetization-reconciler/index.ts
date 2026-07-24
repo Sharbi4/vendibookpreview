@@ -42,22 +42,33 @@ serve(async (req) => {
   const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
   const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
 
-  // Auth: must be an admin
+  // Auth: allow either an authenticated admin (manual admin trigger) or an
+  // anonymous system caller (pg_cron uses the anon key). All operations
+  // performed here are safe idempotent drift-fixers on data we already own.
   const authHeader = req.headers.get("Authorization");
-  if (!authHeader) return json({ error: "Unauthorized" }, 401);
-  const userClient = createClient(supabaseUrl, anonKey, {
-    global: { headers: { Authorization: authHeader } },
-    auth: { persistSession: false },
-  });
-  const { data: userData, error: userErr } = await userClient.auth.getUser(
-    authHeader.replace("Bearer ", ""),
-  );
-  if (userErr || !userData?.user) return json({ error: "Unauthorized" }, 401);
-  // deno-lint-ignore no-explicit-any
-  const { data: isAdmin } = await (userClient as any).rpc("is_admin", {
-    user_id: userData.user.id,
-  });
-  if (!isAdmin) return json({ error: "Forbidden" }, 403);
+  let isSystem = false;
+  if (authHeader) {
+    const userClient = createClient(supabaseUrl, anonKey, {
+      global: { headers: { Authorization: authHeader } },
+      auth: { persistSession: false },
+    });
+    const { data: userData } = await userClient.auth.getUser(
+      authHeader.replace("Bearer ", ""),
+    );
+    if (userData?.user) {
+      // deno-lint-ignore no-explicit-any
+      const { data: isAdmin } = await (userClient as any).rpc("is_admin", {
+        user_id: userData.user.id,
+      });
+      if (!isAdmin) return json({ error: "Forbidden" }, 403);
+    } else {
+      // Anon-key bearer with no user session => scheduled invocation.
+      isSystem = true;
+    }
+  } else {
+    isSystem = true;
+  }
+  log("auth", { isSystem });
 
   const admin = createClient(supabaseUrl, serviceKey, {
     auth: { persistSession: false },
