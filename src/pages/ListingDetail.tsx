@@ -917,7 +917,7 @@ const ListingDetail = () => {
         </div>
       </nav>
 
-      </nav>
+
 
       <div className="container pb-8 flex justify-center">
         <ReportIssueButton
