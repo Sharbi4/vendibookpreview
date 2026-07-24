@@ -107,21 +107,21 @@ export const explainers: Explainer[] = [
     secondaryCtaLabel: 'How Rentals Work',
     secondaryCtaRoute: '/how-it-works',
     transcript:
-      "Okay — so maybe you're not looking to buy just yet. Maybe you've got a catering gig, a weekend pop-up, a festival coming up, or you just want to test a concept before you commit. That's exactly what renting on Vendibook is for. Here's how it flows. You start by searching rentals — your location, your dates, the kind of equipment you need — and when a listing catches your eye, you open the booking calendar. You'll see what's available, what's already booked, and what you've picked, all color-coded, so there's no guesswork. Choose your dates, review the price and the full cost breakdown, and send your request — with your intended use, your business info, and any documents the host asked for. The host reviews everything from their dashboard, and once they approve, the calendar updates automatically. From there, you just work through your requirements — identity verification, driver's license, insurance if it applies, business info, and the rental agreement. Online rental payments go through Stripe, safely. Your renter dashboard then keeps the payment status, booking details, documents, messages, and the next step all in one view. At pickup, and again at return, both sides confirm the handoff — so the whole rental has a clean, clear record from start to finish. Start smaller, test the idea, and grow from there.",
+      "Okay — picture this. You've got a three-day music festival next month, and buying a truck outright doesn't make sense yet. That's exactly what renting on Vendibook is for. Let me walk you through it, step by step. Step one — search rentals by your city, your dates, say Friday through Sunday, and the equipment you need, like a smoker or a full BBQ trailer. Step two — open the booking calendar. Available dates are green, booked dates are gray, and your selection lights up in orange, so there's zero guesswork. You'll see the nightly rate, the weekly rate if you're going longer, and the full cost breakdown right there. Step three — submit your booking request. You tell the host what you're using it for, share your business info, and upload anything they've asked for, like your event permit or a certificate of insurance. Step four — the host reviews everything from their host dashboard, approves, and the calendar locks in automatically. Step five — you knock out your requirements: identity verification, driver's license, insurance if it applies, and the rental agreement. Step six — you pay securely through Stripe, and your renter dashboard becomes mission control. Payment status, booking details, uploaded documents, messages with the host, and the next required action — all in one view. Step seven — at pickup, both sides do a walkaround and confirm the handoff inside the app. Same thing at return. Clean record, start to finish. Rent it, run your event, and grow from there.",
     scenes: buildScenes(
       rentingScenes,
       [
-        "Not ready to buy? Renting is how a lot of food businesses get going.",
-        "First step — find a rental that actually fits what you're doing.",
-        "Open the calendar, pick your dates, and see your total upfront.",
-        "Send everything the host needs, in one organized request.",
-        "Once they approve, the calendar updates automatically.",
-        "Then you work through your requirements — verification, docs, the agreement.",
-        "Pay securely through Stripe and track everything in one place.",
-        "Book it, run your event, and you're on your way.",
+        "Say you've got a festival next month — renting is how a lot of businesses start.",
+        "Step one: search by city, your dates, and the equipment you actually need.",
+        "Step two: open the calendar — available, booked, and your pick, color-coded.",
+        "Step three: send your dates, intended use, and any docs the host requires.",
+        "Step four: host approves from their dashboard, calendar locks in.",
+        "Step five: knock out verification, license, insurance, and the agreement.",
+        "Step six: pay through Stripe, and track everything from your renter dashboard.",
+        "Step seven: confirm pickup and return in-app — clean record, start to finish.",
       ],
       [
-        'Why rent',
+        'Your scenario',
         'Search rentals',
         'Booking calendar',
         'Booking request',
@@ -131,6 +131,7 @@ export const explainers: Explainer[] = [
         'Pickup & return handoff',
       ],
     ),
+
   },
 
   {
