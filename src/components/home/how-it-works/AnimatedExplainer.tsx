@@ -5,6 +5,7 @@ import type { Explainer } from './data/explainers';
 import { cn } from '@/lib/utils';
 import { createAmbientBed, type AmbientBed } from './audio/ambientBed';
 import { trackLeadEvent } from '@/lib/leadTracking';
+import { useAdaptiveMediaPolicy } from '@/lib/adaptiveMedia';
 
 interface Props {
   explainer: Explainer;
