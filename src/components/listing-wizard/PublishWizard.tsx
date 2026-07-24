@@ -3945,6 +3945,9 @@ export const PublishWizard: React.FC = () => {
                     mode={listing.mode as 'rent' | 'sale' | null}
                   />
 
+                  {/* Persisted AI health score */}
+                  <ListingHealthScoreCard listingId={listing?.id} />
+
                   {/* Missing Requirements Warning */}
                   {!canPublish && (
                     <div className="p-4 rounded-xl border border-border bg-muted/30">
