@@ -20,6 +20,8 @@ export const DOCUMENT_TYPES = {
   RENTER_TERMS: 'renter_terms',
   PAY_IN_PERSON_ACKNOWLEDGMENT: 'pay_in_person_acknowledgment',
   FEATURED_LISTING_TERMS: 'featured_listing_terms',
+  SUBSCRIPTION_TERMS: 'subscription_terms',
+  REFUND_CANCELLATION_POLICY: 'refund_cancellation_policy',
 } as const;
 
 export type DocumentType = (typeof DOCUMENT_TYPES)[keyof typeof DOCUMENT_TYPES];
@@ -32,6 +34,8 @@ export const CURRENT_VERSIONS: Record<DocumentType, string> = {
   [DOCUMENT_TYPES.RENTER_TERMS]: 'v1',
   [DOCUMENT_TYPES.PAY_IN_PERSON_ACKNOWLEDGMENT]: 'v1',
   [DOCUMENT_TYPES.FEATURED_LISTING_TERMS]: 'v1',
+  [DOCUMENT_TYPES.SUBSCRIPTION_TERMS]: 'v1',
+  [DOCUMENT_TYPES.REFUND_CANCELLATION_POLICY]: 'v1',
 };
 
 /** Slugs used in `/legal/:slug` URLs — must match `legal_documents.slug`. */
@@ -43,6 +47,8 @@ export const DOCUMENT_SLUGS: Record<DocumentType, string> = {
   [DOCUMENT_TYPES.RENTER_TERMS]: 'renter-terms',
   [DOCUMENT_TYPES.PAY_IN_PERSON_ACKNOWLEDGMENT]: 'pay-in-person-terms',
   [DOCUMENT_TYPES.FEATURED_LISTING_TERMS]: 'featured-listing-terms',
+  [DOCUMENT_TYPES.SUBSCRIPTION_TERMS]: 'subscription-terms',
+  [DOCUMENT_TYPES.REFUND_CANCELLATION_POLICY]: 'refund-cancellation-policy',
 };
 
 /**
@@ -63,6 +69,7 @@ export const CONSENT_TRIGGERS = {
   REFERRAL: 'referral',
   REVIEW_SUBMISSION: 'review_submission',
   CANCELLATION: 'cancellation',
+  SUBSCRIPTION_START: 'subscription_start',
 } as const;
 
 export type ConsentTrigger =
