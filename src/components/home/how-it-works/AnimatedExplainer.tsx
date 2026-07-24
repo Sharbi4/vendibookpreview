@@ -95,7 +95,10 @@ export const AnimatedExplainer = ({ explainer, onProgress, onEnded, onSceneChang
   const [audioDurationMs, setAudioDurationMs] = useState<number>(0);
 
   // Prefetch narration on mount so the first play doesn't stall on the network.
+  // Skipped entirely on Save-Data / slow-2g so mobile users on metered plans
+  // don't pay the TTS payload cost — scenes still play silently with captions.
   useEffect(() => {
+    if (adaptive.disableTts) return;
     let cancelled = false;
     let localUrl: string | null = null;
     (async () => {
