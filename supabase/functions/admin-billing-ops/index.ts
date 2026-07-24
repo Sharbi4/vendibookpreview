@@ -36,6 +36,14 @@ async function upsertSubscription(
   const userId = (sub.metadata?.user_id as string) || fallbackUserId || null;
   const tier = tierFromPrice(priceId, sub.metadata?.tier as string | undefined);
 
+  // Stripe API 2025-08-27.basil moved current_period_* onto the subscription item.
+  // deno-lint-ignore no-explicit-any
+  const itemAny = item as any;
+  const periodStartUnix: number | null =
+    itemAny?.current_period_start ?? sub.current_period_start ?? null;
+  const periodEndUnix: number | null =
+    itemAny?.current_period_end ?? sub.current_period_end ?? null;
+
   const patch = {
     user_id: userId,
     tier: tier ?? "starter",
@@ -43,8 +51,8 @@ async function upsertSubscription(
     stripe_subscription_id: sub.id,
     stripe_price_id: priceId,
     status: sub.status,
-    current_period_start: sub.current_period_start ? new Date(sub.current_period_start * 1000).toISOString() : null,
-    current_period_end: sub.current_period_end ? new Date(sub.current_period_end * 1000).toISOString() : null,
+    current_period_start: periodStartUnix ? new Date(periodStartUnix * 1000).toISOString() : null,
+    current_period_end: periodEndUnix ? new Date(periodEndUnix * 1000).toISOString() : null,
     trial_end: sub.trial_end ? new Date(sub.trial_end * 1000).toISOString() : null,
     cancel_at: sub.cancel_at ? new Date(sub.cancel_at * 1000).toISOString() : null,
     cancel_at_period_end: !!sub.cancel_at_period_end,
