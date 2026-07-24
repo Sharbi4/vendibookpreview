@@ -120,7 +120,7 @@ export default function AdminRevenue() {
     toast.success(next ? 'Product activated' : 'Product deactivated');
   };
 
-  if (authLoading) return null;
+  if (authLoading || isCheckingAdmin) return null;
   if (!user) return <Navigate to="/auth" replace />;
   if (!isAdmin) return <Navigate to="/" replace />;
 
