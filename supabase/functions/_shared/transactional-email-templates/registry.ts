@@ -54,6 +54,10 @@ import { template as cashPurchaseRequestBuyer } from './cash-purchase-request-bu
 import { template as cashSellerConfirmedBuyer } from './cash-seller-confirmed-buyer.tsx'
 import { template as cashBuyerConfirmedSeller } from './cash-buyer-confirmed-seller.tsx'
 import { template as listingRecoveryCs } from './listing-recovery-cs.tsx'
+import { template as subscriptionActivated } from './subscription-activated.tsx'
+import { template as subscriptionUpdated } from './subscription-updated.tsx'
+import { template as subscriptionPaymentFailed } from './subscription-payment-failed.tsx'
+import { template as subscriptionCancelled } from './subscription-cancelled.tsx'
 
 
 export const TEMPLATES: Record<string, TemplateEntry> = {
@@ -102,5 +106,9 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'cash-purchase-request-buyer': cashPurchaseRequestBuyer,
   'cash-seller-confirmed-buyer': cashSellerConfirmedBuyer,
   'cash-buyer-confirmed-seller': cashBuyerConfirmedSeller,
+  'subscription-activated': subscriptionActivated,
+  'subscription-updated': subscriptionUpdated,
+  'subscription-payment-failed': subscriptionPaymentFailed,
+  'subscription-cancelled': subscriptionCancelled,
 }
 
