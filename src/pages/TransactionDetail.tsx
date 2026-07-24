@@ -44,7 +44,7 @@ export default function TransactionDetail() {
       if (data.listing_id) {
         const { data: l } = await supabase
           .from('listings')
-          .select('id, title, images, category')
+          .select('id, title, image_urls, category')
           .eq('id', data.listing_id)
           .maybeSingle();
         if (!cancelled) setListing(l as Listing);
@@ -95,7 +95,7 @@ export default function TransactionDetail() {
     status: tx.status,
   });
 
-  const heroImg = listing?.images?.[0] ?? null;
+  const heroImg = listing?.image_urls?.[0] ?? null;
   const subtotal = Number(tx.amount ?? 0);
   const fees = Number(tx.platform_fee ?? 0);
   const delivery = Number(tx.delivery_fee ?? 0) + Number(tx.freight_cost ?? 0);
