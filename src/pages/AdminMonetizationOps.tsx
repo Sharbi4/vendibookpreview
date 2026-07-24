@@ -324,7 +324,9 @@ export default function AdminMonetizationOps() {
           </div>
         </TabsContent>
 
-        <TabsContent value="refunds" className="mt-4">
+        <TabsContent value="refunds" className="mt-4 space-y-3">
+          <IssueRefundCard onDone={load} />
+
           <div className="overflow-hidden rounded-xl border border-border">
             <table className="w-full text-sm">
               <thead className="bg-muted/50 text-xs uppercase tracking-wider text-muted-foreground">
