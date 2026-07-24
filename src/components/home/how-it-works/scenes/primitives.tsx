@@ -707,3 +707,194 @@ export const InboxRow = ({
     </div>
   </motion.div>
 );
+
+/* ---------------------------------------------------------------------------
+ * Enterprise chrome primitives
+ * -------------------------------------------------------------------------
+ * These sit around the existing product mocks to make every scene read like
+ * a real SaaS product screenshot — window chrome, secure URL, live indicators,
+ * animated KPI counters, sparkline data — instead of a flat card. They're
+ * applied inside DashboardMock / PaymentOptionsPanel / PayoutTimeline so
+ * every scene inherits the upgraded look with zero per-scene changes.
+ * ------------------------------------------------------------------------- */
+
+/** macOS-style window with a secure URL bar and live "connected" pill. */
+export const AppFrame = ({
+  url = 'app.vendibook.com',
+  path = '/dashboard',
+  children,
+  live = true,
+}: {
+  url?: string;
+  path?: string;
+  children: ReactNode;
+  live?: boolean;
+}) => (
+  <div className="relative w-full max-w-md overflow-hidden rounded-2xl border border-border bg-card/95 shadow-[0_30px_80px_-30px_hsl(var(--primary)/0.45),0_15px_40px_-15px_hsl(var(--foreground)/0.35)] ring-1 ring-border/60 backdrop-blur">
+    {/* Title bar */}
+    <div className="flex items-center gap-2 border-b border-border/70 bg-muted/40 px-3 py-2">
+      <div className="flex items-center gap-1.5">
+        <span className="h-2.5 w-2.5 rounded-full bg-[#ff5f57]" />
+        <span className="h-2.5 w-2.5 rounded-full bg-[#febc2e]" />
+        <span className="h-2.5 w-2.5 rounded-full bg-[#28c840]" />
+      </div>
+      <div className="mx-2 flex flex-1 items-center gap-1.5 rounded-md bg-background/80 px-2 py-1 text-[10px] font-medium text-muted-foreground ring-1 ring-border/60">
+        <Lock className="h-2.5 w-2.5 text-primary" />
+        <span className="truncate"><span className="text-foreground/70">{url}</span>{path}</span>
+      </div>
+      {live && (
+        <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-primary ring-1 ring-primary/30">
+          <LiveDot />
+          Live
+        </span>
+      )}
+    </div>
+    <div className="p-4">{children}</div>
+  </div>
+);
+
+/** A pulsing dot to signal "live" / connected state. */
+export const LiveDot = () => (
+  <span className="relative flex h-1.5 w-1.5">
+    <motion.span
+      className="absolute inline-flex h-full w-full rounded-full bg-primary/60"
+      animate={{ scale: [1, 2.2, 1], opacity: [0.6, 0, 0.6] }}
+      transition={{ duration: 1.8, repeat: Infinity, ease: 'easeOut' }}
+    />
+    <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-primary" />
+  </span>
+);
+
+/** Animated count-up KPI stat used inside dashboard footers. */
+export const KPIStat = ({
+  label,
+  value,
+  prefix = '',
+  suffix = '',
+  delta,
+  delay = 0,
+}: {
+  label: string;
+  value: number;
+  prefix?: string;
+  suffix?: string;
+  delta?: string;
+  delay?: number;
+}) => {
+  const [display, setDisplay] = useState(0);
+  useEffect(() => {
+    const startAt = performance.now() + delay * 1000;
+    let raf = 0;
+    const dur = 1100;
+    const tick = (now: number) => {
+      const t = Math.min(1, Math.max(0, (now - startAt) / dur));
+      const eased = 1 - Math.pow(1 - t, 3);
+      setDisplay(value * eased);
+      if (t < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [value, delay]);
+  const formatted = value >= 100
+    ? Math.round(display).toLocaleString()
+    : display.toFixed(1);
+  return (
+    <div className="flex-1 rounded-lg border border-border/70 bg-background/60 px-2.5 py-1.5">
+      <div className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">{label}</div>
+      <div className="mt-0.5 flex items-baseline gap-1">
+        <span className="text-sm font-bold tabular-nums text-foreground">
+          {prefix}{formatted}{suffix}
+        </span>
+        {delta && (
+          <span className="inline-flex items-center gap-0.5 text-[9px] font-semibold text-primary">
+            <TrendingUp className="h-2.5 w-2.5" />
+            {delta}
+          </span>
+        )}
+      </div>
+    </div>
+  );
+};
+
+/** Compact sparkline SVG that draws itself on mount. */
+export const Sparkline = ({
+  points = [12, 18, 14, 22, 20, 28, 26, 34, 32, 42, 40, 48],
+  width = 120,
+  height = 28,
+  delay = 0,
+}: {
+  points?: number[];
+  width?: number;
+  height?: number;
+  delay?: number;
+}) => {
+  const min = Math.min(...points);
+  const max = Math.max(...points);
+  const range = Math.max(1, max - min);
+  const step = width / (points.length - 1);
+  const path = points
+    .map((p, i) => {
+      const x = i * step;
+      const y = height - ((p - min) / range) * (height - 4) - 2;
+      return `${i === 0 ? 'M' : 'L'}${x.toFixed(1)},${y.toFixed(1)}`;
+    })
+    .join(' ');
+  const areaPath = `${path} L${width},${height} L0,${height} Z`;
+  return (
+    <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} className="overflow-visible">
+      <defs>
+        <linearGradient id="spark-fill" x1="0" x2="0" y1="0" y2="1">
+          <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity="0.35" />
+          <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      <motion.path
+        d={areaPath}
+        fill="url(#spark-fill)"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: delay + 0.4, duration: 0.5 }}
+      />
+      <motion.path
+        d={path}
+        fill="none"
+        stroke="hsl(var(--primary))"
+        strokeWidth={1.75}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        initial={{ pathLength: 0 }}
+        animate={{ pathLength: 1 }}
+        transition={{ delay, duration: 1.2, ease: 'easeOut' }}
+      />
+    </svg>
+  );
+};
+
+/** Rolling activity ticker — three most-recent events, staggered in. */
+export const ActivityTicker = ({
+  events,
+}: {
+  events: Array<{ label: string; time: string }>;
+}) => (
+  <div className="space-y-1">
+    <div className="flex items-center gap-1.5 text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">
+      <Activity className="h-2.5 w-2.5 text-primary" />
+      Recent activity
+    </div>
+    {events.map((e, i) => (
+      <motion.div
+        key={i}
+        initial={{ opacity: 0, x: -6 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ delay: 0.6 + i * 0.15 }}
+        className="flex items-center justify-between gap-2 rounded-md bg-background/60 px-2 py-1 text-[10px]"
+      >
+        <span className="flex items-center gap-1.5 truncate text-foreground">
+          <LiveDot />
+          <span className="truncate font-medium">{e.label}</span>
+        </span>
+        <span className="flex-shrink-0 tabular-nums text-muted-foreground">{e.time}</span>
+      </motion.div>
+    ))}
+  </div>
+);
