@@ -9,6 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import BoostListingPrompt from '@/components/dashboard/BoostListingPrompt';
 import { UpgradePackageCards } from '@/components/monetization/UpgradePackageCards';
 import { PromoteListingPanel } from '@/components/monetization/PromoteListingPanel';
+import { RecommendedAddOns } from '@/components/monetization/RecommendedAddOns';
 import PublishStatusSummary from '@/components/listing-wizard/PublishStatusSummary';
 import { reportError } from '@/lib/errorReporter';
 
