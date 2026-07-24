@@ -12,3 +12,4 @@ export {
 } from './trustPresets';
 export { EmptyState } from './EmptyState';
 export { ContinueSetup, type ResumeItem } from './ContinueSetup';
+export { JourneyCard, SectionHeader } from './JourneyCard';

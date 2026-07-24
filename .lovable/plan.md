@@ -1,99 +1,98 @@
+# Vendibook Journey Refinement Plan
 
-# Monetization Rollout — Remaining Work
+This is large. To ship value quickly without breaking existing flows, I'll refine in three phases, layering on the primitives already in `src/components/journey/*`, `src/components/monetization/*`, and the existing edge functions. **No system is rebuilt from scratch.**
 
-Phase 1 (seller upgrades, promotion boosts, Stripe checkout, purchase records, admin revenue, product catalog) and the Protected Sale core (fee calculator, timeline, opt-in card, unified transaction detail, state machine, webhook secret) are already live. This plan covers everything still outstanding from the 20-section brief, without touching existing free flows.
+Each phase ends with a working, testable slice. You approve, I ship the next.
 
-## Scope
+---
 
-Free listings, wizard, dashboards, messaging, calendar, Stripe payments, Affirm, contracts, verification, rentals, sales, saves, alerts, reviews, and transaction workflows stay untouched. Every new surface is additive with a visible "Continue for free" path.
+## Phase 1 — Completion Foundation (ship first)
 
-## Workstreams
+Goal: every core journey has one primary action, visible progress, saved state, contextual trust, and a useful return-from-checkout screen.
 
-### 1. Buyer Services (Phase 2)
-- Seed `monetization_products` with `buyer_readiness_pass` ($29) and `listing_purchase_review` ($149).
-- New table `buyer_service_requests` (listing_id, buyer_id, product_key, status, intake JSON, admin notes, fulfillment fields) with RLS + GRANTs + updated_at trigger.
-- Pages: `/buyer/services`, `/buyer/services/readiness`, `/buyer/services/review/:listingId`.
-- Reuse `create-monetization-checkout` + webhook to insert `monetization_purchases` and provision the request row.
-- Mount `BuyerServicesPanel` on ListingDetail (sale mode), Saved Listings, BuyerDashboard.
+1. **Design system pass** (no visual rebuild)
+   - Audit orange usage; restrict to CTAs / active / progress / badges. Fix offenders in `UpgradePackageCards`, `ProductPricingCard`, `ProtectionOptInCard`, hero surfaces.
+   - Add `src/components/journey/JourneyCard.tsx` + `SectionHeader.tsx` — neutral glass card + soft border tokens used everywhere below.
 
-### 2. Partner Marketplace + Lead Capture (Phase 2/3)
-- Tables: `service_partners` (company, logo, category, service_area, description, website, phone, sponsored, verified, featured, display_order) and `partner_leads` (user_id, listing_id, partner_id, service, location, budget, timeline, status, consent_at).
-- Admin CRUD under `/admin/partners`.
-- Public page `/services` grouped by category (Financing, Insurance, Inspection, Transport, Kitchens, Builders, Wrap, POS, Fire, Cleaning, Repair).
-- `PartnerLeadForm` modal with explicit consent checkbox; never share user info without the checkbox.
-- Lead events feed admin queue and analytics.
+2. **Primary action hierarchy**
+   - Mount `PrimaryActionBar` (already built) into: `PublishWizard` final step, `SaleCheckout`, `BookingCheckout`, `ProtectedSale`, `ListingPurchaseReviewIntake`, `PermitPathUpgrades`, `HostProPlans`, `BuyerServicesHub`.
+   - Remove competing equal-weight buttons; demote to `secondary`/`tertiary` slots.
 
-### 3. Host Pro Subscriptions (Phase 3)
-- Stripe products/prices via `stripe--create_stripe_product_and_price`: Host Starter $39/mo, Host Growth $89/mo, Host Operator $149/mo (store Stripe IDs on `monetization_products`).
-- New `host_subscriptions` table (user_id, tier, stripe_subscription_id, stripe_customer_id, status, current_period_end, trial_end, cancel_at, last_error).
-- Edge functions: `create-host-subscription-checkout`, `host-subscription-portal`, extend `stripe-webhook` to handle `customer.subscription.*` and `invoice.payment_failed` idempotently.
-- `useHostSubscription` hook + `HostSubscriptionCard` on Host Dashboard with Upgrade / Downgrade / Cancel / Reactivate / Manage billing.
-- Feature-gate helpers (`canUseMultipleLocations`, `canUseTeamAccess`, etc.) — do not remove any capability free hosts already have.
+3. **Guided progress**
+   - Mount `JourneyProgress` (already built) into: listing wizard, protected sale, booking checkout, sale checkout, permit path, host onboarding, service request intakes.
+   - Translate technical strings via existing `friendlyStatus()` in `src/lib/journey/copy.ts` — extend the map to cover permit / service / subscription statuses.
 
-### 4. Permit Path Monetization (Phase 3)
-- Products `permit_path_plus` ($29) and `permit_path_concierge` ($299) in catalog.
-- Extend existing `permit_progress` / `permit_documents` / `saved_permit_roadmaps` with `service_level` and `concierge_request_id`.
-- New `permit_concierge_requests` (user_id, roadmap_id, intake JSON, status, admin_notes).
-- Upgrade CTAs on Permit Path dashboard; concierge intake form after purchase.
-- Legal disclaimer: "Vendibook does not provide legal advice and does not guarantee permit approval."
+4. **Save-and-resume**
+   - Extend `ContinueSetup` (already built) to surface all resumable items on `Dashboard` via new hook `useResumableJourneys.ts` reading: draft listings, incomplete `booking_drafts`, incomplete `buyer_service_requests`, `permit_progress`, unfinished `protected_sales`, abandoned `monetization_purchases`.
+   - Add "Saved just now / Xm ago" badge (uses existing `friendlySavedAt`) in wizard headers.
 
-### 5. Services Marketplace Hub (Section 12)
-- New route `/services` — "Everything You Need to Start and Grow Your Food Business" — with category sections that link to seller upgrades, buyer services, partners, host subscriptions, permits, and Protected Sale.
-- Homepage teaser strip with copy: "Find it. Fund it. Verify it. Purchase it. Permit it. Start earning."
-- Nav: add "Services" under Tools.
+5. **Better empty states**
+   - Replace bare empty blocks in `HostDashboard`, `ShopperDashboard`, `HostBookings`, `Favorites`, `Messages`, `Offers`, `ServicesHub` with `EmptyState` (already built) + one clear action.
 
-### 6. Dashboard Upgrades (Section 11)
-- Seller Dashboard: Listing performance, upgrades, promotions, services, protected transactions, offers, inquiries, subscription, revenue, payouts, docs, reviews (compose existing components; add missing panels as thin wrappers).
-- Buyer Dashboard: saved, messages, offers, purchases, rentals, protected transactions, service purchases, financing/inspection/transport requests, Permit Path, docs, reviews.
-- Unified status pill set: Not started, Awaiting payment, In review, Awaiting seller/buyer, Docs required, Scheduled, Completed, Cancelled, Refunded, Disputed.
+6. **Checkout return flows**
+   - `PurchaseReturnBanner` (exists) → route-specific post-checkout screens:
+     - Seller Pro → 3-step listing improvement checklist
+     - Featured / boost → return to the listing detail
+     - Purchase Review → status page
+     - Host Pro → availability + booking-rules setup
+     - Permit upgrades → return to roadmap
+   - Central helper `src/lib/monetization/returnRoutes.ts` maps `product.slug → { successPath, cancelPath, postCheckoutChecklist }`.
 
-### 7. Admin Revenue & Services (Sections 13–14)
-- Extend `/admin/revenue` with tabs: Products, Pricing, Purchases, Subscriptions, Upgrades, Promotions, Service Requests, Protected Transactions, Partner Leads, Discount Codes, Refunds, Failed Payments, Manual Credits, Custom Invoices, Feature Access.
-- Charts: GMV, rental/sale revenue, upgrade revenue, MRR, churn, permit revenue, partner leads, refunds, ARPU, funnel conversions (view→inquiry→transaction, free→paid), most-purchased products, revenue by city + listing type.
-- CSV export + date + product filters.
+7. **Contextual trust** (extension of shipped `TrustModule`)
+   - Add trust modules near: contact-seller CTA, make-offer modal, financing intake, inspection intake, transportation intake, subscription checkout, rental checkout deposit step.
 
-### 8. Discount Codes & Promo Credits
-- Reuse existing `discount_codes` and `promo_codes`; ensure `create-monetization-checkout` accepts a code, validates on the server, records `discount_code_redemptions` after Stripe confirms.
-- Admin UI to create/activate codes, set max uses, expiry, product scope.
+8. **Conversion copy pass**
+   - Rewrite headings/CTAs on: `HostProPlans`, `BuyerServicesHub`, `PermitPathUpgrades`, `Partners`, `ProtectionOptInCard`, `UpgradePackageCards`, following the "what/why/receive/how long/after/refundable" pattern.
 
-### 9. Notifications & Emails (Section 16)
-- Extend `send-transactional-email` templates for: upgrade purchased, promotion activated, promotion ending soon, subscription started, subscription payment failed, subscription cancelled, service request received/updated, protected transaction created, docs requested, buyer/seller confirmation needed, payment released, refund issued, partner request submitted.
-- Every send uses an idempotency key (already hardened) and writes a row in `notifications` for the in-app center.
+9. **Conversion analytics events**
+   - Extend `LeadEventName` (in `src/lib/leadTracking.ts`) with the full event list from section 22.
+   - Instrument checkout start/complete/abandon, upgrade viewed/selected, offer/inspection/financing/permit steps, AI suggestion viewed/accepted/rejected.
+   - Rely on existing `analytics_events` table; no schema change.
 
-### 10. Payment Integrity
-- All new checkouts go through `create-monetization-checkout` + `monetization-webhook`; nothing is marked paid until Stripe confirms.
-- `edge_action_idempotency` covers subscription/lead/service-request creations.
-- Prevent overlapping promotion purchases via a DB check in `listing_promotions` (already present for boosts — extend to new boost types).
+Phase 1 deliverable: unified feel across every monetized surface, resumable dashboard, real return-from-checkout, event coverage for funnels.
 
-### 11. Mobile + Accessibility Pass
-- Verify pricing cards stack, modals fit 375px, dashboards scroll, tables become cards.
-- Test on the current viewport (458px) after each panel lands.
+---
 
-### 12. E2E Coverage
-- Extend Playwright scripts under `tests/e2e/` for: buyer readiness purchase, listing review request, partner lead consent gating, host subscription upgrade/cancel, permit concierge intake, discount code redemption, duplicate-webhook idempotency, mobile layout smoke.
+## Phase 2 — AI Assistance
 
-## Technical Details
+Uses Lovable AI Gateway. All AI calls are server-side edge functions returning suggestions the user must approve.
 
-- New tables always ship with GRANTs (`authenticated` + `service_role`) and RLS scoped to owner or `has_role(auth.uid(),'admin')`.
-- Stripe: seamless integration already enabled; use `STRIPE_SECRET_KEY` + existing `STRIPE_WEBHOOK_SECRET`. Subscriptions use Stripe Billing Portal for management.
-- Feature flags via `app_feature_flags` so any tier can be soft-launched.
-- All prices editable in admin without code changes (source of truth = `monetization_products` row; Stripe price ID stored alongside).
-- Reused primitives: `UpgradePackageCards`, `PromoteListingPanel`, `TrustModule`, `JourneyProgress`, `PrimaryActionBar`, `ContinueSetup`, status-pill kit, `NextActionCard`.
+1. **AI Listing Writer** — `supabase/functions/ai-listing-assist/index.ts` with actions: `title`, `description`, `summary`, `social_caption`, `equipment_categorize`, `suggest_missing`. Uses **only** user-supplied listing fields. Mounted in listing wizard as an "Ask Vendi AI" panel.
+2. **AI Listing Quality Score** — deterministic scorer (`src/lib/listingQuality.ts`) + AI recommendations. Shows "78% ready" + specific missing items. Public-facing uses positive phrasing only.
+3. **AI Photo Guidance** — client-side blur/darkness/dupe detection first pass (no upload cost); optional server pass for missing-angle detection. Never mutates images.
+4. **AI Seller Copilot** — dashboard panel wired to `supabase/functions/ai-seller-copilot/index.ts`. Scoped to that seller's listings/offers/inquiries via RLS. Streaming chat.
+5. **AI Buyer Copilot** — same pattern; scoped to buyer's saved listings and public listing data. Distinguishes stated vs inferred vs unverified.
+6. **AI Permit Path Guide** — `ai-permit-guide` edge function. Uses `permit_items` + user context. Shows source + last-reviewed date. Never legal advice.
+7. **AI Service Matching** — server rules + AI ranker returning top 3 services for the user's current state.
+8. **AI Feedback** — thumbs up/down on every AI response → `analytics_events` with `ai_feedback` type.
+9. **Human Escalation** — every AI panel has "Contact Vendibook support" fallback and auto-detects payment/dispute/fraud/safety intents to surface it prominently.
 
-## Suggested Execution Order
+Guardrails enforced in every function: model can only see the requesting user's own data, all outputs labelled "AI-generated — review before publishing", never auto-send messages, structured output for cache-safety, rate limits per user, degrade silently if AI unavailable.
 
-1. Buyer services + partner marketplace (Phase 2 completion).
-2. Services hub page + homepage teaser + nav.
-3. Host Pro subscriptions.
-4. Permit Path Plus / Concierge.
-5. Admin Revenue tab expansion + analytics.
-6. Notifications, discount codes, mobile pass, E2E.
+---
 
-## Explicit Non-Goals
+## Phase 3 — Optimization
 
-- No changes to free listing eligibility, listing wizard steps, existing calendar, existing rentals, existing Stripe Connect payout flow, or existing Affirm eligibility rules.
-- No new personal emails as CC/BCC — all admin/support routes stay on `support@vendibook.com`.
-- No sparkle/star icons.
-- No "escrow" language on Protected Sale — keep "protected payment process" phrasing.
+1. **Next-Best-Action engine** — `src/lib/nextBestAction.ts` producing a ranked list from journey state. `NextBestAction` component (exists) becomes the primary dashboard hero, max 3 cards.
+2. **Behavioral follow-up** — extend existing `send-transactional-email` idempotent path with new templates: draft-listing-nudge, unanswered-inquiry, offer-started, promotion-expiring, subscription-abandoned. Respect notification preferences and per-user per-action rate limits.
+3. **Listing readiness score** — public-facing positive badges (Detailed / Highly responsive / Documents reviewed / Video available / Pricing provided) surfaced on listing cards and detail.
+4. **Funnel analytics dashboard** — `AdminAnalytics.tsx` reading `analytics_events` with the funnels listed in section 22.
+5. **AI performance analytics** — completion delta before/after AI use, acceptance rates, escalation rate.
+6. **A/B testing scaffold** — `app_feature_flags`-backed variant assignment + event tagging.
 
-Ready to start with **Buyer Services + Partner Marketplace** on approval, or a different slice if you'd rather sequence it differently.
+---
+
+## Technical notes (skimmable)
+
+- No breaking schema changes in Phase 1. Phase 2 adds one AI edge function per copilot + `ai_suggestions` audit table. Phase 3 adds `listing_quality_snapshots`.
+- All new AI code uses `LOVABLE_API_KEY` server-side, Gemini flash for high-volume tasks, structured JSON output where possible.
+- Every workflow remains completable without AI. AI failures never block publish/checkout/payout.
+- Accessibility + mobile: reuse `PrimaryActionBar` sticky mode; audit tap-target sizes on all new components; keep 16px min input font.
+
+---
+
+## What I'd like to start with
+
+**Phase 1 in order: items 1 → 2 → 3 → 4 → 6 → 5 → 7 → 8 → 9.** That's the biggest visible completion lift with zero risk to payments.
+
+Reply "go" (or name items to reorder / skip) and I'll ship item 1 (design-system pass + primary action mounting on `PublishWizard`, `SaleCheckout`, `BookingCheckout`) in the next turn.

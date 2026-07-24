@@ -35,6 +35,39 @@ const STATUS_MAP: Record<string, string> = {
   document_review: "We're reviewing your document",
   document_approved: 'Document approved',
   document_rejected: 'Document needs attention',
+
+  // Permit path
+  permit_not_started: "You haven't started this step yet",
+  permit_in_progress: 'In progress',
+  permit_awaiting_agency: 'Waiting on the agency',
+  permit_ready_for_review: 'Ready for your review',
+  permit_completed: 'Step completed',
+
+  // Services
+  service_request_submitted: 'Your request is in — Vendibook will follow up',
+  service_request_in_review: "We're reviewing your request",
+  service_request_matched: "We've matched you with a specialist",
+  service_request_completed: 'Service completed',
+  service_request_cancelled: 'Request cancelled',
+
+  // Subscriptions
+  subscription_active: 'Your plan is active',
+  subscription_past_due: 'Your payment method needs an update',
+  subscription_cancelled: "Your plan is cancelled — it stays active until the period ends",
+  subscription_paused: 'Your plan is paused',
+
+  // Offers
+  offer_pending: 'Waiting for the other side to respond',
+  offer_countered: 'A counter offer needs your review',
+  offer_accepted: 'Offer accepted — start the transaction',
+  offer_declined: 'Offer declined',
+  offer_expired: 'This offer expired',
+
+  // Fulfillment
+  fulfillment_scheduled: 'Pickup or delivery is scheduled',
+  fulfillment_in_transit: 'On the way',
+  fulfillment_delivered: 'Delivered',
+  fulfillment_confirmed: 'Handoff confirmed',
 };
 
 export function friendlyStatus(key: string, fallback?: string): string {
