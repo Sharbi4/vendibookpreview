@@ -4,6 +4,7 @@ import { Play, Pause, ChevronLeft, ChevronRight, Captions, Volume2, VolumeX } fr
 import type { Explainer } from './data/explainers';
 import { cn } from '@/lib/utils';
 import { createAmbientBed, type AmbientBed } from './audio/ambientBed';
+import { trackLeadEvent } from '@/lib/leadTracking';
 
 interface Props {
   explainer: Explainer;
@@ -226,6 +227,18 @@ export const AnimatedExplainer = ({ explainer, onProgress, onEnded, onSceneChang
     } catch { /* ignore */ }
   };
 
+  // Cumulative start offset (ms) for each scene, plus its percent along the
+  // total timeline — used by the chapter chips and progress-bar ticks.
+  const chapterOffsets = useMemo(() => {
+    const arr: Array<{ startMs: number; percent: number }> = [];
+    let acc2 = 0;
+    for (const sc of explainer.scenes) {
+      arr.push({ startMs: acc2, percent: totalMs > 0 ? (acc2 / totalMs) * 100 : 0 });
+      acc2 += sc.durationMs;
+    }
+    return arr;
+  }, [explainer.scenes, totalMs]);
+
   const jumpToScene = (i: number) => {
     let ms = 0;
     for (let j = 0; j < i; j++) ms += explainer.scenes[j].durationMs;
@@ -234,6 +247,18 @@ export const AnimatedExplainer = ({ explainer, onProgress, onEnded, onSceneChang
     milestoneRef.current = new Set(
       [0.25, 0.5, 0.75, 1].filter((m) => ms / totalMs >= m),
     );
+  };
+
+  const jumpToChapter = (i: number, source: 'chip' | 'tick') => {
+    jumpToScene(i);
+    setPlaying(true);
+    trackLeadEvent('homepage_video_chapter_clicked', {
+      video_type: explainer.id,
+      scene_index: i,
+      scene_count: explainer.scenes.length,
+      chapter_label: explainer.scenes[i]?.chapterLabel,
+      source,
+    });
   };
 
   const scrub = (pct: number) => {
@@ -360,6 +385,21 @@ export const AnimatedExplainer = ({ explainer, onProgress, onEnded, onSceneChang
             className="absolute inset-y-0 left-0 bg-primary"
             style={{ width: `${progressPct}%` }}
           />
+          {/* Chapter tick marks — skip the first one at 0% */}
+          {chapterOffsets.slice(1).map((c, i) => (
+            <button
+              key={`tick-${i + 1}`}
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                jumpToChapter(i + 1, 'tick');
+              }}
+              aria-label={`Jump to chapter ${i + 2}: ${explainer.scenes[i + 1]?.chapterLabel ?? ''}`}
+              title={explainer.scenes[i + 1]?.chapterLabel}
+              className="absolute top-1/2 h-3 w-0.5 -translate-x-1/2 -translate-y-1/2 rounded-sm bg-background/90 ring-1 ring-foreground/30 transition-colors hover:bg-primary"
+              style={{ left: `${c.percent}%` }}
+            />
+          ))}
         </div>
 
         <span className="hidden text-xs tabular-nums text-muted-foreground sm:inline">
@@ -398,6 +438,40 @@ export const AnimatedExplainer = ({ explainer, onProgress, onEnded, onSceneChang
           CC
         </button>
       </div>
+
+      {/* Chapter chips — clickable jump list */}
+      <nav
+        aria-label="Chapters"
+        className="flex gap-2 overflow-x-auto border-t border-border bg-card/60 px-3 py-2 sm:px-4"
+      >
+        {explainer.scenes.map((sc, i) => {
+          const active = i === sceneIndex;
+          return (
+            <button
+              key={`chapter-${i}`}
+              type="button"
+              onClick={() => jumpToChapter(i, 'chip')}
+              aria-current={active ? 'true' : undefined}
+              className={cn(
+                'flex shrink-0 items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-semibold transition-colors sm:text-xs',
+                active
+                  ? 'border-primary bg-primary text-primary-foreground shadow-sm'
+                  : 'border-border bg-background text-muted-foreground hover:border-foreground/40 hover:text-foreground',
+              )}
+            >
+              <span
+                className={cn(
+                  'flex h-4 w-4 items-center justify-center rounded-full text-[10px] font-bold',
+                  active ? 'bg-primary-foreground/20 text-primary-foreground' : 'bg-muted text-foreground',
+                )}
+              >
+                {i + 1}
+              </span>
+              <span className="whitespace-nowrap">{sc.chapterLabel}</span>
+            </button>
+          );
+        })}
+      </nav>
     </div>
   );
 };

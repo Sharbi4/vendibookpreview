@@ -78,6 +78,7 @@ export type LeadEventName =
   | 'homepage_video_completed'
   | 'homepage_video_scene_viewed'
   | 'homepage_video_scene_completed'
+  | 'homepage_video_chapter_clicked'
   | 'homepage_video_watch_duration'
   | 'homepage_video_cta_clicked';
 
@@ -159,6 +160,7 @@ const EVENT_CATEGORY: Record<LeadEventName, string> = {
   homepage_video_scene_viewed: 'homepage',
   homepage_video_scene_completed: 'homepage',
   homepage_video_watch_duration: 'homepage',
+  homepage_video_chapter_clicked: 'homepage',
   homepage_video_cta_clicked: 'homepage',
 };
 
