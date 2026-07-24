@@ -375,8 +375,9 @@ export const AnimatedExplainer = ({ explainer, onProgress, onEnded, onSceneChang
             >
               {caption}
             </motion.div>
-          </div>
-        )}
+          )}
+        </div>
+
 
         {/* Scene counter */}
         <div className="absolute right-3 top-3 rounded-full bg-black/60 px-2 py-0.5 text-[11px] font-semibold text-white backdrop-blur">
