@@ -46,6 +46,7 @@ import { cn } from '@/lib/utils';
 import { FreightSettingsCard } from '@/components/freight';
 import { FeaturedListingCard } from './FeaturedListingCard';
 import { ListingQualityGate } from './ListingQualityGate';
+import { ListingHealthScoreCard } from './ListingHealthScoreCard';
 import { AdditionalSellerSupportCards } from '@/components/monetization/AdditionalSellerSupportCards';
 import { InfoTooltip } from '@/components/ui/info-tooltip';
 import stripeIcon from '@/assets/stripe-icon.png';
