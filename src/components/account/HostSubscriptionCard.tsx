@@ -170,7 +170,7 @@ export function HostSubscriptionCard() {
                 )}
               </Button>
               <Button asChild size="sm" variant="outline">
-                <Link to="/host/plans">Change plan</Link>
+                <Link to="/account/subscription">Manage subscription</Link>
               </Button>
               <Button size="sm" variant="ghost" onClick={() => refetch()} disabled={isFetching}>
                 <RefreshCw className={`h-3.5 w-3.5 mr-1.5 ${isFetching ? 'animate-spin' : ''}`} />
