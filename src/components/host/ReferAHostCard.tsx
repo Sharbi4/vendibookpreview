@@ -1,29 +1,30 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Gift, Copy, Check, Share2 } from 'lucide-react';
+import { Gift, Copy, Check, Share2, Loader2 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import { useReferralCode, useMyReferrals, buildReferralUrl } from '@/hooks/useReferral';
 
 /**
- * Refer-a-Host: hosts share a signup link tied to their user id.
- * When a referred host subscribes to Starter+, both parties earn a credit
- * (redeemed manually by admin for now; tracked via ?ref= param at signup).
+ * Refer-a-Host: hosts share their real referral code. Attribution runs
+ * through the existing `referrals` / `referral_codes` pipeline so credits
+ * are tracked automatically when the referred host subscribes to Starter+.
  */
 export function ReferAHostCard() {
   const { user } = useAuth();
+  const { data: refCode, isLoading } = useReferralCode();
+  const { data: referrals = [] } = useMyReferrals();
   const [copied, setCopied] = useState(false);
-
-  const link = useMemo(() => {
-    if (!user?.id) return '';
-    const short = user.id.slice(0, 8);
-    return `${window.location.origin}/auth?ref=${short}`;
-  }, [user?.id]);
 
   if (!user) return null;
 
+  const link = refCode?.code ? buildReferralUrl(refCode.code, '/auth') : '';
+  const qualifiedCount = referrals.filter((r) => r.status === 'qualified').length;
+
   const copy = async () => {
+    if (!link) return;
     try {
       await navigator.clipboard.writeText(link);
       setCopied(true);
@@ -35,6 +36,7 @@ export function ReferAHostCard() {
   };
 
   const share = async () => {
+    if (!link) return;
     if (navigator.share) {
       try {
         await navigator.share({
@@ -63,16 +65,44 @@ export function ReferAHostCard() {
           Share your link. When a referred host subscribes to Starter or higher,
           you both get a $50 credit toward Vendibook fees.
         </p>
-        <div className="flex gap-2">
-          <Input readOnly value={link} className="text-xs" />
-          <Button variant="outline" size="icon" onClick={copy} aria-label="Copy link">
-            {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-          </Button>
-          <Button variant="outline" size="icon" onClick={share} aria-label="Share link">
-            <Share2 className="h-4 w-4" />
-          </Button>
-        </div>
+
+        {isLoading ? (
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            Loading your referral link…
+          </div>
+        ) : link ? (
+          <>
+            <div className="flex gap-2">
+              <Input readOnly value={link} className="text-xs" />
+              <Button variant="outline" size="icon" onClick={copy} aria-label="Copy link">
+                {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+              </Button>
+              <Button variant="outline" size="icon" onClick={share} aria-label="Share link">
+                <Share2 className="h-4 w-4" />
+              </Button>
+            </div>
+            <div className="grid grid-cols-3 gap-2 pt-2">
+              <Stat label="Invited" value={refCode?.total_referred ?? 0} />
+              <Stat label="Qualified" value={qualifiedCount} />
+              <Stat label="Earned" value={`$${(refCode?.total_earned ?? 0).toFixed(0)}`} />
+            </div>
+          </>
+        ) : (
+          <p className="text-sm text-muted-foreground">
+            Your referral code is being set up. Check back shortly.
+          </p>
+        )}
       </CardContent>
     </Card>
+  );
+}
+
+function Stat({ label, value }: { label: string; value: string | number }) {
+  return (
+    <div className="rounded-lg border border-border/60 bg-muted/30 px-3 py-2 text-center">
+      <div className="text-sm font-semibold text-foreground">{value}</div>
+      <div className="text-[10px] uppercase tracking-wide text-muted-foreground">{label}</div>
+    </div>
   );
 }
