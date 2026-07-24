@@ -90,6 +90,7 @@ export function ReferAHostCard() {
               <Stat label="Earned" value={`$${(refCode?.total_earned ?? 0).toFixed(0)}`} />
             </div>
             <ShareRow link={link} />
+            <EmailInviteComposer />
           </>
         ) : (
           <p className="text-sm text-muted-foreground">
