@@ -810,6 +810,7 @@ const SaleCheckout = () => {
           clientSecret={embeddedCheckout.clientSecret}
           returnUrl={embeddedCheckout.returnUrl}
           onClose={() => setEmbeddedCheckout(null)}
+          totalUsd={totalPrice}
           summary={
             <CheckoutOrderSummary
               variant="sale"

@@ -122,7 +122,10 @@ const EmbeddedStripeCheckout = ({
               <div className="px-6 py-4 border-b border-border/60">{summary}</div>
             ) : null}
 
-            <div className="px-6 py-5">
+            <div className="px-6 py-5 space-y-4">
+              {typeof totalUsd === 'number' && totalUsd >= 50 ? (
+                <AffirmMessagingLine amountUsd={totalUsd} />
+              ) : null}
               <CheckoutElementsProvider
                 stripe={stripePromise}
                 options={{
@@ -136,6 +139,7 @@ const EmbeddedStripeCheckout = ({
               >
                 <PayForm returnUrl={returnUrl} onSuccess={onSuccess} />
               </CheckoutElementsProvider>
+              <TrustRow />
             </div>
           </div>
         </div>
