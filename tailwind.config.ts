@@ -75,11 +75,18 @@ export default {
         },
       },
       borderRadius: {
-        lg: "var(--radius)",
-        md: "calc(var(--radius) - 2px)",
-        sm: "calc(var(--radius) - 4px)",
-        xl: "1rem",
-        "2xl": "1.25rem",
+        /* Unified 3-tier radius scale — matches --radius (20px) */
+        sm: "10px",
+        md: "14px",
+        lg: "20px",
+        xl: "24px",
+        "2xl": "28px",
+        "3xl": "32px",
+      },
+      borderWidth: {
+        DEFAULT: "1.5px",
+        "1.5": "1.5px",
+        "2": "2px",
       },
       padding: {
         'safe': 'env(safe-area-inset-bottom)',
