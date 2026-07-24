@@ -61,6 +61,12 @@ interface PublicProfileData {
   bio?: string | null;
   shop_policies?: ShopPolicies | null;
   pinned_listing_id?: string | null;
+  // Privacy toggles — default to legacy behavior (all visible) when absent
+  show_full_name?: boolean | null;
+  show_public_location?: boolean | null;
+  show_verified_badge?: boolean | null;
+  show_member_since?: boolean | null;
+  show_listings_count?: boolean | null;
 }
 
 // Hook to fetch public profile - supports both userId and username
