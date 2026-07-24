@@ -438,6 +438,40 @@ export const AnimatedExplainer = ({ explainer, onProgress, onEnded, onSceneChang
           CC
         </button>
       </div>
+
+      {/* Chapter chips — clickable jump list */}
+      <nav
+        aria-label="Chapters"
+        className="flex gap-2 overflow-x-auto border-t border-border bg-card/60 px-3 py-2 sm:px-4"
+      >
+        {explainer.scenes.map((sc, i) => {
+          const active = i === sceneIndex;
+          return (
+            <button
+              key={`chapter-${i}`}
+              type="button"
+              onClick={() => jumpToChapter(i, 'chip')}
+              aria-current={active ? 'true' : undefined}
+              className={cn(
+                'flex shrink-0 items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-semibold transition-colors sm:text-xs',
+                active
+                  ? 'border-primary bg-primary text-primary-foreground shadow-sm'
+                  : 'border-border bg-background text-muted-foreground hover:border-foreground/40 hover:text-foreground',
+              )}
+            >
+              <span
+                className={cn(
+                  'flex h-4 w-4 items-center justify-center rounded-full text-[10px] font-bold',
+                  active ? 'bg-primary-foreground/20 text-primary-foreground' : 'bg-muted text-foreground',
+                )}
+              >
+                {i + 1}
+              </span>
+              <span className="whitespace-nowrap">{sc.chapterLabel}</span>
+            </button>
+          );
+        })}
+      </nav>
     </div>
   );
 };
