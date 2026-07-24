@@ -227,6 +227,18 @@ export const AnimatedExplainer = ({ explainer, onProgress, onEnded, onSceneChang
     } catch { /* ignore */ }
   };
 
+  // Cumulative start offset (ms) for each scene, plus its percent along the
+  // total timeline — used by the chapter chips and progress-bar ticks.
+  const chapterOffsets = useMemo(() => {
+    const arr: Array<{ startMs: number; percent: number }> = [];
+    let acc2 = 0;
+    for (const sc of explainer.scenes) {
+      arr.push({ startMs: acc2, percent: totalMs > 0 ? (acc2 / totalMs) * 100 : 0 });
+      acc2 += sc.durationMs;
+    }
+    return arr;
+  }, [explainer.scenes, totalMs]);
+
   const jumpToScene = (i: number) => {
     let ms = 0;
     for (let j = 0; j < i; j++) ms += explainer.scenes[j].durationMs;
@@ -235,6 +247,18 @@ export const AnimatedExplainer = ({ explainer, onProgress, onEnded, onSceneChang
     milestoneRef.current = new Set(
       [0.25, 0.5, 0.75, 1].filter((m) => ms / totalMs >= m),
     );
+  };
+
+  const jumpToChapter = (i: number, source: 'chip' | 'tick') => {
+    jumpToScene(i);
+    setPlaying(true);
+    trackLeadEvent('homepage_video_chapter_clicked', {
+      video_type: explainer.id,
+      scene_index: i,
+      scene_count: explainer.scenes.length,
+      chapter_label: explainer.scenes[i]?.chapterLabel,
+      source,
+    });
   };
 
   const scrub = (pct: number) => {
