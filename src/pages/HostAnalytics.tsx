@@ -50,6 +50,7 @@ const HostAnalytics = () => {
   return (
     <DashboardLayout mode="host" onModeChange={() => {}} isHost={true}>
       <div className="space-y-6">
+        <HostPlanRibbon />
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-semibold text-foreground">Analytics</h1>
