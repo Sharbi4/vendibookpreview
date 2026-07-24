@@ -155,7 +155,7 @@ export function RecommendedAddOns({
                 size="sm"
                 className="mt-auto gap-2"
                 disabled={busy === p.slug || pendingSlug === p.slug}
-                onClick={() => handleBuy(p)}
+                onClick={() => handleBuy(p as unknown as MonetizationProduct)}
               >
                 {busy === p.slug || pendingSlug === p.slug ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
