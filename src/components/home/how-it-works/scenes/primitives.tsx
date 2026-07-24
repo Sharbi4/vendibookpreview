@@ -456,7 +456,7 @@ export const DashboardMock = ({
     initial={{ y: 20, opacity: 0 }}
     animate={{ y: 0, opacity: 1 }}
     transition={{ duration: 0.5 }}
-    className="w-full max-w-md rounded-2xl border border-border bg-card p-4 shadow-xl"
+    className="w-full max-w-md rounded-2xl border border-border bg-card p-4 shadow-[0_20px_50px_-20px_hsl(var(--primary)/0.35),0_10px_25px_-10px_hsl(var(--foreground)/0.25)] ring-1 ring-border/60"
   >
     <div className="flex items-start justify-between gap-2">
       <div>
@@ -506,7 +506,7 @@ export const PaymentOptionsPanel = ({
   <motion.div
     initial={{ y: 20, opacity: 0 }}
     animate={{ y: 0, opacity: 1 }}
-    className="w-80 rounded-2xl border border-border bg-card p-4 shadow-xl"
+    className="w-80 rounded-2xl border border-border bg-card p-4 shadow-[0_20px_50px_-20px_hsl(var(--primary)/0.35),0_10px_25px_-10px_hsl(var(--foreground)/0.25)] ring-1 ring-border/60"
   >
     <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
       Transaction details
@@ -567,7 +567,7 @@ export const PayoutTimeline = () => (
   <motion.div
     initial={{ y: 20, opacity: 0 }}
     animate={{ y: 0, opacity: 1 }}
-    className="w-full max-w-md rounded-2xl border border-border bg-card p-4 shadow-xl"
+    className="w-full max-w-md rounded-2xl border border-border bg-card p-4 shadow-[0_20px_50px_-20px_hsl(var(--primary)/0.35),0_10px_25px_-10px_hsl(var(--foreground)/0.25)] ring-1 ring-border/60"
   >
     <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
       <Clock className="h-3.5 w-3.5 text-primary" /> Payout schedule
