@@ -230,12 +230,12 @@ const IdentityVerification = () => {
               />
             </div>
 
-            <p className="text-xs text-foreground/50 mt-6 leading-relaxed">
+            <p className="text-[13px] text-foreground/70 mt-8 leading-relaxed text-center">
               By continuing you agree to share the information required for
               Stripe Identity to verify you. See our{' '}
               <a
                 href="/privacy"
-                className="underline underline-offset-2 hover:text-foreground/80"
+                className="underline underline-offset-2 hover:text-foreground"
               >
                 Privacy Policy
               </a>
