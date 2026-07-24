@@ -1,5 +1,5 @@
 import { Link, useSearchParams } from 'react-router-dom';
-import { Calendar, CheckCircle2, Clock, XCircle, Loader2, Search, Heart, MessageSquare } from 'lucide-react';
+import { Calendar, CheckCircle2, Clock, XCircle, Loader2, Search, Heart, MessageSquare, ShieldAlert, ShoppingBag, Inbox } from 'lucide-react';
 import PermitsTab from './PermitsTab';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -12,7 +12,9 @@ import { ReferralPanel } from '@/components/referrals/ReferralPanel';
 import { CommandHeader } from './CommandHeader';
 import { CommandStatCard } from './CommandStatCard';
 import { SectionReveal, Reveal } from './SectionReveal';
+import ActionRequiredStack, { ActionItem } from './shared/ActionRequiredStack';
 import { useShopperBookings } from '@/hooks/useShopperBookings';
+import { useUnreadMessageCount } from '@/hooks/useUnreadMessageCount';
 import { useAuth } from '@/contexts/AuthContext';
 
 const Section = ({
