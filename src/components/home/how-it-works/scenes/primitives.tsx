@@ -313,10 +313,33 @@ export const ListingCardStack = ({
 
 
 export const BadgeStamp = ({ label }: { label: string }) => (
-  <div className="flex items-center gap-2 rounded-full border-2 border-primary bg-primary/10 px-4 py-2 text-primary shadow-lg">
-    <Check className="h-5 w-5" strokeWidth={3} />
+  <motion.div
+    initial={{ scale: 1.35, opacity: 0, rotate: -6 }}
+    animate={{ scale: 1, opacity: 1, rotate: 0 }}
+    transition={{ type: 'spring', stiffness: 260, damping: 16 }}
+    className="relative flex items-center gap-2 rounded-full border-2 border-primary bg-primary/10 px-4 py-2 text-primary shadow-[0_10px_28px_-8px_hsl(var(--primary)/0.55)]"
+  >
+    {/* Impact shockwave rings */}
+    {[0, 0.15].map((d, i) => (
+      <motion.span
+        key={i}
+        aria-hidden
+        className="pointer-events-none absolute inset-0 rounded-full border-2 border-primary/70"
+        initial={{ scale: 1, opacity: 0.7 }}
+        animate={{ scale: 1.75, opacity: 0 }}
+        transition={{ delay: d, duration: 0.9, ease: 'easeOut' }}
+      />
+    ))}
+    <motion.span
+      initial={{ scale: 0 }}
+      animate={{ scale: 1 }}
+      transition={{ delay: 0.18, type: 'spring', stiffness: 300, damping: 14 }}
+      className="inline-flex"
+    >
+      <Check className="h-5 w-5" strokeWidth={3} />
+    </motion.span>
     <span className="text-sm font-bold uppercase tracking-wider">{label}</span>
-  </div>
+  </motion.div>
 );
 
 export const CheckDoc = ({ label }: { label: string }) => (
