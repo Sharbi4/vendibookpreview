@@ -1,68 +1,62 @@
-## Goal
-Move buyers off Stripe's hosted checkout page and onto an embedded, brand-native payment surface on vendibook.com, without touching any money/webhook/Connect logic in the backend. Keep the current hosted redirect path behind a feature flag as a safety fallback.
 
-## Current-state facts (verified this turn)
-- `supabase/functions/create-checkout/index.ts` builds a full Checkout Session (automatic_tax, `billing_address_collection: 'required'`, `payment_method_types: ['card','us_bank_account','affirm','klarna','afterpay_clearpay']` for sales; card/affirm/klarna/afterpay for rentals), rich `payment_intent_data.metadata` (buyer/seller/host ids, escrow, platform_fee, terms_id, freight, referral, deposit) and returns `{ url, session_id, customer_total, ... }` today. `success_url` already uses `?session_id={CHECKOUT_SESSION_ID}`. Sale flow is escrow (no `transfer_data`); rentals also hold funds on platform.
-- `src/pages/SaleCheckout.tsx` and `src/pages/BookingCheckout.tsx` call `supabase.functions.invoke('create-checkout')` and then `window.open(data.url, '_blank')` / `window.location.href = data.url` to hand off to Stripe's hosted page.
-- `src/components/checkout/CheckoutOverlay.tsx` is currently a "redirecting to Stripe" spinner — it will be repurposed to host the embedded surface.
-- No Stripe JS SDK is currently installed on the client. `VITE_STRIPE_PUBLISHABLE_KEY` is not yet in `.env`.
+# Enterprise Polish for Embedded Checkout
 
-## Stripe SDK naming (verified against docs this turn)
-Custom Checkout with the Payment Element is `ui_mode: "elements"` on the Checkout Session (NOT the older `ui_mode: "custom"`). Client side uses `CheckoutElementsProvider` (from `@stripe/react-stripe-js/checkout`), initialized with the session's `client_secret`, and payment is confirmed via `checkout.confirm()`. The Session `return_url` receives the buyer after redirect-based methods (Affirm/Klarna/Afterpay) and after successful confirm. Appearance API + `fonts` option are passed to `loadStripe`/provider options exactly like standard Elements.
+Scoped to the already-built `EmbeddedStripeCheckout` (Custom Checkout via `CheckoutElementsProvider` + `useCheckout` + `PaymentElement`). No backend, webhook, or payment-hold changes. All new copy uses "payment protection" (never "escrow").
 
-## Files to change
+## Files changed
 
-### Backend (minimal, no money-logic changes)
-- `supabase/functions/create-checkout/index.ts`
-  - Accept a new body flag `ui_mode?: 'hosted' | 'elements'` (default `'elements'`).
-  - When `elements`: set `ui_mode: 'elements'`, replace `success_url`/`cancel_url` with `return_url: ${origin}/payment-success?session_id={CHECKOUT_SESSION_ID}${escrow ? '&escrow=true' : ''}`. Keep `payment_method_types`, `automatic_tax`, `billing_address_collection`, all `metadata` and `payment_intent_data.metadata`, idempotency, and application-fee/Connect logic identical.
-  - When `hosted`: existing behavior unchanged (fallback path).
-  - Return `client_secret` (in addition to existing `session_id`, `customer_total`, `platform_fee`, `host_receives`, `terms_id`). Keep `url` populated only in `hosted` mode.
+**Edit**
+- `src/components/checkout/EmbeddedStripeCheckout.tsx` — add ExpressCheckoutElement row, skeleton loading, success checkmark, mapped decline errors, mobile bottom-sheet layout with sticky pay button + safe-area padding, ESC-close, focus trap.
+- `src/pages/SaleCheckout.tsx` — build and pass `summary` node (cover, title, itemized lines, total, protection block, financing line, trust row) into `<EmbeddedStripeCheckout>`.
+- `src/pages/BookingCheckout.tsx` — same summary integration for rental instant-book path (rental-specific lines: nightly/daily × units, service fee, tax).
+- `src/lib/stripeAppearance.ts` — minor: add Express Checkout Element theme variables (button height/radius) so Apple Pay / Google Pay / Link match Satin Lux.
 
-### Frontend – dependencies & env
-- `package.json`: add `@stripe/stripe-js` and `@stripe/react-stripe-js`.
-- `.env` (user-managed): add `VITE_STRIPE_PUBLISHABLE_KEY` (publishable key is safe in client bundle).
-- `src/lib/stripeClient.ts` (new): singleton `loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY)`.
-- `src/lib/featureFlags.ts` (new or extend): `EMBEDDED_CHECKOUT_ENABLED` flag (default `true`, overridable via `localStorage` for kill-switch).
-- `src/lib/stripeAppearance.ts` (new): Appearance API object with theme `night`, brand variables (`fontFamily: 'Poppins, system-ui, sans-serif'`, `colorPrimary #FF5124`, `colorBackground #141416`, `colorText #F5F5F5`, `colorTextSecondary #A1A1AA`, `colorTextPlaceholder #6B6B72`, `colorDanger #F26D6D`, `borderRadius: '12px'`), plus `rules` for `.Input`, `.Input:focus` (with orange focus ring via `boxShadow`), `.Tab`, `.Tab--selected`, `.Label`, and floating labels via `variables.labelFloating: true` / rule tweaks. Also exports the `fonts` array loading Poppins from `https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap` so it renders inside Stripe's iframe.
+**New**
+- `src/components/checkout/CheckoutOrderSummary.tsx` — reusable summary card (cover image, title, itemized lines, bold total) used by both Sale and Booking checkouts.
+- `src/components/checkout/PaymentProtectionBlock.tsx` — compact assurance card. Sale card copy: "Your payment is protected. Funds are held securely and released to the seller only after you confirm the item is as described." Rental variant tuned for booking.
+- `src/components/checkout/TrustRow.tsx` — stripe-wordmark-blurple, verified-badge, Visa/Mastercard/Amex/Discover glyphs (lucide `CreditCard` + inline SVG or existing PNGs), and a Lock + "256-bit encryption" note.
+- `src/components/checkout/FinancingLine.tsx` — mounts Stripe's `<PaymentMethodMessagingElement>` for Affirm/Klarna/Afterpay near the total; falls back to a static "as low as $X/mo with Affirm" line if the element fails to load.
+- `src/components/checkout/PaymentFormSkeleton.tsx` — shimmer skeleton mimicking Express row + tab strip + input rows.
+- `src/lib/stripeErrorCopy.ts` — maps Stripe decline_code / code / type → `{ title, why, fix }`. Common: `card_declined/generic_decline`, `insufficient_funds`, `expired_card`, `incorrect_cvc`, `incorrect_number`, `processing_error`, `authentication_required`, `card_velocity_exceeded`, `fraudulent`. Fallback: generic calm copy.
 
-### Frontend – new embedded checkout component
-- `src/components/checkout/EmbeddedStripeCheckout.tsx` (new):
-  - Props: `{ clientSecret, onComplete, onError }`.
-  - Wraps children in `CheckoutElementsProvider` (from `@stripe/react-stripe-js/checkout`) with `stripe`, `options: { clientSecret, appearance, fonts }`.
-  - Renders `<PaymentElement layout="tabs" />` and a "Pay $X" button that calls `useCheckout().confirm()`; surfaces `error.message` and disables while `isLoading`.
-  - Handles redirect PM's (Affirm/Klarna/Afterpay) naturally — Stripe redirects to `return_url`; the component just triggers confirm.
+## What each fix does
 
-### Frontend – repurpose CheckoutOverlay
-- `src/components/checkout/CheckoutOverlay.tsx`:
-  - Replace the "redirecting" spinner with a full-screen branded modal (Satin Lux surface, hairline borders, orange accents) that mounts `EmbeddedStripeCheckout` above the existing order summary/terms slot.
-  - New props: `{ isVisible, clientSecret, orderSummary?: ReactNode, onClose, onComplete }`. Keep `isVisible`/`message` back-compat for callers that pass them.
-  - Only shown when `clientSecret` is set; otherwise renders the old "redirecting" state for fallback path.
+1. **Express row** — Above `PaymentElement`, mount `<ExpressCheckoutElement>` (from `@stripe/react-stripe-js`) inside the existing `CheckoutElementsProvider`. Handle `onConfirm` by calling `checkout.confirm()` (Custom Checkout wires the wallet result automatically). Add a hairline "or pay with card" divider between the row and the tabbed PaymentElement. If Express returns zero available methods (`onReady` reports none), the row hides itself so nothing shows empty.
 
-### Frontend – wire into flows
-- `src/pages/SaleCheckout.tsx`:
-  - When flag on: call `create-checkout` with `ui_mode: 'elements'`, receive `client_secret`, open `CheckoutOverlay` with the embedded surface. Existing terms gate + order summary components remain — pass them into the overlay's `orderSummary` slot.
-  - When flag off: keep current `window.open(data.url)` behavior.
-- `src/pages/BookingCheckout.tsx`: same treatment; keep iframe-aware fallback path (`window.open('about:blank')`) intact only for hosted mode.
-- `src/pages/PaymentSuccess.tsx`: no functional change required — it already reads `session_id`. Entitlements stay webhook-driven; success page only confirms UI.
+2. **In-modal summary** — Both pages already compute `subtotal`, `deliveryFee`/`freight`, tax estimate, and `total`. Wrap those into a `CheckoutOrderSummary` node and pass via the existing `summary` prop slot. Renders inside the modal above the payment fields on desktop; on mobile it collapses into a sticky header with an expand toggle so total stays visible.
 
-### Stripe Dashboard branding (out-of-code)
-- Set brand logo, dark background, orange primary button, rounded shapes in **Stripe Dashboard → Settings → Branding** and **Public Details** for both test and live. This affects hosted receipts, refund emails, and any Stripe-side surface (e.g., Affirm redirect). No repo change.
+3. **Protection block + trust row** — Rendered below the summary, above the Express row. Uses `stripe-wordmark-blurple.png` and `verified-badge.png` already in `src/assets/`. Sale copy uses "payment protection" wording verbatim; rental variant adapts to booking release timing.
 
-## Edge cases / risks
-- **Automatic tax:** unchanged. `automatic_tax` + `billing_address_collection: 'required'` continue to work in `ui_mode: 'elements'`; tax is recalculated when the buyer edits the billing address in the Payment Element.
-- **Connect:** we don't use `transfer_data` today (escrow model) — nothing to migrate. `payment_intent_data.metadata` stays intact so `stripe-webhook` continues to key off buyer/seller/terms ids exactly as it does now.
-- **Apple Pay / Google Pay:** require the site to be served over HTTPS with the Stripe domain association file at `/.well-known/apple-developer-merchantid-domain-association`. The vendibook.com production domain must be registered under **Stripe → Payment method domains** before Apple/Google Pay tabs will appear on the embedded PE.
-- **Affirm / Klarna / Afterpay:** always redirect to the provider — expected. `return_url` brings the buyer back to `/payment-success?session_id=...`; the existing PaymentSuccess page + webhooks handle finalization.
-- **us_bank_account (ACH):** in embedded PE this uses Financial Connections + microdeposits; the confirm flow can enter a `requires_action`/`processing` state. The success page must tolerate `processing`/`pending` — no code change needed since entitlements are webhook-driven.
-- **Iframed preview:** `BookingCheckout` today opens a new tab when embedded in an iframe. In embedded mode we don't need that hack — the PE mounts in-page and works inside iframes.
-- **Idempotency:** `create-checkout` idempotency key logic is untouched; adding `ui_mode` to the request body doesn't affect it.
-- **CSP:** if a Content-Security-Policy is added later, it must allow `https://js.stripe.com`, `https://api.stripe.com`, `https://m.stripe.network`, `https://fonts.googleapis.com`, `https://fonts.gstatic.com`.
+4. **Financing** — `<PaymentMethodMessagingElement>` mounted next to the total with `amount`, `currency: 'usd'`, `country: 'US'`, `paymentMethods: ['affirm','klarna','afterpay_clearpay']`. Redirect flow for approval is unchanged.
 
-## Rollout
-1. Land backend change (`ui_mode` param + `client_secret` in response) — backwards compatible since default can start at `'hosted'` for the first deploy.
-2. Ship SDK, appearance, and embedded component behind `EMBEDDED_CHECKOUT_ENABLED=false`.
-3. Flip default in `create-checkout` and the flag to `true` after smoke test on sale + rental + Affirm redirect.
-4. Keep `hosted` mode as fallback for one release cycle; instructions in `CheckoutOverlay` catch mount errors and auto-fallback to `window.location.href = url` if a hosted `url` is also returned.
+5. **Premium loading + success** — Replace `checkoutState.type === 'loading'` branch with `<PaymentFormSkeleton>`. Add a local `isSuccess` state; when `checkout.confirm()` returns `type: 'success'`, render a full-panel checkmark ("Payment confirmed") for ~900ms, then navigate to `returnUrl`. Entitlement remains webhook-driven — the success view is purely visual.
 
-Waiting for approval before editing.
+6. **Calm errors** — On `result.type === 'error'`, look up `stripeErrorCopy.ts` by `error.code` / `error.decline_code` and render a three-line panel (title, why, fix) inline. Modal stays open, PaymentElement state preserved (no remount). Example: `card_declined` → "Your bank declined this card. / Your bank blocked the charge — this can happen for security reasons. / Try another card or contact your bank."
+
+7. **Mobile bottom sheet** — At `<md`, modal becomes `fixed inset-x-0 bottom-0 top-4 rounded-t-2xl`, body scrolls, sticky footer holds the pay button with `pb-[env(safe-area-inset-bottom)]`. Focus trap via `focus-trap-react` (already available via radix; if not, a small inline trap) and ESC-to-close via existing `onClose`. Summary total pinned to header.
+
+## Apple Pay domain registration (required, one-time)
+
+Apple Pay via ExpressCheckoutElement requires each domain that displays the button to be registered with Stripe. Steps for approval turn:
+
+1. In Stripe Dashboard → Settings → Payment methods → Apple Pay → **Add new domain**, register:
+   - `vendibook.com`
+   - `www.vendibook.com`
+   - `vendibookpreview.lovable.app`
+2. Stripe returns a verification file per domain. Serve each at `/.well-known/apple-developer-merchantid-domain-association` on that exact host. Options:
+   - Add the file(s) to `public/.well-known/` in the repo (simplest — works for the Lovable preview and both custom domains since all requests hit the same build).
+   - Or use Stripe API `POST /v1/payment_method_domains` to register programmatically and let Stripe host verification.
+3. Click **Verify** in the Dashboard until status = Verified.
+4. Test in Safari on macOS/iOS — the wallet button only renders when the device has a saved card *and* the domain is verified. Google Pay / Link have no per-domain step.
+
+I'll wait until you confirm the domains registered before flipping the Express row on for production; behind the scenes ExpressCheckoutElement will simply hide Apple Pay on unverified domains, so there's no user-visible break if we ship code first.
+
+## Out of scope (intentionally)
+
+- `create-checkout` edge function, `stripe-webhook`, entitlement grants, Connect payout logic, payment-hold state machine.
+- Feature-flag / hosted-redirect fallback (already in place).
+- Copy rewording elsewhere in the app.
+
+## Approval
+
+Reply "approved" (or with tweaks) and I'll implement in build mode. If Apple Pay domain registration should happen first, say so — I can prep the `.well-known` file drop as step 1.
