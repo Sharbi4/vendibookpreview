@@ -26,18 +26,18 @@ serve(async (req) => {
     );
 
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader) throw new Error("No authorization header provided");
+    if (!authHeader) return jsonError(401, "unauthenticated", "You must be signed in.");
 
     const token = authHeader.replace("Bearer ", "");
     const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
-    if (userError) throw new Error(`Authentication error: ${userError.message}`);
+    if (userError) return jsonError(401, "unauthenticated", `Authentication error: ${userError.message}`);
     
     const user = userData.user;
-    if (!user) throw new Error("User not authenticated");
+    if (!user) return jsonError(401, "unauthenticated", "User not authenticated");
     logStep("User authenticated", { userId: user.id });
 
     const { session_id } = await req.json();
-    if (!session_id) throw new Error("Missing session_id");
+    if (!session_id) return jsonError(400, "missing_fields", "Missing session_id");
     logStep("Session ID received", { session_id });
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
