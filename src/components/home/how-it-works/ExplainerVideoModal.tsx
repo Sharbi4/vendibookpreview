@@ -57,11 +57,13 @@ export const ExplainerVideoModal = ({ explainer, open, onOpenChange }: Props) =>
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl overflow-hidden p-0">
+      <DialogContent
+        className="w-screen max-w-full h-screen max-h-screen p-0 rounded-none border-0 sm:h-auto sm:max-h-[92vh] sm:w-[92vw] sm:max-w-4xl sm:rounded-lg sm:border overflow-hidden"
+      >
         {explainer && (
           <>
             <DialogTitle className="sr-only">{explainer.title}</DialogTitle>
-            <div className="relative">
+            <div className="relative flex h-full w-full flex-col">
               <AnimatedExplainer
                 key={replayKey}
                 explainer={explainer}
@@ -91,5 +93,6 @@ export const ExplainerVideoModal = ({ explainer, open, onOpenChange }: Props) =>
     </Dialog>
   );
 };
+
 
 export default ExplainerVideoModal;

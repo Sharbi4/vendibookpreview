@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { ReactNode } from 'react';
+import { ReactNode, useEffect, useRef, useState } from 'react';
 import {
   Check,
   FileText,
@@ -13,23 +13,67 @@ import {
   Calendar as CalendarIcon,
 } from 'lucide-react';
 
+/**
+ * Safe design canvas: every scene composes at a fixed 960×540 (16:9) so the
+ * scenes look identical on desktop, tablet, and mobile — we uniformly
+ * `transform: scale()` the whole canvas to fit the actual stage. This is
+ * what keeps Vendi + dashboards + side-by-side layouts fully visible on a
+ * ~384px phone viewport instead of getting clipped.
+ */
+const CANVAS_W = 960;
+const CANVAS_H = 540;
+
 /** Full-bleed scene container with caption bar. */
-export const SceneShell = ({ children, caption }: { children: ReactNode; caption: string }) => (
-  <div className="relative h-full w-full overflow-hidden bg-gradient-to-br from-muted/40 via-background to-muted/20">
-    <div className="absolute inset-0">{children}</div>
-    <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-background/95 via-background/70 to-transparent px-4 pb-5 pt-16 sm:px-8 sm:pb-7">
-      <motion.p
-        key={caption}
-        initial={{ y: 12, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.4 }}
-        className="mx-auto max-w-2xl text-center text-base font-semibold leading-snug text-foreground sm:text-lg"
+export const SceneShell = ({ children, caption }: { children: ReactNode; caption: string }) => {
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const [scale, setScale] = useState(1);
+
+  useEffect(() => {
+    const el = wrapRef.current;
+    if (!el) return;
+    const compute = () => {
+      const { width, height } = el.getBoundingClientRect();
+      if (width === 0 || height === 0) return;
+      // Contain: uniform scale so nothing gets clipped or squished.
+      setScale(Math.min(width / CANVAS_W, height / CANVAS_H));
+    };
+    compute();
+    const ro = new ResizeObserver(compute);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  return (
+    <div
+      ref={wrapRef}
+      className="relative h-full w-full overflow-hidden bg-gradient-to-br from-muted/40 via-background to-muted/20"
+    >
+      <div
+        className="absolute left-1/2 top-1/2"
+        style={{
+          width: CANVAS_W,
+          height: CANVAS_H,
+          transform: `translate(-50%, -50%) scale(${scale})`,
+          transformOrigin: 'center center',
+        }}
       >
-        {caption}
-      </motion.p>
+        {children}
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-background/95 via-background/70 to-transparent px-8 pb-7 pt-16">
+          <motion.p
+            key={caption}
+            initial={{ y: 12, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.4 }}
+            className="mx-auto max-w-2xl text-center text-lg font-semibold leading-snug text-foreground"
+          >
+            {caption}
+          </motion.p>
+        </div>
+      </div>
     </div>
-  </div>
-);
+  );
+};
+
 
 export const ListingCardMini = ({
   variant = 'neutral',
