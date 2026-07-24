@@ -565,8 +565,8 @@ serve(async (req) => {
         },
         success_url: uiMode === 'hosted' ? `${origin}/payment-success?session_id={CHECKOUT_SESSION_ID}` : undefined,
         cancel_url: uiMode === 'hosted' ? `${origin}/payment-cancelled?listing=${listing_id}` : undefined,
-        return_url: uiMode === 'elements' ? `${origin}/payment-success?session_id={CHECKOUT_SESSION_ID}` : undefined,
-        ui_mode: uiMode === 'elements' ? 'custom' : undefined,
+        return_url: uiMode === 'custom' ? `${origin}/payment-success?session_id={CHECKOUT_SESSION_ID}` : undefined,
+        ui_mode: uiMode === 'custom' ? 'custom' : undefined,
         metadata: {
           booking_id: booking_id || '',
           listing_id,
@@ -671,8 +671,8 @@ serve(async (req) => {
         },
         success_url: uiMode === 'hosted' ? `${origin}/payment-success?session_id={CHECKOUT_SESSION_ID}&escrow=true` : undefined,
         cancel_url: uiMode === 'hosted' ? `${origin}/payment-cancelled?listing=${listing_id}` : undefined,
-        return_url: uiMode === 'elements' ? `${origin}/payment-success?session_id={CHECKOUT_SESSION_ID}&escrow=true` : undefined,
-        ui_mode: uiMode === 'elements' ? 'custom' : undefined,
+        return_url: uiMode === 'custom' ? `${origin}/payment-success?session_id={CHECKOUT_SESSION_ID}&escrow=true` : undefined,
+        ui_mode: uiMode === 'custom' ? 'custom' : undefined,
         metadata: {
           listing_id,
           mode: 'sale',
@@ -708,7 +708,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({
         url: uiMode === 'hosted' ? session.url : null,
-        client_secret: uiMode === 'elements' ? (session as any).client_secret ?? null : null,
+        client_secret: uiMode === 'custom' ? (session as any).client_secret ?? null : null,
         ui_mode: uiMode,
         session_id: session.id,
         customer_total: customerTotal / 100,
