@@ -60,6 +60,23 @@ export function ProtectionOptInCard({ salePriceCents, saleTransactionId }: Props
             </div>
           </div>
 
+          <button
+            type="button"
+            onClick={() => setShowCalculator((v) => !v)}
+            className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-orange-300 hover:text-orange-200"
+            aria-expanded={showCalculator}
+          >
+            <ChevronDown className={`h-3.5 w-3.5 transition-transform ${showCalculator ? 'rotate-180' : ''}`} />
+            {showCalculator ? 'Hide fee calculator' : 'Preview the fee at other prices'}
+          </button>
+          {showCalculator ? (
+            <ProtectedSaleFeeCalculator
+              initialSalePriceCents={salePriceCents}
+              className="mt-3"
+              compact
+            />
+          ) : null}
+
           {saleTransactionId ? (
             <Link
               to={`/sale/${saleTransactionId}/protection`}
