@@ -7,6 +7,8 @@ import { ShareKit, ShareKitListing } from '@/components/listing-wizard/ShareKit'
 import { ListingCategory, ListingMode } from '@/types/listing';
 import { useToast } from '@/hooks/use-toast';
 import BoostListingPrompt from '@/components/dashboard/BoostListingPrompt';
+import { UpgradePackageCards } from '@/components/monetization/UpgradePackageCards';
+import { PromoteListingPanel } from '@/components/monetization/PromoteListingPanel';
 import PublishStatusSummary from '@/components/listing-wizard/PublishStatusSummary';
 import { reportError } from '@/lib/errorReporter';
 
@@ -360,6 +362,18 @@ const ListingPublished: React.FC = () => {
       {/* Post-publish: offer 30-day boost */}
       {boostCandidate && (
         <BoostListingPrompt listings={[boostCandidate]} userId={user?.id} />
+      )}
+
+      {/* Optional seller upgrades — every listing on Vendibook is free; these are optional tools. */}
+      {listingId && (
+        <div className="container max-w-4xl mx-auto px-4 pb-16 space-y-10">
+          <UpgradePackageCards
+            listingId={listingId}
+            onSkip={() => navigate('/dashboard')}
+            skipLabel="Continue with free listing"
+          />
+          <PromoteListingPanel listingId={listingId} />
+        </div>
       )}
     </div>
   );
