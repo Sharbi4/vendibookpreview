@@ -17,6 +17,12 @@ interface Body {
   discount_code?: string;
   success_path?: string;
   cancel_path?: string;
+  /**
+   * user_consents.id captured client-side via SubscriptionConsentDialog.
+   * REQUIRED for products where billing_type === "recurring"
+   * (ROSCA + California AB 2863 affirmative-consent record).
+   */
+  consent_id?: string;
 }
 
 serve(async (req) => {

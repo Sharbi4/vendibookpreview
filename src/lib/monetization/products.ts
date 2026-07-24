@@ -126,6 +126,11 @@ export interface StartCheckoutInput {
   discountCode?: string;
   successPath?: string;
   cancelPath?: string;
+  /**
+   * user_consents.id captured via SubscriptionConsentDialog. REQUIRED for
+   * recurring products (ROSCA / CA AB 2863). Ignored for one-time products.
+   */
+  consentId?: string;
 }
 
 export async function startMonetizationCheckout(input: StartCheckoutInput): Promise<{ url: string }> {
@@ -136,6 +141,7 @@ export async function startMonetizationCheckout(input: StartCheckoutInput): Prom
       discount_code: input.discountCode,
       success_path: input.successPath,
       cancel_path: input.cancelPath,
+      consent_id: input.consentId,
     },
   });
   if (error) throw error;
