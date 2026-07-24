@@ -1832,9 +1832,12 @@ export type Database = {
           created_at: string
           current_period_end: string | null
           current_period_start: string | null
+          flag_reason: string | null
+          flagged_at: string | null
           id: string
           last_error: Json | null
           metadata: Json
+          revoke_at_period_end: boolean
           status: string
           stripe_customer_id: string | null
           stripe_price_id: string | null
@@ -1850,9 +1853,12 @@ export type Database = {
           created_at?: string
           current_period_end?: string | null
           current_period_start?: string | null
+          flag_reason?: string | null
+          flagged_at?: string | null
           id?: string
           last_error?: Json | null
           metadata?: Json
+          revoke_at_period_end?: boolean
           status?: string
           stripe_customer_id?: string | null
           stripe_price_id?: string | null
@@ -1868,9 +1874,12 @@ export type Database = {
           created_at?: string
           current_period_end?: string | null
           current_period_start?: string | null
+          flag_reason?: string | null
+          flagged_at?: string | null
           id?: string
           last_error?: Json | null
           metadata?: Json
+          revoke_at_period_end?: boolean
           status?: string
           stripe_customer_id?: string | null
           stripe_price_id?: string | null
@@ -5381,8 +5390,10 @@ export type Database = {
           error_message: string | null
           event_type: string
           id: string
+          last_retry_at: string | null
           payload: Json
           processed_at: string
+          retry_count: number
           status: string
           stripe_event_id: string
         }
@@ -5390,8 +5401,10 @@ export type Database = {
           error_message?: string | null
           event_type: string
           id?: string
+          last_retry_at?: string | null
           payload: Json
           processed_at?: string
+          retry_count?: number
           status?: string
           stripe_event_id: string
         }
@@ -5399,8 +5412,10 @@ export type Database = {
           error_message?: string | null
           event_type?: string
           id?: string
+          last_retry_at?: string | null
           payload?: Json
           processed_at?: string
+          retry_count?: number
           status?: string
           stripe_event_id?: string
         }
@@ -7174,6 +7189,10 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      user_has_tier: {
+        Args: { _min_tier: string; _user_id: string }
+        Returns: boolean
       }
     }
     Enums: {
