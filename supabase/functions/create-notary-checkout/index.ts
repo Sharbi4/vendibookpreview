@@ -1,7 +1,9 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
+import { jsonError, unknownErrorResponse } from "../_shared/jsonError.ts";
 
+// Keep the extended CORS header list this function historically accepts.
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
@@ -34,18 +36,18 @@ serve(async (req) => {
     );
 
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader) throw new Error("No authorization header provided");
+    if (!authHeader) return jsonError(401, "unauthenticated", "You must be signed in.");
 
     const token = authHeader.replace("Bearer ", "");
     const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
-    if (userError) throw new Error(`Authentication error: ${userError.message}`);
-    
+    if (userError) return jsonError(401, "unauthenticated", `Authentication error: ${userError.message}`);
+
     const user = userData.user;
-    if (!user?.email) throw new Error("User not authenticated or email not available");
+    if (!user?.email) return jsonError(401, "unauthenticated", "User not authenticated or email not available");
     logStep("User authenticated", { userId: user.id, email: user.email });
 
     const { listing_id } = await req.json();
-    if (!listing_id) throw new Error("Missing listing_id");
+    if (!listing_id) return jsonError(400, "missing_fields", "Missing listing_id");
     logStep("Request parsed", { listing_id });
 
     // Verify the listing exists and belongs to this user
@@ -61,15 +63,15 @@ serve(async (req) => {
     });
 
     if (listingError || !listing) {
-      throw new Error(`Listing not found: ${listingError?.message || 'No data returned'}`);
+      return jsonError(404, "listing_not_found", `Listing not found: ${listingError?.message || 'No data returned'}`);
     }
 
     if (listing.host_id !== user.id) {
-      throw new Error("Unauthorized: You do not own this listing");
+      return jsonError(403, "not_owner", "You do not own this listing.");
     }
 
     if (!listing.proof_notary_enabled) {
-      throw new Error("Proof Notary is not enabled for this listing");
+      return jsonError(409, "feature_not_enabled", "Proof Notary is not enabled for this listing.");
     }
 
     logStep("Listing verified", { listingId: listing.id, title: listing.title });
@@ -122,9 +124,6 @@ serve(async (req) => {
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     logStep("ERROR", { message: errorMessage });
-    return new Response(JSON.stringify({ error: errorMessage }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 500,
-    });
+    return unknownErrorResponse(error);
   }
 });

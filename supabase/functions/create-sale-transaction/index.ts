@@ -1,13 +1,9 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
+import { corsHeaders, jsonError, unknownErrorResponse } from "../_shared/jsonError.ts";
 
 declare const EdgeRuntime: { waitUntil: (promise: Promise<unknown>) => void };
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
 
 const logStep = (step: string, details?: Record<string, unknown>) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
@@ -47,7 +43,7 @@ serve(async (req) => {
     logStep("Request received", { session_id });
 
     if (!session_id) {
-      throw new Error("Missing required field: session_id");
+      return jsonError(400, "missing_session_id", "Missing required field: session_id");
     }
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
@@ -64,12 +60,12 @@ serve(async (req) => {
     });
 
     if (session.payment_status !== 'paid') {
-      throw new Error("Payment not completed");
+      return jsonError(409, "payment_not_completed", "Payment not completed");
     }
 
     // Check if this is an escrow sale
     if (session.metadata?.mode !== 'sale' || session.metadata?.escrow !== 'true') {
-      throw new Error("This is not an escrow sale transaction");
+      return jsonError(409, "not_escrow_sale", "This is not an escrow sale transaction");
     }
 
     // Check if transaction already exists (avoid .single() so "0 rows" doesn't throw)
@@ -258,9 +254,6 @@ serve(async (req) => {
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     logStep("ERROR", { message: errorMessage });
-    return new Response(JSON.stringify({ error: errorMessage }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 500,
-    });
+    return unknownErrorResponse(error);
   }
 });

@@ -13,6 +13,8 @@ import Footer from '@/components/layout/Footer';
 import { CheckoutOverlay, EmbeddedStripeCheckout } from '@/components/checkout';
 import CheckoutOrderSummary from '@/components/checkout/CheckoutOrderSummary';
 import { isEmbeddedCheckoutEnabled } from '@/lib/featureFlags';
+import { parseEdgeError } from '@/lib/edgeErrors';
+import { checkoutErrorCopy } from '@/lib/checkoutErrorCopy';
 import { validators } from '@/components/ui/validated-input';
 import { trackFormSubmitConversion } from '@/lib/gtagConversions';
 import { trackPurchase, trackInitiateCheckout } from '@/lib/facebookCAPI';
@@ -514,12 +516,23 @@ const SaleCheckout = () => {
           freight_cost: isVendibookFreight ? freightCost : 0,
           referral_code: referralValid ? referralCode : undefined,
           terms_id: termsId,
-          ui_mode: useEmbedded ? 'elements' : 'hosted',
+          ui_mode: useEmbedded ? 'custom' : 'hosted',
         },
       });
 
-      if (error) throw error;
-      if (data.error) throw new Error(data.error);
+      if (error || data?.error) {
+        const parsed = await parseEdgeError(error, data?.error ? { error: data.error, code: data.code } : null);
+        const copy = checkoutErrorCopy(parsed);
+        setShowCheckoutOverlay(false);
+        setEmbeddedCheckout(null);
+        toast({
+          title: copy.title,
+          description: copy.description,
+          variant: 'destructive',
+        });
+        setIsPurchasing(false);
+        return;
+      }
 
       trackFormSubmitConversion({ form_type: 'purchase', listing_id: listingId });
       trackInitiateCheckout({
@@ -552,9 +565,11 @@ const SaleCheckout = () => {
     } catch (error) {
       setShowCheckoutOverlay(false);
       setEmbeddedCheckout(null);
+      const parsed = await parseEdgeError(error);
+      const copy = checkoutErrorCopy(parsed);
       toast({
-        title: 'Purchase Error',
-        description: error instanceof Error ? error.message : 'Failed to start checkout',
+        title: copy.title,
+        description: copy.description,
         variant: 'destructive',
       });
     } finally {

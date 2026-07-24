@@ -1,12 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
-};
+import { corsHeaders, jsonError, jsonResponse, unknownErrorResponse } from "../_shared/jsonError.ts";
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -22,12 +17,12 @@ serve(async (req) => {
     );
 
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader) throw new Error("No authorization header provided");
+    if (!authHeader) return jsonError(401, "unauthenticated", "You must be signed in.");
     const token = authHeader.replace("Bearer ", "");
     const { data: userData, error: userError } = await supabase.auth.getUser(token);
-    if (userError) throw new Error(`Authentication error: ${userError.message}`);
+    if (userError) return jsonError(401, "unauthenticated", `Authentication error: ${userError.message}`);
     const user = userData.user;
-    if (!user?.email) throw new Error("User not authenticated or email not available");
+    if (!user?.email) return jsonError(401, "unauthenticated", "User not authenticated or email not available");
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
 
@@ -47,7 +42,7 @@ serve(async (req) => {
       const customers = await stripe.customers.list({ email: user.email, limit: 1 });
       customerId = customers.data[0]?.id;
     }
-    if (!customerId) throw new Error("No Stripe customer found for this account");
+    if (!customerId) return jsonError(404, "no_stripe_customer", "No Stripe customer found for this account.");
 
     const origin = req.headers.get("origin") || "https://vendibook.com";
     const portal = await stripe.billingPortal.sessions.create({
@@ -55,16 +50,10 @@ serve(async (req) => {
       return_url: `${origin}/account`,
     });
 
-    return new Response(JSON.stringify({ url: portal.url }), {
-      status: 200,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return jsonResponse(200, { url: portal.url });
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     console.error("[CUSTOMER-PORTAL]", msg);
-    return new Response(JSON.stringify({ error: msg }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return unknownErrorResponse(err);
   }
 });

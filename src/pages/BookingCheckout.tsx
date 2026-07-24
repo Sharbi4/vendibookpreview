@@ -41,6 +41,8 @@ import { trackRequestStarted, trackRequestSubmitted } from '@/lib/analytics';
 import { EmbeddedStripeCheckout } from '@/components/checkout';
 import CheckoutOrderSummary from '@/components/checkout/CheckoutOrderSummary';
 import { isEmbeddedCheckoutEnabled } from '@/lib/featureFlags';
+import { parseEdgeError } from '@/lib/edgeErrors';
+import { checkoutErrorCopy } from '@/lib/checkoutErrorCopy';
 import { FinalReviewSheet } from '@/components/transaction/FinalReviewSheet';
 import { useTermsGate } from '@/hooks/useTermsGate';
 import { buildTerms } from '@/lib/transactionTerms';
@@ -485,7 +487,7 @@ const BookingCheckout = () => {
           deposit_amount: depositAmount,
           referral_code: referralValid ? referralCode : undefined,
           terms_id: termsGate.termsId,
-          ...(useEmbedded ? { ui_mode: 'elements' } : {}),
+          ...(useEmbedded ? { ui_mode: 'custom' } : {}),
         },
       });
 
@@ -514,7 +516,19 @@ const BookingCheckout = () => {
         return;
       }
 
-      if (checkoutError) throw checkoutError;
+      if (checkoutError || (checkoutData && (checkoutData as { error?: string }).error)) {
+        if (checkoutWindow) checkoutWindow.close();
+        const parsed = await parseEdgeError(
+          checkoutError,
+          (checkoutData as { error?: string; code?: string } | null)?.error
+            ? { error: (checkoutData as { error?: string }).error, code: (checkoutData as { code?: string }).code }
+            : null,
+        );
+        const copy = checkoutErrorCopy(parsed);
+        toast({ title: copy.title, description: copy.description, variant: 'destructive' });
+        setIsSubmitting(false);
+        return;
+      }
       if (useEmbedded && checkoutData?.client_secret) {
         const returnUrl = `${window.location.origin}/payment-success?session_id=${checkoutData.session_id}`;
         setEmbeddedCheckout({ clientSecret: checkoutData.client_secret, returnUrl });
@@ -562,9 +576,11 @@ const BookingCheckout = () => {
       // Close the pre-opened window if there was an error
       if (checkoutWindow) checkoutWindow.close();
       console.error('Error submitting booking:', error);
+      const parsed = await parseEdgeError(error);
+      const copy = checkoutErrorCopy(parsed);
       toast({
-        title: 'Error',
-        description: 'Failed to submit booking. Please try again.',
+        title: copy.title,
+        description: copy.description,
         variant: 'destructive',
       });
     } finally {

@@ -1,11 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+import { corsHeaders, jsonError, jsonResponse, unknownErrorResponse } from "../_shared/jsonError.ts";
 
 // Commission rates
 const RENTAL_HOST_FEE_PERCENT = 12.9; // 12.9% from host
@@ -42,9 +38,10 @@ interface CheckoutRequest {
   // fresh terms row, preserving the acknowledgement stamp written by
   // acknowledge-terms in the FinalReviewSheet flow.
   terms_id?: string | null;
-  // When 'elements', create an embedded Payment Element session (client_secret returned).
-  // When 'hosted' (default fallback), create a redirect Checkout session (url returned).
-  ui_mode?: 'hosted' | 'elements';
+  // 'custom' → embedded Stripe Custom Checkout (client_secret returned).
+  // 'hosted' → redirect Checkout Session (url returned).
+  // 'elements' is accepted as a backward-compatible alias for 'custom'.
+  ui_mode?: 'hosted' | 'custom' | 'elements';
 }
 
 serve(async (req) => {
@@ -65,14 +62,14 @@ serve(async (req) => {
     );
 
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader) throw new Error("No authorization header provided");
+    if (!authHeader) return jsonError(401, "unauthenticated", "You must be signed in to check out.");
 
     const token = authHeader.replace("Bearer ", "");
     const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
-    if (userError) throw new Error(`Authentication error: ${userError.message}`);
-    
+    if (userError) return jsonError(401, "unauthenticated", `Authentication error: ${userError.message}`);
+
     const user = userData.user;
-    if (!user?.email) throw new Error("User not authenticated or email not available");
+    if (!user?.email) return jsonError(401, "unauthenticated", "User not authenticated or email not available");
     logStep("User authenticated", { userId: user.id, email: user.email });
 
     const body: CheckoutRequest = await req.json();
@@ -96,7 +93,8 @@ serve(async (req) => {
       terms_id: draftTermsId,
       ui_mode: uiModeRaw,
     } = body;
-    const uiMode: 'hosted' | 'elements' = uiModeRaw === 'elements' ? 'elements' : 'hosted';
+    // Accept 'elements' as a backward-compatible alias for 'custom'.
+    const uiMode: 'hosted' | 'custom' = (uiModeRaw === 'custom' || uiModeRaw === 'elements') ? 'custom' : 'hosted';
     const referral_code = rawReferralCode ? String(rawReferralCode).trim().toUpperCase().slice(0, 32) : '';
     
     // Handle null values from request body (null !== undefined, so defaults don't apply)
@@ -110,7 +108,7 @@ serve(async (req) => {
     });
 
     if (!listing_id || !mode || !amount) {
-      throw new Error("Missing required fields: listing_id, mode, or amount");
+      return jsonError(400, "missing_fields", "Missing required fields: listing_id, mode, or amount");
     }
 
     // Fetch listing to get host's Stripe account and details for checkout display
@@ -121,9 +119,14 @@ serve(async (req) => {
       .single();
 
     if (listingError || !listing) {
-      throw new Error("Listing not found");
+      return jsonError(404, "listing_not_found", "Listing not found");
     }
     logStep("Listing found", { host_id: listing.host_id, title: listing.title });
+
+    // Owner cannot buy/rent their own listing.
+    if (listing.host_id === user.id) {
+      return jsonError(403, "owner_cannot_buy_own_listing", "You can't purchase your own listing.");
+    }
 
     // Fetch host's Stripe account and display name
     const { data: hostProfile, error: hostError } = await supabaseClient
@@ -132,12 +135,17 @@ serve(async (req) => {
       .eq('id', listing.host_id)
       .single();
 
-    if (hostError || !hostProfile?.stripe_account_id) {
-      throw new Error("Host has not completed Stripe onboarding");
-    }
-
-    if (!hostProfile.stripe_onboarding_complete) {
-      throw new Error("Host's Stripe account is not fully onboarded");
+    if (hostError || !hostProfile?.stripe_account_id || !hostProfile.stripe_onboarding_complete) {
+      logStep("Host not onboarded", {
+        hostError: hostError?.message,
+        hasAccount: !!hostProfile?.stripe_account_id,
+        onboardingComplete: hostProfile?.stripe_onboarding_complete,
+      });
+      return jsonError(
+        409,
+        "host_not_onboarded",
+        "This seller isn't set up to accept online payments yet. We've let them know — please check back soon or message them directly.",
+      );
     }
     logStep("Host Stripe account verified", { stripe_account_id: hostProfile.stripe_account_id });
     
@@ -182,10 +190,7 @@ serve(async (req) => {
           } else if (availability && (availability as { available?: boolean }).available === false) {
             const reason = (availability as { error?: string }).error || 'This time is no longer available.';
             logStep("Availability conflict", { reason });
-            return new Response(
-              JSON.stringify({ error: reason, code: 'availability_conflict' }),
-              { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 409 }
-            );
+            return jsonError(409, "availability_conflict", reason);
           }
         }
       }
@@ -402,7 +407,7 @@ serve(async (req) => {
         .maybeSingle();
       if (updErr || !updated) {
         logStep('Draft terms activation failed', { error: updErr?.message, draftTermsId });
-        throw new Error(`Failed to activate draft terms: ${updErr?.message || 'not found'}`);
+        return jsonError(409, "terms_draft_invalid", `Could not activate the terms draft: ${updErr?.message || 'not found'}`);
       }
       terms_id = updated.id;
       logStep('Terms snapshot activated from draft', { terms_id });
@@ -560,8 +565,8 @@ serve(async (req) => {
         },
         success_url: uiMode === 'hosted' ? `${origin}/payment-success?session_id={CHECKOUT_SESSION_ID}` : undefined,
         cancel_url: uiMode === 'hosted' ? `${origin}/payment-cancelled?listing=${listing_id}` : undefined,
-        return_url: uiMode === 'elements' ? `${origin}/payment-success?session_id={CHECKOUT_SESSION_ID}` : undefined,
-        ui_mode: uiMode === 'elements' ? 'custom' : undefined,
+        return_url: uiMode === 'custom' ? `${origin}/payment-success?session_id={CHECKOUT_SESSION_ID}` : undefined,
+        ui_mode: uiMode === 'custom' ? 'custom' : undefined,
         metadata: {
           booking_id: booking_id || '',
           listing_id,
@@ -666,8 +671,8 @@ serve(async (req) => {
         },
         success_url: uiMode === 'hosted' ? `${origin}/payment-success?session_id={CHECKOUT_SESSION_ID}&escrow=true` : undefined,
         cancel_url: uiMode === 'hosted' ? `${origin}/payment-cancelled?listing=${listing_id}` : undefined,
-        return_url: uiMode === 'elements' ? `${origin}/payment-success?session_id={CHECKOUT_SESSION_ID}&escrow=true` : undefined,
-        ui_mode: uiMode === 'elements' ? 'custom' : undefined,
+        return_url: uiMode === 'custom' ? `${origin}/payment-success?session_id={CHECKOUT_SESSION_ID}&escrow=true` : undefined,
+        ui_mode: uiMode === 'custom' ? 'custom' : undefined,
         metadata: {
           listing_id,
           mode: 'sale',
@@ -700,29 +705,20 @@ serve(async (req) => {
     });
     logStep("Checkout session created", { sessionId: session.id, url: session.url, idempotencyKey });
 
-    return new Response(
-      JSON.stringify({
-        url: uiMode === 'hosted' ? session.url : null,
-        client_secret: uiMode === 'elements' ? (session as any).client_secret ?? null : null,
-        ui_mode: uiMode,
-        session_id: session.id,
-        customer_total: customerTotal / 100,
-        platform_fee: applicationFee / 100,
-        host_receives: hostReceives / 100,
-        terms_id,
-        terms_version: TERMS_VERSION,
-      }),
-      {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 200,
-      }
-    );
+    return jsonResponse(200, {
+      url: uiMode === 'hosted' ? session.url : null,
+      client_secret: uiMode === 'custom' ? (session as any).client_secret ?? null : null,
+      ui_mode: uiMode,
+      session_id: session.id,
+      customer_total: customerTotal / 100,
+      platform_fee: applicationFee / 100,
+      host_receives: hostReceives / 100,
+      terms_id,
+      terms_version: TERMS_VERSION,
+    });
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     logStep("ERROR", { message: errorMessage });
-    return new Response(JSON.stringify({ error: errorMessage }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 500,
-    });
+    return unknownErrorResponse(error);
   }
 });
