@@ -66,7 +66,16 @@ export type LeadEventName =
   | 'profile_message_host_click'
   | 'profile_share_click'
   // Session linking
-  | 'session_user_link';
+  | 'session_user_link'
+  // How Vendibook Works videos
+  | 'homepage_video_tile_viewed'
+  | 'homepage_video_opened'
+  | 'homepage_video_started'
+  | 'homepage_video_25_percent'
+  | 'homepage_video_50_percent'
+  | 'homepage_video_75_percent'
+  | 'homepage_video_completed'
+  | 'homepage_video_cta_clicked';
 
 
 export interface LeadEventPayload {
@@ -135,6 +144,14 @@ const EVENT_CATEGORY: Record<LeadEventName, string> = {
   profile_message_host_click: 'storefront',
   profile_share_click: 'storefront',
   session_user_link: 'attribution',
+  homepage_video_tile_viewed: 'homepage',
+  homepage_video_opened: 'homepage',
+  homepage_video_started: 'homepage',
+  homepage_video_25_percent: 'homepage',
+  homepage_video_50_percent: 'homepage',
+  homepage_video_75_percent: 'homepage',
+  homepage_video_completed: 'homepage',
+  homepage_video_cta_clicked: 'homepage',
 };
 
 
