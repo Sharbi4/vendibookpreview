@@ -840,26 +840,45 @@ export const AppFrame = ({
   children: ReactNode;
   live?: boolean;
 }) => (
-  <div className="relative w-full max-w-md overflow-hidden rounded-2xl border border-border bg-card/95 shadow-[0_30px_80px_-30px_hsl(var(--primary)/0.45),0_15px_40px_-15px_hsl(var(--foreground)/0.35)] ring-1 ring-border/60 backdrop-blur">
-    {/* Title bar */}
-    <div className="flex items-center gap-2 border-b border-border/70 bg-muted/40 px-3 py-2">
-      <div className="flex items-center gap-1.5">
-        <span className="h-2.5 w-2.5 rounded-full bg-[#ff5f57]" />
-        <span className="h-2.5 w-2.5 rounded-full bg-[#febc2e]" />
-        <span className="h-2.5 w-2.5 rounded-full bg-[#28c840]" />
+  <div className="relative w-full max-w-md">
+    {/* DOF backdrop — soft, blurred, offset ghost frame for cinematic depth. */}
+    <div
+      aria-hidden
+      className="pointer-events-none absolute -inset-3 -z-10 rounded-3xl opacity-70"
+      style={{
+        background:
+          'radial-gradient(60% 55% at 30% 20%, hsl(var(--primary) / 0.35), transparent 70%), radial-gradient(55% 50% at 80% 90%, hsl(var(--foreground) / 0.25), transparent 72%)',
+        filter: 'blur(18px)',
+      }}
+    />
+    <div
+      aria-hidden
+      className="pointer-events-none absolute -right-4 -top-3 h-full w-full -z-10 rounded-2xl border border-border/40 bg-card/60 opacity-60"
+      style={{ filter: 'blur(4px)', transform: 'rotate(2deg) scale(0.96)' }}
+    />
+    <div className="relative overflow-hidden rounded-2xl border border-border bg-card/95 shadow-[0_30px_80px_-30px_hsl(var(--primary)/0.45),0_15px_40px_-15px_hsl(var(--foreground)/0.35)] ring-1 ring-border/60 backdrop-blur">
+      {/* Title bar */}
+      <div className="flex items-center gap-2 border-b border-border/70 bg-muted/40 px-3 py-2">
+        <div className="flex items-center gap-1.5">
+          <span className="h-2.5 w-2.5 rounded-full bg-[#ff5f57]" />
+          <span className="h-2.5 w-2.5 rounded-full bg-[#febc2e]" />
+          <span className="h-2.5 w-2.5 rounded-full bg-[#28c840]" />
+        </div>
+        <div className="mx-2 flex flex-1 items-center gap-1.5 rounded-md bg-background/80 px-2 py-1 text-[10px] font-medium text-muted-foreground ring-1 ring-border/60">
+          <Lock className="h-2.5 w-2.5 text-primary" />
+          <span className="truncate"><span className="text-foreground/70">{url}</span>{path}</span>
+        </div>
+        {live && (
+          <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-primary ring-1 ring-primary/30">
+            <LiveDot />
+            Live
+          </span>
+        )}
       </div>
-      <div className="mx-2 flex flex-1 items-center gap-1.5 rounded-md bg-background/80 px-2 py-1 text-[10px] font-medium text-muted-foreground ring-1 ring-border/60">
-        <Lock className="h-2.5 w-2.5 text-primary" />
-        <span className="truncate"><span className="text-foreground/70">{url}</span>{path}</span>
-      </div>
-      {live && (
-        <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-primary ring-1 ring-primary/30">
-          <LiveDot />
-          Live
-        </span>
-      )}
+      <div className="p-4">{children}</div>
+      {/* Crisp inner highlight for retina sharpness */}
+      <div aria-hidden className="pointer-events-none absolute inset-0 rounded-2xl ring-1 ring-inset ring-white/5" />
     </div>
-    <div className="p-4">{children}</div>
   </div>
 );
 
