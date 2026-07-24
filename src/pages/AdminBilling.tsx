@@ -59,7 +59,7 @@ function fmtDate(iso?: string | null) {
 }
 
 export default function AdminBilling() {
-  const { user, loading: authLoading } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [subs, setSubs] = useState<Sub[]>([]);
   const [events, setEvents] = useState<Evt[]>([]);
