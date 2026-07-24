@@ -10,6 +10,7 @@ import {
   startMonetizationCheckout,
   type MonetizationProduct,
 } from '@/lib/monetization/products';
+import { trackLeadEvent } from '@/lib/leadTracking';
 
 interface Props {
   product: MonetizationProduct;
@@ -46,6 +47,11 @@ export function ProductPricingCard({
         if (!ok) return;
       }
       setBusy(true);
+      trackLeadEvent('checkout_started', {
+        product_slug: product.slug,
+        listing_id: listingId,
+        surface: 'product_pricing_card',
+      });
       const { url } = await startMonetizationCheckout({
         productSlug: product.slug,
         listingId,
