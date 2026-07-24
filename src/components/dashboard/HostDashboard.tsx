@@ -1,104 +1,39 @@
-import { Link, useSearchParams } from 'react-router-dom';
 import { useMemo, useState } from 'react';
 import {
-  Plus,
-  Calendar,
-  MessageSquare,
-  Settings,
-  Loader2,
-  Truck,
-  BarChart3,
-  DollarSign,
   Clock,
   Banknote,
   ShieldAlert,
+  DollarSign,
+  MessageSquare,
 } from 'lucide-react';
 import ActionRequiredStack, { type ActionItem } from './shared/ActionRequiredStack';
-import { Button } from '@/components/ui/button';
-import { CommandStatCard } from './CommandStatCard';
-import { CommandHeader } from './CommandHeader';
-import { SectionReveal, Reveal } from './SectionReveal';
-import { NextBestAction } from './NextBestAction';
-import { ContinueSetup } from '@/components/journey';
-import { useResumableJourneys } from '@/hooks/useResumableJourneys';
-import { OnboardingChecklist } from './OnboardingChecklist';
 import StripeNotificationBubble from './StripeNotificationBubble';
-import HostListingCard from './HostListingCard';
-import BookingRequestsSection from './BookingRequestsSection';
-import SellerSalesSection from './SellerSalesSection';
-import DraftsSection from './DraftsSection';
-import { EnhancedAnalytics } from './EnhancedAnalytics';
-import { RevenueAnalyticsCard } from './RevenueAnalyticsCard';
-import { HostOffersSection } from './HostOffersSection';
-import { ListingInsightsPanel } from './ListingInsightsPanel';
-import { AICopilotLauncher } from './AICopilotLauncher';
-import { PromotionHub } from './PromotionHub';
 import { BoostListingPrompt } from './BoostListingPrompt';
-import { KitchenProSuite } from './KitchenProSuite';
-import { ReferAHostCard } from '@/components/host/ReferAHostCard';
-import { RecommendedAddOns } from '@/components/monetization/RecommendedAddOns';
-import ReferralLeaderboardCard from '@/components/referrals/ReferralLeaderboardCard';
-import PermitsTab from './PermitsTab';
-import { ConversionFunnel } from '@/components/analytics/ConversionFunnel';
-import { RevenueChart } from '@/components/analytics/RevenueChart';
-import { TrafficSourcesCard } from '@/components/analytics/TrafficSourcesCard';
-import { CompetitorPricingCard } from '@/components/analytics/CompetitorPricingCard';
-import { DemandHeatmap } from './DemandHeatmap';
-import { PredictiveBookingCard } from './PredictiveBookingCard';
-import { useDashboardPersona } from '@/hooks/useDashboardPersona';
-import { OperationsTable } from './OperationsTable';
+import { StripeConnectModal } from '@/components/listing-wizard/StripeConnectModal';
+import OverviewGreeting from './overview/OverviewGreeting';
+import { KpiCard } from './overview/KpiCard';
+import RecentActivityStrip, { ActivityItem } from './overview/RecentActivityStrip';
 import { useHostListings } from '@/hooks/useHostListings';
 import { useHostBookings } from '@/hooks/useHostBookings';
 import { useStripeConnect } from '@/hooks/useStripeConnect';
-import { useListingAnalytics } from '@/hooks/useListingAnalytics';
 import { useRevenueAnalytics } from '@/hooks/useRevenueAnalytics';
 import { useHostOffers } from '@/hooks/useHostOffers';
+import { useUnreadMessageCount } from '@/hooks/useUnreadMessageCount';
 import { useAuth } from '@/contexts/AuthContext';
-import { StripeConnectModal } from '@/components/listing-wizard/StripeConnectModal';
 
-/* ──────────────────────────────────────────────────────────────
-   Section wrapper — quiet, hairline, generous breathing room
-   ────────────────────────────────────────────────────────────── */
-const Section = ({
-  title,
-  action,
-  children,
-}: {
-  title?: string;
-  action?: React.ReactNode;
-  children: React.ReactNode;
-}) => (
-  <section>
-    {(title || action) && (
-      <div className="flex items-end justify-between mb-4">
-        {title && (
-          <h2 className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-            {title}
-          </h2>
-        )}
-        {action}
-      </div>
-    )}
-    {children}
-  </section>
-);
-
+/**
+ * NEW OVERVIEW — one viewport-ish surface:
+ *   1. compact greeting
+ *   2. 4 large KPI cards (ember on primary)
+ *   3. needs-your-attention stack
+ *   4. single recent-activity strip (last 3 bookings)
+ *
+ * All deeper tabs live behind Dashboard.tsx lazy routes.
+ */
 const HostDashboard = () => {
   const { user, profile, isVerified } = useAuth();
-  const [searchParams] = useSearchParams();
-  const {
-    listings,
-    isLoading,
-    stats,
-    pauseListing,
-    publishListing,
-    unpauseListing,
-    archiveListing,
-    duplicateListing,
-    deleteListing,
-    updateListingPrice,
-  } = useHostListings();
-  const { stats: bookingStats } = useHostBookings();
+  const { listings, stats } = useHostListings();
+  const { bookings, stats: bookingStats } = useHostBookings();
   const {
     isConnected,
     isLoading: stripeLoading,
@@ -107,451 +42,134 @@ const HostDashboard = () => {
     openStripeDashboard,
     isOpeningDashboard,
   } = useStripeConnect();
-  const { analytics, isLoading: analyticsLoading } = useListingAnalytics();
-  const { analytics: revenueAnalytics, isLoading: revenueLoading } = useRevenueAnalytics();
+  const { analytics: revenueAnalytics } = useRevenueAnalytics();
   const { pendingOffers } = useHostOffers();
-  const { hasGhostKitchen } = useDashboardPersona();
+  const { count: unreadMessageCount } = useUnreadMessageCount();
   const [showStripeModal, setShowStripeModal] = useState(false);
-  const { items: resumableItems } = useResumableJourneys();
-
-  const activeTab = searchParams.get('tab') || 'overview';
-
-  const userType = useMemo(() => {
-    const hasRentals = listings.some((l) => l.mode === 'rent');
-    const hasSales = listings.some((l) => l.mode === 'sale');
-    if (hasRentals && hasSales) return 'hybrid';
-    if (hasSales) return 'seller';
-    return 'host';
-  }, [listings]);
-
-  const draftListings = useMemo(
-    () => listings.filter((l) => l.status === 'draft'),
-    [listings],
-  );
 
   const firstName = profile?.full_name?.split(' ')[0];
+  const monthlyRevenue = revenueAnalytics?.revenueThisMonth || 0;
+  const nextPayoutHint = monthlyRevenue > 0
+    ? 'Rentals settle in 24h · sales in 25d'
+    : 'Nothing pending';
 
-  /* Context line — single sentence, quiet authority */
-  const contextLine =
-    bookingStats.pending > 0
-      ? `${bookingStats.pending} request${bookingStats.pending > 1 ? 's' : ''} awaiting your reply.`
-      : pendingOffers.length > 0
-      ? `${pendingOffers.length} offer${pendingOffers.length > 1 ? 's' : ''} on the table.`
-      : draftListings.length > 0
-      ? `${draftListings.length} draft${draftListings.length > 1 ? 's' : ''} ready to publish.`
-      : userType === 'seller'
-      ? 'Your sales pipeline is quiet. A good day to follow up.'
-      : 'Everything is in order. Nothing needs you right now.';
+  const actionItems: ActionItem[] = useMemo(() => {
+    const items: ActionItem[] = [];
+    if (bookingStats.pending > 0) items.push({
+      id: 'pending-bookings', icon: Clock,
+      title: `${bookingStats.pending} booking request${bookingStats.pending > 1 ? 's' : ''}`,
+      description: 'Review and reply so guests can plan.',
+      href: '/host/bookings', cta: 'Review', tone: 'warning',
+    });
+    if (!stripeLoading && !isConnected) items.push({
+      id: 'stripe', icon: Banknote,
+      title: 'Finish Stripe onboarding',
+      description: 'Required to accept card payments and receive payouts.',
+      href: '/dashboard?view=host&tab=payouts', cta: 'Set up', tone: 'warning',
+    });
+    if (!isVerified) items.push({
+      id: 'verify', icon: ShieldAlert,
+      title: 'Verify your identity',
+      description: 'Required before publishing. Drafts stay safe.',
+      href: '/verify-identity', cta: 'Verify', tone: 'warning',
+    });
+    if (pendingOffers.length > 0) items.push({
+      id: 'offers', icon: DollarSign,
+      title: `${pendingOffers.length} open offer${pendingOffers.length > 1 ? 's' : ''}`,
+      href: '/dashboard?view=host&tab=sales', cta: 'Open',
+    });
+    if (unreadMessageCount > 0) items.push({
+      id: 'unread', icon: MessageSquare,
+      title: `${unreadMessageCount} unread message${unreadMessageCount > 1 ? 's' : ''}`,
+      href: '/messages', cta: 'Open',
+    });
+    return items;
+  }, [bookingStats.pending, stripeLoading, isConnected, isVerified, pendingOffers.length, unreadMessageCount]);
 
-  const handleConnectStripe = async () => {
-    await connectStripe();
-  };
-
-  const handlePublish = async (id: string) => {
-    if (!isConnected) {
-      setShowStripeModal(true);
-      return;
-    }
-    publishListing(id);
-  };
+  const activity: ActivityItem[] = useMemo(() => {
+    return bookings.slice(0, 3).map((b) => {
+      const tone: ActivityItem['status'] = b.status === 'approved'
+        ? { label: 'Approved', tone: 'success' }
+        : b.status === 'pending'
+        ? { label: 'Pending', tone: 'warning' }
+        : b.status === 'declined'
+        ? { label: 'Declined', tone: 'muted' }
+        : { label: b.status, tone: 'muted' };
+      return {
+        id: b.id,
+        href: `/host/bookings?id=${b.id}`,
+        title: b.listing?.title || 'Booking',
+        imageUrl: b.listing?.cover_image_url,
+        meta: `${b.shopper?.full_name || 'Guest'} · ${new Date(b.created_at).toLocaleDateString()}`,
+        status: tone,
+      };
+    });
+  }, [bookings]);
 
   return (
-    <div className="max-w-[1320px] mx-auto">
-      {/* Payout status pill — always visible so hosts see Connected vs Not connected */}
+    <div className="max-w-[1320px] mx-auto space-y-6 sm:space-y-8">
       {!stripeLoading && (
-        <div className="mb-6">
-          <StripeNotificationBubble
-            isConnected={isConnected}
-            isLoading={stripeLoading}
-            onConnect={handleConnectStripe}
-            onManage={openStripeDashboard}
-            isConnecting={isConnecting}
-            isOpeningDashboard={isOpeningDashboard}
-          />
-        </div>
+        <StripeNotificationBubble
+          isConnected={isConnected}
+          isLoading={stripeLoading}
+          onConnect={connectStripe}
+          onManage={openStripeDashboard}
+          isConnecting={isConnecting}
+          isOpeningDashboard={isOpeningDashboard}
+        />
       )}
 
+      <OverviewGreeting firstName={firstName} persona="Hosting" isVerified={isVerified} />
 
-      <SectionReveal className="space-y-10 sm:space-y-12">
-        {/* ── Header strip ───────────────────────────────────── */}
-        <Reveal>
-          <CommandHeader
-            name={firstName}
-            context={contextLine}
-            actions={[
-              {
-                icon: Plus,
-                label: 'New listing',
-                href: '/list?start=true',
-              },
-              {
-                icon: Calendar,
-                label: 'Bookings',
-                href: '/host/bookings',
-                badge: bookingStats.pending,
-              },
-              {
-                icon: MessageSquare,
-                label: 'Messages',
-                href: '/messages',
-              },
-              {
-                icon: Settings,
-                label: 'Account',
-                href: '/account',
-              },
-            ]}
-          />
-        </Reveal>
+      {/* KPI row — ember reserved for Earnings */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <KpiCard
+          ember
+          label="Earnings · MTD"
+          value={monthlyRevenue}
+          format={(n) => `$${n.toLocaleString()}`}
+          hint={nextPayoutHint}
+          href="/dashboard?view=host&tab=payouts"
+        />
+        <KpiCard
+          label="Active listings"
+          value={stats.published}
+          hint={stats.drafts > 0 ? `${stats.drafts} draft${stats.drafts > 1 ? 's' : ''}` : 'All live'}
+          href="/host/listings"
+        />
+        <KpiCard
+          label="Pending requests"
+          value={bookingStats.pending}
+          hint={bookingStats.pending > 0 ? 'Awaiting reply' : 'All clear'}
+          href="/host/bookings"
+        />
+        <KpiCard
+          label="Open offers"
+          value={pendingOffers.length}
+          hint={pendingOffers.length > 0 ? 'Awaiting reply' : 'Nothing pending'}
+          href="/dashboard?view=host&tab=sales"
+        />
+      </div>
 
-        {/* ── Key metrics row ───────────────────────────────── */}
-        <Reveal>
-          <div
-            className={`grid grid-cols-2 gap-3 sm:gap-4 ${
-              userType === 'hybrid' ? 'lg:grid-cols-5' : 'lg:grid-cols-4'
-            }`}
-          >
-            <CommandStatCard
-              label="Listings"
-              value={stats.published}
-              hint={stats.drafts > 0 ? `${stats.drafts} drafts` : 'Active'}
-              href="/host/listings"
-            />
-            <CommandStatCard
-              label="Views · 30d"
-              value={analytics?.totalViews || 0}
-            />
-            {userType !== 'seller' && (
-              <CommandStatCard
-                label="Pending requests"
-                value={bookingStats.pending}
-                hint={bookingStats.pending > 0 ? 'Awaiting reply' : 'All clear'}
-                accent={bookingStats.pending > 0}
-                href="/host/bookings"
-              />
-            )}
-            {(userType !== 'host' || pendingOffers.length > 0) && (
-              <CommandStatCard
-                label="Open offers"
-                value={pendingOffers.length}
-                hint={pendingOffers.length > 0 ? 'Awaiting reply' : 'Nothing pending'}
-                accent={pendingOffers.length > 0}
-              />
-            )}
-            <CommandStatCard
-              label="Revenue · MTD"
-              value={revenueAnalytics?.revenueThisMonth || 0}
-              format={(n) => `$${n.toLocaleString()}`}
-            />
-          </div>
-        </Reveal>
+      {actionItems.length > 0 && <ActionRequiredStack items={actionItems} />}
 
-        {activeTab === 'overview' && (() => {
-          const actionItems: ActionItem[] = [];
-          if (bookingStats.pending > 0) actionItems.push({
-            id: 'pending-bookings', icon: Clock,
-            title: `${bookingStats.pending} booking request${bookingStats.pending > 1 ? 's' : ''}`,
-            description: 'Review and reply so guests can plan.',
-            href: '/host/bookings', cta: 'Review', tone: 'warning',
-          });
-          if (!isConnected) actionItems.push({
-            id: 'stripe', icon: Banknote,
-            title: 'Finish Stripe onboarding',
-            description: 'Required to accept card payments and receive payouts.',
-            href: '/dashboard?view=host&tab=payouts', cta: 'Set up', tone: 'warning',
-          });
-          if (!isVerified) actionItems.push({
-            id: 'verify', icon: ShieldAlert,
-            title: 'Verify your identity',
-            description: 'Required before publishing a listing. Drafts are safe.',
-            href: '/verify-identity', cta: 'Verify', tone: 'warning',
-          });
-          if (pendingOffers.length > 0) actionItems.push({
-            id: 'offers', icon: DollarSign,
-            title: `${pendingOffers.length} open offer${pendingOffers.length > 1 ? 's' : ''}`,
-            href: '/dashboard?view=host&tab=sales', cta: 'Open',
-          });
-          if (!actionItems.length) return null;
-          return <Reveal><ActionRequiredStack items={actionItems} /></Reveal>;
-        })()}
-
-
-
-
-        {/* ── Next Best Action ──────────────────────────────── */}
-        {activeTab === 'overview' && (
-          <Reveal>
-            <NextBestAction
-              publishedListings={stats.published}
-              draftListings={draftListings.length}
-              isStripeConnected={isConnected}
-              isIdentityVerified={isVerified}
-              pendingRequests={bookingStats.pending}
-              pendingOffers={pendingOffers.length}
-              firstName={firstName}
-            />
-          </Reveal>
-        )}
-
-        {/* ── Continue setup ─────────────────────────────────── */}
-        {activeTab === 'overview' && resumableItems.length > 0 && (
-          <Reveal>
-            <ContinueSetup items={resumableItems} />
-          </Reveal>
-        )}
-
-        {/* ── Activation checklist ─────────────────────────── */}
-        {activeTab === 'overview' && !stripeLoading && (
-          <Reveal>
-            <OnboardingChecklist
-              isStripeConnected={isConnected}
-              isIdentityVerified={isVerified}
-              hasPublishedListing={stats.published > 0}
-              hasFirstBooking={
-                (bookingStats.total ?? 0) > 0 ||
-                (revenueAnalytics?.revenueThisMonth ?? 0) > 0
-              }
-              onConnectStripe={handleConnectStripe}
-            />
-          </Reveal>
-        )}
-
-        {/* ── Drafts ─────────────────────────────────────────── */}
-        {!isLoading && draftListings.length > 0 && activeTab === 'overview' && (
-          <Reveal>
-            <Section title="Drafts">
-              <DraftsSection drafts={draftListings} onDelete={deleteListing} />
-            </Section>
-          </Reveal>
-        )}
-
-        {/* ── Overview tab ──────────────────────────────────── */}
-        {activeTab === 'overview' && (
-          <Reveal>
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
-              <div className="lg:col-span-2 space-y-10">
-                {userType !== 'seller' && bookingStats.pending > 0 && (
-                  <Section title="Requests">
-                    <BookingRequestsSection />
-                  </Section>
-                )}
-                <Section title="Offers">
-                  <HostOffersSection />
-                </Section>
-              </div>
-              <div className="space-y-10">
-                <Section title="Forecast">
-                  <PredictiveBookingCard />
-                </Section>
-              </div>
-            </div>
-          </Reveal>
-        )}
-
-        {/* ── Inventory tab ─────────────────────────────────── */}
-        {activeTab === 'inventory' && (
-          <Reveal>
-            <Section
-              title="Listings"
-              action={
-                <Button asChild variant="dark-shine" size="sm" className="h-8 text-xs rounded-lg">
-                  <Link to="/list">
-                    <Plus className="h-3.5 w-3.5 mr-1.5" />
-                    New listing
-                  </Link>
-                </Button>
-              }
-            >
-              {!isLoading && draftListings.length > 0 && (
-                <div className="mb-6">
-                  <DraftsSection drafts={draftListings} onDelete={deleteListing} />
-                </div>
-              )}
-
-              {listings.filter((l) => l.status !== 'draft').length > 6 ? (
-                <OperationsTable
-                  listings={listings.filter((l) => l.status !== 'draft')}
-                  onPublish={handlePublish}
-                  onPause={pauseListing}
-                  onUnpause={unpauseListing}
-                  onDelete={deleteListing}
-                  onDuplicate={duplicateListing}
-                  onArchive={archiveListing}
-                />
-              ) : isLoading ? (
-                <div className="flex items-center justify-center py-16">
-                  <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-                </div>
-              ) : listings.filter((l) => l.status !== 'draft').length === 0 ? (
-                <div className="rounded-xl border border-border bg-card py-16 text-center">
-                  <div className="w-10 h-10 rounded-lg bg-muted mx-auto mb-4 flex items-center justify-center">
-                    <Truck className="h-5 w-5 text-muted-foreground" />
-                  </div>
-                  <p className="text-sm font-medium text-foreground mb-1">
-                    No published listings yet
-                  </p>
-                  <p className="text-xs text-muted-foreground mb-5">
-                    Create one to start earning.
-                  </p>
-                  <Button asChild size="sm" variant="dark-shine" className="rounded-lg">
-                    <Link to="/list">
-                      <Plus className="h-3.5 w-3.5 mr-1.5" />
-                      New listing
-                    </Link>
-                  </Button>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {listings
-                    .filter((l) => l.status !== 'draft')
-                    .map((listing) => (
-                      <HostListingCard
-                        key={listing.id}
-                        listing={listing}
-                        onPause={pauseListing}
-                        onPublish={handlePublish}
-                        onUnpause={unpauseListing}
-                        onDelete={deleteListing}
-                        onDuplicate={duplicateListing}
-                        onArchive={archiveListing}
-                        onPriceUpdate={updateListingPrice}
-                      />
-                    ))}
-                </div>
-              )}
-            </Section>
-          </Reveal>
-        )}
-
-        {/* ── Bookings tab ──────────────────────────────────── */}
-        {activeTab === 'bookings' && (
-          <Reveal>
-            <div className="space-y-10">
-              {userType !== 'seller' && bookingStats.pending > 0 && (
-                <Section title="Requests">
-                  <BookingRequestsSection />
-                </Section>
-              )}
-              {userType !== 'host' && (
-                <Section title="Sales">
-                  <SellerSalesSection />
-                </Section>
-              )}
-            </div>
-          </Reveal>
-        )}
-
-        {/* ── Financials tab ────────────────────────────────── */}
-        {activeTab === 'financials' && (
-          <Reveal>
-            <div className="space-y-10">
-              <Section title="Revenue">
-                {revenueLoading ? (
-                  <div className="flex items-center justify-center py-16">
-                    <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-                  </div>
-                ) : revenueAnalytics ? (
-                  <RevenueAnalyticsCard
-                    analytics={revenueAnalytics}
-                    onOpenStripeDashboard={openStripeDashboard}
-                    isOpeningDashboard={isOpeningDashboard}
-                  />
-                ) : (
-                  <div className="rounded-xl border border-border bg-card py-16 text-center">
-                    <DollarSign className="h-6 w-6 text-muted-foreground mx-auto mb-3" />
-                    <p className="text-sm font-medium text-foreground mb-1">
-                      No revenue yet
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      Revenue appears once your first sale or rental completes.
-                    </p>
-                  </div>
-                )}
-              </Section>
-              <Section title="Performance">
-                {analyticsLoading ? (
-                  <div className="flex items-center justify-center py-16">
-                    <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-                  </div>
-                ) : analytics ? (
-                  <EnhancedAnalytics
-                    analytics={analytics}
-                    stats={stats}
-                    bookingStats={bookingStats}
-                  />
-                ) : (
-                  <div className="rounded-xl border border-border bg-card py-16 text-center">
-                    <BarChart3 className="h-6 w-6 text-muted-foreground mx-auto mb-3" />
-                    <p className="text-sm font-medium text-foreground mb-1">
-                      No views yet
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      Publish a listing to start getting discovered.
-                    </p>
-                  </div>
-                )}
-              </Section>
-            </div>
-          </Reveal>
-        )}
-
-        {/* ── Insights tab ──────────────────────────────────── */}
-        {activeTab === 'insights' && (
-          <Reveal>
-            <div className="space-y-10">
-              <AICopilotLauncher />
-              <Section title="Listing health">
-                <ListingInsightsPanel />
-              </Section>
-              <Section title="Demand">
-                <DemandHeatmap />
-              </Section>
-              <div className="grid lg:grid-cols-2 gap-6">
-                <ConversionFunnel days={30} />
-                <RevenueChart />
-                <TrafficSourcesCard days={30} />
-                <CompetitorPricingCard />
-              </div>
-            </div>
-          </Reveal>
-        )}
-
-        {activeTab === 'promote' && (
-          <Reveal>
-            <div className="space-y-6">
-              <PromotionHub />
-              <RecommendedAddOns
-                context="dashboard_home"
-                heading="Recommended for you"
-                subheading="Boosts and services matched to your account. Members see automatic discounts."
-              />
-              <ReferAHostCard />
-              <ReferralLeaderboardCard limit={10} />
-            </div>
-          </Reveal>
-        )}
-
-        {activeTab === 'kitchen' && hasGhostKitchen && (
-          <Reveal>
-            <KitchenProSuite />
-          </Reveal>
-        )}
-
-        {activeTab === 'permits' && (
-          <Reveal>
-            <PermitsTab />
-          </Reveal>
-        )}
-      </SectionReveal>
+      <RecentActivityStrip
+        title="Recent bookings"
+        items={activity}
+        viewAllHref="/host/bookings"
+        emptyText="No bookings yet. Publish or share a listing to attract renters."
+        emptyHref="/host/listings"
+        emptyCta="Manage listings"
+      />
 
       <StripeConnectModal
         open={showStripeModal}
         onOpenChange={setShowStripeModal}
-        onConnect={handleConnectStripe}
+        onConnect={connectStripe}
         isConnecting={isConnecting}
       />
 
-      {!isLoading && (
+      {listings.length > 0 && (
         <BoostListingPrompt listings={listings as any} userId={user?.id} />
       )}
     </div>

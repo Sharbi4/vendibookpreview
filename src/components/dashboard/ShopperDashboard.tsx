@@ -1,80 +1,38 @@
-import { Link, useSearchParams } from 'react-router-dom';
-import { Calendar, CheckCircle2, Clock, XCircle, Loader2, Search, Heart, MessageSquare, ShieldAlert, ShoppingBag, Inbox } from 'lucide-react';
+import { useMemo } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import {
+  Clock,
+  ShieldAlert,
+  Inbox,
+} from 'lucide-react';
 import PermitsTab from './PermitsTab';
-import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import ShopperBookingCard from './ShopperBookingCard';
-import BuyerSalesSection from './BuyerSalesSection';
-import { BuyerOffersSection } from './BuyerOffersSection';
-import { DiscoveryHeroCard, DiscoveryGrid } from './DiscoveryGrid';
-import BecomeHostCard from './BecomeHostCard';
-import { ReferralPanel } from '@/components/referrals/ReferralPanel';
-import { CommandHeader } from './CommandHeader';
-import { CommandStatCard } from './CommandStatCard';
-import { SectionReveal, Reveal } from './SectionReveal';
-import ActionRequiredStack, { ActionItem } from './shared/ActionRequiredStack';
+import ActionRequiredStack, { type ActionItem } from './shared/ActionRequiredStack';
+import OverviewGreeting from './overview/OverviewGreeting';
+import { KpiCard } from './overview/KpiCard';
+import RecentActivityStrip, { ActivityItem } from './overview/RecentActivityStrip';
 import { useShopperBookings } from '@/hooks/useShopperBookings';
 import { useUnreadMessageCount } from '@/hooks/useUnreadMessageCount';
+import { useFavorites } from '@/hooks/useFavorites';
 import { useAuth } from '@/contexts/AuthContext';
 
-const Section = ({
-  title,
-  children,
-}: {
-  title?: string;
-  children: React.ReactNode;
-}) => (
-  <section>
-    {title && (
-      <h2 className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground mb-4">
-        {title}
-      </h2>
-    )}
-    {children}
-  </section>
-);
-
+/**
+ * NEW OVERVIEW — one viewport-ish surface:
+ *   1. compact greeting
+ *   2. 4 large KPI cards (ember on primary)
+ *   3. needs-your-attention stack
+ *   4. single recent-activity strip (latest 3 bookings)
+ * DiscoveryGrid / ReferralPanel / BecomeHostCard were removed here — they
+ * belong in dedicated tabs, not on the operator's front page.
+ */
 const ShopperDashboard = () => {
-  const { bookings, isLoading, stats, cancelBooking, refetch } = useShopperBookings();
-  const { hasRole, profile, isVerified } = useAuth();
+  const { bookings, stats } = useShopperBookings();
+  const { profile, isVerified } = useAuth();
   const { count: unreadMessageCount } = useUnreadMessageCount();
+  const { favorites } = useFavorites();
   const [searchParams] = useSearchParams();
-  const isHost = hasRole('host');
   const firstName = profile?.full_name?.split(' ')[0];
 
-  const actionItems: ActionItem[] = [];
-  if (!isVerified) {
-    actionItems.push({
-      id: 'verify-identity',
-      icon: ShieldAlert,
-      title: 'Verify your identity',
-      description: 'One tap unlocks publishing and higher-trust checkout.',
-      href: '/verify-identity',
-      cta: 'Verify',
-      tone: 'warning',
-    });
-  }
-  if (stats.pending > 0) {
-    actionItems.push({
-      id: 'pending-bookings',
-      icon: Clock,
-      title: `${stats.pending} booking request${stats.pending > 1 ? 's' : ''} awaiting host`,
-      description: 'We\'ll notify you the moment they reply.',
-      href: '/dashboard?view=shopper',
-      cta: 'View',
-    });
-  }
-  if (unreadMessageCount > 0) {
-    actionItems.push({
-      id: 'unread-messages',
-      icon: Inbox,
-      title: `${unreadMessageCount} unread message${unreadMessageCount > 1 ? 's' : ''}`,
-      href: '/messages',
-      cta: 'Open',
-    });
-  }
-
-
+  // Legacy sub-route for permits (kept as-is).
   if (searchParams.get('tab') === 'permits') {
     return (
       <div className="max-w-[1320px] mx-auto">
@@ -83,202 +41,94 @@ const ShopperDashboard = () => {
     );
   }
 
-  const pendingBookings = bookings.filter((b) => b.status === 'pending');
-  const approvedBookings = bookings.filter((b) => b.status === 'approved');
-  const pastBookings = bookings.filter((b) =>
-    ['declined', 'cancelled', 'completed'].includes(b.status),
-  );
+  const activeOrders = bookings.filter((b) => b.status === 'approved').length;
+  const upcomingRentals = stats.approved;
+  const savedCount = favorites?.length ?? 0;
 
-  /* ── Empty state ── */
-  if (!isLoading && bookings.length === 0) {
-    return (
-      <div className="max-w-[1320px] mx-auto">
-        <SectionReveal className="space-y-10 sm:space-y-12">
-          <Reveal>
-            <CommandHeader
-              name={firstName}
-              context="Nothing booked yet. Let's find your next rental."
-              actions={[
-                { icon: Search, label: 'Search', href: '/search' },
-                { icon: Heart, label: 'Favorites', href: '/favorites' },
-                { icon: MessageSquare, label: 'Messages', href: '/messages' },
-              ]}
-            />
-          </Reveal>
-          <Reveal>
-            <div id="discovery-hero">
-              <DiscoveryHeroCard />
-            </div>
-          </Reveal>
-          <Reveal>
-            <DiscoveryGrid />
-          </Reveal>
-          {!isHost && (
-            <Reveal>
-              <div id="become-host-card">
-                <BecomeHostCard />
-              </div>
-            </Reveal>
-          )}
-        </SectionReveal>
-      </div>
-    );
-  }
+  const actionItems: ActionItem[] = useMemo(() => {
+    const items: ActionItem[] = [];
+    if (!isVerified) items.push({
+      id: 'verify-identity', icon: ShieldAlert,
+      title: 'Verify your identity',
+      description: 'One tap unlocks publishing and higher-trust checkout.',
+      href: '/verify-identity', cta: 'Verify', tone: 'warning',
+    });
+    if (stats.pending > 0) items.push({
+      id: 'pending', icon: Clock,
+      title: `${stats.pending} booking request${stats.pending > 1 ? 's' : ''} awaiting host`,
+      description: "We'll notify you the moment they reply.",
+      href: '/dashboard?view=shopper', cta: 'View',
+    });
+    if (unreadMessageCount > 0) items.push({
+      id: 'unread', icon: Inbox,
+      title: `${unreadMessageCount} unread message${unreadMessageCount > 1 ? 's' : ''}`,
+      href: '/messages', cta: 'Open',
+    });
+    return items;
+  }, [isVerified, stats.pending, unreadMessageCount]);
 
-  /* ── Context line ── */
-  const contextLine =
-    stats.pending > 0
-      ? `${stats.pending} request${stats.pending > 1 ? 's' : ''} awaiting host reply.`
-      : stats.approved > 0
-      ? `${stats.approved} confirmed booking${stats.approved > 1 ? 's' : ''}. You're ready to roll.`
-      : 'Nothing pressing. Browse to find your next rental.';
+  const activity: ActivityItem[] = useMemo(() => {
+    return bookings.slice(0, 3).map((b) => {
+      const tone: ActivityItem['status'] = b.status === 'approved'
+        ? { label: 'Approved', tone: 'success' }
+        : b.status === 'pending'
+        ? { label: 'Awaiting host', tone: 'warning' }
+        : b.status === 'declined'
+        ? { label: 'Declined', tone: 'muted' }
+        : { label: b.status, tone: 'muted' };
+      return {
+        id: b.id,
+        href: `/dashboard?view=shopper&tab=orders`,
+        title: b.listing?.title || 'Booking',
+        imageUrl: b.listing?.cover_image_url,
+        meta: new Date(b.created_at).toLocaleDateString(),
+        status: tone,
+      };
+    });
+  }, [bookings]);
 
   return (
-    <div className="max-w-[1320px] mx-auto">
-      <SectionReveal className="space-y-10 sm:space-y-12">
-        {/* Header */}
-        <Reveal>
-          <CommandHeader
-            name={firstName}
-            context={contextLine}
-            actions={[
-              { icon: Search, label: 'Browse', href: '/search' },
-              { icon: Heart, label: 'Favorites', href: '/favorites' },
-              { icon: MessageSquare, label: 'Messages', href: '/messages' },
-            ]}
-          />
-        </Reveal>
+    <div className="max-w-[1320px] mx-auto space-y-6 sm:space-y-8">
+      <OverviewGreeting firstName={firstName} persona="Buying" isVerified={isVerified} />
 
-        {actionItems.length > 0 && (
-          <Reveal>
-            <ActionRequiredStack items={actionItems} />
-          </Reveal>
-        )}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <KpiCard
+          ember
+          label="Active orders"
+          value={activeOrders}
+          hint={activeOrders > 0 ? 'In progress' : 'Nothing active'}
+          href="/dashboard?view=shopper&tab=orders"
+        />
+        <KpiCard
+          label="Upcoming rentals"
+          value={upcomingRentals}
+          hint={upcomingRentals > 0 ? 'Ready to go' : 'None yet'}
+          href="/dashboard?view=shopper"
+        />
+        <KpiCard
+          label="Saved listings"
+          value={savedCount}
+          hint={savedCount > 0 ? 'Your shortlist' : 'Save with the heart'}
+          href="/dashboard?view=shopper&tab=favorites"
+        />
+        <KpiCard
+          label="Unread messages"
+          value={unreadMessageCount}
+          hint={unreadMessageCount > 0 ? 'New replies' : 'Inbox zero'}
+          href="/messages"
+        />
+      </div>
 
+      {actionItems.length > 0 && <ActionRequiredStack items={actionItems} />}
 
-        {/* Metrics */}
-        <Reveal>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-            <CommandStatCard label="Bookings" value={stats.total} />
-            <CommandStatCard
-              label="Pending"
-              value={stats.pending}
-              accent={stats.pending > 0}
-              hint={stats.pending > 0 ? 'Awaiting host' : 'All clear'}
-            />
-            <CommandStatCard
-              label="Approved"
-              value={stats.approved}
-              hint={stats.approved > 0 ? 'Ready to go' : 'None yet'}
-            />
-            <CommandStatCard label="Declined" value={stats.declined} />
-          </div>
-        </Reveal>
-
-        {/* Referral */}
-        <Reveal>
-          <ReferralPanel />
-        </Reveal>
-
-        {/* Bookings */}
-        <Reveal>
-          <Section title="My bookings">
-            <Tabs defaultValue="pending" className="w-full">
-              <TabsList className="w-full justify-start gap-6 h-auto p-0 bg-transparent border-b border-border rounded-none mb-6">
-                <TabsTrigger
-                  value="pending"
-                  className="relative flex items-center gap-2 pb-3 px-0 rounded-none bg-transparent data-[state=active]:bg-transparent data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-foreground text-muted-foreground data-[state=active]:text-foreground transition-colors text-sm font-medium"
-                >
-                  Pending
-                  {stats.pending > 0 && (
-                    <span className="text-[10px] font-semibold text-primary tabular-nums">
-                      {stats.pending}
-                    </span>
-                  )}
-                </TabsTrigger>
-                <TabsTrigger
-                  value="approved"
-                  className="relative flex items-center gap-2 pb-3 px-0 rounded-none bg-transparent data-[state=active]:bg-transparent data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-foreground text-muted-foreground data-[state=active]:text-foreground transition-colors text-sm font-medium"
-                >
-                  Approved
-                  {stats.approved > 0 && (
-                    <span className="text-[10px] font-semibold text-foreground tabular-nums">
-                      {stats.approved}
-                    </span>
-                  )}
-                </TabsTrigger>
-                <TabsTrigger
-                  value="past"
-                  className="pb-3 px-0 rounded-none bg-transparent data-[state=active]:bg-transparent data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-foreground text-muted-foreground data-[state=active]:text-foreground transition-colors text-sm font-medium"
-                >
-                  Past
-                </TabsTrigger>
-              </TabsList>
-
-              {[
-                { v: 'pending', list: pendingBookings, icon: Clock, empty: 'No pending requests' },
-                { v: 'approved', list: approvedBookings, icon: CheckCircle2, empty: 'No confirmed bookings' },
-                { v: 'past', list: pastBookings, icon: Calendar, empty: 'No past bookings' },
-              ].map(({ v, list, icon: Icon, empty }) => (
-                <TabsContent key={v} value={v} className="animate-fade-in">
-                  {isLoading ? (
-                    <div className="flex items-center justify-center py-16">
-                      <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-                    </div>
-                  ) : list.length === 0 ? (
-                    <div className="rounded-xl border border-border bg-card py-16 text-center">
-                      <Icon className="h-6 w-6 text-muted-foreground mx-auto mb-3" />
-                      <p className="text-sm font-medium text-foreground mb-1">{empty}</p>
-                      <p className="text-xs text-muted-foreground mb-5 max-w-sm mx-auto">
-                        They'll appear here when the time comes.
-                      </p>
-                      {v === 'pending' && (
-                        <Button
-                          asChild
-                          size="sm"
-                          className="bg-foreground text-background hover:bg-foreground/90 rounded-lg"
-                        >
-                          <Link to="/search">Browse listings</Link>
-                        </Button>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="space-y-3">
-                      {list.map((booking, index) => (
-                        <div
-                          key={booking.id}
-                          className="animate-fade-in"
-                          style={{ animationDelay: `${index * 40}ms` }}
-                        >
-                          <ShopperBookingCard
-                            booking={booking}
-                            onCancel={cancelBooking}
-                            onPaymentInitiated={refetch}
-                          />
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </TabsContent>
-              ))}
-            </Tabs>
-          </Section>
-        </Reveal>
-
-        {/* Offers */}
-        <Reveal>
-          <Section title="My offers">
-            <BuyerOffersSection />
-          </Section>
-        </Reveal>
-
-        {/* Purchases */}
-        <Reveal>
-          <Section title="Purchases">
-            <BuyerSalesSection />
-          </Section>
-        </Reveal>
-      </SectionReveal>
+      <RecentActivityStrip
+        title="Recent bookings"
+        items={activity}
+        viewAllHref="/dashboard?view=shopper&tab=orders"
+        emptyText="No bookings yet. Find your next rental."
+        emptyHref="/search"
+        emptyCta="Browse listings"
+      />
     </div>
   );
 };

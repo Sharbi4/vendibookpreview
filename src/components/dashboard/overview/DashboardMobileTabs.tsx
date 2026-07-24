@@ -1,0 +1,67 @@
+import { Link, useLocation } from 'react-router-dom';
+import { cn } from '@/lib/utils';
+
+interface TabPill {
+  label: string;
+  href: string;
+  tab: string | null;
+}
+
+interface Props {
+  mode: 'host' | 'shopper';
+}
+
+/**
+ * Horizontally scrollable pill bar shown on mobile at the top of the
+ * dashboard content so every tab is discoverable without opening a menu.
+ */
+const DashboardMobileTabs = ({ mode }: Props) => {
+  const location = useLocation();
+  const currentTab = new URLSearchParams(location.search).get('tab');
+
+  const pills: TabPill[] = mode === 'host'
+    ? [
+        { label: 'Overview', href: '/dashboard?view=host', tab: null },
+        { label: 'Sales', href: '/dashboard?view=host&tab=sales', tab: 'sales' },
+        { label: 'Insights', href: '/dashboard?view=host&tab=insights', tab: 'insights' },
+        { label: 'Promote', href: '/dashboard?view=host&tab=promote', tab: 'promote' },
+        { label: 'Membership', href: '/dashboard?view=host&tab=membership', tab: 'membership' },
+        { label: 'Payouts', href: '/dashboard?view=host&tab=payouts', tab: 'payouts' },
+        { label: 'Notifications', href: '/dashboard?view=host&tab=notifications', tab: 'notifications' },
+        { label: 'Permits', href: '/dashboard?view=host&tab=permits', tab: 'permits' },
+      ]
+    : [
+        { label: 'Overview', href: '/dashboard?view=shopper', tab: null },
+        { label: 'Orders', href: '/dashboard?view=shopper&tab=orders', tab: 'orders' },
+        { label: 'Favorites', href: '/dashboard?view=shopper&tab=favorites', tab: 'favorites' },
+        { label: 'Tools', href: '/dashboard?view=shopper&tab=tools', tab: 'tools' },
+        { label: 'Notifications', href: '/dashboard?view=shopper&tab=notifications', tab: 'notifications' },
+        { label: 'Permits', href: '/dashboard?view=shopper&tab=permits', tab: 'permits' },
+      ];
+
+  return (
+    <div className="md:hidden -mx-4 px-4 mb-4">
+      <div className="no-scrollbar overflow-x-auto flex gap-2 py-1">
+        {pills.map((p) => {
+          const active = (p.tab ?? null) === (currentTab ?? null);
+          return (
+            <Link
+              key={p.label}
+              to={p.href}
+              className={cn(
+                'shrink-0 px-3.5 py-1.5 rounded-full text-[13px] font-medium border transition-all',
+                active
+                  ? 'bg-primary text-primary-foreground border-primary shadow-[0_0_16px_-4px_rgba(255,81,36,0.6)]'
+                  : 'border-white/10 text-[rgb(var(--dash-text-2))] bg-white/[0.03] hover:text-[rgb(var(--dash-text-1))]',
+              )}
+            >
+              {p.label}
+            </Link>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
+
+export default DashboardMobileTabs;
