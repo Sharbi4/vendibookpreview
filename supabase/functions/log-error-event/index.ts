@@ -170,7 +170,7 @@ Deno.serve(async (req) => {
 
       try {
         const idemBucket = Math.floor(Date.now() / (ALERT_COOLDOWN_MINUTES * 60_000));
-        for (const recipient of [ADMIN_EMAIL, ADMIN_CC_EMAIL]) {
+        for (const recipient of Array.from(new Set([ADMIN_EMAIL, ADMIN_CC_EMAIL]))) {
           await admin.functions.invoke("send-transactional-email", {
             body: {
               templateName: "admin-daily-digest",
