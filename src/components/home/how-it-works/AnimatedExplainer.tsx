@@ -383,13 +383,18 @@ export const AnimatedExplainer = ({ explainer, onProgress, onEnded, onSceneChang
           src={explainer.heroImage}
           alt=""
           aria-hidden
+          loading="lazy"
+          decoding="async"
+          // @ts-expect-error — fetchpriority is valid HTML, React types lag.
+          fetchpriority={adaptive.fetchPriority}
           className="absolute inset-0 h-full w-full object-cover opacity-40"
-          style={{ filter: 'blur(14px) saturate(1.15)' }}
+          style={{ filter: adaptive.dataSaver ? 'blur(6px) saturate(1.1)' : 'blur(14px) saturate(1.15)' }}
           initial={{ scale: 1.06 }}
-          animate={prefersReduced ? undefined : { scale: [1.06, 1.12, 1.06] }}
-          transition={prefersReduced ? undefined : { duration: 22, repeat: Infinity, ease: 'easeInOut' }}
+          animate={prefersReduced || adaptive.disableBackdropAnim ? undefined : { scale: [1.06, 1.12, 1.06] }}
+          transition={prefersReduced || adaptive.disableBackdropAnim ? undefined : { duration: 22, repeat: Infinity, ease: 'easeInOut' }}
         />
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/70 via-black/25 to-black/40" />
+
 
         {/* animated scene */}
         <AnimatePresence mode="wait">
