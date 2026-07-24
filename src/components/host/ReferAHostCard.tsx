@@ -87,6 +87,7 @@ export function ReferAHostCard() {
               <Stat label="Qualified" value={qualifiedCount} />
               <Stat label="Earned" value={`$${(refCode?.total_earned ?? 0).toFixed(0)}`} />
             </div>
+            <ShareRow link={link} />
           </>
         ) : (
           <p className="text-sm text-muted-foreground">
