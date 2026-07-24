@@ -2802,6 +2802,7 @@ export type Database = {
           features: Json
           id: string
           is_active: boolean
+          member_discount_pct: number
           metadata: Json
           name: string
           price_cents: number
@@ -2829,6 +2830,7 @@ export type Database = {
           features?: Json
           id?: string
           is_active?: boolean
+          member_discount_pct?: number
           metadata?: Json
           name: string
           price_cents?: number
@@ -2856,6 +2858,7 @@ export type Database = {
           features?: Json
           id?: string
           is_active?: boolean
+          member_discount_pct?: number
           metadata?: Json
           name?: string
           price_cents?: number
