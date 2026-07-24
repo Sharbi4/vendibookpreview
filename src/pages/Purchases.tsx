@@ -1,11 +1,14 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { CreditCard, Package, Receipt, ArrowRight, CheckCircle2 } from 'lucide-react';
+import { CreditCard, Package, Receipt, ArrowRight, CheckCircle2, ExternalLink, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useEntitlements } from '@/hooks/useEntitlements';
 import { PurchaseHistoryCard } from '@/components/monetization/PurchaseHistoryCard';
 import Header from '@/components/layout/Header';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 const STATUS_TONE: Record<string, string> = {
   active: 'bg-emerald-500/15 text-emerald-500 border-emerald-500/30',
