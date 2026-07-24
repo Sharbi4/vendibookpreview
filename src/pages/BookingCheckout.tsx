@@ -38,6 +38,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { calculateRentalFees } from '@/lib/commissions';
 import { trackFormSubmitConversion } from '@/lib/gtagConversions';
 import { trackRequestStarted, trackRequestSubmitted } from '@/lib/analytics';
+import { EmbeddedStripeCheckout } from '@/components/checkout';
+import { isEmbeddedCheckoutEnabled } from '@/lib/featureFlags';
 import { FinalReviewSheet } from '@/components/transaction/FinalReviewSheet';
 import { useTermsGate } from '@/hooks/useTermsGate';
 import { buildTerms } from '@/lib/transactionTerms';
@@ -125,6 +127,7 @@ const BookingCheckout = () => {
   const [userInfo, setUserInfo] = useState<BookingUserInfo | null>(null);
   const [showInfoModal, setShowInfoModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [embeddedCheckout, setEmbeddedCheckout] = useState<{ clientSecret: string; returnUrl: string } | null>(null);
   const [stagedDocuments, setStagedDocuments] = useState<StagedDocument[]>([]);
   const [showAuthModal, setShowAuthModal] = useState(false);
   
