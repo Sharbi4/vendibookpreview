@@ -69,12 +69,16 @@ export type LeadEventName =
   | 'session_user_link'
   // How Vendibook Works videos
   | 'homepage_video_tile_viewed'
+  | 'homepage_video_tile_clicked'
   | 'homepage_video_opened'
   | 'homepage_video_started'
   | 'homepage_video_25_percent'
   | 'homepage_video_50_percent'
   | 'homepage_video_75_percent'
   | 'homepage_video_completed'
+  | 'homepage_video_scene_viewed'
+  | 'homepage_video_scene_completed'
+  | 'homepage_video_watch_duration'
   | 'homepage_video_cta_clicked';
 
 
@@ -145,12 +149,16 @@ const EVENT_CATEGORY: Record<LeadEventName, string> = {
   profile_share_click: 'storefront',
   session_user_link: 'attribution',
   homepage_video_tile_viewed: 'homepage',
+  homepage_video_tile_clicked: 'homepage',
   homepage_video_opened: 'homepage',
   homepage_video_started: 'homepage',
   homepage_video_25_percent: 'homepage',
   homepage_video_50_percent: 'homepage',
   homepage_video_75_percent: 'homepage',
   homepage_video_completed: 'homepage',
+  homepage_video_scene_viewed: 'homepage',
+  homepage_video_scene_completed: 'homepage',
+  homepage_video_watch_duration: 'homepage',
   homepage_video_cta_clicked: 'homepage',
 };
 

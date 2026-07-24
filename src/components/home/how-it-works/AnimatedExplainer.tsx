@@ -9,6 +9,8 @@ interface Props {
   explainer: Explainer;
   onProgress?: (percent: number) => void;
   onEnded?: () => void;
+  onSceneChange?: (info: { index: number; previousIndex: number | null; total: number }) => void;
+  onWatched?: (ms: number) => void;
   storageKey?: string;
 }
 
@@ -46,7 +48,7 @@ const fetchNarration = (transcript: string): Promise<string> => {
   return p;
 };
 
-export const AnimatedExplainer = ({ explainer, onProgress, onEnded, storageKey }: Props) => {
+export const AnimatedExplainer = ({ explainer, onProgress, onEnded, onSceneChange, onWatched, storageKey }: Props) => {
   const prefersReduced = useReducedMotion();
   const totalMs = useMemo(
     () => explainer.scenes.reduce((s, sc) => s + sc.durationMs, 0),
@@ -68,6 +70,18 @@ export const AnimatedExplainer = ({ explainer, onProgress, onEnded, storageKey }
   const milestoneRef = useRef<Set<number>>(new Set());
   const narrationRef = useRef<HTMLAudioElement | null>(null);
   const ambientRef = useRef<AmbientBed | null>(null);
+  const watchedMsRef = useRef<number>(0);
+  const lastSceneRef = useRef<number>(-1);
+  const onWatchedRef = useRef(onWatched);
+  useEffect(() => { onWatchedRef.current = onWatched; }, [onWatched]);
+
+  // Report accumulated watch duration on unmount.
+  useEffect(() => {
+    return () => {
+      const ms = Math.round(watchedMsRef.current);
+      if (ms > 250) onWatchedRef.current?.(ms);
+    };
+  }, []);
 
   // Prefetch narration on mount so the first play doesn't stall on the network.
   useEffect(() => {
@@ -148,6 +162,7 @@ export const AnimatedExplainer = ({ explainer, onProgress, onEnded, storageKey }
       if (lastTickRef.current == null) lastTickRef.current = t;
       const delta = t - lastTickRef.current;
       lastTickRef.current = t;
+      watchedMsRef.current += delta;
       setElapsedMs((prev) => Math.min(prev + delta, totalMs));
       rafRef.current = requestAnimationFrame(tick);
     };
@@ -191,6 +206,16 @@ export const AnimatedExplainer = ({ explainer, onProgress, onEnded, storageKey }
   const Scene = explainer.scenes[sceneIndex].Component;
   const caption = explainer.scenes[sceneIndex].caption;
   const progressPct = totalMs > 0 ? (elapsedMs / totalMs) * 100 : 0;
+
+  // Fire scene view/completion events when the active scene changes.
+  useEffect(() => {
+    const prev = lastSceneRef.current;
+    if (prev === sceneIndex) return;
+    lastSceneRef.current = sceneIndex;
+    onSceneChange?.({ index: sceneIndex, previousIndex: prev >= 0 ? prev : null, total: explainer.scenes.length });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sceneIndex, explainer.scenes.length]);
+
 
   const seekAudio = (ms: number) => {
     const a = narrationRef.current;

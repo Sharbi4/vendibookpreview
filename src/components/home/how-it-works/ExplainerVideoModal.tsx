@@ -30,6 +30,31 @@ export const ExplainerVideoModal = ({ explainer, open, onOpenChange }: Props) =>
     if (pct === 1) trackLeadEvent('homepage_video_completed', { video_type: explainer.id });
   };
 
+  const handleSceneChange = ({ index, previousIndex, total }: { index: number; previousIndex: number | null; total: number }) => {
+    if (!explainer) return;
+    if (previousIndex !== null) {
+      trackLeadEvent('homepage_video_scene_completed', {
+        video_type: explainer.id,
+        scene_index: previousIndex,
+        scene_count: total,
+      });
+    }
+    trackLeadEvent('homepage_video_scene_viewed', {
+      video_type: explainer.id,
+      scene_index: index,
+      scene_count: total,
+    });
+  };
+
+  const handleWatched = (ms: number) => {
+    if (!explainer) return;
+    trackLeadEvent('homepage_video_watch_duration', {
+      video_type: explainer.id,
+      watched_ms: ms,
+      watched_seconds: Math.round(ms / 1000),
+    });
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl overflow-hidden p-0">
@@ -42,6 +67,8 @@ export const ExplainerVideoModal = ({ explainer, open, onOpenChange }: Props) =>
                 explainer={explainer}
                 storageKey={`vb-explainer-pos-${explainer.id}`}
                 onProgress={handleProgress}
+                onSceneChange={handleSceneChange}
+                onWatched={handleWatched}
                 onEnded={() => setEnded(true)}
               />
               {ended && (

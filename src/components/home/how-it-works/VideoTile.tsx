@@ -3,6 +3,7 @@ import { Play } from 'lucide-react';
 import { Vendi } from './Vendi';
 import type { Explainer } from './data/explainers';
 import { ImpressionTracker } from '@/components/analytics/ImpressionTracker';
+import { trackLeadEvent } from '@/lib/leadTracking';
 
 interface Props {
   explainer: Explainer;
@@ -12,6 +13,11 @@ interface Props {
 export const VideoTile = ({ explainer, onOpen }: Props) => {
   const prefersReduced = useReducedMotion();
 
+  const handleClick = () => {
+    trackLeadEvent('homepage_video_tile_clicked', { video_type: explainer.id });
+    onOpen(explainer.id);
+  };
+
   return (
     <ImpressionTracker
       eventName="homepage_video_tile_viewed"
@@ -20,7 +26,7 @@ export const VideoTile = ({ explainer, onOpen }: Props) => {
     >
       <motion.button
         type="button"
-        onClick={() => onOpen(explainer.id)}
+        onClick={handleClick}
         whileHover={prefersReduced ? undefined : { y: -6 }}
         transition={{ type: 'spring', stiffness: 260, damping: 22 }}
         className="group relative flex w-full snap-start flex-col overflow-hidden rounded-2xl border border-border bg-card text-left shadow-md transition-shadow duration-300 hover:border-foreground/40 hover:shadow-2xl focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background"
