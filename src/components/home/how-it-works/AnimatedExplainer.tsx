@@ -143,14 +143,14 @@ export const AnimatedExplainer = ({ explainer, onProgress, onEnded, onSceneChang
   // Ambient bed lifecycle — only created once narration is ready so it
   // never plays as a standalone hum when TTS is unavailable.
   useEffect(() => {
-    if (!voiceReady) return;
+    if (!voiceReady || adaptive.disableAmbient) return;
     const bed = createAmbientBed(0.06);
     ambientRef.current = bed;
     return () => {
       bed.stop();
       ambientRef.current = null;
     };
-  }, [voiceReady]);
+  }, [voiceReady, adaptive.disableAmbient]);
 
   // Apply volume + mute to narration & ambient in real time.
   useEffect(() => {
