@@ -355,14 +355,22 @@ export const AnimatedExplainer = ({ explainer, onProgress, onEnded, onSceneChang
           </motion.div>
         </AnimatePresence>
 
-        {/* Caption bar */}
-        {captionsOn && caption && (
-          <div className="pointer-events-none absolute inset-x-0 bottom-3 flex justify-center px-4 sm:bottom-5">
+        {/* Caption bar — always mounted so screen readers hear each scene.
+            Visually hidden when the user turns captions off. */}
+        <div
+          className={cn(
+            'pointer-events-none absolute inset-x-0 bottom-3 flex justify-center px-4 sm:bottom-5',
+            !captionsOn && 'sr-only',
+          )}
+          aria-live="polite"
+          aria-atomic="true"
+        >
+          {caption && (
             <motion.div
               key={`cap-${sceneIndex}`}
-              initial={{ opacity: 0, y: 8 }}
+              initial={prefersReduced ? { opacity: 1, y: 0 } : { opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.35, ease: 'easeOut' }}
+              transition={prefersReduced ? { duration: 0 } : { duration: 0.35, ease: 'easeOut' }}
               className="max-w-2xl rounded-lg bg-black/75 px-3 py-1.5 text-center text-sm font-medium leading-snug text-white shadow-lg backdrop-blur sm:px-4 sm:py-2 sm:text-base"
             >
               {caption}
