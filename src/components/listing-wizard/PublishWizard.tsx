@@ -3889,6 +3889,16 @@ export const PublishWizard: React.FC = () => {
                     </div>
                   </div>
 
+                  {/* Publish requirements checklist */}
+                  <ListingQualityGate
+                    hasPhotos={existingImages.length > 0}
+                    photoCount={existingImages.length}
+                    hasTitle={!!title?.trim()}
+                    hasPrice={listing.mode === 'sale' ? parseFloat(priceSale || '0') > 0 : parseFloat(priceDaily || '0') > 0}
+                    hasLocation={!!(displayAddress || pickupLocationText)}
+                    mode={listing.mode as 'rent' | 'sale' | null}
+                  />
+
                   {/* Missing Requirements Warning */}
                   {!canPublish && (
                     <div className="p-4 rounded-xl border border-border bg-muted/30">
