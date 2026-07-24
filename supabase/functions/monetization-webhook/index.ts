@@ -291,8 +291,19 @@ async function handleRefunded(
         type: "purchase",
         title: "Refund Issued 💳",
         message: "A refund has been issued for your recent purchase.",
-        link: "/dashboard",
+        link: "/purchases",
       });
+
+      await sendSubEmail(
+        supabase,
+        "refund-issued",
+        purchase.user_id,
+        {
+          amount: fmtMoney(refundAmount, currency),
+          purchasesUrl: "/purchases",
+        },
+        `refund-issued-${eventId}`,
+      );
     }
   }
 }
