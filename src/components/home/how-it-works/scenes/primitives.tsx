@@ -11,7 +11,11 @@ import {
   ShieldCheck,
   MessageSquare,
   Calendar as CalendarIcon,
+  Lock,
+  TrendingUp,
+  Activity,
 } from 'lucide-react';
+
 
 /**
  * Safe design canvas: every scene composes at a fixed 960×540 (16:9) so the
@@ -94,6 +98,32 @@ export const SceneShell = ({ children, caption }: { children: ReactNode; caption
           className="pointer-events-none absolute inset-0 z-0"
           style={{ boxShadow: 'inset 0 0 160px 20px hsl(var(--background) / 0.9)' }}
         />
+        {/* Ambient floating orbs — subtle enterprise "atmosphere" behind
+            every scene without competing with foreground content. */}
+        <div aria-hidden className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
+          {[
+            { size: 240, x: '8%', y: '18%', delay: 0, dur: 14, opacity: 0.16 },
+            { size: 180, x: '78%', y: '12%', delay: 2, dur: 18, opacity: 0.12 },
+            { size: 300, x: '68%', y: '72%', delay: 4, dur: 20, opacity: 0.10 },
+            { size: 140, x: '22%', y: '80%', delay: 1, dur: 16, opacity: 0.14 },
+          ].map((o, i) => (
+            <motion.div
+              key={i}
+              className="absolute rounded-full"
+              style={{
+                width: o.size,
+                height: o.size,
+                left: o.x,
+                top: o.y,
+                background: `radial-gradient(circle at 30% 30%, hsl(var(--primary) / ${o.opacity}), transparent 70%)`,
+                filter: 'blur(2px)',
+              }}
+              animate={{ y: [0, -18, 0], x: [0, 10, 0] }}
+              transition={{ duration: o.dur, delay: o.delay, repeat: Infinity, ease: 'easeInOut' }}
+            />
+          ))}
+        </div>
+
         <div
           className="absolute left-1/2 top-1/2"
           style={{
@@ -456,36 +486,52 @@ export const DashboardMock = ({
     initial={{ y: 20, opacity: 0 }}
     animate={{ y: 0, opacity: 1 }}
     transition={{ duration: 0.5 }}
-    className="w-full max-w-md rounded-2xl border border-border bg-card p-4 shadow-[0_20px_50px_-20px_hsl(var(--primary)/0.35),0_10px_25px_-10px_hsl(var(--foreground)/0.25)] ring-1 ring-border/60"
+    className="w-full max-w-md"
   >
-    <div className="flex items-start justify-between gap-2">
-      <div>
-        <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-          {role} dashboard
+    <AppFrame path={`/${role.toLowerCase()}/transactions`}>
+      <div className="flex items-start justify-between gap-2">
+        <div>
+          <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+            {role} dashboard
+          </div>
+          <div className="mt-0.5 text-sm font-bold leading-tight text-foreground">{title}</div>
+          {subtitle && <div className="text-[11px] text-muted-foreground">{subtitle}</div>}
         </div>
-        <div className="mt-0.5 text-sm font-bold leading-tight text-foreground">{title}</div>
-        {subtitle && <div className="text-[11px] text-muted-foreground">{subtitle}</div>}
+        <div className="flex flex-wrap items-end justify-end gap-1">
+          {statuses.map((s, i) => (
+            <StatusPill key={i} label={s.label} intent={s.intent} />
+          ))}
+        </div>
       </div>
-      <div className="flex flex-wrap items-end justify-end gap-1">
-        {statuses.map((s, i) => (
-          <StatusPill key={i} label={s.label} intent={s.intent} />
-        ))}
-      </div>
-    </div>
 
-    <div className="mt-4">
-      <TransactionTimeline steps={timeline} />
-    </div>
-
-    {nextAction && (
       <div className="mt-4">
-        <NextActionCard label={nextAction.label} cta={nextAction.cta} />
+        <TransactionTimeline steps={timeline} />
       </div>
-    )}
 
-    {footer && <div className="mt-3 border-t border-border pt-3 text-xs text-foreground/80">{footer}</div>}
+      {nextAction && (
+        <div className="mt-4">
+          <NextActionCard label={nextAction.label} cta={nextAction.cta} />
+        </div>
+      )}
+
+      {footer ? (
+        <div className="mt-3 border-t border-border/70 pt-3 text-xs text-foreground/80">{footer}</div>
+      ) : (
+        <div className="mt-3 border-t border-border/70 pt-3">
+          <div className="flex items-center justify-between gap-2">
+            <KPIStat label="Progress" value={Math.round((timeline.filter(s => s.state !== 'pending').length / timeline.length) * 100)} suffix="%" delta="on track" />
+            <KPIStat label="Est. close" value={3} suffix="d" delay={0.15} />
+            <div className="flex-1 pl-1">
+              <div className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">Momentum</div>
+              <Sparkline delay={0.2} />
+            </div>
+          </div>
+        </div>
+      )}
+    </AppFrame>
   </motion.div>
 );
+
 
 /**
  * PaymentOptionsPanel: shows the actual purchase summary and the payment
@@ -506,58 +552,65 @@ export const PaymentOptionsPanel = ({
   <motion.div
     initial={{ y: 20, opacity: 0 }}
     animate={{ y: 0, opacity: 1 }}
-    className="w-80 rounded-2xl border border-border bg-card p-4 shadow-[0_20px_50px_-20px_hsl(var(--primary)/0.35),0_10px_25px_-10px_hsl(var(--foreground)/0.25)] ring-1 ring-border/60"
+    className="w-80"
   >
-    <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-      Transaction details
-    </div>
-    <div className="mt-2 space-y-1 text-xs">
-      <div className="flex justify-between"><span className="text-muted-foreground">Listing price</span><span className="font-semibold text-foreground">{price}</span></div>
-      <div className="flex justify-between"><span className="text-muted-foreground">Platform fee</span><span className="font-semibold text-foreground">{fees}</span></div>
-      <div className="mt-2 flex justify-between border-t border-border pt-2 text-sm"><span className="font-bold text-foreground">Total</span><span className="font-bold text-foreground">$—</span></div>
-    </div>
-    <div className="mt-3 space-y-1.5">
-      <motion.div
-        initial={{ opacity: 0, x: -8 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ delay: 0.15 }}
-        className="flex items-center gap-2 rounded-lg border-2 border-primary bg-primary/8 px-2.5 py-2 text-xs"
-      >
-        <CreditCard className="h-4 w-4 text-primary" />
-        <div className="flex-1 font-semibold text-foreground">Pay online (Stripe)</div>
-        <span className="text-[10px] font-bold text-primary">Selected</span>
-      </motion.div>
-      {showAffirm && (
+    <AppFrame path="/checkout" url="secure.vendibook.com">
+      <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+        Transaction details
+      </div>
+      <div className="mt-2 space-y-1 text-xs">
+        <div className="flex justify-between"><span className="text-muted-foreground">Listing price</span><span className="font-semibold text-foreground">{price}</span></div>
+        <div className="flex justify-between"><span className="text-muted-foreground">Platform fee</span><span className="font-semibold text-foreground">{fees}</span></div>
+        <div className="mt-2 flex justify-between border-t border-border/70 pt-2 text-sm"><span className="font-bold text-foreground">Total</span><span className="font-bold text-foreground">$—</span></div>
+      </div>
+      <div className="mt-3 space-y-1.5">
         <motion.div
           initial={{ opacity: 0, x: -8 }}
           animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.3 }}
-          className="flex items-center gap-2 rounded-lg border border-border bg-background px-2.5 py-2 text-xs"
+          transition={{ delay: 0.15 }}
+          className="flex items-center gap-2 rounded-lg border-2 border-primary bg-primary/8 px-2.5 py-2 text-xs"
         >
-          <ShieldCheck className="h-4 w-4 text-foreground/70" />
-          <div className="flex-1">
-            <div className="font-semibold text-foreground">Affirm — monthly payments</div>
-            <div className="text-[10px] text-muted-foreground">Subject to eligibility &amp; approval</div>
-          </div>
+          <CreditCard className="h-4 w-4 text-primary" />
+          <div className="flex-1 font-semibold text-foreground">Pay online (Stripe)</div>
+          <span className="text-[10px] font-bold text-primary">Selected</span>
         </motion.div>
-      )}
-      {showPayInPerson && (
-        <motion.div
-          initial={{ opacity: 0, x: -8 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.45 }}
-          className="flex items-center gap-2 rounded-lg border border-border bg-background px-2.5 py-2 text-xs"
-        >
-          <Banknote className="h-4 w-4 text-foreground/70" />
-          <div className="flex-1">
-            <div className="font-semibold text-foreground">Pay in person</div>
-            <div className="text-[10px] text-muted-foreground">When offered by the seller</div>
-          </div>
-        </motion.div>
-      )}
-    </div>
+        {showAffirm && (
+          <motion.div
+            initial={{ opacity: 0, x: -8 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.3 }}
+            className="flex items-center gap-2 rounded-lg border border-border bg-background px-2.5 py-2 text-xs"
+          >
+            <ShieldCheck className="h-4 w-4 text-foreground/70" />
+            <div className="flex-1">
+              <div className="font-semibold text-foreground">Affirm — monthly payments</div>
+              <div className="text-[10px] text-muted-foreground">Subject to eligibility &amp; approval</div>
+            </div>
+          </motion.div>
+        )}
+        {showPayInPerson && (
+          <motion.div
+            initial={{ opacity: 0, x: -8 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.45 }}
+            className="flex items-center gap-2 rounded-lg border border-border bg-background px-2.5 py-2 text-xs"
+          >
+            <Banknote className="h-4 w-4 text-foreground/70" />
+            <div className="flex-1">
+              <div className="font-semibold text-foreground">Pay in person</div>
+              <div className="text-[10px] text-muted-foreground">When offered by the seller</div>
+            </div>
+          </motion.div>
+        )}
+      </div>
+      <div className="mt-3 flex items-center gap-1.5 border-t border-border/70 pt-2 text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">
+        <Lock className="h-2.5 w-2.5 text-primary" />
+        256-bit TLS · PCI-DSS handled by Stripe
+      </div>
+    </AppFrame>
   </motion.div>
 );
+
 
 /**
  * PayoutTimeline: shows the actual Vendibook payout schedule for hosts —
@@ -567,35 +620,53 @@ export const PayoutTimeline = () => (
   <motion.div
     initial={{ y: 20, opacity: 0 }}
     animate={{ y: 0, opacity: 1 }}
-    className="w-full max-w-md rounded-2xl border border-border bg-card p-4 shadow-[0_20px_50px_-20px_hsl(var(--primary)/0.35),0_10px_25px_-10px_hsl(var(--foreground)/0.25)] ring-1 ring-border/60"
+    className="w-full max-w-md"
   >
-    <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-      <Clock className="h-3.5 w-3.5 text-primary" /> Payout schedule
-    </div>
-    {[
-      { label: 'Renter payment received (Stripe)', when: 'Booking confirmed', done: true },
-      { label: 'Rental in progress', when: 'Pickup → return', done: true },
-      { label: 'Return confirmed by both sides', when: 'End of rental', done: true },
-      { label: 'Host payout released', when: '24 hours after rental ends', done: false, highlight: true },
-    ].map((row, i) => (
-      <motion.div
-        key={i}
-        initial={{ opacity: 0, x: -10 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ delay: 0.15 * i }}
-        className={`mt-2 flex items-center gap-2 rounded-lg border px-2.5 py-1.5 text-xs ${
-          row.highlight ? 'border-primary bg-primary/8' : 'border-border bg-background'
-        }`}
-      >
-        <div className={`flex h-4 w-4 items-center justify-center rounded-full ${row.done ? 'bg-primary text-primary-foreground' : 'border-2 border-primary'}`}>
-          {row.done && <Check className="h-2.5 w-2.5" strokeWidth={4} />}
+    <AppFrame path="/host/payouts">
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+          <Clock className="h-3.5 w-3.5 text-primary" /> Payout schedule
         </div>
-        <div className="flex-1 font-semibold text-foreground">{row.label}</div>
-        <div className="text-[10px] text-muted-foreground">{row.when}</div>
-      </motion.div>
-    ))}
+        <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-primary ring-1 ring-primary/30">
+          Instant escrow
+        </span>
+      </div>
+      {[
+        { label: 'Renter payment received (Stripe)', when: 'Booking confirmed', done: true },
+        { label: 'Rental in progress', when: 'Pickup → return', done: true },
+        { label: 'Return confirmed by both sides', when: 'End of rental', done: true },
+        { label: 'Host payout released', when: '24 hours after rental ends', done: false, highlight: true },
+      ].map((row, i) => (
+        <motion.div
+          key={i}
+          initial={{ opacity: 0, x: -10 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.15 * i }}
+          className={`mt-2 flex items-center gap-2 rounded-lg border px-2.5 py-1.5 text-xs ${
+            row.highlight ? 'border-primary bg-primary/8' : 'border-border bg-background'
+          }`}
+        >
+          <div className={`flex h-4 w-4 items-center justify-center rounded-full ${row.done ? 'bg-primary text-primary-foreground' : 'border-2 border-primary'}`}>
+            {row.done && <Check className="h-2.5 w-2.5" strokeWidth={4} />}
+          </div>
+          <div className="flex-1 font-semibold text-foreground">{row.label}</div>
+          <div className="text-[10px] text-muted-foreground">{row.when}</div>
+        </motion.div>
+      ))}
+      <div className="mt-3 border-t border-border/70 pt-3">
+        <div className="flex items-center justify-between gap-2">
+          <KPIStat label="Payout" value={1240} prefix="$" delta="+18%" />
+          <KPIStat label="Bookings" value={7} suffix=" wk" delay={0.1} />
+          <div className="flex-1 pl-1">
+            <div className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">Trend</div>
+            <Sparkline delay={0.2} />
+          </div>
+        </div>
+      </div>
+    </AppFrame>
   </motion.div>
 );
+
 
 /**
  * PayoutCounter: kept for backward compatibility; used by the closing beat
@@ -676,4 +747,195 @@ export const InboxRow = ({
       <div className="truncate text-[11px] text-muted-foreground">{preview}</div>
     </div>
   </motion.div>
+);
+
+/* ---------------------------------------------------------------------------
+ * Enterprise chrome primitives
+ * -------------------------------------------------------------------------
+ * These sit around the existing product mocks to make every scene read like
+ * a real SaaS product screenshot — window chrome, secure URL, live indicators,
+ * animated KPI counters, sparkline data — instead of a flat card. They're
+ * applied inside DashboardMock / PaymentOptionsPanel / PayoutTimeline so
+ * every scene inherits the upgraded look with zero per-scene changes.
+ * ------------------------------------------------------------------------- */
+
+/** macOS-style window with a secure URL bar and live "connected" pill. */
+export const AppFrame = ({
+  url = 'app.vendibook.com',
+  path = '/dashboard',
+  children,
+  live = true,
+}: {
+  url?: string;
+  path?: string;
+  children: ReactNode;
+  live?: boolean;
+}) => (
+  <div className="relative w-full max-w-md overflow-hidden rounded-2xl border border-border bg-card/95 shadow-[0_30px_80px_-30px_hsl(var(--primary)/0.45),0_15px_40px_-15px_hsl(var(--foreground)/0.35)] ring-1 ring-border/60 backdrop-blur">
+    {/* Title bar */}
+    <div className="flex items-center gap-2 border-b border-border/70 bg-muted/40 px-3 py-2">
+      <div className="flex items-center gap-1.5">
+        <span className="h-2.5 w-2.5 rounded-full bg-[#ff5f57]" />
+        <span className="h-2.5 w-2.5 rounded-full bg-[#febc2e]" />
+        <span className="h-2.5 w-2.5 rounded-full bg-[#28c840]" />
+      </div>
+      <div className="mx-2 flex flex-1 items-center gap-1.5 rounded-md bg-background/80 px-2 py-1 text-[10px] font-medium text-muted-foreground ring-1 ring-border/60">
+        <Lock className="h-2.5 w-2.5 text-primary" />
+        <span className="truncate"><span className="text-foreground/70">{url}</span>{path}</span>
+      </div>
+      {live && (
+        <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-primary ring-1 ring-primary/30">
+          <LiveDot />
+          Live
+        </span>
+      )}
+    </div>
+    <div className="p-4">{children}</div>
+  </div>
+);
+
+/** A pulsing dot to signal "live" / connected state. */
+export const LiveDot = () => (
+  <span className="relative flex h-1.5 w-1.5">
+    <motion.span
+      className="absolute inline-flex h-full w-full rounded-full bg-primary/60"
+      animate={{ scale: [1, 2.2, 1], opacity: [0.6, 0, 0.6] }}
+      transition={{ duration: 1.8, repeat: Infinity, ease: 'easeOut' }}
+    />
+    <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-primary" />
+  </span>
+);
+
+/** Animated count-up KPI stat used inside dashboard footers. */
+export const KPIStat = ({
+  label,
+  value,
+  prefix = '',
+  suffix = '',
+  delta,
+  delay = 0,
+}: {
+  label: string;
+  value: number;
+  prefix?: string;
+  suffix?: string;
+  delta?: string;
+  delay?: number;
+}) => {
+  const [display, setDisplay] = useState(0);
+  useEffect(() => {
+    const startAt = performance.now() + delay * 1000;
+    let raf = 0;
+    const dur = 1100;
+    const tick = (now: number) => {
+      const t = Math.min(1, Math.max(0, (now - startAt) / dur));
+      const eased = 1 - Math.pow(1 - t, 3);
+      setDisplay(value * eased);
+      if (t < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [value, delay]);
+  const formatted = value >= 100
+    ? Math.round(display).toLocaleString()
+    : display.toFixed(1);
+  return (
+    <div className="flex-1 rounded-lg border border-border/70 bg-background/60 px-2.5 py-1.5">
+      <div className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">{label}</div>
+      <div className="mt-0.5 flex items-baseline gap-1">
+        <span className="text-sm font-bold tabular-nums text-foreground">
+          {prefix}{formatted}{suffix}
+        </span>
+        {delta && (
+          <span className="inline-flex items-center gap-0.5 text-[9px] font-semibold text-primary">
+            <TrendingUp className="h-2.5 w-2.5" />
+            {delta}
+          </span>
+        )}
+      </div>
+    </div>
+  );
+};
+
+/** Compact sparkline SVG that draws itself on mount. */
+export const Sparkline = ({
+  points = [12, 18, 14, 22, 20, 28, 26, 34, 32, 42, 40, 48],
+  width = 120,
+  height = 28,
+  delay = 0,
+}: {
+  points?: number[];
+  width?: number;
+  height?: number;
+  delay?: number;
+}) => {
+  const min = Math.min(...points);
+  const max = Math.max(...points);
+  const range = Math.max(1, max - min);
+  const step = width / (points.length - 1);
+  const path = points
+    .map((p, i) => {
+      const x = i * step;
+      const y = height - ((p - min) / range) * (height - 4) - 2;
+      return `${i === 0 ? 'M' : 'L'}${x.toFixed(1)},${y.toFixed(1)}`;
+    })
+    .join(' ');
+  const areaPath = `${path} L${width},${height} L0,${height} Z`;
+  return (
+    <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} className="overflow-visible">
+      <defs>
+        <linearGradient id="spark-fill" x1="0" x2="0" y1="0" y2="1">
+          <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity="0.35" />
+          <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      <motion.path
+        d={areaPath}
+        fill="url(#spark-fill)"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: delay + 0.4, duration: 0.5 }}
+      />
+      <motion.path
+        d={path}
+        fill="none"
+        stroke="hsl(var(--primary))"
+        strokeWidth={1.75}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        initial={{ pathLength: 0 }}
+        animate={{ pathLength: 1 }}
+        transition={{ delay, duration: 1.2, ease: 'easeOut' }}
+      />
+    </svg>
+  );
+};
+
+/** Rolling activity ticker — three most-recent events, staggered in. */
+export const ActivityTicker = ({
+  events,
+}: {
+  events: Array<{ label: string; time: string }>;
+}) => (
+  <div className="space-y-1">
+    <div className="flex items-center gap-1.5 text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">
+      <Activity className="h-2.5 w-2.5 text-primary" />
+      Recent activity
+    </div>
+    {events.map((e, i) => (
+      <motion.div
+        key={i}
+        initial={{ opacity: 0, x: -6 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ delay: 0.6 + i * 0.15 }}
+        className="flex items-center justify-between gap-2 rounded-md bg-background/60 px-2 py-1 text-[10px]"
+      >
+        <span className="flex items-center gap-1.5 truncate text-foreground">
+          <LiveDot />
+          <span className="truncate font-medium">{e.label}</span>
+        </span>
+        <span className="flex-shrink-0 tabular-nums text-muted-foreground">{e.time}</span>
+      </motion.div>
+    ))}
+  </div>
 );
