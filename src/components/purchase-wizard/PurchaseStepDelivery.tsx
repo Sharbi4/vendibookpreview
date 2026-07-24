@@ -97,7 +97,7 @@ const METHOD_META: Record<FulfillmentSelection, {
 const NextStepsPanel = ({ selection }: { selection: FulfillmentSelection }) => {
   const steps = NEXT_STEPS[selection];
   return (
-    <div className="rounded-xl border border-border/60 bg-card/60 backdrop-blur-sm p-4">
+    <div className="rounded-md border border-border bg-card/60 backdrop-blur-sm p-4">
       <div className="flex items-center gap-2 mb-3">
         <Clock className="h-4 w-4 text-primary" />
         <h4 className="text-sm font-semibold text-foreground">What to expect after checkout</h4>
@@ -134,8 +134,10 @@ const MethodCard = ({ selection, selected, onSelect, priceNode, showRadio, child
   return (
     <div
       className={cn(
-        'rounded-2xl border-2 transition-all overflow-hidden',
-        selected ? 'border-primary bg-primary/[0.04] shadow-lg shadow-primary/5' : 'border-border/60 bg-card/40',
+        'rounded-lg border-2 transition-all overflow-hidden',
+        selected
+          ? 'border-primary bg-primary/[0.05] shadow-[0_0_0_1px_rgba(255,81,36,0.35)]'
+          : 'border-border bg-card/40 hover:border-white/25',
       )}
     >
       <button
@@ -143,7 +145,7 @@ const MethodCard = ({ selection, selected, onSelect, priceNode, showRadio, child
         onClick={onSelect}
         disabled={!showRadio}
         className={cn(
-          'w-full flex items-start gap-4 p-4 text-left',
+          'w-full flex items-start gap-4 p-5 text-left',
           showRadio && 'hover:bg-muted/20 transition-colors cursor-pointer',
           !showRadio && 'cursor-default',
         )}
@@ -181,7 +183,7 @@ const MethodCard = ({ selection, selected, onSelect, priceNode, showRadio, child
 
       {/* Explainer strip */}
       <div className="px-4 pb-4 -mt-1">
-        <div className="rounded-lg bg-muted/40 border border-border/40 px-3 py-2.5 flex gap-2">
+        <div className="rounded-lg bg-muted/40 border border-border px-3 py-2.5 flex gap-2">
           <Info className="h-4 w-4 text-primary shrink-0 mt-0.5" />
           <div className="text-xs">
             <span className="font-semibold text-foreground">{meta.explainerTitle}. </span>
@@ -191,7 +193,7 @@ const MethodCard = ({ selection, selected, onSelect, priceNode, showRadio, child
       </div>
 
       {selected && children ? (
-        <div className="px-4 pb-4 space-y-3 border-t border-border/40 pt-4 bg-muted/[0.15]">
+        <div className="px-4 pb-4 space-y-3 border-t border-border pt-4 bg-muted/[0.15]">
           {children}
         </div>
       ) : null}
@@ -264,7 +266,7 @@ const PurchaseStepDelivery = ({
             priceNode={pickupPriceNode}
             showRadio={showRadios}
           >
-            <div className="rounded-lg border border-border/60 bg-background/40 p-3">
+            <div className="rounded-lg border border-border bg-background/40 p-3">
               <div className="flex items-center gap-2 mb-1">
                 <MapPin className="h-4 w-4 text-primary" />
                 <span className="text-xs font-semibold text-foreground">Pickup area</span>
