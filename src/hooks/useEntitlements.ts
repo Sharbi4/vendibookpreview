@@ -57,11 +57,11 @@ export function useEntitlements() {
         supabase
           .from('listings')
           .select('id')
-          .eq('owner_id', user.id),
+          .eq('host_id', user.id),
       ]);
 
-      const ownedListingIds = (listingsRes.data ?? []).map((l: any) => l.id).filter(Boolean);
-      let promosRes: any = { data: [] };
+      const ownedListingIds = ((listingsRes.data ?? []) as Array<{ id: string }>).map((l) => l.id).filter(Boolean);
+      let promosRes: { data: any[] | null } = { data: [] };
       if (ownedListingIds.length > 0) {
         promosRes = await supabase
           .from('listing_promotions')
@@ -147,16 +147,11 @@ export function useEntitlements() {
 }
 
 function isBetter(a: Entitlement, b: Entitlement) {
-  const rank = (s: Entitlement['status']) =>
-    s === 'active' ? 5 : s === 'trialing' ? 4 : s === 'fulfilled' ? 3 : s === 'paid' ? 2 : s === 'past_due' ? 1 : 0;
-  return rank(a) > rank(b) || (rank(a) === rank(b) && false);
-  function rank(e: Entitlement) {
-    return (
-      e.status === 'active' ? 5 :
-      e.status === 'trialing' ? 4 :
-      e.status === 'fulfilled' ? 3 :
-      e.status === 'paid' ? 2 :
-      e.status === 'past_due' ? 1 : 0
-    );
-  }
+  const rank = (e: Entitlement) =>
+    e.status === 'active' ? 5 :
+    e.status === 'trialing' ? 4 :
+    e.status === 'fulfilled' ? 3 :
+    e.status === 'paid' ? 2 :
+    e.status === 'past_due' ? 1 : 0;
+  return rank(a) > rank(b);
 }
