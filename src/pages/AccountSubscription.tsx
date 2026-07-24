@@ -100,7 +100,7 @@ export default function AccountSubscription() {
       if (data?.url) window.open(data.url, '_blank', 'noopener,noreferrer');
       else throw new Error('Portal URL missing');
     } catch (err) {
-      const parsed = await parseFunctionError(err);
+      const parsed = await parseEdgeError(err);
       toast({
         title: 'Could not open billing portal',
         description: parsed?.message ?? (err instanceof Error ? err.message : 'Please try again.'),
@@ -126,7 +126,7 @@ export default function AccountSubscription() {
       });
       await refetch();
     } catch (err) {
-      const parsed = await parseFunctionError(err);
+      const parsed = await parseEdgeError(err);
       toast({
         title: 'Could not update subscription',
         description: parsed?.message ?? (err instanceof Error ? err.message : 'Please try again.'),
