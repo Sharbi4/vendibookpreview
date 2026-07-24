@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react';
-import { Receipt, ExternalLink, Loader2 } from 'lucide-react';
+import { Receipt, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 
