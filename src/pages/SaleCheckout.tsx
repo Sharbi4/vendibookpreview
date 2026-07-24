@@ -11,6 +11,7 @@ import { supabase } from '@/integrations/supabase/client';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { CheckoutOverlay, EmbeddedStripeCheckout } from '@/components/checkout';
+import CheckoutOrderSummary from '@/components/checkout/CheckoutOrderSummary';
 import { isEmbeddedCheckoutEnabled } from '@/lib/featureFlags';
 import { validators } from '@/components/ui/validated-input';
 import { trackFormSubmitConversion } from '@/lib/gtagConversions';
@@ -799,6 +800,24 @@ const SaleCheckout = () => {
           clientSecret={embeddedCheckout.clientSecret}
           returnUrl={embeddedCheckout.returnUrl}
           onClose={() => setEmbeddedCheckout(null)}
+          summary={
+            <CheckoutOrderSummary
+              variant="sale"
+              coverImageUrl={listing.cover_image_url || listing.image_urls?.[0]}
+              title={listing.title}
+              subtitle={listing.category ?? undefined}
+              lines={[
+                { label: 'Item price', amount: priceSale },
+                ...(currentDeliveryFee > 0
+                  ? [{
+                      label: fulfillmentSelected === 'vendibook_freight' ? 'Freight' : 'Delivery',
+                      amount: currentDeliveryFee,
+                    }]
+                  : []),
+              ]}
+              total={totalPrice}
+            />
+          }
         />
       ) : null}
       {termsGate.terms ? (
