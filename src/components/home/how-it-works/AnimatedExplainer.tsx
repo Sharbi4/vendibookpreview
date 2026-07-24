@@ -9,6 +9,8 @@ interface Props {
   explainer: Explainer;
   onProgress?: (percent: number) => void;
   onEnded?: () => void;
+  onSceneChange?: (info: { index: number; previousIndex: number | null; total: number }) => void;
+  onWatched?: (ms: number) => void;
   storageKey?: string;
 }
 
