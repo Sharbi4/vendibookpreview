@@ -4,6 +4,10 @@ import { rentingScenes } from '../scenes/RentingScenes';
 import { sellingScenes } from '../scenes/SellingScenes';
 import { hostingScenes } from '../scenes/HostingScenes';
 import type { VendiAccessory } from '../Vendi';
+import buyingHero from '@/assets/how-buying-hero.jpg';
+import rentingHero from '@/assets/how-renting-hero.jpg';
+import sellingHero from '@/assets/how-selling-hero.jpg';
+import hostingHero from '@/assets/how-hosting-hero.jpg';
 
 export type ExplainerType = 'buying' | 'renting' | 'selling' | 'hosting';
 
@@ -20,6 +24,8 @@ export interface Explainer {
   description: string;
   durationSeconds: number;
   accessory: VendiAccessory;
+  /** Cinematic hero image used behind the tile and as scene backdrop. */
+  heroImage: string;
   /** Future MP4 slot. When set, modal renders <video> instead of AnimatedExplainer. */
   videoSource?: string;
   captionsVtt?: string;
@@ -51,6 +57,7 @@ export const explainers: Explainer[] = [
       'Find a food truck or trailer, connect with the seller, and complete your purchase with greater confidence.',
     durationSeconds: 60,
     accessory: 'search',
+    heroImage: buyingHero,
     ctaLabel: 'Browse Food Trucks & Trailers',
     ctaRoute: '/browse',
     secondaryCtaLabel: 'Learn About Buying',
@@ -74,6 +81,7 @@ export const explainers: Explainer[] = [
       'Choose your dates, request a rental, complete verification, and manage the rental process in one place.',
     durationSeconds: 60,
     accessory: 'calendar',
+    heroImage: rentingHero,
     ctaLabel: 'Explore Rentals',
     ctaRoute: '/browse?mode=rent',
     secondaryCtaLabel: 'How Rentals Work',
@@ -97,6 +105,7 @@ export const explainers: Explainer[] = [
       'Create a listing, reach serious buyers, manage inquiries, and sell your equipment faster.',
     durationSeconds: 60,
     accessory: 'camera',
+    heroImage: sellingHero,
     ctaLabel: 'List Your Food Truck for Free',
     ctaRoute: '/list',
     secondaryCtaLabel: 'Explore Selling Tools',
@@ -120,6 +129,7 @@ export const explainers: Explainer[] = [
       'List your food truck, trailer, kitchen, or vendor space and earn from available inventory or unused space.',
     durationSeconds: 60,
     accessory: 'dashboard',
+    heroImage: hostingHero,
     ctaLabel: 'Become a Vendibook Host',
     ctaRoute: '/how-it-works-host',
     secondaryCtaLabel: 'See Hosting Benefits',

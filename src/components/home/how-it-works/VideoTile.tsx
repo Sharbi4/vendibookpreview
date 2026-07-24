@@ -21,53 +21,66 @@ export const VideoTile = ({ explainer, onOpen }: Props) => {
       <motion.button
         type="button"
         onClick={() => onOpen(explainer.id)}
-        whileHover={prefersReduced ? undefined : { y: -4 }}
+        whileHover={prefersReduced ? undefined : { y: -6 }}
         transition={{ type: 'spring', stiffness: 260, damping: 22 }}
-        className="group relative flex w-full snap-start flex-col overflow-hidden rounded-2xl border border-border bg-card text-left shadow-sm transition-shadow duration-200 hover:border-foreground/30 hover:shadow-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+        className="group relative flex w-full snap-start flex-col overflow-hidden rounded-2xl border border-border bg-card text-left shadow-md transition-shadow duration-300 hover:border-foreground/40 hover:shadow-2xl focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background"
         aria-label={`Play video: ${explainer.title}`}
       >
-        {/* Thumbnail stage */}
-        <div className="relative aspect-video w-full overflow-hidden bg-gradient-to-br from-muted/60 via-background to-muted/30">
-          <div className="absolute inset-0 flex items-center justify-center">
-            <Vendi accessory={explainer.accessory} size={140} still />
+        {/* Cinematic thumbnail stage */}
+        <div className="relative aspect-video w-full overflow-hidden bg-foreground">
+          {/* hero image */}
+          <motion.img
+            src={explainer.heroImage}
+            alt=""
+            loading="lazy"
+            className="absolute inset-0 h-full w-full object-cover"
+            initial={{ scale: 1.02 }}
+            whileHover={prefersReduced ? undefined : { scale: 1.08 }}
+            transition={{ duration: 6, ease: 'easeOut' }}
+          />
+
+          {/* cinematic gradient wash */}
+          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-black/35" />
+          <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-primary/15 via-transparent to-transparent" />
+
+          {/* floating mascot */}
+          <div className="absolute inset-y-0 right-2 flex items-center">
+            <Vendi accessory={explainer.accessory} size={128} />
           </div>
-          {/* subtle grid */}
-          <svg className="absolute inset-0 h-full w-full opacity-[0.08]" aria-hidden>
-            <defs>
-              <pattern id={`grid-${explainer.id}`} width="22" height="22" patternUnits="userSpaceOnUse">
-                <path d="M 22 0 L 0 0 0 22" fill="none" stroke="currentColor" strokeWidth="0.5" />
-              </pattern>
-            </defs>
-            <rect width="100%" height="100%" fill={`url(#grid-${explainer.id})`} />
-          </svg>
 
           {/* Play button */}
           <div className="absolute inset-0 flex items-center justify-center">
             <motion.div
-              className="flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-xl ring-4 ring-background/60"
-              animate={prefersReduced ? undefined : { scale: [1, 1.06, 1] }}
+              className="flex h-16 w-16 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-2xl ring-4 ring-background/70"
+              animate={prefersReduced ? undefined : { scale: [1, 1.08, 1] }}
               transition={prefersReduced ? undefined : { duration: 2.4, repeat: Infinity, ease: 'easeInOut' }}
             >
-              <Play className="h-6 w-6 translate-x-0.5" fill="currentColor" />
+              <Play className="h-7 w-7 translate-x-0.5" fill="currentColor" />
             </motion.div>
           </div>
 
           {/* Duration badge */}
-          <div className="absolute right-3 top-3 rounded-full bg-background/85 px-2 py-0.5 text-[11px] font-semibold text-foreground backdrop-blur">
+          <div className="absolute right-3 top-3 rounded-full bg-background/90 px-2.5 py-1 text-[11px] font-semibold text-foreground shadow-sm backdrop-blur">
             ≈{explainer.durationSeconds}s
           </div>
           {/* Headline overlay */}
-          <div className="absolute left-3 top-3 rounded-md bg-foreground/85 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider text-background">
+          <div className="absolute left-3 top-3 rounded-md bg-primary px-2 py-1 text-[11px] font-bold uppercase tracking-wider text-primary-foreground shadow-sm">
             {explainer.tileHeadline}
+          </div>
+
+          {/* Bottom title strip */}
+          <div className="absolute inset-x-0 bottom-0 p-3">
+            <div className="text-base font-semibold leading-tight text-white drop-shadow-lg sm:text-lg">
+              {explainer.title}
+            </div>
           </div>
         </div>
 
         {/* Body */}
         <div className="flex flex-1 flex-col gap-1.5 p-4">
-          <div className="text-base font-semibold text-foreground">{explainer.title}</div>
           <p className="text-sm text-muted-foreground">{explainer.description}</p>
           <div className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-primary">
-            Watch video
+            Watch with voiceover
             <span aria-hidden className="transition-transform duration-200 group-hover:translate-x-0.5">→</span>
           </div>
         </div>
