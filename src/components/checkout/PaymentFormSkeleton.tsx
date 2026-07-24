@@ -3,8 +3,7 @@
  * input rows Stripe will render, so the modal never shows an empty
  * spinner while Stripe.js boots.
  */
-const shimmer =
-  'relative overflow-hidden bg-muted/30 before:absolute before:inset-0 before:-translate-x-full before:animate-[shimmer_1.6s_infinite] before:bg-gradient-to-r before:from-transparent before:via-white/5 before:to-transparent';
+const shimmer = 'bg-muted/30 animate-pulse';
 
 const PaymentFormSkeleton = () => (
   <div className="space-y-4" aria-busy="true" aria-live="polite">
