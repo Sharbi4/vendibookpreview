@@ -60,6 +60,49 @@ serve(async (req) => {
     if (prodErr) throw prodErr;
     if (!product) throw new Error("Product not available");
 
+    // ROSCA / California AB 2863: recurring subscriptions require an affirmative
+    // consent record captured before checkout. Reject the request if the client
+    // did not pass a consent_id or if the consent row does not belong to this
+    // user / match the product they consented to.
+    if (product.billing_type === "recurring") {
+      if (!body.consent_id) {
+        return new Response(
+          JSON.stringify({
+            error:
+              "Missing subscription consent. Please review the terms and check the agreement box, then try again.",
+            code: "missing_subscription_consent",
+          }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 },
+        );
+      }
+      const { data: consent, error: consentErr } = await supabase
+        .from("user_consents")
+        .select("id, user_id, document_type, related_ids, trigger_action")
+        .eq("id", body.consent_id)
+        .maybeSingle();
+      if (consentErr) throw consentErr;
+      const relatedSlug =
+        (consent?.related_ids as Record<string, string> | null)?.product_slug ?? null;
+      const validConsent =
+        !!consent &&
+        consent.user_id === user.id &&
+        consent.document_type === "subscription_terms" &&
+        consent.trigger_action === "subscription_start" &&
+        (relatedSlug === null || relatedSlug === product.slug);
+      if (!validConsent) {
+        return new Response(
+          JSON.stringify({
+            error:
+              "Subscription consent could not be verified. Please re-accept the terms and try again.",
+            code: "invalid_subscription_consent",
+          }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 },
+        );
+      }
+      log("subscription consent verified", { consent_id: consent.id });
+    }
+
+
     // Effective price (respect promo window)
     const now = Date.now();
     const inPromo =
