@@ -6605,6 +6605,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      host_active_listing_limit: { Args: { _user_id: string }; Returns: number }
       increment_referral_counter: {
         Args: { p_owner_id: string }
         Returns: undefined
