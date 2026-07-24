@@ -8,6 +8,7 @@ import {
   PaymentOptionsPanel,
   DashboardMock,
   BadgeStamp,
+  Confetti,
 } from './primitives';
 
 /**
@@ -188,6 +189,7 @@ export const buyingScenes = [
   () => (
     <SceneShell caption="Find it. Finance it when eligible. Manage the purchase.">
       <div className="relative flex h-full w-full items-end justify-center gap-6">
+        <Confetti />
         <Vendi accessory="none" size={220} />
         <div className="flex flex-col items-center gap-3">
           <BadgeStamp label="Receipt Confirmed" />

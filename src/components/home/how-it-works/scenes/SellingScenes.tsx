@@ -8,6 +8,7 @@ import {
   InboxRow,
   ListingWizardStrip,
   PaymentOptionsPanel,
+  Confetti,
 } from './primitives';
 
 /**
@@ -166,7 +167,8 @@ export const sellingScenes = [
   // 8. Confirm the handoff — closing beat
   () => (
     <SceneShell caption="List for free. Sell with a better process.">
-      <div className="flex h-full w-full items-end justify-center gap-6">
+      <div className="relative flex h-full w-full items-end justify-center gap-6">
+        <Confetti />
         <Vendi accessory="none" size={220} />
         <div className="flex flex-col items-center gap-2">
           <BadgeStamp label="Handoff Confirmed" />

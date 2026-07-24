@@ -8,6 +8,7 @@ import {
   CheckDoc,
   DashboardMock,
   PaymentOptionsPanel,
+  Confetti,
 } from './primitives';
 
 /**
@@ -177,7 +178,8 @@ export const rentingScenes = [
   // 8. Pickup & return
   () => (
     <SceneShell caption="Book it. Manage it. Put it to work.">
-      <div className="flex h-full w-full items-end justify-center gap-6">
+      <div className="relative flex h-full w-full items-end justify-center gap-6">
+        <Confetti />
         <Vendi accessory="none" size={220} />
         <div className="flex flex-col items-center gap-2">
           <BadgeStamp label="Pickup Confirmed" />
