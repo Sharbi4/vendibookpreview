@@ -19,6 +19,7 @@ interface Props {
  * Only shown when the sale meets the protection floor.
  */
 export function ProtectionOptInCard({ salePriceCents, saleTransactionId }: Props) {
+  const [showCalculator, setShowCalculator] = useState(false);
   if (!isProtectedSaleEligible(salePriceCents)) return null;
   const { protectionFeeCents, depositCents, balanceCents } =
     computeProtectedSaleAmounts(salePriceCents);
