@@ -9,6 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Navigate } from 'react-router-dom';
 import { formatUsd, type MonetizationProduct } from '@/lib/monetization/products';
+import { SubscriptionRevenueSection, type HostSubscriptionRow } from '@/components/admin/SubscriptionRevenueSection';
 import { toast } from 'sonner';
 
 interface PurchaseRow {
@@ -68,20 +69,23 @@ export default function AdminRevenue() {
   const [purchases, setPurchases] = useState<PurchaseRow[]>([]);
   const [promos, setPromos] = useState<PromoRow[]>([]);
   const [discounts, setDiscounts] = useState<DiscountRow[]>([]);
+  const [subscriptions, setSubscriptions] = useState<HostSubscriptionRow[]>([]);
 
   const load = async () => {
     setLoading(true);
     try {
-      const [p, pu, pr, dc] = await Promise.all([
+      const [p, pu, pr, dc, sb] = await Promise.all([
         anyClient.from('monetization_products').select('*').order('display_order'),
         anyClient.from('monetization_purchases').select('*').order('created_at', { ascending: false }).limit(200),
         anyClient.from('listing_promotions').select('*').order('starts_at', { ascending: false }).limit(200),
         anyClient.from('discount_codes').select('*').order('created_at', { ascending: false }),
+        anyClient.from('host_subscriptions').select('*').order('created_at', { ascending: false }).limit(1000),
       ]);
       setProducts(p.data ?? []);
       setPurchases(pu.data ?? []);
       setPromos(pr.data ?? []);
       setDiscounts(dc.data ?? []);
+      setSubscriptions(sb.data ?? []);
     } catch (e) {
       console.error('admin revenue load failed', e);
       toast.error('Failed to load revenue data');
@@ -174,13 +178,18 @@ export default function AdminRevenue() {
         </CardContent>
       </Card>
 
-      <Tabs defaultValue="products">
+      <Tabs defaultValue="subscriptions">
         <TabsList>
+          <TabsTrigger value="subscriptions">Subscriptions</TabsTrigger>
           <TabsTrigger value="products">Products</TabsTrigger>
           <TabsTrigger value="purchases">Purchases</TabsTrigger>
           <TabsTrigger value="promotions">Promotions</TabsTrigger>
           <TabsTrigger value="discounts">Discount codes</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="subscriptions" className="mt-4">
+          <SubscriptionRevenueSection subscriptions={subscriptions} products={products} />
+        </TabsContent>
 
         <TabsContent value="products" className="mt-4">
           <div className="overflow-hidden rounded-xl border border-border">
