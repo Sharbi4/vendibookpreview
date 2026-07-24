@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Gift, Copy, Check, Share2, Loader2 } from 'lucide-react';
+import { Gift, Copy, Check, Share2, Loader2, Mail, MessageCircle, Facebook, Twitter } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { useReferralCode, useMyReferrals, buildReferralUrl } from '@/hooks/useReferral';
