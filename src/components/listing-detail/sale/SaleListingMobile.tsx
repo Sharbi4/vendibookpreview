@@ -31,6 +31,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { FavoriteButton } from '@/components/listing/FavoriteButton';
 import EnhancedPhotoGallery from '@/components/listing-detail/EnhancedPhotoGallery';
+import ListingExplainerVideo from '@/components/listing-detail/ListingExplainerVideo';
+
 import { AmenitiesSection } from '@/components/listing-detail/AmenitiesSection';
 import ListingLocationMap from '@/components/listing-detail/ListingLocationMap';
 import CollapsibleDescription from '@/components/listing-detail/CollapsibleDescription';
@@ -214,6 +216,9 @@ export const SaleListingMobile = ({
             </div>
           )}
         </div>
+
+        <ListingExplainerVideo mode="sale" listingId={listing.id} />
+
 
         {/* HERO DETAILS */}
         <div className="space-y-3">
