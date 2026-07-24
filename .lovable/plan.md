@@ -1,46 +1,68 @@
-## Diagnosis (confirmed)
+# Vendibook Monetization & Services — Phased Plan
 
-Two separate issues combine into what you're hearing:
+This is a large addition. I'll ship it in three phases, each independently useful and testable, so we don't leave placeholder buttons or half-wired Stripe flows. Nothing in the existing app (listing wizard, dashboards, messaging, calendar, current Stripe/Affirm flows, rentals, cash sales, reviews, Permit Path) will be removed or changed in behavior — only extended.
 
-1. **The "buzzing" is not audio noise from a broken file** — it's the intentional ambient pad in `src/components/home/how-it-works/audio/ambientBed.ts` (two detuned sine oscillators + slow LFO through a lowpass filter). It's meant to sit *under* the narrator's voice. With no voice on top, it sounds like a hum/buzz on its own.
-2. **The narration is missing** because `explainer-tts` calls the Lovable AI Gateway, which is returning `402 Not enough credits` (verified in the edge function logs). So every scene plays the pad with nothing over it.
+## Guiding rules (apply to every phase)
 
-The project already has ElevenLabs wired up (`ELEVENLABS_API_KEY` is used by `supabase/functions/listing-narration/index.ts`), so we can switch the explainer voiceover to ElevenLabs and get natural narration without touching billing.
+- Free listing stays free. All paid products are optional, additive, and clearly marked.
+- Admin-editable catalog: every product/price lives in a DB table; code never hard-codes dollar amounts.
+- Stripe is the single source of truth for payment status — records only flip to `paid` after a Stripe webhook confirms it, using idempotency keys.
+- No "escrow" language. Use "Protected Sale", "protected payment process", "payment released per transaction terms".
+- No pre-checked upsells, no dark patterns. Every card shows: what you get, how long it lasts, recurring vs one-time, cancellation, refund policy.
+- Reuse existing Satin Lux tokens (charcoal, orange CTA, hairline borders, glass). No new visual system.
 
-## Fix
+## Phase 1 — Catalog, Seller Upgrades, Boosts, Admin (this build)
 
-### 1. Switch `explainer-tts` to ElevenLabs
+**Database (one migration):**
+- `monetization_products` — name, category enum (`listing_upgrade | seller_service | buyer_service | protected_sale | host_subscription | permit_upgrade | partner_service | promo_credit`), description, billing_type (`one_time | recurring | percentage | custom`), price_cents, promo_price_cents, promo_starts_at, promo_ends_at, applicable_listing_types[], features jsonb, display_order, is_active, stripe_product_id, stripe_price_id, upgrade_eligibility jsonb.
+- `monetization_purchases` — user_id, product_id, listing_id (nullable), stripe_session_id, stripe_payment_intent_id, amount_cents, status (`pending | paid | fulfilled | refunded | failed`), fulfillment_status, fulfillment_notes, refund_status, metadata jsonb, idempotency_key unique.
+- `listing_promotions` — listing_id, product_id, purchase_id, promo_type (`featured_7 | featured_30 | top_of_search | highlight | motivated_seller | email_campaign | social_feature`), starts_at, ends_at, active, metrics jsonb (impressions, views, saves, messages, offers). Unique partial index prevents overlapping same-type promos on one listing.
+- `discount_codes` — code, percent_off, amount_off_cents, applicable_categories[], max_uses, uses, starts_at, ends_at, active.
+- `discount_code_redemptions` — code_id, user_id, purchase_id.
+- `admin_action_idempotency` reused for admin grants.
 
-Rewrite `supabase/functions/explainer-tts/index.ts` to call ElevenLabs Text‑to‑Speech instead of the Lovable AI Gateway:
+All tables: GRANT to `authenticated` + `service_role`, RLS: users see their own rows; admins see all via `is_admin(auth.uid())`; products readable by anon when `is_active`.
 
-- Model: `eleven_multilingual_v2` (highest quality, best for long marketing narration).
-- Voice: **Sarah** (`EXAVITQu4vr4xnSDxMaL`) as the default — warm, neutral, conversational narrator. Allow `?voice=` override.
-- Output: `mp3_44100_128` (query string, per ElevenLabs API contract).
-- Voice settings tuned for narration: `stability: 0.55`, `similarity_boost: 0.75`, `style: 0.35`, `use_speaker_boost: true`, `speed: 0.98`.
-- Keep the existing `shapeForNarration()` prosody shaper (commas, em-dashes, ellipses, paragraph breaks) — it works just as well for ElevenLabs.
-- Keep the CDN cache header (`Cache-Control: public, max-age=86400, immutable`) so repeat plays are instant.
-- Keep the same GET + POST interface so the client (`AnimatedExplainer.tsx`) needs no changes.
-- Surface ElevenLabs errors clearly (401 → misconfigured key, 429 → rate limited, 402 → quota).
+**Edge functions:**
+- `create-monetization-checkout` — validates product active + eligibility, applies discount code, creates Stripe Checkout Session (`mode: payment` or `subscription`), writes `pending` purchase with idempotency key.
+- `monetization-webhook` — handles `checkout.session.completed`, `payment_intent.succeeded`, `charge.refunded`. Flips purchase to `paid`, activates `listing_promotions`, fires notification. Idempotent on `stripe_event_id`.
+- `admin-monetization-grant` — admin-only complimentary access.
 
-### 2. Stop the "buzzing" when narration isn't ready
+**Frontend:**
+- New step in `PublishWizard` before final review: "Boost your listing" with three package cards (Featured $49, Seller Pro $149, White Glove $499) + prominent "Continue with free listing" secondary button. Copy is short and trust-focused.
+- Seller dashboard: "Promote Listing" panel (individual boosts) + "Current Promotions" showing start/end/days remaining/metrics.
+- Admin route `/admin/revenue`: Products table (create/edit/toggle), Purchases table (filter by product/date/user), Promotions table, Discount codes, Refund action, Manual grant action, Revenue summary cards (gross, by category, refunds, failed payments).
+- Notifications: "Upgrade purchased", "Promotion activated", "Promotion ending soon" (3-day cron), "Refund issued". In-app + email via existing `send-transactional-email`.
 
-In `src/components/home/how-it-works/AnimatedExplainer.tsx`:
+**Out of Phase 1:** Protected Sale, Buyer services, Host subscriptions, Permit upgrades, Partner cards, Services marketplace page.
 
-- Only start `AmbientBed` **after** `voiceReady === true`. If narration fetch fails, the pad never starts, so there's no lone hum.
-- If narration later becomes available (e.g. voice toggle re-fetch), start the bed at that point.
-- Lower the default ambient volume from `0.06` → `0.04` so even when it does play under the voice it's less prominent on small mobile speakers.
+## Phase 2 — Protected Sale + Buyer Services + Partner Leads
 
-### 3. Verify
+- `protected_sale_transactions` (extends `sale_transactions` via 1:1 or adds columns for VIN, ownership_doc_url, condition_checklist, deposit_cents, fee_cents, buyer_verified_at, seller_verified_at, bill_of_sale_url, buyer_acceptance_at, seller_payment_confirm_at, dispute_state).
+- Server-side fee calc: `max($499, min($3000, sale_price * 0.049))`. Admin-editable in `monetization_products` row category=`protected_sale`.
+- Checkout choice screen: "Pay/Complete in Person" (current cash flow) vs "Vendibook Protected Sale" with itemized fee explanation.
+- Buyer services: `Buyer Readiness Pass ($29)` product + checklist UI in buyer dashboard; `Listing Purchase Review ($149)` form + admin service queue table `service_requests`.
+- `partner_services` + `partner_service_leads` tables + concise services panel on listing detail (collapsible cards, primary CTA unchanged) + consent gate before sharing user info.
 
-- Check `ELEVENLABS_API_KEY` is present in project secrets (I'll confirm with `fetch_secrets` in build mode; the `listing-narration` function already uses it, so it should be).
-- Reload the homepage, open a "How Vendibook Works" video, confirm:
-  - Sarah's voice plays clearly over each scene.
-  - No standalone hum when audio isn't loaded yet.
-  - Volume slider + mute still work.
+## Phase 3 — Host Subscriptions + Permit Upgrades + Marketplace Page + Analytics
+
+- `host_subscriptions` table synced from Stripe subscriptions. Tiers Starter $39/Growth $89/Operator $149. `check-host-subscription` edge fn on login + `customer-portal` fn for manage. Free hosts keep everything they have today; paid tiers *add* tools (feature-flag gates only guard the *new* capabilities).
+- Permit Path Plus $29 + Concierge $299 products; extend existing permit UI with tier badge + concierge queue.
+- `/services` marketplace page ("Everything You Need to Start and Grow Your Food Business") with category sections, FAQs, pricing cards.
+- Admin analytics dashboard: GMV, revenue by category, MRR, churn, conversion (view → inquiry → transaction, free → paid upgrade), top products, revenue by city/listing type. Uses aggregated queries against `monetization_purchases`, `sale_transactions`, `booking_requests`, `host_subscriptions`.
 
 ## Technical notes
 
-- **File changes:** `supabase/functions/explainer-tts/index.ts` (full rewrite), `src/components/home/how-it-works/AnimatedExplainer.tsx` (gate ambient bed on `voiceReady`), `src/components/home/how-it-works/audio/ambientBed.ts` (lower default volume constant only).
-- **Not touching:** the client fetch path, cache keys, analytics, captions, keyboard shortcuts, or volume persistence. The audio element still receives an `audio/mpeg` blob URL exactly as it does today.
-- **Cost:** ElevenLabs is billed to the ElevenLabs account (existing connector), not Lovable AI credits, so this also removes the 402 dependency for narration going forward.
-- **Fallback:** If `ELEVENLABS_API_KEY` isn't set for any reason, the function returns a clean JSON 500 and the client already handles narration failure silently (scenes still animate, captions still show).
+- Stripe products/prices are created via the Stripe MCP as we build each product — IDs written back into `monetization_products.stripe_product_id/stripe_price_id` so pricing is admin-editable without redeploy.
+- Webhook secret: I'll request `STRIPE_WEBHOOK_SECRET` via `add_secret` when we wire the webhook (Phase 1).
+- Every new table gets GRANTs + RLS + admin-view-all policy via `has_role(auth.uid(), 'admin')` at creation.
+- All new UI uses existing tokens; no new fonts, no new palette.
+- Mobile: pricing cards stack, sheets use existing mobile bottom-sheet patterns, tables collapse to cards.
+
+## Question before I start Phase 1
+
+1. **Confirm phase scope** — start with Phase 1 only (catalog + seller upgrades/boosts + admin + webhook), then come back for Phase 2 and 3 as separate builds? Or a different ordering (e.g. Protected Sale first because it's revenue-critical)?
+2. **Stripe products** — should I create the initial Stripe products/prices (Featured $49, Seller Pro $149, White Glove $499, and the individual boosts) with the Stripe tools during Phase 1, or would you rather create them yourself in the Stripe dashboard and paste the IDs?
+3. **Refund policy copy** — what should the default refund policy string be on listing upgrades? (e.g. "Non-refundable once promotion is active" vs "Refundable within 7 days if no impressions delivered".)
+
+Once you confirm, I'll start Phase 1 with the migration.
