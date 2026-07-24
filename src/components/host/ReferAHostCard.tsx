@@ -107,3 +107,32 @@ function Stat({ label, value }: { label: string; value: string | number }) {
     </div>
   );
 }
+
+function ShareRow({ link }: { link: string }) {
+  const text = 'List your space on Vendibook and start earning. Join with my link:';
+  const enc = encodeURIComponent;
+  const targets = [
+    { label: 'Email', icon: Mail, href: `mailto:?subject=${enc('Join me on Vendibook')}&body=${enc(`${text} ${link}`)}` },
+    { label: 'SMS', icon: MessageCircle, href: `sms:?&body=${enc(`${text} ${link}`)}` },
+    { label: 'WhatsApp', icon: MessageCircle, href: `https://wa.me/?text=${enc(`${text} ${link}`)}` },
+    { label: 'Facebook', icon: Facebook, href: `https://www.facebook.com/sharer/sharer.php?u=${enc(link)}` },
+    { label: 'X', icon: Twitter, href: `https://twitter.com/intent/tweet?text=${enc(text)}&url=${enc(link)}` },
+  ];
+  return (
+    <div className="flex flex-wrap gap-2 pt-1">
+      {targets.map((t) => (
+        <a
+          key={t.label}
+          href={t.href}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-muted/30 px-3 py-1.5 text-xs text-foreground hover:bg-muted/60 transition-colors"
+          aria-label={`Share via ${t.label}`}
+        >
+          <t.icon className="h-3.5 w-3.5" />
+          {t.label}
+        </a>
+      ))}
+    </div>
+  );
+}
