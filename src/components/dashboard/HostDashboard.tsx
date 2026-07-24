@@ -27,6 +27,7 @@ import { EnhancedAnalytics } from './EnhancedAnalytics';
 import { RevenueAnalyticsCard } from './RevenueAnalyticsCard';
 import { HostOffersSection } from './HostOffersSection';
 import { ListingInsightsPanel } from './ListingInsightsPanel';
+import { AICopilotLauncher } from './AICopilotLauncher';
 import { PromotionHub } from './PromotionHub';
 import { BoostListingPrompt } from './BoostListingPrompt';
 import { KitchenProSuite } from './KitchenProSuite';
@@ -459,6 +460,7 @@ const HostDashboard = () => {
         {activeTab === 'insights' && (
           <Reveal>
             <div className="space-y-10">
+              <AICopilotLauncher />
               <Section title="Listing health">
                 <ListingInsightsPanel />
               </Section>

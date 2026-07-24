@@ -123,6 +123,7 @@ export type LeadEventName =
   | 'ai_suggestion_accepted'
   | 'ai_suggestion_rejected'
   | 'ai_feedback_submitted'
+  | 'ai_copilot_opened'
   // Human escalation
   | 'human_support_requested';
 
@@ -249,6 +250,7 @@ const EVENT_CATEGORY: Record<LeadEventName, string> = {
   ai_suggestion_accepted: 'ai',
   ai_suggestion_rejected: 'ai',
   ai_feedback_submitted: 'ai',
+  ai_copilot_opened: 'ai',
   // Human escalation
   human_support_requested: 'support',
 };
