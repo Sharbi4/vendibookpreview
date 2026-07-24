@@ -13,6 +13,8 @@ import { stripeAppearance, getStripeFonts } from '@/lib/stripeAppearance';
 import { resolveStripeErrorCopy, type StripeErrorCopy } from '@/lib/stripeErrorCopy';
 import { TRUST_COPY } from '@/lib/transactionVocabulary';
 import PaymentFormSkeleton from './PaymentFormSkeleton';
+import TrustRow from './TrustRow';
+import AffirmMessagingLine from './AffirmMessagingLine';
 
 interface EmbeddedStripeCheckoutProps {
   clientSecret: string;
@@ -24,6 +26,8 @@ interface EmbeddedStripeCheckoutProps {
   returnUrl?: string;
   /** Called on same-page confirmation success before navigating to return URL. */
   onSuccess?: () => void;
+  /** Total in USD (dollars) — drives Affirm/Afterpay messaging above the tabs. */
+  totalUsd?: number;
 }
 
 const stripePromise = getStripe();
