@@ -162,6 +162,7 @@ export const AnimatedExplainer = ({ explainer, onProgress, onEnded, onSceneChang
       if (lastTickRef.current == null) lastTickRef.current = t;
       const delta = t - lastTickRef.current;
       lastTickRef.current = t;
+      watchedMsRef.current += delta;
       setElapsedMs((prev) => Math.min(prev + delta, totalMs));
       rafRef.current = requestAnimationFrame(tick);
     };
