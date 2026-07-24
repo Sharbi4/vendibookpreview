@@ -3,6 +3,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { usePageTracking } from '@/hooks/usePageTracking';
 import { Navigate } from 'react-router-dom';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { HostPlanRibbon } from '@/components/host/HostPlanRibbon';
 import { ConversionFunnel } from '@/components/analytics/ConversionFunnel';
 import { RevenueChart } from '@/components/analytics/RevenueChart';
 import { TrafficSourcesCard } from '@/components/analytics/TrafficSourcesCard';
@@ -50,6 +51,7 @@ const HostAnalytics = () => {
   return (
     <DashboardLayout mode="host" onModeChange={() => {}} isHost={true}>
       <div className="space-y-6">
+        <HostPlanRibbon />
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-semibold text-foreground">Analytics</h1>

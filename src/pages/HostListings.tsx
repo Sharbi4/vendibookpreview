@@ -11,11 +11,16 @@ import { useHostListings } from '@/hooks/useHostListings';
 import { useStripeConnect } from '@/hooks/useStripeConnect';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePageTracking } from '@/hooks/usePageTracking';
+import { HostPlanRibbon } from '@/components/host/HostPlanRibbon';
+import { useHostEntitlements } from '@/hooks/useHostEntitlements';
+import { Link as RouterLink } from 'react-router-dom';
+import { Lock } from 'lucide-react';
 
 const HostListings = () => {
   const { hasRole } = useAuth();
   const { listings, isLoading, stats, pauseListing, publishListing, deleteListing, updateListingPrice } = useHostListings();
   const { isConnected, connectStripe, isConnecting } = useStripeConnect();
+  const { canBulkListings } = useHostEntitlements();
   const [showStripeModal, setShowStripeModal] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
 
@@ -23,6 +28,7 @@ const HostListings = () => {
 
   const isHost = hasRole('host');
   const isPowerUser = listings.length > 2;
+  const canUseTable = isPowerUser && canBulkListings;
 
   const draftListings = listings.filter(l => l.status === 'draft');
   const publishedListings = listings.filter(l => l.status !== 'draft');
@@ -78,22 +84,34 @@ const HostListings = () => {
               {/* View Toggle for Power Users */}
               {isPowerUser && (
                 <div className="flex items-center gap-1 bg-muted/50 p-1 rounded-lg">
-                  <Button 
-                    variant={viewMode === 'grid' ? 'default' : 'ghost'} 
-                    size="icon" 
+                  <Button
+                    variant={viewMode === 'grid' ? 'default' : 'ghost'}
+                    size="icon"
                     className="h-8 w-8"
                     onClick={() => setViewMode('grid')}
                   >
                     <Grid3X3 className="h-4 w-4" />
                   </Button>
-                  <Button 
-                    variant={viewMode === 'table' ? 'default' : 'ghost'} 
-                    size="icon" 
-                    className="h-8 w-8"
-                    onClick={() => setViewMode('table')}
-                  >
-                    <List className="h-4 w-4" />
-                  </Button>
+                  {canUseTable ? (
+                    <Button
+                      variant={viewMode === 'table' ? 'default' : 'ghost'}
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={() => setViewMode('table')}
+                      title="Bulk operations table"
+                    >
+                      <List className="h-4 w-4" />
+                    </Button>
+                  ) : (
+                    <RouterLink
+                      to="/host/plans"
+                      className="h-8 px-2 rounded-md inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground hover:bg-background transition-colors"
+                      title="Bulk operations table — Host Pro"
+                    >
+                      <Lock className="h-3.5 w-3.5" />
+                      Pro
+                    </RouterLink>
+                  )}
                 </div>
               )}
               
@@ -107,6 +125,9 @@ const HostListings = () => {
           </div>
         </div>
 
+        {/* Host plan ribbon */}
+        <HostPlanRibbon />
+
         {/* Drafts Section */}
         {!isLoading && draftListings.length > 0 && (
           <DraftsSection drafts={draftListings} onDelete={deleteListing} />
@@ -117,7 +138,7 @@ const HostListings = () => {
           <div className="flex items-center justify-center py-16">
             <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
           </div>
-        ) : viewMode === 'table' && isPowerUser ? (
+        ) : viewMode === 'table' && canUseTable ? (
           <OperationsTable 
             listings={listings}
             onPublish={handlePublish}
