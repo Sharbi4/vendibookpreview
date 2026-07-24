@@ -66,18 +66,18 @@ export const explainers: Explainer[] = [
     secondaryCtaLabel: 'Learn About Buying',
     secondaryCtaRoute: '/how-it-works',
     transcript:
-      "Buying a food truck or trailer should not mean chasing scattered social posts. On Vendibook, you can search food trucks and trailers, apply filters like price, location, condition, and equipment, and compare listings side by side. Open a listing to review photos, included equipment, seller information, available documents, verification indicators, and accepted payment methods. Message the seller directly to ask questions and schedule an inspection. When you're ready, review the full transaction details and pick an available payment method. Online payments are securely processed through Stripe, and eligible purchases may offer Affirm — subject to eligibility and approval. If the seller offers it, you can also pay in person. Once the purchase is created, your buyer dashboard keeps the payment status, agreement, messages, transaction timeline, and the next required action in one place. For pay-in-person purchases, both sides can confirm the handoff and payment through Vendibook. Find the right equipment, choose an available payment option, and manage the whole purchase in one place.",
+      "Hey — thinking about buying a food truck or a trailer? Let me walk you through what that actually looks like on Vendibook, because it's a lot calmer than chasing scattered posts on social media. So, you land on the marketplace, and right away you can search by what actually matters to you — your city, your budget, the type of build, the equipment inside. You compare a few side by side, save the ones you like, and open the listing to really dig in… photos, the equipment list, the seller's info, any documents they've shared, verification badges, and which payment methods they accept. From there, you just message the seller — ask your questions, line up an inspection, get comfortable. When you're ready to move forward, you'll see the full transaction details laid out clearly, and you pick a payment method that's available for that listing. Online payments run securely through Stripe, some purchases may be eligible for Affirm — that's subject to eligibility and approval — and if the seller offers it, you can also pay in person. Once the purchase is created, everything lives in your buyer dashboard — payment status, the agreement, messages, the transaction timeline, and whatever the next step is. And for pay-in-person deals, both sides confirm the handoff right inside Vendibook, so nothing gets lost. That's really it — find the equipment, pick a payment option that fits, and manage the whole thing from one place.",
     scenes: buildScenes(
       buyingScenes,
       [
-        'A marketplace built for food-business equipment.',
-        'Search. Compare. Save your favorites.',
-        'More information before you commit.',
-        'Listing details and conversations together.',
-        'Review your total, then pick an available payment method.',
-        "Know what's complete and what's next.",
-        'Even offline payments stay organized.',
-        'Find it. Finance it when eligible. Manage the purchase.',
+        "So, here's where it starts — a marketplace built just for food-business equipment.",
+        "You search, you compare, you save the ones you like.",
+        "Open a listing and you get the full picture before you commit.",
+        "Message the seller right here — questions, inspections, all of it.",
+        "When you're ready, review the total and pick a payment method that works.",
+        "After you buy, your dashboard tells you exactly what's done and what's next.",
+        "Paying in person? That gets tracked too — both sides confirm the handoff.",
+        "That's the flow — find it, fund it, and manage it, all in one place.",
       ],
       [
         'Marketplace',
@@ -91,6 +91,7 @@ export const explainers: Explainer[] = [
       ],
     ),
   },
+
   {
     id: 'renting',
     title: 'Renting on Vendibook',
