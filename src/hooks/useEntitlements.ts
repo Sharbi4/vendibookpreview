@@ -63,7 +63,7 @@ export function useEntitlements() {
       const ownedListingIds = ((listingsRes.data ?? []) as Array<{ id: string }>).map((l) => l.id).filter(Boolean);
       let promosRes: { data: any[] | null } = { data: [] };
       if (ownedListingIds.length > 0) {
-        promosRes = await supabase
+        promosRes = await (supabase as any)
           .from('listing_promotions')
           .select('id,listing_id,product_id,promo_type,starts_at,ends_at,active,monetization_products(slug,name)')
           .in('listing_id', ownedListingIds)
