@@ -28,13 +28,14 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
-import { SEO } from '@/components/SEO';
+import SEO from '@/components/SEO';
 import { useMonetizationProducts } from '@/hooks/useMonetizationProducts';
 import { ProductPricingCard } from '@/components/monetization/ProductPricingCard';
 import { useHostEntitlements, type HostTier } from '@/hooks/useHostEntitlements';
 import { effectivePriceCents, formatUsd } from '@/lib/monetization/products';
 import { buildCheckoutReturnPaths } from '@/lib/monetization/returnRoutes';
-import { parseFunctionError } from '@/lib/edgeErrors';
+import { parseEdgeError } from '@/lib/edgeErrors';
+
 
 const STATUS_STYLES: Record<string, string> = {
   active: 'bg-emerald-500/15 text-emerald-600 border-emerald-500/30',
