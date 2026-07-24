@@ -158,52 +158,59 @@ export const AnimatedExplainer = ({ explainer, onProgress, onEnded, onSceneChang
     ambientRef.current?.setVolume(effective * 0.35); // ambient sits under narration
   }, [volume, muted, voiceReady]);
 
-  // Sync playback state → audio + ambient bed
+  // Sync playback state → audio + ambient bed. We keep audio *playing* even
+  // when muted (volume=0) so scene transitions stay locked to narration beats.
   useEffect(() => {
     const audio = narrationRef.current;
     const bed = ambientRef.current;
     if (playing) {
       bed?.start().catch(() => { /* autoplay policy — user will click again */ });
       bed?.setMuted(muted);
-      if (audio && !muted) {
-        // Align audio time to the current elapsed position.
+      if (audio) {
         try {
           if (Math.abs(audio.currentTime * 1000 - elapsedMs) > 400) {
             audio.currentTime = Math.min(elapsedMs / 1000, (audio.duration || elapsedMs / 1000));
           }
         } catch { /* ignore */ }
         audio.play().catch(() => { /* blocked until gesture */ });
-      } else if (audio) {
-        audio.pause();
       }
     } else {
       audio?.pause();
       bed?.setMuted(true);
     }
-    // Only fire when play/mute changes — elapsed sync during a scrub is handled
-    // in scrub()/jumpToScene() directly.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [playing, muted, voiceReady]);
+  }, [playing, voiceReady]);
 
-  // playback loop
+  // playback loop — when narration audio is available, drive elapsedMs from
+  // audio.currentTime scaled to totalMs so every scene transition and caption
+  // lands on the actual voiceover beat (not a drifting RAF clock).
   useEffect(() => {
     if (!playing) {
       lastTickRef.current = null;
       return;
     }
+    const audio = narrationRef.current;
+    const useAudioClock = !!(audio && audioDurationMs > 0 && voiceReady);
     const tick = (t: number) => {
       if (lastTickRef.current == null) lastTickRef.current = t;
       const delta = t - lastTickRef.current;
       lastTickRef.current = t;
       watchedMsRef.current += delta;
-      setElapsedMs((prev) => Math.min(prev + delta, totalMs));
+      if (useAudioClock && audio) {
+        const scale = totalMs / audioDurationMs;
+        const next = Math.min(audio.currentTime * 1000 * scale, totalMs);
+        setElapsedMs(next);
+      } else {
+        setElapsedMs((prev) => Math.min(prev + delta, totalMs));
+      }
       rafRef.current = requestAnimationFrame(tick);
     };
     rafRef.current = requestAnimationFrame(tick);
     return () => {
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
-  }, [playing, totalMs]);
+  }, [playing, totalMs, audioDurationMs, voiceReady]);
+
 
   // progress milestones + persistence
   useEffect(() => {
