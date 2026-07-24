@@ -514,6 +514,16 @@ const BookingCheckout = () => {
       }
 
       if (checkoutError) throw checkoutError;
+      if (useEmbedded && checkoutData?.client_secret) {
+        const returnUrl = `${window.location.origin}/payment-success?session_id=${checkoutData.session_id}`;
+        setEmbeddedCheckout({ clientSecret: checkoutData.client_secret, returnUrl });
+        setTimeout(() => {
+          trackFormSubmitConversion({ form_type: 'instant_book', listing_id: listingId });
+          trackRequestSubmitted(listingId || '', true);
+        }, 0);
+        setIsSubmitting(false);
+        return;
+      }
       if (!checkoutData?.url) throw new Error('Failed to create checkout session');
 
 
@@ -1389,6 +1399,13 @@ const BookingCheckout = () => {
           onConfirm={runSubmit}
           submitting={isSubmitting || termsGate.preparing}
           confirmLabel="Continue to secure payment"
+        />
+      ) : null}
+      {embeddedCheckout ? (
+        <EmbeddedStripeCheckout
+          clientSecret={embeddedCheckout.clientSecret}
+          returnUrl={embeddedCheckout.returnUrl}
+          onClose={() => setEmbeddedCheckout(null)}
         />
       ) : null}
     </div>
