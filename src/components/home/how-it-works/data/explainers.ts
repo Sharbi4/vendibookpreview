@@ -189,30 +189,31 @@ export const explainers: Explainer[] = [
     secondaryCtaLabel: 'See Hosting Benefits',
     secondaryCtaRoute: '/how-it-works-host',
     transcript:
-      "Now — here's a thought. If your food truck, trailer, commercial kitchen, or vendor space isn't in use every single day, that downtime could actually be earning for you. That's what hosting on Vendibook is about. Let me show you how it works. You start by building your host listing — your pricing, your amenities, your rules, the documents you require, access instructions, all of it. Then you open your host booking calendar — you pick which dates are available, block out the ones that aren't, and see what's coming up, so you're not double-booking yourself. When a request comes in, you review the renter, their dates, what they're using it for, their verification status, and any documents they've submitted — all before you ever say yes. Once you approve, the whole booking lives in one place — messages, agreements, documents, payment status, the handoff, the return date, and your upcoming payout. Renter payments go through Stripe securely. Your dashboard shows you when the renter has paid, when the rental's in progress, and when your payout is scheduled. And here's the part hosts love — you set your rental price, and the renter sees the platform fee at checkout. Your payout is scheduled twenty-four hours after the rental ends. You handle pickup and return confirmations right in the same dashboard, and reviews build up your reputation over time. You bring the opportunity — Vendibook keeps the whole process organized.",
+      "Now — think about this. Say you own a food truck that only rolls out on weekends, or a commercial kitchen that sits empty Monday through Wednesday. That downtime could actually be earning. That's what hosting on Vendibook is about. Let me walk you through it, step by step. Step one — build your host listing. Photos, nightly and weekly pricing, amenities, house rules, required documents like insurance or a food handler card, and access instructions. Step two — open your host booking calendar. Mark which dates are available, block the ones that aren't — say the Fourth of July because you're using it yourself — and see everything upcoming, so no double-booking. Step three — a request comes in. From your host dashboard, you review the renter's profile, their dates, what they're using it for, their verification status, and every document they uploaded, before you say yes. Step four — approve, and now the whole booking lives in one dashboard. Messages, agreement, documents, payment status, handoff details, return date, and your upcoming payout, all in one place. Step five — the renter pays securely through Stripe. Your dashboard shows exactly when they've paid, when the rental's in progress, and when your payout lands. Here's the money part: you set your rental price, the renter sees the platform fee at checkout, and your payout is scheduled twenty-four hours after the rental ends. Step six — confirm pickup and return right in the dashboard, and reviews start building your reputation. And step seven — invite other hosts through your referrals link. When they earn on Vendibook, you earn too. You bring the opportunity — Vendibook keeps the whole thing organized.",
     scenes: buildScenes(
       hostingScenes,
       [
-        "So — got a truck, trailer, kitchen, or space sitting idle? That's income waiting to happen.",
-        "First, set the expectations — pricing, rules, documents, all of it.",
-        "You stay in control of your calendar, always.",
-        "When a request comes in, you review the details before you approve.",
-        "Everything about your hosting activity lives in one dashboard.",
-        "Payment and payout status are always clearly shown.",
-        "You set the price — that's what you receive, on your payout schedule.",
-        "You bring the opportunity. Vendibook keeps it all organized.",
+        "Truck sitting idle midweek? Kitchen empty Mondays? That's income waiting.",
+        "Step one: build your listing — pricing, rules, docs, access instructions.",
+        "Step two: your booking calendar — mark available, block off what's not.",
+        "Step three: review the renter, dates, and documents before you approve.",
+        "Step four: your host dashboard manages messages, docs, and payout status.",
+        "Step five: renter pays through Stripe, and you see the payout timeline.",
+        "You set the price. Payout drops twenty-four hours after the rental ends.",
+        "Step six: invite other hosts through referrals — when they earn, you earn.",
       ],
       [
-        'Why host',
+        'Your scenario',
         'Host listing setup',
         'Host booking calendar',
-        'Review request & verification',
+        'Review & approve',
         'Host dashboard',
         'Stripe payout timeline',
         'Commission & payout',
-        'Wrap-up',
+        'Referrals',
       ],
     ),
+
   },
 
 ];
