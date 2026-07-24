@@ -90,6 +90,8 @@ export const AnimatedExplainer = ({ explainer, onProgress, onEnded, onSceneChang
     };
   }, []);
 
+  const [audioDurationMs, setAudioDurationMs] = useState<number>(0);
+
   // Prefetch narration on mount so the first play doesn't stall on the network.
   useEffect(() => {
     let cancelled = false;
@@ -102,6 +104,12 @@ export const AnimatedExplainer = ({ explainer, onProgress, onEnded, onSceneChang
         const audio = new Audio(url);
         audio.preload = 'auto';
         audio.volume = muted ? 0 : volume;
+        const captureDuration = () => {
+          const d = audio.duration;
+          if (Number.isFinite(d) && d > 0) setAudioDurationMs(Math.round(d * 1000));
+        };
+        audio.addEventListener('loadedmetadata', captureDuration);
+        audio.addEventListener('durationchange', captureDuration);
         narrationRef.current = audio;
         setVoiceReady(true);
       } catch (err) {
@@ -125,6 +133,7 @@ export const AnimatedExplainer = ({ explainer, onProgress, onEnded, onSceneChang
       void localUrl;
     };
   }, [explainer.transcript]);
+
 
   // Ambient bed lifecycle — only created once narration is ready so it
   // never plays as a standalone hum when TTS is unavailable.
