@@ -166,6 +166,7 @@ const EVENT_CATEGORY: Record<LeadEventName, string> = {
   homepage_video_chapter_clicked: 'homepage',
   homepage_video_cta_clicked: 'homepage',
   listing_explainer_opened: 'discovery',
+  homepage_video_transcript_downloaded: 'discovery',
 
 };
 
