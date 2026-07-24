@@ -258,3 +258,246 @@ async function handleRefunded(supabase: ReturnType<typeof createClient>, charge:
     }
   }
 }
+
+// ----- Subscription lifecycle handlers -----
+
+const TIER_NAMES: Record<string, string> = {
+  starter: "Host Starter",
+  pro: "Host Pro",
+  premium: "Host Premium",
+};
+
+function planLabel(tier?: string | null, fallback?: string | null) {
+  if (!tier) return fallback ?? "Host plan";
+  return TIER_NAMES[tier] ?? `Host ${tier.charAt(0).toUpperCase()}${tier.slice(1)}`;
+}
+
+function fmtMoney(cents?: number | null, currency = "usd") {
+  if (typeof cents !== "number") return undefined;
+  try {
+    return new Intl.NumberFormat("en-US", { style: "currency", currency: currency.toUpperCase() }).format(cents / 100);
+  } catch {
+    return `$${(cents / 100).toFixed(2)}`;
+  }
+}
+
+function fmtDate(unix?: number | null) {
+  if (!unix) return undefined;
+  try {
+    return new Date(unix * 1000).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
+  } catch {
+    return undefined;
+  }
+}
+
+async function resolveRecipient(
+  supabase: ReturnType<typeof createClient>,
+  userId: string | null,
+): Promise<{ email: string; firstName?: string } | null> {
+  if (!userId) return null;
+  // deno-lint-ignore no-explicit-any
+  const { data: prof } = await (supabase as any)
+    .from("profiles")
+    .select("email, first_name, full_name")
+    .eq("id", userId)
+    .maybeSingle();
+  if (prof?.email) {
+    return { email: prof.email as string, firstName: (prof.first_name as string) || (prof.full_name as string)?.split(" ")[0] };
+  }
+  // fallback: auth.users via admin API
+  try {
+    // deno-lint-ignore no-explicit-any
+    const { data } = await (supabase as any).auth.admin.getUserById(userId);
+    if (data?.user?.email) return { email: data.user.email as string };
+  } catch {/* ignore */}
+  return null;
+}
+
+async function sendSubEmail(
+  supabase: ReturnType<typeof createClient>,
+  templateName: string,
+  userId: string | null,
+  templateData: Record<string, unknown>,
+  idempotencyKey: string,
+) {
+  const to = await resolveRecipient(supabase, userId);
+  if (!to?.email) {
+    log("no email for subscription recipient", { userId, templateName });
+    return;
+  }
+  try {
+    await supabase.functions.invoke("send-transactional-email", {
+      body: {
+        templateName,
+        recipientEmail: to.email,
+        idempotencyKey,
+        templateData: { firstName: to.firstName, ...templateData },
+      },
+    });
+  } catch (err) {
+    log("subscription email dispatch failed", { templateName, msg: err instanceof Error ? err.message : String(err) });
+  }
+}
+
+async function handleSubscriptionChange(
+  supabase: ReturnType<typeof createClient>,
+  sub: Stripe.Subscription,
+  eventType: string,
+  previous: Record<string, unknown>,
+) {
+  const item = sub.items?.data?.[0];
+  const price = item?.price;
+  const priceId = price?.id ?? null;
+  const amount = price?.unit_amount ?? null;
+  const currency = price?.currency ?? "usd";
+  const interval = price?.recurring?.interval ?? "month";
+
+  // Look up existing row by subscription id, else by customer id
+  // deno-lint-ignore no-explicit-any
+  const { data: existing } = await (supabase as any)
+    .from("host_subscriptions")
+    .select("*")
+    .or(`stripe_subscription_id.eq.${sub.id},stripe_customer_id.eq.${sub.customer as string}`)
+    .maybeSingle();
+
+  const tier = (sub.metadata?.tier as string) || existing?.tier || null;
+  const userId = (sub.metadata?.user_id as string) || existing?.user_id || null;
+
+  const patch = {
+    user_id: userId,
+    tier,
+    stripe_customer_id: sub.customer as string,
+    stripe_subscription_id: sub.id,
+    stripe_price_id: priceId,
+    status: sub.status,
+    current_period_start: sub.current_period_start ? new Date(sub.current_period_start * 1000).toISOString() : null,
+    current_period_end: sub.current_period_end ? new Date(sub.current_period_end * 1000).toISOString() : null,
+    trial_end: sub.trial_end ? new Date(sub.trial_end * 1000).toISOString() : null,
+    cancel_at: sub.cancel_at ? new Date(sub.cancel_at * 1000).toISOString() : null,
+    cancel_at_period_end: !!sub.cancel_at_period_end,
+    updated_at: new Date().toISOString(),
+  };
+
+  if (existing) {
+    await supabase.from("host_subscriptions").update(patch).eq("id", existing.id);
+  } else {
+    await supabase.from("host_subscriptions").insert(patch);
+  }
+
+  const planName = planLabel(tier, undefined);
+  const amountStr = fmtMoney(amount, currency);
+
+  // Route the correct lifecycle email
+  if (eventType === "customer.subscription.created") {
+    await sendSubEmail(supabase, "subscription-activated", userId, {
+      planName,
+      amount: amountStr,
+      interval,
+      nextBillingDate: fmtDate(sub.current_period_end),
+      isRenewal: false,
+    }, `sub-activated-${sub.id}`);
+    return;
+  }
+
+  if (eventType === "customer.subscription.deleted") {
+    await sendSubEmail(supabase, "subscription-cancelled", userId, {
+      planName,
+      accessEndsAt: fmtDate(sub.current_period_end),
+      immediate: true,
+    }, `sub-deleted-${sub.id}`);
+    return;
+  }
+
+  // updated: detect plan change or cancel schedule
+  const prevPriceId = ((previous as any)?.items?.data?.[0]?.price?.id) as string | undefined;
+  const prevCancelFlag = (previous as any)?.cancel_at_period_end as boolean | undefined;
+
+  if (prevPriceId && prevPriceId !== priceId) {
+    const direction =
+      typeof (existing?.stripe_price_id) === "string" && amount != null
+        ? "change"
+        : "change";
+    await sendSubEmail(supabase, "subscription-updated", userId, {
+      toPlan: planName,
+      fromPlan: existing?.tier ? planLabel(existing.tier) : undefined,
+      amount: amountStr,
+      interval,
+      direction,
+      effectiveDate: fmtDate(sub.current_period_start),
+    }, `sub-updated-${sub.id}-${priceId}`);
+    return;
+  }
+
+  if (sub.cancel_at_period_end && prevCancelFlag === false) {
+    await sendSubEmail(supabase, "subscription-cancelled", userId, {
+      planName,
+      accessEndsAt: fmtDate(sub.current_period_end),
+      immediate: false,
+    }, `sub-cancel-scheduled-${sub.id}-${sub.current_period_end}`);
+  }
+}
+
+async function handleInvoicePaid(
+  supabase: ReturnType<typeof createClient>,
+  _stripe: Stripe,
+  invoice: Stripe.Invoice,
+) {
+  const subId = typeof invoice.subscription === "string" ? invoice.subscription : invoice.subscription?.id;
+  if (!subId) return; // one-off invoices ignored here
+  // Only fire renewal email for cycle-continuation invoices, not the very first one (that's subscription.created).
+  if (invoice.billing_reason && invoice.billing_reason !== "subscription_cycle") return;
+
+  // deno-lint-ignore no-explicit-any
+  const { data: existing } = await (supabase as any)
+    .from("host_subscriptions")
+    .select("*")
+    .eq("stripe_subscription_id", subId)
+    .maybeSingle();
+  if (!existing?.user_id) return;
+
+  const line = invoice.lines?.data?.[0];
+  const interval = line?.price?.recurring?.interval ?? "month";
+  await sendSubEmail(supabase, "subscription-activated", existing.user_id, {
+    planName: planLabel(existing.tier),
+    amount: fmtMoney(invoice.amount_paid, invoice.currency ?? "usd"),
+    interval,
+    nextBillingDate: fmtDate(invoice.period_end),
+    isRenewal: true,
+  }, `sub-renewed-${invoice.id}`);
+}
+
+async function handleInvoiceFailed(
+  supabase: ReturnType<typeof createClient>,
+  invoice: Stripe.Invoice,
+) {
+  const subId = typeof invoice.subscription === "string" ? invoice.subscription : invoice.subscription?.id;
+  if (!subId) return;
+  // deno-lint-ignore no-explicit-any
+  const { data: existing } = await (supabase as any)
+    .from("host_subscriptions")
+    .select("*")
+    .eq("stripe_subscription_id", subId)
+    .maybeSingle();
+  if (!existing?.user_id) return;
+
+  await supabase
+    .from("host_subscriptions")
+    .update({
+      status: "past_due",
+      last_error: {
+        code: "invoice_payment_failed",
+        invoice_id: invoice.id,
+        at: new Date().toISOString(),
+      },
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", existing.id);
+
+  await sendSubEmail(supabase, "subscription-payment-failed", existing.user_id, {
+    planName: planLabel(existing.tier),
+    amount: fmtMoney(invoice.amount_due, invoice.currency ?? "usd"),
+    nextRetryDate: fmtDate(invoice.next_payment_attempt),
+    updatePaymentUrl: invoice.hosted_invoice_url ?? undefined,
+    attemptNumber: (invoice.attempt_count ?? 0) + 1,
+  }, `sub-payfail-${invoice.id}-${invoice.attempt_count ?? 0}`);
+}
