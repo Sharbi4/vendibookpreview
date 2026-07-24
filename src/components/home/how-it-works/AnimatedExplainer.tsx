@@ -319,13 +319,56 @@ export const AnimatedExplainer = ({ explainer, onProgress, onEnded, onSceneChang
     );
   };
 
+  // Build a plain-text transcript with chapter timestamps and trigger download.
+  const downloadTranscript = () => {
+    const pad = (n: number) => n.toString().padStart(2, '0');
+    const stamp = (ms: number) => {
+      const s = Math.max(0, Math.floor(ms / 1000));
+      return `${pad(Math.floor(s / 60))}:${pad(s % 60)}`;
+    };
+    const chapterLines = explainer.scenes
+      .map((sc, i) => {
+        const start = chapterOffsets[i]?.startMs ?? 0;
+        return `[${stamp(start)}] ${sc.chapterLabel}\n${sc.caption ?? ''}`.trim();
+      })
+      .join('\n\n');
+    const body = [
+      explainer.title,
+      'Vendibook — How It Works',
+      ''.padEnd(48, '='),
+      '',
+      'FULL NARRATION',
+      ''.padEnd(48, '-'),
+      explainer.transcript.trim(),
+      '',
+      'CHAPTERS',
+      ''.padEnd(48, '-'),
+      chapterLines,
+      '',
+    ].join('\n');
+    const blob = new Blob([body], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const slug = explainer.id.toString().toLowerCase().replace(/[^a-z0-9]+/g, '-');
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `vendibook-${slug}-transcript.txt`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1500);
+    trackLeadEvent('homepage_video_transcript_downloaded', {
+      video_type: explainer.id,
+      scene_count: explainer.scenes.length,
+    });
+  };
+
   // Keyboard shortcuts:
   //   Space / K       play-pause
   //   ArrowLeft/Right prev / next scene (PageUp / PageDown mirror)
   //   Home / End      first / last scene
   //   1-9             jump to chapter N
   //   M               mute voiceover
-  //   C               toggle captions
+  //   T               download transcript
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const t = e.target as HTMLElement | null;
@@ -354,8 +397,9 @@ export const AnimatedExplainer = ({ explainer, onProgress, onEnded, onSceneChang
         }
       } else if (k === 'm' || k === 'M') {
         setMuted((m) => !m);
-      } else if (k === 'c' || k === 'C') {
-        setCaptionsOn((v) => !v);
+      } else if (k === 't' || k === 'T') {
+        e.preventDefault();
+        downloadTranscript();
       }
     };
     window.addEventListener('keydown', onKey);
@@ -368,12 +412,12 @@ export const AnimatedExplainer = ({ explainer, onProgress, onEnded, onSceneChang
       className="relative flex h-full w-full flex-col bg-background"
       role="region"
       aria-label={`${explainer.title} explainer video`}
-      aria-keyshortcuts="Space K ArrowLeft ArrowRight Home End 1 2 3 4 5 6 7 8 9 M C"
+      aria-keyshortcuts="Space K ArrowLeft ArrowRight Home End 1 2 3 4 5 6 7 8 9 M T"
     >
       <p className="sr-only">
         Keyboard shortcuts: Space or K to play or pause, Left and Right arrows to change scene,
         Home and End to jump to start or end, number keys 1 through {Math.min(9, explainer.scenes.length)} to jump to a chapter,
-        M to mute the voiceover, C to toggle captions.
+        M to mute the voiceover, T to download the transcript.
       </p>
       {/* Cinematic stage */}
       <div className="relative aspect-video w-full overflow-hidden bg-foreground">
