@@ -101,7 +101,7 @@ export const AnimatedExplainer = ({ explainer, onProgress, onEnded, onSceneChang
         localUrl = url;
         const audio = new Audio(url);
         audio.preload = 'auto';
-        audio.volume = 1;
+        audio.volume = muted ? 0 : volume;
         narrationRef.current = audio;
         setVoiceReady(true);
       } catch (err) {
