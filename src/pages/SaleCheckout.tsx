@@ -27,6 +27,7 @@ import { ReferralCodeField } from '@/components/referrals/ReferralCodeField';
 import { FinalReviewSheet } from '@/components/transaction/FinalReviewSheet';
 import { useTermsGate } from '@/hooks/useTermsGate';
 import { buildTerms } from '@/lib/transactionTerms';
+import { ProtectionOptInCard } from '@/components/protected-sale/ProtectionOptInCard';
 
 type FulfillmentSelection = 'pickup' | 'delivery' | 'vendibook_freight';
 type CheckoutStep = 'information' | 'delivery' | 'review';
