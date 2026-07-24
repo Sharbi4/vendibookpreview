@@ -64,7 +64,7 @@ serve(async (req) => {
       }
       case "charge.refunded": {
         const charge = event.data.object as Stripe.Charge;
-        await handleRefunded(supabase, charge);
+        await handleRefunded(supabase, charge, event.id);
         break;
       }
       case "payment_intent.payment_failed": {
@@ -218,23 +218,47 @@ async function handleCheckoutCompleted(
   log("purchase fulfilled", { id: purchase.id });
 }
 
-async function handleRefunded(supabase: ReturnType<typeof createClient>, charge: Stripe.Charge) {
+async function handleRefunded(
+  supabase: ReturnType<typeof createClient>,
+  charge: Stripe.Charge,
+  eventId: string,
+) {
   const pi = typeof charge.payment_intent === "string" ? charge.payment_intent : charge.payment_intent?.id;
   if (!pi) return;
   const refundAmount = charge.amount_refunded ?? 0;
   const fullyRefunded = refundAmount >= charge.amount;
+  const currency = (charge.currency ?? "usd").toLowerCase();
 
   const { data: purchase } = await supabase
     .from("monetization_purchases")
-    .select("id, listing_id, user_id, product_id")
+    .select("id, listing_id, user_id, product_id, status")
     .eq("stripe_payment_intent_id", pi)
     .maybeSingle();
   if (!purchase) return;
 
+  // Immutable audit row — unique on stripe_event_id, so replays are safe.
+  const latestRefund = charge.refunds?.data?.[0];
+  const { error: auditErr } = await supabase.from("monetization_refund_events").insert({
+    purchase_id: purchase.id,
+    stripe_event_id: eventId,
+    stripe_charge_id: charge.id,
+    stripe_refund_id: latestRefund?.id ?? null,
+    refund_amount_cents: refundAmount,
+    refund_status: fullyRefunded ? "full" : "partial",
+    currency,
+    raw: { charge_id: charge.id, amount: charge.amount, amount_refunded: refundAmount },
+  });
+  if (auditErr && (auditErr as { code?: string }).code !== "23505") {
+    log("refund audit insert failed", { msg: auditErr.message });
+  }
+
+  // Status transitions are enforced by trg_enforce_monetization_purchase_transition.
+  // Only move to 'refunded' when fully refunded and current status permits it.
+  const nextStatus = fullyRefunded ? "refunded" : purchase.status;
   await supabase
     .from("monetization_purchases")
     .update({
-      status: fullyRefunded ? "refunded" : "paid",
+      status: nextStatus,
       refund_status: fullyRefunded ? "full" : "partial",
       refund_amount_cents: refundAmount,
       refunded_at: new Date().toISOString(),
