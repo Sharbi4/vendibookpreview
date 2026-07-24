@@ -363,6 +363,18 @@ const ListingPublished: React.FC = () => {
       {boostCandidate && (
         <BoostListingPrompt listings={[boostCandidate]} userId={user?.id} />
       )}
+
+      {/* Optional seller upgrades — every listing on Vendibook is free; these are optional tools. */}
+      {listingId && (
+        <div className="container max-w-4xl mx-auto px-4 pb-16 space-y-10">
+          <UpgradePackageCards
+            listingId={listingId}
+            onSkip={() => navigate('/dashboard')}
+            skipLabel="Continue with free listing"
+          />
+          <PromoteListingPanel listingId={listingId} />
+        </div>
+      )}
     </div>
   );
 };
