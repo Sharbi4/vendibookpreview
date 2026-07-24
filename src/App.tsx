@@ -212,6 +212,7 @@ const AnimatedRoutes = () => {
           <Route path="/activation" element={<PageTransition><Activation /></PageTransition>} />
           <Route path="/reset-password" element={<PageTransition><ResetPassword /></PageTransition>} />
           <Route path="/dashboard" element={<PageTransition><Dashboard /></PageTransition>} />
+          <Route path="/sale/:transactionId/protection" element={<PageTransition><ProtectedSalePage /></PageTransition>} />
           <Route path="/host/bookings" element={<PageTransition><HostBookings /></PageTransition>} />
           <Route path="/host/listings" element={<PageTransition><HostListings /></PageTransition>} />
           <Route path="/host/reporting" element={<PageTransition><HostReporting /></PageTransition>} />
