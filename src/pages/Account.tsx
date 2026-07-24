@@ -24,6 +24,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { CommsPreferencesPanel } from '@/components/comms/CommsPreferencesPanel';
+import HostSubscriptionCard from '@/components/account/HostSubscriptionCard';
 
 // Visibility badge component
 const VisibilityBadge = ({ isPublic }: { isPublic: boolean }) => (
@@ -1344,6 +1345,11 @@ const Account = () => {
               </div>
             </CardContent>
           </Card>
+
+          {/* Host Subscription */}
+          <HostSubscriptionCard />
+
+
 
                   {/* Vendi Comms Preferences */}
                   <CommsPreferencesPanel />
