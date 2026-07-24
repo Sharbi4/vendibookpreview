@@ -385,7 +385,7 @@ export const DashboardLayout = ({ children, mode, onModeChange, isHost }: Dashbo
 
 
       {/* Mobile Bottom Nav */}
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-background border-t border-border z-50 pb-safe">
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur border-t border-white/5 z-50 pb-safe">
         <div className="flex items-center justify-around h-16">
           {(mode === 'host'
             ? [
