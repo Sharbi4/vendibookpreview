@@ -145,16 +145,36 @@ export const ListingCardMini = ({
   large?: boolean;
 }) => (
   <div
-    className={`relative overflow-hidden rounded-2xl border-2 ${
-      variant === 'primary' ? 'border-primary/60' : 'border-border'
-    } bg-card shadow-md ${large ? 'h-40 w-56' : 'h-32 w-40'}`}
+    className={`relative overflow-hidden rounded-2xl border ${
+      variant === 'primary' ? 'border-primary/60 ring-1 ring-primary/30' : 'border-border'
+    } bg-card shadow-[0_10px_30px_-12px_hsl(var(--foreground)/0.35)] ${large ? 'h-40 w-56' : 'h-32 w-40'}`}
   >
-    <div className="h-2/3 w-full bg-gradient-to-br from-muted to-muted-foreground/20" />
+    <div
+      className="relative h-2/3 w-full overflow-hidden"
+      style={{
+        backgroundImage: [
+          'radial-gradient(70% 55% at 30% 25%, hsl(var(--primary) / 0.35), transparent 65%)',
+          'radial-gradient(60% 50% at 80% 90%, hsl(var(--foreground) / 0.22), transparent 70%)',
+          'linear-gradient(135deg, hsl(var(--muted)) 0%, hsl(var(--muted-foreground)/0.18) 100%)',
+        ].join(','),
+      }}
+    >
+      {/* soft glossy sheen */}
+      <div className="absolute inset-0 bg-gradient-to-b from-white/15 via-transparent to-black/15" />
+      <div className="absolute inset-x-2 bottom-1.5 flex items-center gap-1">
+        <div className="h-1.5 w-1.5 rounded-full bg-white/80" />
+        <div className="h-1.5 w-1.5 rounded-full bg-white/50" />
+        <div className="h-1.5 w-1.5 rounded-full bg-white/30" />
+      </div>
+    </div>
     <div className="flex items-center justify-between px-3 py-2">
-      <div className="h-2 w-14 rounded-full bg-foreground/30" />
+      <div className="space-y-1">
+        <div className="h-2 w-14 rounded-full bg-foreground/40" />
+        <div className="h-1.5 w-9 rounded-full bg-foreground/15" />
+      </div>
       {label && (
         <span
-          className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
+          className={`rounded-full px-2 py-0.5 text-[10px] font-bold shadow-sm ${
             variant === 'primary' ? 'bg-primary text-primary-foreground' : 'bg-muted text-foreground'
           }`}
         >
@@ -164,6 +184,7 @@ export const ListingCardMini = ({
     </div>
   </div>
 );
+
 
 export const BadgeStamp = ({ label }: { label: string }) => (
   <div className="flex items-center gap-2 rounded-full border-2 border-primary bg-primary/10 px-4 py-2 text-primary shadow-lg">
