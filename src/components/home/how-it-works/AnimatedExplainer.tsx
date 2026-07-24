@@ -453,13 +453,9 @@ export const AnimatedExplainer = ({ explainer, onProgress, onEnded, onSceneChang
           </motion.div>
         </AnimatePresence>
 
-        {/* Caption bar — always mounted so screen readers hear each scene.
-            Visually hidden when the user turns captions off. */}
+        {/* Burned-in caption bar — always visible on the video stage. */}
         <div
-          className={cn(
-            'pointer-events-none absolute inset-x-0 bottom-3 flex justify-center px-4 sm:bottom-5',
-            !captionsOn && 'sr-only',
-          )}
+          className="pointer-events-none absolute inset-x-0 bottom-3 flex justify-center px-4 sm:bottom-5"
           aria-live="polite"
           aria-atomic="true"
         >
@@ -601,18 +597,13 @@ export const AnimatedExplainer = ({ explainer, onProgress, onEnded, onSceneChang
 
         <button
           type="button"
-          onClick={() => setCaptionsOn((v) => !v)}
-          className={cn(
-            'flex h-8 items-center gap-1 rounded-md border px-2 text-xs font-semibold transition-colors',
-            captionsOn
-              ? 'border-primary bg-primary/10 text-primary'
-              : 'border-border text-muted-foreground hover:text-foreground',
-          )}
-          aria-pressed={captionsOn}
-          aria-label="Toggle captions"
+          onClick={downloadTranscript}
+          className="flex h-8 items-center gap-1 rounded-md border border-border px-2 text-xs font-semibold text-muted-foreground transition-colors hover:border-primary hover:text-primary"
+          aria-label={`Download ${explainer.title} transcript`}
+          title="Download transcript (T)"
         >
-          <Captions className="h-3.5 w-3.5" />
-          CC
+          <Download className="h-3.5 w-3.5" />
+          Transcript
         </button>
       </div>
 

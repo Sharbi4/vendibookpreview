@@ -81,6 +81,7 @@ export type LeadEventName =
   | 'homepage_video_chapter_clicked'
   | 'homepage_video_watch_duration'
   | 'homepage_video_cta_clicked'
+  | 'homepage_video_transcript_downloaded'
   | 'listing_explainer_opened';
 
 
