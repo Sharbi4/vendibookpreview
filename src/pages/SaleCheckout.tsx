@@ -604,21 +604,23 @@ const SaleCheckout = () => {
   // Block owners from purchasing their own listings
   if (isOwner) {
     return (
-      <div className="min-h-screen flex flex-col bg-background">
-        <Header />
-        <div className="flex-1 flex items-center justify-center p-4">
-          <div className="text-center max-w-md">
-            <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
-              <ArrowLeft className="w-8 h-8 text-muted-foreground" />
-            </div>
-            <h2 className="text-xl font-semibold text-foreground mb-2">You own this listing</h2>
-            <p className="text-muted-foreground mb-4">You cannot purchase your own listing.</p>
-            <button onClick={() => navigate(`/listing/${listingId}`)} className="text-primary hover:underline">
-              Back to listing
-            </button>
+      <CheckoutChrome
+        steps={CHECKOUT_STEPS}
+        currentStep={1}
+        exitHref={`/listing/${listingId}`}
+        exitLabel="Back to listing"
+      >
+        <div className="container max-w-md mx-auto px-4 py-16 text-center">
+          <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
+            <ArrowLeft className="w-8 h-8 text-muted-foreground" />
           </div>
+          <h2 className="text-xl font-semibold text-foreground mb-2">You own this listing</h2>
+          <p className="text-muted-foreground mb-4">You cannot purchase your own listing.</p>
+          <button onClick={() => navigate(`/listing/${listingId}`)} className="text-primary hover:underline">
+            Back to listing
+          </button>
         </div>
-      </div>
+      </CheckoutChrome>
     );
   }
 
@@ -636,21 +638,15 @@ const SaleCheckout = () => {
   ];
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <>
       <SEO title={`Checkout - ${listing.title}`} description={`Complete your purchase of ${listing.title}`} />
-      <Header />
-      
-      <main className="flex-1 py-6">
+      <CheckoutChrome
+        steps={CHECKOUT_STEPS}
+        currentStep={currentStepNumber}
+        exitHref={`/listing/${listingId}`}
+        exitLabel="Back to listing"
+      >
         <div className="container max-w-6xl mx-auto px-4">
-          {/* Back Button */}
-          <button
-            onClick={() => navigate(`/listing/${listingId}`)}
-            className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-4 transition-colors"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Back to listing
-          </button>
-
           {/* Guest sign-in prompt — surfaced BEFORE the wizard so buyers don't lose typed info at the Pay step */}
           {!user && (
             <div className="mb-4 rounded-xl border border-primary/40 bg-primary/[0.06] p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
@@ -672,15 +668,7 @@ const SaleCheckout = () => {
           <div className="grid lg:grid-cols-5 gap-8">
             {/* Main Wizard - Left Side */}
             <div className="lg:col-span-3">
-              <div className="bg-card border-2 border-border rounded-2xl shadow-xl overflow-hidden">
-                {/* Premium Wizard Header */}
-                <WizardHeader
-                  mode="checkout"
-                  currentStep={currentStepNumber}
-                  totalSteps={3}
-                  steps={CHECKOUT_STEPS}
-                />
-
+              <div className="bg-card/70 backdrop-blur-md border border-border/60 rounded-2xl shadow-xl overflow-hidden">
                 {/* Step Content */}
                 <div className="p-6">
                   <AnimatePresence mode="wait">
