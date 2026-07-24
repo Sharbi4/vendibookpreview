@@ -68,6 +68,7 @@ const AdminErrors = lazy(() => import("./pages/AdminErrors"));
 const AdminQA = lazy(() => import("./pages/AdminQA"));
 const AdminSupportTickets = lazy(() => import("./pages/AdminSupportTickets"));
 const AdminRevenue = lazy(() => import("./pages/AdminRevenue"));
+const ProtectedSalePage = lazy(() => import("./pages/ProtectedSale"));
 
 const NotificationPreferences = lazy(() => import("./pages/NotificationPreferences"));
 const HelpCenter = lazy(() => import("./pages/HelpCenter"));
