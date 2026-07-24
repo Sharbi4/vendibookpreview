@@ -105,7 +105,11 @@ export const AnimatedExplainer = ({ explainer, onProgress, onEnded, onSceneChang
         narrationRef.current = audio;
         setVoiceReady(true);
       } catch (err) {
-        console.warn('[explainer] narration unavailable:', err);
+        // 402 = workspace out of AI credits; expected & non-fatal (scenes play silently).
+        const msg = err instanceof Error ? err.message : String(err);
+        if (!msg.includes('tts_failed_402')) {
+          console.warn('[explainer] narration unavailable:', err);
+        }
       }
     })();
     return () => {
