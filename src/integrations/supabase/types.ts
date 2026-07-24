@@ -5387,6 +5387,7 @@ export type Database = {
       }
       stripe_webhook_events: {
         Row: {
+          endpoint: string
           error_message: string | null
           event_type: string
           id: string
@@ -5398,6 +5399,7 @@ export type Database = {
           stripe_event_id: string
         }
         Insert: {
+          endpoint?: string
           error_message?: string | null
           event_type: string
           id?: string
@@ -5409,6 +5411,7 @@ export type Database = {
           stripe_event_id: string
         }
         Update: {
+          endpoint?: string
           error_message?: string | null
           event_type?: string
           id?: string

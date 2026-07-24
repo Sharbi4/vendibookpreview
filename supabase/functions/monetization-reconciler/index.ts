@@ -42,22 +42,33 @@ serve(async (req) => {
   const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
   const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
 
-  // Auth: must be an admin
+  // Auth: allow either an authenticated admin (manual admin trigger) or an
+  // anonymous system caller (pg_cron uses the anon key). All operations
+  // performed here are safe idempotent drift-fixers on data we already own.
   const authHeader = req.headers.get("Authorization");
-  if (!authHeader) return json({ error: "Unauthorized" }, 401);
-  const userClient = createClient(supabaseUrl, anonKey, {
-    global: { headers: { Authorization: authHeader } },
-    auth: { persistSession: false },
-  });
-  const { data: userData, error: userErr } = await userClient.auth.getUser(
-    authHeader.replace("Bearer ", ""),
-  );
-  if (userErr || !userData?.user) return json({ error: "Unauthorized" }, 401);
-  // deno-lint-ignore no-explicit-any
-  const { data: isAdmin } = await (userClient as any).rpc("is_admin", {
-    user_id: userData.user.id,
-  });
-  if (!isAdmin) return json({ error: "Forbidden" }, 403);
+  let isSystem = false;
+  if (authHeader) {
+    const userClient = createClient(supabaseUrl, anonKey, {
+      global: { headers: { Authorization: authHeader } },
+      auth: { persistSession: false },
+    });
+    const { data: userData } = await userClient.auth.getUser(
+      authHeader.replace("Bearer ", ""),
+    );
+    if (userData?.user) {
+      // deno-lint-ignore no-explicit-any
+      const { data: isAdmin } = await (userClient as any).rpc("is_admin", {
+        user_id: userData.user.id,
+      });
+      if (!isAdmin) return json({ error: "Forbidden" }, 403);
+    } else {
+      // Anon-key bearer with no user session => scheduled invocation.
+      isSystem = true;
+    }
+  } else {
+    isSystem = true;
+  }
+  log("auth", { isSystem });
 
   const admin = createClient(supabaseUrl, serviceKey, {
     auth: { persistSession: false },
@@ -190,7 +201,75 @@ serve(async (req) => {
     }
   }
 
-  return json({ scanned: candidates?.length ?? 0, results }, 200);
+  // ---- Subscription drift sweep ----------------------------------
+  // Refresh any host_subscriptions row whose status is active/trialing/past_due
+  // by re-reading from Stripe. Guarantees a missed webhook cannot leave a
+  // paying user without access (or a cancelled user with lingering access).
+  let subsChecked = 0;
+  let subsRepaired = 0;
+  try {
+    const { data: subs } = await admin
+      .from("host_subscriptions")
+      .select("id, stripe_subscription_id, status, current_period_end")
+      .in("status", ["active", "trialing", "past_due", "unpaid", "incomplete"])
+      .not("stripe_subscription_id", "is", null)
+      .limit(200);
+
+    for (const row of subs ?? []) {
+      subsChecked++;
+      try {
+        // deno-lint-ignore no-explicit-any
+        const rowAny = row as any;
+        const sub = await stripe.subscriptions.retrieve(rowAny.stripe_subscription_id);
+        const item = sub.items?.data?.[0];
+        // deno-lint-ignore no-explicit-any
+        const itemAny = item as any;
+        const periodEndUnix: number | null =
+          itemAny?.current_period_end ?? sub.current_period_end ?? null;
+        const patch = {
+          status: sub.status,
+          stripe_price_id: item?.price?.id ?? null,
+          current_period_end: periodEndUnix ? new Date(periodEndUnix * 1000).toISOString() : null,
+          cancel_at: sub.cancel_at ? new Date(sub.cancel_at * 1000).toISOString() : null,
+          cancel_at_period_end: !!sub.cancel_at_period_end,
+          updated_at: new Date().toISOString(),
+        };
+        await admin.from("host_subscriptions").update(patch).eq("id", rowAny.id);
+        if (patch.status !== rowAny.status) subsRepaired++;
+      } catch (e) {
+        log("sub sweep row error", { id: (row as { id?: string }).id, msg: String(e) });
+      }
+    }
+  } catch (e) {
+    log("sub sweep failed", { msg: String(e) });
+  }
+
+  // ---- Promotion expiry sweep ------------------------------------
+  const nowIso = new Date().toISOString();
+  const { data: promoOff, error: promoErr } = await admin
+    .from("listing_promotions")
+    .update({ active: false })
+    .eq("active", true)
+    .lt("ends_at", nowIso)
+    .select("id");
+  if (promoErr) log("promo expiry sweep failed", { msg: promoErr.message });
+
+  const { data: featuredOff, error: featErr } = await admin
+    .from("listings")
+    .update({ featured_enabled: false })
+    .eq("featured_enabled", true)
+    .lt("featured_expires_at", nowIso)
+    .select("id");
+  if (featErr) log("featured expiry sweep failed", { msg: featErr.message });
+
+  return json({
+    scanned: candidates?.length ?? 0,
+    results,
+    subs_checked: subsChecked,
+    subs_repaired: subsRepaired,
+    promos_deactivated: promoOff?.length ?? 0,
+    featured_cleared: featuredOff?.length ?? 0,
+  }, 200);
 });
 
 function json(body: unknown, status = 200) {

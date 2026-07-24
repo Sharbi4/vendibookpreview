@@ -38,12 +38,19 @@ serve(async (req) => {
     return new Response(JSON.stringify({ error: msg }), { status: 400, headers: corsHeaders });
   }
 
-  // Idempotency — never process the same Stripe event twice.
+  // Idempotency — never process the same Stripe event twice at this endpoint.
+  // The uniqueness constraint is (endpoint, stripe_event_id) so the parallel
+  // stripe-webhook endpoint can also record the same event id without colliding.
+  const ENDPOINT = "monetization-webhook";
   const { error: idemErr } = await supabase
     .from("stripe_webhook_events")
-    .insert({ stripe_event_id: event.id, event_type: event.type, payload: event as unknown as Record<string, unknown> });
+    .insert({
+      endpoint: ENDPOINT,
+      stripe_event_id: event.id,
+      event_type: event.type,
+      payload: event as unknown as Record<string, unknown>,
+    });
   if (idemErr) {
-    // Unique violation = already processed. Return 200 so Stripe stops retrying.
     if ((idemErr as { code?: string }).code === "23505") {
       log("duplicate event ignored", { id: event.id });
       return new Response(JSON.stringify({ received: true, duplicate: true }), {
@@ -401,6 +408,15 @@ async function handleSubscriptionChange(
   const currency = price?.currency ?? "usd";
   const interval = price?.recurring?.interval ?? "month";
 
+  // Stripe API 2025-08-27.basil moved current_period_* onto the subscription item.
+  // Prefer item-level fields, fall back to top-level for older payloads.
+  // deno-lint-ignore no-explicit-any
+  const itemAny = item as any;
+  const periodStartUnix: number | null =
+    itemAny?.current_period_start ?? sub.current_period_start ?? null;
+  const periodEndUnix: number | null =
+    itemAny?.current_period_end ?? sub.current_period_end ?? null;
+
   // Look up existing row by subscription id, else by customer id
   // deno-lint-ignore no-explicit-any
   const { data: existing } = await (supabase as any)
@@ -419,8 +435,8 @@ async function handleSubscriptionChange(
     stripe_subscription_id: sub.id,
     stripe_price_id: priceId,
     status: sub.status,
-    current_period_start: sub.current_period_start ? new Date(sub.current_period_start * 1000).toISOString() : null,
-    current_period_end: sub.current_period_end ? new Date(sub.current_period_end * 1000).toISOString() : null,
+    current_period_start: periodStartUnix ? new Date(periodStartUnix * 1000).toISOString() : null,
+    current_period_end: periodEndUnix ? new Date(periodEndUnix * 1000).toISOString() : null,
     trial_end: sub.trial_end ? new Date(sub.trial_end * 1000).toISOString() : null,
     cancel_at: sub.cancel_at ? new Date(sub.cancel_at * 1000).toISOString() : null,
     cancel_at_period_end: !!sub.cancel_at_period_end,
@@ -442,7 +458,7 @@ async function handleSubscriptionChange(
       planName,
       amount: amountStr,
       interval,
-      nextBillingDate: fmtDate(sub.current_period_end),
+      nextBillingDate: fmtDate(periodEndUnix),
       isRenewal: false,
     }, `sub-activated-${sub.id}`);
     return;
@@ -451,7 +467,7 @@ async function handleSubscriptionChange(
   if (eventType === "customer.subscription.deleted") {
     await sendSubEmail(supabase, "subscription-cancelled", userId, {
       planName,
-      accessEndsAt: fmtDate(sub.current_period_end),
+      accessEndsAt: fmtDate(periodEndUnix),
       immediate: true,
     }, `sub-deleted-${sub.id}`);
     return;
@@ -472,7 +488,7 @@ async function handleSubscriptionChange(
       amount: amountStr,
       interval,
       direction,
-      effectiveDate: fmtDate(sub.current_period_start),
+      effectiveDate: fmtDate(periodStartUnix),
     }, `sub-updated-${sub.id}-${priceId}`);
     return;
   }
@@ -480,9 +496,9 @@ async function handleSubscriptionChange(
   if (sub.cancel_at_period_end && prevCancelFlag === false) {
     await sendSubEmail(supabase, "subscription-cancelled", userId, {
       planName,
-      accessEndsAt: fmtDate(sub.current_period_end),
+      accessEndsAt: fmtDate(periodEndUnix),
       immediate: false,
-    }, `sub-cancel-scheduled-${sub.id}-${sub.current_period_end}`);
+    }, `sub-cancel-scheduled-${sub.id}-${periodEndUnix}`);
   }
 }
 
