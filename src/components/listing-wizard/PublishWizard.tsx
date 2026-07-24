@@ -46,6 +46,7 @@ import { cn } from '@/lib/utils';
 import { FreightSettingsCard } from '@/components/freight';
 import { FeaturedListingCard } from './FeaturedListingCard';
 import { ListingQualityGate } from './ListingQualityGate';
+import { ListingHealthScoreCard } from './ListingHealthScoreCard';
 import { AdditionalSellerSupportCards } from '@/components/monetization/AdditionalSellerSupportCards';
 import { InfoTooltip } from '@/components/ui/info-tooltip';
 import stripeIcon from '@/assets/stripe-icon.png';
@@ -58,6 +59,7 @@ import {
   RENTAL_HOST_FEE_PERCENT,
   SALE_SELLER_FEE_PERCENT} from '@/lib/commissions';
 import { isListingFeatured } from '@/lib/featured';
+import { trackLeadEvent } from '@/lib/leadTracking';
 
 type PublishStep = 'photos' | 'headline' | 'includes' | 'pricing' | 'details' | 'location' | 'availability' | 'documents' | 'stripe' | 'review';
 
@@ -786,6 +788,13 @@ export const PublishWizard: React.FC = () => {
         setSaleSuggestions(data as SaleSuggestions);
       }
 
+      trackLeadEvent('ai_suggestion_viewed', {
+        listing_id: listing?.id,
+        surface: 'publish_wizard',
+        suggestion_type: 'pricing',
+        mode: listing?.mode,
+      });
+
       toast({
         title: 'Suggestions ready!',
         description: 'AI pricing suggestions have been generated based on your listing details.'});
@@ -808,6 +817,15 @@ export const PublishWizard: React.FC = () => {
     
     setPriceDaily(String(rentalSuggestions[dailyKey]));
     setPriceWeekly(String(rentalSuggestions[weeklyKey]));
+    trackLeadEvent('ai_suggestion_accepted', {
+      listing_id: listing?.id,
+      surface: 'publish_wizard',
+      suggestion_type: 'pricing',
+      variant: type,
+      mode: 'rent',
+      daily: rentalSuggestions[dailyKey],
+      weekly: rentalSuggestions[weeklyKey],
+    });
   };
 
   const applySaleSuggestion = (type: 'low' | 'suggested' | 'high') => {
@@ -815,6 +833,14 @@ export const PublishWizard: React.FC = () => {
     
     const key = `sale_${type}` as keyof SaleSuggestions;
     setPriceSale(String(saleSuggestions[key]));
+    trackLeadEvent('ai_suggestion_accepted', {
+      listing_id: listing?.id,
+      surface: 'publish_wizard',
+      suggestion_type: 'pricing',
+      variant: type,
+      mode: 'sale',
+      price: saleSuggestions[key],
+    });
   };
 
   // AI Description Optimization
@@ -843,6 +869,19 @@ export const PublishWizard: React.FC = () => {
       if (data?.optimizedDescription) {
         setDescription(data.optimizedDescription);
         setShowOptimized(true);
+        trackLeadEvent('ai_suggestion_viewed', {
+          listing_id: listing?.id,
+          surface: 'publish_wizard',
+          suggestion_type: 'copy',
+          field: 'description',
+        });
+        trackLeadEvent('ai_suggestion_accepted', {
+          listing_id: listing?.id,
+          surface: 'publish_wizard',
+          suggestion_type: 'copy',
+          field: 'description',
+          auto_applied: true,
+        });
         toast({
           title: 'Description optimized!',
           description: 'Your listing description has been professionally rewritten.'});
@@ -863,6 +902,13 @@ export const PublishWizard: React.FC = () => {
       setDescription(originalDescription);
       setOriginalDescription(null);
       setShowOptimized(false);
+      trackLeadEvent('ai_suggestion_rejected', {
+        listing_id: listing?.id,
+        surface: 'publish_wizard',
+        suggestion_type: 'copy',
+        field: 'description',
+        reason: 'reverted',
+      });
       toast({
         title: 'Description reverted',
         description: 'Your original description has been restored.'});
@@ -3898,6 +3944,9 @@ export const PublishWizard: React.FC = () => {
                     hasLocation={!!(displayAddress || pickupLocationText)}
                     mode={listing.mode as 'rent' | 'sale' | null}
                   />
+
+                  {/* Persisted AI health score */}
+                  <ListingHealthScoreCard listingId={listing?.id} />
 
                   {/* Missing Requirements Warning */}
                   {!canPublish && (
