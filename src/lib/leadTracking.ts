@@ -82,7 +82,49 @@ export type LeadEventName =
   | 'homepage_video_watch_duration'
   | 'homepage_video_cta_clicked'
   | 'homepage_video_transcript_downloaded'
-  | 'listing_explainer_opened';
+  | 'listing_explainer_opened'
+  // Monetization / checkout funnel
+  | 'upgrade_viewed'
+  | 'upgrade_selected'
+  | 'checkout_started'
+  | 'checkout_completed'
+  | 'checkout_abandoned'
+  | 'checkout_cancelled'
+  // Offers
+  | 'offer_started'
+  | 'offer_submitted'
+  | 'offer_accepted'
+  | 'offer_declined'
+  // Protected sale
+  | 'protected_purchase_started'
+  | 'protected_purchase_completed'
+  // Buyer services
+  | 'financing_request_started'
+  | 'financing_request_completed'
+  | 'inspection_request_started'
+  | 'inspection_request_completed'
+  | 'transportation_request_started'
+  | 'transportation_request_completed'
+  // Permit path
+  | 'permit_path_started'
+  | 'permit_path_step_completed'
+  | 'permit_path_completed'
+  // Subscriptions
+  | 'subscription_started'
+  | 'subscription_cancelled'
+  // Inquiries
+  | 'inquiry_started'
+  | 'inquiry_submitted'
+  // Listing workflow
+  | 'listing_step_completed'
+  | 'listing_abandoned'
+  // AI
+  | 'ai_suggestion_viewed'
+  | 'ai_suggestion_accepted'
+  | 'ai_suggestion_rejected'
+  | 'ai_feedback_submitted'
+  // Human escalation
+  | 'human_support_requested';
 
 
 
@@ -167,7 +209,48 @@ const EVENT_CATEGORY: Record<LeadEventName, string> = {
   homepage_video_cta_clicked: 'homepage',
   listing_explainer_opened: 'discovery',
   homepage_video_transcript_downloaded: 'discovery',
-
+  // Monetization
+  upgrade_viewed: 'monetization',
+  upgrade_selected: 'monetization',
+  checkout_started: 'monetization',
+  checkout_completed: 'monetization',
+  checkout_abandoned: 'monetization',
+  checkout_cancelled: 'monetization',
+  // Offers
+  offer_started: 'offer',
+  offer_submitted: 'offer',
+  offer_accepted: 'offer',
+  offer_declined: 'offer',
+  // Protected sale
+  protected_purchase_started: 'transaction',
+  protected_purchase_completed: 'transaction',
+  // Buyer services
+  financing_request_started: 'service',
+  financing_request_completed: 'service',
+  inspection_request_started: 'service',
+  inspection_request_completed: 'service',
+  transportation_request_started: 'service',
+  transportation_request_completed: 'service',
+  // Permit path
+  permit_path_started: 'permit',
+  permit_path_step_completed: 'permit',
+  permit_path_completed: 'permit',
+  // Subscriptions
+  subscription_started: 'subscription',
+  subscription_cancelled: 'subscription',
+  // Inquiries
+  inquiry_started: 'lead',
+  inquiry_submitted: 'lead',
+  // Listing workflow
+  listing_step_completed: 'supply',
+  listing_abandoned: 'supply',
+  // AI
+  ai_suggestion_viewed: 'ai',
+  ai_suggestion_accepted: 'ai',
+  ai_suggestion_rejected: 'ai',
+  ai_feedback_submitted: 'ai',
+  // Human escalation
+  human_support_requested: 'support',
 };
 
 
