@@ -2,105 +2,159 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { CheckCircle, Loader2, XCircle } from 'lucide-react';
+import { CheckCircle2, Loader2, XCircle, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import Header from '@/components/layout/Header';
+import verifiedBadge from '@/assets/verified-badge.png';
+import { goBackToOrigin } from '@/lib/originNav';
 
 const VerificationComplete = () => {
-  const [status, setStatus] = useState<'checking' | 'verified' | 'failed'>('checking');
+  const [status, setStatus] = useState<'checking' | 'verified' | 'failed'>(
+    'checking',
+  );
   const { refreshProfile, user, isLoading } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Wait for auth state to be determined before checking
     if (isLoading) return;
+    if (!user) {
+      navigate('/auth');
+      return;
+    }
 
-    const checkStatus = async () => {
-      if (!user) {
-        navigate('/auth');
-        return;
-      }
-
+    const check = async () => {
       try {
-        const { data, error } = await supabase.functions.invoke('check-identity-verification');
-        
+        const { data, error } = await supabase.functions.invoke(
+          'check-identity-verification',
+        );
         if (error) {
           setStatus('failed');
           return;
         }
-
-        if (data.verified) {
+        if (data?.verified) {
           await refreshProfile();
           setStatus('verified');
-        } else {
-          // Give Stripe a moment to process
-          setTimeout(async () => {
-            const { data: retryData } = await supabase.functions.invoke('check-identity-verification');
-            if (retryData?.verified) {
-              await refreshProfile();
-              setStatus('verified');
-            } else {
-              setStatus('failed');
-            }
-          }, 2000);
+          return;
         }
-      } catch (error) {
+        // Retry once — Stripe often needs a beat
+        setTimeout(async () => {
+          const { data: retry } = await supabase.functions.invoke(
+            'check-identity-verification',
+          );
+          if (retry?.verified) {
+            await refreshProfile();
+            setStatus('verified');
+          } else {
+            setStatus('failed');
+          }
+        }, 2000);
+      } catch {
         setStatus('failed');
       }
     };
-
-    checkStatus();
+    void check();
   }, [user, isLoading, navigate, refreshProfile]);
 
   if (status === 'checking') {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-vendibook-cream to-background flex items-center justify-center p-4">
-        <div className="text-center">
-          <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto mb-4" />
-          <h2 className="text-xl font-semibold text-foreground">Checking verification status...</h2>
-          <p className="text-muted-foreground mt-2">Please wait while we confirm your identity.</p>
-        </div>
+      <div className="min-h-screen flex flex-col bg-background">
+        <Header />
+        <main className="flex-1 flex items-center justify-center px-4">
+          <div className="text-center">
+            <Loader2 className="h-10 w-10 animate-spin text-primary mx-auto mb-4" />
+            <h2 className="text-xl font-semibold text-foreground">
+              Checking your verification…
+            </h2>
+            <p className="text-foreground/70 mt-2 text-sm">
+              This usually takes just a few seconds.
+            </p>
+          </div>
+        </main>
       </div>
     );
   }
 
   if (status === 'verified') {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-vendibook-cream to-background flex items-center justify-center p-4">
-        <div className="w-full max-w-md text-center">
-          <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-emerald-100 mb-6">
-            <CheckCircle className="h-10 w-10 text-emerald-600" />
+      <div className="min-h-screen flex flex-col bg-background">
+        <Header />
+        <main className="flex-1 flex items-start justify-center px-4 py-10 md:py-16">
+          <div className="w-full max-w-lg rounded-lg border border-border bg-card p-6 md:p-8 shadow-sm text-center">
+            <img
+              src={verifiedBadge}
+              alt="Verified"
+              className="h-20 w-20 object-contain mx-auto"
+            />
+            <h1 className="text-2xl font-semibold text-foreground mt-4">
+              You're verified
+            </h1>
+            <p className="text-foreground/70 mt-2 text-[15px]">
+              Your Verified badge is now live. Here's what you just unlocked.
+            </p>
+
+            <ul className="mt-6 space-y-2 border-t border-border pt-6 text-left">
+              {[
+                'Publish listings without holds',
+                'Higher visibility in search results',
+                'Verified badge on your profile buyers can see',
+              ].map((text) => (
+                <li
+                  key={text}
+                  className="flex items-center gap-2 text-sm text-foreground"
+                >
+                  <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
+                  {text}
+                </li>
+              ))}
+            </ul>
+
+            <Button
+              onClick={() => goBackToOrigin(navigate)}
+              size="lg"
+              className="w-full mt-6"
+            >
+              Continue
+              <ArrowRight className="h-4 w-4 ml-2" />
+            </Button>
           </div>
-          <h1 className="text-2xl font-bold text-foreground mb-3">Verification Complete!</h1>
-          <p className="text-muted-foreground mb-8">
-            Your identity has been successfully verified. You now have full access to all Vendibook features.
-          </p>
-          <Button onClick={() => navigate('/')} className="rounded-xl">
-            Start Exploring
-          </Button>
-        </div>
+        </main>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-vendibook-cream to-background flex items-center justify-center p-4">
-      <div className="w-full max-w-md text-center">
-        <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-red-100 mb-6">
-          <XCircle className="h-10 w-10 text-red-600" />
+    <div className="min-h-screen flex flex-col bg-background">
+      <Header />
+      <main className="flex-1 flex items-start justify-center px-4 py-10 md:py-16">
+        <div className="w-full max-w-lg rounded-lg border border-border bg-card p-6 md:p-8 shadow-sm text-center">
+          <div className="mx-auto h-16 w-16 rounded-full bg-destructive/10 flex items-center justify-center">
+            <XCircle className="h-8 w-8 text-destructive" />
+          </div>
+          <h1 className="text-2xl font-semibold text-foreground mt-4">
+            Verification not complete
+          </h1>
+          <p className="text-foreground/70 mt-2 text-[15px]">
+            We couldn't confirm your ID yet. You can try again or return to
+            where you were.
+          </p>
+          <div className="mt-6 flex flex-col gap-2">
+            <Button
+              onClick={() => navigate('/verify-identity')}
+              size="lg"
+              className="w-full"
+            >
+              Try again
+            </Button>
+            <button
+              type="button"
+              onClick={() => goBackToOrigin(navigate)}
+              className="w-full text-sm text-foreground/60 hover:text-foreground transition-colors py-2"
+            >
+              Go back
+            </button>
+          </div>
         </div>
-        <h1 className="text-2xl font-bold text-foreground mb-3">Verification Pending</h1>
-        <p className="text-muted-foreground mb-8">
-          Your verification is still being processed or was not completed. You can try again or continue browsing.
-        </p>
-        <div className="flex flex-col gap-3">
-          <Button onClick={() => navigate('/verify-identity')} className="rounded-xl">
-            Try Again
-          </Button>
-          <Button variant="outline" onClick={() => navigate('/')} className="rounded-xl">
-            Continue Browsing
-          </Button>
-        </div>
-      </div>
+      </main>
     </div>
   );
 };

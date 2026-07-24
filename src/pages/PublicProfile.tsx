@@ -61,6 +61,12 @@ interface PublicProfileData {
   bio?: string | null;
   shop_policies?: ShopPolicies | null;
   pinned_listing_id?: string | null;
+  // Privacy toggles — default to legacy behavior (all visible) when absent
+  show_full_name?: boolean | null;
+  show_public_location?: boolean | null;
+  show_verified_badge?: boolean | null;
+  show_member_since?: boolean | null;
+  show_listings_count?: boolean | null;
 }
 
 // Hook to fetch public profile - supports both userId and username
@@ -74,7 +80,7 @@ const usePublicProfile = (identifier: string | undefined, isUsername: boolean = 
       if (isUsername) {
         const { data: profileByUsername, error } = await supabase
           .from('profiles')
-          .select('id, full_name, first_name, last_name, display_name, username, business_name, public_city, public_state, avatar_url, header_image_url, identity_verified, created_at, bio, shop_policies, pinned_listing_id')
+          .select('id, full_name, first_name, last_name, display_name, username, business_name, public_city, public_state, avatar_url, header_image_url, identity_verified, created_at, bio, shop_policies, pinned_listing_id, show_full_name, show_public_location, show_verified_badge, show_member_since, show_listings_count')
           .eq('username', identifier)
           .single();
         
@@ -93,7 +99,7 @@ const usePublicProfile = (identifier: string | undefined, isUsername: boolean = 
       if (!profile) {
         const { data: directData, error: directError } = await supabase
           .from('profiles')
-          .select('id, full_name, first_name, last_name, display_name, username, business_name, public_city, public_state, avatar_url, header_image_url, identity_verified, created_at, bio, shop_policies, pinned_listing_id')
+          .select('id, full_name, first_name, last_name, display_name, username, business_name, public_city, public_state, avatar_url, header_image_url, identity_verified, created_at, bio, shop_policies, pinned_listing_id, show_full_name, show_public_location, show_verified_badge, show_member_since, show_listings_count')
           .eq('id', identifier)
           .single();
         
@@ -172,11 +178,21 @@ const PublicProfile = () => {
   // Display name logic - use public display name utility
   const displayName = profile ? getPublicDisplayName(profile) : 'User';
 
-  // Derive service area from listings if not set in profile
+  // Public visibility flags — default to true (legacy behavior) when unset
+  const vis = {
+    location: profile?.show_public_location !== false,
+    verifiedBadge: profile?.show_verified_badge !== false,
+    memberSince: profile?.show_member_since !== false,
+    listingsCount: profile?.show_listings_count !== false,
+  };
+
+  // Derive service area from listings if not set in profile.
+  // Respect the owner's public-location privacy toggle.
   const serviceArea = (() => {
+    if (!vis.location && !isOwnProfile) return null;
     const profileLocation = [profile?.public_city, profile?.public_state].filter(Boolean).join(', ');
     if (profileLocation) return profileLocation;
-    
+
     // Fallback: derive from listings
     if (listings && listings.length > 0) {
       const cities = new Set<string>();
@@ -412,12 +428,12 @@ const PublicProfile = () => {
         {/* ══ TRUST & SOCIAL PROOF STRIP ══ */}
         <div className="container py-4">
           <StorefrontTrustStrip
-            isVerified={profile.identity_verified || false}
+            isVerified={vis.verifiedBadge && (profile.identity_verified || false)}
             responseTime={responseTimeData?.avgResponseTime}
             completedBookings={completedBookings || 0}
             averageRating={stats?.averageRating}
             totalReviews={stats?.totalReviewsReceived}
-            memberSince={memberSinceText}
+            memberSince={vis.memberSince ? memberSinceText : undefined}
             isTopRated={hostBadges.isTopRated}
             isSuperhost={hostBadges.isSuperhost}
           />
@@ -462,7 +478,7 @@ const PublicProfile = () => {
           reviewsReceivedLoading={reviewsReceivedLoading}
           reviewsGivenLoading={reviewsGivenLoading}
           isOwnProfile={isOwnProfile}
-          hostVerified={profile.identity_verified || false}
+          hostVerified={vis.verifiedBadge && (profile.identity_verified || false)}
           isHost={isHost}
           hostId={actualUserId}
           stats={stats}
