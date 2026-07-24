@@ -11,6 +11,8 @@ import { Button } from '@/components/ui/button';
 import { Download, RefreshCw } from 'lucide-react';
 import { useHostAnalytics } from '@/hooks/useHostAnalytics';
 import { toast } from '@/hooks/use-toast';
+import { ProFeatureGate } from '@/components/host/ProFeatureGate';
+
 
 const HostAnalytics = () => {
   const { user, isLoading } = useAuth();
@@ -70,9 +72,24 @@ const HostAnalytics = () => {
         <div className="grid lg:grid-cols-2 gap-4">
           <ConversionFunnel days={30} />
           <RevenueChart />
-          <TrafficSourcesCard days={30} />
-          <CompetitorPricingCard />
+          <ProFeatureGate
+            requires="pro"
+            featureName="Traffic sources & attribution"
+            description="See which channels drive views, saves, and bookings so you can double down on what's working."
+            preview
+          >
+            <TrafficSourcesCard days={30} />
+          </ProFeatureGate>
+          <ProFeatureGate
+            requires="pro"
+            featureName="Competitor pricing intelligence"
+            description="Benchmark your rates against comparable listings in your market — updated weekly."
+            preview
+          >
+            <CompetitorPricingCard />
+          </ProFeatureGate>
         </div>
+
       </div>
     </DashboardLayout>
   );
