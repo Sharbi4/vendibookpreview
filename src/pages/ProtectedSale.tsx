@@ -15,6 +15,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { JourneyProgress, type JourneyStep } from '@/components/journey';
 import { ProtectedSaleStatusBadge } from '@/components/protected-sale/ProtectedSaleStatusBadge';
 import { ProtectedSaleTimeline } from '@/components/protected-sale/ProtectedSaleTimeline';
+import { ProtectedSaleFeeCalculator } from '@/components/protected-sale/ProtectedSaleFeeCalculator';
 import { formatCents } from '@/lib/protectedSale/fees';
 import type { Database } from '@/integrations/supabase/types';
 
