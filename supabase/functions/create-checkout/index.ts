@@ -558,8 +558,10 @@ serve(async (req) => {
             terms_version: TERMS_VERSION,
           },
         },
-        success_url: `${origin}/payment-success?session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${origin}/payment-cancelled?listing=${listing_id}`,
+        success_url: uiMode === 'hosted' ? `${origin}/payment-success?session_id={CHECKOUT_SESSION_ID}` : undefined,
+        cancel_url: uiMode === 'hosted' ? `${origin}/payment-cancelled?listing=${listing_id}` : undefined,
+        return_url: uiMode === 'elements' ? `${origin}/payment-success?session_id={CHECKOUT_SESSION_ID}` : undefined,
+        ui_mode: uiMode === 'elements' ? 'custom' : undefined,
         metadata: {
           booking_id: booking_id || '',
           listing_id,
