@@ -701,8 +701,10 @@ serve(async (req) => {
     logStep("Checkout session created", { sessionId: session.id, url: session.url, idempotencyKey });
 
     return new Response(
-      JSON.stringify({ 
-        url: session.url,
+      JSON.stringify({
+        url: uiMode === 'hosted' ? session.url : null,
+        client_secret: uiMode === 'elements' ? (session as any).client_secret ?? null : null,
+        ui_mode: uiMode,
         session_id: session.id,
         customer_total: customerTotal / 100,
         platform_fee: applicationFee / 100,
