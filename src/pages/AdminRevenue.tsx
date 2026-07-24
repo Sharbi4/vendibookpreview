@@ -178,13 +178,18 @@ export default function AdminRevenue() {
         </CardContent>
       </Card>
 
-      <Tabs defaultValue="products">
+      <Tabs defaultValue="subscriptions">
         <TabsList>
+          <TabsTrigger value="subscriptions">Subscriptions</TabsTrigger>
           <TabsTrigger value="products">Products</TabsTrigger>
           <TabsTrigger value="purchases">Purchases</TabsTrigger>
           <TabsTrigger value="promotions">Promotions</TabsTrigger>
           <TabsTrigger value="discounts">Discount codes</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="subscriptions" className="mt-4">
+          <SubscriptionRevenueSection subscriptions={subscriptions} products={products} />
+        </TabsContent>
 
         <TabsContent value="products" className="mt-4">
           <div className="overflow-hidden rounded-xl border border-border">
