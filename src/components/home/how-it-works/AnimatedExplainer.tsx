@@ -137,7 +137,7 @@ export const AnimatedExplainer = ({ explainer, onProgress, onEnded, onSceneChang
       // re-opens are instant. Browser will GC it on unload.
       void localUrl;
     };
-  }, [explainer.transcript]);
+  }, [explainer.transcript, adaptive.disableTts]);
 
 
   // Ambient bed lifecycle — only created once narration is ready so it
