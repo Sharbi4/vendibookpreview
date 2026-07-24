@@ -250,3 +250,6 @@ verify_jwt = false
 
 
 
+
+[functions.send-referral-invite]
+verify_jwt = true

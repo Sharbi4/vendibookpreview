@@ -2,10 +2,12 @@ import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Gift, Copy, Check, Share2, Loader2, Mail, MessageCircle, Facebook, Twitter } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
+import { Gift, Copy, Check, Share2, Loader2, Mail, MessageCircle, Facebook, Twitter, Send } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { useReferralCode, useMyReferrals, buildReferralUrl } from '@/hooks/useReferral';
+import { supabase } from '@/integrations/supabase/client';
 
 /**
  * Refer-a-Host: hosts share their real referral code. Attribution runs
@@ -88,6 +90,7 @@ export function ReferAHostCard() {
               <Stat label="Earned" value={`$${(refCode?.total_earned ?? 0).toFixed(0)}`} />
             </div>
             <ShareRow link={link} />
+            <EmailInviteComposer />
           </>
         ) : (
           <p className="text-sm text-muted-foreground">
@@ -133,6 +136,88 @@ function ShareRow({ link }: { link: string }) {
           {t.label}
         </a>
       ))}
+    </div>
+  );
+}
+
+function EmailInviteComposer() {
+  const [emails, setEmails] = useState('');
+  const [note, setNote] = useState('');
+  const [sending, setSending] = useState(false);
+
+  const parsed = Array.from(
+    new Set(
+      emails
+        .split(/[\s,;]+/)
+        .map((e) => e.trim().toLowerCase())
+        .filter((e) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)),
+    ),
+  );
+  const overLimit = parsed.length > 10;
+
+  const send = async () => {
+    if (parsed.length === 0) {
+      toast.error('Enter at least one valid email address');
+      return;
+    }
+    if (overLimit) {
+      toast.error('Maximum 10 emails per invite');
+      return;
+    }
+    setSending(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('send-referral-invite', {
+        body: { emails: parsed, note: note.trim() || undefined },
+      });
+      if (error) throw error;
+      const sent = (data as any)?.sent ?? 0;
+      if (sent > 0) {
+        toast.success(`Invite sent to ${sent} ${sent === 1 ? 'person' : 'people'}`);
+        setEmails('');
+        setNote('');
+      } else {
+        toast.error('No invites were sent');
+      }
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Failed to send invites');
+    } finally {
+      setSending(false);
+    }
+  };
+
+  return (
+    <div className="pt-3 space-y-2 border-t border-border/60">
+      <div className="flex items-center justify-between">
+        <div className="text-xs font-medium text-foreground">Invite by email</div>
+        <div className="text-[10px] text-muted-foreground">
+          {parsed.length}/10 valid
+        </div>
+      </div>
+      <Input
+        placeholder="friend@example.com, another@example.com"
+        value={emails}
+        onChange={(e) => setEmails(e.target.value)}
+        className="text-xs"
+      />
+      <Textarea
+        placeholder="Add a short personal note (optional)"
+        value={note}
+        onChange={(e) => setNote(e.target.value.slice(0, 500))}
+        rows={2}
+        className="text-xs resize-none"
+      />
+      <Button
+        onClick={send}
+        disabled={sending || parsed.length === 0 || overLimit}
+        size="sm"
+        className="w-full"
+      >
+        {sending ? (
+          <><Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> Sending…</>
+        ) : (
+          <><Send className="h-3.5 w-3.5 mr-1.5" /> Send {parsed.length || ''} invite{parsed.length === 1 ? '' : 's'}</>
+        )}
+      </Button>
     </div>
   );
 }
