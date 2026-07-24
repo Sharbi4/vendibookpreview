@@ -407,7 +407,7 @@ serve(async (req) => {
         .maybeSingle();
       if (updErr || !updated) {
         logStep('Draft terms activation failed', { error: updErr?.message, draftTermsId });
-        throw new Error(`Failed to activate draft terms: ${updErr?.message || 'not found'}`);
+        return jsonError(409, "terms_draft_invalid", `Could not activate the terms draft: ${updErr?.message || 'not found'}`);
       }
       terms_id = updated.id;
       logStep('Terms snapshot activated from draft', { terms_id });
