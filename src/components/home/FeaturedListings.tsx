@@ -1,3 +1,4 @@
+import { excludeTestListings } from '@/lib/excludeTestListings';
 import { useMemo, useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
@@ -68,14 +69,15 @@ const FeaturedListings = () => {
 
   // Always fetch all listings immediately on page load
   const { data: allListings = [], isLoading: isLoadingAll } = useQuery({
-    queryKey: ['featured-listings'],
+    queryKey: ['featured-listings-v2'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('listings')
-        .select('*')
-        .eq('status', 'published')
-        .order('published_at', { ascending: false });
-      
+      const { data, error } = await excludeTestListings(
+        supabase
+          .from('listings')
+          .select('*')
+          .eq('status', 'published')
+      ).order('published_at', { ascending: false });
+
       if (error) throw error;
       return data;
     },

@@ -1,3 +1,4 @@
+import { excludeTestListings } from '@/lib/excludeTestListings';
 import { useQuery } from '@tanstack/react-query';
 import { useRef, useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -23,16 +24,17 @@ const HomepageFeaturedRow = () => {
   const [scrollState, setScrollState] = useState({ canLeft: false, canRight: true });
 
   const { data: listings = [], isLoading } = useQuery({
-    queryKey: ['homepage-featured-row'],
+    queryKey: ['homepage-featured-row-v2'],
     queryFn: async () => {
       const nowIso = new Date().toISOString();
-      const { data, error } = await supabase
-        .from('listings')
-        .select('*')
-        .eq('status', 'published')
-        .eq('featured_enabled', true)
-        .gt('featured_expires_at', nowIso)
-        .not('title', 'ilike', 'Demo%')
+      const { data, error } = await excludeTestListings(
+        supabase
+          .from('listings')
+          .select('*')
+          .eq('status', 'published')
+          .eq('featured_enabled', true)
+          .gt('featured_expires_at', nowIso)
+      )
         .order('featured_at', { ascending: false })
         .limit(FEATURED_LIMIT);
       if (error) throw error;
