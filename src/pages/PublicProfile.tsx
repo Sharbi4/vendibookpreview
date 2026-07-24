@@ -478,7 +478,7 @@ const PublicProfile = () => {
           reviewsReceivedLoading={reviewsReceivedLoading}
           reviewsGivenLoading={reviewsGivenLoading}
           isOwnProfile={isOwnProfile}
-          hostVerified={profile.identity_verified || false}
+          hostVerified={vis.verifiedBadge && (profile.identity_verified || false)}
           isHost={isHost}
           hostId={actualUserId}
           stats={stats}
