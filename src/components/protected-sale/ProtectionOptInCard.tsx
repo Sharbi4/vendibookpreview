@@ -1,10 +1,12 @@
-import { Shield, Check } from 'lucide-react';
+import { useState } from 'react';
+import { Shield, Check, ChevronDown } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import {
   computeProtectedSaleAmounts,
   formatCents,
   isProtectedSaleEligible,
 } from '@/lib/protectedSale/fees';
+import { ProtectedSaleFeeCalculator } from './ProtectedSaleFeeCalculator';
 
 interface Props {
   salePriceCents: number;
