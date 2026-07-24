@@ -4,7 +4,7 @@ import { useStripeConnect } from '@/hooks/useStripeConnect';
 import { Button } from '@/components/ui/button';
 
 const PayoutsPanel = () => {
-  const { status, isLoading, isConnecting, connect } = useStripeConnect() as any;
+  const { isOnboardingComplete, isLoading, isConnecting, connectStripe } = useStripeConnect();
 
   return (
     <div className="max-w-[840px] mx-auto space-y-6">
@@ -18,7 +18,7 @@ const PayoutsPanel = () => {
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Loader2 className="h-4 w-4 animate-spin" /> Checking your Stripe account…
           </div>
-        ) : status?.onboarding_complete ? (
+        ) : isOnboardingComplete ? (
           <div className="flex items-start gap-4">
             <div className="h-10 w-10 rounded-full bg-emerald-500/10 text-emerald-600 flex items-center justify-center shrink-0">
               <CheckCircle2 className="h-5 w-5" />
@@ -38,12 +38,7 @@ const PayoutsPanel = () => {
             <div className="flex-1">
               <p className="text-sm font-medium text-foreground">Finish Stripe onboarding to accept card payments</p>
               <p className="text-xs text-muted-foreground mt-1">You can still list and take cash / Pay in Person bookings without it.</p>
-              <Button
-                onClick={() => connect?.()}
-                disabled={isConnecting}
-                size="sm"
-                className="mt-4"
-              >
+              <Button onClick={() => connectStripe()} disabled={isConnecting} size="sm" className="mt-4">
                 {isConnecting ? 'Opening Stripe…' : 'Set up payouts'}
                 <ExternalLink className="h-3.5 w-3.5 ml-1.5" />
               </Button>
