@@ -106,18 +106,18 @@ export const explainers: Explainer[] = [
     secondaryCtaLabel: 'How Rentals Work',
     secondaryCtaRoute: '/how-it-works',
     transcript:
-      "Renting on Vendibook helps you test a concept, cover a catering event, or run a weekend pop-up without buying equipment upfront. Search rentals by location, equipment, and price, then open a listing's booking calendar. Available, booked, and selected dates are clearly distinguished, so you can pick your dates and see the rental price and cost breakdown before requesting. Submit your dates, intended use, business information, and any requested documents in one organized booking request. The host reviews your request from their dashboard and, once approved, the calendar updates automatically. Complete the requirements that apply to your booking — identity verification, driver's license, insurance, business info, and the rental agreement. Online rental payments are securely processed through Stripe. Your renter dashboard then shows the payment status, booking details, documents, messages, and the next action required. At pickup and return, both sides confirm the handoff so the rental has a clear record from beginning to end.",
+      "Okay — so maybe you're not looking to buy just yet. Maybe you've got a catering gig, a weekend pop-up, a festival coming up, or you just want to test a concept before you commit. That's exactly what renting on Vendibook is for. Here's how it flows. You start by searching rentals — your location, your dates, the kind of equipment you need — and when a listing catches your eye, you open the booking calendar. You'll see what's available, what's already booked, and what you've picked, all color-coded, so there's no guesswork. Choose your dates, review the price and the full cost breakdown, and send your request — with your intended use, your business info, and any documents the host asked for. The host reviews everything from their dashboard, and once they approve, the calendar updates automatically. From there, you just work through your requirements — identity verification, driver's license, insurance if it applies, business info, and the rental agreement. Online rental payments go through Stripe, safely. Your renter dashboard then keeps the payment status, booking details, documents, messages, and the next step all in one view. At pickup, and again at return, both sides confirm the handoff — so the whole rental has a clean, clear record from start to finish. Start smaller, test the idea, and grow from there.",
     scenes: buildScenes(
       rentingScenes,
       [
-        'Rent the equipment you need.',
-        'Find a rental that fits your business.',
-        'Choose your dates and see your total.',
-        'One organized booking request.',
-        'Approval updates the booking automatically.',
-        'Complete your requirements in one place.',
-        'Payment and booking status together.',
-        'Book it. Manage it. Put it to work.',
+        "Not ready to buy? Renting is how a lot of food businesses get going.",
+        "First step — find a rental that actually fits what you're doing.",
+        "Open the calendar, pick your dates, and see your total upfront.",
+        "Send everything the host needs, in one organized request.",
+        "Once they approve, the calendar updates automatically.",
+        "Then you work through your requirements — verification, docs, the agreement.",
+        "Pay securely through Stripe and track everything in one place.",
+        "Book it, run your event, and you're on your way.",
       ],
       [
         'Why rent',
@@ -131,6 +131,7 @@ export const explainers: Explainer[] = [
       ],
     ),
   },
+
   {
     id: 'selling',
     title: 'Selling on Vendibook',
