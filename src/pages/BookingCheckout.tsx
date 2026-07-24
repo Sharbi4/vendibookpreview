@@ -487,7 +487,7 @@ const BookingCheckout = () => {
           deposit_amount: depositAmount,
           referral_code: referralValid ? referralCode : undefined,
           terms_id: termsGate.termsId,
-          ...(useEmbedded ? { ui_mode: 'elements' } : {}),
+          ...(useEmbedded ? { ui_mode: 'custom' } : {}),
         },
       });
 
