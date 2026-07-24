@@ -9,6 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import BoostListingPrompt from '@/components/dashboard/BoostListingPrompt';
 import { UpgradePackageCards } from '@/components/monetization/UpgradePackageCards';
 import { PromoteListingPanel } from '@/components/monetization/PromoteListingPanel';
+import { RecommendedAddOns } from '@/components/monetization/RecommendedAddOns';
 import PublishStatusSummary from '@/components/listing-wizard/PublishStatusSummary';
 import { reportError } from '@/lib/errorReporter';
 
@@ -373,6 +374,12 @@ const ListingPublished: React.FC = () => {
             skipLabel="Continue with free listing"
           />
           <PromoteListingPanel listingId={listingId} />
+          <RecommendedAddOns
+            context="listing_published"
+            listingId={listingId}
+            heading="Give your new listing a running start"
+            subheading="Hand-picked services and boosts based on what converts best in the first 7 days."
+          />
         </div>
       )}
     </div>
