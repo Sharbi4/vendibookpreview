@@ -66,115 +66,17 @@ const Pricing = () => {
         description="Compare Vendibook host and seller memberships, listing boosts, and expert services. Monthly or annual billing, no hidden fees."
       />
 
-      <section className="mx-auto max-w-6xl px-4 pt-10 pb-4">
-        <PackagesIntro variant="hero" recommendedIndex={0} />
-      </section>
-
-      <section className="mx-auto max-w-6xl px-4 pt-4 pb-6" aria-labelledby="pricing-audiences">
-        <h2 id="pricing-audiences" className="sr-only">Choose your path</h2>
-        <div className="grid gap-4 md:grid-cols-3">
-          {[
-            { icon: Store, title: 'For Sellers', body: 'Boost, price, position, and sell faster.', links: [
-              { to: '/services', label: 'Seller services' },
-              { to: '/pricing#upgrades', label: 'Listing upgrades' },
-              { to: '/host/plans', label: 'Seller Plus' },
-            ] },
-            { icon: ShoppingBag, title: 'For Buyers', body: 'Buy with confidence on high-ticket assets.', links: [
-              { to: '/buyer/services', label: 'Buyer services' },
-              { to: '/tools/permitpath/upgrades', label: 'PermitPath upgrades' },
-              { to: '/partners', label: 'Financing & inspection' },
-            ] },
-            { icon: Building2, title: 'For Hosts', body: 'Placement, analytics, priority support.', links: [
-              { to: '/host/plans', label: 'Host plans' },
-              { to: '/partners', label: 'Trusted partners' },
-              { to: '/pricing#upgrades', label: 'Featured boosts' },
-            ] },
-          ].map(({ icon: Icon, title, body, links }) => (
-            <div key={title} className="rounded-2xl border border-white/10 bg-white/[0.02] p-5 backdrop-blur-md">
-              <div className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-white/[0.03] text-foreground/80">
-                <Icon className="h-4.5 w-4.5" />
-              </div>
-              <h3 className="mt-3 font-display text-lg text-foreground">{title}</h3>
-              <p className="mt-1 text-sm text-muted-foreground">{body}</p>
-              <ul className="mt-3 space-y-1.5">
-                {links.map((l) => (
-                  <li key={l.to}>
-                    <Link to={l.to} className="inline-flex items-center gap-1 text-sm text-primary hover:gap-2 transition-all">
-                      {l.label} <ArrowRight className="h-3 w-3" />
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
-        </div>
+      <section className="mx-auto max-w-6xl px-4 pt-8 pb-4">
+        <PremiumPlansSection />
       </section>
 
       <section id="upgrades" className="mx-auto max-w-6xl px-4 py-10">
         <SectionHeader
-          eyebrow="Pricing"
-          title="Simple pricing. Real tools."
-          description="Free hosts and sellers keep every core tool. Add memberships, boosts, or expert services only when you need them. Cancel anytime — access continues through the paid period."
+          eyebrow="Boosts & add-ons"
+          title="One-time tools for when you need a lift."
+          description="Pay once for placement, a badge, or expert help — no subscription required. Members get automatic discounts at checkout."
         />
 
-        {/* Interval toggle */}
-        <div className="mt-8 flex items-center justify-center">
-          <div className="inline-flex rounded-full border border-white/10 bg-white/[0.03] p-1 backdrop-blur-sm">
-            {(['monthly', 'annual'] as Interval[]).map((opt) => (
-              <button
-                key={opt}
-                type="button"
-                onClick={() => setInterval(opt)}
-                className={cn(
-                  'rounded-full px-4 py-1.5 text-sm font-medium transition',
-                  interval === opt
-                    ? 'bg-orange-500 text-white shadow-sm'
-                    : 'text-muted-foreground hover:text-foreground',
-                )}
-                aria-pressed={interval === opt}
-              >
-                {opt === 'monthly' ? 'Monthly' : 'Annual'}
-                {opt === 'annual' && (
-                  <span className="ml-1.5 text-[10px] font-semibold uppercase tracking-wider text-orange-200/90">
-                    Save ~17%
-                  </span>
-                )}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Subscription tiers */}
-        {loadingSubs ? (
-          <div className="mt-12 flex justify-center">
-            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-          </div>
-        ) : (
-          <div className="mt-8 grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-            {paired.map(({ base, monthly, annual }, idx) => {
-              const active = interval === 'annual' ? annual ?? monthly : monthly ?? annual;
-              if (!active) return null;
-              const paths = buildCheckoutReturnPaths(active.slug);
-              const save = savingsPct(monthly, annual);
-              return (
-                <div key={base} className="relative">
-                  {interval === 'annual' && save && (
-                    <div className="absolute -top-2.5 left-6 z-10 rounded-full bg-emerald-500/90 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-white shadow">
-                      Save {save}%
-                    </div>
-                  )}
-                  <ProductPricingCard
-                    product={active}
-                    recommended={idx === 1}
-                    ctaLabel="Start plan"
-                    successPath={paths.successPath}
-                    cancelPath={paths.cancelPath}
-                  />
-                </div>
-              );
-            })}
-          </div>
-        )}
 
         {/* Listing boosts */}
         <div className="mt-16">
