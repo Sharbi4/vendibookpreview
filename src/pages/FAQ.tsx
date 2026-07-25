@@ -201,7 +201,7 @@ const FAQ = () => {
               <HelpCircle className="h-3 w-3 mr-1" />
               Help & FAQ
             </Badge>
-            <h1 className="text-3xl md:text-5xl font-medium tracking-tight">
+            <h1 className="text-3xl md:text-5xl font-medium tracking-tight font-display">
               Everything about how Vendibook works.
             </h1>
             <p className="mt-3 text-white/60 text-sm md:text-base max-w-2xl mx-auto">
