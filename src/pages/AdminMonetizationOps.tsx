@@ -93,16 +93,34 @@ export default function AdminMonetizationOps() {
   const load = async () => {
     setLoading(true);
     try {
-      const [ev, pn, rf] = await Promise.all([
+      const [ev, pn, rf, sv] = await Promise.all([
         anyClient.from('stripe_webhook_events')
           .select('*').order('processed_at', { ascending: false }).limit(200),
         anyClient.from('monetization_pending_reconciliation').select('*').limit(100),
         anyClient.from('monetization_refund_events')
           .select('*').order('created_at', { ascending: false }).limit(100),
+        anyClient.from('monetization_purchases')
+          .select('id,user_id,listing_id,amount_cents,status,fulfillment_status,created_at,paid_at,monetization_products!inner(slug,name)')
+          .in('monetization_products.slug', MANUAL_SERVICE_SLUGS)
+          .in('status', ['paid', 'fulfilled'])
+          .order('created_at', { ascending: false })
+          .limit(200),
       ]);
       setEvents(ev.data ?? []);
       setPending(pn.data ?? []);
       setRefunds(rf.data ?? []);
+      setServices(((sv.data ?? []) as any[]).map((r) => ({
+        id: r.id,
+        user_id: r.user_id,
+        listing_id: r.listing_id,
+        amount_cents: r.amount_cents,
+        status: r.status,
+        fulfillment_status: r.fulfillment_status,
+        created_at: r.created_at,
+        paid_at: r.paid_at,
+        product_slug: r.monetization_products?.slug ?? null,
+        product_name: r.monetization_products?.name ?? null,
+      })));
     } catch (e) {
       console.error('admin monetization ops load failed', e);
       toast.error('Failed to load operations data');
