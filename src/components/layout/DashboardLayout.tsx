@@ -264,6 +264,7 @@ export const DashboardLayout = ({ children, mode, onModeChange, isHost }: Dashbo
                 </Link>
               );
             })}
+            </div>
           </div>
         ))}
       </ScrollArea>
