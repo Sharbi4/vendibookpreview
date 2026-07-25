@@ -270,9 +270,10 @@ export const QuickStartWizard: React.FC = () => {
 
     } catch (error) {
       console.error('Error creating draft:', error);
+      const raw = error instanceof Error ? error.message : String(error);
       toast({
         title: 'Error creating draft',
-        description: 'Please try again.',
+        description: raw || 'Please try again — your progress is saved.',
         variant: 'destructive'});
     } finally {
       setIsCreating(false);
