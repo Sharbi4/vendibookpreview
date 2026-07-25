@@ -22,7 +22,6 @@ export const StepDetails: React.FC<StepDetailsProps> = ({
   updateField}) => {
   const { toast } = useToast();
   const [newHighlight, setNewHighlight] = useState('');
-  const [isOptimizing, setIsOptimizing] = useState(false);
   const [originalDescription, setOriginalDescription] = useState<string | null>(null);
   const [showOptimized, setShowOptimized] = useState(false);
 
@@ -53,44 +52,10 @@ export const StepDetails: React.FC<StepDetailsProps> = ({
     }
   };
 
-  const optimizeDescription = async () => {
-    if (!formData.description || formData.description.trim().length < 10) {
-      toast({
-        title: 'Description too short',
-        description: 'Please write at least 10 characters to optimize.',
-        variant: 'destructive'});
-      return;
-    }
-
-    setIsOptimizing(true);
+  const applyOptimized = (optimized: string) => {
     setOriginalDescription(formData.description);
-
-    try {
-      const { data, error } = await supabase.functions.invoke('optimize-description', {
-        body: {
-          rawDescription: formData.description,
-          category: formData.category,
-          mode: formData.mode,
-          title: formData.title}});
-
-      if (error) throw error;
-
-      if (data?.optimizedDescription) {
-        updateField('description', data.optimizedDescription);
-        setShowOptimized(true);
-        toast({
-          title: 'Description optimized!',
-          description: 'Your listing description has been professionally rewritten.'});
-      }
-    } catch (error) {
-      console.error('Error optimizing description:', error);
-      toast({
-        title: 'Optimization failed',
-        description: error instanceof Error ? error.message : 'Please try again later.',
-        variant: 'destructive'});
-    } finally {
-      setIsOptimizing(false);
-    }
+    updateField('description', optimized);
+    setShowOptimized(true);
   };
 
   const revertDescription = () => {
