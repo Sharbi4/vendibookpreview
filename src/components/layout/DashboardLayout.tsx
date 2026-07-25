@@ -288,6 +288,7 @@ export const DashboardLayout = ({ children, mode, onModeChange, isHost }: Dashbo
 
   return (
     <div className="dashboard-shell min-h-screen flex flex-col bg-background">
+      <VerifyReminderModal />
       {/* Mobile Header — only real mobile, tablets get the icon rail */}
       <header className="md:hidden sticky top-0 z-50 bg-background/90 backdrop-blur border-b border-white/5">
         <div className="flex items-center justify-between h-14 px-4 gap-2">
@@ -308,6 +309,7 @@ export const DashboardLayout = ({ children, mode, onModeChange, isHost }: Dashbo
           </div>
           {isHost && <ModeSwitch small />}
           <div className="flex items-center gap-2">
+            <GoProButton compact />
             {user && <ConciergeInbox userId={user.id} />}
             <NotificationCenter />
             <AppDropdownMenu variant="light" />
@@ -376,6 +378,7 @@ export const DashboardLayout = ({ children, mode, onModeChange, isHost }: Dashbo
             <div />
             {isHost && <div className="w-[240px]"><ModeSwitch /></div>}
             <div className="flex items-center gap-3">
+              <GoProButton />
               {user && <ConciergeInbox userId={user.id} />}
               <NotificationCenter />
               <AppDropdownMenu variant="light" />
