@@ -44,11 +44,13 @@ const Pricing = () => {
         description="Compare Vendibook host and seller memberships, listing boosts, and expert services. Monthly or annual billing, no hidden fees."
       />
 
-      <section className="mx-auto max-w-6xl px-4 pt-8 pb-4">
+      <section className="mx-auto max-w-6xl px-4 pt-8 pb-16">
         <PremiumPlansSection />
       </section>
 
-      <section id="upgrades" className="mx-auto max-w-6xl px-4 py-10">
+      <div className="section-band">
+      <section id="upgrades" className="mx-auto max-w-6xl px-4 py-16 md:py-20">
+
         <SectionHeader
           eyebrow="Boosts & add-ons"
           title="One-time tools for when you need a lift."
