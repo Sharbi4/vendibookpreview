@@ -129,6 +129,8 @@ const ShopperDashboard = () => {
         emptyHref="/search"
         emptyCta="Browse listings"
       />
+
+      <PremiumSpotlight />
     </div>
   );
 };
