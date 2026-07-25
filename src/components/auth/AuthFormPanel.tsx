@@ -377,7 +377,7 @@ export const AuthFormPanel = ({ mode, setMode }: AuthFormPanelProps) => {
               title: 'Welcome to Vendibook!',
               description: 'Your account is ready.',
             });
-            navigate(redirectUrl !== '/' ? redirectUrl : '/dashboard');
+            navigate(redirectUrl || '/dashboard');
           } else {
             toast({
               title: 'Check your email!',
@@ -419,7 +419,7 @@ export const AuthFormPanel = ({ mode, setMode }: AuthFormPanelProps) => {
         } else {
           trackLoginSuccess('email');
           trackGA4Login('email');
-          navigate(redirectUrl !== '/' ? redirectUrl : '/dashboard');
+          navigate(redirectUrl || '/dashboard');
         }
       }
     } finally {
