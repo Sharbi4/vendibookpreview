@@ -87,26 +87,10 @@ export const Vendi = ({ accessory = 'none', className, size = 180, still = false
         transition={animate ? { duration: 3.2, repeat: Infinity, ease: 'easeInOut' } : undefined}
       />
 
-      {/* accessory chip — icon-only on mobile to avoid overflowing the
-          scaled canvas next to the mascot on a narrow phone stage. */}
-      {acc && (
-        <motion.div
-          className={cn(
-            'absolute right-[6%] top-[4%] flex items-center rounded-full border border-border/60 bg-background/95 shadow-lg backdrop-blur',
-            isMobile
-              ? 'h-7 w-7 justify-center p-0'
-              : 'gap-1 px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-foreground',
-          )}
-          initial={animate ? { scale: 0, rotate: -20 } : undefined}
-          animate={animate ? { scale: 1, rotate: 0 } : undefined}
-          transition={{ type: 'spring', stiffness: 260, damping: 18, delay: 0.2 }}
-          aria-label={acc.label}
-          title={acc.label}
-        >
-          <acc.Icon className={isMobile ? 'h-3.5 w-3.5 text-primary' : 'h-3 w-3 text-primary'} strokeWidth={2.5} />
-          {!isMobile && acc.label}
-        </motion.div>
-      )}
+      {/* Accessory chip removed — the SEARCH / CALENDAR / CAMERA / DASHBOARD
+          chips were internal scene labels bleeding into user-facing UI.
+          Prop is still accepted for backward compatibility, but never
+          rendered. */}
     </div>
   );
 };
