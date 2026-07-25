@@ -3925,14 +3925,14 @@ export const PublishWizard: React.FC = () => {
                     })}
                   </div>
 
-                  <div className="flex gap-3">
-                    <Button variant="dark-shine" onClick={() => setStep('location')}>Back</Button>
-                    <Button variant="dark-shine" onClick={saveStep} disabled={isSaving}>
-                      {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
-                      Continue
-                      <ChevronRight className="w-4 h-4 ml-2" />
-                    </Button>
-                  </div>
+                  <PrimaryActionBar
+                    secondary={{ label: 'Back', onClick: () => setStep('location') }}
+                    primary={{
+                      label: isSaving ? 'Saving…' : 'Continue',
+                      onClick: saveStep,
+                      disabled: isSaving,
+                    }}
+                  />
                 </div>
               )}
 
