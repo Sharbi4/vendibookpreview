@@ -215,7 +215,7 @@ const SellerLandingPage = ({
           </section>
 
           {/* Sell, rent, or both */}
-          <section aria-labelledby="hybrid-heading" className="rounded-3xl border border-border bg-card p-8 md:p-10 space-y-5">
+          <section aria-labelledby="hybrid-heading" className="rounded-2xl border border-border bg-card p-8 md:p-10 space-y-5">
             <div className="flex items-center gap-2 text-primary">
               <Calendar className="h-5 w-5" />
               <span className="text-xs uppercase tracking-wide">Sell or rent while you wait</span>
@@ -319,7 +319,7 @@ const SellerLandingPage = ({
           </section>
 
           {/* Secure transaction tools */}
-          <section aria-labelledby="secure-heading" className="rounded-3xl border border-border bg-gradient-to-br from-card to-background p-8 md:p-10 space-y-5">
+          <section aria-labelledby="secure-heading" className="rounded-2xl border border-border bg-gradient-to-br from-card to-background p-8 md:p-10 space-y-5">
             <div className="flex items-center gap-2 text-primary">
               <ShieldCheck className="h-5 w-5" />
               <span className="text-xs uppercase tracking-wide">Optional secure transaction</span>
@@ -379,7 +379,7 @@ const SellerLandingPage = ({
           </section>
 
           {/* Closing CTA */}
-          <section className="rounded-3xl border border-border bg-card p-8 md:p-12 text-center space-y-4">
+          <section className="rounded-2xl border border-border bg-card p-8 md:p-12 text-center space-y-4">
             <h2 className="text-2xl md:text-3xl font-semibold text-foreground">
               Ready to list your {asset}?
             </h2>
