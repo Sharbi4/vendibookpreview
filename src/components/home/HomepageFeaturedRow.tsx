@@ -6,7 +6,7 @@ import { ChevronLeft, ChevronRight, ArrowRight, Crown } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import ListingCard from '@/components/listing/ListingCard';
 import { Skeleton } from '@/components/ui/skeleton';
-import { isListingFeatured } from '@/lib/featured';
+import { isListingFeatured, sortFeaturedFirstFair } from '@/lib/featured';
 import { trackLeadEvent } from '@/lib/leadTracking';
 
 const FEATURED_LIMIT = 12;
@@ -38,8 +38,8 @@ const HomepageFeaturedRow = () => {
         .order('featured_at', { ascending: false })
         .limit(FEATURED_LIMIT);
       if (error) throw error;
-      // Defensive: re-check with helper to filter any rows whose timestamps drifted.
-      return (data ?? []).filter((l) => isListingFeatured(l as any));
+      // Defensive: re-check with helper, then rotate fairly among the featured cohort.
+      return sortFeaturedFirstFair((data ?? []).filter((l) => isListingFeatured(l as any)) as any);
     },
     staleTime: 60000,
   });

@@ -153,7 +153,7 @@ serve(async (req) => {
         results.push({ purchase_id: row.id, action: "promoted_to_paid" });
       }
 
-      // If paid + listing product but no active promo, activate it
+      // If paid + listing product but no active promo, activate it (with stacking + listings sync)
       if (row.listing_id) {
         const { data: existingPromo } = await admin
           .from("listing_promotions")
@@ -170,22 +170,80 @@ serve(async (req) => {
           // deno-lint-ignore no-explicit-any
           const prod = product as any;
           if (prod?.promo_type && prod?.duration_days) {
-            const starts = new Date();
-            const ends = new Date(
-              starts.getTime() + prod.duration_days * 24 * 60 * 60 * 1000,
-            );
-            const { error: promoErr } = await admin.from("listing_promotions").insert({
-              listing_id: row.listing_id,
-              product_id: row.product_id,
-              purchase_id: row.id,
-              promo_type: prod.promo_type,
-              starts_at: starts.toISOString(),
-              ends_at: ends.toISOString(),
-              active: true,
-            });
-            if (promoErr && (promoErr as { code?: string }).code !== "23505") {
-              throw promoErr;
+            const durationMs = prod.duration_days * 24 * 60 * 60 * 1000;
+            const nowMs = Date.now();
+            const isFeaturedProduct =
+              prod.promo_type === "featured_7" ||
+              prod.promo_type === "featured_30" ||
+              prod.promo_type === "top_of_search";
+
+            // Read current featured expiry for stacking.
+            let currentFeaturedExpiresMs = 0;
+            if (isFeaturedProduct) {
+              const { data: lr } = await admin
+                .from("listings")
+                .select("featured_enabled, featured_expires_at")
+                .eq("id", row.listing_id)
+                .maybeSingle();
+              // deno-lint-ignore no-explicit-any
+              const lrAny = lr as any;
+              if (lrAny?.featured_enabled && lrAny?.featured_expires_at) {
+                currentFeaturedExpiresMs = new Date(lrAny.featured_expires_at).getTime();
+              }
             }
+
+            // Stack against existing active promo of the same type.
+            const { data: samePromo } = await admin
+              .from("listing_promotions")
+              .select("id, ends_at")
+              .eq("listing_id", row.listing_id)
+              .eq("promo_type", prod.promo_type)
+              .eq("active", true)
+              .maybeSingle();
+            // deno-lint-ignore no-explicit-any
+            const existingEndsMs = samePromo && (samePromo as any).ends_at
+              ? new Date((samePromo as any).ends_at).getTime()
+              : 0;
+            const promoStartMs = existingEndsMs > nowMs ? existingEndsMs : nowMs;
+            const promoEndMs = promoStartMs + durationMs;
+
+            if (samePromo) {
+              await admin
+                .from("listing_promotions")
+                // deno-lint-ignore no-explicit-any
+                .update({ ends_at: new Date(promoEndMs).toISOString(), purchase_id: row.id } as any)
+                // deno-lint-ignore no-explicit-any
+                .eq("id", (samePromo as any).id);
+            } else {
+              const { error: promoErr } = await admin.from("listing_promotions").insert({
+                listing_id: row.listing_id,
+                product_id: row.product_id,
+                purchase_id: row.id,
+                promo_type: prod.promo_type,
+                starts_at: new Date(nowMs).toISOString(),
+                ends_at: new Date(promoEndMs).toISOString(),
+                active: true,
+              });
+              if (promoErr && (promoErr as { code?: string }).code !== "23505") {
+                throw promoErr;
+              }
+            }
+
+            if (isFeaturedProduct) {
+              const featuredStartMs = currentFeaturedExpiresMs > nowMs ? currentFeaturedExpiresMs : nowMs;
+              const featuredEndsAt = new Date(featuredStartMs + durationMs).toISOString();
+              await admin
+                .from("listings")
+                // deno-lint-ignore no-explicit-any
+                .update({
+                  featured_enabled: true,
+                  featured_at: currentFeaturedExpiresMs > nowMs ? undefined : new Date(nowMs).toISOString(),
+                  featured_expires_at: featuredEndsAt,
+                  featured_source: "paid",
+                } as any)
+                .eq("id", row.listing_id);
+            }
+
             await admin
               .from("monetization_purchases")
               .update({ status: "fulfilled", fulfillment_status: "active" })

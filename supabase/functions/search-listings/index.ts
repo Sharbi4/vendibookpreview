@@ -368,17 +368,30 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Featured-first PRIMARY sort key — boosted listings always surface
-    // on page 1 regardless of the secondary sort. Mirrors src/lib/featured.ts.
+    // Featured-first PRIMARY sort key + fair daily rotation among the featured cohort.
+    // Mirrors src/lib/featured.ts (dailyFeaturedRotationKey).
     const nowIso = new Date().toISOString();
     const isFeatured = (l: any) =>
       !!(l.featured_enabled && l.featured_expires_at && l.featured_expires_at > nowIso);
+    const today = nowIso.slice(0, 10);
+    const rotKey = (l: any): number => {
+      const seed = `${l.id}|${today}`;
+      let h = 2166136261;
+      for (let i = 0; i < seed.length; i++) { h ^= seed.charCodeAt(i); h = Math.imul(h, 16777619); }
+      return h >>> 0;
+    };
+    const featuredTiebreak = (a: any, b: any): number => {
+      const fa = isFeatured(a), fb = isFeatured(b);
+      if (fa !== fb) return fa ? -1 : 1;
+      if (fa && fb) return rotKey(a) - rotKey(b);
+      return 0;
+    };
+
 
     // Apply sorting (featured-first, then requested order)
     if (sort_by === 'distance' && latitude !== undefined && longitude !== undefined) {
       filteredListings.sort((a, b) => {
-        const fa = isFeatured(a), fb = isFeatured(b);
-        if (fa !== fb) return fa ? -1 : 1;
+        const _f = featuredTiebreak(a, b); if (_f !== 0) return _f;
         if (a.distance_miles === null && b.distance_miles === null) return 0;
         if (a.distance_miles === null) return 1;
         if (b.distance_miles === null) return -1;
@@ -386,16 +399,14 @@ Deno.serve(async (req) => {
       });
     } else if (sort_by === 'price_low') {
       filteredListings.sort((a, b) => {
-        const fa = isFeatured(a), fb = isFeatured(b);
-        if (fa !== fb) return fa ? -1 : 1;
+        const _f = featuredTiebreak(a, b); if (_f !== 0) return _f;
         const priceA = a.mode === 'rent' ? (a.price_daily || a.price_hourly || 0) : (a.price_sale || 0);
         const priceB = b.mode === 'rent' ? (b.price_daily || b.price_hourly || 0) : (b.price_sale || 0);
         return priceA - priceB;
       });
     } else if (sort_by === 'price_high') {
       filteredListings.sort((a, b) => {
-        const fa = isFeatured(a), fb = isFeatured(b);
-        if (fa !== fb) return fa ? -1 : 1;
+        const _f = featuredTiebreak(a, b); if (_f !== 0) return _f;
         const priceA = a.mode === 'rent' ? (a.price_daily || a.price_hourly || 0) : (a.price_sale || 0);
         const priceB = b.mode === 'rent' ? (b.price_daily || b.price_hourly || 0) : (b.price_sale || 0);
         return priceB - priceA;
@@ -403,8 +414,7 @@ Deno.serve(async (req) => {
     } else if (sort_by === 'relevance' && query && query.trim()) {
       const searchLower = query.toLowerCase();
       filteredListings.sort((a, b) => {
-        const fa = isFeatured(a), fb = isFeatured(b);
-        if (fa !== fb) return fa ? -1 : 1;
+        const _f = featuredTiebreak(a, b); if (_f !== 0) return _f;
         const aTitleMatch = a.title?.toLowerCase().includes(searchLower) ? 0 : 1;
         const bTitleMatch = b.title?.toLowerCase().includes(searchLower) ? 0 : 1;
         if (aTitleMatch !== bTitleMatch) return aTitleMatch - bTitleMatch;
@@ -413,8 +423,7 @@ Deno.serve(async (req) => {
     } else {
       // Default: newest (featured-first)
       filteredListings.sort((a, b) => {
-        const fa = isFeatured(a), fb = isFeatured(b);
-        if (fa !== fb) return fa ? -1 : 1;
+        const _f = featuredTiebreak(a, b); if (_f !== 0) return _f;
         return new Date(b.published_at || b.created_at).getTime() - new Date(a.published_at || a.created_at).getTime();
       });
     }
