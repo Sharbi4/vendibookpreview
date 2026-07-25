@@ -2161,11 +2161,14 @@ export const PublishWizard: React.FC = () => {
                     )}
                   </div>
 
-                  <Button onClick={isGuestDraft && !user ? handleDetailsSave : saveStep} disabled={isSaving || allPhotos.length < 3}>
-                    {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
-                    Continue
-                    <ChevronRight className="w-4 h-4 ml-2" />
-                  </Button>
+                  <PrimaryActionBar
+                    helper="At least 3 photos are required to continue."
+                    primary={{
+                      label: isSaving ? 'Saving…' : 'Continue',
+                      onClick: isGuestDraft && !user ? handleDetailsSave : saveStep,
+                      disabled: isSaving || allPhotos.length < 3,
+                    }}
+                  />
                 </div>
               )}
 
