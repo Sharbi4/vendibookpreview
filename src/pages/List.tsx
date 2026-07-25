@@ -259,7 +259,7 @@ const ListingBuildAnimation = () => {
 
 const HowItWorks = () => {
   const steps = [
-    { label: 'Create Your Listing', desc: 'Use our step-by-step wizard to build a professional listing. Pick a category, add photos, set your price — done in minutes.' },
+    { icon: LayoutGrid, label: 'Create Your Listing', desc: 'Use our step-by-step wizard to build a professional listing. Pick a category, add photos, set your price — done in minutes.' },
     { icon: Store, label: 'Go Live', desc: 'Publish a professional storefront. Choose to rent or sell. Accept card payments online or cash in person.' },
     { icon: Share2, label: 'Share & Grow', desc: 'Use the built-in Share Kit to post to social media, generate QR codes, and track who\'s clicking.' },
     { icon: Wallet, label: 'Get Paid', desc: 'Online payments are held in escrow and released securely. Cash payments are handled directly between you and your customer.' }];
