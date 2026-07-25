@@ -89,47 +89,73 @@ const ShopperDashboard = () => {
   }, [bookings]);
 
   return (
-    <div className="max-w-[1320px] mx-auto space-y-6 sm:space-y-8">
+    <div className="max-w-[1320px] mx-auto section-stack">
       <OverviewGreeting firstName={firstName} persona="Buying" isVerified={isVerified} />
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        <KpiCard
-          ember
-          label="Active orders"
-          value={activeOrders}
-          hint={activeOrders > 0 ? 'In progress' : 'Nothing active'}
-          href="/dashboard?view=shopper&tab=orders"
-        />
-        <KpiCard
-          label="Upcoming rentals"
-          value={upcomingRentals}
-          hint={upcomingRentals > 0 ? 'Ready to go' : 'None yet'}
-          href="/dashboard?view=shopper"
-        />
-        <KpiCard
-          label="Saved listings"
-          value={savedCount}
-          hint={savedCount > 0 ? 'Your shortlist' : 'Save with the heart'}
-          href="/dashboard?view=shopper&tab=favorites"
-        />
-        <KpiCard
-          label="Unread messages"
-          value={unreadMessageCount}
-          hint={unreadMessageCount > 0 ? 'New replies' : 'Inbox zero'}
-          href="/messages"
-        />
-      </div>
+      <section aria-labelledby="shop-glance">
+        <header className="section-header">
+          <h2 id="shop-glance" className="section-title">At a glance</h2>
+          <p className="section-subtitle">Your active orders, rentals, and messages.</p>
+        </header>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+          <KpiCard
+            ember
+            label="Active orders"
+            value={activeOrders}
+            hint={activeOrders > 0 ? 'In progress' : 'Nothing active'}
+            href="/dashboard?view=shopper&tab=orders"
+          />
+          <KpiCard
+            label="Upcoming rentals"
+            value={upcomingRentals}
+            hint={upcomingRentals > 0 ? 'Ready to go' : 'None yet'}
+            href="/dashboard?view=shopper"
+          />
+          <KpiCard
+            label="Saved listings"
+            value={savedCount}
+            hint={savedCount > 0 ? 'Your shortlist' : 'Save with the heart'}
+            href="/dashboard?view=shopper&tab=favorites"
+          />
+          <KpiCard
+            label="Unread messages"
+            value={unreadMessageCount}
+            hint={unreadMessageCount > 0 ? 'New replies' : 'Inbox zero'}
+            href="/messages"
+          />
+        </div>
+      </section>
 
-      {actionItems.length > 0 && <ActionRequiredStack items={actionItems} />}
+      {actionItems.length > 0 && (
+        <>
+          <hr className="section-divider" />
+          <section aria-labelledby="shop-attention">
+            <header className="section-header">
+              <h2 id="shop-attention" className="section-title">Needs your attention</h2>
+              <p className="section-subtitle">A few things to keep your bookings on track.</p>
+            </header>
+            <ActionRequiredStack items={actionItems} />
+          </section>
+        </>
+      )}
 
-      <RecentActivityStrip
-        title="Recent bookings"
-        items={activity}
-        viewAllHref="/dashboard?view=shopper&tab=orders"
-        emptyText="No bookings yet. Find your next rental."
-        emptyHref="/search"
-        emptyCta="Browse listings"
-      />
+      <hr className="section-divider" />
+
+      <section aria-labelledby="shop-activity">
+        <header className="section-header">
+          <h2 id="shop-activity" className="section-title">Recent bookings</h2>
+          <p className="section-subtitle">Your last three requests and their status.</p>
+        </header>
+        <RecentActivityStrip
+          items={activity}
+          viewAllHref="/dashboard?view=shopper&tab=orders"
+          emptyText="No bookings yet. Find your next rental."
+          emptyHref="/search"
+          emptyCta="Browse listings"
+        />
+      </section>
+
+      <hr className="section-divider" />
 
       <PremiumSpotlight />
     </div>

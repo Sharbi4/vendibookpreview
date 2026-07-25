@@ -113,7 +113,7 @@ const HostDashboard = () => {
   }, [bookings]);
 
   return (
-    <div className="max-w-[1320px] mx-auto space-y-6 sm:space-y-8">
+    <div className="max-w-[1320px] mx-auto section-stack">
       {!stripeLoading && (
         <StripeNotificationBubble
           isConnected={isConnected}
@@ -128,66 +128,90 @@ const HostDashboard = () => {
       <OverviewGreeting firstName={firstName} persona="Hosting" isVerified={isVerified} />
 
       {/* KPI row — ember reserved for Earnings */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        <KpiCard
-          ember
-          label="Earnings · MTD"
-          value={monthlyRevenue}
-          format={(n) => `$${n.toLocaleString()}`}
-          hint={nextPayoutHint}
-          href="/dashboard?view=host&tab=payouts"
-        />
-        <KpiCard
-          label="Active listings"
-          value={stats.published}
-          hint={stats.drafts > 0 ? `${stats.drafts} draft${stats.drafts > 1 ? 's' : ''}` : 'All live'}
-          href="/host/listings"
-        />
-        <KpiCard
-          label="Pending requests"
-          value={bookingStats.pending}
-          hint={bookingStats.pending > 0 ? 'Awaiting reply' : 'All clear'}
-          href="/host/bookings"
-        />
-        {isFreeTier && pendingOffers.length === 0 ? (
-          <Link
-            to="/pricing"
-            aria-label="Unlock Pro"
-            className="block relative rounded-[18px] gold-card p-5 sm:p-6 h-full hover:-translate-y-0.5 transition-transform"
-          >
-            <div className="flex items-center justify-between gap-2">
-              <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#1A1400]">
-                Unlock Pro
-              </span>
-              <Crown className="h-4 w-4 text-[#1A1400]" strokeWidth={2.4} />
-            </div>
-            <div className="mt-3 sm:mt-4 text-[24px] sm:text-[26px] font-extrabold tracking-tight text-[#1A1400] leading-tight">
-              Featured &amp; lower fees
-            </div>
-            <div className="mt-2 text-[12px] font-semibold text-[#2b2100]">
-              See plans →
-            </div>
-          </Link>
-        ) : (
+      <section aria-labelledby="dash-glance">
+        <header className="section-header">
+          <h2 id="dash-glance" className="section-title">At a glance</h2>
+          <p className="section-subtitle">Your key metrics from the last 30 days.</p>
+        </header>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           <KpiCard
-            label="Open offers"
-            value={pendingOffers.length}
-            hint={pendingOffers.length > 0 ? 'Awaiting reply' : 'Nothing pending'}
-            href="/dashboard?view=host&tab=sales"
+            ember
+            label="Earnings · MTD"
+            value={monthlyRevenue}
+            format={(n) => `$${n.toLocaleString()}`}
+            hint={nextPayoutHint}
+            href="/dashboard?view=host&tab=payouts"
           />
-        )}
-      </div>
+          <KpiCard
+            label="Active listings"
+            value={stats.published}
+            hint={stats.drafts > 0 ? `${stats.drafts} draft${stats.drafts > 1 ? 's' : ''}` : 'All live'}
+            href="/host/listings"
+          />
+          <KpiCard
+            label="Pending requests"
+            value={bookingStats.pending}
+            hint={bookingStats.pending > 0 ? 'Awaiting reply' : 'All clear'}
+            href="/host/bookings"
+          />
+          {isFreeTier && pendingOffers.length === 0 ? (
+            <Link
+              to="/pricing"
+              aria-label="Unlock Pro"
+              className="block relative rounded-[18px] gold-card p-5 sm:p-6 h-full hover:-translate-y-0.5 transition-transform"
+            >
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#1A1400]">
+                  Unlock Pro
+                </span>
+                <Crown className="h-4 w-4 text-[#1A1400]" strokeWidth={2.4} />
+              </div>
+              <div className="mt-3 sm:mt-4 text-[24px] sm:text-[26px] font-extrabold tracking-tight text-[#1A1400] leading-tight">
+                Featured &amp; lower fees
+              </div>
+              <div className="mt-2 text-[12px] font-semibold text-[#2b2100]">
+                See plans →
+              </div>
+            </Link>
+          ) : (
+            <KpiCard
+              label="Open offers"
+              value={pendingOffers.length}
+              hint={pendingOffers.length > 0 ? 'Awaiting reply' : 'Nothing pending'}
+              href="/dashboard?view=host&tab=sales"
+            />
+          )}
+        </div>
+      </section>
 
-      {actionItems.length > 0 && <ActionRequiredStack items={actionItems} />}
+      {actionItems.length > 0 && (
+        <>
+          <hr className="section-divider" />
+          <section aria-labelledby="dash-attention">
+            <header className="section-header">
+              <h2 id="dash-attention" className="section-title">Needs your attention</h2>
+              <p className="section-subtitle">Clear these to keep bookings and payouts moving.</p>
+            </header>
+            <ActionRequiredStack items={actionItems} />
+          </section>
+        </>
+      )}
 
-      <RecentActivityStrip
-        title="Recent bookings"
-        items={activity}
-        viewAllHref="/host/bookings"
-        emptyText="No bookings yet. Publish or share a listing to attract renters."
-        emptyHref="/host/listings"
-        emptyCta="Manage listings"
-      />
+      <hr className="section-divider" />
+
+      <section aria-labelledby="dash-activity">
+        <header className="section-header">
+          <h2 id="dash-activity" className="section-title">Recent bookings</h2>
+          <p className="section-subtitle">The latest three requests across your listings.</p>
+        </header>
+        <RecentActivityStrip
+          items={activity}
+          viewAllHref="/host/bookings"
+          emptyText="No bookings yet. Publish or share a listing to attract renters."
+          emptyHref="/host/listings"
+          emptyCta="Manage listings"
+        />
+      </section>
 
       <StripeConnectModal
         open={showStripeModal}
@@ -197,8 +221,13 @@ const HostDashboard = () => {
       />
 
       {listings.length > 0 && (
-        <BoostListingPrompt listings={listings as any} userId={user?.id} />
+        <>
+          <hr className="section-divider" />
+          <BoostListingPrompt listings={listings as any} userId={user?.id} />
+        </>
       )}
+
+      <hr className="section-divider" />
 
       <PremiumSpotlight />
     </div>
