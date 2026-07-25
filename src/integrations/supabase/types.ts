@@ -2897,6 +2897,8 @@ export type Database = {
       }
       monetization_purchases: {
         Row: {
+          access_ends_at: string | null
+          access_starts_at: string | null
           amount_cents: number
           created_at: string
           currency: string
@@ -2909,6 +2911,7 @@ export type Database = {
           idempotency_key: string
           listing_id: string | null
           metadata: Json
+          nudge_sent_at: string | null
           paid_at: string | null
           product_id: string
           refund_amount_cents: number | null
@@ -2922,6 +2925,8 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          access_ends_at?: string | null
+          access_starts_at?: string | null
           amount_cents: number
           created_at?: string
           currency?: string
@@ -2934,6 +2939,7 @@ export type Database = {
           idempotency_key: string
           listing_id?: string | null
           metadata?: Json
+          nudge_sent_at?: string | null
           paid_at?: string | null
           product_id: string
           refund_amount_cents?: number | null
@@ -2947,6 +2953,8 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          access_ends_at?: string | null
+          access_starts_at?: string | null
           amount_cents?: number
           created_at?: string
           currency?: string
@@ -2959,6 +2967,7 @@ export type Database = {
           idempotency_key?: string
           listing_id?: string | null
           metadata?: Json
+          nudge_sent_at?: string | null
           paid_at?: string | null
           product_id?: string
           refund_amount_cents?: number | null
