@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, X, Loader2, Check, RotateCcw, Ruler, Grid3X3 } from 'lucide-react';
+import { Plus, X, RotateCcw, Ruler, Grid3X3 } from 'lucide-react';
 import { ListingFormData, AMENITIES_BY_CATEGORY, ListingCategory, FREIGHT_CATEGORY_LABELS, FreightCategory } from '@/types/listing';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -7,10 +7,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { InfoTooltip } from '@/components/ui/info-tooltip';
 import { cn } from '@/lib/utils';
+import { AIOptimizeButton } from './AIOptimizeButton';
 
 interface StepDetailsProps {
   formData: ListingFormData;
