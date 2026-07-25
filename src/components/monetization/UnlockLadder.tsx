@@ -16,6 +16,7 @@ import { startMonetizationCheckout } from '@/lib/monetization/products';
 import { buildCheckoutReturnPaths } from '@/lib/monetization/returnRoutes';
 import { resolveUnlockLadder, type LadderOption } from '@/lib/monetization/unlockLadder';
 import { getToolBySlug } from '@/lib/tools/catalog';
+import { useHostEntitlements } from '@/hooks/useHostEntitlements';
 import { trackLeadEvent } from '@/lib/leadTracking';
 import { toast } from 'sonner';
 
@@ -47,6 +48,7 @@ export function UnlockLadder({
   const listing = useMonetizationProducts('listing_upgrade');
   const [busySlug, setBusySlug] = React.useState<string | null>(null);
   const { requestCheckout } = useSubscriptionConsent();
+  const { tier: currentTier } = useHostEntitlements();
 
   const tool = getToolBySlug(toolSlug);
   const products = React.useMemo(
@@ -54,10 +56,11 @@ export function UnlockLadder({
     [subs.products, services.products, permits.products, listing.products],
   );
   const ladder = React.useMemo(
-    () => resolveUnlockLadder(toolSlug, products),
-    [toolSlug, products],
+    () => resolveUnlockLadder(toolSlug, products, currentTier),
+    [toolSlug, products, currentTier],
   );
   const loading = subs.loading || services.loading || permits.loading || listing.loading;
+
 
   const handleSelect = async (option: LadderOption) => {
     setBusySlug(option.productSlug);
