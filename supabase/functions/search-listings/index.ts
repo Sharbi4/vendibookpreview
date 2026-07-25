@@ -368,11 +368,25 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Featured-first PRIMARY sort key — boosted listings always surface
-    // on page 1 regardless of the secondary sort. Mirrors src/lib/featured.ts.
+    // Featured-first PRIMARY sort key + fair daily rotation among the featured cohort.
+    // Mirrors src/lib/featured.ts (dailyFeaturedRotationKey).
     const nowIso = new Date().toISOString();
     const isFeatured = (l: any) =>
       !!(l.featured_enabled && l.featured_expires_at && l.featured_expires_at > nowIso);
+    const today = nowIso.slice(0, 10);
+    const rotKey = (l: any): number => {
+      const seed = `${l.id}|${today}`;
+      let h = 2166136261;
+      for (let i = 0; i < seed.length; i++) { h ^= seed.charCodeAt(i); h = Math.imul(h, 16777619); }
+      return h >>> 0;
+    };
+    const featuredTiebreak = (a: any, b: any): number => {
+      const fa = isFeatured(a), fb = isFeatured(b);
+      if (fa !== fb) return fa ? -1 : 1;
+      if (fa && fb) return rotKey(a) - rotKey(b);
+      return 0;
+    };
+
 
     // Apply sorting (featured-first, then requested order)
     if (sort_by === 'distance' && latitude !== undefined && longitude !== undefined) {
