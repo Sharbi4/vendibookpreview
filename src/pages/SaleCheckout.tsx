@@ -822,7 +822,13 @@ const SaleCheckout = () => {
 
           <div className="grid lg:grid-cols-5 gap-8">
             {/* Main Wizard - Left Side */}
-            <div className="lg:col-span-3">
+            <div className="lg:col-span-3 space-y-4">
+              {/* Persistent step roadmap driven by the real wizard state */}
+              <JourneyProgress
+                steps={journeySteps}
+                currentIndex={journeyIndex}
+                estimate="About 2 minutes"
+              />
               <div className="glass-panel overflow-hidden">
                 {/* Step Content */}
                 <div className="p-6">
