@@ -72,6 +72,42 @@ serve(async (req) => {
       );
     }
 
+    // Entitlement guard: never charge a user for something they already own.
+    // Uses the unified server-side helpers (resolveHostTier + resolveToolAccess).
+    // Add-on SKUs (featured stack, notary, freight...) are pass-through — they
+    // don't grant a persistent capability and are allowed to re-purchase.
+    const classified = classifyProduct({
+      slug: product.slug,
+      billing_type: product.billing_type,
+      metadata: product.metadata ?? null,
+    });
+    if (classified.kind === "subscription" || classified.kind === "weekly_pass") {
+      if (classified.grantsTier) {
+        const currentTier = await resolveHostTier(user.id);
+        if (tierAtLeast(currentTier, classified.grantsTier)) {
+          log("already entitled — tier", { current: currentTier, wants: classified.grantsTier });
+          return alreadyEntitledError({
+            current: currentTier,
+            message:
+              classified.kind === "weekly_pass"
+                ? "Your current plan already includes this. No need to buy the weekly pass."
+                : "You're already on this plan or better. Manage or upgrade from your account.",
+          });
+        }
+      }
+    } else if (classified.kind === "tool_unlock" && classified.toolSlug) {
+      const access = await resolveToolAccess(user.id, classified.toolSlug);
+      if (access.unlocked) {
+        log("already entitled — tool", { tool: classified.toolSlug, reason: access.reason });
+        return alreadyEntitledError({
+          current: access.tier,
+          message: "This tool is already unlocked on your account.",
+        });
+      }
+    }
+
+
+
     // ROSCA / California AB 2863: recurring subscriptions require an affirmative
     // consent record captured before checkout. Reject the request if the client
     // did not pass a consent_id or if the consent row does not belong to this
