@@ -56,7 +56,22 @@ export function ProductPricingCard({
   };
 
 
+  // Listing-scoped promo types write directly to a specific listing row via
+  // the monetization-webhook. Buying one without a listing context would
+  // orphan the charge, so require the caller to pass listingId first.
+  const requiresListingId =
+    product.promo_type === 'featured_7' ||
+    product.promo_type === 'featured_30' ||
+    product.promo_type === 'top_of_search_7';
+  const missingListingId = requiresListingId && !listingId;
+
   const handleClick = async () => {
+    if (missingListingId) {
+      toast.error('Pick a listing first to attach this boost.', {
+        description: 'Open your listing → Boost this listing, or start from the wizard.',
+      });
+      return;
+    }
     try {
       if (onBeforeCheckout) {
         const ok = await onBeforeCheckout();
@@ -86,6 +101,7 @@ export function ProductPricingCard({
       setBusy(false);
     }
   };
+
 
   return (
     <div
