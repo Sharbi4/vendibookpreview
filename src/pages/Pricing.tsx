@@ -52,80 +52,110 @@ const Pricing = () => {
         <SectionHeader
           eyebrow="Boosts & add-ons"
           title="One-time tools for when you need a lift."
-          description="Pay once for placement, a badge, or expert help — no subscription required. Members get automatic discounts at checkout."
+          description="Pay once for placement or expert help — no subscription required. Members get automatic discounts at checkout."
         />
 
-
         {/* Listing boosts */}
-        <div className="mt-16">
-          <SectionHeader
-            eyebrow="Boosts"
-            title="One-time boosts for your listings"
-            description="Pay once for placement or a badge — no subscription required."
-          />
-          {loadingUpgrades ? (
-            <div className="mt-8 flex justify-center">
-              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-            </div>
-          ) : (
-            <div className="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {listingUpgrades.map((p) => {
-                const paths = buildCheckoutReturnPaths(p.slug);
-                return (
-                  <ProductPricingCard
-                    key={p.id}
-                    product={p}
-                    ctaLabel="Buy boost"
-                    successPath={paths.successPath}
-                    cancelPath={paths.cancelPath}
-                  />
-                );
-              })}
-            </div>
-          )}
-        </div>
+        {(loadingUpgrades || listingUpgrades.length > 0) && (
+          <div className="mt-16">
+            <SectionHeader
+              eyebrow="Boosts"
+              title="One-time boosts for your listings"
+              description="Pay once for placement — no subscription required."
+            />
+            {loadingUpgrades ? (
+              <div className="mt-8 flex justify-center">
+                <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+              </div>
+            ) : (
+              <div className="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {listingUpgrades.map((p) => {
+                  const paths = buildCheckoutReturnPaths(p.slug);
+                  return (
+                    <ProductPricingCard
+                      key={p.id}
+                      product={p}
+                      ctaLabel="Buy boost"
+                      successPath={paths.successPath}
+                      cancelPath={paths.cancelPath}
+                    />
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Seller services */}
-        <div className="mt-16">
-          <SectionHeader
-            eyebrow="Seller services"
-            title="Expert help, on demand"
-            description="Human review, copywriting, and pricing analysis. Members get automatic discounts at checkout."
-          />
-          {loadingSeller ? (
-            <div className="mt-8 flex justify-center">
-              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-            </div>
-          ) : (
-            <div className="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {sellerAddons.map((p) => {
-                const paths = buildCheckoutReturnPaths(p.slug);
-                return (
-                  <ProductPricingCard
-                    key={p.id}
-                    product={p}
-                    ctaLabel="Add service"
-                    successPath={paths.successPath}
-                    cancelPath={paths.cancelPath}
-                  />
-                );
-              })}
-            </div>
-          )}
-        </div>
+        {(loadingSeller || sellerAddons.length > 0) && (
+          <div className="mt-16">
+            <SectionHeader
+              eyebrow="Seller services"
+              title="Expert help, on demand"
+              description="Human review and copywriting. Members get automatic discounts at checkout."
+            />
+            {loadingSeller ? (
+              <div className="mt-8 flex justify-center">
+                <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+              </div>
+            ) : (
+              <div className="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {sellerAddons.map((p) => {
+                  const paths = buildCheckoutReturnPaths(p.slug);
+                  return (
+                    <ProductPricingCard
+                      key={p.id}
+                      product={p}
+                      ctaLabel="Add service"
+                      successPath={paths.successPath}
+                      cancelPath={paths.cancelPath}
+                    />
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
 
-        {/* Buyer services */}
-        <div className="mt-16">
-          <SectionHeader
-            eyebrow="Buyer services"
-            title="Buy with confidence"
-            description="Purchase reviews and readiness tools designed for equipment and space buyers."
-          />
-          {loadingBuyer ? (
-            <div className="mt-8 flex justify-center">
-              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-            </div>
-          ) : (
+        {/* Permit upgrades */}
+        {(loadingPermit || permitUpgrades.length > 0) && (
+          <div className="mt-16">
+            <SectionHeader
+              eyebrow="Permits"
+              title="Get to open, faster"
+              description="A step-by-step permit roadmap for your city with document links."
+            />
+            {loadingPermit ? (
+              <div className="mt-8 flex justify-center">
+                <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+              </div>
+            ) : (
+              <div className="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {permitUpgrades.map((p) => {
+                  const paths = buildCheckoutReturnPaths(p.slug);
+                  return (
+                    <ProductPricingCard
+                      key={p.id}
+                      product={p}
+                      ctaLabel="Get roadmap"
+                      successPath={paths.successPath}
+                      cancelPath={paths.cancelPath}
+                    />
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Buyer services — only render when catalog has any */}
+        {!loadingBuyer && buyerServices.length > 0 && (
+          <div className="mt-16">
+            <SectionHeader
+              eyebrow="Buyer services"
+              title="Buy with confidence"
+              description="Purchase reviews and readiness tools for equipment and space buyers."
+            />
             <div className="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {buyerServices.map((p) => {
                 const paths = buildCheckoutReturnPaths(p.slug);
@@ -140,8 +170,8 @@ const Pricing = () => {
                 );
               })}
             </div>
-          )}
-        </div>
+          </div>
+        )}
 
         <div className="mt-10">
           <TrustModule variant="compact" points={PAYMENT_TRUST_POINTS} />
