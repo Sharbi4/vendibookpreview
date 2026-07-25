@@ -262,6 +262,74 @@ serve(async (req) => {
     .select("id");
   if (featErr) log("featured expiry sweep failed", { msg: featErr.message });
 
+  // ---- Account-scoped time-boxed pass expiry (Pro Weekly Pass, etc.) -----
+  // Any monetization_purchases row with access_ends_at < now flips to
+  // fulfillment_status='expired' so useHostEntitlements stops promoting the tier.
+  let passesExpired = 0;
+  try {
+    const { data: expired, error: expErr } = await admin
+      .from("monetization_purchases")
+      .update({ fulfillment_status: "expired" })
+      .lt("access_ends_at", nowIso)
+      .neq("fulfillment_status", "expired")
+      .not("access_ends_at", "is", null)
+      .select("id");
+    if (expErr) log("pass expiry sweep failed", { msg: expErr.message });
+    passesExpired = expired?.length ?? 0;
+  } catch (e) {
+    log("pass expiry sweep threw", { msg: String(e) });
+  }
+
+  // ---- Day-5 nudge for passes ending in ~48h -----
+  let nudgesSent = 0;
+  try {
+    const in48h = new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString();
+    const in24h = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+    const { data: soon } = await admin
+      .from("monetization_purchases")
+      .select("id, user_id, access_ends_at, product:monetization_products(name, metadata)")
+      .gt("access_ends_at", in24h)
+      .lt("access_ends_at", in48h)
+      .is("nudge_sent_at", null)
+      .in("fulfillment_status", ["active"])
+      .limit(100);
+    for (const row of soon ?? []) {
+      // deno-lint-ignore no-explicit-any
+      const r = row as any;
+      if (!r.user_id) continue;
+      const endsAt = new Date(r.access_ends_at);
+      const days = Math.max(1, Math.round((endsAt.getTime() - Date.now()) / 86_400_000));
+      try {
+        // deno-lint-ignore no-explicit-any
+        const { data: prof } = await (admin as any).from("profiles")
+          .select("email, first_name").eq("id", r.user_id).maybeSingle();
+        if (!prof?.email) continue;
+        await admin.functions.invoke("send-transactional-email", {
+          body: {
+            templateName: "weekly-pass-ending",
+            recipientEmail: prof.email,
+            idempotencyKey: `weekly-pass-nudge-${r.id}`,
+            templateData: {
+              firstName: prof.first_name,
+              daysLeft: days,
+              endsAt: endsAt.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }),
+              monthlyPrice: "$89/mo",
+              plansUrl: "/pricing",
+            },
+          },
+        });
+        await admin.from("monetization_purchases").update({ nudge_sent_at: nowIso }).eq("id", r.id);
+        nudgesSent++;
+      } catch (e) {
+        log("nudge send failed", { id: r.id, msg: String(e) });
+      }
+    }
+  } catch (e) {
+    log("nudge sweep threw", { msg: String(e) });
+  }
+
+
+
   return json({
     scanned: candidates?.length ?? 0,
     results,
