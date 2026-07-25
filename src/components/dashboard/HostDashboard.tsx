@@ -20,6 +20,9 @@ import { useRevenueAnalytics } from '@/hooks/useRevenueAnalytics';
 import { useHostOffers } from '@/hooks/useHostOffers';
 import { useUnreadMessageCount } from '@/hooks/useUnreadMessageCount';
 import { useAuth } from '@/contexts/AuthContext';
+import { useHostEntitlements } from '@/hooks/useHostEntitlements';
+import { Link } from 'react-router-dom';
+import { Crown } from 'lucide-react';
 
 /**
  * NEW OVERVIEW — one viewport-ish surface:
