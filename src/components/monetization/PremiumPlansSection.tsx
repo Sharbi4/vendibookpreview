@@ -162,10 +162,14 @@ export function PremiumPlansSection({ compact = false }: Props) {
             </div>
           </section>
 
+          {/* WEEKLY PASS — non-renewing 7-day Pro trial */}
+          <ProWeeklyPassCard />
+
           {/* COMPARISON */}
           <section className="mt-10">
             <PlansComparisonTable />
           </section>
+
 
           {/* FAQ */}
           <section className="mt-14">
