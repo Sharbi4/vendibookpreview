@@ -786,6 +786,34 @@ export const trackScrollDepth = (depth: 25 | 50 | 75 | 100): void => {
   });
 };
 
+// ========== Checkout Intro ("Step 0") ==========
+type CheckoutIntroPayload = {
+  listingId: string;
+  flow: 'sale' | 'rental';
+  price: number;
+};
+
+export const trackCheckoutIntroViewed = (p: CheckoutIntroPayload): void => {
+  trackEvent({
+    category: 'Checkout',
+    action: 'intro_viewed',
+    label: p.flow,
+    value: Math.round(p.price),
+    metadata: { listing_id: p.listingId, flow: p.flow },
+  });
+};
+
+export const trackCheckoutIntroContinued = (p: CheckoutIntroPayload): void => {
+  trackEvent({
+    category: 'Checkout',
+    action: 'intro_continued',
+    label: p.flow,
+    value: Math.round(p.price),
+    metadata: { listing_id: p.listingId, flow: p.flow },
+  });
+};
+
+
 // ========== Facebook CAPI Helpers ==========
 // Re-export FB CAPI functions for direct use where needed
 export { 

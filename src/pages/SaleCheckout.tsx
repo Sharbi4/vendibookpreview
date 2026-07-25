@@ -26,6 +26,8 @@ import StickySummary from '@/components/shared/StickySummary';
 // Step components
 import { PurchaseStepDelivery, PurchaseStepInfo, PurchaseStepReview, type BuyerInfo } from '@/components/purchase-wizard';
 import StepConfirmPurchase from '@/components/checkout/StepConfirmPurchase';
+import CheckoutIntro from '@/components/checkout/CheckoutIntro';
+
 import StepAddOns, { type CheckoutAddOn } from '@/components/checkout/StepAddOns';
 import { ReferralCodeField } from '@/components/referrals/ReferralCodeField';
 import { FinalReviewSheet } from '@/components/transaction/FinalReviewSheet';
@@ -35,7 +37,11 @@ import { ProtectionOptInCard } from '@/components/protected-sale/ProtectionOptIn
 import { useCheckoutState } from '@/hooks/useCheckoutState';
 
 type FulfillmentSelection = 'pickup' | 'delivery' | 'vendibook_freight';
-type CheckoutStep = 'confirm' | 'delivery' | 'addons' | 'details' | 'review';
+type CheckoutStep = 'intro' | 'confirm' | 'delivery' | 'addons' | 'details' | 'review';
+
+// High-value sale threshold. Below this we skip the intro screen and drop
+// buyers straight into the wizard (small tool/add-on purchases).
+const SALE_INTRO_MIN_PRICE = 1000;
 
 const CHECKOUT_STEPS = [
   { step: 1, label: 'Confirm',   short: 'Confirm' },
@@ -46,10 +52,11 @@ const CHECKOUT_STEPS = [
 ];
 
 const STEP_NUM: Record<CheckoutStep, number> = {
-  confirm: 1, delivery: 2, addons: 3, details: 4, review: 5,
+  intro: 0, confirm: 1, delivery: 2, addons: 3, details: 4, review: 5,
 };
 
 const getStepNumber = (step: CheckoutStep): number => STEP_NUM[step];
+
 
 const SaleCheckout = () => {
   const { listingId } = useParams();
@@ -81,7 +88,7 @@ const SaleCheckout = () => {
     addOnSelections: Record<string, boolean>;
   }
   const persist = useCheckoutState<PersistedState>(sessionKey, {
-    step: 'confirm',
+    step: 'intro',
     buyerInfo: {
       firstName: '', lastName: '', businessName: '', email: '', phone: '',
       address1: '', address2: '', city: '', state: '', zipCode: '',
@@ -97,6 +104,7 @@ const SaleCheckout = () => {
     persist.setState((prev) => ({ ...prev, step: s }));
     persist.bumpFurthestStep(STEP_NUM[s]);
   };
+
 
   const buyerInfo = persist.state.buyerInfo;
   const setBuyerInfo = (next: BuyerInfo | ((p: BuyerInfo) => BuyerInfo)) => {
@@ -251,6 +259,20 @@ const SaleCheckout = () => {
 
   // Derived values - Use accepted offer price if available, otherwise listing price
   const priceSale = acceptedOfferPrice || listing?.price_sale || 0;
+
+  // Threshold guard: small purchases skip the intro screen entirely.
+  useEffect(() => {
+    if (
+      currentStep === 'intro' &&
+      !isListingLoading &&
+      priceSale > 0 &&
+      priceSale < SALE_INTRO_MIN_PRICE
+    ) {
+      setCurrentStep('confirm');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentStep, isListingLoading, priceSale]);
+
   const deliveryFee = listing?.delivery_fee || 0;
   const fulfillmentType = listing?.fulfillment_type || 'pickup';
   const vendibookFreightEnabled = listing?.vendibook_freight_enabled || false;
@@ -699,9 +721,36 @@ const SaleCheckout = () => {
     },
   ];
 
+  // "Step 0" — enterprise-grade intro. Shown once per checkout session for
+  // high-value sales; small purchases fall through to the wizard.
+  if (currentStep === 'intro') {
+    return (
+      <>
+        <SEO title={`Checkout - ${listing.title}`} description={`Complete your purchase of ${listing.title}`} />
+        <div className="min-h-screen bg-background py-8 sm:py-12 px-4">
+          <CheckoutIntro
+            listingId={listing.id}
+            listingTitle={listing.title}
+            coverImageUrl={listing.cover_image_url ?? (listing.image_urls?.[0] ?? null)}
+            city={listing.city}
+            state={listing.state}
+            price={priceSale}
+            sellerName={sellerName}
+            sellerVerified={Boolean((host as { identity_verified?: boolean } | null | undefined)?.identity_verified)}
+            flow="sale"
+            financingEligible={priceSale >= 150 && acceptCardPayment}
+            onBack={() => navigate(`/listing/${listingId}`)}
+            onContinue={() => setCurrentStep('confirm')}
+          />
+        </div>
+      </>
+    );
+  }
+
   return (
     <>
       <SEO title={`Checkout - ${listing.title}`} description={`Complete your purchase of ${listing.title}`} />
+
       <CheckoutChrome
         steps={CHECKOUT_STEPS}
         currentStep={currentStepNumber}
@@ -758,6 +807,8 @@ const SaleCheckout = () => {
                           sellerVerified={Boolean((host as { identity_verified?: boolean } | null | undefined)?.identity_verified)}
                           specSummary={(listing as { specifications?: string | null }).specifications ?? null}
                           onContinue={() => setCurrentStep('delivery')}
+                          onBack={priceSale >= SALE_INTRO_MIN_PRICE ? () => setCurrentStep('intro') : undefined}
+
                         />
                       )}
 

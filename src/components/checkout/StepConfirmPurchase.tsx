@@ -1,4 +1,4 @@
-import { ShieldCheck, MapPin, BadgeCheck } from 'lucide-react';
+import { ShieldCheck, MapPin, BadgeCheck, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface StepConfirmPurchaseProps {
@@ -17,6 +17,7 @@ interface StepConfirmPurchaseProps {
   sellerVerified?: boolean;
   specSummary?: string | null;
   onContinue: () => void;
+  onBack?: () => void;
 }
 
 const money = (n: number) =>
@@ -29,7 +30,9 @@ const StepConfirmPurchase = ({
   sellerVerified,
   specSummary,
   onContinue,
+  onBack,
 }: StepConfirmPurchaseProps) => {
+
   const cover =
     listing.cover_image_url || listing.image_urls?.[0] || '/placeholder.svg';
   const location = [listing.city, listing.state].filter(Boolean).join(', ');
@@ -139,11 +142,25 @@ const StepConfirmPurchase = ({
         </p>
       </div>
 
-      <Button onClick={onContinue} size="lg" className="w-full">
-        Looks right — choose delivery
-      </Button>
+      <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-3">
+        {onBack ? (
+          <Button
+            variant="ghost"
+            size="lg"
+            onClick={onBack}
+            className="h-11 rounded-lg text-muted-foreground hover:text-foreground gap-2"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back
+          </Button>
+        ) : <span />}
+        <Button onClick={onContinue} size="lg" className="sm:min-w-[280px]">
+          Looks right — choose delivery
+        </Button>
+      </div>
     </div>
   );
 };
+
 
 export default StepConfirmPurchase;

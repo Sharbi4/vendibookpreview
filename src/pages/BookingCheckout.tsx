@@ -39,6 +39,8 @@ import { calculateRentalFees } from '@/lib/commissions';
 import { trackFormSubmitConversion } from '@/lib/gtagConversions';
 import { trackRequestStarted, trackRequestSubmitted } from '@/lib/analytics';
 import { EmbeddedStripeCheckout } from '@/components/checkout';
+import CheckoutIntro from '@/components/checkout/CheckoutIntro';
+
 import CheckoutOrderSummary from '@/components/checkout/CheckoutOrderSummary';
 import { isEmbeddedCheckoutEnabled } from '@/lib/featureFlags';
 import { parseEdgeError } from '@/lib/edgeErrors';
@@ -772,7 +774,48 @@ const BookingCheckout = () => {
 
   const coverImage = listing.cover_image_url || listing.image_urls?.[0] || '/placeholder.svg';
 
+  // "Step 0" intro for high-value rentals. Shown once per checkout session
+  // per listing; small bookings skip straight to the wizard.
+  const RENTAL_INTRO_MIN_TOTAL = 500;
+  const introSessionKey = `booking_intro_seen:${listingId ?? 'unknown'}`;
+  const shouldOfferIntro = fees.subtotal >= RENTAL_INTRO_MIN_TOTAL;
+  const [introDismissed, setIntroDismissed] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return true;
+    return sessionStorage.getItem(introSessionKey) === '1';
+  });
+
+  if (shouldOfferIntro && !introDismissed) {
+    return (
+      <div className="min-h-screen flex flex-col bg-background">
+        <Header />
+        <main className="flex-1 py-8 sm:py-12 px-4">
+          <CheckoutIntro
+            listingId={listing.id}
+            listingTitle={listing.title}
+            coverImageUrl={coverImage}
+            city={listing.city}
+            state={listing.state}
+            price={fees.subtotal}
+            sellerName={
+              host?.business_name || host?.display_name || host?.full_name ||
+              [host?.first_name, host?.last_name].filter(Boolean).join(' ') || undefined
+            }
+            sellerVerified={Boolean((host as { identity_verified?: boolean } | null | undefined)?.identity_verified)}
+            flow="rental"
+            onBack={() => navigate(`/listing/${listingId}`)}
+            onContinue={() => {
+              try { sessionStorage.setItem(introSessionKey, '1'); } catch { /* noop */ }
+              setIntroDismissed(true);
+            }}
+          />
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
   return (
+
     <div className="min-h-screen flex flex-col bg-background">
       <Header />
       
