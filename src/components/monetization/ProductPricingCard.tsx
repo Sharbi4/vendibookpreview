@@ -47,6 +47,14 @@ export function ProductPricingCard({
   const recurring = product.billing_type === 'recurring';
   const { requestCheckout, dialog: consentDialog, pendingSlug } = useSubscriptionConsent();
   const activeBusy = busy || pendingSlug === product.slug;
+  const learnDeepLink = useLearnMoreDeepLink(product.slug);
+  const [learnOpenManual, setLearnOpenManual] = useState(false);
+  const learnOpen = learnDeepLink.open || learnOpenManual;
+  const setLearnOpen = (v: boolean) => {
+    setLearnOpenManual(v);
+    learnDeepLink.setOpen(v);
+  };
+
 
   const handleClick = async () => {
     try {
