@@ -86,11 +86,13 @@ export function tierAtLeast(actual: HostTier, required: HostTier): boolean {
   return TIER_RANK[actual] >= TIER_RANK[required];
 }
 
-/** Standard 403 body when a tier gate fails. */
+/** Standard 403 body when a tier gate fails. Unified via entitlementError. */
 export function tierRequiredBody(required: HostTier, actual: HostTier) {
+  const label = required === 'premium' ? 'Operator' : required === 'pro' ? 'Growth' : 'Starter';
   return {
-    error: `This feature is included with ${required === 'pro' ? 'Growth' : required === 'premium' ? 'Operator' : 'Starter'} — upgrade to unlock.`,
+    error: `This feature is included with ${label} — upgrade to unlock.`,
     code: 'entitlement_required',
+    legacy_code: 'tool_locked',
     requires: required,
     current: actual,
     upgrade_url: '/pricing',
