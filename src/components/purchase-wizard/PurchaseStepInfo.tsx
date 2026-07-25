@@ -153,6 +153,7 @@ const PurchaseStepInfo = ({
             touched={touchedFields.has('email')}
             onBlur={() => handleFieldTouch('email')}
             required
+            helperText="Receipts, documents, and updates"
           />
 
           <ValidatedInput
@@ -168,11 +169,16 @@ const PurchaseStepInfo = ({
             formatPhone
             maxLength={14}
             required
-            helperText="Used to contact you about this purchase"
+            helperText="So the seller can coordinate handoff"
           />
         </div>
 
-        {/* Address Section */}
+        {/* Address Section — only when delivery/freight needs it */}
+        {hideAddress ? (
+          <div className="rounded-xl border border-border/70 bg-muted/30 p-4 text-sm text-muted-foreground">
+            Since you're picking up, we don't need a delivery address.
+          </div>
+        ) : (
         <div className="space-y-4">
           <div className="flex items-center gap-2">
             <MapPin className="h-5 w-5 text-primary" />
