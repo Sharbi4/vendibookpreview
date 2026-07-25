@@ -69,25 +69,44 @@ const SaleCheckout = () => {
   // Check if user is the owner of this listing
   const isOwner = user?.id && listing?.host_id && user.id === listing.host_id;
 
-  // Multi-step state
-  const [currentStep, setCurrentStep] = useState<CheckoutStep>('information');
-  
-  // Customer info - structured buyer info
-  const [buyerInfo, setBuyerInfo] = useState<BuyerInfo>({
-    firstName: '',
-    lastName: '',
-    businessName: '',
-    email: '',
-    phone: '',
-    address1: '',
-    address2: '',
-    city: '',
-    state: '',
-    zipCode: '',
+  // Multi-step state — persisted per-listing so leaving and returning
+  // restores the furthest step + typed data.
+  const sessionKey = `sale:${listingId ?? 'unknown'}`;
+  interface PersistedState {
+    step: CheckoutStep;
+    buyerInfo: BuyerInfo;
+    fulfillmentSelected: FulfillmentSelection;
+    deliveryAddress: string;
+    deliveryInstructions: string;
+    addOnSelections: Record<string, boolean>;
+  }
+  const persist = useCheckoutState<PersistedState>(sessionKey, {
+    step: 'confirm',
+    buyerInfo: {
+      firstName: '', lastName: '', businessName: '', email: '', phone: '',
+      address1: '', address2: '', city: '', state: '', zipCode: '',
+    },
+    fulfillmentSelected: 'pickup',
+    deliveryAddress: '',
+    deliveryInstructions: '',
+    addOnSelections: {},
   });
-  
+
+  const currentStep = persist.state.step;
+  const setCurrentStep = (s: CheckoutStep) => {
+    persist.setState((prev) => ({ ...prev, step: s }));
+    persist.bumpFurthestStep(STEP_NUM[s]);
+  };
+
+  const buyerInfo = persist.state.buyerInfo;
+  const setBuyerInfo = (next: BuyerInfo | ((p: BuyerInfo) => BuyerInfo)) => {
+    persist.setState((prev) => ({
+      ...prev,
+      buyerInfo: typeof next === 'function' ? (next as (p: BuyerInfo) => BuyerInfo)(prev.buyerInfo) : next,
+    }));
+  };
   const updateBuyerInfo = <K extends keyof BuyerInfo>(field: K, value: BuyerInfo[K]) => {
-    setBuyerInfo(prev => ({ ...prev, [field]: value }));
+    setBuyerInfo((prev) => ({ ...prev, [field]: value }));
   };
 
   // Legacy fields for backward compatibility - computed from buyerInfo
@@ -95,11 +114,23 @@ const SaleCheckout = () => {
   const email = buyerInfo.email;
   const phone = buyerInfo.phone;
   const address = `${buyerInfo.address1}${buyerInfo.address2 ? ', ' + buyerInfo.address2 : ''}, ${buyerInfo.city}, ${buyerInfo.state} ${buyerInfo.zipCode}`.trim();
-  
+
   // Fulfillment
-  const [fulfillmentSelected, setFulfillmentSelected] = useState<FulfillmentSelection>('pickup');
-  const [deliveryAddress, setDeliveryAddress] = useState('');
-  const [deliveryInstructions, setDeliveryInstructions] = useState('');
+  const fulfillmentSelected = persist.state.fulfillmentSelected;
+  const setFulfillmentSelected = (v: FulfillmentSelection) =>
+    persist.setState((prev) => ({ ...prev, fulfillmentSelected: v }));
+  const deliveryAddress = persist.state.deliveryAddress;
+  const setDeliveryAddress = (v: string) =>
+    persist.setState((prev) => ({ ...prev, deliveryAddress: v }));
+  const deliveryInstructions = persist.state.deliveryInstructions;
+  const setDeliveryInstructions = (v: string) =>
+    persist.setState((prev) => ({ ...prev, deliveryInstructions: v }));
+  const addOnSelections = persist.state.addOnSelections;
+  const toggleAddOn = (id: string, next: boolean) =>
+    persist.setState((prev) => ({
+      ...prev,
+      addOnSelections: { ...prev.addOnSelections, [id]: next },
+    }));
   const [isAddressComplete, setIsAddressComplete] = useState(false);
   const [deliveryCoords, setDeliveryCoords] = useState<[number, number] | null>(null);
   
