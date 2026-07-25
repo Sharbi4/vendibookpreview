@@ -241,19 +241,39 @@ async function handleCheckoutCompleted(
       link: purchase.listing_id ? `/listing/${purchase.listing_id}` : "/dashboard",
     });
 
-    // Transactional confirmation email (idempotent per session)
-    await sendSubEmail(
-      supabase,
-      "upgrade-purchased",
-      purchase.user_id,
-      {
-        productName: product?.name ?? "Your upgrade",
-        amount: fmtMoney(purchase.amount_cents, purchase.currency ?? "usd"),
-        listingId: purchase.listing_id ?? null,
-        purchasesUrl: "/purchases",
-      },
-      `upgrade-purchased-${session.id}`,
-    );
+    // Transactional confirmation email (idempotent per session).
+    // Weekly passes and other account-scoped, time-boxed passes get the
+    // dedicated receipt template with the exact expiry date.
+    if (isAccountScopedPass) {
+      const expiresOn = accessEnds
+        ? new Date(accessEnds).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })
+        : undefined;
+      await sendSubEmail(
+        supabase,
+        "weekly-pass-activated",
+        purchase.user_id,
+        {
+          amount: fmtMoney(purchase.amount_cents, purchase.currency ?? "usd"),
+          chargedOn: now.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }),
+          expiresOn,
+          invoiceUrl: (session as unknown as { receipt_url?: string }).receipt_url ?? undefined,
+        },
+        `weekly-pass-activated-${session.id}`,
+      );
+    } else {
+      await sendSubEmail(
+        supabase,
+        "upgrade-purchased",
+        purchase.user_id,
+        {
+          productName: product?.name ?? "Your upgrade",
+          amount: fmtMoney(purchase.amount_cents, purchase.currency ?? "usd"),
+          listingId: purchase.listing_id ?? null,
+          purchasesUrl: "/purchases",
+        },
+        `upgrade-purchased-${session.id}`,
+      );
+    }
   }
 
   log("purchase fulfilled", { id: purchase.id });
