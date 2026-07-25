@@ -40,50 +40,37 @@ export const ListingConciergeBox = ({
   return (
     <>
       <div
-        className="relative overflow-hidden rounded-2xl border border-white/[0.08] bg-gradient-to-br from-[#101013] to-[#0a0a0c] p-5 sm:p-6"
+        className="relative rounded-2xl border border-white/[0.08] bg-gradient-to-br from-[#101013] to-[#0a0a0c] p-5"
         style={{
           boxShadow:
-            '0 1px 0 0 rgba(255,255,255,0.08) inset, 0 20px 40px -20px rgba(0,0,0,0.6)'}}
+            '0 1px 0 0 rgba(255,255,255,0.08) inset, 0 20px 40px -20px rgba(0,0,0,0.6)',
+        }}
       >
-        {/* Decorative warm glow */}
-        <div
-          aria-hidden
-          className="absolute -top-16 -right-16 w-48 h-48 rounded-full pointer-events-none"
-          style={{
-            background:
-              'radial-gradient(ellipse at center, rgba(255,81,36,0.10), transparent 70%)',
-            filter: 'blur(20px)'}}
-        />
-
-        <div className="relative flex items-start gap-3 mb-4">
-          <div className="shrink-0 w-9 h-9 rounded-full bg-primary/15 border border-primary/30 flex items-center justify-center">
-            
-          </div>
-          <div className="flex-1 min-w-0">
-            <div className="text-[10px] font-semibold uppercase tracking-[0.16em] text-primary/90 mb-1">
-              Vendibook Concierge
-            </div>
-            <h3 className="text-base sm:text-lg font-semibold text-foreground leading-snug">
-              Want help with this listing?
-            </h3>
-            <p className="text-sm text-muted-foreground mt-1 leading-relaxed">
-              Vendibook can help confirm availability, answer basic questions, and coordinate
-              next steps with the host.
-            </p>
-          </div>
+        {/* Eyebrow — full width, own line, 8px below to headline */}
+        <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-primary/90 mb-2">
+          Vendibook Concierge
         </div>
 
-        <div className="relative flex flex-col sm:flex-row gap-2.5">
+        <h3 className="text-base sm:text-lg font-semibold text-foreground leading-snug">
+          Want help with this listing?
+        </h3>
+        <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed">
+          Vendibook can help confirm availability, answer basic questions, and coordinate
+          next steps with the host.
+        </p>
+
+        {/* Buttons — one aligned row on ≥sm, full-width stack on narrow */}
+        <div className="mt-4 flex flex-col sm:flex-row gap-2.5">
           <Button
-            variant="dark-shine"
             size="lg"
-            className="flex-1 gap-2 rounded-full"
+            className="flex-1 h-11 gap-2 rounded-lg"
             onClick={() => {
               trackLeadEvent('check_availability_click', {
                 listing_id: listingId,
                 city,
                 category,
-                source: 'listing_concierge_box'});
+                source: 'listing_concierge_box',
+              });
               setLeadOpen(true);
             }}
           >
@@ -91,17 +78,17 @@ export const ListingConciergeBox = ({
             Check Availability
           </Button>
           <Button
-            variant="glass-cta"
+            variant="outline"
             size="lg"
-            className="flex-1 gap-2 rounded-full"
+            className="flex-1 h-11 gap-2 rounded-lg"
             onClick={() => setLeadOpen(true)}
           >
-            
             Ask Vendibook for Help
           </Button>
         </div>
 
-        <div className="relative flex items-center gap-1.5 text-[11px] text-foreground/55 mt-3">
+        {/* Trust line — 12px below the buttons */}
+        <div className="mt-3 flex items-center gap-1.5 text-[11px] text-foreground/60">
           <ShieldCheck className="w-3 h-3" />
           Replies within 1 business hour · No commitment
         </div>
