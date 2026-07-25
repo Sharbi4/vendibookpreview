@@ -348,16 +348,20 @@ const ListingDetail = () => {
       )}
       <Header />
 
-      {/* Commercial product bar — Amazon/Best Buy style */}
-      <CommercialProductBar
-        listingId={listing.id}
-        category={listing.category}
-        mode={listing.mode as 'rent' | 'sale'}
-        title={listing.title}
-        rating={ratingData?.average}
-        reviewCount={ratingData?.count}
-        onShare={handleShare}
-      />
+      {/* Commercial product bar — Amazon/Best Buy style.
+          Hidden on sale mobile because SaleListingMobile mounts its own breadcrumb + share/favorite row
+          (prevents duplicate breadcrumb, duplicate Save button, and clipped content under the sticky header). */}
+      <div className={!isRental ? 'hidden lg:block' : ''}>
+        <CommercialProductBar
+          listingId={listing.id}
+          category={listing.category}
+          mode={listing.mode as 'rent' | 'sale'}
+          title={listing.title}
+          rating={ratingData?.average}
+          reviewCount={ratingData?.count}
+          onShare={handleShare}
+        />
+      </div>
 
       {!isRental && (
         <SaleListingMobile
