@@ -707,6 +707,23 @@
     animation: fadeIn 0.5s ease-out;
   }
 
+  /* SmartImage shimmer skeleton — token-colored, subtle sweep */
+  .smart-image-shimmer {
+    background-color: hsl(var(--muted) / 0.6);
+    background-image: linear-gradient(
+      90deg,
+      transparent 0%,
+      hsl(var(--muted-foreground) / 0.08) 50%,
+      transparent 100%
+    );
+    background-size: 200% 100%;
+    background-repeat: no-repeat;
+    animation: shimmer 1.6s ease-in-out infinite;
+  }
+
+  /* Safety: prevent oversized images from causing CLS */
+  img { max-width: 100%; height: auto; }
+
   .animate-slide-up {
     animation: slideUp 0.5s ease-out;
   }
