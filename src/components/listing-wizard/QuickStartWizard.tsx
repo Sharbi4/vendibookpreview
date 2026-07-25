@@ -225,7 +225,17 @@ export const QuickStartWizard: React.FC = () => {
       const longitude = data.longitude;
 
       const { data: sessionData } = await supabase.auth.getSession();
-      if (!sessionData.session) throw new Error('Please sign in to create a listing.');
+      if (!sessionData.session) {
+        // User exists but has no active session — most commonly they just
+        // signed up and haven't confirmed their email yet. Guide them
+        // instead of showing a generic red error.
+        try { sessionStorage.setItem(QUICKSTART_RESUME_KEY, '1'); } catch {}
+        toast({
+          title: 'Check your email to confirm your account',
+          description: "We saved your listing progress. Click the confirmation link, then return to /list and we'll finish creating your draft.",
+        });
+        return;
+      }
 
       // Create draft through the backend so new users receive the host role safely.
       const { data: listing, error } = await supabase.functions.invoke('create-listing-draft', {
