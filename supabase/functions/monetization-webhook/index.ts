@@ -512,13 +512,18 @@ async function handleSubscriptionChange(
 
   // Route the correct lifecycle email
   if (eventType === "customer.subscription.created") {
-    await sendSubEmail(supabase, "subscription-activated", userId, {
-      planName,
-      amount: amountStr,
-      interval,
-      nextBillingDate: fmtDate(periodEndUnix),
-      isRenewal: false,
-    }, `sub-activated-${sub.id}`);
+    // Trial? Fire the trial-start email. Otherwise wait for invoice.paid
+    // (subscription_create) which carries the receipt/last-4/hosted URL so
+    // the welcome email always includes a real receipt.
+    if (sub.trial_end && sub.status === "trialing") {
+      await sendSubEmail(supabase, "subscription-trial-started", userId, {
+        planName,
+        trialEndsAt: fmtDate(sub.trial_end),
+        priceAfter: amountStr,
+        interval,
+        manageUrl: "https://vendibook.com/account/subscription",
+      }, `sub-trial-${sub.id}`);
+    }
     return;
   }
 
@@ -527,6 +532,7 @@ async function handleSubscriptionChange(
       planName,
       accessEndsAt: fmtDate(periodEndUnix),
       immediate: true,
+      reactivateUrl: "https://vendibook.com/pricing?resubscribe=1",
     }, `sub-deleted-${sub.id}`);
     return;
   }
