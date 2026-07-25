@@ -51,6 +51,8 @@ const IGNORED_CONSOLE = [
   /gsi_logger/i,
   /Failed to decode.*font/i,
   /OTS parsing/i,
+  /Not signed in with the identity provider/i,
+  /accounts list is empty/i,
 ];
 
 async function fetchSamples(): Promise<Sample[]> {
