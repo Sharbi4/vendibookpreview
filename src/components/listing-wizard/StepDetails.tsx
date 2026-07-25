@@ -140,31 +140,16 @@ export const StepDetails: React.FC<StepDetailsProps> = ({
                 Revert
               </Button>
             )}
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={optimizeDescription}
-              disabled={isOptimizing || !formData.description || formData.description.length < 10}
-              className="bg-card border-border hover:border-primary"
-            >
-              {isOptimizing ? (
-                <>
-                  <Loader2 className="w-3 h-3 mr-1 animate-spin" />
-                  Optimizing...
-                </>
-              ) : showOptimized ? (
-                <>
-                  <Check className="w-3 h-3 mr-1 text-green-500" />
-                  Optimized
-                </>
-              ) : (
-                <>
-                  
-                  AI Optimize
-                </>
-              )}
-            </Button>
+            <AIOptimizeButton
+              description={formData.description}
+              category={formData.category}
+              mode={formData.mode}
+              title={formData.title}
+              onApply={applyOptimized}
+              showOptimized={showOptimized}
+              label="AI Optimize"
+            />
+
           </div>
         </div>
         
