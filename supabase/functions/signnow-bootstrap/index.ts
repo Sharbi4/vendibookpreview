@@ -19,111 +19,142 @@ const REQUIRED_ROLES = {
   billOfSale: ['Buyer', 'Seller'],
 };
 
-const RENTAL_TAGS = [
-  { tag_name: 'host_name', role: 'Host', type: 'text', required: true, label: 'Host Name', width: 200, height: 15 },
-  { tag_name: 'renter_name', role: 'Renter', type: 'text', required: true, label: 'Renter Name', width: 200, height: 15 },
-  { tag_name: 'listing_title', role: 'Host', type: 'text', required: true, label: 'Listing Title', width: 250, height: 15 },
-  { tag_name: 'listing_address', role: 'Host', type: 'text', required: true, label: 'Listing Address', width: 300, height: 15 },
-  { tag_name: 'start_date', role: 'Host', type: 'text', required: true, label: 'Start Date', width: 120, height: 15 },
-  { tag_name: 'end_date', role: 'Host', type: 'text', required: true, label: 'End Date', width: 120, height: 15 },
-  { tag_name: 'start_time', role: 'Host', type: 'text', required: false, label: 'Start Time', width: 120, height: 15 },
-  { tag_name: 'end_time', role: 'Host', type: 'text', required: false, label: 'End Time', width: 120, height: 15 },
-  { tag_name: 'total_price', role: 'Host', type: 'text', required: true, label: 'Total Price', width: 150, height: 15 },
-  { tag_name: 'deposit_amount', role: 'Host', type: 'text', required: false, label: 'Deposit Amount', width: 150, height: 15 },
-  { tag_name: 'cancellation_policy', role: 'Host', type: 'text', required: false, label: 'Cancellation Policy', width: 300, height: 15 },
-  { tag_name: 'host_signature', role: 'Host', type: 'signature', required: true, label: 'Host Signature', width: 200, height: 40 },
-  { tag_name: 'renter_signature', role: 'Renter', type: 'signature', required: true, label: 'Renter Signature', width: 200, height: 40 },
-];
-
-const BILL_OF_SALE_TAGS = [
-  { tag_name: 'seller_name', role: 'Seller', type: 'text', required: true, label: 'Seller Name', width: 200, height: 15 },
-  { tag_name: 'buyer_name', role: 'Buyer', type: 'text', required: true, label: 'Buyer Name', width: 200, height: 15 },
-  { tag_name: 'listing_title', role: 'Seller', type: 'text', required: true, label: 'Listing Title', width: 250, height: 15 },
-  { tag_name: 'listing_address', role: 'Seller', type: 'text', required: true, label: 'Listing Address', width: 300, height: 15 },
-  { tag_name: 'category', role: 'Seller', type: 'text', required: false, label: 'Category', width: 150, height: 15 },
-  { tag_name: 'price', role: 'Seller', type: 'text', required: true, label: 'Price', width: 150, height: 15 },
-  { tag_name: 'sale_date', role: 'Seller', type: 'text', required: true, label: 'Sale Date', width: 120, height: 15 },
-  { tag_name: 'as_is_clause', role: 'Seller', type: 'text', required: false, label: 'As-Is Clause', width: 300, height: 15 },
-  { tag_name: 'seller_signature', role: 'Seller', type: 'signature', required: true, label: 'Seller Signature', width: 200, height: 40 },
-  { tag_name: 'buyer_signature', role: 'Buyer', type: 'signature', required: true, label: 'Buyer Signature', width: 200, height: 40 },
-];
-
-function buildRentalPdf(): Uint8Array {
-  const body = `Rental Agreement
-
-Host: {{host_name}}
-Renter: {{renter_name}}
-Listing: {{listing_title}}
-Address: {{listing_address}}
-Start: {{start_date}} at {{start_time}}
-End: {{end_date}} at {{end_time}}
-Total Price: {{total_price}}
-Deposit: {{deposit_amount}}
-Cancellation Policy: {{cancellation_policy}}
-
-Host Signature: {{host_signature}}
-Renter Signature: {{renter_signature}}`;
-  return makeSimplePdf(body, 'Rental Agreement');
+interface PdfField {
+  type: 'text' | 'signature';
+  name: string;
+  role: string;
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  required: boolean;
+  label?: string;
 }
 
-function buildBillOfSalePdf(): Uint8Array {
-  const body = `Bill of Sale
-
-Seller: {{seller_name}}
-Buyer: {{buyer_name}}
-Listing: {{listing_title}}
-Address: {{listing_address}}
-Category: {{category}}
-Price: {{price}}
-Sale Date: {{sale_date}}
-As-Is Clause: {{as_is_clause}}
-
-Seller Signature: {{seller_signature}}
-Buyer Signature: {{buyer_signature}}`;
-  return makeSimplePdf(body, 'Bill of Sale');
+interface PdfSection {
+  label: string;
+  x: number;
+  y: number;
 }
 
-function makeSimplePdf(textBody: string, title: string): Uint8Array {
-  // Minimal PDF 1.4 with a single Helvetica page. Text tags are preserved
-  // literally in the stream so SignNow can extract them via fieldextract.
-  const lines = textBody.split('\n');
-  let y = 700;
-  let stream = `BT
-/F1 12 Tf
-50 ${y} Td
-(${escapePdfString(title)}) Tj
-ET
-`;
-  y -= 24;
-  for (const line of lines) {
-    if (!line) { y -= 12; continue; }
-    stream += `BT
-/F1 12 Tf
-50 ${y} Td
-(${escapePdfString(line)}) Tj
-ET
-`;
-    y -= 18;
+const MARGIN = 60;
+
+function buildRentalPdf(): { pdf: Uint8Array; fields: PdfField[] } {
+  const title = 'Rental Agreement';
+  const sections: PdfSection[] = [
+    { label: 'Host Name:', x: MARGIN, y: 650 },
+    { label: 'Renter Name:', x: MARGIN, y: 620 },
+    { label: 'Listing Title:', x: MARGIN, y: 590 },
+    { label: 'Listing Address:', x: MARGIN, y: 560 },
+    { label: 'Start Date:', x: MARGIN, y: 530 },
+    { label: 'End Date:', x: 300, y: 530 },
+    { label: 'Start Time:', x: MARGIN, y: 500 },
+    { label: 'End Time:', x: 300, y: 500 },
+    { label: 'Total Price:', x: MARGIN, y: 470 },
+    { label: 'Deposit Amount:', x: MARGIN, y: 440 },
+    { label: 'Cancellation Policy:', x: MARGIN, y: 410 },
+    { label: 'Host Signature', x: MARGIN, y: 150 },
+    { label: 'Renter Signature', x: 320, y: 150 },
+  ];
+
+  const fields: PdfField[] = [
+    { type: 'text', name: 'host_name', role: 'Host', x: 160, y: 650, w: 220, h: 20, required: true, label: 'Host Name' },
+    { type: 'text', name: 'renter_name', role: 'Renter', x: 180, y: 620, w: 200, h: 20, required: true, label: 'Renter Name' },
+    { type: 'text', name: 'listing_title', role: 'Host', x: 170, y: 590, w: 300, h: 20, required: true, label: 'Listing Title' },
+    { type: 'text', name: 'listing_address', role: 'Host', x: 190, y: 560, w: 300, h: 20, required: true, label: 'Listing Address' },
+    { type: 'text', name: 'start_date', role: 'Host', x: 150, y: 530, w: 120, h: 20, required: true, label: 'Start Date' },
+    { type: 'text', name: 'end_date', role: 'Host', x: 370, y: 530, w: 120, h: 20, required: true, label: 'End Date' },
+    { type: 'text', name: 'start_time', role: 'Host', x: 150, y: 500, w: 120, h: 20, required: false, label: 'Start Time' },
+    { type: 'text', name: 'end_time', role: 'Host', x: 370, y: 500, w: 120, h: 20, required: false, label: 'End Time' },
+    { type: 'text', name: 'total_price', role: 'Host', x: 160, y: 470, w: 120, h: 20, required: true, label: 'Total Price' },
+    { type: 'text', name: 'deposit_amount', role: 'Host', x: 190, y: 440, w: 120, h: 20, required: false, label: 'Deposit Amount' },
+    { type: 'text', name: 'cancellation_policy', role: 'Host', x: 210, y: 410, w: 300, h: 20, required: false, label: 'Cancellation Policy' },
+    { type: 'signature', name: 'host_signature', role: 'Host', x: MARGIN, y: 100, w: 220, h: 40, required: true, label: 'Host Signature' },
+    { type: 'signature', name: 'renter_signature', role: 'Renter', x: 320, y: 100, w: 220, h: 40, required: true, label: 'Renter Signature' },
+  ];
+
+  return { pdf: makePdfWithSections(title, sections), fields };
+}
+
+function buildBillOfSalePdf(): { pdf: Uint8Array; fields: PdfField[] } {
+  const title = 'Bill of Sale';
+  const sections: PdfSection[] = [
+    { label: 'Seller Name:', x: MARGIN, y: 650 },
+    { label: 'Buyer Name:', x: MARGIN, y: 620 },
+    { label: 'Listing Title:', x: MARGIN, y: 590 },
+    { label: 'Listing Address:', x: MARGIN, y: 560 },
+    { label: 'Category:', x: MARGIN, y: 530 },
+    { label: 'Price:', x: MARGIN, y: 500 },
+    { label: 'Sale Date:', x: MARGIN, y: 470 },
+    { label: 'As-Is Clause:', x: MARGIN, y: 440 },
+    { label: 'Seller Signature', x: MARGIN, y: 150 },
+    { label: 'Buyer Signature', x: 320, y: 150 },
+  ];
+
+  const fields: PdfField[] = [
+    { type: 'text', name: 'seller_name', role: 'Seller', x: 170, y: 650, w: 220, h: 20, required: true, label: 'Seller Name' },
+    { type: 'text', name: 'buyer_name', role: 'Buyer', x: 170, y: 620, w: 220, h: 20, required: true, label: 'Buyer Name' },
+    { type: 'text', name: 'listing_title', role: 'Seller', x: 170, y: 590, w: 300, h: 20, required: true, label: 'Listing Title' },
+    { type: 'text', name: 'listing_address', role: 'Seller', x: 190, y: 560, w: 300, h: 20, required: true, label: 'Listing Address' },
+    { type: 'text', name: 'category', role: 'Seller', x: 140, y: 530, w: 150, h: 20, required: false, label: 'Category' },
+    { type: 'text', name: 'price', role: 'Seller', x: 130, y: 500, w: 120, h: 20, required: true, label: 'Price' },
+    { type: 'text', name: 'sale_date', role: 'Seller', x: 150, y: 470, w: 120, h: 20, required: true, label: 'Sale Date' },
+    { type: 'text', name: 'as_is_clause', role: 'Seller', x: 160, y: 440, w: 300, h: 20, required: false, label: 'As-Is Clause' },
+    { type: 'signature', name: 'seller_signature', role: 'Seller', x: MARGIN, y: 100, w: 220, h: 40, required: true, label: 'Seller Signature' },
+    { type: 'signature', name: 'buyer_signature', role: 'Buyer', x: 320, y: 100, w: 220, h: 40, required: true, label: 'Buyer Signature' },
+  ];
+
+  return { pdf: makePdfWithSections(title, sections), fields };
+}
+
+function makePdfWithSections(title: string, sections: PdfSection[]): Uint8Array {
+  let stream = `BT\n/F1 18 Tf\n${MARGIN} 720 Td\n(${escapePdfString(title)}) Tj\nET\n`;
+
+  for (const s of sections) {
+    stream += `BT\n/F1 12 Tf\n${s.x} ${s.y} Td\n(${escapePdfString(s.label)}) Tj\nET\n`;
   }
-  const streamBytes = new TextEncoder().encode(stream);
+
+  // Add some static legal boilerplate near the bottom.
+  stream += `BT\n/F1 10 Tf\n${MARGIN} 60 Td\n(${escapePdfString('This document is executed electronically via Vendibook and airSlate SignNow.')}) Tj\nET\n`;
 
   const obj1 = '1 0 obj\n<<\n/Type /Catalog\n/Pages 2 0 R\n>>\nendobj\n';
   const obj2 = '2 0 obj\n<<\n/Type /Pages\n/Kids [3 0 R]\n/Count 1\n>>\nendobj\n';
   const obj3Base = '3 0 obj\n<<\n/Type /Page\n/Parent 2 0 R\n/MediaBox [0 0 612 792]\n/Contents 4 0 R\n/Resources <<\n/Font <<\n/F1 5 0 R\n>>\n>>\n>>\nendobj\n';
   const obj5 = '5 0 obj\n<<\n/Type /Font\n/Subtype /Type1\n/BaseFont /Helvetica\n>>\nendobj\n';
 
+  const enc = new TextEncoder();
+  const headerBytes = enc.encode('%PDF-1.4\n');
+  const obj1Bytes = enc.encode(obj1);
+  const obj2Bytes = enc.encode(obj2);
+  const obj3Bytes = enc.encode(obj3Base);
+  const obj5Bytes = enc.encode(obj5);
+  const streamBytes = enc.encode(stream);
   const obj4 = `4 0 obj\n<<\n/Length ${streamBytes.length}\n>>\nstream\n${stream}endstream\nendobj\n`;
-  const full = `%PDF-1.4\n${obj1}${obj2}${obj3Base}${obj4}${obj5}`;
-  const fullBytes = new TextEncoder().encode(full);
+  const obj4Bytes = enc.encode(obj4);
+
+  const off1 = headerBytes.length;
+  const off2 = off1 + obj1Bytes.length;
+  const off3 = off2 + obj2Bytes.length;
+  const off4 = off3 + obj3Bytes.length;
+  const off5 = off4 + obj4Bytes.length;
+
+  const fullBytes = new Uint8Array(headerBytes.length + obj1Bytes.length + obj2Bytes.length + obj3Bytes.length + obj4Bytes.length + obj5Bytes.length);
+  let pos = 0;
+  fullBytes.set(headerBytes, pos); pos += headerBytes.length;
+  fullBytes.set(obj1Bytes, pos); pos += obj1Bytes.length;
+  fullBytes.set(obj2Bytes, pos); pos += obj2Bytes.length;
+  fullBytes.set(obj3Bytes, pos); pos += obj3Bytes.length;
+  fullBytes.set(obj4Bytes, pos); pos += obj4Bytes.length;
+  fullBytes.set(obj5Bytes, pos); pos += obj5Bytes.length;
 
   const xrefOffset = fullBytes.length;
-  const xref = `xref\n0 6\n0000000000 65535 f \n0000000009 00000 n \n0000000058 00000 n \n0000000115 00000 n \n0000000254 00000 n \n0000000000 65535 f \n`;
+  const xref = `xref\n0 6\n0000000000 65535 f \n${String(off1).padStart(10, '0')} 00000 n \n${String(off2).padStart(10, '0')} 00000 n \n${String(off3).padStart(10, '0')} 00000 n \n${String(off4).padStart(10, '0')} 00000 n \n${String(off5).padStart(10, '0')} 00000 n \n`;
   const trailer = `trailer\n<<\n/Size 6\n/Root 1 0 R\n>>\nstartxref\n${xrefOffset}\n%%EOF\n`;
 
   const out = new Uint8Array(fullBytes.length + xref.length + trailer.length);
   out.set(fullBytes, 0);
-  out.set(new TextEncoder().encode(xref), fullBytes.length);
-  out.set(new TextEncoder().encode(trailer), fullBytes.length + xref.length);
+  out.set(enc.encode(xref), fullBytes.length);
+  out.set(enc.encode(trailer), fullBytes.length + xref.length);
   return out;
 }
 
@@ -150,9 +181,7 @@ async function signnowApi(token: string, path: string, init: RequestInit & { jso
   try { return text ? JSON.parse(text) : {}; } catch { return text; }
 }
 
-async function uploadTemplateDocument(token: string, name: string, pdf: Uint8Array, tags: any[]): Promise<string> {
-  // Build multipart/form-data manually. Deno doesn't have a native FormData
-  // file constructor that streams the right boundary, so we do it manually.
+async function uploadRawDocument(token: string, name: string, pdf: Uint8Array): Promise<string> {
   const boundary = '----FormBoundary' + crypto.randomUUID().replace(/-/g, '');
   const e = new TextEncoder();
   const header = e.encode(
@@ -160,19 +189,13 @@ async function uploadTemplateDocument(token: string, name: string, pdf: Uint8Arr
     `Content-Disposition: form-data; name="file"; filename="${name}.pdf"\r\n` +
     `Content-Type: application/pdf\r\n\r\n`,
   );
-  const tagsJson = JSON.stringify(tags);
-  const tagsPart = e.encode(
-    `\r\n--${boundary}\r\n` +
-    `Content-Disposition: form-data; name="Tags[]"\r\n\r\n` +
-    `${tagsJson}\r\n` +
-    `--${boundary}--\r\n`,
-  );
-  const body = new Uint8Array(header.length + pdf.length + tagsPart.length);
+  const footer = e.encode(`\r\n--${boundary}--\r\n`);
+  const body = new Uint8Array(header.length + pdf.length + footer.length);
   body.set(header, 0);
   body.set(pdf, header.length);
-  body.set(tagsPart, header.length + pdf.length);
+  body.set(footer, header.length + pdf.length);
 
-  const res = await fetch(`${signnowBase()}/document/fieldextract`, {
+  const res = await fetch(`${signnowBase()}/document`, {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${token}`,
@@ -182,8 +205,27 @@ async function uploadTemplateDocument(token: string, name: string, pdf: Uint8Arr
     body,
   });
   const text = await res.text();
-  if (!res.ok) throw new Error(`fieldextract [${res.status}]: ${text}`);
+  if (!res.ok) throw new Error(`document upload [${res.status}]: ${text}`);
   return JSON.parse(text).id;
+}
+
+async function editDocumentFields(token: string, documentId: string, name: string, fields: PdfField[]): Promise<void> {
+  const body = {
+    document_name: name,
+    fields: fields.map((f) => ({
+      type: f.type,
+      required: f.required,
+      role: f.role,
+      page_number: 0,
+      x: f.x,
+      y: f.y,
+      width: f.w,
+      height: f.h,
+      label: f.label,
+      name: f.name,
+    })),
+  };
+  await signnowApi(token, `/document/${documentId}`, { method: 'PUT', json: body });
 }
 
 async function createTemplate(token: string, documentId: string, name: string): Promise<string> {
@@ -195,54 +237,17 @@ async function createTemplate(token: string, documentId: string, name: string): 
 }
 
 async function verifyTemplateRoles(token: string, templateId: string, expected: string[]): Promise<string[]> {
-  const doc = await signnowApi(token, `/template/${templateId}`, { method: 'GET' });
+  // Templates are returned as documents in SignNow; the /template/{id} endpoint
+  // returns 404 for templates created via /template, so we query /document/{id}.
+  const doc = await signnowApi(token, `/document/${templateId}`, { method: 'GET' });
   const roles = (doc.roles || []).map((r: any) => r.name || r.role_name || r);
   const missing = expected.filter((r) => !roles.includes(r));
   if (missing.length) throw new Error(`template ${templateId} missing roles: ${missing.join(', ')} (found: ${roles.join(', ')})`);
   return roles;
 }
 
-async function registerWebhook(
-  token: string,
-  userId: string,
-  secret: string,
-  callbackUrl: string,
-): Promise<{ id: string; event: string }[]> {
-  const events = ['document.complete', 'document.update'];
-  const results: { id: string; event: string }[] = [];
-  for (const event of events) {
-    try {
-      const json = await signnowApi(token, '/v2/event-subscriptions', {
-        method: 'POST',
-        json: {
-          event,
-          entity_id: userId,
-          attributes: {
-            callback: callbackUrl,
-            secret_key: secret,
-            delete_access_token: true,
-            docid_queryparam: true,
-          },
-        },
-      });
-      results.push({ id: json.id ?? json.data?.id ?? 'unknown', event });
-    } catch (e: any) {
-      if (e.message?.includes('subscription already exists') || e.message?.includes('duplicate')) {
-        results.push({ id: 'existing', event });
-      } else {
-        throw e;
-      }
-    }
-  }
-  return results;
-}
-
-async function getUserId(token: string): Promise<string> {
-  const user = await signnowApi(token, '/user', { method: 'GET' });
-  return String(user.id);
-}
-
 async function ensureBucket(svc: ReturnType<typeof createClient>): Promise<void> {
+
   const { data: buckets } = await svc.storage.listBuckets();
   const exists = buckets?.some((b) => b.name === 'signed-documents');
   if (exists) return;
@@ -265,43 +270,38 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const callbackUrl = `${Deno.env.get('SUPABASE_URL')?.replace('.supabase.co', '.supabase.co')}/functions/v1/signnow-webhook`;
-    const secret = Deno.env.get('SIGNNOW_WEBHOOK_SECRET');
-    if (!secret) throw new Error('SIGNNOW_WEBHOOK_SECRET not set');
+    const accessToken = await getAccessToken();
 
-    const token = await getAccessToken();
-    const userId = await getUserId(token);
+    const rental = buildRentalPdf();
+    const rentalDocId = await uploadRawDocument(accessToken, 'Vendibook Rental Agreement', rental.pdf);
+    await editDocumentFields(accessToken, rentalDocId, 'Vendibook Rental Agreement', rental.fields);
+    const rentalTemplateId = await createTemplate(accessToken, rentalDocId, 'Vendibook Rental Agreement');
+    const rentalRoles = await verifyTemplateRoles(accessToken, rentalTemplateId, REQUIRED_ROLES.rental);
 
-    const rentalDocId = await uploadTemplateDocument(token, 'Vendibook Rental Agreement', buildRentalPdf(), RENTAL_TAGS);
-    const rentalTemplateId = await createTemplate(token, rentalDocId, 'Vendibook Rental Agreement');
-    const rentalRoles = await verifyTemplateRoles(token, rentalTemplateId, REQUIRED_ROLES.rental);
+    const bill = buildBillOfSalePdf();
+    const billDocId = await uploadRawDocument(accessToken, 'Vendibook Bill of Sale', bill.pdf);
+    await editDocumentFields(accessToken, billDocId, 'Vendibook Bill of Sale', bill.fields);
+    const billTemplateId = await createTemplate(accessToken, billDocId, 'Vendibook Bill of Sale');
+    const billRoles = await verifyTemplateRoles(accessToken, billTemplateId, REQUIRED_ROLES.billOfSale);
 
-    const billDocId = await uploadTemplateDocument(token, 'Vendibook Bill of Sale', buildBillOfSalePdf(), BILL_OF_SALE_TAGS);
-    const billTemplateId = await createTemplate(token, billDocId, 'Vendibook Bill of Sale');
-    const billRoles = await verifyTemplateRoles(token, billTemplateId, REQUIRED_ROLES.billOfSale);
-
-    const subs = await registerWebhook(token, userId, secret, callbackUrl);
-
-    const svc = createClient(Deno.env.get('SUPABASE_URL')!, serviceKey, { auth: { persistSession: false } });
+    const svc = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!, { auth: { persistSession: false } });
     await ensureBucket(svc);
 
     return jsonResponse(200, {
       ok: true,
       api_base: signnowBase(),
-      signnow_user_id: userId,
       templates: {
         rental_agreement: rentalTemplateId,
         bill_of_sale: billTemplateId,
       },
       roles: { rental: rentalRoles, bill_of_sale: billRoles },
-      webhook_subscriptions: subs,
-      webhook_callback_url: callbackUrl,
       next_steps: [
         'Save SIGNNOW_TEMPLATE_RENTAL_AGREEMENT and SIGNNOW_TEMPLATE_BILL_OF_SALE from templates above.',
-        'Ensure the SignNow dashboard webhook signing secret matches SIGNNOW_WEBHOOK_SECRET.',
+        'Webhook subscriptions are created per document when documents are generated.',
       ],
     });
   } catch (e) {
+
     console.error('[signnow-bootstrap]', e);
     return unknownErrorResponse(e);
   }
