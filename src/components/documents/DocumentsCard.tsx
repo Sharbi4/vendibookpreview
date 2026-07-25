@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Loader2, FileText, Download, PenLine, CheckCircle2, Clock } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -47,7 +47,7 @@ export function DocumentsCard({ scope, title = 'Documents' }: { scope: Scope; ti
       ? await query.eq('booking_id', scope.booking_id)
       : await query.eq('transaction_id', scope.transaction_id);
     if (error) { console.error(error); return; }
-    setDocs((data ?? []) as DocRow[]);
+    setDocs((data ?? []) as unknown as DocRow[]);
   }
 
   useEffect(() => { load(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [JSON.stringify(scope)]);
