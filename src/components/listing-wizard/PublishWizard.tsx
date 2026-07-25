@@ -1693,7 +1693,14 @@ export const PublishWizard: React.FC = () => {
           ...(isFirstTimePublish ? { published_at: new Date().toISOString() } : {})})
         .eq('id', listing.id);
 
-      if (error) throw error;
+      if (error) {
+        if (typeof error.message === 'string' && error.message.includes('listing_publish_limit_reached')) {
+          setShowLimitModal(true);
+          setIsSaving(false);
+          return;
+        }
+        throw error;
+      }
 
       // Track analytics - differentiate between new publish and update
       console.log(`[ANALYTICS] Listing ${isFirstTimePublish ? 'published' : 'updated'}`, { listingId: listing.id });
