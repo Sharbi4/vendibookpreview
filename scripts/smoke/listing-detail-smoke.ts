@@ -45,6 +45,14 @@ const IGNORED_CONSOLE = [
   /net::ERR_/i,
   /ResizeObserver/i,
   /Non-Error promise rejection/i,
+  /embed\.tawk\.to/i,
+  /Failed to load resource/i,
+  /Provider's accounts list is empty/i,
+  /gsi_logger/i,
+  /Failed to decode.*font/i,
+  /OTS parsing/i,
+  /Not signed in with the identity provider/i,
+  /accounts list is empty/i,
 ];
 
 async function fetchSamples(): Promise<Sample[]> {
@@ -80,12 +88,14 @@ async function run() {
       const resp = await page.goto(url, { waitUntil: "domcontentloaded", timeout: 30_000 });
       if (!resp || !resp.ok()) fail(`GET ${url} → ${resp?.status()}`);
 
-      // Wait for h1 (rendered by ListingDetail once data loads)
-      await page.waitForSelector("h1", { timeout: 15_000 }).catch(() => {
-        fail(`no <h1> rendered on ${url} within 15s`);
+      // Wait for a VISIBLE h1 — ListingDetail renders both a mobile and a
+      // desktop copy (one is display:none via responsive utility classes),
+      // so `h1` (without :visible) will match the hidden one first and hang.
+      await page.waitForSelector("h1:visible", { timeout: 15_000 }).catch(() => {
+        fail(`no visible <h1> rendered on ${url} within 15s`);
       });
 
-      const h1Text = (await page.locator("h1").first().innerText()).trim();
+      const h1Text = (await page.locator("h1:visible").first().innerText()).trim();
       const docTitle = await page.title();
 
       // Guardrails
@@ -121,8 +131,8 @@ async function run() {
     const negErrs: string[] = [];
     neg.on("pageerror", (e) => negErrs.push(e.message));
     await neg.goto(`${BASE}/listing/${BOGUS_ID}`, { waitUntil: "domcontentloaded", timeout: 30_000 });
-    await neg.waitForSelector("h1", { timeout: 15_000 });
-    const negH1 = (await neg.locator("h1").first().innerText()).trim();
+    await neg.waitForSelector("h1:visible", { timeout: 15_000 });
+    const negH1 = (await neg.locator("h1:visible").first().innerText()).trim();
     if (!/not found/i.test(negH1)) {
       fail(`bogus id did not render "Listing Not Found" — got h1="${negH1}"`);
     }

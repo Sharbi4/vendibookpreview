@@ -47,6 +47,22 @@ async function waitForNav(page: Page, predicate: (url: string) => boolean, label
   fail(`${label}: never navigated to expected URL. current=${page.url()}`);
 }
 
+// Third-party embed / dev-only noise we do NOT want to fail the smoke on.
+// These are cross-origin/CORS complaints, GA warnings, font decode issues,
+// etc. — irrelevant to the auth-guard behaviour under test.
+const IGNORED_CONSOLE = [
+  /embed\.tawk\.to/i,
+  /net::ERR_FAILED/i,
+  /Failed to load resource/i,
+  /favicon/i,
+  /google.*maps/i,
+  /gsi_logger/i,
+  /Provider's accounts list is empty/i,
+  /ResizeObserver/i,
+  /Failed to decode.*font/i,
+  /OTS parsing/i,
+];
+
 async function fresh(context: BrowserContext) {
   // Ensure no leaked session/localStorage between cases.
   await context.clearCookies();
@@ -54,7 +70,10 @@ async function fresh(context: BrowserContext) {
   const errors: string[] = [];
   page.on("pageerror", (e) => errors.push(`pageerror: ${e.message}`));
   page.on("console", (m) => {
-    if (m.type() === "error") errors.push(`console: ${m.text()}`);
+    if (m.type() !== "error") return;
+    const text = m.text();
+    if (IGNORED_CONSOLE.some((re) => re.test(text))) return;
+    errors.push(`console: ${text}`);
   });
   return { page, errors };
 }

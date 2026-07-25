@@ -1,4 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
 import { Link } from 'react-router-dom';
 import { 
   ArrowLeft, 
@@ -27,8 +29,16 @@ import { useHostBookings } from '@/hooks/useHostBookings';
 import BookingRequestCard from '@/components/dashboard/BookingRequestCard';
 
 const HostBookings = () => {
+  const { user, isLoading: authLoading } = useAuth();
+  const navigate = useNavigate();
   const { bookings, isLoading, approveBooking, declineBooking, cancelBooking, processDepositRefund } = useHostBookings();
   const [searchQuery, setSearchQuery] = useState('');
+
+  useEffect(() => {
+    if (!authLoading && !user) navigate('/auth?redirect=' + encodeURIComponent('/host/bookings'));
+  }, [authLoading, user, navigate]);
+
+  if (!authLoading && !user) return null;
 
   const filteredBookings = bookings.filter(b => 
     b.shopper?.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
