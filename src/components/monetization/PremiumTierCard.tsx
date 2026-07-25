@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Check, Loader2, ArrowRight, Flame, TrendingUp, ShoppingBag, Home, Users } from 'lucide-react';
+
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -164,14 +165,30 @@ export function PremiumTierCard({
     return () => io.disconnect();
   }, []);
 
+  const navigate = useNavigate();
+  const location = useLocation();
+
   const handleClick = async () => {
     if (isFree || !product) return;
+    // Signed-out: preserve plan intent through auth. Consent RPC + edge fn
+    // both require an authenticated user, so opening the consent dialog first
+    // would fail with an opaque error.
+    if (!user) {
+      const params = new URLSearchParams({
+        plan: product.slug,
+        interval,
+        auto: '1',
+      });
+      const returnTo = `${location.pathname.startsWith('/pricing') || location.pathname.startsWith('/plans') || location.pathname.startsWith('/host/plans') ? location.pathname : '/pricing'}?${params.toString()}`;
+      navigate(`/auth?returnTo=${encodeURIComponent(returnTo)}`);
+      return;
+    }
     try {
       trackLeadEvent('checkout_started', {
         product_slug: product.slug,
         surface: 'premium_tier_card',
       });
-      await requestCheckout(product, { successPath, cancelPath });
+      await requestCheckout(product, { successPath, cancelPath, interval });
     } catch (e) {
       console.error(e);
       toast.error(e instanceof Error ? e.message : 'Could not start checkout');
@@ -179,6 +196,7 @@ export function PremiumTierCard({
       setBusy(false);
     }
   };
+
 
   const freeHref = user ? '/dashboard' : '/auth?returnTo=/list-your-space';
 

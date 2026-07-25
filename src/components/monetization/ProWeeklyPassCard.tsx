@@ -5,6 +5,8 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { parseEdgeError } from '@/lib/edgeErrors';
+
 
 /**
  * ProWeeklyPassCard — surfaces the non-renewing 7-day Pro pass on the
@@ -37,12 +39,18 @@ export default function ProWeeklyPassCard() {
       if (error) throw error;
       const url = (data as { url?: string })?.url;
       if (!url) throw new Error('No checkout URL returned');
+      const top = window.top;
+      if (top && top !== window) {
+        try { top.location.href = url; return; } catch { /* fall through */ }
+      }
       window.location.href = url;
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : 'Could not start checkout');
+      const parsed = await parseEdgeError(e);
+      toast.error(parsed?.message || (e instanceof Error ? e.message : 'Could not start checkout'));
       setBusy(false);
     }
   };
+
 
   return (
     <section className="mt-10 rounded-[20px] border-[1.5px] border-white/12 bg-gradient-to-br from-orange-500/[0.06] via-white/[0.02] to-transparent p-6 md:p-8">
