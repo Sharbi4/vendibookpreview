@@ -198,6 +198,25 @@ jobs:
           STRIPE_MONETIZATION_WEBHOOK_SECRET: ${{ secrets.STRIPE_MONETIZATION_WEBHOOK_SECRET_TEST }}
         run: bun scripts/smoke/entitlement-checkout-smoke.ts
 
+  entitlement-gate-smoke:
+    name: Entitlement Gate Smoke (free user → 403 entitlement_required on every gated fn)
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - run: bun install --frozen-lockfile
+      - name: Run entitlement-gate smoke (every monetize server action denies free user)
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: bun scripts/smoke/entitlement-gate-smoke.ts
+
+
+
 
 
 
