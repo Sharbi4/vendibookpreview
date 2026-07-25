@@ -1915,6 +1915,49 @@ export const PublishWizard: React.FC = () => {
 
   if (!listing) return null;
 
+  // ─── Journey progress (single source of truth) ───
+  // Mirrors the step order used by saveStep()/handleDetailsSave() so the
+  // indicator, the "Continue" primary action, and the actual navigation
+  // can't drift apart.
+  const isRentalListing = listing.mode === 'rent';
+  const skipStripeStep = listing.mode === 'sale' && !acceptCardPayment;
+  const baseWizardSteps: PublishStep[] = isRentalListing
+    ? ['photos', 'headline', 'includes', 'pricing', 'availability', 'location', 'documents', 'stripe', 'review']
+    : ['photos', 'headline', 'includes', 'pricing', 'location', 'stripe', 'review'];
+  const wizardStepOrder: PublishStep[] = skipStripeStep
+    ? baseWizardSteps.filter((s) => s !== 'stripe')
+    : baseWizardSteps;
+
+  const stepMeta: Record<PublishStep, { label: string; hint?: string; optional?: boolean }> = {
+    photos: { label: 'Media', hint: 'At least 3 photos — drag to reorder' },
+    headline: { label: 'Headline', hint: 'Title & description' },
+    includes: { label: "What's included", hint: 'Highlights & amenities' },
+    pricing: {
+      label: 'Pricing',
+      hint: listing.mode === 'sale' ? 'Set your asking price' : 'Daily & weekly rates',
+    },
+    availability: { label: 'Availability', hint: 'When renters can book' },
+    details: { label: 'Details' },
+    location: { label: 'Location', hint: 'Where & how it changes hands' },
+    documents: { label: 'Documents', hint: 'Required rental paperwork' },
+    stripe: {
+      label: 'Payouts',
+      hint: 'Connect Stripe to accept card payments',
+      optional: listing.mode === 'sale' && !acceptCardPayment,
+    },
+    review: { label: 'Review & publish', hint: 'Preview and go live' },
+  };
+
+  const journeySteps: JourneyStep[] = wizardStepOrder.map((id) => ({
+    id,
+    label: stepMeta[id].label,
+    hint: stepMeta[id].hint,
+    optional: stepMeta[id].optional,
+  }));
+  // 'details' is an off-path step (not in the linear order); pin the
+  // indicator to the closest linear step (photos) if that's the current view.
+  const currentJourneyIndex = Math.max(0, wizardStepOrder.indexOf(step));
+
   return (
     <div className="min-h-screen bg-background">
       {/* Claiming draft overlay */}
