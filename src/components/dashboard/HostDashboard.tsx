@@ -13,6 +13,7 @@ import { StripeConnectModal } from '@/components/listing-wizard/StripeConnectMod
 import OverviewGreeting from './overview/OverviewGreeting';
 import { KpiCard } from './overview/KpiCard';
 import RecentActivityStrip, { ActivityItem } from './overview/RecentActivityStrip';
+import PremiumSpotlight from './overview/PremiumSpotlight';
 import { useHostListings } from '@/hooks/useHostListings';
 import { useHostBookings } from '@/hooks/useHostBookings';
 import { useStripeConnect } from '@/hooks/useStripeConnect';
