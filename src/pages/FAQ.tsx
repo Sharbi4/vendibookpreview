@@ -119,6 +119,23 @@ const FAQ = () => {
   const [categoryId, setCategoryId] = useQueryParam("cat");
   const deferredQuery = useDeferredValue(query);
 
+  // Deep-link support: scroll to the anchored answer when the page loads
+  // with a #slug hash (also opens the accordion via `defaultValue`).
+  const [hash, setHash] = useState<string>(() =>
+    typeof window !== "undefined" ? window.location.hash.replace(/^#/, "") : "",
+  );
+  useEffect(() => {
+    if (!hash) return;
+    const el = document.getElementById(hash);
+    if (el) {
+      // small delay to let accordions mount
+      setTimeout(() => el.scrollIntoView({ behavior: "smooth", block: "start" }), 120);
+    }
+    const onHash = () => setHash(window.location.hash.replace(/^#/, ""));
+    window.addEventListener("hashchange", onHash);
+    return () => window.removeEventListener("hashchange", onHash);
+  }, [hash]);
+
   const results = useMemo(() => {
     return searchFaq(faqCategories, deferredQuery, {
       categoryId: categoryId || undefined,
