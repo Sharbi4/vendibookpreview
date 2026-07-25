@@ -20,8 +20,6 @@ import EditPublicProfileSheet from '@/components/account/EditPublicProfileSheet'
 import ChangePasswordSheet from '@/components/account/ChangePasswordSheet';
 import PaymentsPayoutsSection from '@/components/account/PaymentsPayoutsSection';
 import { getDisplayInitials } from '@/lib/displayName';
-// keep _s to silence unused-import lint if tooling flags icon presets; not rendered.
-void _s;
 
 interface ProfileRow {
   full_name: string;
