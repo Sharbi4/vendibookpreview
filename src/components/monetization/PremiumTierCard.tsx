@@ -11,6 +11,10 @@ import {
 } from '@/lib/monetization/products';
 import { trackLeadEvent } from '@/lib/leadTracking';
 import { useSubscriptionConsent } from '@/hooks/useSubscriptionConsent';
+import {
+  ProductLearnMoreOverlay,
+  useLearnMoreDeepLink,
+} from '@/components/monetization/ProductLearnMoreOverlay';
 
 interface Props {
   product: MonetizationProduct;
