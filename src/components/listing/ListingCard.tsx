@@ -20,6 +20,7 @@ import { trackLeadEvent } from '@/lib/leadTracking';
 import { normalizeScheduleKeys } from '@/lib/scheduleUtils';
 import { isListingFeatured } from '@/lib/featured';
 import { TrustESignChip } from '@/components/trust/TrustESignChip';
+import { SmartImage } from '@/components/ui/SmartImage';
 
 // Types for hourly schedule
 interface TimeRange {
@@ -225,16 +226,16 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
         }}
       >
         {/* Image Container - Turo Look */}
-        <div className={cn(
-          "relative w-full bg-white/5 overflow-hidden",
-          compact ? "aspect-[4/3]" : "aspect-[4/3]"
-        )}>
-          <img
-            src={listing.cover_image_url || listing.image_urls[0] || '/placeholder.svg'}
+        <div className={cn("relative w-full", compact ? "" : "")}>
+          <SmartImage
+            src={listing.cover_image_url || listing.image_urls[0]}
             alt={`${listing.title} - ${listing.category === 'food_truck' ? 'Food Truck' : listing.category === 'food_trailer' ? 'Food Trailer' : listing.category === 'ghost_kitchen' ? 'Shared Kitchen' : 'Vendor Space'} ${listing.mode === 'rent' ? 'for Rent' : 'for Sale'}`}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-in-out"
-            loading="lazy"
+            aspect="4/3"
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+            className="group-hover:scale-105 transition-transform duration-500 ease-in-out"
           />
+        
+        
         
         
         {/* E-sign trust chip — every sale/rental agreement is signed online, free */}
