@@ -10,6 +10,7 @@ import { StatusPillBadge, paymentPill, fulfillmentPill } from '@/components/tran
 import { buildTransactionTimeline, TransactionTimeline } from '@/components/transaction/TransactionTimeline';
 import { computeNextAction, NextActionCard } from '@/components/transaction/NextActionCard';
 import { GetHelpWithOrder } from '@/components/trust/GetHelpWithOrder';
+import { DocumentsCard } from '@/components/documents/DocumentsCard';
 
 type Tx = Record<string, any> | null;
 type Listing = { id: string; title: string | null; image_urls: string[] | null; category?: string | null } | null;
@@ -214,6 +215,10 @@ export default function TransactionDetail() {
             className="mt-6"
           />
         )}
+
+        <div className="mt-6">
+          <DocumentsCard scope={{ transaction_id: String(tx.id) }} title="Bill of sale" />
+        </div>
       </main>
       <Footer />
     </div>
