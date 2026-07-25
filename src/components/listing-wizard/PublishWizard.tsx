@@ -4231,24 +4231,22 @@ export const PublishWizard: React.FC = () => {
                     />
                   )}
 
-                  <div className="flex flex-wrap gap-3">
-                    <Button variant="dark-shine" onClick={() => setStep(requiresStripe ? 'stripe' : 'location')}>Back</Button>
-                    <Button
-                      variant="dark-shine"
-                      onClick={() => setShowPreviewModal(true)}
-                    >
-                      <Eye className="w-4 h-4 mr-2" />
-                      Preview as Shopper
-                    </Button>
-                    <Button 
-                      variant="dark-shine"
-                      onClick={() => setShowPublishDialog(true)} 
-                      disabled={isSaving || !canPublish || (requiresStripe && !isOnboardingComplete)}
-                    >
-                      <Send className="w-4 h-4 mr-2" />
-                      Publish Listing
-                    </Button>
-                  </div>
+                  <PrimaryActionBar
+                    sticky
+                    secondary={{
+                      label: 'Back',
+                      onClick: () => setStep(requiresStripe ? 'stripe' : 'location'),
+                    }}
+                    tertiary={{
+                      label: 'Preview as Shopper',
+                      onClick: () => setShowPreviewModal(true),
+                    }}
+                    primary={{
+                      label: 'Publish Listing',
+                      onClick: () => setShowPublishDialog(true),
+                      disabled: isSaving || !canPublish || (requiresStripe && !isOnboardingComplete),
+                    }}
+                  />
                 </div>
               )}
             </div>
