@@ -35,6 +35,8 @@ interface PurchaseStepReviewProps {
   agreedToTerms: boolean;
   setAgreedToTerms: (value: boolean) => void;
   isPurchasing: boolean;
+  /** When true (pickup), the address row is hidden — we never collected it. */
+  hideAddress?: boolean;
   // Navigation
   onBack: () => void;
   onEditDelivery: () => void;
