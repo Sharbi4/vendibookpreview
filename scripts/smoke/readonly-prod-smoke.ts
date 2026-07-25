@@ -111,7 +111,11 @@ const WRITE_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE"]);
 // (analytics beacons, error reporters). These do NOT create Vendibook records.
 const WRITE_ALLOWLIST = [
   /google-analytics\.com/i,
+  /analytics\.google\.com/i,
   /googletagmanager\.com/i,
+  /googleadservices\.com/i,
+  /google\.com\/(g|rmkt|ads|pagead)\/(collect|viewthroughconversion)/i,
+  /google\.com\/ccm\/collect/i,
   /doubleclick\.net/i,
   /facebook\.com\/tr/i,
   /connect\.facebook\.net/i,
