@@ -3727,22 +3727,25 @@ export const PublishWizard: React.FC = () => {
                     </div>
                   )}
 
-                  <div className="flex gap-3">
-                    <Button variant="dark-shine" onClick={() => setStep(listing.mode === 'rent' ? 'availability' : 'pricing')}>Back</Button>
-                    <Button 
-                      variant="dark-shine"
-                      onClick={saveStep} 
-                      disabled={isSaving || !streetAddress.trim() || !locCity.trim() || !locState.trim() || !locZipCode.trim() || (
-                        (isStaticLocationFn(listing.category) || isStaticLocation) 
+                  <PrimaryActionBar
+                    secondary={{
+                      label: 'Back',
+                      onClick: () => setStep(listing.mode === 'rent' ? 'availability' : 'pricing'),
+                    }}
+                    primary={{
+                      label: isSaving ? 'Saving…' : 'Continue',
+                      onClick: saveStep,
+                      disabled:
+                        isSaving ||
+                        !streetAddress.trim() ||
+                        !locCity.trim() ||
+                        !locState.trim() ||
+                        !locZipCode.trim() ||
+                        (isStaticLocationFn(listing.category) || isStaticLocation
                           ? !accessInstructions
-                          : !fulfillmentType
-                      )}
-                    >
-                      {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
-                      Continue
-                      <ChevronRight className="w-4 h-4 ml-2" />
-                    </Button>
-                  </div>
+                          : !fulfillmentType),
+                    }}
+                  />
                 </div>
               )}
 
