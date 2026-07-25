@@ -62,6 +62,7 @@ const PurchaseStepReview = ({
   agreedToTerms,
   setAgreedToTerms,
   isPurchasing,
+  hideAddress = false,
   onBack,
   onEditDelivery,
   onEditInfo,
@@ -90,9 +91,9 @@ const PurchaseStepReview = ({
 
       {/* Step Header */}
       <div>
-        <h2 className="text-xl font-bold text-foreground">Review your purchase</h2>
+        <h2 className="font-display text-2xl font-bold text-foreground">Review and agree</h2>
         <p className="text-sm text-muted-foreground mt-1">
-          Confirm details. You'll pay securely next.
+          Full breakdown, one checkbox, and you're done.
         </p>
       </div>
 
@@ -192,10 +193,12 @@ const PurchaseStepReview = ({
             <span className="text-muted-foreground">Phone</span>
             <p className="font-medium text-foreground">{buyerInfo.phone}</p>
           </div>
-          <div className="col-span-2">
-            <span className="text-muted-foreground">Address</span>
-            <p className="font-medium text-foreground">{displayAddress}</p>
-          </div>
+          {!hideAddress && (
+            <div className="col-span-2">
+              <span className="text-muted-foreground">Address</span>
+              <p className="font-medium text-foreground">{displayAddress}</p>
+            </div>
+          )}
         </div>
       </div>
 
@@ -239,10 +242,10 @@ const PurchaseStepReview = ({
           )}
           <div className="flex justify-between pt-3 border-t border-primary/20">
             <span className="font-bold text-lg text-foreground flex items-center gap-1.5">
-              Total
+              Total due now
               <FeesInfoPopover />
             </span>
-            <span className="font-bold text-lg text-primary">${totalPrice.toLocaleString()}</span>
+            <span className="font-bold text-lg text-primary" style={{ fontVariantNumeric: 'tabular-nums' }}>${totalPrice.toLocaleString()}</span>
           </div>
         </div>
       </div>
@@ -323,9 +326,9 @@ const PurchaseStepReview = ({
         ) : (
           <ShieldCheck className="h-4 w-4 mr-2" />
         )}
-        {paymentMethod === 'cash' 
-          ? `Submit Cash Request – $${totalPrice.toLocaleString()}`
-          : `Pay Securely – $${totalPrice.toLocaleString()}`
+        {paymentMethod === 'cash'
+          ? `Confirm — arrange in person · $${totalPrice.toLocaleString()}`
+          : `Pay $${totalPrice.toLocaleString()} now`
         }
       </Button>
 
