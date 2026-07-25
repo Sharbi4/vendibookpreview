@@ -10,6 +10,7 @@
  */
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.2';
 import { resolveToolAccess, type ToolSlug } from './toolAccess.ts';
+import { entitlementError, jsonError } from './jsonError.ts';
 
 export interface GateResult {
   response?: Response;
@@ -24,12 +25,7 @@ export async function gateToolAccess(
   const authHeader = req.headers.get('Authorization') ?? '';
   const token = authHeader.replace(/^Bearer\s+/i, '').trim();
   if (!token) {
-    return {
-      response: new Response(
-        JSON.stringify({ error: 'auth_required', message: 'Sign in required to use this tool.' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
-      ),
-    };
+    return { response: jsonError(401, 'auth_required', 'Sign in required to use this tool.') };
   }
 
   const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
@@ -39,26 +35,17 @@ export async function gateToolAccess(
   });
   const { data: userRes, error } = await auth.auth.getUser();
   if (error || !userRes?.user) {
-    return {
-      response: new Response(
-        JSON.stringify({ error: 'auth_invalid', message: 'Session expired. Sign in and try again.' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
-      ),
-    };
+    return { response: jsonError(401, 'auth_invalid', 'Session expired. Sign in and try again.') };
   }
 
   const access = await resolveToolAccess(userRes.user.id, tool);
   if (!access.unlocked) {
     return {
-      response: new Response(
-        JSON.stringify({
-          error: 'tool_locked',
-          tool,
-          message: 'This tool is included with Vendibook Pro. Upgrade to unlock.',
-          upgrade_url: '/pricing',
-        }),
-        { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
-      ),
+      response: entitlementError({
+        tool,
+        current: access.tier,
+        feature: tool,
+      }),
     };
   }
   return { userId: userRes.user.id };

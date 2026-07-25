@@ -1,86 +1,86 @@
-# Guided Checkout Redesign — Sale + Rental
+# Monetization / Upgrade Server Action Entitlement Audit
 
-Goal: replace today's "dump user into fields" flow with a considered, step-by-step, one-screen-at-a-time purchase experience worthy of a $3k–$100k+ transaction. Sale flow is authoritative; Rental mirrors the same pattern with rental-specific steps.
+## What I checked
+Every server action that either **sells access** or **spends paid capability** on the caller's behalf.
 
-## Screens — SaleCheckout (5 steps)
+| Function | Sells / spends | Uses unified helper today | Gap |
+|---|---|---|---|
+| `create-monetization-checkout` | Sells tier subs, weekly pass, tool unlocks, add-ons | none | **Yes — no entitlement check; user can double-buy something they already own** |
+| `create-featured-checkout` | Sells stacking boost days | n/a — stacking is by design | none |
+| `create-notary-checkout`, `create-freight-checkout`, `protected-sale-deposit-checkout` | Per-transaction add-ons, not entitlements | n/a | none |
+| `manage-subscription` | Cancel / reactivate own sub | JWT ownership + `jsonError` | none |
+| `admin-monetization-grant` / `-refund` | Admin overrides | admin role gate | none |
+| `ai-tools`, `ai-web-research`, `ai-equipment-guide`, `ai-marketing-creator` | Spend AI credits | `gateToolAccess` → **402 `tool_locked`** | shape drift |
+| `generate-ad-copy`, `suggest-pricing`, `generate-listing-insights`, `generate-ai-insights`, `ai-negotiation-coach`, `ai-listing-creator` | Spend AI credits | `resolveHostTier` + `tierRequiredBody` → **403 `entitlement_required`** | shape drift |
 
-1. **Confirm** — "Here's what you're buying"
-   - Listing hero photo, title, city/state, price, seller name + verified badge, condition/specs summary.
-   - Copy: "Take one more look before we continue."
-   - No inputs. CTA: "Looks right — continue".
+Two real issues fall out:
 
-2. **Delivery** — "How do you want to get it?"
-   - Three Turo-style selectable cards (1.5px cream border → 2px flame + tint when selected, roomy padding):
-     - **Pickup** — "Free — you arrange pickup at {sellerCity}".
-     - **Delivery** — inline ZIP-only field with reason microcopy; on ZIP entry, live estimate: `$4.50/mi × distance` (existing freight logic in `src/lib/shipping.ts`), stated as "Estimated $X — based on distance from {sellerCity} to {zip}".
-     - **Freight** — "Quoted after purchase — typically $X–$Y for this size" when we can't calculate exactly; be honest about estimated vs fixed.
-   - Running total updates live in sticky footer.
+1. **Missing guard on `create-monetization-checkout`.** A Growth subscriber can be charged again for the Pro Weekly Pass, or for `tool_pricepilot` that their subscription already unlocks. The helper (`resolveHostTier`, `resolveToolAccess`) exists but the checkout doesn't call it.
+2. **Inconsistent permission-error shape.** Two roughly-equivalent responses coexist: `402 { error, code:'tool_locked', tool, upgrade_url }` vs `403 { error, code:'entitlement_required', requires, current, upgrade_url }`. Client tolerates both, but any new function has to guess which pattern to copy.
 
-3. **Add-ons** — "Anything to add?"
-   - Skippable list, none pre-selected. Each row: one-line benefit + price + toggle.
-   - Inspection referral, notarization (if eligible), buyer-side extras only.
-   - Explicit "No thanks, continue" secondary CTA.
+## Plan
 
-4. **Details** — "Where should we send everything?"
-   - Full legal name — "Used on your bill of sale".
-   - Email — "Receipts, documents, and updates".
-   - Phone — "So the seller can coordinate handoff".
-   - Address — ONLY if delivery or freight selected. When Pickup, show: "Since you're picking up, we don't need a delivery address."
-   - Every non-obvious field has WHY microcopy.
+### 1. Guard `create-monetization-checkout`
+After loading the product and before creating any Stripe session:
 
-5. **Review & Agree**
-   - Itemized cost breakdown (tabular numerals): item price, delivery (method named), add-ons, deposit vs balance, taxes/fees, **Total due now** separated from Total price.
-   - Payment structure block (pay in full / deposit + balance / pay in person) with explicit amounts and timing.
-   - Payment method selector (card / ACH / Affirm-Klarna-Afterpay) with Stripe messaging component showing monthly estimate.
-   - Single agreement block: what's included, plain-language payment protection (never "escrow"), one-line cancellation and refund terms, links to full docs, ONE checkbox: "I understand and agree to these terms."
-   - Pay button labeled with exact amount: "Pay $X,XXX now".
+- Derive `productKind` from the product row:
+  - `subscription` — `billing_type === 'recurring'`
+  - `weekly_pass` — slug contains `pro_weekly_pass`
+  - `tool_unlock` — slug is in the `TOOL_UNLOCK_SLUG` map (`_shared/toolAccess.ts`) or is `permit_path_plus`
+  - `addon` — everything else (featured stack, notary, freight referral, etc.)
+- For `subscription` / `weekly_pass`: call `resolveHostTier(user.id)`. If current tier is ≥ the tier this product grants, return `409 already_entitled`.
+- For `tool_unlock`: call `resolveToolAccess(user.id, toolSlug)`. If `unlocked === true`, return `409 already_entitled`.
+- For `addon`: no gate (unchanged).
+- Response shape uses the unified body (see step 3).
 
-## Screens — BookingCheckout (4 rental steps)
+### 2. Small helper: map product → tier / tool slug
+Add `productEntitlement.ts` next to the other shared helpers:
 
-1. **Dates & Duration** — pick dates/slots, running nightly/hourly rate shown live.
-2. **Add-ons & Deposit** — cleaning fee, security deposit disclosed explicitly, optional protections.
-3. **Your Details** — same WHY-microcopy pattern; address only if required by host.
-4. **Review & Agree** — full breakdown: nightly × nights, cleaning fee, deposit (with "refundable after return"), taxes/fees, protection fee, cancellation policy stated in one line, single agreement checkbox, pay button with exact amount.
+```ts
+export type ProductKind = 'subscription' | 'weekly_pass' | 'tool_unlock' | 'addon';
+export function classifyProduct(product): {
+  kind: ProductKind;
+  grantsTier?: HostTier;      // for subscription / weekly_pass
+  toolSlug?: ToolSlug;        // for tool_unlock
+}
+```
+Keeps `create-monetization-checkout` short and gives future functions one place to look.
 
-## Cross-cutting rules
+### 3. Unify the permission-error shape
+Add `entitlementError()` to `_shared/jsonError.ts`:
 
-- **Chrome:** shared `GuidedCheckoutShell` renders header ("Step N of M" progress + Back), main step slot, sticky footer with running total + primary CTA + persistent trust row (Stripe-secured · Payment protection · Free e-signature).
-- **Never lose data:** all step state kept in a `useCheckoutState(sessionKey)` hook backed by `sessionStorage` keyed by listing id; returning restores furthest step + data.
-- **Mobile:** each step full-screen; CTA fixed to bottom safe-area.
-- **Verbiage:** every primary CTA describes the next action ("Choose delivery", "Add your details", "Review your order", "Pay $X now").
-- **Errors:** inline, specific, never wipe input.
-- **Money display:** all totals use `font-variant-numeric: tabular-nums`, Sofia headings, Manrope body.
-- **Estimated vs fixed:** every estimate line reads "Estimated — {basis}".
+```ts
+export function entitlementError(opts: {
+  requires?: HostTier;
+  current?: HostTier;
+  tool?: ToolSlug;
+  feature?: string;
+  message?: string;
+}): Response  // always 403, code 'entitlement_required'
+```
 
-## Files
+Then:
+- `gateToolAccess` returns `entitlementError({ tool })` instead of the bespoke 402 body. Keeps `tool` field and adds the `code: 'entitlement_required'` alias so `usePremiumUpsell` matches on one code going forward (it still accepts the old `tool_locked` alias for one release).
+- `tierRequiredBody` callers switch to `entitlementError({ requires, current, feature })`.
+- `create-monetization-checkout`'s new guard uses `entitlementError({ requires, current, message: 'You already have access to this — no need to purchase again.' })` with status overridden to 409 for the "already own" case (new helper variant `alreadyEntitledError`).
 
-**New**
-- `src/components/checkout/GuidedCheckoutShell.tsx` — header, progress, back, sticky footer, trust row.
-- `src/components/checkout/StepConfirmPurchase.tsx` — Sale step 1.
-- `src/components/checkout/StepDeliveryMethod.tsx` — Sale step 2, cards + ZIP + live estimate.
-- `src/components/checkout/StepAddOns.tsx` — Sale step 3.
-- `src/components/checkout/StepBuyerDetails.tsx` — Sale step 4 (address conditional on delivery).
-- `src/components/checkout/StepReviewAgree.tsx` — Sale step 5, breakdown + payment method + single agreement.
-- `src/components/checkout/AgreementBlock.tsx` — reusable plain-language terms + one checkbox.
-- `src/components/checkout/CostBreakdown.tsx` — itemized rows, tabular nums, deposit vs balance handling.
-- `src/hooks/useCheckoutState.ts` — sessionStorage-backed step + form state.
-- `src/components/booking/BookingStepDates.tsx`, `BookingStepAddOns.tsx`, `BookingStepDetails.tsx`, `BookingStepReview.tsx` — rental variants.
+No client changes required today; the client already handles both codes. In a follow-up we can drop the `tool_locked` alias.
 
-**Rewritten**
-- `src/pages/SaleCheckout.tsx` — become a thin orchestrator around `GuidedCheckoutShell` + the 5 Step components; keep existing calls to `create-checkout` / `create-cash-sale` and terms gate untouched.
-- `src/pages/BookingCheckout.tsx` — same orchestrator pattern with 4 rental steps; keep existing booking mutation and payment call.
+### 4. Scope guarantee (money logic unchanged)
+- No change to price math, promo windows, discount codes, member discount, Stripe metadata, webhook flow, refund flow, or webhook-driven provisioning.
+- Guard runs strictly before Stripe session creation — no partial state.
+- `create-featured-checkout` stacking behavior is preserved (memory: featured boosts stack).
 
-**Reused as-is**
-- `EmbeddedStripeCheckout`, `AffirmMessagingLine`, `TrustRow`, `PaymentProtectionBlock`, `PostPaymentTimeline`, `useTermsGate`, existing money/fee helpers in `src/lib/commissions.ts` and `src/lib/shipping.ts`, `create-checkout` / `create-cash-sale` / booking edge functions.
-
-## Not changing
-
-- Fee math, protection hold, payouts, entitlements.
-- `useTermsGate` behavior.
-- `create-checkout`, `create-cash-sale`, `manage-subscription`, or any Stripe edge function contract beyond what's already in flight.
-- Backend / RLS / DB schema.
+## Files touched
+- `supabase/functions/_shared/jsonError.ts` — add `entitlementError`, `alreadyEntitledError`.
+- `supabase/functions/_shared/productEntitlement.ts` — new: `classifyProduct`.
+- `supabase/functions/_shared/gateToolAccess.ts` — switch to `entitlementError`, keep `tool_locked` alias in body.
+- `supabase/functions/_shared/resolveHostTier.ts` — `tierRequiredBody` becomes a thin wrapper over `entitlementError`.
+- `supabase/functions/create-monetization-checkout/index.ts` — call the guard; return `alreadyEntitledError` on match.
 
 ## Verification
+- Typecheck.
+- Manually walk the four match paths in `create-monetization-checkout`: same-tier sub, higher-tier sub buying weekly pass, subscriber buying `tool_pricepilot`, already-purchased tool re-buy — each returns 409 `already_entitled` and never touches Stripe.
+- Confirm existing AI-tool and AI-tier gate call sites still surface the upsell (they already accept `entitlement_required`).
 
-- `tsgo --noEmit` clean at the end.
-- Walk each step manually in preview: back preserves data, refresh restores step, running total updates, address field appears only for delivery/freight, agreement checkbox required to enable Pay button, Pay button shows exact amount.
+Awaiting approval before editing.

@@ -1,6 +1,10 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
+import { alreadyEntitledError } from "../_shared/jsonError.ts";
+import { classifyProduct } from "../_shared/productEntitlement.ts";
+import { resolveHostTier, tierAtLeast } from "../_shared/resolveHostTier.ts";
+import { resolveToolAccess } from "../_shared/toolAccess.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -67,6 +71,42 @@ serve(async (req) => {
         { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 404 },
       );
     }
+
+    // Entitlement guard: never charge a user for something they already own.
+    // Uses the unified server-side helpers (resolveHostTier + resolveToolAccess).
+    // Add-on SKUs (featured stack, notary, freight...) are pass-through — they
+    // don't grant a persistent capability and are allowed to re-purchase.
+    const classified = classifyProduct({
+      slug: product.slug,
+      billing_type: product.billing_type,
+      metadata: product.metadata ?? null,
+    });
+    if (classified.kind === "subscription" || classified.kind === "weekly_pass") {
+      if (classified.grantsTier) {
+        const currentTier = await resolveHostTier(user.id);
+        if (tierAtLeast(currentTier, classified.grantsTier)) {
+          log("already entitled — tier", { current: currentTier, wants: classified.grantsTier });
+          return alreadyEntitledError({
+            current: currentTier,
+            message:
+              classified.kind === "weekly_pass"
+                ? "Your current plan already includes this. No need to buy the weekly pass."
+                : "You're already on this plan or better. Manage or upgrade from your account.",
+          });
+        }
+      }
+    } else if (classified.kind === "tool_unlock" && classified.toolSlug) {
+      const access = await resolveToolAccess(user.id, classified.toolSlug);
+      if (access.unlocked) {
+        log("already entitled — tool", { tool: classified.toolSlug, reason: access.reason });
+        return alreadyEntitledError({
+          current: access.tier,
+          message: "This tool is already unlocked on your account.",
+        });
+      }
+    }
+
+
 
     // ROSCA / California AB 2863: recurring subscriptions require an affirmative
     // consent record captured before checkout. Reject the request if the client
