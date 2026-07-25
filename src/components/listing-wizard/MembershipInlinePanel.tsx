@@ -95,7 +95,13 @@ export const MembershipInlinePanel: React.FC<MembershipInlinePanelProps> = ({ re
         </p>
       </div>
 
-      <MiniPlansComparison compact />
+      <MiniPlansComparison compact isFoundingMember={quota.isGrandfathered} />
+
+      {quota.isGrandfathered && (
+        <p className="text-xs text-emerald-500/90">
+          You have unlimited listings as an early member — thank you.
+        </p>
+      )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <Button variant="outline" onClick={persistDismiss} className="w-full">
