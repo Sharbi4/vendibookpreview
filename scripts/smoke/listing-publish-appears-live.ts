@@ -31,6 +31,7 @@ if (!URL || !SERVICE_KEY || !ANON_KEY || !APP_BASE_URL) {
     "[smoke] ⚠️  SKIPPING listing-publish-appears-live — missing one of: " +
       "SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, SUPABASE_ANON_KEY, APP_BASE_URL.",
   );
+  if (process.env.CI || process.env.GITHUB_ACTIONS) { console.error("[smoke] ❌ Required CI secrets missing — failing hard to prevent false green."); process.exit(1); }
   process.exit(0);
 }
 
