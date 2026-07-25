@@ -8,6 +8,7 @@ import {
   BarChart3, Zap, MousePointer, Headset, Download, Phone
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { HomepageVideoStatsCard } from '@/components/admin/HomepageVideoStatsCard';
 import { useAdminCityStats, useAdminAlerts } from '@/hooks/useAnalyticsEvents';
 import { 
   useAdminOverviewMetrics, 
