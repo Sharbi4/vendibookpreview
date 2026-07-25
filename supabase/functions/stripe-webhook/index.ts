@@ -225,13 +225,19 @@ serve(async (req) => {
           const isFirstTimePublish = !existingListing.published_at;
           const isDraft = existingListing.status !== 'published' || !existingListing.published_at;
           const now = new Date();
-          // STACKING: if a boost is already live, extend from its current expiry;
-          // otherwise start from now. Extending NEVER shrinks remaining time.
+          // STACKING + SCHEDULING: pick the latest of (now, requested start, current expiry).
+          // Never shrinks remaining time; never allows two boosts to overlap.
+          const scheduledStartRaw = session.metadata?.scheduled_start_at;
+          const scheduledStartMs = scheduledStartRaw ? new Date(scheduledStartRaw).getTime() : 0;
           const currentExpiresMs = existingListing.featured_enabled && existingListing.featured_expires_at
             ? new Date(existingListing.featured_expires_at).getTime()
             : 0;
-          const startFromMs = currentExpiresMs > now.getTime() ? currentExpiresMs : now.getTime();
+          const startFromMs = Math.max(now.getTime(), scheduledStartMs || 0, currentExpiresMs);
+          const startAt = new Date(startFromMs);
           const expiresAt = new Date(startFromMs + 30 * 24 * 60 * 60 * 1000);
+          // If the effective start is in the future, we still mark the listing
+          // as featured_enabled=true (the search rank uses expires_at, and
+          // upstream sort/filter logic checks the active window itself).
 
           // Try to capture the Stripe-hosted receipt URL from the underlying charge
           let receiptUrl: string | null = null;
@@ -259,17 +265,35 @@ serve(async (req) => {
             amount: '$30.00',
             paid_at: now.toISOString(),
             receipt_url: receiptUrl,
+            scheduled_start_at: scheduledStartRaw ?? null,
             ...(isDraft ? {} : { applied_at: now.toISOString(), applied_expires_at: expiresAt.toISOString() }),
           };
 
+          // Append an audit entry to boost_history for the promotions UI.
+          const historyEntry = {
+            session_id: session.id,
+            payment_intent_id: paymentIntentId,
+            paid_at: now.toISOString(),
+            amount_cents: 3000,
+            starts_at: startAt.toISOString(),
+            ends_at: expiresAt.toISOString(),
+            receipt_url: receiptUrl,
+            status: isDraft ? 'queued' : 'active',
+          };
+          const priorHistory = Array.isArray((existingListing as { boost_history?: unknown[] }).boost_history)
+            ? ((existingListing as { boost_history?: unknown[] }).boost_history as unknown[])
+            : [];
+          const nextHistory = [...priorHistory, historyEntry];
+
           const updateData: Record<string, unknown> = isDraft
-            ? { pending_featured_payment: paymentLedger }
+            ? { pending_featured_payment: paymentLedger, boost_history: nextHistory }
             : {
                 status: 'published',
                 featured_enabled: true,
                 featured_at: now.toISOString(),
                 featured_expires_at: expiresAt.toISOString(),
                 pending_featured_payment: paymentLedger,
+                boost_history: nextHistory,
                 ...(isFirstTimePublish ? { published_at: now.toISOString() } : {}),
               };
 
