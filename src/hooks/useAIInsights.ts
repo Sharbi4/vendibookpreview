@@ -60,20 +60,35 @@ export const useAIInsights = (): UseAIInsightsReturn => {
         setDataSnapshot(data.dataSnapshot || null);
         setLastUpdated(new Date());
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error fetching AI insights:', err);
-      setError(err instanceof Error ? err.message : 'Failed to generate insights');
-      // Set fallback insights on error
-      setInsights([{
-        type: 'tip',
-        title: 'Insights Unavailable',
-        description: 'We couldn\'t generate personalized insights right now. Please try again later.',
-        priority: 1
-      }]);
+      const { parseEdgeError } = await import('@/lib/edgeErrors');
+      const parsed = await parseEdgeError(err);
+      const isEntitlement =
+        parsed.code === 'entitlement_required' || parsed.status === 403 || parsed.status === 402;
+      setError(parsed.message || 'Failed to generate insights');
+      setInsights([
+        isEntitlement
+          ? {
+              type: 'opportunity',
+              title: 'Unlock AI Insights with Growth',
+              description:
+                'Personalized recommendations, competitor benchmarks, and health scores are included with the Growth plan.',
+              action: '/pricing?learn=host_growth',
+              priority: 1,
+            }
+          : {
+              type: 'tip',
+              title: 'Insights Unavailable',
+              description: "We couldn't generate personalized insights right now. Please try again later.",
+              priority: 1,
+            },
+      ]);
     } finally {
       setIsLoading(false);
     }
   }, [session?.access_token]);
+
 
   useEffect(() => {
     fetchInsights();
