@@ -19,9 +19,10 @@ const NotFound = () => {
       void import('@/lib/errorReporter')
         .then((m) => {
           m.reportError?.({
-            source: 'client:not_found',
-            message: `404 ${location.pathname}${location.search}`,
-            context: {
+            action: 'client.not_found',
+            errorType: 'not_found',
+            errorMessage: `404 ${location.pathname}${location.search}`,
+            metadata: {
               path: location.pathname + location.search,
               referrer: typeof document !== 'undefined' ? document.referrer : '',
             },
