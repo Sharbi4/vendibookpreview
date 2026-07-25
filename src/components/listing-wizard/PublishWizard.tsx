@@ -2971,17 +2971,19 @@ export const PublishWizard: React.FC = () => {
                     </>
                   )}
 
-                  <div className="flex gap-3 pt-4">
-                    <Button variant="dark-shine" onClick={() => setStep('includes')}>Back</Button>
-                    <Button 
-                      variant="dark-shine"
-                      onClick={saveStep} 
-                      disabled={isSaving || (listing.mode === 'sale' ? (!isValidPrice(priceSale) || (!acceptCardPayment && !acceptCashPayment)) : !isValidPrice(priceDaily))}
-                    >
-                      {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
-                      Continue
-                      <ChevronRight className="w-4 h-4 ml-2" />
-                    </Button>
+                  <div className="pt-4">
+                    <PrimaryActionBar
+                      secondary={{ label: 'Back', onClick: () => setStep('includes') }}
+                      primary={{
+                        label: isSaving ? 'Saving…' : 'Continue',
+                        onClick: saveStep,
+                        disabled:
+                          isSaving ||
+                          (listing.mode === 'sale'
+                            ? !isValidPrice(priceSale) || (!acceptCardPayment && !acceptCashPayment)
+                            : !isValidPrice(priceDaily)),
+                      }}
+                    />
                   </div>
                 </div>
               )}
