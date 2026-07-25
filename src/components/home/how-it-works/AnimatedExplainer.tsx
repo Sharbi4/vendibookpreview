@@ -1,654 +1,259 @@
-import { useEffect, useRef, useState, useMemo } from 'react';
-import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
-import { Play, Pause, ChevronLeft, ChevronRight, Download, Volume2, VolumeX } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { useReducedMotion } from 'framer-motion';
+import { Pause, Play, RotateCcw } from 'lucide-react';
 import type { Explainer } from './data/explainers';
+import { CaptionCard } from './CaptionCard';
+import { useInViewAutoplay } from './useInViewAutoplay';
 import { cn } from '@/lib/utils';
-import { createAmbientBed, type AmbientBed } from './audio/ambientBed';
-import { trackLeadEvent } from '@/lib/leadTracking';
-import { useAdaptiveMediaPolicy } from '@/lib/adaptiveMedia';
 
 interface Props {
   explainer: Explainer;
-  onProgress?: (percent: number) => void;
+  /** Loop back to scene 0 after the last scene finishes (tile preview mode). */
+  loop?: boolean;
+  /** Show Play / Pause / Restart controls (modal only). */
+  showControls?: boolean;
+  /** Only advance the clock when the wrapper is in the viewport. */
+  respectInView?: boolean;
   onEnded?: () => void;
   onSceneChange?: (info: { index: number; previousIndex: number | null; total: number }) => void;
+  onProgress?: (percent: number) => void;
   onWatched?: (ms: number) => void;
-  storageKey?: string;
 }
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
-const SUPABASE_ANON =
-  (import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string) ||
-  (import.meta.env.VITE_SUPABASE_ANON_KEY as string);
+/**
+ * Lean muted-loop explainer. Single scene clock — no audio, no TTS, no
+ * ambient bed, no user-gesture requirement. Captions carry the message and
+ * cannot drift because they read straight from the scene index.
+ *
+ * `prefers-reduced-motion` users get the poster + a static caption stack
+ * instead of any motion.
+ */
+export const AnimatedExplainer = ({
+  explainer,
+  loop = false,
+  showControls = false,
+  respectInView = true,
+  onEnded,
+  onSceneChange,
+  onProgress,
+  onWatched,
+}: Props) => {
+  const reduced = useReducedMotion();
+  const scenes = explainer.scenes;
+  const total = scenes.length;
+  const totalMs = useMemo(() => scenes.reduce((s, sc) => s + sc.durationMs, 0), [scenes]);
 
-// Simple in-memory cache so switching modals doesn't re-synthesize the same
-// narration. Blob URLs are safe to reuse across component mounts within a
-// page session.
-const narrationCache = new Map<string, Promise<string>>();
-
-const fetchNarration = (transcript: string): Promise<string> => {
-  const key = transcript.trim();
-  const existing = narrationCache.get(key);
-  if (existing) return existing;
-  const p = (async () => {
-    const res = await fetch(`${SUPABASE_URL}/functions/v1/explainer-tts`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        apikey: SUPABASE_ANON,
-        Authorization: `Bearer ${SUPABASE_ANON}`,
-      },
-      body: JSON.stringify({ text: key }),
-    });
-    if (!res.ok) throw new Error(`tts_failed_${res.status}`);
-    const blob = await res.blob();
-    return URL.createObjectURL(blob);
-  })();
-  narrationCache.set(key, p);
-  // On failure, purge so we can retry later.
-  p.catch(() => narrationCache.delete(key));
-  return p;
-};
-
-export const AnimatedExplainer = ({ explainer, onProgress, onEnded, onSceneChange, onWatched, storageKey }: Props) => {
-  const prefersReduced = useReducedMotion();
-  const adaptive = useAdaptiveMediaPolicy();
-  const totalMs = useMemo(
-    () => explainer.scenes.reduce((s, sc) => s + sc.durationMs, 0),
-    [explainer.scenes],
-  );
-
-  const [elapsedMs, setElapsedMs] = useState(() => {
-    if (!storageKey) return 0;
-    const raw = typeof window !== 'undefined' ? window.localStorage.getItem(storageKey) : null;
-    const n = raw ? Number(raw) : 0;
-    return Number.isFinite(n) && n < totalMs - 500 ? n : 0;
-  });
+  const { ref: inViewRef, inView } = useInViewAutoplay<HTMLDivElement>(0.35);
   const [playing, setPlaying] = useState(true);
-  const [muted, setMuted] = useState(false);
-  const [volume, setVolume] = useState<number>(() => {
-    if (typeof window === 'undefined') return 1;
-    const raw = window.localStorage.getItem('vb:explainer:volume');
-    const n = raw ? Number(raw) : NaN;
-    return Number.isFinite(n) && n >= 0 && n <= 1 ? n : 1;
-  });
-  const [voiceReady, setVoiceReady] = useState(false);
-  const rafRef = useRef<number | null>(null);
-  const lastTickRef = useRef<number | null>(null);
-  const milestoneRef = useRef<Set<number>>(new Set());
-  const narrationRef = useRef<HTMLAudioElement | null>(null);
-  const ambientRef = useRef<AmbientBed | null>(null);
-  const watchedMsRef = useRef<number>(0);
-  const lastSceneRef = useRef<number>(-1);
-  const onWatchedRef = useRef(onWatched);
-  useEffect(() => { onWatchedRef.current = onWatched; }, [onWatched]);
+  const [sceneIndex, setSceneIndex] = useState(0);
+  const [ended, setEnded] = useState(false);
 
-  // Report accumulated watch duration on unmount.
+  const lastTickRef = useRef<number | null>(null);
+  const elapsedInSceneRef = useRef(0);
+  const rafRef = useRef<number | null>(null);
+  const watchedMsRef = useRef(0);
+  const prevSceneRef = useRef<number | null>(null);
+  const milestoneRef = useRef<Set<number>>(new Set());
+
+  const onSceneChangeRef = useRef(onSceneChange);
+  const onProgressRef = useRef(onProgress);
+  const onEndedRef = useRef(onEnded);
+  useEffect(() => { onSceneChangeRef.current = onSceneChange; }, [onSceneChange]);
+  useEffect(() => { onProgressRef.current = onProgress; }, [onProgress]);
+  useEffect(() => { onEndedRef.current = onEnded; }, [onEnded]);
+
+  // Fire scene-change events.
+  useEffect(() => {
+    onSceneChangeRef.current?.({
+      index: sceneIndex,
+      previousIndex: prevSceneRef.current,
+      total,
+    });
+    prevSceneRef.current = sceneIndex;
+  }, [sceneIndex, total]);
+
+  // Report accumulated watched duration on unmount.
   useEffect(() => {
     return () => {
       const ms = Math.round(watchedMsRef.current);
-      if (ms > 250) onWatchedRef.current?.(ms);
+      if (ms > 250) onWatched?.(ms);
     };
+    // onWatched intentionally omitted — capture-on-unmount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const [audioDurationMs, setAudioDurationMs] = useState<number>(0);
-
-  // Prefetch narration on mount so the first play doesn't stall on the network.
-  // Skipped entirely on Save-Data / slow-2g so mobile users on metered plans
-  // don't pay the TTS payload cost — scenes still play silently with captions.
+  // Static/reduced-motion path — no clock at all.
   useEffect(() => {
-    if (adaptive.disableTts) return;
-    let cancelled = false;
-    let localUrl: string | null = null;
-    (async () => {
-      try {
-        const url = await fetchNarration(explainer.transcript);
-        if (cancelled) return;
-        localUrl = url;
-        const audio = new Audio(url);
-        audio.preload = 'auto';
-        audio.volume = muted ? 0 : volume;
-        const captureDuration = () => {
-          const d = audio.duration;
-          if (Number.isFinite(d) && d > 0) setAudioDurationMs(Math.round(d * 1000));
-        };
-        audio.addEventListener('loadedmetadata', captureDuration);
-        audio.addEventListener('durationchange', captureDuration);
-        narrationRef.current = audio;
-        setVoiceReady(true);
-      } catch (err) {
-        // 402 = workspace out of AI credits; expected & non-fatal (scenes play silently).
-        const msg = err instanceof Error ? err.message : String(err);
-        if (!msg.includes('tts_failed_402')) {
-          console.warn('[explainer] narration unavailable:', err);
-        }
-      }
-    })();
-    return () => {
-      cancelled = true;
-      const a = narrationRef.current;
-      narrationRef.current = null;
-      if (a) {
-        try { a.pause(); } catch { /* ignore */ }
-        a.src = '';
-      }
-      // Don't revoke the cached blob URL — it lives in the module cache so
-      // re-opens are instant. Browser will GC it on unload.
-      void localUrl;
-    };
-  }, [explainer.transcript, adaptive.disableTts]);
+    if (!reduced) return;
+    onEndedRef.current?.();
+  }, [reduced]);
 
-
-  // Ambient bed lifecycle — only created once narration is ready so it
-  // never plays as a standalone hum when TTS is unavailable.
   useEffect(() => {
-    if (!voiceReady || adaptive.disableAmbient) return;
-    const bed = createAmbientBed(0.06);
-    ambientRef.current = bed;
-    return () => {
-      bed.stop();
-      ambientRef.current = null;
-    };
-  }, [voiceReady, adaptive.disableAmbient]);
-
-  // Apply volume + mute to narration & ambient in real time.
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      window.localStorage.setItem('vb:explainer:volume', String(volume));
-    }
-    const a = narrationRef.current;
-    const effective = muted ? 0 : volume;
-    if (a) a.volume = effective;
-    ambientRef.current?.setVolume(effective * 0.35); // ambient sits under narration
-  }, [volume, muted, voiceReady]);
-
-  // Sync playback state → audio + ambient bed. We keep audio *playing* even
-  // when muted (volume=0) so scene transitions stay locked to narration beats.
-  useEffect(() => {
-    const audio = narrationRef.current;
-    const bed = ambientRef.current;
-    if (playing) {
-      bed?.start().catch(() => { /* autoplay policy — user will click again */ });
-      bed?.setMuted(muted);
-      if (audio) {
-        try {
-          if (Math.abs(audio.currentTime * 1000 - elapsedMs) > 400) {
-            audio.currentTime = Math.min(elapsedMs / 1000, (audio.duration || elapsedMs / 1000));
-          }
-        } catch { /* ignore */ }
-        audio.play().catch(() => { /* blocked until gesture */ });
-      }
-    } else {
-      audio?.pause();
-      bed?.setMuted(true);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [playing, voiceReady]);
-
-  // playback loop — when narration audio is available, drive elapsedMs from
-  // audio.currentTime scaled to totalMs so every scene transition and caption
-  // lands on the actual voiceover beat (not a drifting RAF clock).
-  useEffect(() => {
-    if (!playing) {
+    if (reduced) return;
+    const shouldRun = playing && !ended && (!respectInView || inView);
+    if (!shouldRun) {
       lastTickRef.current = null;
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+      rafRef.current = null;
       return;
     }
-    const audio = narrationRef.current;
-    const useAudioClock = !!(audio && audioDurationMs > 0 && voiceReady);
+
     const tick = (t: number) => {
-      if (lastTickRef.current == null) lastTickRef.current = t;
-      const delta = t - lastTickRef.current;
+      const last = lastTickRef.current ?? t;
+      const dt = Math.max(0, Math.min(64, t - last));
       lastTickRef.current = t;
-      watchedMsRef.current += delta;
-      if (useAudioClock && audio) {
-        const scale = totalMs / audioDurationMs;
-        const next = Math.min(audio.currentTime * 1000 * scale, totalMs);
-        setElapsedMs(next);
-      } else {
-        setElapsedMs((prev) => Math.min(prev + delta, totalMs));
+      elapsedInSceneRef.current += dt;
+      watchedMsRef.current += dt;
+
+      const dur = scenes[sceneIndex]?.durationMs ?? 6000;
+
+      // Progress milestones (25/50/75/100) across the full run.
+      if (totalMs > 0 && onProgressRef.current) {
+        const totalElapsed =
+          scenes.slice(0, sceneIndex).reduce((s, sc) => s + sc.durationMs, 0) +
+          elapsedInSceneRef.current;
+        for (const m of [0.25, 0.5, 0.75, 1]) {
+          if (!milestoneRef.current.has(m) && totalElapsed / totalMs >= m) {
+            milestoneRef.current.add(m);
+            onProgressRef.current(m);
+          }
+        }
+      }
+
+      if (elapsedInSceneRef.current >= dur) {
+        elapsedInSceneRef.current = 0;
+        const next = sceneIndex + 1;
+        if (next >= total) {
+          if (loop) {
+            setSceneIndex(0);
+            milestoneRef.current.clear();
+          } else {
+            setEnded(true);
+            setPlaying(false);
+            onEndedRef.current?.();
+            return;
+          }
+        } else {
+          setSceneIndex(next);
+        }
       }
       rafRef.current = requestAnimationFrame(tick);
     };
     rafRef.current = requestAnimationFrame(tick);
     return () => {
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
+      rafRef.current = null;
+      lastTickRef.current = null;
     };
-  }, [playing, totalMs, audioDurationMs, voiceReady]);
+  }, [playing, ended, inView, respectInView, reduced, sceneIndex, scenes, total, totalMs, loop]);
 
-
-  // progress milestones + persistence
-  useEffect(() => {
-    const pct = totalMs > 0 ? elapsedMs / totalMs : 0;
-    if (storageKey && typeof window !== 'undefined') {
-      window.localStorage.setItem(storageKey, String(Math.floor(elapsedMs)));
+  const handlePlayPause = () => {
+    if (ended) {
+      setEnded(false);
+      setSceneIndex(0);
+      elapsedInSceneRef.current = 0;
+      milestoneRef.current.clear();
+      setPlaying(true);
+      return;
     }
-    [0.25, 0.5, 0.75, 1].forEach((m) => {
-      if (pct >= m && !milestoneRef.current.has(m)) {
-        milestoneRef.current.add(m);
-        onProgress?.(m);
-        if (m === 1) {
-          setPlaying(false);
-          onEnded?.();
-          const a = narrationRef.current;
-          if (a) { try { a.pause(); } catch { /* ignore */ } }
-        }
-      }
-    });
-  }, [elapsedMs, totalMs, onProgress, onEnded, storageKey]);
-
-  // determine current scene
-  let acc = 0;
-  let sceneIndex = 0;
-  for (let i = 0; i < explainer.scenes.length; i++) {
-    if (elapsedMs < acc + explainer.scenes[i].durationMs) {
-      sceneIndex = i;
-      break;
-    }
-    acc += explainer.scenes[i].durationMs;
-    sceneIndex = i;
-  }
-  const Scene = explainer.scenes[sceneIndex].Component;
-  const caption = explainer.scenes[sceneIndex].caption;
-  const progressPct = totalMs > 0 ? (elapsedMs / totalMs) * 100 : 0;
-
-  // Fire scene view/completion events when the active scene changes.
-  useEffect(() => {
-    const prev = lastSceneRef.current;
-    if (prev === sceneIndex) return;
-    lastSceneRef.current = sceneIndex;
-    onSceneChange?.({ index: sceneIndex, previousIndex: prev >= 0 ? prev : null, total: explainer.scenes.length });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sceneIndex, explainer.scenes.length]);
-
-
-  const seekAudio = (ms: number) => {
-    const a = narrationRef.current;
-    if (!a) return;
-    try {
-      const dur = a.duration;
-      // When we know both durations, map from video-timeline ms → audio time
-      // so scene jumps land on the corresponding voiceover beat.
-      const target = audioDurationMs > 0 && Number.isFinite(dur)
-        ? (ms / totalMs) * dur
-        : Math.min(ms / 1000, dur || ms / 1000);
-      if (Number.isFinite(target)) a.currentTime = Math.max(0, target);
-    } catch { /* ignore */ }
+    setPlaying((p) => !p);
   };
-
-
-  // Cumulative start offset (ms) for each scene, plus its percent along the
-  // total timeline — used by the chapter chips and progress-bar ticks.
-  const chapterOffsets = useMemo(() => {
-    const arr: Array<{ startMs: number; percent: number }> = [];
-    let acc2 = 0;
-    for (const sc of explainer.scenes) {
-      arr.push({ startMs: acc2, percent: totalMs > 0 ? (acc2 / totalMs) * 100 : 0 });
-      acc2 += sc.durationMs;
-    }
-    return arr;
-  }, [explainer.scenes, totalMs]);
-
-  const jumpToScene = (i: number) => {
-    let ms = 0;
-    for (let j = 0; j < i; j++) ms += explainer.scenes[j].durationMs;
-    setElapsedMs(ms);
-    seekAudio(ms);
-    milestoneRef.current = new Set(
-      [0.25, 0.5, 0.75, 1].filter((m) => ms / totalMs >= m),
-    );
-  };
-
-  const jumpToChapter = (i: number, source: 'chip' | 'tick') => {
-    jumpToScene(i);
+  const handleRestart = () => {
+    setEnded(false);
+    setSceneIndex(0);
+    elapsedInSceneRef.current = 0;
+    milestoneRef.current.clear();
     setPlaying(true);
-    trackLeadEvent('homepage_video_chapter_clicked', {
-      video_type: explainer.id,
-      scene_index: i,
-      scene_count: explainer.scenes.length,
-      chapter_label: explainer.scenes[i]?.chapterLabel,
-      source,
-    });
   };
 
-  const scrub = (pct: number) => {
-    const ms = pct * totalMs;
-    setElapsedMs(ms);
-    seekAudio(ms);
-    milestoneRef.current = new Set(
-      [0.25, 0.5, 0.75, 1].filter((m) => pct >= m),
+  const Current = scenes[sceneIndex]?.Component;
+  const caption = scenes[sceneIndex]?.caption ?? '';
+
+  // Reduced motion → poster + static caption stack.
+  if (reduced) {
+    return (
+      <div ref={inViewRef} className="relative h-full w-full overflow-hidden bg-foreground">
+        <img
+          src={explainer.heroImage}
+          alt=""
+          className="absolute inset-0 h-full w-full object-cover opacity-70"
+        />
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-black/20" />
+        <div className="relative z-10 flex h-full w-full flex-col justify-end gap-2 p-6">
+          {scenes.map((s, i) => (
+            <p
+              key={i}
+              className="font-display text-lg font-semibold text-white drop-shadow-[0_2px_10px_rgba(0,0,0,0.55)] sm:text-xl"
+            >
+              {s.caption}
+            </p>
+          ))}
+        </div>
+      </div>
     );
-  };
-
-  // Build a plain-text transcript with chapter timestamps and trigger download.
-  const downloadTranscript = () => {
-    const pad = (n: number) => n.toString().padStart(2, '0');
-    const stamp = (ms: number) => {
-      const s = Math.max(0, Math.floor(ms / 1000));
-      return `${pad(Math.floor(s / 60))}:${pad(s % 60)}`;
-    };
-    const chapterLines = explainer.scenes
-      .map((sc, i) => {
-        const start = chapterOffsets[i]?.startMs ?? 0;
-        return `[${stamp(start)}] ${sc.chapterLabel}\n${sc.caption ?? ''}`.trim();
-      })
-      .join('\n\n');
-    const body = [
-      explainer.title,
-      'Vendibook — How It Works',
-      ''.padEnd(48, '='),
-      '',
-      'FULL NARRATION',
-      ''.padEnd(48, '-'),
-      explainer.transcript.trim(),
-      '',
-      'CHAPTERS',
-      ''.padEnd(48, '-'),
-      chapterLines,
-      '',
-    ].join('\n');
-    const blob = new Blob([body], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const slug = explainer.id.toString().toLowerCase().replace(/[^a-z0-9]+/g, '-');
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `vendibook-${slug}-transcript.txt`;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 1500);
-    trackLeadEvent('homepage_video_transcript_downloaded', {
-      video_type: explainer.id,
-      scene_count: explainer.scenes.length,
-    });
-  };
-
-  // Keyboard shortcuts:
-  //   Space / K       play-pause
-  //   ArrowLeft/Right prev / next scene (PageUp / PageDown mirror)
-  //   Home / End      first / last scene
-  //   1-9             jump to chapter N
-  //   M               mute voiceover
-  //   T               download transcript
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      const t = e.target as HTMLElement | null;
-      if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
-      const k = e.key;
-      if (e.code === 'Space' || k === 'k' || k === 'K') {
-        e.preventDefault();
-        setPlaying((p) => !p);
-      } else if (k === 'ArrowRight' || k === 'PageDown') {
-        e.preventDefault();
-        jumpToScene(Math.min(sceneIndex + 1, explainer.scenes.length - 1));
-      } else if (k === 'ArrowLeft' || k === 'PageUp') {
-        e.preventDefault();
-        jumpToScene(Math.max(sceneIndex - 1, 0));
-      } else if (k === 'Home') {
-        e.preventDefault();
-        jumpToScene(0);
-      } else if (k === 'End') {
-        e.preventDefault();
-        jumpToScene(explainer.scenes.length - 1);
-      } else if (/^[1-9]$/.test(k)) {
-        const idx = Number(k) - 1;
-        if (idx < explainer.scenes.length) {
-          e.preventDefault();
-          jumpToChapter(idx, 'chip');
-        }
-      } else if (k === 'm' || k === 'M') {
-        setMuted((m) => !m);
-      } else if (k === 't' || k === 'T') {
-        e.preventDefault();
-        downloadTranscript();
-      }
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sceneIndex, explainer.scenes.length]);
+  }
 
   return (
     <div
-      className="relative flex h-full w-full flex-col bg-background"
-      role="region"
-      aria-label={`${explainer.title} explainer video`}
-      aria-keyshortcuts="Space K ArrowLeft ArrowRight Home End 1 2 3 4 5 6 7 8 9 M T"
+      ref={inViewRef}
+      className={cn(
+        'relative h-full w-full overflow-hidden bg-foreground',
+        // Scoped rule: hide the SceneShell's built-in caption bar so our
+        // CaptionCard is the only text on screen (single source of truth).
+        '[&_[data-scene-caption]]:hidden',
+      )}
     >
-      <p className="sr-only">
-        Keyboard shortcuts: Space or K to play or pause, Left and Right arrows to change scene,
-        Home and End to jump to start or end, number keys 1 through {Math.min(9, explainer.scenes.length)} to jump to a chapter,
-        M to mute the voiceover, T to download the transcript.
-      </p>
-      {/* Cinematic stage */}
-      <div className="relative aspect-video w-full overflow-hidden bg-foreground">
-        {/* backdrop: hero photo, softly blurred & darkened for depth */}
-        <motion.img
-          src={explainer.heroImage}
-          alt=""
-          aria-hidden
-          loading="lazy"
-          decoding="async"
-          // @ts-expect-error — fetchpriority is valid HTML, React types lag.
-          fetchpriority={adaptive.fetchPriority}
-          className="absolute inset-0 h-full w-full object-cover opacity-40"
-          style={{ filter: adaptive.dataSaver ? 'blur(6px) saturate(1.1)' : 'blur(14px) saturate(1.15)' }}
-          initial={{ scale: 1.06 }}
-          animate={prefersReduced || adaptive.disableBackdropAnim ? undefined : { scale: [1.06, 1.12, 1.06] }}
-          transition={prefersReduced || adaptive.disableBackdropAnim ? undefined : { duration: 22, repeat: Infinity, ease: 'easeInOut' }}
-        />
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/70 via-black/25 to-black/40" />
+      {/* Poster — painted immediately to avoid a black flash before first frame. */}
+      <img
+        src={explainer.heroImage}
+        alt=""
+        aria-hidden
+        className="absolute inset-0 h-full w-full object-cover opacity-40"
+      />
 
+      {Current ? <Current /> : null}
 
-        {/* animated scene */}
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={sceneIndex}
-            initial={prefersReduced ? { opacity: 1 } : { opacity: 0, scale: 1.03 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={prefersReduced ? { opacity: 0 } : { opacity: 0, scale: 0.98 }}
-            transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
-            className="absolute inset-0"
-          >
-            <Scene />
-          </motion.div>
-        </AnimatePresence>
-
-        {/* Burned-in caption bar — always visible on the video stage. */}
-        <div
-          className="pointer-events-none absolute inset-x-0 bottom-3 flex justify-center px-4 sm:bottom-5"
-          aria-live="polite"
-          aria-atomic="true"
-        >
-          {caption && (
-            <motion.div
-              key={`cap-${sceneIndex}`}
-              initial={prefersReduced ? { opacity: 1, y: 0 } : { opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={prefersReduced ? { duration: 0 } : { duration: 0.35, ease: 'easeOut' }}
-              className="max-w-2xl rounded-lg bg-black/75 px-3 py-1.5 text-center text-sm font-medium leading-snug text-white shadow-lg backdrop-blur sm:px-4 sm:py-2 sm:text-base"
-            >
-              {caption}
-            </motion.div>
-          )}
-        </div>
-
-
-        {/* Scene counter */}
-        <div className="absolute right-3 top-3 rounded-full bg-black/60 px-2 py-0.5 text-[11px] font-semibold text-white backdrop-blur">
-          {sceneIndex + 1} / {explainer.scenes.length}
-        </div>
+      {/* Caption overlay */}
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 z-40 bg-gradient-to-t from-black/85 via-black/45 to-transparent px-5 pb-5 pt-14 sm:px-8 sm:pb-7">
+        <CaptionCard caption={caption} size={showControls ? 'modal' : 'tile'} />
       </div>
 
-      {/* Transport */}
-      <div className="flex items-center gap-3 border-t border-border bg-card px-3 py-2.5 sm:px-4">
-        <button
-          type="button"
-          onClick={() => setPlaying((p) => !p)}
-          className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-primary-foreground transition-transform hover:scale-105"
-          aria-label={playing ? 'Pause' : 'Play'}
-        >
-          {playing ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
-        </button>
-        <button
-          type="button"
-          onClick={() => jumpToScene(Math.max(sceneIndex - 1, 0))}
-          className="text-muted-foreground hover:text-foreground"
-          aria-label="Previous scene"
-        >
-          <ChevronLeft className="h-5 w-5" />
-        </button>
-        <button
-          type="button"
-          onClick={() => jumpToScene(Math.min(sceneIndex + 1, explainer.scenes.length - 1))}
-          className="text-muted-foreground hover:text-foreground"
-          aria-label="Next scene"
-        >
-          <ChevronRight className="h-5 w-5" />
-        </button>
-
-        <div
-          role="slider"
-          aria-label="Progress"
-          aria-valuemin={0}
-          aria-valuemax={100}
-          aria-valuenow={Math.round(progressPct)}
-          aria-valuetext={`${formatTime(elapsedMs)} of ${formatTime(totalMs)}`}
-          tabIndex={0}
-          onClick={(e) => {
-            const rect = e.currentTarget.getBoundingClientRect();
-            scrub(Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width)));
-          }}
-          onKeyDown={(e) => {
-            const pct = progressPct / 100;
-            if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
-              // Handled globally as scene nav; swallow here so the slider
-              // doesn't double-jump when it holds focus.
-              return;
-            }
-            if (e.key === 'Home') { e.preventDefault(); e.stopPropagation(); scrub(0); }
-            else if (e.key === 'End') { e.preventDefault(); e.stopPropagation(); scrub(1); }
-            else if (e.key === 'PageUp') { e.preventDefault(); e.stopPropagation(); scrub(Math.max(0, pct - 0.1)); }
-            else if (e.key === 'PageDown') { e.preventDefault(); e.stopPropagation(); scrub(Math.min(1, pct + 0.1)); }
-          }}
-          className="relative h-1.5 flex-1 cursor-pointer overflow-hidden rounded-full bg-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-        >
-          <div
-            className="absolute inset-y-0 left-0 bg-primary"
-            style={{ width: `${progressPct}%` }}
+      {/* Scene pips */}
+      <div className="pointer-events-none absolute inset-x-0 top-3 z-40 flex justify-center gap-1.5">
+        {scenes.map((_, i) => (
+          <span
+            key={i}
+            className={cn(
+              'h-1 rounded-full transition-all duration-300',
+              i === sceneIndex ? 'w-6 bg-white' : 'w-3 bg-white/40',
+            )}
           />
-          {/* Chapter tick marks — skip the first one at 0% */}
-          {chapterOffsets.slice(1).map((c, i) => (
-            <button
-              key={`tick-${i + 1}`}
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                jumpToChapter(i + 1, 'tick');
-              }}
-              aria-label={`Jump to chapter ${i + 2}: ${explainer.scenes[i + 1]?.chapterLabel ?? ''}`}
-              title={explainer.scenes[i + 1]?.chapterLabel}
-              className="absolute top-1/2 h-3 w-0.5 -translate-x-1/2 -translate-y-1/2 rounded-sm bg-background/90 ring-1 ring-foreground/30 transition-colors hover:bg-primary"
-              style={{ left: `${c.percent}%` }}
-            />
-          ))}
-        </div>
+        ))}
+      </div>
 
-        <span className="hidden text-xs tabular-nums text-muted-foreground sm:inline">
-          {formatTime(elapsedMs)} / {formatTime(totalMs)}
-        </span>
-
-        <div className="flex items-center gap-1.5">
+      {/* Controls (modal only) */}
+      {showControls ? (
+        <div className="absolute right-3 top-3 z-50 flex items-center gap-1.5">
           <button
             type="button"
-            onClick={() => setMuted((m) => !m)}
-            className={cn(
-              'flex h-8 w-8 items-center justify-center rounded-md border transition-colors',
-              muted
-                ? 'border-border text-muted-foreground hover:text-foreground'
-                : 'border-primary bg-primary/10 text-primary',
-            )}
-            aria-pressed={!muted}
-            aria-label={muted ? 'Unmute voiceover' : 'Mute voiceover'}
-            title={muted ? 'Unmute voiceover' : 'Mute voiceover'}
+            onClick={handlePlayPause}
+            aria-label={playing ? 'Pause' : 'Play'}
+            className="grid h-9 w-9 place-items-center rounded-full border border-white/25 bg-black/55 text-white backdrop-blur transition hover:bg-black/75"
           >
-            {muted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+            {playing ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4 translate-x-[1px]" />}
           </button>
-          <input
-            type="range"
-            min={0}
-            max={1}
-            step={0.05}
-            value={muted ? 0 : volume}
-            onChange={(e) => {
-              const v = Number(e.target.value);
-              setVolume(v);
-              if (v > 0 && muted) setMuted(false);
-              if (v === 0 && !muted) setMuted(true);
-            }}
-            aria-label="Voiceover volume"
-            aria-valuemin={0}
-            aria-valuemax={100}
-            aria-valuenow={Math.round((muted ? 0 : volume) * 100)}
-            aria-valuetext={`${Math.round((muted ? 0 : volume) * 100)} percent`}
-            title={`Volume ${Math.round((muted ? 0 : volume) * 100)}%`}
-            className="hidden h-1.5 w-20 cursor-pointer appearance-none rounded-full bg-muted accent-primary sm:block focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-          />
+          <button
+            type="button"
+            onClick={handleRestart}
+            aria-label="Restart"
+            className="grid h-9 w-9 place-items-center rounded-full border border-white/25 bg-black/55 text-white backdrop-blur transition hover:bg-black/75"
+          >
+            <RotateCcw className="h-4 w-4" />
+          </button>
         </div>
-
-        <button
-          type="button"
-          onClick={downloadTranscript}
-          className="flex h-8 items-center gap-1 rounded-md border border-border px-2 text-xs font-semibold text-muted-foreground transition-colors hover:border-primary hover:text-primary"
-          aria-label={`Download ${explainer.title} transcript`}
-          title="Download transcript (T)"
-        >
-          <Download className="h-3.5 w-3.5" />
-          Transcript
-        </button>
-      </div>
-
-      {/* Chapter chips — clickable jump list */}
-      <nav
-        aria-label="Chapters"
-        className="flex gap-2 overflow-x-auto border-t border-border bg-card/60 px-3 py-2 sm:px-4"
-      >
-        {explainer.scenes.map((sc, i) => {
-          const active = i === sceneIndex;
-          return (
-            <button
-              key={`chapter-${i}`}
-              type="button"
-              onClick={() => jumpToChapter(i, 'chip')}
-              aria-current={active ? 'true' : undefined}
-              className={cn(
-                'flex shrink-0 items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-semibold transition-colors sm:text-xs',
-                active
-                  ? 'border-primary bg-primary text-primary-foreground shadow-sm'
-                  : 'border-border bg-background text-muted-foreground hover:border-foreground/40 hover:text-foreground',
-              )}
-            >
-              <span
-                className={cn(
-                  'flex h-4 w-4 items-center justify-center rounded-full text-[10px] font-bold',
-                  active ? 'bg-primary-foreground/20 text-primary-foreground' : 'bg-muted text-foreground',
-                )}
-              >
-                {i + 1}
-              </span>
-              <span className="whitespace-nowrap">{sc.chapterLabel}</span>
-            </button>
-          );
-        })}
-      </nav>
+      ) : null}
     </div>
   );
-};
-
-const formatTime = (ms: number) => {
-  const s = Math.max(0, Math.floor(ms / 1000));
-  const m = Math.floor(s / 60);
-  const r = s % 60;
-  return `${m}:${r.toString().padStart(2, '0')}`;
 };
 
 export default AnimatedExplainer;
