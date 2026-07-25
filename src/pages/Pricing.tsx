@@ -37,7 +37,17 @@ const Pricing = () => {
   const buyerServices = useMemo(() => applyOneLiners(buyerRaw), [buyerRaw]);
   const permitUpgrades = useMemo(() => applyOneLiners(permitRaw), [permitRaw]);
 
-
+  // Wizard-originated visits pass ?returnTo=/create-listing/{id}?step=... and
+  // optionally ?listingContext=<draftId>. When present we route Stripe cancel/success
+  // back to the wizard and auto-scope listing-scoped boosts to that draft so the
+  // user is never dumped on /dashboard mid-listing-creation.
+  const [searchParams] = useSearchParams();
+  const returnTo = searchParams.get('returnTo');
+  const listingContext = searchParams.get('listingContext') ?? undefined;
+  const overrideCancelPath = returnTo || undefined;
+  const overrideSuccessPath = returnTo
+    ? `${returnTo}${returnTo.includes('?') ? '&' : '?'}purchase=success`
+    : undefined;
 
   return (
     <div className="min-h-screen bg-background">
@@ -47,8 +57,12 @@ const Pricing = () => {
       />
 
       <section className="mx-auto max-w-6xl px-4 pt-8 pb-16">
-        <PremiumPlansSection />
+        <PremiumPlansSection
+          successPathOverride={overrideSuccessPath}
+          cancelPathOverride={overrideCancelPath}
+        />
       </section>
+
 
       <div className="section-band">
       <section id="upgrades" className="mx-auto max-w-6xl px-4 py-16 md:py-20">
