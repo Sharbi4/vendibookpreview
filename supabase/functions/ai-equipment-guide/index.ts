@@ -5,6 +5,7 @@ import {
   sourcesToCitations,
   todayISO,
 } from "../_shared/firecrawl-research.ts";
+import { gateToolAccess } from "../_shared/gateToolAccess.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -20,6 +21,8 @@ serve(async (req) => {
   }
 
   try {
+    const gate = await gateToolAccess(req, "buildkit", corsHeaders);
+    if (gate.response) return gate.response;
     const { equipment, issue, maintenanceType } = await req.json();
 
     if (!equipment || equipment.trim().length === 0) {

@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { gateToolAccess } from "../_shared/gateToolAccess.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -188,6 +189,8 @@ serve(async (req) => {
   }
 
   try {
+    const gate = await gateToolAccess(req, "marketing-studio", corsHeaders);
+    if (gate.response) return gate.response;
     const { type, data }: RequestBody = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
 

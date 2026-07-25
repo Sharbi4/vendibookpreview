@@ -18,17 +18,15 @@ const ROWS: Row[] = [
   { label: 'Enhanced listing tools (extra photos, badges)', free: false, starter: true, pro: true, premium: true },
   { label: 'AI listing description generator', free: false, starter: true, pro: true, premium: true },
   { label: 'Booking calendar & automated renter messages', free: 'Basic', starter: true, pro: true, premium: true },
-  { label: 'Recurring availability & custom rules', free: false, starter: false, pro: true, premium: true },
-  { label: 'Storage add-ons, cleaning fees, custom deposits', free: false, starter: false, pro: true, premium: true },
+  { label: 'Custom deposits & cancellation rules', free: false, starter: false, pro: true, premium: true },
+  { label: 'Storage add-ons, cleaning fees', free: false, starter: false, pro: true, premium: true },
   { label: 'Featured Boost included', free: false, starter: false, pro: '1 credit', premium: '1 credit' },
   { label: 'Premium tools bundle (PricePilot, Studios, Radar, Concept Lab)', free: false, starter: false, pro: true, premium: true },
   { label: '$10 off notarization', free: false, starter: false, pro: true, premium: true },
-  { label: 'Multi-location / fleet management', free: false, starter: false, pro: false, premium: true },
-  { label: 'Team member access & permissions', free: false, starter: false, pro: false, premium: true },
-  { label: 'Utilization analytics & accounting exports', free: false, starter: false, pro: false, premium: true },
+  { label: 'Portfolio dashboard across every listing', free: false, starter: false, pro: false, premium: true },
   { label: 'BuildKit included', free: false, starter: false, pro: false, premium: true },
   { label: 'Custom intake questions per booking', free: false, starter: false, pro: false, premium: true },
-  { label: 'Priority support', free: 'Community', starter: 'Email', pro: 'Email + chat', premium: 'Dedicated' },
+  { label: 'Support priority', free: 'Standard', starter: 'Standard', pro: 'High', premium: 'Urgent' },
 ];
 
 function Cell({ v }: { v: boolean | string }) {

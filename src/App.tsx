@@ -98,6 +98,7 @@ const MarketingStudio = lazy(() => import("./pages/tools/MarketingStudio"));
 const StartupGuide = lazy(() => import("./pages/tools/StartupGuide"));
 const FoodTruckStartupCosts2026 = lazy(() => import("./pages/tools/FoodTruckStartupCosts2026"));
 const RegulationsHub = lazy(() => import("./pages/tools/RegulationsHub"));
+import ToolAccessGate from "./components/tools/ToolAccessGate";
 const ToolPreview = lazy(() => import("./pages/tools/ToolPreview"));
 const OrderTracking = lazy(() => import("./pages/OrderTracking"));
 const Transactions = lazy(() => import("./pages/Transactions"));
@@ -302,14 +303,14 @@ const AnimatedRoutes = () => {
           
           {/* Tools - /tools is the canonical hub */}
           <Route path="/tools" element={<PageTransition><ToolsIndex /></PageTransition>} />
-          <Route path="/tools/pricepilot" element={<PageTransition><PricePilot /></PageTransition>} />
+          <Route path="/tools/pricepilot" element={<PageTransition><ToolAccessGate slug="pricepilot"><PricePilot /></ToolAccessGate></PageTransition>} />
           <Route path="/tools/:slug/preview" element={<PageTransition><ToolPreview /></PageTransition>} />
-          <Route path="/tools/permitpath" element={<PageTransition><PermitPath /></PageTransition>} />
-          <Route path="/tools/buildkit" element={<PageTransition><BuildKit /></PageTransition>} />
-          <Route path="/tools/listing-studio" element={<PageTransition><ListingStudio /></PageTransition>} />
-          <Route path="/tools/concept-lab" element={<PageTransition><ConceptLab /></PageTransition>} />
-          <Route path="/tools/market-radar" element={<PageTransition><MarketRadar /></PageTransition>} />
-          <Route path="/tools/marketing-studio" element={<PageTransition><MarketingStudio /></PageTransition>} />
+          <Route path="/tools/permitpath" element={<PageTransition><ToolAccessGate slug="permitpath"><PermitPath /></ToolAccessGate></PageTransition>} />
+          <Route path="/tools/buildkit" element={<PageTransition><ToolAccessGate slug="buildkit"><BuildKit /></ToolAccessGate></PageTransition>} />
+          <Route path="/tools/listing-studio" element={<PageTransition><ToolAccessGate slug="listing-studio"><ListingStudio /></ToolAccessGate></PageTransition>} />
+          <Route path="/tools/concept-lab" element={<PageTransition><ToolAccessGate slug="concept-lab"><ConceptLab /></ToolAccessGate></PageTransition>} />
+          <Route path="/tools/market-radar" element={<PageTransition><ToolAccessGate slug="market-radar"><MarketRadar /></ToolAccessGate></PageTransition>} />
+          <Route path="/tools/marketing-studio" element={<PageTransition><ToolAccessGate slug="marketing-studio"><MarketingStudio /></ToolAccessGate></PageTransition>} />
           <Route path="/tools/startup-guide" element={<PageTransition><StartupGuide /></PageTransition>} />
           <Route path="/tools/food-truck-startup-costs-2026" element={<PageTransition><FoodTruckStartupCosts2026 /></PageTransition>} />
           <Route path="/tools/regulations-hub" element={<PageTransition><RegulationsHub /></PageTransition>} />

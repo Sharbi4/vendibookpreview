@@ -47,6 +47,26 @@ interface RefundEvent {
   created_at: string;
 }
 
+interface ServiceRow {
+  id: string;
+  user_id: string | null;
+  listing_id: string | null;
+  amount_cents: number;
+  status: string;
+  fulfillment_status: string;
+  created_at: string;
+  paid_at: string | null;
+  product_slug: string | null;
+  product_name: string | null;
+}
+
+/** Monetization SKUs that require a human to complete the work. */
+const MANUAL_SERVICE_SLUGS = [
+  'listing_rewrite',
+  'listing_photo_shoot',
+  'concierge_setup',
+];
+
 export default function AdminMonetizationOps() {
   const { user, isLoading: authLoading } = useAuth();
   const [isAdmin, setIsAdmin] = useState(false);
@@ -57,6 +77,7 @@ export default function AdminMonetizationOps() {
   const [events, setEvents] = useState<WebhookEvent[]>([]);
   const [pending, setPending] = useState<PendingRow[]>([]);
   const [refunds, setRefunds] = useState<RefundEvent[]>([]);
+  const [services, setServices] = useState<ServiceRow[]>([]);
   const [typeFilter, setTypeFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<'all' | 'processed' | 'error'>('all');
 
@@ -72,21 +93,54 @@ export default function AdminMonetizationOps() {
   const load = async () => {
     setLoading(true);
     try {
-      const [ev, pn, rf] = await Promise.all([
+      const [ev, pn, rf, sv] = await Promise.all([
         anyClient.from('stripe_webhook_events')
           .select('*').order('processed_at', { ascending: false }).limit(200),
         anyClient.from('monetization_pending_reconciliation').select('*').limit(100),
         anyClient.from('monetization_refund_events')
           .select('*').order('created_at', { ascending: false }).limit(100),
+        anyClient.from('monetization_purchases')
+          .select('id,user_id,listing_id,amount_cents,status,fulfillment_status,created_at,paid_at,monetization_products!inner(slug,name)')
+          .in('monetization_products.slug', MANUAL_SERVICE_SLUGS)
+          .in('status', ['paid', 'fulfilled'])
+          .order('created_at', { ascending: false })
+          .limit(200),
       ]);
       setEvents(ev.data ?? []);
       setPending(pn.data ?? []);
       setRefunds(rf.data ?? []);
+      setServices(((sv.data ?? []) as any[]).map((r) => ({
+        id: r.id,
+        user_id: r.user_id,
+        listing_id: r.listing_id,
+        amount_cents: r.amount_cents,
+        status: r.status,
+        fulfillment_status: r.fulfillment_status,
+        created_at: r.created_at,
+        paid_at: r.paid_at,
+        product_slug: r.monetization_products?.slug ?? null,
+        product_name: r.monetization_products?.name ?? null,
+      })));
     } catch (e) {
       console.error('admin monetization ops load failed', e);
       toast.error('Failed to load operations data');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const markServiceFulfilled = async (purchaseId: string) => {
+    try {
+      const { error } = await anyClient
+        .from('monetization_purchases')
+        .update({ fulfillment_status: 'fulfilled', status: 'fulfilled' })
+        .eq('id', purchaseId);
+      if (error) throw error;
+      toast.success('Marked fulfilled');
+      await load();
+    } catch (e) {
+      console.error('mark fulfilled failed', e);
+      toast.error(e instanceof Error ? e.message : 'Failed to update purchase');
     }
   };
 
@@ -182,6 +236,7 @@ export default function AdminMonetizationOps() {
       <Tabs defaultValue="pending">
         <TabsList>
           <TabsTrigger value="pending">Reconciliation ({pending.length})</TabsTrigger>
+          <TabsTrigger value="services">Services ({services.filter(s => s.fulfillment_status !== 'fulfilled').length})</TabsTrigger>
           <TabsTrigger value="events">Webhook events</TabsTrigger>
           <TabsTrigger value="refunds">Refund audit</TabsTrigger>
         </TabsList>
@@ -237,6 +292,69 @@ export default function AdminMonetizationOps() {
             </div>
           )}
         </TabsContent>
+
+        <TabsContent value="services" className="mt-4 space-y-3">
+          {services.length === 0 ? (
+            <Card>
+              <CardContent className="py-8 text-center text-sm text-muted-foreground">
+                No paid manual-fulfillment services yet.
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="overflow-hidden rounded-xl border border-border">
+              <table className="w-full text-sm">
+                <thead className="bg-muted/50 text-xs uppercase tracking-wider text-muted-foreground">
+                  <tr>
+                    <th className="px-3 py-2 text-left">Paid</th>
+                    <th className="px-3 py-2 text-left">Service</th>
+                    <th className="px-3 py-2 text-left">Listing</th>
+                    <th className="px-3 py-2 text-left">Buyer</th>
+                    <th className="px-3 py-2 text-right">Amount</th>
+                    <th className="px-3 py-2 text-left">Fulfillment</th>
+                    <th className="px-3 py-2 text-right">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {services.map((row) => (
+                    <tr key={row.id} className="border-t border-border">
+                      <td className="px-3 py-2 text-muted-foreground">
+                        {row.paid_at ? new Date(row.paid_at).toLocaleString() : new Date(row.created_at).toLocaleString()}
+                      </td>
+                      <td className="px-3 py-2">{row.product_name ?? row.product_slug}</td>
+                      <td className="px-3 py-2 font-mono text-xs text-muted-foreground">
+                        {row.listing_id ? (
+                          <a className="underline" href={`/listing/${row.listing_id}`} target="_blank" rel="noreferrer">
+                            {row.listing_id.slice(0, 8)}…
+                          </a>
+                        ) : '—'}
+                      </td>
+                      <td className="px-3 py-2 font-mono text-xs text-muted-foreground">
+                        {row.user_id ? row.user_id.slice(0, 8) + '…' : '—'}
+                      </td>
+                      <td className="px-3 py-2 text-right font-semibold">{formatUsd(row.amount_cents)}</td>
+                      <td className="px-3 py-2">
+                        <Badge variant={row.fulfillment_status === 'fulfilled' ? 'default' : 'outline'}>
+                          {row.fulfillment_status}
+                        </Badge>
+                      </td>
+                      <td className="px-3 py-2 text-right">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          disabled={row.fulfillment_status === 'fulfilled'}
+                          onClick={() => markServiceFulfilled(row.id)}
+                        >
+                          Mark fulfilled
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </TabsContent>
+
 
         <TabsContent value="events" className="mt-4 space-y-3">
           <Card>

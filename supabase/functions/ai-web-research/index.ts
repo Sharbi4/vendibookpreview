@@ -5,6 +5,7 @@ import {
   sourcesToCitations,
   todayISO,
 } from "../_shared/firecrawl-research.ts";
+import { gateToolAccess } from "../_shared/gateToolAccess.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -31,6 +32,8 @@ serve(async (req) => {
   }
 
   try {
+    const gate = await gateToolAccess(req, "market-radar", corsHeaders);
+    if (gate.response) return gate.response;
     const { query, category } = await req.json();
     if (!query || query.trim().length === 0) {
       return new Response(

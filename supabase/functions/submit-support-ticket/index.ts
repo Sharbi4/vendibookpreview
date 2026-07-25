@@ -117,7 +117,29 @@ serve(async (req) => {
       }
     }
 
-    const priority = derivePriority(category, !!body.is_blocking);
+    let priority = derivePriority(category, !!body.is_blocking);
+
+    // Paid-tier support elevation: Growth (Pro) subscribers get their tickets
+    // bumped one level (normal → high), Operator (Premium) get bumped to urgent.
+    // Category-derived urgent/high always wins — this only ever raises priority.
+    try {
+      const { data: sub } = await svc
+        .from("host_subscriptions")
+        .select("tier,status")
+        .eq("user_id", user.id)
+        .in("status", ["active", "trialing", "past_due"])
+        .order("updated_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      const tierRaw = (sub?.tier ?? "").toLowerCase();
+      const isPro = /pro|growth/.test(tierRaw);
+      const isOperator = /premium|operator/.test(tierRaw);
+      if (isOperator && priority !== "urgent") priority = "urgent";
+      else if (isPro && priority === "normal") priority = "high";
+      else if (isPro && priority === "low") priority = "high";
+    } catch (_err) {
+      // Non-fatal — fall back to category-derived priority.
+    }
 
     const insertPayload = {
       user_id: user.id,
