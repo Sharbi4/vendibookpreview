@@ -188,6 +188,17 @@
     </image:image>
   </url>
   <url>
+    <loc>https://vendibook.com/listing/779d5773-de60-4075-b92d-32387da86dd3</loc>
+    <lastmod>2026-07-25</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/3b59adbf-20d5-4154-a54e-bf20a1bddbed/779d5773-de60-4075-b92d-32387da86dd3/1770139433353-pqedyd.png</image:loc>
+      <image:title>Pre-Owned Concession Trailer with Deep Freezer – Priced to Sell</image:title>
+      <image:caption>Pre-Owned Concession Trailer with Deep Freezer – Priced to Sell in Baton Rouge, LA on Vendibook</image:caption>
+    </image:image>
+  </url>
+  <url>
     <loc>https://vendibook.com/listing/1791e770-182f-4723-a207-59f727e8310e</loc>
     <lastmod>2026-06-26</lastmod>
     <changefreq>weekly</changefreq>
@@ -196,17 +207,6 @@
       <image:loc>https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=800</image:loc>
       <image:title>Asian Fusion Food Truck</image:title>
       <image:caption>Asian Fusion Food Truck in Los Angeles, CA on Vendibook</image:caption>
-    </image:image>
-  </url>
-  <url>
-    <loc>https://vendibook.com/listing/779d5773-de60-4075-b92d-32387da86dd3</loc>
-    <lastmod>2026-07-24</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/3b59adbf-20d5-4154-a54e-bf20a1bddbed/779d5773-de60-4075-b92d-32387da86dd3/1770139433353-pqedyd.png</image:loc>
-      <image:title>Pre-Owned Concession Trailer with Deep Freezer – Priced to Sell</image:title>
-      <image:caption>Pre-Owned Concession Trailer with Deep Freezer – Priced to Sell in Baton Rouge, LA on Vendibook</image:caption>
     </image:image>
   </url>
   <url>
@@ -298,17 +298,6 @@
     </image:image>
   </url>
   <url>
-    <loc>https://vendibook.com/listing/9fa1aac0-10d3-4c75-8e60-d8e16f7a0a47</loc>
-    <lastmod>2026-07-25</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/3756d71d-fcff-48e2-960f-7f8c565e7c46/9fa1aac0-10d3-4c75-8e60-d8e16f7a0a47/1784143204036-fmnpm.jpeg</image:loc>
-      <image:title>FOOD TRUCK FOR SALE OR LONG-TERM LEASE - $76,000 (Chicago)</image:title>
-      <image:caption>FOOD TRUCK FOR SALE OR LONG-TERM LEASE - $76,000 (Chicago) in Chicago, IL on Vendibook</image:caption>
-    </image:image>
-  </url>
-  <url>
     <loc>https://vendibook.com/listing/33ee8fd3-f9fd-44b3-af28-64d94eb7f9e9</loc>
     <lastmod>2026-07-21</lastmod>
     <changefreq>weekly</changefreq>
@@ -321,13 +310,24 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/d98cfc23-1156-489e-a4f7-1e0bafb74fe5</loc>
-    <lastmod>2026-07-24</lastmod>
+    <lastmod>2026-07-25</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
       <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/e86990e4-0a49-4126-a786-ea2b29eb8457/d98cfc23-1156-489e-a4f7-1e0bafb74fe5/1782570587944-yn47a.jpeg</image:loc>
       <image:title>2022 fully equit with bathroom food trailer</image:title>
       <image:caption>2022 fully equit with bathroom food trailer on Vendibook</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://vendibook.com/listing/9fa1aac0-10d3-4c75-8e60-d8e16f7a0a47</loc>
+    <lastmod>2026-07-25</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/3756d71d-fcff-48e2-960f-7f8c565e7c46/9fa1aac0-10d3-4c75-8e60-d8e16f7a0a47/1784143204036-fmnpm.jpeg</image:loc>
+      <image:title>FOOD TRUCK FOR SALE OR LONG-TERM LEASE - $76,000 (Chicago)</image:title>
+      <image:caption>FOOD TRUCK FOR SALE OR LONG-TERM LEASE - $76,000 (Chicago) in Chicago, IL on Vendibook</image:caption>
     </image:image>
   </url>
   <url>
@@ -541,7 +541,7 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/f5632a2f-1ce4-4cbd-9df7-814079372632</loc>
-    <lastmod>2026-07-23</lastmod>
+    <lastmod>2026-07-25</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
@@ -607,7 +607,7 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/a2a2f761-da8c-4f59-ad5c-6a8b54f67083</loc>
-    <lastmod>2026-07-24</lastmod>
+    <lastmod>2026-07-25</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
@@ -618,7 +618,7 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/0ff66f5f-fae3-4d43-b630-080e56f4baf7</loc>
-    <lastmod>2026-07-22</lastmod>
+    <lastmod>2026-07-25</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
@@ -629,7 +629,7 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/55edfe53-5622-438f-b663-7ced764cc9ca</loc>
-    <lastmod>2026-07-22</lastmod>
+    <lastmod>2026-07-25</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
