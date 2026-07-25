@@ -14,6 +14,9 @@ import ResultsDashboard from '@/components/tools/permit-path/ResultsDashboard';
 import PermitItemManager from './permits/PermitItemManager';
 import RenewalsStrip from './permits/RenewalsStrip';
 import PermitRoadmapCard from './permits/PermitRoadmapCard';
+import PermitsGate from './permits/PermitsGate';
+import { useToolAccess } from '@/hooks/useToolAccess';
+import { Flame } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 
 
