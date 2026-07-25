@@ -123,8 +123,8 @@ async function run() {
     const negErrs: string[] = [];
     neg.on("pageerror", (e) => negErrs.push(e.message));
     await neg.goto(`${BASE}/listing/${BOGUS_ID}`, { waitUntil: "domcontentloaded", timeout: 30_000 });
-    await neg.waitForSelector("h1", { timeout: 15_000 });
-    const negH1 = (await neg.locator("h1").first().innerText()).trim();
+    await neg.waitForSelector("h1:visible", { timeout: 15_000 });
+    const negH1 = (await neg.locator("h1:visible").first().innerText()).trim();
     if (!/not found/i.test(negH1)) {
       fail(`bogus id did not render "Listing Not Found" — got h1="${negH1}"`);
     }
