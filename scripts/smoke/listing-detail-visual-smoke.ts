@@ -92,15 +92,26 @@ async function auditViewport(page: Page, vp: Viewport, listingId: string) {
 
   // 2. Any element wider than viewport (common cause: unbounded images, long words, sticky bars)
   const overflowers = await page.evaluate((vw) => {
+    // Skip nodes that live inside a horizontally-scrollable ancestor —
+    // snap-rail carousels, tab-strips, tables etc. legitimately extend past
+    // the viewport but are clipped by their scroll container.
+    const inScrollableX = (el: HTMLElement): boolean => {
+      let n: HTMLElement | null = el.parentElement;
+      while (n && n !== document.body) {
+        const s = getComputedStyle(n);
+        if ((s.overflowX === "auto" || s.overflowX === "scroll") && n.scrollWidth > n.clientWidth) return true;
+        n = n.parentElement;
+      }
+      return false;
+    };
     const bad: Array<{ tag: string; cls: string; w: number; right: number }> = [];
     const nodes = document.querySelectorAll<HTMLElement>("body *");
     nodes.forEach((el) => {
       const r = el.getBoundingClientRect();
       if (r.width === 0 || r.height === 0) return;
-      // Ignore fixed/off-screen skip-links etc.
       const style = getComputedStyle(el);
       if (style.visibility === "hidden" || style.display === "none") return;
-      if (r.right > vw + 1 && r.width > 40) {
+      if (r.right > vw + 1 && r.width > 40 && !inScrollableX(el)) {
         bad.push({
           tag: el.tagName.toLowerCase(),
           cls: (el.className || "").toString().slice(0, 60),
