@@ -35,15 +35,9 @@ export const ExplainerVideoModal = ({ explainer, open, onOpenChange }: Props) =>
     trackLeadEvent('homepage_video_scene_viewed', { video_type: explainer.id, scene_index: index });
   };
 
-  const handleWatched = (_ms: number) => {
-    // watched ms captured on unmount; not tracked as a lead event
-  };
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent
-        className="w-screen max-w-full h-screen max-h-screen p-0 rounded-none border-0 sm:h-auto sm:max-h-[92vh] sm:w-[92vw] sm:max-w-4xl sm:rounded-lg sm:border overflow-hidden"
-      >
+      <DialogContent className="w-screen max-w-full h-screen max-h-screen p-0 rounded-none border-0 sm:h-auto sm:max-h-[92vh] sm:w-[92vw] sm:max-w-4xl sm:rounded-lg sm:border overflow-hidden">
         {explainer && (
           <>
             <DialogTitle className="sr-only">{explainer.title}</DialogTitle>
@@ -52,12 +46,9 @@ export const ExplainerVideoModal = ({ explainer, open, onOpenChange }: Props) =>
                 <AnimatedExplainer
                   key={replayKey}
                   explainer={explainer}
-                  loop={false}
-                  showControls
-                  respectInView={false}
+                  autoPlay
                   onProgress={handleProgress}
                   onSceneChange={handleSceneChange}
-                  onWatched={handleWatched}
                   onEnded={() => setEnded(true)}
                 />
               </div>
