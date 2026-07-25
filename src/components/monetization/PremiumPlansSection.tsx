@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Loader2, ShieldCheck, XCircle, Lock } from 'lucide-react';
 import { useMonetizationProducts } from '@/hooks/useMonetizationProducts';
 import { buildCheckoutReturnPaths } from '@/lib/monetization/returnRoutes';
@@ -10,8 +11,12 @@ import PlansFAQ from './PlansFAQ';
 import ProWeeklyPassCard from './ProWeeklyPassCard';
 import { TrustESignChip } from '@/components/trust/TrustESignChip';
 import { TIER_CATALOG, type TierRole } from './tierCatalog';
+import { useAuth } from '@/contexts/AuthContext';
+import { useSubscriptionConsent } from '@/hooks/useSubscriptionConsent';
+import { toast } from 'sonner';
 
 import heroImg from '@/assets/trailer-orange-grill.jpg';
+
 
 type Interval = 'monthly' | 'annual';
 
