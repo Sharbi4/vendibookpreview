@@ -202,12 +202,13 @@ export function PremiumPlansSection({ compact = false, successPathOverride, canc
                   role={t.role}
                   groups={groups}
                   interval={interval}
-                  successPath={paths.successPath}
-                  cancelPath={paths.cancelPath}
+                  successPath={successPathOverride ?? paths.successPath}
+                  cancelPath={cancelPathOverride ?? paths.cancelPath}
                   index={i}
                 />
               </div>
             );
+
           })}
         </div>
       )}
