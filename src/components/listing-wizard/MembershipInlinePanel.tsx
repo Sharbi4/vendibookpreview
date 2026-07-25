@@ -29,7 +29,7 @@ interface MembershipInlinePanelProps {
  * Slim, dismissible panel shown once per user inside the publish flow.
  * Never blocks publishing — "Continue free" is a full equal-weight button.
  */
-export const MembershipInlinePanel: React.FC<MembershipInlinePanelProps> = ({ returnTo }) => {
+export const MembershipInlinePanel: React.FC<MembershipInlinePanelProps> = ({ returnTo, listingId }) => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { tier } = useHostEntitlements();
