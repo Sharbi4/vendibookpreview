@@ -198,6 +198,8 @@ const HostDashboard = () => {
       {listings.length > 0 && (
         <BoostListingPrompt listings={listings as any} userId={user?.id} />
       )}
+
+      <PremiumSpotlight />
     </div>
   );
 };
