@@ -59,6 +59,8 @@ import { template as subscriptionUpdated } from './subscription-updated.tsx'
 import { template as subscriptionPaymentFailed } from './subscription-payment-failed.tsx'
 import { template as subscriptionCancelled } from './subscription-cancelled.tsx'
 import { template as upgradePurchased } from './upgrade-purchased.tsx'
+import { template as weeklyPassEnding } from './weekly-pass-ending.tsx'
+
 
 
 export const TEMPLATES: Record<string, TemplateEntry> = {
