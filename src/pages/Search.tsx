@@ -905,7 +905,11 @@ const Search = () => {
                   </div>
                   <div className="lg:order-1 lg:max-h-[calc(100vh-110px)] lg:overflow-y-auto lg:pr-2 lg:-mr-2">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      {listings.length > 0 ? (
+                      {isLoadingListings && listings.length === 0 ? (
+                        Array.from({ length: 4 }).map((_, i) => (
+                          <SkeletonCard key={i} variant="listing" />
+                        ))
+                      ) : listings.length > 0 ? (
                         listings.map((listing) => (
                           <div
                             key={listing.id}
@@ -1062,7 +1066,13 @@ const Search = () => {
               {/* Listings Grid */}
               {viewMode === 'grid' && (
                 <>
-                  {listings.length > 0 ? (
+                  {isLoadingListings && listings.length === 0 ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {Array.from({ length: 6 }).map((_, i) => (
+                        <SkeletonCard key={i} variant="listing" />
+                      ))}
+                    </div>
+                  ) : listings.length > 0 ? (
                     <>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
 
