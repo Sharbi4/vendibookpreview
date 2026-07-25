@@ -5,6 +5,7 @@ import {
   sourcesToCitations,
   todayISO,
 } from "../_shared/firecrawl-research.ts";
+import { gateToolAccess } from "../_shared/gateToolAccess.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
