@@ -4000,17 +4000,17 @@ export const PublishWizard: React.FC = () => {
                     )
                   )}
 
-                  <div className="flex gap-3">
-                    <Button variant="dark-shine" onClick={() => setStep(listing.mode === 'rent' ? 'documents' : 'location')}>Back</Button>
-                    <Button 
-                      variant="dark-shine"
-                      onClick={() => setStep('review')} 
-                      disabled={acceptCardPayment && !isOnboardingComplete}
-                    >
-                      Continue
-                      <ChevronRight className="w-4 h-4 ml-2" />
-                    </Button>
-                  </div>
+                  <PrimaryActionBar
+                    secondary={{
+                      label: 'Back',
+                      onClick: () => setStep(listing.mode === 'rent' ? 'documents' : 'location'),
+                    }}
+                    primary={{
+                      label: 'Continue',
+                      onClick: () => setStep('review'),
+                      disabled: acceptCardPayment && !isOnboardingComplete,
+                    }}
+                  />
                 </div>
               )}
 
