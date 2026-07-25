@@ -1548,11 +1548,20 @@ export const PublishWizard: React.FC = () => {
             featured_enabled: featuredEnabled};
 
       // If Proof Notary is enabled for a sale listing, redirect to checkout for the $45 fee.
-      // IMPORTANT: persist everything first; webhook will publish after payment.
+      // MIRRORS THE FEATURED BOOST PATTERN: publish FIRST so cancelling the notary
+      // checkout does NOT strand the listing in draft. Notary is a protection
+      // add-on — the listing itself should go live regardless. Webhook flips
+      // the notary flag once payment clears.
       if (listing.mode === 'sale' && proofNotaryEnabled) {
+        const isFirstTimePublishForNotary = !listing.published_at;
         const { error: persistError } = await supabase
           .from('listings')
-          .update({ ...baseUpdateData, ...pricingUpdateData })
+          .update({
+            ...baseUpdateData,
+            ...pricingUpdateData,
+            status: 'published',
+            ...(isFirstTimePublishForNotary ? { published_at: new Date().toISOString() } : {}),
+          })
           .eq('id', listing.id);
 
         if (persistError) {
@@ -1577,7 +1586,15 @@ export const PublishWizard: React.FC = () => {
           body: { listing_id: listing.id }});
 
         if (error) throw error;
-        if (!data?.url) throw new Error('No checkout URL returned');
+        if (!data?.url) {
+          // Listing already published — surface a clear success even if notary failed.
+          toast({
+            title: 'Listing published',
+            description: "We couldn't start the Proof Notary checkout. You can add it later from your listing.",
+          });
+          window.location.href = `/listing-published?listing_id=${listing.id}`;
+          return;
+        }
 
         // Set up listener for cross-tab communication before opening checkout
         const handleCheckoutComplete = (event: MessageEvent) => {
@@ -1586,7 +1603,7 @@ export const PublishWizard: React.FC = () => {
             window.location.href = event.data.url || `/listing-published?listing_id=${listing.id}&notary_paid=true`;
           }
         };
-        
+
         try {
           const channel = new BroadcastChannel('notary-checkout');
           channel.onmessage = handleCheckoutComplete;
@@ -1595,12 +1612,15 @@ export const PublishWizard: React.FC = () => {
         } catch (e) {
           console.log('BroadcastChannel not supported');
         }
-        
+
         const newWindow = window.open(data.url, '_blank');
         if (!newWindow) window.location.href = data.url;
 
-        return; // Exit early - webhook will handle publishing after payment
+        // Listing is live; the user is on the published listing while notary settles.
+        window.location.href = `/listing-published?listing_id=${listing.id}&notary_pending=true`;
+        return;
       }
+
 
       // If Featured Listing is enabled and not already active/comped, redirect to checkout for the $30 fee.
       // Pending complimentary boosts are applied by the database trigger when status changes to published.
