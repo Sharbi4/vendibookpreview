@@ -42,6 +42,10 @@ interface PurchaseStepInfoProps {
   // Navigation
   onBack: () => void;
   onContinue: () => void;
+  /** When true (pickup), the address section is hidden — we don't collect it. */
+  hideAddress?: boolean;
+  /** Override for the primary CTA label. */
+  continueLabel?: string;
 }
 
 const PurchaseStepInfo = ({
@@ -55,6 +59,8 @@ const PurchaseStepInfo = ({
   setTouchedFields,
   onBack,
   onContinue,
+  hideAddress = false,
+  continueLabel,
 }: PurchaseStepInfoProps) => {
   const handleFieldTouch = (field: string) => {
     setTouchedFields(new Set([...touchedFields, field]));
