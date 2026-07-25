@@ -41,6 +41,9 @@ import vendibookFavicon from '@/assets/vendibook-favicon.png';
 import AppDropdownMenu from './AppDropdownMenu';
 import IdentityChip from '@/components/dashboard/shared/IdentityChip';
 import DashboardMobileTabs from '@/components/dashboard/overview/DashboardMobileTabs';
+import GoProButton from '@/components/dashboard/GoProButton';
+import SidebarUpgradeCard from '@/components/dashboard/SidebarUpgradeCard';
+import VerifyReminderModal from '@/components/dashboard/VerifyReminderModal';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 
