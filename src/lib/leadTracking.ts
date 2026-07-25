@@ -266,6 +266,14 @@ const EVENT_CATEGORY: Record<LeadEventName, string> = {
   human_support_requested: 'support',
   learn_more_opened: 'monetization',
   learn_more_converted: 'monetization',
+  // Homepage videos
+  video_play: 'homepage',
+  video_view: 'homepage',
+  video_progress_25: 'homepage',
+  video_progress_50: 'homepage',
+  video_progress_75: 'homepage',
+  video_complete: 'homepage',
+  video_replay: 'homepage',
 };
 
 
