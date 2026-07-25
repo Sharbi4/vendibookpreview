@@ -16,6 +16,7 @@ import { startMonetizationCheckout } from '@/lib/monetization/products';
 import { buildCheckoutReturnPaths } from '@/lib/monetization/returnRoutes';
 import { resolveUnlockLadder, type LadderOption } from '@/lib/monetization/unlockLadder';
 import { getToolBySlug } from '@/lib/tools/catalog';
+import { useHostEntitlements } from '@/hooks/useHostEntitlements';
 import { trackLeadEvent } from '@/lib/leadTracking';
 import { toast } from 'sonner';
 
@@ -47,6 +48,7 @@ export function UnlockLadder({
   const listing = useMonetizationProducts('listing_upgrade');
   const [busySlug, setBusySlug] = React.useState<string | null>(null);
   const { requestCheckout } = useSubscriptionConsent();
+  const { tier: currentTier } = useHostEntitlements();
 
   const tool = getToolBySlug(toolSlug);
   const products = React.useMemo(
@@ -54,10 +56,11 @@ export function UnlockLadder({
     [subs.products, services.products, permits.products, listing.products],
   );
   const ladder = React.useMemo(
-    () => resolveUnlockLadder(toolSlug, products),
-    [toolSlug, products],
+    () => resolveUnlockLadder(toolSlug, products, currentTier),
+    [toolSlug, products, currentTier],
   );
   const loading = subs.loading || services.loading || permits.loading || listing.loading;
+
 
   const handleSelect = async (option: LadderOption) => {
     setBusySlug(option.productSlug);
@@ -118,7 +121,7 @@ export function UnlockLadder({
           {headline}
         </p>
       )}
-      <div className="grid gap-2.5">
+      <div className={cn('grid gap-2.5', ladder.length === 2 && 'sm:grid-cols-2')}>
         {ladder.map((option) => {
           const busy = busySlug === option.productSlug;
           return (
@@ -128,37 +131,37 @@ export function UnlockLadder({
               onClick={() => handleSelect(option)}
               disabled={busy}
               className={cn(
-                'group relative flex items-start gap-3 rounded-md border-[1.5px] px-4 py-3 text-left transition-colors',
+                'group relative flex h-full flex-col gap-2 rounded-md border-[1.5px] px-4 py-3.5 text-left transition-colors',
                 option.bestValue
                   ? 'border-orange-500/60 bg-orange-500/[0.06] hover:bg-orange-500/[0.10]'
                   : 'border-white/12 bg-white/[0.03] hover:border-white/25 hover:bg-white/[0.05]',
                 busy && 'opacity-60',
               )}
             >
-              <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-md border-[1.5px] border-white/12 bg-white/[0.04] text-orange-300">
-                {option.kind === 'one_time' && <Check className="h-4 w-4" />}
-                {option.kind === 'weekly_pass' && <ShieldCheck className="h-4 w-4" />}
-                {option.kind === 'subscription' && <TrendingUp className="h-4 w-4" />}
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="flex flex-wrap items-baseline gap-x-2">
-                  <span className="text-sm font-semibold text-foreground">
-                    {option.productName}
-                  </span>
-                  <span className="text-sm font-bold tabular-nums text-foreground">
-                    {option.priceLabel}
-                  </span>
-                  <span className="text-xs text-muted-foreground">{option.cadenceLabel}</span>
-                  {option.bestValue && (
-                    <span className="ml-auto rounded-full border-[1.5px] border-orange-500/60 bg-orange-500/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-orange-300">
-                      Best value
-                    </span>
-                  )}
+              <div className="flex items-center gap-2">
+                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md border-[1.5px] border-white/12 bg-white/[0.04] text-orange-300">
+                  {option.kind === 'one_time' && <Check className="h-3.5 w-3.5" />}
+                  {option.kind === 'weekly_pass' && <ShieldCheck className="h-3.5 w-3.5" />}
+                  {(option.kind === 'subscription' || option.kind === 'upgrade') && <TrendingUp className="h-3.5 w-3.5" />}
                 </div>
-                <p className="mt-0.5 text-xs leading-relaxed text-foreground/70">
-                  {option.reason}
-                </p>
+                <span className="text-sm font-semibold text-foreground truncate">
+                  {option.productName}
+                </span>
+                {option.bestValue && (
+                  <span className="ml-auto shrink-0 rounded-full border-[1.5px] border-orange-500/60 bg-orange-500/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-orange-300">
+                    Best value
+                  </span>
+                )}
               </div>
+              <div className="flex items-baseline gap-1.5">
+                <span className="text-2xl font-bold tabular-nums text-foreground">
+                  {option.priceLabel}
+                </span>
+                <span className="text-xs text-muted-foreground">{option.cadenceLabel}</span>
+              </div>
+              <p className="text-xs leading-relaxed text-foreground/70">
+                {option.reason}
+              </p>
               {busy && (
                 <Loader2 className="absolute right-3 top-3 h-4 w-4 animate-spin text-muted-foreground" />
               )}
@@ -166,6 +169,7 @@ export function UnlockLadder({
           );
         })}
       </div>
+
       <p className="text-[11px] text-muted-foreground">
         Payment protection — refund within 7 days if the tool doesn't help.
       </p>

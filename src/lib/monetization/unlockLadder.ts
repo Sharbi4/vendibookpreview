@@ -1,28 +1,29 @@
 /**
- * Unlock ladder resolver.
+ * Unlock ladder resolver — MAX TWO OPTIONS, cheapest first.
  *
- * For a given premium tool slug, returns the ordered list of ways to unlock
- * it — cheapest first. Never returns a tier that doesn't actually include
- * the feature. Consumed by <UnlockLadder /> and <ToolUnlockDialog />.
+ * Consumed by <UnlockLadder /> and <ToolUnlockDialog />. Never returns a
+ * tier that doesn't actually include the feature. Never leads with the
+ * most expensive tier. If the caller passes a `currentTier`, upgrade is
+ * framed as the honest price difference ("Upgrade to Growth — $50/mo more").
  */
 import { getToolBySlug, type ToolTier } from '@/lib/tools/catalog';
 import type { MonetizationProduct } from './products';
 
-export type LadderKind = 'one_time' | 'weekly_pass' | 'subscription';
+export type LadderKind = 'one_time' | 'weekly_pass' | 'subscription' | 'upgrade';
 
 export interface LadderOption {
   kind: LadderKind;
   productSlug: string;
   productName: string;
-  /** Display price (formatted like "$29"). */
+  /** Display price ("$29"). For upgrade rows this is the DIFFERENCE ("+$50/mo"). */
   priceLabel: string;
-  /** e.g. "one-time · unlocks this tool", "7-day pass", "/mo". */
+  /** e.g. "one-time", "7-day pass", "/mo". */
   cadenceLabel: string;
   /** One-line honest framing. */
   reason: string;
   /** True for the recommended row. */
   bestValue?: boolean;
-  /** Raw product (needed to hand to the checkout flow). */
+  /** Raw product handed to the checkout flow. */
   product: MonetizationProduct;
 }
 
@@ -32,112 +33,146 @@ const TIER_TO_SLUG: Record<Exclude<ToolTier, 'free'>, string> = {
   premium: 'host_operator',
 };
 
+const TIER_RANK: Record<ToolTier, number> = {
+  free: 0, starter: 1, pro: 2, premium: 3,
+};
+
 const usd = (cents: number): string =>
   `$${(cents / 100).toLocaleString('en-US', { maximumFractionDigits: cents % 100 === 0 ? 0 : 2 })}`;
 
+const GROWTH_MATH =
+  'Includes all 6 premium tools + featured placement — cancel anytime.';
+
 /**
- * Build the ladder for a specific tool.
+ * Build the ladder for a specific tool. Returns at most 2 options.
  *
- * @param toolSlug   the tool the user is trying to unlock
- * @param products   the full active monetization_products list (any category)
+ * @param toolSlug     the tool the user is trying to unlock
+ * @param products     the full active monetization_products list
+ * @param currentTier  the caller's current entitlement tier ('free' if none)
  */
 export function resolveUnlockLadder(
   toolSlug: string,
   products: MonetizationProduct[],
+  currentTier: ToolTier = 'free',
 ): LadderOption[] {
   const tool = getToolBySlug(toolSlug);
   if (!tool || tool.minTier === 'free') return [];
 
-  const bySlug = new Map(products.map((p) => [p.slug, p]));
-  const ladder: LadderOption[] = [];
+  // Already unlocked by their current subscription — no ladder needed.
+  if (TIER_RANK[currentTier] >= TIER_RANK[tool.minTier]) return [];
 
-  // 1. One-time unlock for this specific tool (cheapest first).
+  const bySlug = new Map(products.map((p) => [p.slug, p]));
+
+  // If they're already on a paid tier below the requirement, show ONLY the
+  // honest upgrade-diff to the minimum tier that unlocks the feature.
+  if (currentTier !== 'free') {
+    const currentSub = bySlug.get(TIER_TO_SLUG[currentTier as Exclude<ToolTier, 'free'>]);
+    const targetSub = bySlug.get(TIER_TO_SLUG[tool.minTier]);
+    if (currentSub && targetSub && targetSub.price_cents > currentSub.price_cents) {
+      const diff = targetSub.price_cents - currentSub.price_cents;
+      return [
+        {
+          kind: 'upgrade',
+          productSlug: targetSub.slug,
+          productName: `Upgrade to ${targetSub.name}`,
+          priceLabel: `+${usd(diff)}`,
+          cadenceLabel: '/mo more',
+          reason: `Unlocks ${tool.name} and everything else in ${targetSub.name}.`,
+          bestValue: true,
+          product: targetSub,
+        },
+      ];
+    }
+  }
+
+  // Free (or unknown) user: cheapest unlock + best-value tier.
+  let cheapest: LadderOption | null = null;
+  let bestValue: LadderOption | null = null;
+
+  // Cheapest = one-time SKU if it exists, otherwise weekly pass for pro tools,
+  // otherwise the lowest sub that includes the tool.
   if (tool.unlockProductSlug) {
     const p = bySlug.get(tool.unlockProductSlug);
     if (p) {
-      ladder.push({
+      cheapest = {
         kind: 'one_time',
         productSlug: p.slug,
-        productName: p.name,
+        productName: `Unlock ${tool.name}`,
         priceLabel: usd(p.price_cents),
         cadenceLabel: 'one-time',
-        reason: `Unlocks ${tool.name} — no subscription.`,
+        reason: `One purchase, unlocks ${tool.name}. No subscription.`,
         product: p,
-      });
+      };
     }
   }
-
-  // 2. Pro Weekly Pass — only for pro-tier tools (the pass grants tier=pro).
-  if (tool.minTier === 'pro') {
+  if (!cheapest && tool.minTier === 'pro') {
     const wk = bySlug.get('pro_weekly_pass');
     if (wk) {
-      ladder.push({
+      cheapest = {
         kind: 'weekly_pass',
         productSlug: wk.slug,
-        productName: wk.name,
+        productName: `${tool.name} — 7-day pass`,
         priceLabel: usd(wk.price_cents),
-        cadenceLabel: '7-day pass',
-        reason: 'Unlocks every Growth tool for a week — no subscription.',
+        cadenceLabel: 'for 7 days',
+        reason: `Full access to ${tool.name} for a week. No subscription.`,
         product: wk,
-      });
+      };
     }
   }
-
-  // 3. Subscription tier that includes the tool. Always include the *lowest*
-  //    tier that includes it, plus Growth as the "best value" anchor when it
-  //    covers this tool and isn't already the lowest one.
-  const growthMath =
-    'Includes this and all 6 premium tools — bought separately these run $150+/mo.';
-
-  const minSubSlug = TIER_TO_SLUG[tool.minTier];
-  const minSub = bySlug.get(minSubSlug);
-  if (minSub) {
-    const isGrowth = minSubSlug === 'host_growth';
-    ladder.push({
+  const minSub = bySlug.get(TIER_TO_SLUG[tool.minTier]);
+  if (!cheapest && minSub) {
+    cheapest = {
       kind: 'subscription',
       productSlug: minSub.slug,
       productName: minSub.name,
       priceLabel: usd(minSub.price_cents),
       cadenceLabel: '/mo',
-      reason: isGrowth
-        ? growthMath
-        : `Includes ${tool.name} plus enhanced listing tools. Cancel anytime.`,
-      bestValue: isGrowth,
+      reason: `Lowest plan that includes ${tool.name}. Cancel anytime.`,
       product: minSub,
-    });
+    };
   }
 
-  // 4. For starter-tier tools, also surface Growth as the best-value anchor.
-  if (tool.minTier === 'starter') {
-    const growth = bySlug.get('host_growth');
-    if (growth) {
-      ladder.push({
-        kind: 'subscription',
-        productSlug: growth.slug,
-        productName: growth.name,
-        priceLabel: usd(growth.price_cents),
-        cadenceLabel: '/mo',
-        reason: growthMath,
-        bestValue: true,
-        product: growth,
-      });
-    }
+  // Best-value = Growth if it covers the tool, otherwise the min sub.
+  const growth = bySlug.get('host_growth');
+  if (growth && TIER_RANK.pro >= TIER_RANK[tool.minTier]) {
+    bestValue = {
+      kind: 'subscription',
+      productSlug: growth.slug,
+      productName: growth.name,
+      priceLabel: usd(growth.price_cents),
+      cadenceLabel: '/mo',
+      reason: GROWTH_MATH,
+      bestValue: true,
+      product: growth,
+    };
+  } else if (minSub) {
+    // Tool needs premium (BuildKit) — Operator IS the best (and only) value.
+    bestValue = {
+      kind: 'subscription',
+      productSlug: minSub.slug,
+      productName: minSub.name,
+      priceLabel: usd(minSub.price_cents),
+      cadenceLabel: '/mo',
+      reason: `Includes ${tool.name} and every premium tool.`,
+      bestValue: true,
+      product: minSub,
+    };
   }
 
-  return ladder;
+  const result: LadderOption[] = [];
+  if (cheapest) result.push(cheapest);
+  if (bestValue && bestValue.productSlug !== cheapest?.productSlug) result.push(bestValue);
+  return result.slice(0, 2);
 }
 
-
-/**
- * Compact honest one-liner for the ladder header, e.g.:
- *   "Unlock PricePilot — $29 for a week · Included in Growth $89/mo"
- */
+/** Compact one-liner for headers. */
 export function ladderHeadline(toolName: string, ladder: LadderOption[]): string {
   if (ladder.length === 0) return `Unlock ${toolName}`;
-  const parts = ladder.map((o) => {
-    if (o.kind === 'one_time') return `${o.priceLabel} once`;
-    if (o.kind === 'weekly_pass') return `${o.priceLabel} for a week`;
-    return `${o.priceLabel}${o.cadenceLabel}`;
-  });
+  const parts = ladder.map((o) =>
+    o.kind === 'one_time' ? `${o.priceLabel} once`
+    : o.kind === 'weekly_pass' ? `${o.priceLabel} for a week`
+    : o.kind === 'upgrade' ? `${o.priceLabel}${o.cadenceLabel}`
+    : `${o.priceLabel}${o.cadenceLabel}`,
+  );
   return `Unlock ${toolName} — ${parts.join(' · ')}`;
 }
