@@ -143,7 +143,49 @@ export async function prefillFields(
   });
 }
 
+/**
+ * SignNow v2 event subscriptions are per-document for document.* events.
+ * Register document.complete and document.update for a newly created document.
+ * Duplicate subscriptions are ignored.
+ */
+export async function registerDocumentWebhook(
+  documentId: string,
+  events: string[] = ['document.complete', 'document.update'],
+): Promise<{ id: string; event: string }[]> {
+  const callbackUrl = `${Deno.env.get('SUPABASE_URL')}/functions/v1/signnow-webhook`;
+  const secret = Deno.env.get('SIGNNOW_WEBHOOK_SECRET');
+  if (!secret) throw new Error('SIGNNOW_WEBHOOK_SECRET not set');
+
+  const results: { id: string; event: string }[] = [];
+  for (const event of events) {
+    try {
+      const json = await apiFetch('/v2/event-subscriptions', {
+        method: 'POST',
+        json: {
+          event,
+          entity_id: documentId,
+          attributes: {
+            callback: callbackUrl,
+            secret_key: secret,
+            delete_access_token: true,
+            docid_queryparam: true,
+          },
+        },
+      });
+      results.push({ id: json?.data?.id ?? json?.id ?? 'unknown', event });
+    } catch (e: any) {
+      if (e.message?.includes('subscription already exists') || e.message?.includes('duplicate')) {
+        results.push({ id: 'existing', event });
+      } else {
+        throw e;
+      }
+    }
+  }
+  return results;
+}
+
 export interface EmbeddedInviteSigner {
+
   email: string;
   role_name: string;   // must match the template role
   order: number;       // 1-based signing order
