@@ -129,6 +129,10 @@ export type LeadEventName =
   // Learn more overlay funnel
   | 'learn_more_opened'
   | 'learn_more_converted'
+  // Tool preview / unlock ladder funnel
+  | 'tool_preview_viewed'
+  | 'tool_preview_converted'
+  | 'unlock_ladder_option_selected'
   // Homepage videos (canonical funnel)
   | 'video_play'
   | 'video_view'
