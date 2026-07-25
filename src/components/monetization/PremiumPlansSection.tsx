@@ -7,6 +7,8 @@ import { cn } from '@/lib/utils';
 import PremiumTierCard from './PremiumTierCard';
 import PlansComparisonTable from './PlansComparisonTable';
 import PlansFAQ from './PlansFAQ';
+import ProWeeklyPassCard from './ProWeeklyPassCard';
+
 import heroImg from '@/assets/trailer-orange-grill.jpg';
 
 type Interval = 'monthly' | 'annual';
