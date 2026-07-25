@@ -49,9 +49,14 @@ function savingsPct(monthly?: MonetizationProduct, annual?: MonetizationProduct)
 
 interface Props {
   compact?: boolean;
+  /** Override successPath forwarded to PremiumTierCard (e.g. return-to-wizard). */
+  successPathOverride?: string;
+  /** Override cancelPath forwarded to PremiumTierCard (e.g. return-to-wizard). */
+  cancelPathOverride?: string;
 }
 
-export function PremiumPlansSection({ compact = false }: Props) {
+export function PremiumPlansSection({ compact = false, successPathOverride, cancelPathOverride }: Props) {
+
   const { products, loading } = useMonetizationProducts('host_subscription');
   const location = useLocation();
   const navigate = useNavigate();
