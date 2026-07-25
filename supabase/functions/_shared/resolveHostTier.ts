@@ -82,9 +82,11 @@ export function tierAtLeast(actual: HostTier, required: HostTier): boolean {
 /** Standard 403 body when a tier gate fails. */
 export function tierRequiredBody(required: HostTier, actual: HostTier) {
   return {
-    error: `This feature requires the ${required} plan.`,
-    code: 'tier_required',
+    error: `This feature is included with ${required === 'pro' ? 'Growth' : required === 'premium' ? 'Operator' : 'Starter'} — upgrade to unlock.`,
+    code: 'entitlement_required',
     requires: required,
     current: actual,
+    upgrade_url: '/pricing',
   };
 }
+
