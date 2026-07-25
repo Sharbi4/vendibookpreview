@@ -14,6 +14,10 @@ interface Props {
   onSceneChange?: (info: { index: number; previousIndex: number | null; total: number }) => void;
   onProgress?: (percent: number) => void;
   onError?: (message: string) => void;
+  /** Fired every time playback starts (initial + resume). */
+  onPlay?: () => void;
+  /** Fired once per mount when the viewer has watched at least 3 seconds. */
+  onView?: () => void;
 }
 
 /**
