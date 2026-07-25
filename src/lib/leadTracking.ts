@@ -129,6 +129,10 @@ export type LeadEventName =
   // Learn more overlay funnel
   | 'learn_more_opened'
   | 'learn_more_converted'
+  // Tool preview / unlock ladder funnel
+  | 'tool_preview_viewed'
+  | 'tool_preview_converted'
+  | 'unlock_ladder_option_selected'
   // Homepage videos (canonical funnel)
   | 'video_play'
   | 'video_view'
@@ -266,6 +270,9 @@ const EVENT_CATEGORY: Record<LeadEventName, string> = {
   human_support_requested: 'support',
   learn_more_opened: 'monetization',
   learn_more_converted: 'monetization',
+  tool_preview_viewed: 'monetization',
+  tool_preview_converted: 'monetization',
+  unlock_ladder_option_selected: 'monetization',
   // Homepage videos
   video_play: 'homepage',
   video_view: 'homepage',
