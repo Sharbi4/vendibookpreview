@@ -221,6 +221,7 @@ export default function AdminMonetizationOps() {
       <Tabs defaultValue="pending">
         <TabsList>
           <TabsTrigger value="pending">Reconciliation ({pending.length})</TabsTrigger>
+          <TabsTrigger value="services">Services ({services.filter(s => s.fulfillment_status !== 'fulfilled').length})</TabsTrigger>
           <TabsTrigger value="events">Webhook events</TabsTrigger>
           <TabsTrigger value="refunds">Refund audit</TabsTrigger>
         </TabsList>
