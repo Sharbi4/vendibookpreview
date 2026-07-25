@@ -969,11 +969,30 @@ const SaleCheckout = () => {
                   </AnimatePresence>
                 </div>
               </div>
+
+              {/* Sticky mobile-first primary path — mirrors the current step's next action */}
+              <PrimaryActionBar
+                sticky
+                helper={
+                  currentStep === 'review'
+                    ? 'Confirm terms & pay using the panel above.'
+                    : 'You can go back to any prior step at any time.'
+                }
+                primary={{
+                  label: primaryLabel,
+                  onClick: advanceFromCurrent,
+                  disabled: primaryDisabled,
+                }}
+                secondary={{
+                  label: 'Back to listing',
+                  onClick: () => navigate(`/listing/${listingId}`),
+                }}
+              />
             </div>
 
             {/* Sticky Summary - Right Side (Desktop Only) */}
             <div className="lg:col-span-2 hidden lg:block">
-              <div className="sticky top-24">
+              <div className="sticky top-24 space-y-4">
                 <StickySummary
                   imageUrl={listing.cover_image_url || listing.image_urls?.[0]}
                   title={listing.title}
@@ -989,6 +1008,12 @@ const SaleCheckout = () => {
                   mode="checkout"
                   showWhatsIncluded={currentStep !== 'review'}
                   financingEligiblePrice={totalPrice}
+                />
+                {/* Trust reinforcement anchored to the summary */}
+                <TrustModule
+                  points={PAYMENT_TRUST_POINTS}
+                  disclaimer={PAYMENT_DISCLAIMER}
+                  compact
                 />
               </div>
             </div>
