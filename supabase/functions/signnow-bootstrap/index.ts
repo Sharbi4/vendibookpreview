@@ -4,6 +4,9 @@
 // Safe to re-run: it returns existing template IDs and subscription IDs when
 // they already exist. This is meant to be invoked manually after SignNow
 // credentials are saved, not exposed to end users.
+//
+// Protected by a single-use bootstrap token (SIGNNOW_BOOTSTRAP_TOKEN) so it can
+// be called from the Lovable tooling without exposing the service role key.
 
 import { createClient } from 'npm:@supabase/supabase-js@2.45.0';
 import { corsHeaders, jsonError, jsonResponse, unknownErrorResponse } from '../_shared/jsonError.ts';
