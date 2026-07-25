@@ -5,6 +5,14 @@ import {
   sourcesToCitations,
   todayISO,
 } from "../_shared/firecrawl-research.ts";
+import { gateToolAccess } from "../_shared/gateToolAccess.ts";
+import type { ToolSlug } from "../_shared/toolAccess.ts";
+
+const TOOL_MAP: Record<string, ToolSlug> = {
+  pricing: "pricepilot",
+  description: "listing-studio",
+  "business-idea": "concept-lab",
+};
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
