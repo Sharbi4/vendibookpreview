@@ -201,7 +201,7 @@ serve(async (req) => {
           // First, fetch the listing to check current status
           const { data: existingListing, error: fetchError } = await supabaseClient
             .from("listings")
-            .select("id, title, host_id, published_at, status, featured_enabled, featured_expires_at, pending_featured_payment")
+            .select("id, title, host_id, published_at, status, featured_enabled, featured_expires_at, pending_featured_payment, boost_history")
             .eq("id", listingId)
             .single();
 
