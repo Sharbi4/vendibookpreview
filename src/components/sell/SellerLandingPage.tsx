@@ -379,7 +379,7 @@ const SellerLandingPage = ({
           </section>
 
           {/* Closing CTA */}
-          <section className="rounded-3xl border border-border bg-card p-8 md:p-12 text-center space-y-4">
+          <section className="rounded-2xl border border-border bg-card p-8 md:p-12 text-center space-y-4">
             <h2 className="text-2xl md:text-3xl font-semibold text-foreground">
               Ready to list your {asset}?
             </h2>
