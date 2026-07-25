@@ -679,6 +679,26 @@ const SaleCheckout = () => {
     [host?.first_name, host?.last_name].filter(Boolean).join(' ') || undefined;
   const locationLabel = [listing.city, listing.state].filter(Boolean).join(', ') || undefined;
 
+  // Contextual add-ons — only surface what actually applies to this listing.
+  const addOnCatalog: CheckoutAddOn[] = [
+    {
+      id: 'inspection',
+      title: 'Pre-purchase inspection referral',
+      description: 'We connect you with a local third-party inspector before you finalize.',
+      priceLabel: 'From $149',
+      icon: 'inspection',
+      eligible: priceSale >= 3000,
+    },
+    {
+      id: 'notarization',
+      title: 'Notarized bill of sale',
+      description: 'A licensed notary co-signs your documents for higher-value transfers.',
+      priceLabel: '$29',
+      icon: 'notarization',
+      eligible: priceSale >= 10000,
+    },
+  ];
+
   return (
     <>
       <SEO title={`Checkout - ${listing.title}`} description={`Complete your purchase of ${listing.title}`} />
