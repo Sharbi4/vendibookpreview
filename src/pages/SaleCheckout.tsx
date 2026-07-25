@@ -807,6 +807,8 @@ const SaleCheckout = () => {
                           sellerVerified={Boolean((host as { identity_verified?: boolean } | null | undefined)?.identity_verified)}
                           specSummary={(listing as { specifications?: string | null }).specifications ?? null}
                           onContinue={() => setCurrentStep('delivery')}
+                          onBack={priceSale >= SALE_INTRO_MIN_PRICE ? () => setCurrentStep('intro') : undefined}
+
                         />
                       )}
 
