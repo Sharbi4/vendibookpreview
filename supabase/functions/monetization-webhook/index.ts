@@ -568,13 +568,14 @@ async function handleSubscriptionChange(
 
 async function handleInvoicePaid(
   supabase: ReturnType<typeof createClient>,
-  _stripe: Stripe,
+  stripe: Stripe,
   invoice: Stripe.Invoice,
 ) {
   const subId = typeof invoice.subscription === "string" ? invoice.subscription : invoice.subscription?.id;
   if (!subId) return; // one-off invoices ignored here
-  // Only fire renewal email for cycle-continuation invoices, not the very first one (that's subscription.created).
-  if (invoice.billing_reason && invoice.billing_reason !== "subscription_cycle") return;
+  const reason = invoice.billing_reason ?? "";
+  // Only handle first-invoice welcome + renewal receipts.
+  if (reason !== "subscription_create" && reason !== "subscription_cycle") return;
 
   // deno-lint-ignore no-explicit-any
   const { data: existing } = await (supabase as any)
@@ -586,13 +587,32 @@ async function handleInvoicePaid(
 
   const line = invoice.lines?.data?.[0];
   const interval = line?.price?.recurring?.interval ?? "month";
+  const currency = invoice.currency ?? "usd";
+
+  // Best-effort last-4 lookup from the invoice's charge.
+  let last4: string | undefined;
+  try {
+    const chargeId = (invoice as unknown as { charge?: string | Stripe.Charge }).charge;
+    const chId = typeof chargeId === "string" ? chargeId : chargeId?.id;
+    if (chId) {
+      const ch = await stripe.charges.retrieve(chId);
+      last4 = ch.payment_method_details?.card?.last4 ?? undefined;
+    }
+  } catch { /* best-effort */ }
+
+  const isRenewal = reason === "subscription_cycle";
   await sendSubEmail(supabase, "subscription-activated", existing.user_id, {
     planName: planLabel(existing.tier),
-    amount: fmtMoney(invoice.amount_paid, invoice.currency ?? "usd"),
+    amount: fmtMoney(invoice.amount_paid, currency),
     interval,
+    chargedOn: fmtDate(invoice.status_transitions?.paid_at ?? invoice.created),
     nextBillingDate: fmtDate(invoice.period_end),
-    isRenewal: true,
-  }, `sub-renewed-${invoice.id}`);
+    last4,
+    invoiceUrl: invoice.hosted_invoice_url ?? undefined,
+    isRenewal,
+    benefits: tierBenefits(existing.tier),
+    manageUrl: "https://vendibook.com/account/subscription",
+  }, isRenewal ? `sub-renewed-${invoice.id}` : `sub-welcome-${invoice.id}`);
 }
 
 async function handleInvoiceFailed(
@@ -622,11 +642,17 @@ async function handleInvoiceFailed(
     })
     .eq("id", existing.id);
 
+  // Access pauses after Stripe's final retry (~ next_payment_attempt or period end).
+  const pausesOn = fmtDate(invoice.next_payment_attempt) ??
+    (existing.current_period_end ? fmtDateIso(existing.current_period_end) : undefined);
+
   await sendSubEmail(supabase, "subscription-payment-failed", existing.user_id, {
     planName: planLabel(existing.tier),
     amount: fmtMoney(invoice.amount_due, invoice.currency ?? "usd"),
     nextRetryDate: fmtDate(invoice.next_payment_attempt),
     updatePaymentUrl: invoice.hosted_invoice_url ?? undefined,
+    portalUrl: "https://vendibook.com/account/subscription",
+    accessPausesOn: pausesOn,
     attemptNumber: (invoice.attempt_count ?? 0) + 1,
   }, `sub-payfail-${invoice.id}-${invoice.attempt_count ?? 0}`);
 }
