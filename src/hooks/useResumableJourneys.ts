@@ -29,7 +29,7 @@ export function useResumableJourneys() {
       try {
         const { data } = await supabase
           .from('listings')
-          .select('id,title,updated_at,image_urls,description,price_cents')
+          .select('id,title,updated_at,image_urls,description,price_sale,price_daily,price_hourly,price_weekly,price_monthly')
           .eq('host_id', user.id)
           .eq('status', 'draft')
           .order('updated_at', { ascending: false })
@@ -41,11 +41,16 @@ export function useResumableJourneys() {
             updated_at: string | null;
             image_urls: string[] | null;
             description: string | null;
-            price_cents: number | null;
+            price_sale: number | null;
+            price_daily: number | null;
+            price_hourly: number | null;
+            price_weekly: number | null;
+            price_monthly: number | null;
           };
           const hasPhotos = Array.isArray(row.image_urls) && row.image_urls.length > 0;
           const hasDesc = !!row.description && row.description.length > 40;
-          const hasPrice = !!row.price_cents && row.price_cents > 0;
+          const hasPrice = [row.price_sale, row.price_daily, row.price_hourly, row.price_weekly, row.price_monthly]
+            .some((v) => typeof v === 'number' && v > 0);
           const done = [hasPhotos, hasDesc, hasPrice].filter(Boolean).length;
           const nextStep = !hasPhotos
             ? 'Add photos'
