@@ -319,7 +319,7 @@ const SellerLandingPage = ({
           </section>
 
           {/* Secure transaction tools */}
-          <section aria-labelledby="secure-heading" className="rounded-3xl border border-border bg-gradient-to-br from-card to-background p-8 md:p-10 space-y-5">
+          <section aria-labelledby="secure-heading" className="rounded-2xl border border-border bg-gradient-to-br from-card to-background p-8 md:p-10 space-y-5">
             <div className="flex items-center gap-2 text-primary">
               <ShieldCheck className="h-5 w-5" />
               <span className="text-xs uppercase tracking-wide">Optional secure transaction</span>
