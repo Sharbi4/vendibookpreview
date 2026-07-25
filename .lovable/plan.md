@@ -1,99 +1,169 @@
 
-# Dashboard Redesign — Airbnb-style Workspace
+## 1. Kill the identity repetition
 
-## Goal
-Refine the existing DashboardLayout (sidebar, mode switch, mobile bottom nav, 2px indicator) into a calm, photo-forward, progressively disclosed workspace with two clear personas — **Buying** and **Hosting** — and add the missing Orders/Sales Transactions tabs. Navigation + presentation only; no backend, no money logic changes.
+**Current duplication (audited):**
+- Desktop sidebar (`src/components/layout/DashboardLayout.tsx` L206-217) renders avatar + full_name + persona label + `IdentityChip`.
+- Both `HostDashboard.tsx` (L127) and `ShopperDashboard.tsx` (L92) render `OverviewGreeting` = "Welcome back, {firstName}" + persona label + `IdentityChip`.
+- Result: name shown twice, persona label twice, verify chip twice on desktop.
 
-## Scope Boundaries
-- **Reuse:** `DashboardLayout`, `ShopperDashboard`, `HostDashboard`, `NotificationCenter`, existing hooks (`useShopperBookings`, `useHostListings`, `useEntitlements`, `useHostEntitlements`, `useReferralEarnings`, `useAuth`).
-- **Don't rebuild:** sidebar shell, mode switch mechanics, mobile bottom nav container, framer 2px active indicator, existing routes (`/host/listings`, `/host/bookings`, `/host/reporting`, `/dashboard?tab=…`, `/favorites`, `/messages`, `/referral/dashboard`, `/tools/*`, `/account`, `/purchases`, `/verify-identity`, `/notification-preferences`, `/transactions`).
-- **No backend / money logic changes.**
+**Changes to `src/components/dashboard/overview/OverviewGreeting.tsx`:**
+- Rewrite as a viewport-aware component:
+  - Desktop (`sm:` and up): render only a tiny eyebrow line — `Overview · Tuesday, Jul 24` in `text-[12px] text-[rgb(var(--dash-text-2))]`. No name. No chip. No persona label.
+  - Mobile (< `sm`): single 14px row — `Hi {firstName}` + inline `IdentityChip` (compact). Nothing else.
+- Same file, same import site, no changes needed in `HostDashboard`/`ShopperDashboard`.
 
-## Deliverables
+**Overview render order after change** (both personas):
+```text
+(mobile only) greeting row
+(mobile only) pill tab bar  [DashboardMobileTabs]
+KPI row
+Attention stack
+Recent activity
+Premium module  [new — see §2]
+```
 
-### 1. Terminology + sidebar identity block
-- Relabel the mode switch everywhere to **Buying / Hosting** (desktop sidebar, desktop header bar, mobile header). Keep the Kitchen tab (`hasGhostKitchen`) as a separate host nav item; drop the confusing "Kitchen Pro" toggle label.
-- Sidebar profile block: avatar, name, persona label ("Buying" / "Hosting"), and an **identity chip** — green "Verified" or amber "Verify now" → `/verify-identity` (uses `useAuth().isVerified`).
-- Group nav into sections with subtle uppercase headers (Workspace / Account) and add a bottom **Account group**: Profile & Account, Membership & Billing, Identity Verification. Add a divider before it.
+Desktop: the KPI row is the first thing in the content area.
 
-### 2. Sidebar nav — new tabs (both personas)
+**Other identity collapses:**
+- `CommandHeader.tsx` L33 renders "Good day, {name}" — this component is not on Overview per audit, leave alone. If it appears elsewhere on the dashboard route, remove that greeting line too.
+- Verify no other avatar/full_name renders in the Overview content beyond the sidebar. Sidebar keeps its avatar + name + persona + chip (single source of identity on desktop).
 
-**Buying**
-1. Overview — `/dashboard?view=shopper`
-2. Orders & Transactions — `/dashboard?view=shopper&tab=orders` *(new)*
-3. Bookings & Rentals — `/dashboard?view=shopper&tab=bookings`
-4. Favorites — `/favorites`
-5. Messages — `/messages` (unread badge preserved)
-6. Notifications — `/dashboard?view=shopper&tab=notifications` *(new: NotificationCenter feed + link to `/notification-preferences`)*
-7. Refer & Earn — `/referral/dashboard` (earned badge preserved)
-8. Premium Tools — `/dashboard?view=shopper&tab=tools` *(new: entitlements-aware grid → `/tools/*`)*
-9. Account group: Profile (`/account`), Membership & Billing (`/account/subscription` + `/purchases`), Identity Verification (`/verify-identity`)
+## 2. Premium module (state-aware) as last Overview section
 
-**Hosting**
-1. Overview — `/dashboard?view=host`
-2. Listings — `/host/listings`
-3. Sales & Transactions — `/dashboard?view=host&tab=sales` *(new)*
-4. Booking Manager — `/host/bookings`
-5. Insights & Reporting *(merged)* — `/dashboard?view=host&tab=insights` with sub-tabs (Insights / Reporting) inside the page
-6. Promote & Upgrades — `/dashboard?view=host&tab=promote`
-7. Membership — `/dashboard?view=host&tab=membership` *(new: HostSubscriptionCard + link to `/account/subscription`)*
-8. Permits, Messages, Notifications, Refer & Earn
-9. Kitchen (conditional on `hasGhostKitchen`)
-10. Account group: Profile, Payouts (Stripe Connect status card), Notification Settings, Identity Verification
+New component `src/components/dashboard/overview/PremiumSpotlight.tsx`.
 
-### 3. Overview redesign (max 4 sections, action-required first)
+**Free-tier state** — gold-accented `.dash-glass` card:
+- Eyebrow: `VENDIBOOK PRO` in gold (`#D4A437`).
+- Headline (single line): `Keep more of every sale and get seen first.`
+- 3 benefit rows with lucide icons: `Percent` — Lower fees on every sale · `Sparkles` (replace per no-sparkle rule → `TrendingUp`) — Featured placement in search · `Wrench` — All premium tools included.
+- Price anchor: `from $39/mo` (from `host_starter` monthly price).
+- Single gold CTA button → `/pricing` (reuses the existing `GoProButton` styling tokens; no new gold-button variant).
 
-**Buying Overview**
-- `ActionRequiredStack` (new): unpaid booking, order awaiting confirmation, unverified identity, unread messages — each a compact row with icon + CTA.
-- Active orders: cover thumbnail + title + status timeline pill.
-- Upcoming rentals (approved bookings): cover thumbnail + date range.
-- Recent favorites: photo grid (4 cards) each with **Share** button.
-- One "Start your food business" shortcut card → `/tools/permitpath`.
+**Paid-tier state** — compact "Your membership" card (no gold, standard glass):
+- Tier badge (`Starter` / `Pro` / `Premium`) with gold outline for Pro/Premium.
+- `Renews Mar 14, 2027` line from `host_subscriptions.current_period_end`.
+- Two quiet links: `Manage billing` → `/account/subscription`, `Your benefits` → `/purchases`.
 
-**Hosting Overview**
-- `ActionRequiredStack`: pending booking requests, sales awaiting confirmation, Stripe onboarding incomplete, unverified identity.
-- Earnings snapshot (existing hooks).
-- Listing performance cards with cover photos.
-- Next payout card.
+Data source: existing `useHostEntitlements()` (already returns `hostLabel` and subscription meta). One module. Rendered as the last block on Overview in both `HostDashboard.tsx` and `ShopperDashboard.tsx`. Never both states, never nothing.
 
-### 4. New tab pages (thin composers over existing components)
-- `BuyerOrdersTab` — buyer `/transactions` rows with cover images + order-tracking deep links. Sidebar badge = in-progress count.
-- `HostSalesTab` — host `/transactions` rows (mirror composition).
-- `FavoritesTab` — extend Favorites into dashboard as a photo grid with Share.
-- `NotificationsTab` — NotificationCenter feed + prominent link to `/notification-preferences`.
-- `PremiumToolsTab` — grid of `/tools/*` entries; each card shows Unlocked/Premium chip driven by `useHostEntitlements`.
-- `InsightsReportingTab` — single tab with sub-view pills (Insights / Reporting) replacing the two separate entries.
-- `MembershipTab` (host) — `HostSubscriptionCard` + CTA to `/account/subscription`.
-- `PromoteUpgradesTab` — existing PromotionHub + active boosts with expiry from `useEntitlements`.
-- `PayoutsPanel` (host account group) — Stripe Connect status + `/host/payouts` link.
+## 3. Package catalog simplification
 
-### 5. Shared components
-- `SharePopover` — copy link + native share (`navigator.share` fallback). Reused for listings, favorites, referral link (`/share/listing/:id`, `/referral/dashboard`).
-- `IdentityChip` — Verified / Verify now, tied to `useAuth().isVerified`.
-- `ActionRequiredStack` + `ActionRequiredCard` — one-line row: icon, message, CTA.
-- `EmptyState` — inviting empty (photo + one CTA); replaces bare "No items" blocks.
-- `PhotoListingCard` — small cover-image row (used in orders/bookings/listings tabs).
+**Full inventory (30 active products, all with 0 purchases):**
 
-### 6. Mobile bottom nav
-- **Buying:** Explore (`/search`), Orders (`?tab=orders`), Bookings (`?tab=bookings`), Inbox, Profile.
-- **Hosting:** Overview, Listings, Manager, Inbox, Profile.
+Subscriptions:
+| slug | price | grants |
+|---|---|---|
+| seller_plus_monthly | $29/mo | legacy tier |
+| host_starter | $39/mo | Starter |
+| host_growth | $89/mo | Pro |
+| host_operator | $149/mo | Premium |
+| seller_plus_annual | $290/yr | legacy |
+| host_starter_annual | $390/yr | Starter annual |
+| host_growth_annual | $890/yr | Pro annual |
+| host_operator_annual | $1490/yr | Premium annual |
 
-### 7. Publish gate
-- In the listing wizard publish step (or `handlePublish`): if `!isVerified`, block publish with a friendly modal ("Verify your identity to publish — drafts are safe") and a "Verify now" CTA to `/verify-identity`. Drafts still save. Verify current enforcement first; add only if missing.
+Listing upgrades:
+| slug | price |
+|---|---|
+| boost-motivated-seller | $9 |
+| boost-featured-7 | $19 |
+| boost-highlight | $19 |
+| boost-top-of-search | $39 |
+| featured-listing-30 | $49 |
+| boost-featured-30 | $49 |
+| boost-social-feature | $49 |
+| boost-email-campaign | $99 |
+| seller-pro | $149 |
 
-## Technical Notes
-- All new tab views mount inside `Dashboard.tsx` via `searchParams.get('tab')` switch (same pattern as existing `permits` tab). No new routes needed.
-- Sidebar nav becomes a data-driven list with `section` + `badge` fields; render two sections plus Account group.
-- Identity chip reads `useAuth().isVerified`; no new hooks.
-- Sub-view pills inside `InsightsReportingTab` use local state; no URL churn.
-- Fonts/tokens: use existing `text-foreground`, `text-muted-foreground`, `bg-background`, `bg-muted`, `border-border`. No new colors, no glassmorphism.
-- No edits to `create-checkout`, entitlements resolution, or Stripe functions.
+Seller services:
+| slug | price |
+|---|---|
+| tool_listing_studio | $19 |
+| tool_pricepilot | $19 |
+| tool_concept_lab | $29 |
+| tool_market_radar | $29 |
+| pro_weekly_pass | $29 |
+| tool_marketing_studio | $29 |
+| tool_buildkit | $49 |
+| listing_rewrite | $59 |
+| pricing_review | $79 |
+| white-glove-seller | $499 |
 
-## Verification
-- `bunx tsgo --noEmit` at the end.
-- Manual: load `/dashboard` on both personas, click each new tab, resize to mobile, toggle Buying↔Hosting, confirm identity chip states.
+Buyer services:
+| slug | price |
+|---|---|
+| buyer_readiness_pass | $29 |
+| listing_purchase_review | $149 |
 
-## Out of Scope
-- Backend edits, new edge functions, schema changes.
-- Redesign of `/transactions`, `/favorites`, `/tools/*` pages themselves (dashboard tabs link into or compose existing components).
-- Any pricing / fee / entitlement rule changes.
+Permits:
+| slug | price |
+|---|---|
+| permit_path_plus | $29 |
+| permit_path_concierge | $299 |
+
+**Simplified catalog — kept:**
+
+Subscriptions (3):
+- `host_starter` + `host_starter_annual` → surfaced as **Starter** ($39/mo)
+- `host_growth` + `host_growth_annual` → **Pro** ($89/mo)
+- `host_operator` + `host_operator_annual` → **Premium** ($149/mo)
+
+One-time (4):
+- `boost-featured-30` → **Featured Boost** ($49, 30 days)
+- `permit_path_plus` → **PermitPath Plus** ($29)
+- `listing_rewrite` → **Listing Makeover** ($59) — the one done-for-you seller service, absorbs `tool_listing_studio`, `pricing_review`, `boost-social-feature`, `boost-email-campaign` copy
+- `pro_weekly_pass` → **Pro Weekly Pass** ($29, 7 days) — kept because it's the frictionless try-Pro entry the previous turn built
+
+Notary/closing: no existing SKU, so nothing to add per prompt ("if it has real usage").
+
+**Deactivate (is_active=false) — zero-purchase, redundant, safe to hide:**
+- `seller_plus_monthly`, `seller_plus_annual` (legacy overlap with new tiers)
+- `boost-motivated-seller`, `boost-featured-7`, `boost-highlight`, `boost-top-of-search`, `featured-listing-30`, `boost-social-feature`, `boost-email-campaign`, `seller-pro` (all fold into single Featured Boost)
+- `tool_listing_studio`, `tool_pricepilot`, `tool_concept_lab`, `tool_market_radar`, `tool_marketing_studio`, `tool_buildkit` (folded into "included with Pro")
+- `pricing_review`, `white-glove-seller` (folded into Listing Makeover; White Glove is $499 with 0 sales — collapse until demand proven)
+- `permit_path_concierge` (folded — Pro users get concierge as included benefit; can be reactivated if demand emerges)
+- `buyer_readiness_pass`, `listing_purchase_review` (buyer services with 0 purchases — hide until buyer growth funnel matures)
+
+Rationale: zero purchases across every SKU means no entitlement risk. All are `is_active=false` only — rows preserved, prices preserved, historical `monetization_purchases` FKs preserved. Reversible in one SQL update.
+
+**Migration:** `supabase/migrations/<ts>_simplify_catalog.sql` — a single `UPDATE monetization_products SET is_active=false WHERE slug IN (...)`. No `DELETE`, no schema change, no touching `monetization_purchases`.
+
+**Frontend surfaces to update to the simplified set:**
+- `src/lib/monetization/products.ts` `PROMOTED_SLUGS` (or equivalent allowlist) — restrict to the 3 tier slugs + 4 one-time slugs.
+- `src/pages/Pricing.tsx` — tiers section already shows 3 tiers; ensure the one-time/boost section only surfaces the 4 kept SKUs with one-line "what you get":
+  - Featured Boost: "Top of search + featured shelf for 30 days."
+  - PermitPath Plus: "Full permit roadmap for your city with document links."
+  - Listing Makeover: "We rewrite your listing and photos in 3 business days."
+  - Pro Weekly Pass: "All Pro benefits for 7 days. No renewal."
+- `src/components/dashboard/tabs/PromoteUpgradesTab.tsx` — filter to kept slugs.
+- `src/components/dashboard/tabs/PremiumToolsTab.tsx` — tool tiles keep working (routes untouched), but the "unlock this tool" one-time SKU CTAs are hidden and replaced with "Included with Pro — Upgrade to unlock" going to `/pricing`.
+- `src/components/monetization/PackagesIntro.tsx` — align copy to the 4-item catalog.
+
+## 4. Verification pass
+
+- `bunx tsgo --noEmit` after all edits.
+- Playwright drive-through on desktop (1280w) and mobile (390w) of `/dashboard` for both personas:
+  - Assert: no `Welcome back` / no duplicated name / one IdentityChip only.
+  - Assert: Premium module renders (free vs paid state) as last Overview block.
+  - Screenshot both viewports both personas → 4 shots to `/tmp/browser/dash/`.
+- Visit `/pricing`, Promote & Upgrades tab, and any upsell cards → confirm only the 7 simplified SKUs render.
+
+## Files changed
+
+**New:**
+- `src/components/dashboard/overview/PremiumSpotlight.tsx`
+- `supabase/migrations/<ts>_simplify_monetization_catalog.sql`
+
+**Edited:**
+- `src/components/dashboard/overview/OverviewGreeting.tsx` (rewrite)
+- `src/components/dashboard/HostDashboard.tsx` (append PremiumSpotlight)
+- `src/components/dashboard/ShopperDashboard.tsx` (append PremiumSpotlight)
+- `src/lib/monetization/products.ts` (simplified allowlist)
+- `src/pages/Pricing.tsx` (one-line definitions, cut deprecated cards)
+- `src/components/dashboard/tabs/PromoteUpgradesTab.tsx` (filter to kept slugs)
+- `src/components/dashboard/tabs/PremiumToolsTab.tsx` (unlock CTA → upgrade)
+- `src/components/monetization/PackagesIntro.tsx` (copy alignment)
+
+## Money logic — untouched
+
+No changes to fees, payouts, entitlement helpers, webhook, checkout functions, or any `monetization_purchases` rows. No user entitlement is revoked. Deactivation only hides deprecated SKUs from new checkout initiation; existing paid access, `host_subscriptions`, and `listing_promotions` rows continue to grant access as before.
