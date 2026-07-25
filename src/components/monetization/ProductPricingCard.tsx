@@ -158,7 +158,26 @@ export function ProductPricingCard({
           </>
         )}
       </Button>
+      <button
+        type="button"
+        onClick={() => setLearnOpen(true)}
+        className="mt-2 self-center text-xs font-medium text-white/60 hover:text-white/90 underline-offset-4 hover:underline"
+      >
+        Learn more
+      </button>
       {consentDialog}
+      <ProductLearnMoreOverlay
+        open={learnOpen}
+        onOpenChange={setLearnOpen}
+        product={product}
+        surface="product_pricing_card"
+        ctaLabel={ctaLabel ?? (recurring ? 'Review terms and continue' : 'Purchase')}
+        ctaBusy={activeBusy}
+        onBuy={async () => {
+          setLearnOpen(false);
+          await handleClick();
+        }}
+      />
     </div>
   );
 }
