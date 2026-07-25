@@ -1057,3 +1057,104 @@
   backdrop-filter: blur(24px);
   box-shadow: 0 8px 32px rgba(0,0,0,0.06), inset 0 2px 4px rgba(255,255,255,0.7), inset 0 -1px 3px rgba(0,0,0,0.04);
 }
+
+/* ============================================================================
+ * TOKEN SWEEP + SECTION SEPARATOR SYSTEM (2026-07-25)
+ * Upgrades legacy `border-white/10` hairlines to a visible 1.5px cream border
+ * without touching every call site. Preserves glass character.
+ * ========================================================================= */
+@layer components {
+  /* Color upgrade — old 10% cream reads as invisible on dark. Bump to 14%. */
+  .border-white\/5  { border-color: rgba(255, 255, 255, 0.12) !important; }
+  .border-white\/10 { border-color: rgba(255, 255, 255, 0.14) !important; }
+  .border-white\/20 { border-color: rgba(255, 255, 255, 0.22) !important; }
+  .hover\:border-white\/20:hover { border-color: rgba(255, 255, 255, 0.22) !important; }
+  .hover\:border-white\/25:hover { border-color: rgba(255, 255, 255, 0.26) !important; }
+  .hover\:border-white\/35:hover { border-color: rgba(255, 255, 255, 0.36) !important; }
+  .divide-white\/\[0\.06\] > :not([hidden]) ~ :not([hidden]) {
+    border-color: rgba(255, 255, 255, 0.12) !important;
+  }
+
+  /* Width upgrade — where a border class pairs with the `.border` utility
+   * (Tailwind's 1px default), force 1.5px so hairlines are gone. */
+  .border.border-white\/5,
+  .border.border-white\/10,
+  .border.border-white\/20,
+  .border.border-border,
+  .border.border-border\/70 {
+    border-width: 1.5px;
+  }
+
+  /* Sale-card glass — make the inset edge readable (was 6% cream). */
+  .bg-sale-card,
+  .bg-sale-card-warm {
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.10),
+      inset 0 0 0 1.5px rgba(255, 255, 255, 0.14),
+      0 22px 60px rgba(0, 0, 0, 0.36);
+  }
+
+  /* -------- Section separator system -------- */
+
+  /* Alternating lifted band for long marketing pages. */
+  .section-band {
+    background: #141417;
+    border-top: 1.5px solid rgba(255, 255, 255, 0.10);
+    border-bottom: 1.5px solid rgba(255, 255, 255, 0.10);
+  }
+  .section-band-sunken {
+    background: #0b0b0d;
+    border-top: 1.5px solid rgba(255, 255, 255, 0.08);
+    border-bottom: 1.5px solid rgba(255, 255, 255, 0.08);
+  }
+
+  /* Full-width 1.5px divider between sections on utility pages. */
+  .section-divider {
+    height: 0;
+    border: 0;
+    border-top: 1.5px solid hsl(var(--border));
+    margin: 0;
+  }
+
+  /* Consistent header block — 20-24px semibold title + optional subtitle. */
+  .section-header {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 24px;
+  }
+  .section-header > .section-title {
+    font-size: 22px;
+    line-height: 1.25;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: hsl(var(--foreground));
+  }
+  .section-header > .section-subtitle {
+    font-size: 14px;
+    line-height: 1.5;
+    color: hsl(var(--muted-foreground));
+    max-width: 60ch;
+  }
+
+  /* Vertical rhythm helpers — 56/72px gaps between major sections. */
+  .section-stack > * + * { margin-top: 56px; }
+  @media (min-width: 768px) {
+    .section-stack > * + * { margin-top: 72px; }
+  }
+
+  /* KPI card treatment — glass + 1.5px cream border + grid-aligned padding. */
+  .kpi-card {
+    background: rgba(22, 22, 25, 0.62);
+    backdrop-filter: blur(20px) saturate(130%);
+    -webkit-backdrop-filter: blur(20px) saturate(130%);
+    border: 1.5px solid rgba(255, 255, 255, 0.14);
+    border-radius: 20px;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.06),
+      0 10px 30px -20px rgba(0, 0, 0, 0.6);
+  }
+  .kpi-card:hover {
+    border-color: rgba(255, 255, 255, 0.22);
+  }
+}
