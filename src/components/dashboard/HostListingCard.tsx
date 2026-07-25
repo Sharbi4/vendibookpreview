@@ -443,7 +443,7 @@ const HostListingCard = ({
         />
       )}
 
-      <FeaturedListingModal
+      <PromoteListingModal
         open={showFeaturedModal}
         onOpenChange={setShowFeaturedModal}
         listingId={listing.id}
