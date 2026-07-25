@@ -295,7 +295,7 @@ const PurchaseStepInfo = ({
       </div>
 
       {/* Next Step Hint */}
-      <NextStepHint text="Choose your delivery method next." />
+      <NextStepHint text="Review your order and pay next." />
 
       {/* Navigation Buttons */}
       <div className="flex gap-3">
@@ -308,7 +308,7 @@ const PurchaseStepInfo = ({
           Back
         </Button>
         <Button onClick={onContinue} className="flex-1" size="lg">
-          Continue to Delivery
+          {continueLabel ?? 'Review your order'}
         </Button>
       </div>
     </div>
