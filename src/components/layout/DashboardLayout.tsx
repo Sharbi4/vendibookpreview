@@ -229,7 +229,9 @@ export const DashboardLayout = ({ children, mode, onModeChange, isHost }: Dashbo
       {/* Nav sections */}
       <ScrollArea className="flex-1">
         {sections.map((section, sIdx) => (
-          <div key={section.id} className={cn('py-3', sIdx > 0 && 'border-t border-border')}>
+          <div key={section.id}>
+            {section.id === 'account' && <SidebarUpgradeCard />}
+            <div className={cn('py-3', sIdx > 0 && 'border-t border-border')}>
             {section.label && (
               <p className="px-6 pb-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground/70">
                 {section.label}
