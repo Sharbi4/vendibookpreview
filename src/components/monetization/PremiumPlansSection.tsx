@@ -258,8 +258,11 @@ export function PremiumPlansSection({ compact = false }: Props) {
           </a>
         </div>
       )}
+
+      {resumeDialog}
     </div>
   );
 }
+
 
 export default PremiumPlansSection;
