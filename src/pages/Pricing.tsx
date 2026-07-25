@@ -1,5 +1,6 @@
 import { Loader2 } from 'lucide-react';
 import { useMemo } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useMonetizationProducts } from '@/hooks/useMonetizationProducts';
 import { ProductPricingCard } from '@/components/monetization/ProductPricingCard';
 import {
@@ -10,6 +11,7 @@ import {
 import { buildCheckoutReturnPaths } from '@/lib/monetization/returnRoutes';
 import SEO from '@/components/SEO';
 import PremiumPlansSection from '@/components/monetization/PremiumPlansSection';
+
 
 // One-line "what you get" copy for the simplified catalog.
 // Keys match monetization_products.slug — anything outside this map still uses
