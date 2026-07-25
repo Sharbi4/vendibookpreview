@@ -51,9 +51,10 @@ export function useEntitlements() {
           .in('status', ['active', 'trialing', 'past_due']),
         (supabase as any)
           .from('monetization_purchases')
-          .select('id,status,created_at,listing_id,product_id,monetization_products(slug,name,kind)')
+          .select('id,status,fulfillment_status,created_at,listing_id,product_id,access_starts_at,access_ends_at,monetization_products(slug,name,billing_type,metadata)')
           .eq('user_id', user.id)
           .in('status', ['paid', 'fulfilled', 'refunded']),
+
         (supabase as any)
           .from('listings')
           .select('id')
