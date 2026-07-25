@@ -89,11 +89,10 @@ export const MembershipInlinePanel: React.FC<MembershipInlinePanelProps> = ({ re
 
       <div className="pr-8">
         <h3 className="font-display text-lg font-semibold text-foreground">
-          Publish free, or grow faster with a membership.
+          Your listing is free. Members get seen first.
         </h3>
         <p className="text-sm text-muted-foreground mt-1">
-          Listing is always free. Memberships add tools and better placement — they're never
-          required to publish.
+          Listing is free, always. Memberships are optional boosts — never required to publish.
         </p>
       </div>
 
@@ -110,7 +109,7 @@ export const MembershipInlinePanel: React.FC<MembershipInlinePanelProps> = ({ re
           Continue free
         </Button>
         <Button onClick={handleUpgrade} className="w-full">
-          Upgrade
+          Go Pro
         </Button>
       </div>
     </div>

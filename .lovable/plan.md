@@ -1,84 +1,57 @@
-## Goals
+## Scope
 
-1. Verify publish flow works end-to-end for every persona (free, founding, Starter, Growth, mid-trial), fix any dead-ends.
-2. Add two never-blocking membership prompts: post-signup welcome + a slim publish-time comparison panel.
-3. Ensure mid-flow upgrade returns cleanly to the wizard step with entitlements live and draft intact.
-4. Enforce copy rule: **"Listing is always free"** on both prompts; no dark patterns.
+Prior turns already shipped the heavy lifting: `/welcome` post-signup screen, `MembershipInlinePanel` in the Review step, `ListingLimitReachedModal` + DB trigger `enforce_listing_publish_limit`, `grandfathered_listings` backfill, `MiniPlansComparison` with founding-member note, and `ListingPublished` with `BoostListingPrompt` + boost webhook self-heal. This plan closes the remaining gaps against the new spec — no rebuilds.
 
----
+## 1. Copy + CTA alignment (the "free is always fine" rule)
 
-## Part 1 — Publish flow verification (report + fix)
+**`src/pages/Welcome.tsx`**
+- Headline → "Welcome to Vendibook — listing is always free."
+- Primary button → "Start free" (was "Continue free")
+- Secondary → "See member benefits" (opens the compact MiniPlansComparison already on this page; no auto-select).
+- Add subline: "Memberships are optional boosts."
 
-Deliver a matrix by driving a Playwright smoke against localhost + reading the wizard/publish code paths. Personas simulated by seeding `user_roles`, `host_subscriptions`, and (for founding) the grandfathered flag.
+**`src/components/listing-wizard/MembershipInlinePanel.tsx`**
+- Headline → "Your listing is free. Members get seen first."
+- Sub → "Listing is free, always. Memberships are optional boosts."
+- CTAs → `Continue free` (outline, equal weight) and `Go Pro` (was `Upgrade`).
+- Session-scoped suppression: once user clicks Continue free within the same wizard session, don't re-render even if they navigate steps back and forward (already persisted; add a `sessionStorage` guard so re-entering the wizard later still shows it once until the persistent dismiss fires).
 
-Per persona check: draft create → required fields → identity gate (unverified friendly explainer + returns to publish step) → publish → appears in Browse + dashboard Listings → quota modal triggers on 3rd for free / never for founding → active Featured Boost is applied on publish.
+**`src/components/monetization/MiniPlansComparison.tsx`**
+- Mark Growth column as "Recommended" (small pill above header, orange tint).
+- Trim to exactly 6 rows in this order: Active listings · Featured placement · AI listing tools · PermitPath Plus · Fees · Support. Free column always shows a real value (no em-dashes / crossed-out) — e.g. Featured placement = "Standard", AI tools = "Basic templates", PermitPath = "Free checklist", Fees = "12.9%", Support = "Standard".
 
-Report a pass/fail table and fix each failure. Expected fix zones based on prior audits:
-- `PublishWizard.handlePublish` continuity when redirected to `/verify-identity` (must use `returnTo` per `originNav`).
-- Quota-exceeded modal from `useListingQuota` (friendly copy, not error toast).
-- Featured pending-boost application already covered by trigger — smoke re-verifies.
+## 2. Post-publish "Feature this listing" one-liner
 
-No money-logic, RLS, or webhook changes.
+**`src/pages/ListingPublished.tsx`**
+- Insert a compact `FeatureThisListingCTA` row directly under the success banner, above `ShareKit`: title "Want more eyes on it? Feature this listing", one-line pitch, price from monetization catalog, primary button "Feature for 30 days" (routes to existing boost checkout via `BoostListingPrompt`'s handler), secondary "Not now" that hides the row for this listing (localStorage keyed by listing id). The existing full `BoostListingPrompt` below stays as the deeper offer.
 
-## Part 2 — Post-signup welcome (once)
+## 3. Publish-flow scenario verification (test only; fixes if red)
 
-New route `/welcome` + component `src/components/onboarding/SignupWelcome.tsx`.
+Add a single Playwright script `tests/e2e/publish_scenarios.py` that walks and screenshots:
+- (a) new free verified → publish succeeds
+- (b) unverified → gate to `/verify-identity?returnTo=…` → returning restores wizard step (uses existing `originNav`)
+- (c) grandfathered → publish 6th listing succeeds (uses seeded flag)
+- (d) new free at 2 published → publish blocked with `ListingLimitReachedModal`; draft still saves
+- (e) Starter → publish 5, block on 6
+- (f) Growth → unlimited
+- (g) mid-creation boost purchase → returns to Review step with data intact; `?featured_paid=true` self-heal publishes
 
-- Triggered from `Auth.tsx` on successful **new** signup (flag via `profiles.onboarded_at IS NULL` — one migration to add the column if missing) with a `returnTo` param preserved.
-- Content: headline **"Welcome to Vendibook — listing is always free."**, 3-column mini comparison (Free · Starter $39 · Growth $89), two equal-weight buttons **Continue free** and **See memberships** (→ `/pricing?from=welcome`).
-- On dismiss/continue: set `profiles.onboarded_at = now()` so it never shows again.
-- Skippable via clear X. No pre-selection. No card required.
+Fix any red row uncovered. Expected: all green given prior migration + modal wiring; the script is the acceptance harness.
 
-## Part 3 — Publish-time membership panel (once per user)
+## 4. Typecheck + report
 
-New component `src/components/listing-wizard/MembershipInlinePanel.tsx` rendered inside `PublishWizard` above the checklist on the review step (and inside `QuickStartWizard` first step for brand-new hosts).
+- `bunx tsgo --noEmit`
+- Post: pass/fail table (a–g), screenshots of `/welcome`, the inline panel, and the post-publish boost row, and the list of files changed.
 
-- Slim, dismissible; localStorage key `vb:mship-panel-dismissed:v1` + `profiles.membership_panel_dismissed_at`.
-- Headline **"Publish free, or grow faster with a membership."**
-- 4-row × 3-col chart (Free / Starter / Growth): Active listings (2 · 5 · Unlimited — founding shows "Unlimited — early member"), Listing tools (— · AI descriptions · Full tools bundle), Placement (Standard · Priority basics · Featured credit), Support (Standard · Priority · Priority).
-- All cells use ✓ marks; Free column not grayed. Two equal-weight buttons: **Continue free** (dismiss) and **Upgrade** (→ `/pricing?returnTo=<currentWizardStep>`).
-- Dismiss = never blocks again; small `Plans` link remains in wizard footer.
+## Files changed (planned)
 
-## Part 4 — Mid-flow upgrade continuity
+- `src/pages/Welcome.tsx` — copy + CTA labels
+- `src/components/listing-wizard/MembershipInlinePanel.tsx` — copy + CTA + session guard
+- `src/components/monetization/MiniPlansComparison.tsx` — Recommended pill + 6-row canonical set
+- `src/pages/ListingPublished.tsx` — `FeatureThisListingCTA` row
+- `src/components/dashboard/FeatureThisListingCTA.tsx` — new small component
+- `tests/e2e/publish_scenarios.py` — verification harness
 
-Confirm and patch:
-- Any CTA from the panel or `usePremiumUpsell` passes `returnTo=/list?draftId=<id>&step=<n>` when launching checkout.
-- `PaymentSuccess` already honors `returnTo`; add explicit test that entitlements resolved from `useHostEntitlements` refetch on mount so tools unlock immediately.
-- `PublishWizard` reads `?step=` and restores step + loads draft via `useListingForm`.
-- Featured Boost mid-publish uses existing `create-featured-checkout` returning to `/list?...&step=review`; on success the pending boost is auto-applied by the publish trigger.
+## Out of scope (do NOT touch)
 
-## Part 5 — Copy audit
-
-Sweep the two new components + Pricing hero + PackagesIntro Compact variant to include **"Listing is always free"** phrasing and remove any "required to publish" framing.
-
-## Files to add
-
-- `src/components/onboarding/SignupWelcome.tsx`
-- `src/pages/Welcome.tsx` (route wrapper)
-- `src/components/listing-wizard/MembershipInlinePanel.tsx`
-- `src/components/monetization/MiniPlansComparison.tsx` (shared 3-col table used by both prompts)
-- `supabase/migrations/<ts>_profiles_onboarding_flags.sql` — add `onboarded_at`, `membership_panel_dismissed_at` (nullable timestamps) + GRANTs unchanged (no new table).
-- `scripts/smoke/publish-personas-smoke.ts` — extends existing publish smoke with the 5 personas + quota + featured-on-publish assertions; wired into `.github/workflows/smoke-predeploy.yml`.
-
-## Files to edit
-
-- `src/pages/Auth.tsx` — after signup redirect to `/welcome?returnTo=<original>` if `onboarded_at` null.
-- `src/App.tsx` (router) — register `/welcome`.
-- `src/components/listing-wizard/PublishWizard.tsx` — mount panel; ensure `returnTo` on identity redirect; friendly quota modal when `useListingQuota().isAtLimit`.
-- `src/components/listing-wizard/QuickStartWizard.tsx` — mount panel on first-listing users.
-- `src/pages/CreateListing.tsx` — pass `step` query through.
-- `src/hooks/usePremiumUpsell.tsx` — ensure `returnTo` builder appends `step`.
-- `src/pages/Pricing.tsx` — honor `?from=welcome` (small "You can always list for free" reassurance strip).
-
-## Non-goals
-
-- No fee changes, no webhook changes, no RLS changes.
-- No changes to Stripe products or entitlement rules.
-- No redesign of `/pricing` beyond the reassurance strip.
-
-## Verification
-
-- `tsgo --noEmit` clean.
-- Playwright script drives: signup → welcome → continue free → create listing → panel visible → dismiss → publish; separately: upgrade path → return to `step=review` → publish.
-- Existing `publish-flow-smoke.ts` + new `publish-personas-smoke.ts` both green in CI.
-- Report pass/fail per persona + two screenshots (welcome, publish panel) + mid-flow upgrade result.
+- Money logic, quota trigger, checkout return contract, `create-checkout`/`create-cash-sale`, entitlement resolution, terms gate.

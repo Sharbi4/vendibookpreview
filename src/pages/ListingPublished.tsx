@@ -12,6 +12,7 @@ import { PromoteListingPanel } from '@/components/monetization/PromoteListingPan
 import { RecommendedAddOns } from '@/components/monetization/RecommendedAddOns';
 import PublishStatusSummary from '@/components/listing-wizard/PublishStatusSummary';
 import PackagesIntro from '@/components/monetization/PackagesIntro';
+import FeatureThisListingCTA from '@/components/dashboard/FeatureThisListingCTA';
 import { reportError } from '@/lib/errorReporter';
 
 const ListingPublished: React.FC = () => {
@@ -360,7 +361,10 @@ const ListingPublished: React.FC = () => {
       )}
 
       {/* Share Kit */}
-      <div className="container max-w-2xl mx-auto px-4 py-12">
+      <div className="container max-w-2xl mx-auto px-4 py-12 space-y-6">
+        {isPublished && listingId && !featuredActive && !featuredPaid && (
+          <FeatureThisListingCTA listingId={listingId} priceLabel="$29 for 30 days" />
+        )}
         {user?.id && listingId && (
           <PublishStatusSummary listingId={listingId} hostId={user.id} />
         )}
