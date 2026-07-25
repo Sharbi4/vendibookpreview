@@ -7,7 +7,10 @@ import { useToast } from '@/hooks/use-toast';
 interface StripeConnectStatus {
   connected: boolean;
   onboarding_complete: boolean;
+  payouts_enabled?: boolean;
   account_id?: string;
+  bank_last4?: string | null;
+  bank_name?: string | null;
 }
 
 export const useStripeConnect = () => {
