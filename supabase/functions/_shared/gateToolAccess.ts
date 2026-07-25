@@ -50,6 +50,3 @@ export async function gateToolAccess(
   }
   return { userId: userRes.user.id };
 }
-// corsHeaders intentionally unused now — kept in signature for backward compat.
-void corsHeadersUnused;
-function corsHeadersUnused(_: Record<string, string>) { /* noop */ }
