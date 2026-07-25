@@ -21,6 +21,8 @@ serve(async (req) => {
   }
 
   try {
+    const gate = await gateToolAccess(req, "buildkit", corsHeaders);
+    if (gate.response) return gate.response;
     const { equipment, issue, maintenanceType } = await req.json();
 
     if (!equipment || equipment.trim().length === 0) {
