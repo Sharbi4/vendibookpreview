@@ -1776,10 +1776,28 @@ export const PublishWizard: React.FC = () => {
       setShowSuccessModal(true);
     } catch (error) {
       console.error('Error publishing:', error);
-      toast({
-        title: 'Error publishing',
-        description: error instanceof Error ? error.message : 'Please try again.',
-        variant: 'destructive'});
+      const raw = error instanceof Error ? error.message : String(error);
+      // Decode common Postgres/PostgREST errors into actionable copy.
+      let title = 'Error publishing';
+      let description = raw || 'Please try again.';
+      if (/listing_publish_limit_reached/i.test(raw)) {
+        setShowLimitModal(true);
+        return;
+      } else if (/row-level security|permission denied|not authorized|JWT|jwt/i.test(raw)) {
+        title = 'Your session expired';
+        description = 'Please sign in again, then click Publish once more. Your draft is saved.';
+      } else if (/null value in column "([^"]+)"/i.test(raw)) {
+        const col = raw.match(/null value in column "([^"]+)"/i)?.[1] ?? 'a required field';
+        title = 'Missing required field';
+        description = `Please fill in "${col}" before publishing.`;
+      } else if (/violates check constraint/i.test(raw)) {
+        title = 'A field has an invalid value';
+        description = 'One of your inputs failed validation. Double-check your pricing, location and availability, then try again.';
+      } else if (/network|fetch failed|failed to fetch/i.test(raw)) {
+        title = 'Network problem';
+        description = "Couldn't reach the server. Check your connection and try again — your draft is safe.";
+      }
+      toast({ title, description, variant: 'destructive' });
     } finally {
       setIsSaving(false);
     }
