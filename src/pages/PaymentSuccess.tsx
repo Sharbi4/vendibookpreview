@@ -933,9 +933,9 @@ const PaymentSuccess = () => {
                     </Button>
                     
                     <Button variant="outline" asChild className="w-full">
-                      <Link to="/">
+                      <Link to="/dashboard">
                         <Home className="mr-2 h-4 w-4" />
-                        Back to Home
+                        Back to Dashboard
                       </Link>
                     </Button>
                   </div>
