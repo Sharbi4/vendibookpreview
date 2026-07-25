@@ -337,6 +337,8 @@ serve(async (req) => {
     subs_repaired: subsRepaired,
     promos_deactivated: promoOff?.length ?? 0,
     featured_cleared: featuredOff?.length ?? 0,
+    passes_expired: passesExpired,
+    nudges_sent: nudgesSent,
   }, 200);
 });
 
