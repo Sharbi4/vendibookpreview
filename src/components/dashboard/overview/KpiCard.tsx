@@ -55,8 +55,8 @@ export const KpiCard = ({
       whileHover={href ? { y: -2 } : undefined}
       transition={{ duration: 0.15, ease: 'easeOut' }}
       className={cn(
-        'relative px-5 py-5 sm:px-6 sm:py-6 h-full',
-        ember ? 'dash-glass-ember rounded-[18px]' : 'dash-glass',
+        'relative px-6 py-6 sm:px-7 sm:py-7 h-full',
+        ember ? 'dash-glass-ember rounded-[20px]' : 'dash-glass',
         href && 'dash-glass-interactive cursor-pointer',
       )}
     >
