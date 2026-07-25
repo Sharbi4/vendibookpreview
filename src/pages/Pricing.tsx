@@ -88,14 +88,15 @@ const Pricing = () => {
             ) : (
               <div className="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                 {listingUpgrades.map((p) => {
-                  const paths = buildCheckoutReturnPaths(p.slug);
+                  const paths = buildCheckoutReturnPaths(p.slug, listingContext);
                   return (
                     <ProductPricingCard
                       key={p.id}
                       product={p}
+                      listingId={listingContext}
                       ctaLabel="Buy boost"
-                      successPath={paths.successPath}
-                      cancelPath={paths.cancelPath}
+                      successPath={overrideSuccessPath ?? paths.successPath}
+                      cancelPath={overrideCancelPath ?? paths.cancelPath}
                     />
                   );
                 })}
@@ -103,6 +104,7 @@ const Pricing = () => {
             )}
           </div>
         )}
+
 
         {/* Seller services */}
         {(loadingSeller || sellerAddons.length > 0) && (
