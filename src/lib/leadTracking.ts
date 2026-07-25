@@ -128,7 +128,15 @@ export type LeadEventName =
   | 'human_support_requested'
   // Learn more overlay funnel
   | 'learn_more_opened'
-  | 'learn_more_converted';
+  | 'learn_more_converted'
+  // Homepage videos (canonical funnel)
+  | 'video_play'
+  | 'video_view'
+  | 'video_progress_25'
+  | 'video_progress_50'
+  | 'video_progress_75'
+  | 'video_complete'
+  | 'video_replay';
 
 
 
