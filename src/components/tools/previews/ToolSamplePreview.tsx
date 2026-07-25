@@ -393,6 +393,23 @@ const ICON_BY_SLUG: Record<string, React.FC<{ className?: string }>> = {
   'permitpath': FileCheck,
 };
 
+export const YOU_GET: Record<string, string> = {
+  'permitpath':
+    'You get a saved roadmap for your city — track progress, upload documents, export as PDF.',
+  'pricepilot':
+    'You get a live pricing report for your category and metro, refreshed daily.',
+  'market-radar':
+    'You get a market snapshot for any metro — active listings, medians, and month-over-month trends.',
+  'listing-studio':
+    'You get an AI-rewritten title and description you can apply to your listing in one click.',
+  'marketing-studio':
+    'You get a ready-to-post social kit — caption, hashtags, and a cropped listing image.',
+  'concept-lab':
+    'You get a scored concept validation with demand, competition, and margin signals.',
+  'buildkit':
+    'You get a stage-by-stage build-out plan with vetted vendors and cost benchmarks.',
+};
+
 export const ToolSamplePreview: React.FC<Props> = ({ toolSlug, className }) => {
   const Body = React.useMemo(() => {
     switch (toolSlug) {
@@ -407,7 +424,24 @@ export const ToolSamplePreview: React.FC<Props> = ({ toolSlug, className }) => {
     }
   }, [toolSlug]);
   void ICON_BY_SLUG;
-  return <div className={cn('', className)}>{Body}</div>;
+  const youGet = YOU_GET[toolSlug];
+  return (
+    <div className={cn('space-y-2', className)}>
+      <div className="flex items-center gap-2">
+        <span className="rounded-full border-[1.5px] border-orange-500/40 bg-orange-500/[0.08] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-orange-300">
+          Example output
+        </span>
+        <span className="text-[11px] text-muted-foreground">Not your data — a real sample of what this tool produces.</span>
+      </div>
+      {Body}
+      {youGet && (
+        <p className="pt-1 text-[12px] text-foreground/75">
+          <span className="font-semibold text-foreground">You get:</span> {youGet}
+        </p>
+      )}
+    </div>
+  );
 };
 
 export default ToolSamplePreview;
+
