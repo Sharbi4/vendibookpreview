@@ -260,6 +260,13 @@
   /* Auto-hide sticky bar when scrolling down, re-show on scroll up */
   .sticky-autohide { transition: transform 240ms cubic-bezier(0.22, 0.61, 0.36, 1); }
   .sticky-autohide[data-hidden="true"] { transform: translate3d(0, 110%, 0); }
+
+  /* Global sticky-header offset for anchor jumps and focus-into-view scrolls,
+     so a scrolled-to card's top (or an eyebrow label) is never hidden behind
+     the 72px sticky header. */
+  :root { --sticky-header-h: 88px; }
+  html { scroll-padding-top: var(--sticky-header-h); }
+  [id] { scroll-margin-top: var(--sticky-header-h); }
 }
 
 
