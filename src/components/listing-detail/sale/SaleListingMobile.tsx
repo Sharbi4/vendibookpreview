@@ -357,43 +357,37 @@ export const SaleListingMobile = ({
         {/* CONCIERGE CARD */}
         {!isOwner && (
           <SaleCard variant="warm" padding="lg">
-
-            <div className="flex items-start gap-3 mb-4">
-              <div className="shrink-0 w-10 h-10 rounded-full bg-primary/15 ring-1 ring-primary/30 flex items-center justify-center">
-                <Headphones className="h-5 w-5 text-primary" />
-              </div>
-              <div>
-                <div className="text-xs font-semibold uppercase tracking-wide text-primary mb-1">
-                  Vendibook Concierge
-                </div>
-                <h2 className="text-xl font-semibold leading-tight mb-1.5">
-                  Want help with this listing?
-                </h2>
-                <p className="text-sm text-muted-foreground">
-                  Our concierge can confirm availability, answer questions, and coordinate next steps.
-                </p>
-              </div>
+            <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-primary mb-2">
+              Vendibook Concierge
             </div>
-            <div className="grid grid-cols-2 gap-2.5 mb-3">
+            <h2 className="text-lg font-semibold leading-snug text-foreground">
+              Want help with this listing?
+            </h2>
+            <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed">
+              Our concierge can confirm availability, answer questions, and coordinate next steps.
+            </p>
+
+            <div className="mt-4 flex flex-col sm:flex-row gap-2.5">
               <Button
+                size="lg"
                 onClick={() => setConciergeOpen(true)}
-                className="h-12 gap-2 rounded-xl bg-cta-cream text-[#1a1a1a] hover:brightness-95 font-bold border-0"
+                className="flex-1 h-11 gap-2 rounded-lg"
               >
                 <CalendarCheck className="h-4 w-4" />
                 Check Availability
               </Button>
               <Button
                 variant="outline"
+                size="lg"
                 onClick={handleAskVendibook}
-                className="h-12 gap-2 rounded-xl border-0 bg-cta-glass hover:bg-white/10 font-semibold text-white"
+                className="flex-1 h-11 gap-2 rounded-lg"
               >
                 <MessageSquare className="h-4 w-4" />
                 Ask for Help
               </Button>
-
             </div>
 
-            <p className="text-[11px] text-muted-foreground flex items-center gap-1.5">
+            <p className="mt-3 text-[11px] text-muted-foreground flex items-center gap-1.5">
               <ShieldCheck className="h-3 w-3" />
               Replies within 1 business hour · No commitment
             </p>
@@ -403,7 +397,7 @@ export const SaleListingMobile = ({
         {/* MESSAGE SELLER */}
         {!isOwner && (
           <SaleCard padding="lg">
-            <div className="flex items-center justify-between mb-3">
+            <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5 mb-3">
               <h2 className="text-base font-semibold">Send a message to {sellerFirst}</h2>
               <span className="inline-flex items-center gap-1 text-xs text-emerald-400 font-medium">
                 <Lock className="h-3 w-3" />
