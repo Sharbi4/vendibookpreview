@@ -721,9 +721,36 @@ const SaleCheckout = () => {
     },
   ];
 
+  // "Step 0" — enterprise-grade intro. Shown once per checkout session for
+  // high-value sales; small purchases fall through to the wizard.
+  if (currentStep === 'intro') {
+    return (
+      <>
+        <SEO title={`Checkout - ${listing.title}`} description={`Complete your purchase of ${listing.title}`} />
+        <div className="min-h-screen bg-background py-8 sm:py-12 px-4">
+          <CheckoutIntro
+            listingId={listing.id}
+            listingTitle={listing.title}
+            coverImageUrl={listing.cover_image_url ?? (listing.image_urls?.[0] ?? null)}
+            city={listing.city}
+            state={listing.state}
+            price={priceSale}
+            sellerName={sellerName}
+            sellerVerified={Boolean((host as { identity_verified?: boolean } | null | undefined)?.identity_verified)}
+            flow="sale"
+            financingEligible={priceSale >= 150 && acceptCardPayment}
+            onBack={() => navigate(`/listing/${listingId}`)}
+            onContinue={() => setCurrentStep('confirm')}
+          />
+        </div>
+      </>
+    );
+  }
+
   return (
     <>
       <SEO title={`Checkout - ${listing.title}`} description={`Complete your purchase of ${listing.title}`} />
+
       <CheckoutChrome
         steps={CHECKOUT_STEPS}
         currentStep={currentStepNumber}
