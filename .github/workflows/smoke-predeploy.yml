@@ -180,6 +180,27 @@ jobs:
           SMOKE_SUPABASE_SESSION_JSON: ${{ secrets.SMOKE_SUPABASE_SESSION_JSON }}
         run: bun scripts/smoke/subscription-lifecycle-smoke.ts
 
+  entitlement-checkout-smoke:
+    name: Entitlement Checkout Smoke (Stripe TEST mode, blocks deploy on fail)
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - run: bun install --frozen-lockfile
+      - name: Run entitlement-checkout smoke (purchase, short-circuit, webhook)
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          STRIPE_MONETIZATION_WEBHOOK_SECRET: ${{ secrets.STRIPE_MONETIZATION_WEBHOOK_SECRET_TEST }}
+        run: bun scripts/smoke/entitlement-checkout-smoke.ts
+
+
+
+
 
 
   readonly-prod-smoke:
