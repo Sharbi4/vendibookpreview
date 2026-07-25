@@ -212,9 +212,9 @@ export const DashboardLayout = ({ children, mode, onModeChange, isHost }: Dashbo
             <p className="text-base font-medium text-foreground truncate">
               {profile?.full_name || 'User'}
             </p>
-            <div className="flex items-center gap-2 mt-0.5">
+            <div className="flex items-center gap-2 mt-1">
               <span className="text-xs text-muted-foreground">{mode === 'host' ? 'Hosting' : 'Buying'}</span>
-              <IdentityChip verified={isVerified} />
+              <IdentityChip verified={isVerified} prominent={!isVerified} />
             </div>
           </div>
         </div>
