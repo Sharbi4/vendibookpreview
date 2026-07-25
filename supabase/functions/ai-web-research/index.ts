@@ -32,6 +32,8 @@ serve(async (req) => {
   }
 
   try {
+    const gate = await gateToolAccess(req, "market-radar", corsHeaders);
+    if (gate.response) return gate.response;
     const { query, category } = await req.json();
     if (!query || query.trim().length === 0) {
       return new Response(
