@@ -235,6 +235,7 @@ export function PremiumPlansSection({ compact = false }: Props) {
           {/* COMPARISON */}
           <section className="mt-10">
             <PlansComparisonTable />
+            <FoundingMemberNote />
           </section>
 
 
