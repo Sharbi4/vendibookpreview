@@ -1378,8 +1378,8 @@ export const PublishWizard: React.FC = () => {
     const validationErrors = getValidationErrors();
     if (validationErrors.length > 0) {
       toast({
-        title: 'Cannot publish yet',
-        description: validationErrors[0], // Show first error
+        title: validationErrors.length === 1 ? 'Cannot publish yet' : `Cannot publish — ${validationErrors.length} items to fix`,
+        description: validationErrors.map((e) => `• ${e}`).join('\n'),
         variant: 'destructive'});
       return;
     }
@@ -1388,7 +1388,16 @@ export const PublishWizard: React.FC = () => {
       toast({
         title: 'Connect Stripe to accept card payments',
         description: 'Or switch to cash-only (Pay in Person) on the Pricing step to publish now and add Stripe later.',
-        variant: 'destructive'});
+        variant: 'destructive',
+        action: (
+          <button
+            onClick={() => { void connectStripe(); }}
+            className="inline-flex items-center rounded-md bg-foreground px-3 py-1.5 text-xs font-medium text-background hover:bg-foreground/90"
+          >
+            Connect Stripe
+          </button>
+        ) as any,
+      });
       return;
     }
 
