@@ -3944,8 +3944,10 @@ export const PublishWizard: React.FC = () => {
                   </div>
 
                   <MembershipInlinePanel
-                    returnTo={`/list?draftId=${listing.id ?? ''}&step=review`}
+                    returnTo={`/create-listing/${listing.id ?? ''}?step=review`}
+                    listingId={listing.id ?? undefined}
                   />
+
 
                   {/* Full Listing Preview Card */}
                   <div className="rounded-2xl border border-border overflow-hidden bg-card shadow-lg">
