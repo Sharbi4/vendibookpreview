@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
+
 import { Loader2 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { PublishWizard } from '@/components/listing-wizard/PublishWizard';
@@ -9,8 +10,10 @@ import { supabase } from '@/integrations/supabase/client';
 const EditListing: React.FC = () => {
   const { listingId } = useParams<{ listingId: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, isLoading } = useAuth();
   const [hasAccess, setHasAccess] = useState<boolean | null>(null);
+
 
   useEffect(() => {
     const checkAccess = async () => {
@@ -39,9 +42,11 @@ const EditListing: React.FC = () => {
         }
       }
 
-      // No access - redirect to auth
-      navigate('/auth?redirect=' + encodeURIComponent(`/create-listing/${listingId}`));
+      // No access - redirect to auth, preserving querystring so the wizard
+      // step (?step=…) survives the round trip.
+      navigate('/auth?redirect=' + encodeURIComponent(`/create-listing/${listingId}${location.search}`));
     };
+
 
     if (!isLoading) {
       checkAccess();
