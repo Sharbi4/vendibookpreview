@@ -303,6 +303,7 @@ const AnimatedRoutes = () => {
           {/* Tools - /tools is the canonical hub */}
           <Route path="/tools" element={<PageTransition><ToolsIndex /></PageTransition>} />
           <Route path="/tools/pricepilot" element={<PageTransition><PricePilot /></PageTransition>} />
+          <Route path="/tools/:slug/preview" element={<PageTransition><ToolPreview /></PageTransition>} />
           <Route path="/tools/permitpath" element={<PageTransition><PermitPath /></PageTransition>} />
           <Route path="/tools/buildkit" element={<PageTransition><BuildKit /></PageTransition>} />
           <Route path="/tools/listing-studio" element={<PageTransition><ListingStudio /></PageTransition>} />
