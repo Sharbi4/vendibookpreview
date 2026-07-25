@@ -848,6 +848,18 @@ const BookingCheckout = () => {
         <div className="grid lg:grid-cols-5 gap-8 lg:gap-12">
           {/* Left Column - Steps */}
           <div className="lg:col-span-3 space-y-4">
+            {/* Persistent roadmap — mirrors the dynamic accordion steps */}
+            <JourneyProgress
+              steps={steps.map((s): JourneyStep => ({
+                id: String(s.id),
+                label: s.label,
+              }))}
+              currentIndex={Math.max(
+                0,
+                steps.findIndex((s) => s.id === activeStep),
+              )}
+              estimate="About 3 minutes"
+            />
             {/* Auth Status Banner - informational only, not blocking */}
             {user ? (
               <div className="border border-border rounded-2xl overflow-hidden bg-card p-5">
