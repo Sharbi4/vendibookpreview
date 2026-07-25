@@ -122,20 +122,20 @@ export async function resolveToolAccess(userId: string, tool: ToolSlug): Promise
 }
 
 /**
- * Convenience: throw a 402 Response if the caller cannot access the tool.
+ * Convenience: throw a 403 Response (unified entitlement error) if the caller
+ * cannot access the tool.
  */
-export async function assertToolAccess(userId: string, tool: ToolSlug, corsHeaders: Record<string, string>): Promise<ToolAccessResult> {
+export async function assertToolAccess(userId: string, tool: ToolSlug, _corsHeaders: Record<string, string>): Promise<ToolAccessResult> {
   const res = await resolveToolAccess(userId, tool);
   if (!res.unlocked) {
-    throw new Response(
-      JSON.stringify({
-        error: 'tool_locked',
-        tool,
-        message: `This tool requires the ${TOOL_TIER[tool]} tier or a one-time unlock.`,
-        unlock_product_slug: TOOL_UNLOCK_SLUG[tool] ?? null,
-      }),
-      { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
-    );
+    const { entitlementError } = await import('./jsonError.ts');
+    throw entitlementError({
+      tool,
+      current: res.tier,
+      requires: TOOL_TIER[tool],
+      feature: tool,
+      extra: { unlock_product_slug: TOOL_UNLOCK_SLUG[tool] ?? null },
+    });
   }
   return res;
 }
