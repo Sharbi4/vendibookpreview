@@ -17,6 +17,7 @@ interface StepConfirmPurchaseProps {
   sellerVerified?: boolean;
   specSummary?: string | null;
   onContinue: () => void;
+  onBack?: () => void;
 }
 
 const money = (n: number) =>
@@ -29,7 +30,9 @@ const StepConfirmPurchase = ({
   sellerVerified,
   specSummary,
   onContinue,
+  onBack,
 }: StepConfirmPurchaseProps) => {
+
   const cover =
     listing.cover_image_url || listing.image_urls?.[0] || '/placeholder.svg';
   const location = [listing.city, listing.state].filter(Boolean).join(', ');
