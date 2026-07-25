@@ -1409,6 +1409,20 @@ export const PublishWizard: React.FC = () => {
       return;
     }
 
+    // Active-listing quota gate (grandfathered accounts are always unlimited).
+    // Only blocks NEW publishes — already-published listings can always re-save.
+    const isFirstTimePublishForQuota = !listing.published_at;
+    if (
+      isFirstTimePublishForQuota &&
+      !quota.isLoading &&
+      !quota.isGrandfathered &&
+      !quota.isUnlimited &&
+      quota.isAtLimit
+    ) {
+      setShowLimitModal(true);
+      return;
+    }
+
     // Helper to safely parse currency / formatted strings
     const safeParsePrice = (value: string): number | null => {
       if (!value || !value.trim()) return null;
