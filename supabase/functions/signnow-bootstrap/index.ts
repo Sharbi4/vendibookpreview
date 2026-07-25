@@ -257,11 +257,11 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
   if (req.method !== 'POST') return jsonError(405, 'method_not_allowed', 'POST only');
 
-  // Only allow service-role invocations (admin bearer) to prevent abuse.
-  const authHeader = req.headers.get('Authorization') ?? '';
-  const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-  if (authHeader !== `Bearer ${serviceKey}`) {
-    return jsonError(403, 'forbidden', 'service-role bearer required');
+  // Only allow invocations with the one-time bootstrap token.
+  const token = req.headers.get('x-bootstrap-token') ?? '';
+  const expected = Deno.env.get('SIGNNOW_BOOTSTRAP_TOKEN');
+  if (!expected || token !== expected) {
+    return jsonError(403, 'forbidden', 'valid bootstrap token required');
   }
 
   try {
