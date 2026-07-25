@@ -44,9 +44,26 @@ serve(async (req) => {
     if (!user?.email) throw new Error("User not authenticated or email not available");
     logStep("User authenticated", { userId: user.id, email: user.email });
 
-    const { listing_id } = await req.json();
+    const body = await req.json().catch(() => ({}));
+    const { listing_id, starts_at } = body as { listing_id?: string; starts_at?: string };
     if (!listing_id) throw new Error("Missing listing_id");
-    logStep("Request parsed", { listing_id });
+
+    // Validate optional starts_at: must be an ISO date, today or up to +60 days.
+    let scheduledStartIso: string | null = null;
+    if (typeof starts_at === "string" && starts_at.trim() !== "") {
+      const parsed = new Date(starts_at);
+      if (Number.isNaN(parsed.getTime())) {
+        throw new Error("Invalid starts_at — expected ISO date string");
+      }
+      const minMs = Date.now() - 24 * 60 * 60 * 1000; // yesterday tolerance for TZ
+      const maxMs = Date.now() + 60 * 24 * 60 * 60 * 1000;
+      if (parsed.getTime() < minMs || parsed.getTime() > maxMs) {
+        throw new Error("starts_at must be within the next 60 days");
+      }
+      scheduledStartIso = parsed.toISOString();
+    }
+
+    logStep("Request parsed", { listing_id, scheduledStartIso });
 
     // Verify the listing exists and belongs to this user
     const { data: listing, error: listingError } = await supabaseClient
