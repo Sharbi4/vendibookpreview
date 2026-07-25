@@ -19,7 +19,8 @@ import { Link as RouterLink } from 'react-router-dom';
 import { Lock } from 'lucide-react';
 
 const HostListings = () => {
-  const { hasRole } = useAuth();
+  const { user, isLoading: authLoading, hasRole } = useAuth();
+  const navigate = useNavigate();
   const { listings, isLoading, stats, pauseListing, publishListing, deleteListing, updateListingPrice } = useHostListings();
   const { isConnected, connectStripe, isConnecting } = useStripeConnect();
   const { canBulkListings } = useHostEntitlements();
@@ -28,6 +29,12 @@ const HostListings = () => {
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
 
   usePageTracking();
+
+  useEffect(() => {
+    if (!authLoading && !user) navigate('/auth?redirect=' + encodeURIComponent('/host/listings'));
+  }, [authLoading, user, navigate]);
+
+  if (!authLoading && !user) return null;
 
   const isHost = hasRole('host');
   const isPowerUser = listings.length > 2;
