@@ -45,6 +45,8 @@ import { PublishChecklist, createChecklistItems } from './PublishChecklist';
 import { MembershipInlinePanel } from './MembershipInlinePanel';
 import { PublishSuccessModal } from './PublishSuccessModal';
 import { ListingPreviewModal } from './ListingPreviewModal';
+import { ListingLimitReachedModal } from './ListingLimitReachedModal';
+import { useListingQuota } from '@/hooks/useListingQuota';
 import { AuthGateModal } from './AuthGateModal';
 import { getGuestDraft, clearGuestDraft } from '@/lib/guestDraft';
 import { cn } from '@/lib/utils';
