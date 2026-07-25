@@ -23,6 +23,7 @@ import {
 import { faqCategories, allFaqEntries, type FaqAction, type FaqEntry, type FaqCategory } from "@/data/faqContent";
 import { searchFaq, relatedEntries } from "@/lib/faq/search";
 import { ReportIssueButton } from "@/components/support/ReportIssueButton";
+import { FaqHelpfulThumbs } from "@/components/support/FaqHelpfulThumbs";
 import { useAuth } from "@/contexts/AuthContext";
 
 const useQueryParam = (key: string) => {
@@ -80,6 +81,7 @@ const EntryCard = ({ entry, category }: { entry: FaqEntry; category: FaqCategory
             ))}
           </div>
         )}
+        <FaqHelpfulThumbs entryId={entry.id} categoryId={category.id} />
         {related.length > 0 && (
           <div className="mt-5 pt-4 border-t border-white/10">
             <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-white/40 mb-2">
@@ -93,6 +95,7 @@ const EntryCard = ({ entry, category }: { entry: FaqEntry; category: FaqCategory
                     onClick={(e) => {
                       e.preventDefault();
                       document.getElementById(r.entry.id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+                      history.replaceState(null, "", `#${r.entry.id}`);
                     }}
                     className="text-xs text-white/60 hover:text-white transition-colors inline-flex items-start gap-1.5"
                   >
@@ -115,6 +118,23 @@ const FAQ = () => {
   const [query, setQuery] = useQueryParam("q");
   const [categoryId, setCategoryId] = useQueryParam("cat");
   const deferredQuery = useDeferredValue(query);
+
+  // Deep-link support: scroll to the anchored answer when the page loads
+  // with a #slug hash (also opens the accordion via `defaultValue`).
+  const [hash, setHash] = useState<string>(() =>
+    typeof window !== "undefined" ? window.location.hash.replace(/^#/, "") : "",
+  );
+  useEffect(() => {
+    if (!hash) return;
+    const el = document.getElementById(hash);
+    if (el) {
+      // small delay to let accordions mount
+      setTimeout(() => el.scrollIntoView({ behavior: "smooth", block: "start" }), 120);
+    }
+    const onHash = () => setHash(window.location.hash.replace(/^#/, ""));
+    window.addEventListener("hashchange", onHash);
+    return () => window.removeEventListener("hashchange", onHash);
+  }, [hash]);
 
   const results = useMemo(() => {
     return searchFaq(faqCategories, deferredQuery, {
@@ -181,7 +201,7 @@ const FAQ = () => {
               <HelpCircle className="h-3 w-3 mr-1" />
               Help & FAQ
             </Badge>
-            <h1 className="text-3xl md:text-5xl font-medium tracking-tight">
+            <h1 className="text-3xl md:text-5xl font-medium tracking-tight font-display">
               Everything about how Vendibook works.
             </h1>
             <p className="mt-3 text-white/60 text-sm md:text-base max-w-2xl mx-auto">
@@ -287,7 +307,11 @@ const FAQ = () => {
                     {category.blurb && (
                       <p className="text-sm text-white/55 mb-4 max-w-2xl">{category.blurb}</p>
                     )}
-                    <Accordion type="multiple" className="w-full rounded-xl border border-white/10 bg-white/[0.02] divide-y divide-white/10 px-4">
+                    <Accordion
+                      type="multiple"
+                      defaultValue={hash && entries.some((e) => e.id === hash) ? [hash] : undefined}
+                      className="w-full rounded-xl border border-white/10 bg-white/[0.02] divide-y divide-white/10 px-4"
+                    >
                       {entries.map((entry) => (
                         <EntryCard key={entry.id} entry={entry} category={category} />
                       ))}
@@ -299,24 +323,27 @@ const FAQ = () => {
           </div>
         </section>
 
-        {/* Still need help */}
-        <section className="py-12 border-t border-white/[0.06]">
+        {/* Still need help — persistent contact block with concierge chat */}
+        <section className="py-12 border-t border-white/[0.06] section-band">
           <div className="container max-w-3xl text-center">
-            <h2 className="text-2xl font-medium tracking-tight">Still have questions?</h2>
+            <h2 className="text-2xl font-medium tracking-tight font-display">Still need help?</h2>
             <p className="text-white/60 mt-2 mb-6 text-sm">
-              Call (725) 755-9598, email support@vendibook.com, or open a support ticket.
-              Live support is available Mon–Fri, 9am–5pm Arizona time.
+              Chat with our support concierge, call (725) 755-9598, or email
+              support@vendibook.com. Live support Mon–Fri, 9am–5pm Arizona time.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <Button asChild size="lg">
-                <Link to="/contact">
-                  Contact support
-                  <ArrowRight className="h-4 w-4 ml-2" />
-                </Link>
+              <Button
+                size="lg"
+                onClick={() => {
+                  window.dispatchEvent(new CustomEvent("open-vendi-chat", { detail: { prefill: "" } }));
+                }}
+              >
+                <MessageCircle className="h-4 w-4 mr-2" />
+                Chat with support
               </Button>
               <Button asChild variant="outline" size="lg">
-                <Link to="/help">
-                  Visit Help Center
+                <Link to="/contact">
+                  Contact form
                   <ArrowRight className="h-4 w-4 ml-2" />
                 </Link>
               </Button>
