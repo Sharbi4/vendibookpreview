@@ -8,16 +8,12 @@ import { supabase } from '@/integrations/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
 import { motion } from 'framer-motion';
 import { trackLeadEvent } from '@/lib/leadTracking';
-import { isListingFeatured } from '@/lib/featured';
+import { isListingFeatured, sortFeaturedFirstFair } from '@/lib/featured';
 
-// Stable sort that puts active featured listings first, preserves original order otherwise.
-const sortFeaturedFirst = <T extends { featured_enabled?: boolean | null; featured_expires_at?: string | null }>(
+// Featured-first, with fair daily rotation among featured listings (see src/lib/featured.ts).
+const sortFeaturedFirst = <T extends { id: string; featured_enabled?: boolean | null; featured_expires_at?: string | null }>(
   items: T[],
-): T[] => {
-  const featured = items.filter((i) => isListingFeatured(i as any));
-  const rest = items.filter((i) => !isListingFeatured(i as any));
-  return [...featured, ...rest];
-};
+): T[] => sortFeaturedFirstFair(items as any) as T[];
 
 type RowKey = 'rent' | 'sale' | 'trucks' | 'trailers';
 
