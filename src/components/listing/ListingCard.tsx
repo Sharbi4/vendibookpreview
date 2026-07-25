@@ -19,6 +19,7 @@ import { trackLeadEvent } from '@/lib/leadTracking';
 // AvailabilityCalendarModal removed — calendar lives inside ListingCardOverlay now
 import { normalizeScheduleKeys } from '@/lib/scheduleUtils';
 import { isListingFeatured } from '@/lib/featured';
+import { TrustESignChip } from '@/components/trust/TrustESignChip';
 
 // Types for hourly schedule
 interface TimeRange {
