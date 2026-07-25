@@ -90,8 +90,11 @@ async function run() {
       }
 
       // Detail page must actually mount and NOT show "not found" for a real id.
-      await page.waitForSelector("h1", { timeout: 15_000 });
-      const h1 = (await page.locator("h1").first().innerText()).trim();
+      // Detail page must actually mount and NOT show "not found" for a real id.
+      // Use :visible — the sale detail renders duplicate mobile/desktop h1s,
+      // one hidden via responsive utility classes.
+      await page.waitForSelector("h1:visible", { timeout: 15_000 });
+      const h1 = (await page.locator("h1:visible").first().innerText()).trim();
       if (/not found/i.test(h1)) fail(`real id showed "not found" state: "${h1}"`);
 
       const boundary = await page.locator("text=/something went wrong/i").count();
