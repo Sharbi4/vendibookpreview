@@ -2626,6 +2626,7 @@ export type Database = {
           amenities: string[] | null
           available_from: string | null
           available_to: string | null
+          boost_history: Json
           buffer_time_mins: number | null
           category: Database["public"]["Enums"]["listing_category"]
           city: string | null
@@ -2699,6 +2700,7 @@ export type Database = {
           amenities?: string[] | null
           available_from?: string | null
           available_to?: string | null
+          boost_history?: Json
           buffer_time_mins?: number | null
           category: Database["public"]["Enums"]["listing_category"]
           city?: string | null
@@ -2772,6 +2774,7 @@ export type Database = {
           amenities?: string[] | null
           available_from?: string | null
           available_to?: string | null
+          boost_history?: Json
           buffer_time_mins?: number | null
           category?: Database["public"]["Enums"]["listing_category"]
           city?: string | null
@@ -6648,6 +6651,7 @@ export type Database = {
           amenities: string[] | null
           available_from: string | null
           available_to: string | null
+          boost_history: Json
           buffer_time_mins: number | null
           category: Database["public"]["Enums"]["listing_category"]
           city: string | null
