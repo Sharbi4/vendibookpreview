@@ -212,18 +212,84 @@ async function handleCheckoutCompleted(
   // deno-lint-ignore no-explicit-any
   const product: any = (purchase as any).product;
   if (purchase.listing_id && product?.promo_type && product?.duration_days) {
-    const starts = new Date();
-    const ends = new Date(starts.getTime() + product.duration_days * 24 * 60 * 60 * 1000);
-    const { error: promoErr } = await supabase.from("listing_promotions").insert({
-      listing_id: purchase.listing_id,
-      product_id: product.id,
-      purchase_id: purchase.id,
-      promo_type: product.promo_type,
-      starts_at: starts.toISOString(),
-      ends_at: ends.toISOString(),
-      active: true,
-    });
-    if (promoErr && (promoErr as { code?: string }).code !== "23505") throw promoErr;
+    const durationMs = product.duration_days * 24 * 60 * 60 * 1000;
+    const nowMs = Date.now();
+
+    // STACKING: extend from current end (if active) or from now.
+    // Applies to both listing_promotions.ends_at and (for featured_* / top_of_search)
+    // the listings.featured_expires_at column that actually drives sorting + badge.
+    const isFeaturedProduct =
+      product.promo_type === "featured_7" ||
+      product.promo_type === "featured_30" ||
+      product.promo_type === "top_of_search";
+
+    // Read current featured expiry so extends stack cleanly.
+    let currentFeaturedExpiresMs = 0;
+    if (isFeaturedProduct) {
+      const { data: listingRow } = await supabase
+        .from("listings")
+        .select("featured_enabled, featured_expires_at")
+        .eq("id", purchase.listing_id)
+        .maybeSingle();
+      // deno-lint-ignore no-explicit-any
+      const lr = listingRow as any;
+      if (lr?.featured_enabled && lr?.featured_expires_at) {
+        currentFeaturedExpiresMs = new Date(lr.featured_expires_at).getTime();
+      }
+    }
+
+    // Read current promotion end for the same promo_type so listing_promotions stacks too.
+    const { data: existingPromo } = await supabase
+      .from("listing_promotions")
+      .select("id, ends_at")
+      .eq("listing_id", purchase.listing_id)
+      .eq("promo_type", product.promo_type)
+      .eq("active", true)
+      .maybeSingle();
+    // deno-lint-ignore no-explicit-any
+    const existingEndsMs = existingPromo && (existingPromo as any).ends_at
+      ? new Date((existingPromo as any).ends_at).getTime()
+      : 0;
+
+    const promoStartMs = existingEndsMs > nowMs ? existingEndsMs : nowMs;
+    const promoEndMs = promoStartMs + durationMs;
+
+    if (existingPromo) {
+      // Extend the existing promotion row (partial unique index blocks a second active row anyway).
+      await supabase
+        .from("listing_promotions")
+        // deno-lint-ignore no-explicit-any
+        .update({ ends_at: new Date(promoEndMs).toISOString(), purchase_id: purchase.id } as any)
+        // deno-lint-ignore no-explicit-any
+        .eq("id", (existingPromo as any).id);
+    } else {
+      const { error: promoErr } = await supabase.from("listing_promotions").insert({
+        listing_id: purchase.listing_id,
+        product_id: product.id,
+        purchase_id: purchase.id,
+        promo_type: product.promo_type,
+        starts_at: new Date(nowMs).toISOString(),
+        ends_at: new Date(promoEndMs).toISOString(),
+        active: true,
+      });
+      if (promoErr && (promoErr as { code?: string }).code !== "23505") throw promoErr;
+    }
+
+    // Feed the visible-effect columns for featured/top-of-search products.
+    if (isFeaturedProduct) {
+      const featuredStartMs = currentFeaturedExpiresMs > nowMs ? currentFeaturedExpiresMs : nowMs;
+      const featuredEndsAt = new Date(featuredStartMs + durationMs).toISOString();
+      await supabase
+        .from("listings")
+        // deno-lint-ignore no-explicit-any
+        .update({
+          featured_enabled: true,
+          featured_at: currentFeaturedExpiresMs > nowMs ? undefined : new Date(nowMs).toISOString(),
+          featured_expires_at: featuredEndsAt,
+          featured_source: "paid",
+        } as any)
+        .eq("id", purchase.listing_id);
+    }
 
     await supabase
       .from("monetization_purchases")

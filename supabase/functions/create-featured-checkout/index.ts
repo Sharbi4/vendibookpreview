@@ -71,24 +71,19 @@ serve(async (req) => {
     const origin = req.headers.get("origin") || req.headers.get("referer")?.replace(/\/$/, '').split('/').slice(0, 3).join('/') || "https://vendibook.com";
     logStep("Origin determined", { origin });
 
-    // IDEMPOTENCY GUARD 1: boost already active → don't create another Stripe session.
+    // NOTE: If a boost is already active we ALLOW the extend purchase and let
+    // stripe-webhook stack the additional 30 days onto the existing expiry.
+    // Duplicate submits are coalesced by the hourly idempotency key below.
     const now = Date.now();
     const activeBoost =
       listing.featured_enabled === true &&
       listing.featured_expires_at &&
       new Date(listing.featured_expires_at).getTime() > now;
     if (activeBoost) {
-      logStep("Boost already active — returning success URL without new charge", {
+      logStep("Boost already active — creating extend session (webhook will stack days)", {
         listingId: listing.id,
-        expires: listing.featured_expires_at,
+        currentExpires: listing.featured_expires_at,
       });
-      return new Response(
-        JSON.stringify({
-          url: `${origin}/listing-published?listing_id=${listing_id}&featured_paid=true&already_active=true`,
-          already_active: true,
-        }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
-      );
     }
 
     // IDEMPOTENCY GUARD 2: a prior boost payment is queued (paid but listing was draft).

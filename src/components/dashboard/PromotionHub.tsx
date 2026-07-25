@@ -172,18 +172,21 @@ export const PromotionHub = () => {
               <p className="text-sm text-muted-foreground mt-1">
                 $30 one-time. Pin to top of category, glow in cards, weekly performance email.
               </p>
+              <p className="text-xs text-muted-foreground/80 mt-1.5">
+                Extending stacks — you never lose remaining days. Rotates fairly with other Featured
+                listings each day so every booster reaches the top slot.
+              </p>
               <Button
                 variant="dark-shine"
                 className="mt-3 rounded-xl"
                 onClick={() => {
-                  // Hook into existing FeaturedListingModal flow on the listing card
                   toast({
                     title: 'Open the Listings tab',
-                    description: 'Click "Boost" on the listing card to activate.'});
+                    description: 'Click "Boost" on the listing card to activate or extend.'});
                 }}
               >
                 <Zap className="h-4 w-4 mr-1.5" />
-                {selected?.featured_enabled ? 'Active — extend boost' : 'Activate $30 boost'}
+                {selected?.featured_enabled ? 'Active — extend (adds 30 days)' : 'Activate $30 boost'}
               </Button>
             </div>
           </Card>

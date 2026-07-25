@@ -225,7 +225,13 @@ serve(async (req) => {
           const isFirstTimePublish = !existingListing.published_at;
           const isDraft = existingListing.status !== 'published' || !existingListing.published_at;
           const now = new Date();
-          const expiresAt = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000); // 30 days
+          // STACKING: if a boost is already live, extend from its current expiry;
+          // otherwise start from now. Extending NEVER shrinks remaining time.
+          const currentExpiresMs = existingListing.featured_enabled && existingListing.featured_expires_at
+            ? new Date(existingListing.featured_expires_at).getTime()
+            : 0;
+          const startFromMs = currentExpiresMs > now.getTime() ? currentExpiresMs : now.getTime();
+          const expiresAt = new Date(startFromMs + 30 * 24 * 60 * 60 * 1000);
 
           // Try to capture the Stripe-hosted receipt URL from the underlying charge
           let receiptUrl: string | null = null;
