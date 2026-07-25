@@ -1,62 +1,86 @@
-## Scope
+# Guided Checkout Redesign — Sale + Rental
 
-Ship a single `SmartImage` primitive plus card-level `SkeletonCard` and roll them into the highest-traffic image surfaces first (homepage, listing cards, dashboard cards, listing detail). Do NOT touch every `<img>` in the repo (60+); instead cover the ones that render in user viewports and leave a codemod path for the rest. No visual redesign — keep existing sizing, radii, and hover behavior.
+Goal: replace today's "dump user into fields" flow with a considered, step-by-step, one-screen-at-a-time purchase experience worthy of a $3k–$100k+ transaction. Sale flow is authoritative; Rental mirrors the same pattern with rental-specific steps.
 
-## 1. Foundation
+## Screens — SaleCheckout (5 steps)
 
-**`src/components/ui/SmartImage.tsx`** (new)
-- Props: `src`, `alt`, `aspect` (`'video' | 'square' | '4/3' | '3/2' | number`), `sizes?`, `priority?` (boolean, default false), `objectFit?`, `radiusClass?`, `fallback?`, `className?`, plus width/height passthrough.
-- Renders `<div class="relative overflow-hidden">` with the aspect ratio pinned by `padding-top` (works pre-JS, matches Tailwind aspect but predictable across browsers). Inside: shimmer skeleton absolute-positioned, then `<img>` absolute-positioned with `object-cover`, `decoding="async"`, `loading={priority ? 'eager' : 'lazy'}`, `fetchPriority={priority ? 'high' : 'auto'}`.
-- On `onLoad` / `onError`: fade image in over 250ms via opacity transition; on error render the branded fallback (small flame mark on `bg-muted` — reuse existing `/favicon.svg`-style svg mark inline).
-- Skeleton = `.smart-image-shimmer` utility (new, defined in `index.css`) using existing shimmer keyframes with `hsl(var(--muted))` base and `hsl(var(--muted-foreground)/0.08)` sweep.
-- No srcset transform pipeline yet (Supabase storage doesn't proxy transforms in this project); instead honor the `sizes` attribute for future readiness and set a sane rendered width via `className`. Cap cards to `max-w-full` so oversized uploads still render into 300–400px slots without CLS.
+1. **Confirm** — "Here's what you're buying"
+   - Listing hero photo, title, city/state, price, seller name + verified badge, condition/specs summary.
+   - Copy: "Take one more look before we continue."
+   - No inputs. CTA: "Looks right — continue".
 
-**`src/index.css`**
-- Add `.smart-image-shimmer` (background-image linear gradient, uses existing `@keyframes shimmer`, 1.5s cycle) and `.smart-image-fade-in` (opacity 0 → 1 300ms cubic-bezier ease-out).
-- Add `img { max-width: 100%; height: auto; }` sitewide safety (already implicit but make explicit) — no visual change.
+2. **Delivery** — "How do you want to get it?"
+   - Three Turo-style selectable cards (1.5px cream border → 2px flame + tint when selected, roomy padding):
+     - **Pickup** — "Free — you arrange pickup at {sellerCity}".
+     - **Delivery** — inline ZIP-only field with reason microcopy; on ZIP entry, live estimate: `$4.50/mi × distance` (existing freight logic in `src/lib/shipping.ts`), stated as "Estimated $X — based on distance from {sellerCity} to {zip}".
+     - **Freight** — "Quoted after purchase — typically $X–$Y for this size" when we can't calculate exactly; be honest about estimated vs fixed.
+   - Running total updates live in sticky footer.
 
-**`src/components/ui/SkeletonCard.tsx`** (new)
-- Variants: `listing` (4:3 image + 2 title lines + price line), `photo` (aspect-video image + label), `kpi` (small square + 2 lines). Uses `.smart-image-shimmer`. Exact same paddings/radii as the real card components so replacement doesn't reflow.
+3. **Add-ons** — "Anything to add?"
+   - Skippable list, none pre-selected. Each row: one-line benefit + price + toggle.
+   - Inspection referral, notarization (if eligible), buyer-side extras only.
+   - Explicit "No thanks, continue" secondary CTA.
 
-## 2. Surface adoption (targeted, not exhaustive)
+4. **Details** — "Where should we send everything?"
+   - Full legal name — "Used on your bill of sale".
+   - Email — "Receipts, documents, and updates".
+   - Phone — "So the seller can coordinate handoff".
+   - Address — ONLY if delivery or freight selected. When Pickup, show: "Since you're picking up, we don't need a delivery address."
+   - Every non-obvious field has WHY microcopy.
 
-Swap `<img>` for `<SmartImage>` in these files (list only; behavior preserved):
+5. **Review & Agree**
+   - Itemized cost breakdown (tabular numerals): item price, delivery (method named), add-ons, deposit vs balance, taxes/fees, **Total due now** separated from Total price.
+   - Payment structure block (pay in full / deposit + balance / pay in person) with explicit amounts and timing.
+   - Payment method selector (card / ACH / Affirm-Klarna-Afterpay) with Stripe messaging component showing monthly estimate.
+   - Single agreement block: what's included, plain-language payment protection (never "escrow"), one-line cancellation and refund terms, links to full docs, ONE checkbox: "I understand and agree to these terms."
+   - Pay button labeled with exact amount: "Pay $X,XXX now".
 
-- `src/components/listing/ListingCard.tsx` — card cover (aspect 4/3, priority=false, sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw")
-- `src/components/listing/ListingPreviewDrawer.tsx` — hero
-- `src/components/dashboard/shared/PhotoListingCard.tsx` — card image
-- `src/components/dashboard/shared/EmptyState.tsx` — decorative image
-- `src/components/dashboard/overview/RecentActivityStrip.tsx` — activity thumbs
-- `src/components/dashboard/tabs/FavoritesTab.tsx` — favorite card image
-- `src/components/dashboard/DraftsSection.tsx`, `HostOffersSection.tsx`, `BuyerOffersSection.tsx`, `ListingInsightsPanel.tsx` — row thumbnails (aspect square)
-- `src/components/home/HeroWalkthrough.tsx` — hero image (priority=true)
-- `src/components/home/PaymentsSection.tsx` — section media
+## Screens — BookingCheckout (4 rental steps)
 
-## 3. Grid skeletons
+1. **Dates & Duration** — pick dates/slots, running nightly/hourly rate shown live.
+2. **Add-ons & Deposit** — cleaning fee, security deposit disclosed explicitly, optional protections.
+3. **Your Details** — same WHY-microcopy pattern; address only if required by host.
+4. **Review & Agree** — full breakdown: nightly × nights, cleaning fee, deposit (with "refundable after return"), taxes/fees, protection fee, cancellation policy stated in one line, single agreement checkbox, pay button with exact amount.
 
-- `src/pages/Browse.tsx` — while `isLoading`, render 8 `<SkeletonCard variant="listing" />` in the same grid classes (same widths → zero reflow when real cards land).
-- `src/pages/HostListings.tsx` and `src/components/dashboard/tabs/FavoritesTab.tsx` — same pattern in their loading branches.
-- Dashboard `RecentActivityStrip.tsx` — while loading, render 4 `<SkeletonCard variant="photo" />` at strip dimensions.
-- Stagger real cards in via a light `.smart-image-fade-in` on the card root (already there via SmartImage on the image; add to card wrapper only where the whole card enters mid-scroll).
+## Cross-cutting rules
 
-## 4. LCP + font
+- **Chrome:** shared `GuidedCheckoutShell` renders header ("Step N of M" progress + Back), main step slot, sticky footer with running total + primary CTA + persistent trust row (Stripe-secured · Payment protection · Free e-signature).
+- **Never lose data:** all step state kept in a `useCheckoutState(sessionKey)` hook backed by `sessionStorage` keyed by listing id; returning restores furthest step + data.
+- **Mobile:** each step full-screen; CTA fixed to bottom safe-area.
+- **Verbiage:** every primary CTA describes the next action ("Choose delivery", "Add your details", "Review your order", "Pay $X now").
+- **Errors:** inline, specific, never wipe input.
+- **Money display:** all totals use `font-variant-numeric: tabular-nums`, Sofia headings, Manrope body.
+- **Estimated vs fixed:** every estimate line reads "Estimated — {basis}".
 
-- `index.html` — add `<link rel="preload" as="image" href="{hero image url}" fetchpriority="high">` for the homepage hero (only that one). If the hero is a lazy React import we'll rely on `priority` on `SmartImage` instead — pick the one that's actually rendered above the fold.
-- Verify `@font-face` uses `font-display: swap`. If Sofia Pro / Manrope declarations lack it, add it. Add `size-adjust` fallback stack in `body { font-family }` only if measured reflow is visible.
+## Files
 
-## 5. Verify
+**New**
+- `src/components/checkout/GuidedCheckoutShell.tsx` — header, progress, back, sticky footer, trust row.
+- `src/components/checkout/StepConfirmPurchase.tsx` — Sale step 1.
+- `src/components/checkout/StepDeliveryMethod.tsx` — Sale step 2, cards + ZIP + live estimate.
+- `src/components/checkout/StepAddOns.tsx` — Sale step 3.
+- `src/components/checkout/StepBuyerDetails.tsx` — Sale step 4 (address conditional on delivery).
+- `src/components/checkout/StepReviewAgree.tsx` — Sale step 5, breakdown + payment method + single agreement.
+- `src/components/checkout/AgreementBlock.tsx` — reusable plain-language terms + one checkbox.
+- `src/components/checkout/CostBreakdown.tsx` — itemized rows, tabular nums, deposit vs balance handling.
+- `src/hooks/useCheckoutState.ts` — sessionStorage-backed step + form state.
+- `src/components/booking/BookingStepDates.tsx`, `BookingStepAddOns.tsx`, `BookingStepDetails.tsx`, `BookingStepReview.tsx` — rental variants.
 
-- `bunx tsgo --noEmit`
-- Playwright at Fast 3G on `/`, `/browse`, `/listing/:id`, `/dashboard`: capture screenshots at 0.5s / 1s / 3s to demonstrate skeleton → image transitions, and read Layout Shift entries via `PerformanceObserver` to record CLS. Report the before/after (before observed from user's screenshot report; after measured).
-- Report files changed + CLS numbers per page.
+**Rewritten**
+- `src/pages/SaleCheckout.tsx` — become a thin orchestrator around `GuidedCheckoutShell` + the 5 Step components; keep existing calls to `create-checkout` / `create-cash-sale` and terms gate untouched.
+- `src/pages/BookingCheckout.tsx` — same orchestrator pattern with 4 rental steps; keep existing booking mutation and payment call.
 
-## Files changed (planned)
+**Reused as-is**
+- `EmbeddedStripeCheckout`, `AffirmMessagingLine`, `TrustRow`, `PaymentProtectionBlock`, `PostPaymentTimeline`, `useTermsGate`, existing money/fee helpers in `src/lib/commissions.ts` and `src/lib/shipping.ts`, `create-checkout` / `create-cash-sale` / booking edge functions.
 
-New: `src/components/ui/SmartImage.tsx`, `src/components/ui/SkeletonCard.tsx`.
-Edited: `src/index.css`, `index.html`, plus the 11 surface files listed in §2 and §3.
+## Not changing
 
-## Out of scope
+- Fee math, protection hold, payouts, entitlements.
+- `useTermsGate` behavior.
+- `create-checkout`, `create-cash-sale`, `manage-subscription`, or any Stripe edge function contract beyond what's already in flight.
+- Backend / RLS / DB schema.
 
-- SVG icons, inline logos, QR codes, message-thread avatars, admin dashboards, marketing SEO pages — untouched (they either aren't user-visible perf pain or don't have layout-shift risk).
-- No CDN image resizer / responsive srcset backend work (Supabase storage doesn't offer transforms in this project).
-- No design or copy changes.
+## Verification
+
+- `tsgo --noEmit` clean at the end.
+- Walk each step manually in preview: back preserves data, refresh restores step, running total updates, address field appears only for delivery/freight, agreement checkbox required to enable Pay button, Pay button shows exact amount.

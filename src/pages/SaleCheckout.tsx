@@ -25,29 +25,31 @@ import StickySummary from '@/components/shared/StickySummary';
 
 // Step components
 import { PurchaseStepDelivery, PurchaseStepInfo, PurchaseStepReview, type BuyerInfo } from '@/components/purchase-wizard';
+import StepConfirmPurchase from '@/components/checkout/StepConfirmPurchase';
+import StepAddOns, { type CheckoutAddOn } from '@/components/checkout/StepAddOns';
 import { ReferralCodeField } from '@/components/referrals/ReferralCodeField';
 import { FinalReviewSheet } from '@/components/transaction/FinalReviewSheet';
 import { useTermsGate } from '@/hooks/useTermsGate';
 import { buildTerms } from '@/lib/transactionTerms';
 import { ProtectionOptInCard } from '@/components/protected-sale/ProtectionOptInCard';
+import { useCheckoutState } from '@/hooks/useCheckoutState';
 
 type FulfillmentSelection = 'pickup' | 'delivery' | 'vendibook_freight';
-type CheckoutStep = 'information' | 'delivery' | 'review';
+type CheckoutStep = 'confirm' | 'delivery' | 'addons' | 'details' | 'review';
 
 const CHECKOUT_STEPS = [
-  { step: 1, label: 'Your info', short: 'Info' },
-  { step: 2, label: 'How you\'ll get it', short: 'Delivery' },
-  { step: 3, label: 'Review & pay', short: 'Pay' },
+  { step: 1, label: 'Confirm',   short: 'Confirm' },
+  { step: 2, label: 'Delivery',  short: 'Delivery' },
+  { step: 3, label: 'Add-ons',   short: 'Add-ons' },
+  { step: 4, label: 'Your details', short: 'Details' },
+  { step: 5, label: 'Review & pay', short: 'Pay' },
 ];
 
-const getStepNumber = (step: CheckoutStep): number => {
-  switch (step) {
-    case 'information': return 1;
-    case 'delivery': return 2;
-    case 'review': return 3;
-    default: return 1;
-  }
+const STEP_NUM: Record<CheckoutStep, number> = {
+  confirm: 1, delivery: 2, addons: 3, details: 4, review: 5,
 };
+
+const getStepNumber = (step: CheckoutStep): number => STEP_NUM[step];
 
 const SaleCheckout = () => {
   const { listingId } = useParams();
@@ -67,25 +69,44 @@ const SaleCheckout = () => {
   // Check if user is the owner of this listing
   const isOwner = user?.id && listing?.host_id && user.id === listing.host_id;
 
-  // Multi-step state
-  const [currentStep, setCurrentStep] = useState<CheckoutStep>('information');
-  
-  // Customer info - structured buyer info
-  const [buyerInfo, setBuyerInfo] = useState<BuyerInfo>({
-    firstName: '',
-    lastName: '',
-    businessName: '',
-    email: '',
-    phone: '',
-    address1: '',
-    address2: '',
-    city: '',
-    state: '',
-    zipCode: '',
+  // Multi-step state — persisted per-listing so leaving and returning
+  // restores the furthest step + typed data.
+  const sessionKey = `sale:${listingId ?? 'unknown'}`;
+  interface PersistedState {
+    step: CheckoutStep;
+    buyerInfo: BuyerInfo;
+    fulfillmentSelected: FulfillmentSelection;
+    deliveryAddress: string;
+    deliveryInstructions: string;
+    addOnSelections: Record<string, boolean>;
+  }
+  const persist = useCheckoutState<PersistedState>(sessionKey, {
+    step: 'confirm',
+    buyerInfo: {
+      firstName: '', lastName: '', businessName: '', email: '', phone: '',
+      address1: '', address2: '', city: '', state: '', zipCode: '',
+    },
+    fulfillmentSelected: 'pickup',
+    deliveryAddress: '',
+    deliveryInstructions: '',
+    addOnSelections: {},
   });
-  
+
+  const currentStep = persist.state.step;
+  const setCurrentStep = (s: CheckoutStep) => {
+    persist.setState((prev) => ({ ...prev, step: s }));
+    persist.bumpFurthestStep(STEP_NUM[s]);
+  };
+
+  const buyerInfo = persist.state.buyerInfo;
+  const setBuyerInfo = (next: BuyerInfo | ((p: BuyerInfo) => BuyerInfo)) => {
+    persist.setState((prev) => ({
+      ...prev,
+      buyerInfo: typeof next === 'function' ? (next as (p: BuyerInfo) => BuyerInfo)(prev.buyerInfo) : next,
+    }));
+  };
   const updateBuyerInfo = <K extends keyof BuyerInfo>(field: K, value: BuyerInfo[K]) => {
-    setBuyerInfo(prev => ({ ...prev, [field]: value }));
+    setBuyerInfo((prev) => ({ ...prev, [field]: value }));
   };
 
   // Legacy fields for backward compatibility - computed from buyerInfo
@@ -93,11 +114,23 @@ const SaleCheckout = () => {
   const email = buyerInfo.email;
   const phone = buyerInfo.phone;
   const address = `${buyerInfo.address1}${buyerInfo.address2 ? ', ' + buyerInfo.address2 : ''}, ${buyerInfo.city}, ${buyerInfo.state} ${buyerInfo.zipCode}`.trim();
-  
+
   // Fulfillment
-  const [fulfillmentSelected, setFulfillmentSelected] = useState<FulfillmentSelection>('pickup');
-  const [deliveryAddress, setDeliveryAddress] = useState('');
-  const [deliveryInstructions, setDeliveryInstructions] = useState('');
+  const fulfillmentSelected = persist.state.fulfillmentSelected;
+  const setFulfillmentSelected = (v: FulfillmentSelection) =>
+    persist.setState((prev) => ({ ...prev, fulfillmentSelected: v }));
+  const deliveryAddress = persist.state.deliveryAddress;
+  const setDeliveryAddress = (v: string) =>
+    persist.setState((prev) => ({ ...prev, deliveryAddress: v }));
+  const deliveryInstructions = persist.state.deliveryInstructions;
+  const setDeliveryInstructions = (v: string) =>
+    persist.setState((prev) => ({ ...prev, deliveryInstructions: v }));
+  const addOnSelections = persist.state.addOnSelections;
+  const toggleAddOn = (id: string, next: boolean) =>
+    persist.setState((prev) => ({
+      ...prev,
+      addOnSelections: { ...prev.addOnSelections, [id]: next },
+    }));
   const [isAddressComplete, setIsAddressComplete] = useState(false);
   const [deliveryCoords, setDeliveryCoords] = useState<[number, number] | null>(null);
   
@@ -322,28 +355,32 @@ const SaleCheckout = () => {
       return true;
     }
     
-    if (step === 'information') {
+    if (step === 'details') {
+      const needsAddress = fulfillmentSelected !== 'pickup';
+
       const firstNameError = fieldValidators.firstName(buyerInfo.firstName);
       const lastNameError = fieldValidators.lastName(buyerInfo.lastName);
       const emailError = fieldValidators.email(buyerInfo.email);
       const phoneError = fieldValidators.phone(buyerInfo.phone);
-      const address1Error = fieldValidators.address1(buyerInfo.address1);
-      const cityError = fieldValidators.city(buyerInfo.city);
-      const stateError = fieldValidators.state(buyerInfo.state);
-      const zipCodeError = fieldValidators.zipCode(buyerInfo.zipCode);
-      
-      setFieldErrors({ 
-        firstName: firstNameError, 
-        lastName: lastNameError, 
-        email: emailError, 
-        phone: phoneError, 
+      const address1Error = needsAddress ? fieldValidators.address1(buyerInfo.address1) : undefined;
+      const cityError = needsAddress ? fieldValidators.city(buyerInfo.city) : undefined;
+      const stateError = needsAddress ? fieldValidators.state(buyerInfo.state) : undefined;
+      const zipCodeError = needsAddress ? fieldValidators.zipCode(buyerInfo.zipCode) : undefined;
+
+      setFieldErrors({
+        firstName: firstNameError,
+        lastName: lastNameError,
+        email: emailError,
+        phone: phoneError,
         address1: address1Error,
         city: cityError,
         state: stateError,
         zipCode: zipCodeError,
       });
-      setTouchedFields(new Set(['firstName', 'lastName', 'email', 'phone', 'address1', 'city', 'state', 'zipCode']));
-      
+      const touched = ['firstName', 'lastName', 'email', 'phone'];
+      if (needsAddress) touched.push('address1', 'city', 'state', 'zipCode');
+      setTouchedFields(new Set(touched));
+
       const firstError = firstNameError || lastNameError || emailError || phoneError || address1Error || cityError || stateError || zipCodeError;
       if (firstError) {
         toast({ title: 'Missing information', description: firstError, variant: 'destructive' });
@@ -351,7 +388,7 @@ const SaleCheckout = () => {
       }
       return true;
     }
-    
+
     return true;
   };
 
@@ -642,6 +679,26 @@ const SaleCheckout = () => {
     [host?.first_name, host?.last_name].filter(Boolean).join(' ') || undefined;
   const locationLabel = [listing.city, listing.state].filter(Boolean).join(', ') || undefined;
 
+  // Contextual add-ons — only surface what actually applies to this listing.
+  const addOnCatalog: CheckoutAddOn[] = [
+    {
+      id: 'inspection',
+      title: 'Pre-purchase inspection referral',
+      description: 'We connect you with a local third-party inspector before you finalize.',
+      priceLabel: 'From $149',
+      icon: 'inspection',
+      eligible: priceSale >= 3000,
+    },
+    {
+      id: 'notarization',
+      title: 'Notarized bill of sale',
+      description: 'A licensed notary co-signs your documents for higher-value transfers.',
+      priceLabel: '$29',
+      icon: 'notarization',
+      eligible: priceSale >= 10000,
+    },
+  ];
+
   return (
     <>
       <SEO title={`Checkout - ${listing.title}`} description={`Complete your purchase of ${listing.title}`} />
@@ -684,22 +741,23 @@ const SaleCheckout = () => {
                       exit={{ opacity: 0, x: -20 }}
                       transition={{ duration: 0.2 }}
                     >
-                      {currentStep === 'information' && (
-                        <PurchaseStepInfo
-                          buyerInfo={buyerInfo}
-                          updateBuyerInfo={updateBuyerInfo}
-                          deliveryInstructions={deliveryInstructions}
-                          setDeliveryInstructions={setDeliveryInstructions}
-                          fulfillmentSelected={fulfillmentSelected}
-                          fieldErrors={fieldErrors}
-                          touchedFields={touchedFields}
-                          setTouchedFields={setTouchedFields}
-                          onBack={() => navigate(`/listing/${listingId}`)}
-                          onContinue={() => {
-                            if (validateStep('information')) {
-                              setCurrentStep('delivery');
-                            }
+                      {currentStep === 'confirm' && (
+                        <StepConfirmPurchase
+                          listing={{
+                            title: listing.title,
+                            cover_image_url: listing.cover_image_url,
+                            image_urls: listing.image_urls,
+                            city: listing.city,
+                            state: listing.state,
+                            category: listing.category ?? null,
+                            condition: (listing as { condition?: string | null }).condition ?? null,
+                            year: (listing as { year?: number | null }).year ?? null,
                           }}
+                          priceSale={priceSale}
+                          sellerName={sellerName}
+                          sellerVerified={Boolean((host as { identity_verified?: boolean } | null | undefined)?.identity_verified)}
+                          specSummary={(listing as { specifications?: string | null }).specifications ?? null}
+                          onContinue={() => setCurrentStep('delivery')}
                         />
                       )}
 
@@ -726,9 +784,41 @@ const SaleCheckout = () => {
                           clearEstimate={clearEstimate}
                           listingCity={listing.city}
                           listingState={listing.state}
-                          onBack={() => setCurrentStep('information')}
+                          onBack={() => setCurrentStep('confirm')}
                           onContinue={() => {
                             if (validateStep('delivery')) {
+                              setCurrentStep('addons');
+                            }
+                          }}
+                        />
+                      )}
+
+                      {currentStep === 'addons' && (
+                        <StepAddOns
+                          addOns={addOnCatalog}
+                          selected={addOnSelections}
+                          onToggle={toggleAddOn}
+                          onBack={() => setCurrentStep('delivery')}
+                          onContinue={() => setCurrentStep('details')}
+                          onSkip={() => setCurrentStep('details')}
+                        />
+                      )}
+
+                      {currentStep === 'details' && (
+                        <PurchaseStepInfo
+                          buyerInfo={buyerInfo}
+                          updateBuyerInfo={updateBuyerInfo}
+                          deliveryInstructions={deliveryInstructions}
+                          setDeliveryInstructions={setDeliveryInstructions}
+                          fulfillmentSelected={fulfillmentSelected}
+                          fieldErrors={fieldErrors}
+                          touchedFields={touchedFields}
+                          setTouchedFields={setTouchedFields}
+                          hideAddress={fulfillmentSelected === 'pickup'}
+                          continueLabel="Review your order"
+                          onBack={() => setCurrentStep('addons')}
+                          onContinue={() => {
+                            if (validateStep('details')) {
                               setCurrentStep('review');
                             }
                           }}
@@ -763,9 +853,10 @@ const SaleCheckout = () => {
                             agreedToTerms={agreedToTerms}
                             setAgreedToTerms={setAgreedToTerms}
                             isPurchasing={isPurchasing}
-                            onBack={() => setCurrentStep('delivery')}
+                            hideAddress={fulfillmentSelected === 'pickup'}
+                            onBack={() => setCurrentStep('details')}
                             onEditDelivery={() => setCurrentStep('delivery')}
-                            onEditInfo={() => setCurrentStep('information')}
+                            onEditInfo={() => setCurrentStep('details')}
                             onSubmit={handlePurchase}
                           />
                           {paymentMethod !== 'cash' ? (
