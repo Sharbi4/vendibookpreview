@@ -49,9 +49,14 @@ function savingsPct(monthly?: MonetizationProduct, annual?: MonetizationProduct)
 
 interface Props {
   compact?: boolean;
+  /** Override successPath forwarded to PremiumTierCard (e.g. return-to-wizard). */
+  successPathOverride?: string;
+  /** Override cancelPath forwarded to PremiumTierCard (e.g. return-to-wizard). */
+  cancelPathOverride?: string;
 }
 
-export function PremiumPlansSection({ compact = false }: Props) {
+export function PremiumPlansSection({ compact = false, successPathOverride, cancelPathOverride }: Props) {
+
   const { products, loading } = useMonetizationProducts('host_subscription');
   const location = useLocation();
   const navigate = useNavigate();
@@ -103,9 +108,10 @@ export function PremiumPlansSection({ compact = false }: Props) {
       const paths = buildCheckoutReturnPaths(product.slug);
       requestCheckout(product, {
         interval: wantInterval,
-        successPath: paths.successPath,
-        cancelPath: paths.cancelPath,
+        successPath: successPathOverride ?? paths.successPath,
+        cancelPath: cancelPathOverride ?? paths.cancelPath,
       }).catch((e) => console.error('[plans] auto-resume failed', e));
+
     }
     // Clean the URL so a refresh doesn't retrigger.
     const cleaned = new URLSearchParams(location.search);
@@ -197,12 +203,13 @@ export function PremiumPlansSection({ compact = false }: Props) {
                   role={t.role}
                   groups={groups}
                   interval={interval}
-                  successPath={paths.successPath}
-                  cancelPath={paths.cancelPath}
+                  successPath={successPathOverride ?? paths.successPath}
+                  cancelPath={cancelPathOverride ?? paths.cancelPath}
                   index={i}
                 />
               </div>
             );
+
           })}
         </div>
       )}

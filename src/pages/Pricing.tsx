@@ -1,5 +1,6 @@
 import { Loader2 } from 'lucide-react';
 import { useMemo } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useMonetizationProducts } from '@/hooks/useMonetizationProducts';
 import { ProductPricingCard } from '@/components/monetization/ProductPricingCard';
 import {
@@ -10,6 +11,7 @@ import {
 import { buildCheckoutReturnPaths } from '@/lib/monetization/returnRoutes';
 import SEO from '@/components/SEO';
 import PremiumPlansSection from '@/components/monetization/PremiumPlansSection';
+
 
 // One-line "what you get" copy for the simplified catalog.
 // Keys match monetization_products.slug — anything outside this map still uses
@@ -35,7 +37,17 @@ const Pricing = () => {
   const buyerServices = useMemo(() => applyOneLiners(buyerRaw), [buyerRaw]);
   const permitUpgrades = useMemo(() => applyOneLiners(permitRaw), [permitRaw]);
 
-
+  // Wizard-originated visits pass ?returnTo=/create-listing/{id}?step=... and
+  // optionally ?listingContext=<draftId>. When present we route Stripe cancel/success
+  // back to the wizard and auto-scope listing-scoped boosts to that draft so the
+  // user is never dumped on /dashboard mid-listing-creation.
+  const [searchParams] = useSearchParams();
+  const returnTo = searchParams.get('returnTo');
+  const listingContext = searchParams.get('listingContext') ?? undefined;
+  const overrideCancelPath = returnTo || undefined;
+  const overrideSuccessPath = returnTo
+    ? `${returnTo}${returnTo.includes('?') ? '&' : '?'}purchase=success`
+    : undefined;
 
   return (
     <div className="min-h-screen bg-background">
@@ -45,8 +57,12 @@ const Pricing = () => {
       />
 
       <section className="mx-auto max-w-6xl px-4 pt-8 pb-16">
-        <PremiumPlansSection />
+        <PremiumPlansSection
+          successPathOverride={overrideSuccessPath}
+          cancelPathOverride={overrideCancelPath}
+        />
       </section>
+
 
       <div className="section-band">
       <section id="upgrades" className="mx-auto max-w-6xl px-4 py-16 md:py-20">
@@ -72,14 +88,15 @@ const Pricing = () => {
             ) : (
               <div className="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                 {listingUpgrades.map((p) => {
-                  const paths = buildCheckoutReturnPaths(p.slug);
+                  const paths = buildCheckoutReturnPaths(p.slug, { listingId: listingContext });
                   return (
                     <ProductPricingCard
                       key={p.id}
                       product={p}
+                      listingId={listingContext}
                       ctaLabel="Buy boost"
-                      successPath={paths.successPath}
-                      cancelPath={paths.cancelPath}
+                      successPath={overrideSuccessPath ?? paths.successPath}
+                      cancelPath={overrideCancelPath ?? paths.cancelPath}
                     />
                   );
                 })}
@@ -87,6 +104,7 @@ const Pricing = () => {
             )}
           </div>
         )}
+
 
         {/* Seller services */}
         {(loadingSeller || sellerAddons.length > 0) && (

@@ -16,13 +16,20 @@ interface MembershipInlinePanelProps {
    * Should include the current wizard step so continuity is preserved.
    */
   returnTo: string;
+  /**
+   * Draft listing id the user is currently editing. Passed to /pricing as
+   * ?listingContext=<id> so any listing-scoped boost (featured_*) bought from
+   * the pricing detour auto-attaches to this draft on publish.
+   */
+  listingId?: string;
 }
+
 
 /**
  * Slim, dismissible panel shown once per user inside the publish flow.
  * Never blocks publishing — "Continue free" is a full equal-weight button.
  */
-export const MembershipInlinePanel: React.FC<MembershipInlinePanelProps> = ({ returnTo }) => {
+export const MembershipInlinePanel: React.FC<MembershipInlinePanelProps> = ({ returnTo, listingId }) => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { tier } = useHostEntitlements();
@@ -73,8 +80,11 @@ export const MembershipInlinePanel: React.FC<MembershipInlinePanelProps> = ({ re
 
   const handleUpgrade = () => {
     // Do NOT auto-dismiss — user may cancel checkout. Only dismiss on Continue free / X.
-    navigate(`/pricing?returnTo=${encodeURIComponent(returnTo)}`);
+    const params = new URLSearchParams({ returnTo });
+    if (listingId) params.set('listingContext', listingId);
+    navigate(`/pricing?${params.toString()}`);
   };
+
 
   return (
     <div className="relative rounded-lg border border-border/70 bg-card/80 p-5 space-y-4">

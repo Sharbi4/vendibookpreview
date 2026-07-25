@@ -89,25 +89,35 @@ serve(async (req) => {
     const origin = req.headers.get("origin") || req.headers.get("referer")?.replace(/\/$/, '').split('/').slice(0, 3).join('/') || "https://vendibook.com";
     logStep("Origin determined", { origin });
 
+    // Hourly idempotency bucket — matches create-featured-checkout /
+    // create-monetization-checkout convention. Prevents double-charging when
+    // the user retries within the same hour (e.g. popup blocked -> retry).
+    const hourBucket = Math.floor(Date.now() / (60 * 60 * 1000));
+    const idempotencyKey = `notary-${user.id}-${listing_id}-${hourBucket}`;
+
     // Create checkout session for the notary fee
-    const session = await stripe.checkout.sessions.create({
-      customer: customerId,
-      customer_email: customerId ? undefined : user.email,
-      line_items: [
-        {
-          price: PROOF_NOTARY_PRICE_ID,
-          quantity: 1,
+    const session = await stripe.checkout.sessions.create(
+      {
+        customer: customerId,
+        customer_email: customerId ? undefined : user.email,
+        line_items: [
+          {
+            price: PROOF_NOTARY_PRICE_ID,
+            quantity: 1,
+          },
+        ],
+        mode: "payment",
+        success_url: `${origin}/listing-published?listing_id=${listing_id}&notary_paid=true`,
+        cancel_url: `${origin}/create-listing/${listing_id}?notary_cancelled=true`,
+        metadata: {
+          listing_id: listing_id,
+          user_id: user.id,
+          type: "proof_notary",
         },
-      ],
-      mode: "payment",
-      success_url: `${origin}/listing-published?listing_id=${listing_id}&notary_paid=true`,
-      cancel_url: `${origin}/create-listing/${listing_id}?notary_cancelled=true`,
-      metadata: {
-        listing_id: listing_id,
-        user_id: user.id,
-        type: "proof_notary",
       },
-    });
+      { idempotencyKey },
+    );
+
 
     logStep("Checkout session created", { sessionId: session.id, url: session.url });
 
