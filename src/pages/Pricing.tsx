@@ -1,4 +1,5 @@
 import { Loader2 } from 'lucide-react';
+import { useMemo } from 'react';
 import { useMonetizationProducts } from '@/hooks/useMonetizationProducts';
 import { ProductPricingCard } from '@/components/monetization/ProductPricingCard';
 import {
@@ -10,10 +11,30 @@ import { buildCheckoutReturnPaths } from '@/lib/monetization/returnRoutes';
 import SEO from '@/components/SEO';
 import PremiumPlansSection from '@/components/monetization/PremiumPlansSection';
 
+// One-line "what you get" copy for the simplified catalog.
+// Keys match monetization_products.slug — anything outside this map still uses
+// the DB description, so future SKUs are additive without a code change.
+const ONE_LINERS: Record<string, string> = {
+  'boost-featured-30': 'Top of search + featured shelf for 30 days.',
+  'permit_path_plus': 'Full permit roadmap for your city with document links.',
+  'listing_rewrite': 'We rewrite your listing copy and photos in 3 business days.',
+  'pro_weekly_pass': 'All Pro benefits for 7 days. No renewal.',
+};
+
+const applyOneLiners = <T extends { slug: string; description: string | null }>(list: T[]): T[] =>
+  list.map((p) => (ONE_LINERS[p.slug] ? { ...p, description: ONE_LINERS[p.slug] } : p));
+
 const Pricing = () => {
-  const { products: sellerAddons, loading: loadingSeller } = useMonetizationProducts('seller_service');
-  const { products: listingUpgrades, loading: loadingUpgrades } = useMonetizationProducts('listing_upgrade');
-  const { products: buyerServices, loading: loadingBuyer } = useMonetizationProducts('buyer_service');
+  const { products: sellerRaw, loading: loadingSeller } = useMonetizationProducts('seller_service');
+  const { products: listingRaw, loading: loadingUpgrades } = useMonetizationProducts('listing_upgrade');
+  const { products: buyerRaw, loading: loadingBuyer } = useMonetizationProducts('buyer_service');
+  const { products: permitRaw, loading: loadingPermit } = useMonetizationProducts('permit_upgrade');
+
+  const sellerAddons = useMemo(() => applyOneLiners(sellerRaw), [sellerRaw]);
+  const listingUpgrades = useMemo(() => applyOneLiners(listingRaw), [listingRaw]);
+  const buyerServices = useMemo(() => applyOneLiners(buyerRaw), [buyerRaw]);
+  const permitUpgrades = useMemo(() => applyOneLiners(permitRaw), [permitRaw]);
+
 
 
   return (
