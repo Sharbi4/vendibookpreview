@@ -1,4 +1,4 @@
-import { ShieldCheck, MapPin, BadgeCheck } from 'lucide-react';
+import { ShieldCheck, MapPin, BadgeCheck, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface StepConfirmPurchaseProps {
