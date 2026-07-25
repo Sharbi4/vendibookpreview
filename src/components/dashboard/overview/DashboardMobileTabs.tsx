@@ -42,7 +42,7 @@ const DashboardMobileTabs = ({ mode }: Props) => {
       ];
 
   return (
-    <div className="md:hidden -mx-4 px-4 mb-4">
+    <div className="md:hidden -mx-4 px-4 mb-4 relative">
       <div className="no-scrollbar overflow-x-auto flex gap-2 py-1">
         {pills.map((p) => {
           const active = (p.tab ?? null) === (currentTab ?? null);
@@ -62,6 +62,9 @@ const DashboardMobileTabs = ({ mode }: Props) => {
           );
         })}
       </div>
+      {/* edge-fade hint that the row scrolls */}
+      <div className="pointer-events-none absolute top-0 bottom-0 right-0 w-8 bg-gradient-to-l from-background to-transparent" />
+      <div className="pointer-events-none absolute top-0 bottom-0 left-0 w-4 bg-gradient-to-r from-background to-transparent" />
     </div>
   );
 };

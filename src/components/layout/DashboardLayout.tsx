@@ -41,6 +41,9 @@ import vendibookFavicon from '@/assets/vendibook-favicon.png';
 import AppDropdownMenu from './AppDropdownMenu';
 import IdentityChip from '@/components/dashboard/shared/IdentityChip';
 import DashboardMobileTabs from '@/components/dashboard/overview/DashboardMobileTabs';
+import GoProButton from '@/components/dashboard/GoProButton';
+import SidebarUpgradeCard from '@/components/dashboard/SidebarUpgradeCard';
+import VerifyReminderModal from '@/components/dashboard/VerifyReminderModal';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 
@@ -209,9 +212,9 @@ export const DashboardLayout = ({ children, mode, onModeChange, isHost }: Dashbo
             <p className="text-base font-medium text-foreground truncate">
               {profile?.full_name || 'User'}
             </p>
-            <div className="flex items-center gap-2 mt-0.5">
+            <div className="flex items-center gap-2 mt-1">
               <span className="text-xs text-muted-foreground">{mode === 'host' ? 'Hosting' : 'Buying'}</span>
-              <IdentityChip verified={isVerified} />
+              <IdentityChip verified={isVerified} prominent={!isVerified} />
             </div>
           </div>
         </div>
@@ -226,7 +229,9 @@ export const DashboardLayout = ({ children, mode, onModeChange, isHost }: Dashbo
       {/* Nav sections */}
       <ScrollArea className="flex-1">
         {sections.map((section, sIdx) => (
-          <div key={section.id} className={cn('py-3', sIdx > 0 && 'border-t border-border')}>
+          <div key={section.id}>
+            {section.id === 'account' && <SidebarUpgradeCard />}
+            <div className={cn('py-3', sIdx > 0 && 'border-t border-border')}>
             {section.label && (
               <p className="px-6 pb-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground/70">
                 {section.label}
@@ -259,6 +264,7 @@ export const DashboardLayout = ({ children, mode, onModeChange, isHost }: Dashbo
                 </Link>
               );
             })}
+            </div>
           </div>
         ))}
       </ScrollArea>
@@ -282,6 +288,7 @@ export const DashboardLayout = ({ children, mode, onModeChange, isHost }: Dashbo
 
   return (
     <div className="dashboard-shell min-h-screen flex flex-col bg-background">
+      <VerifyReminderModal />
       {/* Mobile Header — only real mobile, tablets get the icon rail */}
       <header className="md:hidden sticky top-0 z-50 bg-background/90 backdrop-blur border-b border-white/5">
         <div className="flex items-center justify-between h-14 px-4 gap-2">
@@ -302,6 +309,7 @@ export const DashboardLayout = ({ children, mode, onModeChange, isHost }: Dashbo
           </div>
           {isHost && <ModeSwitch small />}
           <div className="flex items-center gap-2">
+            <GoProButton compact />
             {user && <ConciergeInbox userId={user.id} />}
             <NotificationCenter />
             <AppDropdownMenu variant="light" />
@@ -370,6 +378,7 @@ export const DashboardLayout = ({ children, mode, onModeChange, isHost }: Dashbo
             <div />
             {isHost && <div className="w-[240px]"><ModeSwitch /></div>}
             <div className="flex items-center gap-3">
+              <GoProButton />
               {user && <ConciergeInbox userId={user.id} />}
               <NotificationCenter />
               <AppDropdownMenu variant="light" />

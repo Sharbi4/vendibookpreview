@@ -391,6 +391,59 @@
   .no-scrollbar::-webkit-scrollbar { display: none; }
   .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
+  /* ─────────────────────────────────────────────
+     GOLD — reserved for the "Go Pro" surface only.
+     Do not reuse this treatment anywhere else.
+     ───────────────────────────────────────────── */
+  .gold-pill {
+    position: relative; overflow: hidden;
+    color: #1A1400;
+    background: linear-gradient(180deg, #F7DA82 0%, #F5D06F 18%, #D4A437 60%, #B8860B 100%);
+    border: 1px solid rgba(120, 82, 0, 0.55);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 245, 200, 0.85),
+      inset 0 -1px 0 rgba(90, 60, 0, 0.35),
+      0 6px 18px -8px rgba(200, 140, 0, 0.55);
+    transition: transform .18s ease, box-shadow .18s ease;
+  }
+  .gold-pill:hover { transform: translateY(-1px); box-shadow: inset 0 1px 0 rgba(255,245,200,0.9), 0 10px 24px -8px rgba(200,140,0,0.7); }
+  .gold-pill::before {
+    content: ''; position: absolute; top: 0; left: -40%;
+    width: 40%; height: 100%; pointer-events: none;
+    background: linear-gradient(100deg, transparent 0%, rgba(255,255,255,0.55) 50%, transparent 100%);
+    transform: skewX(-18deg);
+    animation: gold-shine 6s ease-in-out infinite;
+  }
+  @keyframes gold-shine {
+    0%, 60% { left: -40%; }
+    80% { left: 120%; }
+    100% { left: 120%; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .gold-pill::before { animation: none; display: none; }
+  }
+  .gold-card {
+    color: #1A1400;
+    background: linear-gradient(180deg, #F5D06F 0%, #D4A437 100%);
+    border: 1px solid rgba(120, 82, 0, 0.55);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 245, 200, 0.75),
+      0 8px 24px -12px rgba(200, 140, 0, 0.5);
+  }
+  .pro-chip {
+    color: #F5D06F;
+    background: rgba(212, 164, 55, 0.08);
+    border: 1px solid rgba(212, 164, 55, 0.55);
+    box-shadow: inset 0 1px 0 rgba(255, 245, 200, 0.10);
+  }
+
+  /* Dashboard border weight: 1.5px minimum, high-contrast on dark. */
+  .dashboard-shell [class*="border-border"],
+  .dashboard-shell [class*="border-white/5"],
+  .dashboard-shell [class*="border-white/10"] {
+    border-width: 1.5px;
+  }
+
 
   .card-hover {
     @apply transition-all duration-300 ease-out;
