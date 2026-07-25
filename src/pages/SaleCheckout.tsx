@@ -88,7 +88,7 @@ const SaleCheckout = () => {
     addOnSelections: Record<string, boolean>;
   }
   const persist = useCheckoutState<PersistedState>(sessionKey, {
-    step: 'confirm',
+    step: 'intro',
     buyerInfo: {
       firstName: '', lastName: '', businessName: '', email: '', phone: '',
       address1: '', address2: '', city: '', state: '', zipCode: '',
@@ -104,6 +104,7 @@ const SaleCheckout = () => {
     persist.setState((prev) => ({ ...prev, step: s }));
     persist.bumpFurthestStep(STEP_NUM[s]);
   };
+
 
   const buyerInfo = persist.state.buyerInfo;
   const setBuyerInfo = (next: BuyerInfo | ((p: BuyerInfo) => BuyerInfo)) => {
