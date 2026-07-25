@@ -34,6 +34,7 @@ import { toast } from "sonner";
 // Lazy load all pages for code splitting
 const Index = lazy(() => import("./pages/Index"));
 const Auth = lazy(() => import("./pages/Auth"));
+const Welcome = lazy(() => import("./pages/Welcome"));
 const Activation = lazy(() => import("./pages/Activation"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const LegalDocumentPage = lazy(() => import("./pages/LegalDocumentPage"));
@@ -224,6 +225,7 @@ const AnimatedRoutes = () => {
           <Route path="/browse" element={<PageTransition><Browse /></PageTransition>} />
           <Route path="/search" element={<PageTransition><Search /></PageTransition>} />
           <Route path="/auth" element={<PageTransition><Auth /></PageTransition>} />
+          <Route path="/welcome" element={<PageTransition><Welcome /></PageTransition>} />
           <Route path="/activation" element={<PageTransition><Activation /></PageTransition>} />
           <Route path="/reset-password" element={<PageTransition><ResetPassword /></PageTransition>} />
           <Route path="/dashboard" element={<PageTransition><Dashboard /></PageTransition>} />

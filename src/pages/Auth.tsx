@@ -5,6 +5,7 @@ import { usePageTracking } from '@/hooks/usePageTracking';
 import { Loader2 } from 'lucide-react';
 import { AuthMarketingPanel } from '@/components/auth/AuthMarketingPanel';
 import { AuthFormPanel } from '@/components/auth/AuthFormPanel';
+import { supabase } from '@/integrations/supabase/client';
 
 type AuthMode = 'signin' | 'signup' | 'forgot' | 'verify';
 
@@ -34,7 +35,30 @@ const Auth = () => {
 
   useEffect(() => {
     if (user && !isLoading) {
-      navigate(redirectUrl || '/dashboard');
+      // New signups (no onboarded_at) get the one-time welcome. It never blocks —
+      // the welcome page persists onboarded_at on any exit.
+      let cancelled = false;
+      (async () => {
+        try {
+          const { data } = await supabase
+            .from('profiles')
+            .select('onboarded_at')
+            .eq('id', user.id)
+            .maybeSingle();
+          if (cancelled) return;
+          if (!data?.onboarded_at) {
+            const rt = redirectUrl || '/dashboard';
+            navigate(`/welcome?returnTo=${encodeURIComponent(rt)}`, { replace: true });
+            return;
+          }
+        } catch {
+          /* fall through to normal redirect */
+        }
+        if (!cancelled) navigate(redirectUrl || '/dashboard');
+      })();
+      return () => {
+        cancelled = true;
+      };
     }
   }, [user, isLoading, navigate, redirectUrl]);
 

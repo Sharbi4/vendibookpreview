@@ -1,69 +1,84 @@
+## Goals
 
-# Tools + Product Pages — Full Funnel Verification and Polish
+1. Verify publish flow works end-to-end for every persona (free, founding, Starter, Growth, mid-trial), fix any dead-ends.
+2. Add two never-blocking membership prompts: post-signup welcome + a slim publish-time comparison panel.
+3. Ensure mid-flow upgrade returns cleanly to the wizard step with entitlements live and draft intact.
+4. Enforce copy rule: **"Listing is always free"** on both prompts; no dark patterns.
 
-Acceptance layer for the earlier tools/feature-page passes. Deliverable is (a) a link-integrity table, (b) per-product pass/fail, (c) consistency fixes that make every surface read from one source of truth. Money, entitlement, and webhook logic are OUT OF SCOPE — copy, links, price display, and routing only.
+---
 
-## Scope — surfaces in the graph
+## Part 1 — Publish flow verification (report + fix)
 
-- `/pricing` and `/plans` (Pricing.tsx → PremiumPlansSection, PlansComparisonTable, PlansFAQ, PackagesIntro, ProWeeklyPassCard, tier learn-more overlays)
-- `/host/plans` (HostProPlans.tsx)
-- Feature pages under `/tools/*` and `/plans/tools/:slug` (PricePilot, PermitPath, BuildKit, ListingStudio, ConceptLab, MarketRadar, MarketingStudio, StartupGuide, RegulationsHub, ToolPreview)
-- `/tools` (ToolsIndex) and `/tools/permitpath/upgrades`
-- Dashboard: `PremiumToolsTab`, `MembershipTab`, `PremiumSpotlight`, `SidebarUpgradeCard`, `GoProButton`, promote/upgrade cards, `ActionRequiredStack`
-- Post-purchase: `PaymentSuccess`, `Purchases`, `UnlockedConfirmation`, `PostPurchaseShare`
-- Subscription email templates that link back into the app
+Deliver a matrix by driving a Playwright smoke against localhost + reading the wizard/publish code paths. Personas simulated by seeding `user_roles`, `host_subscriptions`, and (for founding) the grandfathered flag.
 
-## Method
+Per persona check: draft create → required fields → identity gate (unverified friendly explainer + returns to publish step) → publish → appears in Browse + dashboard Listings → quota modal triggers on 3rd for free / never for founding → active Featured Boost is applied on publish.
 
-### Phase 1 — Static crawl (no browser needed)
-1. Read every surface file above.
-2. Extract every `href`, `to`, `navigate(...)`, and `window.location` target reachable from those files.
-3. Build the route table from `App.tsx` and cross-check: OK / BROKEN (no matching route, `#`, empty) / STALE (points at a legacy path that now redirects or 404s).
-4. Extract every price string and tool name literal; compare to `TIER_CATALOG`, `learnMoreCatalog`, `toolCatalog`, and live `monetization_products` (query DB once for `slug, name, base_price_cents, billing_type, active` where `active=true`).
+Report a pass/fail table and fix each failure. Expected fix zones based on prior audits:
+- `PublishWizard.handlePublish` continuity when redirected to `/verify-identity` (must use `returnTo` per `originNav`).
+- Quota-exceeded modal from `useListingQuota` (friendly copy, not error toast).
+- Featured pending-boost application already covered by trigger — smoke re-verifies.
 
-### Phase 2 — Fix broken/stale links
-- Rewrite any hardcoded literal price to read from the product config (or `useMonetizationProducts` where the surface can afford a hook).
-- Replace stale hrefs with the current route.
-- Any dead `href="#"` gets either a real target, an overlay opener, or is removed.
+No money-logic, RLS, or webhook changes.
 
-### Phase 3 — Feature-page quality bar (per tool page)
-For each `/tools/*` page and matching `/plans/tools/:slug` (if it exists):
-- Hero line is outcome-first, not feature-first.
-- 3-step how-it-works matches the shipped tool's actual flow (verified by reading the tool component).
-- Price line = live Stripe amount from product config (no hardcoded cents).
-- "Free with Pro/Growth/Operator" anchor uses the correct current tier name.
-- FAQ links resolve.
-- Section rhythm (`.section-stack`, `.section-divider`), 1.5px cream borders, Sofia Pro Soft display / Manrope UI.
-- Screenshot references point at files that exist in `src/assets/`.
-- Mobile passes at 375px.
+## Part 2 — Post-signup welcome (once)
 
-Flag any claim that isn't backed by shipped capability — cut it or soften; do not invent new capability.
+New route `/welcome` + component `src/components/onboarding/SignupWelcome.tsx`.
 
-### Phase 4 — Cross-consistency (single source of truth)
-Where the same product appears in multiple surfaces, resolve everything through the shared config:
-- `TIER_CATALOG` (host subs) + `useMonetizationProducts` for live price.
-- `toolCatalog` for tool name, slug, price, and included tier.
-- `learnMoreCatalog` for overlay copy.
-Delete duplicated literal names/prices in surface components; import from config. Where a live-price lookup isn't available (emails, static blog), keep the literal but wire it to a shared constant.
+- Triggered from `Auth.tsx` on successful **new** signup (flag via `profiles.onboarded_at IS NULL` — one migration to add the column if missing) with a `returnTo` param preserved.
+- Content: headline **"Welcome to Vendibook — listing is always free."**, 3-column mini comparison (Free · Starter $39 · Growth $89), two equal-weight buttons **Continue free** and **See memberships** (→ `/pricing?from=welcome`).
+- On dismiss/continue: set `profiles.onboarded_at = now()` so it never shows again.
+- Skippable via clear X. No pre-selection. No card required.
 
-### Phase 5 — Report
-Emit three tables in the final message:
-1. Link integrity: `source → target | status | fix`.
-2. Per-product funnel: `product | discover | learn | buy | access | in-tool links | notes`.
-3. Consistency fixes: `field | surfaces normalized | source of truth`.
-Then run typecheck.
+## Part 3 — Publish-time membership panel (once per user)
 
-## Out of scope
+New component `src/components/listing-wizard/MembershipInlinePanel.tsx` rendered inside `PublishWizard` above the checklist on the review step (and inside `QuickStartWizard` first step for brand-new hosts).
 
-- Stripe money changes, webhook, entitlement engine, terms gate.
-- Redesigns beyond token/rhythm compliance.
-- New tools or new copy inventing new capability.
-- Backend function edits (unless a link points at a nonexistent function name).
+- Slim, dismissible; localStorage key `vb:mship-panel-dismissed:v1` + `profiles.membership_panel_dismissed_at`.
+- Headline **"Publish free, or grow faster with a membership."**
+- 4-row × 3-col chart (Free / Starter / Growth): Active listings (2 · 5 · Unlimited — founding shows "Unlimited — early member"), Listing tools (— · AI descriptions · Full tools bundle), Placement (Standard · Priority basics · Featured credit), Support (Standard · Priority · Priority).
+- All cells use ✓ marks; Free column not grayed. Two equal-weight buttons: **Continue free** (dismiss) and **Upgrade** (→ `/pricing?returnTo=<currentWizardStep>`).
+- Dismiss = never blocks again; small `Plans` link remains in wizard footer.
 
-## Deliverables checklist
+## Part 4 — Mid-flow upgrade continuity
 
-- [ ] Zero `href="#"` or dead `to=""` on any product-adjacent surface.
-- [ ] Every price string on product surfaces sourced from config or live product query.
-- [ ] Every "free with X" mention names a tier that currently exists (Starter / Growth / Operator; no lingering Pro/Premium).
-- [ ] Every tool feature page's 3-step matches the shipped tool.
-- [ ] Typecheck clean.
+Confirm and patch:
+- Any CTA from the panel or `usePremiumUpsell` passes `returnTo=/list?draftId=<id>&step=<n>` when launching checkout.
+- `PaymentSuccess` already honors `returnTo`; add explicit test that entitlements resolved from `useHostEntitlements` refetch on mount so tools unlock immediately.
+- `PublishWizard` reads `?step=` and restores step + loads draft via `useListingForm`.
+- Featured Boost mid-publish uses existing `create-featured-checkout` returning to `/list?...&step=review`; on success the pending boost is auto-applied by the publish trigger.
+
+## Part 5 — Copy audit
+
+Sweep the two new components + Pricing hero + PackagesIntro Compact variant to include **"Listing is always free"** phrasing and remove any "required to publish" framing.
+
+## Files to add
+
+- `src/components/onboarding/SignupWelcome.tsx`
+- `src/pages/Welcome.tsx` (route wrapper)
+- `src/components/listing-wizard/MembershipInlinePanel.tsx`
+- `src/components/monetization/MiniPlansComparison.tsx` (shared 3-col table used by both prompts)
+- `supabase/migrations/<ts>_profiles_onboarding_flags.sql` — add `onboarded_at`, `membership_panel_dismissed_at` (nullable timestamps) + GRANTs unchanged (no new table).
+- `scripts/smoke/publish-personas-smoke.ts` — extends existing publish smoke with the 5 personas + quota + featured-on-publish assertions; wired into `.github/workflows/smoke-predeploy.yml`.
+
+## Files to edit
+
+- `src/pages/Auth.tsx` — after signup redirect to `/welcome?returnTo=<original>` if `onboarded_at` null.
+- `src/App.tsx` (router) — register `/welcome`.
+- `src/components/listing-wizard/PublishWizard.tsx` — mount panel; ensure `returnTo` on identity redirect; friendly quota modal when `useListingQuota().isAtLimit`.
+- `src/components/listing-wizard/QuickStartWizard.tsx` — mount panel on first-listing users.
+- `src/pages/CreateListing.tsx` — pass `step` query through.
+- `src/hooks/usePremiumUpsell.tsx` — ensure `returnTo` builder appends `step`.
+- `src/pages/Pricing.tsx` — honor `?from=welcome` (small "You can always list for free" reassurance strip).
+
+## Non-goals
+
+- No fee changes, no webhook changes, no RLS changes.
+- No changes to Stripe products or entitlement rules.
+- No redesign of `/pricing` beyond the reassurance strip.
+
+## Verification
+
+- `tsgo --noEmit` clean.
+- Playwright script drives: signup → welcome → continue free → create listing → panel visible → dismiss → publish; separately: upgrade path → return to `step=review` → publish.
+- Existing `publish-flow-smoke.ts` + new `publish-personas-smoke.ts` both green in CI.
+- Report pass/fail per persona + two screenshots (welcome, publish panel) + mid-flow upgrade result.

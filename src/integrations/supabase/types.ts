@@ -3673,6 +3673,8 @@ export type Database = {
           identity_verified_at: string | null
           last_active_at: string | null
           last_name: string | null
+          membership_panel_dismissed_at: string | null
+          onboarded_at: string | null
           phone_number: string | null
           pinned_listing_id: string | null
           public_city: string | null
@@ -3719,6 +3721,8 @@ export type Database = {
           identity_verified_at?: string | null
           last_active_at?: string | null
           last_name?: string | null
+          membership_panel_dismissed_at?: string | null
+          onboarded_at?: string | null
           phone_number?: string | null
           pinned_listing_id?: string | null
           public_city?: string | null
@@ -3765,6 +3769,8 @@ export type Database = {
           identity_verified_at?: string | null
           last_active_at?: string | null
           last_name?: string | null
+          membership_panel_dismissed_at?: string | null
+          onboarded_at?: string | null
           phone_number?: string | null
           pinned_listing_id?: string | null
           public_city?: string | null
