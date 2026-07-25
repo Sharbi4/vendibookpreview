@@ -202,7 +202,7 @@ async function run() {
   const sample = await fetchOneListing();
   console.log(`[visual] using listing ${sample.id} — "${sample.title}"`);
 
-  const browser = await chromium.launch({ headless: true });
+  const browser = await chromium.launch({ headless: true, executablePath: process.env.PLAYWRIGHT_CHROMIUM_PATH || undefined });
   const context = await browser.newContext();
   const page = await context.newPage();
 
