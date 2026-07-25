@@ -240,6 +240,20 @@ serve(async (req) => {
       })
     );
 
+    // Kick off Bill of Sale generation (SignNow). Fire-and-forget; the
+    // ensure endpoint is idempotent and no-ops if SignNow isn't configured
+    // or a doc already exists for this transaction.
+    EdgeRuntime.waitUntil(
+      fetch(`${supabaseUrl}/functions/v1/signnow-ensure-bill-of-sale`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""}`,
+        },
+        body: JSON.stringify({ transaction_id: transaction.id }),
+      }).catch(err => logStep("Bill of Sale trigger failed", { error: err.message }))
+    );
+
     return new Response(
       JSON.stringify({ 
         success: true,
