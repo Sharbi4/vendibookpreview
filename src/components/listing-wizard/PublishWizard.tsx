@@ -1605,7 +1605,14 @@ export const PublishWizard: React.FC = () => {
             ...(isFirstTimePublishForBoost ? { published_at: new Date().toISOString() } : {})})
           .eq('id', listing.id);
 
-        if (persistError) throw persistError;
+        if (persistError) {
+          if (typeof persistError.message === 'string' && persistError.message.includes('listing_publish_limit_reached')) {
+            setShowLimitModal(true);
+            setIsSaving(false);
+            return;
+          }
+          throw persistError;
+        }
 
         // Get session for auth
         const { data: sessionData } = await supabase.auth.getSession();
