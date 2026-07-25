@@ -123,9 +123,10 @@ async function signnowApi(token: string, path: string, init: RequestInit & { jso
   try { return text ? JSON.parse(text) : {}; } catch { return text; }
 }
 
-async function uploadTemplateDocument(token: string, name: string, pdf: Uint8Array, tags: any[]): Promise<string> {
-  // Build multipart/form-data manually. Deno doesn't have a native FormData
-  // file constructor that streams the right boundary, so we do it manually.
+async function uploadTemplateDocument(token: string, name: string, pdf: Uint8Array): Promise<string> {
+  // Build multipart/form-data manually. The PDF contains simple text tags
+  // (e.g. {t:text;r:yes;o:"Host";n:"host_name";}); SignNow parses them
+  // when parse_type=tag is supplied.
   const boundary = '----FormBoundary' + crypto.randomUUID().replace(/-/g, '');
   const e = new TextEncoder();
   const header = e.encode(
@@ -133,17 +134,16 @@ async function uploadTemplateDocument(token: string, name: string, pdf: Uint8Arr
     `Content-Disposition: form-data; name="file"; filename="${name}.pdf"\r\n` +
     `Content-Type: application/pdf\r\n\r\n`,
   );
-  const tagsJson = JSON.stringify(tags);
-  const tagsPart = e.encode(
+  const parseTypePart = e.encode(
     `\r\n--${boundary}\r\n` +
-    `Content-Disposition: form-data; name="Tags[]"\r\n\r\n` +
-    `${tagsJson}\r\n` +
+    `Content-Disposition: form-data; name="parse_type"\r\n\r\n` +
+    `tag\r\n` +
     `--${boundary}--\r\n`,
   );
-  const body = new Uint8Array(header.length + pdf.length + tagsPart.length);
+  const body = new Uint8Array(header.length + pdf.length + parseTypePart.length);
   body.set(header, 0);
   body.set(pdf, header.length);
-  body.set(tagsPart, header.length + pdf.length);
+  body.set(parseTypePart, header.length + pdf.length);
 
   const res = await fetch(`${signnowBase()}/document/fieldextract`, {
     method: 'POST',
