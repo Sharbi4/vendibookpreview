@@ -10,8 +10,10 @@ import { supabase } from '@/integrations/supabase/client';
 const EditListing: React.FC = () => {
   const { listingId } = useParams<{ listingId: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, isLoading } = useAuth();
   const [hasAccess, setHasAccess] = useState<boolean | null>(null);
+
 
   useEffect(() => {
     const checkAccess = async () => {
