@@ -47,6 +47,7 @@ export interface LearnMoreEntry {
 
 /** Alias any marketing-friendly slugs to the real product slug. */
 export const LEARN_MORE_ALIASES: Record<string, string> = {
+  free: 'host_free',
   starter: 'host_starter',
   pro: 'host_growth',
   growth: 'host_growth',
@@ -64,6 +65,21 @@ export function resolveLearnMoreSlug(input: string): string {
 }
 
 const CATALOG: Record<string, LearnMoreEntry> = {
+  host_free: {
+    slug: 'host_free',
+    promise: 'Start free — list a truck, trailer, kitchen, or vendor space without paying a monthly fee.',
+    bestFor: 'Best for owner-operators testing the waters, one listing at a time.',
+    outcomes: [
+      { icon: DollarSign, title: 'No monthly cost, ever', body: 'List for sale or rent free. Marketplace commission applies only when you actually close a booking or sale.' },
+      { icon: FileCheck, title: 'Free e-signatures on every agreement', body: 'Bills of sale for sellers, rental agreements for hosts — signed online, no printing, no extra fee.' },
+      { icon: ShieldCheck, title: 'Payment protection at checkout', body: 'Every transaction is held securely and released only after fulfillment.' },
+      { icon: Users, title: 'Unlimited inquiries', body: 'Buyers and renters can message you as much as they need — no reply caps.' },
+    ],
+    screenshots: [
+      { src: listingStudioShot, alt: 'Free listing editor', caption: 'Build a real listing in minutes — no card required.' },
+      { src: pricepilotShot, alt: 'Inquiry inbox', caption: 'One inbox for buyer and renter conversations.' },
+    ],
+  },
   host_starter: {
     slug: 'host_starter',
     promise: 'List like a pro — turn a single space or truck into a booked, paid, professional business.',

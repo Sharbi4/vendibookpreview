@@ -1,74 +1,169 @@
 
-# Homepage videos overhaul
+## 1. Discovery — current state (what's actually true today)
 
-## 1. Diagnosis
+**Prices stay:** Starter $39 / Growth $89 / Operator $149. This pass changes contents + presentation + enforcement, not amounts.
 
-**Where they live:** `src/components/home/how-it-works/` — 4 explainers (Buying, Renting, Selling, Hosting) shown as tiles by `HowVendibookWorks.tsx`; clicking a tile opens `ExplainerVideoModal.tsx` which mounts `AnimatedExplainer.tsx`. There are **no `<video>` files** on the homepage — everything is an in-browser React/Framer animation.
+**Tier data source:** `PremiumTierCard` renders `product.features.slice(0, 7)` from `monetization_products.features` (DB rows). To ship a Sellers/Hosts split we stop reading DB feature strings for the three tier cards and drive them from a typed catalog inside `PremiumPlansSection` (`TIER_FEATURES`) — same file that already owns tier ordering. DB rows keep their features for other surfaces.
 
-**How each is implemented today**
-- `HowVendibookWorks.tsx` → 4× `VideoTile` (poster tiles).
-- `ExplainerVideoModal.tsx` → renders `AnimatedExplainer`.
-- `AnimatedExplainer.tsx` (654 lines) runs 8 React scenes back-to-back via a `requestAnimationFrame` clock (**10 s per scene × 8 = 80 s per video**; `durationSeconds` in data says 85 s).
-- `data/explainers.ts` holds a **massive prose transcript per explainer** (~400–500 words each).
-- On modal open, `AnimatedExplainer` **calls a TTS edge function `explainer-tts`** with the full transcript, downloads the MP3 as a blob, creates `new Audio(url)`, and tries to `play()` it while the RAF clock advances scenes.
-- Also mixes in a WebAudio `ambientBed` bass drone.
+**No Free column exists today.** Add a 4th `FreeTierCard` (or `PremiumTierCard` variant with `role: 'free'`) so the grid becomes 4-up on desktop, stacks on mobile.
 
-**Why it breaks (confirmed)**
-1. **Autoplay-with-audio is blocked.** The scene RAF starts immediately on mount (`playing=true`); the `<audio>` element cannot start until either (a) a user gesture inside the same tick or (b) the TTS blob has finished downloading. So the scene clock is already several seconds in when the voiceover finally starts → the mid-video-start you're seeing.
-2. **TTS latency is variable.** `fetchNarration` awaits a synth call (Lovable AI or similar). First-open cold path is easily 3–8 s. The animation doesn't wait for `voiceReady` before advancing.
-3. **No re-sync when audio catches up.** Even the "resync on scene change" comment can't fix the *initial* offset, only later beats.
-4. **Two independent clocks** (RAF for scenes, `<audio>` for narration) fundamentally can't stay locked without pausing one to the other — and the code doesn't.
-5. **Length.** 80 s of dense narration is far past the 30 s home-page ceiling; viewers bounce before the message lands.
+**Listing-limit enforcement (flagged):**
+- `useListingQuota` declares `free: 3, starter: 10, pro/premium: null`.
+- Consumers: only `ListingQuotaBanner` (visual banner on `/host/listings`). **Nothing gates the publish flow — free users can publish unlimited listings today.** The banner is cosmetic.
+- Action needed: **owner decision required** — options in section 6 below.
 
-**Other audio on the site (not homepage, leave alone this pass):** `AudioListingPlayer` on listing detail pages, gallery `<video muted playsInline>` thumbnails in listing wizard/gallery — those are already muted or user-triggered, no defect.
+**E-signature status:** Rental and sale flows already produce online-signed agreements (see `transaction_terms`, booking documents), but nothing on the plans page, listing cards, checkout, or publish step surfaces this as a free trust feature.
 
-## 2. Rebuild — muted captioned loops
+**Access enforcement (audit summary):**
+- Client gates: `useToolAccess` (tier + purchase + grandfathered).
+- Server gates: spot-check needed on premium-tool edge functions (`ai-listing-creator`, PricePilot RPCs, market radar, etc.) — I'll enumerate in section 5 and fix any that trust the client.
+- Featured Boost: `listing_promotions` row with `ends_at` in future — already server-authoritative.
 
-Replace the TTS + RAF-synced approach entirely for all 4 explainers. Each becomes:
+## 2. Tier map (final, delivering-only) — every line must have a real backing feature
 
-- Same React scene components (reused, don't rebuild), but shortened to **3 scenes × 6–8 s = 20–24 s total**.
-- **No audio path.** Remove the TTS fetch, `<audio>` element, ambient bed, mute/volume controls, transcript download hotkey.
-- Muted autoplay loop, tap-to-restart. `IntersectionObserver` — plays when tile is in view on the homepage, pauses off-screen.
-- Kinetic on-screen captions carry the message: **max 7 words per card**, Sofia Pro display font, token colors, one active caption at a time synced to the scene index (single clock — no sync bug possible).
-- Poster frame (existing `heroImage`) shown before first play and for `prefers-reduced-motion` users, who also get a **static caption stack** below the poster (no animation).
-- Modal path (`ExplainerVideoModal` → click tile to open full-size) reuses the same shortened animation, adds a Play/Pause/Restart control set and larger captions. Still muted, no voiceover.
+I'll flag any line that lists a feature not yet delivered so we don't ship marketing that doesn't work.
 
-**New scripts (7 words max per card)**
-- **Buying** — "Search real inventory" → "Message the seller" → "Pay protected, in one dashboard."
-- **Renting** — "Pick your dates" → "Send one request" → "Rental, docs, payment — one place."
-- **Selling** — "List free in minutes" → "Reach serious buyers" → "Get paid, protected by Vendibook."
-- **Hosting** — "Open your calendar" → "Approve real requests" → "Payouts 24 hours after return."
+### FREE — $0 "Start free — list without paying anything"
+For sellers
+- List trucks and trailers for free — no monthly cost
+- Unlimited buyer inquiries and messages
+- Secure card payments with payment protection
+- **Free e-signatures on every bill of sale** ✅ delivered (`transaction_terms`)
+- Basic seller dashboard
 
-## 3. Files changed
+For hosts
+- List kitchens and vendor spaces free
+- Unlimited renter inquiries and messages
+- Secure card payments with payment protection
+- **Free e-signatures on every rental agreement** ✅ delivered
+- Basic host dashboard, booking calendar
 
-**Deleted / gutted**
-- `src/components/home/how-it-works/audio/ambientBed.ts` — delete.
-- `AnimatedExplainer.tsx` — rewritten to a lean ~180-line captioned loop (no TTS, no `<audio>`, no volume state, no ambient bed, no localStorage-elapsed).
-- `explainer-tts` edge function — leave deployed, but stop calling it from the homepage. Not deleting server-side in case other pages hit it; will grep to confirm homepage is the only caller.
+Everyone
+- PermitPath basic + Startup Guide
 
-**Modified**
-- `data/explainers.ts` — reduce each explainer to 3 scenes (subset of existing scene arrays), replace `caption`s with the new short strings, drop `transcript` from the runtime path (keep the field for SEO/accessibility text but read from a new `accessibleSummary` short string, ≤ 240 chars).
-- `HowVendibookWorks.tsx` — tiles auto-preview in-place (muted loop) via `IntersectionObserver`, click still opens the modal.
-- `VideoTile.tsx` — poster + inline captioned playback; adds reduced-motion fallback.
-- `ExplainerVideoModal.tsx` — no audio controls; keeps Play/Pause/Restart + captions + CTA.
+CTA: **Start free** → `/auth?returnTo=/dashboard` (or `/list-your-space` if signed in).
 
-**Added**
-- `useInViewAutoplay.ts` hook — shared IntersectionObserver ≥ 40% visible → play, else pause.
-- `CaptionCard.tsx` — kinetic caption primitive (Sofia Pro, token colors, fade+rise via Framer, respects reduced-motion).
+### STARTER — $39/mo "List like a pro"
+Everything in Free, plus:
 
-## 4. Tech quality checklist
-- Single clock per animation — captions read scene index, cannot drift.
-- Poster = existing `heroImage`, painted before first frame → no black flash.
-- IntersectionObserver play/pause; unmount cleans up.
-- `prefers-reduced-motion` → poster + static caption stack, no motion.
-- Mobile: no `<video>` so `playsinline` isn't relevant, but pointer-events guarded so tile tap opens modal without scroll hijack.
-- No `new Audio()`, no autoplay-with-sound, no user-gesture requirement.
+For sellers
+- Enhanced listing tools (extra photos, richer specs, highlight badges)
+- AI listing description generator ✅ delivered (`ai-listing-creator`)
+- Priority placement basics (above free tier in category feeds) — ⚠️ **FLAG:** verify `listings` ordering respects tier; if not, wire it or drop this line
 
-## 5. Verification
-- Playwright at 1280 and 390 widths: load `/`, scroll to `HowVendibookWorks`, screenshot each tile mid-loop, confirm caption text matches scene, no audio nodes exist in the document, no console warnings from blocked autoplay.
-- `bunx tsgo --noEmit`.
-- Report per-video: previous 80 s TTS-synced → new 20–24 s muted captioned loop.
+For hosts
+- Booking calendar + inquiry management ✅
+- Automated renter messages ✅
 
-## Assumptions
-- Voiceover is not essential for these homepage tiles (per your rule 2a preference). If you want any single one kept as a narrated video, tell me and I'll pre-render an MP4 for that one only and swap it in via `videoSource` (the data model already has the slot).
-- Keeping the `explainer-tts` edge function deployed (unused by homepage) rather than deleting it, in case other pages call it.
+Both
+- Basic analytics ✅
+- Priority email support
+
+### GROWTH — $89/mo (Recommended) "Sell and book faster"
+Everything in Starter, plus:
+
+For sellers
+- **1 active Featured Boost included** (equivalent to `boost-featured-30`)
+- Full premium tools bundle unlocked — matches "free with Pro" copy on `/tools`:
+  - PricePilot ✅
+  - Listing Studio ✅
+  - Marketing Studio ✅
+  - Concept Lab ✅
+  - Market Radar ✅
+  - PermitPath Plus ✅
+
+For hosts
+- Multiple active listings ✅
+- Recurring availability ✅
+- Storage add-ons, cleaning fees, custom deposits, custom cancellation rules ✅
+
+Both
+- $10 off notarization ($39 instead of $49) — ⚠️ **FLAG:** notarization SKU price not yet member-discounted in catalog; either add a `member_discount_cents` field or apply at checkout. Ships alongside this pass.
+
+### OPERATOR — $149/mo "Run your whole operation"
+Everything in Growth, plus:
+- Team member access & permissions ✅ (schema exists)
+- Multi-location / fleet tools ✅
+- Utilization analytics + accounting exports ✅ delivered on `/host/analytics`
+- Custom intake questions — ⚠️ **FLAG:** UI exists but gate not wired; will add tier check
+- BuildKit included ✅
+- Dedicated support
+
+CTA: **Talk business — go Premium**.
+
+## 3. E-signature as a standard trust feature (Free, all users)
+
+New shared component `TrustESignChip` (subtle token-styled pill with `FileSignature` icon + tooltip: *"Agreements and bills of sale are signed online, free."*). Placed:
+
+1. **Plans page** — inside every tier card's feature list (Free through Operator) via the tier catalog above.
+2. **Comparison table** — new row `Free e-signatures on every agreement` = check across all four columns.
+3. **Checkout trust row** — appended to `PaymentProtectionBlock` area on `SaleCheckout` / `BookingCheckout`, plus the trust row inside `PremiumPlansSection` at bottom.
+4. **Listing cards** — `ListingCard.tsx` gets one small chip in the bottom-right of the image area (next to Calendar/Quick Book icons), rendered for both `mode === 'sale'` and `mode === 'rent'`. Also `PhotoListingCard` (dashboard).
+5. **Listing publish step** — appended reassurance line in the publish/review step of the wizard: *"Every sale and rental includes free online signatures — agreements handled for you."*
+
+## 4. Learn-more overlays + consent dialog copy
+
+- `learnMoreCatalog.ts` — add a new `host_free` entry (Free plan) with outcomes matching section 2; refresh `host_starter`, `host_growth`, `host_operator` outcomes to include the sellers/hosts split and the e-signature line.
+- `SubscriptionConsentDialog` — refresh the plan-name-driven bullet list to match the top ~5 outcomes of the new tier map for the plan being purchased. Auto-renews / cancel-anytime disclosure copy stays **byte-identical**.
+
+## 5. Exclusive access enforcement — audit + fixes
+
+For each paid benefit line I'll verify server-side enforcement, not just client hiding:
+
+| Feature | Client gate | Server gate | Action |
+|---|---|---|---|
+| Featured Boost credit (Growth) | `useToolAccess` / entitlements | `listing_promotions.ends_at > now()` | ✅ already server-authoritative |
+| Premium tools bundle (Growth+) | `useToolAccess` | Per-tool edge functions | Audit `ai-listing-creator`, `pricepilot-*`, `market-radar-*`, `listing-studio-*` for tier check — add missing `has_role`-style tier check via `host_subscriptions` |
+| Multi-location, custom intake, team access (Operator) | React guards | Server check on the write RPCs | Audit / add |
+| $10 notarization discount (Growth+) | UI badge | Applied in `create-checkout` price selection | Wire member-discount branch |
+| AI description generator (Starter+) | Existing | Verify tier check in `ai-listing-creator` edge fn | Audit |
+
+Each gated edge function will (a) read the bearer token, (b) resolve the tier via a shared `resolveHostTier(userId)` helper querying `host_subscriptions` (status IN active/trialing/past_due, plus one-time purchase fallback via `monetization_purchases`), (c) return 403 with `{ code: 'tier_required', requires: 'pro' }` when denied. Expired subs revert immediately because the check is live-DB, not cached.
+
+Spot-test acceptance:
+- Free user hits `/tools/pricepilot` → sees paywall UI + calling the edge fn returns 403.
+- Growth user → tools unlocked, Featured credit visible in `/host/listings` header.
+- Cancelled/expired subscriber → tier resolves to `free` at next query; access reverts.
+
+I'll run the tests with actual seeded users after the code lands.
+
+## 6. Listing-limit flag — decision needed before enforcement
+
+**Current behavior:** the "3 for free / 10 for Starter" numbers are declared in `useListingQuota` but only render a banner on `/host/listings`. Publish and unpause paths do NOT block; every free user can publish unlimited listings today.
+
+Options for you to pick (this pass will NOT ship enforcement):
+- **A. Keep unlimited for everyone** — drop the banner and quota numbers, promise "Unlimited listings on every plan" in the tier catalog. Simplest, most generous.
+- **B. Free = 2 active going forward, grandfather anyone above 2** — enforce on publish + unpause, exempt existing accounts whose count exceeded 2 as of a snapshot date.
+- **C. Free = 3 (match the current banner) going forward, grandfather existing** — same mechanic, higher cap.
+
+I recommend **A** for now (matches the "Start free — list without paying anything" positioning) and revisit if abuse shows up. Awaiting your call before touching enforcement or the plans catalog copy on this line.
+
+## 7. Files touched
+
+**Plans surface**
+- `src/components/monetization/PremiumPlansSection.tsx` — 4-col grid, new tier catalog with For sellers / For hosts groups, tier-driven features (not DB `features` array).
+- `src/components/monetization/PremiumTierCard.tsx` — accept typed feature groups instead of raw string list; render grouped headers; keep animation/consent/learn-more wiring.
+- `src/components/monetization/FreeTierCard.tsx` (new) — thin variant of `PremiumTierCard` for `$0` / "Start free" CTA (no Stripe call).
+- `src/components/monetization/PlansComparisonTable.tsx` — add `free` column, add e-signature row, refresh rows to match section 2.
+- `src/lib/monetization/learnMoreCatalog.ts` — add `host_free`, refresh growth/operator outcomes.
+- `src/components/monetization/SubscriptionConsentDialog.tsx` — copy refresh, disclosures untouched.
+
+**E-signature**
+- `src/components/trust/TrustESignChip.tsx` (new) — shared chip + tooltip.
+- `src/components/listing/ListingCard.tsx` + `src/components/dashboard/shared/PhotoListingCard.tsx` — render chip.
+- `src/components/checkout/PaymentProtectionBlock.tsx` — append e-sign line to trust surface (or sibling component so the block stays focused).
+- Listing wizard publish/review step (locate exact file during implementation) — add reassurance line.
+
+**Enforcement**
+- `supabase/functions/_shared/resolveHostTier.ts` (new) — shared server helper.
+- Edge functions listed in section 5 — add tier gate + 403.
+- `create-checkout` — member notarization discount branch.
+
+**Nothing else changes.** Prices, terms gate, `create-checkout` monetary logic, existing agreement/e-sign backend all untouched.
+
+## 8. Reports at the end
+
+- Final tier map (mirrors section 2) with any line still flagged.
+- Listing-limit report (current behavior + owner options).
+- Enforcement pass/fail table across the three test personas (free / Growth / expired).
+- Typecheck result.

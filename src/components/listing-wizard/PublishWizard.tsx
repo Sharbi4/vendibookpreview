@@ -3855,6 +3855,9 @@ export const PublishWizard: React.FC = () => {
                   <div>
                     <h2 className="text-xl font-bold text-foreground mb-2">Review your listing</h2>
                     <p className="text-muted-foreground">Here's how your listing will appear to shoppers.</p>
+                    <p className="mt-2 text-sm text-emerald-600 dark:text-emerald-400 font-medium">
+                      ✓ Every sale and rental includes free online signatures — agreements handled for you.
+                    </p>
                   </div>
 
                   {/* Full Listing Preview Card */}

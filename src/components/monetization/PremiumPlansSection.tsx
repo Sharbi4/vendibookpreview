@@ -8,22 +8,23 @@ import PremiumTierCard from './PremiumTierCard';
 import PlansComparisonTable from './PlansComparisonTable';
 import PlansFAQ from './PlansFAQ';
 import ProWeeklyPassCard from './ProWeeklyPassCard';
+import { TrustESignChip } from '@/components/trust/TrustESignChip';
+import { TIER_CATALOG, type TierRole } from './tierCatalog';
 
 import heroImg from '@/assets/trailer-orange-grill.jpg';
 
 type Interval = 'monthly' | 'annual';
 
-const TIER_MAP: Array<{
-  role: 'starter' | 'pro' | 'premium';
-  base: string;
-  tagline: string;
-  audience: string;
-  cta: string;
-  breakEven?: string;
-}> = [
-  { role: 'starter', base: 'host_starter', tagline: 'List like a pro.', audience: 'For occasional hosts and sellers.', cta: 'Start with Starter' },
-  { role: 'pro', base: 'host_growth', tagline: 'Sell and book faster.', audience: 'For active hosts running the show.', cta: 'Go Pro' },
-  { role: 'premium', base: 'host_operator', tagline: 'Run your whole operation.', audience: 'For fleets, kitchens, and multi-location teams.', cta: 'Talk business — go Premium' },
+interface TierRow {
+  role: TierRole;
+  base?: string;
+}
+
+const TIER_MAP: TierRow[] = [
+  { role: 'free' },
+  { role: 'starter', base: 'host_starter' },
+  { role: 'pro', base: 'host_growth' },
+  { role: 'premium', base: 'host_operator' },
 ];
 
 function pair(products: MonetizationProduct[], base: string) {
@@ -56,10 +57,14 @@ export function PremiumPlansSection({ compact = false }: Props) {
   }, []);
 
   const tiers = useMemo(() =>
-    TIER_MAP.map(t => ({ ...t, ...pair(products, t.base) })),
+    TIER_MAP.map(t => ({
+      ...t,
+      ...(t.base ? pair(products, t.base) : { monthly: undefined, annual: undefined }),
+    })),
   [products]);
 
-  const proSave = savingsPct(tiers[1]?.monthly, tiers[1]?.annual);
+  const growth = tiers.find(t => t.role === 'pro');
+  const proSave = growth ? savingsPct(growth.monthly, growth.annual) : null;
 
   return (
     <div className="relative">
@@ -76,10 +81,10 @@ export function PremiumPlansSection({ compact = false }: Props) {
               Plans built for real operators
             </span>
             <h1 className="mt-5 text-4xl md:text-5xl font-semibold tracking-tight text-white leading-[1.05]">
-              The tools professional hosts use to book faster and earn more.
+              Plans for sellers and hosts — start free, upgrade when the math is obvious.
             </h1>
             <p className="mt-4 text-lg text-white/80 max-w-2xl leading-relaxed">
-              Every plan is designed around one outcome — more paid bookings, less busywork. Start free, upgrade when the math is obvious.
+              Every plan serves both sides — selling a truck and hosting a kitchen live under one account. Free e-signatures on every agreement, at every tier.
             </p>
           </div>
         </section>
@@ -111,24 +116,34 @@ export function PremiumPlansSection({ compact = false }: Props) {
         </div>
       </div>
 
-      {/* TIER CARDS */}
+      {/* TIER CARDS — 4-up on xl (Free + 3 paid) */}
       {loading ? (
         <div className="mt-12 flex justify-center"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
       ) : (
-        <div className="mt-10 grid gap-6 lg:grid-cols-3 lg:items-start">
+        <div className="mt-10 grid gap-6 md:grid-cols-2 xl:grid-cols-4 xl:items-start">
           {tiers.map((t, i) => {
+            const groups = TIER_CATALOG[t.role];
+            if (t.role === 'free') {
+              return (
+                <div key={t.role}>
+                  <PremiumTierCard
+                    role="free"
+                    groups={groups}
+                    interval={interval}
+                    index={i}
+                  />
+                </div>
+              );
+            }
             const product = interval === 'annual' ? (t.annual ?? t.monthly) : (t.monthly ?? t.annual);
             if (!product) return null;
             const paths = buildCheckoutReturnPaths(product.slug);
             return (
-              <div key={t.role} className={cn(t.role === 'pro' && 'lg:-my-3 lg:z-10')}>
+              <div key={t.role} className={cn(t.role === 'pro' && 'xl:-my-3 xl:z-10')}>
                 <PremiumTierCard
                   product={product}
                   role={t.role}
-                  tagline={t.tagline}
-                  audience={t.audience}
-                  ctaLabel={t.cta}
-                  breakEven={t.breakEven}
+                  groups={groups}
                   interval={interval}
                   successPath={paths.successPath}
                   cancelPath={paths.cancelPath}
@@ -145,6 +160,7 @@ export function PremiumPlansSection({ compact = false }: Props) {
         <span className="inline-flex items-center gap-1.5"><ShieldCheck className="h-3.5 w-3.5 text-emerald-400" /> Payment protection at checkout</span>
         <span className="inline-flex items-center gap-1.5"><Lock className="h-3.5 w-3.5 text-emerald-400" /> Stripe-secured billing</span>
         <span className="inline-flex items-center gap-1.5"><XCircle className="h-3.5 w-3.5 text-emerald-400" /> Cancel anytime online</span>
+        <TrustESignChip variant="inline" label="Free e-signatures on every agreement" />
       </div>
 
       {!compact && (

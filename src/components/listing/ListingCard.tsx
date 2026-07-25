@@ -19,6 +19,7 @@ import { trackLeadEvent } from '@/lib/leadTracking';
 // AvailabilityCalendarModal removed — calendar lives inside ListingCardOverlay now
 import { normalizeScheduleKeys } from '@/lib/scheduleUtils';
 import { isListingFeatured } from '@/lib/featured';
+import { TrustESignChip } from '@/components/trust/TrustESignChip';
 
 // Types for hourly schedule
 interface TimeRange {
@@ -235,6 +236,12 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
             loading="lazy"
           />
         
+        
+        {/* E-sign trust chip — every sale/rental agreement is signed online, free */}
+        <div className="absolute bottom-2 left-2 z-10">
+          <TrustESignChip variant="card" />
+        </div>
+
         {/* Mode Badge */}
         <div className="absolute top-2 left-2 flex items-center gap-1.5">
           <Badge 
