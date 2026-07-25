@@ -36,6 +36,8 @@ export const AnimatedExplainer = ({
   onSceneChange,
   onProgress,
   onError,
+  onPlay,
+  onView,
 }: Props) => {
   const reduced = useReducedMotion();
   const scenes = explainer.scenes;
