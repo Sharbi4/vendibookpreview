@@ -3098,13 +3098,15 @@ export const PublishWizard: React.FC = () => {
                     onValidationChange={setAvailabilityStepValid}
                   />
 
-                  <div className="flex gap-3 pt-4">
-                    <Button variant="dark-shine" onClick={() => setStep('pricing')}>Back</Button>
-                    <Button variant="dark-shine" onClick={saveStep} disabled={isSaving}>
-                      {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
-                      Continue
-                      <ChevronRight className="w-4 h-4 ml-2" />
-                    </Button>
+                  <div className="pt-4">
+                    <PrimaryActionBar
+                      secondary={{ label: 'Back', onClick: () => setStep('pricing') }}
+                      primary={{
+                        label: isSaving ? 'Saving…' : 'Continue',
+                        onClick: saveStep,
+                        disabled: isSaving,
+                      }}
+                    />
                   </div>
                 </div>
               )}
