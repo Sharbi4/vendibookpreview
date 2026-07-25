@@ -266,4 +266,16 @@ export function PremiumPlansSection({ compact = false }: Props) {
 }
 
 
+function FoundingMemberNote() {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const { useListingQuota } = require('@/hooks/useListingQuota') as typeof import('@/hooks/useListingQuota');
+  const { isGrandfathered, isLoading } = useListingQuota();
+  if (isLoading || !isGrandfathered) return null;
+  return (
+    <p className="mt-3 text-xs text-emerald-500/90">
+      You have unlimited listings as an early member — thank you.
+    </p>
+  );
+}
+
 export default PremiumPlansSection;
