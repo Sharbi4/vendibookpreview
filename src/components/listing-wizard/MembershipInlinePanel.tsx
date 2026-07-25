@@ -26,6 +26,7 @@ export const MembershipInlinePanel: React.FC<MembershipInlinePanelProps> = ({ re
   const navigate = useNavigate();
   const { user } = useAuth();
   const { tier } = useHostEntitlements();
+  const quota = useListingQuota();
   const [dismissed, setDismissed] = useState<boolean>(() => {
     if (typeof window === 'undefined') return true;
     return window.localStorage.getItem(LS_KEY) === '1';
