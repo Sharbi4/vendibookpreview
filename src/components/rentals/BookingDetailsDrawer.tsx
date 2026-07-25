@@ -12,6 +12,7 @@ import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { triggerOrchestrator } from '@/lib/orchestrator';
+import { DocumentsCard } from '@/components/documents/DocumentsCard';
 import {
   User,
   Calendar,
@@ -410,6 +411,8 @@ END:VCALENDAR`;
                 Report an issue
               </Link>
             </Button>
+
+            <DocumentsCard scope={{ booking_id: booking.id }} title="Rental agreement" />
           </div>
         </div>
       </SheetContent>
