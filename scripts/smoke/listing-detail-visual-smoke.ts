@@ -53,7 +53,7 @@ function pass(msg: string) {
 }
 
 async function fetchOneListing(): Promise<{ id: string; title: string }> {
-  const url = `${SUPABASE_URL}/rest/v1/listings?select=id,title,listing_type&status=eq.published&title=not.is.null&limit=10`;
+  const url = `${SUPABASE_URL}/rest/v1/listings?select=id,title&status=eq.published&title=not.is.null&limit=10`;
   const res = await fetch(url, { headers: { apikey: ANON_KEY, Authorization: `Bearer ${ANON_KEY}` } });
   if (!res.ok) throw new Error(`fetch listings: ${res.status}`);
   const rows = (await res.json()) as Array<{ id: string; title: string }>;
