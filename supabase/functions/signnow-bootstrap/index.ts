@@ -246,47 +246,8 @@ async function verifyTemplateRoles(token: string, templateId: string, expected: 
   return roles;
 }
 
-async function registerWebhook(
-  token: string,
-  userId: string,
-  secret: string,
-  callbackUrl: string,
-): Promise<{ id: string; event: string }[]> {
-  const events = ['document.complete', 'document.update'];
-  const results: { id: string; event: string }[] = [];
-  for (const event of events) {
-    try {
-      const json = await signnowApi(token, '/v2/event-subscriptions', {
-        method: 'POST',
-        json: {
-          event,
-          entity_id: userId,
-          attributes: {
-            callback: callbackUrl,
-            secret_key: secret,
-            delete_access_token: true,
-            docid_queryparam: true,
-          },
-        },
-      });
-      results.push({ id: json.id ?? json.data?.id ?? 'unknown', event });
-    } catch (e: any) {
-      if (e.message?.includes('subscription already exists') || e.message?.includes('duplicate')) {
-        results.push({ id: 'existing', event });
-      } else {
-        throw e;
-      }
-    }
-  }
-  return results;
-}
-
-async function getUserId(token: string): Promise<string> {
-  const user = await signnowApi(token, '/user', { method: 'GET' });
-  return String(user.id);
-}
-
 async function ensureBucket(svc: ReturnType<typeof createClient>): Promise<void> {
+
   const { data: buckets } = await svc.storage.listBuckets();
   const exists = buckets?.some((b) => b.name === 'signed-documents');
   if (exists) return;
