@@ -5,6 +5,8 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { parseEdgeError } from '@/lib/edgeErrors';
+
 
 /**
  * ProWeeklyPassCard — surfaces the non-renewing 7-day Pro pass on the
