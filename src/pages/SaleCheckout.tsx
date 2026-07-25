@@ -35,6 +35,14 @@ import { useTermsGate } from '@/hooks/useTermsGate';
 import { buildTerms } from '@/lib/transactionTerms';
 import { ProtectionOptInCard } from '@/components/protected-sale/ProtectionOptInCard';
 import { useCheckoutState } from '@/hooks/useCheckoutState';
+import {
+  JourneyProgress,
+  PrimaryActionBar,
+  TrustModule,
+  PAYMENT_TRUST_POINTS,
+  PAYMENT_DISCLAIMER,
+  type JourneyStep,
+} from '@/components/journey';
 
 type FulfillmentSelection = 'pickup' | 'delivery' | 'vendibook_freight';
 type CheckoutStep = 'intro' | 'confirm' | 'delivery' | 'addons' | 'details' | 'review';
