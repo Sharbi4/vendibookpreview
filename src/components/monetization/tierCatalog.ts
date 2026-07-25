@@ -78,8 +78,8 @@ export const TIER_CATALOG: Record<TierRole, TierFeatureGroups> = {
     ],
     hosts: [
       'Multiple active listings',
-      'Recurring availability, custom deposits & cancellation rules',
-      'Storage add-ons, cleaning fees, custom rules',
+      'Custom deposits & cancellation rules',
+      'Storage add-ons and cleaning fees',
     ],
     shared: [
       'Concept Lab, Market Radar, PermitPath Plus — no per-tool paywalls',
