@@ -37,8 +37,6 @@ interface PdfSection {
   y: number;
 }
 
-const PAGE_WIDTH = 612;
-const PAGE_HEIGHT = 792;
 const MARGIN = 60;
 
 function buildRentalPdf(): { pdf: Uint8Array; fields: PdfField[] } {
@@ -110,49 +108,53 @@ function buildBillOfSalePdf(): { pdf: Uint8Array; fields: PdfField[] } {
 }
 
 function makePdfWithSections(title: string, sections: PdfSection[]): Uint8Array {
-  let stream = `BT
-/F1 18 Tf
-${MARGIN} 720 Td
-(${escapePdfString(title)}) Tj
-ET
-`;
+  let stream = `BT\n/F1 18 Tf\n${MARGIN} 720 Td\n(${escapePdfString(title)}) Tj\nET\n`;
 
   for (const s of sections) {
-    stream += `BT
-/F1 12 Tf
-${s.x} ${s.y} Td
-(${escapePdfString(s.label)}) Tj
-ET
-`;
+    stream += `BT\n/F1 12 Tf\n${s.x} ${s.y} Td\n(${escapePdfString(s.label)}) Tj\nET\n`;
   }
 
   // Add some static legal boilerplate near the bottom.
-  stream += `BT
-/F1 10 Tf
-${MARGIN} 60 Td
-(${escapePdfString('This document is executed electronically via Vendibook and airSlate SignNow.')}) Tj
-ET
-`;
-
-  const streamBytes = new TextEncoder().encode(stream);
+  stream += `BT\n/F1 10 Tf\n${MARGIN} 60 Td\n(${escapePdfString('This document is executed electronically via Vendibook and airSlate SignNow.')}) Tj\nET\n`;
 
   const obj1 = '1 0 obj\n<<\n/Type /Catalog\n/Pages 2 0 R\n>>\nendobj\n';
   const obj2 = '2 0 obj\n<<\n/Type /Pages\n/Kids [3 0 R]\n/Count 1\n>>\nendobj\n';
   const obj3Base = '3 0 obj\n<<\n/Type /Page\n/Parent 2 0 R\n/MediaBox [0 0 612 792]\n/Contents 4 0 R\n/Resources <<\n/Font <<\n/F1 5 0 R\n>>\n>>\n>>\nendobj\n';
   const obj5 = '5 0 obj\n<<\n/Type /Font\n/Subtype /Type1\n/BaseFont /Helvetica\n>>\nendobj\n';
 
+  const enc = new TextEncoder();
+  const headerBytes = enc.encode('%PDF-1.4\n');
+  const obj1Bytes = enc.encode(obj1);
+  const obj2Bytes = enc.encode(obj2);
+  const obj3Bytes = enc.encode(obj3Base);
+  const obj5Bytes = enc.encode(obj5);
+  const streamBytes = enc.encode(stream);
   const obj4 = `4 0 obj\n<<\n/Length ${streamBytes.length}\n>>\nstream\n${stream}endstream\nendobj\n`;
-  const full = `%PDF-1.4\n${obj1}${obj2}${obj3Base}${obj4}${obj5}`;
-  const fullBytes = new TextEncoder().encode(full);
+  const obj4Bytes = enc.encode(obj4);
+
+  const off1 = headerBytes.length;
+  const off2 = off1 + obj1Bytes.length;
+  const off3 = off2 + obj2Bytes.length;
+  const off4 = off3 + obj3Bytes.length;
+  const off5 = off4 + obj4Bytes.length;
+
+  const fullBytes = new Uint8Array(headerBytes.length + obj1Bytes.length + obj2Bytes.length + obj3Bytes.length + obj4Bytes.length + obj5Bytes.length);
+  let pos = 0;
+  fullBytes.set(headerBytes, pos); pos += headerBytes.length;
+  fullBytes.set(obj1Bytes, pos); pos += obj1Bytes.length;
+  fullBytes.set(obj2Bytes, pos); pos += obj2Bytes.length;
+  fullBytes.set(obj3Bytes, pos); pos += obj3Bytes.length;
+  fullBytes.set(obj4Bytes, pos); pos += obj4Bytes.length;
+  fullBytes.set(obj5Bytes, pos); pos += obj5Bytes.length;
 
   const xrefOffset = fullBytes.length;
-  const xref = `xref\n0 6\n0000000000 65535 f \n0000000009 00000 n \n0000000058 00000 n \n0000000115 00000 n \n0000000254 00000 n \n0000000000 65535 f \n`;
+  const xref = `xref\n0 6\n0000000000 65535 f \n${String(off1).padStart(10, '0')} 00000 n \n${String(off2).padStart(10, '0')} 00000 n \n${String(off3).padStart(10, '0')} 00000 n \n${String(off4).padStart(10, '0')} 00000 n \n${String(off5).padStart(10, '0')} 00000 n \n`;
   const trailer = `trailer\n<<\n/Size 6\n/Root 1 0 R\n>>\nstartxref\n${xrefOffset}\n%%EOF\n`;
 
   const out = new Uint8Array(fullBytes.length + xref.length + trailer.length);
   out.set(fullBytes, 0);
-  out.set(new TextEncoder().encode(xref), fullBytes.length);
-  out.set(new TextEncoder().encode(trailer), fullBytes.length + xref.length);
+  out.set(enc.encode(xref), fullBytes.length);
+  out.set(enc.encode(trailer), fullBytes.length + xref.length);
   return out;
 }
 
@@ -207,9 +209,9 @@ async function uploadRawDocument(token: string, name: string, pdf: Uint8Array): 
   return JSON.parse(text).id;
 }
 
-async function editDocumentFields(token: string, documentId: string, fields: PdfField[]): Promise<void> {
+async function editDocumentFields(token: string, documentId: string, name: string, fields: PdfField[]): Promise<void> {
   const body = {
-    document_name: `Vendibook ${fields.find((f) => f.name === 'host_name') ? 'Rental Agreement' : 'Bill of Sale'}`,
+    document_name: name,
     fields: fields.map((f) => ({
       type: f.type,
       required: f.required,
@@ -316,13 +318,13 @@ Deno.serve(async (req) => {
 
     const rental = buildRentalPdf();
     const rentalDocId = await uploadRawDocument(accessToken, 'Vendibook Rental Agreement', rental.pdf);
-    await editDocumentFields(accessToken, rentalDocId, rental.fields);
+    await editDocumentFields(accessToken, rentalDocId, 'Vendibook Rental Agreement', rental.fields);
     const rentalTemplateId = await createTemplate(accessToken, rentalDocId, 'Vendibook Rental Agreement');
     const rentalRoles = await verifyTemplateRoles(accessToken, rentalTemplateId, REQUIRED_ROLES.rental);
 
     const bill = buildBillOfSalePdf();
     const billDocId = await uploadRawDocument(accessToken, 'Vendibook Bill of Sale', bill.pdf);
-    await editDocumentFields(accessToken, billDocId, bill.fields);
+    await editDocumentFields(accessToken, billDocId, 'Vendibook Bill of Sale', bill.fields);
     const billTemplateId = await createTemplate(accessToken, billDocId, 'Vendibook Bill of Sale');
     const billRoles = await verifyTemplateRoles(accessToken, billTemplateId, REQUIRED_ROLES.billOfSale);
 
