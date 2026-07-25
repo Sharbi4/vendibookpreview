@@ -125,7 +125,10 @@ export type LeadEventName =
   | 'ai_feedback_submitted'
   | 'ai_copilot_opened'
   // Human escalation
-  | 'human_support_requested';
+  | 'human_support_requested'
+  // Learn more overlay funnel
+  | 'learn_more_opened'
+  | 'learn_more_converted';
 
 
 
