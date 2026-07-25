@@ -1,0 +1,128 @@
+import { useState } from 'react';
+import { z } from 'zod';
+import { Eye, EyeOff, Loader2, Lock } from 'lucide-react';
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { toast } from 'sonner';
+import { Link } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
+
+interface Props {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  userId: string;
+  initial: { full_name: string; email: string; phone_number: string };
+  onSaved: () => Promise<void> | void;
+}
+
+const schema = z.object({
+  email: z.string().trim().email('Enter a valid email').max(255),
+});
+
+function maskPhone(p: string) {
+  const digits = p.replace(/\D/g, '');
+  if (digits.length < 4) return p ? '•••' : '';
+  return `••• ••• ${digits.slice(-4)}`;
+}
+
+export default function EditPersonalInfoSheet({ open, onOpenChange, userId, initial, onSaved }: Props) {
+  const [email, setEmail] = useState(initial.email);
+  const [saving, setSaving] = useState(false);
+  const [showPhone, setShowPhone] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  const save = async () => {
+    setErr(null);
+    const parsed = schema.safeParse({ email });
+    if (!parsed.success) {
+      setErr(parsed.error.errors[0]?.message ?? 'Invalid input');
+      return;
+    }
+    setSaving(true);
+    try {
+      const { error } = await supabase.from('profiles').update({ email: email.trim() }).eq('id', userId);
+      if (error) throw error;
+      await onSaved();
+      toast.success('Personal info updated');
+      onOpenChange(false);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Could not save');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">
+        <SheetHeader>
+          <SheetTitle className="font-display">Personal info</SheetTitle>
+          <SheetDescription>
+            These details are private. They're used for verification, receipts, and payouts.
+          </SheetDescription>
+        </SheetHeader>
+
+        <div className="mt-6 space-y-5">
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between">
+              <Label className="text-sm">Legal name</Label>
+              <Badge variant="outline" className="text-[10px] h-4 px-1.5"><Lock className="h-2.5 w-2.5 mr-0.5" />Locked</Badge>
+            </div>
+            <Input value={initial.full_name} disabled className="h-10 bg-muted/50" />
+            <p className="text-xs text-muted-foreground">
+              Locked for security. <Link to="/help/contact" className="underline">Contact support</Link> to change.
+            </p>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="acc-email" className="text-sm">Email</Label>
+            <Input
+              id="acc-email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="h-10"
+              autoComplete="email"
+            />
+            {err && <p className="text-xs text-destructive">{err}</p>}
+            <p className="text-xs text-muted-foreground">Used for receipts and account recovery.</p>
+          </div>
+
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between">
+              <Label className="text-sm">Phone number</Label>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setShowPhone((v) => !v)}
+                  className="text-xs text-muted-foreground hover:text-foreground inline-flex items-center gap-1"
+                >
+                  {showPhone ? <><EyeOff className="h-3.5 w-3.5" />Hide</> : <><Eye className="h-3.5 w-3.5" />Reveal</>}
+                </button>
+                <Badge variant="outline" className="text-[10px] h-4 px-1.5"><Lock className="h-2.5 w-2.5 mr-0.5" />Locked</Badge>
+              </div>
+            </div>
+            <Input
+              value={showPhone ? initial.phone_number : maskPhone(initial.phone_number)}
+              disabled
+              className="h-10 bg-muted/50 tabular"
+            />
+            <p className="text-xs text-muted-foreground">
+              Locked for security. <Link to="/help/contact" className="underline">Contact support</Link> to change.
+            </p>
+          </div>
+
+          <div className="pt-2 flex justify-end gap-2">
+            <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>Cancel</Button>
+            <Button onClick={save} disabled={saving || email.trim() === initial.email.trim()}>
+              {saving ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Saving</> : 'Save changes'}
+            </Button>
+          </div>
+        </div>
+      </SheetContent>
+    </Sheet>
+  );
+}
