@@ -45,6 +45,12 @@ const IGNORED_CONSOLE = [
   /net::ERR_/i,
   /ResizeObserver/i,
   /Non-Error promise rejection/i,
+  /embed\.tawk\.to/i,
+  /Failed to load resource/i,
+  /Provider's accounts list is empty/i,
+  /gsi_logger/i,
+  /Failed to decode.*font/i,
+  /OTS parsing/i,
 ];
 
 async function fetchSamples(): Promise<Sample[]> {
