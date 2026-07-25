@@ -25,29 +25,31 @@ import StickySummary from '@/components/shared/StickySummary';
 
 // Step components
 import { PurchaseStepDelivery, PurchaseStepInfo, PurchaseStepReview, type BuyerInfo } from '@/components/purchase-wizard';
+import StepConfirmPurchase from '@/components/checkout/StepConfirmPurchase';
+import StepAddOns, { type CheckoutAddOn } from '@/components/checkout/StepAddOns';
 import { ReferralCodeField } from '@/components/referrals/ReferralCodeField';
 import { FinalReviewSheet } from '@/components/transaction/FinalReviewSheet';
 import { useTermsGate } from '@/hooks/useTermsGate';
 import { buildTerms } from '@/lib/transactionTerms';
 import { ProtectionOptInCard } from '@/components/protected-sale/ProtectionOptInCard';
+import { useCheckoutState } from '@/hooks/useCheckoutState';
 
 type FulfillmentSelection = 'pickup' | 'delivery' | 'vendibook_freight';
-type CheckoutStep = 'information' | 'delivery' | 'review';
+type CheckoutStep = 'confirm' | 'delivery' | 'addons' | 'details' | 'review';
 
 const CHECKOUT_STEPS = [
-  { step: 1, label: 'Your info', short: 'Info' },
-  { step: 2, label: 'How you\'ll get it', short: 'Delivery' },
-  { step: 3, label: 'Review & pay', short: 'Pay' },
+  { step: 1, label: 'Confirm',   short: 'Confirm' },
+  { step: 2, label: 'Delivery',  short: 'Delivery' },
+  { step: 3, label: 'Add-ons',   short: 'Add-ons' },
+  { step: 4, label: 'Your details', short: 'Details' },
+  { step: 5, label: 'Review & pay', short: 'Pay' },
 ];
 
-const getStepNumber = (step: CheckoutStep): number => {
-  switch (step) {
-    case 'information': return 1;
-    case 'delivery': return 2;
-    case 'review': return 3;
-    default: return 1;
-  }
+const STEP_NUM: Record<CheckoutStep, number> = {
+  confirm: 1, delivery: 2, addons: 3, details: 4, review: 5,
 };
+
+const getStepNumber = (step: CheckoutStep): number => STEP_NUM[step];
 
 const SaleCheckout = () => {
   const { listingId } = useParams();
