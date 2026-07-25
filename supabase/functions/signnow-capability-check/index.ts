@@ -22,7 +22,7 @@ Deno.serve(async (req) => {
 
   try {
     if (!isSignNowConfigured()) {
-      return jsonResponse({
+      return jsonResponse(200, {
         configured: false,
         notary: { available: false, missing: ['SignNow env vars'] },
       });
