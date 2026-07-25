@@ -108,9 +108,10 @@ export function PremiumPlansSection({ compact = false, successPathOverride, canc
       const paths = buildCheckoutReturnPaths(product.slug);
       requestCheckout(product, {
         interval: wantInterval,
-        successPath: paths.successPath,
-        cancelPath: paths.cancelPath,
+        successPath: successPathOverride ?? paths.successPath,
+        cancelPath: cancelPathOverride ?? paths.cancelPath,
       }).catch((e) => console.error('[plans] auto-resume failed', e));
+
     }
     // Clean the URL so a refresh doesn't retrigger.
     const cleaned = new URLSearchParams(location.search);
