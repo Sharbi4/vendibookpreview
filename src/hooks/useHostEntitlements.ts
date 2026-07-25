@@ -90,6 +90,7 @@ export function useHostEntitlements(): HostEntitlements & { isLoading: boolean }
     enabled: !!user?.id,
     staleTime: 60_000,
     queryFn: async (): Promise<HostEntitlements> => {
+      // 1) Real Stripe subscription (monthly / annual)
       const { data: sub } = await supabase
         .from('host_subscriptions')
         .select('tier, status, current_period_end, cancel_at_period_end')
@@ -98,21 +99,48 @@ export function useHostEntitlements(): HostEntitlements & { isLoading: boolean }
         .limit(1)
         .maybeSingle();
 
-      if (!sub) return FREE;
+      const subActive = !!sub?.status && ACTIVE_STATUSES.has(sub.status);
 
-      const status = sub.status ?? null;
-      const isActive = !!status && ACTIVE_STATUSES.has(status);
-      const { tier, label } = isActive ? resolveTier(sub.tier) : { tier: 'free' as HostTier, label: 'Free' };
+      // 2) Time-boxed account pass (Pro Weekly Pass etc.) — one-time purchase
+      // with a metadata.grants_tier flag and an unexpired access_ends_at.
+      const nowIso = new Date().toISOString();
+      const { data: pass } = await supabase
+        .from('monetization_purchases')
+        .select('access_ends_at, product:monetization_products!inner(name, metadata)')
+        .eq('user_id', user!.id)
+        .gt('access_ends_at', nowIso)
+        .in('status', ['paid', 'fulfilled'])
+        .neq('fulfillment_status', 'expired')
+        .order('access_ends_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      // deno-lint-ignore no-explicit-any
+      const passTier = (pass as any)?.product?.metadata?.grants_tier as HostTier | undefined;
+      const passLabel = (pass as any)?.product?.name as string | undefined;
+      const passEndsAt = (pass as any)?.access_ends_at as string | undefined;
+
+      // Pick the stronger entitlement source
+      const subRank = subActive ? (TIER_RANK[resolveTier(sub!.tier).tier] ?? 0) : 0;
+      const passRank = passTier ? (TIER_RANK[passTier] ?? 0) : 0;
+
+      if (!subActive && !passTier) return FREE;
+
+      const usePass = passRank > subRank;
+
+      const status = usePass ? 'active' : (sub!.status ?? null);
+      const { tier, label } = usePass
+        ? { tier: passTier!, label: passLabel ?? `${passTier!.charAt(0).toUpperCase()}${passTier!.slice(1)} (weekly pass)` }
+        : resolveTier(sub!.tier);
       const rank = TIER_RANK[tier] ?? 0;
 
       return {
         tier,
         planLabel: label,
         status,
-        isActive,
-        isPastDue: status === 'past_due',
-        cancelAtPeriodEnd: !!sub.cancel_at_period_end,
-        currentPeriodEnd: sub.current_period_end ?? null,
+        isActive: true,
+        isPastDue: !usePass && status === 'past_due',
+        cancelAtPeriodEnd: !usePass && !!sub?.cancel_at_period_end,
+        currentPeriodEnd: usePass ? (passEndsAt ?? null) : (sub?.current_period_end ?? null),
         canAdvancedAnalytics: rank >= TIER_RANK.pro,
         canPriorityPlacement: rank >= TIER_RANK.pro,
         canBulkListings: rank >= TIER_RANK.pro,

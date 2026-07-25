@@ -7,6 +7,8 @@ import { cn } from '@/lib/utils';
 import PremiumTierCard from './PremiumTierCard';
 import PlansComparisonTable from './PlansComparisonTable';
 import PlansFAQ from './PlansFAQ';
+import ProWeeklyPassCard from './ProWeeklyPassCard';
+
 import heroImg from '@/assets/trailer-orange-grill.jpg';
 
 type Interval = 'monthly' | 'annual';
@@ -160,10 +162,14 @@ export function PremiumPlansSection({ compact = false }: Props) {
             </div>
           </section>
 
+          {/* WEEKLY PASS — non-renewing 7-day Pro trial */}
+          <ProWeeklyPassCard />
+
           {/* COMPARISON */}
           <section className="mt-10">
             <PlansComparisonTable />
           </section>
+
 
           {/* FAQ */}
           <section className="mt-14">

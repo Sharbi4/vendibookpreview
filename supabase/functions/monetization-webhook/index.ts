@@ -151,17 +151,33 @@ async function handleCheckoutCompleted(
     return;
   }
 
-  // Mark paid
+  // Mark paid. For account-scoped time-boxed passes (product.metadata.grants_tier
+  // + duration_days set + no listing_id), also stamp the access window so the
+  // entitlement helper and reconciler can honor exactly the paid duration.
   const paymentIntentId =
     typeof session.payment_intent === "string" ? session.payment_intent : session.payment_intent?.id ?? null;
+  // deno-lint-ignore no-explicit-any
+  const _prod: any = (purchase as any).product;
+  const grantsTier: string | null = _prod?.metadata?.grants_tier ?? null;
+  const durationDays: number | null = typeof _prod?.duration_days === "number" ? _prod.duration_days : null;
+  const isAccountScopedPass =
+    !purchase.listing_id && !!grantsTier && !!durationDays;
+  const now = new Date();
+  const accessEnds = isAccountScopedPass
+    ? new Date(now.getTime() + durationDays! * 86_400_000).toISOString()
+    : null;
   await supabase
     .from("monetization_purchases")
     .update({
       status: "paid",
       stripe_payment_intent_id: paymentIntentId,
-      paid_at: new Date().toISOString(),
+      paid_at: now.toISOString(),
+      ...(isAccountScopedPass
+        ? { access_starts_at: now.toISOString(), access_ends_at: accessEnds, fulfillment_status: "active" }
+        : {}),
     })
     .eq("id", purchase.id);
+
 
   // Bump discount usage
   if (purchase.discount_code_id) {

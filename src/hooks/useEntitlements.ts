@@ -51,9 +51,10 @@ export function useEntitlements() {
           .in('status', ['active', 'trialing', 'past_due']),
         (supabase as any)
           .from('monetization_purchases')
-          .select('id,status,created_at,listing_id,product_id,monetization_products(slug,name,kind)')
+          .select('id,status,fulfillment_status,created_at,listing_id,product_id,access_starts_at,access_ends_at,monetization_products(slug,name,billing_type,metadata)')
           .eq('user_id', user.id)
           .in('status', ['paid', 'fulfilled', 'refunded']),
+
         (supabase as any)
           .from('listings')
           .select('id')
@@ -86,16 +87,36 @@ export function useEntitlements() {
       (purchasesRes.data ?? []).forEach((p: any) => {
         const prod = p.monetization_products;
         if (!prod?.slug) return;
+        // Account-scoped time-boxed pass (e.g. Pro Weekly Pass) surfaces
+        // as a subscription-like entitlement so the UI shows "Active until".
+        const grantsTier = prod?.metadata?.grants_tier as string | undefined;
+        const isPassActive = !!p.access_ends_at &&
+          new Date(p.access_ends_at) > new Date() &&
+          p.fulfillment_status !== 'expired';
+        if (grantsTier && isPassActive) {
+          all.push({
+            productSlug: prod.slug,
+            productName: prod.name ?? prod.slug,
+            kind: 'subscription',
+            source: 'monetization_purchase',
+            status: 'active',
+            listingId: p.listing_id,
+            since: p.access_starts_at ?? p.created_at,
+            endsAt: p.access_ends_at,
+          });
+          return;
+        }
         all.push({
           productSlug: prod.slug,
           productName: prod.name ?? prod.slug,
-          kind: prod.kind === 'subscription' ? 'subscription' : 'one_time',
+          kind: prod.billing_type === 'recurring' ? 'subscription' : 'one_time',
           source: 'monetization_purchase',
           status: p.status,
           listingId: p.listing_id,
           since: p.created_at,
         });
       });
+
       const activePromotions: Entitlement[] = [];
       (promosRes.data ?? []).forEach((pr: any) => {
         const prod = pr.monetization_products;

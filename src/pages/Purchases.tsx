@@ -114,20 +114,27 @@ export default function Purchases() {
                 </div>
               ) : (
                 <ul className="space-y-3">
-                  {subscriptions.map((s, i) => (
-                    <li key={`${s.productSlug}-${i}`} className="flex flex-wrap items-center gap-3 rounded-xl border border-border/60 bg-background/40 px-4 py-3">
-                      <CheckCircle2 className="h-4 w-4 text-primary" />
-                      <div className="flex-1 min-w-0">
-                        <div className="text-sm font-medium text-foreground truncate">{s.productName}</div>
-                        {s.endsAt && (
-                          <div className="text-xs text-muted-foreground">Renews {fmtDate(s.endsAt)}</div>
-                        )}
-                      </div>
-                      <Badge variant="outline" className={`capitalize ${STATUS_TONE[s.status] || ''}`}>
-                        {s.status}
-                      </Badge>
-                    </li>
-                  ))}
+                  {subscriptions.map((s, i) => {
+                    const isPass = s.productSlug === 'pro_weekly_pass' || s.productSlug?.endsWith('_pass');
+                    const endsAtLabel = s.endsAt
+                      ? (isPass ? `Active until ${fmtDate(s.endsAt)}` : `Renews ${fmtDate(s.endsAt)}`)
+                      : null;
+                    return (
+                      <li key={`${s.productSlug}-${i}`} className="flex flex-wrap items-center gap-3 rounded-xl border border-border/60 bg-background/40 px-4 py-3">
+                        <CheckCircle2 className="h-4 w-4 text-primary" />
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm font-medium text-foreground truncate">{s.productName}</div>
+                          {endsAtLabel && (
+                            <div className="text-xs text-muted-foreground">{endsAtLabel}</div>
+                          )}
+                        </div>
+                        <Badge variant="outline" className={`capitalize ${STATUS_TONE[s.status] || ''}`}>
+                          {isPass ? 'pass' : s.status}
+                        </Badge>
+                      </li>
+                    );
+                  })}
+
                 </ul>
               )}
             </CardContent>
