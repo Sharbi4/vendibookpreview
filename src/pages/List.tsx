@@ -370,7 +370,7 @@ const RentOrSell = () => (
 
 const ToolsGrid = () => {
   const features = [
-    { label: 'Listing Wizard', desc: 'Use the step-by-step wizard to build a professional listing. Pick a category, add photos, and go live in minutes.' },
+    { icon: LayoutGrid, label: 'Listing Wizard', desc: 'Use the step-by-step wizard to build a professional listing. Pick a category, add photos, and go live in minutes.' },
     { icon: Search, label: 'Built-In SEO', desc: 'Every listing is optimized for Google. Your storefront gets indexed so buyers and renters find you.' },
     { icon: Share2, label: 'Share Kit', desc: 'Generate social media captions, QR codes, and branded graphics. Track every click.' },
     { icon: QrCode, label: 'Free Signage & QR', desc: 'We send you professional signage. Walk-ins scan the QR code to book or buy instantly.' },
