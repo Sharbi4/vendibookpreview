@@ -17,7 +17,12 @@ const Auth = () => {
   // Track page views with Google Analytics
   usePageTracking();
   
-  const redirectUrl = searchParams.get('redirect') || '/';
+  const rawRedirect =
+    searchParams.get('redirect') || searchParams.get('returnTo') || '';
+  const redirectUrl =
+    rawRedirect.startsWith('/') && !rawRedirect.startsWith('//')
+      ? rawRedirect
+      : '';
 
   // Check for mode in URL params
   useEffect(() => {
@@ -29,7 +34,7 @@ const Auth = () => {
 
   useEffect(() => {
     if (user && !isLoading) {
-      navigate(redirectUrl !== '/' ? redirectUrl : '/dashboard');
+      navigate(redirectUrl || '/dashboard');
     }
   }, [user, isLoading, navigate, redirectUrl]);
 

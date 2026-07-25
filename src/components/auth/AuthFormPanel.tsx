@@ -79,7 +79,12 @@ export const AuthFormPanel = ({ mode, setMode }: AuthFormPanelProps) => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { toast } = useToast();
-  const redirectUrl = searchParams.get('redirect') || '/';
+  const rawRedirect =
+    searchParams.get('redirect') || searchParams.get('returnTo') || '';
+  const redirectUrl =
+    rawRedirect.startsWith('/') && !rawRedirect.startsWith('//')
+      ? rawRedirect
+      : '';
 
   const validateForm = () => {
     try {
@@ -149,7 +154,9 @@ export const AuthFormPanel = ({ mode, setMode }: AuthFormPanelProps) => {
   const handleGoogleSignIn = async () => {
     setIsGoogleLoading(true);
     try {
-      const postAuthRedirect = redirectUrl !== '/' ? `${window.location.origin}${redirectUrl}` : window.location.origin;
+      const postAuthRedirect = redirectUrl
+        ? `${window.location.origin}${redirectUrl}`
+        : `${window.location.origin}/dashboard`;
       
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
@@ -370,7 +377,7 @@ export const AuthFormPanel = ({ mode, setMode }: AuthFormPanelProps) => {
               title: 'Welcome to Vendibook!',
               description: 'Your account is ready.',
             });
-            navigate(redirectUrl !== '/' ? redirectUrl : '/dashboard');
+            navigate(redirectUrl || '/dashboard');
           } else {
             toast({
               title: 'Check your email!',
@@ -412,7 +419,7 @@ export const AuthFormPanel = ({ mode, setMode }: AuthFormPanelProps) => {
         } else {
           trackLoginSuccess('email');
           trackGA4Login('email');
-          navigate(redirectUrl !== '/' ? redirectUrl : '/dashboard');
+          navigate(redirectUrl || '/dashboard');
         }
       }
     } finally {
