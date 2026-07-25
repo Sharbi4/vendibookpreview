@@ -21,6 +21,10 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useStripeConnect } from '@/hooks/useStripeConnect';
 import { supabase } from '@/integrations/supabase/client';
 import { reportError } from '@/lib/errorReporter';
+import { parseEdgeError } from '@/lib/edgeErrors';
+import { usePremiumUpsell, isPremiumError, featureFromParsed } from '@/hooks/usePremiumUpsell';
+import { PremiumChip } from '@/components/monetization/PremiumChip';
+
 import { CATEGORY_LABELS, ListingCategory, FreightPayer, AMENITIES_BY_CATEGORY, FREIGHT_CATEGORY_LABELS, FreightCategory, FulfillmentType, isMobileAsset, isStaticLocation as isStaticLocationFn, MODE_LABELS } from '@/types/listing';
 import {
   DocumentType,
@@ -135,6 +139,8 @@ export const PublishWizard: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user, isVerified } = useAuth();
+  const premiumUpsell = usePremiumUpsell();
+
   const { isOnboardingComplete, isLoading: isStripeLoading, connectStripe, isConnecting } = useStripeConnect();
 
   const [step, setStep] = useState<PublishStep>('photos');
