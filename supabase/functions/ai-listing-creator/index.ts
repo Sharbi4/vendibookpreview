@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
+import { resolveHostTier, tierAtLeast, tierRequiredBody } from "../_shared/resolveHostTier.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -214,6 +215,32 @@ serve(async (req) => {
   }
 
   try {
+    // Tier gate — Starter+ required for AI listing generation for signed-in users.
+    // Anonymous guests keep access so the marketing wizard preview keeps working;
+    // they'll be prompted to sign up on publish.
+    const authHeader = req.headers.get("Authorization");
+    if (authHeader) {
+      try {
+        const authClient = createClient(
+          Deno.env.get("SUPABASE_URL")!,
+          Deno.env.get("SUPABASE_ANON_KEY")!,
+          { global: { headers: { Authorization: authHeader } } },
+        );
+        const { data: { user } } = await authClient.auth.getUser();
+        if (user?.id) {
+          const tier = await resolveHostTier(user.id);
+          if (!tierAtLeast(tier, "starter")) {
+            return new Response(
+              JSON.stringify(tierRequiredBody("starter", tier)),
+              { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+            );
+          }
+        }
+      } catch (gateErr) {
+        console.error("Tier gate error (non-fatal):", gateErr);
+      }
+    }
+
     const { messages, imageUrls } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
