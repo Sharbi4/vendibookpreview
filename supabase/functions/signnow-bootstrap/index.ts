@@ -19,67 +19,40 @@ const REQUIRED_ROLES = {
   billOfSale: ['Buyer', 'Seller'],
 };
 
-const RENTAL_TAGS = [
-  { tag_name: 'host_name', role: 'Host', type: 'text', required: true, label: 'Host Name', width: 200, height: 15 },
-  { tag_name: 'renter_name', role: 'Renter', type: 'text', required: true, label: 'Renter Name', width: 200, height: 15 },
-  { tag_name: 'listing_title', role: 'Host', type: 'text', required: true, label: 'Listing Title', width: 250, height: 15 },
-  { tag_name: 'listing_address', role: 'Host', type: 'text', required: true, label: 'Listing Address', width: 300, height: 15 },
-  { tag_name: 'start_date', role: 'Host', type: 'text', required: true, label: 'Start Date', width: 120, height: 15 },
-  { tag_name: 'end_date', role: 'Host', type: 'text', required: true, label: 'End Date', width: 120, height: 15 },
-  { tag_name: 'start_time', role: 'Host', type: 'text', required: false, label: 'Start Time', width: 120, height: 15 },
-  { tag_name: 'end_time', role: 'Host', type: 'text', required: false, label: 'End Time', width: 120, height: 15 },
-  { tag_name: 'total_price', role: 'Host', type: 'text', required: true, label: 'Total Price', width: 150, height: 15 },
-  { tag_name: 'deposit_amount', role: 'Host', type: 'text', required: false, label: 'Deposit Amount', width: 150, height: 15 },
-  { tag_name: 'cancellation_policy', role: 'Host', type: 'text', required: false, label: 'Cancellation Policy', width: 300, height: 15 },
-  { tag_name: 'host_signature', role: 'Host', type: 'signature', required: true, label: 'Host Signature', width: 200, height: 40 },
-  { tag_name: 'renter_signature', role: 'Renter', type: 'signature', required: true, label: 'Renter Signature', width: 200, height: 40 },
-];
-
-const BILL_OF_SALE_TAGS = [
-  { tag_name: 'seller_name', role: 'Seller', type: 'text', required: true, label: 'Seller Name', width: 200, height: 15 },
-  { tag_name: 'buyer_name', role: 'Buyer', type: 'text', required: true, label: 'Buyer Name', width: 200, height: 15 },
-  { tag_name: 'listing_title', role: 'Seller', type: 'text', required: true, label: 'Listing Title', width: 250, height: 15 },
-  { tag_name: 'listing_address', role: 'Seller', type: 'text', required: true, label: 'Listing Address', width: 300, height: 15 },
-  { tag_name: 'category', role: 'Seller', type: 'text', required: false, label: 'Category', width: 150, height: 15 },
-  { tag_name: 'price', role: 'Seller', type: 'text', required: true, label: 'Price', width: 150, height: 15 },
-  { tag_name: 'sale_date', role: 'Seller', type: 'text', required: true, label: 'Sale Date', width: 120, height: 15 },
-  { tag_name: 'as_is_clause', role: 'Seller', type: 'text', required: false, label: 'As-Is Clause', width: 300, height: 15 },
-  { tag_name: 'seller_signature', role: 'Seller', type: 'signature', required: true, label: 'Seller Signature', width: 200, height: 40 },
-  { tag_name: 'buyer_signature', role: 'Buyer', type: 'signature', required: true, label: 'Buyer Signature', width: 200, height: 40 },
-];
-
 function buildRentalPdf(): Uint8Array {
   const body = `Rental Agreement
 
-Host: {{host_name}}
-Renter: {{renter_name}}
-Listing: {{listing_title}}
-Address: {{listing_address}}
-Start: {{start_date}} at {{start_time}}
-End: {{end_date}} at {{end_time}}
-Total Price: {{total_price}}
-Deposit: {{deposit_amount}}
-Cancellation Policy: {{cancellation_policy}}
+Host: {t:text;r:yes;o:"Host";n:"host_name";}
+Renter: {t:text;r:yes;o:"Renter";n:"renter_name";}
+Listing: {t:text;r:yes;o:"Host";n:"listing_title";}
+Address: {t:text;r:yes;o:"Host";n:"listing_address";}
+Start Date: {t:text;r:yes;o:"Host";n:"start_date";}
+End Date: {t:text;r:yes;o:"Host";n:"end_date";}
+Start Time: {t:text;r:no;o:"Host";n:"start_time";}
+End Time: {t:text;r:no;o:"Host";n:"end_time";}
+Total Price: {t:text;r:yes;o:"Host";n:"total_price";}
+Deposit: {t:text;r:no;o:"Host";n:"deposit_amount";}
+Cancellation Policy: {t:text;r:no;o:"Host";n:"cancellation_policy";}
 
-Host Signature: {{host_signature}}
-Renter Signature: {{renter_signature}}`;
+Host Signature: {t:signature;r:yes;o:"Host";n:"host_signature";}
+Renter Signature: {t:signature;r:yes;o:"Renter";n:"renter_signature";}`;
   return makeSimplePdf(body, 'Rental Agreement');
 }
 
 function buildBillOfSalePdf(): Uint8Array {
   const body = `Bill of Sale
 
-Seller: {{seller_name}}
-Buyer: {{buyer_name}}
-Listing: {{listing_title}}
-Address: {{listing_address}}
-Category: {{category}}
-Price: {{price}}
-Sale Date: {{sale_date}}
-As-Is Clause: {{as_is_clause}}
+Seller: {t:text;r:yes;o:"Seller";n:"seller_name";}
+Buyer: {t:text;r:yes;o:"Buyer";n:"buyer_name";}
+Listing: {t:text;r:yes;o:"Seller";n:"listing_title";}
+Address: {t:text;r:yes;o:"Seller";n:"listing_address";}
+Category: {t:text;r:no;o:"Seller";n:"category";}
+Price: {t:text;r:yes;o:"Seller";n:"price";}
+Sale Date: {t:text;r:yes;o:"Seller";n:"sale_date";}
+As-Is Clause: {t:text;r:no;o:"Seller";n:"as_is_clause";}
 
-Seller Signature: {{seller_signature}}
-Buyer Signature: {{buyer_signature}}`;
+Seller Signature: {t:signature;r:yes;o:"Seller";n:"seller_signature";}
+Buyer Signature: {t:signature;r:yes;o:"Buyer";n:"buyer_signature";}`;
   return makeSimplePdf(body, 'Bill of Sale');
 }
 
