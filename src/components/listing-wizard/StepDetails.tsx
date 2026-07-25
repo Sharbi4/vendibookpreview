@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, X, Loader2, Check, RotateCcw, Ruler, Grid3X3 } from 'lucide-react';
+import { Plus, X, RotateCcw, Ruler, Grid3X3 } from 'lucide-react';
 import { ListingFormData, AMENITIES_BY_CATEGORY, ListingCategory, FREIGHT_CATEGORY_LABELS, FreightCategory } from '@/types/listing';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -7,10 +7,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { InfoTooltip } from '@/components/ui/info-tooltip';
 import { cn } from '@/lib/utils';
+import { AIOptimizeButton } from './AIOptimizeButton';
 
 interface StepDetailsProps {
   formData: ListingFormData;
@@ -22,7 +22,6 @@ export const StepDetails: React.FC<StepDetailsProps> = ({
   updateField}) => {
   const { toast } = useToast();
   const [newHighlight, setNewHighlight] = useState('');
-  const [isOptimizing, setIsOptimizing] = useState(false);
   const [originalDescription, setOriginalDescription] = useState<string | null>(null);
   const [showOptimized, setShowOptimized] = useState(false);
 
@@ -53,44 +52,10 @@ export const StepDetails: React.FC<StepDetailsProps> = ({
     }
   };
 
-  const optimizeDescription = async () => {
-    if (!formData.description || formData.description.trim().length < 10) {
-      toast({
-        title: 'Description too short',
-        description: 'Please write at least 10 characters to optimize.',
-        variant: 'destructive'});
-      return;
-    }
-
-    setIsOptimizing(true);
+  const applyOptimized = (optimized: string) => {
     setOriginalDescription(formData.description);
-
-    try {
-      const { data, error } = await supabase.functions.invoke('optimize-description', {
-        body: {
-          rawDescription: formData.description,
-          category: formData.category,
-          mode: formData.mode,
-          title: formData.title}});
-
-      if (error) throw error;
-
-      if (data?.optimizedDescription) {
-        updateField('description', data.optimizedDescription);
-        setShowOptimized(true);
-        toast({
-          title: 'Description optimized!',
-          description: 'Your listing description has been professionally rewritten.'});
-      }
-    } catch (error) {
-      console.error('Error optimizing description:', error);
-      toast({
-        title: 'Optimization failed',
-        description: error instanceof Error ? error.message : 'Please try again later.',
-        variant: 'destructive'});
-    } finally {
-      setIsOptimizing(false);
-    }
+    updateField('description', optimized);
+    setShowOptimized(true);
   };
 
   const revertDescription = () => {
@@ -175,31 +140,16 @@ export const StepDetails: React.FC<StepDetailsProps> = ({
                 Revert
               </Button>
             )}
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={optimizeDescription}
-              disabled={isOptimizing || !formData.description || formData.description.length < 10}
-              className="bg-card border-border hover:border-primary"
-            >
-              {isOptimizing ? (
-                <>
-                  <Loader2 className="w-3 h-3 mr-1 animate-spin" />
-                  Optimizing...
-                </>
-              ) : showOptimized ? (
-                <>
-                  <Check className="w-3 h-3 mr-1 text-green-500" />
-                  Optimized
-                </>
-              ) : (
-                <>
-                  
-                  AI Optimize
-                </>
-              )}
-            </Button>
+            <AIOptimizeButton
+              description={formData.description}
+              category={formData.category}
+              mode={formData.mode}
+              title={formData.title}
+              onApply={applyOptimized}
+              showOptimized={showOptimized}
+              label="AI Optimize"
+            />
+
           </div>
         </div>
         

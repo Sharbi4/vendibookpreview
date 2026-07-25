@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import { Loader2, Check, RotateCcw, Type } from 'lucide-react';
+import { RotateCcw, Type } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import { AIOptimizeButton } from '../AIOptimizeButton';
 
 interface StepHeadlineDescriptionProps {
   title: string;
@@ -25,48 +25,13 @@ export const StepHeadlineDescription: React.FC<StepHeadlineDescriptionProps> = (
   onTitleChange,
   onDescriptionChange}) => {
   const { toast } = useToast();
-  const [isOptimizing, setIsOptimizing] = useState(false);
   const [originalDescription, setOriginalDescription] = useState<string | null>(null);
   const [showOptimized, setShowOptimized] = useState(false);
 
-  const optimizeDescription = async () => {
-    if (!description || description.trim().length < 10) {
-      toast({
-        title: 'Description too short',
-        description: 'Please write at least 10 characters to optimize.',
-        variant: 'destructive'});
-      return;
-    }
-
-    setIsOptimizing(true);
+  const applyOptimized = (optimized: string) => {
     setOriginalDescription(description);
-
-    try {
-      const { data, error } = await supabase.functions.invoke('optimize-description', {
-        body: {
-          rawDescription: description,
-          category,
-          mode,
-          title}});
-
-      if (error) throw error;
-
-      if (data?.optimizedDescription) {
-        onDescriptionChange(data.optimizedDescription);
-        setShowOptimized(true);
-        toast({
-          title: 'Description optimized!',
-          description: 'Your listing description has been professionally rewritten.'});
-      }
-    } catch (error) {
-      console.error('Error optimizing description:', error);
-      toast({
-        title: 'Optimization failed',
-        description: error instanceof Error ? error.message : 'Please try again later.',
-        variant: 'destructive'});
-    } finally {
-      setIsOptimizing(false);
-    }
+    onDescriptionChange(optimized);
+    setShowOptimized(true);
   };
 
   const revertDescription = () => {
@@ -79,6 +44,7 @@ export const StepHeadlineDescription: React.FC<StepHeadlineDescriptionProps> = (
         description: 'Your original description has been restored.'});
     }
   };
+
 
   return (
     <div className="space-y-6">
@@ -175,30 +141,18 @@ export const StepHeadlineDescription: React.FC<StepHeadlineDescriptionProps> = (
               </p>
             </div>
           </div>
-          <Button
-            type="button"
-            size="sm"
-            onClick={optimizeDescription}
-            disabled={isOptimizing || !description || description.length < 10}
+          <AIOptimizeButton
+            description={description}
+            category={category}
+            mode={mode}
+            title={title}
+            onApply={applyOptimized}
+            showOptimized={showOptimized}
+            variant="default"
             className="w-full"
-          >
-            {isOptimizing ? (
-              <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Optimizing...
-              </>
-            ) : showOptimized ? (
-              <>
-                <Check className="w-4 h-4 mr-2" />
-                Optimized!
-              </>
-            ) : (
-              <>
-                
-                Optimize with AI
-              </>
-            )}
-          </Button>
+            label="Optimize with AI"
+          />
+
         </div>
       </div>
     </div>

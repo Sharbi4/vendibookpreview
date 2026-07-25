@@ -3720,6 +3720,7 @@ export type Database = {
         Row: {
           address1: string | null
           address2: string | null
+          ai_writing_sample_used_at: string | null
           avatar_url: string | null
           bio: string | null
           business_name: string | null
@@ -3769,6 +3770,7 @@ export type Database = {
         Insert: {
           address1?: string | null
           address2?: string | null
+          ai_writing_sample_used_at?: string | null
           avatar_url?: string | null
           bio?: string | null
           business_name?: string | null
@@ -3818,6 +3820,7 @@ export type Database = {
         Update: {
           address1?: string | null
           address2?: string | null
+          ai_writing_sample_used_at?: string | null
           avatar_url?: string | null
           bio?: string | null
           business_name?: string | null
