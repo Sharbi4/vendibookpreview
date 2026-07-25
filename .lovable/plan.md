@@ -1,57 +1,62 @@
 ## Scope
 
-Prior turns already shipped the heavy lifting: `/welcome` post-signup screen, `MembershipInlinePanel` in the Review step, `ListingLimitReachedModal` + DB trigger `enforce_listing_publish_limit`, `grandfathered_listings` backfill, `MiniPlansComparison` with founding-member note, and `ListingPublished` with `BoostListingPrompt` + boost webhook self-heal. This plan closes the remaining gaps against the new spec — no rebuilds.
+Ship a single `SmartImage` primitive plus card-level `SkeletonCard` and roll them into the highest-traffic image surfaces first (homepage, listing cards, dashboard cards, listing detail). Do NOT touch every `<img>` in the repo (60+); instead cover the ones that render in user viewports and leave a codemod path for the rest. No visual redesign — keep existing sizing, radii, and hover behavior.
 
-## 1. Copy + CTA alignment (the "free is always fine" rule)
+## 1. Foundation
 
-**`src/pages/Welcome.tsx`**
-- Headline → "Welcome to Vendibook — listing is always free."
-- Primary button → "Start free" (was "Continue free")
-- Secondary → "See member benefits" (opens the compact MiniPlansComparison already on this page; no auto-select).
-- Add subline: "Memberships are optional boosts."
+**`src/components/ui/SmartImage.tsx`** (new)
+- Props: `src`, `alt`, `aspect` (`'video' | 'square' | '4/3' | '3/2' | number`), `sizes?`, `priority?` (boolean, default false), `objectFit?`, `radiusClass?`, `fallback?`, `className?`, plus width/height passthrough.
+- Renders `<div class="relative overflow-hidden">` with the aspect ratio pinned by `padding-top` (works pre-JS, matches Tailwind aspect but predictable across browsers). Inside: shimmer skeleton absolute-positioned, then `<img>` absolute-positioned with `object-cover`, `decoding="async"`, `loading={priority ? 'eager' : 'lazy'}`, `fetchPriority={priority ? 'high' : 'auto'}`.
+- On `onLoad` / `onError`: fade image in over 250ms via opacity transition; on error render the branded fallback (small flame mark on `bg-muted` — reuse existing `/favicon.svg`-style svg mark inline).
+- Skeleton = `.smart-image-shimmer` utility (new, defined in `index.css`) using existing shimmer keyframes with `hsl(var(--muted))` base and `hsl(var(--muted-foreground)/0.08)` sweep.
+- No srcset transform pipeline yet (Supabase storage doesn't proxy transforms in this project); instead honor the `sizes` attribute for future readiness and set a sane rendered width via `className`. Cap cards to `max-w-full` so oversized uploads still render into 300–400px slots without CLS.
 
-**`src/components/listing-wizard/MembershipInlinePanel.tsx`**
-- Headline → "Your listing is free. Members get seen first."
-- Sub → "Listing is free, always. Memberships are optional boosts."
-- CTAs → `Continue free` (outline, equal weight) and `Go Pro` (was `Upgrade`).
-- Session-scoped suppression: once user clicks Continue free within the same wizard session, don't re-render even if they navigate steps back and forward (already persisted; add a `sessionStorage` guard so re-entering the wizard later still shows it once until the persistent dismiss fires).
+**`src/index.css`**
+- Add `.smart-image-shimmer` (background-image linear gradient, uses existing `@keyframes shimmer`, 1.5s cycle) and `.smart-image-fade-in` (opacity 0 → 1 300ms cubic-bezier ease-out).
+- Add `img { max-width: 100%; height: auto; }` sitewide safety (already implicit but make explicit) — no visual change.
 
-**`src/components/monetization/MiniPlansComparison.tsx`**
-- Mark Growth column as "Recommended" (small pill above header, orange tint).
-- Trim to exactly 6 rows in this order: Active listings · Featured placement · AI listing tools · PermitPath Plus · Fees · Support. Free column always shows a real value (no em-dashes / crossed-out) — e.g. Featured placement = "Standard", AI tools = "Basic templates", PermitPath = "Free checklist", Fees = "12.9%", Support = "Standard".
+**`src/components/ui/SkeletonCard.tsx`** (new)
+- Variants: `listing` (4:3 image + 2 title lines + price line), `photo` (aspect-video image + label), `kpi` (small square + 2 lines). Uses `.smart-image-shimmer`. Exact same paddings/radii as the real card components so replacement doesn't reflow.
 
-## 2. Post-publish "Feature this listing" one-liner
+## 2. Surface adoption (targeted, not exhaustive)
 
-**`src/pages/ListingPublished.tsx`**
-- Insert a compact `FeatureThisListingCTA` row directly under the success banner, above `ShareKit`: title "Want more eyes on it? Feature this listing", one-line pitch, price from monetization catalog, primary button "Feature for 30 days" (routes to existing boost checkout via `BoostListingPrompt`'s handler), secondary "Not now" that hides the row for this listing (localStorage keyed by listing id). The existing full `BoostListingPrompt` below stays as the deeper offer.
+Swap `<img>` for `<SmartImage>` in these files (list only; behavior preserved):
 
-## 3. Publish-flow scenario verification (test only; fixes if red)
+- `src/components/listing/ListingCard.tsx` — card cover (aspect 4/3, priority=false, sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw")
+- `src/components/listing/ListingPreviewDrawer.tsx` — hero
+- `src/components/dashboard/shared/PhotoListingCard.tsx` — card image
+- `src/components/dashboard/shared/EmptyState.tsx` — decorative image
+- `src/components/dashboard/overview/RecentActivityStrip.tsx` — activity thumbs
+- `src/components/dashboard/tabs/FavoritesTab.tsx` — favorite card image
+- `src/components/dashboard/DraftsSection.tsx`, `HostOffersSection.tsx`, `BuyerOffersSection.tsx`, `ListingInsightsPanel.tsx` — row thumbnails (aspect square)
+- `src/components/home/HeroWalkthrough.tsx` — hero image (priority=true)
+- `src/components/home/PaymentsSection.tsx` — section media
 
-Add a single Playwright script `tests/e2e/publish_scenarios.py` that walks and screenshots:
-- (a) new free verified → publish succeeds
-- (b) unverified → gate to `/verify-identity?returnTo=…` → returning restores wizard step (uses existing `originNav`)
-- (c) grandfathered → publish 6th listing succeeds (uses seeded flag)
-- (d) new free at 2 published → publish blocked with `ListingLimitReachedModal`; draft still saves
-- (e) Starter → publish 5, block on 6
-- (f) Growth → unlimited
-- (g) mid-creation boost purchase → returns to Review step with data intact; `?featured_paid=true` self-heal publishes
+## 3. Grid skeletons
 
-Fix any red row uncovered. Expected: all green given prior migration + modal wiring; the script is the acceptance harness.
+- `src/pages/Browse.tsx` — while `isLoading`, render 8 `<SkeletonCard variant="listing" />` in the same grid classes (same widths → zero reflow when real cards land).
+- `src/pages/HostListings.tsx` and `src/components/dashboard/tabs/FavoritesTab.tsx` — same pattern in their loading branches.
+- Dashboard `RecentActivityStrip.tsx` — while loading, render 4 `<SkeletonCard variant="photo" />` at strip dimensions.
+- Stagger real cards in via a light `.smart-image-fade-in` on the card root (already there via SmartImage on the image; add to card wrapper only where the whole card enters mid-scroll).
 
-## 4. Typecheck + report
+## 4. LCP + font
+
+- `index.html` — add `<link rel="preload" as="image" href="{hero image url}" fetchpriority="high">` for the homepage hero (only that one). If the hero is a lazy React import we'll rely on `priority` on `SmartImage` instead — pick the one that's actually rendered above the fold.
+- Verify `@font-face` uses `font-display: swap`. If Sofia Pro / Manrope declarations lack it, add it. Add `size-adjust` fallback stack in `body { font-family }` only if measured reflow is visible.
+
+## 5. Verify
 
 - `bunx tsgo --noEmit`
-- Post: pass/fail table (a–g), screenshots of `/welcome`, the inline panel, and the post-publish boost row, and the list of files changed.
+- Playwright at Fast 3G on `/`, `/browse`, `/listing/:id`, `/dashboard`: capture screenshots at 0.5s / 1s / 3s to demonstrate skeleton → image transitions, and read Layout Shift entries via `PerformanceObserver` to record CLS. Report the before/after (before observed from user's screenshot report; after measured).
+- Report files changed + CLS numbers per page.
 
 ## Files changed (planned)
 
-- `src/pages/Welcome.tsx` — copy + CTA labels
-- `src/components/listing-wizard/MembershipInlinePanel.tsx` — copy + CTA + session guard
-- `src/components/monetization/MiniPlansComparison.tsx` — Recommended pill + 6-row canonical set
-- `src/pages/ListingPublished.tsx` — `FeatureThisListingCTA` row
-- `src/components/dashboard/FeatureThisListingCTA.tsx` — new small component
-- `tests/e2e/publish_scenarios.py` — verification harness
+New: `src/components/ui/SmartImage.tsx`, `src/components/ui/SkeletonCard.tsx`.
+Edited: `src/index.css`, `index.html`, plus the 11 surface files listed in §2 and §3.
 
-## Out of scope (do NOT touch)
+## Out of scope
 
-- Money logic, quota trigger, checkout return contract, `create-checkout`/`create-cash-sale`, entitlement resolution, terms gate.
+- SVG icons, inline logos, QR codes, message-thread avatars, admin dashboards, marketing SEO pages — untouched (they either aren't user-visible perf pain or don't have layout-shift risk).
+- No CDN image resizer / responsive srcset backend work (Supabase storage doesn't offer transforms in this project).
+- No design or copy changes.
