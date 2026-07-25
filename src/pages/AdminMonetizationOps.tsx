@@ -77,6 +77,7 @@ export default function AdminMonetizationOps() {
   const [events, setEvents] = useState<WebhookEvent[]>([]);
   const [pending, setPending] = useState<PendingRow[]>([]);
   const [refunds, setRefunds] = useState<RefundEvent[]>([]);
+  const [services, setServices] = useState<ServiceRow[]>([]);
   const [typeFilter, setTypeFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<'all' | 'processed' | 'error'>('all');
 
