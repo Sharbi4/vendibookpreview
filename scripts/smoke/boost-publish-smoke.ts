@@ -27,6 +27,7 @@ if (!URL || !KEY) {
       "SUPABASE_SERVICE_ROLE_KEY not configured as GitHub Action secrets. " +
       "Add them under repo Settings → Secrets and variables → Actions to enable this gate.",
   );
+  if (process.env.CI || process.env.GITHUB_ACTIONS) { console.error("[smoke] ❌ Required CI secrets missing — failing hard to prevent false green."); process.exit(1); }
   process.exit(0);
 }
 

@@ -42,6 +42,7 @@ if (!URL || !KEY) {
     "[smoke] ⚠️  SKIPPING delete-listing smoke — SUPABASE_URL and/or " +
       "SUPABASE_SERVICE_ROLE_KEY not configured as GitHub Action secrets.",
   );
+  if (process.env.CI || process.env.GITHUB_ACTIONS) { console.error("[smoke] ❌ Required CI secrets missing — failing hard to prevent false green."); process.exit(1); }
   process.exit(0);
 }
 

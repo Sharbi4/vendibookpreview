@@ -50,6 +50,7 @@ if (!URL || !KEY) {
   console.log("    • SUPABASE_URL");
   console.log("    • SUPABASE_SERVICE_ROLE_KEY");
   console.log("============================================================\n");
+  if (process.env.CI || process.env.GITHUB_ACTIONS) { console.error("[smoke] ❌ Required CI secrets missing — failing hard to prevent false green."); process.exit(1); }
   process.exit(0);
 }
 
