@@ -210,6 +210,44 @@ jobs:
           APP_BASE_URL: http://127.0.0.1:8080
         run: bun scripts/smoke/readonly-prod-smoke.ts
 
+  listing-detail-visual-smoke:
+    name: Listing-Detail Visual (360 / 390 / 1440)
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - run: bun install --frozen-lockfile
+      - name: Install Playwright browsers
+        run: bunx playwright install --with-deps chromium
+      - name: Build app
+        run: bun run build
+      - name: Preview server
+        run: bunx vite preview --port 8080 --host 127.0.0.1 &
+      - name: Wait for preview
+        run: |
+          for i in $(seq 1 30); do
+            curl -sf http://127.0.0.1:8080 >/dev/null && exit 0
+            sleep 1
+          done
+          echo "preview never came up" && exit 1
+      - name: Run listing-detail visual smoke
+        env:
+          APP_BASE_URL: http://127.0.0.1:8080
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: bun scripts/smoke/listing-detail-visual-smoke.ts
+      - name: Upload viewport screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: listing-detail-viewports
+          path: /tmp/listing-detail-visual/*.png
+          if-no-files-found: warn
+
+
 
 
 
