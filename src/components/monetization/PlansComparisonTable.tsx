@@ -2,22 +2,33 @@ import { useState } from 'react';
 import { ChevronDown, Check, Minus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-interface Row { label: string; starter: boolean | string; pro: boolean | string; premium: boolean | string; }
+interface Row {
+  label: string;
+  free: boolean | string;
+  starter: boolean | string;
+  pro: boolean | string;
+  premium: boolean | string;
+}
 
 const ROWS: Row[] = [
-  { label: 'Active listings', starter: 'Up to 3', pro: 'Unlimited', premium: 'Unlimited' },
-  { label: 'Enhanced listing tools', starter: true, pro: true, premium: true },
-  { label: 'Booking calendar & inquiries', starter: true, pro: true, premium: true },
-  { label: 'Automated renter messages', starter: true, pro: true, premium: true },
-  { label: 'Recurring availability', starter: false, pro: true, premium: true },
-  { label: 'Custom deposits & cancellation rules', starter: false, pro: true, premium: true },
-  { label: 'Automated contracts', starter: false, pro: true, premium: true },
-  { label: 'Revenue dashboard', starter: false, pro: true, premium: true },
-  { label: 'Multi-location / fleet management', starter: false, pro: false, premium: true },
-  { label: 'Team member access & permissions', starter: false, pro: false, premium: true },
-  { label: 'Utilization analytics & accounting exports', starter: false, pro: false, premium: true },
-  { label: 'Branded booking page', starter: false, pro: false, premium: true },
-  { label: 'Priority support', starter: 'Email', pro: 'Email + chat', premium: 'Dedicated' },
+  { label: 'Active listings', free: 'Unlimited', starter: 'Unlimited', pro: 'Unlimited', premium: 'Unlimited' },
+  { label: 'Free e-signatures on every agreement', free: true, starter: true, pro: true, premium: true },
+  { label: 'Payment protection at checkout', free: true, starter: true, pro: true, premium: true },
+  { label: 'Buyer & renter inquiries', free: 'Unlimited', starter: 'Unlimited', pro: 'Unlimited', premium: 'Unlimited' },
+  { label: 'Enhanced listing tools (extra photos, badges)', free: false, starter: true, pro: true, premium: true },
+  { label: 'AI listing description generator', free: false, starter: true, pro: true, premium: true },
+  { label: 'Booking calendar & automated renter messages', free: 'Basic', starter: true, pro: true, premium: true },
+  { label: 'Recurring availability & custom rules', free: false, starter: false, pro: true, premium: true },
+  { label: 'Storage add-ons, cleaning fees, custom deposits', free: false, starter: false, pro: true, premium: true },
+  { label: 'Featured Boost included', free: false, starter: false, pro: '1 credit', premium: '1 credit' },
+  { label: 'Premium tools bundle (PricePilot, Studios, Radar, Concept Lab)', free: false, starter: false, pro: true, premium: true },
+  { label: '$10 off notarization', free: false, starter: false, pro: true, premium: true },
+  { label: 'Multi-location / fleet management', free: false, starter: false, pro: false, premium: true },
+  { label: 'Team member access & permissions', free: false, starter: false, pro: false, premium: true },
+  { label: 'Utilization analytics & accounting exports', free: false, starter: false, pro: false, premium: true },
+  { label: 'BuildKit included', free: false, starter: false, pro: false, premium: true },
+  { label: 'Custom intake questions per booking', free: false, starter: false, pro: false, premium: true },
+  { label: 'Priority support', free: 'Community', starter: 'Email', pro: 'Email + chat', premium: 'Dedicated' },
 ];
 
 function Cell({ v }: { v: boolean | string }) {
@@ -38,25 +49,27 @@ export function PlansComparisonTable() {
       >
         <div>
           <h3 className="text-lg font-semibold text-foreground">Compare all features</h3>
-          <p className="mt-0.5 text-sm text-muted-foreground">Full breakdown of what's in every plan.</p>
+          <p className="mt-0.5 text-sm text-muted-foreground">Full breakdown across Free, Starter, Growth, and Operator.</p>
         </div>
         <ChevronDown className={cn('h-5 w-5 text-muted-foreground transition-transform', open && 'rotate-180')} />
       </button>
       {open && (
         <div className="border-t-[1.5px] border-white/10 overflow-x-auto">
-          <table className="w-full text-sm min-w-[640px]">
+          <table className="w-full text-sm min-w-[720px]">
             <thead>
               <tr className="border-b-[1.5px] border-white/10 bg-white/[0.02]">
                 <th className="sticky left-0 z-10 bg-[#0e0e10] text-left px-6 py-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">Feature</th>
+                <th className="px-4 py-3 text-center text-xs font-medium uppercase tracking-wider text-muted-foreground">Free</th>
                 <th className="px-4 py-3 text-center text-xs font-medium uppercase tracking-wider text-muted-foreground">Starter</th>
-                <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-orange-300">Pro</th>
-                <th className="px-4 py-3 text-center text-xs font-medium uppercase tracking-wider text-muted-foreground">Premium</th>
+                <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-orange-300">Growth</th>
+                <th className="px-4 py-3 text-center text-xs font-medium uppercase tracking-wider text-muted-foreground">Operator</th>
               </tr>
             </thead>
             <tbody>
               {ROWS.map((r, i) => (
                 <tr key={r.label} className={cn('border-b border-white/[0.06]', i % 2 === 1 && 'bg-white/[0.015]')}>
                   <td className="sticky left-0 z-10 bg-[#0e0e10] px-6 py-3 text-foreground/90">{r.label}</td>
+                  <td className="px-4 py-3 text-center"><div className="inline-flex justify-center"><Cell v={r.free} /></div></td>
                   <td className="px-4 py-3 text-center"><div className="inline-flex justify-center"><Cell v={r.starter} /></div></td>
                   <td className="px-4 py-3 text-center bg-orange-500/[0.04]"><div className="inline-flex justify-center"><Cell v={r.pro} /></div></td>
                   <td className="px-4 py-3 text-center"><div className="inline-flex justify-center"><Cell v={r.premium} /></div></td>
