@@ -67,6 +67,7 @@ import {
   SALE_SELLER_FEE_PERCENT} from '@/lib/commissions';
 import { isListingFeatured } from '@/lib/featured';
 import { trackLeadEvent } from '@/lib/leadTracking';
+import { JourneyProgress, PrimaryActionBar, type JourneyStep } from '@/components/journey';
 
 type PublishStep = 'photos' | 'headline' | 'includes' | 'pricing' | 'details' | 'location' | 'availability' | 'documents' | 'stripe' | 'review';
 
