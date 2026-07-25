@@ -11,7 +11,8 @@ interface Props {
 }
 
 const tierChip = (t: string) =>
-  t === 'starter' ? 'Starter' : t === 'pro' ? 'Pro' : t === 'premium' ? 'Premium' : 'Free';
+  t === 'starter' ? 'Starter' : t === 'pro' ? 'Growth' : t === 'premium' ? 'Operator' : 'Free';
+
 
 /**
  * Reusable premium tool tile.

@@ -59,7 +59,7 @@ const ToolsIndex = () => {
                 </h1>
                 <p className="mt-4 text-lg text-muted-foreground">
                   Price competitively, get permitted, and market smarter — all from one dashboard.
-                  PermitPath and the Startup Guide are free forever. Pro unlocks the rest.
+                  PermitPath and the Startup Guide are free forever. Growth unlocks the rest.
                 </p>
                 <div className="mt-6 flex flex-wrap gap-3">
                   <Button size="lg" variant="glass-cta" asChild>
@@ -77,7 +77,7 @@ const ToolsIndex = () => {
                 <div className="mt-4 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
                   <span className="inline-flex items-center gap-1"><CheckCircle2 className="h-3 w-3" /> No credit card for free tools</span>
                   <span className="inline-flex items-center gap-1"><CheckCircle2 className="h-3 w-3" /> 7-day payment protection on unlocks</span>
-                  <span className="inline-flex items-center gap-1"><CheckCircle2 className="h-3 w-3" /> Included with Pro & Premium</span>
+                  <span className="inline-flex items-center gap-1"><CheckCircle2 className="h-3 w-3" /> Included with Growth &amp; Operator</span>
                 </div>
               </div>
             </div>
@@ -99,8 +99,9 @@ const ToolsIndex = () => {
                 One subscription unlocks the entire toolkit.
               </h2>
               <p className="mt-2 text-muted-foreground max-w-lg mx-auto">
-                Every paid tool is included in Pro or Premium. Buy individual tools one-time if you only need one.
+                Every paid tool is included in Growth or Operator. Free tools stay free — no card needed.
               </p>
+
               <div className="mt-6">
                 <Button size="lg" variant="glass-cta" asChild>
                   <Link to="/pricing">

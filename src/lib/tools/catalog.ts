@@ -77,8 +77,6 @@ export const TOOLS: ToolDef[] = [
     href: '/tools/pricepilot',
     screenshot: pricepilotShot,
     minTier: 'pro',
-    unlockProductSlug: 'tool_pricepilot',
-    unlockPrice: '$19 one-time',
   },
   {
     slug: 'listing-studio',
@@ -93,8 +91,6 @@ export const TOOLS: ToolDef[] = [
     href: '/tools/listing-studio',
     screenshot: listingStudioShot,
     minTier: 'pro',
-    unlockProductSlug: 'tool_listing_studio',
-    unlockPrice: '$19 one-time',
   },
   {
     slug: 'marketing-studio',
@@ -109,8 +105,6 @@ export const TOOLS: ToolDef[] = [
     href: '/tools/marketing-studio',
     screenshot: marketingStudioShot,
     minTier: 'pro',
-    unlockProductSlug: 'tool_marketing_studio',
-    unlockPrice: '$29 one-time',
   },
   {
     slug: 'concept-lab',
@@ -125,8 +119,6 @@ export const TOOLS: ToolDef[] = [
     href: '/tools/concept-lab',
     screenshot: conceptLabShot,
     minTier: 'pro',
-    unlockProductSlug: 'tool_concept_lab',
-    unlockPrice: '$29 one-time',
   },
   {
     slug: 'market-radar',
@@ -141,8 +133,6 @@ export const TOOLS: ToolDef[] = [
     href: '/tools/market-radar',
     screenshot: marketRadarShot,
     minTier: 'pro',
-    unlockProductSlug: 'tool_market_radar',
-    unlockPrice: '$29 one-time',
   },
   {
     slug: 'buildkit',
@@ -157,9 +147,8 @@ export const TOOLS: ToolDef[] = [
     href: '/tools/buildkit',
     screenshot: buildkitShot,
     minTier: 'premium',
-    unlockProductSlug: 'tool_buildkit',
-    unlockPrice: '$49 one-time',
   },
+
   {
     slug: 'startup-guide',
     name: 'Startup Guide',

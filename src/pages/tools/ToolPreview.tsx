@@ -13,7 +13,8 @@ import { startMonetizationCheckout } from '@/lib/monetization/products';
 import { buildCheckoutReturnPaths } from '@/lib/monetization/returnRoutes';
 
 const tierLabel = (t: string) =>
-  t === 'starter' ? 'Starter' : t === 'pro' ? 'Pro' : t === 'premium' ? 'Premium' : 'Free';
+  t === 'starter' ? 'Starter' : t === 'pro' ? 'Growth' : t === 'premium' ? 'Operator' : 'Free';
+
 
 const ToolPreview = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -46,10 +47,11 @@ const ToolPreview = () => {
   const openTool = () => nav(tool.href);
 
   const proAnchor = useMemo(() => {
-    if (tool.minTier === 'premium') return 'Or included with Premium';
-    if (tool.minTier === 'pro') return 'Or included with Pro';
+    if (tool.minTier === 'premium') return 'Included with Operator';
+    if (tool.minTier === 'pro') return 'Included with Growth';
     return null;
   }, [tool.minTier]);
+
 
   const Icon = tool.icon;
 
@@ -126,25 +128,34 @@ const ToolPreview = () => {
                     </div>
                   ) : (
                     <div className="space-y-4">
-                      <div className="flex items-baseline justify-between gap-4 flex-wrap">
-                        <div>
-                          <div className="text-xs uppercase tracking-wide text-muted-foreground">One-time unlock</div>
-                          <div className="text-2xl font-semibold text-foreground">{tool.unlockPrice ?? 'Custom'}</div>
-                        </div>
-                        {proAnchor && (
-                          <div className="text-sm text-muted-foreground">
-                            <Crown className="inline h-3.5 w-3.5 mr-1 text-[hsl(var(--brand-ember))]" />
-                            {proAnchor}
+                      {tool.unlockPrice && tool.unlockProductSlug ? (
+                        <div className="flex items-baseline justify-between gap-4 flex-wrap">
+                          <div>
+                            <div className="text-xs uppercase tracking-wide text-muted-foreground">One-time unlock</div>
+                            <div className="text-2xl font-semibold text-foreground">{tool.unlockPrice}</div>
                           </div>
-                        )}
-                      </div>
+                          {proAnchor && (
+                            <div className="text-sm text-muted-foreground">
+                              <Crown className="inline h-3.5 w-3.5 mr-1 text-[hsl(var(--brand-ember))]" />
+                              {proAnchor}
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <div>
+                          <div className="text-xs uppercase tracking-wide text-muted-foreground">How to unlock</div>
+                          <div className="text-lg font-semibold text-foreground">
+                            {proAnchor ?? `Upgrade to ${tierLabel(tool.minTier)} to unlock`}
+                          </div>
+                        </div>
+                      )}
                       <div className="flex flex-col sm:flex-row gap-2">
                         {tool.unlockProductSlug && (
                           <Button size="lg" variant="glass-cta" onClick={startCheckout} className="flex-1">
                             Unlock {tool.name} <ArrowRight className="ml-1.5 h-4 w-4" />
                           </Button>
                         )}
-                        <Button size="lg" variant="outline" asChild className="flex-1">
+                        <Button size="lg" variant={tool.unlockProductSlug ? 'outline' : 'glass-cta'} asChild className="flex-1">
                           <Link to="/pricing">
                             <Crown className="mr-1.5 h-4 w-4" /> Go {tierLabel(tool.minTier)} to unlock all
                           </Link>
@@ -154,6 +165,7 @@ const ToolPreview = () => {
                         <Lock className="h-3 w-3" /> Payment protection — refund within 7 days if the tool doesn't help.
                       </p>
                     </div>
+
                   )}
                 </div>
               </div>
