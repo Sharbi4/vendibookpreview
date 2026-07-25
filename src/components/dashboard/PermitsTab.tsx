@@ -296,6 +296,7 @@ export default function PermitsTab() {
         onRestore={handleRestore}
       />
     </div>
+    </PermitsGate>
   );
 }
 
