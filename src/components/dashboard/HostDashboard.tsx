@@ -35,6 +35,8 @@ import { Crown } from 'lucide-react';
  */
 const HostDashboard = () => {
   const { user, profile, isVerified } = useAuth();
+  const { tier } = useHostEntitlements();
+  const isFreeTier = tier === 'free';
   const { listings, stats } = useHostListings();
   const { bookings, stats: bookingStats } = useHostBookings();
   const {
