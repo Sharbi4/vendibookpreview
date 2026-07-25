@@ -13,6 +13,7 @@ import { TrustESignChip } from '@/components/trust/TrustESignChip';
 import { TIER_CATALOG, type TierRole } from './tierCatalog';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSubscriptionConsent } from '@/hooks/useSubscriptionConsent';
+import { useListingQuota } from '@/hooks/useListingQuota';
 import { toast } from 'sonner';
 
 import heroImg from '@/assets/trailer-orange-grill.jpg';
