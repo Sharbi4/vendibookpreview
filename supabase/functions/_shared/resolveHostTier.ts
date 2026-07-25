@@ -55,20 +55,27 @@ export async function resolveHostTier(userId: string): Promise<HostTier> {
     if (TIER_RANK[t] > TIER_RANK[tier]) tier = t;
   }
 
-  // 2. Time-boxed one-time purchase (weekly pass, etc.)
+  // 2. Time-boxed one-time purchase (weekly pass, etc.) — join through
+  // monetization_products because the purchases table has no product_slug
+  // column. Any product with metadata.grants_tier set is treated as a
+  // subscription-equivalent pass for the duration of its access window.
   const nowIso = new Date().toISOString();
   const { data: passes } = await supabase
     .from('monetization_purchases')
-    .select('product_slug, access_ends_at, status')
+    .select('access_ends_at, fulfillment_status, monetization_products!inner(slug, metadata)')
     .eq('user_id', userId)
     .eq('status', 'paid')
     .gt('access_ends_at', nowIso)
-    .limit(5);
+    .neq('fulfillment_status', 'expired')
+    .limit(10);
 
-  for (const p of passes ?? []) {
-    if ((p.product_slug ?? '').includes('pro_weekly_pass')) {
-      if (TIER_RANK.pro > TIER_RANK[tier]) tier = 'pro';
-    }
+  for (const p of (passes ?? []) as any[]) {
+    const prod = p.monetization_products;
+    const slug: string = prod?.slug ?? '';
+    const grantsTier = normalizeTier(prod?.metadata?.grants_tier ?? null);
+    const fromSlug = slug.includes('pro_weekly_pass') ? ('pro' as HostTier) : 'free';
+    const candidate = TIER_RANK[grantsTier] >= TIER_RANK[fromSlug] ? grantsTier : fromSlug;
+    if (TIER_RANK[candidate] > TIER_RANK[tier]) tier = candidate;
   }
 
   return tier;
