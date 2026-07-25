@@ -81,6 +81,7 @@ const PaymentSuccess = () => {
   const sessionId = searchParams.get('session_id');
   const isEscrow = searchParams.get('escrow') === 'true';
   const isHold = searchParams.get('hold') === 'true';
+  const isMonetization = searchParams.get('monetization') === 'true';
   const { user } = useAuth();
   
   const [booking, setBooking] = useState<BookingDetails | null>(null);
@@ -131,6 +132,16 @@ const PaymentSuccess = () => {
 
   useEffect(() => {
     const processPayment = async () => {
+      if (isMonetization) {
+        // Provisioning happens in monetization-webhook (subscription + listing_promotion
+        // + receipt email). Nothing to fetch here — the UnlockedConfirmation
+        // component reads live entitlements. Just release the loading gate and
+        // fire confetti so the user sees the success moment immediately.
+        setIsLoading(false);
+        setShowContent(true);
+        fireConfetti();
+        return;
+      }
       if (!sessionId) {
         setIsLoading(false);
         return;
