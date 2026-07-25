@@ -270,12 +270,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const callbackUrl = `${Deno.env.get('SUPABASE_URL')}/functions/v1/signnow-webhook`;
-    const secret = Deno.env.get('SIGNNOW_WEBHOOK_SECRET');
-    if (!secret) throw new Error('SIGNNOW_WEBHOOK_SECRET not set');
-
     const accessToken = await getAccessToken();
-    const userId = await getUserId(accessToken);
 
     const rental = buildRentalPdf();
     const rentalDocId = await uploadRawDocument(accessToken, 'Vendibook Rental Agreement', rental.pdf);
@@ -289,28 +284,24 @@ Deno.serve(async (req) => {
     const billTemplateId = await createTemplate(accessToken, billDocId, 'Vendibook Bill of Sale');
     const billRoles = await verifyTemplateRoles(accessToken, billTemplateId, REQUIRED_ROLES.billOfSale);
 
-    const subs = await registerWebhook(accessToken, userId, secret, callbackUrl);
-
     const svc = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!, { auth: { persistSession: false } });
     await ensureBucket(svc);
 
     return jsonResponse(200, {
       ok: true,
       api_base: signnowBase(),
-      signnow_user_id: userId,
       templates: {
         rental_agreement: rentalTemplateId,
         bill_of_sale: billTemplateId,
       },
       roles: { rental: rentalRoles, bill_of_sale: billRoles },
-      webhook_subscriptions: subs,
-      webhook_callback_url: callbackUrl,
       next_steps: [
         'Save SIGNNOW_TEMPLATE_RENTAL_AGREEMENT and SIGNNOW_TEMPLATE_BILL_OF_SALE from templates above.',
-        'Ensure the SignNow dashboard webhook signing secret matches SIGNNOW_WEBHOOK_SECRET.',
+        'Webhook subscriptions are created per document when documents are generated.',
       ],
     });
   } catch (e) {
+
     console.error('[signnow-bootstrap]', e);
     return unknownErrorResponse(e);
   }
