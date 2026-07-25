@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Loader2, Sparkle, X } from 'lucide-react';
+import { Loader2, TrendingUp, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -60,7 +60,7 @@ export const FeatureThisListingCTA: React.FC<Props> = ({ listingId, priceLabel }
 
   return (
     <div className="rounded-lg border-[1.5px] border-orange-500/30 bg-orange-500/5 p-4 flex flex-wrap items-center gap-3">
-      <Sparkle className="h-4 w-4 text-orange-500 shrink-0" aria-hidden />
+      <TrendingUp className="h-4 w-4 text-orange-500 shrink-0" aria-hidden />
       <div className="flex-1 min-w-[220px]">
         <p className="font-medium text-foreground">
           Want more eyes on it? Feature this listing.
