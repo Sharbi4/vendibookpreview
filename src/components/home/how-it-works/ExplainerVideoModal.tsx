@@ -18,21 +18,49 @@ export const ExplainerVideoModal = ({ explainer, open, onOpenChange }: Props) =>
   useEffect(() => {
     if (open && explainer) {
       setEnded(false);
+      // Legacy funnel event kept for continuity.
       trackLeadEvent('homepage_video_started', { video_type: explainer.id });
     }
   }, [open, explainer, replayKey]);
 
+  const handlePlay = () => {
+    if (!explainer) return;
+    trackLeadEvent('video_play', { video_id: explainer.id });
+  };
+
+  const handleView = () => {
+    if (!explainer) return;
+    // Counts as a "view" once the viewer has watched 3+ seconds.
+    trackLeadEvent('video_view', { video_id: explainer.id });
+  };
+
   const handleProgress = (pct: number) => {
     if (!explainer) return;
-    if (pct === 0.25) trackLeadEvent('homepage_video_25_percent', { video_type: explainer.id });
-    else if (pct === 0.5) trackLeadEvent('homepage_video_50_percent', { video_type: explainer.id });
-    else if (pct === 0.75) trackLeadEvent('homepage_video_75_percent', { video_type: explainer.id });
-    else if (pct === 1) trackLeadEvent('homepage_video_completed', { video_type: explainer.id });
+    const id = explainer.id;
+    if (pct === 0.25) {
+      trackLeadEvent('video_progress_25', { video_id: id });
+      trackLeadEvent('homepage_video_25_percent', { video_type: id });
+    } else if (pct === 0.5) {
+      trackLeadEvent('video_progress_50', { video_id: id });
+      trackLeadEvent('homepage_video_50_percent', { video_type: id });
+    } else if (pct === 0.75) {
+      trackLeadEvent('video_progress_75', { video_id: id });
+      trackLeadEvent('homepage_video_75_percent', { video_type: id });
+    } else if (pct === 1) {
+      trackLeadEvent('video_complete', { video_id: id });
+      trackLeadEvent('homepage_video_completed', { video_type: id });
+    }
   };
 
   const handleSceneChange = ({ index }: { index: number; previousIndex: number | null; total: number }) => {
     if (!explainer) return;
     trackLeadEvent('homepage_video_scene_viewed', { video_type: explainer.id, scene_index: index });
+  };
+
+  const handleReplay = () => {
+    if (explainer) trackLeadEvent('video_replay', { video_id: explainer.id });
+    setEnded(false);
+    setReplayKey((k) => k + 1);
   };
 
   return (
@@ -47,6 +75,8 @@ export const ExplainerVideoModal = ({ explainer, open, onOpenChange }: Props) =>
                   key={replayKey}
                   explainer={explainer}
                   autoPlay
+                  onPlay={handlePlay}
+                  onView={handleView}
                   onProgress={handleProgress}
                   onSceneChange={handleSceneChange}
                   onEnded={() => setEnded(true)}
@@ -55,10 +85,7 @@ export const ExplainerVideoModal = ({ explainer, open, onOpenChange }: Props) =>
               {ended && (
                 <VideoEndCTA
                   explainer={explainer}
-                  onReplay={() => {
-                    setEnded(false);
-                    setReplayKey((k) => k + 1);
-                  }}
+                  onReplay={handleReplay}
                   onClose={() => onOpenChange(false)}
                 />
               )}

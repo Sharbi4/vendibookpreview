@@ -54,37 +54,44 @@ const build = (
   }));
 
 // Scripts are the authoritative source for both TTS and captions.
-// Each sentence maps 1:1 to one scene, in order.
+// Each sentence maps 1:1 to one scene, in order. Scenes render real UI
+// (search results, listing detail, checkout w/ Affirm, agreement signing,
+// host dashboard, PermitPath) — the mascot only appears in the closing frame.
 
 const BUYING_SENTENCES = [
-  'Looking to buy a food truck?',
-  'Browse verified listings, message sellers directly, and make an offer.',
-  'Pay securely by card, or finance with Affirm — your money is protected until you confirm delivery.',
-  'Track everything from your dashboard.',
+  'Buying a food truck is a big deal — Vendibook makes it safe.',
+  'Browse verified listings with real photos and specs.',
+  'Message sellers and make offers directly.',
+  'Pay by card, or split it into monthly payments with Affirm.',
+  'Your money stays protected until you confirm delivery.',
+  'And every permit and license you need? Our free PermitPath tool maps it out.',
   'Find your truck on Vendibook.',
 ];
 
 const RENTING_SENTENCES = [
-  'Need a truck or kitchen for your next event?',
-  'Pick your dates, send a request, and pay securely once the host approves.',
-  'Your rental agreement is signed online — free.',
-  'Manage everything from your dashboard.',
+  'Need a food truck or commercial kitchen — without buying one?',
+  'Search by city and pick your dates on a live calendar.',
+  'Send a request, and pay securely when the host approves.',
+  'Your rental agreement is signed online, free.',
+  'Track your rental, message your host, and manage it all from one dashboard.',
   'Rent with confidence on Vendibook.',
 ];
 
 const SELLING_SENTENCES = [
-  'Selling your food truck or trailer?',
-  'List it free in minutes.',
-  'Reach serious buyers, accept offers, and get paid with protected payments.',
-  'Documents and handoff — all handled in one place.',
+  'Ready to sell your truck or trailer?',
+  'List it free in minutes with photos and specs.',
+  'Our tools help you write a listing that sells — and Featured placement gets you seen first.',
+  'Serious buyers message you and make offers.',
+  'Payments are protected, and your bill of sale is signed online.',
   'Sell faster on Vendibook.',
 ];
 
 const HOSTING_SENTENCES = [
-  'Own a commercial kitchen or vendor space?',
-  'List it free, set your calendar, and approve booking requests.',
-  'Payouts land straight in your bank.',
-  'Run it all from your host dashboard.',
+  'Own a commercial kitchen or vendor space? Turn it into income.',
+  'List free, set your own calendar and rates.',
+  'Review and approve booking requests in one tap.',
+  'Agreements sign online, and payouts land straight in your bank.',
+  'Track earnings and bookings from your host dashboard.',
   'Start hosting on Vendibook.',
 ];
 
@@ -95,15 +102,31 @@ export const explainers: Explainer[] = [
     tileHeadline: 'How Buying Works',
     description:
       'Browse verified listings, message sellers, and pay protected — all from one dashboard.',
-    durationSeconds: 22,
+    durationSeconds: 28,
     accessory: 'none',
     heroImage: buyingHero,
     narrationScript: BUYING_SENTENCES.join(' '),
+    // Sentence -> scene:
+    // 1) Marketplace intro (0)
+    // 2) Verified listings & search (1)
+    // 3) Listing detail + messaging (3)
+    // 4) Checkout with card & Affirm (4)
+    // 5) Protected payment status (5)
+    // 6) PermitPath / requirements (2)
+    // 7) Close (7)
     scenes: build(
       buyingScenes,
-      [0, 3, 4, 5, 7],
+      [0, 1, 3, 4, 5, 2, 7],
       BUYING_SENTENCES,
-      ['Intro', 'Listings & offers', 'Protected payment', 'Dashboard', 'Close'],
+      [
+        'Intro',
+        'Verified listings',
+        'Message & offer',
+        'Card or Affirm',
+        'Protected payment',
+        'PermitPath',
+        'Close',
+      ],
     ),
     ctaLabel: 'Browse Food Trucks & Trailers',
     ctaRoute: '/browse',
@@ -117,15 +140,29 @@ export const explainers: Explainer[] = [
     tileHeadline: 'How Renting Works',
     description:
       'Pick your dates, send one request, and manage the rental from one dashboard.',
-    durationSeconds: 22,
+    durationSeconds: 26,
     accessory: 'none',
     heroImage: rentingHero,
     narrationScript: RENTING_SENTENCES.join(' '),
+    // Sentence -> scene:
+    // 1) Rental intro (0)
+    // 2) Live calendar (2)
+    // 3) Request & approval / secure pay (4)
+    // 4) Agreement signed online (5)
+    // 5) Rental dashboard (6)
+    // 6) Close (7)
     scenes: build(
       rentingScenes,
-      [0, 2, 3, 6, 7],
+      [0, 2, 4, 5, 6, 7],
       RENTING_SENTENCES,
-      ['Intro', 'Dates & request', 'Agreement', 'Dashboard', 'Close'],
+      [
+        'Intro',
+        'Calendar',
+        'Request & pay',
+        'Agreement',
+        'Dashboard',
+        'Close',
+      ],
     ),
     ctaLabel: 'Explore Rentals',
     ctaRoute: '/browse?mode=rent',
@@ -139,15 +176,29 @@ export const explainers: Explainer[] = [
     tileHeadline: 'How Selling Works',
     description:
       'List free in minutes, reach serious buyers, and get paid — protected.',
-    durationSeconds: 22,
+    durationSeconds: 28,
     accessory: 'none',
     heroImage: sellingHero,
     narrationScript: SELLING_SENTENCES.join(' '),
+    // Sentence -> scene:
+    // 1) Selling intro (0)
+    // 2) List free + wizard (1)
+    // 3) Listing tools & Featured placement (3)
+    // 4) Buyer offers (4)
+    // 5) Protected payment + bill of sale (5)
+    // 6) Close (7)
     scenes: build(
       sellingScenes,
-      [0, 1, 4, 5, 7],
+      [0, 1, 3, 4, 5, 7],
       SELLING_SENTENCES,
-      ['Intro', 'List free', 'Offers & payout', 'Handoff', 'Close'],
+      [
+        'Intro',
+        'List free',
+        'Featured placement',
+        'Offers',
+        'Protected payment',
+        'Close',
+      ],
     ),
     ctaLabel: 'Sell on Vendibook',
     ctaRoute: '/list',
@@ -161,15 +212,29 @@ export const explainers: Explainer[] = [
     tileHeadline: 'How Hosting Works',
     description:
       'Open your calendar, approve real requests, and get paid straight to your bank.',
-    durationSeconds: 22,
+    durationSeconds: 26,
     accessory: 'none',
     heroImage: hostingHero,
     narrationScript: HOSTING_SENTENCES.join(' '),
+    // Sentence -> scene:
+    // 1) Hosting intro (0)
+    // 2) Calendar & rates (2)
+    // 3) Approve requests (3)
+    // 4) Payouts / agreements (5)
+    // 5) Host dashboard (4)
+    // 6) Close (7)
     scenes: build(
       hostingScenes,
-      [0, 2, 3, 5, 7],
+      [0, 2, 3, 5, 4, 7],
       HOSTING_SENTENCES,
-      ['Intro', 'Calendar & approvals', 'Payouts', 'Dashboard', 'Close'],
+      [
+        'Intro',
+        'Calendar & rates',
+        'Approve requests',
+        'Payouts',
+        'Host dashboard',
+        'Close',
+      ],
     ),
     ctaLabel: 'Become a Host',
     ctaRoute: '/how-it-works-host',

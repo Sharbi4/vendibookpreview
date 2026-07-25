@@ -14,6 +14,10 @@ interface Props {
   onSceneChange?: (info: { index: number; previousIndex: number | null; total: number }) => void;
   onProgress?: (percent: number) => void;
   onError?: (message: string) => void;
+  /** Fired every time playback starts (initial + resume). */
+  onPlay?: () => void;
+  /** Fired once per mount when the viewer has watched at least 3 seconds. */
+  onView?: () => void;
 }
 
 /**
@@ -32,6 +36,8 @@ export const AnimatedExplainer = ({
   onSceneChange,
   onProgress,
   onError,
+  onPlay,
+  onView,
 }: Props) => {
   const reduced = useReducedMotion();
   const scenes = explainer.scenes;
@@ -53,6 +59,7 @@ export const AnimatedExplainer = ({
 
   const prevSceneRef = useRef<number | null>(null);
   const milestoneRef = useRef<Set<number>>(new Set());
+  const viewFiredRef = useRef(false);
 
   // Kick off audio fetch immediately on mount when autoPlay is on.
   useEffect(() => {
@@ -81,10 +88,17 @@ export const AnimatedExplainer = ({
     const onLoaded = () => {
       if (Number.isFinite(a.duration) && a.duration > 0) setDuration(a.duration);
     };
-    const onTime = () => setCurrentTime(a.currentTime);
-    const onPlay = () => {
+    const onTime = () => {
+      setCurrentTime(a.currentTime);
+      if (!viewFiredRef.current && a.currentTime >= 3) {
+        viewFiredRef.current = true;
+        onView?.();
+      }
+    };
+    const onPlayEv = () => {
       setPlaying(true);
       setEnded(false);
+      onPlay?.();
     };
     const onPause = () => setPlaying(false);
     const onEnd = () => {
@@ -94,7 +108,7 @@ export const AnimatedExplainer = ({
     };
     a.addEventListener('loadedmetadata', onLoaded);
     a.addEventListener('timeupdate', onTime);
-    a.addEventListener('play', onPlay);
+    a.addEventListener('play', onPlayEv);
     a.addEventListener('pause', onPause);
     a.addEventListener('ended', onEnd);
     // Attempt autoplay once metadata is ready.
@@ -111,11 +125,11 @@ export const AnimatedExplainer = ({
     return () => {
       a.removeEventListener('loadedmetadata', onLoaded);
       a.removeEventListener('timeupdate', onTime);
-      a.removeEventListener('play', onPlay);
+      a.removeEventListener('play', onPlayEv);
       a.removeEventListener('pause', onPause);
       a.removeEventListener('ended', onEnd);
     };
-  }, [audioUrl, autoPlay, onEnded]);
+  }, [audioUrl, autoPlay, onEnded, onPlay, onView]);
 
   // Compute active scene from audio time via weighted ranges.
   const sceneIndex = useMemo(() => {
