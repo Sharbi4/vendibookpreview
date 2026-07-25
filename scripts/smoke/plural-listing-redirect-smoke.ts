@@ -117,8 +117,8 @@ async function run() {
       // Must not have fallen back to home
       if (new URL(page.url()).pathname === "/") fail("bogus alias fell back to home");
 
-      await page.waitForSelector("h1", { timeout: 15_000 });
-      const h1 = (await page.locator("h1").first().innerText()).trim();
+      await page.waitForSelector("h1:visible", { timeout: 15_000 });
+      const h1 = (await page.locator("h1:visible").first().innerText()).trim();
       if (!/not found/i.test(h1)) fail(`bogus id did not render "not found" — got "${h1}"`);
 
       const boundary = await page.locator("text=/something went wrong/i").count();
