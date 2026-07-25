@@ -721,22 +721,23 @@ const SaleCheckout = () => {
                       exit={{ opacity: 0, x: -20 }}
                       transition={{ duration: 0.2 }}
                     >
-                      {currentStep === 'information' && (
-                        <PurchaseStepInfo
-                          buyerInfo={buyerInfo}
-                          updateBuyerInfo={updateBuyerInfo}
-                          deliveryInstructions={deliveryInstructions}
-                          setDeliveryInstructions={setDeliveryInstructions}
-                          fulfillmentSelected={fulfillmentSelected}
-                          fieldErrors={fieldErrors}
-                          touchedFields={touchedFields}
-                          setTouchedFields={setTouchedFields}
-                          onBack={() => navigate(`/listing/${listingId}`)}
-                          onContinue={() => {
-                            if (validateStep('information')) {
-                              setCurrentStep('delivery');
-                            }
+                      {currentStep === 'confirm' && (
+                        <StepConfirmPurchase
+                          listing={{
+                            title: listing.title,
+                            cover_image_url: listing.cover_image_url,
+                            image_urls: listing.image_urls,
+                            city: listing.city,
+                            state: listing.state,
+                            category: listing.category ?? null,
+                            condition: (listing as { condition?: string | null }).condition ?? null,
+                            year: (listing as { year?: number | null }).year ?? null,
                           }}
+                          priceSale={priceSale}
+                          sellerName={sellerName}
+                          sellerVerified={Boolean((host as { identity_verified?: boolean } | null | undefined)?.identity_verified)}
+                          specSummary={(listing as { specifications?: string | null }).specifications ?? null}
+                          onContinue={() => setCurrentStep('delivery')}
                         />
                       )}
 
@@ -763,9 +764,41 @@ const SaleCheckout = () => {
                           clearEstimate={clearEstimate}
                           listingCity={listing.city}
                           listingState={listing.state}
-                          onBack={() => setCurrentStep('information')}
+                          onBack={() => setCurrentStep('confirm')}
                           onContinue={() => {
                             if (validateStep('delivery')) {
+                              setCurrentStep('addons');
+                            }
+                          }}
+                        />
+                      )}
+
+                      {currentStep === 'addons' && (
+                        <StepAddOns
+                          addOns={addOnCatalog}
+                          selected={addOnSelections}
+                          onToggle={toggleAddOn}
+                          onBack={() => setCurrentStep('delivery')}
+                          onContinue={() => setCurrentStep('details')}
+                          onSkip={() => setCurrentStep('details')}
+                        />
+                      )}
+
+                      {currentStep === 'details' && (
+                        <PurchaseStepInfo
+                          buyerInfo={buyerInfo}
+                          updateBuyerInfo={updateBuyerInfo}
+                          deliveryInstructions={deliveryInstructions}
+                          setDeliveryInstructions={setDeliveryInstructions}
+                          fulfillmentSelected={fulfillmentSelected}
+                          fieldErrors={fieldErrors}
+                          touchedFields={touchedFields}
+                          setTouchedFields={setTouchedFields}
+                          hideAddress={fulfillmentSelected === 'pickup'}
+                          continueLabel="Review your order"
+                          onBack={() => setCurrentStep('addons')}
+                          onContinue={() => {
+                            if (validateStep('details')) {
                               setCurrentStep('review');
                             }
                           }}
@@ -800,9 +833,10 @@ const SaleCheckout = () => {
                             agreedToTerms={agreedToTerms}
                             setAgreedToTerms={setAgreedToTerms}
                             isPurchasing={isPurchasing}
-                            onBack={() => setCurrentStep('delivery')}
+                            hideAddress={fulfillmentSelected === 'pickup'}
+                            onBack={() => setCurrentStep('details')}
                             onEditDelivery={() => setCurrentStep('delivery')}
-                            onEditInfo={() => setCurrentStep('information')}
+                            onEditInfo={() => setCurrentStep('details')}
                             onSubmit={handlePurchase}
                           />
                           {paymentMethod !== 'cash' ? (
