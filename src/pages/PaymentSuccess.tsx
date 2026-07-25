@@ -81,6 +81,7 @@ const PaymentSuccess = () => {
   const sessionId = searchParams.get('session_id');
   const isEscrow = searchParams.get('escrow') === 'true';
   const isHold = searchParams.get('hold') === 'true';
+  const isMonetization = searchParams.get('monetization') === 'true';
   const { user } = useAuth();
   
   const [booking, setBooking] = useState<BookingDetails | null>(null);
@@ -131,6 +132,16 @@ const PaymentSuccess = () => {
 
   useEffect(() => {
     const processPayment = async () => {
+      if (isMonetization) {
+        // Provisioning happens in monetization-webhook (subscription + listing_promotion
+        // + receipt email). Nothing to fetch here — the UnlockedConfirmation
+        // component reads live entitlements. Just release the loading gate and
+        // fire confetti so the user sees the success moment immediately.
+        setIsLoading(false);
+        setShowContent(true);
+        fireConfetti();
+        return;
+      }
       if (!sessionId) {
         setIsLoading(false);
         return;
@@ -293,7 +304,7 @@ const PaymentSuccess = () => {
     };
 
     processPayment();
-  }, [sessionId, isEscrow, user]);
+  }, [sessionId, isEscrow, isMonetization, user]);
 
   return (
     <div className="min-h-screen flex flex-col relative overflow-hidden bg-gradient-to-br from-emerald-200/30 via-teal-100/25 to-cyan-200/20">
@@ -333,6 +344,50 @@ const PaymentSuccess = () => {
                   <Button asChild className="mt-4">
                     <Link to="/dashboard">Go to Dashboard</Link>
                   </Button>
+                </div>
+              ) : isMonetization ? (
+                // Monetization success (host subscription, add-on, listing promotion)
+                // Provisioning + receipt email happen in monetization-webhook.
+                <div className={`transition-all duration-700 ${showContent ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+                  <div className="relative w-24 h-24 mx-auto mb-6">
+                    <div className="absolute inset-0 bg-primary/20 rounded-full animate-pulse" />
+                    <div className="absolute inset-2 bg-primary/10 rounded-full" />
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <PartyPopper className="h-12 w-12 text-primary" />
+                    </div>
+                  </div>
+                  <h1 className="text-3xl md:text-4xl font-display font-semibold text-foreground">
+                    You're unlocked.
+                  </h1>
+                  <p className="mt-2 text-muted-foreground">
+                    Payment received. Your upgrades are live on your account right now.
+                  </p>
+
+                  <div className="mt-5 inline-flex items-center gap-2 rounded-full border border-border/70 bg-background/70 px-3 py-1.5 text-xs text-muted-foreground">
+                    <Mail className="h-3.5 w-3.5 text-primary" />
+                    A receipt is on its way to {userProfile?.email || user?.email || 'your email'}.
+                  </div>
+
+                  <div className="mt-8 text-left">
+                    <UnlockedConfirmation />
+                  </div>
+
+                  <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+                    <Button asChild size="lg">
+                      <Link to="/dashboard">
+                        Go to dashboard <ArrowRight className="ml-1 h-4 w-4" />
+                      </Link>
+                    </Button>
+                    <Button asChild size="lg" variant="outline">
+                      <Link to="/purchases">
+                        <Receipt className="mr-1 h-4 w-4" /> View purchases
+                      </Link>
+                    </Button>
+                  </div>
+
+                  <p className="mt-6 text-xs text-muted-foreground">
+                    Not seeing something you bought yet? Refresh in a few seconds — provisioning finalizes right after Stripe confirms the payment.
+                  </p>
                 </div>
               ) : isEscrow ? (
                 // Escrow Sale Success

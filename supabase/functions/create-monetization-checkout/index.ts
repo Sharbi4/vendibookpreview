@@ -208,7 +208,13 @@ serve(async (req) => {
       req.headers.get("origin") ||
       req.headers.get("referer")?.replace(/\/$/, "").split("/").slice(0, 3).join("/") ||
       "https://vendibook.com";
-    const successUrl = `${origin}${body.success_path ?? "/dashboard?purchase=success"}&session_id={CHECKOUT_SESSION_ID}`;
+    // Default: land in the in-app success flow so the buyer immediately sees
+    // what was provisioned + a "receipt on the way" confirmation. Callers may
+    // override with success_path; we safely append session_id regardless of
+    // whether the override already contains a query string.
+    const defaultSuccess = "/payment-success?monetization=true";
+    const rawSuccess = `${origin}${body.success_path ?? defaultSuccess}`;
+    const successUrl = `${rawSuccess}${rawSuccess.includes("?") ? "&" : "?"}session_id={CHECKOUT_SESSION_ID}`;
     const cancelUrl = `${origin}${body.cancel_path ?? "/dashboard?purchase=cancelled"}`;
 
     if (existing?.stripe_session_id && existing.status === "pending") {
