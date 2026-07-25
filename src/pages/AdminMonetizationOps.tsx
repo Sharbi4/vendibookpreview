@@ -129,6 +129,21 @@ export default function AdminMonetizationOps() {
     }
   };
 
+  const markServiceFulfilled = async (purchaseId: string) => {
+    try {
+      const { error } = await anyClient
+        .from('monetization_purchases')
+        .update({ fulfillment_status: 'fulfilled', status: 'fulfilled' })
+        .eq('id', purchaseId);
+      if (error) throw error;
+      toast.success('Marked fulfilled');
+      await load();
+    } catch (e) {
+      console.error('mark fulfilled failed', e);
+      toast.error(e instanceof Error ? e.message : 'Failed to update purchase');
+    }
+  };
+
   useEffect(() => { if (isAdmin) load(); }, [isAdmin]);
 
   const eventTypes = useMemo(() => {
