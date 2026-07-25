@@ -188,6 +188,15 @@ export const useHostBookings = () => {
         },
       }).catch(console.error);
 
+      // Kick off the rental agreement (SignNow) once host has approved.
+      // Fire-and-forget; server is idempotent and returns immediately if
+      // SignNow isn't configured or a doc already exists.
+      if (status === 'approved') {
+        supabase.functions.invoke('signnow-ensure-rental-agreement', {
+          body: { booking_id: bookingId },
+        }).catch(console.error);
+      }
+
       setBookings(prev =>
         prev.map(b =>
           b.id === bookingId

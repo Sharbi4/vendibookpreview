@@ -885,6 +885,21 @@ serve(async (req) => {
               transactionId = newTx.id;
               logStep("Sale transaction created", { transactionId, amount, buyerId, sellerId });
 
+              // Kick off Bill of Sale generation (SignNow). Fire-and-forget;
+              // idempotent on the server; safe to skip if not configured.
+              try {
+                fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/signnow-ensure-bill-of-sale`, {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+                  },
+                  body: JSON.stringify({ transaction_id: transactionId }),
+                }).catch((e) => logStep("bill_of_sale invoke failed", { error: String(e) }));
+              } catch (e) {
+                logStep("bill_of_sale trigger error", { error: String(e) });
+              }
+
               // Persist referral_code from session metadata for audit trail
               const refCodeFromMeta = session.metadata?.referral_code || '';
               if (refCodeFromMeta) {
