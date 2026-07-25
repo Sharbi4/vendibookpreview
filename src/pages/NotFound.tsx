@@ -16,13 +16,15 @@ const NotFound = () => {
       location.pathname + location.search,
     );
     try {
-      // Best-effort structured log; ignore if the error logger isn't ready.
-      void import('@/lib/errorLogger')
-        .then((m: { logErrorEvent?: (e: unknown) => void }) => {
-          m.logErrorEvent?.({
-            kind: 'not_found',
-            path: location.pathname + location.search,
-            referrer: typeof document !== 'undefined' ? document.referrer : '',
+      void import('@/lib/errorReporter')
+        .then((m) => {
+          m.reportError?.({
+            source: 'client:not_found',
+            message: `404 ${location.pathname}${location.search}`,
+            context: {
+              path: location.pathname + location.search,
+              referrer: typeof document !== 'undefined' ? document.referrer : '',
+            },
           });
         })
         .catch(() => {
