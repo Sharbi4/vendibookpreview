@@ -11,7 +11,7 @@ interface Row {
 }
 
 const ROWS: Row[] = [
-  { label: 'Active listings', free: 'Unlimited', starter: 'Unlimited', pro: 'Unlimited', premium: 'Unlimited' },
+  { label: 'Active listings', free: 'Up to 2 active', starter: 'Up to 5 active', pro: 'Unlimited', premium: 'Unlimited' },
   { label: 'Free e-signatures on every agreement', free: true, starter: true, pro: true, premium: true },
   { label: 'Payment protection at checkout', free: true, starter: true, pro: true, premium: true },
   { label: 'Buyer & renter inquiries', free: 'Unlimited', starter: 'Unlimited', pro: 'Unlimited', premium: 'Unlimited' },

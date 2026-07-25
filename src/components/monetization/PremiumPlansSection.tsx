@@ -13,6 +13,7 @@ import { TrustESignChip } from '@/components/trust/TrustESignChip';
 import { TIER_CATALOG, type TierRole } from './tierCatalog';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSubscriptionConsent } from '@/hooks/useSubscriptionConsent';
+import { useListingQuota } from '@/hooks/useListingQuota';
 import { toast } from 'sonner';
 
 import heroImg from '@/assets/trailer-orange-grill.jpg';
@@ -235,6 +236,7 @@ export function PremiumPlansSection({ compact = false }: Props) {
           {/* COMPARISON */}
           <section className="mt-10">
             <PlansComparisonTable />
+            <FoundingMemberNote />
           </section>
 
 
@@ -264,5 +266,15 @@ export function PremiumPlansSection({ compact = false }: Props) {
   );
 }
 
+
+function FoundingMemberNote() {
+  const { isGrandfathered, isLoading } = useListingQuota();
+  if (isLoading || !isGrandfathered) return null;
+  return (
+    <p className="mt-3 text-xs text-emerald-500/90">
+      You have unlimited listings as an early member — thank you.
+    </p>
+  );
+}
 
 export default PremiumPlansSection;

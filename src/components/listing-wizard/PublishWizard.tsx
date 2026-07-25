@@ -45,6 +45,8 @@ import { PublishChecklist, createChecklistItems } from './PublishChecklist';
 import { MembershipInlinePanel } from './MembershipInlinePanel';
 import { PublishSuccessModal } from './PublishSuccessModal';
 import { ListingPreviewModal } from './ListingPreviewModal';
+import { ListingLimitReachedModal } from './ListingLimitReachedModal';
+import { useListingQuota } from '@/hooks/useListingQuota';
 import { AuthGateModal } from './AuthGateModal';
 import { getGuestDraft, clearGuestDraft } from '@/lib/guestDraft';
 import { cn } from '@/lib/utils';
@@ -152,6 +154,8 @@ export const PublishWizard: React.FC = () => {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [isGuestDraft, setIsGuestDraft] = useState(false);
   const [isClaimingDraft, setIsClaimingDraft] = useState(false);
+  const [showLimitModal, setShowLimitModal] = useState(false);
+  const quota = useListingQuota();
 
   // Scroll to top when step changes
   useEffect(() => {
@@ -1405,6 +1409,20 @@ export const PublishWizard: React.FC = () => {
       return;
     }
 
+    // Active-listing quota gate (grandfathered accounts are always unlimited).
+    // Only blocks NEW publishes — already-published listings can always re-save.
+    const isFirstTimePublishForQuota = !listing.published_at;
+    if (
+      isFirstTimePublishForQuota &&
+      !quota.isLoading &&
+      !quota.isGrandfathered &&
+      !quota.isUnlimited &&
+      quota.isAtLimit
+    ) {
+      setShowLimitModal(true);
+      return;
+    }
+
     // Helper to safely parse currency / formatted strings
     const safeParsePrice = (value: string): number | null => {
       if (!value || !value.trim()) return null;
@@ -1587,7 +1605,14 @@ export const PublishWizard: React.FC = () => {
             ...(isFirstTimePublishForBoost ? { published_at: new Date().toISOString() } : {})})
           .eq('id', listing.id);
 
-        if (persistError) throw persistError;
+        if (persistError) {
+          if (typeof persistError.message === 'string' && persistError.message.includes('listing_publish_limit_reached')) {
+            setShowLimitModal(true);
+            setIsSaving(false);
+            return;
+          }
+          throw persistError;
+        }
 
         // Get session for auth
         const { data: sessionData } = await supabase.auth.getSession();
@@ -1675,7 +1700,14 @@ export const PublishWizard: React.FC = () => {
           ...(isFirstTimePublish ? { published_at: new Date().toISOString() } : {})})
         .eq('id', listing.id);
 
-      if (error) throw error;
+      if (error) {
+        if (typeof error.message === 'string' && error.message.includes('listing_publish_limit_reached')) {
+          setShowLimitModal(true);
+          setIsSaving(false);
+          return;
+        }
+        throw error;
+      }
 
       // Track analytics - differentiate between new publish and update
       console.log(`[ANALYTICS] Listing ${isFirstTimePublish ? 'published' : 'updated'}`, { listingId: listing.id });
@@ -4191,6 +4223,16 @@ export const PublishWizard: React.FC = () => {
           priceSale: parseFloat(priceSale) || null} : null}
         onViewListing={() => navigate(`/listing/${listing?.id}`)}
       />
+
+      <ListingLimitReachedModal
+        open={showLimitModal}
+        onOpenChange={setShowLimitModal}
+        tier={quota.tier}
+        limit={quota.limit ?? 2}
+        returnTo={typeof window !== 'undefined' ? `${window.location.pathname}${window.location.search}` : undefined}
+      />
+
+
 
       {/* Auth Gate Modal */}
       <AuthGateModal

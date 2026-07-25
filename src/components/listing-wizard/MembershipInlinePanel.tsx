@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { X } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useHostEntitlements } from '@/hooks/useHostEntitlements';
+import { useListingQuota } from '@/hooks/useListingQuota';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { MiniPlansComparison } from '@/components/monetization/MiniPlansComparison';
@@ -25,6 +26,7 @@ export const MembershipInlinePanel: React.FC<MembershipInlinePanelProps> = ({ re
   const navigate = useNavigate();
   const { user } = useAuth();
   const { tier } = useHostEntitlements();
+  const quota = useListingQuota();
   const [dismissed, setDismissed] = useState<boolean>(() => {
     if (typeof window === 'undefined') return true;
     return window.localStorage.getItem(LS_KEY) === '1';
@@ -95,7 +97,13 @@ export const MembershipInlinePanel: React.FC<MembershipInlinePanelProps> = ({ re
         </p>
       </div>
 
-      <MiniPlansComparison compact />
+      <MiniPlansComparison compact isFoundingMember={quota.isGrandfathered} />
+
+      {quota.isGrandfathered && (
+        <p className="text-xs text-emerald-500/90">
+          You have unlimited listings as an early member — thank you.
+        </p>
+      )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <Button variant="outline" onClick={persistDismiss} className="w-full">

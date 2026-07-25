@@ -10,6 +10,7 @@
   <url><loc>https://vendibook.com/chicago</loc><lastmod>2026-07-25</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://vendibook.com/dallas</loc><lastmod>2026-07-25</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://vendibook.com/denver</loc><lastmod>2026-07-25</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://vendibook.com/dumfries</loc><lastmod>2026-07-25</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://vendibook.com/el-paso</loc><lastmod>2026-07-25</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://vendibook.com/elgin</loc><lastmod>2026-07-25</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://vendibook.com/fort-worth</loc><lastmod>2026-07-25</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
@@ -39,6 +40,8 @@
   <url><loc>https://vendibook.com/buy/food-trailer/charlotte-nc</loc><lastmod>2026-07-25</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
   <url><loc>https://vendibook.com/rent/food-trailer/dallas-tx</loc><lastmod>2026-07-25</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
   <url><loc>https://vendibook.com/buy/food-trailer/dallas-tx</loc><lastmod>2026-07-25</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
+  <url><loc>https://vendibook.com/rent/food-trailer/dumfries-va</loc><lastmod>2026-07-25</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
+  <url><loc>https://vendibook.com/buy/food-trailer/dumfries-va</loc><lastmod>2026-07-25</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
   <url><loc>https://vendibook.com/rent/food-trailer/el-paso-tx</loc><lastmod>2026-07-25</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
   <url><loc>https://vendibook.com/buy/food-trailer/el-paso-tx</loc><lastmod>2026-07-25</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
   <url><loc>https://vendibook.com/rent/food-trailer/elgin-sc</loc><lastmod>2026-07-25</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
