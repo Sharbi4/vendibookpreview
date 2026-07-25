@@ -597,6 +597,9 @@ const AdminMetrics = () => {
             </Button>
           ))}
         </div>
+
+        {/* Homepage video funnel */}
+        <HomepageVideoStatsCard days={dateRange} />
       </main>
       <Footer />
     </div>
