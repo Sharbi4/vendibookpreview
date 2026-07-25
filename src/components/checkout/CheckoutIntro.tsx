@@ -275,7 +275,7 @@ const CheckoutIntro = ({
           className="mt-4 flex items-center justify-center gap-2 text-[12px] text-muted-foreground"
         >
           <span>Or pay monthly with</span>
-          <AffirmBadge className="h-4" />
+          <AffirmBadge price={price} className="h-4" showTooltip={false} />
           <span>&mdash; we&rsquo;ll show options at payment.</span>
         </motion.p>
       )}
