@@ -85,6 +85,14 @@ export function PremiumTierCard({
   const { requestCheckout, dialog: consentDialog, pendingSlug } = useSubscriptionConsent();
   const activeBusy = busy || pendingSlug === product.slug;
   const styles = roleStyles[role];
+  // Learn more overlay — auto-opens when ?learn=<role|slug> matches
+  const learnDeepLink = useLearnMoreDeepLink(product.slug);
+  const [learnOpenManual, setLearnOpenManual] = useState(false);
+  const learnOpen = learnDeepLink.open || learnOpenManual;
+  const setLearnOpen = (v: boolean) => {
+    setLearnOpenManual(v);
+    learnDeepLink.setOpen(v);
+  };
 
   useEffect(() => {
     const el = cardRef.current;
