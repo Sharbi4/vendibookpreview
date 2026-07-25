@@ -256,6 +256,8 @@ const EVENT_CATEGORY: Record<LeadEventName, string> = {
   ai_copilot_opened: 'ai',
   // Human escalation
   human_support_requested: 'support',
+  learn_more_opened: 'monetization',
+  learn_more_converted: 'monetization',
 };
 
 
