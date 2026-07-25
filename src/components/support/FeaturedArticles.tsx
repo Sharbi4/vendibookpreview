@@ -42,7 +42,7 @@ const featuredArticles: FeaturedArticle[] = [
 ];
 
 const quickLinks = [
-  { href: '/faq#fees-commission', label: 'Fees & Pricing', icon: DollarSign },
+  { href: '/faq#seller-fees', label: 'Fees & Pricing', icon: DollarSign },
   { href: '/help', label: 'Help Center', icon: HelpCircle },
   { href: '/faq#trust-safety', label: 'Trust & Safety', icon: Shield },
 ];
