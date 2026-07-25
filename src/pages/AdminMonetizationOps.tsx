@@ -47,6 +47,26 @@ interface RefundEvent {
   created_at: string;
 }
 
+interface ServiceRow {
+  id: string;
+  user_id: string | null;
+  listing_id: string | null;
+  amount_cents: number;
+  status: string;
+  fulfillment_status: string;
+  created_at: string;
+  paid_at: string | null;
+  product_slug: string | null;
+  product_name: string | null;
+}
+
+/** Monetization SKUs that require a human to complete the work. */
+const MANUAL_SERVICE_SLUGS = [
+  'listing_rewrite',
+  'listing_photo_shoot',
+  'concierge_setup',
+];
+
 export default function AdminMonetizationOps() {
   const { user, isLoading: authLoading } = useAuth();
   const [isAdmin, setIsAdmin] = useState(false);
