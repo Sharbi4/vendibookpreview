@@ -88,10 +88,17 @@ export const AnimatedExplainer = ({
     const onLoaded = () => {
       if (Number.isFinite(a.duration) && a.duration > 0) setDuration(a.duration);
     };
-    const onTime = () => setCurrentTime(a.currentTime);
-    const onPlay = () => {
+    const onTime = () => {
+      setCurrentTime(a.currentTime);
+      if (!viewFiredRef.current && a.currentTime >= 3) {
+        viewFiredRef.current = true;
+        onView?.();
+      }
+    };
+    const onPlayEv = () => {
       setPlaying(true);
       setEnded(false);
+      onPlay?.();
     };
     const onPause = () => setPlaying(false);
     const onEnd = () => {
@@ -101,7 +108,7 @@ export const AnimatedExplainer = ({
     };
     a.addEventListener('loadedmetadata', onLoaded);
     a.addEventListener('timeupdate', onTime);
-    a.addEventListener('play', onPlay);
+    a.addEventListener('play', onPlayEv);
     a.addEventListener('pause', onPause);
     a.addEventListener('ended', onEnd);
     // Attempt autoplay once metadata is ready.
