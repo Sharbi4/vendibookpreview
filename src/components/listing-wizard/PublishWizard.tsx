@@ -2321,10 +2321,14 @@ export const PublishWizard: React.FC = () => {
                         
                       </div>
                       <div className="flex-1">
-                        <h4 className="font-semibold text-foreground mb-1">AI Pricing Assistant</h4>
+                        <h4 className="font-semibold text-foreground mb-1 flex items-center gap-2">
+                          AI Pricing Assistant
+                          <PremiumChip />
+                        </h4>
                         <p className="text-sm text-muted-foreground mb-3">
-                          Get smart pricing suggestions based on your listing title, category, and location.
+                          Pro sellers auto-generate optimized pricing from category, title, and location. See the example.
                         </p>
+
                         <Button
                           type="button"
                           size="sm"
