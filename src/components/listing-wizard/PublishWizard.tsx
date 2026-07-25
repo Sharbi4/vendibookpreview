@@ -67,6 +67,7 @@ import {
   SALE_SELLER_FEE_PERCENT} from '@/lib/commissions';
 import { isListingFeatured } from '@/lib/featured';
 import { trackLeadEvent } from '@/lib/leadTracking';
+import { JourneyProgress, PrimaryActionBar, type JourneyStep } from '@/components/journey';
 
 type PublishStep = 'photos' | 'headline' | 'includes' | 'pricing' | 'details' | 'location' | 'availability' | 'documents' | 'stripe' | 'review';
 
@@ -1914,6 +1915,49 @@ export const PublishWizard: React.FC = () => {
 
   if (!listing) return null;
 
+  // ─── Journey progress (single source of truth) ───
+  // Mirrors the step order used by saveStep()/handleDetailsSave() so the
+  // indicator, the "Continue" primary action, and the actual navigation
+  // can't drift apart.
+  const isRentalListing = listing.mode === 'rent';
+  const skipStripeStep = listing.mode === 'sale' && !acceptCardPayment;
+  const baseWizardSteps: PublishStep[] = isRentalListing
+    ? ['photos', 'headline', 'includes', 'pricing', 'availability', 'location', 'documents', 'stripe', 'review']
+    : ['photos', 'headline', 'includes', 'pricing', 'location', 'stripe', 'review'];
+  const wizardStepOrder: PublishStep[] = skipStripeStep
+    ? baseWizardSteps.filter((s) => s !== 'stripe')
+    : baseWizardSteps;
+
+  const stepMeta: Record<PublishStep, { label: string; hint?: string; optional?: boolean }> = {
+    photos: { label: 'Media', hint: 'At least 3 photos — drag to reorder' },
+    headline: { label: 'Headline', hint: 'Title & description' },
+    includes: { label: "What's included", hint: 'Highlights & amenities' },
+    pricing: {
+      label: 'Pricing',
+      hint: listing.mode === 'sale' ? 'Set your asking price' : 'Daily & weekly rates',
+    },
+    availability: { label: 'Availability', hint: 'When renters can book' },
+    details: { label: 'Details' },
+    location: { label: 'Location', hint: 'Where & how it changes hands' },
+    documents: { label: 'Documents', hint: 'Required rental paperwork' },
+    stripe: {
+      label: 'Payouts',
+      hint: 'Connect Stripe to accept card payments',
+      optional: listing.mode === 'sale' && !acceptCardPayment,
+    },
+    review: { label: 'Review & publish', hint: 'Preview and go live' },
+  };
+
+  const journeySteps: JourneyStep[] = wizardStepOrder.map((id) => ({
+    id,
+    label: stepMeta[id].label,
+    hint: stepMeta[id].hint,
+    optional: stepMeta[id].optional,
+  }));
+  // 'details' is an off-path step (not in the linear order); pin the
+  // indicator to the closest linear step (photos) if that's the current view.
+  const currentJourneyIndex = Math.max(0, wizardStepOrder.indexOf(step));
+
   return (
     <div className="min-h-screen bg-background">
       {/* Claiming draft overlay */}
@@ -1956,6 +2000,13 @@ export const PublishWizard: React.FC = () => {
 
           {/* Main Content */}
           <div className="lg:col-span-2">
+            {/* Persistent journey progress — visible on every step, every breakpoint */}
+            <JourneyProgress
+              steps={journeySteps}
+              currentIndex={currentJourneyIndex}
+              className="mb-6"
+            />
+
             {/* Mobile Checklist - hide publish button when on review step to avoid duplicate */}
             <div className="lg:hidden mb-6">
               <PublishChecklist
@@ -1965,6 +2016,7 @@ export const PublishWizard: React.FC = () => {
                 hidePublishButton={step === 'review'}
               />
             </div>
+
 
             <div className="bg-card rounded-2xl shadow-sm border p-6 md:p-8">
               {/* Step: Media */}
@@ -2109,11 +2161,14 @@ export const PublishWizard: React.FC = () => {
                     )}
                   </div>
 
-                  <Button onClick={isGuestDraft && !user ? handleDetailsSave : saveStep} disabled={isSaving || allPhotos.length < 3}>
-                    {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
-                    Continue
-                    <ChevronRight className="w-4 h-4 ml-2" />
-                  </Button>
+                  <PrimaryActionBar
+                    helper="At least 3 photos are required to continue."
+                    primary={{
+                      label: isSaving ? 'Saving…' : 'Continue',
+                      onClick: isGuestDraft && !user ? handleDetailsSave : saveStep,
+                      disabled: isSaving || allPhotos.length < 3,
+                    }}
+                  />
                 </div>
               )}
 
@@ -2241,18 +2296,17 @@ export const PublishWizard: React.FC = () => {
                     </div>
                   </div>
 
-                  <div className="flex gap-3">
-                    <Button variant="dark-shine" onClick={() => setStep('photos')}>Back</Button>
-                    <Button 
-                      variant="dark-shine"
-                      onClick={saveStep} 
-                      disabled={isSaving || title.trim().length < MIN_TITLE_LENGTH || description.trim().length < MIN_DESCRIPTION_LENGTH}
-                    >
-                      {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
-                      Continue
-                      <ChevronRight className="w-4 h-4 ml-2" />
-                    </Button>
-                  </div>
+                  <PrimaryActionBar
+                    secondary={{ label: 'Back', onClick: () => setStep('photos') }}
+                    primary={{
+                      label: isSaving ? 'Saving…' : 'Continue',
+                      onClick: saveStep,
+                      disabled:
+                        isSaving ||
+                        title.trim().length < MIN_TITLE_LENGTH ||
+                        description.trim().length < MIN_DESCRIPTION_LENGTH,
+                    }}
+                  />
                 </div>
               )}
 
@@ -2379,14 +2433,14 @@ export const PublishWizard: React.FC = () => {
                     )}
                   </div>
 
-                  <div className="flex gap-3">
-                    <Button variant="dark-shine" onClick={() => setStep('headline')}>Back</Button>
-                    <Button variant="dark-shine" onClick={saveStep} disabled={isSaving}>
-                      {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
-                      Continue
-                      <ChevronRight className="w-4 h-4 ml-2" />
-                    </Button>
-                  </div>
+                  <PrimaryActionBar
+                    secondary={{ label: 'Back', onClick: () => setStep('headline') }}
+                    primary={{
+                      label: isSaving ? 'Saving…' : 'Continue',
+                      onClick: saveStep,
+                      disabled: isSaving,
+                    }}
+                  />
                 </div>
               )}
 
@@ -2917,17 +2971,19 @@ export const PublishWizard: React.FC = () => {
                     </>
                   )}
 
-                  <div className="flex gap-3 pt-4">
-                    <Button variant="dark-shine" onClick={() => setStep('includes')}>Back</Button>
-                    <Button 
-                      variant="dark-shine"
-                      onClick={saveStep} 
-                      disabled={isSaving || (listing.mode === 'sale' ? (!isValidPrice(priceSale) || (!acceptCardPayment && !acceptCashPayment)) : !isValidPrice(priceDaily))}
-                    >
-                      {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
-                      Continue
-                      <ChevronRight className="w-4 h-4 ml-2" />
-                    </Button>
+                  <div className="pt-4">
+                    <PrimaryActionBar
+                      secondary={{ label: 'Back', onClick: () => setStep('includes') }}
+                      primary={{
+                        label: isSaving ? 'Saving…' : 'Continue',
+                        onClick: saveStep,
+                        disabled:
+                          isSaving ||
+                          (listing.mode === 'sale'
+                            ? !isValidPrice(priceSale) || (!acceptCardPayment && !acceptCashPayment)
+                            : !isValidPrice(priceDaily)),
+                      }}
+                    />
                   </div>
                 </div>
               )}
@@ -3042,13 +3098,15 @@ export const PublishWizard: React.FC = () => {
                     onValidationChange={setAvailabilityStepValid}
                   />
 
-                  <div className="flex gap-3 pt-4">
-                    <Button variant="dark-shine" onClick={() => setStep('pricing')}>Back</Button>
-                    <Button variant="dark-shine" onClick={saveStep} disabled={isSaving}>
-                      {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
-                      Continue
-                      <ChevronRight className="w-4 h-4 ml-2" />
-                    </Button>
+                  <div className="pt-4">
+                    <PrimaryActionBar
+                      secondary={{ label: 'Back', onClick: () => setStep('pricing') }}
+                      primary={{
+                        label: isSaving ? 'Saving…' : 'Continue',
+                        onClick: saveStep,
+                        disabled: isSaving,
+                      }}
+                    />
                   </div>
                 </div>
               )}
@@ -3390,22 +3448,23 @@ export const PublishWizard: React.FC = () => {
                     )}
                   </div>
 
-                  <div className="flex flex-col gap-3">
-                    <div className="flex gap-3">
-                      <Button variant="dark-shine" onClick={() => setStep('photos')}>Back</Button>
-                      <Button variant="dark-shine" onClick={handleDetailsSave} disabled={isSaving || !title || !description}>
-                        {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
-                        {!user && isGuestDraft ? 'Save & Continue' : 'Continue'}
-                        <ChevronRight className="w-4 h-4 ml-2" />
-                      </Button>
-                    </div>
-                    {/* Guest reminder */}
-                    {!user && isGuestDraft && (
-                      <p className="text-xs text-muted-foreground text-center">
-                        Sign-in required to save your details.
-                      </p>
-                    )}
-                  </div>
+                  <PrimaryActionBar
+                    helper={
+                      !user && isGuestDraft
+                        ? 'Sign-in required to save your details.'
+                        : undefined
+                    }
+                    secondary={{ label: 'Back', onClick: () => setStep('photos') }}
+                    primary={{
+                      label: isSaving
+                        ? 'Saving…'
+                        : !user && isGuestDraft
+                        ? 'Save & Continue'
+                        : 'Continue',
+                      onClick: handleDetailsSave,
+                      disabled: isSaving || !title || !description,
+                    }}
+                  />
                 </div>
               )}
 
@@ -3668,22 +3727,25 @@ export const PublishWizard: React.FC = () => {
                     </div>
                   )}
 
-                  <div className="flex gap-3">
-                    <Button variant="dark-shine" onClick={() => setStep(listing.mode === 'rent' ? 'availability' : 'pricing')}>Back</Button>
-                    <Button 
-                      variant="dark-shine"
-                      onClick={saveStep} 
-                      disabled={isSaving || !streetAddress.trim() || !locCity.trim() || !locState.trim() || !locZipCode.trim() || (
-                        (isStaticLocationFn(listing.category) || isStaticLocation) 
+                  <PrimaryActionBar
+                    secondary={{
+                      label: 'Back',
+                      onClick: () => setStep(listing.mode === 'rent' ? 'availability' : 'pricing'),
+                    }}
+                    primary={{
+                      label: isSaving ? 'Saving…' : 'Continue',
+                      onClick: saveStep,
+                      disabled:
+                        isSaving ||
+                        !streetAddress.trim() ||
+                        !locCity.trim() ||
+                        !locState.trim() ||
+                        !locZipCode.trim() ||
+                        (isStaticLocationFn(listing.category) || isStaticLocation
                           ? !accessInstructions
-                          : !fulfillmentType
-                      )}
-                    >
-                      {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
-                      Continue
-                      <ChevronRight className="w-4 h-4 ml-2" />
-                    </Button>
-                  </div>
+                          : !fulfillmentType),
+                    }}
+                  />
                 </div>
               )}
 
@@ -3863,14 +3925,14 @@ export const PublishWizard: React.FC = () => {
                     })}
                   </div>
 
-                  <div className="flex gap-3">
-                    <Button variant="dark-shine" onClick={() => setStep('location')}>Back</Button>
-                    <Button variant="dark-shine" onClick={saveStep} disabled={isSaving}>
-                      {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
-                      Continue
-                      <ChevronRight className="w-4 h-4 ml-2" />
-                    </Button>
-                  </div>
+                  <PrimaryActionBar
+                    secondary={{ label: 'Back', onClick: () => setStep('location') }}
+                    primary={{
+                      label: isSaving ? 'Saving…' : 'Continue',
+                      onClick: saveStep,
+                      disabled: isSaving,
+                    }}
+                  />
                 </div>
               )}
 
@@ -3938,17 +4000,17 @@ export const PublishWizard: React.FC = () => {
                     )
                   )}
 
-                  <div className="flex gap-3">
-                    <Button variant="dark-shine" onClick={() => setStep(listing.mode === 'rent' ? 'documents' : 'location')}>Back</Button>
-                    <Button 
-                      variant="dark-shine"
-                      onClick={() => setStep('review')} 
-                      disabled={acceptCardPayment && !isOnboardingComplete}
-                    >
-                      Continue
-                      <ChevronRight className="w-4 h-4 ml-2" />
-                    </Button>
-                  </div>
+                  <PrimaryActionBar
+                    secondary={{
+                      label: 'Back',
+                      onClick: () => setStep(listing.mode === 'rent' ? 'documents' : 'location'),
+                    }}
+                    primary={{
+                      label: 'Continue',
+                      onClick: () => setStep('review'),
+                      disabled: acceptCardPayment && !isOnboardingComplete,
+                    }}
+                  />
                 </div>
               )}
 
@@ -4169,24 +4231,22 @@ export const PublishWizard: React.FC = () => {
                     />
                   )}
 
-                  <div className="flex flex-wrap gap-3">
-                    <Button variant="dark-shine" onClick={() => setStep(requiresStripe ? 'stripe' : 'location')}>Back</Button>
-                    <Button
-                      variant="dark-shine"
-                      onClick={() => setShowPreviewModal(true)}
-                    >
-                      <Eye className="w-4 h-4 mr-2" />
-                      Preview as Shopper
-                    </Button>
-                    <Button 
-                      variant="dark-shine"
-                      onClick={() => setShowPublishDialog(true)} 
-                      disabled={isSaving || !canPublish || (requiresStripe && !isOnboardingComplete)}
-                    >
-                      <Send className="w-4 h-4 mr-2" />
-                      Publish Listing
-                    </Button>
-                  </div>
+                  <PrimaryActionBar
+                    sticky
+                    secondary={{
+                      label: 'Back',
+                      onClick: () => setStep(requiresStripe ? 'stripe' : 'location'),
+                    }}
+                    tertiary={{
+                      label: 'Preview as Shopper',
+                      onClick: () => setShowPreviewModal(true),
+                    }}
+                    primary={{
+                      label: 'Publish Listing',
+                      onClick: () => setShowPublishDialog(true),
+                      disabled: isSaving || !canPublish || (requiresStripe && !isOnboardingComplete),
+                    }}
+                  />
                 </div>
               )}
             </div>
