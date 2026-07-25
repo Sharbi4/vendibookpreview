@@ -42,6 +42,7 @@ import { LocationSearchInput } from '@/components/search/LocationSearchInput';
 import { AvailabilityStep } from './AvailabilityStep';
 import { RentalAvailabilityStep } from './RentalAvailabilityStep';
 import { PublishChecklist, createChecklistItems } from './PublishChecklist';
+import { MembershipInlinePanel } from './MembershipInlinePanel';
 import { PublishSuccessModal } from './PublishSuccessModal';
 import { ListingPreviewModal } from './ListingPreviewModal';
 import { AuthGateModal } from './AuthGateModal';
@@ -3875,6 +3876,10 @@ export const PublishWizard: React.FC = () => {
                       ✓ Every sale and rental includes free online signatures — agreements handled for you.
                     </p>
                   </div>
+
+                  <MembershipInlinePanel
+                    returnTo={`/list?draftId=${listing.id ?? ''}&step=review`}
+                  />
 
                   {/* Full Listing Preview Card */}
                   <div className="rounded-2xl border border-border overflow-hidden bg-card shadow-lg">
