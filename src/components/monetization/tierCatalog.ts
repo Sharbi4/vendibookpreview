@@ -91,16 +91,16 @@ export const TIER_CATALOG: Record<TierRole, TierFeatureGroups> = {
     role: 'premium',
     name: 'Operator',
     tagline: 'Run your whole operation.',
-    audience: 'For fleets, kitchens, and multi-location teams.',
+    audience: 'For fleets, kitchens, and busy operators.',
     ctaLabel: 'Talk business — go Premium',
     sellers: [
-      'Multi-location / fleet portfolio management',
-      'Accounting exports for every sale',
+      'Portfolio-level dashboards across every sale',
+      'Priority listing review and boost placement',
     ],
     hosts: [
-      'Team member access & permissions (no shared logins)',
-      'Utilization analytics across every listing',
+      'Portfolio dashboard across every listing',
       'Custom intake questions per booking',
+      'Urgent-tier priority support',
     ],
     shared: [
       'BuildKit included',
