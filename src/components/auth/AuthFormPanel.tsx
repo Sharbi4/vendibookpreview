@@ -154,7 +154,9 @@ export const AuthFormPanel = ({ mode, setMode }: AuthFormPanelProps) => {
   const handleGoogleSignIn = async () => {
     setIsGoogleLoading(true);
     try {
-      const postAuthRedirect = redirectUrl !== '/' ? `${window.location.origin}${redirectUrl}` : window.location.origin;
+      const postAuthRedirect = redirectUrl
+        ? `${window.location.origin}${redirectUrl}`
+        : `${window.location.origin}/dashboard`;
       
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
