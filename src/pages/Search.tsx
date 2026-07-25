@@ -12,6 +12,7 @@ import { usePageTracking } from '@/hooks/usePageTracking';
 import { usePredictivePrefetch } from '@/hooks/usePredictivePrefetch';
 import { trackLeadEvent } from '@/lib/leadTracking';
 import ListingCard from '@/components/listing/ListingCard';
+import { SkeletonCard } from '@/components/ui/SkeletonCard';
 import QuickBookingModal from '@/components/search/QuickBookingModal';
 import DateRangeFilter from '@/components/search/DateRangeFilter';
 import { LocationSearchInput } from '@/components/search/LocationSearchInput';
