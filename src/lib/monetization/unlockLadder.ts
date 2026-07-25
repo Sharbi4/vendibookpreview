@@ -86,6 +86,9 @@ export function resolveUnlockLadder(
   // 3. Subscription tier that includes the tool. Always include the *lowest*
   //    tier that includes it, plus Growth as the "best value" anchor when it
   //    covers this tool and isn't already the lowest one.
+  const growthMath =
+    'Includes this and all 6 premium tools — bought separately these run $150+/mo.';
+
   const minSubSlug = TIER_TO_SLUG[tool.minTier];
   const minSub = bySlug.get(minSubSlug);
   if (minSub) {
@@ -97,8 +100,8 @@ export function resolveUnlockLadder(
       priceLabel: usd(minSub.price_cents),
       cadenceLabel: '/mo',
       reason: isGrowth
-        ? 'Every premium tool + Featured placement — cancel anytime.'
-        : `Lowest plan that includes ${tool.name}. Cancel anytime.`,
+        ? growthMath
+        : `Includes ${tool.name} plus enhanced listing tools. Cancel anytime.`,
       bestValue: isGrowth,
       product: minSub,
     });
@@ -114,7 +117,7 @@ export function resolveUnlockLadder(
         productName: growth.name,
         priceLabel: usd(growth.price_cents),
         cadenceLabel: '/mo',
-        reason: 'Every premium tool + Featured placement — cancel anytime.',
+        reason: growthMath,
         bestValue: true,
         product: growth,
       });
@@ -123,6 +126,7 @@ export function resolveUnlockLadder(
 
   return ladder;
 }
+
 
 /**
  * Compact honest one-liner for the ladder header, e.g.:
