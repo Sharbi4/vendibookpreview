@@ -154,6 +154,8 @@ export const PublishWizard: React.FC = () => {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [isGuestDraft, setIsGuestDraft] = useState(false);
   const [isClaimingDraft, setIsClaimingDraft] = useState(false);
+  const [showLimitModal, setShowLimitModal] = useState(false);
+  const quota = useListingQuota();
 
   // Scroll to top when step changes
   useEffect(() => {
