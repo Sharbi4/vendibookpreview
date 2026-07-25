@@ -1306,7 +1306,6 @@ const BookingCheckout = () => {
                   activeStep === STEP_REVIEW
                     ? isSubmitting
                     : !canAccessStep(STEP_REVIEW),
-                loading: activeStep === STEP_REVIEW && isSubmitting,
               }}
               secondary={{
                 label: 'Back to listing',
