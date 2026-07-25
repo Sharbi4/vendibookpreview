@@ -1,107 +1,77 @@
-# Signup → List → Publish Audit — Findings & Fix Plan
+## Findings — audit of upsells in the listing flow
 
-## 1. Publish blockers enumerated (real UI path)
+### 1. Upsell inventory
 
-Order they are evaluated in `PublishWizard.handlePublish` (lines 1373–1770):
+| Where | Step | Required? | Unlocks | Works E2E? |
+|---|---|---|---|---|
+| `MembershipInlinePanel` (Go Pro) | Review | Optional | Host subscription tiers | **Partially broken** — see A |
+| `FeaturedListingCard` ($30 boost) | Review | Optional | 30-day featured placement | Works (publish-first then Stripe) |
+| `ProofNotaryCard` ($45, sale only) | Review | Optional | E-notarized bill of sale | **Blocks publish** — see C |
+| `VendiVisionDialog` (AI copywriting) | Details | Optional | Free (tier-gated features) | Works |
+| `StripeConnectBanner` / Modal | Review | Required only if card payments enabled | Free onboarding | Works, gated correctly |
+| Identity verification gate | Publish | Required (free) | Persona verification | Works, loud toast |
+| `/pricing` deep-link boosts (`boost-featured-30`, `pro_weekly_pass`, `permit_path_plus`, etc.) | Reached via Membership panel | Optional | Various | **Detached from listing** — see D |
+| PermitPath / Tools cross-sells | Not inside wizard | — | — | N/A |
 
-| # | Gate | Loud? | Notes / Fix needed |
-|---|---|---|---|
-| A | `getValidationErrors()` — photos ≥ 3, price, title ≥ 5, description ≥ 50, location, payment method (sale) | ✅ Loud toast, but only shows FIRST error | **Fix:** show all missing items (join with " • "), name the wizard step |
-| B | Stripe Connect (`stripeRequired && !isOnboardingComplete`) | ✅ Loud, but no CTA button in toast | **Fix:** add "Connect Stripe" action button that calls `connectStripe()` |
-| C | Identity verified (`!isVerified`) | ✅ Loud with "Verify now" link | OK |
-| D | Listing quota (`quota.isAtLimit`, first publish only) | ✅ Opens `ListingLimitReachedModal` | OK |
-| E | Media upload (no `user`) | ⚠️ Toast shown but `handlePublish` was already past the auth check; guest can't reach here anyway | OK |
-| F | Notary / featured checkout branch — Stripe Checkout errors | ✅ Loud with support ref | OK |
-| G | **Final `listings.update` RLS / trigger errors** | ⚠️ Only `listing_publish_limit_reached` is decoded; other Postgres errors (e.g. `row-level security`, `null value in column X`, `trg_enforce_listing_publish_limit` raise, geocoding trigger) surface as raw `error.message` | **Fix:** map known SQLSTATE / error text to actionable copy (RLS → "Please sign back in", NOT NULL → name the field, listing-limit trigger → open the limit modal) |
-| H | **UNTESTED PATH:** card-payment sale published without Stripe connected | Blocked at gate B, but the CURRENT smoke test always sets `accept_card_payment=false`, so a regression in the Stripe gate would ship unnoticed | **Fix:** add card-payment scenario to `publish-flow-smoke.ts` and assert the DB row STAYS `draft` when Stripe not onboarded |
-| I | **Publish-limit DB trigger** exists (`trg_enforce_listing_publish_limit`) but the client only catches it in the standard branch, NOT in the notary or featured branches (lines 1544–1547, 1599–1615 handle it — actually 1609 does; notary at 1544 does NOT) | ⚠️ Silent in notary branch | **Fix:** apply same limit-error decoding to notary persist |
+### 2. Bugs found
 
-## 2. Signup → wizard continuity
+**A. Mid-wizard membership purchase loses the listing** (blocks user goal #3)
+- `MembershipInlinePanel.handleUpgrade` navigates to `/pricing?returnTo=<wizardStep>`.
+- `src/pages/Pricing.tsx` **never reads `returnTo` from the URL** and never threads it into `PremiumPlansSection` / `PremiumTierCard`.
+- Result: after Stripe checkout, user is dumped at `/payment-success?monetization=true` → `/dashboard`. Draft still exists but the user has to hunt for it.
 
-Traced sequence:
+**B. Signed-out "Go Pro" from a wizard-originated Pricing page drops `returnTo`**
+- `PremiumTierCard.handleClick` (line 176-184) rebuilds `returnTo` from `location.pathname` only, discarding the incoming `?returnTo=/create-listing/…`.
+- After login → auto-checkout → success, user lands at dashboard, not the wizard.
 
-```text
-/list (QuickStartWizard)
-  → user picks category+mode+ZIP
-  → sessionStorage['vendibook_quickstart_draft'] = {data, step}   ✅ preserved
-  → clicks Continue while signed out
-    → sessionStorage['vendibook_quickstart_resume'] = '1'         ✅ resume flag
-    → navigate('/auth?redirect=/list')                            ✅
-  → /auth signs user in
-    → navigates back to /list                                     ✅
-  → QuickStartWizard mounts, useEffect on [user] auto-calls
-    handleCreateDraft() when resume flag set                      ✅
-  → create-listing-draft edge fn:
-       - upserts user_roles(host)                                 ✅
-       - inserts listings row with host_id                        ✅ (service role, bypasses RLS)
-  → refreshProfile()                                              ✅
-  → navigate(`/create-listing/${id}`)                             ✅
-```
+**C. `ProofNotaryCard` can strand the listing at draft**
+- Unlike Featured (publishes first, then opens Stripe in a new tab), the notary path **persists data but does NOT flip status to `published`** before opening checkout. It depends entirely on the webhook to publish.
+- If the user cancels Stripe, closes the tab, or the webhook is delayed, the listing stays in draft. This violates rule #2 ("upsells never block publish"): notary is an OPTIONAL add-on but currently soft-blocks publish.
 
-**Gaps found:**
+**D. `boost-featured-30` bought from `/pricing` without a listing context does nothing visible**
+- `create-monetization-checkout` accepts `listing_id`; `monetization-webhook` writes `featured_*` **directly on that listing row**. When bought from `/pricing` with no listing selected, no `listing_id` is sent, and the purchase row is created but no listing is boosted.
+- No "unapplied credit" concept exists — the money is spent but the boost is orphaned.
 
-- **G1. No `profiles` row is guaranteed on first draft.** `create-listing-draft` upserts `user_roles` but never touches `public.profiles`. Downstream: `useListingQuota` queries `profiles.grandfathered_listings` with `.maybeSingle()` (safe), but the identity-verified gate reads `profile?.identity_verified` — if the auth trigger `handle_new_user` is missing or failed, `profile` is null forever and the user can never publish. **Fix:** have `create-listing-draft` also upsert a minimal `profiles` row (id, email) with `onConflict: 'id'` before inserting the listing.
-- **G2. Email-verification gap.** If Supabase email confirmation is on, the OAuth-less signup returns a user with no session; `handleCreateDraft`'s post-login effect fires but `getSession()` is null → generic "Please sign in" toast. **Fix:** detect this in the resume effect and show a "Check your email to confirm and return to /list" state instead of a red error.
-- **G3. `/auth` redirect param inconsistency.** `QuickStartWizard` uses `?redirect=/list`; `EditListing` uses `?redirect=<path>`; `Auth.tsx` reads both `redirect` and `returnTo` — OK. But `CreateListing.tsx` uses `?redirect=<pathname+search>` which is correct; nothing to change.
-- **G4. Wizard step (`?step=`) preservation.** `EditListing` preserves `location.search` on redirect ✅. `PublishWizard` internal `step` state is NOT written to the URL, so a mid-wizard refresh/relogin drops the user back to the `photos` step. **Fix:** mirror `step` into URL `?step=` so relogin lands on the same step (out of scope for this pass — flag only, no code change unless approved).
+**E. Featured boost purchased from Pricing detour doesn't attach to the in-progress draft**
+- Even if we fixed A and passed `returnTo=/create-listing/{id}`, the `boost-featured-30` checkout at Pricing still isn't scoped to `listing_id={draftId}`. The user pays, returns to the wizard, publishes — boost isn't applied.
 
-## 3. Duplicate-row regression guard
+**F. Cancel URLs point to `/dashboard`, not the wizard**
+- `create-monetization-checkout` defaults `cancel_url` to `/dashboard?purchase=cancelled`. When invoked from the wizard detour, cancel should route back to the wizard step.
 
-- `handlePublish` uses `.update(...).eq('id', listing.id)` in all three branches (notary, featured, standard). No `.insert()` occurs during publish. ✅
-- `saveGuestDraftFields` uses `.update()` or the guest-draft-access function (which also updates). ✅
-- `create-listing-draft` is the SOLE inserter and is called exactly once by `QuickStartWizard`. ✅
+**G. Stranded draft recovery — verify but no bug expected**
+- `useHostListings` fetches all statuses; `HostListings` filters by tab. Need to confirm the "Draft" tab exposes a "Finish publishing" CTA that resumes at the furthest completed step (query string preserved). Will verify and, if missing, add a `Resume` action that navigates to `/create-listing/{id}?step={lastStep}`.
 
-Existing smoke covers this. Nothing to fix.
+**H. `PublishSuccessModal` "Return to dashboard" navigates to `/dashboard`** — that's expected post-publish, not a bug.
 
-## 4. Pre-deploy gate is likely inert
+### 3. Money/webhook correctness (spot check summary)
 
-- `scripts/smoke/publish-flow-smoke.ts` exits 0 with `console.warn` when `SUPABASE_URL`/`SUPABASE_SERVICE_ROLE_KEY` are missing. On GitHub Actions this prints a warning but the job is green — indistinguishable from a real pass.
-- Same skip-and-pass pattern also exists in `boost-publish-smoke.ts`, `delete-listing-smoke.ts`, `entitlement-*-smoke.ts`, `subscription-lifecycle-smoke.ts`.
-- **Cannot verify from sandbox** whether the repo owner has `SUPABASE_URL` / `SUPABASE_SERVICE_ROLE_KEY` set in **Settings → Secrets and variables → Actions**. Report to user: those two secrets must be present at repo level for ANY of the DB smokes to actually execute.
+- `create-monetization-checkout`: idempotency key `mon-{user}-{product}-{listing}-{hour}` correct; pending session reused; prices come from `monetization_products` (source of truth).
+- `create-featured-checkout`: idempotency key present; refuses when `pending_featured_payment` already set (no double-charge).
+- `create-notary-checkout`: needs same idempotency check — will verify.
+- `monetization-webhook`: uses `stripe_webhook_events` idempotency table, stacks featured extends cleanly.
 
-**Fix:** make the skip path LOUD:
-- Print `::warning::SKIPPED — secrets not configured` (GitHub Actions annotation) so CI shows a yellow warning banner.
-- Add a `smoke-gate-status` job that fails when *both* secrets are missing on `push: main`, so an unconfigured gate cannot masquerade as green on production deploys. (Still soft-warns on PRs from forks where secrets can't be shared.)
+### Proposed diffs (small, surgical)
 
-## 5. Extend publish-flow-smoke with real-world blocked cases
+1. **`src/pages/Pricing.tsx`** — read `?returnTo=` from `useSearchParams`, pass to `PremiumPlansSection` and `ProductPricingCard` / `PremiumTierCard` so `successPath` / `cancelPath` route back to the wizard for wizard-originated visits.
+2. **`src/components/monetization/PremiumTierCard.tsx`** — when unauthenticated, preserve any incoming `?returnTo=` on the `/auth` hop; after Stripe redirect honor the caller-supplied `successPath`/`cancelPath` (already prop-driven — just needs the caller wiring from #1).
+3. **`src/components/monetization/PremiumPlansSection.tsx`** — accept optional `successPath`/`cancelPath` overrides; forward to `PremiumTierCard`.
+4. **`src/components/listing-wizard/MembershipInlinePanel.tsx`** — pass the current wizard URL (`/create-listing/{id}?step=…`) as `returnTo` (already partially done); add `listingId` to the URL as `?listingContext={id}` so a boost bought from Pricing can auto-scope.
+5. **`src/pages/Pricing.tsx`** (again) — if `?listingContext={id}` is present, thread `listingId` into `ProductPricingCard` so listing-scoped boosts attach correctly (fixes E; partially fixes D for the wizard flow).
+6. **`src/components/listing-wizard/PublishWizard.tsx`** — notary path: **publish-first, then open Stripe** (mirror the featured pattern). If user abandons payment the listing is live without notary, matching rule #2. Also add the same `listing_publish_limit_reached` decode + limit-modal branch already used by featured/standard.
+7. **`supabase/functions/create-notary-checkout/index.ts`** — add hourly-bucket idempotency key like featured/monetization to prevent double-charge on rapid retries.
+8. **Stranded-draft recovery** — verify `HostListings` Drafts tab surfaces a "Finish publishing" action. If missing, add `RowKebabMenu` action `Finish publishing` → `/create-listing/{id}?step={derived_from_data}` (derive step from completeness: photos → details → pricing → availability → review).
+9. **Boost-from-Pricing orphaning (D)** — narrow scope: for products with `promo_type ∈ {featured_7, featured_30, top_of_search_7}`, require `listing_id` in the checkout call. If missing, the card renders "Pick a listing" instead of "Buy boost" and opens a listing picker. Prevents orphaned charges without touching money logic.
 
-Add three scenarios to `scripts/smoke/publish-flow-smoke.ts` (still service-role DB simulation — no browser):
+### Not changing
+- No changes to fees, hold periods, payout timing, entitlement resolution rules, or Stripe idempotency keys' semantics.
+- No changes to `useListingQuota` (grandfathering intact).
+- No changes to identity-verification or Stripe Connect gating.
 
-- **5a. Card-payment sale without Stripe onboarded** — create draft with `accept_card_payment=true`, profile with `stripe_account_id=NULL`, attempt the publish `update`, then assert via a separate check that the app-level gate would block (simulate by asserting `requiresStripe && !isOnboardingComplete` on a fixture); since the trigger allows the DB write, we instead assert the row's `accept_card_payment` state matches what the gate reads. This tests the *data contract* the gate depends on.
-- **5b. Unverified-identity host** — profile with `identity_verified=false`; simulate the client-side gate by asserting `profile.identity_verified === false` after draft creation. The DB doesn't enforce it, so we assert the fixture the UI reads.
-- **5c. Host at listing limit** — create N=quota published rows then attempt an (N+1)th publish; expect the `trg_enforce_listing_publish_limit` trigger to raise `listing_publish_limit_reached`. This is the ONLY one of the three enforced server-side and is a real regression guard.
+### After edits
+- Typecheck (`bunx tsgo --noEmit`).
+- Run the two-scenario journey mentally against the fixed code:
+  (a) fresh signup → wizard → publish free (no add-ons) → live.
+  (b) fresh signup → wizard → open membership panel → buy Pro from Pricing (wizard-scoped) → returned to wizard step with data intact → toggle Featured Boost → publish → boost applies.
+- Report results per stage.
 
-Scenarios 5a/5b are honest about what the DB smoke can verify vs. what needs the browser smoke (`wizard-auth-guard-smoke.ts`).
-
-## 6. Live end-to-end test after fixes
-
-Run the new `publish-flow-smoke.ts` (with all three scenarios), plus the existing `wizard-auth-guard-smoke.ts`, against `http://localhost:8080` and report the transition of each stage:
-`signup → profile row → draft → wizard save → publish → live in search`.
-Then `tsgo` typecheck.
-
----
-
-## Proposed edits (small, surgical)
-
-1. **`supabase/functions/create-listing-draft/index.ts`** — before inserting the listing, upsert `public.profiles { id: user.id, email: user.email }` with `onConflict: 'id'`. Guarantees the row required by `useAuth`, `useListingQuota`, and identity gate. (Fix G1.)
-
-2. **`src/components/listing-wizard/PublishWizard.tsx` (`handlePublish` catch + `getValidationErrors`)**:
-   - Show ALL validation errors, not just the first.
-   - Add a `Connect Stripe` action to the Stripe gate toast.
-   - Decode common publish `error.message` values (RLS `permission denied`, `null value in column`, `listing_publish_limit_reached` in the notary branch) into actionable toasts naming the blocker.
-
-3. **`src/components/listing-wizard/QuickStartWizard.tsx`** — in the resume effect, if `!sessionData.session` after user object exists (email-confirm pending), show a friendly "Check your email to confirm" state instead of the generic red toast. (Fix G2.)
-
-4. **`scripts/smoke/publish-flow-smoke.ts`**:
-   - Replace silent `process.exit(0)` on missing secrets with `console.log('::warning::…SKIPPED…')` and a distinct `[smoke] SKIPPED` header.
-   - Add scenarios 5a/5b/5c described above, each with clear pass/fail messages.
-
-5. **`.github/workflows/smoke-predeploy.yml`** — add a lightweight `secrets-configured` gate job (fails on `push: main` when `SUPABASE_URL`/`SUPABASE_SERVICE_ROLE_KEY` are empty) so an unconfigured deploy pipeline can't ship green.
-
-6. **Report to user (chat, not code):** exact GitHub secrets to add if missing — `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, and optionally `APP_BASE_URL` for browser smokes.
-
-## Out of scope (flagged, not fixing unless approved)
-- Persisting `PublishWizard` step to the URL (G4).
-- Server-side enforcement of identity verification and Stripe onboarding at publish (currently client-only gates; a determined API caller with a valid JWT could set `status='published'`).
-
-Approve to proceed; I'll implement 1–6, run the smoke locally, then typecheck and report each stage's pass/fail.
+Awaiting approval before editing.
