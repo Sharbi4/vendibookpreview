@@ -16,7 +16,14 @@ interface MembershipInlinePanelProps {
    * Should include the current wizard step so continuity is preserved.
    */
   returnTo: string;
+  /**
+   * Draft listing id the user is currently editing. Passed to /pricing as
+   * ?listingContext=<id> so any listing-scoped boost (featured_*) bought from
+   * the pricing detour auto-attaches to this draft on publish.
+   */
+  listingId?: string;
 }
+
 
 /**
  * Slim, dismissible panel shown once per user inside the publish flow.
