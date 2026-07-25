@@ -174,15 +174,23 @@ export function PremiumTierCard({
     // both require an authenticated user, so opening the consent dialog first
     // would fail with an opaque error.
     if (!user) {
+      const currentSearch = new URLSearchParams(location.search);
+      // Preserve any incoming returnTo (e.g. wizard detour) so that after
+      // sign-in + auto-checkout the user lands back where they started.
+      const incomingReturnTo = currentSearch.get('returnTo');
+      const incomingListingContext = currentSearch.get('listingContext');
       const params = new URLSearchParams({
         plan: product.slug,
         interval,
         auto: '1',
       });
+      if (incomingReturnTo) params.set('returnTo', incomingReturnTo);
+      if (incomingListingContext) params.set('listingContext', incomingListingContext);
       const returnTo = `${location.pathname.startsWith('/pricing') || location.pathname.startsWith('/plans') || location.pathname.startsWith('/host/plans') ? location.pathname : '/pricing'}?${params.toString()}`;
       navigate(`/auth?returnTo=${encodeURIComponent(returnTo)}`);
       return;
     }
+
     try {
       trackLeadEvent('checkout_started', {
         product_slug: product.slug,
