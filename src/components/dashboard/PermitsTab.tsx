@@ -206,11 +206,19 @@ export default function PermitsTab() {
 
   // ---------- List view ----------
   return (
+    <PermitsGate>
     <div className="space-y-6">
       <div className="flex items-end justify-between gap-3 flex-wrap">
         <div>
-          <div className="text-[11px] uppercase tracking-[0.18em] text-white/55 font-semibold mb-1">
-            Permits &amp; Licenses
+          <div className="flex items-center gap-2 mb-1">
+            <div className="text-[11px] uppercase tracking-[0.18em] text-white/55 font-semibold">
+              Permits &amp; Licenses
+            </div>
+            {permitAccess?.reason === 'grandfathered' && (
+              <span className="inline-flex items-center gap-1 rounded-md border border-[hsl(var(--brand-ember)/0.45)] bg-[hsl(var(--brand-ember)/0.12)] px-2 py-0.5 text-[10px] font-medium text-[hsl(var(--brand-ember))]">
+                <Flame className="h-3 w-3" /> Founding member
+              </span>
+            )}
           </div>
           <h2 className="text-2xl font-bold text-white leading-tight">Your saved roadmaps</h2>
           <p className="text-sm text-white/60 mt-1">
