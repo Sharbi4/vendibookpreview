@@ -143,10 +143,15 @@ async function auditViewport(page: Page, vp: Viewport, listingId: string) {
   await page.evaluate(() => window.scrollTo(0, 0));
   await page.waitForTimeout(150);
   const clipping = await page.evaluate(() => {
-    const h1 = document.querySelector<HTMLElement>("h1");
+    // The page renders a mobile h1 AND a desktop h1 with responsive display
+    // toggles — pick the one that is actually laid out.
+    const h1 = Array.from(document.querySelectorAll<HTMLElement>("h1")).find((el) => {
+      const r = el.getBoundingClientRect();
+      const s = getComputedStyle(el);
+      return r.width > 0 && r.height > 0 && s.visibility !== "hidden" && s.display !== "none";
+    });
     if (!h1) return null;
     const hr = h1.getBoundingClientRect();
-    // Find fixed/sticky top bars at y=0
     const bars = Array.from(document.querySelectorAll<HTMLElement>("body *")).filter((el) => {
       const s = getComputedStyle(el);
       if (s.position !== "fixed" && s.position !== "sticky") return false;
