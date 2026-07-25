@@ -215,7 +215,7 @@ const SellerLandingPage = ({
           </section>
 
           {/* Sell, rent, or both */}
-          <section aria-labelledby="hybrid-heading" className="rounded-3xl border border-border bg-card p-8 md:p-10 space-y-5">
+          <section aria-labelledby="hybrid-heading" className="rounded-2xl border border-border bg-card p-8 md:p-10 space-y-5">
             <div className="flex items-center gap-2 text-primary">
               <Calendar className="h-5 w-5" />
               <span className="text-xs uppercase tracking-wide">Sell or rent while you wait</span>
