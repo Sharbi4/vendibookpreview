@@ -125,11 +125,11 @@ export const AnimatedExplainer = ({
     return () => {
       a.removeEventListener('loadedmetadata', onLoaded);
       a.removeEventListener('timeupdate', onTime);
-      a.removeEventListener('play', onPlay);
+      a.removeEventListener('play', onPlayEv);
       a.removeEventListener('pause', onPause);
       a.removeEventListener('ended', onEnd);
     };
-  }, [audioUrl, autoPlay, onEnded]);
+  }, [audioUrl, autoPlay, onEnded, onPlay, onView]);
 
   // Compute active scene from audio time via weighted ranges.
   const sceneIndex = useMemo(() => {
