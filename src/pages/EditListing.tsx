@@ -42,9 +42,11 @@ const EditListing: React.FC = () => {
         }
       }
 
-      // No access - redirect to auth
-      navigate('/auth?redirect=' + encodeURIComponent(`/create-listing/${listingId}`));
+      // No access - redirect to auth, preserving querystring so the wizard
+      // step (?step=…) survives the round trip.
+      navigate('/auth?redirect=' + encodeURIComponent(`/create-listing/${listingId}${location.search}`));
     };
+
 
     if (!isLoading) {
       checkAccess();
