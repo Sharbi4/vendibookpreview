@@ -80,8 +80,11 @@ export const MembershipInlinePanel: React.FC<MembershipInlinePanelProps> = ({ re
 
   const handleUpgrade = () => {
     // Do NOT auto-dismiss — user may cancel checkout. Only dismiss on Continue free / X.
-    navigate(`/pricing?returnTo=${encodeURIComponent(returnTo)}`);
+    const params = new URLSearchParams({ returnTo });
+    if (listingId) params.set('listingContext', listingId);
+    navigate(`/pricing?${params.toString()}`);
   };
+
 
   return (
     <div className="relative rounded-lg border border-border/70 bg-card/80 p-5 space-y-4">
