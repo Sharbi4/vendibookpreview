@@ -245,11 +245,11 @@ Deno.serve(async (req) => {
     const token = await getAccessToken();
     const userId = await getUserId(token);
 
-    const rentalDocId = await uploadTemplateDocument(token, 'Vendibook Rental Agreement', buildRentalPdf(), RENTAL_TAGS);
+    const rentalDocId = await uploadTemplateDocument(token, 'Vendibook Rental Agreement', buildRentalPdf());
     const rentalTemplateId = await createTemplate(token, rentalDocId, 'Vendibook Rental Agreement');
     const rentalRoles = await verifyTemplateRoles(token, rentalTemplateId, REQUIRED_ROLES.rental);
 
-    const billDocId = await uploadTemplateDocument(token, 'Vendibook Bill of Sale', buildBillOfSalePdf(), BILL_OF_SALE_TAGS);
+    const billDocId = await uploadTemplateDocument(token, 'Vendibook Bill of Sale', buildBillOfSalePdf());
     const billTemplateId = await createTemplate(token, billDocId, 'Vendibook Bill of Sale');
     const billRoles = await verifyTemplateRoles(token, billTemplateId, REQUIRED_ROLES.billOfSale);
 
