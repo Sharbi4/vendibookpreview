@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import type { Explainer } from '../data/explainers';
+import type { Explainer } from './data/explainers';
 
 interface CacheEntry {
   url: string;
