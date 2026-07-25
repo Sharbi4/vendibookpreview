@@ -10,7 +10,11 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { useHostListings } from '@/hooks/useHostListings';
 import { usePromotionAssets, useGenerateAdCopy } from '@/hooks/usePromotionAssets';
 import { toast } from '@/hooks/use-toast';
+import { parseEdgeError } from '@/lib/edgeErrors';
+import { usePremiumUpsell, isPremiumError, featureFromParsed } from '@/hooks/usePremiumUpsell';
+import { PremiumChip } from '@/components/monetization/PremiumChip';
 import { cn } from '@/lib/utils';
+
 
 const CHANNELS = [
   { id: 'meta', label: 'Meta (FB+IG)', icon: Facebook, color: 'text-blue-600 bg-blue-500/10 border-blue-500/20' },
@@ -82,11 +86,27 @@ export const PromotionHub = () => {
   const generate = useGenerateAdCopy();
 
   const seo = selected ? calcSeoScore(selected) : null;
+  const premiumUpsell = usePremiumUpsell();
 
-  const handleGenerate = (channels: string[]) => {
+  const handleGenerate = async (channels: string[]) => {
     if (!selected) return;
-    generate.mutate({ listing_id: selected.id, channels });
+    try {
+      await generate.mutateAsync({ listing_id: selected.id, channels });
+    } catch (e: any) {
+      const parsed = await parseEdgeError(e);
+      if (isPremiumError(parsed)) {
+        premiumUpsell.show(featureFromParsed(parsed) ?? 'marketing-studio', 'promotion_hub');
+      } else {
+        toast({
+          title: 'Could not generate copy',
+          description: parsed.message || 'Please try again',
+          variant: 'destructive',
+        });
+      }
+    }
   };
+
+
 
   const handleCopy = (text: string) => {
     navigator.clipboard.writeText(text);
