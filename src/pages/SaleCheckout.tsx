@@ -259,6 +259,20 @@ const SaleCheckout = () => {
 
   // Derived values - Use accepted offer price if available, otherwise listing price
   const priceSale = acceptedOfferPrice || listing?.price_sale || 0;
+
+  // Threshold guard: small purchases skip the intro screen entirely.
+  useEffect(() => {
+    if (
+      currentStep === 'intro' &&
+      !isListingLoading &&
+      priceSale > 0 &&
+      priceSale < SALE_INTRO_MIN_PRICE
+    ) {
+      setCurrentStep('confirm');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentStep, isListingLoading, priceSale]);
+
   const deliveryFee = listing?.delivery_fee || 0;
   const fulfillmentType = listing?.fulfillment_type || 'pickup';
   const vendibookFreightEnabled = listing?.vendibook_freight_enabled || false;
