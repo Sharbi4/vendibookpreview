@@ -5,8 +5,10 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useFavorites } from '@/hooks/useFavorites';
 import EmptyState from '../shared/EmptyState';
 import SharePopover from '../shared/SharePopover';
-import { Loader2, Heart, HeartOff, Image as ImageIcon } from 'lucide-react';
+import { Heart, HeartOff } from 'lucide-react';
 import { toast } from 'sonner';
+import { SmartImage } from '@/components/ui/SmartImage';
+import { SkeletonCard } from '@/components/ui/SkeletonCard';
 
 const FavoritesTab = () => {
   const { user } = useAuth();
@@ -48,9 +50,13 @@ const FavoritesTab = () => {
       </header>
 
       {loading ? (
-        <div className="flex items-center justify-center py-20">
-          <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-        </div>
+        <ul className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <li key={i} className="rounded-md border border-border bg-card p-3">
+              <SkeletonCard variant="listing" />
+            </li>
+          ))}
+        </ul>
       ) : listings.length === 0 ? (
         <EmptyState
           icon={Heart}
@@ -63,15 +69,13 @@ const FavoritesTab = () => {
         <ul className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
           {listings.map((l: any) => (
             <li key={l.id} className="group rounded-md border border-border bg-card overflow-hidden flex flex-col">
-              <Link to={`/listing/${l.id}`} className="block aspect-[4/3] bg-muted overflow-hidden relative">
-                {l.cover_image_url ? (
-                  <img src={l.cover_image_url} alt={l.title} loading="lazy"
-                    className="h-full w-full object-cover group-hover:scale-[1.02] transition-transform" />
-                ) : (
-                  <div className="h-full w-full flex items-center justify-center">
-                    <ImageIcon className="h-6 w-6 text-muted-foreground" />
-                  </div>
-                )}
+              <Link to={`/listing/${l.id}`} className="block overflow-hidden relative">
+                <SmartImage
+                  src={l.cover_image_url}
+                  alt={l.title}
+                  aspect="4/3"
+                  className="group-hover:scale-[1.02] transition-transform"
+                />
                 <button
                   type="button"
                   onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleUnsave(l.id, l.title); }}
