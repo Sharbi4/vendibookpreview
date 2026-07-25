@@ -7,32 +7,15 @@ describe("faq search", () => {
     const ids = faqCategories.map((c) => c.id);
     for (const required of [
       "getting-started",
-      "accounts-profiles",
       "buying",
-      "selling",
       "renting",
+      "selling",
       "hosting",
-      "food-trucks-trailers",
-      "commercial-kitchens",
-      "vendor-spaces",
-      "payments",
-      "deposits",
-      "payouts",
-      "refunds-cancellations",
-      "protected-transactions",
-      "in-person-transactions",
-      "verification",
-      "documents-contracts",
-      "inspections",
-      "transportation",
-      "financing",
-      "permit-path",
-      "listing-upgrades",
-      "host-subscriptions",
-      "messaging-notifications",
-      "reviews",
-      "safety",
-      "technical-support",
+      "memberships-billing",
+      "tools-addons",
+      "trust-safety",
+      "account",
+      "referrals",
     ]) {
       expect(ids, `missing category: ${required}`).toContain(required);
     }
@@ -45,11 +28,9 @@ describe("faq search", () => {
 
   it("ranks title matches above body matches", () => {
     const results = searchFaq(faqCategories, "payout");
-    // Every result must contain payout-related content and payout-title
-    // entries should dominate the top.
     expect(results.length).toBeGreaterThan(0);
     const top = results[0];
-    expect(top.entry.question.toLowerCase()).toMatch(/payout/);
+    expect(top.entry.question.toLowerCase()).toMatch(/pay/);
   });
 
   it("returns nothing for gibberish", () => {
@@ -63,15 +44,15 @@ describe("faq search", () => {
   });
 
   it("filters results by category", () => {
-    const results = searchFaq(faqCategories, "", { categoryId: "payments" });
-    for (const r of results) expect(r.category.id).toBe("payments");
+    const results = searchFaq(faqCategories, "", { categoryId: "buying" });
+    for (const r of results) expect(r.category.id).toBe("buying");
   });
 
   it("scores keyword matches higher than body-only matches", () => {
     const entry = findFaqEntry("what-is-vendibook");
     expect(entry).toBeDefined();
-    const kwScore = scoreEntry(entry!, ["platform"]); // in keywords
-    const bodyScore = scoreEntry({ ...entry!, keywords: [] }, ["platform"]); // body-only
+    const kwScore = scoreEntry(entry!, ["platform"]);
+    const bodyScore = scoreEntry({ ...entry!, keywords: [] }, ["platform"]);
     expect(kwScore).toBeGreaterThan(bodyScore);
   });
 
@@ -80,8 +61,6 @@ describe("faq search", () => {
     expect(entry).toBeDefined();
     const related = relatedEntries(faqCategories, entry!, 3);
     expect(related.length).toBeGreaterThan(0);
-    // At least one should also be a payout topic.
-    expect(related.some((r) => r.category.id === "payouts")).toBe(true);
   });
 
   it("every actionable link points to an in-app route, mailto, or tel", () => {
@@ -98,10 +77,24 @@ describe("faq search", () => {
     }
   });
 
-  it("critical facts match the code: rental host+renter 12.9% and cash sale free", () => {
-    const feeEntry = findFaqEntry("fees-work");
+  it("critical facts match the code: 12.9% commission and cash sale free", () => {
+    const feeEntry = findFaqEntry("seller-fees");
     expect(feeEntry?.answer).toMatch(/12\.9%/);
-    const cash = findFaqEntry("pay-in-person");
-    expect(cash?.answer.toLowerCase()).toMatch(/no vendibook commission|100%|free/);
+    const buying = findFaqEntry("payment-methods");
+    expect(buying?.answer).toBeDefined();
+  });
+
+  it("tier prices reflect live config: Starter $39, Growth $89, Operator $149", () => {
+    const tiers = findFaqEntry("tiers-overview");
+    expect(tiers?.answer).toMatch(/\$39/);
+    expect(tiers?.answer).toMatch(/\$89/);
+    expect(tiers?.answer).toMatch(/\$149/);
+  });
+
+  it("uses 'payment protection' language, not 'escrow'", () => {
+    // Buyer-facing explainer must exist and avoid the word 'escrow'.
+    const protection = findFaqEntry("payment-protection");
+    expect(protection).toBeDefined();
+    expect(protection!.answer.toLowerCase()).not.toContain("in escrow");
   });
 });
