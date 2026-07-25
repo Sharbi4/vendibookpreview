@@ -39,6 +39,8 @@ import { calculateRentalFees } from '@/lib/commissions';
 import { trackFormSubmitConversion } from '@/lib/gtagConversions';
 import { trackRequestStarted, trackRequestSubmitted } from '@/lib/analytics';
 import { EmbeddedStripeCheckout } from '@/components/checkout';
+import CheckoutIntro from '@/components/checkout/CheckoutIntro';
+
 import CheckoutOrderSummary from '@/components/checkout/CheckoutOrderSummary';
 import { isEmbeddedCheckoutEnabled } from '@/lib/featureFlags';
 import { parseEdgeError } from '@/lib/edgeErrors';
