@@ -56,6 +56,23 @@ serve(async (req) => {
       ? "on_site"
       : "pickup";
 
+    // Guarantee a profiles row exists BEFORE any downstream code (identity
+    // gate, quota, listing insert) reads it. If the auth trigger is missing
+    // or slow, this prevents a null-profile lockout where the user can never
+    // publish. Idempotent via onConflict.
+    const { error: profileError } = await admin
+      .from("profiles")
+      .upsert(
+        {
+          id: user.id,
+          email: user.email ?? null,
+          full_name:
+            (user.user_metadata as { full_name?: string } | null)?.full_name ?? null,
+        },
+        { onConflict: "id", ignoreDuplicates: false },
+      );
+    if (profileError) return json({ error: `profile_upsert_failed: ${profileError.message}` }, 400);
+
     const { error: roleError } = await admin
       .from("user_roles")
       .upsert({ user_id: user.id, role: "host" }, { onConflict: "user_id,role" });
