@@ -91,8 +91,6 @@ const ShopperDashboard = () => {
     <div className="max-w-[1320px] mx-auto space-y-6 sm:space-y-8">
       <OverviewGreeting firstName={firstName} persona="Buying" isVerified={isVerified} />
 
-      <div className="sm:hidden"><DashboardMobileTabs persona="shopper" /></div>
-
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <KpiCard
           ember
