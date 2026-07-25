@@ -21,6 +21,10 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useStripeConnect } from '@/hooks/useStripeConnect';
 import { supabase } from '@/integrations/supabase/client';
 import { reportError } from '@/lib/errorReporter';
+import { parseEdgeError } from '@/lib/edgeErrors';
+import { usePremiumUpsell, isPremiumError, featureFromParsed } from '@/hooks/usePremiumUpsell';
+import { PremiumChip } from '@/components/monetization/PremiumChip';
+
 import { CATEGORY_LABELS, ListingCategory, FreightPayer, AMENITIES_BY_CATEGORY, FREIGHT_CATEGORY_LABELS, FreightCategory, FulfillmentType, isMobileAsset, isStaticLocation as isStaticLocationFn, MODE_LABELS } from '@/types/listing';
 import {
   DocumentType,
@@ -135,6 +139,8 @@ export const PublishWizard: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user, isVerified } = useAuth();
+  const premiumUpsell = usePremiumUpsell();
+
   const { isOnboardingComplete, isLoading: isStripeLoading, connectStripe, isConnecting } = useStripeConnect();
 
   const [step, setStep] = useState<PublishStep>('photos');
@@ -800,14 +806,20 @@ export const PublishWizard: React.FC = () => {
         description: 'AI pricing suggestions have been generated based on your listing details.'});
     } catch (error) {
       console.error('Error getting suggestions:', error);
-      toast({
-        title: 'Could not get suggestions',
-        description: error instanceof Error ? error.message : 'Please try again later.',
-        variant: 'destructive'});
+      const parsed = await parseEdgeError(error);
+      if (isPremiumError(parsed)) {
+        premiumUpsell.show(featureFromParsed(parsed) ?? 'pricepilot', 'wizard_pricing');
+      } else {
+        toast({
+          title: 'Could not get suggestions',
+          description: parsed.message || 'Please try again later.',
+          variant: 'destructive'});
+      }
     } finally {
       setIsLoadingSuggestions(false);
     }
   };
+
 
   const applyRentalSuggestion = (type: 'low' | 'suggested' | 'high') => {
     if (!rentalSuggestions) return;
@@ -2309,10 +2321,14 @@ export const PublishWizard: React.FC = () => {
                         
                       </div>
                       <div className="flex-1">
-                        <h4 className="font-semibold text-foreground mb-1">AI Pricing Assistant</h4>
+                        <h4 className="font-semibold text-foreground mb-1 flex items-center gap-2">
+                          AI Pricing Assistant
+                          <PremiumChip />
+                        </h4>
                         <p className="text-sm text-muted-foreground mb-3">
-                          Get smart pricing suggestions based on your listing title, category, and location.
+                          Pro sellers auto-generate optimized pricing from category, title, and location. See the example.
                         </p>
+
                         <Button
                           type="button"
                           size="sm"
@@ -4218,6 +4234,8 @@ export const PublishWizard: React.FC = () => {
             isVerified: false} : undefined}
         />
       )}
+      {premiumUpsell.overlay}
     </div>
+
   );
 };

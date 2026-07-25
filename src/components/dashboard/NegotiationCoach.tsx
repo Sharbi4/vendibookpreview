@@ -5,7 +5,11 @@ import { Badge } from '@/components/ui/badge';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { parseEdgeError } from '@/lib/edgeErrors';
+import { usePremiumUpsell, isPremiumError, featureFromParsed } from '@/hooks/usePremiumUpsell';
+import { PremiumChip } from '@/components/monetization/PremiumChip';
 import { cn } from '@/lib/utils';
+
 
 interface NegotiationCoachProps {
   offerId: string;
@@ -30,6 +34,7 @@ export const NegotiationCoach = ({ offerId, onUseCounter, className }: Negotiati
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [advice, setAdvice] = useState<Advice | null>(null);
+  const premiumUpsell = usePremiumUpsell();
 
   const fetchAdvice = async () => {
     if (advice) return;
@@ -41,11 +46,18 @@ export const NegotiationCoach = ({ offerId, onUseCounter, className }: Negotiati
       if (data?.error) throw new Error(data.error);
       setAdvice(data.advice as Advice);
     } catch (e: any) {
-      toast({ title: 'Coach unavailable', description: e?.message || 'Try again later', variant: 'destructive' });
+      const parsed = await parseEdgeError(e);
+      if (isPremiumError(parsed)) {
+        setOpen(false);
+        premiumUpsell.show(featureFromParsed(parsed) ?? 'negotiation-coach', 'offer_thread');
+      } else {
+        toast({ title: 'Coach unavailable', description: parsed.message || 'Try again later', variant: 'destructive' });
+      }
     } finally {
       setLoading(false);
     }
   };
+
 
   const copyScript = () => {
     if (!advice) return;
@@ -69,8 +81,10 @@ export const NegotiationCoach = ({ offerId, onUseCounter, className }: Negotiati
           <div className="flex items-center gap-2 min-w-0">
             
             <span className="text-xs font-semibold text-foreground">AI Negotiation Coach</span>
+            <PremiumChip />
             <Badge variant="secondary" className="text-[9px] px-1.5 py-0 h-4">Beta</Badge>
           </div>
+
           <ChevronDown className={cn("h-3.5 w-3.5 text-muted-foreground transition-transform", open && "rotate-180")} />
         </button>
       </CollapsibleTrigger>
@@ -137,6 +151,8 @@ export const NegotiationCoach = ({ offerId, onUseCounter, className }: Negotiati
           </div>
         )}
       </CollapsibleContent>
+      {premiumUpsell.overlay}
     </Collapsible>
   );
 };
+

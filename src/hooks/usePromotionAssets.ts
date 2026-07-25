@@ -51,12 +51,11 @@ export function useGenerateAdCopy() {
       qc.invalidateQueries({ queryKey: ['promotion-assets'] });
       toast({ title: 'Ad copy generated', description: 'Fresh marketing assets ready.' });
     },
-    onError: (e: any) => {
-      toast({
-        title: 'Could not generate copy',
-        description: e?.message || 'Please try again',
-        variant: 'destructive',
-      });
+    onError: (_e: any) => {
+      // Caller (PromotionHub) handles the error — including surfacing
+      // entitlement_required as the upsell overlay. Keep this quiet to
+      // avoid a duplicate destructive toast.
     },
+
   });
 }
