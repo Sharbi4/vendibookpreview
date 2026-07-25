@@ -4234,6 +4234,8 @@ export const PublishWizard: React.FC = () => {
             isVerified: false} : undefined}
         />
       )}
+      {premiumUpsell.overlay}
     </div>
+
   );
 };
