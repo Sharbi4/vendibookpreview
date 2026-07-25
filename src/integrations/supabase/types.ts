@@ -1835,6 +1835,7 @@ export type Database = {
           current_period_start: string | null
           flag_reason: string | null
           flagged_at: string | null
+          getting_started_sent_at: string | null
           id: string
           last_error: Json | null
           metadata: Json
@@ -1857,6 +1858,7 @@ export type Database = {
           current_period_start?: string | null
           flag_reason?: string | null
           flagged_at?: string | null
+          getting_started_sent_at?: string | null
           id?: string
           last_error?: Json | null
           metadata?: Json
@@ -1879,6 +1881,7 @@ export type Database = {
           current_period_start?: string | null
           flag_reason?: string | null
           flagged_at?: string | null
+          getting_started_sent_at?: string | null
           id?: string
           last_error?: Json | null
           metadata?: Json
