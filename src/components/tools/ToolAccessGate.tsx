@@ -20,7 +20,7 @@ interface Props {
  * purchases, and subscription tiers all resolve consistently.
  */
 export default function ToolAccessGate({ slug, children }: Props) {
-  const { user, loading: authLoading } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
   const { bySlug, isLoading } = useToolAccess();
   const tool = TOOLS.find((t) => t.slug === slug);
   const access = bySlug[slug];
