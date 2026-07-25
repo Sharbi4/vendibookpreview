@@ -62,7 +62,8 @@ export function ProductPricingCard({
   const requiresListingId =
     product.promo_type === 'featured_7' ||
     product.promo_type === 'featured_30' ||
-    product.promo_type === 'top_of_search_7';
+    product.promo_type === 'top_of_search';
+
   const missingListingId = requiresListingId && !listingId;
 
   const handleClick = async () => {
