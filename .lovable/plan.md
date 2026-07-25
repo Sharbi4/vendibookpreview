@@ -1,108 +1,74 @@
-# Plans "Learn more" overlay + legal document link fix
 
-## PART A — Diagnosis: Broken "Open full document" link
+# Homepage videos overhaul
 
-**Root cause found.** `useLegalDocumentBySlug` (`src/hooks/useLegalDocument.ts`) filters `status = 'active'`, but two rows in `legal_documents` are stored with `status = 'published'`:
+## 1. Diagnosis
 
-| slug | status |
-|---|---|
-| `subscription-terms` | `published` ❌ |
-| `refund-cancellation-policy` | `published` ❌ |
-| (7 others) | `active` ✅ |
+**Where they live:** `src/components/home/how-it-works/` — 4 explainers (Buying, Renting, Selling, Hosting) shown as tiles by `HowVendibookWorks.tsx`; clicking a tile opens `ExplainerVideoModal.tsx` which mounts `AnimatedExplainer.tsx`. There are **no `<video>` files** on the homepage — everything is an in-browser React/Framer animation.
 
-Result: `/legal/subscription-terms` and `/legal/refund-cancellation-policy` render the empty-state fallback. The signup consent's "open full document" for Terms of Service actually works today; the failure the user hit is on the subscription-terms link surfaced from `SubscriptionConsentDialog` (and any signup surface that also links to refund/cancellation policy).
+**How each is implemented today**
+- `HowVendibookWorks.tsx` → 4× `VideoTile` (poster tiles).
+- `ExplainerVideoModal.tsx` → renders `AnimatedExplainer`.
+- `AnimatedExplainer.tsx` (654 lines) runs 8 React scenes back-to-back via a `requestAnimationFrame` clock (**10 s per scene × 8 = 80 s per video**; `durationSeconds` in data says 85 s).
+- `data/explainers.ts` holds a **massive prose transcript per explainer** (~400–500 words each).
+- On modal open, `AnimatedExplainer` **calls a TTS edge function `explainer-tts`** with the full transcript, downloads the MP3 as a blob, creates `new Audio(url)`, and tries to `play()` it while the RAF clock advances scenes.
+- Also mixes in a WebAudio `ambientBed` bass drone.
 
-Additionally, the `current_legal_document` RPC used by `useLegalDocument` (in-modal) may share the same filter — will verify and align.
+**Why it breaks (confirmed)**
+1. **Autoplay-with-audio is blocked.** The scene RAF starts immediately on mount (`playing=true`); the `<audio>` element cannot start until either (a) a user gesture inside the same tick or (b) the TTS blob has finished downloading. So the scene clock is already several seconds in when the voiceover finally starts → the mid-video-start you're seeing.
+2. **TTS latency is variable.** `fetchNarration` awaits a synth call (Lovable AI or similar). First-open cold path is easily 3–8 s. The animation doesn't wait for `voiceReady` before advancing.
+3. **No re-sync when audio catches up.** Even the "resync on scene change" comment can't fix the *initial* offset, only later beats.
+4. **Two independent clocks** (RAF for scenes, `<audio>` for narration) fundamentally can't stay locked without pausing one to the other — and the code doesn't.
+5. **Length.** 80 s of dense narration is far past the 30 s home-page ceiling; viewers bounce before the message lands.
 
-### Fix
-1. **Data**: `UPDATE legal_documents SET status='active' WHERE slug IN ('subscription-terms','refund-cancellation-policy');` (via `supabase--insert`).
-2. **Resilience**: change `useLegalDocumentBySlug` to accept `status IN ('active','published')` so any future seeded row with either status resolves.
-3. **Verify** the `current_legal_document` RPC returns the row for both types after the update (read-only check).
-4. **LegalDocumentPage** already renders a friendly not-found state — leave as is (was previously blank only because the query returned `null` silently which it still displays; confirm error path is user-friendly, no code change needed beyond wording tweak if warranted).
+**Other audio on the site (not homepage, leave alone this pass):** `AudioListingPlayer` on listing detail pages, gallery `<video muted playsInline>` thumbnails in listing wizard/gallery — those are already muted or user-triggered, no defect.
 
-### Click-test matrix (post-fix)
-Manually verify each surface's "Open full document" / "View full document" link resolves to a rendered `/legal/:slug` page:
+## 2. Rebuild — muted captioned loops
 
-| Surface | Doc type | Expected slug |
-|---|---|---|
-| Signup consent (`AuthFormPanel` → `ConsentModal`) | terms_of_service | `/legal/terms` |
-| Signup consent | privacy_policy | `/legal/privacy` |
-| `SubscriptionConsentDialog` | subscription_terms | `/legal/subscription-terms` |
-| Pay-in-Person (`FinalReviewSheet`) | pay_in_person_acknowledgment | `/legal/pay-in-person-terms` |
-| Featured listing activation (`PublishWizard`) | featured_listing_terms | `/legal/featured-listing-terms` |
-| Purchase/Booking review | seller_terms / renter_terms | `/legal/seller-terms`, `/legal/renter-terms` |
-| Marketplace rules link | marketplace_rules | `/legal/marketplace-rules` |
-| Refund policy link | refund_cancellation_policy | `/legal/refund-cancellation-policy` |
+Replace the TTS + RAF-synced approach entirely for all 4 explainers. Each becomes:
 
-Report pass/fail per row after fix.
+- Same React scene components (reused, don't rebuild), but shortened to **3 scenes × 6–8 s = 20–24 s total**.
+- **No audio path.** Remove the TTS fetch, `<audio>` element, ambient bed, mute/volume controls, transcript download hotkey.
+- Muted autoplay loop, tap-to-restart. `IntersectionObserver` — plays when tile is in view on the homepage, pauses off-screen.
+- Kinetic on-screen captions carry the message: **max 7 words per card**, Sofia Pro display font, token colors, one active caption at a time synced to the scene index (single clock — no sync bug possible).
+- Poster frame (existing `heroImage`) shown before first play and for `prefers-reduced-motion` users, who also get a **static caption stack** below the poster (no animation).
+- Modal path (`ExplainerVideoModal` → click tile to open full-size) reuses the same shortened animation, adds a Play/Pause/Restart control set and larger captions. Still muted, no voiceover.
 
----
+**New scripts (7 words max per card)**
+- **Buying** — "Search real inventory" → "Message the seller" → "Pay protected, in one dashboard."
+- **Renting** — "Pick your dates" → "Send one request" → "Rental, docs, payment — one place."
+- **Selling** — "List free in minutes" → "Reach serious buyers" → "Get paid, protected by Vendibook."
+- **Hosting** — "Open your calendar" → "Approve real requests" → "Payouts 24 hours after return."
 
-## PART B — ProductLearnMoreOverlay
+## 3. Files changed
 
-### New reusable component
-`src/components/monetization/ProductLearnMoreOverlay.tsx` — one component, responsive:
-- **Desktop**: Radix Dialog, centered, r-lg, `dash-glass`, max-w-2xl.
-- **Mobile**: Radix Sheet from bottom, 92dvh, same tokens.
-- **Deep-link**: reads `?learn=<slug>` on mount and opens automatically; writes/removes the param on open/close via `useSearchParams` so URLs like `/pricing?learn=pro` land straight in the overlay.
-- **Content** (driven by a typed catalog entry):
-  - Title + one-line promise
-  - Price row (`$X /mo` or `$X one-time`) with billing terms
-  - "Best for" line (plans only)
-  - **What you get** — icon bullets (Lucide, no sparkles), each with an outcome sentence (e.g., "Boost placement: your listing appears above standard results for 30 days, typically 3–5× more views")
-  - **See it in action** — 2–3 real screenshots captured from live pages (dashboard analytics, PermitPath, a boosted listing card). Stored under `src/assets/learn-more/` and imported statically. No AI art.
-  - Sticky footer with the **same buy CTA** the parent card uses (consent gate intact — reuse the parent's handler by passing `onBuy` prop). "Continue without buying" secondary close.
+**Deleted / gutted**
+- `src/components/home/how-it-works/audio/ambientBed.ts` — delete.
+- `AnimatedExplainer.tsx` — rewritten to a lean ~180-line captioned loop (no TTS, no `<audio>`, no volume state, no ambient bed, no localStorage-elapsed).
+- `explainer-tts` edge function — leave deployed, but stop calling it from the homepage. Not deleting server-side in case other pages hit it; will grep to confirm homepage is the only caller.
 
-### Catalog
-`src/lib/monetization/learnMoreCatalog.ts`:
-```ts
-export interface LearnMoreEntry {
-  slug: string;              // ?learn= value
-  productKey: string;        // maps to product_key / tier
-  name: string;
-  promise: string;
-  price: string;
-  billing: string;
-  bestFor?: string;
-  outcomes: { icon: LucideIcon; title: string; body: string }[];
-  screenshots: { src: string; alt: string; caption: string }[];
-  ctaLabel: string;
-}
-```
-Entries: `starter`, `pro`, `premium`, `pro-weekly`, plus every active one-time add-on (featured boost tiers, PermitPath unlock, BuildKit, PricePilot, etc.) — pulled from existing `catalog.ts` + monetization products.
+**Modified**
+- `data/explainers.ts` — reduce each explainer to 3 scenes (subset of existing scene arrays), replace `caption`s with the new short strings, drop `transcript` from the runtime path (keep the field for SEO/accessibility text but read from a new `accessibleSummary` short string, ≤ 240 chars).
+- `HowVendibookWorks.tsx` — tiles auto-preview in-place (muted loop) via `IntersectionObserver`, click still opens the modal.
+- `VideoTile.tsx` — poster + inline captioned playback; adds reduced-motion fallback.
+- `ExplainerVideoModal.tsx` — no audio controls; keeps Play/Pause/Restart + captions + CTA.
 
-### Wire "Learn more" secondary link into
-- `PremiumTierCard.tsx` (used by `PremiumPlansSection.tsx`, `Pricing.tsx`, `HostProPlans.tsx`)
-- `ProductPricingCard.tsx` (add-ons on Pricing + Purchases + Promote surfaces)
-- `PremiumToolsTab.tsx` (dashboard Membership / Premium Tools tiles)
-- `ToolPreview.tsx` (locked-tool preview surfaces — CTA already exists, add secondary "Learn more" that opens overlay with the tool's entry)
+**Added**
+- `useInViewAutoplay.ts` hook — shared IntersectionObserver ≥ 40% visible → play, else pause.
+- `CaptionCard.tsx` — kinetic caption primitive (Sofia Pro, token colors, fade+rise via Framer, respects reduced-motion).
 
-Link styling: quiet ghost text link under primary CTA, `text-xs font-medium text-white/60 hover:text-white/90 underline-offset-4 hover:underline`.
+## 4. Tech quality checklist
+- Single clock per animation — captions read scene index, cannot drift.
+- Poster = existing `heroImage`, painted before first frame → no black flash.
+- IntersectionObserver play/pause; unmount cleans up.
+- `prefers-reduced-motion` → poster + static caption stack, no motion.
+- Mobile: no `<video>` so `playsinline` isn't relevant, but pointer-events guarded so tile tap opens modal without scroll hijack.
+- No `new Audio()`, no autoplay-with-sound, no user-gesture requirement.
 
-### Analytics
-Reuse existing `trackEvent()` (`src/lib/analytics.ts`):
-- `learn_more_opened` `{ product_slug, surface, deep_link: bool }` on open
-- `learn_more_converted` `{ product_slug, surface }` when buy CTA inside overlay is clicked
+## 5. Verification
+- Playwright at 1280 and 390 widths: load `/`, scroll to `HowVendibookWorks`, screenshot each tile mid-loop, confirm caption text matches scene, no audio nodes exist in the document, no console warnings from blocked autoplay.
+- `bunx tsgo --noEmit`.
+- Report per-video: previous 80 s TTS-synced → new 20–24 s muted captioned loop.
 
-### Screenshots
-Capture from running preview via Playwright to `/mnt/documents/`, review, then commit trimmed webp/png files under `src/assets/learn-more/`. Targeted captures:
-1. Dashboard KPI/analytics strip (for Pro/Premium)
-2. Featured listing card with boost badge (for featured add-ons / Pro placement)
-3. PermitPath ResultsDashboard (for PermitPath entry and Premium)
-4. Payouts/earnings block (for Starter and lower fees narrative)
-
-### Not touched
-- Consent gates, Stripe calls, entitlement resolution, pricing math, terms flow.
-- No changes to `create-checkout` / `create-monetization-checkout`.
-- Dashboard layout, tokens, typography system.
-
----
-
-## Deliverables
-1. Migration-free data patch: `UPDATE legal_documents SET status='active' ...` via insert tool.
-2. `src/hooks/useLegalDocument.ts` — accept `active|published`.
-3. `src/lib/monetization/learnMoreCatalog.ts` (new).
-4. `src/components/monetization/ProductLearnMoreOverlay.tsx` (new).
-5. `src/assets/learn-more/*.png` (new — real captures).
-6. Edits to `PremiumTierCard.tsx`, `ProductPricingCard.tsx`, `Pricing.tsx`, `HostProPlans.tsx`, `PremiumToolsTab.tsx`, `ToolPreview.tsx` to render the secondary link and mount the overlay.
-7. Typecheck + click-test report of every legal link.
+## Assumptions
+- Voiceover is not essential for these homepage tiles (per your rule 2a preference). If you want any single one kept as a narrated video, tell me and I'll pre-render an MP4 for that one only and swap it in via `videoSource` (the data model already has the slot).
+- Keeping the `explainer-tts` edge function deployed (unused by homepage) rather than deleting it, in case other pages call it.

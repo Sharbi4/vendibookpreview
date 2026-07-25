@@ -25,34 +25,18 @@ export const ExplainerVideoModal = ({ explainer, open, onOpenChange }: Props) =>
   const handleProgress = (pct: number) => {
     if (!explainer) return;
     if (pct === 0.25) trackLeadEvent('homepage_video_25_percent', { video_type: explainer.id });
-    if (pct === 0.5) trackLeadEvent('homepage_video_50_percent', { video_type: explainer.id });
-    if (pct === 0.75) trackLeadEvent('homepage_video_75_percent', { video_type: explainer.id });
-    if (pct === 1) trackLeadEvent('homepage_video_completed', { video_type: explainer.id });
+    else if (pct === 0.5) trackLeadEvent('homepage_video_50_percent', { video_type: explainer.id });
+    else if (pct === 0.75) trackLeadEvent('homepage_video_75_percent', { video_type: explainer.id });
+    else if (pct === 1) trackLeadEvent('homepage_video_completed', { video_type: explainer.id });
   };
 
-  const handleSceneChange = ({ index, previousIndex, total }: { index: number; previousIndex: number | null; total: number }) => {
+  const handleSceneChange = ({ index }: { index: number; previousIndex: number | null; total: number }) => {
     if (!explainer) return;
-    if (previousIndex !== null) {
-      trackLeadEvent('homepage_video_scene_completed', {
-        video_type: explainer.id,
-        scene_index: previousIndex,
-        scene_count: total,
-      });
-    }
-    trackLeadEvent('homepage_video_scene_viewed', {
-      video_type: explainer.id,
-      scene_index: index,
-      scene_count: total,
-    });
+    trackLeadEvent('homepage_video_scene_viewed', { video_type: explainer.id, scene_index: index });
   };
 
-  const handleWatched = (ms: number) => {
-    if (!explainer) return;
-    trackLeadEvent('homepage_video_watch_duration', {
-      video_type: explainer.id,
-      watched_ms: ms,
-      watched_seconds: Math.round(ms / 1000),
-    });
+  const handleWatched = (_ms: number) => {
+    // watched ms captured on unmount; not tracked as a lead event
   };
 
   return (
@@ -64,22 +48,23 @@ export const ExplainerVideoModal = ({ explainer, open, onOpenChange }: Props) =>
           <>
             <DialogTitle className="sr-only">{explainer.title}</DialogTitle>
             <div className="relative flex h-full w-full flex-col">
-              <AnimatedExplainer
-                key={replayKey}
-                explainer={explainer}
-                storageKey={`vb-explainer-pos-${explainer.id}`}
-                onProgress={handleProgress}
-                onSceneChange={handleSceneChange}
-                onWatched={handleWatched}
-                onEnded={() => setEnded(true)}
-              />
+              <div className="relative aspect-video w-full sm:aspect-[16/9]">
+                <AnimatedExplainer
+                  key={replayKey}
+                  explainer={explainer}
+                  loop={false}
+                  showControls
+                  respectInView={false}
+                  onProgress={handleProgress}
+                  onSceneChange={handleSceneChange}
+                  onWatched={handleWatched}
+                  onEnded={() => setEnded(true)}
+                />
+              </div>
               {ended && (
                 <VideoEndCTA
                   explainer={explainer}
                   onReplay={() => {
-                    if (typeof window !== 'undefined') {
-                      window.localStorage.removeItem(`vb-explainer-pos-${explainer.id}`);
-                    }
                     setEnded(false);
                     setReplayKey((k) => k + 1);
                   }}
@@ -93,6 +78,5 @@ export const ExplainerVideoModal = ({ explainer, open, onOpenChange }: Props) =>
     </Dialog>
   );
 };
-
 
 export default ExplainerVideoModal;

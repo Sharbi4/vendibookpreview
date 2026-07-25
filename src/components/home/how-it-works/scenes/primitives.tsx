@@ -164,6 +164,7 @@ export const SceneShell = ({ children, caption }: { children: ReactNode; caption
               dashboards are never hidden behind it on small screens. */}
           <div className="relative z-30 h-full w-full">{children}</div>
           <div
+            data-scene-caption
             className={
               // On mobile the caption block is compressed so it never eats
               // into the mascot's lower half; on desktop we keep the tall
