@@ -381,7 +381,8 @@ Deno.serve(async (req) => {
       return h >>> 0;
     };
     const featuredTiebreak = (a: any, b: any): number => {
-      const _f = featuredTiebreak(a, b); if (_f !== 0) return _f;
+      const fa = isFeatured(a), fb = isFeatured(b);
+      if (fa !== fb) return fa ? -1 : 1;
       if (fa && fb) return rotKey(a) - rotKey(b);
       return 0;
     };
