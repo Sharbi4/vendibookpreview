@@ -53,7 +53,7 @@ function pass(msg: string) {
 }
 
 async function fetchOneListing(): Promise<{ id: string; title: string }> {
-  const url = `${SUPABASE_URL}/rest/v1/listings?select=id,title,listing_type&status=eq.published&title=not.is.null&limit=10`;
+  const url = `${SUPABASE_URL}/rest/v1/listings?select=id,title&status=eq.published&title=not.is.null&limit=10`;
   const res = await fetch(url, { headers: { apikey: ANON_KEY, Authorization: `Bearer ${ANON_KEY}` } });
   if (!res.ok) throw new Error(`fetch listings: ${res.status}`);
   const rows = (await res.json()) as Array<{ id: string; title: string }>;
@@ -92,15 +92,26 @@ async function auditViewport(page: Page, vp: Viewport, listingId: string) {
 
   // 2. Any element wider than viewport (common cause: unbounded images, long words, sticky bars)
   const overflowers = await page.evaluate((vw) => {
+    // Skip nodes that live inside a horizontally-scrollable ancestor —
+    // snap-rail carousels, tab-strips, tables etc. legitimately extend past
+    // the viewport but are clipped by their scroll container.
+    const inScrollableX = (el: HTMLElement): boolean => {
+      let n: HTMLElement | null = el.parentElement;
+      while (n && n !== document.body) {
+        const s = getComputedStyle(n);
+        if ((s.overflowX === "auto" || s.overflowX === "scroll") && n.scrollWidth > n.clientWidth) return true;
+        n = n.parentElement;
+      }
+      return false;
+    };
     const bad: Array<{ tag: string; cls: string; w: number; right: number }> = [];
     const nodes = document.querySelectorAll<HTMLElement>("body *");
     nodes.forEach((el) => {
       const r = el.getBoundingClientRect();
       if (r.width === 0 || r.height === 0) return;
-      // Ignore fixed/off-screen skip-links etc.
       const style = getComputedStyle(el);
       if (style.visibility === "hidden" || style.display === "none") return;
-      if (r.right > vw + 1 && r.width > 40) {
+      if (r.right > vw + 1 && r.width > 40 && !inScrollableX(el)) {
         bad.push({
           tag: el.tagName.toLowerCase(),
           cls: (el.className || "").toString().slice(0, 60),
@@ -132,10 +143,15 @@ async function auditViewport(page: Page, vp: Viewport, listingId: string) {
   await page.evaluate(() => window.scrollTo(0, 0));
   await page.waitForTimeout(150);
   const clipping = await page.evaluate(() => {
-    const h1 = document.querySelector<HTMLElement>("h1");
+    // The page renders a mobile h1 AND a desktop h1 with responsive display
+    // toggles — pick the one that is actually laid out.
+    const h1 = Array.from(document.querySelectorAll<HTMLElement>("h1")).find((el) => {
+      const r = el.getBoundingClientRect();
+      const s = getComputedStyle(el);
+      return r.width > 0 && r.height > 0 && s.visibility !== "hidden" && s.display !== "none";
+    });
     if (!h1) return null;
     const hr = h1.getBoundingClientRect();
-    // Find fixed/sticky top bars at y=0
     const bars = Array.from(document.querySelectorAll<HTMLElement>("body *")).filter((el) => {
       const s = getComputedStyle(el);
       if (s.position !== "fixed" && s.position !== "sticky") return false;
@@ -191,7 +207,7 @@ async function run() {
   const sample = await fetchOneListing();
   console.log(`[visual] using listing ${sample.id} — "${sample.title}"`);
 
-  const browser = await chromium.launch({ headless: true });
+  const browser = await chromium.launch({ headless: true, executablePath: process.env.PLAYWRIGHT_CHROMIUM_PATH || undefined });
   const context = await browser.newContext();
   const page = await context.newPage();
 

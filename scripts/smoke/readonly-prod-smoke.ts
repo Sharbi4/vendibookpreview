@@ -122,7 +122,12 @@ const WRITE_ALLOWLIST = [
   /tawk\.to/i,
   /sentry\.io/i,
   /clarity\.ms/i,
-  /o\/log-error-event/i, // our error reporter — read-only side effect
+  /o\/log-error-event/i, // legacy path
+  /\/functions\/v1\/log-error-event/i, // error reporter — read-only side effect
+  /\/functions\/v1\/facebook-conversions-api/i, // marketing pixel — server-side beacon
+  /\/rest\/v1\/rpc\//i, // Supabase RPC calls are POST-shaped reads
+  /\/rest\/v1\/analytics_events/i, // client analytics beacon
+  /\/rest\/v1\/listing_views/i, // view counter beacon
 ];
 
 type Failure = { route: string; kind: string; detail: string };

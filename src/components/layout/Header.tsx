@@ -302,10 +302,10 @@ const Header = ({ hideSearch = false }: HeaderProps) => {
 
         {/* Mobile Expandable Search */}
         {!hideSearch && <div 
-          className={`md:hidden flex items-center transition-all duration-300 ease-in-out ${
+          className={`md:hidden flex items-center min-w-0 transition-all duration-300 ease-in-out ${
             isMobileSearchOpen 
               ? 'flex-1 mx-0' 
-              : 'flex-none'
+              : 'flex-1'
           }`}
         >
           {isMobileSearchOpen ? (

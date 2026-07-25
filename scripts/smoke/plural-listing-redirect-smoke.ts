@@ -69,7 +69,7 @@ async function run() {
   const realId = await fetchRealId();
   console.log(`[smoke] using real id ${realId}`);
 
-  const browser = await chromium.launch({ headless: true });
+  const browser = await chromium.launch({ headless: true, executablePath: process.env.PLAYWRIGHT_CHROMIUM_PATH || undefined });
   const context = await browser.newContext({ viewport: { width: 1280, height: 1800 } });
 
   try {
