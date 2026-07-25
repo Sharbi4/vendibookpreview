@@ -24,19 +24,17 @@ import {
   SubscriptionConsentDialog,
   type SubscriptionConsentPayload,
 } from '@/components/monetization/SubscriptionConsentDialog';
+import { parseEdgeError } from '@/lib/edgeErrors';
 
-type CheckoutOpts = Omit<StartCheckoutInput, 'productSlug' | 'consentId'>;
+type CheckoutOpts = Omit<StartCheckoutInput, 'productSlug' | 'consentId'> & {
+  /** UI billing cadence. Controls consent-dialog disclosure wording only —
+   *  the actual billing interval is dictated by the Stripe price. */
+  interval?: 'monthly' | 'annual' | 'month' | 'year';
+};
 
 export interface UseSubscriptionConsentResult {
-  /**
-   * Kick off checkout. For recurring products this opens the consent dialog
-   * and only invokes the edge function after the user affirmatively consents.
-   * For one-time products it starts checkout immediately.
-   */
   requestCheckout: (product: MonetizationProduct, opts?: CheckoutOpts) => Promise<void>;
-  /** Element that MUST be rendered by the caller. */
   dialog: React.ReactNode;
-  /** True while awaiting user consent or Stripe response. */
   pendingSlug: string | null;
 }
 
@@ -44,6 +42,13 @@ interface PendingRecurring {
   product: MonetizationProduct;
   opts: CheckoutOpts;
   payload: SubscriptionConsentPayload;
+}
+
+function deriveInterval(product: MonetizationProduct, hint?: CheckoutOpts['interval']): 'month' | 'year' {
+  if (hint === 'annual' || hint === 'year') return 'year';
+  if (hint === 'monthly' || hint === 'month') return 'month';
+  if (product.slug.endsWith('_annual') || product.slug.endsWith('_yearly')) return 'year';
+  return 'month';
 }
 
 export function useSubscriptionConsent(): UseSubscriptionConsentResult {
@@ -57,11 +62,21 @@ export function useSubscriptionConsent(): UseSubscriptionConsentResult {
         const { url } = await startMonetizationCheckout({
           productSlug: product.slug,
           consentId,
-          ...opts,
+          listingId: opts.listingId,
+          discountCode: opts.discountCode,
+          successPath: opts.successPath,
+          cancelPath: opts.cancelPath,
         });
+        // Break out of preview iframe if we're embedded, otherwise same-tab redirect.
+        const top = typeof window !== 'undefined' ? window.top : null;
+        if (top && top !== window) {
+          try { top.location.href = url; return; } catch { /* cross-origin — fall through */ }
+        }
         window.location.href = url;
       } catch (err) {
-        const msg = err instanceof Error ? err.message : 'Could not start checkout';
+        const parsed = await parseEdgeError(err);
+        const msg = parsed?.message || (err instanceof Error ? err.message : 'Could not start checkout');
+        console.error('[subscription-checkout] failed', { slug: product.slug, err, parsed });
         toast.error(msg);
         setPendingSlug(null);
       }
@@ -77,8 +92,7 @@ export function useSubscriptionConsent(): UseSubscriptionConsentResult {
         return;
       }
       const priceCents = effectivePriceCents(product);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const interval = ((product as any).metadata?.interval as string) || 'month';
+      const interval = deriveInterval(product, opts.interval);
       setPending({
         product,
         opts,
@@ -87,8 +101,7 @@ export function useSubscriptionConsent(): UseSubscriptionConsentResult {
           productName: product.name,
           priceCents,
           interval,
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          tier: (product as any).slug ?? null,
+          tier: product.slug ?? null,
         },
       });
       setOpen(true);
@@ -121,3 +134,4 @@ export function useSubscriptionConsent(): UseSubscriptionConsentResult {
 
   return { requestCheckout, dialog, pendingSlug };
 }
+
