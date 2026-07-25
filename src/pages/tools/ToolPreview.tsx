@@ -13,7 +13,8 @@ import { startMonetizationCheckout } from '@/lib/monetization/products';
 import { buildCheckoutReturnPaths } from '@/lib/monetization/returnRoutes';
 
 const tierLabel = (t: string) =>
-  t === 'starter' ? 'Starter' : t === 'pro' ? 'Pro' : t === 'premium' ? 'Premium' : 'Free';
+  t === 'starter' ? 'Starter' : t === 'pro' ? 'Growth' : t === 'premium' ? 'Operator' : 'Free';
+
 
 const ToolPreview = () => {
   const { slug } = useParams<{ slug: string }>();
