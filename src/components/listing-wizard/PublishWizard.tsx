@@ -800,14 +800,20 @@ export const PublishWizard: React.FC = () => {
         description: 'AI pricing suggestions have been generated based on your listing details.'});
     } catch (error) {
       console.error('Error getting suggestions:', error);
-      toast({
-        title: 'Could not get suggestions',
-        description: error instanceof Error ? error.message : 'Please try again later.',
-        variant: 'destructive'});
+      const parsed = await parseEdgeError(error);
+      if (isPremiumError(parsed)) {
+        premiumUpsell.show(featureFromParsed(parsed) ?? 'pricepilot', 'wizard_pricing');
+      } else {
+        toast({
+          title: 'Could not get suggestions',
+          description: parsed.message || 'Please try again later.',
+          variant: 'destructive'});
+      }
     } finally {
       setIsLoadingSuggestions(false);
     }
   };
+
 
   const applyRentalSuggestion = (type: 'low' | 'suggested' | 'high') => {
     if (!rentalSuggestions) return;
