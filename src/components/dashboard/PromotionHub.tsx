@@ -242,7 +242,9 @@ export const PromotionHub = () => {
               <CardTitle className="text-sm flex items-center gap-2">
                 
                 AI-generated ad copy
+                <PremiumChip />
               </CardTitle>
+
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3">
@@ -456,8 +458,10 @@ export const PromotionHub = () => {
           </Card>
         </TabsContent>
       </Tabs>
+      {premiumUpsell.overlay}
     </div>
   );
 };
+
 
 export default PromotionHub;
