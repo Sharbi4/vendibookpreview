@@ -1,150 +1,107 @@
-# SignNow (airSlate) E-Signature — Foundation Build
+# Signup → List → Publish Audit — Findings & Fix Plan
 
-Signatures are **free** for users. No paywall anywhere on signing. Notarization is deferred (stub only).
+## 1. Publish blockers enumerated (real UI path)
 
----
+Order they are evaluated in `PublishWizard.handlePublish` (lines 1373–1770):
 
-## 0. Secrets the owner must add (Project Settings → Secrets)
+| # | Gate | Loud? | Notes / Fix needed |
+|---|---|---|---|
+| A | `getValidationErrors()` — photos ≥ 3, price, title ≥ 5, description ≥ 50, location, payment method (sale) | ✅ Loud toast, but only shows FIRST error | **Fix:** show all missing items (join with " • "), name the wizard step |
+| B | Stripe Connect (`stripeRequired && !isOnboardingComplete`) | ✅ Loud, but no CTA button in toast | **Fix:** add "Connect Stripe" action button that calls `connectStripe()` |
+| C | Identity verified (`!isVerified`) | ✅ Loud with "Verify now" link | OK |
+| D | Listing quota (`quota.isAtLimit`, first publish only) | ✅ Opens `ListingLimitReachedModal` | OK |
+| E | Media upload (no `user`) | ⚠️ Toast shown but `handlePublish` was already past the auth check; guest can't reach here anyway | OK |
+| F | Notary / featured checkout branch — Stripe Checkout errors | ✅ Loud with support ref | OK |
+| G | **Final `listings.update` RLS / trigger errors** | ⚠️ Only `listing_publish_limit_reached` is decoded; other Postgres errors (e.g. `row-level security`, `null value in column X`, `trg_enforce_listing_publish_limit` raise, geocoding trigger) surface as raw `error.message` | **Fix:** map known SQLSTATE / error text to actionable copy (RLS → "Please sign back in", NOT NULL → name the field, listing-limit trigger → open the limit modal) |
+| H | **UNTESTED PATH:** card-payment sale published without Stripe connected | Blocked at gate B, but the CURRENT smoke test always sets `accept_card_payment=false`, so a regression in the Stripe gate would ship unnoticed | **Fix:** add card-payment scenario to `publish-flow-smoke.ts` and assert the DB row STAYS `draft` when Stripe not onboarded |
+| I | **Publish-limit DB trigger** exists (`trg_enforce_listing_publish_limit`) but the client only catches it in the standard branch, NOT in the notary or featured branches (lines 1544–1547, 1599–1615 handle it — actually 1609 does; notary at 1544 does NOT) | ⚠️ Silent in notary branch | **Fix:** apply same limit-error decoding to notary persist |
 
-Before we can call SignNow we need three secrets. I will surface a prompt with these exact names — please add them before the sandbox test:
+## 2. Signup → wizard continuity
 
-- `SIGNNOW_CLIENT_ID` — from your SignNow app (sandbox app for now)
-- `SIGNNOW_CLIENT_SECRET` — from your SignNow app
-- `SIGNNOW_API_BASE` — set to `https://api-eval.signnow.com` for sandbox; swap to `https://api.signnow.com` for production
-- `SIGNNOW_WEBHOOK_SECRET` — the signing secret from your SignNow webhook subscription (used to verify incoming webhook signatures)
-- `SIGNNOW_BASIC_AUTH` — the base64 `client_id:client_secret` string SignNow requires for the OAuth `Authorization: Basic …` header on the token endpoint
+Traced sequence:
 
-We'll also need a **service user** (email + password) inside your SignNow account to obtain access tokens via password grant — SignNow's OAuth2 uses `grant_type=password` with `Basic client_id:client_secret`. Two more secrets:
+```text
+/list (QuickStartWizard)
+  → user picks category+mode+ZIP
+  → sessionStorage['vendibook_quickstart_draft'] = {data, step}   ✅ preserved
+  → clicks Continue while signed out
+    → sessionStorage['vendibook_quickstart_resume'] = '1'         ✅ resume flag
+    → navigate('/auth?redirect=/list')                            ✅
+  → /auth signs user in
+    → navigates back to /list                                     ✅
+  → QuickStartWizard mounts, useEffect on [user] auto-calls
+    handleCreateDraft() when resume flag set                      ✅
+  → create-listing-draft edge fn:
+       - upserts user_roles(host)                                 ✅
+       - inserts listings row with host_id                        ✅ (service role, bypasses RLS)
+  → refreshProfile()                                              ✅
+  → navigate(`/create-listing/${id}`)                             ✅
+```
 
-- `SIGNNOW_SERVICE_USER_EMAIL`
-- `SIGNNOW_SERVICE_USER_PASSWORD`
+**Gaps found:**
 
-Everything is namespaced so sandbox → production is a base-URL + credentials swap, no code change.
+- **G1. No `profiles` row is guaranteed on first draft.** `create-listing-draft` upserts `user_roles` but never touches `public.profiles`. Downstream: `useListingQuota` queries `profiles.grandfathered_listings` with `.maybeSingle()` (safe), but the identity-verified gate reads `profile?.identity_verified` — if the auth trigger `handle_new_user` is missing or failed, `profile` is null forever and the user can never publish. **Fix:** have `create-listing-draft` also upsert a minimal `profiles` row (id, email) with `onConflict: 'id'` before inserting the listing.
+- **G2. Email-verification gap.** If Supabase email confirmation is on, the OAuth-less signup returns a user with no session; `handleCreateDraft`'s post-login effect fires but `getSession()` is null → generic "Please sign in" toast. **Fix:** detect this in the resume effect and show a "Check your email to confirm and return to /list" state instead of a red error.
+- **G3. `/auth` redirect param inconsistency.** `QuickStartWizard` uses `?redirect=/list`; `EditListing` uses `?redirect=<path>`; `Auth.tsx` reads both `redirect` and `returnTo` — OK. But `CreateListing.tsx` uses `?redirect=<pathname+search>` which is correct; nothing to change.
+- **G4. Wizard step (`?step=`) preservation.** `EditListing` preserves `location.search` on redirect ✅. `PublishWizard` internal `step` state is NOT written to the URL, so a mid-wizard refresh/relogin drops the user back to the `photos` step. **Fix:** mirror `step` into URL `?step=` so relogin lands on the same step (out of scope for this pass — flag only, no code change unless approved).
 
----
+## 3. Duplicate-row regression guard
 
-## 1. Foundation
+- `handlePublish` uses `.update(...).eq('id', listing.id)` in all three branches (notary, featured, standard). No `.insert()` occurs during publish. ✅
+- `saveGuestDraftFields` uses `.update()` or the guest-draft-access function (which also updates). ✅
+- `create-listing-draft` is the SOLE inserter and is called exactly once by `QuickStartWizard`. ✅
 
-### DB (one migration)
+Existing smoke covers this. Nothing to fix.
 
-- `documents` table (columns per spec):
-  - `id uuid pk`, `transaction_id uuid null` (fk `sale_transactions`), `booking_id uuid null` (fk `booking_requests`) — CHECK exactly one is set
-  - `document_type text` — enum-checked: `rental_agreement | bill_of_sale | purchase_agreement | kitchen_agreement | handoff_acknowledgment`
-  - `signnow_document_id text unique`, `signnow_template_id text null`
-  - `status text` — `draft | sent | partially_signed | completed | voided`
-  - `signers jsonb` — `[{ role, user_id, email, name, signed_at, signing_url_expires_at }]`
-  - `signed_pdf_path text null` (Storage path in a new **private** `signed-documents` bucket)
-  - `metadata jsonb`, `created_at`, `updated_at`
-- Grants: `authenticated` SELECT/INSERT/UPDATE, `service_role` ALL. No `anon`.
-- RLS: SELECT allowed when caller is a listed signer OR is a participant on the linked transaction/booking (host, buyer, seller, renter) OR `has_role(auth.uid(),'admin')`. INSERT/UPDATE restricted to `service_role` (edge functions only).
-- `signnow_webhook_events` table (mirrors `stripe_webhook_events` pattern): `id`, `event_id unique`, `event_type`, `payload jsonb`, `processed_at`, `created_at`. Service-role only.
-- `sale_transactions.bill_of_sale_completed_at timestamptz null` added.
+## 4. Pre-deploy gate is likely inert
 
-Storage: private bucket `signed-documents`. Access via signed URLs from an edge function that re-checks the same RLS predicate.
+- `scripts/smoke/publish-flow-smoke.ts` exits 0 with `console.warn` when `SUPABASE_URL`/`SUPABASE_SERVICE_ROLE_KEY` are missing. On GitHub Actions this prints a warning but the job is green — indistinguishable from a real pass.
+- Same skip-and-pass pattern also exists in `boost-publish-smoke.ts`, `delete-listing-smoke.ts`, `entitlement-*-smoke.ts`, `subscription-lifecycle-smoke.ts`.
+- **Cannot verify from sandbox** whether the repo owner has `SUPABASE_URL` / `SUPABASE_SERVICE_ROLE_KEY` set in **Settings → Secrets and variables → Actions**. Report to user: those two secrets must be present at repo level for ANY of the DB smokes to actually execute.
 
-### Edge functions
+**Fix:** make the skip path LOUD:
+- Print `::warning::SKIPPED — secrets not configured` (GitHub Actions annotation) so CI shows a yellow warning banner.
+- Add a `smoke-gate-status` job that fails when *both* secrets are missing on `push: main`, so an unconfigured gate cannot masquerade as green on production deploys. (Still soft-warns on PRs from forks where secrets can't be shared.)
 
-- **`signnow-client`** (shared helper module, not a public function — lives at `supabase/functions/_shared/signnow.ts`):
-  - `getAccessToken()` — password grant against `${SIGNNOW_API_BASE}/oauth2/token`, caches token in-memory per isolate keyed to expiry-60s.
-  - Typed wrappers: `createDocumentFromTemplate`, `prefillFields`, `createEmbeddedInvite`, `getEmbeddedSigningLinks`, `downloadDocument`, `createWebhookSubscription` (used once at setup).
-  - Every non-2xx from SignNow surfaces `[status]: body` upstream.
-- **`signnow-webhook`** (`verify_jwt=false`):
-  - Verifies HMAC-SHA256 signature header (`x-neap-signature` / SignNow's documented header) using `SIGNNOW_WEBHOOK_SECRET`.
-  - Idempotent write into `signnow_webhook_events` on `event_id` unique.
-  - Handles `document.complete`, `document.update`, `document.field_invite.signed`: updates `documents.status`, appends `signers[i].signed_at`, downloads final PDF on `document.complete` and stores it to `signed-documents/{doc.id}.pdf`, and inserts an in-app `notifications` row for each participant.
-- **`signnow-create-embedded-session`** (auth required):
-  - Input: `{ document_id, signer_role }`. Verifies the caller is that signer, returns a fresh embedded signing `url` (short-lived) for the modal iframe.
-- **`signnow-download-signed`** (auth required):
-  - Returns a signed Storage URL to `signed_pdf_path` after RLS check.
+## 5. Extend publish-flow-smoke with real-world blocked cases
 
----
+Add three scenarios to `scripts/smoke/publish-flow-smoke.ts` (still service-role DB simulation — no browser):
 
-## 2. Flow 1 — Rental agreement
+- **5a. Card-payment sale without Stripe onboarded** — create draft with `accept_card_payment=true`, profile with `stripe_account_id=NULL`, attempt the publish `update`, then assert via a separate check that the app-level gate would block (simulate by asserting `requiresStripe && !isOnboardingComplete` on a fixture); since the trigger allows the DB write, we instead assert the row's `accept_card_payment` state matches what the gate reads. This tests the *data contract* the gate depends on.
+- **5b. Unverified-identity host** — profile with `identity_verified=false`; simulate the client-side gate by asserting `profile.identity_verified === false` after draft creation. The DB doesn't enforce it, so we assert the fixture the UI reads.
+- **5c. Host at listing limit** — create N=quota published rows then attempt an (N+1)th publish; expect the `trg_enforce_listing_publish_limit` trigger to raise `listing_publish_limit_reached`. This is the ONLY one of the three enforced server-side and is a real regression guard.
 
-**Trigger.** On host approval of a `booking_requests` row (existing approval edge function) OR on instant-book confirmation, call a new helper `ensureRentalAgreement(booking_id)`:
+Scenarios 5a/5b are honest about what the DB smoke can verify vs. what needs the browser smoke (`wizard-auth-guard-smoke.ts`).
 
-1. Load booking + listing + host + renter + terms (rate, deposit, dates, cancellation policy already stored in the booking/transaction_terms).
-2. Create a document from the master **rental_agreement** SignNow template via API.
-3. Prefill text-tag fields: `{{host_name}}`, `{{renter_name}}`, `{{listing_title}}`, `{{start_date}}`, `{{end_date}}`, `{{daily_rate}}`, `{{total_amount}}`, `{{deposit_amount}}`, `{{cancellation_policy}}`.
-4. Create embedded field-invites for role `host` and role `renter`.
-5. Insert `documents` row (`status=sent`, `document_type=rental_agreement`, `booking_id=…`, signers seeded).
+## 6. Live end-to-end test after fixes
 
-**UI.** New `<DocumentsCard type="rental_agreement" bookingId=… />` on `BookingDetail` / `HostBookingDetail`:
-
-- Header: "Free e-signature included — protects both parties" (token design, no orange CTA hijack).
-- Per-signer chip: `Awaiting your signature` / `Waiting on host` / `Completed`.
-- Primary button `Review & sign` opens `<EmbeddedSigningSheet>` (Radix Sheet on desktop, Drawer on mobile) that hosts an iframe pointing at the URL returned by `signnow-create-embedded-session`.
-- On `document.complete` webhook, the card polls (or reacts to a Supabase realtime channel on `documents`) and swaps in `Download signed agreement` → calls `signnow-download-signed`.
-- Non-blocking: booking flow continues regardless. Gentle amber footnote until both signed.
-
-## 3. Flow 2 — Bill of sale
-
-**Trigger.** Stripe webhook path we already own (`stripe-webhook`) — when `sale_transactions.status` transitions to `paid`, call `ensureBillOfSale(transaction_id)`:
-
-1. Master **bill_of_sale** template, fields: `{{buyer_name}}`, `{{seller_name}}`, `{{listing_title}}`, `{{vin}}` (blank when not present), `{{sale_price}}`, `{{sale_date}}`, `{{as_is_clause}}` (fixed template text).
-2. Same embedded-invite pattern, roles `buyer` and `seller`.
-3. On `document.complete` webhook, set `sale_transactions.bill_of_sale_completed_at = now()`.
-
-**UI.** Same `<DocumentsCard type="bill_of_sale" transactionId=… />` on `TransactionDetail`, both buyer and seller views.
-
-## 4. UX + copy
-
-- Section heading: **Documents**.
-- Trust line: **Free e-signature included — protects both parties**. Subline: "Powered by SignNow. Signatures are legally binding under the ESIGN Act." No pricing anywhere.
-- Notarize stub: a disabled `Notarize this document` row with tooltip "Coming soon — online notarization via SignNow Proof." No routing, no CTA event.
-- Emails: extend transactional email system with two templates — `rental-agreement-ready`, `bill-of-sale-ready`, plus completion twins. Every link is `https://vendibook.com/bookings/{id}?doc={documents.id}` or the transaction equivalent — never a raw SignNow URL.
-
-## 5. Sandbox test (I run this at the end)
-
-Two live end-to-end tests against `api-eval.signnow.com` using a freshly created synthetic host+renter and buyer+seller pair. For each flow I'll report PASS/FAIL on:
-
-1. OAuth token fetched.
-2. Document created from template.
-3. Embedded invite URLs returned for both roles.
-4. Both roles sign inside the iframe.
-5. `document.complete` webhook received, signature verified, idempotent row landed.
-6. Signed PDF downloaded and written to `signed-documents/`.
-7. `documents.status = completed` and (bill of sale) `bill_of_sale_completed_at` set.
-
-## Templates I need in your SignNow account
-
-Two templates, both authored with text tags so field IDs stay stable across template edits:
-
-**rental_agreement** — tags: `{{host_name}} {{renter_name}} {{listing_title}} {{start_date}} {{end_date}} {{daily_rate}} {{total_amount}} {{deposit_amount}} {{cancellation_policy}} {{host_signature}} {{renter_signature}} {{sign_date_host}} {{sign_date_renter}}`
-
-**bill_of_sale** — tags: `{{buyer_name}} {{seller_name}} {{listing_title}} {{vin}} {{sale_price}} {{sale_date}} {{as_is_clause}} {{buyer_signature}} {{seller_signature}} {{sign_date_buyer}} {{sign_date_seller}}`
-
-Store their template IDs in two more secrets so we don't hardcode: `SIGNNOW_TEMPLATE_RENTAL_AGREEMENT`, `SIGNNOW_TEMPLATE_BILL_OF_SALE`.
-
-## Explicit non-goals (v1)
-
-- No notarization wiring beyond the disabled stub.
-- No signature paywall, no per-document metering.
-- No purchase_agreement / kitchen_agreement / handoff_acknowledgment flows yet (enum reserved, but no triggers/UI).
-- No bulk-send, no reminders scheduling — SignNow's default reminder is enough for v1.
-
-## Production switch checklist (for later)
-
-1. Create production SignNow app + service user.
-2. Recreate the two templates in the production account, capture new template IDs.
-3. Update secrets: `SIGNNOW_API_BASE=https://api.signnow.com`, new `SIGNNOW_CLIENT_ID/SECRET/BASIC_AUTH`, new `SIGNNOW_SERVICE_USER_*`, new template ID secrets, new `SIGNNOW_WEBHOOK_SECRET`.
-4. Re-subscribe the webhook to point at the production project's `signnow-webhook` URL.
-5. Smoke-test one rental + one bill of sale end-to-end in prod.
+Run the new `publish-flow-smoke.ts` (with all three scenarios), plus the existing `wizard-auth-guard-smoke.ts`, against `http://localhost:8080` and report the transition of each stage:
+`signup → profile row → draft → wizard save → publish → live in search`.
+Then `tsgo` typecheck.
 
 ---
 
-## Files I'll add / change
+## Proposed edits (small, surgical)
 
-- Migration: `documents`, `signnow_webhook_events`, `sale_transactions.bill_of_sale_completed_at`, private `signed-documents` bucket + RLS.
-- `supabase/functions/_shared/signnow.ts` (client + typed API wrappers).
-- `supabase/functions/signnow-webhook/index.ts`.
-- `supabase/functions/signnow-create-embedded-session/index.ts`.
-- `supabase/functions/signnow-download-signed/index.ts`.
-- `supabase/functions/_shared/ensureRentalAgreement.ts` + call site inside the existing booking-approval function.
-- `supabase/functions/_shared/ensureBillOfSale.ts` + call site inside `stripe-webhook` on `paid` transition.
-- `src/components/documents/DocumentsCard.tsx`, `EmbeddedSigningSheet.tsx`, `SignerStatusChip.tsx`, `useDocuments.ts` hook (realtime).
-- Wire `<DocumentsCard>` into `BookingDetail`, `HostBookingDetail`, `TransactionDetail`.
-- Two transactional email templates + registry updates.
-- README section `docs/signnow.md` documenting template tags + production switch.
+1. **`supabase/functions/create-listing-draft/index.ts`** — before inserting the listing, upsert `public.profiles { id: user.id, email: user.email }` with `onConflict: 'id'`. Guarantees the row required by `useAuth`, `useListingQuota`, and identity gate. (Fix G1.)
 
-Please confirm and add the secrets above; I'll then run the migration, build the code, and execute the sandbox tests.
+2. **`src/components/listing-wizard/PublishWizard.tsx` (`handlePublish` catch + `getValidationErrors`)**:
+   - Show ALL validation errors, not just the first.
+   - Add a `Connect Stripe` action to the Stripe gate toast.
+   - Decode common publish `error.message` values (RLS `permission denied`, `null value in column`, `listing_publish_limit_reached` in the notary branch) into actionable toasts naming the blocker.
+
+3. **`src/components/listing-wizard/QuickStartWizard.tsx`** — in the resume effect, if `!sessionData.session` after user object exists (email-confirm pending), show a friendly "Check your email to confirm" state instead of the generic red toast. (Fix G2.)
+
+4. **`scripts/smoke/publish-flow-smoke.ts`**:
+   - Replace silent `process.exit(0)` on missing secrets with `console.log('::warning::…SKIPPED…')` and a distinct `[smoke] SKIPPED` header.
+   - Add scenarios 5a/5b/5c described above, each with clear pass/fail messages.
+
+5. **`.github/workflows/smoke-predeploy.yml`** — add a lightweight `secrets-configured` gate job (fails on `push: main` when `SUPABASE_URL`/`SUPABASE_SERVICE_ROLE_KEY` are empty) so an unconfigured deploy pipeline can't ship green.
+
+6. **Report to user (chat, not code):** exact GitHub secrets to add if missing — `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, and optionally `APP_BASE_URL` for browser smokes.
+
+## Out of scope (flagged, not fixing unless approved)
+- Persisting `PublishWizard` step to the URL (G4).
+- Server-side enforcement of identity verification and Stripe onboarding at publish (currently client-only gates; a determined API caller with a valid JWT could set `status='published'`).
+
+Approve to proceed; I'll implement 1–6, run the smoke locally, then typecheck and report each stage's pass/fail.
