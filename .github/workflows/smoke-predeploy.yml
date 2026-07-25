@@ -8,6 +8,34 @@ on:
   workflow_dispatch:
 
 jobs:
+  # Fails on push:main when the DB smoke secrets are not configured, so the
+  # deploy pipeline cannot ship green while every downstream job silently
+  # SKIPs. PRs from forks (which can't access secrets) get a soft warning.
+  secrets-configured:
+    name: Smoke Secrets Configured (blocks main deploy when missing)
+    runs-on: ubuntu-latest
+    timeout-minutes: 1
+    steps:
+      - name: Verify SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are set
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          EVENT: ${{ github.event_name }}
+        run: |
+          if [ -z "$SUPABASE_URL" ] || [ -z "$SUPABASE_SERVICE_ROLE_KEY" ]; then
+            MSG="Missing SUPABASE_URL and/or SUPABASE_SERVICE_ROLE_KEY. All DB smoke tests will SKIP silently. Add them under repo Settings → Secrets and variables → Actions."
+            echo "::warning title=Smoke gate INERT::$MSG"
+            if [ "$EVENT" = "push" ]; then
+              echo "::error title=Deploy gate blocked::$MSG"
+              exit 1
+            else
+              echo "PR from fork or secrets not shared — soft-warning only."
+            fi
+          else
+            echo "✅ Smoke secrets configured."
+          fi
+
+
   boost-publish-smoke:
     name: Boost-Publish Smoke (blocks deploy on fail)
     runs-on: ubuntu-latest
