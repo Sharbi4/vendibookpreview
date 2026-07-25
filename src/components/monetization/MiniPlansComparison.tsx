@@ -23,8 +23,8 @@ const ROWS: Array<{
 }> = [
   {
     label: 'Active listings',
-    free: '2',
-    starter: '5',
+    free: 'Up to 2 active',
+    starter: 'Up to 5 active',
     growth: 'Unlimited',
   },
   {
