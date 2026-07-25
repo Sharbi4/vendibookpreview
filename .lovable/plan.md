@@ -1,169 +1,75 @@
+# Entitlement Audit — Simplified Catalog
 
-## 1. Discovery — current state (what's actually true today)
+Full matrix from the code investigation. For each MISSING/PARTIAL line I recommend either **BUILD now** (fits under a day) or **SOFTEN copy** (remove the unbacked claim). Notary excluded per instructions.
 
-**Prices stay:** Starter $39 / Growth $89 / Operator $149. This pass changes contents + presentation + enforcement, not amounts.
+## Matrix
 
-**Tier data source:** `PremiumTierCard` renders `product.features.slice(0, 7)` from `monetization_products.features` (DB rows). To ship a Sellers/Hosts split we stop reading DB feature strings for the three tier cards and drive them from a typed catalog inside `PremiumPlansSection` (`TIER_FEATURES`) — same file that already owns tier ordering. DB rows keep their features for other surfaces.
+| Package | Benefit line | Delivering feature | Status | Action |
+|---|---|---|---|---|
+| Free | List free, unlimited inquiries, free e-signatures | Listing CRUD + messaging + TrustESignChip | WORKS | — |
+| All | Payment protection at checkout | `create-checkout` + Stripe | WORKS | — |
+| Starter | AI listing description generator | `ai-listing-creator` (server tier gate confirmed) | WORKS | — |
+| Starter | Booking calendar + inquiry mgmt | `HostBookings.tsx`, `AvailabilityCalendar.tsx` — no gate | Free-for-all | **SOFTEN** — reframe as "included from Free" |
+| Starter | Basic analytics | `HostAnalytics.tsx` base charts | WORKS (open) | — |
+| Starter | Priority email support | No priority mechanism | MISSING | **BUILD** priority flag on support_tickets + badge |
+| Starter | Enhanced listing tools (extra photos, badges) | No tier check on photo count | MISSING | **SOFTEN** — remove; every tier has same photo/badge caps today |
+| Growth (Pro) | Full premium tools bundle, no per-tool paywalls | 7 tool routes + 4 AI edge fns have **zero** tier check (client OR server) | PARTIAL / privilege escalation | **BUILD** server gate in 4 edge fns + client `<ToolAccessGate>` on 7 pages |
+| Growth | 1 Featured Boost/mo included | Not granted anywhere | MISSING | **SOFTEN** — remove "1 included" line (credit-grant infra out of day scope) |
+| Growth | Recurring availability | Not implemented | MISSING | **SOFTEN** — remove |
+| Growth | Custom deposits & cancellation rules | `deposit_amount` open to all tiers | Free-for-all | **SOFTEN** — reframe as included from Free |
+| Growth | Storage add-ons, cleaning fees | No schema/UI | MISSING | **SOFTEN** — remove |
+| Growth | $10 off notarization | Notary excluded | N/A | Leave copy as-is per instructions |
+| Operator | Multi-location / fleet portfolio | Not implemented | MISSING | **SOFTEN** — remove |
+| Operator | Team member access & permissions | Not implemented | MISSING | **SOFTEN** — remove |
+| Operator | Utilization analytics | Not implemented | MISSING | **SOFTEN** — remove |
+| Operator | Accounting exports | Not implemented | MISSING | **SOFTEN** — remove (>day of scope for CSV exports across sales/rentals + tax breakdown) |
+| Operator | Custom intake questions per booking | Not implemented | MISSING | **SOFTEN** — remove |
+| Operator | Dedicated support in hours | Same as Starter priority | MISSING | Rolled into priority-support BUILD (Operator = highest priority tier) |
+| Operator | BuildKit included | Same tools-gate issue | PARTIAL | Fixed by tools-gate BUILD |
+| `pro_weekly_pass` | 7 days all Pro, no auto-renew | `resolveHostTier` reads `access_ends_at` | WORKS | — (value improves after tools-gate BUILD) |
+| `boost-featured-30` | Featured badge + priority placement + refresh, 30d | Badge + `listing_promotions` work; **no featured-first sort** in search | PARTIAL | **BUILD** featured-first ordering in listing search query |
+| `permit_path_plus` | Personalized checklist, saved progress, docs, deadlines | Tables + `useToolAccess` gate exist; `/tools/permitpath` page itself ungated | PARTIAL | Covered by tools-gate BUILD (route enforces purchase-or-tier) |
+| `listing_rewrite` | We rewrite in 3 business days | No fulfillment queue or admin surface | MISSING/PARTIAL | **BUILD** admin "Manual services" filter tab keyed on category=`seller_service` + status=`paid` |
 
-**No Free column exists today.** Add a 4th `FreeTierCard` (or `PremiumTierCard` variant with `role: 'free'`) so the grid becomes 4-up on desktop, stacks on mobile.
+No orphan SKUs. No notary SKUs are active.
 
-**Listing-limit enforcement (flagged):**
-- `useListingQuota` declares `free: 3, starter: 10, pro/premium: null`.
-- Consumers: only `ListingQuotaBanner` (visual banner on `/host/listings`). **Nothing gates the publish flow — free users can publish unlimited listings today.** The banner is cosmetic.
-- Action needed: **owner decision required** — options in section 6 below.
+## BUILD Plan (all fit under a day each)
 
-**E-signature status:** Rental and sale flows already produce online-signed agreements (see `transaction_terms`, booking documents), but nothing on the plans page, listing cards, checkout, or publish step surfaces this as a free trust feature.
+### 1. Tool bundle server + client gate (largest, ~1 day)
+- **Server:** add `resolveHostTier` + purchase-check to `ai-tools`, `ai-marketing-creator`, `ai-web-research`, `ai-equipment-guide`. Return 402 with `{error, upgrade_slug}` when tier insufficient.
+- **Client:** new `<ToolAccessGate slug="…">` wrapper reading `useToolAccess`. Wrap the 7 tool page components (`PricePilot`, `ListingStudio`, `MarketingStudio`, `ConceptLab`, `MarketRadar`, `BuildKit`, `PermitPath`). Insufficient access → render a compact upsell block linking to `/plans/tools/:slug` and `/pricing`.
+- Grandfather logic already in `useToolAccess.ts` preserved.
 
-**Access enforcement (audit summary):**
-- Client gates: `useToolAccess` (tier + purchase + grandfathered).
-- Server gates: spot-check needed on premium-tool edge functions (`ai-listing-creator`, PricePilot RPCs, market radar, etc.) — I'll enumerate in section 5 and fix any that trust the client.
-- Featured Boost: `listing_promotions` row with `ends_at` in future — already server-authoritative.
+### 2. Priority support (~3h)
+- Migration: `ALTER TABLE support_tickets ADD COLUMN priority text CHECK (priority IN ('standard','priority','dedicated')) DEFAULT 'standard';`
+- Trigger or client-set on ticket creation: read caller tier via `resolveHostTier` in the ticket-create edge function; Growth → `priority`, Operator → `dedicated`.
+- UI: "Priority" / "Dedicated" chip on ticket list and detail (`SupportTicketList`, `SupportTicketDetail`).
 
-## 2. Tier map (final, delivering-only) — every line must have a real backing feature
+### 3. Featured-first search sort (~2h)
+- In the listing search/browse query (`useListings`/`ListingBrowse` — locate exact file), add secondary order `is_featured desc nulls last` before existing sort. Compute `is_featured` via `listing_promotions.featured_expires_at > now()` or reuse `featured_enabled` on listings.
 
-I'll flag any line that lists a feature not yet delivered so we don't ship marketing that doesn't work.
+### 4. Manual-services admin queue (~3h)
+- In `AdminMonetizationOps`, add tab "Manual services" filtering `monetization_purchases` where `product.category = 'seller_service'` and `status = 'paid'` and no `fulfilled_at`. Row action: "Mark fulfilled" writes `fulfilled_at` + admin note.
 
-### FREE — $0 "Start free — list without paying anything"
-For sellers
-- List trucks and trailers for free — no monthly cost
-- Unlimited buyer inquiries and messages
-- Secure card payments with payment protection
-- **Free e-signatures on every bill of sale** ✅ delivered (`transaction_terms`)
-- Basic seller dashboard
+## SOFTEN Plan (copy-only edits)
 
-For hosts
-- List kitchens and vendor spaces free
-- Unlimited renter inquiries and messages
-- Secure card payments with payment protection
-- **Free e-signatures on every rental agreement** ✅ delivered
-- Basic host dashboard, booking calendar
+Update these files to remove/reframe unbacked lines above:
+- `src/components/monetization/tierCatalog.ts` (host & seller feature arrays for growth + operator)
+- `src/components/monetization/PlansComparisonTable.tsx` (drop rows: multi-location, team access, utilization, accounting exports, custom intake, storage add-ons, recurring availability; keep or reframe deposits)
+- `src/lib/monetization/learnMoreCatalog.ts` (rewrite growth/operator outcomes to reflect delivered value: tools bundle, boost credit gone, priority support, faster payouts if real)
+- `src/pages/Pricing.tsx` one-liners
+- `src/components/monetization/PremiumPlansSection.tsx` hero bullets
 
-Everyone
-- PermitPath basic + Startup Guide
+Rewrites will emphasize what IS delivered: tools bundle (post-BUILD), AI listing generator, priority/dedicated support, notarization discount (unchanged), payment protection, e-signatures.
 
-CTA: **Start free** → `/auth?returnTo=/dashboard` (or `/list-your-space` if signed in).
+## Out of scope (flagged, not built)
+- Featured Boost monthly credit for Growth subscribers (needs credit-ledger schema).
+- Multi-location, team access, utilization analytics, accounting exports, custom intake (each is multi-day).
+- Notary — owner is wiring their own integration.
 
-### STARTER — $39/mo "List like a pro"
-Everything in Free, plus:
+## Verification
+- `tsgo` typecheck after edits.
+- Manual: signed-out visit to `/tools/pricepilot` → sees upsell, not the tool.
+- DB: existing paid `permit_path_plus` purchase still resolves via `useToolAccess`.
 
-For sellers
-- Enhanced listing tools (extra photos, richer specs, highlight badges)
-- AI listing description generator ✅ delivered (`ai-listing-creator`)
-- Priority placement basics (above free tier in category feeds) — ⚠️ **FLAG:** verify `listings` ordering respects tier; if not, wire it or drop this line
-
-For hosts
-- Booking calendar + inquiry management ✅
-- Automated renter messages ✅
-
-Both
-- Basic analytics ✅
-- Priority email support
-
-### GROWTH — $89/mo (Recommended) "Sell and book faster"
-Everything in Starter, plus:
-
-For sellers
-- **1 active Featured Boost included** (equivalent to `boost-featured-30`)
-- Full premium tools bundle unlocked — matches "free with Pro" copy on `/tools`:
-  - PricePilot ✅
-  - Listing Studio ✅
-  - Marketing Studio ✅
-  - Concept Lab ✅
-  - Market Radar ✅
-  - PermitPath Plus ✅
-
-For hosts
-- Multiple active listings ✅
-- Recurring availability ✅
-- Storage add-ons, cleaning fees, custom deposits, custom cancellation rules ✅
-
-Both
-- $10 off notarization ($39 instead of $49) — ⚠️ **FLAG:** notarization SKU price not yet member-discounted in catalog; either add a `member_discount_cents` field or apply at checkout. Ships alongside this pass.
-
-### OPERATOR — $149/mo "Run your whole operation"
-Everything in Growth, plus:
-- Team member access & permissions ✅ (schema exists)
-- Multi-location / fleet tools ✅
-- Utilization analytics + accounting exports ✅ delivered on `/host/analytics`
-- Custom intake questions — ⚠️ **FLAG:** UI exists but gate not wired; will add tier check
-- BuildKit included ✅
-- Dedicated support
-
-CTA: **Talk business — go Premium**.
-
-## 3. E-signature as a standard trust feature (Free, all users)
-
-New shared component `TrustESignChip` (subtle token-styled pill with `FileSignature` icon + tooltip: *"Agreements and bills of sale are signed online, free."*). Placed:
-
-1. **Plans page** — inside every tier card's feature list (Free through Operator) via the tier catalog above.
-2. **Comparison table** — new row `Free e-signatures on every agreement` = check across all four columns.
-3. **Checkout trust row** — appended to `PaymentProtectionBlock` area on `SaleCheckout` / `BookingCheckout`, plus the trust row inside `PremiumPlansSection` at bottom.
-4. **Listing cards** — `ListingCard.tsx` gets one small chip in the bottom-right of the image area (next to Calendar/Quick Book icons), rendered for both `mode === 'sale'` and `mode === 'rent'`. Also `PhotoListingCard` (dashboard).
-5. **Listing publish step** — appended reassurance line in the publish/review step of the wizard: *"Every sale and rental includes free online signatures — agreements handled for you."*
-
-## 4. Learn-more overlays + consent dialog copy
-
-- `learnMoreCatalog.ts` — add a new `host_free` entry (Free plan) with outcomes matching section 2; refresh `host_starter`, `host_growth`, `host_operator` outcomes to include the sellers/hosts split and the e-signature line.
-- `SubscriptionConsentDialog` — refresh the plan-name-driven bullet list to match the top ~5 outcomes of the new tier map for the plan being purchased. Auto-renews / cancel-anytime disclosure copy stays **byte-identical**.
-
-## 5. Exclusive access enforcement — audit + fixes
-
-For each paid benefit line I'll verify server-side enforcement, not just client hiding:
-
-| Feature | Client gate | Server gate | Action |
-|---|---|---|---|
-| Featured Boost credit (Growth) | `useToolAccess` / entitlements | `listing_promotions.ends_at > now()` | ✅ already server-authoritative |
-| Premium tools bundle (Growth+) | `useToolAccess` | Per-tool edge functions | Audit `ai-listing-creator`, `pricepilot-*`, `market-radar-*`, `listing-studio-*` for tier check — add missing `has_role`-style tier check via `host_subscriptions` |
-| Multi-location, custom intake, team access (Operator) | React guards | Server check on the write RPCs | Audit / add |
-| $10 notarization discount (Growth+) | UI badge | Applied in `create-checkout` price selection | Wire member-discount branch |
-| AI description generator (Starter+) | Existing | Verify tier check in `ai-listing-creator` edge fn | Audit |
-
-Each gated edge function will (a) read the bearer token, (b) resolve the tier via a shared `resolveHostTier(userId)` helper querying `host_subscriptions` (status IN active/trialing/past_due, plus one-time purchase fallback via `monetization_purchases`), (c) return 403 with `{ code: 'tier_required', requires: 'pro' }` when denied. Expired subs revert immediately because the check is live-DB, not cached.
-
-Spot-test acceptance:
-- Free user hits `/tools/pricepilot` → sees paywall UI + calling the edge fn returns 403.
-- Growth user → tools unlocked, Featured credit visible in `/host/listings` header.
-- Cancelled/expired subscriber → tier resolves to `free` at next query; access reverts.
-
-I'll run the tests with actual seeded users after the code lands.
-
-## 6. Listing-limit flag — decision needed before enforcement
-
-**Current behavior:** the "3 for free / 10 for Starter" numbers are declared in `useListingQuota` but only render a banner on `/host/listings`. Publish and unpause paths do NOT block; every free user can publish unlimited listings today.
-
-Options for you to pick (this pass will NOT ship enforcement):
-- **A. Keep unlimited for everyone** — drop the banner and quota numbers, promise "Unlimited listings on every plan" in the tier catalog. Simplest, most generous.
-- **B. Free = 2 active going forward, grandfather anyone above 2** — enforce on publish + unpause, exempt existing accounts whose count exceeded 2 as of a snapshot date.
-- **C. Free = 3 (match the current banner) going forward, grandfather existing** — same mechanic, higher cap.
-
-I recommend **A** for now (matches the "Start free — list without paying anything" positioning) and revisit if abuse shows up. Awaiting your call before touching enforcement or the plans catalog copy on this line.
-
-## 7. Files touched
-
-**Plans surface**
-- `src/components/monetization/PremiumPlansSection.tsx` — 4-col grid, new tier catalog with For sellers / For hosts groups, tier-driven features (not DB `features` array).
-- `src/components/monetization/PremiumTierCard.tsx` — accept typed feature groups instead of raw string list; render grouped headers; keep animation/consent/learn-more wiring.
-- `src/components/monetization/FreeTierCard.tsx` (new) — thin variant of `PremiumTierCard` for `$0` / "Start free" CTA (no Stripe call).
-- `src/components/monetization/PlansComparisonTable.tsx` — add `free` column, add e-signature row, refresh rows to match section 2.
-- `src/lib/monetization/learnMoreCatalog.ts` — add `host_free`, refresh growth/operator outcomes.
-- `src/components/monetization/SubscriptionConsentDialog.tsx` — copy refresh, disclosures untouched.
-
-**E-signature**
-- `src/components/trust/TrustESignChip.tsx` (new) — shared chip + tooltip.
-- `src/components/listing/ListingCard.tsx` + `src/components/dashboard/shared/PhotoListingCard.tsx` — render chip.
-- `src/components/checkout/PaymentProtectionBlock.tsx` — append e-sign line to trust surface (or sibling component so the block stays focused).
-- Listing wizard publish/review step (locate exact file during implementation) — add reassurance line.
-
-**Enforcement**
-- `supabase/functions/_shared/resolveHostTier.ts` (new) — shared server helper.
-- Edge functions listed in section 5 — add tier gate + 403.
-- `create-checkout` — member notarization discount branch.
-
-**Nothing else changes.** Prices, terms gate, `create-checkout` monetary logic, existing agreement/e-sign backend all untouched.
-
-## 8. Reports at the end
-
-- Final tier map (mirrors section 2) with any line still flagged.
-- Listing-limit report (current behavior + owner options).
-- Enforcement pass/fail table across the three test personas (free / Growth / expired).
-- Typecheck result.
+Approve and I'll ship in this order: BUILD 1 → 2 → 3 → 4 → SOFTEN copy → typecheck.
