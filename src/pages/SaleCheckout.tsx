@@ -26,6 +26,8 @@ import StickySummary from '@/components/shared/StickySummary';
 // Step components
 import { PurchaseStepDelivery, PurchaseStepInfo, PurchaseStepReview, type BuyerInfo } from '@/components/purchase-wizard';
 import StepConfirmPurchase from '@/components/checkout/StepConfirmPurchase';
+import CheckoutIntro from '@/components/checkout/CheckoutIntro';
+
 import StepAddOns, { type CheckoutAddOn } from '@/components/checkout/StepAddOns';
 import { ReferralCodeField } from '@/components/referrals/ReferralCodeField';
 import { FinalReviewSheet } from '@/components/transaction/FinalReviewSheet';
