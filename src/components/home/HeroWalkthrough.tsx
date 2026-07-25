@@ -279,9 +279,15 @@ const HeroWalkthrough = () => {
               <img 
                 src={vendibookLogo} 
                 alt="Vendibook" 
+                width={800}
+                height={800}
                 className="h-48 sm:h-64 md:h-80 lg:h-96 w-auto drop-shadow-lg"
                 loading="eager"
+                decoding="async"
+                // @ts-expect-error fetchpriority DOM attr
+                fetchpriority="high"
               />
+
             </motion.div>
 
             {/* Tagline with premium typography */}
