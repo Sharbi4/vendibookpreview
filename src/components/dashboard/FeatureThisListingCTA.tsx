@@ -14,7 +14,7 @@ interface Props {
  * Compact one-liner shown at the top of ListingPublished:
  *   "Want more eyes on it? Feature this listing"
  *
- * One tap → boost checkout for this listing (create-boost-checkout).
+ * One tap → boost checkout for this listing (create-featured-checkout).
  * One tap → dismiss for this listing (localStorage-scoped).
  * The deeper BoostListingPrompt lower on the page remains the fuller offer.
  *
@@ -41,8 +41,8 @@ export const FeatureThisListingCTA: React.FC<Props> = ({ listingId, priceLabel }
   const handleFeature = async () => {
     setBusy(true);
     try {
-      const { data, error } = await supabase.functions.invoke('create-boost-checkout', {
-        body: { listing_id: listingId, duration_days: 30 },
+      const { data, error } = await supabase.functions.invoke('create-featured-checkout', {
+        body: { listing_id: listingId },
       });
       if (error) throw error;
       const url = (data as { url?: string } | null)?.url;
