@@ -88,7 +88,7 @@ const Pricing = () => {
             ) : (
               <div className="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                 {listingUpgrades.map((p) => {
-                  const paths = buildCheckoutReturnPaths(p.slug, listingContext);
+                  const paths = buildCheckoutReturnPaths(p.slug, { listingId: listingContext });
                   return (
                     <ProductPricingCard
                       key={p.id}
