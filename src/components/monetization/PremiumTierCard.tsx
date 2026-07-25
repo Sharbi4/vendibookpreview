@@ -11,6 +11,10 @@ import {
 } from '@/lib/monetization/products';
 import { trackLeadEvent } from '@/lib/leadTracking';
 import { useSubscriptionConsent } from '@/hooks/useSubscriptionConsent';
+import {
+  ProductLearnMoreOverlay,
+  useLearnMoreDeepLink,
+} from '@/components/monetization/ProductLearnMoreOverlay';
 
 interface Props {
   product: MonetizationProduct;
@@ -81,6 +85,14 @@ export function PremiumTierCard({
   const { requestCheckout, dialog: consentDialog, pendingSlug } = useSubscriptionConsent();
   const activeBusy = busy || pendingSlug === product.slug;
   const styles = roleStyles[role];
+  // Learn more overlay — auto-opens when ?learn=<role|slug> matches
+  const learnDeepLink = useLearnMoreDeepLink(product.slug);
+  const [learnOpenManual, setLearnOpenManual] = useState(false);
+  const learnOpen = learnDeepLink.open || learnOpenManual;
+  const setLearnOpen = (v: boolean) => {
+    setLearnOpenManual(v);
+    learnDeepLink.setOpen(v);
+  };
 
   useEffect(() => {
     const el = cardRef.current;
@@ -186,10 +198,30 @@ export function PremiumTierCard({
           <>{ctaLabel} <ArrowRight className="ml-1.5 h-4 w-4" /></>
         )}
       </Button>
+      <button
+        type="button"
+        onClick={() => setLearnOpen(true)}
+        className="mt-2 text-center text-xs font-medium text-white/60 hover:text-white/90 underline-offset-4 hover:underline"
+      >
+        Learn more about {product.name.replace(/\s*\(.*\)$/, '')}
+      </button>
       <p className="mt-3 text-[11px] text-muted-foreground text-center">
         Cancel anytime online. Auto-renews at {formatUsd(priceCents)} / {interval === 'annual' ? 'yr' : 'mo'} until canceled.
       </p>
       {consentDialog}
+      <ProductLearnMoreOverlay
+        open={learnOpen}
+        onOpenChange={setLearnOpen}
+        product={product}
+        surface={`premium_tier_card:${role}`}
+        billingLabel={interval === 'annual' ? '/yr' : '/mo'}
+        ctaLabel={ctaLabel}
+        ctaBusy={activeBusy}
+        onBuy={async () => {
+          setLearnOpen(false);
+          await handleClick();
+        }}
+      />
     </div>
   );
 }

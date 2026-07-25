@@ -12,6 +12,10 @@ import {
 } from '@/lib/monetization/products';
 import { trackLeadEvent } from '@/lib/leadTracking';
 import { useSubscriptionConsent } from '@/hooks/useSubscriptionConsent';
+import {
+  ProductLearnMoreOverlay,
+  useLearnMoreDeepLink,
+} from '@/components/monetization/ProductLearnMoreOverlay';
 
 interface Props {
   product: MonetizationProduct;
@@ -43,6 +47,14 @@ export function ProductPricingCard({
   const recurring = product.billing_type === 'recurring';
   const { requestCheckout, dialog: consentDialog, pendingSlug } = useSubscriptionConsent();
   const activeBusy = busy || pendingSlug === product.slug;
+  const learnDeepLink = useLearnMoreDeepLink(product.slug);
+  const [learnOpenManual, setLearnOpenManual] = useState(false);
+  const learnOpen = learnDeepLink.open || learnOpenManual;
+  const setLearnOpen = (v: boolean) => {
+    setLearnOpenManual(v);
+    learnDeepLink.setOpen(v);
+  };
+
 
   const handleClick = async () => {
     try {
@@ -146,7 +158,26 @@ export function ProductPricingCard({
           </>
         )}
       </Button>
+      <button
+        type="button"
+        onClick={() => setLearnOpen(true)}
+        className="mt-2 self-center text-xs font-medium text-white/60 hover:text-white/90 underline-offset-4 hover:underline"
+      >
+        Learn more
+      </button>
       {consentDialog}
+      <ProductLearnMoreOverlay
+        open={learnOpen}
+        onOpenChange={setLearnOpen}
+        product={product}
+        surface="product_pricing_card"
+        ctaLabel={ctaLabel ?? (recurring ? 'Review terms and continue' : 'Purchase')}
+        ctaBusy={activeBusy}
+        onBuy={async () => {
+          setLearnOpen(false);
+          await handleClick();
+        }}
+      />
     </div>
   );
 }

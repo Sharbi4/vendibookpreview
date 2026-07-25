@@ -125,7 +125,10 @@ export type LeadEventName =
   | 'ai_feedback_submitted'
   | 'ai_copilot_opened'
   // Human escalation
-  | 'human_support_requested';
+  | 'human_support_requested'
+  // Learn more overlay funnel
+  | 'learn_more_opened'
+  | 'learn_more_converted';
 
 
 
@@ -253,6 +256,8 @@ const EVENT_CATEGORY: Record<LeadEventName, string> = {
   ai_copilot_opened: 'ai',
   // Human escalation
   human_support_requested: 'support',
+  learn_more_opened: 'monetization',
+  learn_more_converted: 'monetization',
 };
 
 

@@ -38,7 +38,7 @@ export function useLegalDocumentBySlug(slug: string | undefined) {
         .from('legal_documents')
         .select('*')
         .eq('slug', slug)
-        .eq('status', 'active')
+        .in('status', ['active', 'published'])
         .order('effective_at', { ascending: false })
         .limit(1)
         .maybeSingle();
