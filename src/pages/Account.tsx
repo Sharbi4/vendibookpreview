@@ -323,7 +323,7 @@ const Account = () => {
                   icon={FileText}
                   label="Legal & policies"
                   hint="Terms, privacy, refund, and marketplace rules."
-                  to="/legal"
+                  to="/legal/terms"
                 />
               </SectionCard>
             </div>
