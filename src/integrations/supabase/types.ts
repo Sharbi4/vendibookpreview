@@ -3667,6 +3667,7 @@ export type Database = {
           email: string | null
           first_name: string | null
           full_name: string | null
+          grandfathered_listings: boolean
           header_image_url: string | null
           id: string
           identity_verified: boolean | null
@@ -3715,6 +3716,7 @@ export type Database = {
           email?: string | null
           first_name?: string | null
           full_name?: string | null
+          grandfathered_listings?: boolean
           header_image_url?: string | null
           id: string
           identity_verified?: boolean | null
@@ -3763,6 +3765,7 @@ export type Database = {
           email?: string | null
           first_name?: string | null
           full_name?: string | null
+          grandfathered_listings?: boolean
           header_image_url?: string | null
           id?: string
           identity_verified?: boolean | null
