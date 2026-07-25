@@ -174,6 +174,11 @@ serve(async (req) => {
 
   try {
     const { tool, data }: RequestBody = await req.json();
+    const slug = TOOL_MAP[tool];
+    if (slug) {
+      const gate = await gateToolAccess(req, slug, corsHeaders);
+      if (gate.response) return gate.response;
+    }
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
