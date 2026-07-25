@@ -1,75 +1,69 @@
-# Entitlement Audit — Simplified Catalog
 
-Full matrix from the code investigation. For each MISSING/PARTIAL line I recommend either **BUILD now** (fits under a day) or **SOFTEN copy** (remove the unbacked claim). Notary excluded per instructions.
+# Tools + Product Pages — Full Funnel Verification and Polish
 
-## Matrix
+Acceptance layer for the earlier tools/feature-page passes. Deliverable is (a) a link-integrity table, (b) per-product pass/fail, (c) consistency fixes that make every surface read from one source of truth. Money, entitlement, and webhook logic are OUT OF SCOPE — copy, links, price display, and routing only.
 
-| Package | Benefit line | Delivering feature | Status | Action |
-|---|---|---|---|---|
-| Free | List free, unlimited inquiries, free e-signatures | Listing CRUD + messaging + TrustESignChip | WORKS | — |
-| All | Payment protection at checkout | `create-checkout` + Stripe | WORKS | — |
-| Starter | AI listing description generator | `ai-listing-creator` (server tier gate confirmed) | WORKS | — |
-| Starter | Booking calendar + inquiry mgmt | `HostBookings.tsx`, `AvailabilityCalendar.tsx` — no gate | Free-for-all | **SOFTEN** — reframe as "included from Free" |
-| Starter | Basic analytics | `HostAnalytics.tsx` base charts | WORKS (open) | — |
-| Starter | Priority email support | No priority mechanism | MISSING | **BUILD** priority flag on support_tickets + badge |
-| Starter | Enhanced listing tools (extra photos, badges) | No tier check on photo count | MISSING | **SOFTEN** — remove; every tier has same photo/badge caps today |
-| Growth (Pro) | Full premium tools bundle, no per-tool paywalls | 7 tool routes + 4 AI edge fns have **zero** tier check (client OR server) | PARTIAL / privilege escalation | **BUILD** server gate in 4 edge fns + client `<ToolAccessGate>` on 7 pages |
-| Growth | 1 Featured Boost/mo included | Not granted anywhere | MISSING | **SOFTEN** — remove "1 included" line (credit-grant infra out of day scope) |
-| Growth | Recurring availability | Not implemented | MISSING | **SOFTEN** — remove |
-| Growth | Custom deposits & cancellation rules | `deposit_amount` open to all tiers | Free-for-all | **SOFTEN** — reframe as included from Free |
-| Growth | Storage add-ons, cleaning fees | No schema/UI | MISSING | **SOFTEN** — remove |
-| Growth | $10 off notarization | Notary excluded | N/A | Leave copy as-is per instructions |
-| Operator | Multi-location / fleet portfolio | Not implemented | MISSING | **SOFTEN** — remove |
-| Operator | Team member access & permissions | Not implemented | MISSING | **SOFTEN** — remove |
-| Operator | Utilization analytics | Not implemented | MISSING | **SOFTEN** — remove |
-| Operator | Accounting exports | Not implemented | MISSING | **SOFTEN** — remove (>day of scope for CSV exports across sales/rentals + tax breakdown) |
-| Operator | Custom intake questions per booking | Not implemented | MISSING | **SOFTEN** — remove |
-| Operator | Dedicated support in hours | Same as Starter priority | MISSING | Rolled into priority-support BUILD (Operator = highest priority tier) |
-| Operator | BuildKit included | Same tools-gate issue | PARTIAL | Fixed by tools-gate BUILD |
-| `pro_weekly_pass` | 7 days all Pro, no auto-renew | `resolveHostTier` reads `access_ends_at` | WORKS | — (value improves after tools-gate BUILD) |
-| `boost-featured-30` | Featured badge + priority placement + refresh, 30d | Badge + `listing_promotions` work; **no featured-first sort** in search | PARTIAL | **BUILD** featured-first ordering in listing search query |
-| `permit_path_plus` | Personalized checklist, saved progress, docs, deadlines | Tables + `useToolAccess` gate exist; `/tools/permitpath` page itself ungated | PARTIAL | Covered by tools-gate BUILD (route enforces purchase-or-tier) |
-| `listing_rewrite` | We rewrite in 3 business days | No fulfillment queue or admin surface | MISSING/PARTIAL | **BUILD** admin "Manual services" filter tab keyed on category=`seller_service` + status=`paid` |
+## Scope — surfaces in the graph
 
-No orphan SKUs. No notary SKUs are active.
+- `/pricing` and `/plans` (Pricing.tsx → PremiumPlansSection, PlansComparisonTable, PlansFAQ, PackagesIntro, ProWeeklyPassCard, tier learn-more overlays)
+- `/host/plans` (HostProPlans.tsx)
+- Feature pages under `/tools/*` and `/plans/tools/:slug` (PricePilot, PermitPath, BuildKit, ListingStudio, ConceptLab, MarketRadar, MarketingStudio, StartupGuide, RegulationsHub, ToolPreview)
+- `/tools` (ToolsIndex) and `/tools/permitpath/upgrades`
+- Dashboard: `PremiumToolsTab`, `MembershipTab`, `PremiumSpotlight`, `SidebarUpgradeCard`, `GoProButton`, promote/upgrade cards, `ActionRequiredStack`
+- Post-purchase: `PaymentSuccess`, `Purchases`, `UnlockedConfirmation`, `PostPurchaseShare`
+- Subscription email templates that link back into the app
 
-## BUILD Plan (all fit under a day each)
+## Method
 
-### 1. Tool bundle server + client gate (largest, ~1 day)
-- **Server:** add `resolveHostTier` + purchase-check to `ai-tools`, `ai-marketing-creator`, `ai-web-research`, `ai-equipment-guide`. Return 402 with `{error, upgrade_slug}` when tier insufficient.
-- **Client:** new `<ToolAccessGate slug="…">` wrapper reading `useToolAccess`. Wrap the 7 tool page components (`PricePilot`, `ListingStudio`, `MarketingStudio`, `ConceptLab`, `MarketRadar`, `BuildKit`, `PermitPath`). Insufficient access → render a compact upsell block linking to `/plans/tools/:slug` and `/pricing`.
-- Grandfather logic already in `useToolAccess.ts` preserved.
+### Phase 1 — Static crawl (no browser needed)
+1. Read every surface file above.
+2. Extract every `href`, `to`, `navigate(...)`, and `window.location` target reachable from those files.
+3. Build the route table from `App.tsx` and cross-check: OK / BROKEN (no matching route, `#`, empty) / STALE (points at a legacy path that now redirects or 404s).
+4. Extract every price string and tool name literal; compare to `TIER_CATALOG`, `learnMoreCatalog`, `toolCatalog`, and live `monetization_products` (query DB once for `slug, name, base_price_cents, billing_type, active` where `active=true`).
 
-### 2. Priority support (~3h)
-- Migration: `ALTER TABLE support_tickets ADD COLUMN priority text CHECK (priority IN ('standard','priority','dedicated')) DEFAULT 'standard';`
-- Trigger or client-set on ticket creation: read caller tier via `resolveHostTier` in the ticket-create edge function; Growth → `priority`, Operator → `dedicated`.
-- UI: "Priority" / "Dedicated" chip on ticket list and detail (`SupportTicketList`, `SupportTicketDetail`).
+### Phase 2 — Fix broken/stale links
+- Rewrite any hardcoded literal price to read from the product config (or `useMonetizationProducts` where the surface can afford a hook).
+- Replace stale hrefs with the current route.
+- Any dead `href="#"` gets either a real target, an overlay opener, or is removed.
 
-### 3. Featured-first search sort (~2h)
-- In the listing search/browse query (`useListings`/`ListingBrowse` — locate exact file), add secondary order `is_featured desc nulls last` before existing sort. Compute `is_featured` via `listing_promotions.featured_expires_at > now()` or reuse `featured_enabled` on listings.
+### Phase 3 — Feature-page quality bar (per tool page)
+For each `/tools/*` page and matching `/plans/tools/:slug` (if it exists):
+- Hero line is outcome-first, not feature-first.
+- 3-step how-it-works matches the shipped tool's actual flow (verified by reading the tool component).
+- Price line = live Stripe amount from product config (no hardcoded cents).
+- "Free with Pro/Growth/Operator" anchor uses the correct current tier name.
+- FAQ links resolve.
+- Section rhythm (`.section-stack`, `.section-divider`), 1.5px cream borders, Sofia Pro Soft display / Manrope UI.
+- Screenshot references point at files that exist in `src/assets/`.
+- Mobile passes at 375px.
 
-### 4. Manual-services admin queue (~3h)
-- In `AdminMonetizationOps`, add tab "Manual services" filtering `monetization_purchases` where `product.category = 'seller_service'` and `status = 'paid'` and no `fulfilled_at`. Row action: "Mark fulfilled" writes `fulfilled_at` + admin note.
+Flag any claim that isn't backed by shipped capability — cut it or soften; do not invent new capability.
 
-## SOFTEN Plan (copy-only edits)
+### Phase 4 — Cross-consistency (single source of truth)
+Where the same product appears in multiple surfaces, resolve everything through the shared config:
+- `TIER_CATALOG` (host subs) + `useMonetizationProducts` for live price.
+- `toolCatalog` for tool name, slug, price, and included tier.
+- `learnMoreCatalog` for overlay copy.
+Delete duplicated literal names/prices in surface components; import from config. Where a live-price lookup isn't available (emails, static blog), keep the literal but wire it to a shared constant.
 
-Update these files to remove/reframe unbacked lines above:
-- `src/components/monetization/tierCatalog.ts` (host & seller feature arrays for growth + operator)
-- `src/components/monetization/PlansComparisonTable.tsx` (drop rows: multi-location, team access, utilization, accounting exports, custom intake, storage add-ons, recurring availability; keep or reframe deposits)
-- `src/lib/monetization/learnMoreCatalog.ts` (rewrite growth/operator outcomes to reflect delivered value: tools bundle, boost credit gone, priority support, faster payouts if real)
-- `src/pages/Pricing.tsx` one-liners
-- `src/components/monetization/PremiumPlansSection.tsx` hero bullets
+### Phase 5 — Report
+Emit three tables in the final message:
+1. Link integrity: `source → target | status | fix`.
+2. Per-product funnel: `product | discover | learn | buy | access | in-tool links | notes`.
+3. Consistency fixes: `field | surfaces normalized | source of truth`.
+Then run typecheck.
 
-Rewrites will emphasize what IS delivered: tools bundle (post-BUILD), AI listing generator, priority/dedicated support, notarization discount (unchanged), payment protection, e-signatures.
+## Out of scope
 
-## Out of scope (flagged, not built)
-- Featured Boost monthly credit for Growth subscribers (needs credit-ledger schema).
-- Multi-location, team access, utilization analytics, accounting exports, custom intake (each is multi-day).
-- Notary — owner is wiring their own integration.
+- Stripe money changes, webhook, entitlement engine, terms gate.
+- Redesigns beyond token/rhythm compliance.
+- New tools or new copy inventing new capability.
+- Backend function edits (unless a link points at a nonexistent function name).
 
-## Verification
-- `tsgo` typecheck after edits.
-- Manual: signed-out visit to `/tools/pricepilot` → sees upsell, not the tool.
-- DB: existing paid `permit_path_plus` purchase still resolves via `useToolAccess`.
+## Deliverables checklist
 
-Approve and I'll ship in this order: BUILD 1 → 2 → 3 → 4 → SOFTEN copy → typecheck.
+- [ ] Zero `href="#"` or dead `to=""` on any product-adjacent surface.
+- [ ] Every price string on product surfaces sourced from config or live product query.
+- [ ] Every "free with X" mention names a tier that currently exists (Starter / Growth / Operator; no lingering Pro/Premium).
+- [ ] Every tool feature page's 3-step matches the shipped tool.
+- [ ] Typecheck clean.
