@@ -268,8 +268,6 @@ export function PremiumPlansSection({ compact = false }: Props) {
 
 
 function FoundingMemberNote() {
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const { useListingQuota } = require('@/hooks/useListingQuota') as typeof import('@/hooks/useListingQuota');
   const { isGrandfathered, isLoading } = useListingQuota();
   if (isLoading || !isGrandfathered) return null;
   return (
