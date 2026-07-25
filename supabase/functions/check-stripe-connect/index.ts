@@ -65,15 +65,35 @@ serve(async (req) => {
     // Treat onboarding as complete once details are submitted. `payouts_enabled` can temporarily toggle
     // (e.g., reviews/verification), and we don't want to force "reconnect" for already-linked accounts.
     const isComplete = Boolean(account.details_submitted);
-    
-    logStep("Account status checked", { 
+
+    // Best-effort: retrieve the default external bank account so the UI can show
+    // "•••• 1234 · Chase" next to "Update bank details".
+    let bank_last4: string | null = null;
+    let bank_name: string | null = null;
+    try {
+      const externals = await stripe.accounts.listExternalAccounts(
+        profile.stripe_account_id,
+        { object: "bank_account", limit: 5 },
+      );
+      const primary =
+        externals.data.find((b: { default_for_currency?: boolean }) => b.default_for_currency) ??
+        externals.data[0];
+      if (primary) {
+        bank_last4 = (primary as { last4?: string }).last4 ?? null;
+        bank_name = (primary as { bank_name?: string }).bank_name ?? null;
+      }
+    } catch (e) {
+      logStep("External account lookup skipped", { error: e instanceof Error ? e.message : String(e) });
+    }
+
+    logStep("Account status checked", {
       accountId: profile.stripe_account_id,
       detailsSubmitted: account.details_submitted,
       payoutsEnabled: account.payouts_enabled,
-      isComplete
+      isComplete,
+      bank_last4,
     });
 
-    // Update profile if onboarding status changed
     if (isComplete && !profile.stripe_onboarding_complete) {
       await supabaseClient
         .from('profiles')
@@ -81,10 +101,13 @@ serve(async (req) => {
         .eq('id', user.id);
     }
 
-    return new Response(JSON.stringify({ 
+    return new Response(JSON.stringify({
       connected: true,
       onboarding_complete: isComplete,
-      account_id: profile.stripe_account_id
+      payouts_enabled: Boolean(account.payouts_enabled),
+      account_id: profile.stripe_account_id,
+      bank_last4,
+      bank_name,
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
