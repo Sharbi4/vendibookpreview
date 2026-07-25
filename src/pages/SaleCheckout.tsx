@@ -35,6 +35,14 @@ import { useTermsGate } from '@/hooks/useTermsGate';
 import { buildTerms } from '@/lib/transactionTerms';
 import { ProtectionOptInCard } from '@/components/protected-sale/ProtectionOptInCard';
 import { useCheckoutState } from '@/hooks/useCheckoutState';
+import {
+  JourneyProgress,
+  PrimaryActionBar,
+  TrustModule,
+  PAYMENT_TRUST_POINTS,
+  PAYMENT_DISCLAIMER,
+  type JourneyStep,
+} from '@/components/journey';
 
 type FulfillmentSelection = 'pickup' | 'delivery' | 'vendibook_freight';
 type CheckoutStep = 'intro' | 'confirm' | 'delivery' | 'addons' | 'details' | 'review';
@@ -686,6 +694,42 @@ const SaleCheckout = () => {
   const hasMultiplePaymentOptions = acceptCardPayment && acceptCashPayment;
   const currentStepNumber = getStepNumber(currentStep);
 
+  // ─── Journey progress + primary-action wiring ───
+  // Uses the existing CHECKOUT_STEPS + listing identifier so the roadmap
+  // and CTA stay in lock-step with the wizard's real state.
+  type WizardStep = Exclude<CheckoutStep, 'intro'>;
+  const WIZARD_STEP_ORDER: WizardStep[] = ['confirm', 'delivery', 'addons', 'details', 'review'];
+  const journeySteps: JourneyStep[] = CHECKOUT_STEPS.map((s, i) => ({
+    id: WIZARD_STEP_ORDER[i],
+    label: s.label,
+    optional: WIZARD_STEP_ORDER[i] === 'addons',
+  }));
+  const journeyIndex = Math.max(0, WIZARD_STEP_ORDER.indexOf(currentStep as WizardStep));
+  const nextWizardStep: WizardStep | null =
+    WIZARD_STEP_ORDER[Math.min(journeyIndex + 1, WIZARD_STEP_ORDER.length - 1)] ?? null;
+
+  const advanceFromCurrent = () => {
+    if (currentStep === 'confirm') return setCurrentStep('delivery');
+    if (currentStep === 'delivery') {
+      if (validateStep('delivery')) setCurrentStep('addons');
+      return;
+    }
+    if (currentStep === 'addons') return setCurrentStep('details');
+    if (currentStep === 'details') {
+      if (validateStep('details')) setCurrentStep('review');
+      return;
+    }
+  };
+
+  const primaryLabel =
+    currentStep === 'review'
+      ? 'Complete purchase below'
+      : nextWizardStep && nextWizardStep !== (currentStep as WizardStep)
+        ? `Continue to ${CHECKOUT_STEPS[WIZARD_STEP_ORDER.indexOf(nextWizardStep)]?.label ?? 'next step'}`
+        : 'Continue';
+  const primaryDisabled = currentStep === 'review';
+
+
   // Price lines for sticky summary — real listing title, never "Item price"
   const priceLines = [
     { label: listing.title, amount: priceSale },
@@ -778,7 +822,13 @@ const SaleCheckout = () => {
 
           <div className="grid lg:grid-cols-5 gap-8">
             {/* Main Wizard - Left Side */}
-            <div className="lg:col-span-3">
+            <div className="lg:col-span-3 space-y-4">
+              {/* Persistent step roadmap driven by the real wizard state */}
+              <JourneyProgress
+                steps={journeySteps}
+                currentIndex={journeyIndex}
+                estimate="About 2 minutes"
+              />
               <div className="glass-panel overflow-hidden">
                 {/* Step Content */}
                 <div className="p-6">
@@ -919,11 +969,30 @@ const SaleCheckout = () => {
                   </AnimatePresence>
                 </div>
               </div>
+
+              {/* Sticky mobile-first primary path — mirrors the current step's next action */}
+              <PrimaryActionBar
+                sticky
+                helper={
+                  currentStep === 'review'
+                    ? 'Confirm terms & pay using the panel above.'
+                    : 'You can go back to any prior step at any time.'
+                }
+                primary={{
+                  label: primaryLabel,
+                  onClick: advanceFromCurrent,
+                  disabled: primaryDisabled,
+                }}
+                secondary={{
+                  label: 'Back to listing',
+                  onClick: () => navigate(`/listing/${listingId}`),
+                }}
+              />
             </div>
 
             {/* Sticky Summary - Right Side (Desktop Only) */}
             <div className="lg:col-span-2 hidden lg:block">
-              <div className="sticky top-24">
+              <div className="sticky top-24 space-y-4">
                 <StickySummary
                   imageUrl={listing.cover_image_url || listing.image_urls?.[0]}
                   title={listing.title}
@@ -939,6 +1008,12 @@ const SaleCheckout = () => {
                   mode="checkout"
                   showWhatsIncluded={currentStep !== 'review'}
                   financingEligiblePrice={totalPrice}
+                />
+                {/* Trust reinforcement anchored to the summary */}
+                <TrustModule
+                  points={PAYMENT_TRUST_POINTS}
+                  disclaimer={PAYMENT_DISCLAIMER}
+                  variant="compact"
                 />
               </div>
             </div>

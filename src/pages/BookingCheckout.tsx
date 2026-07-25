@@ -60,7 +60,14 @@ import type { DocumentType } from '@/types/documents';
 import { AffirmBadge } from '@/components/ui/AffirmBadge';
 import { AfterpayBadge } from '@/components/ui/AfterpayBadge';
 import { AuthGateOfferModal } from '@/components/offers/AuthGateOfferModal';
-import { TrustModule, PAYMENT_TRUST_POINTS, PAYMENT_DISCLAIMER } from '@/components/journey';
+import {
+  TrustModule,
+  PAYMENT_TRUST_POINTS,
+  PAYMENT_DISCLAIMER,
+  JourneyProgress,
+  PrimaryActionBar,
+  type JourneyStep,
+} from '@/components/journey';
 import { trackLeadEvent } from '@/lib/leadTracking';
 import { detectAvailabilityConflict } from '@/lib/availabilityConflict';
 import { ReferralCodeField } from '@/components/referrals/ReferralCodeField';
@@ -841,6 +848,18 @@ const BookingCheckout = () => {
         <div className="grid lg:grid-cols-5 gap-8 lg:gap-12">
           {/* Left Column - Steps */}
           <div className="lg:col-span-3 space-y-4">
+            {/* Persistent roadmap — mirrors the dynamic accordion steps */}
+            <JourneyProgress
+              steps={steps.map((s): JourneyStep => ({
+                id: String(s.id),
+                label: s.label,
+              }))}
+              currentIndex={Math.max(
+                0,
+                steps.findIndex((s) => s.id === activeStep),
+              )}
+              estimate="About 3 minutes"
+            />
             {/* Auth Status Banner - informational only, not blocking */}
             {user ? (
               <div className="border border-border rounded-2xl overflow-hidden bg-card p-5">
@@ -1260,6 +1279,39 @@ const BookingCheckout = () => {
                 )}
               </AnimatePresence>
             </div>
+
+            {/* Sticky mobile-first primary path */}
+            <PrimaryActionBar
+              sticky
+              helper={
+                activeStep === STEP_REVIEW
+                  ? 'Confirm and pay using the panel above.'
+                  : 'Complete each step above to unlock review & payment.'
+              }
+              primary={{
+                label:
+                  activeStep === STEP_REVIEW
+                    ? listing.instant_book
+                      ? 'Confirm and pay'
+                      : 'Continue to payment'
+                    : 'Jump to review',
+                onClick: () => {
+                  if (activeStep === STEP_REVIEW) {
+                    handleSubmit();
+                  } else {
+                    setActiveStep(STEP_REVIEW);
+                  }
+                },
+                disabled:
+                  activeStep === STEP_REVIEW
+                    ? isSubmitting
+                    : !canAccessStep(STEP_REVIEW),
+              }}
+              secondary={{
+                label: 'Back to listing',
+                onClick: () => navigate(`/listing/${listingId}`),
+              }}
+            />
           </div>
 
           {/* Right Column - Summary Card */}
