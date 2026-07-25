@@ -46,7 +46,7 @@ Deno.serve(async (req) => {
     const notaryAvailable =
       mentionsNotary || (probe.status !== 403 && probe.status !== 402 && probe.status !== 404);
 
-    return jsonResponse({
+    return jsonResponse(200, {
       configured: true,
       user: {
         status: user.status,
