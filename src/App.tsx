@@ -98,6 +98,7 @@ const MarketingStudio = lazy(() => import("./pages/tools/MarketingStudio"));
 const StartupGuide = lazy(() => import("./pages/tools/StartupGuide"));
 const FoodTruckStartupCosts2026 = lazy(() => import("./pages/tools/FoodTruckStartupCosts2026"));
 const RegulationsHub = lazy(() => import("./pages/tools/RegulationsHub"));
+import ToolAccessGate from "./components/tools/ToolAccessGate";
 const ToolPreview = lazy(() => import("./pages/tools/ToolPreview"));
 const OrderTracking = lazy(() => import("./pages/OrderTracking"));
 const Transactions = lazy(() => import("./pages/Transactions"));
