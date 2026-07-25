@@ -72,11 +72,13 @@ const PurchaseStepInfo = ({
     <div className="space-y-6">
       {/* Step Header */}
       <div>
-        <h2 className="text-xl font-bold text-foreground">Your information</h2>
+        <h2 className="font-display text-2xl font-bold text-foreground">
+          Where should we send everything?
+        </h2>
         <p className="text-sm text-muted-foreground mt-1 flex items-center gap-1.5">
-          Used for receipts, coordination, and delivery scheduling.
+          Receipts, documents, and coordination — nothing extra.
           <InfoPopover title="Why we need this">
-            <p>Sellers and VendiBook support use this to coordinate pickup/delivery and resolve issues.</p>
+            <p>Sellers and Vendibook support use this to coordinate {hideAddress ? 'pickup' : 'delivery'} and resolve issues.</p>
             <p className="mt-2">Your information is kept private and only shared with parties involved in this transaction.</p>
           </InfoPopover>
         </p>
