@@ -59,6 +59,7 @@ export const AnimatedExplainer = ({
 
   const prevSceneRef = useRef<number | null>(null);
   const milestoneRef = useRef<Set<number>>(new Set());
+  const viewFiredRef = useRef(false);
 
   // Kick off audio fetch immediately on mount when autoPlay is on.
   useEffect(() => {
