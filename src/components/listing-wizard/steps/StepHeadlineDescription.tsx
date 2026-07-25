@@ -141,30 +141,18 @@ export const StepHeadlineDescription: React.FC<StepHeadlineDescriptionProps> = (
               </p>
             </div>
           </div>
-          <Button
-            type="button"
-            size="sm"
-            onClick={optimizeDescription}
-            disabled={isOptimizing || !description || description.length < 10}
+          <AIOptimizeButton
+            description={description}
+            category={category}
+            mode={mode}
+            title={title}
+            onApply={applyOptimized}
+            showOptimized={showOptimized}
+            variant="default"
             className="w-full"
-          >
-            {isOptimizing ? (
-              <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Optimizing...
-              </>
-            ) : showOptimized ? (
-              <>
-                <Check className="w-4 h-4 mr-2" />
-                Optimized!
-              </>
-            ) : (
-              <>
-                
-                Optimize with AI
-              </>
-            )}
-          </Button>
+            label="Optimize with AI"
+          />
+
         </div>
       </div>
     </div>
