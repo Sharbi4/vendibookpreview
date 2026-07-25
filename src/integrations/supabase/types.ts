@@ -1291,6 +1291,66 @@ export type Database = {
         }
         Relationships: []
       }
+      documents: {
+        Row: {
+          booking_id: string | null
+          created_at: string
+          document_type: string
+          id: string
+          metadata: Json
+          signed_pdf_path: string | null
+          signers: Json
+          signnow_document_id: string | null
+          signnow_template_id: string | null
+          status: string
+          transaction_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          booking_id?: string | null
+          created_at?: string
+          document_type: string
+          id?: string
+          metadata?: Json
+          signed_pdf_path?: string | null
+          signers?: Json
+          signnow_document_id?: string | null
+          signnow_template_id?: string | null
+          status?: string
+          transaction_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          booking_id?: string | null
+          created_at?: string
+          document_type?: string
+          id?: string
+          metadata?: Json
+          signed_pdf_path?: string | null
+          signers?: Json
+          signnow_document_id?: string | null
+          signnow_template_id?: string | null
+          status?: string
+          transaction_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "documents_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "booking_requests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documents_transaction_id_fkey"
+            columns: ["transaction_id"]
+            isOneToOne: false
+            referencedRelation: "sale_transactions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       edge_action_idempotency: {
         Row: {
           action: string
@@ -4803,6 +4863,7 @@ export type Database = {
       sale_transactions: {
         Row: {
           amount: number
+          bill_of_sale_completed_at: string | null
           buyer_confirmed_at: string | null
           buyer_email: string | null
           buyer_id: string
@@ -4848,6 +4909,7 @@ export type Database = {
         }
         Insert: {
           amount: number
+          bill_of_sale_completed_at?: string | null
           buyer_confirmed_at?: string | null
           buyer_email?: string | null
           buyer_id: string
@@ -4893,6 +4955,7 @@ export type Database = {
         }
         Update: {
           amount?: number
+          bill_of_sale_completed_at?: string | null
           buyer_confirmed_at?: string | null
           buyer_email?: string | null
           buyer_id?: string
@@ -5276,6 +5339,36 @@ export type Database = {
           updated_at?: string
           use_count?: number
           variant?: string
+        }
+        Relationships: []
+      }
+      signnow_webhook_events: {
+        Row: {
+          created_at: string
+          error: string | null
+          event_id: string
+          event_type: string
+          id: string
+          payload: Json
+          processed_at: string | null
+        }
+        Insert: {
+          created_at?: string
+          error?: string | null
+          event_id: string
+          event_type: string
+          id?: string
+          payload: Json
+          processed_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          error?: string | null
+          event_id?: string
+          event_type?: string
+          id?: string
+          payload?: Json
+          processed_at?: string | null
         }
         Relationships: []
       }
@@ -6844,6 +6937,13 @@ export type Database = {
         Returns: undefined
       }
       is_admin: { Args: { user_id: string }; Returns: boolean }
+      is_document_participant: {
+        Args: {
+          _doc: Database["public"]["Tables"]["documents"]["Row"]
+          _uid: string
+        }
+        Returns: boolean
+      }
       is_fast_responder: { Args: { host_user_id: string }; Returns: boolean }
       list_payable_referrers: {
         Args: { p_min_payout?: number }
@@ -7190,6 +7290,7 @@ export type Database = {
         }
         Returns: {
           amount: number
+          bill_of_sale_completed_at: string | null
           buyer_confirmed_at: string | null
           buyer_email: string | null
           buyer_id: string
