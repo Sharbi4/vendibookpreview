@@ -183,6 +183,7 @@ const Pricing = () => {
           Subscriptions are managed through Stripe. Upgrade, downgrade, or cancel any time — access continues through the current paid period. Existing subscribers keep their current pricing.
         </div>
       </section>
+      </div>
     </div>
   );
 };
