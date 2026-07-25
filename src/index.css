@@ -394,14 +394,17 @@
     background: radial-gradient(60% 80% at 100% 0%, rgba(var(--dash-ember), 0.10), transparent 60%);
   }
   .dash-kpi-number {
+    font-family: 'Manrope', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     font-size: 30px; line-height: 1; font-weight: 800;
     letter-spacing: -0.02em; color: rgb(var(--dash-text-1));
     font-variant-numeric: tabular-nums;
+    font-feature-settings: 'tnum' 1, 'lnum' 1;
   }
   @media (min-width: 640px) {
-    .dash-kpi-number { font-size: 34px; }
+    .dash-kpi-number { font-size: 32px; }
   }
   .dash-label {
+    font-family: 'Manrope', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     font-size: 11px; font-weight: 600; letter-spacing: 0.14em;
     text-transform: uppercase; color: rgb(var(--dash-text-2));
   }
