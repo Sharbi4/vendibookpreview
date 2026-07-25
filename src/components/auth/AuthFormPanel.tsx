@@ -79,7 +79,12 @@ export const AuthFormPanel = ({ mode, setMode }: AuthFormPanelProps) => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { toast } = useToast();
-  const redirectUrl = searchParams.get('redirect') || '/';
+  const rawRedirect =
+    searchParams.get('redirect') || searchParams.get('returnTo') || '';
+  const redirectUrl =
+    rawRedirect.startsWith('/') && !rawRedirect.startsWith('//')
+      ? rawRedirect
+      : '';
 
   const validateForm = () => {
     try {
