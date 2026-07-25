@@ -3,217 +3,110 @@ import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import SEO from '@/components/SEO';
 import { usePageTracking } from '@/hooks/usePageTracking';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { 
-  DollarSign, 
-  FileCheck, 
-  FileText, 
-  Lightbulb, 
-  Wrench, 
-  Search,
-  ArrowRight,
-  Megaphone,
-  CheckCircle2,
-  Rocket
-} from 'lucide-react';
-
-// Benefit-first descriptions: "Do X so you Y"
-const tools = [
-  {
-    name: 'Startup Guide',
-    description: 'Complete checklist to launch your food business.',
-    icon: Rocket,
-    gradient: 'from-emerald-400 to-teal-600',
-    href: '/tools/startup-guide',
-  },
-  {
-    name: 'PricePilot',
-    description: 'Set competitive rates so you book faster.',
-    icon: DollarSign,
-    gradient: 'from-yellow-400 to-orange-500',
-    href: '/tools/pricepilot',
-  },
-  {
-    name: 'PermitPath',
-    description: 'Find required licenses so you stay compliant.',
-    icon: FileCheck,
-    gradient: 'from-amber-400 to-orange-600',
-    href: '/tools/permitpath',
-  },
-  {
-    name: 'Listing Studio',
-    description: 'Write listings that convert browsers to bookers.',
-    icon: FileText,
-    gradient: 'from-rose-400 to-pink-600',
-    href: '/tools/listing-studio',
-  },
-  {
-    name: 'Concept Lab',
-    description: 'Generate business concepts matched to your market.',
-    icon: Lightbulb,
-    gradient: 'from-yellow-300 to-amber-500',
-    href: '/tools/concept-lab',
-  },
-  {
-    name: 'BuildKit',
-    description: 'Get equipment guides so you maintain with confidence.',
-    icon: Wrench,
-    gradient: 'from-orange-400 to-red-500',
-    href: '/tools/buildkit',
-  },
-  {
-    name: 'Market Radar',
-    description: 'Research demand so you pick the right location.',
-    icon: Search,
-    gradient: 'from-blue-400 to-indigo-600',
-    href: '/tools/market-radar',
-  },
-  {
-    name: 'Marketing Studio',
-    description: 'Create promos so you attract more customers.',
-    icon: Megaphone,
-    gradient: 'from-pink-500 to-purple-600',
-    href: '/tools/marketing-studio',
-  },
-  {
-    name: 'Regulations Hub',
-    description: 'Navigate permits, certifications & compliance by state.',
-    icon: FileCheck,
-    gradient: 'from-blue-500 to-purple-600',
-    href: '/tools/regulations-hub',
-  }
-];
-
-const benefits = [
-  'Price competitively based on real market data',
-  'Know your permit requirements before you start',
-  'Write listings that actually convert',
-  'Maintain your equipment with confidence'
-];
+import { ArrowRight, CheckCircle2, Crown, Flame } from 'lucide-react';
+import { TOOLS } from '@/lib/tools/catalog';
+import { useToolAccess } from '@/hooks/useToolAccess';
+import ToolTile from '@/components/tools/ToolTile';
 
 const pageJsonLd = {
-  "@context": "https://schema.org",
-  "@type": "CollectionPage",
-  "name": "Host Tools - Free AI Tools for Food Truck Owners",
-  "description": "Free AI-powered tools to help food truck and trailer owners price competitively, find permits, write listings, and grow their business.",
-  "url": "https://vendibook.com/tools"
+  '@context': 'https://schema.org',
+  '@type': 'CollectionPage',
+  name: 'Vendibook Premium Tools',
+  description:
+    'The operator toolkit for mobile food businesses — pricing, permits, listings, marketing, and market research.',
+  url: 'https://vendibook.com/tools',
 };
 
 const ToolsIndex = () => {
-  // Track page views with Google Analytics
   usePageTracking();
-  
+  const access = useToolAccess();
+
   return (
     <>
       <SEO
-        title="Host Tools | Free AI Tools for Food Truck Owners | Vendibook"
-        description="Free AI tools to help you price your food truck, find permits, write listings, and grow your mobile food business."
+        title="Vendibook Premium Tools | Pricing, Permits, Marketing & Market Research"
+        description="The operator toolkit for food-truck and trailer owners: PermitPath, PricePilot, Listing Studio, Marketing Studio, Concept Lab, Market Radar, and BuildKit."
         canonical="/tools"
       />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(pageJsonLd) }} />
-      
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(pageJsonLd) }}
+      />
+
       <div className="min-h-screen flex flex-col bg-background">
         <Header />
 
         <main className="flex-1">
-          {/* Hero Section - Clear, benefit-first headline */}
-          <section className="py-16 md:py-20 bg-gradient-to-b from-foreground/[0.03] to-background">
-            <div className="container text-center">
-              <Badge className="mb-4 bg-foreground/10 text-foreground border-foreground/15">
-                100% Free
-              </Badge>
-              
-              <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-foreground mb-4 leading-tight max-w-3xl mx-auto">
-                Host Tools
-              </h1>
-              <p className="text-lg text-muted-foreground mb-8 max-w-lg mx-auto">
-                Free utilities to help you price, write, and stay compliant—so you earn more and book faster.
-              </p>
-              
-              {/* Primary CTA */}
-              <Button size="lg" variant="glass-cta" asChild>
-                <Link to="/tools/pricepilot">
-                  <DollarSign className="h-5 w-5 mr-2" />
-                  Start with PricePilot
-                  <ArrowRight className="h-4 w-4 ml-2" />
-                </Link>
-              </Button>
-              <p className="text-sm text-muted-foreground mt-3">
-                Most popular — set your rates in 60 seconds
-              </p>
-            </div>
-          </section>
-
-          {/* Tools Grid */}
-          <section className="py-12 md:py-16">
-            <div className="container">
-              <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                {tools.map((tool) => {
-                  const Icon = tool.icon;
-                  return (
-                    <Card key={tool.name} className="group hover:shadow-lg transition-all duration-200 border hover:border-foreground/20 bg-card/80 backdrop-blur-xl">
-                      <CardHeader className="pb-3">
-                        <div className="h-11 w-11 rounded-xl bg-foreground flex items-center justify-center shadow-md group-hover:scale-105 transition-transform duration-200">
-                          <Icon className="h-5 w-5 text-background" />
-                        </div>
-                        <CardTitle className="text-lg mt-3">{tool.name}</CardTitle>
-                        <CardDescription className="text-sm leading-relaxed">
-                          {tool.description}
-                        </CardDescription>
-                      </CardHeader>
-                      <CardContent className="pt-0">
-                        <Button asChild variant="glass-cta" className="w-full justify-between">
-                          <Link to={tool.href}>
-                            Try {tool.name}
-                            <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
-                          </Link>
-                        </Button>
-                      </CardContent>
-                    </Card>
-                  );
-                })}
-              </div>
-            </div>
-          </section>
-
-          {/* Why These Tools Exist */}
-          <section className="py-12 bg-muted/40">
-            <div className="container">
-              <div className="max-w-3xl mx-auto">
-                <h2 className="text-xl md:text-2xl font-bold mb-4 text-center">Why we built these tools</h2>
-                <p className="text-muted-foreground text-center mb-6">
-                  Starting and running a mobile food business is complex. These tools help you make smarter decisions before you list—and after.
+          {/* Hero */}
+          <section className="relative overflow-hidden border-b border-border">
+            <div
+              aria-hidden
+              className="absolute inset-0"
+              style={{
+                background:
+                  'radial-gradient(60% 80% at 80% 0%, hsl(var(--brand-ember) / 0.12), transparent 60%), radial-gradient(50% 60% at 0% 100%, hsl(var(--brand-ember) / 0.06), transparent 60%)',
+              }}
+            />
+            <div className="container relative py-16 md:py-24">
+              <div className="max-w-2xl">
+                <Badge className="bg-[hsl(var(--brand-ember)/0.15)] text-[hsl(var(--brand-ember))] border-[hsl(var(--brand-ember)/0.35)] gap-1">
+                  <Flame className="h-3 w-3" /> Vendibook Premium Tools
+                </Badge>
+                <h1 className="mt-4 text-4xl md:text-5xl font-semibold text-foreground leading-tight">
+                  The operator toolkit for mobile food businesses.
+                </h1>
+                <p className="mt-4 text-lg text-muted-foreground">
+                  Price competitively, get permitted, and market smarter — all from one dashboard.
+                  PermitPath and the Startup Guide are free forever. Pro unlocks the rest.
                 </p>
-                <div className="grid sm:grid-cols-2 gap-3">
-                  {benefits.map((benefit, i) => (
-                    <div key={i} className="flex items-start gap-2 text-sm">
-                      <CheckCircle2 className="h-4 w-4 text-foreground/50 shrink-0 mt-0.5" />
-                      <span>{benefit}</span>
-                    </div>
-                  ))}
+                <div className="mt-6 flex flex-wrap gap-3">
+                  <Button size="lg" variant="glass-cta" asChild>
+                    <Link to="/tools/permitpath">
+                      Start with PermitPath — free
+                      <ArrowRight className="h-4 w-4 ml-1.5" />
+                    </Link>
+                  </Button>
+                  <Button size="lg" variant="outline" asChild>
+                    <Link to="/pricing">
+                      <Crown className="h-4 w-4 mr-1.5" /> Compare plans
+                    </Link>
+                  </Button>
+                </div>
+                <div className="mt-4 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+                  <span className="inline-flex items-center gap-1"><CheckCircle2 className="h-3 w-3" /> No credit card for free tools</span>
+                  <span className="inline-flex items-center gap-1"><CheckCircle2 className="h-3 w-3" /> 7-day payment protection on unlocks</span>
+                  <span className="inline-flex items-center gap-1"><CheckCircle2 className="h-3 w-3" /> Included with Pro & Premium</span>
                 </div>
               </div>
             </div>
           </section>
 
-          {/* CTA Section */}
-          <section className="py-16 bg-foreground">
-            <div className="container text-center">
-              <h2 className="text-2xl md:text-3xl font-bold mb-3 text-background">Ready to list your asset?</h2>
-              <p className="text-background/60 mb-6 max-w-md mx-auto">
-                Create your listing in minutes and start earning from your food truck, trailer, or equipment.
+          {/* Grid */}
+          <section className="container py-12 md:py-16">
+            <div className="grid gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {TOOLS.map((t) => (
+                <ToolTile key={t.slug} tool={t} access={access.bySlug[t.slug]} />
+              ))}
+            </div>
+          </section>
+
+          {/* Pricing anchor */}
+          <section className="border-t border-border bg-card/40">
+            <div className="container py-14 md:py-16 text-center">
+              <h2 className="text-2xl md:text-3xl font-semibold text-foreground">
+                One subscription unlocks the entire toolkit.
+              </h2>
+              <p className="mt-2 text-muted-foreground max-w-lg mx-auto">
+                Every paid tool is included in Pro or Premium. Buy individual tools one-time if you only need one.
               </p>
-              <div className="flex flex-wrap gap-3 justify-center">
-                <Button size="lg" className="bg-background text-foreground hover:bg-background/90" asChild>
-                  <Link to="/host">
-                    List Your Asset
-                    <ArrowRight className="h-4 w-4 ml-2" />
+              <div className="mt-6">
+                <Button size="lg" variant="glass-cta" asChild>
+                  <Link to="/pricing">
+                    <Crown className="h-4 w-4 mr-1.5" /> View plans
+                    <ArrowRight className="h-4 w-4 ml-1.5" />
                   </Link>
-                </Button>
-                <Button size="lg" variant="outline" className="border-background/30 bg-transparent text-background hover:bg-background/10 hover:text-background" asChild>
-                  <Link to="/search">Browse Listings</Link>
                 </Button>
               </div>
             </div>

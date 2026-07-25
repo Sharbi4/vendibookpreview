@@ -98,6 +98,7 @@ const MarketingStudio = lazy(() => import("./pages/tools/MarketingStudio"));
 const StartupGuide = lazy(() => import("./pages/tools/StartupGuide"));
 const FoodTruckStartupCosts2026 = lazy(() => import("./pages/tools/FoodTruckStartupCosts2026"));
 const RegulationsHub = lazy(() => import("./pages/tools/RegulationsHub"));
+const ToolPreview = lazy(() => import("./pages/tools/ToolPreview"));
 const OrderTracking = lazy(() => import("./pages/OrderTracking"));
 const Transactions = lazy(() => import("./pages/Transactions"));
 
@@ -302,6 +303,7 @@ const AnimatedRoutes = () => {
           {/* Tools - /tools is the canonical hub */}
           <Route path="/tools" element={<PageTransition><ToolsIndex /></PageTransition>} />
           <Route path="/tools/pricepilot" element={<PageTransition><PricePilot /></PageTransition>} />
+          <Route path="/tools/:slug/preview" element={<PageTransition><ToolPreview /></PageTransition>} />
           <Route path="/tools/permitpath" element={<PageTransition><PermitPath /></PageTransition>} />
           <Route path="/tools/buildkit" element={<PageTransition><BuildKit /></PageTransition>} />
           <Route path="/tools/listing-studio" element={<PageTransition><ListingStudio /></PageTransition>} />
