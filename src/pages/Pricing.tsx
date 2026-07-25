@@ -1,4 +1,3 @@
-import { useMemo, useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import { useMonetizationProducts } from '@/hooks/useMonetizationProducts';
 import { ProductPricingCard } from '@/components/monetization/ProductPricingCard';
@@ -8,14 +7,9 @@ import {
   PAYMENT_TRUST_POINTS,
 } from '@/components/journey';
 import { buildCheckoutReturnPaths } from '@/lib/monetization/returnRoutes';
-import { effectivePriceCents, type MonetizationProduct } from '@/lib/monetization/products';
-import { cn } from '@/lib/utils';
 import SEO from '@/components/SEO';
-import PackagesIntro from '@/components/monetization/PackagesIntro';
-import { Link } from 'react-router-dom';
-import { Store, ShoppingBag, Building2, ArrowRight } from 'lucide-react';
+import PremiumPlansSection from '@/components/monetization/PremiumPlansSection';
 
-type Interval = 'monthly' | 'annual';
 
 /**
  * Pair recurring host_subscription products by their base slug.
