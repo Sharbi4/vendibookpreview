@@ -4224,6 +4224,16 @@ export const PublishWizard: React.FC = () => {
         onViewListing={() => navigate(`/listing/${listing?.id}`)}
       />
 
+      <ListingLimitReachedModal
+        open={showLimitModal}
+        onOpenChange={setShowLimitModal}
+        tier={quota.tier}
+        limit={quota.limit ?? 2}
+        returnTo={typeof window !== 'undefined' ? `${window.location.pathname}${window.location.search}` : undefined}
+      />
+
+
+
       {/* Auth Gate Modal */}
       <AuthGateModal
         open={showAuthModal}
