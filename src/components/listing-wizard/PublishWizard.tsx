@@ -2000,6 +2000,13 @@ export const PublishWizard: React.FC = () => {
 
           {/* Main Content */}
           <div className="lg:col-span-2">
+            {/* Persistent journey progress — visible on every step, every breakpoint */}
+            <JourneyProgress
+              steps={journeySteps}
+              currentIndex={currentJourneyIndex}
+              className="mb-6"
+            />
+
             {/* Mobile Checklist - hide publish button when on review step to avoid duplicate */}
             <div className="lg:hidden mb-6">
               <PublishChecklist
@@ -2009,6 +2016,7 @@ export const PublishWizard: React.FC = () => {
                 hidePublishButton={step === 'review'}
               />
             </div>
+
 
             <div className="bg-card rounded-2xl shadow-sm border p-6 md:p-8">
               {/* Step: Media */}
