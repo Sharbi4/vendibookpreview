@@ -259,7 +259,7 @@ const ListingBuildAnimation = () => {
 
 const HowItWorks = () => {
   const steps = [
-    { label: 'Create Your Listing', desc: 'Use our step-by-step wizard to build a professional listing. Pick a category, add photos, set your price — done in minutes.' },
+    { icon: LayoutGrid, label: 'Create Your Listing', desc: 'Use our step-by-step wizard to build a professional listing. Pick a category, add photos, set your price — done in minutes.' },
     { icon: Store, label: 'Go Live', desc: 'Publish a professional storefront. Choose to rent or sell. Accept card payments online or cash in person.' },
     { icon: Share2, label: 'Share & Grow', desc: 'Use the built-in Share Kit to post to social media, generate QR codes, and track who\'s clicking.' },
     { icon: Wallet, label: 'Get Paid', desc: 'Online payments are held in escrow and released securely. Cash payments are handled directly between you and your customer.' }];
@@ -370,7 +370,7 @@ const RentOrSell = () => (
 
 const ToolsGrid = () => {
   const features = [
-    { label: 'Listing Wizard', desc: 'Use the step-by-step wizard to build a professional listing. Pick a category, add photos, and go live in minutes.' },
+    { icon: LayoutGrid, label: 'Listing Wizard', desc: 'Use the step-by-step wizard to build a professional listing. Pick a category, add photos, and go live in minutes.' },
     { icon: Search, label: 'Built-In SEO', desc: 'Every listing is optimized for Google. Your storefront gets indexed so buyers and renters find you.' },
     { icon: Share2, label: 'Share Kit', desc: 'Generate social media captions, QR codes, and branded graphics. Track every click.' },
     { icon: QrCode, label: 'Free Signage & QR', desc: 'We send you professional signage. Walk-ins scan the QR code to book or buy instantly.' },
