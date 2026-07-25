@@ -114,6 +114,8 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'subscription-payment-failed': subscriptionPaymentFailed,
   'subscription-cancelled': subscriptionCancelled,
   'upgrade-purchased': upgradePurchased,
+  'weekly-pass-ending': weeklyPassEnding,
+
   // Alias: monetization webhook dispatches 'refund-issued' for add-on refunds;
   // route to the shared refund-processed template so the send does not silently fail.
   'refund-issued': refundProcessed,
