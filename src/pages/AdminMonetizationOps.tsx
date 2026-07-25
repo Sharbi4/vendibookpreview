@@ -278,6 +278,69 @@ export default function AdminMonetizationOps() {
           )}
         </TabsContent>
 
+        <TabsContent value="services" className="mt-4 space-y-3">
+          {services.length === 0 ? (
+            <Card>
+              <CardContent className="py-8 text-center text-sm text-muted-foreground">
+                No paid manual-fulfillment services yet.
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="overflow-hidden rounded-xl border border-border">
+              <table className="w-full text-sm">
+                <thead className="bg-muted/50 text-xs uppercase tracking-wider text-muted-foreground">
+                  <tr>
+                    <th className="px-3 py-2 text-left">Paid</th>
+                    <th className="px-3 py-2 text-left">Service</th>
+                    <th className="px-3 py-2 text-left">Listing</th>
+                    <th className="px-3 py-2 text-left">Buyer</th>
+                    <th className="px-3 py-2 text-right">Amount</th>
+                    <th className="px-3 py-2 text-left">Fulfillment</th>
+                    <th className="px-3 py-2 text-right">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {services.map((row) => (
+                    <tr key={row.id} className="border-t border-border">
+                      <td className="px-3 py-2 text-muted-foreground">
+                        {row.paid_at ? new Date(row.paid_at).toLocaleString() : new Date(row.created_at).toLocaleString()}
+                      </td>
+                      <td className="px-3 py-2">{row.product_name ?? row.product_slug}</td>
+                      <td className="px-3 py-2 font-mono text-xs text-muted-foreground">
+                        {row.listing_id ? (
+                          <a className="underline" href={`/listing/${row.listing_id}`} target="_blank" rel="noreferrer">
+                            {row.listing_id.slice(0, 8)}…
+                          </a>
+                        ) : '—'}
+                      </td>
+                      <td className="px-3 py-2 font-mono text-xs text-muted-foreground">
+                        {row.user_id ? row.user_id.slice(0, 8) + '…' : '—'}
+                      </td>
+                      <td className="px-3 py-2 text-right font-semibold">{formatUsd(row.amount_cents)}</td>
+                      <td className="px-3 py-2">
+                        <Badge variant={row.fulfillment_status === 'fulfilled' ? 'default' : 'outline'}>
+                          {row.fulfillment_status}
+                        </Badge>
+                      </td>
+                      <td className="px-3 py-2 text-right">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          disabled={row.fulfillment_status === 'fulfilled'}
+                          onClick={() => markServiceFulfilled(row.id)}
+                        >
+                          Mark fulfilled
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </TabsContent>
+
+
         <TabsContent value="events" className="mt-4 space-y-3">
           <Card>
             <CardHeader className="pb-2">
