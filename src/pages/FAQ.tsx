@@ -23,6 +23,7 @@ import {
 import { faqCategories, allFaqEntries, type FaqAction, type FaqEntry, type FaqCategory } from "@/data/faqContent";
 import { searchFaq, relatedEntries } from "@/lib/faq/search";
 import { ReportIssueButton } from "@/components/support/ReportIssueButton";
+import { FaqHelpfulThumbs } from "@/components/support/FaqHelpfulThumbs";
 import { useAuth } from "@/contexts/AuthContext";
 
 const useQueryParam = (key: string) => {
@@ -80,6 +81,7 @@ const EntryCard = ({ entry, category }: { entry: FaqEntry; category: FaqCategory
             ))}
           </div>
         )}
+        <FaqHelpfulThumbs entryId={entry.id} categoryId={category.id} />
         {related.length > 0 && (
           <div className="mt-5 pt-4 border-t border-white/10">
             <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-white/40 mb-2">
@@ -93,6 +95,7 @@ const EntryCard = ({ entry, category }: { entry: FaqEntry; category: FaqCategory
                     onClick={(e) => {
                       e.preventDefault();
                       document.getElementById(r.entry.id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+                      history.replaceState(null, "", `#${r.entry.id}`);
                     }}
                     className="text-xs text-white/60 hover:text-white transition-colors inline-flex items-start gap-1.5"
                   >
