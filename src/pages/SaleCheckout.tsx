@@ -35,7 +35,11 @@ import { ProtectionOptInCard } from '@/components/protected-sale/ProtectionOptIn
 import { useCheckoutState } from '@/hooks/useCheckoutState';
 
 type FulfillmentSelection = 'pickup' | 'delivery' | 'vendibook_freight';
-type CheckoutStep = 'confirm' | 'delivery' | 'addons' | 'details' | 'review';
+type CheckoutStep = 'intro' | 'confirm' | 'delivery' | 'addons' | 'details' | 'review';
+
+// High-value sale threshold. Below this we skip the intro screen and drop
+// buyers straight into the wizard (small tool/add-on purchases).
+const SALE_INTRO_MIN_PRICE = 1000;
 
 const CHECKOUT_STEPS = [
   { step: 1, label: 'Confirm',   short: 'Confirm' },
@@ -46,10 +50,11 @@ const CHECKOUT_STEPS = [
 ];
 
 const STEP_NUM: Record<CheckoutStep, number> = {
-  confirm: 1, delivery: 2, addons: 3, details: 4, review: 5,
+  intro: 0, confirm: 1, delivery: 2, addons: 3, details: 4, review: 5,
 };
 
 const getStepNumber = (step: CheckoutStep): number => STEP_NUM[step];
+
 
 const SaleCheckout = () => {
   const { listingId } = useParams();
