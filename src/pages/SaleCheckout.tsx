@@ -694,6 +694,42 @@ const SaleCheckout = () => {
   const hasMultiplePaymentOptions = acceptCardPayment && acceptCashPayment;
   const currentStepNumber = getStepNumber(currentStep);
 
+  // ─── Journey progress + primary-action wiring ───
+  // Uses the existing CHECKOUT_STEPS + listing identifier so the roadmap
+  // and CTA stay in lock-step with the wizard's real state.
+  type WizardStep = Exclude<CheckoutStep, 'intro'>;
+  const WIZARD_STEP_ORDER: WizardStep[] = ['confirm', 'delivery', 'addons', 'details', 'review'];
+  const journeySteps: JourneyStep[] = CHECKOUT_STEPS.map((s, i) => ({
+    id: WIZARD_STEP_ORDER[i],
+    label: s.label,
+    optional: WIZARD_STEP_ORDER[i] === 'addons',
+  }));
+  const journeyIndex = Math.max(0, WIZARD_STEP_ORDER.indexOf(currentStep as WizardStep));
+  const nextWizardStep: WizardStep | null =
+    WIZARD_STEP_ORDER[Math.min(journeyIndex + 1, WIZARD_STEP_ORDER.length - 1)] ?? null;
+
+  const advanceFromCurrent = () => {
+    if (currentStep === 'confirm') return setCurrentStep('delivery');
+    if (currentStep === 'delivery') {
+      if (validateStep('delivery')) setCurrentStep('addons');
+      return;
+    }
+    if (currentStep === 'addons') return setCurrentStep('details');
+    if (currentStep === 'details') {
+      if (validateStep('details')) setCurrentStep('review');
+      return;
+    }
+  };
+
+  const primaryLabel =
+    currentStep === 'review'
+      ? 'Complete purchase below'
+      : nextWizardStep && nextWizardStep !== (currentStep as WizardStep)
+        ? `Continue to ${CHECKOUT_STEPS[WIZARD_STEP_ORDER.indexOf(nextWizardStep)]?.label ?? 'next step'}`
+        : 'Continue';
+  const primaryDisabled = currentStep === 'review';
+
+
   // Price lines for sticky summary — real listing title, never "Item price"
   const priceLines = [
     { label: listing.title, amount: priceSale },
