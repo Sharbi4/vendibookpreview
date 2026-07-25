@@ -79,8 +79,8 @@ const Welcome: React.FC = () => {
               Welcome to Vendibook — listing is always free.
             </h1>
             <p className="text-muted-foreground">
-              Publish a listing at no cost, forever. Memberships are optional — they just help you
-              grow faster with more tools and better placement.
+              Publish a listing at no cost, forever. Memberships are optional boosts — they help
+              you grow faster with more tools and better placement.
             </p>
           </div>
 
@@ -88,21 +88,21 @@ const Welcome: React.FC = () => {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
             <Button
-              variant="outline"
               size="lg"
               onClick={handleContinueFree}
               disabled={saving}
               className="w-full"
             >
-              Continue free
+              Start free
             </Button>
             <Button
+              variant="outline"
               size="lg"
               onClick={handleSeeMemberships}
               disabled={saving}
               className="w-full"
             >
-              See memberships
+              See member benefits
             </Button>
           </div>
 
