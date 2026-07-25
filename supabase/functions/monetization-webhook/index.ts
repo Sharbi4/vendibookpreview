@@ -241,19 +241,39 @@ async function handleCheckoutCompleted(
       link: purchase.listing_id ? `/listing/${purchase.listing_id}` : "/dashboard",
     });
 
-    // Transactional confirmation email (idempotent per session)
-    await sendSubEmail(
-      supabase,
-      "upgrade-purchased",
-      purchase.user_id,
-      {
-        productName: product?.name ?? "Your upgrade",
-        amount: fmtMoney(purchase.amount_cents, purchase.currency ?? "usd"),
-        listingId: purchase.listing_id ?? null,
-        purchasesUrl: "/purchases",
-      },
-      `upgrade-purchased-${session.id}`,
-    );
+    // Transactional confirmation email (idempotent per session).
+    // Weekly passes and other account-scoped, time-boxed passes get the
+    // dedicated receipt template with the exact expiry date.
+    if (isAccountScopedPass) {
+      const expiresOn = accessEnds
+        ? new Date(accessEnds).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })
+        : undefined;
+      await sendSubEmail(
+        supabase,
+        "weekly-pass-activated",
+        purchase.user_id,
+        {
+          amount: fmtMoney(purchase.amount_cents, purchase.currency ?? "usd"),
+          chargedOn: now.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }),
+          expiresOn,
+          invoiceUrl: (session as unknown as { receipt_url?: string }).receipt_url ?? undefined,
+        },
+        `weekly-pass-activated-${session.id}`,
+      );
+    } else {
+      await sendSubEmail(
+        supabase,
+        "upgrade-purchased",
+        purchase.user_id,
+        {
+          productName: product?.name ?? "Your upgrade",
+          amount: fmtMoney(purchase.amount_cents, purchase.currency ?? "usd"),
+          listingId: purchase.listing_id ?? null,
+          purchasesUrl: "/purchases",
+        },
+        `upgrade-purchased-${session.id}`,
+      );
+    }
   }
 
   log("purchase fulfilled", { id: purchase.id });
@@ -338,14 +358,41 @@ async function handleRefunded(
 // ----- Subscription lifecycle handlers -----
 
 const TIER_NAMES: Record<string, string> = {
-  starter: "Host Starter",
-  pro: "Host Pro",
-  premium: "Host Premium",
+  starter: "Vendibook Starter",
+  pro: "Vendibook Growth",
+  premium: "Vendibook Operator",
+};
+
+// Deep-linked benefit lists per tier — each label points to the surface that
+// delivers the feature so the confirmation email is actionable, not marketing fluff.
+const TIER_BENEFITS: Record<string, { label: string; href: string }[]> = {
+  starter: [
+    { label: 'Enhanced listing tools & AI descriptions', href: '/dashboard/listings' },
+    { label: 'Booking calendar & inquiry management', href: '/dashboard/bookings' },
+    { label: 'Basic analytics + priority email support', href: '/dashboard/insights' },
+  ],
+  pro: [
+    { label: 'Featured placement — Promote & Upgrades', href: '/dashboard/promote' },
+    { label: 'Full Premium Tools bundle (PricePilot, Studio, Marketing)', href: '/dashboard/tools' },
+    { label: 'Concept Lab, Market Radar & PermitPath Plus', href: '/dashboard/permits' },
+    { label: 'Advanced analytics + booking insights', href: '/dashboard/insights' },
+  ],
+  premium: [
+    { label: 'Portfolio dashboards across every listing', href: '/dashboard' },
+    { label: 'BuildKit + dedicated support', href: '/dashboard/tools' },
+    { label: 'Priority listing review & boost placement', href: '/dashboard/promote' },
+    { label: 'Urgent-tier priority support', href: '/support' },
+  ],
 };
 
 function planLabel(tier?: string | null, fallback?: string | null) {
-  if (!tier) return fallback ?? "Host plan";
-  return TIER_NAMES[tier] ?? `Host ${tier.charAt(0).toUpperCase()}${tier.slice(1)}`;
+  if (!tier) return fallback ?? "Vendibook plan";
+  return TIER_NAMES[tier] ?? `Vendibook ${tier.charAt(0).toUpperCase()}${tier.slice(1)}`;
+}
+
+function tierBenefits(tier?: string | null) {
+  if (!tier) return TIER_BENEFITS.pro;
+  return TIER_BENEFITS[tier] ?? TIER_BENEFITS.pro;
 }
 
 function fmtMoney(cents?: number | null, currency = "usd") {
@@ -364,6 +411,13 @@ function fmtDate(unix?: number | null) {
   } catch {
     return undefined;
   }
+}
+
+function fmtDateIso(iso?: string | null) {
+  if (!iso) return undefined;
+  try {
+    return new Date(iso).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
+  } catch { return undefined; }
 }
 
 async function resolveRecipient(
@@ -478,13 +532,18 @@ async function handleSubscriptionChange(
 
   // Route the correct lifecycle email
   if (eventType === "customer.subscription.created") {
-    await sendSubEmail(supabase, "subscription-activated", userId, {
-      planName,
-      amount: amountStr,
-      interval,
-      nextBillingDate: fmtDate(periodEndUnix),
-      isRenewal: false,
-    }, `sub-activated-${sub.id}`);
+    // Trial? Fire the trial-start email. Otherwise wait for invoice.paid
+    // (subscription_create) which carries the receipt/last-4/hosted URL so
+    // the welcome email always includes a real receipt.
+    if (sub.trial_end && sub.status === "trialing") {
+      await sendSubEmail(supabase, "subscription-trial-started", userId, {
+        planName,
+        trialEndsAt: fmtDate(sub.trial_end),
+        priceAfter: amountStr,
+        interval,
+        manageUrl: "https://vendibook.com/account/subscription",
+      }, `sub-trial-${sub.id}`);
+    }
     return;
   }
 
@@ -493,6 +552,7 @@ async function handleSubscriptionChange(
       planName,
       accessEndsAt: fmtDate(periodEndUnix),
       immediate: true,
+      reactivateUrl: "https://vendibook.com/pricing?resubscribe=1",
     }, `sub-deleted-${sub.id}`);
     return;
   }
@@ -528,13 +588,14 @@ async function handleSubscriptionChange(
 
 async function handleInvoicePaid(
   supabase: ReturnType<typeof createClient>,
-  _stripe: Stripe,
+  stripe: Stripe,
   invoice: Stripe.Invoice,
 ) {
   const subId = typeof invoice.subscription === "string" ? invoice.subscription : invoice.subscription?.id;
   if (!subId) return; // one-off invoices ignored here
-  // Only fire renewal email for cycle-continuation invoices, not the very first one (that's subscription.created).
-  if (invoice.billing_reason && invoice.billing_reason !== "subscription_cycle") return;
+  const reason = invoice.billing_reason ?? "";
+  // Only handle first-invoice welcome + renewal receipts.
+  if (reason !== "subscription_create" && reason !== "subscription_cycle") return;
 
   // deno-lint-ignore no-explicit-any
   const { data: existing } = await (supabase as any)
@@ -546,13 +607,32 @@ async function handleInvoicePaid(
 
   const line = invoice.lines?.data?.[0];
   const interval = line?.price?.recurring?.interval ?? "month";
+  const currency = invoice.currency ?? "usd";
+
+  // Best-effort last-4 lookup from the invoice's charge.
+  let last4: string | undefined;
+  try {
+    const chargeId = (invoice as unknown as { charge?: string | Stripe.Charge }).charge;
+    const chId = typeof chargeId === "string" ? chargeId : chargeId?.id;
+    if (chId) {
+      const ch = await stripe.charges.retrieve(chId);
+      last4 = ch.payment_method_details?.card?.last4 ?? undefined;
+    }
+  } catch { /* best-effort */ }
+
+  const isRenewal = reason === "subscription_cycle";
   await sendSubEmail(supabase, "subscription-activated", existing.user_id, {
     planName: planLabel(existing.tier),
-    amount: fmtMoney(invoice.amount_paid, invoice.currency ?? "usd"),
+    amount: fmtMoney(invoice.amount_paid, currency),
     interval,
+    chargedOn: fmtDate(invoice.status_transitions?.paid_at ?? invoice.created),
     nextBillingDate: fmtDate(invoice.period_end),
-    isRenewal: true,
-  }, `sub-renewed-${invoice.id}`);
+    last4,
+    invoiceUrl: invoice.hosted_invoice_url ?? undefined,
+    isRenewal,
+    benefits: tierBenefits(existing.tier),
+    manageUrl: "https://vendibook.com/account/subscription",
+  }, isRenewal ? `sub-renewed-${invoice.id}` : `sub-welcome-${invoice.id}`);
 }
 
 async function handleInvoiceFailed(
@@ -582,11 +662,17 @@ async function handleInvoiceFailed(
     })
     .eq("id", existing.id);
 
+  // Access pauses after Stripe's final retry (~ next_payment_attempt or period end).
+  const pausesOn = fmtDate(invoice.next_payment_attempt) ??
+    (existing.current_period_end ? fmtDateIso(existing.current_period_end) : undefined);
+
   await sendSubEmail(supabase, "subscription-payment-failed", existing.user_id, {
     planName: planLabel(existing.tier),
     amount: fmtMoney(invoice.amount_due, invoice.currency ?? "usd"),
     nextRetryDate: fmtDate(invoice.next_payment_attempt),
     updatePaymentUrl: invoice.hosted_invoice_url ?? undefined,
+    portalUrl: "https://vendibook.com/account/subscription",
+    accessPausesOn: pausesOn,
     attemptNumber: (invoice.attempt_count ?? 0) + 1,
   }, `sub-payfail-${invoice.id}-${invoice.attempt_count ?? 0}`);
 }
