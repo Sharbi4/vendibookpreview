@@ -1013,7 +1013,7 @@ const SaleCheckout = () => {
                 <TrustModule
                   points={PAYMENT_TRUST_POINTS}
                   disclaimer={PAYMENT_DISCLAIMER}
-                  compact
+                  variant="compact"
                 />
               </div>
             </div>
