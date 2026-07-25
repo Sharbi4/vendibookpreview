@@ -58,7 +58,15 @@ serve(async (req) => {
       .eq("is_active", true)
       .maybeSingle();
     if (prodErr) throw prodErr;
-    if (!product) throw new Error("Product not available");
+    if (!product) {
+      return new Response(
+        JSON.stringify({
+          error: `The product "${body.product_slug}" is not available. Please refresh and try again.`,
+          code: "product_not_found",
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 404 },
+      );
+    }
 
     // ROSCA / California AB 2863: recurring subscriptions require an affirmative
     // consent record captured before checkout. Reject the request if the client
