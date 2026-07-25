@@ -1,85 +1,52 @@
-import { useCallback, useMemo, useState } from 'react';
-import { ProductLearnMoreOverlay } from '@/components/monetization/ProductLearnMoreOverlay';
-import { useMonetizationProducts } from './useMonetizationProducts';
-import { useSubscriptionConsent } from './useSubscriptionConsent';
-import { buildCheckoutReturnPaths } from '@/lib/monetization/returnRoutes';
-import type { MonetizationProduct } from '@/lib/monetization/products';
+import { useCallback, useState } from 'react';
+import { ToolUnlockDialog } from '@/components/monetization/ToolUnlockDialog';
 
 /**
- * Which product slug to promote for a given premium feature.
- * All current premium features map to Host Growth (Pro tier).
+ * Map a premium feature key to a tool slug in the catalog. Every gate
+ * resolves to a specific tool so the upsell overlay can show the real
+ * sample preview + the full ladder (cheapest first).
  */
-const FEATURE_TO_SLUG: Record<string, string> = {
-  pricepilot: 'host_growth',
-  'ai-description': 'host_starter',
-  'ai-listing-creator': 'host_starter',
-  'marketing-studio': 'host_growth',
-  'listing-studio': 'host_growth',
-  'concept-lab': 'host_growth',
-  'market-radar': 'host_growth',
-  'negotiation-coach': 'host_growth',
-  'advanced-insights': 'host_growth',
-  'listing-insights': 'host_growth',
-  buildkit: 'host_operator',
+const FEATURE_TO_TOOL_SLUG: Record<string, string> = {
+  pricepilot: 'pricepilot',
+  'ai-description': 'listing-studio',
+  'ai-listing-creator': 'listing-studio',
+  'listing-studio': 'listing-studio',
+  'marketing-studio': 'marketing-studio',
+  'concept-lab': 'concept-lab',
+  'market-radar': 'market-radar',
+  'negotiation-coach': 'pricepilot',
+  'advanced-insights': 'market-radar',
+  'listing-insights': 'market-radar',
+  buildkit: 'buildkit',
+  permitpath: 'permitpath',
 };
 
-export type PremiumFeatureKey = keyof typeof FEATURE_TO_SLUG | string;
+export type PremiumFeatureKey = keyof typeof FEATURE_TO_TOOL_SLUG | string;
 
 /**
- * usePremiumUpsell — returns:
- *   - show(feature, surface): open the ProductLearnMoreOverlay for the
- *     product that unlocks the given feature.
- *   - overlay: JSX to mount once in the surface.
- *   - isPremiumError(parsed): true when a parsed edge error should trigger
- *     an upsell (code === 'entitlement_required' or HTTP 402/403 + code).
+ * usePremiumUpsell — opens the unified ToolUnlockDialog, which shows the
+ * real sample preview + the full unlock ladder (one-time / weekly pass /
+ * lowest-tier / best-value). Never presents only a single expensive tier.
  */
 export function usePremiumUpsell() {
-  const { products } = useMonetizationProducts('host_subscription');
-  const { requestCheckout } = useSubscriptionConsent();
   const [open, setOpen] = useState(false);
-  const [feature, setFeature] = useState<string | null>(null);
+  const [toolSlug, setToolSlug] = useState<string>('pricepilot');
   const [surface, setSurface] = useState<string>('unknown');
-  const [busy, setBusy] = useState(false);
 
-  const product: MonetizationProduct | null = useMemo(() => {
-    if (!feature) return null;
-    const slug = FEATURE_TO_SLUG[feature] ?? 'host_growth';
-    return products.find((p) => p.slug === slug) ?? products.find((p) => p.slug === 'host_growth') ?? null;
-  }, [feature, products]);
-
-  const show = useCallback((f: PremiumFeatureKey, s = 'premium_leak') => {
-    setFeature(f);
+  const show = useCallback((feature: PremiumFeatureKey, s = 'premium_leak') => {
+    setToolSlug(FEATURE_TO_TOOL_SLUG[feature] ?? feature ?? 'pricepilot');
     setSurface(s);
     setOpen(true);
   }, []);
 
-  const handleBuy = useCallback(async () => {
-    if (!product) return;
-    setBusy(true);
-    try {
-      const paths = buildCheckoutReturnPaths(product.slug);
-      await requestCheckout(product, {
-        interval: 'monthly',
-        successPath: paths.successPath,
-        cancelPath: paths.cancelPath,
-      });
-    } finally {
-      setBusy(false);
-    }
-  }, [product, requestCheckout]);
-
-  const overlay = product ? (
-    <ProductLearnMoreOverlay
+  const overlay = (
+    <ToolUnlockDialog
       open={open}
       onOpenChange={setOpen}
-      product={product}
-      surface={`upsell:${surface}:${feature ?? ''}`}
-      billingLabel="/mo"
-      ctaLabel="Upgrade & unlock"
-      ctaBusy={busy}
-      onBuy={handleBuy}
+      toolSlug={toolSlug}
+      surface={surface}
     />
-  ) : null;
+  );
 
   return { show, overlay };
 }
