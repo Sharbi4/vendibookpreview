@@ -3448,22 +3448,23 @@ export const PublishWizard: React.FC = () => {
                     )}
                   </div>
 
-                  <div className="flex flex-col gap-3">
-                    <div className="flex gap-3">
-                      <Button variant="dark-shine" onClick={() => setStep('photos')}>Back</Button>
-                      <Button variant="dark-shine" onClick={handleDetailsSave} disabled={isSaving || !title || !description}>
-                        {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
-                        {!user && isGuestDraft ? 'Save & Continue' : 'Continue'}
-                        <ChevronRight className="w-4 h-4 ml-2" />
-                      </Button>
-                    </div>
-                    {/* Guest reminder */}
-                    {!user && isGuestDraft && (
-                      <p className="text-xs text-muted-foreground text-center">
-                        Sign-in required to save your details.
-                      </p>
-                    )}
-                  </div>
+                  <PrimaryActionBar
+                    helper={
+                      !user && isGuestDraft
+                        ? 'Sign-in required to save your details.'
+                        : undefined
+                    }
+                    secondary={{ label: 'Back', onClick: () => setStep('photos') }}
+                    primary={{
+                      label: isSaving
+                        ? 'Saving…'
+                        : !user && isGuestDraft
+                        ? 'Save & Continue'
+                        : 'Continue',
+                      onClick: handleDetailsSave,
+                      disabled: isSaving || !title || !description,
+                    }}
+                  />
                 </div>
               )}
 
