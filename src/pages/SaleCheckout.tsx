@@ -355,28 +355,32 @@ const SaleCheckout = () => {
       return true;
     }
     
-    if (step === 'information') {
+    if (step === 'details') {
+      const needsAddress = fulfillmentSelected !== 'pickup';
+
       const firstNameError = fieldValidators.firstName(buyerInfo.firstName);
       const lastNameError = fieldValidators.lastName(buyerInfo.lastName);
       const emailError = fieldValidators.email(buyerInfo.email);
       const phoneError = fieldValidators.phone(buyerInfo.phone);
-      const address1Error = fieldValidators.address1(buyerInfo.address1);
-      const cityError = fieldValidators.city(buyerInfo.city);
-      const stateError = fieldValidators.state(buyerInfo.state);
-      const zipCodeError = fieldValidators.zipCode(buyerInfo.zipCode);
-      
-      setFieldErrors({ 
-        firstName: firstNameError, 
-        lastName: lastNameError, 
-        email: emailError, 
-        phone: phoneError, 
+      const address1Error = needsAddress ? fieldValidators.address1(buyerInfo.address1) : undefined;
+      const cityError = needsAddress ? fieldValidators.city(buyerInfo.city) : undefined;
+      const stateError = needsAddress ? fieldValidators.state(buyerInfo.state) : undefined;
+      const zipCodeError = needsAddress ? fieldValidators.zipCode(buyerInfo.zipCode) : undefined;
+
+      setFieldErrors({
+        firstName: firstNameError,
+        lastName: lastNameError,
+        email: emailError,
+        phone: phoneError,
         address1: address1Error,
         city: cityError,
         state: stateError,
         zipCode: zipCodeError,
       });
-      setTouchedFields(new Set(['firstName', 'lastName', 'email', 'phone', 'address1', 'city', 'state', 'zipCode']));
-      
+      const touched = ['firstName', 'lastName', 'email', 'phone'];
+      if (needsAddress) touched.push('address1', 'city', 'state', 'zipCode');
+      setTouchedFields(new Set(touched));
+
       const firstError = firstNameError || lastNameError || emailError || phoneError || address1Error || cityError || stateError || zipCodeError;
       if (firstError) {
         toast({ title: 'Missing information', description: firstError, variant: 'destructive' });
@@ -384,7 +388,7 @@ const SaleCheckout = () => {
       }
       return true;
     }
-    
+
     return true;
   };
 
