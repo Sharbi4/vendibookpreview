@@ -17,7 +17,7 @@ import {
 } from '@/components/monetization/ProductLearnMoreOverlay';
 import { TrustESignChip } from '@/components/trust/TrustESignChip';
 import type { TierFeatureGroups, TierRole } from './tierCatalog';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface Props {
   /** Required for paid tiers; ignored for free tier. */
