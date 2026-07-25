@@ -52,8 +52,19 @@ interface Props {
 
 export function PremiumPlansSection({ compact = false }: Props) {
   const { products, loading } = useMonetizationProducts('host_subscription');
-  const [interval, setInterval] = useState<Interval>('monthly');
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { user, isLoading: authLoading } = useAuth();
+  const { requestCheckout, dialog: resumeDialog } = useSubscriptionConsent();
+  const initialInterval: Interval = (() => {
+    try {
+      const q = new URLSearchParams(location.search).get('interval');
+      return q === 'annual' ? 'annual' : 'monthly';
+    } catch { return 'monthly'; }
+  })();
+  const [interval, setInterval] = useState<Interval>(initialInterval);
   const [showStickyCta, setShowStickyCta] = useState(false);
+  const autoResumeTried = useRef(false);
 
   useEffect(() => {
     const onScroll = () => setShowStickyCta(window.scrollY > 600);
@@ -71,8 +82,43 @@ export function PremiumPlansSection({ compact = false }: Props) {
   const growth = tiers.find(t => t.role === 'pro');
   const proSave = growth ? savingsPct(growth.monthly, growth.annual) : null;
 
+  // Auto-resume checkout after auth redirect: /pricing?plan=<slug>&interval=<x>&auto=1
+  useEffect(() => {
+    if (autoResumeTried.current) return;
+    if (loading || authLoading) return;
+    if (!user) return;
+    const params = new URLSearchParams(location.search);
+    if (params.get('auto') !== '1') return;
+    const slug = params.get('plan');
+    const wantInterval: Interval = params.get('interval') === 'annual' ? 'annual' : 'monthly';
+    if (!slug) return;
+    autoResumeTried.current = true;
+    const product =
+      products.find(p => p.slug === slug) ??
+      products.find(p => p.slug === (wantInterval === 'annual' ? `${slug}_annual` : slug));
+    if (!product) {
+      toast.error(`We couldn't find that plan (${slug}). Pick one below.`);
+    } else {
+      const paths = buildCheckoutReturnPaths(product.slug);
+      requestCheckout(product, {
+        interval: wantInterval,
+        successPath: paths.successPath,
+        cancelPath: paths.cancelPath,
+      }).catch((e) => console.error('[plans] auto-resume failed', e));
+    }
+    // Clean the URL so a refresh doesn't retrigger.
+    const cleaned = new URLSearchParams(location.search);
+    cleaned.delete('auto');
+    cleaned.delete('plan');
+    navigate(
+      { pathname: location.pathname, search: cleaned.toString() ? `?${cleaned}` : '' },
+      { replace: true },
+    );
+  }, [loading, authLoading, user, products, location.search, location.pathname, navigate, requestCheckout]);
+
   return (
     <div className="relative">
+
       {/* HERO */}
       {!compact && (
         <section className="relative overflow-hidden rounded-[20px] border-[1.5px] border-white/12">
