@@ -32,12 +32,11 @@ export const ExplainerVideoModal = ({ explainer, open, onOpenChange }: Props) =>
 
   const handleSceneChange = ({ index }: { index: number; previousIndex: number | null; total: number }) => {
     if (!explainer) return;
-    trackLeadEvent('homepage_video_scene_change', { video_type: explainer.id, scene_index: index });
+    trackLeadEvent('homepage_video_scene_viewed', { video_type: explainer.id, scene_index: index });
   };
 
-  const handleWatched = (ms: number) => {
-    if (!explainer) return;
-    trackLeadEvent('homepage_video_watched_ms', { video_type: explainer.id, ms });
+  const handleWatched = (_ms: number) => {
+    // watched ms captured on unmount; not tracked as a lead event
   };
 
   return (
