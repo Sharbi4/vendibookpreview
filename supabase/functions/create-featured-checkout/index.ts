@@ -170,6 +170,7 @@ serve(async (req) => {
           listing_id: listing_id,
           user_id: user.id,
           type: "featured_listing",
+          ...(scheduledStartIso ? { scheduled_start_at: scheduledStartIso } : {}),
         },
       },
       { idempotencyKey }
