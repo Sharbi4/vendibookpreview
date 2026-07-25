@@ -80,12 +80,14 @@ async function run() {
       const resp = await page.goto(url, { waitUntil: "domcontentloaded", timeout: 30_000 });
       if (!resp || !resp.ok()) fail(`GET ${url} → ${resp?.status()}`);
 
-      // Wait for h1 (rendered by ListingDetail once data loads)
-      await page.waitForSelector("h1", { timeout: 15_000 }).catch(() => {
-        fail(`no <h1> rendered on ${url} within 15s`);
+      // Wait for a VISIBLE h1 — ListingDetail renders both a mobile and a
+      // desktop copy (one is display:none via responsive utility classes),
+      // so `h1` (without :visible) will match the hidden one first and hang.
+      await page.waitForSelector("h1:visible", { timeout: 15_000 }).catch(() => {
+        fail(`no visible <h1> rendered on ${url} within 15s`);
       });
 
-      const h1Text = (await page.locator("h1").first().innerText()).trim();
+      const h1Text = (await page.locator("h1:visible").first().innerText()).trim();
       const docTitle = await page.title();
 
       // Guardrails
