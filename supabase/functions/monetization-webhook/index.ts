@@ -338,14 +338,41 @@ async function handleRefunded(
 // ----- Subscription lifecycle handlers -----
 
 const TIER_NAMES: Record<string, string> = {
-  starter: "Host Starter",
-  pro: "Host Pro",
-  premium: "Host Premium",
+  starter: "Vendibook Starter",
+  pro: "Vendibook Growth",
+  premium: "Vendibook Operator",
+};
+
+// Deep-linked benefit lists per tier — each label points to the surface that
+// delivers the feature so the confirmation email is actionable, not marketing fluff.
+const TIER_BENEFITS: Record<string, { label: string; href: string }[]> = {
+  starter: [
+    { label: 'Enhanced listing tools & AI descriptions', href: '/dashboard/listings' },
+    { label: 'Booking calendar & inquiry management', href: '/dashboard/bookings' },
+    { label: 'Basic analytics + priority email support', href: '/dashboard/insights' },
+  ],
+  pro: [
+    { label: 'Featured placement — Promote & Upgrades', href: '/dashboard/promote' },
+    { label: 'Full Premium Tools bundle (PricePilot, Studio, Marketing)', href: '/dashboard/tools' },
+    { label: 'Concept Lab, Market Radar & PermitPath Plus', href: '/dashboard/permits' },
+    { label: 'Advanced analytics + booking insights', href: '/dashboard/insights' },
+  ],
+  premium: [
+    { label: 'Portfolio dashboards across every listing', href: '/dashboard' },
+    { label: 'BuildKit + dedicated support', href: '/dashboard/tools' },
+    { label: 'Priority listing review & boost placement', href: '/dashboard/promote' },
+    { label: 'Urgent-tier priority support', href: '/support' },
+  ],
 };
 
 function planLabel(tier?: string | null, fallback?: string | null) {
-  if (!tier) return fallback ?? "Host plan";
-  return TIER_NAMES[tier] ?? `Host ${tier.charAt(0).toUpperCase()}${tier.slice(1)}`;
+  if (!tier) return fallback ?? "Vendibook plan";
+  return TIER_NAMES[tier] ?? `Vendibook ${tier.charAt(0).toUpperCase()}${tier.slice(1)}`;
+}
+
+function tierBenefits(tier?: string | null) {
+  if (!tier) return TIER_BENEFITS.pro;
+  return TIER_BENEFITS[tier] ?? TIER_BENEFITS.pro;
 }
 
 function fmtMoney(cents?: number | null, currency = "usd") {
@@ -364,6 +391,13 @@ function fmtDate(unix?: number | null) {
   } catch {
     return undefined;
   }
+}
+
+function fmtDateIso(iso?: string | null) {
+  if (!iso) return undefined;
+  try {
+    return new Date(iso).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
+  } catch { return undefined; }
 }
 
 async function resolveRecipient(
