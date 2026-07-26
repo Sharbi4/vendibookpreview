@@ -187,7 +187,7 @@ export const trustTiles: TrustTile[] = [
       title: '24/7 Support',
       description: [
         'Vendibook offers 24/7 support through in-app chat, with priority routing for users with active transactions. During business hours, most inquiries receive a response within 2 hours. Urgent transaction issues are escalated immediately.',
-        'Our support flow starts with AI-assisted triage to route you to the right specialist - payments, disputes, listings, or account issues. Complex problems are handed off to human agents without losing context.',
+        'Our support flow starts with Automated triage to route you to the right specialist - payments, disputes, listings, or account issues. Complex problems are handed off to human agents without losing context.',
         'For critical issues during active bookings or sales (e.g., lockouts, delivery no-shows), use the Urgent flag in chat to skip the queue. We are here to make sure your transaction completes smoothly.'
       ],
       steps: [

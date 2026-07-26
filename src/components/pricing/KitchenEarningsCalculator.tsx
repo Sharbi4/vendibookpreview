@@ -127,7 +127,7 @@ const KitchenEarningsCalculator = () => {
                   </div>
                   <div>
                     <CardTitle className="text-xl">Kitchen Earnings Calculator</CardTitle>
-                    <p className="text-sm text-muted-foreground">Get AI-powered rental income estimates</p>
+                    <p className="text-sm text-muted-foreground">Get Rental income estimates, powered by Spark</p>
                   </div>
                 </div>
               </CardHeader>
@@ -322,7 +322,7 @@ const EarningsResults = ({ estimate, onReset, activeTab, setActiveTab, getNetEar
               </div>
               <div>
                 <CardTitle className="text-xl">Your Earnings Potential</CardTitle>
-                <p className="text-sm text-muted-foreground">AI-powered market analysis</p>
+                <p className="text-sm text-muted-foreground">Market analysis, powered by Spark</p>
               </div>
             </div>
             <Badge className={`${confidenceColors[estimate.confidence]} border`}>

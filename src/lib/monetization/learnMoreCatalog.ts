@@ -108,7 +108,7 @@ const CATALOG: Record<string, LearnMoreEntry> = {
     ],
     screenshots: [
       { src: pricepilotShot, alt: 'PricePilot dashboard', caption: 'PricePilot — see comps and set winning rates.' },
-      { src: marketingStudioShot, alt: 'Marketing studio', caption: 'AI-crafted listing copy and email pushes.' },
+      { src: marketingStudioShot, alt: 'Marketing studio', caption: 'Spark-written listing copy and email pushes.' },
       { src: marketRadarShot, alt: 'Analytics dashboard', caption: 'Views, saves, offers, and revenue at a glance.' },
     ],
   },

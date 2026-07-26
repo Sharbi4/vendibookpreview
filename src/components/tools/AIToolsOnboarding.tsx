@@ -30,7 +30,7 @@ interface OnboardingStep {
 const onboardingSteps: OnboardingStep[] = [
   {
     title: 'Welcome to Vendi AI',
-    description: 'Your AI-powered toolkit for running a successful mobile food business. Let us show you around!',
+    description: 'Your operator toolkit, powered by Spark for running a successful mobile food business. Let us show you around!',
     icon: <Rocket className="h-8 w-8" />,
     tip: 'All tools are free to try—no credit card needed'
   },
@@ -68,7 +68,7 @@ const onboardingSteps: OnboardingStep[] = [
     title: 'Market Radar',
     description: 'Research your local market, see what competitors are doing, and find opportunities.',
     icon: <Search className="h-8 w-8" />,
-    tip: 'AI-powered market research in seconds'
+    tip: 'Market research powered by Spark in seconds'
   }
 ];
 

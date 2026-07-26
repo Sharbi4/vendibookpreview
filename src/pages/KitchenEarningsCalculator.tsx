@@ -50,7 +50,7 @@ const KitchenEarningsCalculator = () => {
   };
 
   const benefits = [
-    { icon: TrendingUp, title: "AI-Powered Estimates", description: "Get market-based pricing suggestions instantly" },
+    { icon: TrendingUp, title: "Estimates Powered by Spark", description: "Get market-based pricing suggestions instantly" },
     { icon: Clock, title: "Flexible Scheduling", description: "Rent hourly, daily, weekly, or monthly" },
     { icon: ShieldCheck, title: "Verified Renters", description: "Identity verification protects your kitchen" },
     { icon: Users, title: "Growing Demand", description: "Food entrepreneurs need licensed kitchen space" },
@@ -66,7 +66,7 @@ const KitchenEarningsCalculator = () => {
     <>
       <SEO
         title="Kitchen Rental Earnings Calculator | Vendibook"
-        description="See how much your commercial kitchen can earn. AI-powered estimates for hourly, daily, weekly & monthly rentals. Free, instant results."
+        description="See how much your commercial kitchen can earn. estimates powered by Spark for hourly, daily, weekly & monthly rentals. Free, instant results."
         canonical="https://vendibook.com/kitchen-earnings-calculator"
       />
       <JsonLd schema={[faqSchema, breadcrumbSchema]} />
@@ -87,7 +87,7 @@ const KitchenEarningsCalculator = () => {
                   Turn your kitchen into a <span className="text-primary">revenue stream</span>
                 </h1>
                 <p className="text-lg text-muted-foreground max-w-xl mx-auto mb-8">
-                  Use our AI-powered calculator to see how much you could earn renting your commercial kitchen to food entrepreneurs, caterers, and food trucks.
+                  Use our calculator powered by Spark to see how much you could earn renting your commercial kitchen to food entrepreneurs, caterers, and food trucks.
                 </p>
                 
                 {/* Stats Row */}

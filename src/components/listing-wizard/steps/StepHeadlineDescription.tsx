@@ -150,7 +150,7 @@ export const StepHeadlineDescription: React.FC<StepHeadlineDescriptionProps> = (
             showOptimized={showOptimized}
             variant="default"
             className="w-full"
-            label="Optimize with AI"
+            label="Write it for me"
           />
 
         </div>

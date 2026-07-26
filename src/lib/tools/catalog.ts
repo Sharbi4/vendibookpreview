@@ -69,7 +69,7 @@ export const TOOLS: ToolDef[] = [
     name: 'PricePilot',
     tagline: 'Set nightly, weekly, and monthly rates that beat your local market.',
     bullets: [
-      'AI-driven pricing model trained on live marketplace data',
+      'Pricing model powered by Spark trained on live marketplace data',
       'Compares your rates to comparable listings in your metro',
       'Recommends event-week and seasonal premiums',
     ],
@@ -83,7 +83,7 @@ export const TOOLS: ToolDef[] = [
     name: 'Listing Studio',
     tagline: 'Write listings that convert browsers into paid bookings.',
     bullets: [
-      'AI-written title and description in your voice',
+      'Spark writes titles and descriptions in your voice',
       'Search-optimized for the Vendibook index',
       'Photo hints and highlight suggestions',
     ],

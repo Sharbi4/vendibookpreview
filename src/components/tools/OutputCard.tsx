@@ -68,7 +68,7 @@ export const OutputCard = ({
                 <CardTitle className="text-lg flex items-center gap-2">
                   {title}
                   <Badge variant="secondary" className="text-xs font-normal">
-                    AI Generated
+                    Spark draft
                   </Badge>
                 </CardTitle>
                 {subtitle && <CardDescription>{subtitle}</CardDescription>}

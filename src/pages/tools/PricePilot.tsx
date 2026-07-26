@@ -44,7 +44,7 @@ const pageJsonLd = {
     "price": "0",
     "priceCurrency": "USD"
   },
-  "description": "AI-powered pricing recommendations for food trucks, trailers, and shared kitchens. Get data-backed pricing that helps you book faster and earn more.",
+  "description": "Data-backed pricing recommendations, powered by Spark for food trucks, trailers, and shared kitchens. Get data-backed pricing that helps you book faster and earn more.",
   "featureList": [
     "Competitive market pricing analysis",
     "Daily, weekly, and monthly rate suggestions",
@@ -99,7 +99,7 @@ const PricePilot = () => {
     <>
       <SEO
         title="Vendi PricePilot | AI Pricing for Food Trucks & Trailers | Vendibook"
-        description="Get data-backed pricing recommendations for your food truck, trailer, or shared kitchen. AI-powered analysis helps you book faster and earn more. Free to use."
+        description="Get data-backed pricing recommendations for your food truck, trailer, or shared kitchen. Data-backed analysis powered by Spark helps you book faster and earn more. Free to use."
         canonical="/tools/pricepilot"
       />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(pageJsonLd) }} />

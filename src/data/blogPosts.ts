@@ -1338,7 +1338,7 @@ Required in many areas, especially if using propane or open flames.
 
 ## Getting Help
 
-Our AI-powered Permit Path tool can help you identify the specific permits needed for your location and business type.
+Our Permit Path tool can help you identify the specific permits needed for your location and business type.
 
 ## Stay Compliant
 
@@ -1922,7 +1922,7 @@ Vendibook listings include information about local permit requirements to help y
 
 <p class="mb-8">Look for platforms that clearly explain their payment structure and protection policies.</p>
 
-<h2 class="text-2xl font-bold mt-10 mb-4">The Rise of AI-Guided Marketplaces</h2>
+<h2 class="text-2xl font-bold mt-10 mb-4">The Rise of Guided Marketplaces</h2>
 
 <p class="mb-6">The next generation of food truck marketplaces are integrating AI to reduce friction in the launch process. This includes:</p>
 
@@ -1934,7 +1934,7 @@ Vendibook listings include information about local permit requirements to help y
   <li>Instant callback scheduling</li>
 </ul>
 
-<p class="mb-6">Instead of leaving operators to figure it out alone, AI-driven marketplaces provide <strong>guided execution</strong>.</p>
+<p class="mb-6">Instead of leaving operators to figure it out alone, guided marketplaces provide <strong>guided execution</strong>.</p>
 
 <p class="mb-8">The future isn't just listing inventory — it's ensuring completion.</p>
 

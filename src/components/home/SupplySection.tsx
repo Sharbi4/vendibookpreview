@@ -162,7 +162,7 @@ const SupplySection = () => {
             </div>
             
             <p className="text-muted-foreground mb-6">
-              Get an edge with our AI-powered tools—optimize pricing, find permits, and create listings that convert.
+              Get an edge with our Spark-powered tools—optimize pricing, find permits, and write listings that convert.
             </p>
 
             <ul className="space-y-3 mb-6">

@@ -244,7 +244,7 @@ export const PromotionHub = () => {
             <CardHeader className="pb-3">
               <CardTitle className="text-sm flex items-center gap-2">
                 
-                AI-generated ad copy
+                Ready-to-post ad copy from Spark
                 <PremiumChip />
               </CardTitle>
 

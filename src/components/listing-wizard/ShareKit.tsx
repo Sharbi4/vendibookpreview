@@ -120,7 +120,7 @@ export const ShareKit: React.FC<ShareKitProps> = ({ listing, onClose }) => {
   const { toast } = useToast();
   const { logShare, generate, templates } = useShareKitHook(listing.id);
 
-  // AI-generated captions take precedence when available; falls back to local variants.
+  // Spark captions take precedence when available; falls back to local variants.
   useEffect(() => {
     generate().catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -162,7 +162,7 @@ export const ShareKit: React.FC<ShareKitProps> = ({ listing, onClose }) => {
     listing.mode === 'sale'
       ? `🔥 ${categoryLabel} alert${city ? ` — ${city}` : ''}!\n${listing.title}${priceText ? `\n${priceText}` : ''}\nTap link to see full specs & photos.`
       : `Looking for a ${categoryLabel.toLowerCase()}${city ? ` in ${city}` : ''}? I just opened bookings for ${listing.title}.${priceText ? ` ${priceText}.` : ''} Lock your date here:`];
-  // Prefer AI-generated captions when available (matched by variant index modulo).
+  // Prefer Spark captions when available (matched by variant index modulo).
   const aiCaptions = templates
     .map((t) => t.caption)
     .filter((c): c is string => !!c && c.trim().length > 0);

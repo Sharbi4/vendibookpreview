@@ -37,7 +37,7 @@ const pageJsonLd = {
   "applicationCategory": "BusinessApplication",
   "operatingSystem": "Web",
   "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
-  "description": "Generate sellable food truck concepts designed for your market and margins. AI-powered business idea generator.",
+  "description": "Generate sellable food truck concepts designed for your market and margins. Business idea generator, powered by Spark.",
   "featureList": ["10 unique concept ideas", "Target market analysis", "Menu suggestions", "Startup cost estimates"]
 };
 
@@ -275,7 +275,7 @@ const ConceptLab = () => {
                   <div className="flex items-center gap-2 mb-6">
                     
                     <h3 className="font-semibold text-lg">Your Business Concepts</h3>
-                    <Badge variant="secondary" className="text-xs">AI Generated</Badge>
+                    <Badge variant="secondary" className="text-xs">Spark draft</Badge>
                   </div>
                   <div className="grid gap-4 md:grid-cols-2">
                     {ideaResult.ideas.map((idea, i) => (
@@ -357,7 +357,7 @@ const ConceptLab = () => {
               <Accordion type="single" collapsible>
                 <AccordionItem value="q1">
                   <AccordionTrigger>Are these ideas guaranteed to succeed?</AccordionTrigger>
-                  <AccordionContent>No business idea is guaranteed. These are AI-generated concepts based on your inputs. Always validate with local market research.</AccordionContent>
+                  <AccordionContent>No business idea is guaranteed. These are Spark-generated concepts based on your inputs. Always validate with local market research.</AccordionContent>
                 </AccordionItem>
                 <AccordionItem value="q2">
                   <AccordionTrigger>Can I regenerate ideas?</AccordionTrigger>

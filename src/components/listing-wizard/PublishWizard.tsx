@@ -2287,7 +2287,7 @@ export const PublishWizard: React.FC = () => {
                             ) : (
                               <>
                                 
-                                Optimize with AI
+                                Write it for me
                               </>
                             )}
                           </Button>
