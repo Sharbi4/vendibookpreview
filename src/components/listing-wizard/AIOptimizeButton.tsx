@@ -34,7 +34,7 @@ interface Props {
  */
 export const AIOptimizeButton: React.FC<Props> = ({
   description, category, mode, title, onApply,
-  showOptimized, size = 'sm', variant = 'outline', className, label = 'Optimize with AI',
+  showOptimized, size = 'sm', variant = 'outline', className, label = 'Write it for me',
 }) => {
   const { toast } = useToast();
   const navigate = useNavigate();
