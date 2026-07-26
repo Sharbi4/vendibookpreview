@@ -1,6 +1,6 @@
 import { ReactNode, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, FileCheck, Flame, Lock, Sparkles } from 'lucide-react';
+import { ArrowRight, FileCheck, Flame, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { PremiumChip } from '@/components/monetization/PremiumChip';
 import { ProductLearnMoreOverlay } from '@/components/monetization/ProductLearnMoreOverlay';
@@ -120,7 +120,7 @@ export function PermitsGate({ children }: { children: ReactNode }) {
               onClick={() => setOverlayOpen(true)}
               disabled={!plusProduct}
             >
-              <Sparkles className="h-4 w-4 mr-1.5" />
+              <Flame className="h-4 w-4 mr-1.5" />
               See what's inside
               <ArrowRight className="h-4 w-4 ml-1.5" />
             </Button>
