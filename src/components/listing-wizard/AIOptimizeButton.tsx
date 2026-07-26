@@ -99,7 +99,7 @@ export const AIOptimizeButton: React.FC<Props> = ({
           return;
         }
         toast({
-          title: 'Optimization failed',
+          title: "Couldn't write that draft",
           description: parsed?.error ?? error.message ?? 'Please try again.',
           variant: 'destructive',
         });
@@ -108,7 +108,7 @@ export const AIOptimizeButton: React.FC<Props> = ({
 
       const optimized: string | undefined = data?.optimizedDescription;
       if (!optimized) {
-        toast({ title: 'No output', description: 'AI returned nothing. Please try again.', variant: 'destructive' });
+        toast({ title: 'No output', description: 'Spark returned nothing. Please try again.', variant: 'destructive' });
         return;
       }
 
