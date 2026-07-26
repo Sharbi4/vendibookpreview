@@ -173,13 +173,17 @@ export const AIOptimizeButton: React.FC<Props> = ({
         <DialogContent className="max-w-3xl">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <Wand2 className="w-5 h-5 text-primary" />
-              {isSamplePreview ? 'Your free AI sample' : 'AI-polished description'}
+              <Flame className="w-5 h-5 text-primary" />
+              {isSamplePreview ? 'Your free Spark sample' : "Here's a draft — edit anything"}
+              <SparkChip className="ml-1" />
             </DialogTitle>
           </DialogHeader>
+          <p className="text-xs text-muted-foreground -mt-2">
+            Generated draft — review before publishing. Nothing is applied until you tap “Use this”.
+          </p>
           {isSamplePreview && (
             <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-3 text-xs text-amber-600 dark:text-amber-400">
-              This is a one-time free sample. Upgrade to Starter or above to apply AI copy directly to your listing and generate unlimited rewrites.
+              This is a one-time free sample. Upgrade to Starter or above to apply Spark drafts directly to your listing and get unlimited rewrites.
             </div>
           )}
           <div className="grid gap-3 md:grid-cols-2">
@@ -190,7 +194,9 @@ export const AIOptimizeButton: React.FC<Props> = ({
               </p>
             </div>
             <div className="relative rounded-lg border border-primary/40 bg-primary/[0.04] p-3">
-              <div className="text-[10px] font-semibold uppercase tracking-wider text-primary mb-2">AI suggestion</div>
+              <div className="text-[10px] font-semibold uppercase tracking-wider text-primary mb-2 flex items-center gap-1.5">
+                <Flame className="w-3 h-3" /> Spark draft
+              </div>
               {isSamplePreview && (
                 <div className="absolute inset-0 pointer-events-none flex items-center justify-center opacity-[0.08] select-none">
                   <span className="text-6xl font-black rotate-[-18deg] tracking-widest">SAMPLE</span>
