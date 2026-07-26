@@ -203,7 +203,7 @@ const AIListingCreator: React.FC = () => {
       if (!resp.ok || !resp.body) {
         if (resp.status === 429) toast.error('Rate limited. Please wait a moment.');
         else if (resp.status === 402) toast.error('AI credits exhausted.');
-        else toast.error('Failed to connect to AI assistant.');
+        else toast.error('Failed to connect to Spark.');
         setIsLoading(false);
         return;
       }

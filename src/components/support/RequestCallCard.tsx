@@ -97,7 +97,7 @@ const RequestCallCard = () => {
                   Talk to a human in 60 seconds.
                 </h2>
                 <p className="text-sm text-white/60 leading-relaxed max-w-md">
-                  Our AI-assisted support team will call your phone immediately —
+                  Our Support team will call your phone immediately —
                   for bookings, payouts, listings, documents, or anything in between.
                 </p>
                 <div className="hidden md:flex items-center gap-4 mt-6 text-[11px] text-white/40 font-mono">

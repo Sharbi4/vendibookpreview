@@ -364,7 +364,7 @@ const HostOnboarding = () => {
                   <span className="text-sm font-medium">Free for all hosts</span>
                 </div>
                 <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-3">
-                  AI-powered tools to help you succeed
+                  Operator tools that help you succeed — powered by Spark
                 </h2>
                 <p className="text-muted-foreground max-w-xl mx-auto">
                   From pricing recommendations to listing copy, our tools help you create better listings and earn more.

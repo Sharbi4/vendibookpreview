@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
-import { Loader2, Check, Wand2, Lock, RefreshCw } from 'lucide-react';
+import { Loader2, Check, Flame, Lock, RefreshCw } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useHostEntitlements } from '@/hooks/useHostEntitlements';
 import { usePremiumUpsell, isPremiumError } from '@/hooks/usePremiumUpsell';
+import { SparkChip } from '@/components/spark/SparkChip';
 import { cn } from '@/lib/utils';
 
 interface Props {
@@ -24,7 +24,7 @@ interface Props {
 }
 
 /**
- * AI Optimize button.
+ * Spark writing assistant button.
  * - NEVER a dead click: button is only disabled while busy. Short-description
  *   validation surfaces as a toast so the user sees why nothing generated.
  * - Entitled users: generates via edge function, shows before/after preview,
@@ -34,7 +34,7 @@ interface Props {
  */
 export const AIOptimizeButton: React.FC<Props> = ({
   description, category, mode, title, onApply,
-  showOptimized, size = 'sm', variant = 'outline', className, label = 'Optimize with AI',
+  showOptimized, size = 'sm', variant = 'outline', className, label = 'Write it for me',
 }) => {
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -53,7 +53,7 @@ export const AIOptimizeButton: React.FC<Props> = ({
     if (trimmed.length < 10) {
       toast({
         title: 'Add a bit more first',
-        description: 'Write at least 10 characters (a rough draft is fine) — AI will polish it.',
+        description: 'Write at least 10 characters (a rough draft is fine) — Spark will polish it.',
         variant: 'destructive',
       });
       return;
@@ -79,7 +79,7 @@ export const AIOptimizeButton: React.FC<Props> = ({
 
         if (code === 'auth_required' || code === 'auth_invalid' || status === 401) {
           toast({
-            title: 'Sign in to use AI',
+            title: 'Sign in to use Spark',
             description: 'Redirecting to sign in — your draft will be preserved.',
           });
           const returnTo = location.pathname + location.search;
@@ -95,11 +95,11 @@ export const AIOptimizeButton: React.FC<Props> = ({
           return;
         }
         if (code === 'credits_exhausted' || status === 402) {
-          toast({ title: 'AI temporarily unavailable', description: 'Please try again shortly.', variant: 'destructive' });
+          toast({ title: 'Spark is temporarily unavailable', description: 'Please try again shortly.', variant: 'destructive' });
           return;
         }
         toast({
-          title: 'Optimization failed',
+          title: "Couldn't write that draft",
           description: parsed?.error ?? error.message ?? 'Please try again.',
           variant: 'destructive',
         });
@@ -108,7 +108,7 @@ export const AIOptimizeButton: React.FC<Props> = ({
 
       const optimized: string | undefined = data?.optimizedDescription;
       if (!optimized) {
-        toast({ title: 'No output', description: 'AI returned nothing. Please try again.', variant: 'destructive' });
+        toast({ title: 'No output', description: 'Spark returned nothing. Please try again.', variant: 'destructive' });
         return;
       }
 
@@ -117,7 +117,7 @@ export const AIOptimizeButton: React.FC<Props> = ({
       setPreviewOpen(true);
     } catch (err) {
       toast({
-        title: 'Optimization failed',
+        title: "Couldn't write that draft",
         description: err instanceof Error ? err.message : 'Please try again later.',
         variant: 'destructive',
       });
@@ -152,17 +152,17 @@ export const AIOptimizeButton: React.FC<Props> = ({
         className={cn('gap-1.5', className)}
       >
         {busy ? (
-          <><Loader2 className="w-4 h-4 animate-spin" /> Optimizing…</>
+          <><Loader2 className="w-4 h-4 animate-spin" /> Writing your description…</>
         ) : showOptimized ? (
-          <><Check className="w-4 h-4 text-green-500" /> Optimized</>
+          <><Check className="w-4 h-4 text-green-500" /> Written</>
         ) : (
           <>
-            <Wand2 className="w-4 h-4" />
+            <Flame className="w-4 h-4" />
             {label}
-            {!isEntitled && !entLoading && (
-              <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-[10px] uppercase tracking-wide bg-amber-500/15 text-amber-500 border border-amber-500/30">
-                <Lock className="w-2.5 h-2.5 mr-1" />Pro
-              </Badge>
+            {!isEntitled && !entLoading ? (
+              <SparkChip variant="gold" label="Pro" className="ml-1" />
+            ) : (
+              <SparkChip className="ml-1" />
             )}
           </>
         )}
@@ -173,13 +173,17 @@ export const AIOptimizeButton: React.FC<Props> = ({
         <DialogContent className="max-w-3xl">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <Wand2 className="w-5 h-5 text-primary" />
-              {isSamplePreview ? 'Your free AI sample' : 'AI-polished description'}
+              <Flame className="w-5 h-5 text-primary" />
+              {isSamplePreview ? 'Your free Spark sample' : "Here's a draft — edit anything"}
+              <SparkChip className="ml-1" />
             </DialogTitle>
           </DialogHeader>
+          <p className="text-xs text-muted-foreground -mt-2">
+            Generated draft — review before publishing. Nothing is applied until you tap “Use this”.
+          </p>
           {isSamplePreview && (
             <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-3 text-xs text-amber-600 dark:text-amber-400">
-              This is a one-time free sample. Upgrade to Starter or above to apply AI copy directly to your listing and generate unlimited rewrites.
+              This is a one-time free sample. Upgrade to Starter or above to apply Spark drafts directly to your listing and get unlimited rewrites.
             </div>
           )}
           <div className="grid gap-3 md:grid-cols-2">
@@ -190,7 +194,9 @@ export const AIOptimizeButton: React.FC<Props> = ({
               </p>
             </div>
             <div className="relative rounded-lg border border-primary/40 bg-primary/[0.04] p-3">
-              <div className="text-[10px] font-semibold uppercase tracking-wider text-primary mb-2">AI suggestion</div>
+              <div className="text-[10px] font-semibold uppercase tracking-wider text-primary mb-2 flex items-center gap-1.5">
+                <Flame className="w-3 h-3" /> Spark draft
+              </div>
               {isSamplePreview && (
                 <div className="absolute inset-0 pointer-events-none flex items-center justify-center opacity-[0.08] select-none">
                   <span className="text-6xl font-black rotate-[-18deg] tracking-widest">SAMPLE</span>
@@ -207,7 +213,7 @@ export const AIOptimizeButton: React.FC<Props> = ({
             </Button>
             {!isSamplePreview && (
               <Button variant="outline" onClick={() => { setPreviewOpen(false); void run(); }} className="gap-1.5">
-                <RefreshCw className="w-4 h-4" /> Regenerate
+                <RefreshCw className="w-4 h-4" /> Try again
               </Button>
             )}
             {isSamplePreview ? (

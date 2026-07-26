@@ -1361,7 +1361,7 @@ const StartupGuide = () => {
                       <DollarSign className="h-6 w-6" />
                     </div>
                     <h3 className="font-semibold text-lg mb-2">Price Pilot</h3>
-                    <p className="text-sm text-muted-foreground mb-3">Get AI-powered pricing recommendations based on your market and equipment.</p>
+                    <p className="text-sm text-muted-foreground mb-3">Get Data-backed pricing recommendations, powered by Spark based on your market and equipment.</p>
                     <span className="text-primary text-sm font-medium inline-flex items-center gap-1 group-hover:gap-2 transition-all">
                       Calculate Pricing <ArrowRight className="h-4 w-4" />
                     </span>

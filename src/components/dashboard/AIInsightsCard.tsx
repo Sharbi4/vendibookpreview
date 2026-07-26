@@ -54,9 +54,9 @@ export const AIInsightsCard = () => {
             <div className="w-10 h-10 rounded-2xl bg-primary text-primary-foreground shadow-lg flex items-center justify-center">
               
             </div>
-            AI Insights
+            Insights
             <span className="text-xs font-normal text-primary bg-primary/10 px-2 py-0.5 rounded-full ml-2">
-              Powered by AI
+              Powered by Spark
             </span>
           </CardTitle>
           <div className="flex items-center gap-2">
@@ -108,7 +108,7 @@ export const AIInsightsCard = () => {
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-8 gap-3">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            <p className="text-sm text-muted-foreground">Analyzing your data with AI...</p>
+            <p className="text-sm text-muted-foreground">Reading your data…</p>
           </div>
         ) : error ? (
           <div className="flex flex-col items-center justify-center py-6 gap-3 bg-muted/30 rounded-xl">
@@ -122,7 +122,7 @@ export const AIInsightsCard = () => {
           <div className="flex flex-col items-center justify-center py-6 gap-3 bg-muted/30 rounded-xl">
             
             <p className="text-sm text-muted-foreground text-center">
-              No insights available yet. Create listings to start receiving AI-powered recommendations.
+              No insights available yet. Create listings to start receiving recommendations powered by Spark.
             </p>
           </div>
         ) : (

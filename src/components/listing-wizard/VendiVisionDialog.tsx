@@ -82,7 +82,7 @@ export const VendiVisionDialog = ({ open, onOpenChange, onApply }: VendiVisionDi
     onApply(result, preview);
     onOpenChange(false);
     reset();
-    toast({ title: '✨ Applied to listing', description: 'Review and tweak before publishing.' });
+    toast({ title: 'Applied to listing', description: 'Review and tweak before publishing.' });
   };
 
   return (

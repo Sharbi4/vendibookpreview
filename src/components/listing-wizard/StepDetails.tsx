@@ -147,7 +147,7 @@ export const StepDetails: React.FC<StepDetailsProps> = ({
               title={formData.title}
               onApply={applyOptimized}
               showOptimized={showOptimized}
-              label="AI Optimize"
+              label="Write it for me"
             />
 
           </div>
@@ -176,7 +176,7 @@ export const StepDetails: React.FC<StepDetailsProps> = ({
           </p>
           {!showOptimized && formData.description.length >= 10 && (
             <p className="text-xs text-muted-foreground/70 whitespace-nowrap">
-              ✨ Tip: Click AI Optimize for a professional rewrite
+              Tip: tap “Write it for me” for a polished rewrite you can edit
             </p>
           )}
         </div>

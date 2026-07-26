@@ -158,11 +158,11 @@ const SupplySection = () => {
               >
                 
               </motion.div>
-              <h3 className="text-xl font-semibold text-foreground">Free AI Tools for Hosts</h3>
+              <h3 className="text-xl font-semibold text-foreground">Free Operator Tools, Powered by Spark</h3>
             </div>
             
             <p className="text-muted-foreground mb-6">
-              Get an edge with our AI-powered tools—optimize pricing, find permits, and create listings that convert.
+              Get an edge with our Spark-powered tools—optimize pricing, find permits, and write listings that convert.
             </p>
 
             <ul className="space-y-3 mb-6">

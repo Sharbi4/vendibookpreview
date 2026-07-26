@@ -82,7 +82,7 @@ const BuildKit = () => {
     <>
       <SEO
         title="Vendi BuildKit | Equipment Guide for Food Trucks | Vendibook"
-        description="Get equipment recommendations and maintenance guides for commercial kitchen equipment. Match your menu, volume, and budget. Free AI-powered tool."
+        description="Get equipment recommendations and maintenance guides for commercial kitchen equipment. Match your menu, volume, and budget. Free tool, powered by Spark."
         canonical="/tools/buildkit"
       />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(pageJsonLd) }} />

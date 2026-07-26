@@ -52,7 +52,7 @@ const SellMyFoodTruck = () => {
     },
     {
       question: "How do I know what to price it at?",
-      answer: "Start with the Pricing Calculator for a quick estimate, then use PricePilot for AI-based comps and a recommended range. Update your price anytime."
+      answer: "Start with the Pricing Calculator for a quick estimate, then use PricePilot for data-backed comps and a recommended range. Update your price anytime."
     },
     {
       question: "What happens after the buyer checks out?",

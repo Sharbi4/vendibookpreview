@@ -128,7 +128,7 @@ export const StepHeadlineDescription: React.FC<StepHeadlineDescriptionProps> = (
           </span>
         </div>
 
-        {/* AI Optimize Card */}
+        {/* Write it for me Card */}
         <div className="rounded-xl border border-border bg-card p-4 space-y-3">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center shrink-0">
@@ -150,7 +150,7 @@ export const StepHeadlineDescription: React.FC<StepHeadlineDescriptionProps> = (
             showOptimized={showOptimized}
             variant="default"
             className="w-full"
-            label="Optimize with AI"
+            label="Write it for me"
           />
 
         </div>

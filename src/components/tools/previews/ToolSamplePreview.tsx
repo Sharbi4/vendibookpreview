@@ -4,7 +4,7 @@
  * "Example" where data is synthetic; based on the app's real category /
  * state options everywhere else.
  *
- * No AI-generated stock art, no empty placeholder boxes. Every preview is
+ * No generic stock art, no empty placeholder boxes. Every preview is
  * a compact facsimile of the actual tool UI, partially truncated with an
  * "Unlock to see the full …" footer.
  */

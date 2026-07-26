@@ -38,7 +38,7 @@ const pageJsonLd = {
   "applicationCategory": "BusinessApplication",
   "operatingSystem": "Web",
   "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
-  "description": "AI-powered market research for food truck and mobile food businesses. Location intel, competitor snapshots, and demand signals.",
+  "description": "Market research powered by Spark for food truck and mobile food businesses. Location intel, competitor snapshots, and demand signals.",
   "featureList": ["Industry research", "Competitor analysis", "Location insights", "Expert tips"]
 };
 
@@ -82,7 +82,7 @@ const MarketRadar = () => {
     <>
       <SEO
         title="Vendi Market Radar | Food Truck Industry Research | Vendibook"
-        description="AI-powered market research for food truck businesses. Get location intel, competitor snapshots, and demand signals for smarter decisions."
+        description="Market research powered by Spark for food truck businesses. Get location intel, competitor snapshots, and demand signals for smarter decisions."
         canonical="/tools/market-radar"
       />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(pageJsonLd) }} />
@@ -135,7 +135,7 @@ const MarketRadar = () => {
                   Research smarter, decide faster.
                 </h1>
                 <p className="text-xl text-foreground/70 mb-8">
-                  Location intel + competitor snapshots for smarter decisions. AI-powered research on any food truck topic.
+                  Location intel + competitor snapshots for smarter decisions. Research powered by Spark on any food truck topic.
                 </p>
                 <div className="flex flex-wrap gap-4">
                   <Button size="lg" variant="dark-shine" onClick={() => document.getElementById('tool-section')?.scrollIntoView({ behavior: 'smooth' })}>
@@ -211,7 +211,7 @@ const MarketRadar = () => {
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2"><Search className="h-5 w-5 text-primary" />Market Radar</CardTitle>
-                  <CardDescription>Get comprehensive AI-powered research on any food truck topic.</CardDescription>
+                  <CardDescription>Get comprehensive Research powered by Spark on any food truck topic.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   {/* Quick Topics */}

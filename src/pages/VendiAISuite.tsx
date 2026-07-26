@@ -17,7 +17,7 @@ const VendiAISuite = () => {
   return (
     <>
       <SEO
-        title="Free AI Tools for Food Truck Owners | Vendibook"
+        title="Free Operator Tools for Food Truck Owners — Powered by Spark | Vendibook"
         description="Launch and legalize your food truck with free AI tools: pricing, permits, listing copy, and a step-by-step startup guide. Built for mobile food vendors."
         canonical="/vendi-ai-suite"
       />

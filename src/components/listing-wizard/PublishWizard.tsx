@@ -2255,7 +2255,7 @@ export const PublishWizard: React.FC = () => {
                       </span>
                     </div>
 
-                    {/* AI Optimize Card */}
+                    {/* Write it for me Card */}
                     <div className="relative overflow-hidden rounded-xl p-4 border border-border bg-gradient-to-br from-primary/5 via-primary/3 to-background">
                       <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-primary/3 animate-pulse pointer-events-none" />
                       <div className="relative flex items-start gap-3">
@@ -2287,7 +2287,7 @@ export const PublishWizard: React.FC = () => {
                             ) : (
                               <>
                                 
-                                Optimize with AI
+                                Write it for me
                               </>
                             )}
                           </Button>
@@ -3155,7 +3155,7 @@ export const PublishWizard: React.FC = () => {
                     )}
                   </div>
 
-                  {/* Description with AI Optimize */}
+                  {/* Description with Write it for me */}
                   <div className="space-y-2">
                     <div className="flex justify-between items-center">
                       <Label htmlFor="description" className="text-base font-medium">
@@ -3194,7 +3194,7 @@ export const PublishWizard: React.FC = () => {
                           ) : (
                             <>
                               
-                              AI Optimize
+                              Write it for me
                             </>
                           )}
                         </Button>
@@ -3238,7 +3238,7 @@ export const PublishWizard: React.FC = () => {
                     
                     {!showOptimized && description.length >= 10 && description.trim().length >= MIN_DESCRIPTION_LENGTH && (
                       <p className="text-xs text-muted-foreground/70">
-                        ✨ Tip: Click AI Optimize for a professional rewrite
+                        Tip: tap “Write it for me” for a polished rewrite you can edit
                       </p>
                     )}
                   </div>

@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { trackLeadEvent } from '@/lib/leadTracking';
 
 /**
- * Prominent entry-point card for AI-powered host tools.
+ * Prominent entry-point card for Spark-powered host tools.
  * Surfaces the conversational AI Listing Creator + Vendi voice/text chat
  * so hosts can find AI assistance without hunting through nav.
  */
@@ -50,7 +50,7 @@ export const AICopilotLauncher = () => {
             <Link to="/list/ai">
               <span className="flex items-center gap-2">
                 <PenLine className="h-4 w-4" />
-                Draft a listing with AI
+                Draft my listing with Spark
               </span>
               <ArrowRight className="h-4 w-4" />
             </Link>

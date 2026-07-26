@@ -37,8 +37,8 @@ const pageJsonLd = {
   "applicationCategory": "BusinessApplication",
   "operatingSystem": "Web",
   "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
-  "description": "Turn specs into high-converting listings in minutes. AI-powered title, description, and highlights generator for food trucks and trailers.",
-  "featureList": ["AI-generated titles", "Compelling descriptions", "Key highlights", "SEO optimization"]
+  "description": "Turn specs into high-converting listings in minutes. Title, description, and highlights writer — powered by Spark for food trucks and trailers.",
+  "featureList": ["Spark-written titles", "Compelling descriptions", "Key highlights", "SEO optimization"]
 };
 
 interface DescriptionResult {
@@ -79,7 +79,7 @@ const ListingStudio = () => {
     <>
       <SEO
         title="Vendi Listing Studio | AI Listing Generator | Vendibook"
-        description="Turn specs into high-converting food truck listings in minutes. AI-powered title, description, and highlights generator. Free to use."
+        description="Turn specs into high-converting food truck listings in minutes. Title, description, and highlights writer — powered by Spark. Free to use."
         canonical="/tools/listing-studio"
       />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(pageJsonLd) }} />
