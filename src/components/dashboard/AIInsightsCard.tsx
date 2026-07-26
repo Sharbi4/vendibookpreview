@@ -54,7 +54,7 @@ export const AIInsightsCard = () => {
             <div className="w-10 h-10 rounded-2xl bg-primary text-primary-foreground shadow-lg flex items-center justify-center">
               
             </div>
-            AI Insights
+            Insights
             <span className="text-xs font-normal text-primary bg-primary/10 px-2 py-0.5 rounded-full ml-2">
               Powered by Spark
             </span>
