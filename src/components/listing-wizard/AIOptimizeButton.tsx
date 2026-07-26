@@ -79,7 +79,7 @@ export const AIOptimizeButton: React.FC<Props> = ({
 
         if (code === 'auth_required' || code === 'auth_invalid' || status === 401) {
           toast({
-            title: 'Sign in to use AI',
+            title: 'Sign in to use Spark',
             description: 'Redirecting to sign in — your draft will be preserved.',
           });
           const returnTo = location.pathname + location.search;
@@ -95,7 +95,7 @@ export const AIOptimizeButton: React.FC<Props> = ({
           return;
         }
         if (code === 'credits_exhausted' || status === 402) {
-          toast({ title: 'AI temporarily unavailable', description: 'Please try again shortly.', variant: 'destructive' });
+          toast({ title: 'Spark is temporarily unavailable', description: 'Please try again shortly.', variant: 'destructive' });
           return;
         }
         toast({
