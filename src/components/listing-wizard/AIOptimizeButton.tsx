@@ -53,7 +53,7 @@ export const AIOptimizeButton: React.FC<Props> = ({
     if (trimmed.length < 10) {
       toast({
         title: 'Add a bit more first',
-        description: 'Write at least 10 characters (a rough draft is fine) — AI will polish it.',
+        description: 'Write at least 10 characters (a rough draft is fine) — Spark will polish it.',
         variant: 'destructive',
       });
       return;
