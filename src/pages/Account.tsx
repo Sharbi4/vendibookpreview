@@ -19,6 +19,7 @@ import EditPersonalInfoSheet from '@/components/account/EditPersonalInfoSheet';
 import EditPublicProfileSheet from '@/components/account/EditPublicProfileSheet';
 import ChangePasswordSheet from '@/components/account/ChangePasswordSheet';
 import PaymentsPayoutsSection from '@/components/account/PaymentsPayoutsSection';
+import MembershipSummaryCard from '@/components/account/MembershipSummaryCard';
 import { getDisplayInitials } from '@/lib/displayName';
 
 interface ProfileRow {
