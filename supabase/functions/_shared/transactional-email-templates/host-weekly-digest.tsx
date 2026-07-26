@@ -73,7 +73,7 @@ const E = ({ hostName, weekLabel, views, inquiries, bookings, earnings, topListi
 
 export const template = {
   component: E,
-  subject: (d: any) => d?.aiSubject || `Your Vendibook week — ${d?.bookings ?? 0} bookings, $${(d?.earnings ?? 0).toLocaleString()}`,
+  subject: (d: any) => (typeof d?.aiSubject === "string" && d.aiSubject.trim() ? d.aiSubject : null) || `Your Vendibook week — ${d?.bookings ?? 0} bookings, $${(d?.earnings ?? 0).toLocaleString()}`,
   displayName: 'Host weekly digest',
   previewData: { hostName: 'Sam', weekLabel: 'WEEK OF APR 14', views: 412, inquiries: 18, bookings: 3, earnings: 1240, topListingTitle: 'Downtown Food Truck', topListingId: 'demo', aiInsight: 'Strong week — inquiries up 22%. Two listings under-priced for weekends.', tip: 'Add 3 more photos to your top listing — listings with 8+ photos book 60% more.' },
 } satisfies TemplateEntry

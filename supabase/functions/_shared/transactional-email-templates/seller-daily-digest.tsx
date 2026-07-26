@@ -52,7 +52,7 @@ const E = ({ sellerName, dateLabel, openOffers, salesYesterday, revenueYesterday
 
 export const template = {
   component: E,
-  subject: (d: any) => d?.aiSubject || `${(d?.openOffers?.length ?? 0)} open offers · $${(d?.revenueYesterday ?? 0).toLocaleString()} yesterday`,
+  subject: (d: any) => (typeof d?.aiSubject === "string" && d.aiSubject.trim() ? d.aiSubject : null) || `${(d?.openOffers?.length ?? 0)} open offers · $${(d?.revenueYesterday ?? 0).toLocaleString()} yesterday`,
   displayName: 'Seller daily digest',
   previewData: { sellerName: 'Jordan', dateLabel: 'TODAY', salesYesterday: 2, revenueYesterday: 540, aiInsight: '2 offers expire in under 24h. Counter or accept now to keep momentum.', tip: 'Counter at 92% of list — converts ~3x more than holding firm.', openOffers: [{ id: 'a', listingTitle: 'Pro Camera Kit', offerAmount: 720, status: 'pending' }] },
 } satisfies TemplateEntry
