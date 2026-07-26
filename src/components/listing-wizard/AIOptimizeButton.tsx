@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
-import { Loader2, Check, Wand2, Lock, RefreshCw } from 'lucide-react';
+import { Loader2, Check, Flame, Lock, RefreshCw } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useHostEntitlements } from '@/hooks/useHostEntitlements';
 import { usePremiumUpsell, isPremiumError } from '@/hooks/usePremiumUpsell';
+import { SparkChip } from '@/components/spark/SparkChip';
 import { cn } from '@/lib/utils';
 
 interface Props {
