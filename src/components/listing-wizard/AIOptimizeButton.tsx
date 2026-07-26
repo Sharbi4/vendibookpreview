@@ -117,7 +117,7 @@ export const AIOptimizeButton: React.FC<Props> = ({
       setPreviewOpen(true);
     } catch (err) {
       toast({
-        title: 'Optimization failed',
+        title: "Couldn't write that draft",
         description: err instanceof Error ? err.message : 'Please try again later.',
         variant: 'destructive',
       });
