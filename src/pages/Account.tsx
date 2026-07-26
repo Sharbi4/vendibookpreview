@@ -19,6 +19,7 @@ import EditPersonalInfoSheet from '@/components/account/EditPersonalInfoSheet';
 import EditPublicProfileSheet from '@/components/account/EditPublicProfileSheet';
 import ChangePasswordSheet from '@/components/account/ChangePasswordSheet';
 import PaymentsPayoutsSection from '@/components/account/PaymentsPayoutsSection';
+import MembershipSummaryCard from '@/components/account/MembershipSummaryCard';
 import { getDisplayInitials } from '@/lib/displayName';
 
 interface ProfileRow {
@@ -279,6 +280,9 @@ const Account = () => {
               {/* 4. Payments & payouts */}
               <PaymentsPayoutsSection />
 
+              {/* 4b. Membership & billing (inline manage) */}
+              {user && <MembershipSummaryCard />}
+
               {/* 5. Privacy & sharing */}
               {user && (
                 <section id="section-privacy" className="scroll-mt-24">
@@ -297,12 +301,6 @@ const Account = () => {
                   label="Notifications"
                   hint="Email, push, and SMS preferences."
                   to="/notification-preferences"
-                />
-                <RowLink
-                  icon={CreditCard}
-                  label="Membership & billing"
-                  hint="Your plan, invoices, and add-ons."
-                  to="/account/subscription"
                 />
                 <RowLink
                   icon={ShieldCheck}
