@@ -213,7 +213,7 @@ export const AIOptimizeButton: React.FC<Props> = ({
             </Button>
             {!isSamplePreview && (
               <Button variant="outline" onClick={() => { setPreviewOpen(false); void run(); }} className="gap-1.5">
-                <RefreshCw className="w-4 h-4" /> Regenerate
+                <RefreshCw className="w-4 h-4" /> Try again
               </Button>
             )}
             {isSamplePreview ? (
