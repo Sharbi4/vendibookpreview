@@ -189,7 +189,7 @@ const ConceptLab = () => {
                 </div>
                 <div className="text-center">
                   <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4"><span className="text-2xl font-bold text-primary">2</span></div>
-                  <h3 className="font-bold mb-2">AI Generates Concepts</h3>
+                  <h3 className="font-bold mb-2">Spark Generates Concepts</h3>
                   <p className="text-muted-foreground text-sm">Get 10 unique business ideas with menus, positioning, and estimates.</p>
                 </div>
                 <div className="text-center">

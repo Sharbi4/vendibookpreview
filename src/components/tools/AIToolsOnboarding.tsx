@@ -227,7 +227,7 @@ const AIToolsOnboarding = ({ onComplete }: AIToolsOnboardingProps) => {
                   >
                     <div className="text-center p-3 bg-muted/50 rounded-lg">
                       <Rocket className="h-5 w-5 mx-auto mb-1 text-orange-500" />
-                      <p className="text-xs text-muted-foreground">6 AI Tools</p>
+                      <p className="text-xs text-muted-foreground">6 Operator Tools</p>
                     </div>
                     <div className="text-center p-3 bg-muted/50 rounded-lg">
                       <Clock className="h-5 w-5 mx-auto mb-1 text-amber-500" />

@@ -158,7 +158,7 @@ const SupplySection = () => {
               >
                 
               </motion.div>
-              <h3 className="text-xl font-semibold text-foreground">Free AI Tools for Hosts</h3>
+              <h3 className="text-xl font-semibold text-foreground">Free Operator Tools, Powered by Spark</h3>
             </div>
             
             <p className="text-muted-foreground mb-6">

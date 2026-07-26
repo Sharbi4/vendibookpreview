@@ -37,12 +37,12 @@ import ToolCrossLinks from '@/components/tools/ToolCrossLinks';
 const pageJsonLd = {
   "@context": "https://schema.org",
   "@type": "SoftwareApplication",
-  "name": "Vendi Marketing Studio - AI Marketing Materials Creator",
+  "name": "Vendi Marketing Studio - Marketing Materials Studio",
   "applicationCategory": "BusinessApplication",
   "operatingSystem": "Web",
   "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
   "description": "Create social media posts, flyers, emails, menu descriptions, taglines, and marketing images, powered by Spark.",
-  "featureList": ["Social media posts", "Flyer copy", "Email campaigns", "Menu descriptions", "Taglines", "AI image generation"]
+  "featureList": ["Social media posts", "Flyer copy", "Email campaigns", "Menu descriptions", "Taglines", "Image generation with Spark"]
 };
 
 type ContentType = 'social-post' | 'flyer' | 'promo-email' | 'menu-description' | 'tagline' | 'image';
@@ -123,7 +123,7 @@ const MarketingStudio = () => {
   return (
     <>
       <SEO
-        title="Vendi Marketing Studio | AI Marketing Materials Creator | Vendibook"
+        title="Vendi Marketing Studio | Marketing Materials Studio | Vendibook"
         description="Create social media posts, flyers, emails, menu descriptions, taglines, and marketing images, powered by Spark. Free marketing tools for food truck businesses."
         canonical="/tools/marketing-studio"
       />
@@ -197,7 +197,7 @@ const MarketingStudio = () => {
                     <div className="w-12 h-12 rounded-xl bg-purple-500/10 flex items-center justify-center mb-4">
                       <Image className="h-6 w-6 text-purple-600" />
                     </div>
-                    <h3 className="font-bold text-lg mb-2">AI Image Generation</h3>
+                    <h3 className="font-bold text-lg mb-2">Image Generation</h3>
                     <p className="text-muted-foreground">Create stunning promotional images with Spark — no design skills needed.</p>
                   </CardContent>
                 </Card>
@@ -506,7 +506,7 @@ const MarketingStudio = () => {
                 <TabsContent value="image">
                   <Card>
                     <CardHeader>
-                      <CardTitle className="flex items-center gap-2"><Image className="h-5 w-5 text-fuchsia-500" />AI Image Generator</CardTitle>
+                      <CardTitle className="flex items-center gap-2"><Image className="h-5 w-5 text-fuchsia-500" />Image Generator</CardTitle>
                       <CardDescription>Create stunning promotional images with Spark — no design skills needed.</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
