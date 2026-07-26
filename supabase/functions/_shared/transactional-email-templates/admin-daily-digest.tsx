@@ -47,7 +47,7 @@ const E = ({ dateLabel, newSignups, newListings, newBookings, grossRevenue, open
 
 export const template = {
   component: E,
-  subject: (d: any) => d?.aiSubject || `Ops · ${d?.newBookings ?? 0} bookings, $${(d?.grossRevenue ?? 0).toLocaleString()} GMV, ${d?.openDisputes ?? 0} disputes`,
+  subject: (d: any) => (typeof d?.aiSubject === "string" && d.aiSubject.trim() ? d.aiSubject : null) || `Ops · ${d?.newBookings ?? 0} bookings, $${(d?.grossRevenue ?? 0).toLocaleString()} GMV, ${d?.openDisputes ?? 0} disputes`,
   displayName: 'Admin daily ops digest',
   previewData: { dateLabel: 'YESTERDAY', newSignups: 24, newListings: 11, newBookings: 18, grossRevenue: 6420, openDisputes: 1, pendingPayouts: 4, aiInsight: 'Healthy day. Bookings up 14% WoW. One dispute aging > 48h needs review.' },
 } satisfies TemplateEntry

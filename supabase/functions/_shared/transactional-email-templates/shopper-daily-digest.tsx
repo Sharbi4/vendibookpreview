@@ -45,7 +45,7 @@ const E = ({ shopperName, area, listings, aiInsight, tip }: Props) => (
 
 export const template = {
   component: E,
-  subject: (d: any) => d?.aiSubject || `${(d?.listings?.length ?? 0)} new listings${d?.area ? ` near ${d.area}` : ''}`,
+  subject: (d: any) => (typeof d?.aiSubject === "string" && d.aiSubject.trim() ? d.aiSubject : null) || `${(d?.listings?.length ?? 0)} new listings${d?.area ? ` near ${d.area}` : ''}`,
   displayName: 'Shopper daily digest',
   previewData: { shopperName: 'Alex', area: 'Brooklyn, NY', aiInsight: '3 new food trucks just listed within 5 miles of your saved area.', tip: 'Send a quick message to hosts — fast replies book first.', listings: [{ id: 'a', title: 'Vintage Airstream Food Truck', city: 'Brooklyn', state: 'NY', priceLabel: '$240/day' }, { id: 'b', title: 'Williamsburg Pop-up Kitchen', city: 'Brooklyn', state: 'NY', priceLabel: '$180/day' }] },
 } satisfies TemplateEntry

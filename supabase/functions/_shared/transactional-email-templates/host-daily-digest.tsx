@@ -51,7 +51,7 @@ const E = ({ hostName, dateLabel, views, inquiries, bookings, earnings, topListi
 
 export const template = {
   component: E,
-  subject: (d: any) => d?.aiSubject || `Your Vendibook day — ${d?.bookings ?? 0} bookings, $${(d?.earnings ?? 0).toLocaleString()}`,
+  subject: (d: any) => (typeof d?.aiSubject === "string" && d.aiSubject.trim() ? d.aiSubject : null) || `Your Vendibook day — ${d?.bookings ?? 0} bookings, $${(d?.earnings ?? 0).toLocaleString()}`,
   displayName: 'Host daily digest',
   previewData: { hostName: 'Sam', dateLabel: 'YESTERDAY', views: 84, inquiries: 4, bookings: 1, earnings: 320, topListingTitle: 'Downtown Food Truck', topListingId: 'demo', aiInsight: 'Strong inquiry day — 4 leads on one listing. Reply within an hour to convert.', tip: 'Reply to inquiries within an hour to triple your booking rate.' },
 } satisfies TemplateEntry
