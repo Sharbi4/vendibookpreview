@@ -152,17 +152,17 @@ export const AIOptimizeButton: React.FC<Props> = ({
         className={cn('gap-1.5', className)}
       >
         {busy ? (
-          <><Loader2 className="w-4 h-4 animate-spin" /> Optimizing…</>
+          <><Loader2 className="w-4 h-4 animate-spin" /> Writing your description…</>
         ) : showOptimized ? (
-          <><Check className="w-4 h-4 text-green-500" /> Optimized</>
+          <><Check className="w-4 h-4 text-green-500" /> Written</>
         ) : (
           <>
-            <Wand2 className="w-4 h-4" />
+            <Flame className="w-4 h-4" />
             {label}
-            {!isEntitled && !entLoading && (
-              <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-[10px] uppercase tracking-wide bg-amber-500/15 text-amber-500 border border-amber-500/30">
-                <Lock className="w-2.5 h-2.5 mr-1" />Pro
-              </Badge>
+            {!isEntitled && !entLoading ? (
+              <SparkChip variant="gold" label="Pro" className="ml-1" />
+            ) : (
+              <SparkChip className="ml-1" />
             )}
           </>
         )}
