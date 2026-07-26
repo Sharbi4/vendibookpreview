@@ -24,7 +24,7 @@ interface Props {
 }
 
 /**
- * AI Optimize button.
+ * Spark writing assistant button.
  * - NEVER a dead click: button is only disabled while busy. Short-description
  *   validation surfaces as a toast so the user sees why nothing generated.
  * - Entitled users: generates via edge function, shows before/after preview,

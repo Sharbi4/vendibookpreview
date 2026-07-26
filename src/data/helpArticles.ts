@@ -2975,7 +2975,7 @@ Ready to get started? [List your food truck for sale →](/sell-my-food-truck)`
 **Pricing Calculator**
 Get a quick estimate based on category, condition, and market signals. [Open the Pricing Calculator →](/pricing-calculator)
 
-**PricePilot (AI Suggestions)**
+**PricePilot (Spark Suggestions)**
 Let our AI scan comparable listings and suggest a competitive price range with confidence cues. [Get AI Pricing Suggestions →](/tools/pricepilot)
 
 **Tips for Pricing:**
