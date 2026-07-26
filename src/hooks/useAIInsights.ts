@@ -71,7 +71,7 @@ export const useAIInsights = (): UseAIInsightsReturn => {
         isEntitlement
           ? {
               type: 'opportunity',
-              title: 'Unlock AI Insights with Growth',
+              title: 'Unlock Spark Insights with Growth',
               description:
                 'Personalized recommendations, competitor benchmarks, and health scores are included with the Growth plan.',
               action: '/pricing?learn=host_growth',
