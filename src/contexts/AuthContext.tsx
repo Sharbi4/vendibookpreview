@@ -201,7 +201,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
               drainPendingSignupConsent(session.user).catch((e) =>
                 console.warn('[Auth] deferred consent drain failed', e),
               );
+
+              // Honor the pre-auth redirect intent stashed by OAuth /
+              // Message-Seller / checkout entry points. Same-origin only.
+              try {
+                const pending = window.sessionStorage?.getItem('pending_post_auth_redirect');
+                if (pending && pending.startsWith('/') && !pending.startsWith('//')) {
+                  window.sessionStorage.removeItem('pending_post_auth_redirect');
+                  const here = window.location.pathname + window.location.search;
+                  if (here !== pending) {
+                    // Defer so profile/roles state hydrates first.
+                    setTimeout(() => window.location.assign(pending), 50);
+                  }
+                }
+              } catch {
+                /* ignore */
+              }
             }
+
+
 
 
             const [profileData, rolesData] = await Promise.all([
