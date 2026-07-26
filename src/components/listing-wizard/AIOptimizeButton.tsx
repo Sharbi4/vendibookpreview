@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Loader2, Check, Wand2, Lock } from 'lucide-react';
+import { Loader2, Check, Wand2, Lock, RefreshCw } from 'lucide-react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
@@ -23,32 +24,36 @@ interface Props {
 }
 
 /**
- * AI Optimize button that:
- * - For entitled users: calls edge function and applies the result directly.
- * - For free users: shows a one-time free sample in a preview dialog (watermarked)
- *   with an "Upgrade to apply" CTA. After the sample is used, subsequent clicks
- *   open the premium upsell overlay.
- * - Never a dead click, never a silent disable.
+ * AI Optimize button.
+ * - NEVER a dead click: button is only disabled while busy. Short-description
+ *   validation surfaces as a toast so the user sees why nothing generated.
+ * - Entitled users: generates via edge function, shows before/after preview,
+ *   applies only after explicit "Use this" (never silently overwrites).
+ * - Free users: one watermarked sample per account, then upsell overlay.
+ * - Non-2xx from the edge function ALWAYS produces visible feedback.
  */
 export const AIOptimizeButton: React.FC<Props> = ({
   description, category, mode, title, onApply,
   showOptimized, size = 'sm', variant = 'outline', className, label = 'Optimize with AI',
 }) => {
   const { toast } = useToast();
+  const navigate = useNavigate();
+  const location = useLocation();
   const { tier, isLoading: entLoading } = useHostEntitlements();
   const { show: showUpsell, overlay } = usePremiumUpsell();
   const [busy, setBusy] = useState(false);
-  const [sample, setSample] = useState<string | null>(null);
-  const [sampleOpen, setSampleOpen] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewText, setPreviewText] = useState<string | null>(null);
+  const [isSamplePreview, setIsSamplePreview] = useState(false);
 
   const isEntitled = tier !== 'free';
-  const tooShort = !description || description.trim().length < 10;
 
   const run = async () => {
-    if (tooShort) {
+    const trimmed = (description ?? '').trim();
+    if (trimmed.length < 10) {
       toast({
-        title: 'Description too short',
-        description: 'Please write at least 10 characters before optimizing.',
+        title: 'Add a bit more first',
+        description: 'Write at least 10 characters (a rough draft is fine) — AI will polish it.',
         variant: 'destructive',
       });
       return;
@@ -56,12 +61,11 @@ export const AIOptimizeButton: React.FC<Props> = ({
     setBusy(true);
     try {
       const { data, error } = await supabase.functions.invoke('optimize-description', {
-        body: { rawDescription: description, category, mode, title },
+        body: { rawDescription: trimmed, category, mode, title },
       });
 
-      // supabase-js swallows the body on non-2xx; re-parse it.
       if (error) {
-        // Try to extract structured code
+        // supabase-js hides the response body on non-2xx — parse it back.
         const ctx: any = (error as any).context;
         let parsed: any = null;
         try {
@@ -72,8 +76,26 @@ export const AIOptimizeButton: React.FC<Props> = ({
         } catch { /* ignore */ }
         const status = ctx?.status ?? null;
         const code = parsed?.code ?? null;
+
+        if (code === 'auth_required' || code === 'auth_invalid' || status === 401) {
+          toast({
+            title: 'Sign in to use AI',
+            description: 'Redirecting to sign in — your draft will be preserved.',
+          });
+          const returnTo = location.pathname + location.search;
+          navigate(`/auth?returnTo=${encodeURIComponent(returnTo)}`);
+          return;
+        }
         if (isPremiumError({ status, code, raw: parsed })) {
           showUpsell('ai-description', 'listing_wizard_ai_optimize');
+          return;
+        }
+        if (code === 'rate_limited' || status === 429) {
+          toast({ title: 'Slow down a sec', description: 'Too many requests — try again in a moment.', variant: 'destructive' });
+          return;
+        }
+        if (code === 'credits_exhausted' || status === 402) {
+          toast({ title: 'AI temporarily unavailable', description: 'Please try again shortly.', variant: 'destructive' });
           return;
         }
         toast({
@@ -90,17 +112,9 @@ export const AIOptimizeButton: React.FC<Props> = ({
         return;
       }
 
-      if (data?.is_sample) {
-        setSample(optimized);
-        setSampleOpen(true);
-        return;
-      }
-
-      onApply(optimized);
-      toast({
-        title: 'Description optimized',
-        description: 'Your listing description has been professionally rewritten.',
-      });
+      setPreviewText(optimized);
+      setIsSamplePreview(!!data?.is_sample);
+      setPreviewOpen(true);
     } catch (err) {
       toast({
         title: 'Optimization failed',
@@ -113,8 +127,18 @@ export const AIOptimizeButton: React.FC<Props> = ({
   };
 
   const handleClick = () => {
-    if (entLoading) return;
+    if (entLoading || busy) return;
     void run();
+  };
+
+  const handleUseThis = () => {
+    if (!previewText) return;
+    onApply(previewText);
+    setPreviewOpen(false);
+    toast({
+      title: 'Applied',
+      description: 'Your description has been updated. You can still edit it.',
+    });
   };
 
   return (
@@ -124,9 +148,8 @@ export const AIOptimizeButton: React.FC<Props> = ({
         size={size}
         variant={variant}
         onClick={handleClick}
-        disabled={busy || tooShort}
+        disabled={busy}
         className={cn('gap-1.5', className)}
-        title={tooShort ? 'Write at least 10 characters first' : undefined}
       >
         {busy ? (
           <><Loader2 className="w-4 h-4 animate-spin" /> Optimizing…</>
@@ -145,37 +168,63 @@ export const AIOptimizeButton: React.FC<Props> = ({
         )}
       </Button>
 
-      {/* Sample preview dialog for free users */}
-      <Dialog open={sampleOpen} onOpenChange={setSampleOpen}>
-        <DialogContent className="max-w-2xl">
+      {/* Before/After preview — required for entitled users; watermarked + upsell for the free sample. */}
+      <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
+        <DialogContent className="max-w-3xl">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Wand2 className="w-5 h-5 text-primary" />
-              Your free AI sample
+              {isSamplePreview ? 'Your free AI sample' : 'AI-polished description'}
             </DialogTitle>
           </DialogHeader>
-          <div className="space-y-3">
+          {isSamplePreview && (
             <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-3 text-xs text-amber-600 dark:text-amber-400">
-              This is a one-time free sample. Upgrade to Starter or above to generate unlimited AI descriptions and apply them directly.
+              This is a one-time free sample. Upgrade to Starter or above to apply AI copy directly to your listing and generate unlimited rewrites.
             </div>
-            <div className="relative rounded-lg border border-border bg-muted/30 p-4 max-h-[380px] overflow-y-auto">
-              <div className="absolute inset-0 pointer-events-none flex items-center justify-center opacity-[0.08] select-none">
-                <span className="text-6xl font-black rotate-[-18deg] tracking-widest">SAMPLE</span>
-              </div>
-              <p className="text-sm whitespace-pre-wrap relative">{sample}</p>
+          )}
+          <div className="grid gap-3 md:grid-cols-2">
+            <div className="rounded-lg border border-border bg-muted/20 p-3">
+              <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">Your draft</div>
+              <p className="text-sm whitespace-pre-wrap text-foreground/80 max-h-[380px] overflow-y-auto">
+                {description}
+              </p>
+            </div>
+            <div className="relative rounded-lg border border-primary/40 bg-primary/[0.04] p-3">
+              <div className="text-[10px] font-semibold uppercase tracking-wider text-primary mb-2">AI suggestion</div>
+              {isSamplePreview && (
+                <div className="absolute inset-0 pointer-events-none flex items-center justify-center opacity-[0.08] select-none">
+                  <span className="text-6xl font-black rotate-[-18deg] tracking-widest">SAMPLE</span>
+                </div>
+              )}
+              <p className="text-sm whitespace-pre-wrap text-foreground max-h-[380px] overflow-y-auto relative">
+                {previewText}
+              </p>
             </div>
           </div>
           <DialogFooter className="gap-2 sm:gap-2">
-            <Button variant="outline" onClick={() => setSampleOpen(false)}>Close</Button>
-            <Button
-              onClick={() => {
-                setSampleOpen(false);
-                showUpsell('ai-description', 'listing_wizard_ai_sample');
-              }}
-              className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-black font-semibold"
-            >
-              Upgrade to apply
+            <Button variant="outline" onClick={() => setPreviewOpen(false)}>
+              Keep my draft
             </Button>
+            {!isSamplePreview && (
+              <Button variant="outline" onClick={() => { setPreviewOpen(false); void run(); }} className="gap-1.5">
+                <RefreshCw className="w-4 h-4" /> Regenerate
+              </Button>
+            )}
+            {isSamplePreview ? (
+              <Button
+                onClick={() => {
+                  setPreviewOpen(false);
+                  showUpsell('ai-description', 'listing_wizard_ai_sample');
+                }}
+                className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-black font-semibold"
+              >
+                Upgrade to apply
+              </Button>
+            ) : (
+              <Button onClick={handleUseThis} className="gap-1.5">
+                <Check className="w-4 h-4" /> Use this
+              </Button>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>
