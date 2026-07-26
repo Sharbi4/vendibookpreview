@@ -153,7 +153,7 @@ export const PromotionHub = () => {
       <Tabs defaultValue="boost" className="w-full">
         <TabsList className="grid grid-cols-4 w-full rounded-xl bg-muted/50 p-1">
           <TabsTrigger value="boost" className="rounded-lg">Boost</TabsTrigger>
-          <TabsTrigger value="copy" className="rounded-lg">AI Copy</TabsTrigger>
+          <TabsTrigger value="copy" className="rounded-lg">Spark Copy</TabsTrigger>
           <TabsTrigger value="seo" className="rounded-lg">SEO</TabsTrigger>
           <TabsTrigger value="share" className="rounded-lg">Share</TabsTrigger>
         </TabsList>
