@@ -718,7 +718,7 @@ async function checkLiveWebhookDelivery() {
   const { count, error } = await supabase
     .from("stripe_webhook_events")
     .select("id", { count: "exact", head: true })
-    .gte("received_at", since);
+    .gte("processed_at", since);
   if (error) {
     record("live webhook delivery (last 24h)", false, `query failed: ${error.message}`);
     return;
