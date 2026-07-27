@@ -2,20 +2,33 @@
 //
 // Dedicated server-to-server endpoint for the Vapi outbound support
 // assistant (a37b08b5-ddf7-473d-ac23-1cb49ea2c713) to open a Vendibook
-// support ticket after a voice callback.
+// support ticket after a voice callback. Also accepts a flat body for
+// Help Center / smoke-test compatibility.
 //
-// Auth model: shared bearer credential (VAPI_TOOL_SHARED_SECRET) enforced
-// in-code. NEVER accepts a customer's Supabase JWT — Vapi cannot vouch for
-// a signed-in user; unverified email addresses are always persisted as
-// unverified regardless of what Vapi claims.
+// Auth: shared bearer credential (VAPI_TOOL_SHARED_SECRET) — Vapi cannot
+// vouch for a signed-in user. Emails are trusted only when explicit OTP
+// verification metadata accompanies the call.
 //
-// Idempotency: (source='vapi_callback', external_event_id=call_id) unique
-// on support_ticket_webhook_events → replays return the original reference.
+// Vapi custom-tool envelope (canonical):
+//   { message: {
+//       toolCalls: [{ id, type:'function',
+//         function: { name:'create_support_ticket', arguments: {..} | "json" }
+//       }],
+//       call: { id, customer: { number, name } }
+//   } }
+// Response (canonical):
+//   { results: [{ toolCallId, result: "<json string>" }] }
 //
-// Response is customer-safe (no secrets, no Tawk address, no config).
+// Idempotency: (vapi_call_id, vapi_tool_call_id) unique index on
+// support_tickets + support_ticket_webhook_events row per tool call.
+// Retries return the original reference and never re-forward.
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
+import {
+  parsePhoneNumberFromString,
+  type CountryCode,
+} from "https://esm.sh/libphonenumber-js@1.11.14/max";
 import { forwardTicketToTawk } from "../_shared/tawkForward.ts";
 
 const corsHeaders = {
@@ -28,6 +41,8 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 const VAPI_TOOL_SHARED_SECRET = Deno.env.get("VAPI_TOOL_SHARED_SECRET") ?? "";
 
+const APPROVED_TOOL_NAME = "create_support_ticket";
+
 const ALLOWED_SEVERITY = new Set(["standard", "urgent", "critical"]);
 const ALLOWED_CATEGORY = new Set([
   "account_access", "billing_payment", "payout", "listing_issue",
@@ -38,9 +53,8 @@ const ALLOWED_ENTITY = new Set([
   "listing", "booking", "sale_transaction", "permit_roadmap",
   "conversation", "review", "draft", "user",
 ]);
+const ALLOWED_FOLLOW_UP = new Set(["phone", "email", "text", "either"]);
 
-// Map Vapi's coarse category → the canonical support_tickets category vocabulary
-// used by submit-support-ticket for priority derivation.
 const CATEGORY_TO_INTERNAL: Record<string, string> = {
   safety_fraud: "suspected_fraud",
   billing_payment: "payment_issue",
@@ -89,25 +103,33 @@ function featureAreaFor(category: string): string {
   }
 }
 
-function json(status: number, body: Record<string, unknown>): Response {
+// -----------------------------------------------------------------------
+// HTTP helpers
+
+function httpJson(status: number, body: Record<string, unknown>): Response {
   return new Response(JSON.stringify(body), {
     status,
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
 }
 
-function safeString(v: unknown, max: number): string | null {
-  if (typeof v !== "string") return null;
-  const t = v.trim();
-  if (!t) return null;
-  return t.slice(0, max);
+/** Wrap a tool-call outcome in Vapi's { results:[{toolCallId,result}] } envelope. */
+function vapiResults(toolCallId: string, payload: Record<string, unknown>): Response {
+  return new Response(
+    JSON.stringify({ results: [{ toolCallId, result: JSON.stringify(payload) }] }),
+    { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+  );
 }
 
-function normalizePhone(raw: string | null): string | null {
-  if (!raw) return null;
-  const digits = raw.replace(/\D/g, "");
-  if (digits.length < 10 || digits.length > 15) return null;
-  return raw.startsWith("+") ? `+${digits}` : digits.length === 10 ? `+1${digits}` : `+${digits}`;
+// -----------------------------------------------------------------------
+// Parsing helpers
+
+function safeString(v: unknown, max: number): string | null {
+  if (v == null) return null;
+  const s = typeof v === "string" ? v : typeof v === "number" || typeof v === "boolean" ? String(v) : null;
+  if (s == null) return null;
+  const t = s.trim();
+  return t ? t.slice(0, max) : null;
 }
 
 function looksLikeEmail(v: string | null): boolean {
@@ -115,105 +137,224 @@ function looksLikeEmail(v: string | null): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
 }
 
-serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
-  if (req.method !== "POST") return json(405, { success: false, error: "method_not_allowed" });
-
-  // --- server-to-server auth ---------------------------------------------
-  if (!VAPI_TOOL_SHARED_SECRET) {
-    console.error("[vapi-create-support-ticket] VAPI_TOOL_SHARED_SECRET not configured");
-    return json(500, { success: false, error: "server_not_configured" });
+/**
+ * Normalize a phone number as a STRING (never numeric). Preserves leading
+ * zeros and country codes. Extension is parsed off before validation.
+ * Returns null when the number cannot be parsed as a valid phone.
+ */
+type NormalizedPhone = {
+  e164: string;
+  display: string;
+  country: string | null;
+  extension: string | null;
+};
+function normalizePhoneString(raw: unknown, defaultCountry: CountryCode = "US"): NormalizedPhone | null {
+  if (raw == null) return null;
+  // Always coerce to string — never trust numeric JSON.
+  let s = String(raw).trim();
+  if (!s) return null;
+  // Pull out extension expressed as "x123" / "ext 123" / ",123"
+  let ext: string | null = null;
+  const extMatch = s.match(/(?:\s*(?:ext|x|extension)\.?\s*|,)(\d{1,7})\s*$/i);
+  if (extMatch) {
+    ext = extMatch[1];
+    s = s.slice(0, extMatch.index).trim();
   }
-  const authHeader = req.headers.get("authorization") ?? req.headers.get("Authorization") ?? "";
-  const presented = authHeader.startsWith("Bearer ") ? authHeader.slice(7).trim() : "";
-  if (!presented) return json(401, { success: false, error: "missing_bearer" });
+  // Spoken-digit groups: keep digits, "+", and separators; strip words.
+  const cleaned = s.replace(/[^\d+\s\-().]/g, "").trim();
+  if (!cleaned) return null;
+  const parsed = parsePhoneNumberFromString(cleaned, defaultCountry);
+  if (!parsed || !parsed.isValid()) return null;
+  return {
+    e164: parsed.number, // string, always "+…"
+    display: parsed.formatNational(),
+    country: parsed.country ?? null,
+    extension: ext,
+  };
+}
 
-  // constant-time compare
-  const a = new TextEncoder().encode(presented);
-  const b = new TextEncoder().encode(VAPI_TOOL_SHARED_SECRET);
-  let diff = a.length ^ b.length;
-  const len = Math.max(a.length, b.length);
-  for (let i = 0; i < len; i++) diff |= (a[i] ?? 0) ^ (b[i] ?? 0);
-  if (diff !== 0) return json(403, { success: false, error: "invalid_bearer" });
+type ToolCall = { id: string; args: Record<string, unknown>; name: string };
 
-  // --- validation --------------------------------------------------------
-  let raw: Record<string, unknown>;
-  try { raw = await req.json(); } catch { return json(400, { success: false, error: "invalid_json" }); }
+/**
+ * Extract create_support_ticket tool calls from either the canonical Vapi
+ * envelope or a flat body (used by the Help Center backfill and smoke tests).
+ * Returns { toolCalls, callMetadata }.
+ */
+function extractToolCalls(body: unknown): {
+  toolCalls: ToolCall[];
+  callId: string | null;
+  callerNumber: string | null;
+  callerName: string | null;
+} {
+  const b = (body && typeof body === "object" ? body : {}) as Record<string, unknown>;
+  const message = (b.message && typeof b.message === "object" ? b.message : {}) as Record<string, unknown>;
+  const call = (message.call && typeof message.call === "object" ? message.call : b.call && typeof b.call === "object" ? b.call : {}) as Record<string, unknown>;
+  const customer = (call.customer && typeof call.customer === "object" ? call.customer : {}) as Record<string, unknown>;
 
-  const customer_name = safeString(raw.customer_name, 120);
-  const verified_email = safeString(raw.verified_email, 254);
-  const callback_phone = normalizePhone(safeString(raw.callback_phone, 40));
-  const issue_category = safeString(raw.issue_category, 40) ?? "other";
-  const severityIn = safeString(raw.severity, 20) ?? "standard";
-  const issue_summary = safeString(raw.issue_summary, 200);
-  const exact_error_message = safeString(raw.exact_error_message, 2000);
-  const related_entity_type = safeString(raw.related_entity_type, 40);
-  const related_entity_id = safeString(raw.related_entity_id, 64);
-  const troubleshooting_attempted = safeString(raw.troubleshooting_attempted, 2000);
-  const customer_impact = safeString(raw.customer_impact, 1000);
-  const preferred_follow_up = safeString(raw.preferred_follow_up, 60);
-  const call_id = safeString(raw.call_id, 120);
-  const call_summary = safeString(raw.call_summary, 4000);
-  const email_verification_method = safeString(raw.email_verification_method, 40);
-  const email_verification_result = safeString(raw.email_verification_result, 40);
+  const callId = safeString(call.id ?? message.callId ?? b.call_id, 120);
+  const callerNumber = safeString(customer.number ?? call.customerPhoneNumber, 40);
+  const callerName = safeString(customer.name, 120);
 
+  // Vapi custom-tool: message.toolCalls[]
+  const rawCalls =
+    (Array.isArray(message.toolCalls) && message.toolCalls) ||
+    (Array.isArray(message.toolCallList) && message.toolCallList) ||
+    (Array.isArray(b.toolCalls) && b.toolCalls) ||
+    null;
+
+  const toolCalls: ToolCall[] = [];
+  if (rawCalls) {
+    for (const raw of rawCalls) {
+      if (!raw || typeof raw !== "object") continue;
+      const tc = raw as Record<string, unknown>;
+      const id = safeString(tc.id ?? tc.toolCallId, 120) ?? "";
+      const fn = (tc.function && typeof tc.function === "object" ? tc.function : {}) as Record<string, unknown>;
+      const name = safeString(fn.name ?? tc.name, 80) ?? "";
+      let args: Record<string, unknown> = {};
+      const rawArgs = fn.arguments ?? tc.arguments ?? tc.parameters ?? {};
+      if (typeof rawArgs === "string") {
+        try { args = JSON.parse(rawArgs); } catch { args = {}; }
+      } else if (rawArgs && typeof rawArgs === "object") {
+        args = rawArgs as Record<string, unknown>;
+      }
+      if (!id || !name) continue;
+      toolCalls.push({ id, name, args });
+    }
+  } else {
+    // Flat body (legacy / Help Center / smoke) → synthesize a single tool call.
+    toolCalls.push({
+      id: safeString(b.tool_call_id ?? b.toolCallId, 120) ?? `flat:${callId ?? crypto.randomUUID()}`,
+      name: APPROVED_TOOL_NAME,
+      args: b,
+    });
+  }
+
+  return { toolCalls, callId, callerNumber, callerName };
+}
+
+// -----------------------------------------------------------------------
+// Per-tool-call processor
+
+type ProcessInput = {
+  args: Record<string, unknown>;
+  toolCallId: string;
+  callId: string | null;
+  callerNumberFromCall: string | null;
+  callerNameFromCall: string | null;
+  submissionChannel: string;
+};
+
+async function processCreateSupportTicket(input: ProcessInput): Promise<Record<string, unknown>> {
+  const { args, toolCallId, callId, callerNumberFromCall, callerNameFromCall, submissionChannel } = input;
+
+  // ---- extract + coerce ------------------------------------------------
+  const customer_name = safeString(args.customer_name ?? callerNameFromCall, 120);
+  const verified_email = safeString(args.verified_email ?? args.customer_email, 254);
+
+  // Accept several phone aliases; ALWAYS coerce to string.
+  const rawCallback =
+    args.callback_phone ??
+    args.callback_number ??
+    args.phone_number ??
+    args.phone ??
+    args.customer_phone ??
+    null;
+  const country = safeString(args.callback_phone_country ?? args.phone_country, 8) as CountryCode | null;
+
+  // Prefer explicitly provided/confirmed callback; fall back to the outbound
+  // call's own customer number (already in E.164 from Vapi).
+  const providedNorm = normalizePhoneString(rawCallback, (country ?? "US") as CountryCode);
+  const fallbackNorm = providedNorm ? null : normalizePhoneString(callerNumberFromCall);
+  const phone = providedNorm ?? fallbackNorm;
+  const phoneSource = providedNorm
+    ? "assistant_confirmed"
+    : fallbackNorm
+      ? "call_metadata"
+      : null;
+
+  const issue_category = safeString(args.issue_category, 40) ?? "other";
+  const severityIn = safeString(args.severity, 20) ?? "standard";
+  const issue_summary = safeString(args.issue_summary ?? args.summary, 200);
+  const exact_error_message = safeString(args.exact_error_message ?? args.error_message, 2000);
+  const related_entity_type = safeString(args.related_entity_type, 40);
+  const related_entity_id = safeString(args.related_entity_id, 64);
+  const troubleshooting_attempted = safeString(args.troubleshooting_attempted, 2000);
+  const customer_impact = safeString(args.customer_impact, 1000);
+  const preferred_follow_up = safeString(args.preferred_follow_up, 60);
+  const call_summary = safeString(args.call_summary, 4000);
+  const email_verification_method = safeString(args.email_verification_method, 40);
+  const email_verification_result = safeString(args.email_verification_result, 40);
+
+  // ---- validate --------------------------------------------------------
   const errors: string[] = [];
   if (!customer_name || customer_name.length < 2) errors.push("customer_name");
   if (!issue_summary || issue_summary.length < 3) errors.push("issue_summary");
-  if (!call_id) errors.push("call_id");
   if (!ALLOWED_SEVERITY.has(severityIn)) errors.push("severity");
   if (!ALLOWED_CATEGORY.has(issue_category)) errors.push("issue_category");
   if (related_entity_type && !ALLOWED_ENTITY.has(related_entity_type)) errors.push("related_entity_type");
   if (verified_email && !looksLikeEmail(verified_email)) errors.push("verified_email");
-  if (errors.length) return json(400, { success: false, error: "validation_failed", fields: errors });
+  if (preferred_follow_up && !ALLOWED_FOLLOW_UP.has(preferred_follow_up)) errors.push("preferred_follow_up");
+  // If caller asked for phone/text follow-up we need a valid phone.
+  if (
+    (preferred_follow_up === "phone" || preferred_follow_up === "text") &&
+    !phone
+  ) errors.push("callback_phone");
+  if (errors.length) {
+    return {
+      success: false,
+      ticket_created: false,
+      retryable: false,
+      error_code: "validation_failed",
+      missing_fields: errors,
+      customer_message:
+        "I couldn't capture everything I need — could you repeat the missing detail so I can log this ticket?",
+    };
+  }
 
   const svc = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, { auth: { persistSession: false } });
 
-  // --- idempotency: replay returns original ticket -----------------------
-  const { data: prior } = await svc
-    .from("support_ticket_webhook_events")
-    .select("id, ticket_id")
-    .eq("source", "vapi_callback")
-    .eq("external_event_id", call_id!)
-    .maybeSingle();
-
-  if (prior?.ticket_id) {
-    const { data: existingTicket } = await svc
-      .from("support_tickets")
-      .select("id, reference_code, forwarding_status")
-      .eq("id", prior.ticket_id)
+  // ---- idempotency: prior tool-call replay -----------------------------
+  const idempotencyKey = callId ? `${callId}::${toolCallId}` : `tool:${toolCallId}`;
+  if (callId) {
+    const { data: prior } = await svc
+      .from("support_ticket_webhook_events")
+      .select("id, ticket_id")
+      .eq("source", "vapi_callback")
+      .eq("external_event_id", idempotencyKey)
       .maybeSingle();
-    if (existingTicket) {
-      return json(200, {
-        success: true,
-        ticket_created: false,
-        deduped: true,
-        ticket_id: existingTicket.id,
-        reference: existingTicket.reference_code,
-        forwarding_status: existingTicket.forwarding_status,
-        retryable: false,
-        confirmation_message: `We already opened ticket ${existingTicket.reference_code} for this call.`,
-      });
+    if (prior?.ticket_id) {
+      const { data: existing } = await svc
+        .from("support_tickets")
+        .select("id, reference_code, forwarding_status, callback_phone_e164, callback_phone_display")
+        .eq("id", prior.ticket_id)
+        .maybeSingle();
+      if (existing) {
+        return {
+          success: true,
+          ticket_created: false,
+          deduped: true,
+          ticket_reference: existing.reference_code,
+          reference: existing.reference_code,
+          callback_phone_e164: existing.callback_phone_e164,
+          callback_phone_display: existing.callback_phone_display,
+          delivery_status: existing.forwarding_status,
+          retryable: false,
+          customer_message: `We already opened ticket ${existing.reference_code} for this call.`,
+        };
+      }
     }
   }
 
-  // --- email verification handling --------------------------------------
-  // Trust ONLY explicit verification metadata from the assistant runtime.
-  // A raw email string is never enough to unlock account context.
+  // ---- email verification handling ------------------------------------
   const email_verified =
     !!verified_email &&
     email_verification_method === "otp" &&
     email_verification_result === "verified";
 
-  // Best-effort account lookup — never leaks account data into the response;
-  // used only to link the ticket to the correct user_id when verified.
   let linkedUserId: string | null = null;
   if (email_verified && verified_email) {
     const { data: profile } = await svc
-      .from("profiles")
-      .select("id")
-      .eq("email", verified_email)
-      .maybeSingle();
+      .from("profiles").select("id").eq("email", verified_email).maybeSingle();
     linkedUserId = profile?.id ?? null;
   }
 
@@ -229,6 +370,7 @@ serve(async (req) => {
     troubleshooting_attempted ? `Troubleshooting tried: ${troubleshooting_attempted}` : null,
     exact_error_message ? `Exact error message: ${exact_error_message}` : null,
     preferred_follow_up ? `Preferred follow-up: ${preferred_follow_up}` : null,
+    phone ? `Callback: ${phone.display} (${phone.e164})${phone.extension ? ` ext. ${phone.extension}` : ""}` : null,
     !email_verified ? `NOTE: caller email was NOT securely verified during the call.` : null,
   ].filter(Boolean).join("\n");
 
@@ -245,16 +387,16 @@ serve(async (req) => {
   const relatedPatch: Record<string, string | null> = {};
   if (related_entity_type && related_entity_id) {
     const col = relatedColumnMap[related_entity_type];
-    // uuid columns only — validate crudely to avoid insert errors
     if (col && /^[0-9a-fA-F-]{10,64}$/.test(related_entity_id)) relatedPatch[col] = related_entity_id;
   }
 
-  // --- insert ticket -----------------------------------------------------
+  // ---- insert ticket (pending delivery) --------------------------------
   const { data: ticket, error: insertErr } = await svc
     .from("support_tickets")
     .insert({
       user_id: linkedUserId,
       source: "vapi_callback",
+      submission_channel: submissionChannel,
       feature_area: featureArea,
       category: internalCategory,
       priority,
@@ -265,73 +407,112 @@ serve(async (req) => {
       customer_email: verified_email,
       customer_name,
       email_verified,
-      vapi_call_id: call_id,
-      request_id: `vapi:${call_id}`,
-      page_url: null,
+      vapi_call_id: callId,
+      vapi_tool_call_id: toolCallId,
+      request_id: callId ? `vapi:${callId}:${toolCallId}` : `vapi:${toolCallId}`,
       forwarding_status: "pending",
+      callback_phone_e164: phone?.e164 ?? null,
+      callback_phone_display: phone?.display ?? null,
+      callback_phone_country: phone?.country ?? null,
+      callback_phone_extension: phone?.extension ?? null,
+      callback_phone_source: phoneSource,
       ...relatedPatch,
     })
-    .select("id, reference_code, priority, forwarding_status")
+    .select("id, reference_code, priority, forwarding_status, callback_phone_e164, callback_phone_display")
     .single();
 
   if (insertErr || !ticket) {
-    console.error("[vapi-create-support-ticket] insert failed", insertErr);
-    return json(500, {
+    // Handle uniqueness race: someone else inserted with same (call, tool)
+    if (insertErr && (insertErr as { code?: string }).code === "23505" && callId) {
+      const { data: dup } = await svc
+        .from("support_tickets")
+        .select("id, reference_code, forwarding_status, callback_phone_e164, callback_phone_display")
+        .eq("vapi_call_id", callId)
+        .eq("vapi_tool_call_id", toolCallId)
+        .maybeSingle();
+      if (dup) {
+        return {
+          success: true,
+          ticket_created: false,
+          deduped: true,
+          ticket_reference: dup.reference_code,
+          reference: dup.reference_code,
+          callback_phone_e164: dup.callback_phone_e164,
+          callback_phone_display: dup.callback_phone_display,
+          delivery_status: dup.forwarding_status,
+          retryable: false,
+          customer_message: `We already opened ticket ${dup.reference_code} for this call.`,
+        };
+      }
+    }
+    console.error("[vapi-create-support-ticket] insert failed", (insertErr as { code?: string; message?: string })?.code, (insertErr as { message?: string })?.message);
+    return {
       success: false,
       ticket_created: false,
       retryable: true,
-      error: "ticket_persist_failed",
-      confirmation_message:
+      error_code: "ticket_persist_failed",
+      customer_message:
         "I couldn't open the ticket right now. Please try again or email support@vendibook.com.",
-    });
+    };
   }
 
-  // Reserve idempotency row now that ticket exists.
-  await svc.from("support_ticket_webhook_events").insert({
-    source: "vapi_callback",
-    external_event_id: call_id!,
-    event_type: "vapi_tool_call",
-    payload: {
-      severity: severityIn,
-      issue_category,
-      priority_derived: priority,
-      email_verified,
-      email_verification_method,
-      preferred_follow_up,
-    },
-    ticket_id: ticket.id,
-    processed_at: new Date().toISOString(),
-  });
+  // Reserve idempotency row (post-insert so we always have ticket_id).
+  if (callId) {
+    await svc.from("support_ticket_webhook_events").insert({
+      source: "vapi_callback",
+      external_event_id: idempotencyKey,
+      event_type: "vapi_tool_call",
+      payload: {
+        tool_call_id: toolCallId,
+        severity: severityIn,
+        issue_category,
+        priority_derived: priority,
+        email_verified,
+        email_verification_method,
+        preferred_follow_up,
+        callback_phone_source: phoneSource,
+      },
+      ticket_id: ticket.id,
+      processed_at: new Date().toISOString(),
+    });
+  }
 
   await svc.from("support_ticket_audit_events").insert({
     ticket_id: ticket.id,
     event_type: "vapi_callback_captured",
     actor_type: "system",
-    external_ref: call_id,
+    external_ref: callId,
     details: {
       call_summary,
-      callback_phone,
+      callback_phone_e164: phone?.e164,
+      callback_phone_display: phone?.display,
+      callback_phone_source: phoneSource,
       severity_reported: severityIn,
       email_verified,
       issue_category,
       related_entity_type,
       related_entity_id,
+      submission_channel: submissionChannel,
     },
   });
 
-  // --- forward to Tawk (private address, never exposed) ------------------
+  // ---- forward to private Tawk address --------------------------------
+  await svc.from("support_tickets")
+    .update({ delivery_attempted_at: new Date().toISOString() })
+    .eq("id", ticket.id);
+
   const forwardResult = await forwardTicketToTawk({
     referenceCode: ticket.reference_code,
     ticketId: ticket.id,
     subject: issue_summary!,
-    priority: priority,
+    priority,
     category: internalCategory,
     featureArea,
     source: "vapi_callback",
     customerName: customer_name,
     customerEmail: verified_email,
     emailVerified: email_verified,
-    callbackPhone: callback_phone,
+    callbackPhone: phone ? `${phone.display} (${phone.e164})${phone.extension ? ` ext. ${phone.extension}` : ""}` : null,
     bodyText: descriptionParts,
     context: {
       severity: severityIn,
@@ -339,8 +520,9 @@ serve(async (req) => {
       related_entity_type,
       related_entity_id,
       preferred_follow_up,
+      callback_phone_source: phoneSource,
     },
-    callId: call_id,
+    callId,
     callSummary: call_summary,
     replyTo: email_verified ? verified_email : null,
   });
@@ -356,16 +538,116 @@ serve(async (req) => {
   const retryable = forwardResult.status === "retryable_failure";
   const forwardingOk = forwardResult.status === "delivered" || forwardResult.status === "skipped";
 
-  return json(200, {
+  return {
     success: true,
     ticket_created: true,
-    ticket_id: ticket.id,
+    ticket_reference: ticket.reference_code,
+    // Legacy keys retained for existing consumers (smoke test, Help Center):
     reference: ticket.reference_code,
+    ticket_id: ticket.id,
     priority: ticket.priority,
+    callback_phone_e164: phone?.e164 ?? null,
+    callback_phone_display: phone?.display ?? null,
+    delivery_status: forwardResult.status,
     forwarding_status: forwardResult.status,
     retryable,
-    confirmation_message: forwardingOk
+    customer_message: forwardingOk
       ? `I've opened ticket ${ticket.reference_code}. Our support team has it now.`
       : `I've opened ticket ${ticket.reference_code}, but the handoff to our support inbox is still syncing. If you don't hear back within a business day, please email support@vendibook.com and reference ${ticket.reference_code}.`,
+    confirmation_message: forwardingOk
+      ? `I've opened ticket ${ticket.reference_code}. Our support team has it now.`
+      : `I've opened ticket ${ticket.reference_code}, but the handoff to our support inbox is still syncing. Please email support@vendibook.com and reference ${ticket.reference_code} if you don't hear back within a business day.`,
+  };
+}
+
+// -----------------------------------------------------------------------
+// Request handler
+
+serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  if (req.method !== "POST") return httpJson(405, { success: false, error: "method_not_allowed" });
+
+  // Server-to-server auth
+  if (!VAPI_TOOL_SHARED_SECRET) {
+    console.error("[vapi-create-support-ticket] VAPI_TOOL_SHARED_SECRET not configured");
+    return httpJson(500, { success: false, error: "server_not_configured" });
+  }
+  const authHeader = req.headers.get("authorization") ?? req.headers.get("Authorization") ?? "";
+  const presented = authHeader.startsWith("Bearer ") ? authHeader.slice(7).trim() : "";
+  if (!presented) return httpJson(401, { success: false, error: "missing_bearer" });
+  const a = new TextEncoder().encode(presented);
+  const b = new TextEncoder().encode(VAPI_TOOL_SHARED_SECRET);
+  let diff = a.length ^ b.length;
+  const len = Math.max(a.length, b.length);
+  for (let i = 0; i < len; i++) diff |= (a[i] ?? 0) ^ (b[i] ?? 0);
+  if (diff !== 0) return httpJson(403, { success: false, error: "invalid_bearer" });
+
+  let body: unknown;
+  try { body = await req.json(); } catch { return httpJson(400, { success: false, error: "invalid_json" }); }
+
+  const { toolCalls, callId, callerNumber, callerName } = extractToolCalls(body);
+  if (toolCalls.length === 0) {
+    return httpJson(400, { success: false, error: "no_tool_calls" });
+  }
+
+  // Detect envelope shape for auditing / channel labeling.
+  const isVapiEnvelope = !!(body && typeof body === "object" && (body as { message?: unknown }).message);
+  const submissionChannel = isVapiEnvelope ? "vapi_voice" : "vapi_direct";
+
+  const results: Array<{ toolCallId: string; result: string }> = [];
+
+  for (const tc of toolCalls) {
+    if (tc.name !== APPROVED_TOOL_NAME) {
+      results.push({
+        toolCallId: tc.id,
+        result: JSON.stringify({
+          success: false,
+          ticket_created: false,
+          error_code: "unknown_tool",
+          retryable: false,
+          customer_message: "I don't recognize that support action.",
+        }),
+      });
+      continue;
+    }
+    try {
+      const payload = await processCreateSupportTicket({
+        args: tc.args,
+        toolCallId: tc.id,
+        callId,
+        callerNumberFromCall: callerNumber,
+        callerNameFromCall: callerName,
+        submissionChannel,
+      });
+      results.push({ toolCallId: tc.id, result: JSON.stringify(payload) });
+    } catch (err) {
+      console.error("[vapi-create-support-ticket] unhandled", (err as Error).message);
+      results.push({
+        toolCallId: tc.id,
+        result: JSON.stringify({
+          success: false,
+          ticket_created: false,
+          retryable: true,
+          error_code: "internal_error",
+          customer_message:
+            "Something went wrong on our side. Please try again or email support@vendibook.com.",
+        }),
+      });
+    }
+  }
+
+  // Single-call flat-body compatibility: mirror the tool result at the top
+  // level so existing consumers (smoke test, Help Center) keep working.
+  if (!isVapiEnvelope && results.length === 1) {
+    const only = JSON.parse(results[0].result);
+    return new Response(
+      JSON.stringify({ ...only, results }),
+      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+    );
+  }
+
+  return new Response(JSON.stringify({ results }), {
+    status: 200,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
 });

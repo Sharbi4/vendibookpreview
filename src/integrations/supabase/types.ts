@@ -5999,11 +5999,17 @@ export type Database = {
           app_version: string | null
           assigned_to: string | null
           browser_info: string | null
+          callback_phone_country: string | null
+          callback_phone_display: string | null
+          callback_phone_e164: string | null
+          callback_phone_extension: string | null
+          callback_phone_source: string | null
           category: string
           closed_at: string | null
           created_at: string
           customer_email: string | null
           customer_name: string | null
+          delivery_attempted_at: string | null
           description: string
           device_type: string | null
           email_verified: boolean
@@ -6035,6 +6041,7 @@ export type Database = {
           resolved_at: string | null
           source: string
           status: string
+          submission_channel: string | null
           tawk_chat_id: string | null
           tawk_property_id: string | null
           tawk_ticket_id: string | null
@@ -6043,6 +6050,7 @@ export type Database = {
           updated_at: string
           user_id: string | null
           vapi_call_id: string | null
+          vapi_tool_call_id: string | null
           what_happened_instead: string | null
           what_i_was_doing: string | null
           wizard_step: string | null
@@ -6051,11 +6059,17 @@ export type Database = {
           app_version?: string | null
           assigned_to?: string | null
           browser_info?: string | null
+          callback_phone_country?: string | null
+          callback_phone_display?: string | null
+          callback_phone_e164?: string | null
+          callback_phone_extension?: string | null
+          callback_phone_source?: string | null
           category: string
           closed_at?: string | null
           created_at?: string
           customer_email?: string | null
           customer_name?: string | null
+          delivery_attempted_at?: string | null
           description: string
           device_type?: string | null
           email_verified?: boolean
@@ -6087,6 +6101,7 @@ export type Database = {
           resolved_at?: string | null
           source?: string
           status?: string
+          submission_channel?: string | null
           tawk_chat_id?: string | null
           tawk_property_id?: string | null
           tawk_ticket_id?: string | null
@@ -6095,6 +6110,7 @@ export type Database = {
           updated_at?: string
           user_id?: string | null
           vapi_call_id?: string | null
+          vapi_tool_call_id?: string | null
           what_happened_instead?: string | null
           what_i_was_doing?: string | null
           wizard_step?: string | null
@@ -6103,11 +6119,17 @@ export type Database = {
           app_version?: string | null
           assigned_to?: string | null
           browser_info?: string | null
+          callback_phone_country?: string | null
+          callback_phone_display?: string | null
+          callback_phone_e164?: string | null
+          callback_phone_extension?: string | null
+          callback_phone_source?: string | null
           category?: string
           closed_at?: string | null
           created_at?: string
           customer_email?: string | null
           customer_name?: string | null
+          delivery_attempted_at?: string | null
           description?: string
           device_type?: string | null
           email_verified?: boolean
@@ -6139,6 +6161,7 @@ export type Database = {
           resolved_at?: string | null
           source?: string
           status?: string
+          submission_channel?: string | null
           tawk_chat_id?: string | null
           tawk_property_id?: string | null
           tawk_ticket_id?: string | null
@@ -6147,6 +6170,7 @@ export type Database = {
           updated_at?: string
           user_id?: string | null
           vapi_call_id?: string | null
+          vapi_tool_call_id?: string | null
           what_happened_instead?: string | null
           what_i_was_doing?: string | null
           wizard_step?: string | null
