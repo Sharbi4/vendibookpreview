@@ -1,8 +1,11 @@
 import React from 'react';
 import { Lock } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import stripeWhite from '@/assets/brand/powered-by-stripe-white.svg';
-import stripeBlurple from '@/assets/brand/powered-by-stripe-blurple.svg';
+import stripeWhiteAsset from '@/assets/brand/powered-by-stripe-white.svg.asset.json';
+import stripeBlurpleAsset from '@/assets/brand/powered-by-stripe-blurple.svg.asset.json';
+
+const stripeWhite = stripeWhiteAsset.url;
+const stripeBlurple = stripeBlurpleAsset.url;
 
 /**
  * Official "Powered by Stripe" trust badge.
