@@ -108,7 +108,7 @@ serve(async (req) => {
         ],
         mode: "payment",
         success_url: `${origin}/listing-published?listing_id=${listing_id}&notary_paid=true`,
-        cancel_url: `${origin}/create-listing/${listing_id}?notary_cancelled=true`,
+        cancel_url: `${origin}/create-listing/${listing_id}?notary_cancelled=true&step=review`,
         metadata: {
           listing_id: listing_id,
           user_id: user.id,

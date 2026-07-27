@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { useNavigate, useParams, Link } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams, Link } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import { ArrowLeft, Loader2, Send, ExternalLink, Check, Camera, DollarSign, FileText, Calendar, CreditCard, ChevronRight, Save, TrendingUp, TrendingDown, Target, Wallet, Info, Banknote, Zap, RotateCcw, Plus, X, Package, Scale, Ruler, MapPin, Truck, Building2, Eye, AlertCircle, Shield, Clock, ChevronDown, ChevronUp, GripVertical, Type, ListChecks } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -144,10 +145,17 @@ export const PublishWizard: React.FC = () => {
   const { toast } = useToast();
   const { user, isVerified } = useAuth();
   const premiumUpsell = usePremiumUpsell();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const queryClient = useQueryClient();
 
   const { isOnboardingComplete, isLoading: isStripeLoading, connectStripe, isConnecting } = useStripeConnect();
 
-  const [step, setStep] = useState<PublishStep>('photos');
+  const VALID_STEPS: PublishStep[] = ['photos', 'headline', 'includes', 'pricing', 'details', 'location', 'availability', 'documents', 'stripe', 'review'];
+  const initialStep = (() => {
+    const s = searchParams.get('step');
+    return s && (VALID_STEPS as string[]).includes(s) ? (s as PublishStep) : 'photos';
+  })();
+  const [step, setStep] = useState<PublishStep>(initialStep);
   const [listing, setListing] = useState<ListingData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -162,6 +170,81 @@ export const PublishWizard: React.FC = () => {
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [step]);
+
+  // Handle returns from Stripe Checkout (featured / notary / membership).
+  // - Restore the step the user was on via ?step= (validated above).
+  // - Show cancel/success toasts.
+  // - Invalidate entitlement caches so any newly-unlocked features go live in
+  //   this session without a manual refresh.
+  // - Strip our own params via replace so a page refresh doesn't re-fire toasts.
+  useEffect(() => {
+    const unlocked = searchParams.get('unlocked');
+    const featuredCancelled = searchParams.get('featured_cancelled') === 'true';
+    const notaryCancelled = searchParams.get('notary_cancelled') === 'true';
+    const membershipCancelled = searchParams.get('membership_cancelled') === 'true';
+
+    if (!unlocked && !featuredCancelled && !notaryCancelled && !membershipCancelled) return;
+
+    const refreshEntitlements = () => {
+      queryClient.invalidateQueries({ queryKey: ['host-entitlements'] });
+      queryClient.invalidateQueries({ queryKey: ['listing-quota'] });
+      queryClient.invalidateQueries({ queryKey: ['entitlements'] });
+      queryClient.invalidateQueries({ queryKey: ['tool-access'] });
+    };
+
+    if (unlocked) {
+      refreshEntitlements();
+      // Give the webhook a brief window to provision, then refresh again so
+      // gated controls flip from locked → live without user action.
+      const t1 = window.setTimeout(refreshEntitlements, 1500);
+      const t2 = window.setTimeout(refreshEntitlements, 4000);
+      toast({
+        title: 'Pro unlocked 🎉',
+        description: 'Your new plan is active — premium tools are live on this account.',
+      });
+      // best-effort cleanup handled by cleanup below
+      // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+      [t1, t2];
+    }
+    if (featuredCancelled) {
+      toast({
+        title: 'Boost cancelled',
+        description: 'Your listing is still saved. You can add the Featured boost later.',
+      });
+    }
+    if (notaryCancelled) {
+      toast({
+        title: 'Notary cancelled',
+        description: 'Your listing is still saved. You can add Proof Notary later.',
+      });
+    }
+    if (membershipCancelled) {
+      toast({
+        title: 'Membership cancelled',
+        description: 'No worries — publishing is free. You can upgrade anytime.',
+      });
+    }
+
+    // Strip handled params but preserve ?step= so a refresh keeps position.
+    const next = new URLSearchParams(searchParams);
+    ['unlocked', 'featured_cancelled', 'notary_cancelled', 'membership_cancelled'].forEach((k) => next.delete(k));
+    setSearchParams(next, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
+
+  // Refetch entitlements when the tab regains focus — covers the new-tab
+  // Stripe Checkout pattern where success lands in the other tab.
+  useEffect(() => {
+    const onFocus = () => {
+      queryClient.invalidateQueries({ queryKey: ['host-entitlements'] });
+      queryClient.invalidateQueries({ queryKey: ['listing-quota'] });
+      queryClient.invalidateQueries({ queryKey: ['entitlements'] });
+      queryClient.invalidateQueries({ queryKey: ['tool-access'] });
+    };
+    window.addEventListener('focus', onFocus);
+    return () => window.removeEventListener('focus', onFocus);
+  }, [queryClient]);
+
 
   // Form fields
   const [images, setImages] = useState<File[]>([]);
