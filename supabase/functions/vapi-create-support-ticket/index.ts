@@ -124,7 +124,7 @@ function vapiResults(toolCallId: string, payload: Record<string, unknown>): Resp
 // -----------------------------------------------------------------------
 // Parsing helpers
 
-function safeString(v: unknown, max: number): string | null {
+export function safeString(v: unknown, max: number): string | null {
   if (v == null) return null;
   const s = typeof v === "string" ? v : typeof v === "number" || typeof v === "boolean" ? String(v) : null;
   if (s == null) return null;
@@ -148,7 +148,7 @@ type NormalizedPhone = {
   country: string | null;
   extension: string | null;
 };
-function normalizePhoneString(raw: unknown, defaultCountry: CountryCode = "US"): NormalizedPhone | null {
+export function normalizePhoneString(raw: unknown, defaultCountry: CountryCode = "US"): NormalizedPhone | null {
   if (raw == null) return null;
   // Always coerce to string — never trust numeric JSON.
   let s = String(raw).trim();
@@ -180,7 +180,7 @@ type ToolCall = { id: string; args: Record<string, unknown>; name: string };
  * envelope or a flat body (used by the Help Center backfill and smoke tests).
  * Returns { toolCalls, callMetadata }.
  */
-function extractToolCalls(body: unknown): {
+export function extractToolCalls(body: unknown): {
   toolCalls: ToolCall[];
   callId: string | null;
   callerNumber: string | null;
