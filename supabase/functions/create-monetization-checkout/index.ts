@@ -392,6 +392,22 @@ serve(async (req) => {
       .single();
     if (insErr) throw insErr;
 
+    // D2: consume the recurring-billing consent artifact so a duplicate click,
+    // a replay from another tab, or a swap to a different SKU cannot re-use
+    // it. Duplicate-click idempotency is still preserved because we detect an
+    // existing pending session for the same idempotencyKey earlier and reuse
+    // it BEFORE reaching this point.
+    if (validatedConsentId) {
+      await supabase
+        .from("user_consents")
+        .update({
+          consumed_at: new Date().toISOString(),
+          consumed_by_ref: session.id,
+        })
+        .eq("id", validatedConsentId)
+        .is("consumed_at", null);
+    }
+
     log("checkout created", { session: session.id, purchase: purchase?.id });
     return new Response(
       JSON.stringify({ url: session.url, purchase_id: purchase?.id, session_id: session.id }),
