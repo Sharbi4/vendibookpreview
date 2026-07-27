@@ -336,6 +336,14 @@ const HelpCenter = () => {
             </div>
           </div>
         </section>
+
+        {/* ===== Intent lanes ===== */}
+        <section className="relative py-10 md:py-14 border-t border-white/[0.06]">
+          <div className="container max-w-6xl">
+            <Kicker>Start here</Kicker>
+            <h2 className="text-xl md:text-2xl font-medium tracking-tight text-white mb-6">
+              What are you trying to do?
+            </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {intentLanes.map((lane) => (
                 <div
