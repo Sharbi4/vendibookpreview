@@ -287,10 +287,11 @@ export const DashboardLayout = ({ children, mode, onModeChange, isHost }: Dashbo
   const railItems = sections.find((s) => s.id === 'workspace')?.items ?? [];
 
   return (
-    <div className="dashboard-shell min-h-screen flex flex-col bg-background">
+    <div className="dashboard-shell vendibook-dashboard-luxury min-h-screen flex flex-col bg-background">
       <VerifyReminderModal />
       {/* Mobile Header — only real mobile, tablets get the icon rail */}
-      <header className="md:hidden sticky top-0 z-50 bg-background/90 backdrop-blur border-b border-white/5">
+      <header className="md:hidden sticky top-0 z-50 dash-utility-header">
+
         <div className="flex items-center justify-between h-14 px-4 gap-2">
           <div className="flex items-center gap-2">
             <Sheet open={isMobileOpen} onOpenChange={setIsMobileOpen}>
