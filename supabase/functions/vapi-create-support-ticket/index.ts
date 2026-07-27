@@ -25,11 +25,14 @@
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
-import {
-  parsePhoneNumberFromString,
-  type CountryCode,
-} from "https://esm.sh/libphonenumber-js@1.11.14/max";
+import { type CountryCode } from "https://esm.sh/libphonenumber-js@1.11.14/max";
 import { forwardTicketToTawk } from "../_shared/tawkForward.ts";
+import {
+  APPROVED_TOOL_NAME,
+  extractToolCalls,
+  normalizePhoneString,
+  safeString,
+} from "./helpers.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -40,8 +43,6 @@ const corsHeaders = {
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 const VAPI_TOOL_SHARED_SECRET = Deno.env.get("VAPI_TOOL_SHARED_SECRET") ?? "";
-
-const APPROVED_TOOL_NAME = "create_support_ticket";
 
 const ALLOWED_SEVERITY = new Set(["standard", "urgent", "critical"]);
 const ALLOWED_CATEGORY = new Set([
@@ -122,114 +123,11 @@ function vapiResults(toolCallId: string, payload: Record<string, unknown>): Resp
 }
 
 // -----------------------------------------------------------------------
-// Parsing helpers
-
-function safeString(v: unknown, max: number): string | null {
-  if (v == null) return null;
-  const s = typeof v === "string" ? v : typeof v === "number" || typeof v === "boolean" ? String(v) : null;
-  if (s == null) return null;
-  const t = s.trim();
-  return t ? t.slice(0, max) : null;
-}
+// Parsing helpers (see ./helpers.ts). Only local-only helpers remain here.
 
 function looksLikeEmail(v: string | null): boolean {
   if (!v) return false;
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
-}
-
-/**
- * Normalize a phone number as a STRING (never numeric). Preserves leading
- * zeros and country codes. Extension is parsed off before validation.
- * Returns null when the number cannot be parsed as a valid phone.
- */
-type NormalizedPhone = {
-  e164: string;
-  display: string;
-  country: string | null;
-  extension: string | null;
-};
-function normalizePhoneString(raw: unknown, defaultCountry: CountryCode = "US"): NormalizedPhone | null {
-  if (raw == null) return null;
-  // Always coerce to string — never trust numeric JSON.
-  let s = String(raw).trim();
-  if (!s) return null;
-  // Pull out extension expressed as "x123" / "ext 123" / ",123"
-  let ext: string | null = null;
-  const extMatch = s.match(/(?:\s*(?:ext|x|extension)\.?\s*|,)(\d{1,7})\s*$/i);
-  if (extMatch) {
-    ext = extMatch[1];
-    s = s.slice(0, extMatch.index).trim();
-  }
-  // Spoken-digit groups: keep digits, "+", and separators; strip words.
-  const cleaned = s.replace(/[^\d+\s\-().]/g, "").trim();
-  if (!cleaned) return null;
-  const parsed = parsePhoneNumberFromString(cleaned, defaultCountry);
-  if (!parsed || !parsed.isValid()) return null;
-  return {
-    e164: parsed.number, // string, always "+…"
-    display: parsed.formatNational(),
-    country: parsed.country ?? null,
-    extension: ext,
-  };
-}
-
-type ToolCall = { id: string; args: Record<string, unknown>; name: string };
-
-/**
- * Extract create_support_ticket tool calls from either the canonical Vapi
- * envelope or a flat body (used by the Help Center backfill and smoke tests).
- * Returns { toolCalls, callMetadata }.
- */
-function extractToolCalls(body: unknown): {
-  toolCalls: ToolCall[];
-  callId: string | null;
-  callerNumber: string | null;
-  callerName: string | null;
-} {
-  const b = (body && typeof body === "object" ? body : {}) as Record<string, unknown>;
-  const message = (b.message && typeof b.message === "object" ? b.message : {}) as Record<string, unknown>;
-  const call = (message.call && typeof message.call === "object" ? message.call : b.call && typeof b.call === "object" ? b.call : {}) as Record<string, unknown>;
-  const customer = (call.customer && typeof call.customer === "object" ? call.customer : {}) as Record<string, unknown>;
-
-  const callId = safeString(call.id ?? message.callId ?? b.call_id, 120);
-  const callerNumber = safeString(customer.number ?? call.customerPhoneNumber, 40);
-  const callerName = safeString(customer.name, 120);
-
-  // Vapi custom-tool: message.toolCalls[]
-  const rawCalls =
-    (Array.isArray(message.toolCalls) && message.toolCalls) ||
-    (Array.isArray(message.toolCallList) && message.toolCallList) ||
-    (Array.isArray(b.toolCalls) && b.toolCalls) ||
-    null;
-
-  const toolCalls: ToolCall[] = [];
-  if (rawCalls) {
-    for (const raw of rawCalls) {
-      if (!raw || typeof raw !== "object") continue;
-      const tc = raw as Record<string, unknown>;
-      const id = safeString(tc.id ?? tc.toolCallId, 120) ?? "";
-      const fn = (tc.function && typeof tc.function === "object" ? tc.function : {}) as Record<string, unknown>;
-      const name = safeString(fn.name ?? tc.name, 80) ?? "";
-      let args: Record<string, unknown> = {};
-      const rawArgs = fn.arguments ?? tc.arguments ?? tc.parameters ?? {};
-      if (typeof rawArgs === "string") {
-        try { args = JSON.parse(rawArgs); } catch { args = {}; }
-      } else if (rawArgs && typeof rawArgs === "object") {
-        args = rawArgs as Record<string, unknown>;
-      }
-      if (!id || !name) continue;
-      toolCalls.push({ id, name, args });
-    }
-  } else {
-    // Flat body (legacy / Help Center / smoke) → synthesize a single tool call.
-    toolCalls.push({
-      id: safeString(b.tool_call_id ?? b.toolCallId, 120) ?? `flat:${callId ?? crypto.randomUUID()}`,
-      name: APPROVED_TOOL_NAME,
-      args: b,
-    });
-  }
-
-  return { toolCalls, callId, callerNumber, callerName };
 }
 
 // -----------------------------------------------------------------------
@@ -585,13 +483,12 @@ serve(async (req) => {
   let body: unknown;
   try { body = await req.json(); } catch { return httpJson(400, { success: false, error: "invalid_json" }); }
 
-  const { toolCalls, callId, callerNumber, callerName } = extractToolCalls(body);
+  const { toolCalls, callId, callerNumber, callerName, isVapiEnvelope } = extractToolCalls(body);
   if (toolCalls.length === 0) {
     return httpJson(400, { success: false, error: "no_tool_calls" });
   }
 
-  // Detect envelope shape for auditing / channel labeling.
-  const isVapiEnvelope = !!(body && typeof body === "object" && (body as { message?: unknown }).message);
+  // Envelope shape is used for auditing / channel labeling.
   const submissionChannel = isVapiEnvelope ? "vapi_voice" : "vapi_direct";
 
   const results: Array<{ toolCallId: string; result: string }> = [];
