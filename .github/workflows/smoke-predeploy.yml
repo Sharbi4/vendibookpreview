@@ -243,6 +243,26 @@ jobs:
           SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
         run: bun scripts/smoke/entitlement-gate-smoke.ts
 
+  support-ticket-smoke:
+    name: Support Ticket Surface Smoke (RLS + Tawk webhook signature/dedupe)
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - run: bun install --frozen-lockfile
+      - name: Run support-ticket smoke (submit + priority + RLS + tawk sig + dedupe + bad-sig)
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          TAWK_WEBHOOK_SECRET: ${{ secrets.TAWK_WEBHOOK_SECRET }}
+        run: bun scripts/smoke/support-ticket-smoke.ts
+
+
+
 
 
 
