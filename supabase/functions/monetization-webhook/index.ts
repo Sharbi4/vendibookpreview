@@ -10,23 +10,10 @@ const corsHeaders = {
 const log = (step: string, details?: unknown) =>
   console.log(`[MONETIZATION-WEBHOOK] ${step}${details ? " - " + JSON.stringify(details) : ""}`);
 
-// RFC 4122 UUID (any version). Stripe metadata is user-supplied; anything else
-// must be dropped before writing to a `uuid` column or the insert 500s.
-const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-export function validateConsentId(raw: unknown): string | null {
-  if (typeof raw !== "string") return null;
-  const trimmed = raw.trim();
-  return UUID_RE.test(trimmed) ? trimmed.toLowerCase() : null;
-}
-
-// Marker error: outer handler removes the idempotency row and returns non-2xx
-// so Stripe retries the delivery instead of us silently marking it processed.
-export class PersistenceError extends Error {
-  constructor(message: string, public cause_?: unknown) {
-    super(message);
-    this.name = "PersistenceError";
-  }
-}
+// RFC 4122 UUID + PersistenceError live in ./helpers.ts so unit tests can
+// import them without dragging the whole handler into the typechecker.
+export { validateConsentId, PersistenceError } from "./helpers.ts";
+import { validateConsentId, PersistenceError } from "./helpers.ts";
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
