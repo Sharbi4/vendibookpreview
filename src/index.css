@@ -1270,4 +1270,17 @@
     -webkit-backdrop-filter: blur(10px);
     backdrop-filter: blur(10px);
   }
+
+
+  /* Reduced motion — disable obsidian hover transforms and specular sweep */
+  @media (prefers-reduced-motion: reduce) {
+    .obsidian-panel-interactive,
+    .obsidian-panel-interactive:hover {
+      transition: none !important;
+      transform: none !important;
+    }
+    .obsidian-shine::after {
+      display: none !important;
+    }
+  }
 }

@@ -1,21 +1,25 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { Loader2, ArrowRight, Check } from 'lucide-react';
+import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { MiniPlansComparison } from '@/components/monetization/MiniPlansComparison';
 import { StripeTrustBadge } from '@/components/trust/StripeTrustBadge';
+import { cn } from '@/lib/utils';
 import heroBg from '@/assets/hero-hosttools-bg.jpg';
 
 /**
- * Post-signup welcome. Never blocks. Shown once — we set
- * profiles.onboarded_at on any exit (continue / see memberships).
+ * Post-signup welcome. Never blocks. Persists profiles.onboarded_at on
+ * successful exit — Free continues to dashboard, "Explore plans" opens /pricing.
  *
- * Copy rule: the phrase "Listing is always free" must appear.
- * No silent-dismiss X: user must explicitly Continue Free or See Members.
- * Sticky action footer keeps the primary CTA visible while plan content scrolls.
- * Respects prefers-reduced-motion via CSS transitions only.
+ * Semantics: this is a full route, not a modal. We use <main> landmark
+ * semantics and do NOT claim role=dialog / aria-modal since there is no
+ * focus trap. Escape does not dismiss silently — the user must choose.
+ *
+ * Copy: no hardcoded prices, features, or "Recommended" claims. The paid
+ * option routes to /pricing where the authoritative catalog renders.
  */
 
 type Selection = 'free' | 'members';
@@ -26,7 +30,7 @@ const Welcome: React.FC = () => {
   const [params] = useSearchParams();
   const [saving, setSaving] = useState(false);
   const [selection, setSelection] = useState<Selection>('free');
-  const firstFocusRef = useRef<HTMLButtonElement | null>(null);
+  const primaryBtnRef = useRef<HTMLButtonElement | null>(null);
 
   const returnTo = useMemo(() => {
     const raw = params.get('returnTo') || '';
@@ -37,40 +41,51 @@ const Welcome: React.FC = () => {
     if (!isLoading && !user) navigate('/auth');
   }, [user, isLoading, navigate]);
 
-  // Focus trap: move focus to the primary CTA on mount for keyboard users.
+  // Initial focus — not a trap. Keyboard focus flows naturally after.
   useEffect(() => {
-    firstFocusRef.current?.focus();
+    primaryBtnRef.current?.focus();
   }, []);
 
-  const markOnboarded = async () => {
-    if (!user) return;
-    setSaving(true);
-    try {
-      await supabase
-        .from('profiles')
-        .update({ onboarded_at: new Date().toISOString() })
-        .eq('id', user.id);
-    } catch {
-      // Non-blocking: welcome dismissal is a UX nicety, not critical.
-    } finally {
-      setSaving(false);
+  /**
+   * Persist onboarded_at. Returns true on success, false on failure so
+   * callers can keep the user on Welcome and offer retry.
+   */
+  const markOnboarded = async (): Promise<boolean> => {
+    if (!user) return false;
+    const { error } = await supabase
+      .from('profiles')
+      .update({ onboarded_at: new Date().toISOString() })
+      .eq('id', user.id);
+    if (error) {
+      console.error('[welcome] failed to persist onboarded_at', error);
+      return false;
     }
+    return true;
   };
 
-  const handleContinueFree = async () => {
-    await markOnboarded();
-    navigate(returnTo, { replace: true });
+  const withSave = async (next: () => void) => {
+    setSaving(true);
+    const ok = await markOnboarded();
+    setSaving(false);
+    if (!ok) {
+      toast.error("We couldn't save your choice", {
+        description: 'Please try again in a moment. Your account is fine — this is just the onboarding note.',
+      });
+      return;
+    }
+    next();
   };
 
-  const handleSeeMemberships = async () => {
-    await markOnboarded();
-    navigate(`/pricing?from=welcome&returnTo=${encodeURIComponent(returnTo)}`);
-  };
+  const handleContinueFree = () =>
+    withSave(() => navigate(returnTo, { replace: true }));
 
-  const handlePrimary = () => {
-    if (selection === 'free') return handleContinueFree();
-    return handleSeeMemberships();
-  };
+  const handleSeeMemberships = () =>
+    withSave(() =>
+      navigate(`/pricing?from=welcome&returnTo=${encodeURIComponent(returnTo)}`),
+    );
+
+  const handlePrimary = () =>
+    selection === 'free' ? handleContinueFree() : handleSeeMemberships();
 
   if (isLoading || !user) {
     return (
@@ -81,17 +96,19 @@ const Welcome: React.FC = () => {
   }
 
   return (
-    <div
-      role="dialog"
-      aria-modal="true"
+    <main
       aria-labelledby="welcome-title"
-      className="min-h-screen w-full obsidian-scrim flex items-start md:items-center justify-center px-3 sm:px-4 py-6 md:py-10"
+      className="min-h-[100svh] w-full obsidian-scrim flex items-start md:items-center justify-center px-3 sm:px-4 py-6 md:py-10"
     >
-      <div
-        className="relative w-full max-w-3xl obsidian-panel obsidian-shine overflow-hidden animate-in fade-in-0 zoom-in-95 duration-200"
+      <section
+        className={cn(
+          'relative w-full max-w-3xl obsidian-panel obsidian-shine overflow-hidden',
+          'flex flex-col max-h-[calc(100svh-3rem)]',
+          'motion-safe:animate-in motion-safe:fade-in-0 motion-safe:zoom-in-95 motion-safe:duration-200',
+        )}
       >
         {/* Hero band — real photography, no AI artwork */}
-        <div className="relative h-40 sm:h-48 md:h-56 w-full overflow-hidden">
+        <div className="relative h-40 sm:h-48 md:h-56 w-full overflow-hidden shrink-0">
           <img
             src={heroBg}
             alt=""
@@ -120,15 +137,19 @@ const Welcome: React.FC = () => {
           </div>
         </div>
 
-        {/* Body */}
-        <div className="p-5 sm:p-7 space-y-6 max-h-[60vh] overflow-y-auto">
+        {/* Body — the single scroll container */}
+        <div className="flex-1 min-h-0 overflow-y-auto p-5 sm:p-7 space-y-6">
           <p className="text-sm sm:text-base text-white/75 leading-relaxed">
-            Publish a listing at no cost, forever. Memberships are optional boosts — they help
-            you grow faster with more tools and better placement. Choose your path below.
+            Publish a listing at no cost, forever. Memberships are optional — explore them
+            whenever you like. Choose your path below.
           </p>
 
-          {/* Two-option selector: Free vs Members */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3" role="radiogroup" aria-label="Choose your starting plan">
+          {/* Two-option selector — neutral copy, no hardcoded pricing */}
+          <div
+            className="grid grid-cols-1 sm:grid-cols-2 gap-3"
+            role="radiogroup"
+            aria-label="Choose your starting path"
+          >
             <button
               type="button"
               role="radio"
@@ -140,14 +161,13 @@ const Welcome: React.FC = () => {
               )}
             >
               <div className="flex items-center justify-between">
-                <span className="font-display text-lg text-white font-semibold">Free</span>
-                <span className="text-xs text-white/60">$0 forever</span>
+                <span className="font-display text-lg text-white font-semibold">Start Free</span>
               </div>
               <p className="text-xs text-white/70 leading-relaxed">
-                Publish your listing, take bookings, and receive payments. Upgrade any time — or never.
+                Publish your listing, take bookings, and receive payments. No card required.
               </p>
               <div className="mt-1 flex items-center gap-1.5 text-[11px] text-emerald-400/90">
-                <Check className="h-3 w-3" /> No card required
+                <Check className="h-3 w-3" /> Continue straight to your dashboard
               </div>
             </button>
 
@@ -157,27 +177,25 @@ const Welcome: React.FC = () => {
               aria-checked={selection === 'members'}
               onClick={() => setSelection('members')}
               className={cn(
-                'obsidian-panel-interactive text-left p-4 flex flex-col gap-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 relative',
+                'obsidian-panel-interactive text-left p-4 flex flex-col gap-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/60',
                 selection === 'members' && 'obsidian-selected',
               )}
             >
-              <span className="absolute -top-2 right-4 rounded-full bg-primary text-primary-foreground text-[10px] font-semibold px-2 py-0.5 shadow-sm">
-                Recommended
-              </span>
               <div className="flex items-center justify-between">
-                <span className="font-display text-lg text-white font-semibold">See member benefits</span>
-                <span className="text-xs text-white/60">From $39/mo</span>
+                <span className="font-display text-lg text-white font-semibold">
+                  Explore member plans
+                </span>
               </div>
               <p className="text-xs text-white/70 leading-relaxed">
-                Priority placement, Spark AI tools, and featured credit. Cancel anytime.
+                Compare current plans and benefits. Cancel anytime.
               </p>
               <div className="mt-1 flex items-center gap-1.5 text-[11px] text-white/70">
-                <Check className="h-3 w-3" /> Compare plans on the next screen
+                <Check className="h-3 w-3" /> Opens the live pricing page
               </div>
             </button>
           </div>
 
-          {/* Comparison — retained but framed inside the obsidian system */}
+          {/* Live catalog — the authoritative source of plan facts */}
           <div className="rounded-xl overflow-hidden ring-1 ring-white/10">
             <MiniPlansComparison compact />
           </div>
@@ -189,20 +207,23 @@ const Welcome: React.FC = () => {
             </Link>
             .
           </p>
+
+          {/* Spacer so the last row is never covered by the sticky footer */}
+          <div aria-hidden className="h-2" />
         </div>
 
-        {/* Sticky action footer — always visible, safe-area aware on mobile */}
+        {/* Action footer — outside body scroll, always visible */}
         <div
-          className="sticky bottom-0 left-0 right-0 border-t-2 border-white/10 obsidian-surface p-4 sm:p-5"
+          className="shrink-0 border-t-2 border-white/10 obsidian-surface p-4 sm:p-5"
           style={{ paddingBottom: 'calc(1rem + env(safe-area-inset-bottom, 0))' }}
         >
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:justify-between">
-            <div className="text-xs text-white/70">
+            <div className="text-xs text-white/70 sm:max-w-[45%]">
               {selection === 'free'
                 ? 'You selected Free. You can upgrade any time.'
-                : "You'll see full member benefits and pricing next."}
+                : "We'll open the live pricing page next."}
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 min-w-0">
               <Button
                 variant="ghost"
                 size="lg"
@@ -210,20 +231,20 @@ const Welcome: React.FC = () => {
                 disabled={saving}
                 className="text-white/80 hover:text-white hover:bg-white/5"
               >
-                {selection === 'free' ? 'See member benefits' : 'Continue with Free'}
+                {selection === 'free' ? 'Explore member plans' : 'Continue with Free'}
               </Button>
               <Button
-                ref={firstFocusRef}
+                ref={primaryBtnRef}
                 size="lg"
                 onClick={handlePrimary}
                 disabled={saving}
-                className="min-w-[180px] gap-2 shadow-cta-primary bg-cta-primary text-white"
+                className="sm:min-w-[200px] gap-2 shadow-cta-primary bg-cta-primary text-white"
               >
                 {saving ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
                   <>
-                    {selection === 'free' ? 'Continue to Dashboard' : 'See Member Benefits'}
+                    {selection === 'free' ? 'Continue to Dashboard' : 'Explore Plans'}
                     <ArrowRight className="h-4 w-4" />
                   </>
                 )}
@@ -231,17 +252,15 @@ const Welcome: React.FC = () => {
             </div>
           </div>
           <div className="mt-3 flex items-center justify-center">
-            <StripeTrustBadge context="combined" surface="dark" size="sm" />
+            {/* Truthful context: billing is Stripe-powered. Do not imply Stripe covers
+                every part of Vendibook. Badge asset already reads "Powered by Stripe" —
+                no repeat copy alongside it. */}
+            <StripeTrustBadge context="subscription" surface="dark" size="sm" withCopy={false} />
           </div>
         </div>
-      </div>
-    </div>
+      </section>
+    </main>
   );
 };
-
-// Local cn to avoid an extra import churn.
-function cn(...args: Array<string | false | null | undefined>) {
-  return args.filter(Boolean).join(' ');
-}
 
 export default Welcome;
