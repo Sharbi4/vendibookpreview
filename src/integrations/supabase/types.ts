@@ -5378,6 +5378,60 @@ export type Database = {
         }
         Relationships: []
       }
+      sms_consent_events: {
+        Row: {
+          created_at: string
+          disclosure_text_hash: string | null
+          disclosure_version: string | null
+          event_type: string
+          id: string
+          ip_address: unknown
+          message_category: string | null
+          metadata: Json | null
+          phone_e164: string
+          privacy_version: string | null
+          provider_message_sid: string | null
+          source: string
+          terms_version: string | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          disclosure_text_hash?: string | null
+          disclosure_version?: string | null
+          event_type: string
+          id?: string
+          ip_address?: unknown
+          message_category?: string | null
+          metadata?: Json | null
+          phone_e164: string
+          privacy_version?: string | null
+          provider_message_sid?: string | null
+          source: string
+          terms_version?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          disclosure_text_hash?: string | null
+          disclosure_version?: string | null
+          event_type?: string
+          id?: string
+          ip_address?: unknown
+          message_category?: string | null
+          metadata?: Json | null
+          phone_e164?: string
+          privacy_version?: string | null
+          provider_message_sid?: string | null
+          source?: string
+          terms_version?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       sms_inbound_messages: {
         Row: {
           action_taken: string | null
@@ -5411,6 +5465,114 @@ export type Database = {
           raw_payload?: Json | null
           to_phone?: string
           twilio_message_sid?: string | null
+        }
+        Relationships: []
+      }
+      sms_message_log_v2: {
+        Row: {
+          business_purpose: string
+          consent_basis: Json
+          created_at: string
+          delivery_status: string | null
+          failure_reason: string | null
+          id: string
+          message_category: string
+          provider_message_sid: string | null
+          recipient_phone_e164: string
+          send_status: string
+          template_id: string
+          template_variables: Json | null
+          template_version: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          business_purpose: string
+          consent_basis: Json
+          created_at?: string
+          delivery_status?: string | null
+          failure_reason?: string | null
+          id?: string
+          message_category: string
+          provider_message_sid?: string | null
+          recipient_phone_e164: string
+          send_status?: string
+          template_id: string
+          template_variables?: Json | null
+          template_version?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          business_purpose?: string
+          consent_basis?: Json
+          created_at?: string
+          delivery_status?: string | null
+          failure_reason?: string | null
+          id?: string
+          message_category?: string
+          provider_message_sid?: string | null
+          recipient_phone_e164?: string
+          send_status?: string
+          template_id?: string
+          template_variables?: Json | null
+          template_version?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      sms_preferences: {
+        Row: {
+          consent_source: string | null
+          consent_version: string | null
+          created_at: string
+          id: string
+          last_updated_at: string
+          marketing_status: string
+          opted_in_at: string | null
+          opted_out_at: string | null
+          phone_e164: string
+          phone_verified_at: string | null
+          transactional_status: string
+          twilio_sync_status: string | null
+          twilio_synced_at: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          consent_source?: string | null
+          consent_version?: string | null
+          created_at?: string
+          id?: string
+          last_updated_at?: string
+          marketing_status?: string
+          opted_in_at?: string | null
+          opted_out_at?: string | null
+          phone_e164: string
+          phone_verified_at?: string | null
+          transactional_status?: string
+          twilio_sync_status?: string | null
+          twilio_synced_at?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          consent_source?: string | null
+          consent_version?: string | null
+          created_at?: string
+          id?: string
+          last_updated_at?: string
+          marketing_status?: string
+          opted_in_at?: string | null
+          opted_out_at?: string | null
+          phone_e164?: string
+          phone_verified_at?: string | null
+          transactional_status?: string
+          twilio_sync_status?: string | null
+          twilio_synced_at?: string | null
+          updated_at?: string
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -5497,6 +5659,53 @@ export type Database = {
           verified_at?: string | null
         }
         Relationships: []
+      }
+      sms_suppressions: {
+        Row: {
+          created_at: string
+          id: string
+          phone_e164: string
+          provider_message_sid: string | null
+          reason: string
+          released_at: string | null
+          released_by_event_id: string | null
+          sender_or_program: string
+          source: string
+          suppressed_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          phone_e164: string
+          provider_message_sid?: string | null
+          reason: string
+          released_at?: string | null
+          released_by_event_id?: string | null
+          sender_or_program?: string
+          source: string
+          suppressed_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          phone_e164?: string
+          provider_message_sid?: string | null
+          reason?: string
+          released_at?: string | null
+          released_by_event_id?: string | null
+          sender_or_program?: string
+          source?: string
+          suppressed_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sms_suppressions_released_by_event_id_fkey"
+            columns: ["released_by_event_id"]
+            isOneToOne: false
+            referencedRelation: "sms_consent_events"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       sms_verification_codes: {
         Row: {

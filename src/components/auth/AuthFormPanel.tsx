@@ -23,6 +23,9 @@ import {
   CONSENT_TRIGGERS,
 } from '@/lib/legalDocuments';
 import { stashPendingSignupConsent, clearPendingSignupConsent } from '@/lib/pendingSignupConsent';
+import SmsConsentField from '@/components/sms/SmsConsentField';
+import { normalizeNanpToE164 } from '@/lib/sms/phone';
+import { SMS_CONSENT_DISCLOSURE } from '@/lib/sms/consent';
 
 const SIGNUP_TOS_ACCEPTANCE_TEXT =
   'I agree to the Vendibook Terms of Service and acknowledge the Privacy Policy.';
@@ -73,6 +76,10 @@ export const AuthFormPanel = ({ mode, setMode }: AuthFormPanelProps) => {
   const [resendingEmail, setResendingEmail] = useState(false);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [marketingOptIn, setMarketingOptIn] = useState(false);
+  // SMS consent state — must always start unchecked and remain separate
+  // from the ToS + marketing consent above.
+  const [smsConsent, setSmsConsent] = useState(false);
+  const [smsError, setSmsError] = useState<string | null>(null);
 
   const { signIn, signUp, resetPassword } = useAuth();
   const navigate = useNavigate();
@@ -225,6 +232,17 @@ export const AuthFormPanel = ({ mode, setMode }: AuthFormPanelProps) => {
       return;
     }
 
+    // SMS consent gate: only trigger validation when the user checked the
+    // box. Consent is otherwise optional and never blocks signup.
+    if (mode === 'signup' && smsConsent) {
+      if (!normalizeNanpToE164(trimmedPhone)) {
+        setSmsError('Enter a valid US or Canadian mobile number to receive text updates, or uncheck the SMS box.');
+        return;
+      }
+      setSmsError(null);
+    }
+
+
     setIsSubmitting(true);
 
     try {
@@ -353,6 +371,25 @@ export const AuthFormPanel = ({ mode, setMode }: AuthFormPanelProps) => {
                 }
                 // Inline write succeeded — no need for the deferred drain.
                 clearPendingSignupConsent();
+
+                // Record SMS consent when the user affirmatively opted in
+                // during signup. Never blocks account creation.
+                if (smsConsent && normalizeNanpToE164(trimmedPhone)) {
+                  try {
+                    await supabase.functions.invoke('sms-record-consent', {
+                      body: {
+                        phone: trimmedPhone,
+                        source: 'signup',
+                        consent: true,
+                        marketing: false,
+                        disclosureText: SMS_CONSENT_DISCLOSURE,
+                        userAgent: navigator.userAgent,
+                      },
+                    });
+                  } catch (smsErr) {
+                    console.error('SMS consent record failed', smsErr);
+                  }
+                }
               } catch (consentErr) {
                 console.error('Failed to record signup consent', consentErr);
               }
@@ -686,6 +723,19 @@ export const AuthFormPanel = ({ mode, setMode }: AuthFormPanelProps) => {
                       {SIGNUP_MARKETING_TEXT}
                     </span>
                   </label>
+
+                  {/* SMS opt-in — separate from ToS and marketing; unchecked by default,
+                      never required, disclosure sits directly adjacent to the field. */}
+                  <div className="pt-2">
+                    <SmsConsentField
+                      phone={phoneNumber}
+                      onPhoneChange={setPhoneNumber}
+                      consent={smsConsent}
+                      onConsentChange={(v) => { setSmsConsent(v); if (!v) setSmsError(null); }}
+                      error={smsError ?? undefined}
+                      testIdPrefix="signup-sms"
+                    />
+                  </div>
                 </div>
               )}
 

@@ -17,6 +17,7 @@ import {
   setStoredSoundPreference, 
   playNotificationSound 
 } from '@/lib/notificationSound';
+import SmsNotificationSection from '@/components/sms/SmsNotificationSection';
 
 interface PreferenceRowProps {
   label: string;
@@ -345,6 +346,8 @@ const NotificationPreferences = () => {
               />
             </CardContent>
           </Card>
+
+          <SmsNotificationSection />
         </div>
       </main>
       <Footer />

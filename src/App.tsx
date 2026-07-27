@@ -39,6 +39,9 @@ const Welcome = lazy(() => import("./pages/Welcome"));
 const Activation = lazy(() => import("./pages/Activation"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const LegalDocumentPage = lazy(() => import("./pages/LegalDocumentPage"));
+const SmsTerms = lazy(() => import("./pages/legal/SmsTerms"));
+const SmsOptInProof = lazy(() => import("./pages/legal/SmsOptInProof"));
+const SmsEnrollment = lazy(() => import("./pages/SmsEnrollment"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const CreateListing = lazy(() => import("./pages/CreateListing"));
 const EditListing = lazy(() => import("./pages/EditListing"));
@@ -260,6 +263,10 @@ const AnimatedRoutes = () => {
           <Route path="/privacy" element={<PageTransition><Privacy /></PageTransition>} />
           <Route path="/terms" element={<PageTransition><Terms /></PageTransition>} />
           <Route path="/insurance" element={<PageTransition><Insurance /></PageTransition>} />
+          {/* Static legal pages take precedence over the /legal/:slug DB catch-all */}
+          <Route path="/legal/sms" element={<PageTransition><SmsTerms /></PageTransition>} />
+          <Route path="/legal/sms-opt-in-proof" element={<PageTransition><SmsOptInProof /></PageTransition>} />
+          <Route path="/sms" element={<PageTransition><SmsEnrollment /></PageTransition>} />
           <Route path="/legal/:slug" element={<PageTransition><LegalDocumentPage /></PageTransition>} />
           <Route path="/how-it-works" element={<PageTransition><HowItWorks /></PageTransition>} />
           <Route path="/how-it-works-host" element={<PageTransition><HowItWorksHost /></PageTransition>} />
