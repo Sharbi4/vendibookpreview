@@ -483,13 +483,12 @@ serve(async (req) => {
   let body: unknown;
   try { body = await req.json(); } catch { return httpJson(400, { success: false, error: "invalid_json" }); }
 
-  const { toolCalls, callId, callerNumber, callerName } = extractToolCalls(body);
+  const { toolCalls, callId, callerNumber, callerName, isVapiEnvelope } = extractToolCalls(body);
   if (toolCalls.length === 0) {
     return httpJson(400, { success: false, error: "no_tool_calls" });
   }
 
-  // Detect envelope shape for auditing / channel labeling.
-  const isVapiEnvelope = !!(body && typeof body === "object" && (body as { message?: unknown }).message);
+  // Envelope shape is used for auditing / channel labeling.
   const submissionChannel = isVapiEnvelope ? "vapi_voice" : "vapi_direct";
 
   const results: Array<{ toolCallId: string; result: string }> = [];
