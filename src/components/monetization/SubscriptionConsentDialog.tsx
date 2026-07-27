@@ -17,6 +17,7 @@ import * as React from 'react';
 import { ConsentModal } from '@/components/consent/ConsentModal';
 import { DOCUMENT_TYPES, CONSENT_TRIGGERS } from '@/lib/legalDocuments';
 import { formatUsd } from '@/lib/monetization/products';
+import { StripeTrustBadge } from '@/components/trust/StripeTrustBadge';
 
 export interface SubscriptionConsentPayload {
   productSlug: string;
