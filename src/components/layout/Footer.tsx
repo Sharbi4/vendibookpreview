@@ -80,6 +80,8 @@ const footerSections: FooterSection[] = [
       { label: 'Privacy Policy', href: '/privacy' },
       { label: 'California Privacy', href: '/california-privacy' },
       { label: 'Do Not Sell My Info', href: '/california-privacy#do-not-sell' },
+      { label: 'Text message preferences', href: '/sms-opt-in' },
+      { label: 'SMS Terms', href: '/legal/sms' },
     ],
   },
 ];
