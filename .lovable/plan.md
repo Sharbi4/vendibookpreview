@@ -1,77 +1,79 @@
-## Findings — audit of upsells in the listing flow
+# P0 Signup + Publish Recovery Plan
 
-### 1. Upsell inventory
+## Findings up front (verified before proposing fixes)
 
-| Where | Step | Required? | Unlocks | Works E2E? |
-|---|---|---|---|---|
-| `MembershipInlinePanel` (Go Pro) | Review | Optional | Host subscription tiers | **Partially broken** — see A |
-| `FeaturedListingCard` ($30 boost) | Review | Optional | 30-day featured placement | Works (publish-first then Stripe) |
-| `ProofNotaryCard` ($45, sale only) | Review | Optional | E-notarized bill of sale | **Blocks publish** — see C |
-| `VendiVisionDialog` (AI copywriting) | Details | Optional | Free (tier-gated features) | Works |
-| `StripeConnectBanner` / Modal | Review | Required only if card payments enabled | Free onboarding | Works, gated correctly |
-| Identity verification gate | Publish | Required (free) | Persona verification | Works, loud toast |
-| `/pricing` deep-link boosts (`boost-featured-30`, `pro_weekly_pass`, `permit_path_plus`, etc.) | Reached via Membership panel | Optional | Various | **Detached from listing** — see D |
-| PermitPath / Tools cross-sells | Not inside wizard | — | — | N/A |
+1. **Email delivery is NOT the root cause.** Lovable Emails on `notify.vendibook.com` is verified and healthy. Last 7 days: 30 `welcome`, 41 `listing-draft-nudge`, 10 `listing-published`, 10 `stripe-onboarding-nudge`, 51 `generic-notice` all sent successfully. The 1,350 dead-letters are 100% digest emails (`host-daily-digest`, `shopper-daily-digest`, `host-weekly-digest`) — a separate templating bug, not auth. Auth-email sending itself is working.
+2. **Signups and publishes are happening, but low.** 19 listings created / 10 published in the last 14 days. So the friction is real but "zero" is directional. The audit still needs to run to confirm each of the 6 publish paths works for a real end-user (not service-role).
+3. **Phone field bug confirmed.** `authSchema` marks `phoneNumber` `.optional()` but the input has `required` on it — that WILL silently block submit if the browser rejects an empty required field before Zod runs.
+4. **Google OAuth uses managed wrapper** (`lovable.auth.signInWithOAuth`) — that's the correct path on Lovable Cloud, not a bug per se, but I'll verify end-to-end in the preview.
+5. **"Escrow" copy is present in ~50 files** — needs a global sweep.
 
-### 2. Bugs found
+## Part 1 — Reduce signup friction (immediate code fixes)
 
-**A. Mid-wizard membership purchase loses the listing** (blocks user goal #3)
-- `MembershipInlinePanel.handleUpgrade` navigates to `/pricing?returnTo=<wizardStep>`.
-- `src/pages/Pricing.tsx` **never reads `returnTo` from the URL** and never threads it into `PremiumPlansSection` / `PremiumTierCard`.
-- Result: after Stripe checkout, user is dumped at `/payment-success?monetization=true` → `/dashboard`. Draft still exists but the user has to hunt for it.
+**`src/components/auth/AuthFormPanel.tsx`**
+- Reduce required signup fields to: email, password, full name, terms. Keep the role selector.
+- Delete the phone input from the signup form and drop `phoneNumber` from the `authSchema.parse` call. Collect phone later at booking/listing time where it's actually needed.
+- Change `emailRedirectTo: '${origin}/'` → `${origin}/auth/callback` (a public route the app already handles) so users don't bounce off protected redirect logic.
+- Remove any `required` attribute from optional inputs so the browser doesn't block submit.
 
-**B. Signed-out "Go Pro" from a wizard-originated Pricing page drops `returnTo`**
-- `PremiumTierCard.handleClick` (line 176-184) rebuilds `returnTo` from `location.pathname` only, discarding the incoming `?returnTo=/create-listing/…`.
-- After login → auto-checkout → success, user lands at dashboard, not the wizard.
+**Verify (no code change unless broken):**
+- `AuthContext.signUp` creates the profile row via the `handle_new_user` trigger — confirm the trigger still exists and runs for both password + Google signups.
+- Redirect allowlist: report what needs to be added to the Cloud auth allowlist (production domain, published `.lovable.app`, preview `id-preview--*.lovable.app`). This is a config action for the owner, not code.
 
-**C. `ProofNotaryCard` can strand the listing at draft**
-- Unlike Featured (publishes first, then opens Stripe in a new tab), the notary path **persists data but does NOT flip status to `published`** before opening checkout. It depends entirely on the webhook to publish.
-- If the user cancels Stripe, closes the tab, or the webhook is delayed, the listing stays in draft. This violates rule #2 ("upsells never block publish"): notary is an OPTIONAL add-on but currently soft-blocks publish.
+## Part 2 — "Escrow" → "Payment protection" sweep
 
-**D. `boost-featured-30` bought from `/pricing` without a listing context does nothing visible**
-- `create-monetization-checkout` accepts `listing_id`; `monetization-webhook` writes `featured_*` **directly on that listing row**. When bought from `/pricing` with no listing selected, no `listing_id` is sent, and the purchase row is created but no listing is boosted.
-- No "unapplied credit" concept exists — the money is spent but the boost is orphaned.
+Global find/replace across the ~50 files listed, preserving legal/agreement wording where "escrow-style" is technically accurate but rewording user-facing copy to "payment protection." Test files that assert on "escrow" get updated too.
 
-**E. Featured boost purchased from Pricing detour doesn't attach to the in-progress draft**
-- Even if we fixed A and passed `returnTo=/create-listing/{id}`, the `boost-featured-30` checkout at Pricing still isn't scoped to `listing_id={draftId}`. The user pays, returns to the wizard, publishes — boost isn't applied.
+## Part 3 — Publish matrix audit (real user, not service role)
 
-**F. Cancel URLs point to `/dashboard`, not the wizard**
-- `create-monetization-checkout` defaults `cancel_url` to `/dashboard?purchase=cancelled`. When invoked from the wizard detour, cancel should route back to the wizard step.
+Using a real verified test account driven through Playwright against the local preview, exercise all 6 paths and report pass/fail with the exact blocker:
 
-**G. Stranded draft recovery — verify but no bug expected**
-- `useHostListings` fetches all statuses; `HostListings` filters by tab. Need to confirm the "Draft" tab exposes a "Finish publishing" CTA that resumes at the furthest completed step (query string preserved). Will verify and, if missing, add a `Resume` action that navigates to `/create-listing/{id}?step={lastStep}`.
+| # | Path | Expected |
+|---|---|---|
+| a | Sale, card enabled | Requires Stripe Connect gate; publishes after onboarding |
+| b | Sale, pay-in-person only | Publishes with NO Stripe account required |
+| c | Sale, both | Card path gated by Stripe; cash path always OK |
+| d | Rent, card enabled | Gated by Stripe |
+| e | Rent, pay-in-person | No Stripe required |
+| f | Rent + deposit + cleaning fee | Publishes; fees stored |
 
-**H. `PublishSuccessModal` "Return to dashboard" navigates to `/dashboard`** — that's expected post-publish, not a bug.
+For each path verify: draft row created, each wizard step saves, `status='published'` with `published_at` set, exactly ONE listings row (no dupe), and the listing appears in browse/search + detail page.
 
-### 3. Money/webhook correctness (spot check summary)
+## Part 4 — Fix the Stripe Connect gate (if it fires on cash-only)
 
-- `create-monetization-checkout`: idempotency key `mon-{user}-{product}-{listing}-{hour}` correct; pending session reused; prices come from `monetization_products` (source of truth).
-- `create-featured-checkout`: idempotency key present; refuses when `pending_featured_payment` already set (no double-charge).
-- `create-notary-checkout`: needs same idempotency check — will verify.
-- `monetization-webhook`: uses `stripe_webhook_events` idempotency table, stacks featured extends cleanly.
+Inspect `useListingForm` publish path + `EditListing`/`CreateListing` submit handlers. The current rule should be "Stripe required only if `payment_methods` includes card." If the gate fires on cash-only listings, remove that branch. Any blocker must produce a toast with a clear message and a link to fix (e.g., "Connect payouts" → Stripe onboarding).
 
-### Proposed diffs (small, surgical)
+## Part 5 — Wizard upgrade / Pro CTAs
 
-1. **`src/pages/Pricing.tsx`** — read `?returnTo=` from `useSearchParams`, pass to `PremiumPlansSection` and `ProductPricingCard` / `PremiumTierCard` so `successPath` / `cancelPath` route back to the wizard for wizard-originated visits.
-2. **`src/components/monetization/PremiumTierCard.tsx`** — when unauthenticated, preserve any incoming `?returnTo=` on the `/auth` hop; after Stripe redirect honor the caller-supplied `successPath`/`cancelPath` (already prop-driven — just needs the caller wiring from #1).
-3. **`src/components/monetization/PremiumPlansSection.tsx`** — accept optional `successPath`/`cancelPath` overrides; forward to `PremiumTierCard`.
-4. **`src/components/listing-wizard/MembershipInlinePanel.tsx`** — pass the current wizard URL (`/create-listing/{id}?step=…`) as `returnTo` (already partially done); add `listingId` to the URL as `?listingContext={id}` so a boost bought from Pricing can auto-scope.
-5. **`src/pages/Pricing.tsx`** (again) — if `?listingContext={id}` is present, thread `listingId` into `ProductPricingCard` so listing-scoped boosts attach correctly (fixes E; partially fixes D for the wizard flow).
-6. **`src/components/listing-wizard/PublishWizard.tsx`** — notary path: **publish-first, then open Stripe** (mirror the featured pattern). If user abandons payment the listing is live without notary, matching rule #2. Also add the same `listing_publish_limit_reached` decode + limit-modal branch already used by featured/standard.
-7. **`supabase/functions/create-notary-checkout/index.ts`** — add hourly-bucket idempotency key like featured/monetization to prevent double-charge on rapid retries.
-8. **Stranded-draft recovery** — verify `HostListings` Drafts tab surfaces a "Finish publishing" action. If missing, add `RowKebabMenu` action `Finish publishing` → `/create-listing/{id}?step={derived_from_data}` (derive step from completeness: photos → details → pricing → availability → review).
-9. **Boost-from-Pricing orphaning (D)** — narrow scope: for products with `promo_type ∈ {featured_7, featured_30, top_of_search_7}`, require `listing_id` in the checkout call. If missing, the card renders "Pick a listing" instead of "Buy boost" and opens a listing picker. Prevents orphaned charges without touching money logic.
+Audit every upgrade CTA inside the listing wizard (Spark write-for-me, price suggestions, Featured Boost at publish, membership nudges, locked tools):
 
-### Not changing
-- No changes to fees, hold periods, payout timing, entitlement resolution rules, or Stripe idempotency keys' semantics.
-- No changes to `useListingQuota` (grandfathering intact).
-- No changes to identity-verification or Stripe Connect gating.
+1. Every CTA must invoke `create-checkout` (or the monetization checkout) and open Stripe. No dead clicks.
+2. `success_url` returns to `/create-listing?draft=<id>&step=<n>&unlocked=<sku>` so the user lands on the exact step with data intact.
+3. `cancel_url` returns to the same step with nothing charged.
+4. **Hard rule:** every optional upsell has a visible "Skip / continue free" that always completes publishing. Verify each CTA has one.
 
-### After edits
-- Typecheck (`bunx tsgo --noEmit`).
-- Run the two-scenario journey mentally against the fixed code:
-  (a) fresh signup → wizard → publish free (no add-ons) → live.
-  (b) fresh signup → wizard → open membership panel → buy Pro from Pricing (wizard-scoped) → returned to wizard step with data intact → toggle Featured Boost → publish → boost applies.
-- Report results per stage.
+## Part 6 — Configuration the owner must change (report only)
 
-Awaiting approval before editing.
+I'll report the exact required changes at the end (not code):
+- Cloud → Auth: confirm Site URL and add missing redirect URLs to the allowlist.
+- Cloud → Auth → Google: confirm managed Google is enabled; if BYOK, verify redirect URI matches.
+- Auto-confirm should stay OFF (verification email required); confirm this too.
+- Separately: fix the digest DLQ (`aiSubject: true` bug already patched previously — verify redeployed).
+
+## Technical details
+
+- `src/components/auth/AuthFormPanel.tsx`: remove phone input + state + validation; simplify submit; fix redirect target.
+- `src/contexts/AuthContext.tsx`: signature stays the same but we pass `phoneNumber = undefined`; drop unused param eventually.
+- Test file for auth if any snapshots reference the phone field.
+- Playwright scripts under `/tmp/browser/` for the 6 publish paths (won't be committed; used for verification).
+- `rg` sweep for "escrow" replacing user-facing copy; keep legal terms of art where accurate.
+
+## Out of scope for this pass (per your directives)
+
+- No changes to fee/commission/hold/payout math.
+- No changes to the terms gate itself.
+- No changes to `create-checkout` money logic — only its `success_url` and `cancel_url` for wizard-context returns.
+
+## Deliverable
+
+At end I'll post: root cause summary, exact owner config changes, publish matrix results (6 rows pass/fail with evidence), CTA fixes, and typecheck output.
