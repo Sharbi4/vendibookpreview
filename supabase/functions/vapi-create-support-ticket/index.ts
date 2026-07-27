@@ -348,17 +348,27 @@ async function processCreateSupportTicket(input: ProcessInput): Promise<Record<s
         .eq("vapi_tool_call_id", toolCallId)
         .maybeSingle();
       if (dup) {
+        // Uniqueness-race replay: another concurrent insert won. Mirror
+        // the same terminal-outcome contract as the webhook_events replay
+        // path above.
+        const originalDelivered =
+          dup.forwarding_status === "delivered" ||
+          dup.forwarding_status === "skipped";
         return {
           success: true,
-          ticket_created: false,
+          ticket_created: true,
           deduped: true,
           ticket_reference: dup.reference_code,
           reference: dup.reference_code,
+          ticket_id: dup.id,
           callback_phone_e164: dup.callback_phone_e164,
           callback_phone_display: dup.callback_phone_display,
           delivery_status: dup.forwarding_status,
+          forwarding_status: dup.forwarding_status,
           retryable: false,
-          customer_message: `We already opened ticket ${dup.reference_code} for this call.`,
+          customer_message: originalDelivered
+            ? `We already opened ticket ${dup.reference_code} for this call — our support team has it.`
+            : `We already opened ticket ${dup.reference_code} for this call. If you don't hear back within a business day, please email support@vendibook.com and reference ${dup.reference_code}.`,
         };
       }
     }
