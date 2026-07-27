@@ -1,17 +1,17 @@
 import { Lock } from 'lucide-react';
-import stripeWordmark from '@/assets/stripe-wordmark-blurple.png';
 import verifiedBadge from '@/assets/verified-badge.png';
+import { StripeTrustBadge } from '@/components/trust/StripeTrustBadge';
 
 /**
- * Compact trust row: Stripe wordmark, verified badge, card-network
+ * Compact trust row: official Stripe badge, verified badge, card-network
  * initials, and a lock + encryption line. Purely visual reassurance;
  * no interactive elements.
  */
 const TrustRow = () => (
   <div className="flex flex-col gap-2 pt-1">
-    <div className="flex items-center justify-between gap-3">
+    <div className="flex items-center justify-between gap-3 flex-wrap">
       <div className="flex items-center gap-2">
-        <img src={stripeWordmark} alt="Powered by Stripe" className="h-4 w-auto opacity-80" />
+        <StripeTrustBadge context="payments" surface="dark" size="sm" withCopy={false} />
         <span className="h-3 w-px bg-border/70" aria-hidden />
         <img src={verifiedBadge} alt="Verified" className="h-4 w-auto opacity-80" />
       </div>
@@ -28,7 +28,7 @@ const TrustRow = () => (
     </div>
     <p className="text-[11px] text-muted-foreground flex items-center gap-1.5">
       <Lock className="h-3 w-3" />
-      256-bit encryption. Vendibook never sees your full card number.
+      Secure payments powered by Stripe · 256-bit encryption · Vendibook never sees your full card number.
     </p>
   </div>
 );
