@@ -23,6 +23,9 @@ import {
   CONSENT_TRIGGERS,
 } from '@/lib/legalDocuments';
 import { stashPendingSignupConsent, clearPendingSignupConsent } from '@/lib/pendingSignupConsent';
+import SmsConsentField from '@/components/sms/SmsConsentField';
+import { normalizeNanpToE164 } from '@/lib/sms/phone';
+import { SMS_CONSENT_DISCLOSURE } from '@/lib/sms/consent';
 
 const SIGNUP_TOS_ACCEPTANCE_TEXT =
   'I agree to the Vendibook Terms of Service and acknowledge the Privacy Policy.';
@@ -73,6 +76,10 @@ export const AuthFormPanel = ({ mode, setMode }: AuthFormPanelProps) => {
   const [resendingEmail, setResendingEmail] = useState(false);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [marketingOptIn, setMarketingOptIn] = useState(false);
+  // SMS consent state — must always start unchecked and remain separate
+  // from the ToS + marketing consent above.
+  const [smsConsent, setSmsConsent] = useState(false);
+  const [smsError, setSmsError] = useState<string | null>(null);
 
   const { signIn, signUp, resetPassword } = useAuth();
   const navigate = useNavigate();
