@@ -70,18 +70,6 @@ const Dashboard = () => {
     setSearchParams(next);
   };
 
-  useEffect(() => {
-    const hasSeen = localStorage.getItem('vendibook_dashboard_onboarding_v1');
-    if (!hasSeen && !isLoading && user) {
-      const timer = setTimeout(() => setShowOnboarding(true), 1000);
-      return () => clearTimeout(timer);
-    }
-  }, [isLoading, user]);
-
-  const handleOnboardingComplete = () => {
-    localStorage.setItem('vendibook_dashboard_onboarding_v1', 'true');
-    setShowOnboarding(false);
-  };
 
   useEffect(() => {
     if (!isLoading && !user) navigate('/auth');
