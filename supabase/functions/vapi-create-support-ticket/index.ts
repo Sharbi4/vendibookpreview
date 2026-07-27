@@ -261,8 +261,6 @@ async function processCreateSupportTicket(input: ProcessInput): Promise<Record<s
             ? `We already opened ticket ${existing.reference_code} for this call — our support team has it.`
             : `We already opened ticket ${existing.reference_code} for this call. If you don't hear back within a business day, please email support@vendibook.com and reference ${existing.reference_code}.`,
         };
-
-        };
       }
     }
   }
