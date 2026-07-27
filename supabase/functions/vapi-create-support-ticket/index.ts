@@ -237,17 +237,31 @@ async function processCreateSupportTicket(input: ProcessInput): Promise<Record<s
         .eq("id", prior.ticket_id)
         .maybeSingle();
       if (existing) {
+        // Replay of a previously accepted tool call. Mirror the ORIGINAL
+        // terminal outcome — if the first attempt successfully created a
+        // ticket, replay reports success:true / ticket_created:true so the
+        // voice agent may confirm the reference. Do NOT re-insert or
+        // re-forward. `deduped:true` marks this as an idempotent replay.
+        const originalDelivered =
+          existing.forwarding_status === "delivered" ||
+          existing.forwarding_status === "skipped";
         return {
           success: true,
-          ticket_created: false,
+          ticket_created: true,
           deduped: true,
           ticket_reference: existing.reference_code,
           reference: existing.reference_code,
+          ticket_id: existing.id,
           callback_phone_e164: existing.callback_phone_e164,
           callback_phone_display: existing.callback_phone_display,
           delivery_status: existing.forwarding_status,
+          forwarding_status: existing.forwarding_status,
           retryable: false,
-          customer_message: `We already opened ticket ${existing.reference_code} for this call.`,
+          customer_message: originalDelivered
+            ? `We already opened ticket ${existing.reference_code} for this call — our support team has it.`
+            : `We already opened ticket ${existing.reference_code} for this call. If you don't hear back within a business day, please email support@vendibook.com and reference ${existing.reference_code}.`,
+        };
+
         };
       }
     }
