@@ -1796,6 +1796,21 @@ serve(async (req) => {
           .update({ stripe_onboarding_complete: isComplete })
           .eq("id", profile.id);
 
+        // D1: sync trusted server-only host payment eligibility. Signed
+        // Stripe events are the second (and authoritative for async
+        // requirements changes) write path into this table.
+        await supabaseClient.from("host_payment_eligibility").upsert({
+          user_id: profile.id,
+          stripe_account_id: account.id,
+          onboarding_complete: isComplete,
+          charges_enabled: Boolean(account.charges_enabled),
+          payouts_enabled: Boolean(account.payouts_enabled),
+          details_submitted: Boolean(account.details_submitted),
+          requirements_currently_due: (account.requirements?.currently_due ?? []) as unknown as object,
+          disabled_reason: account.requirements?.disabled_reason ?? null,
+          last_synced_at: new Date().toISOString(),
+        }, { onConflict: "user_id" });
+
         // First-time completion: notify the user their payouts are live
         if (isComplete && !wasComplete) {
           await supabaseClient.from("notifications").insert({

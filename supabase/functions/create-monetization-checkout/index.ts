@@ -109,9 +109,14 @@ serve(async (req) => {
 
 
     // ROSCA / California AB 2863: recurring subscriptions require an affirmative
-    // consent record captured before checkout. Reject the request if the client
-    // did not pass a consent_id or if the consent row does not belong to this
-    // user / match the product they consented to.
+    // consent record captured before checkout. Validate:
+    //   - artifact exists, belongs to this user, and matches this SKU
+    //   - document_version matches the CURRENT active subscription_terms row
+    //   - price shown at consent matches the price we are about to charge
+    //   - artifact has not been consumed by a prior checkout attempt (replay)
+    // Then mark it consumed before creating the Stripe session so a duplicate
+    // click cannot re-use the same consent for a second/third session.
+    let validatedConsentId: string | null = null;
     if (product.billing_type === "recurring") {
       if (!body.consent_id) {
         return new Response(
@@ -125,29 +130,59 @@ serve(async (req) => {
       }
       const { data: consent, error: consentErr } = await supabase
         .from("user_consents")
-        .select("id, user_id, document_type, related_ids, trigger_action")
+        .select("id, user_id, document_type, document_version, related_ids, trigger_action, consumed_at")
         .eq("id", body.consent_id)
         .maybeSingle();
       if (consentErr) throw consentErr;
-      const relatedSlug =
-        (consent?.related_ids as Record<string, string> | null)?.product_slug ?? null;
-      const validConsent =
-        !!consent &&
-        consent.user_id === user.id &&
-        consent.document_type === "subscription_terms" &&
-        consent.trigger_action === "subscription_start" &&
-        (relatedSlug === null || relatedSlug === product.slug);
-      if (!validConsent) {
+
+      const related = (consent?.related_ids as Record<string, string> | null) ?? {};
+      const relatedSlug = related.product_slug ?? null;
+      const relatedPrice = Number(related.price_cents_shown ?? NaN);
+
+      // Compute effective price BEFORE discounts so we compare against what the
+      // consent dialog actually displayed to the user (list price, not discounted).
+      const nowMs = Date.now();
+      const inPromoNow =
+        product.promo_price_cents != null &&
+        (!product.promo_starts_at || new Date(product.promo_starts_at).getTime() <= nowMs) &&
+        (!product.promo_ends_at || new Date(product.promo_ends_at).getTime() > nowMs);
+      const shownPriceCents: number = inPromoNow ? product.promo_price_cents : product.price_cents;
+
+      // Look up current active subscription_terms version.
+      const { data: activeDoc } = await supabase
+        .from("legal_documents")
+        .select("version")
+        .eq("document_type", "subscription_terms")
+        .eq("status", "active")
+        .order("effective_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      const activeVersion = activeDoc?.version ?? null;
+
+      const failReasons: string[] = [];
+      if (!consent) failReasons.push("not_found");
+      if (consent && consent.user_id !== user.id) failReasons.push("user_mismatch");
+      if (consent && consent.document_type !== "subscription_terms") failReasons.push("wrong_doc_type");
+      if (consent && consent.trigger_action !== "subscription_start") failReasons.push("wrong_trigger");
+      if (relatedSlug && relatedSlug !== product.slug) failReasons.push("sku_mismatch");
+      if (Number.isFinite(relatedPrice) && relatedPrice !== shownPriceCents) failReasons.push("price_drift");
+      if (activeVersion && consent && consent.document_version !== activeVersion) failReasons.push("stale_version");
+      if (consent?.consumed_at) failReasons.push("replayed");
+
+      if (failReasons.length > 0) {
+        log("subscription consent rejected", { reasons: failReasons, consent_id: body.consent_id });
         return new Response(
           JSON.stringify({
             error:
-              "Subscription consent could not be verified. Please re-accept the terms and try again.",
+              "Subscription consent could not be verified. Please re-accept the current terms and try again.",
             code: "invalid_subscription_consent",
+            reasons: failReasons,
           }),
           { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 },
         );
       }
-      log("subscription consent verified", { consent_id: consent.id });
+      validatedConsentId = consent!.id;
+      log("subscription consent verified", { consent_id: validatedConsentId, version: activeVersion });
     }
 
 
@@ -356,6 +391,22 @@ serve(async (req) => {
       .select("id")
       .single();
     if (insErr) throw insErr;
+
+    // D2: consume the recurring-billing consent artifact so a duplicate click,
+    // a replay from another tab, or a swap to a different SKU cannot re-use
+    // it. Duplicate-click idempotency is still preserved because we detect an
+    // existing pending session for the same idempotencyKey earlier and reuse
+    // it BEFORE reaching this point.
+    if (validatedConsentId) {
+      await supabase
+        .from("user_consents")
+        .update({
+          consumed_at: new Date().toISOString(),
+          consumed_by_ref: session.id,
+        })
+        .eq("id", validatedConsentId)
+        .is("consumed_at", null);
+    }
 
     log("checkout created", { session: session.id, purchase: purchase?.id });
     return new Response(
