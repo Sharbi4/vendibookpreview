@@ -85,6 +85,7 @@ const ProtectedSalePage = lazy(() => import("./pages/ProtectedSale"));
 const TransactionDetail = lazy(() => import("./pages/TransactionDetail"));
 
 const NotificationPreferences = lazy(() => import("./pages/NotificationPreferences"));
+const MyTickets = lazy(() => import("./pages/MyTickets"));
 const HelpCenter = lazy(() => import("./pages/HelpCenter"));
 const HelpArticle = lazy(() => import("./pages/HelpArticle"));
 const CaliforniaPrivacy = lazy(() => import("./pages/CaliforniaPrivacy"));
