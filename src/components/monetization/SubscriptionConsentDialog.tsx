@@ -17,6 +17,7 @@ import * as React from 'react';
 import { ConsentModal } from '@/components/consent/ConsentModal';
 import { DOCUMENT_TYPES, CONSENT_TRIGGERS } from '@/lib/legalDocuments';
 import { formatUsd } from '@/lib/monetization/products';
+import { StripeTrustBadge } from '@/components/trust/StripeTrustBadge';
 
 export interface SubscriptionConsentPayload {
   productSlug: string;
@@ -76,6 +77,14 @@ export const SubscriptionConsentDialog: React.FC<Props> = ({
         ...(payload.tier ? { tier: payload.tier } : {}),
         ...(checkoutAttemptId ? { checkout_attempt_id: checkoutAttemptId } : {}),
       }}
+      footerSlot={
+        <StripeTrustBadge
+          context="subscription"
+          surface="light"
+          size="sm"
+          withCopy={false}
+        />
+      }
       onAccept={async (consentId) => {
         await onConsented(consentId);
       }}

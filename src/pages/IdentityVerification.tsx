@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 import Header from '@/components/layout/Header';
 import verifiedBadge from '@/assets/verified-badge.png';
-import stripeWordmark from '@/assets/stripe-wordmark-blurple.png';
+import { StripeTrustBadge } from '@/components/trust/StripeTrustBadge';
 import { goBackToOrigin } from '@/lib/originNav';
 
 type Status = 'checking' | 'not_started' | 'pending' | 'processing' | 'verified';
@@ -203,10 +203,11 @@ const IdentityVerification = () => {
             <div className="mt-8 pt-6 border-t border-border grid gap-4 md:grid-cols-3">
               <TrustCell
                 media={
-                  <img
-                    src={stripeWordmark}
-                    alt="Stripe"
-                    className="h-4 w-auto object-contain"
+                  <StripeTrustBadge
+                    context="identity"
+                    surface="light"
+                    size="sm"
+                    withCopy={false}
                   />
                 }
                 title="Powered by Stripe Identity"

@@ -2,6 +2,7 @@ import { DollarSign, TrendingUp, Wallet, Clock, ArrowUpRight, CheckCircle2 } fro
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { AnimatedCounter } from './AnimatedCounter';
 import { StripeLogo } from '@/components/ui/StripeLogo';
+import { StripeTrustBadge } from '@/components/trust/StripeTrustBadge';
 import { cn } from '@/lib/utils';
 import { RevenueAnalytics } from '@/hooks/useRevenueAnalytics';
 import { format } from 'date-fns';
@@ -84,10 +85,13 @@ export const RevenueAnalyticsCard = ({ analytics, onOpenStripeDashboard, isOpeni
           </div>
           <div>
             <h3 className="text-lg font-semibold">Revenue Analytics</h3>
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <span>Powered by</span>
-              <StripeLogo size="sm" />
-            </div>
+            <StripeTrustBadge
+              context="payouts"
+              surface="light"
+              size="sm"
+              withCopy={false}
+              className="mt-1"
+            />
           </div>
         </div>
       </div>
@@ -292,14 +296,11 @@ export const RevenueAnalyticsCard = ({ analytics, onOpenStripeDashboard, isOpeni
       {/* Payout History */}
       <Card className="border border-border shadow-md">
         <CardHeader className="pb-3 bg-muted/30 border-b border-border">
-          <CardTitle className="text-base font-semibold flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-xl bg-primary text-primary-foreground flex items-center justify-center">
-                <ArrowUpRight className="h-4 w-4" />
-              </div>
-              Recent Transactions
+          <CardTitle className="text-base font-semibold flex items-center gap-2">
+            <div className="w-8 h-8 rounded-xl bg-primary text-primary-foreground flex items-center justify-center">
+              <ArrowUpRight className="h-4 w-4" />
             </div>
-            <StripeLogo size="sm" />
+            Recent Transactions
           </CardTitle>
         </CardHeader>
         <CardContent className="pt-4">

@@ -41,6 +41,8 @@ interface Props {
   relatedIds?: Record<string, string>;
   intro?: string;
   primaryLabel?: string;
+  /** Optional trust mark or helper node rendered below the action row. */
+  footerSlot?: React.ReactNode;
   onAccept: (consentId: string) => void | Promise<void>;
   onCancel?: () => void;
 }
@@ -54,6 +56,7 @@ export const ConsentModal: React.FC<Props> = ({
   relatedIds,
   intro,
   primaryLabel = 'Accept and continue',
+  footerSlot,
   onAccept,
   onCancel,
 }) => {
@@ -217,6 +220,12 @@ export const ConsentModal: React.FC<Props> = ({
               {primaryLabel}
             </Button>
           </div>
+
+          {footerSlot && (
+            <div className="pt-1 flex justify-center sm:justify-end">
+              {footerSlot}
+            </div>
+          )}
         </div>
       </DialogContent>
     </Dialog>
