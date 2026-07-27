@@ -180,10 +180,16 @@ const HelpCenter = () => {
   const openZendeskChat = () => {
     trackEventToDb('help_chat_click', 'engagement', { source: 'help_center' });
     try {
-      (window as any).Tawk_API?.maximize?.();
+      const tawk = (window as any).Tawk_API;
+      if (tawk && typeof tawk.maximize === 'function') {
+        tawk.maximize();
+        return;
+      }
     } catch (error) {
-      console.debug('Tawk chat open error:', error);
+      console.debug('Chat open error:', error);
     }
+    // Graceful fallback if chat isn't available yet — route to the support form.
+    window.location.assign('/contact');
   };
 
   const faqSchema = {
