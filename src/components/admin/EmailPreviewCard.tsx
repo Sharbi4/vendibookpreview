@@ -457,7 +457,7 @@ const generateEmailHtml = (templateId: string, data: Record<string, unknown>): s
       return wrapHtml(`
         <h1 style="color: #1a1a1a; font-size: 24px; margin-bottom: 24px;">Payment Confirmed! 🎉</h1>
         <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6;">
-          Your payment of <strong>$${(data.amount as number).toLocaleString()}</strong> for <strong>${data.listingTitle}</strong> has been received and is now held in escrow.
+          Your payment of <strong>$${(data.amount as number).toLocaleString()}</strong> for <strong>${data.listingTitle}</strong> has been received and is now held in payment protection.
         </p>
         <div style="background: #f8f9fa; border-radius: 12px; padding: 20px; margin: 24px 0;">
           <h3 style="color: #1a1a1a; margin: 0 0 12px;">What's Next?</h3>
@@ -468,7 +468,7 @@ const generateEmailHtml = (templateId: string, data: Record<string, unknown>): s
           </ul>
         </div>
         <p style="color: #6a6a6a; font-size: 14px; margin-top: 24px;">
-          Your payment is protected by our escrow system until the transaction is complete.
+          Your payment is protected by our payment protection system until the transaction is complete.
         </p>
       `);
 

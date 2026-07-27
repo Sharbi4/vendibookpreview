@@ -313,7 +313,7 @@ export const useCreateSaleTransaction = () => {
     onSuccess: () => {
       toast({
         title: 'Purchase Recorded',
-        description: 'Your purchase is now in escrow. Please confirm receipt of the item to release payment to the seller.',
+        description: 'Your purchase is now in payment protection. Please confirm receipt of the item to release payment to the seller.',
       });
     },
     onError: (error: Error) => {

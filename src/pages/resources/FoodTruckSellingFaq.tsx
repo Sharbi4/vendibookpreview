@@ -36,7 +36,7 @@ const FAQS = [
   {
     question: 'How do I avoid scams when selling a food truck?',
     answer:
-      'Verify buyer identity, keep early conversations in-platform, avoid wire transfers to unknown parties, use a deposit or escrow tool rather than direct transfer, and lean on optional secure transaction support where available.',
+      'Verify buyer identity, keep early conversations in-platform, avoid wire transfers to unknown parties, use a deposit or payment protection tool rather than direct transfer, and lean on optional secure transaction support where available.',
   },
   {
     question: 'Can buyers make offers on Vendibook?',
@@ -56,7 +56,7 @@ const FAQS = [
   {
     question: 'Does Vendibook offer secure transactions?',
     answer:
-      'Yes. Optional escrow-style secure transaction tools are available where the transaction type supports it — including identity verification, offer tracking, supporting documents, and reviews after the sale.',
+      'Yes. Optional payment protection-style secure transaction tools are available where the transaction type supports it — including identity verification, offer tracking, supporting documents, and reviews after the sale.',
   },
 ];
 

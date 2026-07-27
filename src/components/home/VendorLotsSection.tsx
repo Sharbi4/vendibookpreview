@@ -22,7 +22,7 @@ const benefits = [
 
 const features = [
   "Verified vendors with insurance documentation",
-  "Secure payments held in escrow",
+  "Secure payments held in payment protection",
   "Easy scheduling and calendar management",
   "24/7 customer support",
   "No upfront costs—list for free"

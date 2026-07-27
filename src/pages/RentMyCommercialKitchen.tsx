@@ -130,7 +130,7 @@ const ValueGrid = () => {
     {
       icon: DollarSign,
       title: "Guaranteed Payouts",
-      desc: "Renters pay upfront. Funds are held in escrow and released to you automatically. No chasing invoices."
+      desc: "Renters pay upfront. Funds are held in payment protection and released to you automatically. No chasing invoices."
     },
     {
       icon: Users,
@@ -512,7 +512,7 @@ const KitchenFAQ = () => {
     },
     {
       q: "When is payment collected?",
-      a: "We charge the renter's card the moment they send a booking request. The funds are held securely in escrow and released to you 24 hours after the booking starts."
+      a: "We charge the renter's card the moment they send a booking request. The funds are held securely in payment protection and released to you 24 hours after the booking starts."
     },
     {
       q: "Is this legal in my city?",
@@ -563,7 +563,7 @@ const RentMyCommercialKitchen = () => {
         name: 'When is payment collected?',
         acceptedAnswer: {
           '@type': 'Answer',
-          text: "We charge the renter's card the moment they send a booking request. The funds are held securely in escrow."
+          text: "We charge the renter's card the moment they send a booking request. The funds are held securely in payment protection."
         }
       }
     ],

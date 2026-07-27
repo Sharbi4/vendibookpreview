@@ -51,10 +51,10 @@ const TERMS: Term[] = [
     link: { label: 'Food trucks for rent', href: '/food-trucks-for-rent' },
   },
   {
-    term: 'Food truck escrow',
-    slug: 'food-truck-escrow',
+    term: 'Food truck payment protection',
+    slug: 'food-truck-payment protection',
     definition:
-      'A secure transaction model where funds are held by a third party until both buyer and seller satisfy agreed conditions. Vendibook supports escrow-style secure transaction tools where available.',
+      'A secure transaction model where funds are held by a third party until both buyer and seller satisfy agreed conditions. Vendibook supports payment protection-style secure transaction tools where available.',
   },
   {
     term: 'Food truck listing',
@@ -119,7 +119,7 @@ const MobileFoodMarketplaceGlossary = () => {
   return (
     <AiContentLayout
       title="Mobile Food Marketplace Glossary | Vendibook"
-      description="Plain-language definitions for food truck marketplaces, food trailers, commissaries, vendor lots, food truck rentals, escrow, and other mobile food terms."
+      description="Plain-language definitions for food truck marketplaces, food trailers, commissaries, vendor lots, food truck rentals, payment protection, and other mobile food terms."
       path="/resources/mobile-food-marketplace-glossary"
       h1="Mobile Food Marketplace Glossary"
       article

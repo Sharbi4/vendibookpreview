@@ -25,7 +25,7 @@ export const DOCUMENT_DISCLAIMER =
 /** Trust points to render next to payment/checkout CTAs. */
 export const PAYMENT_TRUST_POINTS: TrustPoint[] = [
   { icon: CreditCard, label: 'Stripe-secured checkout', detail: 'PCI DSS Level 1 processing — we never see card numbers.' },
-  { icon: ShieldCheck, label: 'Held, not spent', detail: 'Funds stay in escrow until both parties confirm.' },
+  { icon: ShieldCheck, label: 'Held, not spent', detail: 'Funds stay in payment protection until both parties confirm.' },
   { icon: RefreshCcw, label: 'Dispute support', detail: 'Open a case anytime — our team reviews within 1 business day.' },
   { icon: Lock, label: 'Address masked', detail: 'Exact pickup location is only shared after payment.' },
 ];
@@ -35,7 +35,7 @@ export const PAYMENT_DISCLAIMER =
 
 /** Compact trust points for the protected-sale deposit step. */
 export const DEPOSIT_TRUST_POINTS: TrustPoint[] = [
-  { icon: ShieldCheck, label: 'Escrow-held deposit', detail: 'Deposit is captured but not released until handoff is confirmed.' },
+  { icon: ShieldCheck, label: 'Payment Protection-held deposit', detail: 'Deposit is captured but not released until handoff is confirmed.' },
   { icon: RefreshCcw, label: 'Refundable', detail: 'Full refund if the seller cancels or fails identity checks.' },
   { icon: CreditCard, label: 'Balance later', detail: 'You only pay the balance once you meet in person.' },
 ];

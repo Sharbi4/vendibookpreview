@@ -161,7 +161,7 @@ const AdminDashboard = () => {
             <CardContent className="pt-4">
               <div className="flex items-center gap-2">
                 <DollarSign className="h-4 w-4 text-primary" />
-                <span className="text-sm text-muted-foreground">In Escrow</span>
+                <span className="text-sm text-muted-foreground">In Payment Protection</span>
               </div>
               <p className="text-2xl font-bold">{stats.inEscrow}</p>
             </CardContent>

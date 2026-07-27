@@ -66,7 +66,7 @@ export const RevenueAnalyticsCard = ({ analytics, onOpenStripeDashboard, isOpeni
       case 'paid':
       case 'buyer_confirmed':
       case 'seller_confirmed':
-        return 'In Escrow';
+        return 'In Payment Protection';
       case 'disputed':
         return 'Disputed';
       default:

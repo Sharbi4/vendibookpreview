@@ -28,14 +28,14 @@ import ValuePillars, { Pillar } from '@/components/howitworks/ValuePillars';
 const steps: WalkthroughStep[] = [
   { number: 1, title: 'List with great photos', description: 'Upload high-res photos, write specs, set asking price. Listings with 8+ photos sell 3x faster.', icon: Camera, mock: 'photo' },
   { number: 2, title: 'Receive offers from verified buyers', description: 'Verified buyers send full-price purchases or counter-offers. Review, negotiate, or accept with one click.', icon: MessageSquare, mock: 'message' },
-  { number: 3, title: 'Accept payment securely', description: 'Buyer pays via card, ACH, or financing. Funds are held in escrow — protecting both parties.', icon: CreditCard, mock: 'payment' },
+  { number: 3, title: 'Accept payment securely', description: 'Buyer pays via card, ACH, or financing. Funds are held in payment protection — protecting both parties.', icon: CreditCard, mock: 'payment' },
   { number: 4, title: 'Coordinate handoff', description: 'Local pickup or use Vendibook Freight ($4.50/mile) for nationwide delivery. We handle logistics quotes automatically.', icon: Truck, mock: 'truck' },
   { number: 5, title: 'Get paid', description: 'Once the buyer confirms receipt, funds release to your bank instantly. Track everything in your dashboard.', icon: DollarSign, mock: 'payout' }];
 
 const pillars: Pillar[] = [
   { icon: Users, title: 'Verified buyers', description: 'Every buyer is identity-verified — no spam, no tire-kickers.' },
   { icon: CreditCard, title: 'Buyer financing built-in', description: 'Affirm, Klarna, and Afterpay expand your buyer pool overnight.' },
-  { icon: ShieldCheck, title: 'Escrow protection', description: 'Funds held until handoff is confirmed — fraud protection both ways.' },
+  { icon: ShieldCheck, title: 'Payment Protection protection', description: 'Funds held until handoff is confirmed — fraud protection both ways.' },
   { icon: DollarSign, title: 'No upfront fees', description: 'Free to list. Pay only when the sale completes.' }];
 
 const faqs = [
@@ -43,7 +43,7 @@ const faqs = [
   { q: 'Can buyers finance my asset?', a: 'Yes — buyers can finance with Affirm/Klarna ($35–$30K) or Afterpay (up to $4K). You still get paid in full at close.' },
   { q: 'Do you handle freight shipping?', a: 'Vendibook Freight covers door-to-door US delivery at $4.50/mile, calculated and quoted automatically at checkout.' },
   { q: 'How long until I get paid?', a: 'Funds release immediately once the buyer confirms receipt — typically same-day for local pickup, 2–5 days for freight.' },
-  { q: 'What if a buyer backs out?', a: 'Once a buyer pays, funds are locked in escrow. They can\'t back out without a valid dispute, and we mediate every case.' },
+  { q: 'What if a buyer backs out?', a: 'Once a buyer pays, funds are locked in payment protection. They can\'t back out without a valid dispute, and we mediate every case.' },
   { q: 'Can I list multiple items?', a: 'Yes — list as many trucks, trailers, or pieces of equipment as you have. Manage everything from one dashboard.' }];
 
 const HowItWorksSeller = () => {
@@ -53,7 +53,7 @@ const HowItWorksSeller = () => {
     <div className="min-h-screen bg-background flex flex-col">
       <SEO
         title="Sell a Food Truck or Trailer Fast | Vendibook"
-        description="List free, reach verified buyers nationwide, and close with escrow protection & buyer financing. See how selling on Vendibook works—step by step."
+        description="List free, reach verified buyers nationwide, and close with payment protection protection & buyer financing. See how selling on Vendibook works—step by step."
         canonical="/how-it-works-seller"
       />
       <Header />
@@ -77,7 +77,7 @@ const HowItWorksSeller = () => {
                   Sell to buyers who are ready to write the check.
                 </h1>
                 <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-xl leading-relaxed">
-                  Reach thousands of verified buyers looking for food trucks, trailers, and commercial kitchen equipment. Free to list, secure escrow, optional nationwide freight.
+                  Reach thousands of verified buyers looking for food trucks, trailers, and commercial kitchen equipment. Free to list, secure payment protection, optional nationwide freight.
                 </p>
                 <div className="flex flex-wrap gap-3">
                   <Button size="lg" variant="glass-cta" className="rounded-full" asChild>

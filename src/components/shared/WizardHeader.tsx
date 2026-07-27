@@ -119,7 +119,7 @@ const WizardHeader = ({
           ) : (
             <span className="px-2.5 py-1 rounded-full bg-primary/10 text-primary text-xs font-semibold flex items-center gap-1.5">
               <ShieldCheck className="h-3 w-3" />
-              Escrow Protected
+              Payment Protection Protected
             </span>
           )}
           <span className="text-xs text-muted-foreground">

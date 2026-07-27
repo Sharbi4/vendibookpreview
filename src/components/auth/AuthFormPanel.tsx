@@ -815,7 +815,7 @@ export const AuthFormPanel = ({ mode, setMode }: AuthFormPanelProps) => {
                 <Shield className="h-4 w-4 text-primary shrink-0 mt-0.5" />
                 <div>
                   <p className="text-sm font-medium text-foreground">Secure payments</p>
-                  <p className="text-xs text-muted-foreground">Escrow-protected transactions</p>
+                  <p className="text-xs text-muted-foreground">Payment Protection-protected transactions</p>
                 </div>
               </div>
             </div>

@@ -348,7 +348,7 @@ const SaleTransactionCard = ({
               </div>
             )}
 
-            {/* Escrow Status Banner */}
+            {/* Payment Protection Status Banner */}
             {['paid', 'buyer_confirmed', 'seller_confirmed'].includes(transaction.status) && (
               <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-700 rounded-lg p-4 mb-4">
                 <div className="flex items-center gap-3">
@@ -360,7 +360,7 @@ const SaleTransactionCard = ({
                       🔒 Funds Held Securely by VendiBook
                     </p>
                     <p className="text-xs text-blue-600/90 dark:text-blue-300/90 mt-1">
-                      ${transaction.amount.toLocaleString()} is protected in escrow. {role === 'buyer' 
+                      ${transaction.amount.toLocaleString()} is protected in payment protection. {role === 'buyer' 
                         ? 'Confirm receipt to release payment to seller.' 
                         : 'Funds will be released after both parties confirm.'}
                     </p>
@@ -522,7 +522,7 @@ const SaleTransactionCard = ({
                       <DialogTitle>Raise a Dispute</DialogTitle>
                       <DialogDescription>
                         Explain the issue with this transaction. Our team will review and work to resolve it. 
-                        Payment will remain in escrow until the dispute is resolved.
+                        Payment will remain in payment protection until the dispute is resolved.
                       </DialogDescription>
                     </DialogHeader>
                     <div className="py-4">

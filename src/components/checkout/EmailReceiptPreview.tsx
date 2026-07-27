@@ -194,7 +194,7 @@ export function EmailReceiptPreview({
               {isEscrow && (
                 <p className="text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1.5 mt-2 font-medium">
                   <Shield className="h-3.5 w-3.5" />
-                  Escrow Protected - Funds released after confirmation
+                  Payment Protection Protected - Funds released after confirmation
                 </p>
               )}
             </div>

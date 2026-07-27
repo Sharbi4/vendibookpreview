@@ -21,7 +21,7 @@ const WhatsIncluded = ({
       icon: Lock,
       iconBg: "bg-emerald-100 dark:bg-emerald-900/30",
       iconColor: "text-emerald-600",
-      title: "Secure Escrow Payment",
+      title: "Secure Payment Protection Payment",
       description: mode === 'checkout' 
         ? "Funds held until both parties confirm"
         : "Protected by Stripe encryption",

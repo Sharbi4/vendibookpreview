@@ -8,7 +8,7 @@ const benefits = [
   {
     icon: ShieldCheck,
     title: 'Built-in Trust',
-    description: "Verified & Professional. We've standardized the industry. From Stripe-backed ID verification to secure escrow and digital agreements, we've handled the risk so you can focus on the food."},
+    description: "Verified & Professional. We've standardized the industry. From Stripe-backed ID verification to secure payment protection and digital agreements, we've handled the risk so you can focus on the food."},
   {
     icon: MapPin,
     title: 'Strategic Placement',

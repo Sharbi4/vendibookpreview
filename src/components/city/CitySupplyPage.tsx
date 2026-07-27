@@ -55,7 +55,7 @@ const FAQS = [
   },
   {
     q: 'What if something goes wrong?',
-    a: 'Our dispute resolution process protects both hosts and renters. We hold funds in escrow until confirmation.',
+    a: 'Our dispute resolution process protects both hosts and renters. We hold funds in payment protection until confirmation.',
   },
   {
     q: 'Do I need insurance?',
@@ -209,7 +209,7 @@ export function CitySupplyPage({ city, assetType }: CitySupplyPageProps) {
                   <Shield className="h-7 w-7 text-emerald-600" />
                 </div>
                 <h3 className="font-semibold text-foreground mb-2">Secure payments</h3>
-                <p className="text-sm text-muted-foreground">Funds held in escrow until confirmation.</p>
+                <p className="text-sm text-muted-foreground">Funds held in payment protection until confirmation.</p>
               </div>
               
               <div className="text-center">
@@ -248,7 +248,7 @@ export function CitySupplyPage({ city, assetType }: CitySupplyPageProps) {
               {[
                 { name: 'Marcus T.', quote: 'Listed my food truck and had my first booking within a week. The process was seamless.' },
                 { name: 'Sarah L.', quote: 'Finally a platform that understands the food truck business. Great support team.' },
-                { name: 'James R.', quote: 'The escrow system gives me peace of mind. I know I will get paid.' },
+                { name: 'James R.', quote: 'The payment protection system gives me peace of mind. I know I will get paid.' },
               ].map((testimonial, i) => (
                 <Card key={i} className="bg-card">
                   <CardContent className="p-6">

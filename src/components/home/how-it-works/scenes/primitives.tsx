@@ -812,7 +812,7 @@ export const PayoutTimeline = () => (
           <Clock className="h-3.5 w-3.5 text-primary" /> Payout schedule
         </div>
         <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-primary ring-1 ring-primary/30">
-          Instant escrow
+          Instant payment protection
         </span>
       </div>
       {[

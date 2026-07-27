@@ -12,7 +12,7 @@ interface AgreementBlockProps {
 
 /**
  * Plain-language, single-checkbox agreement block. Uses "payment protection"
- * language, never "escrow". One-line cancellation and refund summaries with
+ * language, never "payment protection". One-line cancellation and refund summaries with
  * links to the full documents.
  */
 const AgreementBlock = ({

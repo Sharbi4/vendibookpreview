@@ -89,7 +89,7 @@ export const trustTiles: TrustTile[] = [
         { step: 3, title: 'Funds Held Safely', description: 'Payment is captured and held until the transaction milestone is met.' }
       ],
       faqs: [
-        { question: 'Can I pay off-platform?', answer: 'No. Off-platform payments bypass all buyer protections, escrow, and dispute resolution. We strongly discourage this and cannot assist with off-platform issues.' },
+        { question: 'Can I pay off-platform?', answer: 'No. Off-platform payments bypass all buyer protections, payment protection, and dispute resolution. We strongly discourage this and cannot assist with off-platform issues.' },
         { question: 'Are fees included in the listed price?', answer: 'Yes. The price you see includes platform fees. Payment processing fees are transparent and shown at checkout.' },
         { question: 'Is my card information stored?', answer: 'Card details are stored securely by Stripe (not Vendibook) if you opt to save your card. You can manage or delete saved cards anytime.' }
       ],
@@ -98,14 +98,14 @@ export const trustTiles: TrustTile[] = [
     }
   },
   {
-    id: 'escrow-payout',
+    id: 'payment protection-payout',
     icon: Wallet,
-    title: 'Escrow + Payout Approval',
+    title: 'Payment Protection + Payout Approval',
     explainer: 'Funds are held until delivery is confirmed by both parties.',
     modal: {
-      title: 'Escrow + Payout Approval',
+      title: 'Payment Protection + Payout Approval',
       description: [
-        'Vendibook holds buyer funds in escrow until the transaction is complete. For sales, this means delivery and acceptance. For rentals, this means return and condition confirmation. Hosts do not get paid until you are satisfied.',
+        'Vendibook holds buyer funds in payment protection until the transaction is complete. For sales, this means delivery and acceptance. For rentals, this means return and condition confirmation. Hosts do not get paid until you are satisfied.',
         'After delivery or pickup, buyers have a 48-hour acceptance window to confirm the asset matches the listing. If no dispute is raised, funds auto-release to the host. This protects both parties without slowing down legitimate transactions.',
         'For rentals, payout triggers after the return date plus condition verification. Damage claims must be filed within 24 hours of return. Clear timelines mean no surprises for anyone.'
       ],

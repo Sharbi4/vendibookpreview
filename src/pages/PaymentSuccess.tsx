@@ -79,7 +79,7 @@ interface CheckoutSessionInfo {
 const PaymentSuccess = () => {
   const [searchParams] = useSearchParams();
   const sessionId = searchParams.get('session_id');
-  const isEscrow = searchParams.get('escrow') === 'true';
+  const isEscrow = searchParams.get('payment protection') === 'true';
   const isHold = searchParams.get('hold') === 'true';
   const isMonetization = searchParams.get('monetization') === 'true';
   const { user } = useAuth();
@@ -186,7 +186,7 @@ const PaymentSuccess = () => {
               transactionFound = true;
               setSaleTransaction(data as SaleTransactionDetails);
               
-              // Track GA4 purchase conversion for escrow sale
+              // Track GA4 purchase conversion for payment protection sale
               trackGA4Purchase({
                 transaction_id: data.id,
                 value: data.amount,
@@ -331,7 +331,7 @@ const PaymentSuccess = () => {
                     </div>
                   </div>
                   <p className="text-muted-foreground font-medium">
-                    {isEscrow ? 'Setting up your escrow purchase...' : 'Confirming your payment...'}
+                    {isEscrow ? 'Setting up your payment protection purchase...' : 'Confirming your payment...'}
                   </p>
                 </div>
               ) : error ? (
@@ -390,7 +390,7 @@ const PaymentSuccess = () => {
                   </p>
                 </div>
               ) : isEscrow ? (
-                // Escrow Sale Success
+                // Payment Protection Sale Success
                 <div className={`transition-all duration-700 ${showContent ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
                   <div className="relative w-24 h-24 mx-auto mb-6">
                     <div className="absolute inset-0 bg-emerald-200 rounded-full animate-pulse" />
@@ -403,7 +403,7 @@ const PaymentSuccess = () => {
                   
                   <h1 className="text-2xl font-bold text-foreground mb-2 flex items-center justify-center gap-2">
                     <PartyPopper className="h-6 w-6 text-primary" />
-                    Purchase in Escrow!
+                    Purchase in Payment Protection!
                     <PartyPopper className="h-6 w-6 text-primary transform scale-x-[-1]" />
                   </h1>
                   
@@ -488,12 +488,12 @@ const PaymentSuccess = () => {
                     </Collapsible>
                   )}
 
-                  {/* Escrow Process Steps */}
+                  {/* Payment Protection Process Steps */}
                   <div className="bg-muted/30 rounded-xl p-4 mb-4 text-left">
                     <h4 className="font-semibold text-foreground mb-3 text-sm">What happens next?</h4>
                     <div className="space-y-3">
                       {[
-                        { done: true, title: 'Payment Secured', desc: 'Your funds are safely held in escrow' },
+                        { done: true, title: 'Payment Secured', desc: 'Your funds are safely held in payment protection' },
                         { done: false, step: 2, title: 'Receive Your Item', desc: 'Coordinate with the seller' },
                         { done: false, step: 3, title: 'Confirm Receipt', desc: 'Verify in your dashboard' },
                         { done: false, step: 4, title: 'Payment Released', desc: 'Funds go to the seller' }].map((item, i) => (

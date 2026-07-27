@@ -21,7 +21,7 @@ const values = [
 ];
 
 const securityFeatures = [
-  "Secure escrow holds funds until booking completion",
+  "Secure payment protection holds funds until booking completion",
   "Verified hosts and verified equipment",
   "Document verification for every transaction",
   "24/7 dispute resolution support",
@@ -70,7 +70,7 @@ const PaymentsSection = () => {
             </div>
             
             <p className="relative text-muted-foreground mb-8 leading-relaxed">
-              When you book on VendiBook, your payment is held securely in escrow. 
+              When you book on VendiBook, your payment is held securely in payment protection. 
               Funds are only released to the host after your booking is complete—giving 
               both parties complete peace of mind.
             </p>

@@ -6,7 +6,7 @@ interface PaymentProtectionBlockProps {
 
 /**
  * Compact assurance block shown inside the checkout modal.
- * Uses "payment protection" wording — never "escrow".
+ * Uses "payment protection" wording — never "payment protection".
  * Includes the standard free e-signature promise (delivered on every tier).
  */
 const PaymentProtectionBlock = ({ variant = 'sale' }: PaymentProtectionBlockProps) => {

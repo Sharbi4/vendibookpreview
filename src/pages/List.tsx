@@ -262,7 +262,7 @@ const HowItWorks = () => {
     { icon: LayoutGrid, label: 'Create Your Listing', desc: 'Use our step-by-step wizard to build a professional listing. Pick a category, add photos, set your price — done in minutes.' },
     { icon: Store, label: 'Go Live', desc: 'Publish a professional storefront. Choose to rent or sell. Accept card payments online or cash in person.' },
     { icon: Share2, label: 'Share & Grow', desc: 'Use the built-in Share Kit to post to social media, generate QR codes, and track who\'s clicking.' },
-    { icon: Wallet, label: 'Get Paid', desc: 'Online payments are held in escrow and released securely. Cash payments are handled directly between you and your customer.' }];
+    { icon: Wallet, label: 'Get Paid', desc: 'Online payments are held in payment protection and released securely. Cash payments are handled directly between you and your customer.' }];
 
   return (
     <section className="py-14 sm:py-20 md:py-28">
@@ -349,11 +349,11 @@ const RentOrSell = () => (
           <Badge className="mb-4 bg-accent/10 text-accent-foreground border-accent/20">For Sale</Badge>
           <h3 className="text-xl sm:text-2xl font-bold text-foreground mb-3">Equipment, Trucks & Supplies</h3>
           <p className="text-muted-foreground mb-6 leading-relaxed">
-            Set your price, accept offers, and choose how to get paid — card online with escrow protection or cash in person.
+            Set your price, accept offers, and choose how to get paid — card online with payment protection protection or cash in person.
           </p>
           <div className="space-y-3">
             {[
-              { icon: ShoppingBag, text: 'Buyer pays online — funds held in escrow' },
+              { icon: ShoppingBag, text: 'Buyer pays online — funds held in payment protection' },
               { icon: Banknote, text: 'Or choose "Pay in Person" for cash deals' },
               { icon: TrendingUp, text: 'Make & receive offers with counter-offers' }].map((item, i) => (
               <div key={i} className="flex items-center gap-3 text-sm text-foreground">
@@ -374,7 +374,7 @@ const ToolsGrid = () => {
     { icon: Search, label: 'Built-In SEO', desc: 'Every listing is optimized for Google. Your storefront gets indexed so buyers and renters find you.' },
     { icon: Share2, label: 'Share Kit', desc: 'Generate social media captions, QR codes, and branded graphics. Track every click.' },
     { icon: QrCode, label: 'Free Signage & QR', desc: 'We send you professional signage. Walk-ins scan the QR code to book or buy instantly.' },
-    { icon: Lock, label: 'Safe Escrow', desc: 'Online payments are held securely until the deal is done. Deposits refunded automatically.' },
+    { icon: Lock, label: 'Safe Payment Protection', desc: 'Online payments are held securely until the deal is done. Deposits refunded automatically.' },
     { icon: Megaphone, label: 'Product Listings', desc: 'Showcase your full catalog — kitchens, trucks, equipment, parking — all in one storefront.' }];
 
   return (
@@ -434,7 +434,7 @@ const PaymentOptions = () => (
           </div>
           <h3 className="text-lg font-semibold text-foreground mb-2">Pay Online</h3>
           <p className="text-sm text-muted-foreground leading-relaxed mb-3">
-            Card, ACH, Afterpay, Klarna, Affirm — all processed through our secure escrow. Funds are held until the deal is complete.
+            Card, ACH, Afterpay, Klarna, Affirm — all processed through our secure payment protection. Funds are held until the deal is complete.
           </p>
           <p className="text-xs text-primary/80 font-medium mb-1">Buyer pays for payment processing — you get paid upfront</p>
           <p className="text-xs text-muted-foreground">12.9% success fee on completed transactions</p>

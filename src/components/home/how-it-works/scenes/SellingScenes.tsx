@@ -129,7 +129,7 @@ export const sellingScenes = [
           nextAction={{ label: 'Confirm the handoff at pickup', cta: 'Confirm' }}
           footer={
             <div className="text-[11px]">
-              <span className="font-semibold">Payout timing:</span> released 25 days after the buyer confirms receipt (standard escrow hold).
+              <span className="font-semibold">Payout timing:</span> released 25 days after the buyer confirms receipt (standard payment protection hold).
             </div>
           }
         />

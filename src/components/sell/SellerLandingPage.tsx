@@ -77,7 +77,7 @@ const FAQ_DATA = (asset: string): { q: string; a: string }[] => [
   },
   {
     q: 'Does Vendibook offer secure transaction tools?',
-    a: 'Yes. Optional escrow-style secure transaction support is available where the transaction type supports it, including identity verification, offer tracking, and reviews after completed sales.',
+    a: 'Yes. Optional payment protection-style secure transaction support is available where the transaction type supports it, including identity verification, offer tracking, and reviews after completed sales.',
   },
   {
     q: 'What should I include in my listing?',

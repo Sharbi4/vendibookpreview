@@ -1840,7 +1840,7 @@ Vendibook listings include information about local permit requirements to help y
 <p class="mb-4">Modern marketplaces now offer:</p>
 
 <ul class="list-disc pl-6 mb-6 space-y-2">
-  <li>Secure escrow protection</li>
+  <li>Secure payment protection protection</li>
   <li>Payment plans (Affirm, Klarna, Afterpay)</li>
   <li>Buyer verification</li>
   <li>Structured payout release</li>
@@ -1854,7 +1854,7 @@ Vendibook listings include information about local permit requirements to help y
 
 <ul class="list-disc pl-6 mb-6 space-y-2">
   <li>Stripe-backed ID verification</li>
-  <li>Escrow-based payments</li>
+  <li>Payment Protection-based payments</li>
   <li>Digital agreements</li>
   <li>Authorization holds for rentals</li>
   <li>Structured payout timelines</li>
