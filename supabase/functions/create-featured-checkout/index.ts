@@ -165,7 +165,7 @@ serve(async (req) => {
         line_items: [{ price: FEATURED_LISTING_PRICE_ID, quantity: 1 }],
         mode: "payment",
         success_url: `${origin}/listing-published?listing_id=${listing_id}&featured_paid=true`,
-        cancel_url: `${origin}/create-listing/${listing_id}?featured_cancelled=true`,
+        cancel_url: `${origin}/create-listing/${listing_id}?featured_cancelled=true&step=review`,
         metadata: {
           listing_id: listing_id,
           user_id: user.id,
