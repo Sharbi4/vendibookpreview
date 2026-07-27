@@ -2,6 +2,7 @@ import { DollarSign, TrendingUp, Wallet, Clock, ArrowUpRight, CheckCircle2 } fro
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { AnimatedCounter } from './AnimatedCounter';
 import { StripeLogo } from '@/components/ui/StripeLogo';
+import { StripeTrustBadge } from '@/components/trust/StripeTrustBadge';
 import { cn } from '@/lib/utils';
 import { RevenueAnalytics } from '@/hooks/useRevenueAnalytics';
 import { format } from 'date-fns';
