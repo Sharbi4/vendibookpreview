@@ -138,6 +138,7 @@ export function useSubscriptionConsent(): UseSubscriptionConsentResult {
         }
       }}
       payload={pending?.payload ?? null}
+      checkoutAttemptId={pending?.checkoutAttemptId ?? null}
       onConsented={handleConsented}
     />
   );
