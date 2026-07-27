@@ -305,6 +305,7 @@ const AnimatedRoutes = () => {
           <Route path="/admin/campaigns/new-exit-plan" element={<PageTransition><AdminCampaignNewExitPlan /></PageTransition>} />
           <Route path="/email/thanks" element={<PageTransition><EmailFeedbackThanks /></PageTransition>} />
           <Route path="/notification-preferences" element={<PageTransition><NotificationPreferences /></PageTransition>} />
+          <Route path="/account/support" element={<PageTransition><MyTickets /></PageTransition>} />
           <Route path="/help" element={<PageTransition><HelpCenter /></PageTransition>} />
           <Route path="/help/:slug" element={<PageTransition><HelpArticle /></PageTransition>} />
           <Route path="/california-privacy" element={<PageTransition><CaliforniaPrivacy /></PageTransition>} />
