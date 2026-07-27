@@ -203,7 +203,7 @@ const StartFoodBusiness = () => {
                 <div className="w-10 h-10 rounded-full bg-foreground/10 flex items-center justify-center">
                   <CreditCard className="h-5 w-5 text-foreground/60" />
                 </div>
-                <span className="text-foreground font-medium">Escrow protection</span>
+                <span className="text-foreground font-medium">Payment Protection protection</span>
               </div>
             </div>
           </div>

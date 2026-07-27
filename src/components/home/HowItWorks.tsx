@@ -23,7 +23,7 @@ const steps: Step[] = [
   {
     icon: Landmark,
     title: 'Transact Securely',
-    description: 'Payments held in escrow until complete',
+    description: 'Payments held in payment protection until complete',
   },
 ];
 

@@ -156,8 +156,8 @@ Many sellers are open to reasonable offers. Be respectful and professional in ne
         content: `**Secure Payment**
 All payments are processed through Vendibook's secure payment system. Never pay outside the platform.
 
-**Escrow Protection**
-Funds are held in escrow until both parties confirm the transaction is complete.
+**Payment Protection Protection**
+Funds are held in payment protection until both parties confirm the transaction is complete.
 
 **Documentation**
 Ensure you receive:
@@ -2866,7 +2866,7 @@ Always get 3+ quotes to compare. Prices can vary significantly between carriers.
         content: `Selling on Vendibook gives you access to thousands of serious buyers looking for mobile kitchens and commercial equipment. Our platform handles:
 
 - Secure payment processing
-- Escrow protection for both parties
+- Payment Protection protection for both parties
 - Dispute resolution if needed
 - Support throughout the process`
       },
@@ -2930,7 +2930,7 @@ Serious buyers may want to inspect in person. Be accommodating.
 When you accept an offer, the buyer is prompted to complete payment.
 
 **Payment Processing**
-- Funds held in escrow until transaction completes
+- Funds held in payment protection until transaction completes
 - You will receive confirmation when payment clears
 
 **Transfer of Ownership**
@@ -2960,7 +2960,7 @@ Once buyer confirms receipt, funds are released to your account (minus platform 
 
 **What you get:**
 - Verified buyers who reduce tire-kickers
-- Secure checkout with escrow-style protection
+- Secure checkout with payment protection-style protection
 - Dashboard to manage inquiries and confirmations
 - Optional freight coordination
 - 24/7 support
@@ -3124,7 +3124,7 @@ Most buyers expect to negotiate. Price 5-10% higher than your minimum acceptable
         id: 'after-accepted',
         title: 'After Offer is Accepted',
         content: `**Payment Confirmation**
-Once the buyer completes payment, funds are held in escrow.
+Once the buyer completes payment, funds are held in payment protection.
 
 **Coordinate Handoff**
 - Agree on pickup date/time or shipping arrangements
@@ -3842,7 +3842,7 @@ The best negotiations are win-win. Sellers want to sell, and buyers want to buy.
 - Common for smaller transactions or when buyer/seller prefer cash
 
 **Key Difference from Online Payments**
-- Funds are NOT held in escrow
+- Funds are NOT held in payment protection
 - Vendibook cannot mediate payment disputes
 - Both parties must confirm completion in-app`
       },
@@ -3898,7 +3898,7 @@ Both confirmations close the transaction. Both parties can leave reviews.`
 - Basic dispute documentation
 
 **What Vendibook Cannot Do**
-- Hold funds in escrow
+- Hold funds in payment protection
 - Guarantee payment was made
 - Refund cash transactions
 - Mediate "he said/she said" disputes

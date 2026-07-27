@@ -9,7 +9,7 @@
  *    Weekly Pass: $29 for 7 days.
  *    Payout: rentals 24h after start, sales 25d after buyer confirms.
  *    Support: (725) 755-9598 · support@vendibook.com · Mon–Fri 9a–5p AZ.
- *  - Never say "escrow" — say "payment protection" or "funds are held".
+ *  - Never say "payment protection" — say "payment protection" or "funds are held".
  *  - Anything not shipped is marked "coming soon".
  *  - Answers link to real routes; long legalese defers to policy pages.
  */
@@ -168,8 +168,8 @@ export const faqCategories: FaqCategory[] = [
         id: "payment-protection",
         question: "How does payment protection work?",
         answer:
-          "When you pay through Vendibook, your money is held by our payment processor — not sent to the seller yet. The seller only gets paid after you confirm you received exactly what was listed. If you never confirm, we auto-complete 7 days after delivery; the seller's payout still doesn't release for a full 25 days after that (Stripe's dispute window), so you have time to raise an issue. This replaces the old-school escrow model with something faster and integrated with your card's chargeback rights.",
-        keywords: ["escrow", "protection", "hold", "safe"],
+          "When you pay through Vendibook, your money is held by our payment processor — not sent to the seller yet. The seller only gets paid after you confirm you received exactly what was listed. If you never confirm, we auto-complete 7 days after delivery; the seller's payout still doesn't release for a full 25 days after that (Stripe's dispute window), so you have time to raise an issue. This replaces the old-school payment protection model with something faster and integrated with your card's chargeback rights.",
+        keywords: ["payment protection", "protection", "hold", "safe"],
       },
       {
         id: "delivery-options",
@@ -559,7 +559,7 @@ export const faqCategories: FaqCategory[] = [
         id: "how-protection-works",
         question: "How does payment protection actually work?",
         answer:
-          "When you pay on Vendibook, your money is held by our payment processor (Stripe) — not sent to the seller. The seller only gets paid after you confirm you got exactly what was listed. For sales, the seller's payout is held a further 25 days (Stripe's chargeback window) so we can reverse the payment if there's a dispute. This gives you strong buyer protection without the friction of traditional escrow companies.",
+          "When you pay on Vendibook, your money is held by our payment processor (Stripe) — not sent to the seller. The seller only gets paid after you confirm you got exactly what was listed. For sales, the seller's payout is held a further 25 days (Stripe's chargeback window) so we can reverse the payment if there's a dispute. This gives you strong buyer protection without the friction of traditional payment protection companies.",
       },
       {
         id: "verified-badges",

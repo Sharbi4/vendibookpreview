@@ -126,7 +126,7 @@ const defaultCancellationCopy = (mode: 'rent' | 'sale', isCash: boolean): string
     if (isCash) {
       return 'Pay-in-Person sales are between buyer and seller. Vendibook does not hold funds or process refunds for cash transactions — inspect the item in person before you pay.';
     }
-    return 'Sales are escrow-protected. Funds are held by Vendibook and released to the seller 25 days after you confirm the item is as described. Open a dispute from your order page if something is wrong.';
+    return 'Sales are payment protection-protected. Funds are held by Vendibook and released to the seller 25 days after you confirm the item is as described. Open a dispute from your order page if something is wrong.';
   }
   return 'Free cancellation is not automatic. Contact the host to request a refund. Deposits are refunded within 24 hours after the rental ends if there is no damage or late return. Platform service fees are non-refundable once a booking is confirmed.';
 };
@@ -238,7 +238,7 @@ export function buildTerms(input: {
     acknowledgements.push(
       selection.mode === 'rent'
         ? 'Your card is authorized now; funds are held by Vendibook until 24 hours after the rental ends.'
-        : 'Your card is charged now; funds are held in escrow and released to the seller 25 days after you confirm the item.',
+        : 'Your card is charged now; funds are held in payment protection and released to the seller 25 days after you confirm the item.',
     );
   } else if (selection.paymentMethod === 'pay_in_person') {
     acknowledgements.push(

@@ -3,7 +3,7 @@ import { ShieldCheck, BellRing, PackageCheck, CircleDollarSign } from 'lucide-re
 /**
  * "What happens after you pay" — 4-step timeline shown on the review
  * step of an immersive high-ticket checkout. Uses payment-protection
- * vocabulary (never "escrow" here — buyer-facing).
+ * vocabulary (never "payment protection" here — buyer-facing).
  */
 const STEPS = [
   {

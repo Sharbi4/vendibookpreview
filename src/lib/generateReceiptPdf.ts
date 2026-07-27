@@ -165,11 +165,11 @@ export function generateReceiptPdf(data: ReceiptData): void {
     yPos += 7;
   }
   
-  // Escrow notice
+  // Payment Protection notice
   if (data.isEscrow) {
     doc.setTextColor(245, 158, 11); // amber
     doc.setFontSize(9);
-    doc.text('🔒 Escrow Protected - Funds released after confirmation', 28, yPos);
+    doc.text('🔒 Payment Protection Protected - Funds released after confirmation', 28, yPos);
     yPos += 7;
   }
   

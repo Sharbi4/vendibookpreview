@@ -263,7 +263,7 @@ const MockVisual = ({ variant, tone }: { variant: WalkthroughStep['mock']; tone:
           <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="bg-foreground text-background rounded-2xl p-4 shadow-lg">
             <div className="flex items-center gap-2 mb-2">
               <CreditCard className="w-4 h-4 opacity-60" />
-              <span className="text-xs opacity-60">Held in escrow</span>
+              <span className="text-xs opacity-60">Held in payment protection</span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-sm font-medium">•••• 4242</span>

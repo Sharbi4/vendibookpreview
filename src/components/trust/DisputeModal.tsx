@@ -19,7 +19,7 @@ interface Props {
 
 /**
  * 3-step guided dispute. Calls raise-dispute edge function.
- * Copy uses "payment protection" language, never "escrow".
+ * Copy uses "payment protection" language, never "payment protection".
  */
 export function DisputeModal({ open, onOpenChange, transactionId, role, onSubmitted }: Props) {
   const [step, setStep] = useState<1 | 2 | 3>(1);

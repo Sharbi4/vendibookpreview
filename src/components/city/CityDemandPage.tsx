@@ -148,7 +148,7 @@ export function CityDemandPage({ city }: CityDemandPageProps) {
               </div>
               <div className="flex items-center gap-3">
                 <CreditCard className="h-6 w-6 text-amber-600" />
-                <span className="text-foreground font-medium">Escrow protection</span>
+                <span className="text-foreground font-medium">Payment Protection protection</span>
               </div>
             </div>
           </div>

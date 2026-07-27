@@ -28,7 +28,7 @@ const BuyerSalesSection = () => {
       <div className="bg-muted/30 border-b border-border p-6">
         <h2 className="text-xl font-bold text-foreground mb-2">Purchases</h2>
         <p className="text-muted-foreground text-sm">
-          Funds held in escrow until both parties confirm.
+          Funds held in payment protection until both parties confirm.
         </p>
       </div>
       
@@ -43,7 +43,7 @@ const BuyerSalesSection = () => {
         />
         <StatCard 
           icon={ShieldCheck} 
-          label="In Escrow" 
+          label="In Payment Protection" 
           value={stats.awaitingConfirmation}
           iconBgClass="bg-amber-100"
           iconClass="text-amber-600"
@@ -65,10 +65,10 @@ const BuyerSalesSection = () => {
       </div>
 
       {/* Tabs */}
-      <Tabs defaultValue="escrow" className="w-full">
+      <Tabs defaultValue="payment protection" className="w-full">
         <TabsList className="grid w-full grid-cols-3 mb-6">
-          <TabsTrigger value="escrow" className="relative">
-            In Escrow
+          <TabsTrigger value="payment protection" className="relative">
+            In Payment Protection
             {stats.awaitingConfirmation > 0 && (
               <span className="ml-2 px-2 py-0.5 text-xs bg-amber-100 text-amber-700 rounded-full">
                 {stats.awaitingConfirmation}
@@ -79,7 +79,7 @@ const BuyerSalesSection = () => {
           <TabsTrigger value="other">Other</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="escrow">
+        <TabsContent value="payment protection">
           {isLoading ? (
             <div className="flex items-center justify-center py-12">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />

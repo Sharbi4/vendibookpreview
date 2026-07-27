@@ -616,7 +616,7 @@ const SaleCheckout = () => {
       termsGate.reset();
 
       if (useEmbedded && data.client_secret) {
-        const returnUrl = `${window.location.origin}/payment-success?session_id=${data.session_id}&escrow=true`;
+        const returnUrl = `${window.location.origin}/payment-success?session_id=${data.session_id}&payment protection=true`;
         setShowCheckoutOverlay(false);
         setEmbeddedCheckout({ clientSecret: data.client_secret, returnUrl });
         return;

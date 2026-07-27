@@ -15,7 +15,7 @@ const reviews = [{
   role: "Event Caterer",
   avatar: "",
   rating: 5,
-  text: "I've rented from three different hosts now. Every experience has been professional and the escrow payments give me total peace of mind.",
+  text: "I've rented from three different hosts now. Every experience has been professional and the payment protection payments give me total peace of mind.",
   location: "Houston, TX"
 }, {
   id: 3,

@@ -11,7 +11,7 @@ const BENEFITS = [
   { h: 'Chat with prospects', p: 'Built-in messaging with document sharing keeps every conversation in one place.' },
   { h: 'Photos and video', p: 'High-quality images and short video walkthroughs drive far more serious inquiries.' },
   { h: 'Equipment details', p: 'Capture hood, fryer, grill, generator, refrigeration, water tanks, and inspection status.' },
-  { h: 'Optional secure transactions', p: 'Use escrow-style protection where available, including identity-verified parties.' },
+  { h: 'Optional secure transactions', p: 'Use payment protection-style protection where available, including identity-verified parties.' },
   { h: 'Stripe Identity verification', p: 'Verified badges on profiles and listings raise buyer and renter confidence.' },
   { h: 'Reviews and trust signals', p: 'Build a trusted reputation through reviews after completed transactions.' },
   { h: 'Feature or boost a listing', p: 'Optional paid placement on category, city, and homepage discovery rows.' },
@@ -47,7 +47,7 @@ const FAQS = [
   {
     question: 'Does Vendibook offer secure transactions?',
     answer:
-      'Yes. Optional escrow-style secure transaction tools are available where the transaction type supports it, including identity verification, offer tracking, supporting documents, and reviews after the sale.',
+      'Yes. Optional payment protection-style secure transaction tools are available where the transaction type supports it, including identity verification, offer tracking, supporting documents, and reviews after the sale.',
   },
   {
     question: 'Can I sell and rent at the same time?',

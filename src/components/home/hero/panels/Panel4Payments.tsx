@@ -24,7 +24,7 @@ const FeatureRow = ({ icon: Icon, title, text }: { icon: typeof Lock; title: str
 const PaymentsBelow = () => (
   <div className="grid gap-2 max-w-md">
     <FeatureRow icon={Lock} title="Secure checkout" text="Encrypted and protected payments" />
-    <FeatureRow icon={ShieldCheck} title="Optional escrow" text="Hold funds until both sides complete the deal" />
+    <FeatureRow icon={ShieldCheck} title="Optional payment protection" text="Hold funds until both sides complete the deal" />
     <FeatureRow icon={Truck} title="Delivery coordination" text="Track and manage delivery where available" />
   </div>
 );
@@ -54,7 +54,7 @@ const Panel4Payments = () => (
     glassModules={<PaymentsModules />}
     eyebrow="Trusted transaction support"
     headline={<>Accept payments with <span className="text-orange-600">more confidence</span></>}
-    supportingText="Support in-person or online payments through Vendibook, with secure checkout, optional escrow-style workflows, and delivery coordination where available."
+    supportingText="Support in-person or online payments through Vendibook, with secure checkout, optional payment protection-style workflows, and delivery coordination where available."
     belowSupporting={<PaymentsBelow />}
     finePrint="Features may vary by listing type, transaction flow, eligibility, and availability."
     primaryCta={

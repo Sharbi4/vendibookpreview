@@ -101,7 +101,7 @@ const HostOnboardingWizard = () => {
           subtitle="Sell to verified buyers"
           description="List your equipment for sale to thousands of verified buyers. Get fair market value with secure payments."
           features={[
-            'Escrow payment protection',
+            'Payment Protection payment protection',
             'Verified buyer network',
             'Nationwide freight options',
           ]}

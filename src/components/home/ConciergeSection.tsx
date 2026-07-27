@@ -131,7 +131,7 @@ const ConciergeSection = () => {
                     When is my money released to the seller?
                   </AccordionTrigger>
                   <AccordionContent className="text-muted-foreground text-sm leading-relaxed">
-                    Funds are held in escrow until the transaction is complete — 24 hours for
+                    Funds are held in payment protection until the transaction is complete — 24 hours for
                     rentals and 25 days for sales — so you have time to confirm everything is as
                     described.
                   </AccordionContent>

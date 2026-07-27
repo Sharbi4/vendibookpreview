@@ -203,7 +203,7 @@ const PurchaseStepReview = ({
       </div>
 
       {/* Comprehensive "What happens after you pay" — replaces the old
-          escrow-labeled timeline with buyer-facing payment-protection copy. */}
+          payment protection-labeled timeline with buyer-facing payment-protection copy. */}
       <PostPaymentTimeline />
 
       {/* What's Included */}
