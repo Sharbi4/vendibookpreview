@@ -318,15 +318,16 @@ export const DashboardLayout = ({ children, mode, onModeChange, isHost }: Dashbo
         </div>
       </header>
 
-      <div className="flex flex-1">
-        {/* Full sidebar — lg+ */}
-        <aside className="hidden lg:flex lg:w-64 flex-col border-r border-white/5 bg-background shrink-0">
+      <div className="flex flex-1 min-h-0">
+        {/* Full sidebar — lg+, sticky to viewport height */}
+        <aside className="hidden lg:flex lg:w-64 flex-col border-r-2 border-white/[0.07] bg-background shrink-0 sticky top-0 h-screen z-40">
           <SidebarContent />
         </aside>
 
         {/* Icon rail — md → lg only. Persistent, no hamburger required. */}
         <TooltipProvider delayDuration={100}>
-          <aside className="hidden md:flex lg:hidden w-16 flex-col items-center border-r border-white/5 bg-background shrink-0 py-3 gap-1">
+          <aside className="hidden md:flex lg:hidden w-16 flex-col items-center border-r-2 border-white/[0.07] bg-background shrink-0 py-3 gap-1 sticky top-0 h-screen z-40">
+
             <Link to="/" className="mb-2" aria-label="Vendibook home">
               <img src={vendibookFavicon} alt="Vendibook" className="h-8 w-8" />
             </Link>
