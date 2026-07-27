@@ -28,6 +28,61 @@ export type NormalizedPhone = {
 };
 
 /**
+ * Convert unambiguous English digit words to digits within a phone-number
+ * context. Conservative by design:
+ *   - Accepts: "zero"–"nine", plus "oh" ONLY as a substitute for zero when
+ *     it sits inside a run of other digit words / digits / phone punctuation.
+ *   - Does NOT accept multi-digit words ("ten", "eleven", "twenty",
+ *     "hundred", …). If any such word appears mixed with digit words,
+ *     the input is treated as ambiguous and returned unchanged (the
+ *     downstream phone parser will then reject it).
+ *   - Leaves already-digit input untouched.
+ *
+ * Returns the rewritten string. The caller is still responsible for
+ * validation via libphonenumber-js.
+ */
+const DIGIT_WORDS: Record<string, string> = {
+  zero: "0", one: "1", two: "2", three: "3", four: "4",
+  five: "5", six: "6", seven: "7", eight: "8", nine: "9",
+};
+const AMBIGUOUS_NUMBER_WORDS = new Set([
+  "ten","eleven","twelve","thirteen","fourteen","fifteen","sixteen",
+  "seventeen","eighteen","nineteen","twenty","thirty","forty","fifty",
+  "sixty","seventy","eighty","ninety","hundred","thousand",
+]);
+export function tokenizeSpokenDigits(input: string): string {
+  if (!input) return input;
+  // Fast path: no letters at all.
+  if (!/[a-z]/i.test(input)) return input;
+  const lower = input.toLowerCase();
+  // If any ambiguous number word appears, refuse to guess.
+  const wordMatches = lower.match(/[a-z]+/g) ?? [];
+  const hasDigitWord = wordMatches.some((w) => w in DIGIT_WORDS || w === "oh");
+  const hasAmbiguous = wordMatches.some((w) => AMBIGUOUS_NUMBER_WORDS.has(w));
+  if (hasAmbiguous) return input;
+  if (!hasDigitWord) return input;
+  // Any non-digit-word word other than "ext"/"extension"/"x" also disqualifies.
+  const ALLOWED_NON_DIGIT = new Set(["ext", "extension", "x"]);
+  for (const w of wordMatches) {
+    if (w in DIGIT_WORDS) continue;
+    if (w === "oh") continue;
+    if (ALLOWED_NON_DIGIT.has(w)) continue;
+    return input; // unknown word — ambiguous, bail.
+  }
+  // Rewrite. "oh" -> "0" only when adjacent to digit-context chars.
+  return lower.replace(/[a-z]+/g, (word, offset: number) => {
+    if (word in DIGIT_WORDS) return DIGIT_WORDS[word];
+    if (word === "oh") {
+      const before = lower.slice(Math.max(0, offset - 2), offset);
+      const after = lower.slice(offset + word.length, offset + word.length + 2);
+      const ctx = before + after;
+      return /[\d+()\-.,\s]/.test(ctx) ? "0" : word;
+    }
+    return word; // ext / extension / x — leave for the extension matcher.
+  });
+}
+
+/**
  * Normalize a phone number as a STRING (never numeric). Preserves leading
  * zeros and country codes. Extension is parsed off before validation.
  * Returns null when the number cannot be parsed as a valid phone.
@@ -39,6 +94,9 @@ export function normalizePhoneString(
   if (raw == null) return null;
   let s = String(raw).trim();
   if (!s) return null;
+  // Rewrite spoken digit words BEFORE extension stripping so "five ext 42"
+  // still splits correctly.
+  s = tokenizeSpokenDigits(s);
   let ext: string | null = null;
   const extMatch = s.match(
     /(?:\s*(?:ext|x|extension)\.?\s*|,)(\d{1,7})\s*$/i,
