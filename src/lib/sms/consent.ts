@@ -4,7 +4,7 @@
  */
 export const SMS_POLICY_VERSION = 'v1.2026-07-27';
 export const SMS_TERMS_URL = '/legal/sms';
-export const SMS_PRIVACY_URL = '/legal/privacy';
+export const SMS_PRIVACY_URL = '/privacy';
 
 export const SMS_CONSENT_DISCLOSURE = [
   'Yes, send me text messages from Vendibook about my account, bookings,',
