@@ -242,13 +242,36 @@ async function checkVapiCreateTicket() {
   assert("vapi ticket NOT linked to any user (unverified path)", row?.user_id == null, `user_id=${row?.user_id}`);
   assert("vapi ticket vapi_call_id persisted", row?.vapi_call_id === VAPI_CALL_ID);
 
-  // 6. replay idempotency → same reference returned, no second ticket row
+  // 6. replay idempotency → same reference returned, no second ticket row,
+  //    no second delivery attempt, and replay must claim the ORIGINAL
+  //    terminal outcome (success:true + ticket_created:true + deduped:true)
+  //    so the voice agent may still confirm the ticket.
+  const { data: preReplay } = await admin
+    .from("support_tickets")
+    .select("forwarded_at, delivery_attempted_at, forwarding_status")
+    .eq("id", vapiTicketId!)
+    .single();
   const replay = await fetch(VAPI_URL, { method: "POST", headers, body: JSON.stringify(okBody) });
   const replayJson = await replay.json();
-  assert("vapi replay returns success with deduped=true", replay.status === 200 && replayJson.deduped === true, `body ${JSON.stringify(replayJson).slice(0, 200)}`);
+  assert("vapi replay returns HTTP 200", replay.status === 200, `status ${replay.status}`);
+  assert("vapi replay success:true", replayJson.success === true, `body ${JSON.stringify(replayJson).slice(0, 200)}`);
+  assert("vapi replay ticket_created:true (mirrors original outcome)", replayJson.ticket_created === true, `ticket_created=${replayJson.ticket_created}`);
+  assert("vapi replay deduped:true", replayJson.deduped === true);
   assert("vapi replay returns same reference", replayJson.reference === okJson.reference);
   const { data: rows } = await admin.from("support_tickets").select("id").eq("vapi_call_id", VAPI_CALL_ID);
-  assert("vapi replay did NOT create a second ticket", (rows?.length ?? 0) === 1, `count=${rows?.length ?? 0}`);
+  assert("vapi replay did NOT create a second ticket row", (rows?.length ?? 0) === 1, `count=${rows?.length ?? 0}`);
+  const { data: postReplay } = await admin
+    .from("support_tickets")
+    .select("forwarded_at, delivery_attempted_at, forwarding_status")
+    .eq("id", vapiTicketId!)
+    .single();
+  assert(
+    "vapi replay did NOT re-attempt delivery",
+    preReplay?.delivery_attempted_at === postReplay?.delivery_attempted_at &&
+      preReplay?.forwarded_at === postReplay?.forwarded_at,
+    `pre=${JSON.stringify(preReplay)} post=${JSON.stringify(postReplay)}`,
+  );
+
 
   // 7. anon cannot read vapi ticket
   const { data: anonRead } = await anon.from("support_tickets").select("id").eq("id", vapiTicketId!).maybeSingle();

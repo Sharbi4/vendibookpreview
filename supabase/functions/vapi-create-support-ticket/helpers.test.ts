@@ -222,3 +222,66 @@ Deno.test("envelope: LLM-supplied email_verification_* fields survive parsing (h
   assertEquals(toolCalls[0].args.email_verification_result, "verified");
   assertEquals(toolCalls[0].args.customer_email, "victim@example.com");
 });
+
+// -----------------------------------------------------------------------
+// Spoken-digit tokenizer tests
+import { tokenizeSpokenDigits } from "./helpers.ts";
+
+Deno.test("spoken: pure digit-word US number normalizes to E.164", () => {
+  const p = normalizePhoneString(
+    "five two zero, five five five, zero one two three",
+  );
+  assertEquals(p?.e164, "+15205550123");
+  assertEquals(p?.country, "US");
+});
+
+Deno.test("spoken: 'oh' inside a digit context maps to 0", () => {
+  const p = normalizePhoneString("five two oh five five five oh one two three");
+  assertEquals(p?.e164, "+15205550123");
+});
+
+Deno.test("spoken: mixed digit words + '+1' country code preserved", () => {
+  const p = normalizePhoneString("+1 five two zero five five five zero one two three");
+  assertEquals(p?.e164, "+15205550123");
+});
+
+Deno.test("spoken: mixed punctuation (dashes, parens) accepted", () => {
+  const p = normalizePhoneString("(five two zero) five-five-five oh-one-two-three");
+  assertEquals(p?.e164, "+15205550123");
+});
+
+Deno.test("spoken: extension via 'extension' word survives tokenization", () => {
+  const p = normalizePhoneString(
+    "five two zero five five five zero one two three extension 42",
+  );
+  assertEquals(p?.e164, "+15205550123");
+  assertEquals(p?.extension, "42");
+});
+
+Deno.test("spoken: ambiguous number word ('twenty') is REJECTED, not guessed", () => {
+  // We must not guess "twenty" == "20".
+  const p = normalizePhoneString("twenty five two zero five five five zero one two three");
+  assertEquals(p, null);
+});
+
+Deno.test("spoken: 'hundred' / 'thousand' are REJECTED", () => {
+  assertEquals(normalizePhoneString("five hundred five five five one two three four"), null);
+  assertEquals(normalizePhoneString("one thousand two three four five six seven"), null);
+});
+
+Deno.test("spoken: unrelated word inside the number is REJECTED", () => {
+  // "please" is not a digit word or an extension marker → refuse to guess.
+  assertEquals(
+    normalizePhoneString("five two zero please five five five zero one two three"),
+    null,
+  );
+});
+
+Deno.test("spoken: tokenizer is a no-op for pure digit input", () => {
+  assertEquals(tokenizeSpokenDigits("+1 (520) 555-0123"), "+1 (520) 555-0123");
+});
+
+Deno.test("spoken: standalone 'oh' with no digit context is left alone", () => {
+  // Not a phone number at all — must not silently become "0".
+  assertEquals(tokenizeSpokenDigits("oh well"), "oh well");
+});
