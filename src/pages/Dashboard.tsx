@@ -130,9 +130,6 @@ const Dashboard = () => {
         <Suspense fallback={<TabFallback />}>{content}</Suspense>
       )}
 
-      {showOnboarding && (
-        <DashboardOnboarding mode={currentMode} onComplete={handleOnboardingComplete} />
-      )}
     </DashboardLayout>
   );
 };
