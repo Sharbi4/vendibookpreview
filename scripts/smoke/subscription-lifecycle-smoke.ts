@@ -684,11 +684,13 @@ async function main() {
     await checkCancel();
     await checkPromotionExpiry();
     await checkSecurity();
+    await checkLiveWebhookDelivery();
   } catch (e) {
     record("uncaught runner error", false, (e as Error).message);
   } finally {
     await teardown();
   }
+
 
   const failed = results.filter((r) => !r.pass);
   console.log(`\n[smoke] ${results.length - failed.length}/${results.length} checks passed`);
