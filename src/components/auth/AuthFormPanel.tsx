@@ -232,6 +232,17 @@ export const AuthFormPanel = ({ mode, setMode }: AuthFormPanelProps) => {
       return;
     }
 
+    // SMS consent gate: only trigger validation when the user checked the
+    // box. Consent is otherwise optional and never blocks signup.
+    if (mode === 'signup' && smsConsent) {
+      if (!normalizeNanpToE164(trimmedPhone)) {
+        setSmsError('Enter a valid US or Canadian mobile number to receive text updates, or uncheck the SMS box.');
+        return;
+      }
+      setSmsError(null);
+    }
+
+
     setIsSubmitting(true);
 
     try {
@@ -360,6 +371,25 @@ export const AuthFormPanel = ({ mode, setMode }: AuthFormPanelProps) => {
                 }
                 // Inline write succeeded — no need for the deferred drain.
                 clearPendingSignupConsent();
+
+                // Record SMS consent when the user affirmatively opted in
+                // during signup. Never blocks account creation.
+                if (smsConsent && normalizeNanpToE164(trimmedPhone)) {
+                  try {
+                    await supabase.functions.invoke('sms-record-consent', {
+                      body: {
+                        phone: trimmedPhone,
+                        source: 'signup',
+                        consent: true,
+                        marketing: false,
+                        disclosureText: SMS_CONSENT_DISCLOSURE,
+                        userAgent: navigator.userAgent,
+                      },
+                    });
+                  } catch (smsErr) {
+                    console.error('SMS consent record failed', smsErr);
+                  }
+                }
               } catch (consentErr) {
                 console.error('Failed to record signup consent', consentErr);
               }
