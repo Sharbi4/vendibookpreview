@@ -374,49 +374,99 @@ const PaymentSuccess = () => {
                   </Button>
                 </div>
               ) : isMonetization ? (
-                // Monetization success (host subscription, add-on, listing promotion)
-                // Provisioning + receipt email happen in monetization-webhook.
+                // Monetization result — status-aware. Only celebrates once the
+                // webhook has flipped monetization_purchases.status='completed'.
                 <div className={`transition-all duration-700 ${showContent ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
-                  <div className="relative w-24 h-24 mx-auto mb-6">
-                    <div className="absolute inset-0 bg-primary/20 rounded-full animate-pulse" />
-                    <div className="absolute inset-2 bg-primary/10 rounded-full" />
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <PartyPopper className="h-12 w-12 text-primary" />
-                    </div>
-                  </div>
-                  <h1 className="text-3xl md:text-4xl font-display font-semibold text-foreground">
-                    You're unlocked.
-                  </h1>
-                  <p className="mt-2 text-muted-foreground">
-                    Payment received. Your upgrades are live on your account right now.
-                  </p>
+                  {monetizationStatus === 'failed' ? (
+                    <>
+                      <div className="relative w-24 h-24 mx-auto mb-6">
+                        <div className="absolute inset-0 bg-destructive/20 rounded-full" />
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <span className="text-3xl">⚠️</span>
+                        </div>
+                      </div>
+                      <h1 className="text-3xl md:text-4xl font-display font-semibold text-foreground">
+                        Payment didn't go through
+                      </h1>
+                      <p className="mt-2 text-muted-foreground">
+                        Stripe couldn't complete this purchase. You have not been charged for a successful subscription. Try again or reach out to support.
+                      </p>
+                      <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+                        <Button asChild size="lg">
+                          <Link to="/pricing">Try again</Link>
+                        </Button>
+                        <Button asChild size="lg" variant="outline">
+                          <Link to="/help">Get help</Link>
+                        </Button>
+                      </div>
+                    </>
+                  ) : monetizationStatus === 'completed' ? (
+                    <>
+                      <div className="relative w-24 h-24 mx-auto mb-6">
+                        <div className="absolute inset-0 bg-primary/20 rounded-full animate-pulse" />
+                        <div className="absolute inset-2 bg-primary/10 rounded-full" />
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <PartyPopper className="h-12 w-12 text-primary" />
+                        </div>
+                      </div>
+                      <h1 className="text-3xl md:text-4xl font-display font-semibold text-foreground">
+                        You're unlocked.
+                      </h1>
+                      <p className="mt-2 text-muted-foreground">
+                        Payment received. Your upgrades are live on your account right now.
+                      </p>
 
-                  <div className="mt-5 inline-flex items-center gap-2 rounded-full border border-border/70 bg-background/70 px-3 py-1.5 text-xs text-muted-foreground">
-                    <Mail className="h-3.5 w-3.5 text-primary" />
-                    A receipt is on its way to {userProfile?.email || user?.email || 'your email'}.
-                  </div>
+                      <div className="mt-5 inline-flex items-center gap-2 rounded-full border border-border/70 bg-background/70 px-3 py-1.5 text-xs text-muted-foreground">
+                        <Mail className="h-3.5 w-3.5 text-primary" />
+                        A receipt is on its way to {userProfile?.email || user?.email || 'your email'}.
+                      </div>
 
-                  <div className="mt-8 text-left">
-                    <UnlockedConfirmation />
-                  </div>
+                      <div className="mt-8 text-left">
+                        <UnlockedConfirmation />
+                      </div>
 
-                  <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-                    <Button asChild size="lg">
-                      <Link to="/dashboard">
-                        Go to dashboard <ArrowRight className="ml-1 h-4 w-4" />
-                      </Link>
-                    </Button>
-                    <Button asChild size="lg" variant="outline">
-                      <Link to="/purchases">
-                        <Receipt className="mr-1 h-4 w-4" /> View purchases
-                      </Link>
-                    </Button>
-                  </div>
-
-                  <p className="mt-6 text-xs text-muted-foreground">
-                    Not seeing something you bought yet? Refresh in a few seconds — provisioning finalizes right after Stripe confirms the payment.
-                  </p>
+                      <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+                        <Button asChild size="lg">
+                          <Link to="/dashboard">
+                            Go to dashboard <ArrowRight className="ml-1 h-4 w-4" />
+                          </Link>
+                        </Button>
+                        <Button asChild size="lg" variant="outline">
+                          <Link to="/purchases">
+                            <Receipt className="mr-1 h-4 w-4" /> View purchases
+                          </Link>
+                        </Button>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="relative w-24 h-24 mx-auto mb-6">
+                        <div className="absolute inset-0 bg-primary/10 rounded-full animate-pulse" />
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <PartyPopper className="h-12 w-12 text-primary/70" />
+                        </div>
+                      </div>
+                      <h1 className="text-3xl md:text-4xl font-display font-semibold text-foreground">
+                        Finalizing your purchase…
+                      </h1>
+                      <p className="mt-2 text-muted-foreground">
+                        Stripe has your payment. We're waiting on the confirmation event to provision your upgrades — this usually lands in a few seconds.
+                      </p>
+                      <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+                        <Button size="lg" onClick={() => window.location.reload()}>
+                          Refresh status
+                        </Button>
+                        <Button asChild size="lg" variant="outline">
+                          <Link to="/dashboard">Go to dashboard</Link>
+                        </Button>
+                      </div>
+                      <p className="mt-6 text-xs text-muted-foreground">
+                        Still not unlocked after a minute? Contact support with this session id and we'll reconcile it manually.
+                      </p>
+                    </>
+                  )}
                 </div>
+
               ) : isEscrow ? (
                 // Payment Protection Sale Success
                 <div className={`transition-all duration-700 ${showContent ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
