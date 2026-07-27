@@ -861,7 +861,35 @@ export const ListingWizard: React.FC = () => {
       }
     } catch (error: any) {
       console.error('Error saving listing:', error);
-      
+
+      // Privacy-safe structured telemetry: log stage + PG code + shortened message.
+      // Never write price, price_sale, address, image URLs, or document data to error_events.
+      try {
+        await supabase.from('error_events').insert({
+          source: 'frontend',
+          action: publish ? 'listing_publish' : 'listing_save_draft',
+          endpoint: '/list',
+          method: 'POST',
+          page_url: typeof window !== 'undefined' ? window.location.pathname : null,
+          error_type: 'wizard_' + (publish ? 'publish' : 'draft') + '_failed',
+          error_message: String(error?.message || 'unknown').slice(0, 500),
+          user_id: user?.id ?? null,
+          fingerprint: 'wizard-' + (publish ? 'publish' : 'draft') + '-' + (error?.code || 'err'),
+          reference_code: 'wz-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8),
+          metadata: {
+            pg_code: error?.code ?? null,
+            mode: formData.mode ?? null,
+            category: formData.category ?? null,
+            accept_card: formData.accept_card_payment ?? null,
+            accept_cash: formData.accept_cash_payment ?? null,
+            stripe_onboarded: isOnboardingComplete ?? null,
+            authed: !!user?.id,
+          },
+        });
+      } catch (telemetryErr) {
+        console.warn('telemetry insert failed', telemetryErr);
+      }
+
       // User-friendly error messages
       let errorMessage = 'Please try again.';
       if (error?.message?.includes('network') || error?.message?.includes('fetch')) {
@@ -873,7 +901,7 @@ export const ListingWizard: React.FC = () => {
       } else if (error?.message) {
         errorMessage = error.message;
       }
-      
+
       toast({
         title: 'Error saving listing',
         description: errorMessage,

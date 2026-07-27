@@ -130,7 +130,7 @@ export default function Subscribe() {
                 icon={<Map className="h-4 w-4" />}
                 title="Permit Path"
                 desc="Know exactly what permits you need."
-                to="/tools/permit-path"
+                to="/tools/permitpath"
               />
               <NextCard
                 icon={<Search className="h-4 w-4" />}

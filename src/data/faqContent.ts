@@ -48,7 +48,7 @@ const A = {
   contactSupport: { label: "Contact support", href: "/contact" },
   browseRentals: { label: "Browse rentals", href: "/search?mode=rent" },
   browseSales: { label: "Browse for sale", href: "/search?mode=sale" },
-  permitPath: { label: "Open PermitPath", href: "/tools/permit-path" },
+  permitPath: { label: "Open PermitPath", href: "/tools/permitpath" },
   messages: { label: "Open messages", href: "/messages", requiresAuth: true },
   account: { label: "Account settings", href: "/account", requiresAuth: true },
   pricing: { label: "See plans", href: "/pricing" },
