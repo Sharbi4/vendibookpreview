@@ -254,17 +254,12 @@ async function processCreateSupportTicket(input: ProcessInput): Promise<Record<s
   }
 
   // ---- email verification handling ------------------------------------
-  const email_verified =
-    !!verified_email &&
-    email_verification_method === "otp" &&
-    email_verification_result === "verified";
-
-  let linkedUserId: string | null = null;
-  if (email_verified && verified_email) {
-    const { data: profile } = await svc
-      .from("profiles").select("id").eq("email", verified_email).maybeSingle();
-    linkedUserId = profile?.id ?? null;
-  }
+  // Vapi callers cannot prove ownership of an email address during a voice
+  // call. Always treat as unverified; never auto-link a user_id from a
+  // spoken email; never set reply-to. If the human agent later verifies
+  // ownership out-of-band, they can update the ticket manually.
+  const email_verified = false;
+  const linkedUserId: string | null = null;
 
   const internalCategory = CATEGORY_TO_INTERNAL[issue_category] ?? "other";
   const priority = derivePriority(internalCategory, severityIn);
