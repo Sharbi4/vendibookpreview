@@ -285,6 +285,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             first_name: firstName || '',
             last_name: lastName || '',
             phone_number: phoneNumber || '',
+            role, // consumed by handle_new_user trigger to seed user_roles
           },
         },
       });
@@ -293,14 +294,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         return { error };
       }
 
-      // Add the selected role
+      // Role is now assigned by the handle_new_user trigger (SECURITY DEFINER)
+      // using the `role` field in user_metadata above. We still attempt a
+      // best-effort client insert as belt-and-suspenders for legacy sessions,
+      // but ON CONFLICT prevents duplicates and RLS failures are non-fatal.
       if (data.user) {
         const { error: roleError } = await supabase
           .from('user_roles')
           .insert({ user_id: data.user.id, role });
 
-        if (roleError) {
-          console.error('Error adding role:', roleError);
+        if (roleError && !/(duplicate|already exists|conflict)/i.test(roleError.message)) {
+          // Trigger is the source of truth — log but don't fail signup.
+          console.warn('[signUp] client user_roles insert skipped:', roleError.message);
         }
 
         // Send welcome email to the new user
@@ -312,12 +317,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
               role,
             },
           });
-          console.log('Welcome email sent successfully');
         } catch (welcomeError) {
           console.error('Failed to send welcome email:', welcomeError);
         }
 
       }
+
 
       return { error: null };
     } catch (error) {
