@@ -10,7 +10,7 @@
  * scanning a long list. Adding a new legal page = add one entry here.
  */
 import { Link } from 'react-router-dom';
-import { SEO } from '@/components/SEO';
+import SEO from '@/components/SEO';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Scale, Shield, ShoppingBag, Truck, CreditCard, MessageSquare, Sparkles, FileText } from 'lucide-react';
 
