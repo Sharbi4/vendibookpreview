@@ -10,29 +10,29 @@ import {
 } from "./helpers.ts";
 
 Deno.test("phone: US 10-digit string", () => {
-  const p = normalizePhoneString("415-555-0132");
-  assertEquals(p?.e164, "+14155550132");
+  const p = normalizePhoneString("415-273-9218");
+  assertEquals(p?.e164, "+14152739218");
   assertEquals(typeof p?.e164, "string");
   assertEquals(p?.country, "US");
   assertEquals(p?.extension, null);
 });
 
 Deno.test("phone: US E.164 with '+1'", () => {
-  const p = normalizePhoneString("+1 (415) 555-0132");
-  assertEquals(p?.e164, "+14155550132");
+  const p = normalizePhoneString("+1 (415) 273-9218");
+  assertEquals(p?.e164, "+14152739218");
 });
 
 Deno.test("phone: extension parsed off (x123)", () => {
-  const p = normalizePhoneString("415-555-0132 x 42");
-  assertEquals(p?.e164, "+14155550132");
+  const p = normalizePhoneString("415-273-9218 x 42");
+  assertEquals(p?.e164, "+14152739218");
   assertEquals(p?.extension, "42");
 });
 
 Deno.test("phone: numeric JSON input coerced to string, not dropped", () => {
   // Vapi sometimes emits phone as a JSON number — leading '+' would be lost
   // BUT digits must still parse.
-  const p = normalizePhoneString(4155550132 as unknown);
-  assertEquals(p?.e164, "+14155550132");
+  const p = normalizePhoneString(4152739218 as unknown);
+  assertEquals(p?.e164, "+14152739218");
   assertEquals(typeof p?.e164, "string");
 });
 
