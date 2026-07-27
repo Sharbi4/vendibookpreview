@@ -42,6 +42,7 @@ const LegalDocumentPage = lazy(() => import("./pages/LegalDocumentPage"));
 const SmsTerms = lazy(() => import("./pages/legal/SmsTerms"));
 const SmsOptInProof = lazy(() => import("./pages/legal/SmsOptInProof"));
 const SmsEnrollment = lazy(() => import("./pages/SmsEnrollment"));
+const SmsOptIn = lazy(() => import("./pages/SmsOptIn"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const CreateListing = lazy(() => import("./pages/CreateListing"));
 const EditListing = lazy(() => import("./pages/EditListing"));
