@@ -145,10 +145,17 @@ export const PublishWizard: React.FC = () => {
   const { toast } = useToast();
   const { user, isVerified } = useAuth();
   const premiumUpsell = usePremiumUpsell();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const queryClient = useQueryClient();
 
   const { isOnboardingComplete, isLoading: isStripeLoading, connectStripe, isConnecting } = useStripeConnect();
 
-  const [step, setStep] = useState<PublishStep>('photos');
+  const VALID_STEPS: PublishStep[] = ['photos', 'headline', 'includes', 'pricing', 'details', 'location', 'availability', 'documents', 'stripe', 'review'];
+  const initialStep = (() => {
+    const s = searchParams.get('step');
+    return s && (VALID_STEPS as string[]).includes(s) ? (s as PublishStep) : 'photos';
+  })();
+  const [step, setStep] = useState<PublishStep>(initialStep);
   const [listing, setListing] = useState<ListingData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
