@@ -130,22 +130,50 @@ const PaymentSuccess = () => {
     }, 250);
   };
 
+  const [monetizationStatus, setMonetizationStatus] = useState<'processing' | 'completed' | 'failed' | 'unknown'>('processing');
+
   useEffect(() => {
     const processPayment = async () => {
       if (isMonetization) {
-        // Provisioning happens in monetization-webhook (subscription + listing_promotion
-        // + receipt email). Nothing to fetch here — the UnlockedConfirmation
-        // component reads live entitlements. Just release the loading gate and
-        // fire confetti so the user sees the success moment immediately.
+        // Provisioning happens in monetization-webhook. Confirm the purchase
+        // actually flipped to 'completed' before we congratulate — otherwise
+        // surface a processing state (webhook lag) or a hard failure (bad
+        // webhook config, declined card). Never claim success blindly.
         setIsLoading(false);
         setShowContent(true);
-        fireConfetti();
+        if (!sessionId) {
+          setMonetizationStatus('unknown');
+          return;
+        }
+        const maxAttempts = 12; // ~24s
+        for (let i = 0; i < maxAttempts; i++) {
+          const { data } = await (supabase
+            .from('monetization_purchases' as any)
+            .select('status')
+            .eq('stripe_session_id', sessionId)
+            .maybeSingle()) as any;
+          const status = data?.status as string | undefined;
+          if (status === 'completed') {
+            setMonetizationStatus('completed');
+            fireConfetti();
+            return;
+          }
+          if (status === 'failed' || status === 'canceled') {
+            setMonetizationStatus('failed');
+            return;
+          }
+          await new Promise((r) => setTimeout(r, 2000));
+        }
+        // Timed out waiting for webhook — leave in processing state so the
+        // user can refresh; do not fire confetti.
+        setMonetizationStatus('processing');
         return;
       }
       if (!sessionId) {
         setIsLoading(false);
         return;
       }
+
 
       try {
         if (isEscrow) {
