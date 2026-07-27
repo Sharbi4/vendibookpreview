@@ -41,6 +41,8 @@ interface Props {
   relatedIds?: Record<string, string>;
   intro?: string;
   primaryLabel?: string;
+  /** Optional trust mark or helper node rendered below the action row. */
+  footerSlot?: React.ReactNode;
   onAccept: (consentId: string) => void | Promise<void>;
   onCancel?: () => void;
 }
