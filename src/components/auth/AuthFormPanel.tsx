@@ -34,7 +34,6 @@ const authSchema = z.object({
   password: z.string().min(8, 'Password must be at least 8 characters').max(72, 'Password is too long'),
   firstName: z.string().trim().min(1, 'First name is required').max(50, 'First name is too long').optional(),
   lastName: z.string().trim().min(1, 'Last name is required').max(50, 'Last name is too long').optional(),
-  phoneNumber: z.string().trim().min(10, 'Phone number must be at least 10 digits').max(20, 'Phone number is too long').optional(),
 });
 
 const getPasswordStrength = (password: string): { score: number; label: string; color: string } => {
@@ -89,11 +88,11 @@ export const AuthFormPanel = ({ mode, setMode }: AuthFormPanelProps) => {
   const validateForm = () => {
     try {
       if (mode === 'signup') {
-        authSchema.parse({ email, password, firstName, lastName, phoneNumber });
+        authSchema.parse({ email, password, firstName, lastName });
       } else if (mode === 'forgot' || mode === 'verify') {
         authSchema.pick({ email: true }).parse({ email });
       } else {
-        authSchema.omit({ firstName: true, lastName: true, phoneNumber: true }).parse({ email, password });
+        authSchema.omit({ firstName: true, lastName: true }).parse({ email, password });
       }
       setErrors({});
       return true;
@@ -207,8 +206,7 @@ export const AuthFormPanel = ({ mode, setMode }: AuthFormPanelProps) => {
     setEmail(trimmedEmail);
     setFirstName(trimmedFirstName);
     setLastName(trimmedLastName);
-    setPhoneNumber(trimmedPhone);
-    
+
     if (!validateForm()) return;
 
     // Non-preselected consent gate — signup cannot proceed without an
@@ -524,20 +522,6 @@ export const AuthFormPanel = ({ mode, setMode }: AuthFormPanelProps) => {
                       />
                       {errors.lastName && <p className="text-sm text-destructive">{errors.lastName}</p>}
                     </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="phoneNumber">Phone Number</Label>
-                    <Input
-                      id="phoneNumber"
-                      type="tel"
-                      placeholder="(555) 123-4567"
-                      value={phoneNumber}
-                      onChange={(e) => setPhoneNumber(e.target.value)}
-                      className={errors.phoneNumber ? 'border-destructive' : ''}
-                      required
-                    />
-                    {errors.phoneNumber && <p className="text-sm text-destructive">{errors.phoneNumber}</p>}
                   </div>
                 </>
               )}

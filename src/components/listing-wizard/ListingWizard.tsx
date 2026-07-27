@@ -513,9 +513,9 @@ export const ListingWizard: React.FC = () => {
     return urls;
   };
 
-  // Check if Stripe Connect is required (only if card payments are enabled for sale listings)
-  const requiresStripeConnect = formData.mode === 'rent' || 
-    (formData.mode === 'sale' && formData.accept_card_payment);
+  // Stripe Connect is required ONLY when the listing accepts card payments.
+  // Cash / pay-in-person listings (sale or rent) publish with no Stripe account.
+  const requiresStripeConnect = formData.accept_card_payment === true;
 
   const saveListing = async (publish: boolean) => {
     if (!user) {
