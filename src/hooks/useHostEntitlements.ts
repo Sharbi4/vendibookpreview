@@ -24,14 +24,22 @@ const ACTIVE_STATUSES = new Set(['active', 'trialing', 'past_due']);
  * Missing / unknown → 'free'. Annual variants collapse to the same rank as
  * their monthly counterpart.
  */
-function resolveTier(raw: string | null | undefined): { tier: HostTier; label: string } {
+// Exported for unit tests. Keep in lockstep with
+// supabase/functions/_shared/toolAccess.ts:resolveTierFromSub — any new
+// legacy slug must be added in both places.
+export function resolveTier(raw: string | null | undefined): { tier: HostTier; label: string } {
   if (!raw) return { tier: 'free', label: 'Free' };
   const key = raw.toLowerCase().replace(/_annual$/, '').replace(/_monthly$/, '');
   switch (key) {
-    // Legacy
+    // Legacy canonical
     case 'starter': return { tier: 'starter', label: 'Starter' };
     case 'pro': return { tier: 'pro', label: 'Pro' };
     case 'premium': return { tier: 'premium', label: 'Premium' };
+    // Legacy alias — older Stripe subs stored `host_pro` before the
+    // catalog was renamed to host_growth. Must resolve to Pro, never Free.
+    case 'host_pro':
+    case 'host-pro':
+      return { tier: 'pro', label: 'Pro' };
     // New catalog
     case 'seller_plus':
     case 'seller-plus':
