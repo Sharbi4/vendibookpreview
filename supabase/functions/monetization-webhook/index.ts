@@ -132,8 +132,26 @@ serve(async (req) => {
     });
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
-    log("handler error", { type: event.type, msg });
-    // Record the failure but still 200 so Stripe doesn't loop indefinitely once we've persisted the event.
+    const isPersistence = err instanceof PersistenceError;
+    log("handler error", { type: event.type, msg, persistence: isPersistence });
+
+    if (isPersistence) {
+      // Remove the idempotency row so Stripe's retry re-enters processing.
+      // Otherwise the next delivery hits the unique constraint and we'd
+      // "duplicate ignored" a payload we never actually persisted.
+      await supabase
+        .from("stripe_webhook_events")
+        .delete()
+        .eq("stripe_event_id", event.id)
+        .eq("endpoint", ENDPOINT);
+      return new Response(JSON.stringify({ error: msg, retry: true }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Non-persistence handler error (e.g. email send) — record and 200 so
+    // Stripe doesn't loop on a side-effect failure we can't recover from.
     await supabase
       .from("stripe_webhook_events")
       .update({ status: "error", error_message: msg })
