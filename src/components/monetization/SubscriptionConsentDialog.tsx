@@ -30,6 +30,9 @@ interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   payload: SubscriptionConsentPayload | null;
+  /** D2: per-attempt id embedded in the consent artifact so a single consent
+   *  cannot be replayed across separate checkout attempts. */
+  checkoutAttemptId?: string | null;
   onConsented: (consentId: string) => void | Promise<void>;
 }
 
@@ -40,6 +43,7 @@ export const SubscriptionConsentDialog: React.FC<Props> = ({
   open,
   onOpenChange,
   payload,
+  checkoutAttemptId,
   onConsented,
 }) => {
   if (!payload) return null;
@@ -70,6 +74,7 @@ export const SubscriptionConsentDialog: React.FC<Props> = ({
         price_cents_shown: String(payload.priceCents),
         interval: payload.interval,
         ...(payload.tier ? { tier: payload.tier } : {}),
+        ...(checkoutAttemptId ? { checkout_attempt_id: checkoutAttemptId } : {}),
       }}
       onAccept={async (consentId) => {
         await onConsented(consentId);
