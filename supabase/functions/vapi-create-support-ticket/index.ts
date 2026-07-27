@@ -180,8 +180,18 @@ async function processCreateSupportTicket(input: ProcessInput): Promise<Record<s
   const customer_impact = safeString(args.customer_impact, 1000);
   const preferred_follow_up = safeString(args.preferred_follow_up, 60);
   const call_summary = safeString(args.call_summary, 4000);
-  const email_verification_method = safeString(args.email_verification_method, 40);
-  const email_verification_result = safeString(args.email_verification_result, 40);
+  // NOTE: `email_verification_method` / `email_verification_result` were
+  // previously accepted as trust signals. They are LLM-controlled tool
+  // arguments — NOT independent OTP proof — so they are intentionally
+  // ignored here. A caller email spoken to the voice assistant is always
+  // treated as unverified: we store it as `customer_email`, never as
+  // `reply_email`, and never link `user_id` from it. Verified linkage
+  // requires an out-of-band, server-side OTP store, which this endpoint
+  // does not currently consult.
+  const _ignored_email_verification_method = args.email_verification_method;
+  const _ignored_email_verification_result = args.email_verification_result;
+  void _ignored_email_verification_method;
+  void _ignored_email_verification_result;
 
   // ---- validate --------------------------------------------------------
   const errors: string[] = [];
@@ -244,17 +254,12 @@ async function processCreateSupportTicket(input: ProcessInput): Promise<Record<s
   }
 
   // ---- email verification handling ------------------------------------
-  const email_verified =
-    !!verified_email &&
-    email_verification_method === "otp" &&
-    email_verification_result === "verified";
-
-  let linkedUserId: string | null = null;
-  if (email_verified && verified_email) {
-    const { data: profile } = await svc
-      .from("profiles").select("id").eq("email", verified_email).maybeSingle();
-    linkedUserId = profile?.id ?? null;
-  }
+  // Vapi callers cannot prove ownership of an email address during a voice
+  // call. Always treat as unverified; never auto-link a user_id from a
+  // spoken email; never set reply-to. If the human agent later verifies
+  // ownership out-of-band, they can update the ticket manually.
+  const email_verified = false;
+  const linkedUserId: string | null = null;
 
   const internalCategory = CATEGORY_TO_INTERNAL[issue_category] ?? "other";
   const priority = derivePriority(internalCategory, severityIn);
@@ -366,7 +371,7 @@ async function processCreateSupportTicket(input: ProcessInput): Promise<Record<s
         issue_category,
         priority_derived: priority,
         email_verified,
-        email_verification_method,
+        email_verification_note: "voice_caller_email_never_trusted",
         preferred_follow_up,
         callback_phone_source: phoneSource,
       },
