@@ -604,7 +604,17 @@ async function handleSubscriptionChange(
 
   const tier = (sub.metadata?.tier as string) || existing?.tier || null;
   const userId = (sub.metadata?.user_id as string) || existing?.user_id || null;
-  const consentIdMeta = (sub.metadata?.consent_id as string) || null;
+  const consentIdRaw = sub.metadata?.consent_id;
+  const consentIdMeta = validateConsentId(consentIdRaw);
+  if (consentIdRaw && !consentIdMeta) {
+    // Structured warning only — never log the raw metadata blob.
+    log("invalid consent_id metadata, dropping", {
+      subscription_id: sub.id,
+      customer_id: sub.customer,
+      consent_id_type: typeof consentIdRaw,
+      consent_id_length: typeof consentIdRaw === "string" ? consentIdRaw.length : 0,
+    });
+  }
 
   const patch: Record<string, unknown> = {
     user_id: userId,
@@ -620,14 +630,29 @@ async function handleSubscriptionChange(
     cancel_at_period_end: !!sub.cancel_at_period_end,
     updated_at: new Date().toISOString(),
   };
-  // Only overwrite consent_id when a fresh one arrived on the event; preserve
-  // the original signup consent on renewal/update events.
+  // Only overwrite consent_id when a fresh, valid UUID arrived on the event;
+  // preserve the original signup consent on renewal/update events.
   if (consentIdMeta) patch.consent_id = consentIdMeta;
 
   if (existing) {
-    await supabase.from("host_subscriptions").update(patch).eq("id", existing.id);
+    const { error: updErr } = await supabase
+      .from("host_subscriptions")
+      .update(patch)
+      .eq("id", existing.id);
+    if (updErr) {
+      throw new PersistenceError(
+        `host_subscriptions update failed: ${updErr.message}`,
+        updErr,
+      );
+    }
   } else {
-    await supabase.from("host_subscriptions").insert(patch);
+    const { error: insErr } = await supabase.from("host_subscriptions").insert(patch);
+    if (insErr) {
+      throw new PersistenceError(
+        `host_subscriptions insert failed: ${insErr.message}`,
+        insErr,
+      );
+    }
   }
 
   const planName = planLabel(tier, undefined);
