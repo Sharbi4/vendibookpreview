@@ -723,6 +723,19 @@ export const AuthFormPanel = ({ mode, setMode }: AuthFormPanelProps) => {
                       {SIGNUP_MARKETING_TEXT}
                     </span>
                   </label>
+
+                  {/* SMS opt-in — separate from ToS and marketing; unchecked by default,
+                      never required, disclosure sits directly adjacent to the field. */}
+                  <div className="pt-2">
+                    <SmsConsentField
+                      phone={phoneNumber}
+                      onPhoneChange={setPhoneNumber}
+                      consent={smsConsent}
+                      onConsentChange={(v) => { setSmsConsent(v); if (!v) setSmsError(null); }}
+                      error={smsError ?? undefined}
+                      testIdPrefix="signup-sms"
+                    />
+                  </div>
                 </div>
               )}
 
