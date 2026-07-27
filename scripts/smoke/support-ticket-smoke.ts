@@ -42,6 +42,7 @@ const admin = createClient(URL_, SERVICE_KEY, { auth: { persistSession: false } 
 const anon = createClient(URL_, ANON_KEY, { auth: { persistSession: false } });
 const SUBMIT_URL = `${URL_}/functions/v1/submit-support-ticket`;
 const TAWK_URL = `${URL_}/functions/v1/tawk-webhook`;
+const VAPI_URL = `${URL_}/functions/v1/vapi-create-support-ticket`;
 
 const RUN = randomUUID().slice(0, 8);
 const USER_A = randomUUID();
@@ -49,6 +50,7 @@ const USER_B = randomUUID();
 const EMAIL_A = `smoke-ticket-a-${RUN}@vendibook-qa.test`;
 const EMAIL_B = `smoke-ticket-b-${RUN}@vendibook-qa.test`;
 const TAWK_EVENT_ID = `smoke-tawk-${RUN}`;
+const VAPI_CALL_ID = `smoke-vapi-${RUN}`;
 const createdTicketIds: string[] = [];
 
 type Result = { name: string; pass: boolean; detail?: string };
