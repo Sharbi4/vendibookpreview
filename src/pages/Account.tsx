@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   ArrowLeft, User, Lock, KeyRound, Shield, Bell, CreditCard,
-  ShieldCheck, FileText, Loader2, Eye,
+  ShieldCheck, FileText, Loader2, Eye, MessageSquare,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
