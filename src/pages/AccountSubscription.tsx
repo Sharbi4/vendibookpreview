@@ -180,6 +180,13 @@ export default function AccountSubscription() {
             Change your plan, schedule a cancellation, or open the secure billing
             portal to update your payment method and download invoices.
           </p>
+          <StripeTrustBadge
+            context="subscription"
+            surface="light"
+            size="sm"
+            withCopy={false}
+            className="pt-1"
+          />
         </header>
 
         {/* Current plan */}
