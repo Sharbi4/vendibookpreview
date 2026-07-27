@@ -7,6 +7,8 @@ project_id = "nbrehbwfsmedbelzntqs"
     verify_jwt = false
   [functions.vapi-chat]
     verify_jwt = false
+  [functions.vapi-create-support-ticket]
+    verify_jwt = false
   [functions.ai-license-finder]
     verify_jwt = false
   [functions.ai-listing-creator]
