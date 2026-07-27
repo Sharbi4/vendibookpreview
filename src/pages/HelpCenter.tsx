@@ -206,7 +206,7 @@ const HelpCenter = () => {
     <div className="min-h-screen flex flex-col bg-[#08080a] text-white">
       <SEO
         title="Help Center — Vendibook Support"
-        description="Request a call, search guides, or chat 24/7. Help for renting, buying, listing, and getting paid on Vendibook."
+        description="Get help from Vendibook Support. Request a callback, start a chat, or email support@vendibook.com for bookings, payouts, listings, documents, and account questions."
         canonical="/help"
         type="website"
       />
