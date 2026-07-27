@@ -35,7 +35,6 @@ const Dashboard = () => {
   const { user, isLoading, hasRole } = useAuth();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const [showOnboarding, setShowOnboarding] = useState(false);
 
   usePageTracking();
 
