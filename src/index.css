@@ -1263,11 +1263,16 @@
   }
 
   /* Overlay scrim used behind welcome/plan selector */
-  .obsidian-scrim {
-    background:
-      radial-gradient(80% 60% at 50% 0%, rgba(255, 81, 36, 0.10), transparent 60%),
-      linear-gradient(180deg, rgba(6,6,8,0.85), rgba(6,6,8,0.95));
-    -webkit-backdrop-filter: blur(10px);
-    backdrop-filter: blur(10px);
+
+  /* Reduced motion — disable obsidian hover transforms and specular sweep */
+  @media (prefers-reduced-motion: reduce) {
+    .obsidian-panel-interactive,
+    .obsidian-panel-interactive:hover {
+      transition: none !important;
+      transform: none !important;
+    }
+    .obsidian-shine::after {
+      display: none !important;
+    }
   }
 }
