@@ -132,6 +132,7 @@ const Cities = lazy(() => import("./pages/Cities"));
 const SaleCheckout = lazy(() => import("./pages/SaleCheckout"));
 const BookingCheckout = lazy(() => import("./pages/BookingCheckout"));
 const NotFound = lazy(() => import("./pages/NotFound"));
+const OAuthConsent = lazy(() => import("./pages/OAuthConsent"));
 const Blog = lazy(() => import("./pages/Blog"));
 const BlogPost = lazy(() => import("./pages/BlogPost"));
 const BlogCategory = lazy(() => import("./pages/BlogCategory"));
@@ -448,6 +449,9 @@ const AnimatedRoutes = () => {
           {/* Dynamic city SEO pages - catches valid city slugs like /houston, /dallas */}
           <Route path="/:citySlug" element={<PageTransition><DynamicCityPage /></PageTransition>} />
           
+          {/* MCP OAuth consent — must be routable so external clients complete authorization */}
+          <Route path="/.lovable/oauth/consent" element={<OAuthConsent />} />
+
           {/* Explicit 404 route */}
           <Route path="/404" element={<PageTransition><NotFound /></PageTransition>} />
 
