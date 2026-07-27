@@ -22,10 +22,26 @@ export const DOCUMENT_TYPES = {
   FEATURED_LISTING_TERMS: 'featured_listing_terms',
   SUBSCRIPTION_TERMS: 'subscription_terms',
   REFUND_CANCELLATION_POLICY: 'refund_cancellation_policy',
+  PAYMENTS_PAYOUTS_TERMS: 'payments_payouts_terms',
+  COOKIE_POLICY: 'cookie_policy',
+  CALIFORNIA_PRIVACY_NOTICE: 'california_privacy_notice',
+  ESIGN_DISCLOSURE: 'esign_disclosure',
+  SMS_TERMS: 'sms_terms',
+  REFERRAL_TERMS: 'referral_terms',
+  AI_TOOLS_DISCLAIMER: 'ai_tools_disclaimer',
+  FINANCING_DISCLOSURE: 'financing_disclosure',
+  IP_TAKEDOWN_POLICY: 'ip_takedown_policy',
 } as const;
 
 export type DocumentType = (typeof DOCUMENT_TYPES)[keyof typeof DOCUMENT_TYPES];
 
+/**
+ * Currently-active version per document type. v2 rows for the 9 original
+ * documents and v1 rows for the 9 new ones are seeded as `draft` in the DB
+ * and remain inactive until owner review — so CURRENT_VERSIONS still points
+ * at v1 for the shipped docs. Bump each entry only when its DB row is
+ * flipped to `status='active'`.
+ */
 export const CURRENT_VERSIONS: Record<DocumentType, string> = {
   [DOCUMENT_TYPES.TERMS_OF_SERVICE]: 'v1',
   [DOCUMENT_TYPES.PRIVACY_POLICY]: 'v1',
@@ -36,6 +52,15 @@ export const CURRENT_VERSIONS: Record<DocumentType, string> = {
   [DOCUMENT_TYPES.FEATURED_LISTING_TERMS]: 'v1',
   [DOCUMENT_TYPES.SUBSCRIPTION_TERMS]: 'v1',
   [DOCUMENT_TYPES.REFUND_CANCELLATION_POLICY]: 'v1',
+  [DOCUMENT_TYPES.PAYMENTS_PAYOUTS_TERMS]: 'v1',
+  [DOCUMENT_TYPES.COOKIE_POLICY]: 'v1',
+  [DOCUMENT_TYPES.CALIFORNIA_PRIVACY_NOTICE]: 'v1',
+  [DOCUMENT_TYPES.ESIGN_DISCLOSURE]: 'v1',
+  [DOCUMENT_TYPES.SMS_TERMS]: 'v1',
+  [DOCUMENT_TYPES.REFERRAL_TERMS]: 'v1',
+  [DOCUMENT_TYPES.AI_TOOLS_DISCLAIMER]: 'v1',
+  [DOCUMENT_TYPES.FINANCING_DISCLOSURE]: 'v1',
+  [DOCUMENT_TYPES.IP_TAKEDOWN_POLICY]: 'v1',
 };
 
 /** Slugs used in `/legal/:slug` URLs — must match `legal_documents.slug`. */
@@ -49,6 +74,15 @@ export const DOCUMENT_SLUGS: Record<DocumentType, string> = {
   [DOCUMENT_TYPES.FEATURED_LISTING_TERMS]: 'featured-listing-terms',
   [DOCUMENT_TYPES.SUBSCRIPTION_TERMS]: 'subscription-terms',
   [DOCUMENT_TYPES.REFUND_CANCELLATION_POLICY]: 'refund-cancellation-policy',
+  [DOCUMENT_TYPES.PAYMENTS_PAYOUTS_TERMS]: 'payments-payouts-terms',
+  [DOCUMENT_TYPES.COOKIE_POLICY]: 'cookie-policy',
+  [DOCUMENT_TYPES.CALIFORNIA_PRIVACY_NOTICE]: 'california-privacy',
+  [DOCUMENT_TYPES.ESIGN_DISCLOSURE]: 'esign-disclosure',
+  [DOCUMENT_TYPES.SMS_TERMS]: 'sms-terms',
+  [DOCUMENT_TYPES.REFERRAL_TERMS]: 'referral-terms',
+  [DOCUMENT_TYPES.AI_TOOLS_DISCLAIMER]: 'ai-tools-disclaimer',
+  [DOCUMENT_TYPES.FINANCING_DISCLOSURE]: 'financing-disclosure',
+  [DOCUMENT_TYPES.IP_TAKEDOWN_POLICY]: 'ip-takedown-policy',
 };
 
 /**
