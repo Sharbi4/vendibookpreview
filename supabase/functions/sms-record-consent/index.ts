@@ -18,8 +18,22 @@ import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 import { normalizeNanpToE164, SMS_POLICY_VERSION } from '../_shared/smsConsent.ts';
 
 const ALLOWED_SOURCES = new Set([
-  'signup','booking','listing','settings','sms_page','support','system',
+  'signup','booking','listing','settings','sms_page','support','system','web_form',
 ]);
+
+// Basic per-IP web-form abuse guard: refuse if more than N consent events for
+// the same IP within the last hour. Applies to the anonymous /sms-opt-in path.
+const WEB_FORM_HOURLY_LIMIT = 15;
+
+function isEmail(v: unknown): v is string {
+  return typeof v === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v) && v.length <= 320;
+}
+function safeShort(v: unknown, max = 120): string | null {
+  if (typeof v !== 'string') return null;
+  const t = v.trim();
+  if (!t) return null;
+  return t.slice(0, max);
+}
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
