@@ -287,10 +287,11 @@ export const DashboardLayout = ({ children, mode, onModeChange, isHost }: Dashbo
   const railItems = sections.find((s) => s.id === 'workspace')?.items ?? [];
 
   return (
-    <div className="dashboard-shell min-h-screen flex flex-col bg-background">
+    <div className="dashboard-shell vendibook-dashboard-luxury min-h-screen flex flex-col bg-background">
       <VerifyReminderModal />
       {/* Mobile Header — only real mobile, tablets get the icon rail */}
-      <header className="md:hidden sticky top-0 z-50 bg-background/90 backdrop-blur border-b border-white/5">
+      <header className="md:hidden sticky top-0 z-50 dash-utility-header">
+
         <div className="flex items-center justify-between h-14 px-4 gap-2">
           <div className="flex items-center gap-2">
             <Sheet open={isMobileOpen} onOpenChange={setIsMobileOpen}>
@@ -317,15 +318,16 @@ export const DashboardLayout = ({ children, mode, onModeChange, isHost }: Dashbo
         </div>
       </header>
 
-      <div className="flex flex-1">
-        {/* Full sidebar — lg+ */}
-        <aside className="hidden lg:flex lg:w-64 flex-col border-r border-white/5 bg-background shrink-0">
+      <div className="flex flex-1 min-h-0">
+        {/* Full sidebar — lg+, sticky to viewport height */}
+        <aside className="hidden lg:flex lg:w-64 flex-col border-r-2 border-white/[0.07] bg-background shrink-0 sticky top-0 h-screen z-40">
           <SidebarContent />
         </aside>
 
         {/* Icon rail — md → lg only. Persistent, no hamburger required. */}
         <TooltipProvider delayDuration={100}>
-          <aside className="hidden md:flex lg:hidden w-16 flex-col items-center border-r border-white/5 bg-background shrink-0 py-3 gap-1">
+          <aside className="hidden md:flex lg:hidden w-16 flex-col items-center border-r-2 border-white/[0.07] bg-background shrink-0 py-3 gap-1 sticky top-0 h-screen z-40">
+
             <Link to="/" className="mb-2" aria-label="Vendibook home">
               <img src={vendibookFavicon} alt="Vendibook" className="h-8 w-8" />
             </Link>
@@ -374,7 +376,7 @@ export const DashboardLayout = ({ children, mode, onModeChange, isHost }: Dashbo
         </TooltipProvider>
 
         <main className="flex-1 flex flex-col min-w-0">
-          <div className="hidden md:flex items-center justify-between gap-3 px-4 lg:px-6 py-3 border-b border-white/5 bg-background">
+          <div className="hidden md:flex items-center justify-between gap-3 px-4 lg:px-6 py-3 dash-utility-header sticky top-0 z-30">
             <div />
             {isHost && <div className="w-[240px]"><ModeSwitch /></div>}
             <div className="flex items-center gap-3">
@@ -384,7 +386,8 @@ export const DashboardLayout = ({ children, mode, onModeChange, isHost }: Dashbo
               <AppDropdownMenu variant="light" />
             </div>
           </div>
-          <div className="flex-1 p-4 md:p-6 lg:p-8 pb-24 md:pb-6 overflow-auto">
+          <div className="flex-1 p-4 md:p-6 lg:p-8 pb-24 md:pb-6">
+
             {/* Mobile-only tab pills — every tab discoverable without opening a menu */}
             <DashboardMobileTabs mode={mode} />
             {children}
