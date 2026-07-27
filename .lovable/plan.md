@@ -1,135 +1,154 @@
-## Scope
 
-Five parallel workstreams, one shared visual system rooted in the home host-tools ember-glass section. All colors flow through tokens in `index.css` — no inline `text-white`, no ad-hoc `#hex`. Everything reduced-motion aware.
+# READ-ONLY AUDIT — no code, DB, Stripe, Tawk, or secret changes were made in this pass.
 
----
+## A. Subscription lifecycle
 
-### 1. Foundation — shared design primitives (build first, everything else consumes)
+### Live evidence (production DB, this session)
+- `user_consents` where `document_type='subscription_terms'`: **3 rows**, all with `trigger_action='subscription_start'`, dated 2026-07-25 (two `host_growth`, one `host_starter`). `related_ids` correctly carries `product_slug`.
+- `monetization_purchases` rows tied to those consents: **3 rows, all `status='failed'`**, each with a real `cs_live_…` Stripe Checkout Session id. Products = `host_growth` ×2, `host_starter` ×1. Amount_cents matches the product row.
+- `host_subscriptions`: **0 rows.**
+- `stripe_webhook_events` (all endpoints, all event types): **0 rows, ever.**
+- `monetization_products` where `billing_type='recurring'`: 6 active (host_starter/growth/operator × monthly/annual) + 2 inactive (seller_plus). All have `stripe_price_id` populated.
 
-New in `src/components/upgrade/`:
-- **`GlassPanel.tsx`** — the base surface. Variants: `default`, `elevated`, `hero`. Encodes: `bg: rgba(20,20,23,0.75)`, `backdrop-blur: 24px`, `border: 1.5px hsla(0,0%,100%,0.10)`, `radius: 20px`, soft top inner-highlight, optional ember corner glow.
-- **`RecommendedPill.tsx`** — flame-filled small-caps pill, positioned to overlap the top edge of a card. One canonical implementation; every "Recommended" callout imports this.
-- **`PlanCard.tsx`** — accepts `plan`, `recommended`, `onSelect`, `benefits[]` (with Lucide icon). Handles the elevated-when-recommended treatment (brighter border + only card with ember glow), staggered entrance, Sofia Pro title, Manrope tabular price with `CountUpNumber`.
-- **`CountUpNumber.tsx`** — 600ms tabular-num count-up on mount, `prefers-reduced-motion` short-circuits to the final value.
-- **`UpgradeHero.tsx`** — treated hero band using real photography from `src/assets` with a dark gradient overlay. Slotable header + subheadline.
-- **`EmberSweep.tsx`** — the very-low-opacity animated ember gradient shared by banner and modal (single implementation, respects reduced motion).
+### The chain, end-to-end (files & line anchors)
 
-New tokens in `index.css` (HSL only):
-- `--ember-500`, `--ember-400`, `--ember-glow`, `--flame-border`
-- `--glass-surface`, `--glass-surface-elevated`, `--glass-hairline`
-- `--warn-flame` (replaces every `--warning`/amber use)
-- `--gold-pro`, `--gold-pro-edge`, `--gold-pro-shadow` (scoped ONLY to Go Pro button)
+1. **Legal consent overlay & CTA gate**
+   - `src/components/monetization/SubscriptionConsentDialog.tsx`, used from `src/components/listing-wizard/MembershipInlinePanel.tsx`, `src/components/monetization/PremiumTierCard.tsx`, `UpgradePackageCards.tsx`, `PremiumPlansSection.tsx`, `RecommendedAddOns.tsx`, `UnlockLadder.tsx`, `ProductPricingCard.tsx`, `src/components/dashboard/permits/PermitsGate.tsx`.
+   - Consent flow: writes a `user_consents` row (`document_type='subscription_terms'`, `trigger_action='subscription_start'`, `related_ids.product_slug`). ✅ Working — 3 rows prove it.
 
-Add matching Tailwind mappings so `bg-glass`, `border-hairline`, `text-warn-flame`, `bg-gold-pro` work.
+2. **Checkout session creation**
+   - `supabase/functions/create-monetization-checkout/index.ts`
+     - Verifies consent (lines 115–151): user_id match + document_type + trigger_action + optional product_slug match.
+     - Idempotency key = `mon-{user}-{product}-{listing}-{hour}` (line 246) + Stripe `idempotencyKey`.
+     - Uses `product.stripe_price_id` (line 286). ✅ Every recurring product has one.
+     - `mode: 'subscription'` when `billing_type='recurring'` (line 314).
+     - Attaches `metadata.consent_id`, `product_slug`, `user_id`, `listing_id`, `idempotency_key` (300–307) and mirrors these onto `subscription_data.metadata` (322–333) so downstream renewals can resolve.
+     - Success URL: `/payment-success?monetization=true&session_id={CHECKOUT_SESSION_ID}`; cancel: `/dashboard?purchase=cancelled`. ✅ Return state preserved.
+   - Purchase row upserted with `status='pending'` (338–357). The three `failed` rows in prod indicate this ran successfully; something later marked them failed (Stripe session expired without paid completion, or the reconciler flipped them). Consistent with "no webhook ever fired against us."
 
----
+3. **Webhook handling**
+   - `supabase/functions/monetization-webhook/index.ts` — 744 lines, handles `checkout.session.completed`, `customer.subscription.{created,updated,deleted}`, `invoice.paid`, `invoice.payment_failed`. Signature verified with `STRIPE_MONETIZATION_WEBHOOK_SECRET` (falls back to `STRIPE_WEBHOOK_SECRET` if unset, line 20). Writes to `host_subscriptions` and `monetization_purchases`, plus `stripe_webhook_events` for audit.
+   - `supabase/functions/stripe-webhook/index.ts` — 1842 lines, orders/payments; also requires `STRIPE_WEBHOOK_SECRET`.
+   - Both secrets are present in the sandbox env. Function code is correct.
 
-### 2. Kill amber/yellow app-wide
+4. **Persistence + entitlement refresh**
+   - `host_subscriptions` table exists with correct RLS (`user_id = auth.uid()` or admin).
+   - Client hooks read it live: `useHostEntitlements.ts`, `useEntitlements.ts`, `useToolAccess.ts`, `useTierGate.ts`, `useListingQuota.ts`. Wizard already invalidates these queries on return per prior turn.
 
-Global sweep of every `amber-*` / `yellow-*` utility class and every warning-tinted background. Rebuild the identity affordances on the new system:
+5. **Gates on actual features** (verified surfaces)
+   - Pricing assistant / listing writing / photo tools / listing benefits → `useToolAccess` + `resolveToolAccess` (server) → `monetization_purchases` + `host_subscriptions`.
+   - Pro/Business surfaces (`MembershipInlinePanel`, `PremiumPlansSection`, `PermitsGate`) → `useHostEntitlements` / `resolveHostTier` (server) → `host_subscriptions.status IN ('active','trialing')`.
+   - Gates are wired correctly, but they can never flip **on** because no `host_subscriptions` row is ever created without a webhook.
 
-- **`src/components/home/VerificationBanner.tsx`** → full-width dark-glass strip using `GlassPanel` + `EmberSweep`. Small flame-tinted `ShieldCheck` icon in a soft glowing circle. `#F7F7F8` primary text via `text-foreground`, `#B8B8C0` secondary via `text-muted-foreground`. Compact solid CTA "Verify identity". `sessionStorage` dismiss key, re-appears next session until verified.
-- **`src/components/dashboard/shared/IdentityChip.tsx`** → refined pill: dark-glass base, `border: 1.5px hsl(var(--flame-border))`, `ShieldCheck` icon, hover lift.
-- Same treatment applied in the sidebar profile block (`DashboardLayout.tsx`) and the attention stack (flame-tinted left edge, not amber).
-- `EnhancedProfileNextStepCard.tsx` + `ProfileNextStepCard.tsx` + any residual amber warning surfaces (dashboard warnings, listing wizard warnings) migrated to `--warn-flame`.
+### Break-point diagnosis (single most likely cause)
 
-No functional / RLS / auth change — visual only.
+**Stripe webhook deliveries are not reaching either endpoint at all** (0 rows in `stripe_webhook_events` across every endpoint, every event type, every day). Because:
+- All three real users completed the consent gate → completed edge-function call → got a live `cs_live_…` Checkout Session (`monetization_purchases` proves it).
+- If Stripe delivered any event with the wrong secret, the function would still record a signature-verification failure row (or at minimum server logs would exist). The absence of *any* row across both endpoints indicates the Stripe Dashboard endpoints are either **not configured**, **disabled**, or **pointed at a different URL** (e.g. a stale preview host / old function name).
 
----
+This is the same class of finding surfaced two turns ago ("Stripe webhooks rejected: signing-secret mismatch"), unresolved because the fix is Stripe-side.
 
-### 3. First-sign-in Welcome Modal — full rebuild
+Contributing/secondary risks worth reporting but not the primary blocker:
+- `monetization-webhook` falls back to `STRIPE_WEBHOOK_SECRET` when `STRIPE_MONETIZATION_WEBHOOK_SECRET` is unset (index.ts:20). If the owner ever configures **one** endpoint in Stripe that fans out both, and the fallback path is used, one of the two functions will get a signature it can't verify. Not the current cause (zero events at all), but a latent footgun.
+- Failed purchases are not surfaced back to the user; they see `/payment-success` regardless if they navigate manually. Low-severity UX, not the break-point.
 
-New: `src/components/onboarding/FirstSignInWelcomeModal.tsx`, mounted at the top of `Dashboard.tsx` (not in `DashboardLayout`, so it doesn't fire on every dashboard sub-route).
+### Do the smoke tests actually prove live behavior?
 
-Behavior:
-- Fires once per user. Persisted via `profiles.welcome_seen_at` (migration below) with a `localStorage` optimistic mirror. If either is set → never shows again. Never fires after any plan is chosen (checks `useHostEntitlements().tier !== 'free'`).
-- **No auto-dismiss.** No timers. Closes only on: (a) explicit close, (b) plan CTA, (c) "Continue to dashboard".
+`scripts/smoke/subscription-lifecycle-smoke.ts` (706 lines):
+- Signs fixture events with the **test** webhook secret and POSTs them directly to `functions/v1/monetization-webhook`, then asserts DB state.
+- ✅ Proves function code + signing math + DB writes work when a request arrives.
+- ❌ Does **not** prove Stripe → our endpoint delivery. If Stripe never posts to us (current situation), this suite still passes and everything looks green. This is exactly why prod has 3 consents, 0 subscriptions, and no one noticed.
+- The suite is also gated `process.exit(0)` locally when secrets missing (line 44); only fails in CI (line 43). That's fine, but it means it doesn't run for owner spot-checks.
 
-Composition:
-- Desktop: centered `GlassPanel` variant `elevated`, ~880px wide.
-- Mobile: full-screen sheet.
-- Top: `UpgradeHero` band with treated trailer photography from `src/assets/rise-food-truck-fleet-owner.png` (existing real photo).
-- Headline: Sofia Pro "Welcome to Vendibook, {firstName}" + one-line subhead "Listing is free, always. Members get seen first."
-- Three `PlanCard`s side by side (stack on mobile). Middle tier is `recommended` — elevated border + only card with ember glow + `RecommendedPill` overlapping the top edge.
-- 3 benefit lines max per card, each with a Lucide icon.
-- Prices via `CountUpNumber`.
-- Staggered entrance (60ms per card + fade), reduced-motion aware.
-- Card CTAs: "Start free" / "Go Pro" / "Talk business".
-- Secondary text button below, equal dignity, never guilt-worded: "Continue to dashboard".
-- Analytics events fired via existing `trackEvent`: `welcome_modal_viewed`, `welcome_modal_plan_clicked` (with `plan_slug`), `welcome_modal_skipped`.
+## B. Report an Issue + Tawk.to
 
-DB migration:
-```sql
-ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS welcome_seen_at timestamptz;
-```
-No new table, no new grants needed (profiles already granted).
+### What exists (verified in code + DB)
 
----
+**Schema** (all present):
+- `support_tickets` (45 cols) — includes `source`, `tawk_ticket_id` (unique when set), `tawk_chat_id`, `tawk_property_id`, `customer_email`, `customer_name`, `first_response_at`, `first_response_due_at`, priority + status + rich related_* FKs. RLS: users see own + admins see all; users can insert; admins update.
+- `support_ticket_messages` (7 cols, 2 policies).
+- `support_ticket_attachments` (8 cols, 2 policies).
+- `support_ticket_audit_events` (10 cols, 1 policy).
+- `support_ticket_webhook_events` (10 cols, 1 policy) — dedupe by `(source, external_event_id)`.
 
-### 4. Go Pro button refinement
+**Customer UI**
+- `src/components/support/ReportIssueDialog.tsx` (454 lines) + `ReportIssueButton.tsx` — reusable, auto-captures page URL / feature area / related IDs, submits via edge function. Rendered from wizard, listing detail, permit path, order tracking, help center, host onboarding, and `FloatingConciergeButton`.
+- `SocialContactOptions.tsx`, `GetHelpWithOrder.tsx` for adjacent channels.
+- **No customer "my tickets" page.** After submit, the user has no in-app view of their own ticket history. `AdminSupportTickets.tsx` exists for admins only.
 
-Refactor `src/components/dashboard/GoProButton.tsx` (single source of truth used by `DashboardLayout` top bar):
-- Tighter pill height (32px), 12px horizontal padding.
-- Metallic gradient via `--gold-pro` → darker gold, 1px lighter top edge via inset shadow.
-- 16px `Crown` from Lucide (never sparkles per project rule).
-- `#1A1400` dark text (via `--gold-pro-fg` token).
-- Subtle inner shadow.
-- Slow shine sweep every ~6s via keyframe on a `::before` overlay; disabled at `prefers-reduced-motion: reduce`.
-- Warm glow on hover only.
-- Paid users: refined `ProChip` variant — thin gold outline, transparent fill, `PRO` in small caps. Same file, `variant="paid"`.
+**Admin UI**
+- `src/pages/AdminSupportTickets.tsx` — inventory + triage surface.
 
-Gold remains scoped to this component; nothing else in the app uses `--gold-pro`.
+**Edge functions**
+- `supabase/functions/submit-support-ticket/index.ts` (290 lines) — server derives priority from category, sends acknowledgement + admin notification, idempotency-guarded.
+- `supabase/functions/tawk-webhook/index.ts` (342 lines) — HMAC-SHA1 verify against `TAWK_WEBHOOK_SECRET`, dedupes by `(source, external_event_id)`, inserts one `support_tickets` row per Tawk event, writes audit + acknowledgement email. Uses `verify_jwt = false`.
+- `check-ticket-status`, `bulk-sync-zendesk`, `zendesk-webhook`, `create-zendesk-ticket` (legacy, memory notes Zendesk is removed from user flows).
 
----
+**Tawk widget**
+- Loaded in `index.html:152–168` (property `68300d3b16f3f4bfe08eec8f`).
+- `FloatingConciergeButton.tsx` and `HelpCenter.tsx` call `window.Tawk_API.{showWidget,maximize,hideWidget,minimize}`. There is no server-side Tawk REST integration.
+- Env: `TAWK_WEBHOOK_SECRET` is set. No `TAWK_API_KEY` / `TAWK_PROPERTY_ID` env variables exist — outbound Tawk API access isn't wired.
 
-### 5. Consistency pass — refactor upgrade surfaces onto the new primitives
+### Gaps vs. "Vendibook-native tickets as system of record"
 
-Every listed surface refactored to import `PlanCard`, `RecommendedPill`, `GlassPanel`, `UpgradeHero`, `CountUpNumber`:
+| Area | Status |
+|---|---|
+| DB schema for native tickets | ✅ Complete |
+| Customer submit path | ✅ Complete (`submit-support-ticket`) |
+| Customer ack email | ✅ Sent by edge function |
+| Admin triage UI | ✅ `AdminSupportTickets.tsx` |
+| **Customer "my tickets" view** | ❌ Missing |
+| **Two-way threaded reply UI** (customer ↔ admin using `support_ticket_messages`) | ❌ Missing (schema exists, no UI) |
+| **Attachment upload UI** | ❌ Missing (table + RLS exist) |
+| Tawk inbound (chat/ticket → our DB) | ✅ `tawk-webhook` handler present, dedupe correct |
+| **Tawk widget → identify user** (pre-fill email/name via `Tawk_API.setAttributes`) | ❌ Not wired — increases duplicate-ticket risk |
+| **Tawk widget path-based visibility** | Partial (`FloatingConciergeButton` shows/hides) |
+| Tawk REST API outbound (post reply from admin UI into Tawk conversation) | ❌ Not wired, not officially supportable without documented Tawk REST + JWT auth per property; recommend Vendibook-native replies only |
 
-1. `src/pages/Pricing.tsx` — plans grid.
-2. `src/pages/AccountSubscription.tsx` — Membership tab plan comparison.
-3. `src/components/dashboard/ProSpotlightTile.tsx` — dashboard Pro spotlight.
-4. `src/components/monetization/PremiumPlansSection.tsx` — landing pricing.
-5. `src/components/monetization/MiniPlansComparison.tsx` — compact comparison used in wizard/panel.
-6. `src/components/listing-wizard/MembershipInlinePanel.tsx` — inline wizard upsell (keeps consent-gate wiring intact).
-7. `src/components/tools/LockedToolPreview.tsx` — locked-tool overlay.
-8. `src/components/monetization/PromoteUpgradesSection.tsx` — Promote & Upgrades section.
-9. Any learn-more overlay in Premium Tools.
+### Recommendation — system of record
 
-Report a final list of files touched.
+**Adopt Vendibook-native `support_tickets` as the sole source of truth.** Keep Tawk purely as an **inbound intake channel** (live chat + Tawk web form) whose events land in our DB via the existing `tawk-webhook`. Do **not** attempt outbound writes back into Tawk conversations from server code — Tawk's REST surface is limited and not officially documented for arbitrary two-way sync, so trying would be brittle and unsupported.
 
----
+Officially supportable Tawk capabilities (no unofficial MCP):
+- ✅ Embed widget + JS API (`showWidget`, `hideWidget`, `maximize`, `minimize`, `setAttributes`, `addEvent`, `visitor` prefill).
+- ✅ Inbound webhooks: `chat:start`, `chat:end`, `chat:transcript_created`, `ticket:create` (already handled).
+- ❌ Server-side ticket mutation / two-way reply threading requires manual admin work inside the Tawk dashboard.
 
-### 6. Escrow → payment protection sweep
+## Minimal staged remediation plan (implementation happens only after explicit owner approval)
 
-Global replacement (case-preserving) across `src`, `supabase/functions`, emails, legal-adjacent copy, and marketing:
+### Stage 1 — Unblock subscriptions (external, owner-only)
+Requires owner action in the Stripe Dashboard (not something Lovable can perform):
+1. Open Stripe Dashboard → Developers → Webhooks. Confirm two endpoints exist and are **enabled**, pointed at the current project host:
+   - `https://<project>.supabase.co/functions/v1/stripe-webhook` — events: `checkout.session.*`, `payment_intent.*`, `charge.*`, `account.updated`, `transfer.*`, `payout.*`.
+   - `https://<project>.supabase.co/functions/v1/monetization-webhook` — events: `checkout.session.completed`, `customer.subscription.created|updated|deleted`, `invoice.paid`, `invoice.payment_failed`.
+2. For each endpoint, copy its **Signing secret** and store them in project secrets as `STRIPE_WEBHOOK_SECRET` (orders) and `STRIPE_MONETIZATION_WEBHOOK_SECRET` (monetization). They must be distinct.
+3. Trigger a "Send test event" from Stripe for each endpoint and confirm rows appear in `stripe_webhook_events`.
 
-- "escrow-style" → "payment protection"
-- "escrow" → "payment protection"
-- "Escrow" → "Payment protection"
-- "ESCROW" → "PAYMENT PROTECTION"
+### Stage 2 — Guardrails (small code changes; owner approval required)
+- **Remove the `STRIPE_WEBHOOK_SECRET` fallback** in `monetization-webhook/index.ts:20` so misconfiguration fails loudly instead of silently mis-verifying.
+- **Backfill for the three stranded consenters**: for each `monetization_purchases` row with `status='failed'` whose `stripe_session_id` shows `paid` in Stripe, re-drive the webhook via `stripe events resend` (owner-run) or an admin edge action; if not paid, notify the three users their attempt didn't complete.
+- **Live-delivery smoke**: add a nightly job that asserts `stripe_webhook_events` has ≥1 row in the last 24h; page owner if zero. This closes the "green CI, silent prod" gap.
+- **Failed-purchase surfacing**: `/payment-success` should confirm against `monetization_purchases.status='completed'` before congratulating; otherwise show a retry CTA.
 
-Files identified so far (18 hits): `useAdminTransactions.ts`, `PaymentSuccess.tsx`, `faq-chatbot/index.ts`, `create-sale-transaction/index.ts`, `AdminDashboard.tsx`, `create-checkout/index.ts`, `generateReceiptPdf.ts`, `stripe-webhook/index.ts`, `raise-dispute/index.ts` + test, `search.test.ts`, `SellerSalesSection.tsx`, `BuyerSalesSection.tsx`, `EmailReceiptPreview.tsx`, `shared/index.ts`, `InfoPopover.tsx`. Ledger fields / db column names are NOT renamed — copy only.
+### Stage 3 — Native ticket experience (owner approval required)
+- **Customer `MyTickets` page** at `/account/support`: paginated list from `support_tickets` scoped by `user_id`; detail view lists `support_ticket_messages`.
+- **Two-way threaded replies**: new edge function `post-ticket-message` (auth required, inserts into `support_ticket_messages`, writes audit row, emails counterpart). Admin surface adds reply composer.
+- **Attachment upload**: reuse storage pattern from booking_documents; write to `support_ticket_attachments`.
+- **Tawk visitor identification**: on authenticated pages, call `Tawk_API.setAttributes({ name, email, hash })` server-signed via `TAWK_API_KEY` (owner adds env). Reduces duplicate tickets by matching Tawk transcripts to our user on inbound webhook.
+- **Deprecate Zendesk edge functions** already unused per project memory (`create-zendesk-ticket`, `zendesk-webhook`, `bulk-sync-zendesk`, `check-ticket-status`) after confirming zero recent invocations.
 
-Report exact instances changed.
+### Stage 4 — Test coverage (no prod side-effects)
+- Extend `subscription-lifecycle-smoke.ts` with a **delivery-observability** assertion (queries `stripe_webhook_events` for a recent real Stripe test-mode ping).
+- Add `support-ticket-smoke.ts` covering: submit → row inserted → ack email queued → admin can read → user can read own → anon blocked → Tawk webhook dedupe.
 
----
+## Production changes that require explicit owner approval before I execute
 
-## Verification
+1. **Stripe Dashboard reconfiguration** (Stage 1) — external, only the owner can do this.
+2. **Edit `monetization-webhook/index.ts`** to remove the secret fallback (Stage 2).
+3. **Backfill / re-drive the 3 stranded purchases** and outreach email content (Stage 2).
+4. **New `/account/support` route + reply/attachment surfaces + `post-ticket-message` edge function** (Stage 3).
+5. **Adding `TAWK_API_KEY` (or JS-API identity hash secret) as a project secret** and wiring `setAttributes` (Stage 3).
+6. **Removing legacy Zendesk edge functions** (Stage 3).
+7. **New nightly delivery-observability smoke job and CI wiring** (Stage 4).
 
-- Playwright screenshots at 390px and 1440px of: verification banner, first-sign-in welcome modal, top bar (free + paid states), plans page.
-- `bunx tsgo` clean at the end.
-- Confirm publishing still returns 200 with a real authenticated session (the enum-coercion trigger fix from earlier is untouched — we're only editing UI + copy + one additive column).
-
-## Not in scope
-
-Money logic, entitlements resolution, RLS, webhook contracts, business flows. Purely visual + copy + one additive column for the welcome flag.
-
-## Assumptions (call out if wrong)
-
-- The three plan tiers for the welcome modal match the existing catalog: Starter (free), Growth/Pro (recommended, monthly), Enterprise/"Talk business" (contact-sales). If a different tier should be the recommended middle card, tell me.
-- "Continue to dashboard" is fine as the secondary label.
-- The one-line subhead uses the existing standing copy "Listing is free, always. Members get seen first."
-- Emails: `escrow` in template bodies is treated as user-facing copy and swept; email template names / db keys are NOT renamed.
-
-Approve to ship.
+Nothing in this audit turn changed code, database rows, secrets, Stripe, or Tawk. Waiting for approval on which stages to execute and in what order.
