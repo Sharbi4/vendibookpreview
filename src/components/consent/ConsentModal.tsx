@@ -220,6 +220,12 @@ export const ConsentModal: React.FC<Props> = ({
               {primaryLabel}
             </Button>
           </div>
+
+          {footerSlot && (
+            <div className="pt-1 flex justify-center sm:justify-end">
+              {footerSlot}
+            </div>
+          )}
         </div>
       </DialogContent>
     </Dialog>
