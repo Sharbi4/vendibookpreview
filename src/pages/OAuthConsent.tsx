@@ -43,7 +43,7 @@ export default function OAuthConsent() {
       const { data: sess } = await supabase.auth.getSession();
       if (!sess.session) {
         const next = window.location.pathname + window.location.search;
-        window.location.href = "/auth?next=" + encodeURIComponent(next);
+        window.location.href = "/auth?redirect=" + encodeURIComponent(next);
         return;
       }
       setUserEmail(sess.session.user.email ?? null);
