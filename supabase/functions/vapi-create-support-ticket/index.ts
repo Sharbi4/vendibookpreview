@@ -371,7 +371,7 @@ async function processCreateSupportTicket(input: ProcessInput): Promise<Record<s
         issue_category,
         priority_derived: priority,
         email_verified,
-        email_verification_method,
+        email_verification_note: "voice_caller_email_never_trusted",
         preferred_follow_up,
         callback_phone_source: phoneSource,
       },
