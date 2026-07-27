@@ -85,10 +85,13 @@ export const RevenueAnalyticsCard = ({ analytics, onOpenStripeDashboard, isOpeni
           </div>
           <div>
             <h3 className="text-lg font-semibold">Revenue Analytics</h3>
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <span>Powered by</span>
-              <StripeLogo size="sm" />
-            </div>
+            <StripeTrustBadge
+              context="payouts"
+              surface="light"
+              size="sm"
+              withCopy={false}
+              className="mt-1"
+            />
           </div>
         </div>
       </div>
