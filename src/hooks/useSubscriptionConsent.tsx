@@ -42,6 +42,7 @@ interface PendingRecurring {
   product: MonetizationProduct;
   opts: CheckoutOpts;
   payload: SubscriptionConsentPayload;
+  checkoutAttemptId: string;
 }
 
 function deriveInterval(product: MonetizationProduct, hint?: CheckoutOpts['interval']): 'month' | 'year' {
@@ -49,6 +50,13 @@ function deriveInterval(product: MonetizationProduct, hint?: CheckoutOpts['inter
   if (hint === 'monthly' || hint === 'month') return 'month';
   if (product.slug.endsWith('_annual') || product.slug.endsWith('_yearly')) return 'year';
   return 'month';
+}
+
+function genAttemptId(): string {
+  try {
+    if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) return crypto.randomUUID();
+  } catch { /* fall through */ }
+  return `att_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 10)}`;
 }
 
 export function useSubscriptionConsent(): UseSubscriptionConsentResult {
@@ -93,9 +101,11 @@ export function useSubscriptionConsent(): UseSubscriptionConsentResult {
       }
       const priceCents = effectivePriceCents(product);
       const interval = deriveInterval(product, opts.interval);
+      const checkoutAttemptId = genAttemptId();
       setPending({
         product,
         opts,
+        checkoutAttemptId,
         payload: {
           productSlug: product.slug,
           productName: product.name,
