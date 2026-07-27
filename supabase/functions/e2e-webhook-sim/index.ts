@@ -44,7 +44,7 @@ Deno.serve(async (req) => {
       trial_end: null,
       current_period_start: now,
       current_period_end: now + 30 * 86400,
-      metadata: { user_id, tier, consent_id: `consent_e2e_${now}` },
+      metadata: { user_id, tier },
       items: {
         object: "list",
         data: [{
