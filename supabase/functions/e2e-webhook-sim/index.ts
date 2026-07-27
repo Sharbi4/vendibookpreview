@@ -22,7 +22,7 @@ async function hmacSha256Hex(secret: string, payload: string): Promise<string> {
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   try {
-    const { user_id, tier = "host_pro", event_type = "customer.subscription.created" } =
+    const { user_id, tier = "host_pro", event_type = "customer.subscription.created", sub_id, cancel_at_period_end = false } =
       await req.json();
     if (!user_id) throw new Error("user_id required");
 
@@ -30,8 +30,8 @@ Deno.serve(async (req) => {
     if (!secret) throw new Error("missing STRIPE_MONETIZATION_WEBHOOK_SECRET");
 
     const now = Math.floor(Date.now() / 1000);
-    const subId = `sub_e2e_${now}`;
-    const custId = `cus_e2e_${now}`;
+    const subId = sub_id || `sub_e2e_${now}`;
+    const custId = `cus_${subId}`;
     const priceId = `price_e2e_${tier}`;
 
     const subscription = {
