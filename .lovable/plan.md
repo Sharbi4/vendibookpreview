@@ -1,79 +1,135 @@
-# P0 Signup + Publish Recovery Plan
+## Scope
 
-## Findings up front (verified before proposing fixes)
+Five parallel workstreams, one shared visual system rooted in the home host-tools ember-glass section. All colors flow through tokens in `index.css` — no inline `text-white`, no ad-hoc `#hex`. Everything reduced-motion aware.
 
-1. **Email delivery is NOT the root cause.** Lovable Emails on `notify.vendibook.com` is verified and healthy. Last 7 days: 30 `welcome`, 41 `listing-draft-nudge`, 10 `listing-published`, 10 `stripe-onboarding-nudge`, 51 `generic-notice` all sent successfully. The 1,350 dead-letters are 100% digest emails (`host-daily-digest`, `shopper-daily-digest`, `host-weekly-digest`) — a separate templating bug, not auth. Auth-email sending itself is working.
-2. **Signups and publishes are happening, but low.** 19 listings created / 10 published in the last 14 days. So the friction is real but "zero" is directional. The audit still needs to run to confirm each of the 6 publish paths works for a real end-user (not service-role).
-3. **Phone field bug confirmed.** `authSchema` marks `phoneNumber` `.optional()` but the input has `required` on it — that WILL silently block submit if the browser rejects an empty required field before Zod runs.
-4. **Google OAuth uses managed wrapper** (`lovable.auth.signInWithOAuth`) — that's the correct path on Lovable Cloud, not a bug per se, but I'll verify end-to-end in the preview.
-5. **"Escrow" copy is present in ~50 files** — needs a global sweep.
+---
 
-## Part 1 — Reduce signup friction (immediate code fixes)
+### 1. Foundation — shared design primitives (build first, everything else consumes)
 
-**`src/components/auth/AuthFormPanel.tsx`**
-- Reduce required signup fields to: email, password, full name, terms. Keep the role selector.
-- Delete the phone input from the signup form and drop `phoneNumber` from the `authSchema.parse` call. Collect phone later at booking/listing time where it's actually needed.
-- Change `emailRedirectTo: '${origin}/'` → `${origin}/auth/callback` (a public route the app already handles) so users don't bounce off protected redirect logic.
-- Remove any `required` attribute from optional inputs so the browser doesn't block submit.
+New in `src/components/upgrade/`:
+- **`GlassPanel.tsx`** — the base surface. Variants: `default`, `elevated`, `hero`. Encodes: `bg: rgba(20,20,23,0.75)`, `backdrop-blur: 24px`, `border: 1.5px hsla(0,0%,100%,0.10)`, `radius: 20px`, soft top inner-highlight, optional ember corner glow.
+- **`RecommendedPill.tsx`** — flame-filled small-caps pill, positioned to overlap the top edge of a card. One canonical implementation; every "Recommended" callout imports this.
+- **`PlanCard.tsx`** — accepts `plan`, `recommended`, `onSelect`, `benefits[]` (with Lucide icon). Handles the elevated-when-recommended treatment (brighter border + only card with ember glow), staggered entrance, Sofia Pro title, Manrope tabular price with `CountUpNumber`.
+- **`CountUpNumber.tsx`** — 600ms tabular-num count-up on mount, `prefers-reduced-motion` short-circuits to the final value.
+- **`UpgradeHero.tsx`** — treated hero band using real photography from `src/assets` with a dark gradient overlay. Slotable header + subheadline.
+- **`EmberSweep.tsx`** — the very-low-opacity animated ember gradient shared by banner and modal (single implementation, respects reduced motion).
 
-**Verify (no code change unless broken):**
-- `AuthContext.signUp` creates the profile row via the `handle_new_user` trigger — confirm the trigger still exists and runs for both password + Google signups.
-- Redirect allowlist: report what needs to be added to the Cloud auth allowlist (production domain, published `.lovable.app`, preview `id-preview--*.lovable.app`). This is a config action for the owner, not code.
+New tokens in `index.css` (HSL only):
+- `--ember-500`, `--ember-400`, `--ember-glow`, `--flame-border`
+- `--glass-surface`, `--glass-surface-elevated`, `--glass-hairline`
+- `--warn-flame` (replaces every `--warning`/amber use)
+- `--gold-pro`, `--gold-pro-edge`, `--gold-pro-shadow` (scoped ONLY to Go Pro button)
 
-## Part 2 — "Escrow" → "Payment protection" sweep
+Add matching Tailwind mappings so `bg-glass`, `border-hairline`, `text-warn-flame`, `bg-gold-pro` work.
 
-Global find/replace across the ~50 files listed, preserving legal/agreement wording where "escrow-style" is technically accurate but rewording user-facing copy to "payment protection." Test files that assert on "escrow" get updated too.
+---
 
-## Part 3 — Publish matrix audit (real user, not service role)
+### 2. Kill amber/yellow app-wide
 
-Using a real verified test account driven through Playwright against the local preview, exercise all 6 paths and report pass/fail with the exact blocker:
+Global sweep of every `amber-*` / `yellow-*` utility class and every warning-tinted background. Rebuild the identity affordances on the new system:
 
-| # | Path | Expected |
-|---|---|---|
-| a | Sale, card enabled | Requires Stripe Connect gate; publishes after onboarding |
-| b | Sale, pay-in-person only | Publishes with NO Stripe account required |
-| c | Sale, both | Card path gated by Stripe; cash path always OK |
-| d | Rent, card enabled | Gated by Stripe |
-| e | Rent, pay-in-person | No Stripe required |
-| f | Rent + deposit + cleaning fee | Publishes; fees stored |
+- **`src/components/home/VerificationBanner.tsx`** → full-width dark-glass strip using `GlassPanel` + `EmberSweep`. Small flame-tinted `ShieldCheck` icon in a soft glowing circle. `#F7F7F8` primary text via `text-foreground`, `#B8B8C0` secondary via `text-muted-foreground`. Compact solid CTA "Verify identity". `sessionStorage` dismiss key, re-appears next session until verified.
+- **`src/components/dashboard/shared/IdentityChip.tsx`** → refined pill: dark-glass base, `border: 1.5px hsl(var(--flame-border))`, `ShieldCheck` icon, hover lift.
+- Same treatment applied in the sidebar profile block (`DashboardLayout.tsx`) and the attention stack (flame-tinted left edge, not amber).
+- `EnhancedProfileNextStepCard.tsx` + `ProfileNextStepCard.tsx` + any residual amber warning surfaces (dashboard warnings, listing wizard warnings) migrated to `--warn-flame`.
 
-For each path verify: draft row created, each wizard step saves, `status='published'` with `published_at` set, exactly ONE listings row (no dupe), and the listing appears in browse/search + detail page.
+No functional / RLS / auth change — visual only.
 
-## Part 4 — Fix the Stripe Connect gate (if it fires on cash-only)
+---
 
-Inspect `useListingForm` publish path + `EditListing`/`CreateListing` submit handlers. The current rule should be "Stripe required only if `payment_methods` includes card." If the gate fires on cash-only listings, remove that branch. Any blocker must produce a toast with a clear message and a link to fix (e.g., "Connect payouts" → Stripe onboarding).
+### 3. First-sign-in Welcome Modal — full rebuild
 
-## Part 5 — Wizard upgrade / Pro CTAs
+New: `src/components/onboarding/FirstSignInWelcomeModal.tsx`, mounted at the top of `Dashboard.tsx` (not in `DashboardLayout`, so it doesn't fire on every dashboard sub-route).
 
-Audit every upgrade CTA inside the listing wizard (Spark write-for-me, price suggestions, Featured Boost at publish, membership nudges, locked tools):
+Behavior:
+- Fires once per user. Persisted via `profiles.welcome_seen_at` (migration below) with a `localStorage` optimistic mirror. If either is set → never shows again. Never fires after any plan is chosen (checks `useHostEntitlements().tier !== 'free'`).
+- **No auto-dismiss.** No timers. Closes only on: (a) explicit close, (b) plan CTA, (c) "Continue to dashboard".
 
-1. Every CTA must invoke `create-checkout` (or the monetization checkout) and open Stripe. No dead clicks.
-2. `success_url` returns to `/create-listing?draft=<id>&step=<n>&unlocked=<sku>` so the user lands on the exact step with data intact.
-3. `cancel_url` returns to the same step with nothing charged.
-4. **Hard rule:** every optional upsell has a visible "Skip / continue free" that always completes publishing. Verify each CTA has one.
+Composition:
+- Desktop: centered `GlassPanel` variant `elevated`, ~880px wide.
+- Mobile: full-screen sheet.
+- Top: `UpgradeHero` band with treated trailer photography from `src/assets/rise-food-truck-fleet-owner.png` (existing real photo).
+- Headline: Sofia Pro "Welcome to Vendibook, {firstName}" + one-line subhead "Listing is free, always. Members get seen first."
+- Three `PlanCard`s side by side (stack on mobile). Middle tier is `recommended` — elevated border + only card with ember glow + `RecommendedPill` overlapping the top edge.
+- 3 benefit lines max per card, each with a Lucide icon.
+- Prices via `CountUpNumber`.
+- Staggered entrance (60ms per card + fade), reduced-motion aware.
+- Card CTAs: "Start free" / "Go Pro" / "Talk business".
+- Secondary text button below, equal dignity, never guilt-worded: "Continue to dashboard".
+- Analytics events fired via existing `trackEvent`: `welcome_modal_viewed`, `welcome_modal_plan_clicked` (with `plan_slug`), `welcome_modal_skipped`.
 
-## Part 6 — Configuration the owner must change (report only)
+DB migration:
+```sql
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS welcome_seen_at timestamptz;
+```
+No new table, no new grants needed (profiles already granted).
 
-I'll report the exact required changes at the end (not code):
-- Cloud → Auth: confirm Site URL and add missing redirect URLs to the allowlist.
-- Cloud → Auth → Google: confirm managed Google is enabled; if BYOK, verify redirect URI matches.
-- Auto-confirm should stay OFF (verification email required); confirm this too.
-- Separately: fix the digest DLQ (`aiSubject: true` bug already patched previously — verify redeployed).
+---
 
-## Technical details
+### 4. Go Pro button refinement
 
-- `src/components/auth/AuthFormPanel.tsx`: remove phone input + state + validation; simplify submit; fix redirect target.
-- `src/contexts/AuthContext.tsx`: signature stays the same but we pass `phoneNumber = undefined`; drop unused param eventually.
-- Test file for auth if any snapshots reference the phone field.
-- Playwright scripts under `/tmp/browser/` for the 6 publish paths (won't be committed; used for verification).
-- `rg` sweep for "escrow" replacing user-facing copy; keep legal terms of art where accurate.
+Refactor `src/components/dashboard/GoProButton.tsx` (single source of truth used by `DashboardLayout` top bar):
+- Tighter pill height (32px), 12px horizontal padding.
+- Metallic gradient via `--gold-pro` → darker gold, 1px lighter top edge via inset shadow.
+- 16px `Crown` from Lucide (never sparkles per project rule).
+- `#1A1400` dark text (via `--gold-pro-fg` token).
+- Subtle inner shadow.
+- Slow shine sweep every ~6s via keyframe on a `::before` overlay; disabled at `prefers-reduced-motion: reduce`.
+- Warm glow on hover only.
+- Paid users: refined `ProChip` variant — thin gold outline, transparent fill, `PRO` in small caps. Same file, `variant="paid"`.
 
-## Out of scope for this pass (per your directives)
+Gold remains scoped to this component; nothing else in the app uses `--gold-pro`.
 
-- No changes to fee/commission/hold/payout math.
-- No changes to the terms gate itself.
-- No changes to `create-checkout` money logic — only its `success_url` and `cancel_url` for wizard-context returns.
+---
 
-## Deliverable
+### 5. Consistency pass — refactor upgrade surfaces onto the new primitives
 
-At end I'll post: root cause summary, exact owner config changes, publish matrix results (6 rows pass/fail with evidence), CTA fixes, and typecheck output.
+Every listed surface refactored to import `PlanCard`, `RecommendedPill`, `GlassPanel`, `UpgradeHero`, `CountUpNumber`:
+
+1. `src/pages/Pricing.tsx` — plans grid.
+2. `src/pages/AccountSubscription.tsx` — Membership tab plan comparison.
+3. `src/components/dashboard/ProSpotlightTile.tsx` — dashboard Pro spotlight.
+4. `src/components/monetization/PremiumPlansSection.tsx` — landing pricing.
+5. `src/components/monetization/MiniPlansComparison.tsx` — compact comparison used in wizard/panel.
+6. `src/components/listing-wizard/MembershipInlinePanel.tsx` — inline wizard upsell (keeps consent-gate wiring intact).
+7. `src/components/tools/LockedToolPreview.tsx` — locked-tool overlay.
+8. `src/components/monetization/PromoteUpgradesSection.tsx` — Promote & Upgrades section.
+9. Any learn-more overlay in Premium Tools.
+
+Report a final list of files touched.
+
+---
+
+### 6. Escrow → payment protection sweep
+
+Global replacement (case-preserving) across `src`, `supabase/functions`, emails, legal-adjacent copy, and marketing:
+
+- "escrow-style" → "payment protection"
+- "escrow" → "payment protection"
+- "Escrow" → "Payment protection"
+- "ESCROW" → "PAYMENT PROTECTION"
+
+Files identified so far (18 hits): `useAdminTransactions.ts`, `PaymentSuccess.tsx`, `faq-chatbot/index.ts`, `create-sale-transaction/index.ts`, `AdminDashboard.tsx`, `create-checkout/index.ts`, `generateReceiptPdf.ts`, `stripe-webhook/index.ts`, `raise-dispute/index.ts` + test, `search.test.ts`, `SellerSalesSection.tsx`, `BuyerSalesSection.tsx`, `EmailReceiptPreview.tsx`, `shared/index.ts`, `InfoPopover.tsx`. Ledger fields / db column names are NOT renamed — copy only.
+
+Report exact instances changed.
+
+---
+
+## Verification
+
+- Playwright screenshots at 390px and 1440px of: verification banner, first-sign-in welcome modal, top bar (free + paid states), plans page.
+- `bunx tsgo` clean at the end.
+- Confirm publishing still returns 200 with a real authenticated session (the enum-coercion trigger fix from earlier is untouched — we're only editing UI + copy + one additive column).
+
+## Not in scope
+
+Money logic, entitlements resolution, RLS, webhook contracts, business flows. Purely visual + copy + one additive column for the welcome flag.
+
+## Assumptions (call out if wrong)
+
+- The three plan tiers for the welcome modal match the existing catalog: Starter (free), Growth/Pro (recommended, monthly), Enterprise/"Talk business" (contact-sales). If a different tier should be the recommended middle card, tell me.
+- "Continue to dashboard" is fine as the secondary label.
+- The one-line subhead uses the existing standing copy "Listing is free, always. Members get seen first."
+- Emails: `escrow` in template bodies is treated as user-facing copy and swept; email template names / db keys are NOT renamed.
+
+Approve to ship.
