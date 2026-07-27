@@ -296,14 +296,11 @@ export const RevenueAnalyticsCard = ({ analytics, onOpenStripeDashboard, isOpeni
       {/* Payout History */}
       <Card className="border border-border shadow-md">
         <CardHeader className="pb-3 bg-muted/30 border-b border-border">
-          <CardTitle className="text-base font-semibold flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-xl bg-primary text-primary-foreground flex items-center justify-center">
-                <ArrowUpRight className="h-4 w-4" />
-              </div>
-              Recent Transactions
+          <CardTitle className="text-base font-semibold flex items-center gap-2">
+            <div className="w-8 h-8 rounded-xl bg-primary text-primary-foreground flex items-center justify-center">
+              <ArrowUpRight className="h-4 w-4" />
             </div>
-            <StripeLogo size="sm" />
+            Recent Transactions
           </CardTitle>
         </CardHeader>
         <CardContent className="pt-4">
