@@ -29,6 +29,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import SEO from '@/components/SEO';
+import { StripeTrustBadge } from '@/components/trust/StripeTrustBadge';
 import { useMonetizationProducts } from '@/hooks/useMonetizationProducts';
 import { ProductPricingCard } from '@/components/monetization/ProductPricingCard';
 import { useHostEntitlements, type HostTier } from '@/hooks/useHostEntitlements';
