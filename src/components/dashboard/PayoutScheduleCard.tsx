@@ -63,7 +63,7 @@ export const PayoutScheduleCard = ({
             Payout Schedule
           </CardTitle>
           <div className="flex items-center gap-2">
-            <StripeLogo size="sm" />
+            <StripeTrustBadge context="payouts" surface="light" size="sm" withCopy={false} />
             {onOpenStripeDashboard && (
               <Button 
                 variant="outline" 
