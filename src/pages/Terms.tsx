@@ -214,6 +214,19 @@ const Terms = () => {
                 Email: legal@vendibook.com
               </p>
             </section>
+
+            <section>
+              <h2 className="text-2xl font-semibold mb-4">Mobile Messaging</h2>
+              <p className="text-muted-foreground leading-relaxed">
+                Vendibook offers an optional transactional SMS program. Enrollment is
+                voluntary and consent is <strong>not</strong> a condition of purchase or
+                account creation. Message frequency varies and message and data rates may
+                apply. You can reply <strong>STOP</strong> to any Vendibook SMS to opt out
+                or <strong>HELP</strong> for assistance. The full program terms are
+                governed by the{' '}
+                <a className="underline" href="/legal/sms">Vendibook SMS Terms and Consent Policy</a>.
+              </p>
+            </section>
           </div>
         </div>
       </main>

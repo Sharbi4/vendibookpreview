@@ -233,6 +233,43 @@ const Privacy = () => {
               protecting your information.
             </p>
           </section>
+
+          <section id="sms-and-mobile-messaging">
+            <h2 className="text-2xl font-semibold text-foreground mt-8 mb-3">SMS and Mobile Messaging</h2>
+            <div className="text-muted-foreground leading-relaxed space-y-3 text-sm">
+              <p>
+                Vendibook offers an optional transactional SMS program covering account,
+                booking, payment, required-document, listing, pickup or delivery, and
+                customer-support communications. You can review the full program in the{' '}
+                <Link to="/legal/sms" className="underline">Vendibook SMS Terms and Consent Policy</Link>.
+              </p>
+              <p>
+                We collect a mobile number only when you provide it (during signup, in
+                notification settings, at checkout, on a listing flow, or on the{' '}
+                <Link to="/sms" className="underline">/sms enrollment page</Link>). We use
+                it solely to deliver the transactional SMS categories described above and
+                to record your consent state. We record consent through an affirmative
+                action, along with a timestamp, source, disclosure version, and — when
+                available — IP address and user agent, so we can produce evidence of
+                consent when required.
+              </p>
+              <p>
+                Opting out of SMS does not delete your Vendibook account. We never sell
+                SMS opt-in information. We never transfer SMS opt-in information to
+                unrelated third parties. Service providers (for example our messaging
+                carrier) process messages only to deliver the service. You can opt out at
+                any time by replying <strong>STOP</strong> to any Vendibook SMS, by
+                disabling SMS in notification settings, or by emailing{' '}
+                <a className="underline" href="mailto:support@vendibook.com">support@vendibook.com</a>.
+              </p>
+              <p>
+                <strong>
+                  All the above categories exclude text messaging originator opt-in data and consent;
+                  this information won&apos;t be shared with any third parties.
+                </strong>
+              </p>
+            </div>
+          </section>
         </div>
 
         {/* Back to Home */}
