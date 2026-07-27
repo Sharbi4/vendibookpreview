@@ -50,6 +50,10 @@ Deno.serve(async (req) => {
     userAgent?: string;
     consent?: boolean;
     marketing?: boolean;
+    firstName?: string;
+    lastName?: string;
+    email?: string;
+    sourceUrl?: string;
   };
   try {
     payload = await req.json();
