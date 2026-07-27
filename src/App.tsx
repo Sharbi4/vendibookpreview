@@ -22,6 +22,7 @@ import { usePendingMessage } from "@/hooks/usePendingMessage";
 import { AnimatePresence } from "framer-motion";
 import { Loader2 } from "lucide-react";
 import GoogleOneTap from "@/components/auth/GoogleOneTap";
+import TawkIdentity from "@/components/support/TawkIdentity";
 
 import MobileBottomNav from "@/components/layout/MobileBottomNav";
 import OfflineBanner from "@/components/system/OfflineBanner";
@@ -85,6 +86,7 @@ const ProtectedSalePage = lazy(() => import("./pages/ProtectedSale"));
 const TransactionDetail = lazy(() => import("./pages/TransactionDetail"));
 
 const NotificationPreferences = lazy(() => import("./pages/NotificationPreferences"));
+const MyTickets = lazy(() => import("./pages/MyTickets"));
 const HelpCenter = lazy(() => import("./pages/HelpCenter"));
 const HelpArticle = lazy(() => import("./pages/HelpArticle"));
 const CaliforniaPrivacy = lazy(() => import("./pages/CaliforniaPrivacy"));
@@ -304,6 +306,7 @@ const AnimatedRoutes = () => {
           <Route path="/admin/campaigns/new-exit-plan" element={<PageTransition><AdminCampaignNewExitPlan /></PageTransition>} />
           <Route path="/email/thanks" element={<PageTransition><EmailFeedbackThanks /></PageTransition>} />
           <Route path="/notification-preferences" element={<PageTransition><NotificationPreferences /></PageTransition>} />
+          <Route path="/account/support" element={<PageTransition><MyTickets /></PageTransition>} />
           <Route path="/help" element={<PageTransition><HelpCenter /></PageTransition>} />
           <Route path="/help/:slug" element={<PageTransition><HelpArticle /></PageTransition>} />
           <Route path="/california-privacy" element={<PageTransition><CaliforniaPrivacy /></PageTransition>} />
@@ -503,6 +506,8 @@ const AppContent = () => {
       <CookieConsent />
 
       <GoogleOneTap />
+      <TawkIdentity />
+      
       
       <AnimatedRoutes />
       <MobileBottomNav />

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   ArrowLeft, User, Lock, KeyRound, Shield, Bell, CreditCard,
-  ShieldCheck, FileText, Loader2, Eye,
+  ShieldCheck, FileText, Loader2, Eye, MessageSquare,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
@@ -301,6 +301,12 @@ const Account = () => {
                   label="Notifications"
                   hint="Email, push, and SMS preferences."
                   to="/notification-preferences"
+                />
+                <RowLink
+                  icon={MessageSquare}
+                  label="My tickets"
+                  hint="Track issues you've reported and reply to support."
+                  to="/account/support"
                 />
                 <RowLink
                   icon={ShieldCheck}
