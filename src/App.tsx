@@ -262,6 +262,10 @@ const AnimatedRoutes = () => {
           <Route path="/how-it-works" element={<PageTransition><HowItWorks /></PageTransition>} />
           <Route path="/how-it-works-host" element={<PageTransition><HowItWorksHost /></PageTransition>} />
           <Route path="/how-it-works-seller" element={<PageTransition><HowItWorksSeller /></PageTransition>} />
+          {/* Legacy inbound-link redirects — external sites/emails may have linked the slash forms */}
+          <Route path="/how-it-works/host" element={<Navigate to="/how-it-works-host" replace />} />
+          <Route path="/how-it-works/seller" element={<Navigate to="/how-it-works-seller" replace />} />
+          <Route path="/tools/permit-path" element={<Navigate to="/tools/permitpath" replace />} />
           <Route path="/become-a-host" element={<PageTransition><BecomeAHost /></PageTransition>} />
           <Route path="/contact" element={<PageTransition><Contact /></PageTransition>} />
           <Route path="/verify-identity" element={<PageTransition><IdentityVerification /></PageTransition>} />
