@@ -101,6 +101,20 @@ serve(async (req) => {
         .eq('id', user.id);
     }
 
+    // D1: sync trusted server-only host_payment_eligibility. This is the
+    // ONLY authority the publish trigger consults.
+    await supabaseClient.from('host_payment_eligibility').upsert({
+      user_id: user.id,
+      stripe_account_id: profile.stripe_account_id,
+      onboarding_complete: isComplete,
+      charges_enabled: Boolean(account.charges_enabled),
+      payouts_enabled: Boolean(account.payouts_enabled),
+      details_submitted: Boolean(account.details_submitted),
+      requirements_currently_due: (account.requirements?.currently_due ?? []) as unknown as object,
+      disabled_reason: account.requirements?.disabled_reason ?? null,
+      last_synced_at: new Date().toISOString(),
+    }, { onConflict: 'user_id' });
+
     return new Response(JSON.stringify({
       connected: true,
       onboarding_complete: isComplete,
