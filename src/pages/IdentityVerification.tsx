@@ -203,10 +203,11 @@ const IdentityVerification = () => {
             <div className="mt-8 pt-6 border-t border-border grid gap-4 md:grid-cols-3">
               <TrustCell
                 media={
-                  <img
-                    src={stripeWordmark}
-                    alt="Stripe"
-                    className="h-4 w-auto object-contain"
+                  <StripeTrustBadge
+                    context="identity"
+                    surface="light"
+                    size="sm"
+                    withCopy={false}
                   />
                 }
                 title="Powered by Stripe Identity"
