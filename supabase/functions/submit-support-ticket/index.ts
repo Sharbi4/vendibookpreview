@@ -6,6 +6,7 @@
 // The client is only trusted for description content and non-sensitive context.
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
+import { forwardTicketToTawk } from "../_shared/tawkForward.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -271,11 +272,48 @@ serve(async (req) => {
       console.error("[submit-support-ticket] admin notify failed", e);
     }
 
+    // Forward to private Tawk inbound-mail address (server-side only).
+    // Delivery outcome is written back to the ticket row; failures never
+    // block the customer response because the ticket is already persisted.
+    let forwardingStatus: string = "skipped";
+    try {
+      const fwd = await forwardTicketToTawk({
+        referenceCode: ticket.reference_code,
+        ticketId: ticket.id,
+        subject: title,
+        priority,
+        category,
+        featureArea,
+        source: "in_app",
+        customerName: user.user_metadata?.full_name ?? null,
+        customerEmail: recipient,
+        emailVerified: !!user.email_confirmed_at,
+        callbackPhone: null,
+        bodyText: description,
+        context: {
+          is_blocking: body.is_blocking,
+          page_url: insertPayload.page_url,
+          wizard_step: insertPayload.wizard_step,
+          transaction_status: insertPayload.transaction_status,
+        },
+        replyTo: recipient,
+      });
+      forwardingStatus = fwd.status;
+      await svc.from("support_tickets").update({
+        forwarding_status: fwd.status,
+        forwarding_last_error: fwd.error ?? null,
+        forwarded_at: fwd.status === "delivered" ? new Date().toISOString() : null,
+      }).eq("id", ticket.id);
+    } catch (e) {
+      console.error("[submit-support-ticket] tawk forward failed", e);
+    }
+
     return new Response(
       JSON.stringify({
         ticket_id: ticket.id,
         reference_code: ticket.reference_code,
         priority: ticket.priority,
+        forwarding_status: forwardingStatus,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 },
     );

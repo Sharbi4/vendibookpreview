@@ -253,12 +253,13 @@ jobs:
         with:
           bun-version: latest
       - run: bun install --frozen-lockfile
-      - name: Run support-ticket smoke (submit + priority + RLS + tawk sig + dedupe + bad-sig)
+      - name: Run support-ticket smoke (submit + priority + RLS + tawk sig + dedupe + vapi bearer + vapi replay)
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
           TAWK_WEBHOOK_SECRET: ${{ secrets.TAWK_WEBHOOK_SECRET }}
+          VAPI_TOOL_SHARED_SECRET: ${{ secrets.VAPI_TOOL_SHARED_SECRET }}
         run: bun scripts/smoke/support-ticket-smoke.ts
 
 

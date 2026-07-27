@@ -5964,9 +5964,13 @@ export type Database = {
           customer_name: string | null
           description: string
           device_type: string | null
+          email_verified: boolean
           feature_area: string
           first_response_at: string | null
           first_response_due_at: string | null
+          forwarded_at: string | null
+          forwarding_last_error: string | null
+          forwarding_status: string
           id: string
           is_blocking: boolean
           last_error_category: string | null
@@ -5996,6 +6000,7 @@ export type Database = {
           transaction_status: string | null
           updated_at: string
           user_id: string | null
+          vapi_call_id: string | null
           what_happened_instead: string | null
           what_i_was_doing: string | null
           wizard_step: string | null
@@ -6011,9 +6016,13 @@ export type Database = {
           customer_name?: string | null
           description: string
           device_type?: string | null
+          email_verified?: boolean
           feature_area: string
           first_response_at?: string | null
           first_response_due_at?: string | null
+          forwarded_at?: string | null
+          forwarding_last_error?: string | null
+          forwarding_status?: string
           id?: string
           is_blocking?: boolean
           last_error_category?: string | null
@@ -6043,6 +6052,7 @@ export type Database = {
           transaction_status?: string | null
           updated_at?: string
           user_id?: string | null
+          vapi_call_id?: string | null
           what_happened_instead?: string | null
           what_i_was_doing?: string | null
           wizard_step?: string | null
@@ -6058,9 +6068,13 @@ export type Database = {
           customer_name?: string | null
           description?: string
           device_type?: string | null
+          email_verified?: boolean
           feature_area?: string
           first_response_at?: string | null
           first_response_due_at?: string | null
+          forwarded_at?: string | null
+          forwarding_last_error?: string | null
+          forwarding_status?: string
           id?: string
           is_blocking?: boolean
           last_error_category?: string | null
@@ -6090,6 +6104,7 @@ export type Database = {
           transaction_status?: string | null
           updated_at?: string
           user_id?: string | null
+          vapi_call_id?: string | null
           what_happened_instead?: string | null
           what_i_was_doing?: string | null
           wizard_step?: string | null

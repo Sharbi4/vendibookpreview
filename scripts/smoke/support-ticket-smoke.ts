@@ -24,6 +24,7 @@ const URL_ = process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL;
 const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const ANON_KEY = process.env.SUPABASE_ANON_KEY ?? process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 const TAWK_SECRET = process.env.TAWK_WEBHOOK_SECRET;
+const VAPI_TOOL_SHARED_SECRET = process.env.VAPI_TOOL_SHARED_SECRET;
 
 if (!URL_ || !SERVICE_KEY || !ANON_KEY) {
   console.warn(
@@ -41,6 +42,7 @@ const admin = createClient(URL_, SERVICE_KEY, { auth: { persistSession: false } 
 const anon = createClient(URL_, ANON_KEY, { auth: { persistSession: false } });
 const SUBMIT_URL = `${URL_}/functions/v1/submit-support-ticket`;
 const TAWK_URL = `${URL_}/functions/v1/tawk-webhook`;
+const VAPI_URL = `${URL_}/functions/v1/vapi-create-support-ticket`;
 
 const RUN = randomUUID().slice(0, 8);
 const USER_A = randomUUID();
@@ -48,6 +50,7 @@ const USER_B = randomUUID();
 const EMAIL_A = `smoke-ticket-a-${RUN}@vendibook-qa.test`;
 const EMAIL_B = `smoke-ticket-b-${RUN}@vendibook-qa.test`;
 const TAWK_EVENT_ID = `smoke-tawk-${RUN}`;
+const VAPI_CALL_ID = `smoke-vapi-${RUN}`;
 const createdTicketIds: string[] = [];
 
 type Result = { name: string; pass: boolean; detail?: string };
@@ -177,14 +180,91 @@ async function checkTawkWebhookDedupe() {
     `status ${badRes.status}`);
 }
 
+async function checkVapiCreateTicket() {
+  if (!VAPI_TOOL_SHARED_SECRET) {
+    record("vapi-create-support-ticket", true, "skipped — VAPI_TOOL_SHARED_SECRET not set in this env");
+    return;
+  }
+
+  // 1. missing bearer → 401
+  const noAuth = await fetch(VAPI_URL, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ call_id: `${VAPI_CALL_ID}-x`, customer_name: "Smoke", issue_summary: "x" }),
+  });
+  assert("vapi endpoint rejects missing bearer", noAuth.status === 401, `status ${noAuth.status}`);
+  await noAuth.text();
+
+  // 2. bad bearer → 403
+  const badAuth = await fetch(VAPI_URL, {
+    method: "POST",
+    headers: { "content-type": "application/json", authorization: "Bearer nope-nope-nope" },
+    body: JSON.stringify({ call_id: `${VAPI_CALL_ID}-x`, customer_name: "Smoke", issue_summary: "x" }),
+  });
+  assert("vapi endpoint rejects bad bearer", badAuth.status === 403, `status ${badAuth.status}`);
+  await badAuth.text();
+
+  const headers = { "content-type": "application/json", authorization: `Bearer ${VAPI_TOOL_SHARED_SECRET}` };
+
+  // 3. validation failure
+  const badBody = await fetch(VAPI_URL, { method: "POST", headers, body: JSON.stringify({}) });
+  assert("vapi endpoint rejects invalid payload", badBody.status === 400, `status ${badBody.status}`);
+  await badBody.text();
+
+  // 4. valid unverified-email submission → ticket created, no user linked
+  const okBody = {
+    customer_name: `Smoke Vapi ${RUN}`,
+    verified_email: EMAIL_A, // note: verification metadata NOT provided → treated as unverified
+    callback_phone: "555-123-4567",
+    issue_category: "safety_fraud",
+    severity: "standard",
+    issue_summary: `smoke vapi ${RUN}`,
+    troubleshooting_attempted: "restarted browser",
+    customer_impact: "cannot proceed with sale",
+    preferred_follow_up: "phone",
+    call_id: VAPI_CALL_ID,
+    call_summary: "Caller reported suspected fraud on active listing.",
+  };
+  const ok = await fetch(VAPI_URL, { method: "POST", headers, body: JSON.stringify(okBody) });
+  const okJson = await ok.json();
+  assert("vapi endpoint accepts valid payload", ok.status === 200 && okJson.success === true, `status ${ok.status} body ${JSON.stringify(okJson).slice(0, 200)}`);
+  const vapiTicketId: string | undefined = okJson?.ticket_id;
+  if (vapiTicketId) createdTicketIds.push(vapiTicketId);
+  assert("vapi response includes reference + confirmation_message", !!okJson?.reference && !!okJson?.confirmation_message);
+  assert("vapi response does NOT leak TAWK_FORWARD_EMAIL", !JSON.stringify(okJson).toLowerCase().includes("tawk.email"));
+  assert("vapi response does NOT leak bearer secret", !JSON.stringify(okJson).includes(VAPI_TOOL_SHARED_SECRET));
+
+  // 5. server-derived priority: safety_fraud → suspected_fraud → urgent
+  const { data: row } = await admin.from("support_tickets").select("priority, email_verified, source, vapi_call_id, user_id, forwarding_status").eq("id", vapiTicketId!).maybeSingle();
+  assert("vapi ticket source=vapi_callback", row?.source === "vapi_callback");
+  assert("vapi ticket server-derived priority=urgent", row?.priority === "urgent", `priority=${row?.priority}`);
+  assert("vapi ticket flagged unverified (no otp metadata)", row?.email_verified === false);
+  assert("vapi ticket NOT linked to any user (unverified path)", row?.user_id == null, `user_id=${row?.user_id}`);
+  assert("vapi ticket vapi_call_id persisted", row?.vapi_call_id === VAPI_CALL_ID);
+
+  // 6. replay idempotency → same reference returned, no second ticket row
+  const replay = await fetch(VAPI_URL, { method: "POST", headers, body: JSON.stringify(okBody) });
+  const replayJson = await replay.json();
+  assert("vapi replay returns success with deduped=true", replay.status === 200 && replayJson.deduped === true, `body ${JSON.stringify(replayJson).slice(0, 200)}`);
+  assert("vapi replay returns same reference", replayJson.reference === okJson.reference);
+  const { data: rows } = await admin.from("support_tickets").select("id").eq("vapi_call_id", VAPI_CALL_ID);
+  assert("vapi replay did NOT create a second ticket", (rows?.length ?? 0) === 1, `count=${rows?.length ?? 0}`);
+
+  // 7. anon cannot read vapi ticket
+  const { data: anonRead } = await anon.from("support_tickets").select("id").eq("id", vapiTicketId!).maybeSingle();
+  assert("anon cannot read vapi-created ticket", !anonRead);
+}
+
 async function teardown() {
   if (createdTicketIds.length) {
     await admin.from("support_ticket_messages").delete().in("ticket_id", createdTicketIds);
     await admin.from("support_ticket_attachments").delete().in("ticket_id", createdTicketIds);
     await admin.from("support_ticket_audit_events").delete().in("ticket_id", createdTicketIds);
+    await admin.from("support_ticket_webhook_events").delete().in("ticket_id", createdTicketIds);
     await admin.from("support_tickets").delete().in("id", createdTicketIds);
   }
   await admin.from("support_ticket_webhook_events").delete().eq("external_event_id", TAWK_EVENT_ID);
+  await admin.from("support_ticket_webhook_events").delete().eq("external_event_id", VAPI_CALL_ID);
   await admin.from("profiles").delete().in("id", [USER_A, USER_B]);
   await admin.auth.admin.deleteUser(USER_A).catch(() => {});
   await admin.auth.admin.deleteUser(USER_B).catch(() => {});
@@ -196,6 +276,7 @@ async function main() {
   try {
     await checkSubmitTicket();
     await checkTawkWebhookDedupe();
+    await checkVapiCreateTicket();
   } catch (e) {
     record("uncaught runner error", false, (e as Error).message);
   } finally {
