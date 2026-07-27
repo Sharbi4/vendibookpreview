@@ -6,7 +6,7 @@ import { useDashboardPersona } from '@/hooks/useDashboardPersona';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import HostDashboard from '@/components/dashboard/HostDashboard';
 import ShopperDashboard from '@/components/dashboard/ShopperDashboard';
-import DashboardOnboarding from '@/components/onboarding/DashboardOnboarding';
+
 import EmailVerificationBanner from '@/components/auth/EmailVerificationBanner';
 import PurchaseReturnBanner from '@/components/monetization/PurchaseReturnBanner';
 import { Loader2 } from 'lucide-react';
@@ -35,7 +35,6 @@ const Dashboard = () => {
   const { user, isLoading, hasRole } = useAuth();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const [showOnboarding, setShowOnboarding] = useState(false);
 
   usePageTracking();
 
@@ -71,18 +70,6 @@ const Dashboard = () => {
     setSearchParams(next);
   };
 
-  useEffect(() => {
-    const hasSeen = localStorage.getItem('vendibook_dashboard_onboarding_v1');
-    if (!hasSeen && !isLoading && user) {
-      const timer = setTimeout(() => setShowOnboarding(true), 1000);
-      return () => clearTimeout(timer);
-    }
-  }, [isLoading, user]);
-
-  const handleOnboardingComplete = () => {
-    localStorage.setItem('vendibook_dashboard_onboarding_v1', 'true');
-    setShowOnboarding(false);
-  };
 
   useEffect(() => {
     if (!isLoading && !user) navigate('/auth');
@@ -143,9 +130,6 @@ const Dashboard = () => {
         <Suspense fallback={<TabFallback />}>{content}</Suspense>
       )}
 
-      {showOnboarding && (
-        <DashboardOnboarding mode={currentMode} onComplete={handleOnboardingComplete} />
-      )}
     </DashboardLayout>
   );
 };
