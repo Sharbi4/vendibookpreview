@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { StripeLogo } from '@/components/ui/StripeLogo';
+import { StripeTrustBadge } from '@/components/trust/StripeTrustBadge';
 import { cn } from '@/lib/utils';
 import { format, addDays, isAfter, isBefore, startOfDay } from 'date-fns';
 import { PayoutRecord } from '@/hooks/useRevenueAnalytics';
