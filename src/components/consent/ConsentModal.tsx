@@ -56,6 +56,7 @@ export const ConsentModal: React.FC<Props> = ({
   relatedIds,
   intro,
   primaryLabel = 'Accept and continue',
+  footerSlot,
   onAccept,
   onCancel,
 }) => {
