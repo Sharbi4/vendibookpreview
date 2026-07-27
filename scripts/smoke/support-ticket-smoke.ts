@@ -24,6 +24,7 @@ const URL_ = process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL;
 const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const ANON_KEY = process.env.SUPABASE_ANON_KEY ?? process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 const TAWK_SECRET = process.env.TAWK_WEBHOOK_SECRET;
+const VAPI_TOOL_SHARED_SECRET = process.env.VAPI_TOOL_SHARED_SECRET;
 
 if (!URL_ || !SERVICE_KEY || !ANON_KEY) {
   console.warn(
