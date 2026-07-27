@@ -376,7 +376,7 @@ export const DashboardLayout = ({ children, mode, onModeChange, isHost }: Dashbo
         </TooltipProvider>
 
         <main className="flex-1 flex flex-col min-w-0">
-          <div className="hidden md:flex items-center justify-between gap-3 px-4 lg:px-6 py-3 border-b border-white/5 bg-background">
+          <div className="hidden md:flex items-center justify-between gap-3 px-4 lg:px-6 py-3 dash-utility-header sticky top-0 z-30">
             <div />
             {isHost && <div className="w-[240px]"><ModeSwitch /></div>}
             <div className="flex items-center gap-3">
@@ -386,7 +386,8 @@ export const DashboardLayout = ({ children, mode, onModeChange, isHost }: Dashbo
               <AppDropdownMenu variant="light" />
             </div>
           </div>
-          <div className="flex-1 p-4 md:p-6 lg:p-8 pb-24 md:pb-6 overflow-auto">
+          <div className="flex-1 p-4 md:p-6 lg:p-8 pb-24 md:pb-6">
+
             {/* Mobile-only tab pills — every tab discoverable without opening a menu */}
             <DashboardMobileTabs mode={mode} />
             {children}
