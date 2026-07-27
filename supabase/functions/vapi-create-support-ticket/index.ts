@@ -25,11 +25,14 @@
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
-import {
-  parsePhoneNumberFromString,
-  type CountryCode,
-} from "https://esm.sh/libphonenumber-js@1.11.14/max";
+import { type CountryCode } from "https://esm.sh/libphonenumber-js@1.11.14/max";
 import { forwardTicketToTawk } from "../_shared/tawkForward.ts";
+import {
+  APPROVED_TOOL_NAME,
+  extractToolCalls,
+  normalizePhoneString,
+  safeString,
+} from "./helpers.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -40,8 +43,6 @@ const corsHeaders = {
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 const VAPI_TOOL_SHARED_SECRET = Deno.env.get("VAPI_TOOL_SHARED_SECRET") ?? "";
-
-const APPROVED_TOOL_NAME = "create_support_ticket";
 
 const ALLOWED_SEVERITY = new Set(["standard", "urgent", "critical"]);
 const ALLOWED_CATEGORY = new Set([
