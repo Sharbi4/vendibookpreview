@@ -14,12 +14,18 @@ const CAPTURE_DATE = 'July 27, 2026';
  * capture instructions are shown below so reviewers can reproduce them.
  */
 const SmsOptInProof: React.FC = () => {
+  useEffect(() => {
+    document.title = 'SMS Opt-In Evidence · Vendibook';
+    let meta = document.querySelector<HTMLMetaElement>('meta[name="robots"]');
+    if (!meta) {
+      meta = document.createElement('meta');
+      meta.name = 'robots';
+      document.head.appendChild(meta);
+    }
+    meta.content = 'noindex, nofollow';
+  }, []);
   return (
     <>
-      <Helmet>
-        <title>SMS Opt-In Evidence · Vendibook</title>
-        <meta name="robots" content="noindex, nofollow" />
-      </Helmet>
       <main className="mx-auto max-w-4xl px-4 py-10 space-y-8 text-foreground">
         <header>
           <h1 className="text-2xl font-semibold">Vendibook SMS Opt-In Evidence</h1>
