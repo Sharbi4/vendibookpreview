@@ -180,10 +180,16 @@ const HelpCenter = () => {
   const openZendeskChat = () => {
     trackEventToDb('help_chat_click', 'engagement', { source: 'help_center' });
     try {
-      (window as any).Tawk_API?.maximize?.();
+      const tawk = (window as any).Tawk_API;
+      if (tawk && typeof tawk.maximize === 'function') {
+        tawk.maximize();
+        return;
+      }
     } catch (error) {
-      console.debug('Tawk chat open error:', error);
+      console.debug('Chat open error:', error);
     }
+    // Graceful fallback if chat isn't available yet — route to the support form.
+    window.location.assign('/contact');
   };
 
   const faqSchema = {
@@ -200,7 +206,7 @@ const HelpCenter = () => {
     <div className="min-h-screen flex flex-col bg-[#08080a] text-white">
       <SEO
         title="Help Center — Vendibook Support"
-        description="Request a call, search guides, or chat 24/7. Help for renting, buying, listing, and getting paid on Vendibook."
+        description="Get help from Vendibook Support. Request a callback, start a chat, or email support@vendibook.com for bookings, payouts, listings, documents, and account questions."
         canonical="/help"
         type="website"
       />
@@ -219,82 +225,114 @@ const HelpCenter = () => {
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(255,255,255,0.04),transparent_55%)]" />
         </div>
 
-        {/* ===== HERO: Request a Call (TOP) ===== */}
-        <section className="relative pt-10 md:pt-16 pb-10 md:pb-14">
-          <div className="container max-w-5xl">
+        {/* ===== HERO: Three ways to get help ===== */}
+        <section className="relative pt-10 md:pt-16 pb-10 md:pb-14" aria-labelledby="support-heading">
+          <div className="container max-w-6xl">
             <div className="text-center mb-8 md:mb-10">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/10 bg-white/[0.03] backdrop-blur-md mb-5">
-                <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-white/60">
-                  Vendibook · Help Center
+                <span className="font-mono text-[10px] uppercase tracking-[0.25em] text-white/60">
+                  Vendibook Support
                 </span>
               </div>
-              <h1 className="text-3xl md:text-5xl font-medium tracking-tight text-white">
-                Real help, the moment you need it.
+              <h1 id="support-heading" className="text-3xl md:text-5xl font-medium tracking-tight text-white">
+                Get help, your way.
               </h1>
-              <p className="text-white/55 mt-3 max-w-xl mx-auto text-sm md:text-base">
-                Request an instant callback, search the knowledge base, or chat with our AI support agent.
+              <p className="text-white/55 mt-3 max-w-2xl mx-auto text-sm md:text-base">
+                Questions about a booking, payout, listing, document, or your account?
+                Choose the support option that works best for you.
               </p>
             </div>
 
-            <RequestCallCard />
-          </div>
-        </section>
-
-        {/* ===== Search + quick chat ===== */}
-        <section className="relative py-8 md:py-12 border-t border-white/[0.06]">
-          <div className="container max-w-5xl">
-            <div className="grid md:grid-cols-[1fr,300px] gap-6 items-start">
-              <div>
-                <Kicker>Knowledge Base</Kicker>
-                <h2 className="text-xl md:text-2xl font-medium tracking-tight text-white mb-4">
-                  Search guides, articles, and policies.
-                </h2>
-                <div className="rounded-xl border border-white/10 bg-white/[0.03] p-2 backdrop-blur-md">
-                  <HelpCenterSearch />
-                </div>
-                <div className="flex flex-wrap gap-2 mt-4">
-                  {popularSearches.map((chip) => (
-                    <Link
-                      key={chip.query}
-                      to={`/faq?q=${encodeURIComponent(chip.query)}`}
-                      className="text-[11px] px-3 py-1.5 rounded-full bg-white/[0.04] border border-white/10 text-white/60 hover:text-white hover:border-white/25 transition-colors"
-                    >
-                      {chip.label}
-                    </Link>
-                  ))}
-                </div>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 items-stretch">
+              {/* Primary: Callback (spans 2 cols on wide screens) */}
+              <div className="lg:col-span-2">
+                <RequestCallCard />
               </div>
 
-              {/* Right: lightweight chat panel */}
-              <div className="rounded-2xl border border-white/10 bg-gradient-to-b from-white/[0.04] to-transparent backdrop-blur-md p-5">
-                <div className="flex items-center gap-2 mb-3">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
-                  <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-white/50">Online · 24/7</span>
-                </div>
-                <h3 className="text-base font-medium text-white">Prefer to type?</h3>
-                <p className="text-xs text-white/55 mt-1 mb-4">
-                  Chat with our AI support agent or submit a ticket — replies in under 5 minutes.
-                </p>
-                <div className="space-y-2">
+              {/* Secondary: Chat + Email stacked */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-5">
+                {/* Chat */}
+                <div className="relative h-full rounded-2xl border border-white/10 bg-gradient-to-b from-white/[0.05] to-white/[0.01] backdrop-blur-md p-6 flex flex-col">
+                  <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/15 to-transparent" />
+                  <div className="flex items-center gap-2 mb-4">
+                    <span className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-white/[0.06] border border-white/10 text-white/80">
+                      <MessageCircle className="h-4 w-4" aria-hidden="true" />
+                    </span>
+                    <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-white/45">
+                      Chat
+                    </span>
+                  </div>
+                  <h2 className="text-lg font-medium tracking-tight text-white mb-1.5">
+                    Chat with Support
+                  </h2>
+                  <p className="text-sm text-white/55 leading-relaxed mb-5 flex-1">
+                    Start a conversation from the Help Center for help with your account,
+                    listing, booking, or transaction.
+                  </p>
                   <Button
                     onClick={openZendeskChat}
-                    className="w-full h-10 bg-white text-black hover:bg-white/90 font-medium"
+                    className="w-full h-11 rounded-xl bg-white text-black hover:bg-white/90 font-medium"
                   >
-                    <MessageCircle className="h-4 w-4 mr-2" />
-                    Chat with Support
+                    <MessageCircle className="h-4 w-4 mr-2" aria-hidden="true" />
+                    Start a chat
                   </Button>
+                </div>
+
+                {/* Email */}
+                <div className="relative h-full rounded-2xl border border-white/10 bg-gradient-to-b from-white/[0.04] to-white/[0.01] backdrop-blur-md p-6 flex flex-col">
+                  <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/15 to-transparent" />
+                  <div className="flex items-center gap-2 mb-4">
+                    <span className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-white/[0.06] border border-white/10 text-white/80">
+                      <Send className="h-4 w-4" aria-hidden="true" />
+                    </span>
+                    <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-white/45">
+                      Email
+                    </span>
+                  </div>
+                  <h2 className="text-lg font-medium tracking-tight text-white mb-1.5">
+                    Email Support
+                  </h2>
+                  <p className="text-sm text-white/55 leading-relaxed mb-5 flex-1">
+                    Send us a message at{' '}
+                    <span className="text-white/80">support@vendibook.com</span>.
+                    We'll respond within 24 hours.
+                  </p>
                   <Button
                     asChild
                     variant="outline"
-                    className="w-full h-10 bg-transparent border-white/15 text-white hover:bg-white/5 hover:text-white"
+                    className="w-full h-11 rounded-xl bg-white/[0.04] border-white/15 text-white hover:bg-white/10 hover:text-white"
                   >
-                    <Link to="/contact">
-                      <Send className="h-4 w-4 mr-2" />
-                      Submit a Request
-                    </Link>
+                    <a href="mailto:support@vendibook.com">
+                      <Send className="h-4 w-4 mr-2" aria-hidden="true" />
+                      Email Support
+                    </a>
                   </Button>
                 </div>
               </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ===== Knowledge Base search ===== */}
+        <section className="relative py-10 md:py-14 border-t border-white/[0.06]" aria-labelledby="help-search-heading">
+          <div className="container max-w-4xl">
+            <Kicker>Knowledge Base</Kicker>
+            <h2 id="help-search-heading" className="text-xl md:text-2xl font-medium tracking-tight text-white mb-4">
+              Find an answer in the Help Center
+            </h2>
+            <div className="rounded-xl border border-white/10 bg-white/[0.03] p-2 backdrop-blur-md">
+              <HelpCenterSearch />
+            </div>
+            <div className="flex flex-wrap gap-2 mt-4">
+              {popularSearches.map((chip) => (
+                <Link
+                  key={chip.query}
+                  to={`/faq?q=${encodeURIComponent(chip.query)}`}
+                  className="text-[11px] px-3 py-1.5 rounded-full bg-white/[0.04] border border-white/10 text-white/60 hover:text-white hover:border-white/25 transition-colors"
+                >
+                  {chip.label}
+                </Link>
+              ))}
             </div>
           </div>
         </section>
