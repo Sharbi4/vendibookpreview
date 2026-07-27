@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
-import { SEO } from '@/components/SEO';
+import SEO from '@/components/SEO';
 import vendibookLogo from '@/assets/vendibook-logo.png';
 import { SmsConsentField } from '@/components/sms/SmsConsentField';
 import { normalizeNanpToE164 } from '@/lib/sms/phone';

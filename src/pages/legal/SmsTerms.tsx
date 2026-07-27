@@ -1,5 +1,5 @@
 import React from 'react';
-import { SEO } from '@/components/SEO';
+import SEO from '@/components/SEO';
 import { SMS_POLICY_VERSION } from '@/lib/sms/consent';
 
 const EFFECTIVE_DATE = 'July 27, 2026';
