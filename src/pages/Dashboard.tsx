@@ -6,7 +6,7 @@ import { useDashboardPersona } from '@/hooks/useDashboardPersona';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import HostDashboard from '@/components/dashboard/HostDashboard';
 import ShopperDashboard from '@/components/dashboard/ShopperDashboard';
-import DashboardOnboarding from '@/components/onboarding/DashboardOnboarding';
+
 import EmailVerificationBanner from '@/components/auth/EmailVerificationBanner';
 import PurchaseReturnBanner from '@/components/monetization/PurchaseReturnBanner';
 import { Loader2 } from 'lucide-react';
