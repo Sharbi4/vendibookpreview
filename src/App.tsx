@@ -39,6 +39,7 @@ const Welcome = lazy(() => import("./pages/Welcome"));
 const Activation = lazy(() => import("./pages/Activation"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const LegalDocumentPage = lazy(() => import("./pages/LegalDocumentPage"));
+const LegalCenter = lazy(() => import("./pages/LegalCenter"));
 const SmsTerms = lazy(() => import("./pages/legal/SmsTerms"));
 const SmsOptInProof = lazy(() => import("./pages/legal/SmsOptInProof"));
 const SmsEnrollment = lazy(() => import("./pages/SmsEnrollment"));
@@ -269,6 +270,11 @@ const AnimatedRoutes = () => {
           <Route path="/legal/sms-opt-in-proof" element={<PageTransition><SmsOptInProof /></PageTransition>} />
           <Route path="/sms" element={<PageTransition><SmsEnrollment /></PageTransition>} />
           <Route path="/sms-opt-in" element={<PageTransition><SmsOptIn /></PageTransition>} />
+          <Route path="/legal" element={<PageTransition><LegalCenter /></PageTransition>} />
+          {/* Legacy path redirects to canonical URLs (Phase 1 legal architecture) */}
+          <Route path="/legal/terms" element={<Navigate to="/terms" replace />} />
+          <Route path="/legal/privacy" element={<Navigate to="/privacy" replace />} />
+          <Route path="/support" element={<Navigate to="/help" replace />} />
           <Route path="/legal/:slug" element={<PageTransition><LegalDocumentPage /></PageTransition>} />
           <Route path="/how-it-works" element={<PageTransition><HowItWorks /></PageTransition>} />
           <Route path="/how-it-works-host" element={<PageTransition><HowItWorksHost /></PageTransition>} />

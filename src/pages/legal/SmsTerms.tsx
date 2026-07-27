@@ -76,7 +76,7 @@ const SmsTerms: React.FC = () => {
         <Section title="Help">
           <p>
             Reply <strong>HELP</strong>, <strong>INFO</strong>, or <strong>SUPPORT</strong> to any
-            Vendibook SMS, visit <a href="/support" className="underline">Vendibook Support</a>,
+            Vendibook SMS, visit the <a href="/help" className="underline">Vendibook Help Center</a>,
             or email <a href="mailto:support@vendibook.com" className="underline">support@vendibook.com</a>.
           </p>
         </Section>
@@ -99,7 +99,7 @@ const SmsTerms: React.FC = () => {
         <Section title="Privacy">
           <p>
             Vendibook handles mobile-number consent records in accordance with our{' '}
-            <a href="/legal/privacy" className="underline">Privacy Policy</a>.
+            <a href="/privacy" className="underline">Privacy Policy</a>.
           </p>
         </Section>
 
