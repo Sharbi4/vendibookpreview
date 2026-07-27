@@ -121,7 +121,7 @@ function formatBytes(n: number | null | undefined) {
 }
 
 const MyTickets = () => {
-  const { user, loading: authLoading } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [params, setParams] = useSearchParams();
