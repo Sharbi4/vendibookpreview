@@ -505,6 +505,8 @@ const AppContent = () => {
       <CookieConsent />
 
       <GoogleOneTap />
+      <TawkIdentity />
+      
       
       <AnimatedRoutes />
       <MobileBottomNav />
