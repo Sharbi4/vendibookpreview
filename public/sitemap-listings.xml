@@ -177,6 +177,17 @@
     </image:image>
   </url>
   <url>
+    <loc>https://vendibook.com/listing/fec458ae-0672-4073-ac92-c120de896c8a</loc>
+    <lastmod>2026-07-27</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://images.unsplash.com/photo-1559339352-11d035aa65de?w=800</image:loc>
+      <image:title>Premium Seafood Truck Empire</image:title>
+      <image:caption>Premium Seafood Truck Empire in Seattle, WA on Vendibook</image:caption>
+    </image:image>
+  </url>
+  <url>
     <loc>https://vendibook.com/listing/6f438a50-85bb-43bd-b0ad-c6253251b12d</loc>
     <lastmod>2026-07-22</lastmod>
     <changefreq>weekly</changefreq>
@@ -185,17 +196,6 @@
       <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/2d6d68c7-7efe-40cb-8061-42ac57b351a4/6f438a50-85bb-43bd-b0ad-c6253251b12d/1783710987986-af3kb.jpg</image:loc>
       <image:title>Fully Equipped Mobile Juice Truck-Van - Ready to Roll</image:title>
       <image:caption>Fully Equipped Mobile Juice Truck-Van - Ready to Roll in Aurora, CO on Vendibook</image:caption>
-    </image:image>
-  </url>
-  <url>
-    <loc>https://vendibook.com/listing/fec458ae-0672-4073-ac92-c120de896c8a</loc>
-    <lastmod>2026-07-24</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://images.unsplash.com/photo-1559339352-11d035aa65de?w=800</image:loc>
-      <image:title>Premium Seafood Truck Empire</image:title>
-      <image:caption>Premium Seafood Truck Empire in Seattle, WA on Vendibook</image:caption>
     </image:image>
   </url>
   <url>
@@ -574,7 +574,7 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/a2a2f761-da8c-4f59-ad5c-6a8b54f67083</loc>
-    <lastmod>2026-07-26</lastmod>
+    <lastmod>2026-07-27</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
