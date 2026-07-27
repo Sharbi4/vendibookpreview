@@ -702,6 +702,35 @@ async function main() {
   console.log("\n✅ Subscription lifecycle verified.\n");
 }
 
+// -----------------------------------------------------------------------------
+// Delivery-observability guard: closes the "green CI, silent prod" gap by
+// asserting at least one real Stripe delivery has landed in stripe_webhook_events
+// in the last 24h. If nothing arrived, either the Stripe Dashboard endpoint is
+// disabled or the signing secret is wrong — both would silently starve
+// host_subscriptions with no other alarm. Skips when explicitly disabled so the
+// synthetic-only path (e.g. brand-new project) doesn't false-fail.
+async function checkLiveWebhookDelivery() {
+  if (process.env.SKIP_LIVE_DELIVERY_CHECK === "1") {
+    record("live webhook delivery (last 24h)", true, "skipped via SKIP_LIVE_DELIVERY_CHECK");
+    return;
+  }
+  const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+  const { count, error } = await supabase
+    .from("stripe_webhook_events")
+    .select("id", { count: "exact", head: true })
+    .gte("received_at", since);
+  if (error) {
+    record("live webhook delivery (last 24h)", false, `query failed: ${error.message}`);
+    return;
+  }
+  assert(
+    "live webhook delivery (last 24h)",
+    (count ?? 0) > 0,
+    `stripe_webhook_events has 0 rows in last 24h — Stripe Dashboard endpoint likely disabled or signing secret mismatch`,
+  );
+}
+
+
 main().catch((e) => {
   console.error("[smoke] uncaught:", e);
   process.exit(1);
