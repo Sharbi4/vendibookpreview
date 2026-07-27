@@ -77,6 +77,14 @@ export const SubscriptionConsentDialog: React.FC<Props> = ({
         ...(payload.tier ? { tier: payload.tier } : {}),
         ...(checkoutAttemptId ? { checkout_attempt_id: checkoutAttemptId } : {}),
       }}
+      footerSlot={
+        <StripeTrustBadge
+          context="subscription"
+          surface="light"
+          size="sm"
+          withCopy={false}
+        />
+      }
       onAccept={async (consentId) => {
         await onConsented(consentId);
       }}
