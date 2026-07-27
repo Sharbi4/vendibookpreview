@@ -303,6 +303,12 @@ const Account = () => {
                   to="/notification-preferences"
                 />
                 <RowLink
+                  icon={MessageSquare}
+                  label="My tickets"
+                  hint="Track issues you've reported and reply to support."
+                  to="/account/support"
+                />
+                <RowLink
                   icon={ShieldCheck}
                   label="Identity verification"
                   hint={row.identity_verified ? 'Verified — manage or re-run at any time.' : 'Verify your ID to unlock trust badges.'}
