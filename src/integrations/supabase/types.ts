@@ -1885,6 +1885,48 @@ export type Database = {
         }
         Relationships: []
       }
+      host_payment_eligibility: {
+        Row: {
+          charges_enabled: boolean
+          created_at: string
+          details_submitted: boolean
+          disabled_reason: string | null
+          last_synced_at: string
+          onboarding_complete: boolean
+          payouts_enabled: boolean
+          requirements_currently_due: Json
+          stripe_account_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          charges_enabled?: boolean
+          created_at?: string
+          details_submitted?: boolean
+          disabled_reason?: string | null
+          last_synced_at?: string
+          onboarding_complete?: boolean
+          payouts_enabled?: boolean
+          requirements_currently_due?: Json
+          stripe_account_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          charges_enabled?: boolean
+          created_at?: string
+          details_submitted?: boolean
+          disabled_reason?: string | null
+          last_synced_at?: string
+          onboarding_complete?: boolean
+          payouts_enabled?: boolean
+          requirements_currently_due?: Json
+          stripe_account_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       host_subscriptions: {
         Row: {
           cancel_at: string | null
@@ -6250,6 +6292,8 @@ export type Database = {
         Row: {
           acceptance_text: string
           application_version: string | null
+          consumed_at: string | null
+          consumed_by_ref: string | null
           created_at: string
           document_id: string | null
           document_type: string
@@ -6270,6 +6314,8 @@ export type Database = {
         Insert: {
           acceptance_text: string
           application_version?: string | null
+          consumed_at?: string | null
+          consumed_by_ref?: string | null
           created_at?: string
           document_id?: string | null
           document_type: string
@@ -6290,6 +6336,8 @@ export type Database = {
         Update: {
           acceptance_text?: string
           application_version?: string | null
+          consumed_at?: string | null
+          consumed_by_ref?: string | null
           created_at?: string
           document_id?: string | null
           document_type?: string
