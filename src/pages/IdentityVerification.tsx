@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 import Header from '@/components/layout/Header';
 import verifiedBadge from '@/assets/verified-badge.png';
-import stripeWordmark from '@/assets/stripe-wordmark-blurple.png';
+import { StripeTrustBadge } from '@/components/trust/StripeTrustBadge';
 import { goBackToOrigin } from '@/lib/originNav';
 
 type Status = 'checking' | 'not_started' | 'pending' | 'processing' | 'verified';
