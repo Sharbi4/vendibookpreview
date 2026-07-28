@@ -1194,25 +1194,7 @@ const Search = () => {
         initialEndDate={dateRange?.to}
       />
 
-      {/* Mobile floating Map/List toggle — Airbnb signature */}
-      <div className="md:hidden fixed bottom-20 left-1/2 -translate-x-1/2 z-40 pointer-events-none">
-        <button
-          onClick={() => setViewMode(viewMode === 'map' ? 'split' : 'map')}
-          className="pointer-events-auto inline-flex items-center gap-2 px-5 py-3 rounded-full bg-foreground text-background text-sm font-semibold shadow-2xl hover:scale-105 active:scale-95 transition-transform border border-background/10"
-        >
-          {viewMode === 'map' ? (
-            <>
-              <Rows3 className="h-4 w-4" />
-              Show list
-            </>
-          ) : (
-            <>
-              <Map className="h-4 w-4" />
-              Show map
-            </>
-          )}
-        </button>
-      </div>
+      {/* Mobile floating Map/List toggle temporarily disabled while Maps API is offline */}
 
       {/* Mobile Sticky Bar */}
       <MobileStickyBar
