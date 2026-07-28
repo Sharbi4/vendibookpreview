@@ -103,11 +103,13 @@ interface SaleLocationCardProps {
   city?: string | null;
   state?: string | null;
   zipCode?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
   mapHeight?: number;
 }
 
 /** Glass location card with approximate-area badge — never a broken map box. */
-export const SaleLocationCard = ({ city, state, zipCode, mapHeight = 240 }: SaleLocationCardProps) => {
+export const SaleLocationCard = ({ city, state, zipCode, latitude, longitude, mapHeight = 240 }: SaleLocationCardProps) => {
   const locationShort = [city, state].filter(Boolean).join(', ');
   if (!locationShort) return null;
   return (
@@ -131,6 +133,8 @@ export const SaleLocationCard = ({ city, state, zipCode, mapHeight = 240 }: Sale
           city={city ?? null}
           state={state ?? null}
           zipCode={zipCode ?? null}
+          latitude={latitude ?? null}
+          longitude={longitude ?? null}
           className="h-full"
         />
       </div>

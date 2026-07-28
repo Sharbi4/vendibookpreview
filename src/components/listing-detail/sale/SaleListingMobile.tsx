@@ -630,6 +630,8 @@ export const SaleListingMobile = ({
                 city={listing.city}
                 state={listing.state}
                 zipCode={listing.zip_code}
+                latitude={listing.latitude}
+                longitude={listing.longitude}
                 className="h-full"
               />
             </div>

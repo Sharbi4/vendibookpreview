@@ -159,7 +159,7 @@ const ListingLocationMapInner = memo(({
         }}
       >
         <Marker
-          position={coordinates}
+          position={mapCoordinates}
           icon={{
             path: google.maps.SymbolPath.CIRCLE,
             scale: 10,
