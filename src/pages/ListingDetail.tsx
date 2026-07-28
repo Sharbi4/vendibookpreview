@@ -790,6 +790,8 @@ const ListingDetail = () => {
                   city={listing.city}
                   state={listing.state}
                   zipCode={(listing as any).zip_code}
+                  latitude={listing.latitude}
+                  longitude={listing.longitude}
                 />
               ) : (
                 location && locationShort && (

@@ -11,6 +11,8 @@ interface ListingLocationMapProps {
   city?: string | null;
   state?: string | null;
   zipCode?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
   className?: string;
 }
 
@@ -25,6 +27,8 @@ const ListingLocationMapInner = memo(({
   city,
   state,
   zipCode,
+  latitude,
+  longitude,
   className,
   apiKey,
 }: ListingLocationMapProps & { apiKey: string }) => {
@@ -37,6 +41,12 @@ const ListingLocationMapInner = memo(({
     id: GOOGLE_MAPS_LOADER_ID,
     libraries: GOOGLE_MAPS_LIBRARIES,
   });
+
+  const providedCoordinates = React.useMemo(() => {
+    if (typeof latitude !== 'number' || typeof longitude !== 'number') return null;
+    if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) return null;
+    return { lat: latitude, lng: longitude };
+  }, [latitude, longitude]);
 
 
   // Build location string from available data
@@ -51,6 +61,13 @@ const ListingLocationMapInner = memo(({
 
   // Geocode the location
   const geocodeLocation = useCallback(async () => {
+    if (providedCoordinates) {
+      setCoordinates(providedCoordinates);
+      setGeocodeError(null);
+      setIsGeocoding(false);
+      return;
+    }
+
     if (!locationString || !isLoaded) return;
 
     setIsGeocoding(true);
@@ -75,14 +92,16 @@ const ListingLocationMapInner = memo(({
     } finally {
       setIsGeocoding(false);
     }
-  }, [locationString, isLoaded]);
+  }, [locationString, isLoaded, providedCoordinates]);
 
   useEffect(() => {
     geocodeLocation();
   }, [geocodeLocation]);
 
   // Loading state
-  if (!isLoaded || isGeocoding) {
+  const mapCoordinates = providedCoordinates ?? coordinates;
+
+  if (!isLoaded || (!providedCoordinates && isGeocoding)) {
     return (
       <div className={cn('rounded-xl border border-border bg-muted/30 flex items-center justify-center', className)}>
         <div className="flex flex-col items-center gap-2 text-muted-foreground">
@@ -94,7 +113,7 @@ const ListingLocationMapInner = memo(({
   }
 
   // Error state — render a premium dark fallback panel instead of "Map unavailable"
-  if (loadError || geocodeError || !locationString || !coordinates) {
+  if (loadError || (!providedCoordinates && geocodeError) || (!providedCoordinates && !locationString) || !mapCoordinates) {
     return (
       <div
         className={cn('rounded-xl overflow-hidden relative', className)}
@@ -124,7 +143,7 @@ const ListingLocationMapInner = memo(({
     <div className={cn('rounded-xl overflow-hidden border border-border', className)}>
       <GoogleMap
         mapContainerStyle={mapContainerStyle}
-        center={coordinates}
+        center={mapCoordinates}
         zoom={13}
         options={{
           disableDefaultUI: true,
@@ -140,7 +159,7 @@ const ListingLocationMapInner = memo(({
         }}
       >
         <Marker
-          position={coordinates}
+          position={mapCoordinates}
           icon={{
             path: google.maps.SymbolPath.CIRCLE,
             scale: 10,
