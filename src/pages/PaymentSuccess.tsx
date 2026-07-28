@@ -79,7 +79,7 @@ interface CheckoutSessionInfo {
 const PaymentSuccess = () => {
   const [searchParams] = useSearchParams();
   const sessionId = searchParams.get('session_id');
-  const isEscrow = searchParams.get('payment protection') === 'true';
+  const isEscrow = searchParams.get('escrow') === 'true';
   const isHold = searchParams.get('hold') === 'true';
   const isMonetization = searchParams.get('monetization') === 'true';
   const { user } = useAuth();
