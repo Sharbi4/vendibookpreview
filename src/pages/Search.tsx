@@ -732,17 +732,11 @@ const Search = () => {
                   onValueChange={(value) => value && setViewMode(value as 'grid' | 'map' | 'split' | 'list')}
                   className="bg-card/80 backdrop-blur-sm border border-border/60 rounded-xl p-0.5 shadow-sm"
                 >
-                  <ToggleGroupItem value="split" aria-label="Split view (map + cards)" title="Split view" className="h-8 px-2.5 rounded-lg data-[state=on]:bg-foreground data-[state=on]:text-background data-[state=on]:shadow-sm transition-all">
-                    <Columns className="h-3.5 w-3.5" />
-                  </ToggleGroupItem>
                   <ToggleGroupItem value="grid" aria-label="Grid view" title="Grid view" className="h-8 px-2.5 rounded-lg data-[state=on]:bg-foreground data-[state=on]:text-background data-[state=on]:shadow-sm transition-all">
                     <LayoutGrid className="h-3.5 w-3.5" />
                   </ToggleGroupItem>
                   <ToggleGroupItem value="list" aria-label="List view" title="List view" className="h-8 px-2.5 rounded-lg data-[state=on]:bg-foreground data-[state=on]:text-background data-[state=on]:shadow-sm transition-all">
                     <Rows3 className="h-3.5 w-3.5" />
-                  </ToggleGroupItem>
-                  <ToggleGroupItem value="map" aria-label="Map view" title="Map view" className="h-8 px-2.5 rounded-lg data-[state=on]:bg-foreground data-[state=on]:text-background data-[state=on]:shadow-sm transition-all">
-                    <Map className="h-3.5 w-3.5" />
                   </ToggleGroupItem>
                 </ToggleGroup>
 
@@ -1200,25 +1194,7 @@ const Search = () => {
         initialEndDate={dateRange?.to}
       />
 
-      {/* Mobile floating Map/List toggle — Airbnb signature */}
-      <div className="md:hidden fixed bottom-20 left-1/2 -translate-x-1/2 z-40 pointer-events-none">
-        <button
-          onClick={() => setViewMode(viewMode === 'map' ? 'split' : 'map')}
-          className="pointer-events-auto inline-flex items-center gap-2 px-5 py-3 rounded-full bg-foreground text-background text-sm font-semibold shadow-2xl hover:scale-105 active:scale-95 transition-transform border border-background/10"
-        >
-          {viewMode === 'map' ? (
-            <>
-              <Rows3 className="h-4 w-4" />
-              Show list
-            </>
-          ) : (
-            <>
-              <Map className="h-4 w-4" />
-              Show map
-            </>
-          )}
-        </button>
-      </div>
+      {/* Mobile floating Map/List toggle temporarily disabled while Maps API is offline */}
 
       {/* Mobile Sticky Bar */}
       <MobileStickyBar

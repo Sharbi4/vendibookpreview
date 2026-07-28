@@ -134,7 +134,7 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/d02ec787-17cb-4e37-b1a7-e70dec639b23</loc>
-    <lastmod>2026-07-27</lastmod>
+    <lastmod>2026-07-28</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
@@ -255,7 +255,7 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/4e50a07a-6909-411b-a4e0-429fee24c52a</loc>
-    <lastmod>2026-07-27</lastmod>
+    <lastmod>2026-07-28</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
@@ -386,17 +386,6 @@
     </image:image>
   </url>
   <url>
-    <loc>https://vendibook.com/listing/349ca02e-d0c1-4298-94f0-c7109c1cc691</loc>
-    <lastmod>2026-07-23</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/77f157af-d5d8-4be4-95d8-a1b755c6c6a1/349ca02e-d0c1-4298-94f0-c7109c1cc691/1768892777901-tw864.jpg</image:loc>
-      <image:title>Food Vending Trailer / Mobile Concession Booth – Dual Windows (Model FT41)</image:title>
-      <image:caption>Food Vending Trailer / Mobile Concession Booth – Dual Windows (Model FT41) in Houston, TX on Vendibook</image:caption>
-    </image:image>
-  </url>
-  <url>
     <loc>https://vendibook.com/listing/5caa1345-be50-46b0-93bf-ce6f4a6ae8d2</loc>
     <lastmod>2026-07-26</lastmod>
     <changefreq>weekly</changefreq>
@@ -405,6 +394,17 @@
       <image:loc>https://images.unsplash.com/photo-1513104890138-7c749659a591?w=800</image:loc>
       <image:title>Wood-Fired Pizza Trailer</image:title>
       <image:caption>Wood-Fired Pizza Trailer in Dallas, TX on Vendibook</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://vendibook.com/listing/349ca02e-d0c1-4298-94f0-c7109c1cc691</loc>
+    <lastmod>2026-07-28</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/77f157af-d5d8-4be4-95d8-a1b755c6c6a1/349ca02e-d0c1-4298-94f0-c7109c1cc691/1768892777901-tw864.jpg</image:loc>
+      <image:title>Food Vending Trailer / Mobile Concession Booth – Dual Windows (Model FT41)</image:title>
+      <image:caption>Food Vending Trailer / Mobile Concession Booth – Dual Windows (Model FT41) in Houston, TX on Vendibook</image:caption>
     </image:image>
   </url>
   <url>
@@ -486,7 +486,7 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/98b799f7-067e-4b11-b912-828ef2878837</loc>
-    <lastmod>2026-07-24</lastmod>
+    <lastmod>2026-07-28</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
