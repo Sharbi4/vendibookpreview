@@ -32,23 +32,12 @@ const ChoosePathModal = ({ isOpen, onClose }: ChoosePathModalProps) => {
     // Store selection in localStorage for routing
     localStorage.setItem('user_path_preference', path);
 
-    // If user is logged in, add role
+    // If user is logged in, add role via service-role edge function
+    // (client inserts on user_roles are blocked by RLS).
     if (user) {
       const role = path === 'supply' ? 'host' : 'shopper';
       try {
-        // Check if role already exists
-        const { data: existingRole } = await supabase
-          .from('user_roles')
-          .select('id')
-          .eq('user_id', user.id)
-          .eq('role', role)
-          .single();
-
-        if (!existingRole) {
-          await supabase
-            .from('user_roles')
-            .insert({ user_id: user.id, role });
-        }
+        await supabase.functions.invoke('assign-user-role', { body: { role } });
       } catch (error) {
         console.error('Error adding role:', error);
       }

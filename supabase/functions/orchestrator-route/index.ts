@@ -85,7 +85,7 @@ Deno.serve(async (req) => {
     const [{ data: profile }, { data: journey }, { data: smsSub }] = await Promise.all([
       supabase.from("profiles").select("first_name,full_name,business_name,public_city,public_state,quiet_hours_start,quiet_hours_end,quiet_hours_timezone").eq("id", user_id).maybeSingle(),
       supabase.from("user_journey_state").select("*").eq("user_id", user_id).maybeSingle(),
-      supabase.from("sms_subscriptions").select("opted_in,phone_number,categories").eq("user_id", user_id).maybeSingle().then((r) => r).catch(() => ({ data: null })) as any,
+      supabase.from("sms_subscriptions").select("opted_in,phone_number").eq("user_id", user_id).maybeSingle().then((r) => r).catch(() => ({ data: null })) as any,
     ]);
 
     const sms_opted_in = !!smsSub?.opted_in && !!smsSub?.phone_number;

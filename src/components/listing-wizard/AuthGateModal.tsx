@@ -82,6 +82,7 @@ export const AuthGateModal: React.FC<AuthGateModalProps> = ({
               full_name: fullName,
               first_name: firstName.trim(),
               last_name: lastName.trim(),
+              role: 'host', // handle_new_user trigger seeds user_roles from this
             },
           },
         });
@@ -98,16 +99,6 @@ export const AuthGateModal: React.FC<AuthGateModalProps> = ({
             });
             setMode('signin');
             return;
-          }
-
-          // Best-effort: give new users the host role (non-blocking)
-          try {
-            await supabase.from('user_roles').insert({
-              user_id: data.user.id,
-              role: 'host',
-            });
-          } catch (err) {
-            console.error('Failed to add host role:', err);
           }
 
           // Send welcome email to new user (don't block on failure)
