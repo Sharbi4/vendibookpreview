@@ -1,17 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
   <url>
-    <loc>https://vendibook.com/listing/c649440f-d3df-4f3a-a622-e118767efb4d</loc>
-    <lastmod>2026-07-28</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/20434a7d-a365-4d4a-ab9b-5cff26815f33/c649440f-d3df-4f3a-a622-e118767efb4d/1773684471904-n7qn7c.jpeg</image:loc>
-      <image:title>My Food Trailer</image:title>
-      <image:caption>My Food Trailer on Vendibook</image:caption>
-    </image:image>
-  </url>
-  <url>
     <loc>https://vendibook.com/listing/b88edd57-967c-4036-a5bb-a89d2e18ee88</loc>
     <lastmod>2026-07-28</lastmod>
     <changefreq>weekly</changefreq>
@@ -713,6 +702,17 @@
       <image:loc>https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800</image:loc>
       <image:title>Downtown Ghost Kitchen - Prime Location</image:title>
       <image:caption>Downtown Ghost Kitchen - Prime Location in Dallas, TX on Vendibook</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://vendibook.com/listing/c649440f-d3df-4f3a-a622-e118767efb4d</loc>
+    <lastmod>2026-07-28</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/20434a7d-a365-4d4a-ab9b-5cff26815f33/c649440f-d3df-4f3a-a622-e118767efb4d/1773684471904-n7qn7c.jpeg</image:loc>
+      <image:title>My Food Trailer</image:title>
+      <image:caption>My Food Trailer on Vendibook</image:caption>
     </image:image>
   </url>
   <url>
