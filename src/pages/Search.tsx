@@ -732,17 +732,11 @@ const Search = () => {
                   onValueChange={(value) => value && setViewMode(value as 'grid' | 'map' | 'split' | 'list')}
                   className="bg-card/80 backdrop-blur-sm border border-border/60 rounded-xl p-0.5 shadow-sm"
                 >
-                  <ToggleGroupItem value="split" aria-label="Split view (map + cards)" title="Split view" className="h-8 px-2.5 rounded-lg data-[state=on]:bg-foreground data-[state=on]:text-background data-[state=on]:shadow-sm transition-all">
-                    <Columns className="h-3.5 w-3.5" />
-                  </ToggleGroupItem>
                   <ToggleGroupItem value="grid" aria-label="Grid view" title="Grid view" className="h-8 px-2.5 rounded-lg data-[state=on]:bg-foreground data-[state=on]:text-background data-[state=on]:shadow-sm transition-all">
                     <LayoutGrid className="h-3.5 w-3.5" />
                   </ToggleGroupItem>
                   <ToggleGroupItem value="list" aria-label="List view" title="List view" className="h-8 px-2.5 rounded-lg data-[state=on]:bg-foreground data-[state=on]:text-background data-[state=on]:shadow-sm transition-all">
                     <Rows3 className="h-3.5 w-3.5" />
-                  </ToggleGroupItem>
-                  <ToggleGroupItem value="map" aria-label="Map view" title="Map view" className="h-8 px-2.5 rounded-lg data-[state=on]:bg-foreground data-[state=on]:text-background data-[state=on]:shadow-sm transition-all">
-                    <Map className="h-3.5 w-3.5" />
                   </ToggleGroupItem>
                 </ToggleGroup>
 
