@@ -11,14 +11,21 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const GOOGLE_MAPS_API_KEY = Deno.env.get("GOOGLE_MAPS_API_KEY");
-    
-    if (!GOOGLE_MAPS_API_KEY) {
+    // Prefer the Lovable-managed Google Maps connector browser key (referrer-restricted, safe for client).
+    const BROWSER_KEY =
+      Deno.env.get("GOOGLE_MAPS_BROWSER_KEY") || Deno.env.get("GOOGLE_MAPS_API_KEY");
+
+    if (!BROWSER_KEY) {
       return new Response(
         JSON.stringify({ error: "Google Maps API key not configured" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
+
+    return new Response(
+      JSON.stringify({ apiKey: BROWSER_KEY }),
+      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
 
     return new Response(
       JSON.stringify({ apiKey: GOOGLE_MAPS_API_KEY }),

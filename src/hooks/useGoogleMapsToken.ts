@@ -22,6 +22,15 @@ export const useGoogleMapsToken = (enabled = true) => {
 
     const fetchApiKey = async () => {
       try {
+        // Prefer the Lovable-managed Google Maps connector browser key (referrer-restricted, safe for client).
+        const connectorKey = import.meta.env.VITE_LOVABLE_CONNECTOR_GOOGLE_MAPS_BROWSER_KEY;
+        if (connectorKey) {
+          setApiKey(connectorKey);
+          setError(null);
+          setIsLoading(false);
+          return;
+        }
+
         const envKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
         if (envKey && envKey !== 'YOUR_GOOGLE_MAPS_API_KEY_HERE') {
           setApiKey(envKey);
@@ -31,9 +40,9 @@ export const useGoogleMapsToken = (enabled = true) => {
         }
 
         const { data, error: fetchError } = await supabase.functions.invoke('get-maps-api-key');
-        
+
         if (fetchError) throw fetchError;
-        
+
         if (data?.apiKey) {
           setApiKey(data.apiKey);
           setError(null);
