@@ -143,7 +143,7 @@ export const PublishWizard: React.FC = () => {
   const { listingId } = useParams<{ listingId: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { user, isVerified } = useAuth();
+  const { user } = useAuth();
   const premiumUpsell = usePremiumUpsell();
   const [searchParams, setSearchParams] = useSearchParams();
   const queryClient = useQueryClient();
