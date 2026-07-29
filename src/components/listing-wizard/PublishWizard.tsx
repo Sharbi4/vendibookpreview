@@ -143,7 +143,7 @@ export const PublishWizard: React.FC = () => {
   const { listingId } = useParams<{ listingId: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { user, isVerified } = useAuth();
+  const { user } = useAuth();
   const premiumUpsell = usePremiumUpsell();
   const [searchParams, setSearchParams] = useSearchParams();
   const queryClient = useQueryClient();
@@ -1485,22 +1485,9 @@ export const PublishWizard: React.FC = () => {
       return;
     }
 
-    if (!isVerified) {
-      toast({
-        title: 'Verify your identity to publish',
-        description: 'Drafts are safe — publishing needs a quick ID check. It takes about a minute.',
-        variant: 'destructive',
-        action: (
-          <a
-            href="/verify-identity"
-            className="inline-flex items-center rounded-md bg-foreground px-3 py-1.5 text-xs font-medium text-background hover:bg-foreground/90"
-          >
-            Verify now
-          </a>
-        ) as any,
-      });
-      return;
-    }
+    // Identity verification is optional — it no longer blocks publishing.
+
+
 
     // Active-listing quota gate (grandfathered accounts are always unlimited).
     // Only blocks NEW publishes — already-published listings can always re-save.
