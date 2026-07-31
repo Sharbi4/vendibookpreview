@@ -22,9 +22,9 @@ import {
 import {
   activateBillingPlan,
   createBillingPlan,
-  createCatalogProduct,
-  createInvoice,
-  createSubscription,
+  createCatalogProduct as ppCreateCatalogProduct,
+  createInvoice as ppCreateInvoice,
+  createSubscription as ppCreateSubscription,
   deactivateBillingPlan,
 } from "../paypalCatalog.ts";
 import { ensureSellerPayable } from "../paypalAccounting.ts";
