@@ -239,7 +239,7 @@ serve(async (req) => {
 
 
     return jsonResponse(200, {
-      order_id: order.id,
+      order_id: order.providerOrderId,
       reference: quote.reference,
       amount_cents: quote.grossCents,
       currency: quote.currency,
