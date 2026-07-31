@@ -3,6 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import { corsHeaders, jsonError, jsonResponse, unknownErrorResponse } from "../_shared/jsonError.ts";
 import { capturePayPalOrder, getPayPalOrder, PayPalError, safeLog } from "../_shared/paypal.ts";
 import { extractCaptureFacts, finalizeCapture } from "../_shared/paypalFinalize.ts";
+import { auditPayment, requestIp } from "../_shared/paymentAudit.ts";
 
 /**
  * Captures an approved PayPal order and verifies it server-side.
@@ -77,6 +78,25 @@ serve(async (req) => {
 
     const updated = await finalizeCapture(admin, record, facts, "capture_endpoint");
     safeLog("capture_finalized", { reference: record.reference, status: facts.status });
+
+    await auditPayment(admin, {
+      actorId: user.id,
+      actorRole: "user",
+      actorIp: requestIp(req),
+      provider: "paypal",
+      action: "order.captured",
+      entityType: "payment_record",
+      entityId: record.id,
+      reference: record.reference,
+      captureId: facts.captureId,
+      oldValue: { payment_status: record.payment_status },
+      newValue: {
+        payment_status: updated.payment_status,
+        amount_cents: facts.amountCents,
+        currency: facts.currency,
+      },
+    });
+
 
     return jsonResponse(200, {
       status: updated.payment_status,

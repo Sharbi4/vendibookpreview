@@ -2925,9 +2925,72 @@ export type Database = {
           },
         ]
       }
+      monetization_product_plans: {
+        Row: {
+          billing_interval: string
+          created_at: string
+          currency: string
+          display_order: number
+          environment: string
+          external_status: string | null
+          id: string
+          is_active: boolean
+          metadata: Json
+          paypal_plan_id: string | null
+          price_cents: number
+          product_id: string
+          provider: string
+          trial_days: number | null
+          updated_at: string
+        }
+        Insert: {
+          billing_interval: string
+          created_at?: string
+          currency?: string
+          display_order?: number
+          environment?: string
+          external_status?: string | null
+          id?: string
+          is_active?: boolean
+          metadata?: Json
+          paypal_plan_id?: string | null
+          price_cents: number
+          product_id: string
+          provider?: string
+          trial_days?: number | null
+          updated_at?: string
+        }
+        Update: {
+          billing_interval?: string
+          created_at?: string
+          currency?: string
+          display_order?: number
+          environment?: string
+          external_status?: string | null
+          id?: string
+          is_active?: boolean
+          metadata?: Json
+          paypal_plan_id?: string | null
+          price_cents?: number
+          product_id?: string
+          provider?: string
+          trial_days?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "monetization_product_plans_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "monetization_products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       monetization_products: {
         Row: {
           applicable_listing_types: string[]
+          archived_at: string | null
           billing_type: Database["public"]["Enums"]["monetization_billing_type"]
           category: Database["public"]["Enums"]["monetization_product_category"]
           created_at: string
@@ -2939,9 +3002,11 @@ export type Database = {
           features: Json
           id: string
           is_active: boolean
+          is_taxable: boolean
           member_discount_pct: number
           metadata: Json
           name: string
+          paypal_product_id: string | null
           price_cents: number
           promo_ends_at: string | null
           promo_price_cents: number | null
@@ -2953,9 +3018,11 @@ export type Database = {
           stripe_product_id: string | null
           updated_at: string
           upgrade_eligibility: Json
+          visibility: string
         }
         Insert: {
           applicable_listing_types?: string[]
+          archived_at?: string | null
           billing_type?: Database["public"]["Enums"]["monetization_billing_type"]
           category: Database["public"]["Enums"]["monetization_product_category"]
           created_at?: string
@@ -2967,9 +3034,11 @@ export type Database = {
           features?: Json
           id?: string
           is_active?: boolean
+          is_taxable?: boolean
           member_discount_pct?: number
           metadata?: Json
           name: string
+          paypal_product_id?: string | null
           price_cents?: number
           promo_ends_at?: string | null
           promo_price_cents?: number | null
@@ -2981,9 +3050,11 @@ export type Database = {
           stripe_product_id?: string | null
           updated_at?: string
           upgrade_eligibility?: Json
+          visibility?: string
         }
         Update: {
           applicable_listing_types?: string[]
+          archived_at?: string | null
           billing_type?: Database["public"]["Enums"]["monetization_billing_type"]
           category?: Database["public"]["Enums"]["monetization_product_category"]
           created_at?: string
@@ -2995,9 +3066,11 @@ export type Database = {
           features?: Json
           id?: string
           is_active?: boolean
+          is_taxable?: boolean
           member_discount_pct?: number
           metadata?: Json
           name?: string
+          paypal_product_id?: string | null
           price_cents?: number
           promo_ends_at?: string | null
           promo_price_cents?: number | null
@@ -3009,6 +3082,7 @@ export type Database = {
           stripe_product_id?: string | null
           updated_at?: string
           upgrade_eligibility?: Json
+          visibility?: string
         }
         Relationships: []
       }
@@ -3551,6 +3625,63 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      payment_audit_log: {
+        Row: {
+          action: string
+          actor_id: string | null
+          actor_ip: string | null
+          actor_role: string | null
+          capture_id: string | null
+          created_at: string
+          entity_id: string | null
+          entity_type: string
+          id: string
+          metadata: Json
+          new_value: Json | null
+          old_value: Json | null
+          payout_id: string | null
+          provider: string | null
+          reference: string | null
+          refund_id: string | null
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          actor_ip?: string | null
+          actor_role?: string | null
+          capture_id?: string | null
+          created_at?: string
+          entity_id?: string | null
+          entity_type: string
+          id?: string
+          metadata?: Json
+          new_value?: Json | null
+          old_value?: Json | null
+          payout_id?: string | null
+          provider?: string | null
+          reference?: string | null
+          refund_id?: string | null
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          actor_ip?: string | null
+          actor_role?: string | null
+          capture_id?: string | null
+          created_at?: string
+          entity_id?: string | null
+          entity_type?: string
+          id?: string
+          metadata?: Json
+          new_value?: Json | null
+          old_value?: Json | null
+          payout_id?: string | null
+          provider?: string | null
+          reference?: string | null
+          refund_id?: string | null
+        }
+        Relationships: []
       }
       payment_ledger_entries: {
         Row: {

@@ -1,7 +1,9 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import { corsHeaders, jsonError, jsonResponse, unknownErrorResponse } from "../_shared/jsonError.ts";
-import { createPayPalOrder, PayPalError, safeLog } from "../_shared/paypal.ts";
+import { PayPalError, safeLog } from "../_shared/paypal.ts";
+import { getPaymentProvider, PaymentProviderError } from "../_shared/payments/index.ts";
+import { auditPayment, requestIp } from "../_shared/paymentAudit.ts";
 import {
   quoteBookingRequest,
   quoteMonetizationProduct,
@@ -199,9 +201,10 @@ serve(async (req) => {
       return jsonError(500, "record_failed", "We couldn't start this payment. Please try again.");
     }
 
-    const order = await createPayPalOrder({
-      amountCents: quote.grossCents,
-      currency: quote.currency,
+    // Routed through the provider abstraction — no direct SDK calls here.
+    const provider = getPaymentProvider();
+    const order = await provider.createOrder({
+      amount: { amountCents: quote.grossCents, currency: quote.currency },
       reference: quote.reference,
       description: quote.description,
       idempotencyKey: quote.reference,
@@ -210,26 +213,47 @@ serve(async (req) => {
 
     await admin
       .from("payment_records")
-      .update({ paypal_order_id: order.id, metadata: { paypal_status: order.status } })
+      .update({
+        paypal_order_id: order.providerOrderId,
+        metadata: { paypal_status: order.status },
+      })
       .eq("id", record.id);
 
-    safeLog("order_created", { reference: quote.reference, orderId: order.id });
+    await auditPayment(admin, {
+      actorId: record.buyer_id,
+      actorRole: "user",
+      actorIp: requestIp(req),
+      provider: provider.name,
+      action: "order.created",
+      entityType: "payment_record",
+      entityId: record.id,
+      reference: quote.reference,
+      newValue: {
+        provider_order_id: order.providerOrderId,
+        amount_cents: quote.grossCents,
+        currency: quote.currency,
+      },
+    });
+
+    safeLog("order_created", { reference: quote.reference, orderId: order.providerOrderId });
+
 
     return jsonResponse(200, {
-      order_id: order.id,
+      order_id: order.providerOrderId,
       reference: quote.reference,
       amount_cents: quote.grossCents,
       currency: quote.currency,
       breakdown: quote.breakdown,
     });
   } catch (err) {
-    if (err instanceof PayPalError) {
+    if (err instanceof PaymentProviderError || err instanceof PayPalError) {
+      const status = (err as { status?: number }).status ?? 502;
       return jsonError(
-        err.status === 503 ? 503 : 502,
-        err.status === 503 ? "paypal_not_configured" : "paypal_error",
-        err.status === 503
-          ? "PayPal checkout isn't available right now."
-          : "We couldn't reach PayPal. Please try again in a moment.",
+        status === 503 ? 503 : 502,
+        status === 503 ? "provider_not_configured" : "provider_error",
+        status === 503
+          ? "Checkout isn't available right now."
+          : "We couldn't reach the payment provider. Please try again in a moment.",
       );
     }
     return unknownErrorResponse(err);

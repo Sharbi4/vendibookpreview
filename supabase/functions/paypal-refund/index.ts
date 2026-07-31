@@ -3,6 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import { corsHeaders, jsonError, jsonResponse, unknownErrorResponse } from "../_shared/jsonError.ts";
 import { centsFromPayPalAmount, PayPalError, refundPayPalCapture, safeLog } from "../_shared/paypal.ts";
 import { appendLedgerEntry, recalculatePayableAfterRefund } from "../_shared/paypalAccounting.ts";
+import { auditPayment, requestIp } from "../_shared/paymentAudit.ts";
 
 /** Administrator-only PayPal refund. Always calls PayPal — never a DB-only status flip. */
 serve(async (req) => {
@@ -109,6 +110,21 @@ serve(async (req) => {
         });
       }
     }
+
+    await auditPayment(admin, {
+      actorId: user.id,
+      actorRole: "admin",
+      actorIp: requestIp(req),
+      provider: "paypal",
+      action: isFull ? "refund.full" : "refund.partial",
+      entityType: "refund",
+      entityId: record.id,
+      reference: record.reference,
+      captureId: record.paypal_capture_id,
+      refundId: refund?.id ?? null,
+      oldValue: { refunded_cents: record.refunded_cents ?? 0, payment_status: record.payment_status },
+      newValue: { refunded_cents: totalRefunded, refunded_now_cents: refundedNow, reason: reason ?? null },
+    });
 
     safeLog("refund_processed", { reference: record.reference, refundedNow });
 
