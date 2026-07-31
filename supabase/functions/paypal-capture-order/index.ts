@@ -3,6 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import { corsHeaders, jsonError, jsonResponse, unknownErrorResponse } from "../_shared/jsonError.ts";
 import { capturePayPalOrder, getPayPalOrder, PayPalError, safeLog } from "../_shared/paypal.ts";
 import { extractCaptureFacts, finalizeCapture } from "../_shared/paypalFinalize.ts";
+import { auditPayment, requestIp } from "../_shared/paymentAudit.ts";
 
 /**
  * Captures an approved PayPal order and verifies it server-side.
