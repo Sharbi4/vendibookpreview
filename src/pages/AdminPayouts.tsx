@@ -28,6 +28,7 @@ import {
 } from '@/components/ui/dialog';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
+import type { Database } from '@/integrations/supabase/types';
 import { toast } from 'sonner';
 
 interface Payable {
@@ -53,7 +54,9 @@ interface Payable {
   seller?: { full_name: string | null; email: string | null } | null;
 }
 
-const TABS: { value: string; label: string; statuses: string[] }[] = [
+type PayableStatus = Database['public']['Enums']['seller_payout_status'];
+
+const TABS: { value: string; label: string; statuses: PayableStatus[] }[] = [
   { value: 'review', label: 'Needs review', statuses: ['eligible_for_review'] },
   { value: 'scheduled', label: 'Scheduled', statuses: ['pending_release'] },
   { value: 'approved', label: 'Approved', statuses: ['payout_approved', 'payout_processing'] },
