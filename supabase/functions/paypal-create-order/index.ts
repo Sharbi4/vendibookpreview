@@ -246,13 +246,14 @@ serve(async (req) => {
       breakdown: quote.breakdown,
     });
   } catch (err) {
-    if (err instanceof PayPalError) {
+    if (err instanceof PaymentProviderError || err instanceof PayPalError) {
+      const status = (err as { status?: number }).status ?? 502;
       return jsonError(
-        err.status === 503 ? 503 : 502,
-        err.status === 503 ? "paypal_not_configured" : "paypal_error",
-        err.status === 503
-          ? "PayPal checkout isn't available right now."
-          : "We couldn't reach PayPal. Please try again in a moment.",
+        status === 503 ? 503 : 502,
+        status === 503 ? "provider_not_configured" : "provider_error",
+        status === 503
+          ? "Checkout isn't available right now."
+          : "We couldn't reach the payment provider. Please try again in a moment.",
       );
     }
     return unknownErrorResponse(err);
