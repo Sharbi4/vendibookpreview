@@ -199,9 +199,10 @@ serve(async (req) => {
       return jsonError(500, "record_failed", "We couldn't start this payment. Please try again.");
     }
 
-    const order = await createPayPalOrder({
-      amountCents: quote.grossCents,
-      currency: quote.currency,
+    // Routed through the provider abstraction — no direct SDK calls here.
+    const provider = getPaymentProvider();
+    const order = await provider.createOrder({
+      amount: { amountCents: quote.grossCents, currency: quote.currency },
       reference: quote.reference,
       description: quote.description,
       idempotencyKey: quote.reference,
@@ -210,10 +211,30 @@ serve(async (req) => {
 
     await admin
       .from("payment_records")
-      .update({ paypal_order_id: order.id, metadata: { paypal_status: order.status } })
+      .update({
+        paypal_order_id: order.providerOrderId,
+        metadata: { paypal_status: order.status },
+      })
       .eq("id", record.id);
 
-    safeLog("order_created", { reference: quote.reference, orderId: order.id });
+    await auditPayment(admin, {
+      actorId: record.buyer_id,
+      actorRole: "user",
+      actorIp: requestIp(req),
+      provider: provider.name,
+      action: "order.created",
+      entityType: "payment_record",
+      entityId: record.id,
+      reference: quote.reference,
+      newValue: {
+        provider_order_id: order.providerOrderId,
+        amount_cents: quote.grossCents,
+        currency: quote.currency,
+      },
+    });
+
+    safeLog("order_created", { reference: quote.reference, orderId: order.providerOrderId });
+
 
     return jsonResponse(200, {
       order_id: order.id,
