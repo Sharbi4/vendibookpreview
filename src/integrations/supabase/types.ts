@@ -606,6 +606,7 @@ export type Database = {
           message: string | null
           paid_at: string | null
           payment_intent_id: string | null
+          payment_provider: Database["public"]["Enums"]["payment_provider"]
           payment_status: string | null
           payout_hold_reason: string | null
           payout_hold_set_by: string | null
@@ -667,6 +668,7 @@ export type Database = {
           message?: string | null
           paid_at?: string | null
           payment_intent_id?: string | null
+          payment_provider?: Database["public"]["Enums"]["payment_provider"]
           payment_status?: string | null
           payout_hold_reason?: string | null
           payout_hold_set_by?: string | null
@@ -728,6 +730,7 @@ export type Database = {
           message?: string | null
           paid_at?: string | null
           payment_intent_id?: string | null
+          payment_provider?: Database["public"]["Enums"]["payment_provider"]
           payment_status?: string | null
           payout_hold_reason?: string | null
           payout_hold_set_by?: string | null
@@ -1941,6 +1944,8 @@ export type Database = {
           id: string
           last_error: Json | null
           metadata: Json
+          payment_provider: Database["public"]["Enums"]["payment_provider"]
+          paypal_subscription_id: string | null
           revoke_at_period_end: boolean
           status: string
           stripe_customer_id: string | null
@@ -1964,6 +1969,8 @@ export type Database = {
           id?: string
           last_error?: Json | null
           metadata?: Json
+          payment_provider?: Database["public"]["Enums"]["payment_provider"]
+          paypal_subscription_id?: string | null
           revoke_at_period_end?: boolean
           status?: string
           stripe_customer_id?: string | null
@@ -1987,6 +1994,8 @@ export type Database = {
           id?: string
           last_error?: Json | null
           metadata?: Json
+          payment_provider?: Database["public"]["Enums"]["payment_provider"]
+          paypal_subscription_id?: string | null
           revoke_at_period_end?: boolean
           status?: string
           stripe_customer_id?: string | null
@@ -3021,6 +3030,7 @@ export type Database = {
           metadata: Json
           nudge_sent_at: string | null
           paid_at: string | null
+          payment_provider: Database["public"]["Enums"]["payment_provider"]
           product_id: string
           refund_amount_cents: number | null
           refund_status: string | null
@@ -3049,6 +3059,7 @@ export type Database = {
           metadata?: Json
           nudge_sent_at?: string | null
           paid_at?: string | null
+          payment_provider?: Database["public"]["Enums"]["payment_provider"]
           product_id: string
           refund_amount_cents?: number | null
           refund_status?: string | null
@@ -3077,6 +3088,7 @@ export type Database = {
           metadata?: Json
           nudge_sent_at?: string | null
           paid_at?: string | null
+          payment_provider?: Database["public"]["Enums"]["payment_provider"]
           product_id?: string
           refund_amount_cents?: number | null
           refund_status?: string | null
@@ -3539,6 +3551,431 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      payment_ledger_entries: {
+        Row: {
+          actor_id: string | null
+          amount_cents: number
+          created_at: string
+          currency: string
+          dedupe_key: string | null
+          description: string | null
+          direction: string
+          entry_type: string
+          external_reference: string | null
+          id: string
+          metadata: Json
+          payment_record_id: string
+        }
+        Insert: {
+          actor_id?: string | null
+          amount_cents: number
+          created_at?: string
+          currency?: string
+          dedupe_key?: string | null
+          description?: string | null
+          direction?: string
+          entry_type: string
+          external_reference?: string | null
+          id?: string
+          metadata?: Json
+          payment_record_id: string
+        }
+        Update: {
+          actor_id?: string | null
+          amount_cents?: number
+          created_at?: string
+          currency?: string
+          dedupe_key?: string | null
+          description?: string | null
+          direction?: string
+          entry_type?: string
+          external_reference?: string | null
+          id?: string
+          metadata?: Json
+          payment_record_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_ledger_entries_payment_record_id_fkey"
+            columns: ["payment_record_id"]
+            isOneToOne: false
+            referencedRelation: "payment_records"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payment_records: {
+        Row: {
+          booking_request_id: string | null
+          buyer_email: string | null
+          buyer_id: string | null
+          captured_at: string | null
+          created_at: string
+          currency: string
+          deposit_cents: number
+          discount_cents: number
+          dispute_status: string
+          fee_breakdown: Json
+          gross_amount_cents: number
+          id: string
+          idempotency_key: string | null
+          internal_status: string
+          last_error: Json | null
+          last_reconciled_at: string | null
+          listing_id: string | null
+          metadata: Json
+          monetization_purchase_id: string | null
+          payment_source: string | null
+          payment_status: Database["public"]["Enums"]["paypal_payment_status"]
+          paypal_capture_id: string | null
+          paypal_order_id: string | null
+          paypal_payer_id: string | null
+          platform_fee_cents: number
+          provider: Database["public"]["Enums"]["payment_provider"]
+          reference: string
+          refunded_at: string | null
+          refunded_cents: number
+          sale_transaction_id: string | null
+          seller_id: string | null
+          seller_proceeds_cents: number
+          tax_cents: number
+          transaction_type: string
+          updated_at: string
+        }
+        Insert: {
+          booking_request_id?: string | null
+          buyer_email?: string | null
+          buyer_id?: string | null
+          captured_at?: string | null
+          created_at?: string
+          currency?: string
+          deposit_cents?: number
+          discount_cents?: number
+          dispute_status?: string
+          fee_breakdown?: Json
+          gross_amount_cents?: number
+          id?: string
+          idempotency_key?: string | null
+          internal_status?: string
+          last_error?: Json | null
+          last_reconciled_at?: string | null
+          listing_id?: string | null
+          metadata?: Json
+          monetization_purchase_id?: string | null
+          payment_source?: string | null
+          payment_status?: Database["public"]["Enums"]["paypal_payment_status"]
+          paypal_capture_id?: string | null
+          paypal_order_id?: string | null
+          paypal_payer_id?: string | null
+          platform_fee_cents?: number
+          provider?: Database["public"]["Enums"]["payment_provider"]
+          reference: string
+          refunded_at?: string | null
+          refunded_cents?: number
+          sale_transaction_id?: string | null
+          seller_id?: string | null
+          seller_proceeds_cents?: number
+          tax_cents?: number
+          transaction_type: string
+          updated_at?: string
+        }
+        Update: {
+          booking_request_id?: string | null
+          buyer_email?: string | null
+          buyer_id?: string | null
+          captured_at?: string | null
+          created_at?: string
+          currency?: string
+          deposit_cents?: number
+          discount_cents?: number
+          dispute_status?: string
+          fee_breakdown?: Json
+          gross_amount_cents?: number
+          id?: string
+          idempotency_key?: string | null
+          internal_status?: string
+          last_error?: Json | null
+          last_reconciled_at?: string | null
+          listing_id?: string | null
+          metadata?: Json
+          monetization_purchase_id?: string | null
+          payment_source?: string | null
+          payment_status?: Database["public"]["Enums"]["paypal_payment_status"]
+          paypal_capture_id?: string | null
+          paypal_order_id?: string | null
+          paypal_payer_id?: string | null
+          platform_fee_cents?: number
+          provider?: Database["public"]["Enums"]["payment_provider"]
+          reference?: string
+          refunded_at?: string | null
+          refunded_cents?: number
+          sale_transaction_id?: string | null
+          seller_id?: string | null
+          seller_proceeds_cents?: number
+          tax_cents?: number
+          transaction_type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_records_booking_request_id_fkey"
+            columns: ["booking_request_id"]
+            isOneToOne: false
+            referencedRelation: "booking_requests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_records_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_records_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "public_listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_records_monetization_purchase_id_fkey"
+            columns: ["monetization_purchase_id"]
+            isOneToOne: false
+            referencedRelation: "monetization_pending_reconciliation"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_records_monetization_purchase_id_fkey"
+            columns: ["monetization_purchase_id"]
+            isOneToOne: false
+            referencedRelation: "monetization_purchases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_records_sale_transaction_id_fkey"
+            columns: ["sale_transaction_id"]
+            isOneToOne: false
+            referencedRelation: "sale_transactions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payout_actions: {
+        Row: {
+          action: string
+          actor_id: string | null
+          created_at: string
+          external_reference: string | null
+          from_status:
+            | Database["public"]["Enums"]["seller_payout_status"]
+            | null
+          id: string
+          metadata: Json
+          note: string | null
+          payable_id: string
+          to_status: Database["public"]["Enums"]["seller_payout_status"] | null
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          created_at?: string
+          external_reference?: string | null
+          from_status?:
+            | Database["public"]["Enums"]["seller_payout_status"]
+            | null
+          id?: string
+          metadata?: Json
+          note?: string | null
+          payable_id: string
+          to_status?: Database["public"]["Enums"]["seller_payout_status"] | null
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          created_at?: string
+          external_reference?: string | null
+          from_status?:
+            | Database["public"]["Enums"]["seller_payout_status"]
+            | null
+          id?: string
+          metadata?: Json
+          note?: string | null
+          payable_id?: string
+          to_status?: Database["public"]["Enums"]["seller_payout_status"] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payout_actions_payable_id_fkey"
+            columns: ["payable_id"]
+            isOneToOne: false
+            referencedRelation: "seller_payables"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      paypal_plan_mappings: {
+        Row: {
+          billing_interval: string
+          created_at: string
+          currency: string
+          environment: string
+          id: string
+          is_active: boolean
+          paypal_plan_id: string | null
+          paypal_product_id: string | null
+          price_cents: number
+          tier: string
+          updated_at: string
+        }
+        Insert: {
+          billing_interval?: string
+          created_at?: string
+          currency?: string
+          environment?: string
+          id?: string
+          is_active?: boolean
+          paypal_plan_id?: string | null
+          paypal_product_id?: string | null
+          price_cents?: number
+          tier: string
+          updated_at?: string
+        }
+        Update: {
+          billing_interval?: string
+          created_at?: string
+          currency?: string
+          environment?: string
+          id?: string
+          is_active?: boolean
+          paypal_plan_id?: string | null
+          paypal_product_id?: string | null
+          price_cents?: number
+          tier?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      paypal_subscriptions: {
+        Row: {
+          billing_interval: string
+          cancelled_at: string | null
+          consent_id: string | null
+          created_at: string
+          currency: string
+          expires_at: string | null
+          id: string
+          last_payment_at: string | null
+          last_reconciled_at: string | null
+          last_webhook_event_id: string | null
+          metadata: Json
+          next_billing_time: string | null
+          paypal_plan_id: string
+          paypal_product_id: string | null
+          paypal_subscriber_id: string | null
+          paypal_subscription_id: string
+          recurring_amount_cents: number
+          start_time: string | null
+          status: string
+          suspended_at: string | null
+          tier: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          billing_interval?: string
+          cancelled_at?: string | null
+          consent_id?: string | null
+          created_at?: string
+          currency?: string
+          expires_at?: string | null
+          id?: string
+          last_payment_at?: string | null
+          last_reconciled_at?: string | null
+          last_webhook_event_id?: string | null
+          metadata?: Json
+          next_billing_time?: string | null
+          paypal_plan_id: string
+          paypal_product_id?: string | null
+          paypal_subscriber_id?: string | null
+          paypal_subscription_id: string
+          recurring_amount_cents?: number
+          start_time?: string | null
+          status?: string
+          suspended_at?: string | null
+          tier: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          billing_interval?: string
+          cancelled_at?: string | null
+          consent_id?: string | null
+          created_at?: string
+          currency?: string
+          expires_at?: string | null
+          id?: string
+          last_payment_at?: string | null
+          last_reconciled_at?: string | null
+          last_webhook_event_id?: string | null
+          metadata?: Json
+          next_billing_time?: string | null
+          paypal_plan_id?: string
+          paypal_product_id?: string | null
+          paypal_subscriber_id?: string | null
+          paypal_subscription_id?: string
+          recurring_amount_cents?: number
+          start_time?: string | null
+          status?: string
+          suspended_at?: string | null
+          tier?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      paypal_webhook_events: {
+        Row: {
+          event_id: string
+          event_type: string
+          id: string
+          processed: boolean
+          processed_at: string | null
+          processing_error: string | null
+          raw_event: Json
+          received_at: string
+          resource_id: string | null
+          resource_type: string | null
+          verification_status: string
+        }
+        Insert: {
+          event_id: string
+          event_type: string
+          id?: string
+          processed?: boolean
+          processed_at?: string | null
+          processing_error?: string | null
+          raw_event?: Json
+          received_at?: string
+          resource_id?: string | null
+          resource_type?: string | null
+          verification_status?: string
+        }
+        Update: {
+          event_id?: string
+          event_type?: string
+          id?: string
+          processed?: boolean
+          processed_at?: string | null
+          processing_error?: string | null
+          raw_event?: Json
+          received_at?: string
+          resource_id?: string | null
+          resource_type?: string | null
+          verification_status?: string
+        }
+        Relationships: []
       }
       permit_concierge_requests: {
         Row: {
@@ -4937,6 +5374,7 @@ export type Database = {
           listing_id: string
           message: string | null
           payment_intent_id: string | null
+          payment_provider: Database["public"]["Enums"]["payment_provider"]
           payout_completed_at: string | null
           platform_fee: number
           promo_code_id: string | null
@@ -4983,6 +5421,7 @@ export type Database = {
           listing_id: string
           message?: string | null
           payment_intent_id?: string | null
+          payment_provider?: Database["public"]["Enums"]["payment_provider"]
           payout_completed_at?: string | null
           platform_fee: number
           promo_code_id?: string | null
@@ -5029,6 +5468,7 @@ export type Database = {
           listing_id?: string
           message?: string | null
           payment_intent_id?: string | null
+          payment_provider?: Database["public"]["Enums"]["payment_provider"]
           payout_completed_at?: string | null
           platform_fee?: number
           promo_code_id?: string | null
@@ -5233,6 +5673,130 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      seller_payables: {
+        Row: {
+          adjustments_cents: number
+          admin_notes: string | null
+          buyer_id: string | null
+          created_at: string
+          currency: string
+          dispute_status: string
+          dwolla_transfer_id: string | null
+          external_payout_reference: string | null
+          failure_reason: string | null
+          gross_collected_cents: number
+          hold_reason: string | null
+          id: string
+          listing_id: string | null
+          net_payout_cents: number
+          paid_at: string | null
+          payment_record_id: string
+          payout_approved_at: string | null
+          payout_approved_by: string | null
+          payout_completed_at: string | null
+          payout_eligible_at: string | null
+          payout_idempotency_key: string | null
+          payout_method: string
+          payout_provider: Database["public"]["Enums"]["payment_provider"]
+          platform_fee_cents: number
+          refunded_cents: number
+          release_due_at: string | null
+          seller_id: string
+          status: Database["public"]["Enums"]["seller_payout_status"]
+          transaction_type: string
+          updated_at: string
+          verification_status: string
+        }
+        Insert: {
+          adjustments_cents?: number
+          admin_notes?: string | null
+          buyer_id?: string | null
+          created_at?: string
+          currency?: string
+          dispute_status?: string
+          dwolla_transfer_id?: string | null
+          external_payout_reference?: string | null
+          failure_reason?: string | null
+          gross_collected_cents?: number
+          hold_reason?: string | null
+          id?: string
+          listing_id?: string | null
+          net_payout_cents?: number
+          paid_at?: string | null
+          payment_record_id: string
+          payout_approved_at?: string | null
+          payout_approved_by?: string | null
+          payout_completed_at?: string | null
+          payout_eligible_at?: string | null
+          payout_idempotency_key?: string | null
+          payout_method?: string
+          payout_provider?: Database["public"]["Enums"]["payment_provider"]
+          platform_fee_cents?: number
+          refunded_cents?: number
+          release_due_at?: string | null
+          seller_id: string
+          status?: Database["public"]["Enums"]["seller_payout_status"]
+          transaction_type: string
+          updated_at?: string
+          verification_status?: string
+        }
+        Update: {
+          adjustments_cents?: number
+          admin_notes?: string | null
+          buyer_id?: string | null
+          created_at?: string
+          currency?: string
+          dispute_status?: string
+          dwolla_transfer_id?: string | null
+          external_payout_reference?: string | null
+          failure_reason?: string | null
+          gross_collected_cents?: number
+          hold_reason?: string | null
+          id?: string
+          listing_id?: string | null
+          net_payout_cents?: number
+          paid_at?: string | null
+          payment_record_id?: string
+          payout_approved_at?: string | null
+          payout_approved_by?: string | null
+          payout_completed_at?: string | null
+          payout_eligible_at?: string | null
+          payout_idempotency_key?: string | null
+          payout_method?: string
+          payout_provider?: Database["public"]["Enums"]["payment_provider"]
+          platform_fee_cents?: number
+          refunded_cents?: number
+          release_due_at?: string | null
+          seller_id?: string
+          status?: Database["public"]["Enums"]["seller_payout_status"]
+          transaction_type?: string
+          updated_at?: string
+          verification_status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "seller_payables_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "seller_payables_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "public_listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "seller_payables_payment_record_id_fkey"
+            columns: ["payment_record_id"]
+            isOneToOne: true
+            referencedRelation: "payment_records"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       service_partners: {
         Row: {
@@ -7619,6 +8183,7 @@ export type Database = {
           listing_id: string
           message: string | null
           payment_intent_id: string | null
+          payment_provider: Database["public"]["Enums"]["payment_provider"]
           payout_completed_at: string | null
           platform_fee: number
           promo_code_id: string | null
@@ -7730,6 +8295,18 @@ export type Database = {
         | "refunded"
         | "failed"
         | "cancelled"
+      payment_provider: "stripe" | "paypal" | "manual" | "dwolla_future"
+      paypal_payment_status:
+        | "created"
+        | "approved"
+        | "pending"
+        | "completed"
+        | "declined"
+        | "failed"
+        | "cancelled"
+        | "partially_refunded"
+        | "refunded"
+        | "reversed"
       protected_sale_handoff_mode: "pickup" | "delivery"
       protected_sale_status:
         | "initiated"
@@ -7743,6 +8320,20 @@ export type Database = {
         | "disputed"
         | "cancelled"
         | "refunded"
+      seller_payout_status:
+        | "awaiting_payment_confirmation"
+        | "pending_release"
+        | "eligible_for_review"
+        | "payout_on_hold"
+        | "payout_approved"
+        | "payout_processing"
+        | "payout_completed"
+        | "payout_failed"
+        | "partially_refunded"
+        | "fully_refunded"
+        | "disputed"
+        | "reversed"
+        | "cancelled"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -7960,6 +8551,19 @@ export const Constants = {
         "failed",
         "cancelled",
       ],
+      payment_provider: ["stripe", "paypal", "manual", "dwolla_future"],
+      paypal_payment_status: [
+        "created",
+        "approved",
+        "pending",
+        "completed",
+        "declined",
+        "failed",
+        "cancelled",
+        "partially_refunded",
+        "refunded",
+        "reversed",
+      ],
       protected_sale_handoff_mode: ["pickup", "delivery"],
       protected_sale_status: [
         "initiated",
@@ -7973,6 +8577,21 @@ export const Constants = {
         "disputed",
         "cancelled",
         "refunded",
+      ],
+      seller_payout_status: [
+        "awaiting_payment_confirmation",
+        "pending_release",
+        "eligible_for_review",
+        "payout_on_hold",
+        "payout_approved",
+        "payout_processing",
+        "payout_completed",
+        "payout_failed",
+        "partially_refunded",
+        "fully_refunded",
+        "disputed",
+        "reversed",
+        "cancelled",
       ],
     },
   },
