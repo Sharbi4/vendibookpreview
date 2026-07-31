@@ -3,6 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import { corsHeaders, jsonError, jsonResponse, unknownErrorResponse } from "../_shared/jsonError.ts";
 import { centsFromPayPalAmount, PayPalError, refundPayPalCapture, safeLog } from "../_shared/paypal.ts";
 import { appendLedgerEntry, recalculatePayableAfterRefund } from "../_shared/paypalAccounting.ts";
+import { auditPayment, requestIp } from "../_shared/paymentAudit.ts";
 
 /** Administrator-only PayPal refund. Always calls PayPal — never a DB-only status flip. */
 serve(async (req) => {
