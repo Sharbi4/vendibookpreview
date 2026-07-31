@@ -78,6 +78,25 @@ serve(async (req) => {
     const updated = await finalizeCapture(admin, record, facts, "capture_endpoint");
     safeLog("capture_finalized", { reference: record.reference, status: facts.status });
 
+    await auditPayment(admin, {
+      actorId: user.id,
+      actorRole: "user",
+      actorIp: requestIp(req),
+      provider: "paypal",
+      action: "order.captured",
+      entityType: "payment_record",
+      entityId: record.id,
+      reference: record.reference,
+      captureId: facts.captureId,
+      oldValue: { payment_status: record.payment_status },
+      newValue: {
+        payment_status: updated.payment_status,
+        amount_cents: facts.amountCents,
+        currency: facts.currency,
+      },
+    });
+
+
     return jsonResponse(200, {
       status: updated.payment_status,
       reference: updated.reference,
