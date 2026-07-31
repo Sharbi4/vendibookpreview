@@ -209,7 +209,7 @@ export class PayPalProvider implements PaymentProvider {
 
   async createSubscription(req: CreateSubscriptionRequest): Promise<ProviderSubscription> {
     try {
-      const sub = await createSubscription({
+      const sub = await ppCreateSubscription({
         planId: req.planId,
         subscriberEmail: req.subscriberEmail,
         subscriberName: req.subscriberName,
@@ -265,7 +265,7 @@ export class PayPalProvider implements PaymentProvider {
 
   async createCatalogProduct(req: CatalogProductRequest) {
     try {
-      const product = await createCatalogProduct({
+      const product = await ppCreateCatalogProduct({
         name: req.name,
         description: req.description,
         category: req.category,
@@ -316,7 +316,7 @@ export class PayPalProvider implements PaymentProvider {
 
   async createInvoice(req: PaymentLinkRequest): Promise<PaymentLinkResult> {
     try {
-      const inv = await createInvoice({
+      const inv = await ppCreateInvoice({
         amountCents: req.amount.amountCents,
         currency: req.amount.currency,
         reference: req.reference,
