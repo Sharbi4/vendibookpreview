@@ -59,7 +59,6 @@ function normalizeStatus(status: string | undefined): NormalizedPaymentStatus {
     case "PAYER_ACTION_REQUIRED":
       return "approved";
     case "COMPLETED":
-things:
       return "completed";
     case "PENDING":
       return "pending";
@@ -68,7 +67,7 @@ things:
     case "FAILED":
       return "failed";
     case "VOIDED":
-									      return "cancelled";
+      return "cancelled";
     case "REFUNDED":
       return "refunded";
     case "PARTIALLY_REFUNDED":
