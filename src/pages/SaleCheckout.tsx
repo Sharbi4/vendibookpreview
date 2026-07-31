@@ -8,7 +8,7 @@ import { useListing } from '@/hooks/useListing';
 import { useToast } from '@/hooks/use-toast';
 import { useFreightEstimate } from '@/hooks/useFreightEstimate';
 import { supabase } from '@/integrations/supabase/client';
-import { CheckoutOverlay, EmbeddedStripeCheckout } from '@/components/checkout';
+import { CheckoutOverlay, PayPalPaymentPanel } from '@/components/checkout';
 import CheckoutChrome from '@/components/checkout/CheckoutChrome';
 import CheckoutOrderSummary from '@/components/checkout/CheckoutOrderSummary';
 import { isEmbeddedCheckoutEnabled } from '@/lib/featureFlags';
@@ -153,7 +153,7 @@ const SaleCheckout = () => {
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [isPurchasing, setIsPurchasing] = useState(false);
   const [showCheckoutOverlay, setShowCheckoutOverlay] = useState(false);
-  const [embeddedCheckout, setEmbeddedCheckout] = useState<{ clientSecret: string; returnUrl: string } | null>(null);
+  const [paypalCheckout, setPaypalCheckout] = useState<{ transactionId: string; returnUrl: string } | null>(null);
   
 
   // Validation
@@ -556,19 +556,17 @@ const SaleCheckout = () => {
       return;
     }
 
-    // Handle card payment
+    // Handle card / PayPal payment
     setIsPurchasing(true);
     setShowCheckoutOverlay(true);
 
     try {
       const isVendibookFreight = fulfillmentSelected === 'vendibook_freight';
 
-      const useEmbedded = isEmbeddedCheckoutEnabled();
-      const { data, error } = await supabase.functions.invoke('create-checkout', {
+      // Create (or reuse) the pending sale transaction the PayPal order attaches to.
+      const { data, error } = await supabase.functions.invoke('create-sale-intent', {
         body: {
           listing_id: listingId,
-          mode: 'sale',
-          amount: priceSale,
           delivery_fee: fulfillmentSelected === 'delivery' ? deliveryFee : 0,
           fulfillment_type: isVendibookFreight ? 'vendibook_freight' : fulfillmentSelected,
           delivery_address: (fulfillmentSelected === 'delivery' || isVendibookFreight) ? deliveryAddress.trim() : null,
@@ -576,20 +574,17 @@ const SaleCheckout = () => {
           buyer_name: `${buyerInfo.firstName} ${buyerInfo.lastName}`.trim(),
           buyer_email: buyerInfo.email.trim(),
           buyer_phone: buyerInfo.phone.trim() || null,
-          vendibook_freight_enabled: isVendibookFreight,
-          freight_payer: isVendibookFreight ? freightPayer : 'buyer',
           freight_cost: isVendibookFreight ? freightCost : 0,
           referral_code: referralValid ? referralCode : undefined,
           terms_id: termsId,
-          ui_mode: useEmbedded ? 'custom' : 'hosted',
         },
       });
 
-      if (error || data?.error) {
+      if (error || data?.error || !data?.transaction_id) {
         const parsed = await parseEdgeError(error, data?.error ? { error: data.error, code: data.code } : null);
         const copy = checkoutErrorCopy(parsed);
         setShowCheckoutOverlay(false);
-        setEmbeddedCheckout(null);
+        setPaypalCheckout(null);
         toast({
           title: copy.title,
           description: copy.description,
@@ -614,22 +609,14 @@ const SaleCheckout = () => {
       });
 
       termsGate.reset();
-
-      if (useEmbedded && data.client_secret) {
-        const returnUrl = `${window.location.origin}/payment-success?session_id=${data.session_id}&payment protection=true`;
-        setShowCheckoutOverlay(false);
-        setEmbeddedCheckout({ clientSecret: data.client_secret, returnUrl });
-        return;
-      }
-
-      // Hosted redirect fallback
-      const stripeWindow = window.open(data.url, '_blank');
-      if (!stripeWindow) {
-        window.location.href = data.url;
-      }
+      setShowCheckoutOverlay(false);
+      setPaypalCheckout({
+        transactionId: data.transaction_id as string,
+        returnUrl: `${window.location.origin}/order-tracking/${data.transaction_id}`,
+      });
     } catch (error) {
       setShowCheckoutOverlay(false);
-      setEmbeddedCheckout(null);
+      setPaypalCheckout(null);
       const parsed = await parseEdgeError(error);
       const copy = checkoutErrorCopy(parsed);
       toast({
@@ -641,6 +628,7 @@ const SaleCheckout = () => {
       setIsPurchasing(false);
     }
   };
+
 
 
 
@@ -1022,12 +1010,13 @@ const SaleCheckout = () => {
       </CheckoutChrome>
 
       <CheckoutOverlay isVisible={showCheckoutOverlay} />
-      {embeddedCheckout ? (
-        <EmbeddedStripeCheckout
-          clientSecret={embeddedCheckout.clientSecret}
-          returnUrl={embeddedCheckout.returnUrl}
-          onClose={() => setEmbeddedCheckout(null)}
+      {paypalCheckout ? (
+        <PayPalPaymentPanel
+          target={{ kind: 'sale', id: paypalCheckout.transactionId }}
+          returnUrl={paypalCheckout.returnUrl}
+          onClose={() => setPaypalCheckout(null)}
           totalUsd={totalPrice}
+
           summary={
             <CheckoutOrderSummary
               variant="sale"
