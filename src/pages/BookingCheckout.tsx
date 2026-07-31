@@ -38,7 +38,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { calculateRentalFees } from '@/lib/commissions';
 import { trackFormSubmitConversion } from '@/lib/gtagConversions';
 import { trackRequestStarted, trackRequestSubmitted } from '@/lib/analytics';
-import { EmbeddedStripeCheckout } from '@/components/checkout';
+import { PayPalPaymentPanel } from '@/components/checkout';
 import CheckoutIntro from '@/components/checkout/CheckoutIntro';
 
 import CheckoutOrderSummary from '@/components/checkout/CheckoutOrderSummary';
@@ -139,7 +139,7 @@ const BookingCheckout = () => {
   const [userInfo, setUserInfo] = useState<BookingUserInfo | null>(null);
   const [showInfoModal, setShowInfoModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [embeddedCheckout, setEmbeddedCheckout] = useState<{ clientSecret: string; returnUrl: string } | null>(null);
+  const [paypalCheckout, setPaypalCheckout] = useState<{ bookingId: string; returnUrl: string } | null>(null);
   const [stagedDocuments, setStagedDocuments] = useState<StagedDocument[]>([]);
   const [showAuthModal, setShowAuthModal] = useState(false);
   
@@ -480,107 +480,30 @@ const BookingCheckout = () => {
         }
       }
 
-      // Create authorization hold checkout - payment is held until host approves
-      // For Instant Book: use regular checkout (immediate capture)
-      // For Request to Book: use authorization hold (capture on approval)
-      const checkoutFunction = listing.instant_book ? 'create-checkout' : 'create-booking-hold';
-      const useEmbedded = wantsEmbedded && checkoutFunction === 'create-checkout';
+      // PayPal checkout happens in-page, so the pre-opened popup isn't needed.
+      if (checkoutWindow) checkoutWindow.close();
 
-      const { data: checkoutData, error: checkoutError } = await supabase.functions.invoke(checkoutFunction, {
-        body: {
-          booking_id: bookingResult.id,
-          listing_id: listingId,
-          mode: 'rent',
-          amount: fees.subtotal,
-          delivery_fee: currentDeliveryFee,
-          deposit_amount: depositAmount,
-          referral_code: referralValid ? referralCode : undefined,
-          terms_id: termsGate.termsId,
-          ...(useEmbedded ? { ui_mode: 'custom' } : {}),
-        },
+      // Availability is enforced by the database trigger on booking insert, so
+      // reaching this point means the slot is still held for this guest.
+
+
+      setPaypalCheckout({
+        bookingId: bookingResult.id,
+        returnUrl: `${window.location.origin}/payment-success?booking_id=${bookingResult.id}`,
       });
 
-      // Detect availability conflict (409) from either data body or FunctionsHttpError body
-      const conflictReason = await detectAvailabilityConflict({
-        data: checkoutData as { code?: string; error?: string } | null,
-        error: checkoutError,
-      });
-
-
-      if (conflictReason) {
-        if (checkoutWindow) checkoutWindow.close();
-        // Remove the just-created booking row so the user can retry cleanly
-        await supabase.from('booking_requests').delete().eq('id', bookingResult.id);
-        trackLeadEvent('availability_unavailable_conflict', {
-          listing_id: listingId,
-          reason: conflictReason,
-          source: 'booking_checkout',
-        });
-        toast({
-          title: 'No longer available',
-          description: 'Sorry, this time is no longer available. Please choose another date or time.',
-          variant: 'destructive',
-        });
-        setIsSubmitting(false);
-        return;
-      }
-
-      if (checkoutError || (checkoutData && (checkoutData as { error?: string }).error)) {
-        if (checkoutWindow) checkoutWindow.close();
-        const parsed = await parseEdgeError(
-          checkoutError,
-          (checkoutData as { error?: string; code?: string } | null)?.error
-            ? { error: (checkoutData as { error?: string }).error, code: (checkoutData as { code?: string }).code }
-            : null,
-        );
-        const copy = checkoutErrorCopy(parsed);
-        toast({ title: copy.title, description: copy.description, variant: 'destructive' });
-        setIsSubmitting(false);
-        return;
-      }
-      if (useEmbedded && checkoutData?.client_secret) {
-        const returnUrl = `${window.location.origin}/payment-success?session_id=${checkoutData.session_id}`;
-        setEmbeddedCheckout({ clientSecret: checkoutData.client_secret, returnUrl });
-        setTimeout(() => {
-          trackFormSubmitConversion({ form_type: 'instant_book', listing_id: listingId });
-          trackRequestSubmitted(listingId || '', true);
-        }, 0);
-        setIsSubmitting(false);
-        return;
-      }
-      if (!checkoutData?.url) throw new Error('Failed to create checkout session');
-
-
-
-      // Fire tracking calls asynchronously to not block the redirect
+      // Fire tracking calls asynchronously so they never block the payment panel.
       const formType = listing.instant_book ? 'instant_book' : 'booking_request_hold';
       setTimeout(() => {
         trackFormSubmitConversion({ form_type: formType, listing_id: listingId });
         trackRequestSubmitted(listingId || '', listing.instant_book || false);
       }, 0);
-      
-      // NOTE: Do NOT send booking notification here - notifications are sent
-      // ONLY after payment is confirmed via the stripe-webhook function
-      
-      // Redirect to Stripe checkout IMMEDIATELY (don't wait for tracking)
-      if (checkoutWindow) {
-        // Use pre-opened window to bypass popup blockers in iframe
-        checkoutWindow.location.href = checkoutData.url;
-        return;
-      }
 
-      if (isInIframe) {
-        // Fallback: try to escape the iframe
-        try {
-          window.top?.location.assign(checkoutData.url);
-        } catch {
-          window.location.assign(checkoutData.url);
-        }
-        return;
-      }
+      // NOTE: Do NOT send booking notifications here — they are sent only after
+      // the payment capture is verified server-side.
+      setIsSubmitting(false);
+      return;
 
-      // Standard navigation for non-iframe contexts
-      window.location.href = checkoutData.url;
     } catch (error) {
       // Close the pre-opened window if there was an error
       if (checkoutWindow) checkoutWindow.close();
@@ -1513,11 +1436,13 @@ const BookingCheckout = () => {
           confirmLabel="Continue to secure payment"
         />
       ) : null}
-      {embeddedCheckout ? (
-        <EmbeddedStripeCheckout
-          clientSecret={embeddedCheckout.clientSecret}
-          returnUrl={embeddedCheckout.returnUrl}
-          onClose={() => setEmbeddedCheckout(null)}
+      {paypalCheckout ? (
+        <PayPalPaymentPanel
+          target={{ kind: 'booking', id: paypalCheckout.bookingId }}
+          returnUrl={paypalCheckout.returnUrl}
+          onClose={() => setPaypalCheckout(null)}
+          totalUsd={fees.customerTotal + (depositAmount || 0)}
+
           summary={
             <CheckoutOrderSummary
               variant="rental"
