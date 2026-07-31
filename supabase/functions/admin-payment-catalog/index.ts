@@ -33,6 +33,7 @@ serve(async (req) => {
     const user = userData?.user;
     if (!user) return jsonError(401, "unauthenticated", "Your session expired.");
 
+const actorId = user.id;
     const { data: isAdmin } = await admin.rpc("has_role", { _user_id: user.id, _role: "admin" });
     if (!isAdmin) return jsonError(403, "forbidden", "Administrator access required.");
 
@@ -88,7 +89,7 @@ serve(async (req) => {
         is_taxable: p.is_taxable ?? false,
         visibility: p.visibility ?? "public",
         metadata: p.metadata ?? {},
-        created_by: existing?.created_by ?? user.id,
+        created_by: existing?.created_by ?? actorId,
       };
 
       const { data: row, error } = existing

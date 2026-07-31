@@ -42,7 +42,7 @@ export class PaymentProviderError extends Error {
     this.status = opts.status ?? 502;
     this.code = opts.code ?? "provider_error";
     this.debugId = opts.debugId;
-    this.retryable = opts.retryable ?? opts.status === undefined || opts.status >= 500;
+    this.retryable = opts.retryable ?? (opts.status === undefined || opts.status >= 500);
   }
 }
 
