@@ -47,90 +47,12 @@ function fmtDate(iso?: string | null) {
 }
 
 export default function MembershipSummaryCard() {
-  const { user } = useAuth();
-  const { toast } = useToast();
   const entitlements = useHostEntitlements();
-  const [scheduling, setScheduling] = useState<'cancel' | 'reactivate' | null>(null);
-  const [openingPortal, setOpeningPortal] = useState(false);
+  const {
+    sub, provider, hasSubscription, scheduledCancel, isPastDue,
+    isLoading, busy, cancel, reactivate, openBilling, canReactivate,
+  } = useSubscriptionManagement();
 
-  const { data: sub, isLoading, refetch } = useQuery({
-    queryKey: ['membership-summary', user?.id],
-    enabled: !!user?.id,
-    queryFn: async () => {
-      const { data } = await supabase
-        .from('host_subscriptions')
-        .select('status, cancel_at_period_end, cancel_at, current_period_end, stripe_subscription_id')
-        .eq('user_id', user!.id)
-        .order('updated_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      return data;
-    },
-  });
-
-  const hasSubscription = !!sub?.stripe_subscription_id && sub.status !== 'canceled';
-  const scheduledCancel = !!sub?.cancel_at_period_end && sub?.status !== 'canceled';
-  const isPastDue = sub?.status === 'past_due' || sub?.status === 'unpaid';
-  const statusClass = STATUS_STYLES[sub?.status ?? ''] ?? 'bg-muted text-muted-foreground border-border';
-
-  /** Poll for the webhook mirror after a manage action. Stripe fires
-   *  customer.subscription.updated near-instantly, but not synchronously. */
-  const refetchUntilSynced = async (expectedCancel: boolean) => {
-    for (let i = 0; i < 6; i++) {
-      const { data } = await refetch();
-      if (!!data?.cancel_at_period_end === expectedCancel) return;
-      await new Promise((r) => setTimeout(r, 700));
-    }
-  };
-
-  const manageSchedule = async (action: 'cancel' | 'reactivate') => {
-    setScheduling(action);
-    try {
-      const { data, error } = await supabase.functions.invoke('manage-subscription', {
-        body: { action },
-      });
-      if (error) throw error;
-      toast({
-        title: action === 'cancel' ? 'Cancellation scheduled' : 'Subscription resumed',
-        description: action === 'cancel'
-          ? `Access continues through ${fmtDate(
-              data?.cancel_at
-                ? new Date((data.cancel_at as number) * 1000).toISOString()
-                : sub?.current_period_end,
-            )}.`
-          : 'Your plan will renew normally at the end of the current period.',
-      });
-      await refetchUntilSynced(action === 'cancel');
-    } catch (err) {
-      const parsed = await parseEdgeError(err);
-      toast({
-        title: 'Could not update subscription',
-        description: parsed?.message ?? (err instanceof Error ? err.message : 'Please try again.'),
-        variant: 'destructive',
-      });
-    } finally {
-      setScheduling(null);
-    }
-  };
-
-  const openPortal = async () => {
-    setOpeningPortal(true);
-    try {
-      const { data, error } = await supabase.functions.invoke('customer-portal');
-      if (error) throw error;
-      if (data?.url) window.open(data.url, '_blank', 'noopener,noreferrer');
-      else throw new Error('Portal URL missing');
-    } catch (err) {
-      const parsed = await parseEdgeError(err);
-      toast({
-        title: 'Could not open billing portal',
-        description: parsed?.message ?? (err instanceof Error ? err.message : 'Please try again.'),
-        variant: 'destructive',
-      });
-    } finally {
-      setOpeningPortal(false);
-    }
-  };
 
   return (
     <section id="section-membership" className="scroll-mt-24">
