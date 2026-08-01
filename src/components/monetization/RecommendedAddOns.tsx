@@ -11,7 +11,7 @@ import {
   type RecommendationContext,
 } from '@/hooks/useProductRecommendations';
 import { useSubscriptionConsent } from '@/hooks/useSubscriptionConsent';
-import type { MonetizationProduct } from '@/lib/monetization/products';
+import { startMonetizationCheckout, type MonetizationProduct } from '@/lib/monetization/products';
 
 interface Props {
   context: RecommendationContext;

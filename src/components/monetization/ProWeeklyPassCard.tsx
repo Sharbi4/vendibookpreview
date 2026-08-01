@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Loader2, Zap, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
+import { startMonetizationCheckout } from '@/lib/monetization/products';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { parseEdgeError } from '@/lib/edgeErrors';
