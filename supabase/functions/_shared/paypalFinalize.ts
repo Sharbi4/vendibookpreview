@@ -11,6 +11,7 @@ import { appendLedgerEntry, ensureSellerPayable } from "./paypalAccounting.ts";
 import { recordOrderEvent } from "./orders/orderEvents.ts";
 import { deliverOrderReceipt } from "./orders/deliverOrderReceipt.ts";
 import { notifyOrderParties, notifyUser } from "./notify.ts";
+import { fulfillMonetizationPurchase } from "./fulfillMonetizationPurchase.ts";
 
 export interface CaptureFacts {
   captureId: string;
@@ -246,6 +247,28 @@ async function propagateToDomainRecord(
         payment_provider: "paypal",
         paid_at: nowIso,
       }).eq("id", record.monetization_purchase_id).neq("status", "paid");
+      // Grant the entitlement / promotion the buyer just paid for.
+      await fulfillMonetizationPurchase(supabase, record.monetization_purchase_id);
+    }
+
+    // Vendibook service charges (freight, notary, protected-sale deposit).
+    const fulfillment = record.fee_breakdown?.fulfillment as
+      | { kind?: string; sale_transaction_id?: string; protected_sale_id?: string; listing_id?: string }
+      | undefined;
+
+    if (fulfillment?.kind === "freight" && fulfillment.sale_transaction_id) {
+      await supabase.from("sale_transactions").update({
+        freight_payment_status: "paid",
+        freight_paid_at: nowIso,
+        freight_payment_intent_id: facts.captureId,
+      }).eq("id", fulfillment.sale_transaction_id).neq("freight_payment_status", "paid");
+    }
+
+    if (fulfillment?.kind === "protected_sale_deposit" && fulfillment.protected_sale_id) {
+      await supabase.from("protected_sales").update({
+        status: "deposit_paid",
+        deposit_paid_at: nowIso,
+      }).eq("id", fulfillment.protected_sale_id).neq("status", "deposit_paid");
     }
   } catch (err) {
     safeLog("domain_propagation_failed", {
