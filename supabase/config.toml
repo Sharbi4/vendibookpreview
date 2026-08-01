@@ -3,6 +3,8 @@ project_id = "nbrehbwfsmedbelzntqs"
 [functions]
   [functions.monetization-webhook]
     verify_jwt = false
+  [functions.paypal-webhook]
+    verify_jwt = false
   [functions.ai-equipment-guide]
     verify_jwt = false
   [functions.vapi-chat]
@@ -248,10 +250,6 @@ verify_jwt = false
 
 [functions.explainer-tts]
 verify_jwt = false
-
-
-
-
 
 [functions.send-referral-invite]
 verify_jwt = true
