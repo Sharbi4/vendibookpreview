@@ -4523,7 +4523,10 @@ export type Database = {
           identity_verified_at: string | null
           last_active_at: string | null
           last_name: string | null
+          legal_first_name: string | null
+          legal_last_name: string | null
           membership_panel_dismissed_at: string | null
+          name_parts_confirmed: boolean
           onboarded_at: string | null
           phone_number: string | null
           pinned_listing_id: string | null
@@ -4574,7 +4577,10 @@ export type Database = {
           identity_verified_at?: string | null
           last_active_at?: string | null
           last_name?: string | null
+          legal_first_name?: string | null
+          legal_last_name?: string | null
           membership_panel_dismissed_at?: string | null
+          name_parts_confirmed?: boolean
           onboarded_at?: string | null
           phone_number?: string | null
           pinned_listing_id?: string | null
@@ -4625,7 +4631,10 @@ export type Database = {
           identity_verified_at?: string | null
           last_active_at?: string | null
           last_name?: string | null
+          legal_first_name?: string | null
+          legal_last_name?: string | null
           membership_panel_dismissed_at?: string | null
+          name_parts_confirmed?: boolean
           onboarded_at?: string | null
           phone_number?: string | null
           pinned_listing_id?: string | null
@@ -7977,6 +7986,10 @@ export type Database = {
         Args: { payload: Json; queue_name: string }
         Returns: number
       }
+      format_public_name: {
+        Args: { _fallback?: string; _first: string; _last: string }
+        Returns: string
+      }
       get_all_asset_requests: {
         Args: never
         Returns: {
@@ -8221,6 +8234,10 @@ export type Database = {
           source_queue: string
         }
         Returns: number
+      }
+      public_display_name: {
+        Args: { _fallback?: string; _user_id: string }
+        Returns: string
       }
       purge_expired_permit_soft_deletes: { Args: never; Returns: undefined }
       read_email_batch: {
