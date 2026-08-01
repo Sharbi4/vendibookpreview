@@ -8,8 +8,11 @@ import {
   quoteBookingRequest,
   quoteMonetizationProduct,
   quoteSaleTransaction,
+  quoteServiceCharge,
   type QuoteResult,
 } from "../_shared/paypalAccounting.ts";
+
+const NOTARY_FEE_CENTS = 4500;
 
 /**
  * Creates a PayPal Orders v2 order for a Vendibook transaction.
@@ -45,6 +48,8 @@ serve(async (req) => {
     let saleTransactionId: string | null = null;
     let bookingRequestId: string | null = null;
     let monetizationPurchaseId: string | null = null;
+    /** Set for Vendibook service charges so the capture can fulfil them. */
+    let fulfillment: Record<string, string> | null = null;
 
     if (kind === "sale") {
       if (!targetId) return jsonError(400, "missing_fields", "Missing transaction id.");
@@ -114,6 +119,94 @@ serve(async (req) => {
         .select("id")
         .maybeSingle();
       monetizationPurchaseId = purchase?.id ?? null;
+    } else if (kind === "freight") {
+      if (!targetId) return jsonError(400, "missing_fields", "Missing transaction id.");
+      const { data: tx } = await admin
+        .from("sale_transactions")
+        .select("*, listing:listings(title)")
+        .eq("id", targetId)
+        .maybeSingle();
+      if (!tx) return jsonError(404, "not_found", "We couldn't find that transaction.");
+      if (tx.buyer_id !== user.id) {
+        return jsonError(403, "forbidden", "Only the buyer can pay for freight.");
+      }
+      if (!tx.seller_confirmed_at) {
+        return jsonError(409, "not_ready", "The seller needs to confirm this sale before freight can be paid.");
+      }
+      if (tx.fulfillment_type !== "vendibook_freight") {
+        return jsonError(409, "not_applicable", "This order doesn't use Vendibook freight.");
+      }
+      if (tx.freight_payment_status === "paid") {
+        return jsonError(409, "already_paid", "Freight is already paid on this order.");
+      }
+      const freightCents = Math.round(Number(tx.freight_cost ?? 0) * 100);
+      if (freightCents <= 0) return jsonError(400, "invalid_amount", "There's no freight amount due.");
+      quote = quoteServiceCharge({
+        prefix: "VB-FRT",
+        transactionType: "freight",
+        amountCents: freightCents,
+        description: `Vendibook freight — ${(tx as any).listing?.title ?? "your order"}`,
+        lineLabel: "Nationwide freight shipping",
+        listingId: tx.listing_id ?? null,
+        buyerId: user.id,
+        sellerId: tx.seller_id ?? null,
+      });
+      fulfillment = { kind: "freight", sale_transaction_id: tx.id, key: `freight:${tx.id}` };
+    } else if (kind === "notary") {
+      if (!targetId) return jsonError(400, "missing_fields", "Missing listing id.");
+      const { data: listing } = await admin
+        .from("listings")
+        .select("id, title, host_id, proof_notary_enabled")
+        .eq("id", targetId)
+        .maybeSingle();
+      if (!listing) return jsonError(404, "not_found", "We couldn't find that listing.");
+      if (listing.host_id !== user.id) {
+        return jsonError(403, "forbidden", "You don't own this listing.");
+      }
+      if (!listing.proof_notary_enabled) {
+        return jsonError(409, "not_applicable", "Proof Notary isn't enabled on this listing.");
+      }
+      quote = quoteServiceCharge({
+        prefix: "VB-NOT",
+        transactionType: "addon",
+        amountCents: NOTARY_FEE_CENTS,
+        description: `Vendibook Proof Notary — ${listing.title}`,
+        lineLabel: "Proof Notary (notarized bill of sale)",
+        listingId: listing.id,
+        buyerId: user.id,
+      });
+      fulfillment = { kind: "notary", listing_id: listing.id, key: `notary:${listing.id}` };
+    } else if (kind === "protected_sale_deposit") {
+      if (!targetId) return jsonError(400, "missing_fields", "Missing protected sale id.");
+      const { data: ps } = await admin
+        .from("protected_sales")
+        .select("id, buyer_id, deposit_cents, status, sale_transaction_id, listing_id")
+        .eq("id", targetId)
+        .maybeSingle();
+      if (!ps) return jsonError(404, "not_found", "We couldn't find that protected sale.");
+      if (ps.buyer_id !== user.id) return jsonError(403, "forbidden", "You aren't the buyer on this sale.");
+      if (ps.status !== "agreement_signed" && ps.status !== "id_verified") {
+        return jsonError(409, "not_ready", "The deposit isn't collectable at this stage.");
+      }
+      if (!ps.deposit_cents || ps.deposit_cents <= 0) {
+        return jsonError(400, "invalid_amount", "There's no deposit amount due.");
+      }
+      quote = quoteServiceCharge({
+        prefix: "VB-DEP",
+        transactionType: "booking_deposit",
+        amountCents: ps.deposit_cents,
+        description: "Vendibook Protected Sale — deposit",
+        lineLabel: "Protected Sale deposit",
+        listingId: ps.listing_id ?? null,
+        buyerId: user.id,
+        depositCents: ps.deposit_cents,
+      });
+      fulfillment = {
+        kind: "protected_sale_deposit",
+        protected_sale_id: ps.id,
+        sale_transaction_id: ps.sale_transaction_id ?? "",
+        key: `protected_sale_deposit:${ps.id}`,
+      };
     } else {
       return jsonError(400, "invalid_kind", "Unsupported checkout type.");
     }
@@ -129,6 +222,37 @@ serve(async (req) => {
       : bookingRequestId
       ? { column: "booking_request_id", value: bookingRequestId }
       : null;
+
+    if (fulfillment) {
+      const { data: paidAlready } = await admin
+        .from("payment_records")
+        .select("id")
+        .eq("fee_breakdown->fulfillment->>key", fulfillment.key)
+        .eq("payment_status", "completed")
+        .limit(1)
+        .maybeSingle();
+      if (paidAlready) return jsonError(409, "already_paid", "This payment was already completed.");
+
+      const { data: inflight } = await admin
+        .from("payment_records")
+        .select("id, reference, paypal_order_id, gross_amount_cents")
+        .eq("fee_breakdown->fulfillment->>key", fulfillment.key)
+        .in("payment_status", ["created", "approved"])
+        .gt("created_at", new Date(Date.now() - 20 * 60_000).toISOString())
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (inflight?.paypal_order_id && inflight.gross_amount_cents === quote.grossCents) {
+        return jsonResponse(200, {
+          order_id: inflight.paypal_order_id,
+          reference: inflight.reference,
+          amount_cents: inflight.gross_amount_cents,
+          currency: quote.currency,
+          breakdown: quote.breakdown,
+          reused: true,
+        });
+      }
+    }
 
     if (inflightFilter) {
       const { data: existing } = await admin
@@ -191,6 +315,7 @@ serve(async (req) => {
         fee_breakdown: {
           lines: quote.breakdown,
           release_at: quote.releaseAt,
+          ...(fulfillment ? { fulfillment } : {}),
         },
       })
       .select()
