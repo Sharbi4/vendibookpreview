@@ -23,17 +23,15 @@ jobs:
   deploy:
     name: Configure and deploy PayPal functions
     runs-on: ubuntu-latest
-    environment: production
+    timeout-minutes: 15
     env:
       SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
       SUPABASE_PROJECT_ID: nbrehbwfsmedbelzntqs
-      # PayPal webhook IDs are identifiers, not API credentials. Keep the
-      # supplied production ID here so deployment is not blocked by a second
-      # GitHub secret that may not exist yet.
       PAYPAL_WEBHOOK_ID: 6XK510927N3848536
       PAYPAL_CLIENT_ID: ${{ secrets.PAYPAL_CLIENT_ID }}
       PAYPAL_CLIENT_SECRET: ${{ secrets.PAYPAL_CLIENT_SECRET }}
       PAYPAL_ENVIRONMENT: ${{ secrets.PAYPAL_ENVIRONMENT }}
+      EXPECTED_SUBSCRIPTION_VERSION: paypal-subscription-create-2026-08-01.3
 
     steps:
       - name: Check required deployment credential
@@ -61,15 +59,13 @@ jobs:
         run: |
           set -euo pipefail
 
-          # Always synchronize the registered webhook ID supplied for this
-          # project. Never print secret values.
           supabase secrets set \
             --project-ref "$SUPABASE_PROJECT_ID" \
             PAYPAL_WEBHOOK_ID="$PAYPAL_WEBHOOK_ID"
 
-          # Synchronize API credentials when repository secrets exist. If they
-          # are absent, deployment still proceeds so an existing Supabase secret
-          # is not accidentally overwritten or blocked.
+          # Synchronize PayPal API credentials when GitHub contains them.
+          # Otherwise preserve existing Supabase values and let the live health
+          # probe below determine whether the runtime is configured.
           if [[ -n "${PAYPAL_CLIENT_ID:-}" && -n "${PAYPAL_CLIENT_SECRET:-}" ]]; then
             paypal_env="${PAYPAL_ENVIRONMENT:-live}"
             supabase secrets set \
@@ -79,8 +75,7 @@ jobs:
               PAYPAL_ENVIRONMENT="$paypal_env"
             echo "PayPal API credential names were synchronized to Supabase."
           else
-            [[ -n "${PAYPAL_CLIENT_ID:-}" ]] || echo "GitHub secret PAYPAL_CLIENT_ID is not configured; preserving any existing Supabase value."
-            [[ -n "${PAYPAL_CLIENT_SECRET:-}" ]] || echo "GitHub secret PAYPAL_CLIENT_SECRET is not configured; preserving any existing Supabase value."
+            echo "GitHub PayPal API credential secrets are not both present; preserving existing Supabase values."
           fi
 
       - name: Deploy PayPal webhook Edge Function
@@ -110,35 +105,73 @@ jobs:
             --data '{}')
 
           cat /tmp/paypal-webhook-response.txt
-
           if [[ "$status" != "400" ]]; then
             echo "Expected HTTP 400 from the malformed-payload reachability test; received $status." >&2
             exit 1
           fi
 
-      - name: Verify subscription endpoint is deployed
+      - name: Verify corrected subscription build and PayPal credentials
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          # The Supabase anon key is intentionally public and is already used by
+          # the browser. Read it from the checked-in frontend environment file
+          # solely to pass the gateway for the safe GET health probe.
+          anon_key=$(sed -n 's/^VITE_SUPABASE_PUBLISHABLE_KEY="\(.*\)"$/\1/p' .env)
+          if [[ -z "$anon_key" ]]; then
+            echo "Could not read VITE_SUPABASE_PUBLISHABLE_KEY from .env" >&2
+            exit 1
+          fi
+
+          endpoint="https://${SUPABASE_PROJECT_ID}.supabase.co/functions/v1/paypal-subscription-create"
+          status=$(curl --silent --show-error \
+            --output /tmp/paypal-subscription-health.json \
+            --write-out "%{http_code}" \
+            --request GET "$endpoint" \
+            --header "apikey: $anon_key" \
+            --header "Authorization: Bearer $anon_key")
+
+          cat /tmp/paypal-subscription-health.json
+          if [[ "$status" != "200" ]]; then
+            echo "The corrected subscription function is not live; health probe returned HTTP $status." >&2
+            exit 1
+          fi
+
+          actual_version=$(jq -r '.version // empty' /tmp/paypal-subscription-health.json)
+          configured=$(jq -r '.configured // false' /tmp/paypal-subscription-health.json)
+
+          if [[ "$actual_version" != "$EXPECTED_SUBSCRIPTION_VERSION" ]]; then
+            echo "Wrong subscription build is live. Expected $EXPECTED_SUBSCRIPTION_VERSION, received ${actual_version:-missing}." >&2
+            exit 1
+          fi
+          if [[ "$configured" != "true" ]]; then
+            echo "The function deployed, but PAYPAL_CLIENT_ID and/or PAYPAL_CLIENT_SECRET is missing from Supabase." >&2
+            echo "Add both as GitHub Actions secrets so this workflow can synchronize them, or set them directly in Supabase." >&2
+            exit 1
+          fi
+
+      - name: Verify subscription authorization boundary
         shell: bash
         run: |
           set -euo pipefail
           endpoint="https://${SUPABASE_PROJECT_ID}.supabase.co/functions/v1/paypal-subscription-create"
           status=$(curl --silent --show-error \
-            --output /tmp/paypal-subscription-response.txt \
+            --output /tmp/paypal-subscription-auth.json \
             --write-out "%{http_code}" \
             --request POST "$endpoint" \
             --header "Content-Type: application/json" \
             --data '{}')
 
-          cat /tmp/paypal-subscription-response.txt
-
+          cat /tmp/paypal-subscription-auth.json
           if [[ "$status" != "401" ]]; then
-            echo "Expected HTTP 401 from the unauthenticated subscription smoke test; received $status." >&2
+            echo "Expected HTTP 401 from the unauthenticated subscription request; received $status." >&2
             exit 1
           fi
 
       - name: Deployment summary
         shell: bash
         run: |
-          echo "PayPal webhook and subscription functions deployed to ${SUPABASE_PROJECT_ID}."
-          if [[ -z "${PAYPAL_CLIENT_ID:-}" || -z "${PAYPAL_CLIENT_SECRET:-}" ]]; then
-            echo "Repository-level PayPal API credentials were not both present. If subscription checkout still reports provider_unavailable, add PAYPAL_CLIENT_ID and PAYPAL_CLIENT_SECRET as GitHub Actions secrets or confirm they already exist in Supabase."
-          fi
+          echo "Corrected PayPal webhook and subscription functions are live on ${SUPABASE_PROJECT_ID}."
+          echo "Verified subscription build: ${EXPECTED_SUBSCRIPTION_VERSION}"
+          echo "Verified PayPal API credentials are available to the Edge Function."
