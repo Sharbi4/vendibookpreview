@@ -53,6 +53,8 @@ serve(async (req) => {
         return await deactivatePlan();
       case "archive_product":
         return await archiveProduct();
+      case "sync_all_plans":
+        return await syncAllPlans();
       case "list_catalog":
         return await listCatalog();
       default:
@@ -130,6 +132,51 @@ serve(async (req) => {
         product: { ...row, paypal_product_id: providerProductId },
         provider_synced: !externalError,
         ...(externalError ? { provider_error: externalError } : {}),
+      });
+    }
+
+    /**
+     * Idempotent bulk seed: makes sure every active recurring product has a
+     * provider plan for its canonical interval. Prices and intervals come from
+     * the existing catalog — nothing is invented here. Re-running is safe:
+     * `upsertPlan` reuses an existing plan row + provider plan id unless the
+     * price actually changed.
+     */
+    async function syncAllPlans() {
+      const { data: products, error } = await admin
+        .from("monetization_products")
+        .select("id, slug, name, price_cents, currency, billing_type, is_active")
+        .eq("billing_type", "recurring")
+        .eq("is_active", true)
+        .order("display_order");
+      if (error) return jsonError(400, "read_failed", error.message);
+
+      const results: Array<Record<string, unknown>> = [];
+      for (const product of products ?? []) {
+        const interval: Interval = /annual|yearly/i.test(product.slug) ? "annual" : "monthly";
+        body.plan = {
+          product_id: product.id,
+          billing_interval: interval,
+          price_cents: product.price_cents,
+          currency: product.currency ?? "USD",
+          is_active: true,
+        };
+        const res = await upsertPlan();
+        const payload = await res.clone().json().catch(() => ({}));
+        results.push({
+          slug: product.slug,
+          billing_interval: interval,
+          price_cents: product.price_cents,
+          ok: res.status === 200,
+          paypal_plan_id: payload?.plan?.paypal_plan_id ?? null,
+          provider_error: payload?.provider_error ?? payload?.message ?? null,
+        });
+      }
+
+      return jsonResponse(200, {
+        synced: results.filter((r) => r.ok && r.paypal_plan_id).length,
+        total: results.length,
+        results,
       });
     }
 
