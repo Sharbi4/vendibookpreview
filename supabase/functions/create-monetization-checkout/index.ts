@@ -5,6 +5,10 @@ import { alreadyEntitledError, jsonError } from "../_shared/jsonError.ts";
 import { classifyProduct } from "../_shared/productEntitlement.ts";
 import { resolveHostTier, tierAtLeast } from "../_shared/resolveHostTier.ts";
 import { resolveToolAccess } from "../_shared/toolAccess.ts";
+import {
+  buildCheckoutIdempotencyKey,
+  newCorrelationId,
+} from "../_shared/payments/checkoutIdempotency.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -32,9 +36,8 @@ interface Body {
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
+  const correlationId = newCorrelationId();
   try {
-    const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
-    if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
 
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
@@ -82,6 +85,9 @@ serve(async (req) => {
         "Memberships are now purchased through PayPal. Please reload the page and try again.",
       );
     }
+
+    const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
+    if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
 
     // Entitlement guard: never charge a user for something they already own.
     // Uses the unified server-side helpers (resolveHostTier + resolveToolAccess).
@@ -287,17 +293,6 @@ serve(async (req) => {
       }
     }
 
-    // Idempotency key scoped to (user, product, listing, hour) — bursty double-clicks reuse the session.
-    const hourBucket = Math.floor(Date.now() / (60 * 60 * 1000));
-    const idempotencyKey = `mon-${user.id}-${product.id}-${body.listing_id ?? "none"}-${hourBucket}`;
-
-    // Reuse existing pending purchase if one already exists for this key
-    const { data: existing } = await supabase
-      .from("monetization_purchases")
-      .select("id, stripe_session_id, status")
-      .eq("idempotency_key", idempotencyKey)
-      .maybeSingle();
-
     const origin =
       req.headers.get("origin") ||
       req.headers.get("referer")?.replace(/\/$/, "").split("/").slice(0, 3).join("/") ||
@@ -311,10 +306,41 @@ serve(async (req) => {
     const successUrl = `${rawSuccess}${rawSuccess.includes("?") ? "&" : "?"}session_id={CHECKOUT_SESSION_ID}`;
     const cancelUrl = `${origin}${body.cancel_path ?? "/dashboard?purchase=cancelled"}`;
 
+    const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
+    const customers = await stripe.customers.list({ email: user.email, limit: 1 });
+    const customerId = customers.data[0]?.id;
+
+    // Idempotency key derived from the FULL parameter set of this logical
+    // checkout operation. Same parameters => same key (safe retry/reuse);
+    // any change (price, promo, listing, customer, URLs) => new key, new
+    // session. Never time-bucketed — that caused provider key-reuse errors.
+    const idempotencyKey = await buildCheckoutIdempotencyKey({
+      userId: user.id,
+      productId: product.id,
+      productSlug: product.slug,
+      mode: "payment",
+      amountCents: priceCents,
+      currency: product.currency,
+      quantity: 1,
+      listingId: body.listing_id ?? null,
+      discountCodeId: discountCodeId,
+      discountAppliedCents: discountAppliedCents + memberDiscountCents,
+      customerRef: customerId ?? user.email,
+      priceRef: product.stripe_price_id ?? null,
+      successUrl,
+      cancelUrl,
+    });
+
+    // Reuse existing pending purchase only when the parameters match exactly
+    // (guaranteed by the hash above).
+    const { data: existing } = await supabase
+      .from("monetization_purchases")
+      .select("id, stripe_session_id, status")
+      .eq("idempotency_key", idempotencyKey)
+      .maybeSingle();
+
     if (existing?.stripe_session_id && existing.status === "pending") {
       log("reusing pending session", { id: existing.id, session: existing.stripe_session_id });
-      // Retrieve the URL from Stripe
-      const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
       const sess = await stripe.checkout.sessions.retrieve(existing.stripe_session_id);
       if (sess.url && sess.status !== "expired") {
         return new Response(JSON.stringify({ url: sess.url, purchase_id: existing.id }), {
@@ -323,10 +349,6 @@ serve(async (req) => {
         });
       }
     }
-
-    const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
-    const customers = await stripe.customers.list({ email: user.email, limit: 1 });
-    const customerId = customers.data[0]?.id;
 
     // Prefer stored price ID; else inline price_data.
     const lineItem = product.stripe_price_id
@@ -352,34 +374,31 @@ serve(async (req) => {
     };
     if (body.consent_id) sessionMetadata.consent_id = body.consent_id;
 
-    const session = await stripe.checkout.sessions.create(
-      {
-        customer: customerId,
-        customer_email: customerId ? undefined : user.email,
-        line_items: [lineItem as Stripe.Checkout.SessionCreateParams.LineItem],
-        mode: product.billing_type === "recurring" ? "subscription" : "payment",
-        success_url: successUrl,
-        cancel_url: cancelUrl,
-        metadata: sessionMetadata,
-        // Mirror the consent + product context onto the Subscription itself so
-        // handleSubscriptionChange can link host_subscriptions.consent_id even
-        // on downstream events (renewals, updates) where session metadata is
-        // not attached.
-        ...(product.billing_type === "recurring"
-          ? {
-              subscription_data: {
-                metadata: {
-                  product_slug: product.slug,
-                  user_id: user.id,
-                  tier: product.slug,
-                  ...(body.consent_id ? { consent_id: body.consent_id } : {}),
-                },
-              },
-            }
-          : {}),
-      },
-      { idempotencyKey: `stripe-${idempotencyKey}` },
-    );
+    let session: Stripe.Checkout.Session;
+    try {
+      session = await stripe.checkout.sessions.create(
+        {
+          customer: customerId,
+          customer_email: customerId ? undefined : user.email,
+          line_items: [lineItem as Stripe.Checkout.SessionCreateParams.LineItem],
+          mode: "payment",
+          success_url: successUrl,
+          cancel_url: cancelUrl,
+          metadata: sessionMetadata,
+        },
+        { idempotencyKey },
+      );
+    } catch (providerErr) {
+      const detail = providerErr instanceof Error ? providerErr.message : String(providerErr);
+      log("provider error", { correlation_id: correlationId, idempotencyKey, detail });
+      return jsonError(
+        502,
+        "provider_error",
+        "We couldn't start that checkout. Please try again in a moment.",
+        { correlation_id: correlationId, retryable: true },
+      );
+    }
+
 
     // Insert / upsert pending purchase row
     const purchaseRow = {
@@ -426,10 +445,12 @@ serve(async (req) => {
     );
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
-    log("ERROR", { msg });
-    return new Response(JSON.stringify({ error: msg }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 500,
-    });
+    log("ERROR", { correlation_id: correlationId, msg });
+    return jsonError(
+      500,
+      "checkout_failed",
+      "We couldn't start that checkout. Please try again.",
+      { correlation_id: correlationId, retryable: true },
+    );
   }
 });

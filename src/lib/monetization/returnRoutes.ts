@@ -253,3 +253,31 @@ export function buildCheckoutReturnPaths(
     cancelPath: `${route.cancelPath}&product=${encodeURIComponent(productSlug)}${listingQs}`,
   };
 }
+
+/**
+ * Preserve the selected plan across an unauthenticated signup/login detour.
+ * Returns the `/auth?returnTo=...` destination that brings the visitor back to
+ * the Plans page with the exact plan + interval they clicked, auto-resuming
+ * checkout.
+ */
+export function buildPlanAuthReturnTo(opts: {
+  planSlug: string;
+  interval: 'monthly' | 'annual';
+  pathname?: string;
+  search?: string;
+}): string {
+  const current = new URLSearchParams(opts.search ?? '');
+  const params = new URLSearchParams({
+    plan: opts.planSlug,
+    interval: opts.interval,
+    auto: '1',
+  });
+  const returnToParam = current.get('returnTo');
+  const listingContext = current.get('listingContext');
+  if (returnToParam) params.set('returnTo', returnToParam);
+  if (listingContext) params.set('listingContext', listingContext);
+  const path = opts.pathname ?? '/pricing';
+  const isPlansPage = ['/pricing', '/plans', '/host/plans'].some((p) => path.startsWith(p));
+  const target = `${isPlansPage ? path : '/pricing'}?${params.toString()}`;
+  return `/auth?returnTo=${encodeURIComponent(target)}`;
+}

@@ -138,16 +138,53 @@ export interface StartCheckoutInput {
 const intervalFromSlug = (slug: string): 'monthly' | 'quarterly' | 'annual' =>
   /annual|yearly/i.test(slug) ? 'annual' : 'monthly';
 
+/** Slugs that are always memberships, used when the catalog lookup fails. */
+const RECURRING_SLUG_PATTERN = /^(host_|seller_plus)/i;
+
+/**
+ * Stable identity of one logical checkout operation. Repeated clicks with the
+ * SAME parameters reuse the in-flight request; any change (plan, interval,
+ * listing, promo code, return paths) produces a different key and therefore a
+ * brand new checkout operation.
+ */
+export function checkoutOperationKey(input: StartCheckoutInput): string {
+  return [
+    input.productSlug,
+    input.billingInterval ?? intervalFromSlug(input.productSlug),
+    input.listingId ?? '',
+    input.discountCode ?? '',
+    input.consentId ?? '',
+    input.successPath ?? '',
+    input.cancelPath ?? '',
+  ].join('|');
+}
+
+const inFlight = new Map<string, Promise<{ url: string }>>();
+
 export async function startMonetizationCheckout(input: StartCheckoutInput): Promise<{ url: string }> {
+  const key = checkoutOperationKey(input);
+  const existing = inFlight.get(key);
+  if (existing) return existing;
+  const run = runCheckout(input).finally(() => inFlight.delete(key));
+  inFlight.set(key, run);
+  return run;
+}
+
+async function runCheckout(input: StartCheckoutInput): Promise<{ url: string }> {
   // Every Vendibook charge runs through PayPal. One-time products are paid on
   // our own hosted checkout page; recurring plans use PayPal Subscriptions.
+  // Stripe is never reachable for a NEW purchase from this path.
   const { data: product } = await (supabase as any)
     .from('monetization_products')
     .select('billing_type')
     .eq('slug', input.productSlug)
     .maybeSingle();
 
-  if (product?.billing_type === 'recurring') {
+  const isRecurring =
+    product?.billing_type === 'recurring' ||
+    (!product && RECURRING_SLUG_PATTERN.test(input.productSlug));
+
+  if (isRecurring) {
     const { data, error } = await supabase.functions.invoke('paypal-subscription-create', {
       body: {
         product_slug: input.productSlug,
@@ -173,4 +210,5 @@ export async function startMonetizationCheckout(input: StartCheckoutInput): Prom
     url: `${window.location.origin}/checkout/product/${input.productSlug}${qs ? `?${qs}` : ''}`,
   };
 }
+
 

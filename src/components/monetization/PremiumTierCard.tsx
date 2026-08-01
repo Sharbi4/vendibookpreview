@@ -17,6 +17,7 @@ import {
   useLearnMoreDeepLink,
 } from '@/components/monetization/ProductLearnMoreOverlay';
 import { TrustESignChip } from '@/components/trust/TrustESignChip';
+import { buildPlanAuthReturnTo } from '@/lib/monetization/returnRoutes';
 import type { TierFeatureGroups, TierRole } from './tierCatalog';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -174,20 +175,14 @@ export function PremiumTierCard({
     // both require an authenticated user, so opening the consent dialog first
     // would fail with an opaque error.
     if (!user) {
-      const currentSearch = new URLSearchParams(location.search);
-      // Preserve any incoming returnTo (e.g. wizard detour) so that after
-      // sign-in + auto-checkout the user lands back where they started.
-      const incomingReturnTo = currentSearch.get('returnTo');
-      const incomingListingContext = currentSearch.get('listingContext');
-      const params = new URLSearchParams({
-        plan: product.slug,
-        interval,
-        auto: '1',
-      });
-      if (incomingReturnTo) params.set('returnTo', incomingReturnTo);
-      if (incomingListingContext) params.set('listingContext', incomingListingContext);
-      const returnTo = `${location.pathname.startsWith('/pricing') || location.pathname.startsWith('/plans') || location.pathname.startsWith('/host/plans') ? location.pathname : '/pricing'}?${params.toString()}`;
-      navigate(`/auth?returnTo=${encodeURIComponent(returnTo)}`);
+      navigate(
+        buildPlanAuthReturnTo({
+          planSlug: product.slug,
+          interval,
+          pathname: location.pathname,
+          search: location.search,
+        }),
+      );
       return;
     }
 
