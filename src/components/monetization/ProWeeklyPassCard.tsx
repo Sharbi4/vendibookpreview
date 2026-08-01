@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Loader2, Zap, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
+import { startMonetizationCheckout } from '@/lib/monetization/products';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { parseEdgeError } from '@/lib/edgeErrors';
@@ -29,16 +29,11 @@ export default function ProWeeklyPassCard() {
     }
     setBusy(true);
     try {
-      const { data, error } = await supabase.functions.invoke('create-monetization-checkout', {
-        body: {
-          product_slug: 'pro_weekly_pass',
-          success_path: '/payment-success?monetization=true',
-          cancel_path: '/pricing',
-        },
+      const { url } = await startMonetizationCheckout({
+        productSlug: 'pro_weekly_pass',
+        successPath: '/payment-success?monetization=true',
+        cancelPath: '/pricing',
       });
-      if (error) throw error;
-      const url = (data as { url?: string })?.url;
-      if (!url) throw new Error('No checkout URL returned');
       const top = window.top;
       if (top && top !== window) {
         try { top.location.href = url; return; } catch { /* fall through */ }

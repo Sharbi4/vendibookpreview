@@ -25,6 +25,7 @@ import { format } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import FailedPaymentAttemptsPanel from '@/components/admin/FailedPaymentAttemptsPanel';
+import PayPalPlanSyncPanel from '@/components/admin/PayPalPlanSyncPanel';
 
 const AdminFinance = () => {
   const navigate = useNavigate();
@@ -388,6 +389,7 @@ const AdminFinance = () => {
         </div>
 
         <div className="mt-8">
+          <PayPalPlanSyncPanel />
           <FailedPaymentAttemptsPanel />
         </div>
       </main>

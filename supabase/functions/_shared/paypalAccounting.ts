@@ -259,3 +259,41 @@ export function recalculatePayableAfterRefund(
     hold_reason: "Partial refund issued — payout amount recalculated.",
   };
 }
+
+/**
+ * Quote for a Vendibook-owned service charge that isn't backed by a catalog
+ * product — freight, notary, protected-sale deposit. Vendibook is the merchant
+ * of record, so the whole amount is platform revenue and no payable is owed to
+ * a seller at capture time.
+ */
+export function quoteServiceCharge(opts: {
+  prefix: string;
+  transactionType: VendibookTransactionType;
+  amountCents: number;
+  description: string;
+  lineLabel: string;
+  listingId?: string | null;
+  buyerId?: string | null;
+  sellerId?: string | null;
+  currency?: string;
+  depositCents?: number;
+}): QuoteResult {
+  const amountCents = Math.max(0, Math.round(opts.amountCents));
+  return {
+    reference: newPaymentReference(opts.prefix),
+    transactionType: opts.transactionType,
+    currency: (opts.currency ?? "USD").toUpperCase(),
+    grossCents: amountCents,
+    platformFeeCents: amountCents,
+    taxCents: 0,
+    depositCents: opts.depositCents ?? 0,
+    discountCents: 0,
+    sellerProceedsCents: 0,
+    description: opts.description,
+    breakdown: [{ label: opts.lineLabel, amountCents }],
+    sellerId: opts.sellerId ?? null,
+    buyerId: opts.buyerId ?? null,
+    listingId: opts.listingId ?? null,
+    releaseAt: null,
+  };
+}

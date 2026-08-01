@@ -1,7 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
-import { alreadyEntitledError } from "../_shared/jsonError.ts";
+import { alreadyEntitledError, jsonError } from "../_shared/jsonError.ts";
 import { classifyProduct } from "../_shared/productEntitlement.ts";
 import { resolveHostTier, tierAtLeast } from "../_shared/resolveHostTier.ts";
 import { resolveToolAccess } from "../_shared/toolAccess.ts";
@@ -69,6 +69,17 @@ serve(async (req) => {
           code: "product_not_found",
         }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 404 },
+      );
+    }
+
+    // Stripe is closed to new business. Recurring memberships are sold only
+    // through PayPal Subscriptions (`paypal-subscription-create`); existing
+    // Stripe subscribers keep their plan and are managed read-only.
+    if (product.billing_type === "recurring") {
+      return jsonError(
+        409,
+        "provider_retired",
+        "Memberships are now purchased through PayPal. Please reload the page and try again.",
       );
     }
 

@@ -131,41 +131,46 @@ export interface StartCheckoutInput {
    * recurring products (ROSCA / CA AB 2863). Ignored for one-time products.
    */
   consentId?: string;
+  /** Recurring products only. Defaults to the interval implied by the slug. */
+  billingInterval?: 'monthly' | 'quarterly' | 'annual';
 }
 
+const intervalFromSlug = (slug: string): 'monthly' | 'quarterly' | 'annual' =>
+  /annual|yearly/i.test(slug) ? 'annual' : 'monthly';
+
 export async function startMonetizationCheckout(input: StartCheckoutInput): Promise<{ url: string }> {
-  // One-time products are paid through PayPal on our own hosted checkout page.
-  // Recurring plans still route through the legacy provider session below.
+  // Every Vendibook charge runs through PayPal. One-time products are paid on
+  // our own hosted checkout page; recurring plans use PayPal Subscriptions.
   const { data: product } = await (supabase as any)
     .from('monetization_products')
     .select('billing_type')
     .eq('slug', input.productSlug)
     .maybeSingle();
 
-  if (product?.billing_type === 'one_time') {
-    const search = new URLSearchParams();
-    if (input.listingId) search.set('listing_id', input.listingId);
-    if (input.successPath) search.set('success', input.successPath);
-    if (input.cancelPath) search.set('cancel', input.cancelPath);
-    const qs = search.toString();
-    return {
-      url: `${window.location.origin}/checkout/product/${input.productSlug}${qs ? `?${qs}` : ''}`,
-    };
+  if (product?.billing_type === 'recurring') {
+    const { data, error } = await supabase.functions.invoke('paypal-subscription-create', {
+      body: {
+        product_slug: input.productSlug,
+        billing_interval: input.billingInterval ?? intervalFromSlug(input.productSlug),
+        consent_id: input.consentId,
+        return_path: input.successPath,
+        cancel_path: input.cancelPath,
+      },
+    });
+    if (error) throw error;
+    const payload = data as { approve_url?: string; url?: string; message?: string; error?: string };
+    const url = payload?.approve_url ?? payload?.url;
+    if (!url) throw new Error(payload?.message ?? payload?.error ?? 'We could not start that membership.');
+    return { url };
   }
 
-  const { data, error } = await supabase.functions.invoke('create-monetization-checkout', {
-    body: {
-      product_slug: input.productSlug,
-      listing_id: input.listingId,
-      discount_code: input.discountCode,
-      success_path: input.successPath,
-      cancel_path: input.cancelPath,
-      consent_id: input.consentId,
-    },
-  });
-  if (error) throw error;
-  const payload = data as { url?: string; error?: string };
-  if (payload?.error) throw new Error(payload.error);
-  if (!payload?.url) throw new Error('Checkout URL missing from response');
-  return { url: payload.url };
+  const search = new URLSearchParams();
+  if (input.listingId) search.set('listing_id', input.listingId);
+  if (input.successPath) search.set('success', input.successPath);
+  if (input.cancelPath) search.set('cancel', input.cancelPath);
+  const qs = search.toString();
+  return {
+    url: `${window.location.origin}/checkout/product/${input.productSlug}${qs ? `?${qs}` : ''}`,
+  };
 }
+
