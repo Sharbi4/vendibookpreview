@@ -2684,6 +2684,7 @@ export type Database = {
           cover_image_url: string | null
           created_at: string
           daily_enabled: boolean | null
+          deleted_at: string | null
           delivery_fee: number | null
           delivery_instructions: string | null
           delivery_radius_miles: number | null
@@ -2715,6 +2716,7 @@ export type Database = {
           min_hours: number | null
           min_notice_hours: number | null
           mode: Database["public"]["Enums"]["listing_mode"]
+          moderation_status: string
           operating_hours_end: string | null
           operating_hours_start: string | null
           pending_featured_payment: Json | null
@@ -2758,6 +2760,7 @@ export type Database = {
           cover_image_url?: string | null
           created_at?: string
           daily_enabled?: boolean | null
+          deleted_at?: string | null
           delivery_fee?: number | null
           delivery_instructions?: string | null
           delivery_radius_miles?: number | null
@@ -2789,6 +2792,7 @@ export type Database = {
           min_hours?: number | null
           min_notice_hours?: number | null
           mode: Database["public"]["Enums"]["listing_mode"]
+          moderation_status?: string
           operating_hours_end?: string | null
           operating_hours_start?: string | null
           pending_featured_payment?: Json | null
@@ -2832,6 +2836,7 @@ export type Database = {
           cover_image_url?: string | null
           created_at?: string
           daily_enabled?: boolean | null
+          deleted_at?: string | null
           delivery_fee?: number | null
           delivery_instructions?: string | null
           delivery_radius_miles?: number | null
@@ -2863,6 +2868,7 @@ export type Database = {
           min_hours?: number | null
           min_notice_hours?: number | null
           mode?: Database["public"]["Enums"]["listing_mode"]
+          moderation_status?: string
           operating_hours_end?: string | null
           operating_hours_start?: string | null
           pending_featured_payment?: Json | null
@@ -4496,6 +4502,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          account_suspended: boolean
           address1: string | null
           address2: string | null
           ai_writing_sample_used_at: string | null
@@ -4546,6 +4553,7 @@ export type Database = {
           zip_code: string | null
         }
         Insert: {
+          account_suspended?: boolean
           address1?: string | null
           address2?: string | null
           ai_writing_sample_used_at?: string | null
@@ -4596,6 +4604,7 @@ export type Database = {
           zip_code?: string | null
         }
         Update: {
+          account_suspended?: boolean
           address1?: string | null
           address2?: string | null
           ai_writing_sample_used_at?: string | null
@@ -7820,6 +7829,7 @@ export type Database = {
           cover_image_url: string | null
           created_at: string
           daily_enabled: boolean | null
+          deleted_at: string | null
           delivery_fee: number | null
           delivery_instructions: string | null
           delivery_radius_miles: number | null
@@ -7851,6 +7861,7 @@ export type Database = {
           min_hours: number | null
           min_notice_hours: number | null
           mode: Database["public"]["Enums"]["listing_mode"]
+          moderation_status: string
           operating_hours_end: string | null
           operating_hours_start: string | null
           pending_featured_payment: Json | null
@@ -8111,6 +8122,11 @@ export type Database = {
         Returns: boolean
       }
       is_fast_responder: { Args: { host_user_id: string }; Returns: boolean }
+      is_host_account_active: { Args: { _host_id: string }; Returns: boolean }
+      is_listing_publicly_visible: {
+        Args: { _listing_id: string }
+        Returns: boolean
+      }
       list_payable_referrers: {
         Args: { p_min_payout?: number }
         Returns: {
@@ -8119,6 +8135,7 @@ export type Database = {
           total_owed: number
         }[]
       }
+      listing_purchase_state: { Args: { _listing_id: string }; Returns: Json }
       log_referral_status_change:
         | {
             Args: {
