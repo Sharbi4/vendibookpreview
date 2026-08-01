@@ -4,6 +4,10 @@ import { corsHeaders, jsonError, jsonResponse, unknownErrorResponse } from "../_
 import { capturePayPalOrder, getPayPalOrder, PayPalError, safeLog } from "../_shared/paypal.ts";
 import { extractCaptureFacts, finalizeCapture } from "../_shared/paypalFinalize.ts";
 import { auditPayment, requestIp } from "../_shared/paymentAudit.ts";
+import { getListingPurchaseState, LISTING_UNAVAILABLE_MESSAGE } from "../_shared/listingGuard.ts";
+import { recordOrderEvent } from "../_shared/orders/orderEvents.ts";
+import { notifyUser } from "../_shared/notify.ts";
+
 
 /**
  * Captures an approved PayPal order and verifies it server-side.
