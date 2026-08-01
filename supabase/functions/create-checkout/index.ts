@@ -125,29 +125,17 @@ serve(async (req) => {
       return jsonError(403, "owner_cannot_buy_own_listing", "You can't purchase your own listing.");
     }
 
-    // Fetch host's Stripe account and display name
-    const { data: hostProfile, error: hostError } = await supabaseClient
+    // Host display name for the checkout summary. Vendibook is the merchant
+    // of record on PayPal and pays hosts out from `seller_payables`, so a
+    // connected provider account is no longer required to accept a booking.
+    const { data: hostProfile } = await supabaseClient
       .from('profiles')
-      .select('stripe_account_id, stripe_onboarding_complete, display_name, business_name, full_name')
+      .select('display_name, business_name, full_name')
       .eq('id', listing.host_id)
-      .single();
-
-    if (hostError || !hostProfile?.stripe_account_id || !hostProfile.stripe_onboarding_complete) {
-      logStep("Host not onboarded", {
-        hostError: hostError?.message,
-        hasAccount: !!hostProfile?.stripe_account_id,
-        onboardingComplete: hostProfile?.stripe_onboarding_complete,
-      });
-      return jsonError(
-        409,
-        "host_not_onboarded",
-        "This seller isn't set up to accept online payments yet. We've let them know — please check back soon or message them directly.",
-      );
-    }
-    logStep("Host Stripe account verified", { stripe_account_id: hostProfile.stripe_account_id });
+      .maybeSingle();
     
     // Get host display name for checkout
-    const hostDisplayName = hostProfile.business_name || hostProfile.display_name || hostProfile.full_name || 'Host';
+    const hostDisplayName = hostProfile?.business_name || hostProfile?.display_name || hostProfile?.full_name || 'Host';
     
     // Fetch booking details if booking_id provided (for rentals)
     let bookingDetails: { start_date: string; end_date: string; start_time?: string; end_time?: string } | null = null;
@@ -197,7 +185,6 @@ serve(async (req) => {
     // Build location string for display
     const locationDisplay = listing.address || listing.pickup_location_text || '';
 
-    const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
     const origin = req.headers.get("origin") || "https://vendibook.com";
     
     // Generate idempotency key to prevent duplicate charges on retries
