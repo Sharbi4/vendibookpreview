@@ -10,7 +10,10 @@ import TrustRow from './TrustRow';
 export type PayPalCheckoutTarget =
   | { kind: 'sale'; id: string }
   | { kind: 'booking'; id: string }
-  | { kind: 'product'; slug: string; listing_id?: string };
+  | { kind: 'product'; slug: string; listing_id?: string }
+  | { kind: 'freight'; id: string }
+  | { kind: 'notary'; id: string }
+  | { kind: 'protected_sale_deposit'; id: string };
 
 interface PayPalPaymentPanelProps {
   /** What is being paid for. Amounts are always re-derived server-side. */
