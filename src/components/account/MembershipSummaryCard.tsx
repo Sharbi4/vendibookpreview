@@ -48,6 +48,8 @@ export default function MembershipSummaryCard() {
     sub, provider, hasSubscription, scheduledCancel, isPastDue,
     isLoading, busy, cancel, reactivate, openBilling, canReactivate,
   } = useSubscriptionManagement();
+  const statusClass = STATUS_STYLES[sub?.status ?? ''] ?? 'bg-muted text-muted-foreground border-border';
+
 
 
   return (
