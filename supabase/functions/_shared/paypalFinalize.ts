@@ -8,6 +8,8 @@
 
 import { centsFromPayPalAmount, safeLog } from "./paypal.ts";
 import { appendLedgerEntry, ensureSellerPayable } from "./paypalAccounting.ts";
+import { recordOrderEvent } from "./orders/orderEvents.ts";
+import { deliverOrderReceipt } from "./orders/deliverOrderReceipt.ts";
 
 export interface CaptureFacts {
   captureId: string;
@@ -124,7 +126,35 @@ export async function finalizeCapture(
   const releaseAt = current.fee_breakdown?.release_at ?? null;
   await ensureSellerPayable(supabase, current, releaseAt);
 
+  await recordOrderEvent(supabase, {
+    paymentRecordId: current.id,
+    code: "payment_captured",
+    title: "Payment captured",
+    description: "Your payment was successfully processed through PayPal.",
+    actorRole: "provider",
+    visibility: "both",
+    dedupeKey: `captured:${facts.captureId}`,
+    metadata: { source },
+  });
+  await recordOrderEvent(supabase, {
+    paymentRecordId: current.id,
+    code: "payout_queued",
+    title: "Seller payout queued",
+    description: "Funds are scheduled for release to the seller per Vendibook transaction terms.",
+    actorRole: "system",
+    visibility: "seller",
+    dedupeKey: `payout-queued:${facts.captureId}`,
+  });
+
   await propagateToDomainRecord(supabase, current, facts);
+
+  // Exactly-once buyer receipt, triggered only after a verified capture.
+  try {
+    await deliverOrderReceipt(supabase, current.id);
+  } catch (err) {
+    safeLog("receipt_dispatch_failed", { reference: current.reference, message: (err as Error).message });
+  }
+
   return current;
 }
 
