@@ -1,5 +1,4 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import { corsHeaders, jsonError, jsonResponse, unknownErrorResponse } from "../_shared/jsonError.ts";
 
@@ -52,8 +51,6 @@ serve(async (req) => {
   try {
     logStep("Function started");
 
-    const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
-    if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
 
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
@@ -442,274 +439,36 @@ serve(async (req) => {
 
 
 
-    // Check if customer already exists in Stripe
-    const customers = await stripe.customers.list({ email: user.email, limit: 1 });
-    let customerId: string | undefined;
-    if (customers.data.length > 0) {
-      customerId = customers.data[0].id;
-      logStep("Existing Stripe customer found", { customerId });
+    // ------------------------------------------------------------------
+    // PayPal is the only live payment provider. Everything above (ownership,
+    // availability, pricing, terms snapshot) still runs server-side; we now
+    // hand the buyer to Vendibook's own hosted PayPal checkout, where
+    // `paypal-create-order` re-derives the authoritative amount from the
+    // booking row before an order can exist.
+    // ------------------------------------------------------------------
+    if (mode !== 'rent' || !booking_id) {
+      return jsonError(
+        409,
+        "unsupported_checkout",
+        "This purchase is completed on the listing's checkout page.",
+      );
     }
 
-    // Create the Checkout Session
-    // BOTH rentals and sales use PLATFORM HOLD model:
-    // - Funds are captured to platform account (no transfer_data)
-    // - Host payout happens 24 hours after booking ends (via complete-ended-bookings cron)
-    // - This protects renters and allows for dispute resolution
-    
-    let sessionParams: Stripe.Checkout.SessionCreateParams;
-    
-    if (mode === 'rent') {
-      // Rentals: Direct transfer to host
-      // Calculate rental subtotal (for display purposes)
-      const rentalSubtotal = amount + delivery_fee;
-      const renterFee = rentalSubtotal * (RENTAL_RENTER_FEE_PERCENT / 100);
-      
-      // Build detailed description with rental info
-      let rentalDescription = `Rental from ${hostDisplayName}`;
-      if (bookingDetails) {
-        // Format dates
-        const startDate = new Date(bookingDetails.start_date).toLocaleDateString('en-US', { 
-          weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' 
-        });
-        const endDate = new Date(bookingDetails.end_date).toLocaleDateString('en-US', { 
-          weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' 
-        });
-        rentalDescription += ` • ${startDate} - ${endDate}`;
-        
-        // Add times if hourly booking
-        if (bookingDetails.start_time && bookingDetails.end_time) {
-          rentalDescription += ` • ${bookingDetails.start_time} - ${bookingDetails.end_time}`;
-        }
-      }
-      if (locationDisplay) {
-        rentalDescription += ` • ${locationDisplay}`;
-      }
-      if (delivery_fee > 0) {
-        rentalDescription += ` (includes $${delivery_fee.toFixed(2)} delivery)`;
-      }
-      
-      // Build line items - separate base rental and platform fee
-      // Include cover image if available
-      const productImages = listing.cover_image_url ? [listing.cover_image_url] : undefined;
-      
-      const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = [
-        {
-          price_data: {
-            currency: 'usd',
-            product_data: {
-              name: listing.title,
-              description: rentalDescription,
-              images: productImages,
-            },
-            unit_amount: Math.round(rentalSubtotal * 100),
-            tax_behavior: 'exclusive',
-          },
-          quantity: 1,
-        },
-        {
-          price_data: {
-            currency: 'usd',
-            product_data: {
-              name: 'Platform Service Fee',
-              description: 'Vendibook marketplace fee (12.9%)',
-            },
-            unit_amount: Math.round(renterFee * 100),
-            tax_behavior: 'exclusive',
-          },
-          quantity: 1,
-        },
-      ];
+    const successPath = `/payment-success?booking_id=${booking_id}`;
+    const cancelPath = `/payment-cancelled?listing=${listing_id}`;
+    const hostedUrl = `${origin}/checkout/pay?kind=booking&id=${encodeURIComponent(booking_id)}` +
+      `&amount_cents=${customerTotal}` +
+      `&label=${encodeURIComponent(listing.title ?? 'Vendibook booking')}` +
+      `&success=${encodeURIComponent(successPath)}&cancel=${encodeURIComponent(cancelPath)}`;
 
-      // Add deposit as separate line item if present
-      if (deposit_amount > 0) {
-        lineItems.push({
-          price_data: {
-            currency: 'usd',
-            product_data: {
-              name: 'Security Deposit (Refundable)',
-              description: 'Refunded after rental if no damage or late return',
-            },
-            unit_amount: Math.round(deposit_amount * 100),
-            tax_behavior: 'exclusive',
-          },
-          quantity: 1,
-        });
-      }
-
-      sessionParams = {
-        // For rentals: offer card + buy-now-pay-later options (including Affirm)
-        payment_method_types: ['card', 'affirm', 'klarna', 'afterpay_clearpay'],
-        mode: 'payment',
-        customer: customerId,
-        customer_email: customerId ? undefined : user.email,
-        customer_update: customerId ? { address: 'auto' } : undefined,
-        automatic_tax: { enabled: true },
-        billing_address_collection: 'required',
-        line_items: lineItems,
-        payment_intent_data: {
-          // NO transfer_data - funds stay on platform until booking ends
-          // Host payout is handled by complete-ended-bookings cron 24h after end_date
-          metadata: {
-            booking_id: booking_id || '',
-            listing_id,
-            mode,
-            buyer_id: user.id,
-            host_id: listing.host_id,
-            deposit_amount: deposit_amount.toString(),
-            platform_fee_cents: applicationFee.toString(),
-            host_payout_cents: hostReceives.toString(),
-            referral_code,
-            terms_id,
-            terms_version: TERMS_VERSION,
-          },
-        },
-        success_url: uiMode === 'hosted' ? `${origin}/payment-success?session_id={CHECKOUT_SESSION_ID}` : undefined,
-        cancel_url: uiMode === 'hosted' ? `${origin}/payment-cancelled?listing=${listing_id}` : undefined,
-        return_url: uiMode === 'custom' ? `${origin}/payment-success?session_id={CHECKOUT_SESSION_ID}` : undefined,
-        ui_mode: uiMode === 'custom' ? 'custom' : undefined,
-        metadata: {
-          booking_id: booking_id || '',
-          listing_id,
-          mode,
-          buyer_id: user.id,
-          host_id: listing.host_id,
-          deposit_amount: deposit_amount.toString(),
-          referral_code,
-          terms_id,
-          terms_version: TERMS_VERSION,
-        },
-      };
-    } else {
-      // Sales: ESCROW - Funds held on platform, transferred after confirmation
-      // No transfer_data - funds stay on platform until both parties confirm
-      const saleDeliveryFee = delivery_fee || 0;
-      
-      // Vendibook Freight handling for description
-      const isVendibookFreight = vendibook_freight_enabled && fulfillment_type === 'vendibook_freight';
-      const isBuyerPaidFreight = isVendibookFreight && freight_payer === 'buyer';
-      const isSellerPaidFreight = isVendibookFreight && freight_payer === 'seller';
-      const freightAmount = isVendibookFreight ? freight_cost : 0;
-      const buyerFreightCost = isBuyerPaidFreight ? freightAmount : 0;
-      
-      // Build detailed description with seller info
-      let productDescription = `Sold by ${hostDisplayName}`;
-      if (locationDisplay) {
-        productDescription += ` • ${locationDisplay}`;
-      }
-      productDescription += ' • Escrow protected';
-      
-      // Add shipping/delivery details
-      if (isVendibookFreight) {
-        if (isBuyerPaidFreight && buyerFreightCost > 0) {
-          productDescription += ` • Vendibook Freight: $${buyerFreightCost.toFixed(2)}`;
-        } else if (isSellerPaidFreight) {
-          productDescription += ' • Free Shipping (Vendibook Freight)';
-        }
-      } else if (saleDeliveryFee > 0) {
-        productDescription += ` • includes $${saleDeliveryFee} delivery`;
-      }
-      
-      // Include cover image if available
-      const saleProductImages = listing.cover_image_url ? [listing.cover_image_url] : undefined;
-      
-      sessionParams = {
-        // For sales: offer multiple payment options including ACH for large purchases
-        // ACH has lower fees (0.8% capped at $5) - great for expensive items
-        // Affirm, Klarna, and Afterpay offer buy-now-pay-later options
-        payment_method_types: ['card', 'us_bank_account', 'affirm', 'klarna', 'afterpay_clearpay'],
-        mode: 'payment',
-        customer: customerId,
-        customer_email: customerId ? undefined : user.email,
-        // Save billing address to customer for future tax calculations
-        customer_update: customerId ? { address: 'auto' } : undefined,
-        // Enable automatic tax calculation based on customer location
-        automatic_tax: { enabled: true },
-        // Collect billing address for accurate tax calculation
-        billing_address_collection: 'required',
-        line_items: [
-          {
-            price_data: {
-              currency: 'usd',
-              product_data: {
-                name: listing.title,
-                description: productDescription,
-                images: saleProductImages,
-              },
-              unit_amount: customerTotal,
-              // Mark as taxable - Stripe will calculate based on customer location
-              tax_behavior: 'exclusive',
-            },
-            quantity: 1,
-          },
-        ],
-        payment_intent_data: {
-          metadata: {
-            listing_id,
-            mode: 'sale',
-            buyer_id: user.id,
-            seller_id: listing.host_id,
-            escrow: 'true',
-            platform_fee: applicationFee.toString(),
-            seller_payout: hostReceives.toString(),
-            fulfillment_type: fulfillment_type || 'pickup',
-            delivery_fee: saleDeliveryFee.toString(),
-            delivery_address: delivery_address || '',
-            delivery_instructions: delivery_instructions || '',
-            buyer_name: buyer_name || '',
-            buyer_email: buyer_email || user.email,
-            buyer_phone: buyer_phone || '',
-            // Vendibook freight metadata
-            vendibook_freight_enabled: vendibook_freight_enabled.toString(),
-            freight_payer: freight_payer,
-            freight_cost: freightAmount.toString(),
-            buyer_freight_cost: buyerFreightCost.toString(),
-            seller_freight_deduction: isSellerPaidFreight ? freightAmount.toString() : '0',
-            referral_code,
-            terms_id,
-            terms_version: TERMS_VERSION,
-          },
-        },
-        success_url: uiMode === 'hosted' ? `${origin}/payment-success?session_id={CHECKOUT_SESSION_ID}&escrow=true` : undefined,
-        cancel_url: uiMode === 'hosted' ? `${origin}/payment-cancelled?listing=${listing_id}` : undefined,
-        return_url: uiMode === 'custom' ? `${origin}/payment-success?session_id={CHECKOUT_SESSION_ID}&escrow=true` : undefined,
-        ui_mode: uiMode === 'custom' ? 'custom' : undefined,
-        metadata: {
-          listing_id,
-          mode: 'sale',
-          buyer_id: user.id,
-          seller_id: listing.host_id,
-          escrow: 'true',
-          platform_fee: applicationFee.toString(),
-          seller_payout: hostReceives.toString(),
-          fulfillment_type: fulfillment_type || 'pickup',
-          delivery_fee: saleDeliveryFee.toString(),
-          delivery_address: delivery_address || '',
-          delivery_instructions: delivery_instructions || '',
-          buyer_name: buyer_name || '',
-          buyer_email: buyer_email || user.email,
-          buyer_phone: buyer_phone || '',
-          vendibook_freight_enabled: vendibook_freight_enabled.toString(),
-          freight_payer: freight_payer,
-          freight_cost: freightAmount.toString(),
-          buyer_freight_cost: buyerFreightCost.toString(),
-          seller_freight_deduction: isSellerPaidFreight ? freightAmount.toString() : '0',
-          referral_code,
-          terms_id,
-          terms_version: TERMS_VERSION,
-        },
-      };
-    }
-
-    const session = await stripe.checkout.sessions.create(sessionParams, {
-      idempotencyKey,
-    });
-    logStep("Checkout session created", { sessionId: session.id, url: session.url, idempotencyKey });
+    logStep("Hosted PayPal checkout issued", { booking_id, customerTotal });
 
     return jsonResponse(200, {
-      url: uiMode === 'hosted' ? session.url : null,
-      client_secret: uiMode === 'custom' ? (session as any).client_secret ?? null : null,
-      ui_mode: uiMode,
-      session_id: session.id,
+      url: hostedUrl,
+      provider: "paypal",
+      ui_mode: "hosted",
+      client_secret: null,
+      session_id: null,
       customer_total: customerTotal / 100,
       platform_fee: applicationFee / 100,
       host_receives: hostReceives / 100,
