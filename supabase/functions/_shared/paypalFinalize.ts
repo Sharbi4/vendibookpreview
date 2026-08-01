@@ -97,7 +97,28 @@ export async function finalizeCapture(
     .maybeSingle();
 
   const current = updated ?? record;
-  if (!isPaid) return current;
+  if (!isPaid) {
+    if (paymentStatus === "pending") {
+      await notifyOrderParties(supabase, current, {
+        type: "payment_pending",
+        buyer: {
+          title: "Payment pending",
+          message: `PayPal is still reviewing your payment for order ${current.reference}. We'll update you as soon as it clears.`,
+        },
+        dedupeKey: `pending:${facts.captureId}`,
+      });
+    } else if (paymentStatus === "declined" || paymentStatus === "failed") {
+      await notifyOrderParties(supabase, current, {
+        type: "payment_failed",
+        buyer: {
+          title: "Payment did not go through",
+          message: `Your payment for order ${current.reference} was not completed. You can safely try again — nothing was charged.`,
+        },
+        dedupeKey: `failed:${facts.captureId}`,
+      });
+    }
+    return current;
+  }
 
   await appendLedgerEntry(supabase, {
     paymentRecordId: current.id,
