@@ -24,6 +24,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useHostEntitlements } from '@/hooks/useHostEntitlements';
 import { Link } from 'react-router-dom';
 import { Crown } from 'lucide-react';
+import { getCounterpartyName } from '@/lib/displayName';
 
 /**
  * NEW OVERVIEW — one viewport-ish surface:
@@ -106,7 +107,7 @@ const HostDashboard = () => {
         href: `/host/bookings?id=${b.id}`,
         title: b.listing?.title || 'Booking',
         imageUrl: b.listing?.cover_image_url,
-        meta: `${b.shopper?.full_name || 'Guest'} · ${new Date(b.created_at).toLocaleDateString()}`,
+        meta: `${getCounterpartyName(b.shopper, 'Guest')} · ${new Date(b.created_at).toLocaleDateString()}`,
         status: tone,
       };
     });

@@ -14,6 +14,7 @@ import BookingRequestCard from './BookingRequestCard';
 import StatCard from './StatCard';
 import { useHostBookings } from '@/hooks/useHostBookings';
 import { useDocumentComplianceStatus } from '@/hooks/useRequiredDocuments';
+import { getCounterpartyName, getDisplayInitials } from '@/lib/displayName';
 
 type DocFilterType = 'all' | 'instant-book' | 'pending-docs' | 'incomplete-docs' | 'complete-docs';
 
@@ -323,8 +324,8 @@ const CompletedBookingCard = ({ booking }: { booking: any }) => {
   const isCompleted = booking.status === 'completed';
   const isCancelled = booking.status === 'cancelled';
 
-  const shopperInitials = booking.shopper?.full_name
-    ? booking.shopper.full_name.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2)
+  const shopperInitials = booking.shopper
+    ? getDisplayInitials(booking.shopper)
     : 'U';
 
   const formatDate = (dateStr: string) => {
@@ -374,7 +375,7 @@ const CompletedBookingCard = ({ booking }: { booking: any }) => {
             <div className="h-6 w-6 rounded-full bg-foreground flex items-center justify-center text-[10px] font-medium text-background">
               {shopperInitials}
             </div>
-            <span className="text-xs text-muted-foreground">{booking.shopper?.full_name || 'Guest'}</span>
+            <span className="text-xs text-muted-foreground">{getCounterpartyName(booking.shopper, 'Guest')}</span>
             <span className="ml-auto text-sm font-semibold">${booking.total_price}</span>
           </div>
 

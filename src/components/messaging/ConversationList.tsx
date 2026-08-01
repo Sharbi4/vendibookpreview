@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/contexts/AuthContext';
 import { useConversations, Conversation } from '@/hooks/useConversations';
 import { cn } from '@/lib/utils';
+import { getCounterpartyName } from '@/lib/displayName';
 
 const ConversationItem = ({ conversation }: { conversation: Conversation }) => {
   const { user } = useAuth();
@@ -13,7 +14,7 @@ const ConversationItem = ({ conversation }: { conversation: Conversation }) => {
   // Determine other party
   const isHost = user?.id === conversation.host_id;
   const otherParty = isHost ? conversation.shopper : conversation.host;
-  const otherPartyName = otherParty?.full_name || 'Unknown User';
+  const otherPartyName = getCounterpartyName(otherParty, 'Vendibook member');
   const otherPartyAvatar = otherParty?.avatar_url;
 
   const lastMessageTime = conversation.last_message?.created_at

@@ -29,6 +29,7 @@ import BookingPhaseIndicator, { getBookingPhase } from './BookingPhaseIndicator'
 import BookingConfirmationSection from './BookingConfirmationSection';
 import NextActionBanner from '@/components/shared/NextActionBanner';
 import { AddToCalendarButton } from '@/components/booking/AddToCalendarButton';
+import { getCounterpartyName, getDisplayInitials } from '@/lib/displayName';
 
 // Type for business info stored in JSONB
 interface BusinessInfoData {
@@ -134,8 +135,8 @@ const BookingRequestCard = ({ booking, onApprove, onDecline, onCancel, onDeposit
   const hasDocumentRequirements = compliance.hasRequirements;
   const hasPendingDocReviews = compliance.pendingCount > 0;
 
-  const shopperInitials = booking.shopper?.full_name
-    ? booking.shopper.full_name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
+  const shopperInitials = booking.shopper
+    ? getDisplayInitials(booking.shopper)
     : 'U';
 
   const handleAction = (action: 'approve' | 'decline') => {
@@ -325,7 +326,7 @@ const BookingRequestCard = ({ booking, onApprove, onDecline, onCancel, onDeposit
               </Avatar>
               <div className="flex-1 min-w-0">
                 <p className="font-medium text-foreground text-sm">
-                  {booking.shopper?.full_name || 'Guest'}
+                  {getCounterpartyName(booking.shopper, 'Guest')}
                 </p>
                 <p className="text-xs text-muted-foreground truncate">
                   {booking.shopper?.email}
@@ -694,7 +695,7 @@ const BookingRequestCard = ({ booking, onApprove, onDecline, onCancel, onDeposit
         onOpenChange={setShowMessageDialog}
         bookingId={booking.id}
         listingTitle={booking.listing?.title || 'Booking'}
-        otherPartyName={booking.shopper?.full_name || 'Guest'}
+        otherPartyName={getCounterpartyName(booking.shopper, 'Guest')}
       />
 
       {/* Deposit Management Dialog */}

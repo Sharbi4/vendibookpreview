@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { MessageCircle, Clock, User } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { getCounterpartyName } from '@/lib/displayName';
 
 interface HourlySlot {
   date: string;
@@ -37,7 +38,7 @@ interface BookingCardProps {
 
 const BookingCard = ({ booking, variant = 'confirmed' }: BookingCardProps) => {
   const shopper = booking.shopper;
-  const shopperName = shopper?.display_name || shopper?.full_name || 'Guest';
+  const shopperName = getCounterpartyName(shopper, 'Guest');
   const shopperInitials = shopperName
     .split(' ')
     .map(n => n[0])
