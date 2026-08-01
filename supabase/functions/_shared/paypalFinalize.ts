@@ -10,6 +10,7 @@ import { centsFromPayPalAmount, safeLog } from "./paypal.ts";
 import { appendLedgerEntry, ensureSellerPayable } from "./paypalAccounting.ts";
 import { recordOrderEvent } from "./orders/orderEvents.ts";
 import { deliverOrderReceipt } from "./orders/deliverOrderReceipt.ts";
+import { notifyOrderParties, notifyUser } from "./notify.ts";
 
 export interface CaptureFacts {
   captureId: string;
