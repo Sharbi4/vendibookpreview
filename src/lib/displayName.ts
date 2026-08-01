@@ -49,8 +49,8 @@ export function formatPublicName(
   if (!first) return fallback;
   if (!last) return first;
 
-  const lastTokens = last.split(' ').filter(Boolean);
-  const surname = lastTokens[lastTokens.length - 1] ?? '';
+  // Spec: multi-word surnames use the FIRST surname token ("de la Cruz" → "D.").
+  const surname = last.split(' ').filter(Boolean)[0] ?? '';
   const initial = firstInitial(surname);
   return initial ? `${first} ${initial}.` : first;
 }
@@ -147,7 +147,7 @@ export function getDisplayInitials(
   const legacy = splitLegacyName(profile.full_name);
   if (legacy.first) {
     return `${firstInitial(legacy.first)}${
-      legacy.last ? firstInitial(legacy.last.split(' ').pop() ?? '') : ''
+      legacy.last ? firstInitial(legacy.last.split(' ')[0] ?? '') : ''
     }`;
   }
 

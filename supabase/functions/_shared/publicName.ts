@@ -27,7 +27,8 @@ export function formatPublicName(
   const last = clean(lastName);
   if (!first) return fallback;
   if (!last) return first;
-  const surname = last.split(" ").filter(Boolean).pop() ?? "";
+  // Spec: "de la Cruz" → "D." (first surname token).
+  const surname = last.split(" ").filter(Boolean)[0] ?? "";
   const initial = firstInitial(surname);
   return initial ? `${first} ${initial}.` : first;
 }
