@@ -352,6 +352,57 @@ async function mirrorHostSubscription(admin: any, paypalSubId: string, status: s
   } else {
     await admin.from("host_subscriptions").insert(payload);
   }
+
+  await notifySubscriptionState(admin, sub, status);
+}
+
+/** In-app notification for every subscription lifecycle transition. */
+async function notifySubscriptionState(admin: any, sub: any, status: string) {
+  const link = "/account/subscription";
+  const key = `${sub.paypal_subscription_id}:${status}`;
+  const plan = sub.tier ? `${sub.tier} plan` : "your plan";
+
+  const copy: Record<string, { type: string; title: string; message: string }> = {
+    active: {
+      type: sub.last_payment_at ? "subscription_renewed" : "subscription_activated",
+      title: sub.last_payment_at ? "Membership renewed" : "Membership active",
+      message: sub.last_payment_at
+        ? `Your ${plan} renewed successfully. Everything stays unlocked.`
+        : `Your ${plan} is now active. All included features are unlocked.`,
+    },
+    payment_failed: {
+      type: "subscription_payment_failed",
+      title: "Membership payment failed",
+      message:
+        `We couldn't collect the latest payment for your ${plan}. Update your PayPal payment method to avoid losing access.`,
+    },
+    suspended: {
+      type: "subscription_suspended",
+      title: "Membership paused",
+      message: `Your ${plan} is paused, so premium features are unavailable until it resumes.`,
+    },
+    cancelled: {
+      type: "subscription_cancelled",
+      title: "Membership cancelled",
+      message: `Your ${plan} has been cancelled. You can resubscribe at any time.`,
+    },
+    expired: {
+      type: "subscription_cancelled",
+      title: "Membership expired",
+      message: `Your ${plan} has expired and premium features are now locked.`,
+    },
+  };
+
+  const entry = copy[status];
+  if (!entry) return;
+  await notifyUser(admin, {
+    userId: sub.user_id,
+    type: entry.type,
+    title: entry.title,
+    message: entry.message,
+    link,
+    dedupeKey: key,
+  });
 }
 
 async function alertAdmins(admin: any, title: string, message: string) {
