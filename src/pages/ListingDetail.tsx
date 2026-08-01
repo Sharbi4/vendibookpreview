@@ -53,6 +53,8 @@ import ListingExplainerVideo from '@/components/listing-detail/ListingExplainerV
 import { ListingHighlightsCard } from '@/components/transaction';
 import OwnerBanner from '@/components/listing-detail/OwnerBanner';
 import { useListing } from '@/hooks/useListing';
+import ListingUnavailable from '@/components/listing-detail/ListingUnavailable';
+import { isListingPubliclyVisible } from '@/lib/listings/publicVisibility';
 import { useListingAverageRating, useListingReviews } from '@/hooks/useReviews';
 import { useTrackListingView } from '@/hooks/useListingAnalytics';
 import { useAuth } from '@/contexts/AuthContext';
@@ -80,6 +82,16 @@ const ListingDetail = () => {
 
   // Check if user is the owner of this listing
   const isOwner = user?.id && listing?.host_id && user.id === listing.host_id;
+
+  // Admins keep access to the private management view of unavailable listings.
+  const { data: isAdminViewer = false } = useQuery({
+    queryKey: ['is-admin', user?.id],
+    enabled: !!user?.id,
+    queryFn: async () => {
+      const { data } = await supabase.rpc('is_admin', { user_id: user!.id });
+      return Boolean(data);
+    },
+  });
 
   // Share URL uses a pretty route on vendibook.com
   // The /share/listing/:id route redirects humans to the SPA
