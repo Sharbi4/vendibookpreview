@@ -8,15 +8,11 @@
  *
  * Money logic is unchanged — this only wraps the existing edge function.
  */
-import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
 import {
   Loader2, Crown, CalendarClock, XCircle, RotateCcw, AlertTriangle,
   ExternalLink, ArrowUpRight,
 } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -24,9 +20,9 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { useToast } from '@/hooks/use-toast';
 import { useHostEntitlements } from '@/hooks/useHostEntitlements';
-import { parseEdgeError } from '@/lib/edgeErrors';
+import { useSubscriptionManagement } from '@/hooks/useSubscriptionManagement';
+
 
 const STATUS_STYLES: Record<string, string> = {
   active: 'bg-emerald-500/15 text-emerald-600 border-emerald-500/30',
