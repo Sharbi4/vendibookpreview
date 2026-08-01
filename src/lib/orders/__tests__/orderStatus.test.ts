@@ -5,7 +5,7 @@ import {
   deriveOrderStatus,
   inferFulfillmentType,
   presentPaymentStatus,
-} from '../../../supabase/functions/_shared/orders/orderStatus';
+} from '../../../../supabase/functions/_shared/orders/orderStatus';
 
 describe('presentPaymentStatus', () => {
   it('maps completed captures', () => {
