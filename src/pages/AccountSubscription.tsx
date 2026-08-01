@@ -35,7 +35,7 @@ import { ProductPricingCard } from '@/components/monetization/ProductPricingCard
 import { useHostEntitlements, type HostTier } from '@/hooks/useHostEntitlements';
 import { effectivePriceCents, formatUsd } from '@/lib/monetization/products';
 import { buildCheckoutReturnPaths } from '@/lib/monetization/returnRoutes';
-import { parseEdgeError } from '@/lib/edgeErrors';
+import { useSubscriptionManagement } from '@/hooks/useSubscriptionManagement';
 
 
 const STATUS_STYLES: Record<string, string> = {
@@ -68,78 +68,24 @@ const TIER_RANK: Record<HostTier, number> = { free: 0, starter: 1, pro: 2, premi
 
 export default function AccountSubscription() {
   const { user } = useAuth();
-  const { toast } = useToast();
   const entitlements = useHostEntitlements();
   const { products, loading: productsLoading } = useMonetizationProducts('host_subscription');
-  const [openingPortal, setOpeningPortal] = useState(false);
-  const [scheduling, setScheduling] = useState<'cancel' | 'reactivate' | null>(null);
 
-  const { data: sub, isLoading, refetch, isFetching } = useQuery({
-    queryKey: ['host-subscription-detail', user?.id],
-    enabled: !!user?.id,
-    queryFn: async () => {
-      const { data } = await supabase
-        .from('host_subscriptions')
-        .select('*')
-        .eq('user_id', user!.id)
-        .order('updated_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      return data;
-    },
-  });
+  const {
+    sub, provider, hasSubscription, scheduledCancel, isPastDue,
+    isLoading, isFetching, refetch, busy, cancel, reactivate, openBilling, canReactivate,
+  } = useSubscriptionManagement();
 
-  const hasSubscription = !!sub?.stripe_subscription_id && sub.status !== 'canceled';
+  // Legacy call-site aliases so the existing markup keeps working.
+  const openingPortal = busy === 'portal';
+  const scheduling = busy === 'cancel' || busy === 'reactivate' ? busy : null;
+  const openPortal = openBilling;
+  const manageSchedule = (action: 'cancel' | 'reactivate') =>
+    action === 'cancel' ? cancel() : reactivate();
+
   const currentRank = TIER_RANK[entitlements.tier] ?? 0;
   const statusClass = STATUS_STYLES[sub?.status ?? ''] ?? 'bg-muted text-muted-foreground border-border';
 
-  const openPortal = async () => {
-    setOpeningPortal(true);
-    try {
-      const { data, error } = await supabase.functions.invoke('customer-portal');
-      if (error) throw error;
-      if (data?.url) window.open(data.url, '_blank', 'noopener,noreferrer');
-      else throw new Error('Portal URL missing');
-    } catch (err) {
-      const parsed = await parseEdgeError(err);
-      toast({
-        title: 'Could not open billing portal',
-        description: parsed?.message ?? (err instanceof Error ? err.message : 'Please try again.'),
-        variant: 'destructive',
-      });
-    } finally {
-      setOpeningPortal(false);
-    }
-  };
-
-  const manageSchedule = async (action: 'cancel' | 'reactivate') => {
-    setScheduling(action);
-    try {
-      const { data, error } = await supabase.functions.invoke('manage-subscription', {
-        body: { action },
-      });
-      if (error) throw error;
-      toast({
-        title: action === 'cancel' ? 'Cancellation scheduled' : 'Subscription resumed',
-        description: action === 'cancel'
-          ? `Access continues through ${fmtDate(data?.cancel_at ? new Date((data.cancel_at as number) * 1000).toISOString() : sub?.current_period_end)}.`
-          : 'Your plan will renew normally at the end of the current period.',
-      });
-      await refetch();
-    } catch (err) {
-      const parsed = await parseEdgeError(err);
-      toast({
-        title: 'Could not update subscription',
-        description: parsed?.message ?? (err instanceof Error ? err.message : 'Please try again.'),
-        variant: 'destructive',
-      });
-    } finally {
-      setScheduling(null);
-    }
-  };
-
-  const scheduledCancel = !!sub?.cancel_at_period_end && sub?.status !== 'canceled';
-  const isPastDue = sub?.status === 'past_due' || sub?.status === 'unpaid';
 
   const sortedProducts = useMemo(
     () => [...products].sort((a, b) => a.display_order - b.display_order),
@@ -166,7 +112,7 @@ export default function AccountSubscription() {
     <div className="min-h-screen bg-background">
       <SEO
         title="Manage Subscription | Vendibook"
-        description="Upgrade, downgrade, cancel, or resume your Vendibook host subscription. Manage billing and invoices through the secure Stripe portal."
+        description="Upgrade, downgrade, cancel, or resume your Vendibook host subscription. Manage billing securely through PayPal."
       />
       <section className="mx-auto max-w-5xl px-4 py-10 md:py-14 space-y-8">
         <header className="space-y-2">
@@ -246,7 +192,9 @@ export default function AccountSubscription() {
                     <div className="text-xs text-amber-800">
                       <div className="font-medium">Payment failed</div>
                       <p className="text-amber-700/90 mt-0.5">
-                        Update your card in the billing portal to keep your plan active. We'll retry automatically.
+                        {provider === 'paypal'
+                          ? "Update your funding source in PayPal's automatic payments to keep your plan active. We'll retry automatically."
+                          : "Update your card in the billing portal to keep your plan active. We'll retry automatically."}
                       </p>
                     </div>
                   </div>
@@ -264,10 +212,10 @@ export default function AccountSubscription() {
                   <Button size="sm" onClick={openPortal} disabled={openingPortal}>
                     {openingPortal
                       ? (<><Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />Opening…</>)
-                      : (<><ExternalLink className="h-3.5 w-3.5 mr-1.5" />Manage billing & invoices</>)}
+                      : (<><ExternalLink className="h-3.5 w-3.5 mr-1.5" />{provider === 'paypal' ? 'Manage in PayPal' : 'Manage billing & invoices'}</>)}
                   </Button>
 
-                  {scheduledCancel ? (
+                  {canReactivate ? (
                     <Button
                       size="sm"
                       variant="outline"
@@ -278,7 +226,7 @@ export default function AccountSubscription() {
                         ? (<><Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />Resuming…</>)
                         : (<><RotateCcw className="h-3.5 w-3.5 mr-1.5" />Resume subscription</>)}
                     </Button>
-                  ) : (
+                  ) : scheduledCancel ? null : (
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
                         <Button size="sm" variant="outline" disabled={scheduling !== null}>
@@ -288,17 +236,22 @@ export default function AccountSubscription() {
                       </AlertDialogTrigger>
                       <AlertDialogContent>
                         <AlertDialogHeader>
-                          <AlertDialogTitle>Schedule cancellation?</AlertDialogTitle>
+                          <AlertDialogTitle>
+                            {provider === 'paypal' ? 'Cancel your membership?' : 'Schedule cancellation?'}
+                          </AlertDialogTitle>
                           <AlertDialogDescription>
                             Your {entitlements.planLabel} plan will stay active until{' '}
                             <strong>{fmtDate(sub?.current_period_end)}</strong>. After that, your
-                            account returns to the free tier. You can resume anytime before then.
+                            account returns to the free tier.
+                            {provider === 'paypal'
+                              ? ' Future PayPal billing stops right away — you can resubscribe anytime.'
+                              : ' You can resume anytime before then.'}
                           </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
                           <AlertDialogCancel>Keep plan</AlertDialogCancel>
                           <AlertDialogAction onClick={() => manageSchedule('cancel')}>
-                            Schedule cancellation
+                            {provider === 'paypal' ? 'Cancel membership' : 'Schedule cancellation'}
                           </AlertDialogAction>
                         </AlertDialogFooter>
                       </AlertDialogContent>
@@ -324,11 +277,13 @@ export default function AccountSubscription() {
               </h2>
               <p className="text-sm text-muted-foreground mt-1 max-w-2xl">
                 {hasSubscription
-                  ? 'Switch tiers anytime. Upgrades and downgrades are handled in the secure billing portal — Stripe prorates the difference automatically.'
+                  ? provider === 'paypal'
+                    ? 'Switch tiers anytime. Cancel your current membership first, then start the new plan — PayPal bills the new plan from its next cycle.'
+                    : 'Switch tiers anytime. Upgrades and downgrades are handled in the secure billing portal — Stripe prorates the difference automatically.'
                   : 'Every plan includes payment protection. Cancel or change anytime.'}
               </p>
             </div>
-            {hasSubscription && (
+            {hasSubscription && provider === 'stripe' && (
               <Button variant="outline" size="sm" onClick={openPortal} disabled={openingPortal}>
                 <ArrowUpRight className="h-3.5 w-3.5 mr-1.5" />
                 Open portal to switch plan
@@ -387,7 +342,9 @@ export default function AccountSubscription() {
                           </ul>
                         )}
                         <div className="pt-1 text-[11px] text-muted-foreground">
-                          You're on this plan. Use the portal to switch tiers or cancel.
+                          You're on this plan. {provider === 'paypal'
+                            ? 'Cancel above to switch tiers or end billing.'
+                            : 'Use the portal to switch tiers or cancel.'}
                         </div>
                       </CardContent>
                     </Card>
@@ -422,21 +379,32 @@ export default function AccountSubscription() {
                             ))}
                           </ul>
                         )}
-                        <Button
-                          size="sm"
-                          variant={direction === 'upgrade' ? 'default' : 'outline'}
-                          className="w-full"
-                          onClick={openPortal}
-                          disabled={openingPortal}
-                        >
-                          {openingPortal ? (
-                            <><Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />Opening…</>
-                          ) : direction === 'upgrade' ? (
-                            <><ArrowUpRight className="h-3.5 w-3.5 mr-1.5" />Upgrade in portal</>
-                          ) : (
-                            <>Switch to this plan</>
-                          )}
-                        </Button>
+                        {provider === 'paypal' ? (
+                          <>
+                            <Button size="sm" variant="outline" className="w-full" disabled>
+                              {direction === 'upgrade' ? 'Upgrade to this plan' : 'Switch to this plan'}
+                            </Button>
+                            <p className="text-[11px] text-muted-foreground text-center">
+                              Cancel your current membership first, then start this plan.
+                            </p>
+                          </>
+                        ) : (
+                          <Button
+                            size="sm"
+                            variant={direction === 'upgrade' ? 'default' : 'outline'}
+                            className="w-full"
+                            onClick={openPortal}
+                            disabled={openingPortal}
+                          >
+                            {openingPortal ? (
+                              <><Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />Opening…</>
+                            ) : direction === 'upgrade' ? (
+                              <><ArrowUpRight className="h-3.5 w-3.5 mr-1.5" />Upgrade in portal</>
+                            ) : (
+                              <>Switch to this plan</>
+                            )}
+                          </Button>
+                        )}
                       </CardContent>
                     </Card>
                   );
@@ -460,7 +428,7 @@ export default function AccountSubscription() {
           <div className="rounded-xl border border-border/70 bg-card/50 backdrop-blur-sm p-4 text-xs text-muted-foreground">
             Subscriptions renew automatically until canceled. Cancellations take effect at
             the end of the current paid period — you keep full access until then. Manage
-            payment methods and invoices through the secure Stripe billing portal.
+            payment methods through PayPal's automatic payments settings.
           </div>
         </section>
       </section>

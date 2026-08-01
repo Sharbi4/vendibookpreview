@@ -27,8 +27,8 @@ import {
 import { parseEdgeError } from '@/lib/edgeErrors';
 
 type CheckoutOpts = Omit<StartCheckoutInput, 'productSlug' | 'consentId'> & {
-  /** UI billing cadence. Controls consent-dialog disclosure wording only —
-   *  the actual billing interval is dictated by the Stripe price. */
+  /** Billing cadence for recurring products. Drives the consent disclosure
+   *  and selects the server-side PayPal plan. */
   interval?: 'monthly' | 'annual' | 'month' | 'year';
 };
 
@@ -70,6 +70,12 @@ export function useSubscriptionConsent(): UseSubscriptionConsentResult {
         const { url } = await startMonetizationCheckout({
           productSlug: product.slug,
           consentId,
+          // Recurring products: forward the cadence the member picked so the
+          // server resolves the matching PayPal plan (pricing stays server-side).
+          billingInterval:
+            product.billing_type === 'recurring'
+              ? (deriveInterval(product, opts.interval) === 'year' ? 'annual' : 'monthly')
+              : undefined,
           listingId: opts.listingId,
           discountCode: opts.discountCode,
           successPath: opts.successPath,
