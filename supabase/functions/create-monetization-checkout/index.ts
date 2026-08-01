@@ -5,6 +5,10 @@ import { alreadyEntitledError, jsonError } from "../_shared/jsonError.ts";
 import { classifyProduct } from "../_shared/productEntitlement.ts";
 import { resolveHostTier, tierAtLeast } from "../_shared/resolveHostTier.ts";
 import { resolveToolAccess } from "../_shared/toolAccess.ts";
+import {
+  buildCheckoutIdempotencyKey,
+  newCorrelationId,
+} from "../_shared/payments/checkoutIdempotency.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -32,9 +36,8 @@ interface Body {
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
+  const correlationId = newCorrelationId();
   try {
-    const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
-    if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
 
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
@@ -82,6 +85,9 @@ serve(async (req) => {
         "Memberships are now purchased through PayPal. Please reload the page and try again.",
       );
     }
+
+    const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
+    if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
 
     // Entitlement guard: never charge a user for something they already own.
     // Uses the unified server-side helpers (resolveHostTier + resolveToolAccess).
@@ -439,10 +445,12 @@ serve(async (req) => {
     );
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
-    log("ERROR", { msg });
-    return new Response(JSON.stringify({ error: msg }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 500,
-    });
+    log("ERROR", { correlation_id: correlationId, msg });
+    return jsonError(
+      500,
+      "checkout_failed",
+      "We couldn't start that checkout. Please try again.",
+      { correlation_id: correlationId, retryable: true },
+    );
   }
 });
