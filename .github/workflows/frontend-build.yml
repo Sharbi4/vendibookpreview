@@ -1,0 +1,56 @@
+name: Frontend Build Verification
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: frontend-build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build React preview bundle
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Type-check application
+        run: bunx tsc --noEmit -p tsconfig.app.json
+
+      - name: Build production frontend
+        run: bun run build
+
+      - name: Verify generated preview entrypoint
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f dist/index.html
+          test -s dist/index.html
+          grep -q '<div id="root"></div>' dist/index.html
+          echo "Frontend bundle and root entrypoint generated successfully."
+
+      - name: Upload production bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: vendibook-frontend-dist
+          path: dist
+          if-no-files-found: error
+          retention-days: 3
