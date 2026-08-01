@@ -67,12 +67,13 @@ export const useHostOffers = () => {
             ...offer,
             buyer: buyerProfile ? {
               id: buyerProfile.id,
+              // RPC already returns the privacy-safe display value.
               full_name: buyerProfile.full_name,
               avatar_url: buyerProfile.avatar_url,
               email: null,
             } : {
               id: offer.buyer_id,
-              full_name: 'Unknown User',
+              full_name: 'Buyer',
               avatar_url: null,
               email: null,
             },

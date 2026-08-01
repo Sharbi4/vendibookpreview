@@ -42,7 +42,7 @@ const HostBookings = () => {
   if (!authLoading && !user) return null;
 
   const filteredBookings = bookings.filter(b => 
-    b.shopper?.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    getCounterpartyName(b.shopper, 'Guest').toLowerCase().includes(searchQuery.toLowerCase()) ||
     b.listing?.title?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 

@@ -149,7 +149,7 @@ const ListingDetail = () => {
       image_urls: listing.image_urls || [],
       address: listing.address,
       status: listing.status,
-      host_name: host?.full_name || host?.display_name || host?.business_name,
+      host_name: getPublicDisplayName(host, 'Host'),
       host_business_name: host?.business_name,
       brand: (listing as any).brand ?? null,
       make: (listing as any).make ?? null,
@@ -330,7 +330,7 @@ const ListingDetail = () => {
     make: (listing as any).make ?? null,
     manufacturer: (listing as any).manufacturer ?? null,
     host_business_name: host?.business_name ?? null,
-    host_display_name: host?.display_name ?? host?.full_name ?? null,
+    host_display_name: host ? getPublicDisplayName(host, 'Host') : null,
   });
 
   // Resolve condition for OG meta
@@ -644,7 +644,7 @@ const ListingDetail = () => {
                         make: (listing as any).make,
                         manufacturer: (listing as any).manufacturer,
                         host_business_name: host?.business_name,
-                        host_display_name: host?.full_name || host?.display_name,
+                        host_display_name: getPublicDisplayName(host, 'Host'),
                       })}
                     </dd>
                   </div>
