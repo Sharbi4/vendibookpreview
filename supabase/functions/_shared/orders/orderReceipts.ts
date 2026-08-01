@@ -95,7 +95,6 @@ async function deliver(
         templateName: RECEIPT_TEMPLATE,
         recipientEmail,
         idempotencyKey: `order-receipt-${paymentRecordId}`,
-        subjectOverride: `Payment confirmed — Vendibook order ${ctx.orderNumber}`,
         templateData: ctx,
       },
     });
