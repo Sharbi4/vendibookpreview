@@ -17,7 +17,7 @@ import * as React from 'react';
 import { ConsentModal } from '@/components/consent/ConsentModal';
 import { DOCUMENT_TYPES, CONSENT_TRIGGERS } from '@/lib/legalDocuments';
 import { formatUsd } from '@/lib/monetization/products';
-import { StripeTrustBadge } from '@/components/trust/StripeTrustBadge';
+import { ShieldCheck } from 'lucide-react';
 
 export interface SubscriptionConsentPayload {
   productSlug: string;
@@ -78,12 +78,10 @@ export const SubscriptionConsentDialog: React.FC<Props> = ({
         ...(checkoutAttemptId ? { checkout_attempt_id: checkoutAttemptId } : {}),
       }}
       footerSlot={
-        <StripeTrustBadge
-          context="subscription"
-          surface="light"
-          size="sm"
-          withCopy={false}
-        />
+        <span className="inline-flex items-center gap-1.5 text-[11px] text-muted-foreground">
+          <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
+          Secure billing through PayPal — cancel anytime online.
+        </span>
       }
       onAccept={async (consentId) => {
         await onConsented(consentId);
