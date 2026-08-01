@@ -139,3 +139,28 @@ describe('safe checkout messaging', () => {
     );
   });
 });
+
+import { buildPlanAuthReturnTo } from '@/lib/monetization/returnRoutes';
+
+describe('unauthenticated plan selection', () => {
+  it('preserves plan + interval through auth and auto-resumes', () => {
+    const url = buildPlanAuthReturnTo({ planSlug: 'host_growth_annual', interval: 'annual', pathname: '/plans' });
+    const returnTo = decodeURIComponent(url.replace('/auth?returnTo=', ''));
+    expect(returnTo).toContain('/plans?');
+    expect(returnTo).toContain('plan=host_growth_annual');
+    expect(returnTo).toContain('interval=annual');
+    expect(returnTo).toContain('auto=1');
+  });
+
+  it('carries wizard returnTo + listing context and defaults off-plans pages to /pricing', () => {
+    const url = buildPlanAuthReturnTo({
+      planSlug: 'host_starter',
+      interval: 'monthly',
+      pathname: '/dashboard',
+      search: '?returnTo=/create-listing/1&listingContext=abc',
+    });
+    const returnTo = decodeURIComponent(url.replace('/auth?returnTo=', ''));
+    expect(returnTo.startsWith('/pricing?')).toBe(true);
+    expect(returnTo).toContain('listingContext=abc');
+  });
+});
