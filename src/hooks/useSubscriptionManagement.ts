@@ -1,0 +1,215 @@
+/**
+ * useSubscriptionManagement — provider-aware subscription state + controls.
+ *
+ * Vendibook bills new memberships through PayPal; legacy members may still be
+ * on Stripe. This hook resolves the row in `host_subscriptions`, detects which
+ * provider owns it, and exposes the right management action for that provider:
+ *
+ *   PayPal  → cancel via `paypal-subscription-cancel` (cancels at PayPal first,
+ *             access continues through the paid period). Payment-method changes
+ *             happen in the member's PayPal automatic-payments settings.
+ *   Stripe  → legacy: `manage-subscription` (cancel / reactivate scheduling)
+ *             and the Stripe Customer Portal.
+ *
+ * No money logic lives here — every mutation is an edge-function call.
+ */
+import { useCallback, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/hooks/use-toast';
+import { parseEdgeError } from '@/lib/edgeErrors';
+
+export type SubscriptionProvider = 'paypal' | 'stripe' | 'none';
+
+/** Where PayPal members manage the funding source for a recurring plan. */
+export const PAYPAL_AUTOPAY_URL = 'https://www.paypal.com/myaccount/autopay/';
+
+export interface SubscriptionRow {
+  id?: string;
+  status?: string | null;
+  tier?: string | null;
+  payment_provider?: string | null;
+  paypal_subscription_id?: string | null;
+  stripe_subscription_id?: string | null;
+  cancel_at_period_end?: boolean | null;
+  cancel_at?: string | null;
+  current_period_end?: string | null;
+  [key: string]: unknown;
+}
+
+export function fmtSubDate(iso?: string | null): string {
+  if (!iso) return '—';
+  try {
+    return new Date(iso).toLocaleDateString('en-US', {
+      year: 'numeric', month: 'long', day: 'numeric',
+    });
+  } catch { return '—'; }
+}
+
+export function useSubscriptionManagement() {
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const [busy, setBusy] = useState<'cancel' | 'reactivate' | 'portal' | null>(null);
+
+  const query = useQuery({
+    queryKey: ['subscription-management', user?.id],
+    enabled: !!user?.id,
+    queryFn: async (): Promise<SubscriptionRow | null> => {
+      const { data } = await supabase
+        .from('host_subscriptions')
+        .select('*')
+        .eq('user_id', user!.id)
+        .order('updated_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      return (data as SubscriptionRow) ?? null;
+    },
+  });
+
+  const sub = query.data ?? null;
+
+  const provider: SubscriptionProvider =
+    sub?.payment_provider === 'paypal' || sub?.paypal_subscription_id
+      ? 'paypal'
+      : sub?.stripe_subscription_id
+      ? 'stripe'
+      : 'none';
+
+  const hasSubscription =
+    provider !== 'none' && (sub?.status ?? 'canceled') !== 'canceled';
+
+  const scheduledCancel = !!sub?.cancel_at_period_end && sub?.status !== 'canceled';
+  const isPastDue = sub?.status === 'past_due' || sub?.status === 'unpaid';
+  const accessEndsAt = sub?.cancel_at ?? sub?.current_period_end ?? null;
+
+  /** Poll until the webhook mirror lands (both providers sync async). */
+  const refetchUntilSynced = useCallback(
+    async (matches: (row: SubscriptionRow | null) => boolean) => {
+      for (let i = 0; i < 6; i++) {
+        const { data } = await query.refetch();
+        if (matches((data as SubscriptionRow) ?? null)) return;
+        await new Promise((r) => setTimeout(r, 700));
+      }
+    },
+    [query],
+  );
+
+  const cancel = useCallback(async () => {
+    setBusy('cancel');
+    try {
+      if (provider === 'paypal') {
+        const { data, error } = await supabase.functions.invoke('paypal-subscription-cancel', {
+          body: { reason: 'Member requested cancellation' },
+        });
+        if (error) throw error;
+        toast({
+          title: 'Membership cancelled',
+          description:
+            (data as { message?: string })?.message ??
+            'Access continues until the end of your paid period.',
+        });
+      } else {
+        const { data, error } = await supabase.functions.invoke('manage-subscription', {
+          body: { action: 'cancel' },
+        });
+        if (error) throw error;
+        const at = (data as { cancel_at?: number })?.cancel_at;
+        toast({
+          title: 'Cancellation scheduled',
+          description: `Access continues through ${fmtSubDate(
+            at ? new Date(at * 1000).toISOString() : accessEndsAt,
+          )}.`,
+        });
+      }
+      await refetchUntilSynced((row) =>
+        provider === 'paypal'
+          ? row?.status === 'canceled' || !!row?.cancel_at_period_end
+          : !!row?.cancel_at_period_end,
+      );
+    } catch (err) {
+      const parsed = await parseEdgeError(err);
+      toast({
+        title: 'Could not cancel subscription',
+        description: parsed?.message ?? (err instanceof Error ? err.message : 'Please try again.'),
+        variant: 'destructive',
+      });
+    } finally {
+      setBusy(null);
+    }
+  }, [provider, accessEndsAt, refetchUntilSynced, toast]);
+
+  /** Stripe-only: un-schedule a pending cancellation. */
+  const reactivate = useCallback(async () => {
+    setBusy('reactivate');
+    try {
+      const { error } = await supabase.functions.invoke('manage-subscription', {
+        body: { action: 'reactivate' },
+      });
+      if (error) throw error;
+      toast({
+        title: 'Subscription resumed',
+        description: 'Your plan will renew normally at the end of the current period.',
+      });
+      await refetchUntilSynced((row) => !row?.cancel_at_period_end);
+    } catch (err) {
+      const parsed = await parseEdgeError(err);
+      toast({
+        title: 'Could not resume subscription',
+        description: parsed?.message ?? (err instanceof Error ? err.message : 'Please try again.'),
+        variant: 'destructive',
+      });
+    } finally {
+      setBusy(null);
+    }
+  }, [refetchUntilSynced, toast]);
+
+  /**
+   * Opens the billing surface for the owning provider. PayPal members manage
+   * their funding source in PayPal's automatic-payments settings; legacy
+   * Stripe members get the Customer Portal.
+   */
+  const openBilling = useCallback(async () => {
+    if (provider === 'paypal') {
+      window.open(PAYPAL_AUTOPAY_URL, '_blank', 'noopener,noreferrer');
+      return;
+    }
+    setBusy('portal');
+    try {
+      const { data, error } = await supabase.functions.invoke('customer-portal');
+      if (error) throw error;
+      const url = (data as { url?: string })?.url;
+      if (!url) throw new Error('Portal URL missing');
+      window.open(url, '_blank', 'noopener,noreferrer');
+    } catch (err) {
+      const parsed = await parseEdgeError(err);
+      toast({
+        title: 'Could not open billing portal',
+        description: parsed?.message ?? (err instanceof Error ? err.message : 'Please try again.'),
+        variant: 'destructive',
+      });
+    } finally {
+      setBusy(null);
+    }
+  }, [provider, toast]);
+
+  return {
+    sub,
+    provider,
+    hasSubscription,
+    scheduledCancel,
+    isPastDue,
+    accessEndsAt,
+    /** PayPal cancellations are immediate-at-provider, so there's no resume. */
+    canReactivate: provider === 'stripe' && scheduledCancel,
+    isLoading: query.isLoading,
+    isFetching: query.isFetching,
+    refetch: query.refetch,
+    busy,
+    cancel,
+    reactivate,
+    openBilling,
+  };
+}
+
+export default useSubscriptionManagement;
