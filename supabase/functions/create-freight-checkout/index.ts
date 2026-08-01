@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import { corsHeaders, jsonError, jsonResponse, unknownErrorResponse } from "../_shared/jsonError.ts";
+import { assertListingPurchasable } from "../_shared/listingGuard.ts";
 
 /**
  * Freight checkout for a for-sale transaction.
@@ -31,7 +32,7 @@ serve(async (req) => {
 
     const { data: tx } = await admin
       .from("sale_transactions")
-      .select("id, buyer_id, freight_cost, fulfillment_type, freight_payment_status, seller_confirmed_at")
+      .select("id, listing_id, buyer_id, freight_cost, fulfillment_type, freight_payment_status, seller_confirmed_at")
       .eq("id", transactionId)
       .maybeSingle();
     if (!tx) return jsonError(404, "not_found", "We couldn't find that transaction.");
@@ -46,6 +47,11 @@ serve(async (req) => {
     }
     if (tx.freight_payment_status === "paid") {
       return jsonError(409, "already_paid", "Freight has already been paid.");
+    }
+
+    if (tx.listing_id) {
+      const blocked = await assertListingPurchasable(admin, tx.listing_id);
+      if (blocked) return blocked;
     }
 
     const amountCents = Math.round(Number(tx.freight_cost ?? 0) * 100);
