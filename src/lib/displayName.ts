@@ -35,7 +35,7 @@ function firstInitial(token: string): string {
  * - Trims and collapses whitespace.
  * - Missing/blank last name → first name only.
  * - Missing/blank first name → neutral label (never the surname, never an email).
- * - Multi-word surnames ("de la Cruz") use the LAST token's initial → "Maria D.".
+ * - Multi-word surnames ("de la Cruz") use the first token initial → "Maria D.".
  * - Hyphenated/apostrophe surnames keep their leading initial ("O'Brien" → "O.").
  */
 export function formatPublicName(
