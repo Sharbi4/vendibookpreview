@@ -53,6 +53,77 @@ serve(async (req) => {
       });
     }
 
+    // --------------------------------------------------------------- race
+    // The listing may have been paused, removed, sold, archived, suspended or
+    // deleted while the buyer was inside the PayPal approval window. Re-check
+    // the canonical state immediately before capturing.
+    if (record.listing_id) {
+      const state = await getListingPurchaseState(admin, record.listing_id);
+      if (!state.purchasable) {
+        // Reconcile the ambiguous provider state before deciding.
+        let providerOrder: any = null;
+        try {
+          providerOrder = await getPayPalOrder(order_id);
+        } catch (_err) {
+          providerOrder = null;
+        }
+        const alreadyCaptured = providerOrder?.status === "COMPLETED";
+
+        await admin.from("payment_records").update({
+          payment_status: alreadyCaptured ? "refund_required" : "cancelled",
+          internal_status: alreadyCaptured ? "refund_review" : "cancelled_listing_unavailable",
+          last_error: {
+            reason: "listing_unavailable",
+            listing_reason: state.reason,
+            listing_status: state.status,
+          },
+        }).eq("id", record.id);
+
+        await recordOrderEvent(admin, {
+          paymentRecordId: record.id,
+          code: alreadyCaptured ? "refund_requested" : "capture_failed",
+          title: alreadyCaptured
+            ? "Listing became unavailable — refund review opened"
+            : "Listing became unavailable — payment not captured",
+          description: alreadyCaptured
+            ? "The listing was withdrawn after payment was captured. Fulfillment is blocked and a refund is being processed."
+            : LISTING_UNAVAILABLE_MESSAGE,
+          actorRole: "system",
+          visibility: "both",
+          dedupeKey: `listing_unavailable:${record.id}`,
+          metadata: { listing_reason: state.reason, listing_status: state.status },
+        });
+
+        await auditPayment(admin, {
+          actorId: user.id,
+          actorRole: "user",
+          actorIp: requestIp(req),
+          provider: "paypal",
+          action: alreadyCaptured ? "capture.blocked_refund_required" : "capture.blocked",
+          entityType: "payment_record",
+          entityId: record.id,
+          reference: record.reference,
+          newValue: { listing_reason: state.reason, listing_status: state.status },
+        });
+
+        await notifyUser(admin, {
+          userId: record.buyer_id,
+          type: "payment",
+          title: alreadyCaptured ? "Refund on the way" : "Listing no longer available",
+          message: alreadyCaptured
+            ? `The listing for order ${record.reference} was withdrawn after your payment. Nothing will be fulfilled and a refund is being processed.`
+            : `${LISTING_UNAVAILABLE_MESSAGE} Order ${record.reference} was not completed.`,
+          link: `/orders/${record.id}`,
+          dedupeKey: `listing_unavailable:${record.id}`,
+        });
+
+        return jsonError(409, "listing_unavailable", LISTING_UNAVAILABLE_MESSAGE, {
+          refund_pending: alreadyCaptured,
+          reference: record.reference,
+        });
+      }
+    }
+
     let order: any;
     try {
       order = await capturePayPalOrder(order_id, `capture:${record.reference}`);
