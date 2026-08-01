@@ -35,7 +35,7 @@ import { ProductPricingCard } from '@/components/monetization/ProductPricingCard
 import { useHostEntitlements, type HostTier } from '@/hooks/useHostEntitlements';
 import { effectivePriceCents, formatUsd } from '@/lib/monetization/products';
 import { buildCheckoutReturnPaths } from '@/lib/monetization/returnRoutes';
-import { parseEdgeError } from '@/lib/edgeErrors';
+import { useSubscriptionManagement } from '@/hooks/useSubscriptionManagement';
 
 
 const STATUS_STYLES: Record<string, string> = {
@@ -213,7 +213,7 @@ export default function AccountSubscription() {
                       : (<><ExternalLink className="h-3.5 w-3.5 mr-1.5" />Manage billing & invoices</>)}
                   </Button>
 
-                  {scheduledCancel ? (
+                  {canReactivate ? (
                     <Button
                       size="sm"
                       variant="outline"
