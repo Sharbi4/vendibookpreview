@@ -4,6 +4,7 @@ import { corsHeaders, jsonResponse } from "../_shared/jsonError.ts";
 import { centsFromPayPalAmount, safeLog, verifyPayPalWebhook } from "../_shared/paypal.ts";
 import { extractCaptureFacts, finalizeCapture } from "../_shared/paypalFinalize.ts";
 import { appendLedgerEntry, recalculatePayableAfterRefund } from "../_shared/paypalAccounting.ts";
+import { notifyOrderParties, notifyUser } from "../_shared/notify.ts";
 
 /**
  * Verified, idempotent PayPal webhook receiver for both one-time payments
