@@ -9,8 +9,10 @@ import {
 } from "../_shared/jsonError.ts";
 import { getPaymentProvider, type ProviderName } from "../_shared/payments/index.ts";
 import { auditPayment, requestIp } from "../_shared/paymentAudit.ts";
-import { safeLog } from "../_shared/paypal.ts";
+import { paypalConfigStatus, safeLog } from "../_shared/paypal.ts";
 import { classifyProduct } from "../_shared/productEntitlement.ts";
+
+const FUNCTION_VERSION = "paypal-subscription-create-2026-08-01.3";
 
 /**
  * Starts a recurring membership. The plan (and therefore the price) is always
@@ -21,6 +23,19 @@ import { classifyProduct } from "../_shared/productEntitlement.ts";
  */
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+
+  // Safe deployment/configuration probe. This exposes no credential values.
+  if (req.method === "GET") {
+    const config = paypalConfigStatus();
+    return jsonResponse(200, {
+      ok: true,
+      function: "paypal-subscription-create",
+      version: FUNCTION_VERSION,
+      provider: "paypal",
+      environment: config.environment,
+      configured: config.client_id_configured && config.client_secret_configured,
+    });
+  }
 
   try {
     const admin = createClient(
@@ -47,8 +62,32 @@ serve(async (req) => {
     }
 
     const provider = getPaymentProvider(providerName);
-    if (!provider.isConfigured()) {
-      return jsonError(503, "provider_unavailable", "Payments are temporarily unavailable. Please try again shortly.");
+    if (providerName === "paypal") {
+      const config = paypalConfigStatus();
+      const configured = config.client_id_configured && config.client_secret_configured;
+      if (!configured) {
+        safeLog("subscription_paypal_credentials_missing", {
+          functionVersion: FUNCTION_VERSION,
+          environment: config.environment,
+          clientIdConfigured: config.client_id_configured,
+          clientSecretConfigured: config.client_secret_configured,
+        });
+        return jsonError(
+          503,
+          "paypal_credentials_missing",
+          "Subscription billing is temporarily unavailable. Vendibook support has been notified.",
+        );
+      }
+    } else if (!provider.isConfigured()) {
+      safeLog("subscription_provider_unavailable", {
+        functionVersion: FUNCTION_VERSION,
+        provider: providerName,
+      });
+      return jsonError(
+        503,
+        "provider_unavailable",
+        "Subscription billing is temporarily unavailable. Please try again shortly.",
+      );
     }
 
     // ---- product + plan (server-side pricing) --------------------------
@@ -68,6 +107,13 @@ serve(async (req) => {
       .eq("is_active", true)
       .maybeSingle();
     if (!plan?.paypal_plan_id) {
+      safeLog("subscription_plan_unavailable", {
+        functionVersion: FUNCTION_VERSION,
+        productSlug,
+        interval,
+        provider: providerName,
+        environment: provider.environment,
+      });
       return jsonError(409, "plan_unavailable", "That billing option isn't set up yet. Please pick another.");
     }
 
@@ -104,12 +150,15 @@ serve(async (req) => {
     const cancelUrl = `${origin}${body.cancel_path ?? "/pricing?cancelled=1"}`;
 
     const { data: profile } = await admin.from("profiles")
-      .select("full_name").eq("id", user.id).maybeSingle();
+      .select("first_name, last_name").eq("id", user.id).maybeSingle();
+    const subscriberName = [profile?.first_name, profile?.last_name]
+      .filter((value: unknown) => typeof value === "string" && value.trim())
+      .join(" ") || null;
 
     const subscription = await provider.createSubscription({
       planId: plan.paypal_plan_id,
       subscriberEmail: user.email,
-      subscriberName: profile?.full_name ?? null,
+      subscriberName,
       returnUrl,
       cancelUrl,
       customId: user.id,
@@ -132,7 +181,12 @@ serve(async (req) => {
       currency: plan.currency,
       next_billing_time: subscription.nextBillingTime,
       consent_id: consentId,
-      metadata: { product_slug: product.slug, product_id: product.id, plan_id: plan.id },
+      metadata: {
+        product_slug: product.slug,
+        product_id: product.id,
+        plan_id: plan.id,
+        function_version: FUNCTION_VERSION,
+      },
     }).select().maybeSingle();
     if (insertError) {
       safeLog("subscription_row_insert_failed", { message: insertError.message });
@@ -153,6 +207,7 @@ serve(async (req) => {
         plan_id: plan.id,
         amount_cents: plan.price_cents,
         status: subscription.status,
+        function_version: FUNCTION_VERSION,
       },
     });
 
@@ -164,8 +219,13 @@ serve(async (req) => {
       amount_cents: plan.price_cents,
       currency: plan.currency,
       billing_interval: interval,
+      function_version: FUNCTION_VERSION,
     });
   } catch (err) {
+    safeLog("subscription_create_unhandled", {
+      functionVersion: FUNCTION_VERSION,
+      message: err instanceof Error ? err.message : "unknown_error",
+    });
     return unknownErrorResponse(err);
   }
 });
