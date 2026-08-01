@@ -48,6 +48,7 @@ import { PromoteListingModal } from './PromoteListingModal';
 import { ListingUpgradesDialog } from '@/components/monetization/ListingUpgradesDialog';
 import ShareKitModal from './ShareKitModal';
 import { isListingFeatured } from '@/lib/featured';
+import { canBoostListing, canRepublishListing } from '@/lib/listings/publicVisibility';
 import { useNavigate } from 'react-router-dom';
 
 type Listing = Tables<'listings'>;
@@ -117,11 +118,18 @@ const HostListingCard = ({
     .proof_notary_enabled;
   const isRental = listing.mode === 'rent';
 
+  // Paid promotion eligibility mirrors public visibility exactly: no boosts on
+  // paused, removed, deleted, archived, rejected, suspended or expired listings.
+  const canBoost = canBoostListing(listing as never);
+  const canRepublish = canRepublishListing(listing as never);
+
   const handleFeaturedClick = () => {
-    if (!isPublished) {
+    if (!canBoost) {
       toast({
-        title: 'Publish first to boost',
-        description: 'Boost requires a published listing.',
+        title: canRepublish ? 'Republish first to boost' : 'Boost unavailable',
+        description: canRepublish
+          ? 'Republish this listing to make it available, then boost it.'
+          : 'Boost requires a live, published listing.',
         variant: 'destructive',
       });
       return;
@@ -130,7 +138,7 @@ const HostListingCard = ({
   };
 
   const handleNotaryCheckout = async () => {
-    if (!isPublished) {
+    if (!canBoost) {
       toast({
         title: 'Publish first to add Notary',
         description: 'Proof Notary requires a published listing.',
@@ -262,7 +270,7 @@ const HostListingCard = ({
             Edit
           </Link>
         </Button>
-        {!isFeatured && (
+        {!isFeatured && canBoost && (
           <Button
             size="sm"
             onClick={handleFeaturedClick}
