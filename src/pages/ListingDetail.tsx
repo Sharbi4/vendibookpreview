@@ -52,6 +52,8 @@ import ListingExplainerVideo from '@/components/listing-detail/ListingExplainerV
 
 import { ListingHighlightsCard } from '@/components/transaction';
 import OwnerBanner from '@/components/listing-detail/OwnerBanner';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import { useListing } from '@/hooks/useListing';
 import ListingUnavailable from '@/components/listing-detail/ListingUnavailable';
 import { isListingPubliclyVisible } from '@/lib/listings/publicVisibility';
