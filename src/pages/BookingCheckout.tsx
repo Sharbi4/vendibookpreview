@@ -71,6 +71,7 @@ import {
 import { trackLeadEvent } from '@/lib/leadTracking';
 import { detectAvailabilityConflict } from '@/lib/availabilityConflict';
 import { ReferralCodeField } from '@/components/referrals/ReferralCodeField';
+import { getPublicDisplayName } from '@/lib/displayName';
 
 type FulfillmentSelection = 'pickup' | 'delivery' | 'on_site';
 
@@ -727,8 +728,8 @@ const BookingCheckout = () => {
             state={listing.state}
             price={fees.subtotal}
             sellerName={
-              host?.business_name || host?.display_name || host?.full_name ||
-              [host?.first_name, host?.last_name].filter(Boolean).join(' ') || undefined
+              // Privacy-safe: business name, else "First L." — never a full legal name.
+              host ? getPublicDisplayName(host, 'Host') : undefined
             }
             sellerVerified={Boolean((host as { identity_verified?: boolean } | null | undefined)?.identity_verified)}
             flow="rental"

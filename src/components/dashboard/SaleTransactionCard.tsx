@@ -20,6 +20,7 @@ import {
 import { SaleTransaction } from '@/hooks/useSaleTransactions';
 import { CATEGORY_LABELS } from '@/types/listing';
 import SecurePaymentStrip from '@/components/trust/SecurePaymentStrip';
+import { getCounterpartyName, getDisplayInitials } from '@/lib/displayName';
 
 /** Map sale-transaction status into a short, plain-language next-action line. */
 const getSaleNextAction = (
@@ -248,12 +249,12 @@ const SaleTransactionCard = ({
               <Avatar className="h-8 w-8">
                 <AvatarImage src={otherParty?.avatar_url || undefined} />
                 <AvatarFallback>
-                  {otherParty?.full_name?.charAt(0) || '?'}
+                  {getDisplayInitials(otherParty)}
                 </AvatarFallback>
               </Avatar>
               <div>
                 <p className="text-sm font-medium text-foreground">
-                  {otherParty?.full_name || 'Unknown User'}
+                  {getCounterpartyName(otherParty, 'Vendibook member')}
                 </p>
                 <p className="text-xs text-muted-foreground">{otherPartyLabel}</p>
               </div>

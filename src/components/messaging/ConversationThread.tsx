@@ -30,6 +30,7 @@ import TypingIndicator from './TypingIndicator';
 import QuickReplies from './QuickReplies';
 import { MessageReactionPicker, MessageReactionBadges } from './MessageReactions';
 import type { ReactionSummary } from '@/hooks/useMessageReactions';
+import { getCounterpartyName } from '@/lib/displayName';
 
 interface ConversationThreadProps {
   conversationId: string;
@@ -362,7 +363,7 @@ const ConversationThread = ({ conversationId }: ConversationThreadProps) => {
     );
   }
 
-  const otherPartyName = otherParty?.full_name || 'Unknown User';
+  const otherPartyName = getCounterpartyName(otherParty, 'Vendibook member');
 
   return (
     <div className="flex flex-col h-full">

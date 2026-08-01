@@ -1,115 +1,172 @@
 /**
- * Utility for generating public display names.
- * Priority: business_name > "FirstName L." format
- * 
- * Example: "Tiffany Roger" -> "Tiffany R."
+ * Privacy-safe public name model.
+ *
+ * A user's full legal/account name is NEVER shown to another marketplace user.
+ * Public surfaces may only render:
+ *   1. business_name (a deliberately public trading name), or
+ *   2. "First L." (first name + last-name initial), or
+ *   3. First name only, or
+ *   4. A neutral role label ("Vendibook member", "Host", "Seller", "Buyer").
+ *
+ * Full names remain available to the account owner, admins, and legally
+ * required transaction documents — those paths must read the private fields
+ * directly and must never route through these helpers.
  */
 
-interface DisplayNameInput {
+export type NeutralRoleLabel =
+  | 'Vendibook member'
+  | 'Host'
+  | 'Seller'
+  | 'Buyer'
+  | 'Guest';
+
+const clean = (value?: string | null): string =>
+  typeof value === 'string' ? value.replace(/\s+/g, ' ').trim() : '';
+
+/** First grapheme of a token, uppercased. Unicode-safe (handles é, Ø, 中, emoji). */
+function firstInitial(token: string): string {
+  const chars = Array.from(token);
+  return (chars[0] ?? '').toLocaleUpperCase();
+}
+
+/**
+ * Canonical public formatter: `formatPublicName('Shawnna', 'Harbin') → 'Shawnna H.'`
+ *
+ * - Trims and collapses whitespace.
+ * - Missing/blank last name → first name only.
+ * - Missing/blank first name → neutral label (never the surname, never an email).
+ * - Multi-word surnames ("de la Cruz") use the first token initial → "Maria D.".
+ * - Hyphenated/apostrophe surnames keep their leading initial ("O'Brien" → "O.").
+ */
+export function formatPublicName(
+  firstName?: string | null,
+  lastName?: string | null,
+  fallback: NeutralRoleLabel = 'Vendibook member',
+): string {
+  const first = clean(firstName);
+  const last = clean(lastName);
+
+  if (!first) return fallback;
+  if (!last) return first;
+
+  // Spec: multi-word surnames use the FIRST surname token ("de la Cruz" → "D.").
+  const surname = last.split(' ').filter(Boolean)[0] ?? '';
+  const initial = firstInitial(surname);
+  return initial ? `${first} ${initial}.` : first;
+}
+
+/**
+ * Best-effort split of a legacy single-string name into first/last parts.
+ * Used only to keep historical rows renderable — never treated as verified
+ * legal identity data.
+ */
+export function splitLegacyName(fullName?: string | null): {
+  first: string;
+  last: string;
+} {
+  const parts = clean(fullName).split(' ').filter(Boolean);
+  if (parts.length === 0) return { first: '', last: '' };
+  if (parts.length === 1) return { first: parts[0], last: '' };
+  return { first: parts[0], last: parts.slice(1).join(' ') };
+}
+
+export interface DisplayNameInput {
   business_name?: string | null;
   first_name?: string | null;
   last_name?: string | null;
+  /** Legacy single-string name. Only ever used to derive "First L.". */
   full_name?: string | null;
+  /** Self-chosen public handle/storefront name. */
   display_name?: string | null;
+  /** Account lifecycle flags — deleted/suspended users lose name exposure. */
+  deleted_at?: string | null;
+  account_suspended?: boolean | null;
   /**
-   * When true, the profile owner has opted in to showing their full last name
-   * publicly. When false or omitted, we fall back to the "FirstName L." format.
+   * @deprecated Full surnames are never shown publicly. Retained so existing
+   * callers keep compiling; the value is intentionally ignored.
    */
   show_full_name?: boolean | null;
 }
 
+export const FORMER_MEMBER_LABEL = 'Former Vendibook member';
+export const UNAVAILABLE_SELLER_LABEL = 'Unavailable seller';
+
 /**
- * Generates a public-safe display name.
- * 
- * Priority order:
- * 1. business_name (if set)
- * 2. "FirstName L." format (if first_name and last_name available)
- * 3. First word of full_name + initial of second word
- * 4. display_name or full_name as fallback
- * 5. "User" as last resort
- * 
- * @example
- * getPublicDisplayName({ first_name: 'Tiffany', last_name: 'Roger' }) // "Tiffany R."
- * getPublicDisplayName({ business_name: 'Taco Truck Co' }) // "Taco Truck Co"
+ * Public-safe display name for any marketplace-facing surface.
+ *
+ * Priority: business_name → "First L." → first name → display_name (a
+ * self-chosen handle, never a legal name) → neutral label.
+ * An email username is NEVER used as a person's name.
  */
-export function getPublicDisplayName(profile: DisplayNameInput): string {
-  // Priority 1: Business name
-  if (profile.business_name?.trim()) {
-    return profile.business_name.trim();
+export function getPublicDisplayName(
+  profile: DisplayNameInput | null | undefined,
+  fallback: NeutralRoleLabel = 'Vendibook member',
+): string {
+  if (!profile) return fallback;
+
+  if (profile.deleted_at) return FORMER_MEMBER_LABEL;
+
+  if (clean(profile.business_name)) return clean(profile.business_name);
+
+  const first = clean(profile.first_name);
+  const last = clean(profile.last_name);
+  if (first) return formatPublicName(first, last, fallback);
+
+  // Legacy rows that only have a single-string name.
+  const legacy = splitLegacyName(profile.full_name);
+  if (legacy.first) return formatPublicName(legacy.first, legacy.last, fallback);
+
+  // A display_name is a self-chosen handle, not an account/legal name.
+  const handle = clean(profile.display_name);
+  if (handle) {
+    const parts = handle.split(' ').filter(Boolean);
+    // Defensive: if a handle looks like "First Last", still abbreviate it.
+    return parts.length >= 2
+      ? formatPublicName(parts[0], parts.slice(1).join(' '), fallback)
+      : handle;
   }
 
-  const showFull = profile.show_full_name === true;
+  return fallback;
+}
 
-  // Priority 2: FirstName L. (or full "First Last" when opted in)
-  if (profile.first_name?.trim() && profile.last_name?.trim()) {
-    const firstName = profile.first_name.trim();
-    const last = profile.last_name.trim();
-    return showFull
-      ? `${firstName} ${last}`
-      : `${firstName} ${last.charAt(0).toUpperCase()}.`;
+/** Avatar initials — safe because a single initial reveals no surname. */
+export function getDisplayInitials(
+  profile: DisplayNameInput | null | undefined,
+): string {
+  if (!profile) return '?';
+  if (profile.deleted_at) return '?';
+
+  const business = clean(profile.business_name);
+  const first = clean(profile.first_name);
+  const last = clean(profile.last_name);
+
+  if (first) {
+    return `${firstInitial(first)}${last ? firstInitial(last) : ''}`;
   }
 
-  // Priority 3: Parse from full_name if available
-  if (profile.full_name?.trim()) {
-    const parts = profile.full_name.trim().split(' ').filter(Boolean);
-    if (parts.length >= 2) {
-      const firstName = parts[0];
-      const last = parts[parts.length - 1];
-      return showFull
-        ? profile.full_name.trim()
-        : `${firstName} ${last.charAt(0).toUpperCase()}.`;
-    }
-    // Single name, return as-is
-    if (parts.length === 1) {
-      return parts[0];
-    }
+  const legacy = splitLegacyName(profile.full_name);
+  if (legacy.first) {
+    return `${firstInitial(legacy.first)}${
+      legacy.last ? firstInitial(legacy.last.split(' ')[0] ?? '') : ''
+    }`;
   }
 
-  // Priority 4: display_name fallback
-  if (profile.display_name?.trim()) {
-    return profile.display_name.trim();
-  }
+  const handle = business || clean(profile.display_name);
+  if (handle) return firstInitial(handle);
 
-  // Priority 5: full_name fallback
-  if (profile.full_name?.trim()) {
-    return profile.full_name.trim();
-  }
-
-  // Last resort
-  return 'User';
+  return '?';
 }
 
 /**
- * Generates initials from a profile for avatar display.
- * Uses first_name and last_name if available, otherwise parses from full_name.
+ * Counterparty label for booking/order/offer surfaces where the other party's
+ * profile may be missing (guest checkout), deleted, or suspended.
  */
-export function getDisplayInitials(profile: DisplayNameInput): string {
-  // Priority 1: first_name + last_name
-  if (profile.first_name?.trim() && profile.last_name?.trim()) {
-    return `${profile.first_name.charAt(0)}${profile.last_name.charAt(0)}`.toUpperCase();
-  }
-
-  // Priority 2: Parse from full_name
-  if (profile.full_name?.trim()) {
-    const parts = profile.full_name.trim().split(' ').filter(Boolean);
-    if (parts.length >= 2) {
-      return `${parts[0].charAt(0)}${parts[parts.length - 1].charAt(0)}`.toUpperCase();
-    }
-    if (parts.length === 1) {
-      return parts[0].charAt(0).toUpperCase();
-    }
-  }
-
-  // Priority 3: display_name
-  if (profile.display_name?.trim()) {
-    const parts = profile.display_name.trim().split(' ').filter(Boolean);
-    if (parts.length >= 2) {
-      return `${parts[0].charAt(0)}${parts[parts.length - 1].charAt(0)}`.toUpperCase();
-    }
-    if (parts.length === 1) {
-      return parts[0].charAt(0).toUpperCase();
-    }
-  }
-
-  return '?';
+export function getCounterpartyName(
+  profile: DisplayNameInput | null | undefined,
+  role: NeutralRoleLabel = 'Guest',
+): string {
+  if (!profile) return role;
+  if (profile.deleted_at) return FORMER_MEMBER_LABEL;
+  if (profile.account_suspended) return UNAVAILABLE_SELLER_LABEL;
+  return getPublicDisplayName(profile, role);
 }

@@ -27,6 +27,7 @@ import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { useHostBookings } from '@/hooks/useHostBookings';
 import BookingRequestCard from '@/components/dashboard/BookingRequestCard';
+import { getCounterpartyName } from '@/lib/displayName';
 
 const HostBookings = () => {
   const { user, isLoading: authLoading } = useAuth();
@@ -41,7 +42,7 @@ const HostBookings = () => {
   if (!authLoading && !user) return null;
 
   const filteredBookings = bookings.filter(b => 
-    b.shopper?.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    getCounterpartyName(b.shopper, 'Guest').toLowerCase().includes(searchQuery.toLowerCase()) ||
     b.listing?.title?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
@@ -194,7 +195,7 @@ const BookingListRow = ({ booking, status }: { booking: any, status: string }) =
         </div>
         
         <div>
-          <h4 className="font-semibold">{booking.shopper?.full_name || 'Guest'}</h4>
+          <h4 className="font-semibold">{getCounterpartyName(booking.shopper, 'Guest')}</h4>
           <p className="text-sm text-muted-foreground line-clamp-1">
             {booking.listing?.title}
           </p>

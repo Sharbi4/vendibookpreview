@@ -36,6 +36,7 @@ import { buildTerms } from '@/lib/transactionTerms';
 import { ProtectionOptInCard } from '@/components/protected-sale/ProtectionOptInCard';
 import { useCheckoutState } from '@/hooks/useCheckoutState';
 import {
+import { getPublicDisplayName } from '@/lib/displayName';
   JourneyProgress,
   PrimaryActionBar,
   TrustModule,
@@ -728,9 +729,8 @@ const SaleCheckout = () => {
     }] : []),
   ];
 
-  const sellerName =
-    host?.business_name || host?.display_name || host?.full_name ||
-    [host?.first_name, host?.last_name].filter(Boolean).join(' ') || undefined;
+  // Privacy-safe: business name, else "First L." — never a full legal name.
+  const sellerName = host ? getPublicDisplayName(host, 'Seller') : undefined;
   const locationLabel = [listing.city, listing.state].filter(Boolean).join(', ') || undefined;
 
   // Contextual add-ons — only surface what actually applies to this listing.

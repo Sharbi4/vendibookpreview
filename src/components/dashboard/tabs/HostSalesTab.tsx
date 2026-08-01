@@ -5,6 +5,7 @@ import PhotoListingCard from '../shared/PhotoListingCard';
 import EmptyState from '../shared/EmptyState';
 import StatusChipPopover from '../shared/StatusChipPopover';
 import { Loader2, DollarSign } from 'lucide-react';
+import { getCounterpartyName } from '@/lib/displayName';
 
 type FilterId = 'all' | 'action' | 'completed' | 'cancelled';
 
@@ -84,7 +85,7 @@ const HostSalesTab = () => {
                   href={`/transactions/${tx.id}`}
                   title={tx.listing?.title ?? 'Listing'}
                   imageUrl={tx.listing?.cover_image_url}
-                  subtitle={tx.buyer?.full_name ? `Buyer · ${tx.buyer.full_name}` : tx.listing?.category ?? undefined}
+                  subtitle={tx.buyer ? `Buyer · ${getCounterpartyName(tx.buyer, 'Buyer')}` : tx.listing?.category ?? undefined}
                   meta={`Order ${tx.id.slice(0, 8).toUpperCase()} · ${new Date(tx.created_at).toLocaleDateString()} · ${amount}`}
                   statusNode={
                     <StatusChipPopover label={s.label} tone={s.tone} title={s.label} body={s.body} nextStep={s.next} />

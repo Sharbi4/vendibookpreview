@@ -11,6 +11,7 @@ import { format, addMonths, subMonths, startOfMonth, endOfMonth, eachDayOfInterv
 import { useListingAvailability } from '@/hooks/useListingAvailability';
 import { Link } from 'react-router-dom';
 import type { Tables } from '@/integrations/supabase/types';
+import { getCounterpartyName, getDisplayInitials } from '@/lib/displayName';
 
 type Listing = Tables<'listings'>;
 
@@ -192,7 +193,7 @@ const AvailabilityCalendar = ({ listing, onClose }: AvailabilityCalendarProps) =
                       <div className="absolute bottom-0.5 left-0 right-0 flex justify-center gap-0.5">
                         {dateBookings.slice(0, 3).map((booking, idx) => {
                           const shopper = (booking as any).shopper;
-                          const initial = (shopper?.display_name || shopper?.full_name || 'G')[0].toUpperCase();
+                          const initial = shopper ? getDisplayInitials(shopper).slice(0, 1) : 'G';
                           const isApproved = booking.status === 'approved';
                           return (
                             <div
@@ -203,7 +204,7 @@ const AvailabilityCalendar = ({ listing, onClose }: AvailabilityCalendarProps) =
                                   ? 'bg-emerald-500 text-white' 
                                   : 'bg-amber-500 text-white'
                               )}
-                              title={`${shopper?.display_name || shopper?.full_name || 'Guest'} - ${isApproved ? 'Confirmed' : 'Pending'}`}
+                              title={`${getCounterpartyName(shopper, 'Guest')} - ${isApproved ? 'Confirmed' : 'Pending'}`}
                             >
                               {initial}
                             </div>
@@ -279,7 +280,7 @@ const AvailabilityCalendar = ({ listing, onClose }: AvailabilityCalendarProps) =
                 <div className="space-y-3">
                   {upcomingBookings.map(booking => {
                     const shopper = (booking as any).shopper;
-                    const shopperName = shopper?.display_name || shopper?.full_name || 'Guest';
+                    const shopperName = getCounterpartyName(shopper, 'Guest');
                     const shopperInitials = shopperName
                       .split(' ')
                       .map((n: string) => n[0])
@@ -349,7 +350,7 @@ const AvailabilityCalendar = ({ listing, onClose }: AvailabilityCalendarProps) =
                 <div className="space-y-3">
                   {pendingBookings.map(booking => {
                     const shopper = (booking as any).shopper;
-                    const shopperName = shopper?.display_name || shopper?.full_name || 'Guest';
+                    const shopperName = getCounterpartyName(shopper, 'Guest');
                     const shopperInitials = shopperName
                       .split(' ')
                       .map((n: string) => n[0])

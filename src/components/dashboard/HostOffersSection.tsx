@@ -19,6 +19,7 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { useHostOffers, HostOffer } from '@/hooks/useHostOffers';
 import { NegotiationCoach } from './NegotiationCoach';
+import { getCounterpartyName, getDisplayInitials } from '@/lib/displayName';
 
 interface OfferCardProps {
   offer: HostOffer;
@@ -123,11 +124,11 @@ const OfferCard = ({ offer, onAccept, onDecline, onCounter, isResponding }: Offe
                     <Avatar className="h-5 w-5">
                       <AvatarImage src={offer.buyer.avatar_url || undefined} />
                       <AvatarFallback className="text-[10px]">
-                        {offer.buyer.full_name?.[0] || 'U'}
+                        {getDisplayInitials(offer.buyer)}
                       </AvatarFallback>
                     </Avatar>
                     <span className="text-xs text-muted-foreground">
-                      {offer.buyer.full_name || 'Unknown Buyer'}
+                      {getCounterpartyName(offer.buyer, 'Buyer')}
                     </span>
                   </div>
                 </div>
