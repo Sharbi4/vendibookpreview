@@ -50,20 +50,9 @@ export default function Purchases() {
   const services = all.filter((e) => e.kind === 'one_time' && (e.status === 'paid' || e.status === 'pending'));
   const completed = all.filter((e) => e.kind === 'one_time' && (e.status === 'fulfilled' || e.status === 'refunded'));
 
-  const openStripePortal = async () => {
-    setOpeningPortal(true);
-    try {
-      const { data, error } = await supabase.functions.invoke('customer-portal');
-      if (error) throw error;
-      const url = (data as { url?: string })?.url;
-      if (!url) throw new Error('No portal URL returned');
-      window.open(url, '_blank', 'noopener,noreferrer');
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : 'Could not open Stripe billing portal');
-    } finally {
-      setOpeningPortal(false);
-    }
-  };
+  // Provider-aware billing management (PayPal autopay vs legacy Stripe portal).
+  const { openBilling, busy } = useSubscriptionManagement();
+  const openStripePortal = openBilling;
 
   return (
     <>
@@ -79,8 +68,8 @@ export default function Purchases() {
             </div>
             <div className="flex flex-wrap gap-2">
               {hasActiveSubscription && (
-                <Button onClick={openStripePortal} variant="outline" size="sm" disabled={openingPortal}>
-                  {openingPortal ? (
+                <Button onClick={openStripePortal} variant="outline" size="sm" disabled={busy === 'portal'}>
+                  {busy === 'portal' ? (
                     <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
                   ) : (
                     <ExternalLink className="mr-1.5 h-3.5 w-3.5" />

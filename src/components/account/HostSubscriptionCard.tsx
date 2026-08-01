@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
+import { useSubscriptionManagement } from '@/hooks/useSubscriptionManagement';
 
 const TIER_LABEL: Record<string, string> = {
   starter: 'Host Starter',
@@ -61,23 +62,10 @@ export function HostSubscriptionCard() {
     return { kind: 'other' as const };
   }, [sub]);
 
-  const openPortal = async () => {
-    setOpening(true);
-    try {
-      const { data, error } = await supabase.functions.invoke('customer-portal');
-      if (error) throw error;
-      if (data?.url) window.open(data.url, '_blank', 'noopener,noreferrer');
-      else throw new Error('Portal URL missing');
-    } catch (err) {
-      toast({
-        title: 'Could not open billing portal',
-        description: err instanceof Error ? err.message : 'Please try again.',
-        variant: 'destructive',
-      });
-    } finally {
-      setOpening(false);
-    }
-  };
+  // Billing management is provider-aware: PayPal members go to PayPal's
+  // automatic payments, legacy Stripe members get the Customer Portal.
+  const { provider, openBilling, busy } = useSubscriptionManagement();
+  const openPortal = openBilling;
 
   if (isLoading) {
     return (
@@ -147,7 +135,9 @@ export function HostSubscriptionCard() {
                 <div className="text-xs text-amber-800">
                   <div className="font-medium">Payment failed</div>
                   <p className="text-amber-700/90 mt-0.5">
-                    Update your card in the billing portal to keep Pro perks active. We'll retry automatically.
+                    {provider === 'paypal'
+                      ? "Update your funding source in PayPal to keep Pro perks active. We'll retry automatically."
+                      : "Update your card in the billing portal to keep Pro perks active. We'll retry automatically."}
                   </p>
                 </div>
               </div>
@@ -162,11 +152,14 @@ export function HostSubscriptionCard() {
             )}
 
             <div className="flex flex-wrap gap-2">
-              <Button size="sm" onClick={openPortal} disabled={opening}>
-                {opening ? (
+              <Button size="sm" onClick={openPortal} disabled={busy === 'portal'}>
+                {busy === 'portal' ? (
                   <><Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />Opening…</>
                 ) : (
-                  <><ExternalLink className="h-3.5 w-3.5 mr-1.5" />Manage billing</>
+                  <>
+                    <ExternalLink className="h-3.5 w-3.5 mr-1.5" />
+                    {provider === 'paypal' ? 'Manage in PayPal' : 'Manage billing'}
+                  </>
                 )}
               </Button>
               <Button asChild size="sm" variant="outline">
