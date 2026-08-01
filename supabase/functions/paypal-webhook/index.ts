@@ -156,6 +156,18 @@ async function handleEvent(admin: any, event: any) {
       }).eq("id", record.id);
 
       await applyRefundToPayable(admin, record.id, total, reversed);
+      await notifyOrderParties(admin, record, {
+        type: "refund_completed",
+        buyer: {
+          title: reversed ? "Payment reversed" : "Refund completed",
+          message: `${(refundCents / 100).toLocaleString("en-US", { style: "currency", currency: record.currency ?? "USD" })} has been returned for order ${record.reference}.`,
+        },
+        seller: {
+          title: reversed ? "A payment was reversed" : "A refund was issued",
+          message: `Order ${record.reference} was ${reversed ? "reversed" : "refunded"}. Your payout has been adjusted accordingly.`,
+        },
+        dedupeKey: `refund:${resource.id}`,
+      });
       return;
     }
 
