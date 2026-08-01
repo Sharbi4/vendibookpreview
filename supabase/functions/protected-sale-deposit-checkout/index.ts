@@ -1,93 +1,57 @@
-// Creates a Stripe Checkout session for the Protected Sale deposit.
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import Stripe from "https://esm.sh/stripe@18.5.0";
-import { createClient } from "npm:@supabase/supabase-js@2.57.2";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
+import { corsHeaders, jsonError, jsonResponse, unknownErrorResponse } from "../_shared/jsonError.ts";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
-};
-
+/**
+ * Protected Sale deposit checkout.
+ *
+ * Returns a Vendibook-hosted PayPal checkout URL. The deposit amount and the
+ * allowed sale statuses are re-validated in `paypal-create-order`, which also
+ * advances the protected sale to `deposit_paid` once PayPal confirms capture.
+ */
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const userClient = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_ANON_KEY") ?? "",
-      { global: { headers: { Authorization: req.headers.get("Authorization") ?? "" } } },
-    );
-    const { data: userData } = await userClient.auth.getUser();
-    const user = userData?.user;
-    if (!user?.email) {
-      return new Response(JSON.stringify({ error: "unauthenticated" }), {
-        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    const { protected_sale_id } = await req.json();
-    if (!protected_sale_id) {
-      return new Response(JSON.stringify({ error: "protected_sale_id required" }), {
-        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
     const admin = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+      { auth: { persistSession: false } },
     );
+
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) return jsonError(401, "unauthenticated", "Please sign in to continue.");
+    const { data: userData } = await admin.auth.getUser(authHeader.replace("Bearer ", ""));
+    const user = userData?.user;
+    if (!user) return jsonError(401, "unauthenticated", "Your session expired. Please sign in again.");
+
+    const body = await req.json().catch(() => ({}));
+    const protectedSaleId = body?.protected_sale_id ? String(body.protected_sale_id) : "";
+    if (!protectedSaleId) return jsonError(400, "missing_fields", "Missing protected_sale_id.");
+
     const { data: ps } = await admin
       .from("protected_sales")
       .select("id, buyer_id, deposit_cents, status, sale_transaction_id")
-      .eq("id", protected_sale_id)
+      .eq("id", protectedSaleId)
       .maybeSingle();
-
-    if (!ps || ps.buyer_id !== user.id) {
-      return new Response(JSON.stringify({ error: "forbidden" }), {
-        status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+    if (!ps) return jsonError(404, "not_found", "We couldn't find that protected sale.");
+    if (ps.buyer_id !== user.id) return jsonError(403, "forbidden", "You aren't the buyer on this sale.");
     if (ps.status !== "agreement_signed" && ps.status !== "id_verified") {
-      return new Response(JSON.stringify({ error: `deposit unavailable in status ${ps.status}` }), {
-        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return jsonError(409, "not_ready", "The deposit isn't collectable at this stage.");
     }
-
-    const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") ?? "", {
-      apiVersion: "2025-08-27.basil",
-    });
+    if (!ps.deposit_cents || ps.deposit_cents <= 0) {
+      return jsonError(400, "invalid_amount", "There's no deposit amount due.");
+    }
 
     const origin = req.headers.get("origin") ?? "https://vendibook.com";
-    const session = await stripe.checkout.sessions.create({
-      mode: "payment",
-      customer_email: user.email,
-      line_items: [{
-        price_data: {
-          currency: "usd",
-          product_data: {
-            name: "Vendibook Protected Sale — Deposit",
-            description: "Non-refundable deposit that secures your protected purchase.",
-          },
-          unit_amount: ps.deposit_cents,
-        },
-        quantity: 1,
-      }],
-      metadata: {
-        protected_sale_id: ps.id,
-        sale_transaction_id: ps.sale_transaction_id,
-        kind: "protected_sale_deposit",
-      },
-      success_url: `${origin}/sale/${ps.sale_transaction_id}/protection?deposit=success`,
-      cancel_url: `${origin}/sale/${ps.sale_transaction_id}/protection?deposit=cancelled`,
-    });
+    const success = `/sale/${ps.sale_transaction_id}/protection?deposit=success`;
+    const cancel = `/sale/${ps.sale_transaction_id}/protection?deposit=cancelled`;
+    const url = `${origin}/checkout/pay?kind=protected_sale_deposit&id=${encodeURIComponent(ps.id)}` +
+      `&amount_cents=${ps.deposit_cents}&label=${encodeURIComponent("Protected Sale deposit")}` +
+      `&success=${encodeURIComponent(success)}&cancel=${encodeURIComponent(cancel)}`;
 
-    return new Response(JSON.stringify({ url: session.url }), {
-      status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-  } catch (e) {
-    return new Response(JSON.stringify({ error: (e as Error).message }), {
-      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return jsonResponse(200, { url, provider: "paypal" });
+  } catch (error) {
+    return unknownErrorResponse(error);
   }
 });
