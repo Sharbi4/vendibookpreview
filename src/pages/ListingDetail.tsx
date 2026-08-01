@@ -214,6 +214,13 @@ const ListingDetail = () => {
     );
   }
 
+  // Unavailable listings: owners and admins keep the private management view
+  // (labelled by OwnerBanner); everyone else gets a neutral page with no
+  // private details and no purchase controls.
+  if (listing && !isListingPubliclyVisible(listing) && !isOwner && !isAdminViewer) {
+    return <ListingUnavailable />;
+  }
+
   if (error || !listing) {
     return (
       <div className="min-h-screen flex flex-col bg-background">
