@@ -72,6 +72,17 @@ serve(async (req) => {
       );
     }
 
+    // Stripe is closed to new business. Recurring memberships are sold only
+    // through PayPal Subscriptions (`paypal-subscription-create`); existing
+    // Stripe subscribers keep their plan and are managed read-only.
+    if (product.billing_type === "recurring") {
+      return jsonError(
+        409,
+        "provider_retired",
+        "Memberships are now purchased through PayPal. Please reload the page and try again.",
+      );
+    }
+
     // Entitlement guard: never charge a user for something they already own.
     // Uses the unified server-side helpers (resolveHostTier + resolveToolAccess).
     // Add-on SKUs (featured stack, notary, freight...) are pass-through — they
