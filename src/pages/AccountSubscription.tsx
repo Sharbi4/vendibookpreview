@@ -68,78 +68,24 @@ const TIER_RANK: Record<HostTier, number> = { free: 0, starter: 1, pro: 2, premi
 
 export default function AccountSubscription() {
   const { user } = useAuth();
-  const { toast } = useToast();
   const entitlements = useHostEntitlements();
   const { products, loading: productsLoading } = useMonetizationProducts('host_subscription');
-  const [openingPortal, setOpeningPortal] = useState(false);
-  const [scheduling, setScheduling] = useState<'cancel' | 'reactivate' | null>(null);
 
-  const { data: sub, isLoading, refetch, isFetching } = useQuery({
-    queryKey: ['host-subscription-detail', user?.id],
-    enabled: !!user?.id,
-    queryFn: async () => {
-      const { data } = await supabase
-        .from('host_subscriptions')
-        .select('*')
-        .eq('user_id', user!.id)
-        .order('updated_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      return data;
-    },
-  });
+  const {
+    sub, provider, hasSubscription, scheduledCancel, isPastDue,
+    isLoading, isFetching, refetch, busy, cancel, reactivate, openBilling, canReactivate,
+  } = useSubscriptionManagement();
 
-  const hasSubscription = !!sub?.stripe_subscription_id && sub.status !== 'canceled';
+  // Legacy call-site aliases so the existing markup keeps working.
+  const openingPortal = busy === 'portal';
+  const scheduling = busy === 'cancel' || busy === 'reactivate' ? busy : null;
+  const openPortal = openBilling;
+  const manageSchedule = (action: 'cancel' | 'reactivate') =>
+    action === 'cancel' ? cancel() : reactivate();
+
   const currentRank = TIER_RANK[entitlements.tier] ?? 0;
   const statusClass = STATUS_STYLES[sub?.status ?? ''] ?? 'bg-muted text-muted-foreground border-border';
 
-  const openPortal = async () => {
-    setOpeningPortal(true);
-    try {
-      const { data, error } = await supabase.functions.invoke('customer-portal');
-      if (error) throw error;
-      if (data?.url) window.open(data.url, '_blank', 'noopener,noreferrer');
-      else throw new Error('Portal URL missing');
-    } catch (err) {
-      const parsed = await parseEdgeError(err);
-      toast({
-        title: 'Could not open billing portal',
-        description: parsed?.message ?? (err instanceof Error ? err.message : 'Please try again.'),
-        variant: 'destructive',
-      });
-    } finally {
-      setOpeningPortal(false);
-    }
-  };
-
-  const manageSchedule = async (action: 'cancel' | 'reactivate') => {
-    setScheduling(action);
-    try {
-      const { data, error } = await supabase.functions.invoke('manage-subscription', {
-        body: { action },
-      });
-      if (error) throw error;
-      toast({
-        title: action === 'cancel' ? 'Cancellation scheduled' : 'Subscription resumed',
-        description: action === 'cancel'
-          ? `Access continues through ${fmtDate(data?.cancel_at ? new Date((data.cancel_at as number) * 1000).toISOString() : sub?.current_period_end)}.`
-          : 'Your plan will renew normally at the end of the current period.',
-      });
-      await refetch();
-    } catch (err) {
-      const parsed = await parseEdgeError(err);
-      toast({
-        title: 'Could not update subscription',
-        description: parsed?.message ?? (err instanceof Error ? err.message : 'Please try again.'),
-        variant: 'destructive',
-      });
-    } finally {
-      setScheduling(null);
-    }
-  };
-
-  const scheduledCancel = !!sub?.cancel_at_period_end && sub?.status !== 'canceled';
-  const isPastDue = sub?.status === 'past_due' || sub?.status === 'unpaid';
 
   const sortedProducts = useMemo(
     () => [...products].sort((a, b) => a.display_order - b.display_order),
