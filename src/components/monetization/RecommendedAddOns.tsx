@@ -58,7 +58,7 @@ export function RecommendedAddOns({
 
   const handleBuy = async (product: MonetizationProduct) => {
     // Recurring subscriptions must pass through the consent gate; one-time
-    // add-ons continue to invoke the edge function directly.
+    // add-ons go to our hosted PayPal product checkout.
     if (product.billing_type === 'recurring') {
       await requestCheckout(product, {
         successPath: '/dashboard?purchase=success',
@@ -68,20 +68,13 @@ export function RecommendedAddOns({
     }
     setBusy(product.slug);
     try {
-      const { data, error } = await supabase.functions.invoke('create-monetization-checkout', {
-        body: {
-          product_slug: product.slug,
-          listing_id: listingId,
-          success_path: '/dashboard?purchase=success',
-          cancel_path: window.location.pathname + '?purchase=cancelled',
-        },
+      const { url } = await startMonetizationCheckout({
+        productSlug: product.slug,
+        listingId,
+        successPath: '/dashboard?purchase=success',
+        cancelPath: window.location.pathname + '?purchase=cancelled',
       });
-      if (error) throw error;
-      if (data?.url) {
-        window.open(data.url, '_blank', 'noopener');
-      } else {
-        throw new Error('No checkout URL returned');
-      }
+      window.location.href = url;
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       toast.error(msg || 'Could not start checkout');
