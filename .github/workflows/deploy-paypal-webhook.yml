@@ -1,4 +1,4 @@
-name: Deploy PayPal webhook
+name: Deploy PayPal payments
 
 on:
   push:
@@ -6,6 +6,7 @@ on:
       - main
     paths:
       - "supabase/functions/paypal-webhook/**"
+      - "supabase/functions/paypal-subscription-create/**"
       - "supabase/functions/_shared/**"
       - "supabase/config.toml"
       - ".github/workflows/deploy-paypal-webhook.yml"
@@ -15,12 +16,12 @@ permissions:
   contents: read
 
 concurrency:
-  group: deploy-paypal-webhook-production
+  group: deploy-paypal-payments-production
   cancel-in-progress: false
 
 jobs:
   deploy:
-    name: Set webhook secret and deploy
+    name: Configure and deploy PayPal functions
     runs-on: ubuntu-latest
     environment: production
     env:
@@ -67,7 +68,14 @@ jobs:
           supabase functions deploy paypal-webhook \
             --project-ref "$SUPABASE_PROJECT_ID"
 
-      - name: Verify public endpoint is reachable
+      - name: Deploy PayPal subscription Edge Function
+        shell: bash
+        run: |
+          set -euo pipefail
+          supabase functions deploy paypal-subscription-create \
+            --project-ref "$SUPABASE_PROJECT_ID"
+
+      - name: Verify public webhook endpoint is reachable
         shell: bash
         run: |
           set -euo pipefail
@@ -85,5 +93,26 @@ jobs:
           # but it must reach the function without Supabase JWT enforcement.
           if [[ "$status" != "400" ]]; then
             echo "Expected HTTP 400 from the malformed-payload reachability test; received $status." >&2
+            exit 1
+          fi
+
+      - name: Verify subscription endpoint is deployed
+        shell: bash
+        run: |
+          set -euo pipefail
+          endpoint="https://${SUPABASE_PROJECT_ID}.supabase.co/functions/v1/paypal-subscription-create"
+          status=$(curl --silent --show-error \
+            --output /tmp/paypal-subscription-response.txt \
+            --write-out "%{http_code}" \
+            --request POST "$endpoint" \
+            --header "Content-Type: application/json" \
+            --data '{}')
+
+          cat /tmp/paypal-subscription-response.txt
+
+          # No bearer token should be rejected by application auth. A 401 proves
+          # the newly deployed function loaded and executed instead of crashing.
+          if [[ "$status" != "401" ]]; then
+            echo "Expected HTTP 401 from the unauthenticated subscription smoke test; received $status." >&2
             exit 1
           fi
