@@ -72,7 +72,7 @@ const baseQuery = (category: CategoryKey, mode: ModeFilter, limit: number) => {
   let q = supabase
     .from('listings')
     .select(baseSelect)
-    .eq('status', 'published')
+    .eq('status', 'published').not('published_at', 'is', null).is('deleted_at', null).eq('moderation_status', 'clear')
     .eq('category', category as any)
     .not('published_at', 'is', null)
     .not('title', 'ilike', 'demo%')

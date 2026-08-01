@@ -210,7 +210,7 @@ export const useAdminCityStats = () => {
         const { count: listingCount } = await supabase
           .from('listings')
           .select('*', { count: 'exact', head: true })
-          .eq('status', 'published')
+          .eq('status', 'published').not('published_at', 'is', null).is('deleted_at', null).eq('moderation_status', 'clear')
           .or(`city.eq.${city},address.ilike.%${city}%`);
 
         // Get requests count (last 30 days)
@@ -308,7 +308,7 @@ export const useAdminAlerts = () => {
       const { count: lowQuality } = await supabase
         .from('listings')
         .select('*', { count: 'exact', head: true })
-        .eq('status', 'published')
+        .eq('status', 'published').not('published_at', 'is', null).is('deleted_at', null).eq('moderation_status', 'clear')
         .or('image_urls.is.null,cover_image_url.is.null');
 
       if ((lowQuality || 0) > 0) {

@@ -19,7 +19,7 @@ async function fetchMarketPricing(category: string, city: string | null, state: 
       .from("listings")
       .select("price_daily, price_weekly, price_monthly, price_hourly, price_sale, mode, city, state")
       .eq("category", category)
-      .eq("status", "published");
+      .eq("status", "published").not("published_at", "is", null).is("deleted_at", null).eq("moderation_status", "clear");
 
     if (state) query = query.eq("state", state);
 

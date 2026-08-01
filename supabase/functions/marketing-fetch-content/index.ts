@@ -71,7 +71,7 @@ serve(async (req) => {
     const { data: newSale } = await supabase
       .from("listings")
       .select("id,title,city,state,price_sale,cover_image_url,image_urls,category,subcategory,mode,published_at")
-      .eq("status", "published").eq("mode", "sale")
+      .eq("status", "published").not("published_at", "is", null).is("deleted_at", null).eq("moderation_status", "clear").eq("mode", "sale")
       .not("title", "ilike", "DEMO%")
       .not("published_at", "is", null)
       .gte("published_at", sinceIso)
@@ -94,7 +94,7 @@ serve(async (req) => {
       let fillQuery = supabase
         .from("listings")
         .select("id,title,city,state,price_sale,cover_image_url,image_urls,category,subcategory,mode,published_at")
-        .eq("status", "published").eq("mode", "sale")
+        .eq("status", "published").not("published_at", "is", null).is("deleted_at", null).eq("moderation_status", "clear").eq("mode", "sale")
         .not("title", "ilike", "DEMO%")
         .not("published_at", "is", null)
         .order("published_at", { ascending: false })
@@ -108,7 +108,7 @@ serve(async (req) => {
     const { count: totalActiveSale } = await supabase
       .from("listings")
       .select("id", { count: "exact", head: true })
-      .eq("status", "published").eq("mode", "sale")
+      .eq("status", "published").not("published_at", "is", null).is("deleted_at", null).eq("moderation_status", "clear").eq("mode", "sale")
       .not("title", "ilike", "DEMO%")
       .not("published_at", "is", null);
 
@@ -142,7 +142,7 @@ serve(async (req) => {
     const { data: newRental } = await supabase
       .from("listings")
       .select("id,title,city,state,price_hourly,price_daily,price_weekly,price_monthly,cover_image_url,image_urls,category,amenities,mode,published_at")
-      .eq("status", "published").eq("mode", "rent")
+      .eq("status", "published").not("published_at", "is", null).is("deleted_at", null).eq("moderation_status", "clear").eq("mode", "rent")
       .not("title", "ilike", "DEMO%")
       .not("published_at", "is", null)
       .gte("published_at", sinceIso)
@@ -157,7 +157,7 @@ serve(async (req) => {
       const { data: candidates } = await supabase
         .from("listings")
         .select("id,title,city,state,price_hourly,price_daily,price_weekly,price_monthly,cover_image_url,image_urls,category,amenities,mode,published_at")
-        .eq("status", "published").eq("mode", "rent")
+        .eq("status", "published").not("published_at", "is", null).is("deleted_at", null).eq("moderation_status", "clear").eq("mode", "rent")
         .not("title", "ilike", "DEMO%")
         .not("published_at", "is", null)
         .order("published_at", { ascending: false })

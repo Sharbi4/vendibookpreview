@@ -59,7 +59,7 @@ Deno.serve(async (req) => {
     const { data: hosts, error: hErr } = await supabase
       .from("listings")
       .select("host_id")
-      .eq("status", "published")
+      .eq("status", "published").not("published_at", "is", null).is("deleted_at", null).eq("moderation_status", "clear")
       .not("host_id", "is", null)
       .limit(2000);
     if (hErr) throw hErr;

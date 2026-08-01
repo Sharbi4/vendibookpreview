@@ -31,7 +31,7 @@ const HomepageFeaturedRow = () => {
         supabase
           .from('listings')
           .select('*')
-          .eq('status', 'published')
+          .eq('status', 'published').not('published_at', 'is', null).is('deleted_at', null).eq('moderation_status', 'clear')
           .eq('featured_enabled', true)
           .gt('featured_expires_at', nowIso)
       )

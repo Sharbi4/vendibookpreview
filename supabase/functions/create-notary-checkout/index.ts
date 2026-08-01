@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import { corsHeaders, jsonError, jsonResponse, unknownErrorResponse } from "../_shared/jsonError.ts";
+import { assertListingPurchasable } from "../_shared/listingGuard.ts";
 
 /**
  * Proof Notary checkout.
@@ -41,6 +42,9 @@ serve(async (req) => {
     if (!listing.proof_notary_enabled) {
       return jsonError(409, "feature_not_enabled", "Proof Notary is not enabled for this listing.");
     }
+
+    const blocked = await assertListingPurchasable(admin, listing.id);
+    if (blocked) return blocked;
 
     const origin = req.headers.get("origin") ?? "https://vendibook.com";
     const success = `/listing-published?listing_id=${listingId}&notary_paid=true`;

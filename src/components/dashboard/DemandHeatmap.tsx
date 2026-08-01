@@ -32,7 +32,7 @@ export const DemandHeatmap = () => {
         supabase
           .from('listings')
           .select('city')
-          .eq('status', 'published')
+          .eq('status', 'published').not('published_at', 'is', null).is('deleted_at', null).eq('moderation_status', 'clear')
           .not('city', 'is', null)
           .limit(5000),
       ]);

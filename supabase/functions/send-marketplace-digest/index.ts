@@ -140,7 +140,7 @@ Deno.serve(async (req) => {
     const { data: listingsRaw, error: lErr } = await supabase
       .from("listings")
       .select("id,title,cover_image_url,category,city,state,price_daily,price_sale,mode,published_at")
-      .eq("status", "published")
+      .eq("status", "published").not("published_at", "is", null).is("deleted_at", null).eq("moderation_status", "clear")
       .gte("published_at", since)
       .not("title", "ilike", "Demo%")
       .order("published_at", { ascending: false })

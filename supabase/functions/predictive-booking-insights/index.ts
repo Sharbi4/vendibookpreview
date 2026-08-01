@@ -41,7 +41,7 @@ serve(async (req) => {
         .from("listings")
         .select("id, title, category, price_daily, price_hourly, total_slots")
         .eq("host_id", user.id)
-        .eq("status", "published"),
+        .eq("status", "published").not("published_at", "is", null).is("deleted_at", null).eq("moderation_status", "clear"),
     ]);
 
     // Compute booking lead time (days between created_at and start_date)

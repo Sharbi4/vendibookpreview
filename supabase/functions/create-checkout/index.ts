@@ -118,6 +118,21 @@ serve(async (req) => {
     if (listingError || !listing) {
       return jsonError(404, "listing_not_found", "Listing not found");
     }
+
+    // Canonical availability gate, re-checked immediately before any payment
+    // object is created. Never trust the client's view of the listing.
+    {
+      const { data: state } = await supabaseClient.rpc('listing_purchase_state', {
+        _listing_id: listing_id,
+      });
+      if (!(state as { purchasable?: boolean } | null)?.purchasable) {
+        return jsonError(
+          409,
+          "listing_unavailable",
+          "This listing is no longer available and no payment was created.",
+        );
+      }
+    }
     logStep("Listing found", { host_id: listing.host_id, title: listing.title });
 
     // Owner cannot buy/rent their own listing.

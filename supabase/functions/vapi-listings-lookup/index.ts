@@ -149,7 +149,7 @@ async function searchListings(supabase: any, args: any) {
   let qb = supabase
     .from('listings')
     .select('id, title, description, category, mode, address, city, state, price_daily, price_hourly, price_sale, price_weekly, price_monthly, cover_image_url, instant_book, fulfillment_type, amenities, highlights')
-    .eq('status', 'published')
+    .eq('status', 'published').not('published_at', 'is', null).is('deleted_at', null).eq('moderation_status', 'clear')
     .not('title', 'ilike', 'Demo %')
     .limit(Math.min(limit, 10));
 
@@ -202,7 +202,7 @@ async function getListingDetails(supabase: any, args: any) {
     .from('listings')
     .select('*')
     .eq('id', listing_id)
-    .eq('status', 'published')
+    .eq('status', 'published').not('published_at', 'is', null).is('deleted_at', null).eq('moderation_status', 'clear')
     .maybeSingle();
 
   if (error) throw error;
@@ -469,7 +469,7 @@ async function getBookingInfo(supabase: any, args: any) {
     .from('listings')
     .select('id, title, category, mode, price_hourly, price_daily, price_weekly, price_monthly, price_sale, deposit_amount, instant_book, fulfillment_type, delivery_fee, delivery_radius_miles, rental_min_days, total_slots, slot_names, available_from, available_to, hourly_enabled, daily_enabled, city, state, address, amenities, highlights, pickup_instructions, access_instructions, hours_of_access')
     .eq('id', listing_id)
-    .eq('status', 'published')
+    .eq('status', 'published').not('published_at', 'is', null).is('deleted_at', null).eq('moderation_status', 'clear')
     .maybeSingle();
 
   if (error) throw error;

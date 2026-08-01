@@ -159,7 +159,7 @@ serve(async (req) => {
       const { data: listings, error } = await supabaseClient
         .from("listings")
         .select("*")
-        .eq("status", "published")
+        .eq("status", "published").not("published_at", "is", null).is("deleted_at", null).eq("moderation_status", "clear")
         .eq("mode", "sale")
         .not("price_sale", "is", null);
 

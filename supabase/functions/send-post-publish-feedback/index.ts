@@ -29,7 +29,7 @@ Deno.serve(async (req) => {
     const { data: listings } = await supabase
       .from('listings')
       .select('id, title, host_id, published_at, profiles!listings_host_id_fkey(email, full_name, first_name)')
-      .eq('status', 'published')
+      .eq('status', 'published').not('published_at', 'is', null).is('deleted_at', null).eq('moderation_status', 'clear')
       .lt('published_at', minAge)
       .gt('published_at', maxAge)
       .limit(200);

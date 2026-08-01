@@ -23,7 +23,7 @@ const FavoritesTab = () => {
         .from('listings')
         .select('id, title, cover_image_url, category, city, state, price_per_hour, sale_price_cents')
         .in('id', favorites)
-        .eq('status', 'published');
+        .eq('status', 'published').not('published_at', 'is', null).is('deleted_at', null).eq('moderation_status', 'clear');
       if (error) throw error;
       return data ?? [];
     },

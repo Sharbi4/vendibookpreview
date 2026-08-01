@@ -97,6 +97,16 @@ Deno.serve(async (req) => {
       .maybeSingle();
 
     if (listingErr || !listing) return json({ error: 'listing_not_found' }, 404);
+    // Canonical availability gate — paused/removed/archived listings can never
+    // start a cash sale, even if the buyer had the page open.
+    const { data: cashState } = await supabase.rpc('listing_purchase_state', { _listing_id: listing.id });
+    if (!(cashState as { purchasable?: boolean } | null)?.purchasable) {
+      return json({
+        error: 'listing_unavailable',
+        code: 'listing_unavailable',
+        message: 'This listing is no longer available and no payment was created.',
+      }, 409);
+    }
     if (listing.host_id === user.id) return json({ error: 'cannot_buy_own_listing' }, 403);
     if (!listing.accept_cash_payment) return json({ error: 'cash_not_accepted' }, 400);
 

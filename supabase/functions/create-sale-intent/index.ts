@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import { corsHeaders, jsonError, jsonResponse, unknownErrorResponse } from "../_shared/jsonError.ts";
+import { assertListingPurchasable } from "../_shared/listingGuard.ts";
 
 const SELLER_COMMISSION = 0.129;
 
@@ -36,9 +37,8 @@ serve(async (req) => {
       .maybeSingle();
 
     if (!listing) return jsonError(404, "not_found", "That listing is no longer available.");
-    if (listing.status !== "published") {
-      return jsonError(409, "not_purchasable", "This listing isn't accepting purchases right now.");
-    }
+    const blocked = await assertListingPurchasable(admin, listing.id);
+    if (blocked) return blocked;
     if (!listing.price_sale || Number(listing.price_sale) <= 0) {
       return jsonError(409, "not_for_sale", "This listing isn't for sale.");
     }

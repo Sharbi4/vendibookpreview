@@ -32,7 +32,7 @@ export function useTrendingListings(limit = 5) {
         const { data, error } = await supabase
           .from('listings')
           .select('*')
-          .eq('status', 'published')
+          .eq('status', 'published').not('published_at', 'is', null).is('deleted_at', null).eq('moderation_status', 'clear')
           .order('view_count', { ascending: false })
           .limit(limit);
         if (error) throw error;
@@ -43,7 +43,7 @@ export function useTrendingListings(limit = 5) {
         .from('listings')
         .select('*')
         .in('id', topListingIds)
-        .eq('status', 'published');
+        .eq('status', 'published').not('published_at', 'is', null).is('deleted_at', null).eq('moderation_status', 'clear');
 
       if (error) throw error;
 

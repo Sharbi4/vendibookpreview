@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import { corsHeaders, jsonError, jsonResponse, unknownErrorResponse } from "../_shared/jsonError.ts";
+import { assertListingPurchasable } from "../_shared/listingGuard.ts";
 
 /**
  * Protected Sale deposit checkout.
@@ -31,7 +32,7 @@ serve(async (req) => {
 
     const { data: ps } = await admin
       .from("protected_sales")
-      .select("id, buyer_id, deposit_cents, status, sale_transaction_id")
+      .select("id, buyer_id, deposit_cents, status, sale_transaction_id, listing_id")
       .eq("id", protectedSaleId)
       .maybeSingle();
     if (!ps) return jsonError(404, "not_found", "We couldn't find that protected sale.");
@@ -41,6 +42,11 @@ serve(async (req) => {
     }
     if (!ps.deposit_cents || ps.deposit_cents <= 0) {
       return jsonError(400, "invalid_amount", "There's no deposit amount due.");
+    }
+
+    if (ps.listing_id) {
+      const blocked = await assertListingPurchasable(admin, ps.listing_id);
+      if (blocked) return blocked;
     }
 
     const origin = req.headers.get("origin") ?? "https://vendibook.com";

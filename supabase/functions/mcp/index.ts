@@ -26,7 +26,7 @@ var search_listings_default = defineTool({
     const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, {
       auth: { persistSession: false, autoRefreshToken: false }
     });
-    let q = supabase.from("listings").select("id,title,city,state,price,transaction_type,category,published_at").eq("status", "published").order("published_at", { ascending: false }).limit(limit ?? 10);
+    let q = supabase.from("listings").select("id,title,city,state,price,transaction_type,category,published_at").eq("status", "published").not("published_at", "is", null).is("deleted_at", null).eq("moderation_status", "clear").order("published_at", { ascending: false }).limit(limit ?? 10);
     if (query) q = q.ilike("title", `%${query}%`);
     if (city) q = q.ilike("city", `%${city}%`);
     if (transaction_type && transaction_type !== "any") {
@@ -61,7 +61,7 @@ var get_listing_default = defineTool2({
     const supabase = createClient2(SUPABASE_URL2, SUPABASE_KEY2, {
       auth: { persistSession: false, autoRefreshToken: false }
     });
-    const { data, error } = await supabase.from("listings").select("*").eq("id", listing_id).eq("status", "published").maybeSingle();
+    const { data, error } = await supabase.from("listings").select("*").eq("id", listing_id).eq("status", "published").not("published_at", "is", null).is("deleted_at", null).eq("moderation_status", "clear").maybeSingle();
     if (error) {
       return { content: [{ type: "text", text: `Lookup failed: ${error.message}` }], isError: true };
     }

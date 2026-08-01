@@ -57,6 +57,22 @@ serve(async (req) => {
     if (!body.product_slug) throw new Error("Missing product_slug");
     log("start", { userId: user.id, slug: body.product_slug, listing: body.listing_id });
 
+    // Listing-scoped products (boosts, add-ons) require an available listing.
+    if (body.listing_id) {
+      const { data: state } = await supabase.rpc("listing_purchase_state", {
+        _listing_id: body.listing_id,
+      });
+      if (!(state as { purchasable?: boolean } | null)?.purchasable) {
+        return new Response(
+          JSON.stringify({
+            error: "This listing is no longer available and no payment was created.",
+            code: "listing_unavailable",
+          }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 409 },
+        );
+      }
+    }
+
     // Load product
     const { data: product, error: prodErr } = await supabase
       .from("monetization_products")

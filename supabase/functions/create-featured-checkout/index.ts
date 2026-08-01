@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import { corsHeaders, jsonError, jsonResponse, unknownErrorResponse } from "../_shared/jsonError.ts";
+import { getListingPurchaseState, LISTING_UNAVAILABLE_MESSAGE } from "../_shared/listingGuard.ts";
 
 /**
  * Featured Boost checkout.
@@ -39,12 +40,27 @@ serve(async (req) => {
 
     const { data: listing } = await admin
       .from("listings")
-      .select("id, title, host_id, status, published_at, pending_featured_payment")
+      .select("id, title, host_id, status, published_at, deleted_at, moderation_status, pending_featured_payment")
       .eq("id", listingId)
       .maybeSingle();
     if (!listing) return jsonError(404, "listing_not_found", "We couldn't find that listing.");
     if (listing.host_id !== user.id) {
       return jsonError(403, "not_owner", "You don't own this listing.");
+    }
+
+    // Boosts are only sellable for a listing that is live, or a draft that is
+    // being published by the wizard right now. Paused / archived / removed /
+    // rejected / suspended / soft-deleted listings can never be boosted.
+    const boostState = await getListingPurchaseState(admin, listing.id);
+    const isPublishableDraft = listing.status === "draft" &&
+      !listing.deleted_at &&
+      (listing.moderation_status ?? "clear") === "clear";
+    if (!boostState.purchasable && !isPublishableDraft) {
+      return jsonError(409, "listing_unavailable", LISTING_UNAVAILABLE_MESSAGE, {
+        reason: boostState.reason,
+        listing_status: listing.status,
+        republish_required: listing.status === "paused" || listing.status === "archived",
+      });
     }
 
     const origin = req.headers.get("origin") ?? "https://vendibook.com";

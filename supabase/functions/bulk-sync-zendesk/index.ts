@@ -106,7 +106,7 @@ const handler = async (req: Request): Promise<Response> => {
         .from('listings')
         .select('host_id')
         .in('host_id', userIds)
-        .eq('status', 'published'),
+        .eq('status', 'published').not('published_at', 'is', null).is('deleted_at', null).eq('moderation_status', 'clear'),
     ]);
 
     // Count bookings and listings per user

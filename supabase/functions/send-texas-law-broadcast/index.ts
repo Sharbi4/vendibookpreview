@@ -219,7 +219,7 @@ serve(async (req) => {
     const { data: txListings } = await admin
       .from("listings")
       .select("id,title,mode,city,state,cover_image_url,price_daily,price_sale,published_at")
-      .eq("status", "published")
+      .eq("status", "published").not("published_at", "is", null).is("deleted_at", null).eq("moderation_status", "clear")
       .ilike("state", "TX")
       .not("cover_image_url", "is", null)
       .not("title", "ilike", "DEMO%")

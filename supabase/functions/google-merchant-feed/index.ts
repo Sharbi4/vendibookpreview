@@ -57,7 +57,7 @@ Deno.serve(async (req) => {
     const { data: listings, error } = await supabase
       .from("listings")
       .select("id, title, description, cover_image_url, price_sale, category, mode, city, state, updated_at")
-      .eq("status", "published")
+      .eq("status", "published").not("published_at", "is", null).is("deleted_at", null).eq("moderation_status", "clear")
       .eq("mode", "sale")
       .in("category", ["food_truck", "food_trailer"])
       .not("published_at", "is", null)

@@ -4,6 +4,7 @@ import { corsHeaders, jsonError, jsonResponse, unknownErrorResponse } from "../_
 import { PayPalError, safeLog } from "../_shared/paypal.ts";
 import { getPaymentProvider, PaymentProviderError } from "../_shared/payments/index.ts";
 import { auditPayment, requestIp } from "../_shared/paymentAudit.ts";
+import { assertListingPurchasable } from "../_shared/listingGuard.ts";
 import {
   quoteBookingRequest,
   quoteMonetizationProduct,
@@ -86,6 +87,11 @@ serve(async (req) => {
     } else if (kind === "product") {
       const slug = body?.slug ? String(body.slug) : null;
       if (!slug) return jsonError(400, "missing_fields", "Missing product slug.");
+      // Add-ons / boosts attached to a listing require a purchasable listing.
+      if (body?.listing_id) {
+        const blocked = await assertListingPurchasable(admin, String(body.listing_id));
+        if (blocked) return blocked;
+      }
       const { data: product } = await admin
         .from("monetization_products")
         .select("*")
@@ -209,6 +215,13 @@ serve(async (req) => {
       };
     } else {
       return jsonError(400, "invalid_kind", "Unsupported checkout type.");
+    }
+
+    // Canonical availability re-check immediately before any provider call.
+    // Never rely on the UI having hidden the button.
+    if (quote.listingId) {
+      const blocked = await assertListingPurchasable(admin, quote.listingId);
+      if (blocked) return blocked;
     }
 
     if (quote.grossCents <= 0) {
