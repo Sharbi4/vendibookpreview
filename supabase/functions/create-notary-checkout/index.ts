@@ -1,139 +1,56 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
-import { jsonError, unknownErrorResponse } from "../_shared/jsonError.ts";
+import { corsHeaders, jsonError, jsonResponse, unknownErrorResponse } from "../_shared/jsonError.ts";
 
-// Keep the extended CORS header list this function historically accepts.
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
-};
+/**
+ * Proof Notary checkout.
+ *
+ * Returns a Vendibook-hosted PayPal checkout URL. The $45 fee, ownership and
+ * eligibility are re-validated server-side in `paypal-create-order`.
+ */
 
-const PROOF_NOTARY_PRICE_ID = "price_1SrLkXA6Qt4pF0fMXZNXFmRC";
-const PROOF_NOTARY_FEE = 45;
-
-const logStep = (step: string, details?: Record<string, unknown>) => {
-  const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
-  console.log(`[CREATE-NOTARY-CHECKOUT] ${step}${detailsStr}`);
-};
+const PROOF_NOTARY_FEE_CENTS = 4500;
 
 serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
-  }
+  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    logStep("Function started");
-
-    const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
-    if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
-
-    // Use service role key to bypass RLS for reading listing data
-    const supabaseClient = createClient(
+    const admin = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
-      { auth: { persistSession: false } }
+      { auth: { persistSession: false } },
     );
 
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) return jsonError(401, "unauthenticated", "You must be signed in.");
+    const { data: userData } = await admin.auth.getUser(authHeader.replace("Bearer ", ""));
+    const user = userData?.user;
+    if (!user) return jsonError(401, "unauthenticated", "Your session expired. Please sign in again.");
 
-    const token = authHeader.replace("Bearer ", "");
-    const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
-    if (userError) return jsonError(401, "unauthenticated", `Authentication error: ${userError.message}`);
+    const body = await req.json().catch(() => ({}));
+    const listingId = body?.listing_id ? String(body.listing_id) : "";
+    if (!listingId) return jsonError(400, "missing_fields", "Missing listing_id");
 
-    const user = userData.user;
-    if (!user?.email) return jsonError(401, "unauthenticated", "User not authenticated or email not available");
-    logStep("User authenticated", { userId: user.id, email: user.email });
-
-    const { listing_id } = await req.json();
-    if (!listing_id) return jsonError(400, "missing_fields", "Missing listing_id");
-    logStep("Request parsed", { listing_id });
-
-    // Verify the listing exists and belongs to this user
-    const { data: listing, error: listingError } = await supabaseClient
+    const { data: listing } = await admin
       .from("listings")
-      .select("id, title, host_id, proof_notary_enabled, status")
-      .eq("id", listing_id)
-      .single();
-
-    logStep("Listing query result", { 
-      listing: listing ? { id: listing.id, title: listing.title } : null, 
-      error: listingError?.message || null 
-    });
-
-    if (listingError || !listing) {
-      return jsonError(404, "listing_not_found", `Listing not found: ${listingError?.message || 'No data returned'}`);
-    }
-
-    if (listing.host_id !== user.id) {
-      return jsonError(403, "not_owner", "You do not own this listing.");
-    }
-
+      .select("id, title, host_id, proof_notary_enabled")
+      .eq("id", listingId)
+      .maybeSingle();
+    if (!listing) return jsonError(404, "listing_not_found", "We couldn't find that listing.");
+    if (listing.host_id !== user.id) return jsonError(403, "not_owner", "You do not own this listing.");
     if (!listing.proof_notary_enabled) {
       return jsonError(409, "feature_not_enabled", "Proof Notary is not enabled for this listing.");
     }
 
-    logStep("Listing verified", { listingId: listing.id, title: listing.title });
+    const origin = req.headers.get("origin") ?? "https://vendibook.com";
+    const success = `/listing-published?listing_id=${listingId}&notary_paid=true`;
+    const cancel = `/create-listing/${listingId}?notary_cancelled=true&step=review`;
+    const url = `${origin}/checkout/pay?kind=notary&id=${encodeURIComponent(listingId)}` +
+      `&amount_cents=${PROOF_NOTARY_FEE_CENTS}&label=${encodeURIComponent("Proof Notary")}` +
+      `&success=${encodeURIComponent(success)}&cancel=${encodeURIComponent(cancel)}`;
 
-    const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
-
-    // Check if customer exists
-    const customers = await stripe.customers.list({ email: user.email, limit: 1 });
-    let customerId: string | undefined;
-    if (customers.data.length > 0) {
-      customerId = customers.data[0].id;
-      logStep("Found existing Stripe customer", { customerId });
-    }
-
-    const origin = req.headers.get("origin") || req.headers.get("referer")?.replace(/\/$/, '').split('/').slice(0, 3).join('/') || "https://vendibook.com";
-    logStep("Origin determined", { origin });
-
-    // Hourly idempotency bucket — matches create-featured-checkout /
-    // create-monetization-checkout convention. Prevents double-charging when
-    // the user retries within the same hour (e.g. popup blocked -> retry).
-    const hourBucket = Math.floor(Date.now() / (60 * 60 * 1000));
-    const idempotencyKey = `notary-${user.id}-${listing_id}-${hourBucket}`;
-
-    // Create checkout session for the notary fee
-    const session = await stripe.checkout.sessions.create(
-      {
-        customer: customerId,
-        customer_email: customerId ? undefined : user.email,
-        line_items: [
-          {
-            price: PROOF_NOTARY_PRICE_ID,
-            quantity: 1,
-          },
-        ],
-        mode: "payment",
-        success_url: `${origin}/listing-published?listing_id=${listing_id}&notary_paid=true`,
-        cancel_url: `${origin}/create-listing/${listing_id}?notary_cancelled=true&step=review`,
-        metadata: {
-          listing_id: listing_id,
-          user_id: user.id,
-          type: "proof_notary",
-        },
-      },
-      { idempotencyKey },
-    );
-
-
-    logStep("Checkout session created", { sessionId: session.id, url: session.url });
-
-    return new Response(
-      JSON.stringify({ 
-        url: session.url,
-        session_id: session.id,
-      }),
-      {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 200,
-      }
-    );
+    return jsonResponse(200, { url, provider: "paypal" });
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    logStep("ERROR", { message: errorMessage });
     return unknownErrorResponse(error);
   }
 });
