@@ -3541,6 +3541,53 @@ export type Database = {
         }
         Relationships: []
       }
+      order_timeline_events: {
+        Row: {
+          actor_role: string | null
+          created_at: string
+          dedupe_key: string | null
+          description: string | null
+          event_code: string
+          id: string
+          metadata: Json
+          payment_record_id: string
+          title: string
+          visibility: string
+        }
+        Insert: {
+          actor_role?: string | null
+          created_at?: string
+          dedupe_key?: string | null
+          description?: string | null
+          event_code: string
+          id?: string
+          metadata?: Json
+          payment_record_id: string
+          title: string
+          visibility?: string
+        }
+        Update: {
+          actor_role?: string | null
+          created_at?: string
+          dedupe_key?: string | null
+          description?: string | null
+          event_code?: string
+          id?: string
+          metadata?: Json
+          payment_record_id?: string
+          title?: string
+          visibility?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_timeline_events_payment_record_id_fkey"
+            columns: ["payment_record_id"]
+            isOneToOne: false
+            referencedRelation: "payment_records"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       partner_leads: {
         Row: {
           admin_notes: string | null
@@ -3622,6 +3669,71 @@ export type Database = {
             columns: ["partner_id"]
             isOneToOne: false
             referencedRelation: "service_partners"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payment_attempts: {
+        Row: {
+          attempt_number: number
+          buyer_id: string | null
+          completed_at: string | null
+          created_at: string
+          failure_category: string | null
+          failure_code: string | null
+          failure_message_internal: string | null
+          failure_message_safe: string | null
+          id: string
+          idempotency_key: string | null
+          payment_record_id: string | null
+          provider: Database["public"]["Enums"]["payment_provider"]
+          provider_capture_id: string | null
+          provider_order_id: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          attempt_number?: number
+          buyer_id?: string | null
+          completed_at?: string | null
+          created_at?: string
+          failure_category?: string | null
+          failure_code?: string | null
+          failure_message_internal?: string | null
+          failure_message_safe?: string | null
+          id?: string
+          idempotency_key?: string | null
+          payment_record_id?: string | null
+          provider?: Database["public"]["Enums"]["payment_provider"]
+          provider_capture_id?: string | null
+          provider_order_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          attempt_number?: number
+          buyer_id?: string | null
+          completed_at?: string | null
+          created_at?: string
+          failure_category?: string | null
+          failure_code?: string | null
+          failure_message_internal?: string | null
+          failure_message_safe?: string | null
+          id?: string
+          idempotency_key?: string | null
+          payment_record_id?: string | null
+          provider?: Database["public"]["Enums"]["payment_provider"]
+          provider_capture_id?: string | null
+          provider_order_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_attempts_payment_record_id_fkey"
+            columns: ["payment_record_id"]
+            isOneToOne: false
+            referencedRelation: "payment_records"
             referencedColumns: ["id"]
           },
         ]
@@ -3729,6 +3841,62 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "payment_ledger_entries_payment_record_id_fkey"
+            columns: ["payment_record_id"]
+            isOneToOne: false
+            referencedRelation: "payment_records"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payment_receipts: {
+        Row: {
+          attempt_count: number
+          created_at: string
+          failure_reason: string | null
+          id: string
+          last_retry_at: string | null
+          payment_record_id: string
+          provider_message_id: string | null
+          recipient_email: string
+          sent_at: string | null
+          status: string
+          template_name: string
+          template_version: string
+          updated_at: string
+        }
+        Insert: {
+          attempt_count?: number
+          created_at?: string
+          failure_reason?: string | null
+          id?: string
+          last_retry_at?: string | null
+          payment_record_id: string
+          provider_message_id?: string | null
+          recipient_email: string
+          sent_at?: string | null
+          status?: string
+          template_name?: string
+          template_version?: string
+          updated_at?: string
+        }
+        Update: {
+          attempt_count?: number
+          created_at?: string
+          failure_reason?: string | null
+          id?: string
+          last_retry_at?: string | null
+          payment_record_id?: string
+          provider_message_id?: string | null
+          recipient_email?: string
+          sent_at?: string | null
+          status?: string
+          template_name?: string
+          template_version?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_receipts_payment_record_id_fkey"
             columns: ["payment_record_id"]
             isOneToOne: false
             referencedRelation: "payment_records"
