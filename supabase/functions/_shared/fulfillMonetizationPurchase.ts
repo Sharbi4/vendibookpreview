@@ -125,7 +125,6 @@ export async function fulfillMonetizationPurchase(
         title: "Upgrade purchased",
         message: `${product?.name ?? "Your upgrade"} is now active on your account.`,
         link: purchase.listing_id ? `/listing/${purchase.listing_id}` : "/dashboard",
-        dedupe_key: `monetization-fulfilled:${purchase.id}`,
       })
       .then(
         () => {},
