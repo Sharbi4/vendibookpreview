@@ -12,6 +12,7 @@ export interface TemplateEntry {
 import { template as welcome } from './welcome.tsx'
 import { template as bookingConfirmation } from './booking-confirmation.tsx'
 import { template as paymentReceipt } from './payment-receipt.tsx'
+import { template as orderReceipt } from './order-receipt.tsx'
 import { template as bookingRequestHost } from './booking-request-host.tsx'
 import { template as bookingApprovedGuest } from './booking-approved-guest.tsx'
 import { template as bookingDeclinedGuest } from './booking-declined-guest.tsx'
@@ -71,6 +72,7 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'welcome': welcome,
   'booking-confirmation': bookingConfirmation,
   'payment-receipt': paymentReceipt,
+  'order-receipt': orderReceipt,
   'booking-request-host': bookingRequestHost,
   'booking-approved-guest': bookingApprovedGuest,
   'booking-declined-guest': bookingDeclinedGuest,
