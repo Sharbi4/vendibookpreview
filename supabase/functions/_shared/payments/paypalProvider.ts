@@ -100,8 +100,8 @@ export class PayPalProvider implements PaymentProvider {
   }
 
   isConfigured(): boolean {
-    const status = paypalConfigStatus() as Record<string, unknown>;
-    return Boolean(status.configured ?? (status.hasClientId && status.hasSecret));
+    const status = paypalConfigStatus();
+    return status.client_id_configured && status.client_secret_configured;
   }
 
   // ------------------------------------------------------------- orders
