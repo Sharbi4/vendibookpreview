@@ -5,6 +5,8 @@ project_id = "nbrehbwfsmedbelzntqs"
     verify_jwt = false
   [functions.paypal-webhook]
     verify_jwt = false
+  [functions.paypal-subscription-create]
+    verify_jwt = false
   [functions.ai-equipment-guide]
     verify_jwt = false
   [functions.vapi-chat]
