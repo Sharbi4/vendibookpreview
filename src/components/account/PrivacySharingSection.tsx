@@ -9,7 +9,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useQueryClient } from '@tanstack/react-query';
 
 export interface PrivacyFlags {
-  show_full_name: boolean;
   show_public_location: boolean;
   show_verified_badge: boolean;
   show_member_since: boolean;
@@ -17,7 +16,6 @@ export interface PrivacyFlags {
 }
 
 const DEFAULTS: PrivacyFlags = {
-  show_full_name: false,
   show_public_location: true,
   show_verified_badge: true,
   show_member_since: true,
@@ -29,12 +27,6 @@ const ROWS: Array<{
   label: string;
   description: string;
 }> = [
-  {
-    key: 'show_full_name',
-    label: 'Show my full name',
-    description:
-      'Off shows first name + last initial (e.g. "Jane D.") to buyers.',
-  },
   {
     key: 'show_public_location',
     label: 'Show city and state',
@@ -72,7 +64,6 @@ const PrivacySharingSection = ({ userId, username }: Props) => {
     const p = profile as unknown as Partial<PrivacyFlags> | null;
     if (!p) return;
     setFlags({
-      show_full_name: p.show_full_name ?? DEFAULTS.show_full_name,
       show_public_location:
         p.show_public_location ?? DEFAULTS.show_public_location,
       show_verified_badge:
