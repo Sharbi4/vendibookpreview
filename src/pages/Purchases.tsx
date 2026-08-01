@@ -4,6 +4,7 @@ import { CreditCard, Package, Zap, Wrench, Receipt, ArrowRight, CheckCircle2, Ex
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { useSubscriptionManagement } from '@/hooks/useSubscriptionManagement';
 import { useEntitlements, type Entitlement } from '@/hooks/useEntitlements';
 import { PurchaseHistoryCard } from '@/components/monetization/PurchaseHistoryCard';
 import PackagesIntro from '@/components/monetization/PackagesIntro';
@@ -43,7 +44,6 @@ function surfaceFor(e: Entitlement): { label: string; to: string } | null {
 
 export default function Purchases() {
   const { all, loading, hasActiveSubscription } = useEntitlements();
-  const [openingPortal, setOpeningPortal] = useState(false);
 
   const subscriptions = all.filter((e) => e.kind === 'subscription');
   const promotions = all.filter((e) => e.kind === 'promotion');
