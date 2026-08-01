@@ -114,53 +114,55 @@ export default function MembershipSummaryCard() {
             <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
           ) : hasSubscription ? (
             <>
-              {scheduledCancel ? (
-                <Button
-                  size="sm"
-                  onClick={() => manageSchedule('reactivate')}
-                  disabled={scheduling !== null}
-                >
-                  {scheduling === 'reactivate' ? (
+              {canReactivate ? (
+                <Button size="sm" onClick={reactivate} disabled={busy !== null}>
+                  {busy === 'reactivate' ? (
                     <><Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />Resuming…</>
                   ) : (
                     <><RotateCcw className="h-3.5 w-3.5 mr-1.5" />Resume subscription</>
                   )}
                 </Button>
-              ) : (
+              ) : !scheduledCancel ? (
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
-                    <Button size="sm" variant="outline" disabled={scheduling !== null}>
+                    <Button size="sm" variant="outline" disabled={busy !== null}>
                       <XCircle className="h-3.5 w-3.5 mr-1.5" />
                       Cancel subscription
                     </Button>
                   </AlertDialogTrigger>
                   <AlertDialogContent>
                     <AlertDialogHeader>
-                      <AlertDialogTitle>Schedule cancellation?</AlertDialogTitle>
+                      <AlertDialogTitle>Cancel your membership?</AlertDialogTitle>
                       <AlertDialogDescription>
-                        Your {entitlements.planLabel} plan will stay active until{' '}
+                        Your {entitlements.planLabel} plan stays active until{' '}
                         <strong>{fmtDate(sub?.current_period_end)}</strong>. After that
-                        your account returns to the free tier. You can resume anytime
-                        before then.
+                        your account returns to the free tier.
+                        {provider === 'paypal'
+                          ? ' Future PayPal billing stops immediately — you can resubscribe anytime.'
+                          : ' You can resume anytime before then.'}
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                       <AlertDialogCancel>Keep plan</AlertDialogCancel>
-                      <AlertDialogAction onClick={() => manageSchedule('cancel')}>
-                        Schedule cancellation
+                      <AlertDialogAction onClick={cancel}>
+                        {provider === 'paypal' ? 'Cancel membership' : 'Schedule cancellation'}
                       </AlertDialogAction>
                     </AlertDialogFooter>
                   </AlertDialogContent>
                 </AlertDialog>
-              )}
-              <Button size="sm" variant="ghost" onClick={openPortal} disabled={openingPortal}>
-                {openingPortal ? (
+              ) : null}
+              <Button size="sm" variant="ghost" onClick={openBilling} disabled={busy === 'portal'}>
+                {busy === 'portal' ? (
                   <><Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />Opening…</>
                 ) : (
-                  <><ExternalLink className="h-3.5 w-3.5 mr-1.5" />Billing & invoices</>
+                  <>
+                    <ExternalLink className="h-3.5 w-3.5 mr-1.5" />
+                    {provider === 'paypal' ? 'Manage in PayPal' : 'Billing & invoices'}
+                  </>
                 )}
               </Button>
             </>
+
           ) : (
             <Button asChild size="sm">
               <Link to="/pricing">Choose a plan</Link>
