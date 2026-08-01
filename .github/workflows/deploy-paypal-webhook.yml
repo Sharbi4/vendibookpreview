@@ -7,6 +7,7 @@ on:
     paths:
       - "supabase/functions/paypal-webhook/**"
       - "supabase/functions/paypal-subscription-create/**"
+      - "supabase/functions/check-stripe-connect/**"
       - "supabase/functions/_shared/**"
       - "supabase/config.toml"
       - ".github/workflows/deploy-paypal-webhook.yml"
@@ -63,9 +64,6 @@ jobs:
             --project-ref "$SUPABASE_PROJECT_ID" \
             PAYPAL_WEBHOOK_ID="$PAYPAL_WEBHOOK_ID"
 
-          # Synchronize PayPal API credentials when GitHub contains them.
-          # Otherwise preserve existing Supabase values and let the live health
-          # probe below determine whether the runtime is configured.
           if [[ -n "${PAYPAL_CLIENT_ID:-}" && -n "${PAYPAL_CLIENT_SECRET:-}" ]]; then
             paypal_env="${PAYPAL_ENVIRONMENT:-live}"
             supabase secrets set \
@@ -92,6 +90,13 @@ jobs:
           supabase functions deploy paypal-subscription-create \
             --project-ref "$SUPABASE_PROJECT_ID"
 
+      - name: Deploy legacy Stripe compatibility Edge Function
+        shell: bash
+        run: |
+          set -euo pipefail
+          supabase functions deploy check-stripe-connect \
+            --project-ref "$SUPABASE_PROJECT_ID"
+
       - name: Verify public webhook endpoint is reachable
         shell: bash
         run: |
@@ -115,9 +120,6 @@ jobs:
         run: |
           set -euo pipefail
 
-          # The Supabase anon key is intentionally public and is already used by
-          # the browser. Read it from the checked-in frontend environment file
-          # solely to pass the gateway for the safe GET health probe.
           anon_key=$(sed -n 's/^VITE_SUPABASE_PUBLISHABLE_KEY="\(.*\)"$/\1/p' .env)
           if [[ -z "$anon_key" ]]; then
             echo "Could not read VITE_SUPABASE_PUBLISHABLE_KEY from .env" >&2
@@ -147,7 +149,6 @@ jobs:
           fi
           if [[ "$configured" != "true" ]]; then
             echo "The function deployed, but PAYPAL_CLIENT_ID and/or PAYPAL_CLIENT_SECRET is missing from Supabase." >&2
-            echo "Add both as GitHub Actions secrets so this workflow can synchronize them, or set them directly in Supabase." >&2
             exit 1
           fi
 
@@ -169,9 +170,34 @@ jobs:
             exit 1
           fi
 
+      - name: Verify Stripe compatibility endpoint is non-fatal
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          anon_key=$(sed -n 's/^VITE_SUPABASE_PUBLISHABLE_KEY="\(.*\)"$/\1/p' .env)
+          endpoint="https://${SUPABASE_PROJECT_ID}.supabase.co/functions/v1/check-stripe-connect"
+          status=$(curl --silent --show-error \
+            --output /tmp/stripe-compatibility.json \
+            --write-out "%{http_code}" \
+            --request POST "$endpoint" \
+            --header "apikey: $anon_key" \
+            --header "Authorization: Bearer $anon_key" \
+            --header "Content-Type: application/json" \
+            --data '{}')
+
+          cat /tmp/stripe-compatibility.json
+          if [[ "$status" != "200" ]]; then
+            echo "Expected HTTP 200 from the disabled Stripe compatibility endpoint; received $status." >&2
+            exit 1
+          fi
+          if [[ "$(jq -r '.legacy_provider_disabled // false' /tmp/stripe-compatibility.json)" != "true" ]]; then
+            echo "Stripe compatibility endpoint did not report the legacy provider as disabled." >&2
+            exit 1
+          fi
+
       - name: Deployment summary
         shell: bash
         run: |
-          echo "Corrected PayPal webhook and subscription functions are live on ${SUPABASE_PROJECT_ID}."
-          echo "Verified subscription build: ${EXPECTED_SUBSCRIPTION_VERSION}"
-          echo "Verified PayPal API credentials are available to the Edge Function."
+          echo "PayPal webhook and subscription functions are live on ${SUPABASE_PROJECT_ID}."
+          echo "Legacy Stripe status checks now return a safe disabled response instead of HTTP 500."
