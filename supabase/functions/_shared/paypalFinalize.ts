@@ -170,11 +170,46 @@ export async function finalizeCapture(
 
   await propagateToDomainRecord(supabase, current, facts);
 
+  const dollars = (facts.amountCents / 100).toLocaleString("en-US", {
+    style: "currency",
+    currency: facts.currency ?? "USD",
+  });
+  await notifyOrderParties(supabase, current, {
+    type: "payment_completed",
+    buyer: {
+      title: "Payment confirmed",
+      message: `We received your ${dollars} payment. Order ${current.reference} is confirmed.`,
+    },
+    seller: {
+      title: "You have a paid order",
+      message: `Order ${current.reference} has been paid. Review the next steps to keep it moving.`,
+    },
+    dedupeKey: `paid:${facts.captureId}`,
+  });
+
   // Exactly-once buyer receipt, triggered only after a verified capture.
   try {
-    await deliverOrderReceipt(supabase, current.id);
+    const receipt = await deliverOrderReceipt(supabase, current.id);
+    if (receipt && (receipt as any).sent) {
+      await notifyUser(supabase, {
+        userId: current.buyer_id,
+        type: "receipt_sent",
+        title: "Receipt sent",
+        message: `Your receipt for order ${current.reference} is on its way to your inbox.`,
+        link: `/orders/${current.id}`,
+        dedupeKey: `receipt-sent:${facts.captureId}`,
+      });
+    }
   } catch (err) {
     safeLog("receipt_dispatch_failed", { reference: current.reference, message: (err as Error).message });
+    await notifyUser(supabase, {
+      userId: current.buyer_id,
+      type: "receipt_failed",
+      title: "We couldn't email your receipt",
+      message: `Your payment for order ${current.reference} went through, but the emailed receipt failed. You can view and download it from your order page.`,
+      link: `/orders/${current.id}`,
+      dedupeKey: `receipt-failed:${facts.captureId}`,
+    });
   }
 
   return current;
