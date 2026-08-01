@@ -52,6 +52,31 @@ function deriveInterval(product: MonetizationProduct, hint?: CheckoutOpts['inter
   return 'month';
 }
 
+/** Provider/internal errors are logged, never rendered verbatim. */
+const SAFE_CODES = new Set([
+  'already_entitled',
+  'entitlement_required',
+  'missing_subscription_consent',
+  'invalid_subscription_consent',
+  'product_not_found',
+  'provider_retired',
+]);
+
+export function toSafeCheckoutMessage(raw?: string | null, code?: string | null): string {
+  if (code && SAFE_CODES.has(code) && raw) return raw;
+  if (!raw) return 'We couldn\u2019t start that checkout. Please try again.';
+  const lower = raw.toLowerCase();
+  const leaky =
+    lower.includes('idempot') ||
+    lower.includes('stripe') ||
+    lower.includes('paypal') ||
+    lower.includes('api key') ||
+    lower.includes('request id') ||
+    lower.includes('http') ||
+    raw.length > 180;
+  return leaky ? 'We couldn\u2019t start that checkout. Please try again.' : raw;
+}
+
 function genAttemptId(): string {
   try {
     if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) return crypto.randomUUID();
@@ -89,9 +114,24 @@ export function useSubscriptionConsent(): UseSubscriptionConsentResult {
         window.location.href = url;
       } catch (err) {
         const parsed = await parseEdgeError(err);
-        const msg = parsed?.message || (err instanceof Error ? err.message : 'Could not start checkout');
-        console.error('[subscription-checkout] failed', { slug: product.slug, err, parsed });
-        toast.error(msg);
+        const correlationId =
+          (parsed?.raw?.correlation_id as string | undefined) ?? null;
+        // Never surface raw provider text (e.g. Stripe idempotency internals).
+        const safeMessage = toSafeCheckoutMessage(parsed?.message, parsed?.code);
+        console.error('[subscription-checkout] failed', {
+          slug: product.slug,
+          correlation_id: correlationId,
+          provider_error: parsed?.message,
+          code: parsed?.code,
+          err,
+        });
+        toast.error(safeMessage, {
+          description: correlationId ? `Reference ${correlationId}` : undefined,
+          action: {
+            label: 'Try again',
+            onClick: () => { void launchCheckout(product, opts, consentId); },
+          },
+        });
         setPendingSlug(null);
       }
     },
