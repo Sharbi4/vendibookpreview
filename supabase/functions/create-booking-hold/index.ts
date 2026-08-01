@@ -92,6 +92,22 @@ serve(async (req) => {
       throw new Error("Missing required fields: booking_id, listing_id, or amount");
     }
 
+    // === Listing availability gate (paused / removed / archived / suspended) ===
+    {
+      const { data: holdState } = await supabaseClient.rpc('listing_purchase_state', {
+        _listing_id: listing_id,
+      });
+      if (!(holdState as { purchasable?: boolean } | null)?.purchasable) {
+        return new Response(
+          JSON.stringify({
+            error: 'This listing is no longer available and no payment was created.',
+            code: 'listing_unavailable',
+          }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 409 },
+        );
+      }
+    }
+
     // === Availability guard: prevent double-booking before creating Stripe session ===
     const { data: bookingRow, error: bookingRowErr } = await supabaseClient
       .from('booking_requests')
