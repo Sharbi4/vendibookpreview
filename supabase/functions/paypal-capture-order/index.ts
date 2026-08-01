@@ -70,8 +70,12 @@ serve(async (req) => {
         const alreadyCaptured = providerOrder?.status === "COMPLETED";
 
         await admin.from("payment_records").update({
-          payment_status: alreadyCaptured ? "refund_required" : "cancelled",
-          internal_status: alreadyCaptured ? "refund_review" : "cancelled_listing_unavailable",
+          // `paypal_payment_status` stays factual; fulfillment is blocked via
+          // `internal_status`, which the payout/fulfilment paths respect.
+          payment_status: alreadyCaptured ? "completed" : "cancelled",
+          internal_status: alreadyCaptured
+            ? "refund_review_listing_unavailable"
+            : "cancelled_listing_unavailable",
           last_error: {
             reason: "listing_unavailable",
             listing_reason: state.reason,
