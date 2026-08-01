@@ -102,7 +102,7 @@ serve(async (req) => {
       .select("id, price_daily, price_weekly, price_sale, view_count, instant_book, image_urls")
       .eq("category", listing.category)
       .eq("city", listing.city || "")
-      .eq("status", "published")
+      .eq("status", "published").not("published_at", "is", null).is("deleted_at", null).eq("moderation_status", "clear")
       .neq("id", listing_id)
       .limit(20);
 

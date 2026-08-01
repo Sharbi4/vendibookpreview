@@ -28,7 +28,7 @@ Deno.serve(async (req) => {
     const { data: listings, error } = await supabase
       .from('listings')
       .select('id, title, category, city, cover_image_url, mode, host_id')
-      .eq('status', 'published')
+      .eq('status', 'published').not('published_at', 'is', null).is('deleted_at', null).eq('moderation_status', 'clear')
       .not('title', 'ilike', 'demo%')
       .order('created_at', { ascending: false })
       .limit(limit)

@@ -92,7 +92,7 @@ const handler = async (req: Request): Promise<Response> => {
     const { data: newListings, error: listingsError } = await supabase
       .from("listings")
       .select("id, title, category, mode, address, latitude, longitude, price_daily, price_sale, cover_image_url, published_at")
-      .eq("status", "published")
+      .eq("status", "published").not("published_at", "is", null).is("deleted_at", null).eq("moderation_status", "clear")
       .gte("published_at", sinceIso);
 
     if (listingsError) throw listingsError;

@@ -132,13 +132,13 @@ Deno.serve(async (req) => {
 
         const city = profile.public_city || profile.city;
         const state = profile.public_state || profile.state;
-        let q = supabase.from("listings").select("id,title,city,state,price_daily,price_sale,cover_image_url,published_at").eq("status", "published").gte("published_at", yIso).lt("published_at", tIso).not("title", "ilike", "demo%").order("published_at", { ascending: false }).limit(5);
+        let q = supabase.from("listings").select("id,title,city,state,price_daily,price_sale,cover_image_url,published_at").eq("status", "published").not("published_at", "is", null).is("deleted_at", null).eq("moderation_status", "clear").gte("published_at", yIso).lt("published_at", tIso).not("title", "ilike", "demo%").order("published_at", { ascending: false }).limit(5);
         if (city) q = q.eq("city", city);
         const { data: nearby } = await q;
         let listings = nearby || [];
         // Fallback: state-only if city yielded nothing
         if (listings.length === 0 && state) {
-          const { data: stateListings } = await supabase.from("listings").select("id,title,city,state,price_daily,price_sale,cover_image_url,published_at").eq("status", "published").eq("state", state).gte("published_at", yIso).lt("published_at", tIso).not("title", "ilike", "demo%").order("published_at", { ascending: false }).limit(5);
+          const { data: stateListings } = await supabase.from("listings").select("id,title,city,state,price_daily,price_sale,cover_image_url,published_at").eq("status", "published").not("published_at", "is", null).is("deleted_at", null).eq("moderation_status", "clear").eq("state", state).gte("published_at", yIso).lt("published_at", tIso).not("title", "ilike", "demo%").order("published_at", { ascending: false }).limit(5);
           listings = stateListings || [];
         }
         if (listings.length === 0) { summary.skipped++; continue; }
@@ -159,7 +159,7 @@ Deno.serve(async (req) => {
 
     // ===== SELLERS (open offers + market tip) — sellers = hosts with sale listings =====
     if (!onlyRole || onlyRole === "seller") {
-      const { data: sellerListings } = await supabase.from("listings").select("host_id").eq("mode", "sale").eq("status", "published").not("host_id", "is", null).limit(2000);
+      const { data: sellerListings } = await supabase.from("listings").select("host_id").eq("mode", "sale").eq("status", "published").not("published_at", "is", null).is("deleted_at", null).eq("moderation_status", "clear").not("host_id", "is", null).limit(2000);
       const sellerIds = Array.from(new Set((sellerListings || []).map((l: any) => l.host_id))).slice(0, limit);
       for (const sid of sellerIds) {
         const { data: profile } = await supabase.from("profiles").select("id,email,first_name,full_name,display_name").eq("id", sid).maybeSingle();

@@ -92,7 +92,7 @@ const handler = async (req: Request): Promise<Response> => {
         .from('listings')
         .select('id', { count: 'exact' })
         .eq('host_id', data.user_id)
-        .eq('status', 'published'),
+        .eq('status', 'published').not('published_at', 'is', null).is('deleted_at', null).eq('moderation_status', 'clear'),
     ]);
 
     const totalBookings = bookingsResult.count || 0;

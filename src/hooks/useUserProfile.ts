@@ -117,7 +117,7 @@ export const useUserStats = (userId: string | undefined) => {
         .from('listings')
         .select('*', { count: 'exact', head: true })
         .eq('host_id', userId)
-        .eq('status', 'published');
+        .eq('status', 'published').not('published_at', 'is', null).is('deleted_at', null).eq('moderation_status', 'clear');
 
       // Get reviews received (as host)
       const { data: reviewsReceived } = await supabase
@@ -156,7 +156,7 @@ export const useUserListings = (userId: string | undefined) => {
         .from('listings')
         .select('*')
         .eq('host_id', userId)
-        .eq('status', 'published')
+        .eq('status', 'published').not('published_at', 'is', null).is('deleted_at', null).eq('moderation_status', 'clear')
         .order('created_at', { ascending: false });
 
       if (error) throw error;

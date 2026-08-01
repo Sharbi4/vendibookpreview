@@ -80,7 +80,7 @@ serve(async (req) => {
       .from("listings")
       .select("price_sale, view_count, city")
       .eq("category", listing?.category || "")
-      .eq("status", "published")
+      .eq("status", "published").not("published_at", "is", null).is("deleted_at", null).eq("moderation_status", "clear")
       .neq("id", offer.listing_id)
       .not("price_sale", "is", null)
       .limit(20);

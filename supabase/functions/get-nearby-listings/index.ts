@@ -56,7 +56,7 @@ serve(async (req) => {
     const { data: listings, error } = await supabaseClient
       .from("listings")
       .select("*")
-      .eq("status", "published")
+      .eq("status", "published").not("published_at", "is", null).is("deleted_at", null).eq("moderation_status", "clear")
       .not("latitude", "is", null)
       .not("longitude", "is", null);
 

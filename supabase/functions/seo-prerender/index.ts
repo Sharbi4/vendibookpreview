@@ -698,7 +698,7 @@ serve(async (req) => {
           .from("listings")
           .select("*")
           .eq("id", listingId)
-          .eq("status", "published")
+          .eq("status", "published").not("published_at", "is", null).is("deleted_at", null).eq("moderation_status", "clear")
           .single(),
         supabase
           .rpc("get_listing_reviews_safe", { p_listing_id: listingId }),

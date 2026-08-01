@@ -18,7 +18,7 @@ export const CompetitorPricingCard = () => {
         .from('listings')
         .select('id, title, category, mode, city, price_daily, price_weekly, price_sale')
         .eq('host_id', user.id)
-        .eq('status', 'published');
+        .eq('status', 'published').not('published_at', 'is', null).is('deleted_at', null).eq('moderation_status', 'clear');
 
       if (!mine || mine.length === 0) return [];
 
@@ -44,7 +44,7 @@ export const CompetitorPricingCard = () => {
           .eq('category', m.category)
           .eq('city', m.city || '')
           .eq('mode', m.mode)
-          .eq('status', 'published')
+          .eq('status', 'published').not('published_at', 'is', null).is('deleted_at', null).eq('moderation_status', 'clear')
           .neq('id', m.id)
           .limit(50);
 

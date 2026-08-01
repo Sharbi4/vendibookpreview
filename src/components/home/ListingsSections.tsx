@@ -58,7 +58,7 @@ const ListingsSections = () => {
         supabase
           .from('listings')
           .select('*')
-          .eq('status', 'published')
+          .eq('status', 'published').not('published_at', 'is', null).is('deleted_at', null).eq('moderation_status', 'clear')
           .eq('mode', 'rent')
           .in('category', RENT_CATEGORIES)
       )
@@ -77,7 +77,7 @@ const ListingsSections = () => {
         supabase
           .from('listings')
           .select('*')
-          .eq('status', 'published')
+          .eq('status', 'published').not('published_at', 'is', null).is('deleted_at', null).eq('moderation_status', 'clear')
           .eq('mode', 'sale')
           .in('category', BASE_CATEGORIES)
       )
@@ -96,7 +96,7 @@ const ListingsSections = () => {
         supabase
           .from('listings')
           .select('*')
-          .eq('status', 'published')
+          .eq('status', 'published').not('published_at', 'is', null).is('deleted_at', null).eq('moderation_status', 'clear')
           .eq('category', 'food_truck')
       )
         .order('published_at', { ascending: false })
@@ -114,7 +114,7 @@ const ListingsSections = () => {
         supabase
           .from('listings')
           .select('*')
-          .eq('status', 'published')
+          .eq('status', 'published').not('published_at', 'is', null).is('deleted_at', null).eq('moderation_status', 'clear')
           .eq('category', 'food_trailer')
       )
         .order('published_at', { ascending: false })

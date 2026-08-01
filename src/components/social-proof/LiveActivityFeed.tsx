@@ -46,7 +46,7 @@ export const LiveActivityFeed = () => {
         supabase.from('booking_requests').select('id, listing_id, created_at, listings(title, city)').gte('created_at', since24h).limit(15),
         supabase.from('listing_views').select('listing_id, viewed_at, listings(title, city)').gte('viewed_at', since24h).limit(20),
         supabase.from('favorites').select('listing_id, created_at, listings(title, city)').gte('created_at', since24h).limit(10),
-        supabase.from('listings').select('title, city').eq('status', 'published').not('city', 'is', null).limit(40)]);
+        supabase.from('listings').select('title, city').eq('status', 'published').not('published_at', 'is', null).is('deleted_at', null).eq('moderation_status', 'clear').not('city', 'is', null).limit(40)]);
       if (cancelled) return;
 
       const real: Event[] = [];

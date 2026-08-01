@@ -31,7 +31,7 @@ export default defineTool({
     let q = supabase
       .from("listings")
       .select("id,title,city,state,price,transaction_type,category,published_at")
-      .eq("status", "published")
+      .eq("status", "published").not("published_at", "is", null).is("deleted_at", null).eq("moderation_status", "clear")
       .order("published_at", { ascending: false })
       .limit(limit ?? 10);
     if (query) q = q.ilike("title", `%${query}%`);

@@ -177,7 +177,7 @@ Deno.serve(async (req) => {
     const { data: listings, error: listingsError } = await supabase
       .from('listings')
       .select('*')
-      .eq('status', 'published')
+      .eq('status', 'published').not('published_at', 'is', null).is('deleted_at', null).eq('moderation_status', 'clear')
       .not('title', 'ilike', 'Demo %');
 
     if (listingsError) throw listingsError;

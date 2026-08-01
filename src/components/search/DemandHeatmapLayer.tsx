@@ -46,7 +46,7 @@ export const DemandHeatmapLayer = ({ enabled, onToggle, mapInstance }: DemandHea
         supabase
           .from('listings')
           .select('city, latitude, longitude')
-          .eq('status', 'published')
+          .eq('status', 'published').not('published_at', 'is', null).is('deleted_at', null).eq('moderation_status', 'clear')
           .not('city', 'is', null)
           .not('latitude', 'is', null)
           .limit(5000),

@@ -23,7 +23,7 @@ export default defineTool({
       .from("listings")
       .select("*")
       .eq("id", listing_id)
-      .eq("status", "published")
+      .eq("status", "published").not("published_at", "is", null).is("deleted_at", null).eq("moderation_status", "clear")
       .maybeSingle();
     if (error) {
       return { content: [{ type: "text", text: `Lookup failed: ${error.message}` }], isError: true };

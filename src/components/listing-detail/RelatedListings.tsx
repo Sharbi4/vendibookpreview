@@ -34,7 +34,7 @@ const RelatedListings = ({ listingId, category, mode, address, latitude, longitu
       const { data } = await supabase
         .from('listings')
         .select('id, title, cover_image_url, price_daily, price_sale, mode, category, address, latitude, longitude')
-        .eq('status', 'published')
+        .eq('status', 'published').not('published_at', 'is', null).is('deleted_at', null).eq('moderation_status', 'clear')
         .neq('id', listingId)
         .eq('category', category as any)
         .eq('mode', mode as any)
