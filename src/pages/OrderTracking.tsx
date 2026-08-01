@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link, useSearchParams } from 'react-router-dom';
+import OrderPaymentLink from '@/components/orders/OrderPaymentLink';
 import { format } from 'date-fns';
 import { 
   Package, Truck, CheckCircle2, Clock, MapPin, 
@@ -914,6 +915,8 @@ const OrderTracking = () => {
               )}
             </CardContent>
           </Card>
+
+          <OrderPaymentLink saleTransactionId={transaction.id} className="mt-6" />
 
           {(isBuyer || isSeller) && (
             <GetHelpWithOrder

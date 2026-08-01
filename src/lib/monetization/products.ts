@@ -134,6 +134,25 @@ export interface StartCheckoutInput {
 }
 
 export async function startMonetizationCheckout(input: StartCheckoutInput): Promise<{ url: string }> {
+  // One-time products are paid through PayPal on our own hosted checkout page.
+  // Recurring plans still route through the legacy provider session below.
+  const { data: product } = await (supabase as any)
+    .from('monetization_products')
+    .select('billing_type')
+    .eq('slug', input.productSlug)
+    .maybeSingle();
+
+  if (product?.billing_type === 'one_time') {
+    const search = new URLSearchParams();
+    if (input.listingId) search.set('listing_id', input.listingId);
+    if (input.successPath) search.set('success', input.successPath);
+    if (input.cancelPath) search.set('cancel', input.cancelPath);
+    const qs = search.toString();
+    return {
+      url: `${window.location.origin}/checkout/product/${input.productSlug}${qs ? `?${qs}` : ''}`,
+    };
+  }
+
   const { data, error } = await supabase.functions.invoke('create-monetization-checkout', {
     body: {
       product_slug: input.productSlug,

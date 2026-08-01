@@ -3,6 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import { corsHeaders, jsonError, jsonResponse, unknownErrorResponse } from "../_shared/jsonError.ts";
 import { centsFromPayPalAmount, PayPalError, refundPayPalCapture, safeLog } from "../_shared/paypal.ts";
 import { appendLedgerEntry, recalculatePayableAfterRefund } from "../_shared/paypalAccounting.ts";
+import { notifyOrderParties } from "../_shared/notify.ts";
 import { auditPayment, requestIp } from "../_shared/paymentAudit.ts";
 
 /** Administrator-only PayPal refund. Always calls PayPal — never a DB-only status flip. */
@@ -124,6 +125,19 @@ serve(async (req) => {
       refundId: refund?.id ?? null,
       oldValue: { refunded_cents: record.refunded_cents ?? 0, payment_status: record.payment_status },
       newValue: { refunded_cents: totalRefunded, refunded_now_cents: refundedNow, reason: reason ?? null },
+    });
+
+    await notifyOrderParties(admin, record, {
+      type: "refund_initiated",
+      buyer: {
+        title: "Refund on the way",
+        message: `A refund of ${(refundedNow / 100).toLocaleString("en-US", { style: "currency", currency: record.currency ?? "USD" })} was issued for order ${record.reference}. It can take a few business days to appear.`,
+      },
+      seller: {
+        title: "A refund was issued",
+        message: `Order ${record.reference} was refunded. Your payout has been recalculated.`,
+      },
+      dedupeKey: `refund-initiated:${refund?.id ?? idempotencyKey}`,
     });
 
     safeLog("refund_processed", { reference: record.reference, refundedNow });

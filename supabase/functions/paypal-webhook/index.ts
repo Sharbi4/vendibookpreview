@@ -4,6 +4,7 @@ import { corsHeaders, jsonResponse } from "../_shared/jsonError.ts";
 import { centsFromPayPalAmount, safeLog, verifyPayPalWebhook } from "../_shared/paypal.ts";
 import { extractCaptureFacts, finalizeCapture } from "../_shared/paypalFinalize.ts";
 import { appendLedgerEntry, recalculatePayableAfterRefund } from "../_shared/paypalAccounting.ts";
+import { notifyOrderParties, notifyUser } from "../_shared/notify.ts";
 
 /**
  * Verified, idempotent PayPal webhook receiver for both one-time payments
@@ -155,6 +156,18 @@ async function handleEvent(admin: any, event: any) {
       }).eq("id", record.id);
 
       await applyRefundToPayable(admin, record.id, total, reversed);
+      await notifyOrderParties(admin, record, {
+        type: "refund_completed",
+        buyer: {
+          title: reversed ? "Payment reversed" : "Refund completed",
+          message: `${(refundCents / 100).toLocaleString("en-US", { style: "currency", currency: record.currency ?? "USD" })} has been returned for order ${record.reference}.`,
+        },
+        seller: {
+          title: reversed ? "A payment was reversed" : "A refund was issued",
+          message: `Order ${record.reference} was ${reversed ? "reversed" : "refunded"}. Your payout has been adjusted accordingly.`,
+        },
+        dedupeKey: `refund:${resource.id}`,
+      });
       return;
     }
 
@@ -339,6 +352,57 @@ async function mirrorHostSubscription(admin: any, paypalSubId: string, status: s
   } else {
     await admin.from("host_subscriptions").insert(payload);
   }
+
+  await notifySubscriptionState(admin, sub, status);
+}
+
+/** In-app notification for every subscription lifecycle transition. */
+async function notifySubscriptionState(admin: any, sub: any, status: string) {
+  const link = "/account/subscription";
+  const key = `${sub.paypal_subscription_id}:${status}`;
+  const plan = sub.tier ? `${sub.tier} plan` : "your plan";
+
+  const copy: Record<string, { type: string; title: string; message: string }> = {
+    active: {
+      type: sub.last_payment_at ? "subscription_renewed" : "subscription_activated",
+      title: sub.last_payment_at ? "Membership renewed" : "Membership active",
+      message: sub.last_payment_at
+        ? `Your ${plan} renewed successfully. Everything stays unlocked.`
+        : `Your ${plan} is now active. All included features are unlocked.`,
+    },
+    payment_failed: {
+      type: "subscription_payment_failed",
+      title: "Membership payment failed",
+      message:
+        `We couldn't collect the latest payment for your ${plan}. Update your PayPal payment method to avoid losing access.`,
+    },
+    suspended: {
+      type: "subscription_suspended",
+      title: "Membership paused",
+      message: `Your ${plan} is paused, so premium features are unavailable until it resumes.`,
+    },
+    cancelled: {
+      type: "subscription_cancelled",
+      title: "Membership cancelled",
+      message: `Your ${plan} has been cancelled. You can resubscribe at any time.`,
+    },
+    expired: {
+      type: "subscription_cancelled",
+      title: "Membership expired",
+      message: `Your ${plan} has expired and premium features are now locked.`,
+    },
+  };
+
+  const entry = copy[status];
+  if (!entry) return;
+  await notifyUser(admin, {
+    userId: sub.user_id,
+    type: entry.type,
+    title: entry.title,
+    message: entry.message,
+    link,
+    dedupeKey: key,
+  });
 }
 
 async function alertAdmins(admin: any, title: string, message: string) {

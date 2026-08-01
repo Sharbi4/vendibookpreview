@@ -24,6 +24,7 @@ import { formatCurrency } from '@/lib/commissions';
 import { format } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import FailedPaymentAttemptsPanel from '@/components/admin/FailedPaymentAttemptsPanel';
 
 const AdminFinance = () => {
   const navigate = useNavigate();
@@ -384,6 +385,10 @@ const AdminFinance = () => {
             </div>
             <ArrowRight className="h-4 w-4 ml-auto" />
           </Button>
+        </div>
+
+        <div className="mt-8">
+          <FailedPaymentAttemptsPanel />
         </div>
       </main>
       <Footer />
