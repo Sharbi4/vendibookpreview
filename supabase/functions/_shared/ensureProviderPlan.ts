@@ -108,7 +108,7 @@ export async function ensureProviderPlan(opts: {
       price: { amountCents: priceCents, currency },
       trialDays: existing?.trial_days ?? null,
       taxable: product.is_taxable ?? false,
-      idempotencyKey: `catalog-plan:${product.id}:${interval}:${priceCents}`,
+      idempotencyKey: `catalog-plan:${environment}:${product.id}:${interval}:${priceCents}`,
     });
 
     const payload = {
