@@ -11,7 +11,7 @@ import { getPaymentProvider, type ProviderName } from "../_shared/payments/index
 import { auditPayment, requestIp } from "../_shared/paymentAudit.ts";
 import { safeLog } from "../_shared/paypal.ts";
 import { classifyProduct } from "../_shared/productEntitlement.ts";
-import { ensureProviderPlan } from "../_shared/ensureProviderPlan.ts";
+import { ensureProviderPlan, intervalForProduct } from "../_shared/ensureProviderPlan.ts";
 
 /**
  * Starts a recurring membership. The plan (and therefore the price) is always
@@ -63,15 +63,20 @@ serve(async (req) => {
     // Plans are seeded by the admin catalog sync, but a missing plan must not
     // dead-end a paying member: create it on demand from the catalog price
     // (deterministic idempotency key → no duplicate provider plans).
+    // Annual products carry their cadence in the catalog row itself — trust
+    // that over whatever the browser asked for so we never bill an annual
+    // price on a monthly cycle.
+    const resolvedInterval = intervalForProduct(product, interval);
+
     const { plan, error: planError } = await ensureProviderPlan({
       admin,
       provider,
       providerName,
       product,
-      interval: interval as "monthly" | "quarterly" | "annual",
+      interval: resolvedInterval,
     });
     if (!plan?.paypal_plan_id) {
-      safeLog("plan_provision_failed", { slug: productSlug, interval, message: planError });
+      safeLog("plan_provision_failed", { slug: productSlug, interval: resolvedInterval, message: planError });
       return jsonError(
         409,
         "plan_unavailable",
@@ -132,7 +137,7 @@ serve(async (req) => {
     const { data: row, error: insertError } = await admin.from("paypal_subscriptions").insert({
       user_id: user.id,
       tier,
-      billing_interval: interval,
+      billing_interval: resolvedInterval,
       paypal_product_id: product.paypal_product_id,
       paypal_plan_id: plan.paypal_plan_id,
       paypal_subscription_id: subscription.providerSubscriptionId,
@@ -158,7 +163,7 @@ serve(async (req) => {
       reference: subscription.providerSubscriptionId,
       newValue: {
         tier,
-        interval,
+        interval: resolvedInterval,
         plan_id: plan.id,
         amount_cents: plan.price_cents,
         status: subscription.status,
@@ -172,7 +177,7 @@ serve(async (req) => {
       tier,
       amount_cents: plan.price_cents,
       currency: plan.currency,
-      billing_interval: interval,
+      billing_interval: resolvedInterval,
     });
   } catch (err) {
     return unknownErrorResponse(err);
