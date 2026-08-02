@@ -1,32 +1,46 @@
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Loader2, CheckCircle2, AlertTriangle, ExternalLink, Wallet } from 'lucide-react';
-import { useStripeConnect } from '@/hooks/useStripeConnect';
+import { Loader2, Wallet, Clock, ShieldCheck } from 'lucide-react';
+import { useManualPayout, MANUAL_PAYOUT_SETTINGS_PATH } from '@/hooks/useManualPayout';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import EmptyState from '../shared/EmptyState';
+
+/** Human labels for the internal payable states admins work through. */
+const PAYABLE_STATUS_LABEL: Record<string, string> = {
+  awaiting_payment_confirmation: 'Awaiting payment confirmation',
+  pending_release: 'Pending release',
+  eligible_for_review: 'In review',
+  payout_on_hold: 'On hold',
+  payout_approved: 'Approved',
+  payout_processing: 'Processing',
+  payout_completed: 'Paid',
+  payout_failed: 'Failed — support notified',
+  partially_refunded: 'Partially refunded',
+  fully_refunded: 'Refunded',
+  disputed: 'Disputed',
+  reversed: 'Reversed',
+  cancelled: 'Cancelled',
+};
+
+const money = (cents: number | null | undefined) =>
+  `$${(((cents ?? 0) as number) / 100).toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
 
 const PayoutsPanel = () => {
   const { user } = useAuth();
-  const {
-    isOnboardingComplete, isLoading, isConnecting, connectStripe,
-    openStripeDashboard, isOpeningDashboard,
-  } = useStripeConnect();
+  const { payoutEmail, hasPayoutInstructions, isLoading } = useManualPayout();
 
-  const { data: payouts = [], isLoading: payoutsLoading } = useQuery({
-    queryKey: ['host-payout-history', user?.id],
-    enabled: !!user && isOnboardingComplete,
+  const { data: payables = [], isLoading: payablesLoading } = useQuery({
+    queryKey: ['seller-payables', user?.id],
+    enabled: !!user,
     queryFn: async () => {
-      // Best-effort — some deployments don't expose payouts to the client.
       const { data } = await supabase
-        .from('sale_transactions')
-        .select('id, amount, platform_fee, created_at, status')
+        .from('seller_payables')
+        .select('id, status, seller_amount_cents, gross_amount_cents, created_at')
         .eq('seller_id', user!.id)
-        .in('status', ['completed', 'buyer_confirmed'])
         .order('created_at', { ascending: false })
-        .limit(10);
+        .limit(20);
       return data ?? [];
     },
   });
@@ -34,122 +48,78 @@ const PayoutsPanel = () => {
   return (
     <div className="max-w-[840px] mx-auto space-y-6">
       <header>
-        <h1 className="text-2xl font-semibold text-foreground">Payouts</h1>
-        <p className="text-sm text-muted-foreground mt-1">Where your earnings land, and your PayPal Connect status.</p>
+        <h1 className="text-2xl font-semibold text-foreground">Earnings &amp; payouts</h1>
+        <p className="text-sm text-muted-foreground mt-1">
+          Payments are collected securely through PayPal. Seller earnings are reviewed and paid
+          manually by Vendibook according to the transaction timeline.
+        </p>
       </header>
 
-      <button
-        type="button"
-        onClick={() => (isOnboardingComplete ? openStripeDashboard() : connectStripe())}
-        disabled={isLoading || isConnecting || isOpeningDashboard}
-        className="w-full text-left rounded-md border border-border bg-card p-6 hover:bg-muted/30 transition disabled:opacity-70 disabled:cursor-wait"
-      >
+      <div className="rounded-md border border-border bg-card p-6">
         {isLoading ? (
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Loader2 className="h-4 w-4 animate-spin" /> Checking your PayPal account…
-          </div>
-        ) : isOnboardingComplete ? (
-          <div className="flex items-start gap-4">
-            <div className="h-10 w-10 rounded-full bg-emerald-500/10 text-emerald-600 flex items-center justify-center shrink-0">
-              <CheckCircle2 className="h-5 w-5" />
-            </div>
-            <div className="flex-1">
-              <p className="text-sm font-medium text-foreground">PayPal Connect is active</p>
-              <p className="text-xs text-muted-foreground mt-1">
-                Rentals settle in 24h · sales in 25d after buyer confirmation.
-              </p>
-              <span className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-foreground">
-                {isOpeningDashboard ? 'Opening…' : 'Manage in PayPal'} <ExternalLink className="h-3 w-3" />
-              </span>
-            </div>
+            <Loader2 className="h-4 w-4 animate-spin" /> Loading your payout details…
           </div>
         ) : (
           <div className="flex items-start gap-4">
-            <div className="h-10 w-10 rounded-full bg-amber-500/10 text-amber-600 flex items-center justify-center shrink-0">
-              <AlertTriangle className="h-5 w-5" />
+            <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center shrink-0">
+              <Wallet className="h-5 w-5 text-muted-foreground" />
             </div>
             <div className="flex-1">
-              <p className="text-sm font-medium text-foreground">Finish PayPal onboarding to accept card payments</p>
-              <p className="text-xs text-muted-foreground mt-1">You can still list and take cash / Pay in Person bookings without it.</p>
-              <span className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-primary">
-                {isConnecting ? 'Opening PayPal…' : 'Set up payouts'} <ExternalLink className="h-3 w-3" />
-              </span>
+              <p className="text-sm font-medium text-foreground">
+                {hasPayoutInstructions ? 'Manual payout details on file' : 'Add your payout details'}
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                {hasPayoutInstructions
+                  ? `We'll send your reviewed earnings to ${payoutEmail}. Update it any time — this is payout instruction info for Vendibook operations, not a connected payment account.`
+                  : 'Tell us where to send your earnings. You can list, take bookings and get paid by buyers before adding this.'}
+              </p>
+              <Button asChild variant="outline" size="sm" className="mt-3">
+                <Link to={MANUAL_PAYOUT_SETTINGS_PATH}>
+                  {hasPayoutInstructions ? 'Update payout details' : 'Add payout details'}
+                </Link>
+              </Button>
             </div>
           </div>
         )}
-      </button>
+      </div>
 
-      <section className="rounded-md border border-border bg-card overflow-hidden">
-        <header className="px-5 pt-4 pb-2">
-          <h2 className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Recent payouts</h2>
+      <div className="rounded-md border border-border bg-card">
+        <header className="px-6 py-4 border-b border-border flex items-center gap-2">
+          <ShieldCheck className="h-4 w-4 text-muted-foreground" />
+          <h2 className="text-sm font-medium text-foreground">Your earnings</h2>
         </header>
-        {payoutsLoading ? (
-          <div className="flex items-center justify-center py-10">
-            <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+        {payablesLoading ? (
+          <div className="p-6 flex items-center gap-2 text-sm text-muted-foreground">
+            <Loader2 className="h-4 w-4 animate-spin" /> Loading earnings…
           </div>
-        ) : payouts.length === 0 ? (
-          <EmptyState
-            icon={Wallet}
-            title="No payouts yet"
-            description="Once a sale completes, the payout breakdown lands here — gross, fees, and net."
-          />
+        ) : payables.length === 0 ? (
+          <div className="p-6">
+            <EmptyState
+              icon={Clock}
+              title="No earnings yet"
+              description="Once a buyer pays, your proceeds appear here while our team reviews the payout."
+            />
+          </div>
         ) : (
           <ul className="divide-y divide-border">
-            {payouts.map((p: any) => {
-              const gross = (p.amount ?? 0) / 100;
-              const fees = (p.platform_fee ?? 0) / 100;
-              const net = gross - fees;
-              const arrival = new Date(new Date(p.created_at).getTime() + 25 * 24 * 60 * 60 * 1000);
-              return (
-                <li key={p.id}>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <button
-                        type="button"
-                        className="w-full flex items-center justify-between px-5 py-3 hover:bg-muted/40 transition text-left"
-                      >
-                        <div>
-                          <p className="text-sm font-medium text-foreground">
-                            Order {p.id.slice(0, 8).toUpperCase()}
-                          </p>
-                          <p className="text-[11px] text-muted-foreground mt-0.5">
-                            {new Date(p.created_at).toLocaleDateString()}
-                          </p>
-                        </div>
-                        <span className="text-sm font-semibold text-foreground">${net.toLocaleString()}</span>
-                      </button>
-                    </PopoverTrigger>
-                    <PopoverContent align="end" className="w-64">
-                      <p className="text-sm font-semibold text-foreground">Payout breakdown</p>
-                      <ul className="mt-3 text-sm space-y-1.5">
-                        <li className="flex justify-between">
-                          <span className="text-muted-foreground">Gross</span>
-                          <span className="text-foreground">${gross.toLocaleString()}</span>
-                        </li>
-                        <li className="flex justify-between">
-                          <span className="text-muted-foreground">Vendibook fee</span>
-                          <span className="text-foreground">−${fees.toLocaleString()}</span>
-                        </li>
-                        <li className="flex justify-between pt-1.5 border-t border-border">
-                          <span className="text-foreground font-medium">Net to you</span>
-                          <span className="text-foreground font-semibold">${net.toLocaleString()}</span>
-                        </li>
-                      </ul>
-                      <p className="mt-3 text-[11px] text-muted-foreground">
-                        Estimated arrival {arrival.toLocaleDateString()} · PayPal schedule may vary.
-                      </p>
-                    </PopoverContent>
-                  </Popover>
-                </li>
-              );
-            })}
+            {payables.map((p: any) => (
+              <li key={p.id} className="px-6 py-4 flex items-center justify-between gap-4">
+                <div>
+                  <p className="text-sm font-medium text-foreground">
+                    {money(p.seller_amount_cents ?? p.gross_amount_cents)}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {new Date(p.created_at).toLocaleDateString()}
+                  </p>
+                </div>
+                <span className="text-xs text-muted-foreground">
+                  {PAYABLE_STATUS_LABEL[p.status] ?? p.status}
+                </span>
+              </li>
+            ))}
           </ul>
         )}
-      </section>
-
-      <div className="rounded-md border border-border bg-card p-5 text-sm text-muted-foreground">
-        Need to update bank info?{' '}
-        <Link to="/account" className="text-foreground underline underline-offset-2">Open account settings</Link>.
       </div>
     </div>
   );
