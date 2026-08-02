@@ -203,6 +203,8 @@ export function PremiumPlansSection({ compact = false, successPathOverride, canc
               <div key={t.role} className={cn(t.role === 'pro' && 'xl:-my-3 xl:z-10')}>
                 <PremiumTierCard
                   product={product}
+                  priceReference={fallbackForCopy}
+                  cadenceUnavailable={!product}
                   role={t.role}
                   groups={groups}
                   interval={interval}
