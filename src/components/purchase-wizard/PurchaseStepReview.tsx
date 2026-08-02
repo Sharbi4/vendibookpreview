@@ -10,7 +10,6 @@ import WhatsIncluded from '@/components/shared/WhatsIncluded';
 import { FeesInfoPopover } from '@/components/shared/InfoPopover';
 import { TrustModule, PAYMENT_TRUST_POINTS, PAYMENT_DISCLAIMER } from '@/components/journey';
 import PostPaymentTimeline from '@/components/checkout/PostPaymentTimeline';
-import AffirmMessagingLine from '@/components/checkout/AffirmMessagingLine';
 import type { BuyerInfo } from './PurchaseStepInfo';
 
 type FulfillmentSelection = 'pickup' | 'delivery' | 'vendibook_freight';
@@ -253,7 +252,6 @@ const PurchaseStepReview = ({
       {/* Live Affirm / Afterpay / Klarna promotional messaging so buyers
           see "as low as $X/mo" before choosing a payment tab in Stripe. */}
       {paymentMethod !== 'cash' ? (
-        <AffirmMessagingLine amountUsd={totalPrice} />
       ) : null}
 
       {/* Payment Method Selection */}

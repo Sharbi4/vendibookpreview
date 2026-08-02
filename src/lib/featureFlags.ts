@@ -4,7 +4,6 @@
  * behavior (e.g. `localStorage.setItem('ff.embeddedCheckout', 'false')`).
  */
 
-import { hasStripePublishableKey } from './stripeClient';
 
 function readLocalOverride(key: string): boolean | null {
   if (typeof window === 'undefined') return null;
@@ -19,12 +18,10 @@ function readLocalOverride(key: string): boolean | null {
 }
 
 /**
- * When true, checkout flows mount Stripe's Custom Checkout (Payment Element)
- * inside a branded overlay. When false (or when the publishable key is
- * missing), we fall back to the classic hosted redirect flow.
+ * When true, checkout flows always false: embedded card checkout is retired and every flow uses the in-app PayPal checkout surface.
  */
 export function isEmbeddedCheckoutEnabled(): boolean {
-  const override = readLocalOverride('embeddedCheckout');
-  if (override !== null) return override && hasStripePublishableKey();
-  return hasStripePublishableKey();
+  // Embedded card checkout is retired — all checkout flows run through the
+  // in-app PayPal surfaces. Kept as a stable no-op for existing call sites.
+  return false;
 }
