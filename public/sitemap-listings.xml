@@ -89,17 +89,6 @@
     </image:image>
   </url>
   <url>
-    <loc>https://vendibook.com/listing/171bf57c-6225-4188-819f-81d4230a9a17</loc>
-    <lastmod>2026-07-27</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://images.unsplash.com/photo-1551218372-a8789b81b253?w=800</image:loc>
-      <image:title>Modern Taco Trailer - Turn-Key Ready</image:title>
-      <image:caption>Modern Taco Trailer - Turn-Key Ready in Houston, TX on Vendibook</image:caption>
-    </image:image>
-  </url>
-  <url>
     <loc>https://vendibook.com/listing/34eb359a-71ec-46e8-8cca-357634bb95ac</loc>
     <lastmod>2026-07-26</lastmod>
     <changefreq>weekly</changefreq>
@@ -119,6 +108,17 @@
       <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/5fbd89d5-fa6b-424c-97b8-dea19753eda8/10ae96b2-12c7-413a-a612-92110bc2050e/1781406117162-jk7v8.jpeg</image:loc>
       <image:title>Food Truck renovated inside - out</image:title>
       <image:caption>Food Truck renovated inside - out on Vendibook</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://vendibook.com/listing/171bf57c-6225-4188-819f-81d4230a9a17</loc>
+    <lastmod>2026-08-02</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://images.unsplash.com/photo-1551218372-a8789b81b253?w=800</image:loc>
+      <image:title>Modern Taco Trailer - Turn-Key Ready</image:title>
+      <image:caption>Modern Taco Trailer - Turn-Key Ready in Houston, TX on Vendibook</image:caption>
     </image:image>
   </url>
   <url>
