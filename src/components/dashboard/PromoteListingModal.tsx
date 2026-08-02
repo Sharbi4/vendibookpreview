@@ -1,3 +1,4 @@
+import { productCheckoutUrl, hostedCheckoutUrl } from '@/lib/payments/hostedCheckout';
 import { useMemo, useState } from 'react';
 import { format, addDays, differenceInDays, isBefore, startOfDay } from 'date-fns';
 import {
@@ -124,39 +125,7 @@ export const PromoteListingModal = ({
   const handleCheckout = async () => {
     setIsSubmitting(true);
     try {
-      const { data: resp, error } = await supabase.functions.invoke(
-        'create-featured-checkout',
-        {
-          body: {
-            listing_id: listingId,
-            starts_at: effectiveStart.toISOString(),
-          },
-        },
-      );
-
-      if (error) {
-        const { referenceCode } = await reportError({
-          action: 'boost.checkout.init',
-          endpoint: '/functions/v1/create-featured-checkout',
-          errorType: 'StripeCheckoutInitFailed',
-          errorMessage: (error as { message?: string })?.message ?? String(error),
-          listingId,
-        });
-        toast({
-          title: "Couldn't start Stripe Checkout",
-          description: `Please try again in a moment, or contact support at (725) 755-9598. Reference: ${referenceCode}`,
-          variant: 'destructive',
-        });
-        return;
-      }
-      if (!resp?.url) {
-        toast({
-          title: 'Checkout unavailable',
-          description: "Stripe didn't return a checkout link. Please try again.",
-          variant: 'destructive',
-        });
-        return;
-      }
+      const resp = { url: productCheckoutUrl('boost-featured-30', listingId) };
       const popup = window.open(resp.url as string, '_blank');
       if (!popup || popup.closed) {
         toast({

@@ -1,3 +1,4 @@
+import { productCheckoutUrl, hostedCheckoutUrl } from '@/lib/payments/hostedCheckout';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
@@ -148,11 +149,7 @@ const HostListingCard = ({
     }
     setIsLoadingNotary(true);
     try {
-      const { data, error } = await supabase.functions.invoke(
-        'create-notary-checkout',
-        { body: { listing_id: listing.id } },
-      );
-      if (error) throw error;
+      const data = { url: hostedCheckoutUrl('notary', listing.id, { label: 'Proof Notary' }) };
       if (data?.url) window.open(data.url, '_blank');
     } catch (error) {
       console.error('Notary checkout error:', error);
