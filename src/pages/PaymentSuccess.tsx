@@ -303,21 +303,6 @@ const PaymentSuccess = () => {
           }
         }
 
-        // Fetch checkout session details for tax breakdown
-        if (sessionId) {
-          try {
-            const { data: sessionData, error: sessionError } = await supabase.functions.invoke('get-checkout-session', {
-              body: { session_id: sessionId }
-            });
-            
-            if (!sessionError && sessionData) {
-              setSessionInfo(sessionData as CheckoutSessionInfo);
-            }
-          } catch (taxErr) {
-            console.error('Error fetching tax info:', taxErr);
-            // Non-critical error, continue without tax breakdown
-          }
-        }
       } catch (err) {
         console.error('Error processing payment:', err);
         setError(err instanceof Error ? err.message : 'An error occurred');
