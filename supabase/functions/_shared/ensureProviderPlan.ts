@@ -26,6 +26,24 @@ export interface EnsuredPlan {
   is_active: boolean;
 }
 
+/**
+ * The catalog stores annual memberships as their own product (slug suffixed
+ * `_annual`). A caller that omits (or guesses) the interval must never mint a
+ * MONTHLY provider plan priced at the annual amount.
+ */
+export function intervalForProduct(
+  product: { slug?: string | null; name?: string | null; billing_interval?: string | null },
+  requested?: string | null,
+): PlanInterval {
+  const text = `${product.slug ?? ""} ${product.name ?? ""}`;
+  if (/annual|yearly/i.test(text)) return "annual";
+  if (/quarterly/i.test(text)) return "quarterly";
+  if (requested === "annual" || requested === "quarterly" || requested === "monthly") {
+    return requested;
+  }
+  return "monthly";
+}
+
 export async function ensureProviderPlan(opts: {
   admin: any;
   provider: any;
@@ -50,7 +68,7 @@ export async function ensureProviderPlan(opts: {
   }
 
   const priceCents = existing?.price_cents ?? product.price_cents;
-  const currency = existing?.currency ?? product.currency ?? "USD";
+  const currency = String(existing?.currency ?? product.currency ?? "USD").toUpperCase();
   if (!Number.isInteger(priceCents) || priceCents <= 0) {
     return { plan: null, error: "This membership has no price configured." };
   }
