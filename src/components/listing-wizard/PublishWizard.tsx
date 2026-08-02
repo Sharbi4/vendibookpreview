@@ -1759,21 +1759,14 @@ export const PublishWizard: React.FC = () => {
           setIsSaving(false);
           return;
         }
-        // D1: server-enforced Stripe Connect eligibility for card-enabled publishing.
+        // Legacy guard retired with Stripe Connect — no merchant account is
+        // required to publish. Surface a plain message if the old trigger fires.
         if (typeof error.message === 'string' && error.message.includes('STRIPE_CONNECT_REQUIRED')) {
           setIsSaving(false);
           toast({
-            title: 'Connect Stripe to accept card payments',
-            description: 'Or switch to cash-only (Pay in Person) on the Pricing step to publish now and add Stripe later.',
+            title: 'Add your payout details to accept card payments',
+            description: 'Or switch to cash-only (Pay in Person) on the Pricing step to publish now.',
             variant: 'destructive',
-            action: (
-              <button
-                onClick={() => { void connectStripe(); }}
-                className="inline-flex items-center rounded-md bg-foreground px-3 py-1.5 text-xs font-medium text-background hover:bg-foreground/90"
-              >
-                Connect Stripe
-              </button>
-            ) as any,
           });
           return;
         }
