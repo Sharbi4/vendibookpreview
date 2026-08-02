@@ -110,7 +110,7 @@ export class PayPalProvider implements PaymentProvider {
     try {
       const order = await createPayPalOrder({
         amountCents: req.amount.amountCents,
-        currency: req.amount.currency,
+        currency: (req.amount.currency || "USD").toUpperCase(),
         reference: req.reference,
         description: req.description,
         breakdown: req.breakdown,
@@ -187,7 +187,7 @@ export class PayPalProvider implements PaymentProvider {
       const refund = await refundPayPalCapture({
         captureId: req.captureId,
         amountCents: req.amount?.amountCents,
-        currency: req.amount?.currency,
+        currency: (req.amount?.currency || "USD").toUpperCase(),
         reason: req.reason,
         idempotencyKey: req.idempotencyKey,
       });
@@ -285,7 +285,7 @@ export class PayPalProvider implements PaymentProvider {
         description: req.description,
         interval: req.interval,
         priceCents: req.price.amountCents,
-        currency: req.price.currency,
+        currency: (req.price.currency || "USD").toUpperCase(),
         trialDays: req.trialDays,
         taxable: req.taxable,
         idempotencyKey: req.idempotencyKey,
@@ -318,7 +318,7 @@ export class PayPalProvider implements PaymentProvider {
     try {
       const inv = await ppCreateInvoice({
         amountCents: req.amount.amountCents,
-        currency: req.amount.currency,
+        currency: (req.amount.currency || "USD").toUpperCase(),
         reference: req.reference,
         description: req.description,
         buyerEmail: req.buyerEmail,
@@ -373,7 +373,7 @@ export class PayPalProvider implements PaymentProvider {
         id: input.paymentRecordId,
         seller_id: input.sellerId,
         seller_proceeds_cents: input.netPayoutCents,
-        currency: input.currency,
+        currency: (input.currency || "USD").toUpperCase(),
       } as any,
       input.releaseAt,
     );
