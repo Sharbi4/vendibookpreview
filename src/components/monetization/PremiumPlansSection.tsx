@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Loader2, ShieldCheck, XCircle, Lock } from 'lucide-react';
 import { useMonetizationProducts } from '@/hooks/useMonetizationProducts';
-import { buildCheckoutReturnPaths } from '@/lib/monetization/returnRoutes';
+import { buildCheckoutReturnPaths, buildPlanAuthReturnTo } from '@/lib/monetization/returnRoutes';
 import { effectivePriceCents, type MonetizationProduct } from '@/lib/monetization/products';
 import { cn } from '@/lib/utils';
 import PremiumTierCard from './PremiumTierCard';
@@ -99,6 +99,7 @@ export function PremiumPlansSection({ compact = false, successPathOverride, canc
     const wantInterval: Interval = params.get('interval') === 'annual' ? 'annual' : 'monthly';
     if (!slug) return;
     autoResumeTried.current = true;
+    setInterval(wantInterval);
     const product =
       products.find(p => p.slug === slug) ??
       products.find(p => p.slug === (wantInterval === 'annual' ? `${slug}_annual` : slug));
@@ -262,14 +263,12 @@ export function PremiumPlansSection({ compact = false, successPathOverride, canc
       {/* STICKY MOBILE CTA */}
       {!compact && showStickyCta && tiers[1] && (
         <div className="fixed bottom-4 left-4 right-4 z-40 lg:hidden">
-          <a
-            href="#tier-pro"
-            onClick={(e) => { e.preventDefault(); document.querySelectorAll('button').forEach(() => {}); window.scrollTo({ top: 700, behavior: 'smooth' }); }}
-            className="flex items-center justify-between rounded-full border-[1.5px] border-orange-400/60 bg-orange-500 px-5 py-3 text-sm font-semibold text-white shadow-[0_10px_30px_-10px_rgba(251,146,60,0.6)]"
-          >
-            <span>Go Pro — recommended</span>
-            <span className="tabular-nums">${Math.round(effectivePriceCents(interval === 'annual' ? (tiers[1].annual ?? tiers[1].monthly)! : tiers[1].monthly!) / (interval === 'annual' ? 1200 : 100))}/mo</span>
-          </a>
+          <StickyPlanCta
+            tier={growth ?? tiers[1]}
+            interval={interval}
+            successPathOverride={successPathOverride}
+            cancelPathOverride={cancelPathOverride}
+          />
         </div>
       )}
 
@@ -278,6 +277,86 @@ export function PremiumPlansSection({ compact = false, successPathOverride, canc
   );
 }
 
+
+/**
+ * Sticky mobile CTA. Starts the recommended (Growth) plan checkout directly at
+ * the currently-selected cadence — never a dead scroll target. If that cadence
+ * has no product it truthfully says so instead of substituting another.
+ */
+function StickyPlanCta({
+  tier,
+  interval,
+  successPathOverride,
+  cancelPathOverride,
+}: {
+  tier: { monthly?: MonetizationProduct; annual?: MonetizationProduct };
+  interval: Interval;
+  successPathOverride?: string;
+  cancelPathOverride?: string;
+}) {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { requestCheckout, dialog, pendingSlug } = useSubscriptionConsent();
+  const product = interval === 'annual' ? tier.annual : tier.monthly;
+  const busy = !!product && pendingSlug === product.slug;
+
+  if (!product) {
+    return (
+      <div className="flex items-center justify-center rounded-full border-[1.5px] border-white/15 bg-black/80 px-5 py-3 text-sm font-medium text-white/70 backdrop-blur">
+        {interval === 'annual' ? 'Annual billing unavailable' : 'Monthly billing unavailable'}
+      </div>
+    );
+  }
+
+  const perMonth = Math.round(
+    effectivePriceCents(product) / (interval === 'annual' ? 1200 : 100),
+  );
+
+  const onClick = () => {
+    if (busy) return;
+    if (!user) {
+      navigate(
+        buildPlanAuthReturnTo({
+          planSlug: product.slug,
+          interval,
+          pathname: location.pathname,
+          search: location.search,
+        }),
+      );
+      return;
+    }
+    const paths = buildCheckoutReturnPaths(product.slug);
+    void requestCheckout(product, {
+      interval,
+      successPath: successPathOverride ?? paths.successPath,
+      cancelPath: cancelPathOverride ?? paths.cancelPath,
+    });
+  };
+
+  return (
+    <>
+      <button
+        type="button"
+        onClick={onClick}
+        disabled={busy}
+        className="flex w-full items-center justify-between rounded-full border-[1.5px] border-orange-400/60 bg-orange-500 px-5 py-3 text-sm font-semibold text-white shadow-[0_10px_30px_-10px_rgba(251,146,60,0.6)] disabled:opacity-80"
+      >
+        {busy ? (
+          <span className="mx-auto inline-flex items-center gap-2">
+            <Loader2 className="h-4 w-4 animate-spin" /> Opening PayPal…
+          </span>
+        ) : (
+          <>
+            <span>Go Pro — recommended</span>
+            <span className="tabular-nums">${perMonth}/mo</span>
+          </>
+        )}
+      </button>
+      {dialog}
+    </>
+  );
+}
 
 function FoundingMemberNote() {
   const { isGrandfathered, isLoading } = useListingQuota();
