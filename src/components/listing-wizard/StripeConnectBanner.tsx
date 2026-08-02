@@ -2,7 +2,6 @@ import { CheckCircle2, ArrowRight, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useStripeConnect } from '@/hooks/useStripeConnect';
 import { cn } from '@/lib/utils';
-import stripeWordmark from '@/assets/stripe-wordmark-blurple.png';
 
 interface StripeConnectBannerProps {
   className?: string;
@@ -46,7 +45,7 @@ export const StripeConnectBanner = ({ className, variant = 'compact' }: StripeCo
       <div className={cn("space-y-1", className)}>
         <div className="flex items-center justify-between gap-3 px-3 py-2 bg-[#635bff]/5 border border-[#635bff]/20 rounded-lg">
           <div className="flex items-center gap-2">
-            <img src={stripeWordmark} alt="PayPal" className="h-4 w-auto" />
+            <span className="text-xs font-semibold text-foreground">PayPal</span>
             <span className="text-sm text-[#635bff] dark:text-[#a8a4ff]">
               {hasAccountStarted ? 'Complete setup to get paid' : 'Connect to get paid from your listings'}
             </span>
@@ -83,7 +82,7 @@ export const StripeConnectBanner = ({ className, variant = 'compact' }: StripeCo
     )}>
       <div className="flex items-start gap-3">
         <div className="flex-shrink-0 w-10 h-10 bg-[#635bff]/10 rounded-lg flex items-center justify-center">
-          <img src={stripeWordmark} alt="PayPal" className="h-5 w-auto" />
+          <span className="text-sm font-semibold text-foreground">PayPal</span>
         </div>
         <div className="flex-1">
           <h4 className="font-medium text-foreground">

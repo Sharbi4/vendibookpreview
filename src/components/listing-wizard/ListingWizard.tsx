@@ -933,7 +933,7 @@ export const ListingWizard: React.FC = () => {
       setTimeout(refreshStatus, 2000);
     } catch (error) {
       toast({
-        title: 'Error connecting Stripe',
+        title: 'Could not open payout settings',
         description: 'Please try again.',
         variant: 'destructive',
       });
@@ -1140,14 +1140,14 @@ export const ListingWizard: React.FC = () => {
                     <Button
                       onClick={() => saveListing(true)}
                       disabled={isSaving || !canPublish() || (requiresStripeConnect && !isOnboardingComplete)}
-                      title={requiresStripeConnect && !isOnboardingComplete ? 'Connect Stripe to publish' : undefined}
+                      title={requiresStripeConnect && !isOnboardingComplete ? 'Add a payout method to publish' : undefined}
                     >
                       {isSaving ? (
                         <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                       ) : (
                         <Send className="w-4 h-4 mr-2" />
                       )}
-                      {requiresStripeConnect && !isOnboardingComplete ? 'Connect Stripe to Publish' : 'Publish'}
+                      {requiresStripeConnect && !isOnboardingComplete ? 'Add payout method' : 'Publish'}
                     </Button>
                   </>
                 ) : (

@@ -8,7 +8,6 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { StripeLogo } from '@/components/ui/StripeLogo';
 
 interface StripeConnectModalProps {
   open: boolean;
@@ -43,12 +42,12 @@ export const StripeConnectModal: React.FC<StripeConnectModalProps> = ({
             <div className="absolute inset-0 bg-gradient-to-br from-[#635bff]/20 to-[#7c75ff]/20 rounded-full animate-pulse" />
             <div className="absolute inset-2 bg-gradient-to-br from-[#635bff]/30 to-[#7c75ff]/30 rounded-full" />
             <div className="absolute inset-4 bg-gradient-to-br from-[#635bff] to-[#7c75ff] rounded-full flex items-center justify-center shadow-lg shadow-[#635bff]/25">
-              <StripeLogo size="lg" className="brightness-0 invert" />
+              <span className="text-lg font-bold">PayPal</span>
             </div>
           </div>
           
           <DialogTitle className="text-xl flex items-center justify-center gap-2">
-            Connect <StripeLogo size="sm" showText /> to Get Paid
+            Add your PayPal payout email to get paid
           </DialogTitle>
           <DialogDescription className="text-center text-base">
             Set up secure payments and start earning from your listings
@@ -95,7 +94,7 @@ export const StripeConnectModal: React.FC<StripeConnectModalProps> = ({
               </>
             ) : (
               <>
-                <StripeLogo size="sm" className="mr-2 brightness-0 invert" />
+                
                 Connect with PayPal
                 <ExternalLink className="w-4 h-4 ml-2" />
               </>

@@ -188,11 +188,11 @@ const ReferralDashboard = () => {
               <AlertCircle className="h-5 w-5 text-amber-600" />
               <div>
                 <p className="font-medium text-amber-900">Connect your bank to receive payouts</p>
-                <p className="text-xs text-amber-700">Powered by Stripe Connect. Takes about 2 minutes.</p>
+                <p className="text-xs text-amber-700">Add the PayPal email where we should send your referral payouts.</p>
               </div>
             </div>
             <Button onClick={() => stripe.connectStripe("/referral/dashboard")} disabled={stripe.isConnecting}>
-              {stripe.isConnecting ? "Opening…" : "Connect Stripe"}
+              {stripe.isConnecting ? "Opening…" : "Set up payouts"}
             </Button>
           </Card>
         )}
