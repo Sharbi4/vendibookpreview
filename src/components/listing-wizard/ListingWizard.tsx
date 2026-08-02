@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { useListingForm } from '@/hooks/useListingForm';
-import { useStripeConnect } from '@/hooks/useStripeConnect';
 import { supabase } from '@/integrations/supabase/client';
 import { CATEGORY_LABELS } from '@/types/listing';
 import {
@@ -29,9 +28,7 @@ import { StepPricing } from './StepPricing';
 import { StepRequiredDocuments } from './StepRequiredDocuments';
 import { StepPhotos, VideoUploadProgress } from './StepPhotos';
 import { StepReview } from './StepReview';
-import { StripeConnectModal } from './StripeConnectModal';
 import { PublishSuccessModal } from './PublishSuccessModal';
-import { StripeConnectBanner } from './StripeConnectBanner';
 import { ListingPreviewModal } from './ListingPreviewModal';
 import { WizardPreviewSidebar } from './WizardPreviewSidebar';
 import { trackLeadEvent } from '@/lib/leadTracking';
@@ -72,12 +69,6 @@ export const ListingWizard: React.FC = () => {
     isCategoryStaticLocation,
   } = useListingForm();
 
-  const {
-    isOnboardingComplete,
-    isConnecting,
-    connectStripe,
-    refreshStatus,
-  } = useStripeConnect();
 
   const [isSaving, setIsSaving] = useState(false);
   const [isAutoSaving, setIsAutoSaving] = useState(false);
@@ -514,9 +505,10 @@ export const ListingWizard: React.FC = () => {
     return urls;
   };
 
-  // Stripe Connect is required ONLY when the listing accepts card payments.
-  // Cash / pay-in-person listings (sale or rent) publish with no Stripe account.
-  const requiresStripeConnect = formData.accept_card_payment === true;
+  // Payouts are handled manually by Vendibook, so publishing is never gated on
+  // a seller payment account. Buyers always pay through PayPal.
+  const requiresStripeConnect = false;
+  const isOnboardingComplete = true;
 
   const saveListing = async (publish: boolean) => {
     if (!user) {
@@ -524,10 +516,6 @@ export const ListingWizard: React.FC = () => {
       return;
     }
 
-    if (publish && requiresStripeConnect && !isOnboardingComplete) {
-      setShowStripeModal(true);
-      return;
-    }
 
     if (publish && !canPublish()) {
       // Provide specific feedback about what's missing
@@ -911,20 +899,6 @@ export const ListingWizard: React.FC = () => {
     setShowSuccessModal(open);
   };
 
-  const handleStripeConnect = async () => {
-    try {
-      await connectStripe();
-      setShowStripeModal(false);
-      // Refresh status after user returns
-      setTimeout(refreshStatus, 2000);
-    } catch (error) {
-      toast({
-        title: 'Could not open payout settings',
-        description: 'Please try again.',
-        variant: 'destructive',
-      });
-    }
-  };
 
   const renderStep = () => {
     switch (currentStep) {
@@ -1046,10 +1020,6 @@ export const ListingWizard: React.FC = () => {
             </div>
 
           </div>
-          {/* Stripe Connect Status Banner - Only show when online payment is needed */}
-          {(formData.mode === 'rent' || formData.accept_card_payment) && (
-            <StripeConnectBanner className="mb-4" variant="compact" />
-          )}
           <WizardProgress
             currentStep={currentStep}
             steps={STEPS}
@@ -1176,12 +1146,6 @@ export const ListingWizard: React.FC = () => {
         </div>
       </div>
 
-      <StripeConnectModal
-        open={showStripeModal}
-        onOpenChange={setShowStripeModal}
-        onConnect={handleStripeConnect}
-        isConnecting={isConnecting}
-      />
 
       <PublishSuccessModal
         open={showSuccessModal}

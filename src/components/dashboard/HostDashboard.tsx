@@ -7,16 +7,14 @@ import {
   MessageSquare,
 } from 'lucide-react';
 import ActionRequiredStack, { type ActionItem } from './shared/ActionRequiredStack';
-import StripeNotificationBubble from './StripeNotificationBubble';
 import { BoostListingPrompt } from './BoostListingPrompt';
-import { StripeConnectModal } from '@/components/listing-wizard/StripeConnectModal';
 import OverviewGreeting from './overview/OverviewGreeting';
 import { KpiCard } from './overview/KpiCard';
 import RecentActivityStrip, { ActivityItem } from './overview/RecentActivityStrip';
 import PremiumSpotlight from './overview/PremiumSpotlight';
 import { useHostListings } from '@/hooks/useHostListings';
 import { useHostBookings } from '@/hooks/useHostBookings';
-import { useStripeConnect } from '@/hooks/useStripeConnect';
+import { useManualPayout } from '@/hooks/useManualPayout';
 import { useRevenueAnalytics } from '@/hooks/useRevenueAnalytics';
 import { useHostOffers } from '@/hooks/useHostOffers';
 import { useUnreadMessageCount } from '@/hooks/useUnreadMessageCount';
@@ -41,18 +39,10 @@ const HostDashboard = () => {
   const isFreeTier = tier === 'free';
   const { listings, stats } = useHostListings();
   const { bookings, stats: bookingStats } = useHostBookings();
-  const {
-    isConnected,
-    isLoading: stripeLoading,
-    connectStripe,
-    isConnecting,
-    openStripeDashboard,
-    isOpeningDashboard,
-  } = useStripeConnect();
+  const { hasPayoutInstructions, isLoading: payoutLoading } = useManualPayout();
   const { analytics: revenueAnalytics } = useRevenueAnalytics();
   const { pendingOffers } = useHostOffers();
   const { count: unreadMessageCount } = useUnreadMessageCount();
-  const [showStripeModal, setShowStripeModal] = useState(false);
 
   const firstName = profile?.full_name?.split(' ')[0];
   const monthlyRevenue = revenueAnalytics?.revenueThisMonth || 0;
@@ -68,11 +58,11 @@ const HostDashboard = () => {
       description: 'Review and reply so guests can plan.',
       href: '/host/bookings', cta: 'Review', tone: 'warning',
     });
-    if (!stripeLoading && !isConnected) items.push({
-      id: 'stripe', icon: Banknote,
-      title: 'Finish Stripe onboarding',
-      description: 'Required to accept card payments and receive payouts.',
-      href: '/dashboard?view=host&tab=payouts', cta: 'Set up', tone: 'warning',
+    if (!payoutLoading && !hasPayoutInstructions) items.push({
+      id: 'payout-details', icon: Banknote,
+      title: 'Add your payout details',
+      description: 'Tell us where to send earnings — Vendibook pays sellers manually.',
+      href: '/dashboard?view=host&tab=payouts', cta: 'Add', tone: 'warning',
     });
     if (!isVerified) items.push({
       id: 'verify', icon: ShieldAlert,
@@ -91,7 +81,7 @@ const HostDashboard = () => {
       href: '/messages', cta: 'Open',
     });
     return items;
-  }, [bookingStats.pending, stripeLoading, isConnected, isVerified, pendingOffers.length, unreadMessageCount]);
+  }, [bookingStats.pending, payoutLoading, hasPayoutInstructions, isVerified, pendingOffers.length, unreadMessageCount]);
 
   const activity: ActivityItem[] = useMemo(() => {
     return bookings.slice(0, 3).map((b) => {
@@ -115,17 +105,6 @@ const HostDashboard = () => {
 
   return (
     <div className="max-w-[1320px] mx-auto section-stack">
-      {!stripeLoading && (
-        <StripeNotificationBubble
-          isConnected={isConnected}
-          isLoading={stripeLoading}
-          onConnect={connectStripe}
-          onManage={openStripeDashboard}
-          isConnecting={isConnecting}
-          isOpeningDashboard={isOpeningDashboard}
-        />
-      )}
-
       <OverviewGreeting firstName={firstName} persona="Hosting" isVerified={isVerified} />
 
       {/* KPI row — ember reserved for Earnings */}
@@ -213,13 +192,6 @@ const HostDashboard = () => {
           emptyCta="Manage listings"
         />
       </section>
-
-      <StripeConnectModal
-        open={showStripeModal}
-        onOpenChange={setShowStripeModal}
-        onConnect={connectStripe}
-        isConnecting={isConnecting}
-      />
 
       {listings.length > 0 && (
         <>

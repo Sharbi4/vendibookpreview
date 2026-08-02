@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { ArrowRight, CreditCard, FileText, UserCheck, Calendar, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useStripeConnect } from '@/hooks/useStripeConnect';
+import { useManualPayout } from '@/hooks/useManualPayout';
 import { useAuth } from '@/contexts/AuthContext';
 import { useHostListings } from '@/hooks/useHostListings';
 import { useHostBookings } from '@/hooks/useHostBookings';
@@ -26,7 +26,7 @@ interface NextStepCardProps {
 
 export const NextStepCard = ({ onConnectStripe, isConnectingStripe }: NextStepCardProps) => {
   const { user, profile } = useAuth();
-  const { isConnected, isLoading: stripeLoading } = useStripeConnect();
+  const { hasPayoutInstructions: isConnected, isLoading: stripeLoading } = useManualPayout();
   const { stats, isLoading: listingsLoading } = useHostListings();
   const { stats: bookingStats, isLoading: bookingsLoading } = useHostBookings();
 

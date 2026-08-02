@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import SEO from "@/components/SEO";
 import { useAuth } from "@/contexts/AuthContext";
 import { useReferralCode, useMyReferrals, buildReferralUrl, useFeatureFlag, useAcceptReferralTerms } from "@/hooks/useReferral";
-import { useStripeConnect } from "@/hooks/useStripeConnect";
+import { useManualPayout, MANUAL_PAYOUT_SETTINGS_PATH } from "@/hooks/useManualPayout";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Copy, Download, Facebook, MessageCircle, Mail, Share2, Twitter, ExternalLink, AlertCircle, Info } from "lucide-react";
@@ -45,7 +45,7 @@ const ReferralDashboard = () => {
   const { data: code } = useReferralCode();
   const { data: referralsData } = useMyReferrals();
   const referrals = referralsData ?? EMPTY_REFERRALS;
-  const stripe = useStripeConnect();
+  const payout = useManualPayout();
   const { data: programEnabled = true } = useFeatureFlag("referral_program_enabled", true);
   const acceptTermsMut = useAcceptReferralTerms();
 
@@ -181,18 +181,18 @@ const ReferralDashboard = () => {
         </Card>
 
 
-        {/* Stripe Connect banner */}
-        {!stripe.isConnected && (
+        {/* Manual payout details banner */}
+        {!payout.hasPayoutInstructions && (
           <Card className="p-4 mb-6 border-amber-300 bg-amber-50 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <AlertCircle className="h-5 w-5 text-amber-600" />
               <div>
-                <p className="font-medium text-amber-900">Connect your bank to receive payouts</p>
+                <p className="font-medium text-amber-900">Add your payout details</p>
                 <p className="text-xs text-amber-700">Add the PayPal email where we should send your referral payouts.</p>
               </div>
             </div>
-            <Button onClick={() => stripe.connectStripe("/referral/dashboard")} disabled={stripe.isConnecting}>
-              {stripe.isConnecting ? "Opening…" : "Set up payouts"}
+            <Button onClick={() => window.location.assign(MANUAL_PAYOUT_SETTINGS_PATH)}>
+              Add payout details
             </Button>
           </Card>
         )}

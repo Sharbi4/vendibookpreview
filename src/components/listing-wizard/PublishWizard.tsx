@@ -20,7 +20,6 @@ import {
   AlertDialogTitle} from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
-import { useStripeConnect } from '@/hooks/useStripeConnect';
 import { supabase } from '@/integrations/supabase/client';
 import { reportError } from '@/lib/errorReporter';
 import { parseEdgeError } from '@/lib/edgeErrors';
@@ -58,7 +57,6 @@ import { ListingQualityGate } from './ListingQualityGate';
 import { ListingHealthScoreCard } from './ListingHealthScoreCard';
 import { AdditionalSellerSupportCards } from '@/components/monetization/AdditionalSellerSupportCards';
 import { InfoTooltip } from '@/components/ui/info-tooltip';
-import stripeIcon from '@/assets/stripe-icon.png';
 import { ConsentModal } from '@/components/consent/ConsentModal';
 import { DOCUMENT_TYPES, CONSENT_TRIGGERS } from '@/lib/legalDocuments';
 import {
@@ -149,7 +147,11 @@ export const PublishWizard: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const queryClient = useQueryClient();
 
-  const { isOnboardingComplete, isLoading: isStripeLoading, connectStripe, isConnecting } = useStripeConnect();
+  // Payouts are manual (Vendibook pays sellers directly), so there is no
+  // seller payment-account onboarding and nothing here can block publishing.
+  const isOnboardingComplete = true;
+  const isStripeLoading = false;
+  const isConnecting = false;
 
   const VALID_STEPS: PublishStep[] = ['photos', 'headline', 'includes', 'pricing', 'details', 'location', 'availability', 'documents', 'stripe', 'review'];
   const initialStep = (() => {
@@ -793,7 +795,7 @@ export const PublishWizard: React.FC = () => {
       await saveGuestDraftFields();
       // Move to next step manually
       const isRentalListing = listing?.mode === 'rent';
-      const skipStripeStep = listing?.mode === 'sale' && !acceptCardPayment;
+      const skipStripeStep = true;
       const baseSteps: PublishStep[] = isRentalListing
         ? ['photos', 'headline', 'includes', 'pricing', 'availability', 'location', 'documents', 'stripe', 'review']
         : ['photos', 'headline', 'includes', 'pricing', 'location', 'stripe', 'review'];
@@ -1435,7 +1437,7 @@ export const PublishWizard: React.FC = () => {
       // Move to next step - rental listings have availability and documents steps
       // Skip stripe step if card payment is not enabled (cash-only sales)
       const isRentalListing = listing.mode === 'rent';
-      const skipStripeStep = listing.mode === 'sale' && !acceptCardPayment;
+      const skipStripeStep = true;
       const baseSteps: PublishStep[] = isRentalListing
         ? ['photos', 'headline', 'includes', 'pricing', 'availability', 'location', 'documents', 'stripe', 'review']
         : ['photos', 'headline', 'includes', 'pricing', 'location', 'stripe', 'review'];
@@ -1457,7 +1459,6 @@ export const PublishWizard: React.FC = () => {
 
   const handlePublish = async () => {
     if (!listing) return;
-    const stripeRequired = listing.mode === 'rent' || (listing.mode === 'sale' && acceptCardPayment);
 
     // Validate all required fields before publishing
     const validationErrors = getValidationErrors();
@@ -1469,22 +1470,6 @@ export const PublishWizard: React.FC = () => {
       return;
     }
 
-    if (stripeRequired && !isOnboardingComplete) {
-      toast({
-        title: 'Connect Stripe to accept card payments',
-        description: 'Or switch to cash-only (Pay in Person) on the Pricing step to publish now and add Stripe later.',
-        variant: 'destructive',
-        action: (
-          <button
-            onClick={() => { void connectStripe(); }}
-            className="inline-flex items-center rounded-md bg-foreground px-3 py-1.5 text-xs font-medium text-background hover:bg-foreground/90"
-          >
-            Connect Stripe
-          </button>
-        ) as any,
-      });
-      return;
-    }
 
     // Identity verification is optional — it no longer blocks publishing.
 
@@ -1873,13 +1858,6 @@ export const PublishWizard: React.FC = () => {
     }
   };
 
-  const handleStripeConnect = async () => {
-    try {
-      await connectStripe();
-    } catch (error) {
-      toast({ title: 'Error connecting Stripe', variant: 'destructive' });
-    }
-  };
 
   // Publish confirmation + terms consent modal state
   const [showPublishDialog, setShowPublishDialog] = useState(false);
@@ -1889,7 +1867,7 @@ export const PublishWizard: React.FC = () => {
   // Checklist state - with proper validation
   const totalPhotoCount = existingImages.length + images.length;
   // Stripe is required for rentals and for sale listings that accept card payment.
-  const requiresStripe = listing?.mode === 'rent' || (listing?.mode === 'sale' && acceptCardPayment);
+  const requiresStripe = false;
   const enabledDocsCount = requiredDocuments.filter(d => d.is_required).length;
 
   // Helper to properly validate price input
@@ -1950,7 +1928,6 @@ export const PublishWizard: React.FC = () => {
     if (!hasValidTitle) errors.push(`Title must be at least ${MIN_TITLE_LENGTH} characters`);
     if (!hasValidDescription) errors.push(`Description must be at least ${MIN_DESCRIPTION_LENGTH} characters (currently ${description.trim().length})`);
     if (!checklistState.hasLocation) errors.push('Complete the location and logistics section');
-    if (requiresStripe && !isOnboardingComplete) errors.push('Connect Stripe to accept card payments — or switch to cash-only (Pay in Person) on the Pricing step to publish now and add Stripe later.');
     return errors;
   };
 
@@ -1969,7 +1946,7 @@ export const PublishWizard: React.FC = () => {
   // indicator, the "Continue" primary action, and the actual navigation
   // can't drift apart.
   const isRentalListing = listing.mode === 'rent';
-  const skipStripeStep = listing.mode === 'sale' && !acceptCardPayment;
+  const skipStripeStep = true;
   const baseWizardSteps: PublishStep[] = isRentalListing
     ? ['photos', 'headline', 'includes', 'pricing', 'availability', 'location', 'documents', 'stripe', 'review']
     : ['photos', 'headline', 'includes', 'pricing', 'location', 'stripe', 'review'];
@@ -3986,84 +3963,6 @@ export const PublishWizard: React.FC = () => {
               )}
 
               {/* Step: Stripe - Only shown if card payment is enabled */}
-              {step === 'stripe' && (
-                <div className="space-y-6">
-                  <div>
-                    <h2 className="text-xl font-bold text-foreground mb-2">Connect Stripe</h2>
-                    <p className="text-muted-foreground">
-                      {acceptCardPayment ? 'Required to receive card payments.' : 'Optional for cash-only listings.'}
-                    </p>
-                  </div>
-
-                  {!acceptCardPayment && (
-                    <div className="relative overflow-hidden rounded-xl p-4 border-2 border-muted bg-muted/30">
-                      <div className="flex items-center gap-3">
-                        <div className="p-2.5 bg-muted rounded-xl flex items-center justify-center">
-                          <Banknote className="w-5 h-5 text-foreground" />
-                        </div>
-                        <div>
-                          <p className="font-semibold text-foreground">Cash-only listing</p>
-                          <p className="text-sm text-muted-foreground">Stripe is not required since you're only accepting in-person payments.</p>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {acceptCardPayment && (
-                    isOnboardingComplete ? (
-                      <div className="relative overflow-hidden rounded-xl p-4 border border-border bg-muted/30">
-                        <div className="relative flex items-center gap-3">
-                          <div className="p-1 rounded-lg flex items-center justify-center">
-                            <Check className="w-5 h-5 text-foreground" />
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <img src={stripeIcon} alt="Stripe" className="h-6 w-6 object-cover rounded-md" />
-                            <span className="font-semibold text-foreground">connected</span>
-                          </div>
-                          <p className="text-sm text-muted-foreground ml-auto">You're ready to receive payments</p>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="relative overflow-hidden rounded-xl p-6 border border-border bg-muted/30 text-center">
-                        <div className="relative">
-                          <img src={stripeIcon} alt="Stripe" className="w-14 h-14 mx-auto mb-4 rounded-xl object-cover" />
-                          <h3 className="font-semibold text-foreground mb-2">Set up payouts</h3>
-                          <p className="text-sm text-muted-foreground mb-4">
-                            Connect to get paid from your listings when you receive bookings or sales.
-                          </p>
-                          <Button 
-                            variant="dark-shine"
-                            onClick={handleStripeConnect} 
-                            disabled={isConnecting}
-                          >
-                            {isConnecting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
-                            <img src={stripeIcon} alt="" className="h-5 w-5 object-cover rounded mr-2" />
-                            Connect Stripe
-                            <ExternalLink className="w-4 h-4 ml-2" />
-                          </Button>
-                          <p className="text-xs text-muted-foreground mt-2">
-                            ⚠️ Stripe opens in a new tab — please disable your pop-up blocker if it doesn't open.
-                          </p>
-                        </div>
-                      </div>
-                    )
-                  )}
-
-                  <PrimaryActionBar
-                    secondary={{
-                      label: 'Back',
-                      onClick: () => setStep(listing.mode === 'rent' ? 'documents' : 'location'),
-                    }}
-                    primary={{
-                      label: 'Continue',
-                      onClick: () => setStep('review'),
-                      disabled: acceptCardPayment && !isOnboardingComplete,
-                    }}
-                  />
-                </div>
-              )}
-
-              {/* Step: Review */}
               {step === 'review' && (
                 <div className="space-y-6">
                   <div>
@@ -4203,51 +4102,6 @@ export const PublishWizard: React.FC = () => {
                     </div>
                   )}
 
-                  {/* Stripe Connect Panel - Only show if card payments are enabled */}
-                  {requiresStripe && !isOnboardingComplete && (
-                    <div className="p-5 rounded-xl border border-border bg-muted/30">
-                      <div className="flex items-start gap-3">
-                        <img src={stripeIcon} alt="Stripe" className="w-12 h-12 object-cover rounded-xl mt-0.5" />
-                        <div className="flex-1">
-                          <h3 className="font-semibold text-foreground mb-1">
-                            Connect to get paid from your listings
-                          </h3>
-                          <p className="text-sm text-muted-foreground mb-3">
-                            To accept card payments, connect Stripe (about 2 minutes). Or switch to cash-only (Pay in Person) and publish now — you can add Stripe later.
-                          </p>
-                          <div className="flex flex-wrap gap-2">
-                            <Button size="sm" variant="dark-shine" onClick={handleStripeConnect} disabled={isConnecting}>
-                              {isConnecting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
-                              Connect Stripe (2 min)
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => {
-                                setAcceptCardPayment(false);
-                                setAcceptCashPayment(true);
-                                toast({
-                                  title: 'Switched to cash-only',
-                                  description: 'You can publish now and add Stripe later from your dashboard.'});
-                              }}
-                            >
-                              Switch to cash-only & publish
-                            </Button>
-                          </div>
-                          <p className="text-xs text-muted-foreground mt-2">
-                            ⚠️ Stripe opens in a new tab — please disable your pop-up blocker if it doesn't open.
-                          </p>
-                          <div className="flex flex-wrap gap-2 mt-2">
-                            <Button size="sm" variant="dark-shine" onClick={() => navigate('/dashboard')}>
-                              <Save className="w-4 h-4 mr-1" />
-                              Save Draft
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
                   {/* Ready to Publish Message */}
                   {canPublish && (!requiresStripe || isOnboardingComplete) && (
                     <div className="relative overflow-hidden rounded-xl p-4 border border-border bg-gradient-to-br from-primary/5 via-primary/3 to-background">
@@ -4284,7 +4138,7 @@ export const PublishWizard: React.FC = () => {
                     sticky
                     secondary={{
                       label: 'Back',
-                      onClick: () => setStep(requiresStripe ? 'stripe' : 'location'),
+                      onClick: () => setStep('location'),
                     }}
                     tertiary={{
                       label: 'Preview as Shopper',

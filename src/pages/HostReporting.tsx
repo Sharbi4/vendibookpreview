@@ -31,12 +31,12 @@ import { Badge } from '@/components/ui/badge';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { useRevenueAnalytics } from '@/hooks/useRevenueAnalytics';
-import { useStripeConnect } from '@/hooks/useStripeConnect';
+import { MANUAL_PAYOUT_SETTINGS_PATH } from '@/hooks/useManualPayout';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 
 const HostReporting = () => {
   const { analytics, isLoading } = useRevenueAnalytics();
-  const { openStripeDashboard, isOpeningDashboard } = useStripeConnect();
+
   const [timeRange, setTimeRange] = useState('30d');
   const [isExporting, setIsExporting] = useState(false);
 
@@ -145,10 +145,9 @@ const HostReporting = () => {
               <Button 
                 variant="outline" 
                 className="gap-2 rounded-xl border-border hover:bg-foreground hover:text-background hover:border-foreground transition-all duration-200"
-                onClick={() => openStripeDashboard()}
-                disabled={isOpeningDashboard}
+                onClick={() => window.location.assign(MANUAL_PAYOUT_SETTINGS_PATH)}
               >
-                {isOpeningDashboard ? <Loader2 className="h-4 w-4 animate-spin" /> : <CreditCard className="h-4 w-4" />}
+                <CreditCard className="h-4 w-4" />
                 Payout settings
               </Button>
               <Button variant="outline" className="gap-2 rounded-xl border-border hover:bg-foreground hover:text-background hover:border-foreground transition-all duration-200">
@@ -369,10 +368,8 @@ const HostReporting = () => {
                     </div>
                     <Button 
                       className="bg-foreground text-background hover:bg-foreground/90 rounded-xl"
-                      onClick={() => openStripeDashboard()}
-                      disabled={isOpeningDashboard}
+                      onClick={() => window.location.assign(MANUAL_PAYOUT_SETTINGS_PATH)}
                     >
-                      {isOpeningDashboard ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
                       View payout settings
                     </Button>
                   </div>
