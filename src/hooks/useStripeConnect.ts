@@ -11,7 +11,7 @@ import { usePayoutAccount } from '@/hooks/usePayoutAccount';
 export const useStripeConnect = () => {
   const { payoutEmail, isPayoutReady, isLoading, isSaving, refresh } = usePayoutAccount();
 
-  const goToPayoutSettings = useCallback(async () => {
+  const goToPayoutSettings = useCallback(async (_returnPath?: string) => {
     if (typeof window !== 'undefined') {
       window.location.assign('/account#section-payments');
     }
