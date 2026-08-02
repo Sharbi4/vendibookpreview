@@ -249,10 +249,8 @@ const PurchaseStepReview = ({
         </div>
       </div>
 
-      {/* Live Affirm / Afterpay / Klarna promotional messaging so buyers
-          see "as low as $X/mo" before choosing a payment tab in Stripe. */}
-      {paymentMethod !== 'cash' ? (
-      ) : null}
+
+
 
       {/* Payment Method Selection */}
       {hasMultiplePaymentOptions && (
