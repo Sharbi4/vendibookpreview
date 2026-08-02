@@ -9,7 +9,7 @@ import {
 } from "../_shared/jsonError.ts";
 import { getPaymentProvider, type ProviderName } from "../_shared/payments/index.ts";
 import { auditPayment, requestIp } from "../_shared/paymentAudit.ts";
-import { safeLog } from "../_shared/paypal.ts";
+import { paypalEnvironment, safeLog } from "../_shared/paypal.ts";
 import { classifyProduct } from "../_shared/productEntitlement.ts";
 import { ensureProviderPlan, intervalForProduct } from "../_shared/ensureProviderPlan.ts";
 
