@@ -59,17 +59,25 @@ serve(async (req) => {
       return jsonError(400, "not_recurring", "That product isn't a subscription.");
     }
 
-    const { data: plan } = await admin.from("monetization_product_plans")
-      .select("*")
-      .eq("product_id", product.id)
-      .eq("billing_interval", interval)
-      .eq("provider", providerName)
-      .eq("environment", provider.environment)
-      .eq("is_active", true)
-      .maybeSingle();
+    // Plans are seeded by the admin catalog sync, but a missing plan must not
+    // dead-end a paying member: create it on demand from the catalog price
+    // (deterministic idempotency key → no duplicate provider plans).
+    const { plan, error: planError } = await ensureProviderPlan({
+      admin,
+      provider,
+      providerName,
+      product,
+      interval: interval as "monthly" | "quarterly" | "annual",
+    });
     if (!plan?.paypal_plan_id) {
-      return jsonError(409, "plan_unavailable", "That billing option isn't set up yet. Please pick another.");
+      safeLog("plan_provision_failed", { slug: productSlug, interval, message: planError });
+      return jsonError(
+        409,
+        "plan_unavailable",
+        "That billing option isn't set up yet. Please pick another or contact support.",
+      );
     }
+
 
     // ---- consent (required for recurring billing) ----------------------
     if (!consentId) {
