@@ -16,7 +16,6 @@ import {
   SALE_SELLER_FEE_PERCENT} from '@/lib/commissions';
 import { FreightSettingsCard } from '@/components/freight';
 import { InfoTooltip } from '@/components/ui/info-tooltip';
-import { StripeConnectBanner } from './StripeConnectBanner';
 
 interface StepPricingProps {
   formData: ListingFormData;
@@ -513,10 +512,6 @@ export const StepPricing: React.FC<StepPricingProps> = ({
             </div>
           )}
 
-          {/* Stripe Banner for card payments */}
-          {formData.accept_card_payment && !isRental && (
-            <StripeConnectBanner variant="compact" />
-          )}
         </div>
       </section>
 
