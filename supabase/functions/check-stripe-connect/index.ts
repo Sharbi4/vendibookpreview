@@ -20,8 +20,17 @@ serve(async (req) => {
   try {
     logStep("Function started");
 
+    // Stripe is retired for new business (payouts run through PayPal). Without
+    // a key we simply report "not connected" instead of failing the page.
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
-    if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
+    if (!stripeKey) {
+      logStep("Stripe not configured — reporting disconnected");
+      return new Response(
+        JSON.stringify({ connected: false, onboarding_complete: false, provider_retired: true }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 },
+      );
+    }
+
 
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
