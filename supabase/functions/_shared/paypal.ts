@@ -191,12 +191,12 @@ export interface CreateOrderInput {
 }
 
 const money = (cents: number, currency: string) => ({
-  currency_code: currency,
+  currency_code: (currency || "USD").toUpperCase(),
   value: (cents / 100).toFixed(2),
 });
 
 export async function createPayPalOrder(input: CreateOrderInput) {
-  const currency = input.currency ?? "USD";
+  const currency = (input.currency ?? "USD").toUpperCase();
   const b = input.breakdown;
 
   const amount: Record<string, unknown> = money(input.amountCents, currency);

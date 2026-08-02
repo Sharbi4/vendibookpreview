@@ -8,7 +8,7 @@
 import { paypalRequest } from "./paypal.ts";
 
 const money = (cents: number, currency: string) => ({
-  currency_code: currency,
+  currency_code: (currency || "USD").toUpperCase(),
   value: (cents / 100).toFixed(2),
 });
 
@@ -68,7 +68,7 @@ export async function createBillingPlan(opts: {
   taxable?: boolean;
   idempotencyKey: string;
 }) {
-  const currency = opts.currency ?? "USD";
+  const currency = (opts.currency ?? "USD").toUpperCase();
   const cycles: Record<string, unknown>[] = [];
   let sequence = 1;
 
@@ -182,7 +182,7 @@ export async function createInvoice(opts: {
   buyerEmail?: string | null;
   dueDate?: string | null;
 }) {
-  const currency = opts.currency ?? "USD";
+  const currency = (opts.currency ?? "USD").toUpperCase();
   const draft = await paypalRequest("/v2/invoicing/invoices", {
     method: "POST",
     idempotencyKey: `invoice:${opts.reference}`,
