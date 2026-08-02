@@ -49,6 +49,14 @@ serve(async (req) => {
 
     const provider = getPaymentProvider(providerName);
     if (!provider.isConfigured()) {
+      // Distinct internal diagnostic — the customer message stays generic.
+      safeLog("live_credentials_missing", {
+        provider: providerName,
+        environment: paypalEnvironment(),
+        client_id_configured: !!Deno.env.get("PAYPAL_CLIENT_ID"),
+        client_secret_configured: !!Deno.env.get("PAYPAL_CLIENT_SECRET"),
+        webhook_id_configured: !!Deno.env.get("PAYPAL_WEBHOOK_ID"),
+      });
       return jsonError(503, "provider_unavailable", "Payments are temporarily unavailable. Please try again shortly.");
     }
 
@@ -76,7 +84,25 @@ serve(async (req) => {
       interval: resolvedInterval,
     });
     if (!plan?.paypal_plan_id) {
-      safeLog("plan_provision_failed", { slug: productSlug, interval: resolvedInterval, message: planError });
+      // Distinct internal reason codes so admin diagnostics can tell a
+      // sandbox/live catalog mismatch apart from a missing product or plan.
+      const env = paypalEnvironment();
+      const productEnv = product.paypal_product_env ?? null;
+      const reason = !product.paypal_product_id
+        ? "live_product_missing"
+        : productEnv && productEnv !== env
+        ? "catalog_environment_mismatch"
+        : /auth|credential|401/i.test(planError ?? "")
+        ? "oauth_authentication_failed"
+        : "live_plan_missing";
+      safeLog("plan_provision_failed", {
+        reason,
+        slug: productSlug,
+        interval: resolvedInterval,
+        environment: env,
+        stored_product_env: productEnv,
+        message: planError,
+      });
       return jsonError(
         409,
         "plan_unavailable",
@@ -131,6 +157,11 @@ serve(async (req) => {
     });
 
     if (!subscription.approveUrl) {
+      safeLog("approval_url_missing", {
+        environment: paypalEnvironment(),
+        subscription_id: subscription.providerSubscriptionId,
+        status: subscription.status,
+      });
       return jsonError(502, "approval_link_missing", "We couldn't start that subscription. Please try again.");
     }
 
