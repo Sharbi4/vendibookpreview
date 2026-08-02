@@ -1,3 +1,4 @@
+import { productCheckoutUrl, hostedCheckoutUrl } from '@/lib/payments/hostedCheckout';
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, Save, Send, Loader2, Cloud, Check, Eye } from 'lucide-react';
@@ -725,22 +726,7 @@ export const ListingWizard: React.FC = () => {
           }
 
           // Create notary checkout session
-          const { data, error } = await supabase.functions.invoke('create-notary-checkout', {
-            headers: {
-              Authorization: `Bearer ${sessionData.session.access_token}`,
-            },
-            body: { listing_id: listing.id },
-          });
-
-          if (error) {
-            console.error('Failed to create notary checkout:', error);
-            toast({
-              title: 'Failed to create checkout',
-              description: error.message || 'Please try again.',
-              variant: 'destructive',
-            });
-            return;
-          }
+          const data = { url: hostedCheckoutUrl('notary', listing.id, { success: `/listing-published?listing_id=${listing.id}`, cancel: `/listing-published?listing_id=${listing.id}`, label: 'Proof Notary' }) };
 
           if (data?.url) {
             // Clear unsaved changes flag before redirecting

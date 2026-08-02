@@ -1,3 +1,4 @@
+import { productCheckoutUrl, hostedCheckoutUrl } from '@/lib/payments/hostedCheckout';
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate, useParams, useSearchParams, Link } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
@@ -1651,12 +1652,7 @@ export const PublishWizard: React.FC = () => {
           return;
         }
 
-        const { data, error } = await supabase.functions.invoke('create-notary-checkout', {
-          headers: {
-            Authorization: `Bearer ${sessionData.session.access_token}`},
-          body: { listing_id: listing.id }});
-
-        if (error) throw error;
+        const data = { url: hostedCheckoutUrl('notary', listing.id, { success: `/listing-published?listing_id=${listing.id}`, cancel: `/listing-published?listing_id=${listing.id}`, label: 'Proof Notary' }) };
         if (!data?.url) {
           // Listing already published — surface a clear success even if notary failed.
           toast({
@@ -1728,42 +1724,7 @@ export const PublishWizard: React.FC = () => {
           return;
         }
 
-        const { data, error } = await supabase.functions.invoke('create-featured-checkout', {
-          headers: {
-            Authorization: `Bearer ${sessionData.session.access_token}`},
-          body: { listing_id: listing.id }});
-
-        if (error) {
-          const { referenceCode } = await reportError({
-            action: 'publish.boost.checkout.init',
-            endpoint: '/functions/v1/create-featured-checkout',
-            errorType: 'StripeCheckoutInitFailed',
-            errorMessage: (error as any)?.message ?? String(error),
-            status: (error as any)?.status,
-            listingId: listing.id,
-          });
-          toast({
-            title: "Couldn't start Stripe Checkout",
-            description: `Your listing is saved. Payments are temporarily unreachable — try publishing again in a moment, or contact support at (725) 755-9598. Reference: ${referenceCode}`,
-            variant: 'destructive',
-          });
-          return;
-        }
-        if (!data?.url) {
-          const { referenceCode } = await reportError({
-            action: 'publish.boost.checkout.init',
-            endpoint: '/functions/v1/create-featured-checkout',
-            errorType: 'StripeCheckoutMissingUrl',
-            errorMessage: 'No checkout URL returned',
-            listingId: listing.id,
-          });
-          toast({
-            title: 'Checkout unavailable',
-            description: `Stripe didn't return a checkout link. Please try again. Reference: ${referenceCode}`,
-            variant: 'destructive',
-          });
-          return;
-        }
+        const data = { url: productCheckoutUrl('boost-featured-30', listing.id) };
 
         // Set up listener for cross-tab communication before opening checkout
         const handleCheckoutComplete = (event: MessageEvent) => {
