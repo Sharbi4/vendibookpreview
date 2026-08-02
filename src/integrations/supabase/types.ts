@@ -3012,6 +3012,7 @@ export type Database = {
           member_discount_pct: number
           metadata: Json
           name: string
+          paypal_product_env: string | null
           paypal_product_id: string | null
           price_cents: number
           promo_ends_at: string | null
@@ -3044,6 +3045,7 @@ export type Database = {
           member_discount_pct?: number
           metadata?: Json
           name: string
+          paypal_product_env?: string | null
           paypal_product_id?: string | null
           price_cents?: number
           promo_ends_at?: string | null
@@ -3076,6 +3078,7 @@ export type Database = {
           member_discount_pct?: number
           metadata?: Json
           name?: string
+          paypal_product_env?: string | null
           paypal_product_id?: string | null
           price_cents?: number
           promo_ends_at?: string | null
