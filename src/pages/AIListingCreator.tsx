@@ -161,7 +161,7 @@ const AIListingCreator: React.FC = () => {
       // Add a next-steps message to the chat before redirecting
       setMessages(prev => [...prev, {
         role: 'assistant' as const,
-        content: `🎉 **Your draft has been saved!**\n\nHere's what to do next:\n\n1. **Open your draft** — You'll land on your Dashboard. Tap on the draft to open the editor.\n2. **${uploadedImages.length > 0 ? 'Review your photos — they\'re attached! Add more or rearrange in the editor.' : 'Add photos — listings with photos get 5x more views! Upload at least 3-5 in the editor.'}**\n3. **Connect payments** — Set up Stripe so you can get paid (takes ~2 min).\n4. **Hit Publish** — Your listing goes live instantly!\n5. **Share it** — Use the Share Kit to post on social media and generate a QR code.\n\nRedirecting you to your dashboard now...`
+        content: `🎉 **Your draft has been saved!**\n\nHere's what to do next:\n\n1. **Open your draft** — You'll land on your Dashboard. Tap on the draft to open the editor.\n2. **${uploadedImages.length > 0 ? 'Review your photos — they\'re attached! Add more or rearrange in the editor.' : 'Add photos — listings with photos get 5x more views! Upload at least 3-5 in the editor.'}**\n3. **Connect payments** — Set up PayPal so you can get paid (takes ~2 min).\n4. **Hit Publish** — Your listing goes live instantly!\n5. **Share it** — Use the Share Kit to post on social media and generate a QR code.\n\nRedirecting you to your dashboard now...`
       }]);
       setTimeout(() => navigate(`/create-listing/${draft.id}`), 4000);
     } catch (e: any) {

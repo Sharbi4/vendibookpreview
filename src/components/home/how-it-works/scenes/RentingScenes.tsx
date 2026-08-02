@@ -14,7 +14,7 @@ import {
 /**
  * Renting on Vendibook — 8 scenes. Shows browsing rentals, the booking
  * calendar with available / booked / selected states, the request flow,
- * host approval, verification & documents, Stripe checkout, the renter
+ * host approval, verification & documents, PayPal checkout, the renter
  * dashboard, and pickup / return confirmations.
  */
 export const rentingScenes = [
@@ -150,7 +150,7 @@ export const rentingScenes = [
     </SceneShell>
   ),
 
-  // 7. Stripe payment + shopper dashboard (rental view)
+  // 7. PayPal payment + shopper dashboard (rental view)
   () => (
     <SceneShell caption="Payment and booking status together.">
       <div className="flex h-full w-full items-center justify-center gap-4 px-6">

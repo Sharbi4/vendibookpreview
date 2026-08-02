@@ -35,7 +35,7 @@ export const StripeConnectBanner = ({ className, variant = 'compact' }: StripeCo
       )}>
         <CheckCircle2 className="h-4 w-4 text-emerald-600 flex-shrink-0" />
         <span className="text-sm font-medium text-emerald-700 dark:text-emerald-400">
-          Stripe connected — ready to publish
+          PayPal connected — ready to publish
         </span>
       </div>
     );
@@ -46,7 +46,7 @@ export const StripeConnectBanner = ({ className, variant = 'compact' }: StripeCo
       <div className={cn("space-y-1", className)}>
         <div className="flex items-center justify-between gap-3 px-3 py-2 bg-[#635bff]/5 border border-[#635bff]/20 rounded-lg">
           <div className="flex items-center gap-2">
-            <img src={stripeWordmark} alt="Stripe" className="h-4 w-auto" />
+            <img src={stripeWordmark} alt="PayPal" className="h-4 w-auto" />
             <span className="text-sm text-[#635bff] dark:text-[#a8a4ff]">
               {hasAccountStarted ? 'Complete setup to get paid' : 'Connect to get paid from your listings'}
             </span>
@@ -69,7 +69,7 @@ export const StripeConnectBanner = ({ className, variant = 'compact' }: StripeCo
           </Button>
         </div>
         <p className="text-[10px] text-muted-foreground px-3">
-          ⚠️ Stripe opens in a new tab — please disable your pop-up blocker if it doesn't open.
+          ⚠️ PayPal opens in a new tab — please disable your pop-up blocker if it doesn't open.
         </p>
       </div>
     );
@@ -83,16 +83,16 @@ export const StripeConnectBanner = ({ className, variant = 'compact' }: StripeCo
     )}>
       <div className="flex items-start gap-3">
         <div className="flex-shrink-0 w-10 h-10 bg-[#635bff]/10 rounded-lg flex items-center justify-center">
-          <img src={stripeWordmark} alt="Stripe" className="h-5 w-auto" />
+          <img src={stripeWordmark} alt="PayPal" className="h-5 w-auto" />
         </div>
         <div className="flex-1">
           <h4 className="font-medium text-foreground">
-            {hasAccountStarted ? 'Complete Your Stripe Setup' : 'Connect to Get Paid from Your Listings'}
+            {hasAccountStarted ? 'Complete Your PayPal Setup' : 'Connect to Get Paid from Your Listings'}
           </h4>
           <p className="text-sm text-muted-foreground mt-1">
             {hasAccountStarted 
-              ? 'Finish your Stripe onboarding to start accepting payments and publish listings.'
-              : 'You\'ll need to connect a Stripe account before you can publish. Takes about 5 minutes.'}
+              ? 'Finish your PayPal onboarding to start accepting payments and publish listings.'
+              : 'You\'ll need to connect a PayPal account before you can publish. Takes about 5 minutes.'}
           </p>
           <Button 
             size="sm" 
@@ -108,13 +108,13 @@ export const StripeConnectBanner = ({ className, variant = 'compact' }: StripeCo
               </>
             ) : (
               <>
-                {hasAccountStarted ? 'Complete Setup' : 'Connect Stripe'}
+                {hasAccountStarted ? 'Complete Setup' : 'Set up payouts'}
                 <ArrowRight className="h-4 w-4" />
               </>
             )}
           </Button>
           <p className="text-xs text-muted-foreground mt-2">
-            ⚠️ Stripe opens in a new tab — please disable your pop-up blocker if it doesn't open.
+            ⚠️ PayPal opens in a new tab — please disable your pop-up blocker if it doesn't open.
           </p>
         </div>
       </div>

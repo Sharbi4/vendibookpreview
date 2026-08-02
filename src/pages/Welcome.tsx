@@ -252,8 +252,8 @@ const Welcome: React.FC = () => {
             </div>
           </div>
           <div className="mt-3 flex items-center justify-center">
-            {/* Truthful context: billing is Stripe-powered. Do not imply Stripe covers
-                every part of Vendibook. Badge asset already reads "Powered by Stripe" —
+            {/* Truthful context: billing is PayPal-powered. Do not imply PayPal covers
+                every part of Vendibook. Badge asset already reads "Powered by PayPal" —
                 no repeat copy alongside it. */}
             <StripeTrustBadge context="subscription" surface="dark" size="sm" withCopy={false} />
           </div>

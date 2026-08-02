@@ -38,7 +38,7 @@ export const StripeConnectModal: React.FC<StripeConnectModalProps> = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader className="text-center pb-2">
-          {/* Animated Stripe logo */}
+          {/* Animated PayPal logo */}
           <div className="relative mx-auto w-20 h-20 mb-4">
             <div className="absolute inset-0 bg-gradient-to-br from-[#635bff]/20 to-[#7c75ff]/20 rounded-full animate-pulse" />
             <div className="absolute inset-2 bg-gradient-to-br from-[#635bff]/30 to-[#7c75ff]/30 rounded-full" />
@@ -91,12 +91,12 @@ export const StripeConnectModal: React.FC<StripeConnectModalProps> = ({
             {isConnecting ? (
               <>
                 <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                Opening Stripe...
+                Opening PayPal...
               </>
             ) : (
               <>
                 <StripeLogo size="sm" className="mr-2 brightness-0 invert" />
-                Connect with Stripe
+                Connect with PayPal
                 <ExternalLink className="w-4 h-4 ml-2" />
               </>
             )}
@@ -105,11 +105,11 @@ export const StripeConnectModal: React.FC<StripeConnectModalProps> = ({
           {/* New user explainer - important! */}
           <div className="bg-blue-50 dark:bg-blue-950/30 rounded-lg p-4 border border-blue-200 dark:border-blue-800">
             <p className="text-sm font-medium text-blue-800 dark:text-blue-200 mb-2">
-              🆕 First time? No Stripe account needed!
+              🆕 First time? No PayPal account needed!
             </p>
             <p className="text-xs text-blue-700 dark:text-blue-300">
-              You'll be redirected to Stripe's secure page. Just <strong>fill out the form</strong> with your info — 
-              Stripe will create your account automatically. No signup required.
+              You'll be redirected to PayPal's secure page. Just <strong>fill out the form</strong> with your info — 
+              PayPal will create your account automatically. No signup required.
             </p>
           </div>
 
@@ -137,10 +137,10 @@ export const StripeConnectModal: React.FC<StripeConnectModalProps> = ({
           </div>
 
           <p className="text-xs text-center text-muted-foreground">
-            ⚠️ Stripe opens in a new tab — please disable your pop-up blocker if it doesn't open.
+            ⚠️ PayPal opens in a new tab — please disable your pop-up blocker if it doesn't open.
           </p>
           <p className="text-xs text-center text-muted-foreground">
-            You can save drafts without connecting Stripe. Connect anytime before publishing.
+            You can save drafts without connecting PayPal. Connect anytime before publishing.
           </p>
         </div>
       </DialogContent>

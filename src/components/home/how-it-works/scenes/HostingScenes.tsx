@@ -14,7 +14,7 @@ import {
 /**
  * Hosting on Vendibook — 8 scenes. Shows unused availability becoming
  * income, the host listing wizard, the host calendar with available /
- * booked states, incoming booking requests, the host dashboard, Stripe
+ * booked states, incoming booking requests, the host dashboard, PayPal
  * payment tracking, the actual payout timing (24h after rental ends), and
  * handoff / return / review beats.
  */
@@ -113,7 +113,7 @@ export const hostingScenes = [
   ),
 
 
-  // 6. Stripe payment flow
+  // 6. PayPal payment flow
   () => (
     <SceneShell caption="See payment and payout status clearly.">
       <div className="flex h-full w-full items-center justify-center px-6">

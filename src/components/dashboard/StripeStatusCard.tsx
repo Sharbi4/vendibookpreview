@@ -56,7 +56,7 @@ const StripeStatusCard = ({
             <Check className="h-6 w-6 text-primary-foreground" strokeWidth={2.5} />
           </div>
           <div>
-            <p className="font-semibold text-foreground">Stripe connected</p>
+            <p className="font-semibold text-foreground">PayPal connected</p>
             <p className="text-sm text-muted-foreground">Payments enabled. Funds will be deposited to your account.</p>
           </div>
         </div>
@@ -72,7 +72,7 @@ const StripeStatusCard = ({
               <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
               <>
-                View in Stripe
+                View in PayPal
                 <ExternalLink className="h-4 w-4" />
               </>
             )}

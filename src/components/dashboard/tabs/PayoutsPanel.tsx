@@ -35,7 +35,7 @@ const PayoutsPanel = () => {
     <div className="max-w-[840px] mx-auto space-y-6">
       <header>
         <h1 className="text-2xl font-semibold text-foreground">Payouts</h1>
-        <p className="text-sm text-muted-foreground mt-1">Where your earnings land, and your Stripe Connect status.</p>
+        <p className="text-sm text-muted-foreground mt-1">Where your earnings land, and your PayPal Connect status.</p>
       </header>
 
       <button
@@ -46,7 +46,7 @@ const PayoutsPanel = () => {
       >
         {isLoading ? (
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Loader2 className="h-4 w-4 animate-spin" /> Checking your Stripe account…
+            <Loader2 className="h-4 w-4 animate-spin" /> Checking your PayPal account…
           </div>
         ) : isOnboardingComplete ? (
           <div className="flex items-start gap-4">
@@ -54,12 +54,12 @@ const PayoutsPanel = () => {
               <CheckCircle2 className="h-5 w-5" />
             </div>
             <div className="flex-1">
-              <p className="text-sm font-medium text-foreground">Stripe Connect is active</p>
+              <p className="text-sm font-medium text-foreground">PayPal Connect is active</p>
               <p className="text-xs text-muted-foreground mt-1">
                 Rentals settle in 24h · sales in 25d after buyer confirmation.
               </p>
               <span className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-foreground">
-                {isOpeningDashboard ? 'Opening…' : 'Manage in Stripe'} <ExternalLink className="h-3 w-3" />
+                {isOpeningDashboard ? 'Opening…' : 'Manage in PayPal'} <ExternalLink className="h-3 w-3" />
               </span>
             </div>
           </div>
@@ -69,10 +69,10 @@ const PayoutsPanel = () => {
               <AlertTriangle className="h-5 w-5" />
             </div>
             <div className="flex-1">
-              <p className="text-sm font-medium text-foreground">Finish Stripe onboarding to accept card payments</p>
+              <p className="text-sm font-medium text-foreground">Finish PayPal onboarding to accept card payments</p>
               <p className="text-xs text-muted-foreground mt-1">You can still list and take cash / Pay in Person bookings without it.</p>
               <span className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-primary">
-                {isConnecting ? 'Opening Stripe…' : 'Set up payouts'} <ExternalLink className="h-3 w-3" />
+                {isConnecting ? 'Opening PayPal…' : 'Set up payouts'} <ExternalLink className="h-3 w-3" />
               </span>
             </div>
           </div>
@@ -136,7 +136,7 @@ const PayoutsPanel = () => {
                         </li>
                       </ul>
                       <p className="mt-3 text-[11px] text-muted-foreground">
-                        Estimated arrival {arrival.toLocaleDateString()} · Stripe schedule may vary.
+                        Estimated arrival {arrival.toLocaleDateString()} · PayPal schedule may vary.
                       </p>
                     </PopoverContent>
                   </Popover>

@@ -38,11 +38,11 @@ export const NextStepCard = ({ onConnectStripe, isConnectingStripe }: NextStepCa
   const possibleSteps: NextStepConfig[] = [
     {
       id: 'stripe',
-      title: 'Connect Stripe to get paid',
+      title: 'Set up payouts to get paid',
       description: 'Set up payouts so you can accept bookings and sales.',
       icon: CreditCard,
       action: {
-        label: 'Connect Stripe',
+        label: 'Set up payouts',
         onClick: onConnectStripe,
       },
       priority: 1,
