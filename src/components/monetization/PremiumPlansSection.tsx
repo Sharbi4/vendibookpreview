@@ -193,9 +193,12 @@ export function PremiumPlansSection({ compact = false, successPathOverride, canc
                 </div>
               );
             }
-            const product = interval === 'annual' ? (t.annual ?? t.monthly) : (t.monthly ?? t.annual);
-            if (!product) return null;
-            const paths = buildCheckoutReturnPaths(product.slug);
+            // Exact cadence only — never silently bill a different interval
+            // than the one shown on the toggle.
+            const product = interval === 'annual' ? t.annual : t.monthly;
+            const fallbackForCopy = t.monthly ?? t.annual;
+            if (!product && !fallbackForCopy) return null;
+            const paths = buildCheckoutReturnPaths((product ?? fallbackForCopy)!.slug);
             return (
               <div key={t.role} className={cn(t.role === 'pro' && 'xl:-my-3 xl:z-10')}>
                 <PremiumTierCard
