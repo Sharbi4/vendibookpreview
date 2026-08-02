@@ -1459,7 +1459,6 @@ export const PublishWizard: React.FC = () => {
 
   const handlePublish = async () => {
     if (!listing) return;
-    const stripeRequired = listing.mode === 'rent' || (listing.mode === 'sale' && acceptCardPayment);
 
     // Validate all required fields before publishing
     const validationErrors = getValidationErrors();
@@ -1471,22 +1470,6 @@ export const PublishWizard: React.FC = () => {
       return;
     }
 
-    if (stripeRequired && !isOnboardingComplete) {
-      toast({
-        title: 'Connect Stripe to accept card payments',
-        description: 'Or switch to cash-only (Pay in Person) on the Pricing step to publish now and add Stripe later.',
-        variant: 'destructive',
-        action: (
-          <button
-            onClick={() => { void connectStripe(); }}
-            className="inline-flex items-center rounded-md bg-foreground px-3 py-1.5 text-xs font-medium text-background hover:bg-foreground/90"
-          >
-            Connect Stripe
-          </button>
-        ) as any,
-      });
-      return;
-    }
 
     // Identity verification is optional — it no longer blocks publishing.
 
@@ -1945,7 +1928,6 @@ export const PublishWizard: React.FC = () => {
     if (!hasValidTitle) errors.push(`Title must be at least ${MIN_TITLE_LENGTH} characters`);
     if (!hasValidDescription) errors.push(`Description must be at least ${MIN_DESCRIPTION_LENGTH} characters (currently ${description.trim().length})`);
     if (!checklistState.hasLocation) errors.push('Complete the location and logistics section');
-    if (requiresStripe && !isOnboardingComplete) errors.push('Connect Stripe to accept card payments — or switch to cash-only (Pay in Person) on the Pricing step to publish now and add Stripe later.');
     return errors;
   };
 
