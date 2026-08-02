@@ -3,7 +3,7 @@ import { CheckCircle2, ArrowRight, CreditCard, FileText, UserCheck } from 'lucid
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { useStripeConnect } from '@/hooks/useStripeConnect';
+import { useManualPayout, MANUAL_PAYOUT_SETTINGS_PATH } from '@/hooks/useManualPayout';
 import { useAuth } from '@/contexts/AuthContext';
 import { useHostListings } from '@/hooks/useHostListings';
 import { cn } from '@/lib/utils';
@@ -23,7 +23,7 @@ interface OnboardingStep {
 
 export const HostOnboardingCard = () => {
   const { user } = useAuth();
-  const { isConnected, isLoading: stripeLoading, connectStripe, isConnecting } = useStripeConnect();
+  const { hasPayoutInstructions, isLoading: payoutLoading } = useManualPayout();
   const { stats, isLoading: listingsLoading } = useHostListings();
 
   // Determine step completion
@@ -35,14 +35,14 @@ export const HostOnboardingCard = () => {
 
   const steps: OnboardingStep[] = [
     {
-      id: 'stripe',
-      title: 'Set up payouts',
-      description: 'Set up payments to receive earnings',
+      id: 'payout-details',
+      title: 'Add payout details',
+      description: 'Tell us where to send your earnings — payouts are sent manually by Vendibook',
       icon: CreditCard,
-      isComplete: isConnected,
-      action: !isConnected ? {
-        label: isConnecting ? 'Connecting...' : 'Set up payouts',
-        onClick: connectStripe,
+      isComplete: hasPayoutInstructions,
+      action: !hasPayoutInstructions ? {
+        label: 'Add payout details',
+        to: MANUAL_PAYOUT_SETTINGS_PATH,
       } : undefined,
     },
     {
@@ -74,7 +74,7 @@ export const HostOnboardingCard = () => {
   const allComplete = completedSteps === steps.length;
 
   // Don't show if loading or all steps complete
-  if (stripeLoading || listingsLoading) return null;
+  if (payoutLoading || listingsLoading) return null;
   if (allComplete) return null;
 
   // Find the next incomplete step

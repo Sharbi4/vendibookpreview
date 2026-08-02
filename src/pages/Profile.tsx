@@ -18,7 +18,7 @@ import {
 } from '@/hooks/useUserProfile';
 import { useHostListings } from '@/hooks/useHostListings';
 import { useHostBookings } from '@/hooks/useHostBookings';
-import { useStripeConnect } from '@/hooks/useStripeConnect';
+import { useManualPayout, MANUAL_PAYOUT_SETTINGS_PATH } from '@/hooks/useManualPayout';
 import { useHostResponseTime } from '@/hooks/useHostResponseTime';
 import { useAuth } from '@/contexts/AuthContext';
 import { Listing } from '@/types/listing';
@@ -41,7 +41,8 @@ const Profile = () => {
   // Host-specific data (only for own profile)
   const { listings: hostListings, stats: hostStats } = useHostListings();
   const { stats: bookingStats } = useHostBookings();
-  const { isConnected: stripeConnected, isLoading: stripeLoading, connectStripe, isConnecting } = useStripeConnect();
+  const { hasPayoutInstructions: stripeConnected, isLoading: stripeLoading } = useManualPayout();
+  const goToPayoutSettings = () => { window.location.assign(MANUAL_PAYOUT_SETTINGS_PATH); };
   const { data: responseTimeData } = useHostResponseTime(profileUserId);
 
   const isLoading = profileLoading || statsLoading;
@@ -120,8 +121,8 @@ const Profile = () => {
               draftCount={draftCount}
               pendingRequestCount={pendingRequestCount}
               isLoadingStripe={stripeLoading}
-              onConnectStripe={connectStripe}
-              isConnectingStripe={isConnecting}
+              onConnectStripe={goToPayoutSettings}
+              isConnectingStripe={false}
             />
           )}
 
