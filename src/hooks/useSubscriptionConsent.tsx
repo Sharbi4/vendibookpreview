@@ -143,8 +143,6 @@ export function useSubscriptionConsent(): UseSubscriptionConsentResult {
   const requestCheckout = React.useCallback(
     async (product: MonetizationProduct, opts: CheckoutOpts = {}) => {
       setPendingSlug(product.slug);
-      // Re-entrancy guard: ignore a second request while one is in flight.
-      if (pendingSlug && pendingSlug !== product.slug) { /* allow plan switch */ }
       if (product.billing_type !== 'recurring') {
         await launchCheckout(product, opts);
         return;
