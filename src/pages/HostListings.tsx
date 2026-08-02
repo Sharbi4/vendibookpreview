@@ -6,9 +6,7 @@ import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import HostListingCard from '@/components/dashboard/HostListingCard';
 import DraftsSection from '@/components/dashboard/DraftsSection';
 import { OperationsTable } from '@/components/dashboard/OperationsTable';
-import { StripeConnectModal } from '@/components/listing-wizard/StripeConnectModal';
 import { useHostListings } from '@/hooks/useHostListings';
-import { useStripeConnect } from '@/hooks/useStripeConnect';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePageTracking } from '@/hooks/usePageTracking';
 import { HostPlanRibbon } from '@/components/host/HostPlanRibbon';
@@ -22,10 +20,8 @@ const HostListings = () => {
   const { user, isLoading: authLoading, hasRole } = useAuth();
   const navigate = useNavigate();
   const { listings, isLoading, stats, pauseListing, publishListing, deleteListing, updateListingPrice } = useHostListings();
-  const { isConnected, connectStripe, isConnecting } = useStripeConnect();
   const { canBulkListings } = useHostEntitlements();
   const quota = useListingQuota();
-  const [showStripeModal, setShowStripeModal] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
 
   usePageTracking();
@@ -43,22 +39,9 @@ const HostListings = () => {
   const draftListings = listings.filter(l => l.status === 'draft');
   const publishedListings = listings.filter(l => l.status !== 'draft');
 
-  const handleConnectStripe = async () => {
-    await connectStripe();
-  };
-
   const handlePublish = async (id: string) => {
-    // Stripe is only required for rentals or sales that accept card payments.
-    // Cash-only (Pay in Person) sale listings can publish without Stripe.
-    const listing = listings.find((l) => l.id === id);
-    const needsStripe =
-      listing?.mode === 'rent' ||
-      (listing?.mode === 'sale' && (listing as any)?.accept_card_payment !== false);
-
-    if (needsStripe && !isConnected) {
-      setShowStripeModal(true);
-      return;
-    }
+    // Payouts are handled manually by Vendibook, so publishing is never gated
+    // on a seller payment account.
     publishListing(id);
   };
 
@@ -201,13 +184,6 @@ const HostListings = () => {
         )}
       </div>
 
-      {/* Stripe Connect Modal */}
-      <StripeConnectModal
-        open={showStripeModal}
-        onOpenChange={setShowStripeModal}
-        onConnect={handleConnectStripe}
-        isConnecting={isConnecting}
-      />
     </DashboardLayout>
   );
 };
