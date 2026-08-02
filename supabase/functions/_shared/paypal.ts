@@ -88,7 +88,19 @@ export async function getPayPalAccessToken(): Promise<string> {
   });
 
   if (!res.ok) {
-    throw new PayPalError("Could not authenticate with PayPal.", 502, "AUTH_FAILED");
+    // Keep the upstream status/issue (never the credential) so diagnostics can
+    // tell "wrong credentials" apart from "PayPal is down".
+    let issue = "AUTH_FAILED";
+    try {
+      const body = await res.json();
+      issue = String(body?.error ?? body?.name ?? issue);
+    } catch { /* non-JSON error body */ }
+    safeLog("oauth_failed", { http_status: res.status, issue, environment: paypalEnvironment() });
+    throw new PayPalError(
+      `PayPal rejected the client credentials (HTTP ${res.status}).`,
+      res.status >= 500 ? 502 : 401,
+      issue,
+    );
   }
   const json = await res.json();
   cachedToken = {

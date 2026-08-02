@@ -1,146 +1,23 @@
-import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import Stripe from "https://esm.sh/stripe@18.5.0";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
+import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
-
-const logStep = (step: string, details?: Record<string, unknown>) => {
-  const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
-  console.log(`[CHECK-STRIPE-CONNECT] ${step}${detailsStr}`);
-};
-
-serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
-  }
-
-  try {
-    logStep("Function started");
-
-    // Stripe is retired for new business (payouts run through PayPal). Without
-    // a key we simply report "not connected" instead of failing the page.
-    const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
-    if (!stripeKey) {
-      logStep("Stripe not configured — reporting disconnected");
-      return new Response(
-        JSON.stringify({ connected: false, onboarding_complete: false, provider_retired: true }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 },
-      );
-    }
-
-
-    const supabaseClient = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
-      { auth: { persistSession: false } }
-    );
-
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader) throw new Error("No authorization header provided");
-
-    const token = authHeader.replace("Bearer ", "");
-    const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
-    if (userError) throw new Error(`Authentication error: ${userError.message}`);
-    
-    const user = userData.user;
-    if (!user) throw new Error("User not authenticated");
-    logStep("User authenticated", { userId: user.id });
-
-    // Get profile with Stripe account info
-    const { data: profile } = await supabaseClient
-      .from('profiles')
-      .select('stripe_account_id, stripe_onboarding_complete')
-      .eq('id', user.id)
-      .single();
-
-    if (!profile?.stripe_account_id) {
-      logStep("No Stripe account found");
-      return new Response(JSON.stringify({ 
-        connected: false, 
-        onboarding_complete: false 
-      }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 200,
-      });
-    }
-
-    const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
-    
-    // Check account status
-    const account = await stripe.accounts.retrieve(profile.stripe_account_id);
-    // Treat onboarding as complete once details are submitted. `payouts_enabled` can temporarily toggle
-    // (e.g., reviews/verification), and we don't want to force "reconnect" for already-linked accounts.
-    const isComplete = Boolean(account.details_submitted);
-
-    // Best-effort: retrieve the default external bank account so the UI can show
-    // "•••• 1234 · Chase" next to "Update bank details".
-    let bank_last4: string | null = null;
-    let bank_name: string | null = null;
-    try {
-      const externals = await stripe.accounts.listExternalAccounts(
-        profile.stripe_account_id,
-        { object: "bank_account", limit: 5 },
-      );
-      const primary =
-        externals.data.find((b: { default_for_currency?: boolean }) => b.default_for_currency) ??
-        externals.data[0];
-      if (primary) {
-        bank_last4 = (primary as { last4?: string }).last4 ?? null;
-        bank_name = (primary as { bank_name?: string }).bank_name ?? null;
-      }
-    } catch (e) {
-      logStep("External account lookup skipped", { error: e instanceof Error ? e.message : String(e) });
-    }
-
-    logStep("Account status checked", {
-      accountId: profile.stripe_account_id,
-      detailsSubmitted: account.details_submitted,
-      payoutsEnabled: account.payouts_enabled,
-      isComplete,
-      bank_last4,
-    });
-
-    if (isComplete && !profile.stripe_onboarding_complete) {
-      await supabaseClient
-        .from('profiles')
-        .update({ stripe_onboarding_complete: true })
-        .eq('id', user.id);
-    }
-
-    // D1: sync trusted server-only host_payment_eligibility. This is the
-    // ONLY authority the publish trigger consults.
-    await supabaseClient.from('host_payment_eligibility').upsert({
-      user_id: user.id,
-      stripe_account_id: profile.stripe_account_id,
-      onboarding_complete: isComplete,
-      charges_enabled: Boolean(account.charges_enabled),
-      payouts_enabled: Boolean(account.payouts_enabled),
-      details_submitted: Boolean(account.details_submitted),
-      requirements_currently_due: (account.requirements?.currently_due ?? []) as unknown as object,
-      disabled_reason: account.requirements?.disabled_reason ?? null,
-      last_synced_at: new Date().toISOString(),
-    }, { onConflict: 'user_id' });
-
-    return new Response(JSON.stringify({
-      connected: true,
-      onboarding_complete: isComplete,
-      payouts_enabled: Boolean(account.payouts_enabled),
-      account_id: profile.stripe_account_id,
-      bank_last4,
-      bank_name,
-    }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 200,
-    });
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    logStep("ERROR", { message: errorMessage });
-    return new Response(JSON.stringify({ error: errorMessage }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 500,
-    });
-  }
+/**
+ * RETIRED: check-stripe-connect
+ *
+ * The legacy card processor's Connect onboarding is no longer used. This
+ * endpoint never contacts the retired provider; it always reports a
+ * disconnected state with a 200 so callers render the "set up payouts"
+ * state instead of blank-screening. Payout destinations now live on
+ * `profiles.paypal_payout_email`.
+ */
+Deno.serve((req) => {
+  if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
+  return new Response(
+    JSON.stringify({
+      connected: false,
+      onboarding_complete: false,
+      provider_retired: true,
+      message: 'Payouts are handled through PayPal. Save your payout email in account settings.',
+    }),
+    { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+  );
 });

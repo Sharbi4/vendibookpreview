@@ -1,59 +1,22 @@
-import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import Stripe from "https://esm.sh/stripe@18.5.0";
-import { createClient } from "npm:@supabase/supabase-js@2.57.2";
-import { corsHeaders, jsonError, jsonResponse, unknownErrorResponse } from "../_shared/jsonError.ts";
+import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 
-serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
-
-  try {
-    const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
-    if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
-
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
-      { auth: { persistSession: false } },
-    );
-
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader) return jsonError(401, "unauthenticated", "You must be signed in.");
-    const token = authHeader.replace("Bearer ", "");
-    const { data: userData, error: userError } = await supabase.auth.getUser(token);
-    if (userError) return jsonError(401, "unauthenticated", `Authentication error: ${userError.message}`);
-    const user = userData.user;
-    if (!user?.email) return jsonError(401, "unauthenticated", "User not authenticated or email not available");
-
-    const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
-
-    // Prefer stored customer id from host_subscriptions
-    let customerId: string | undefined;
-    const { data: sub } = await supabase
-      .from("host_subscriptions")
-      .select("stripe_customer_id")
-      .eq("user_id", user.id)
-      .not("stripe_customer_id", "is", null)
-      .order("updated_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-    customerId = sub?.stripe_customer_id ?? undefined;
-
-    if (!customerId) {
-      const customers = await stripe.customers.list({ email: user.email, limit: 1 });
-      customerId = customers.data[0]?.id;
-    }
-    if (!customerId) return jsonError(404, "no_stripe_customer", "No Stripe customer found for this account.");
-
-    const origin = req.headers.get("origin") || "https://vendibook.com";
-    const portal = await stripe.billingPortal.sessions.create({
-      customer: customerId,
-      return_url: `${origin}/account`,
-    });
-
-    return jsonResponse(200, { url: portal.url });
-  } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err);
-    console.error("[CUSTOMER-PORTAL]", msg);
-    return unknownErrorResponse(err);
-  }
+/**
+ * RETIRED: customer-portal
+ *
+ * The legacy card processor is no longer used by Vendibook. This endpoint is
+ * kept only so old clients/bookmarks get a stable, non-500 answer. It never
+ * contacts the retired provider. All active payments run through PayPal
+ * (`paypal-create-order`, `paypal-capture-order`, `paypal-subscription-create`).
+ */
+Deno.serve((req) => {
+  if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
+  return new Response(
+    JSON.stringify({
+      error: 'provider_retired',
+      message:
+        'This payment path has been retired. Please refresh the page — checkout now runs through PayPal.',
+      
+    }),
+    { status: 410, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+  );
 });

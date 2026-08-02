@@ -184,10 +184,10 @@ export const StepReview: React.FC<StepReviewProps> = ({
                 <CreditCard className="w-5 h-5 text-amber-600 mt-0.5" />
                 <div className="flex-1">
                   <p className="font-medium text-amber-800 dark:text-amber-200">
-                    Connect Stripe to get paid
+                    Add a payout method to get paid
                   </p>
                   <p className="text-sm text-amber-700 dark:text-amber-300 mt-0.5">
-                    To go live and receive card payments, connect your Stripe account. Tap here to set up now.
+                    To receive card payments, add the PayPal email where we should send your money. Tap here to set it up.
                   </p>
                 </div>
                 <ChevronRight className="w-5 h-5 text-amber-600 mt-0.5 shrink-0" />

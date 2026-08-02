@@ -4528,6 +4528,9 @@ export type Database = {
           membership_panel_dismissed_at: string | null
           name_parts_confirmed: boolean
           onboarded_at: string | null
+          paypal_payout_email: string | null
+          paypal_payout_updated_at: string | null
+          paypal_payout_verified_at: string | null
           phone_number: string | null
           pinned_listing_id: string | null
           public_city: string | null
@@ -4582,6 +4585,9 @@ export type Database = {
           membership_panel_dismissed_at?: string | null
           name_parts_confirmed?: boolean
           onboarded_at?: string | null
+          paypal_payout_email?: string | null
+          paypal_payout_updated_at?: string | null
+          paypal_payout_verified_at?: string | null
           phone_number?: string | null
           pinned_listing_id?: string | null
           public_city?: string | null
@@ -4636,6 +4642,9 @@ export type Database = {
           membership_panel_dismissed_at?: string | null
           name_parts_confirmed?: boolean
           onboarded_at?: string | null
+          paypal_payout_email?: string | null
+          paypal_payout_updated_at?: string | null
+          paypal_payout_verified_at?: string | null
           phone_number?: string | null
           pinned_listing_id?: string | null
           public_city?: string | null

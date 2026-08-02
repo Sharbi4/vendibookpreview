@@ -719,7 +719,7 @@ export const DashboardMock = ({
 
 /**
  * PaymentOptionsPanel: shows the actual purchase summary and the payment
- * methods available on Vendibook — Stripe, Affirm (when eligible), and
+ * methods available on Vendibook — PayPal, Affirm (when eligible), and
  * pay-in-person (when offered by the seller/host).
  */
 export const PaymentOptionsPanel = ({
@@ -755,7 +755,7 @@ export const PaymentOptionsPanel = ({
           className="flex items-center gap-2 rounded-lg border-2 border-primary bg-primary/8 px-2.5 py-2 text-xs"
         >
           <CreditCard className="h-4 w-4 text-primary" />
-          <div className="flex-1 font-semibold text-foreground">Pay online (Stripe)</div>
+          <div className="flex-1 font-semibold text-foreground">Pay online (PayPal)</div>
           <span className="text-[10px] font-bold text-primary">Selected</span>
         </motion.div>
         {showAffirm && (
@@ -789,7 +789,7 @@ export const PaymentOptionsPanel = ({
       </div>
       <div className="mt-3 flex items-center gap-1.5 border-t border-border/70 pt-2 text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">
         <Lock className="h-2.5 w-2.5 text-primary" />
-        256-bit TLS · PCI-DSS handled by Stripe
+        256-bit TLS · PCI-DSS handled by PayPal
       </div>
     </AppFrame>
   </motion.div>
@@ -798,7 +798,7 @@ export const PaymentOptionsPanel = ({
 
 /**
  * PayoutTimeline: shows the actual Vendibook payout schedule for hosts —
- * paid on Stripe checkout, host payout released 24h after the rental ends.
+ * paid on PayPal checkout, host payout released 24h after the rental ends.
  */
 export const PayoutTimeline = () => (
   <motion.div
@@ -816,7 +816,7 @@ export const PayoutTimeline = () => (
         </span>
       </div>
       {[
-        { label: 'Renter payment received (Stripe)', when: 'Booking confirmed', done: true },
+        { label: 'Renter payment received (PayPal)', when: 'Booking confirmed', done: true },
         { label: 'Rental in progress', when: 'Pickup → return', done: true },
         { label: 'Return confirmed by both sides', when: 'End of rental', done: true },
         { label: 'Host payout released', when: '24 hours after rental ends', done: false, highlight: true },

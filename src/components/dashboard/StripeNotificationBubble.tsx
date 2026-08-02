@@ -39,7 +39,7 @@ const StripeNotificationBubble = ({
         {...(clickable
           ? { onClick: onManage, disabled: isOpeningDashboard, type: 'button' }
           : {})}
-        aria-label={clickable ? 'Payouts connected — manage in Stripe' : 'Payouts connected'}
+        aria-label={clickable ? 'Payouts connected — manage in PayPal' : 'Payouts connected'}
         data-stripe-status="connected"
         className={cn(
           'inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium transition-colors',
@@ -63,7 +63,7 @@ const StripeNotificationBubble = ({
       type="button"
       onClick={onConnect}
       disabled={isConnecting}
-      aria-label="Connect Stripe to receive payouts"
+      aria-label="Set up payouts to receive payouts"
       data-stripe-status="disconnected"
       className={cn(
         'inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium transition-colors',
@@ -75,7 +75,7 @@ const StripeNotificationBubble = ({
       ) : (
         <AlertCircle className="h-3.5 w-3.5" />
       )}
-      {isConnecting ? 'Connecting…' : 'Payouts not connected — Connect Stripe'}
+      {isConnecting ? 'Connecting…' : 'Payouts not connected — Set up payouts'}
     </button>
   );
 };

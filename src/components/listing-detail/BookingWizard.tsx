@@ -1,3 +1,4 @@
+import { hostedCheckoutUrl } from '@/lib/payments/hostedCheckout';
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { format, differenceInDays, eachDayOfInterval } from 'date-fns';
@@ -327,19 +328,13 @@ const BookingWizard = ({
 
       // For Instant Book: redirect to payment
       if (instantBook) {
-        const { data: checkoutData, error: checkoutError } = await supabase.functions.invoke('create-checkout', {
-          body: {
-            booking_id: bookingResult.id,
-            listing_id: listingId,
-            mode: 'rent',
-            amount: fees.subtotal,
-            delivery_fee: currentDeliveryFee,
-            deposit_amount: depositAmount,
-          },
-        });
-
-        if (checkoutError) throw checkoutError;
-        if (!checkoutData?.url) throw new Error('Failed to create checkout session');
+        const checkoutData = {
+          url: hostedCheckoutUrl('booking', bookingResult.id, {
+            success: '/payment-success',
+            cancel: '/dashboard',
+            label: 'Rental booking',
+          }),
+        };
 
         trackFormSubmitConversion({ form_type: 'instant_book', listing_id: listingId });
         clearDraft(); // Clear saved draft on successful submission

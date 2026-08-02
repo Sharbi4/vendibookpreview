@@ -1,3 +1,4 @@
+import { productCheckoutUrl, hostedCheckoutUrl } from '@/lib/payments/hostedCheckout';
 import React, { useState } from 'react';
 import { Loader2, TrendingUp, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -41,12 +42,7 @@ export const FeatureThisListingCTA: React.FC<Props> = ({ listingId, priceLabel }
   const handleFeature = async () => {
     setBusy(true);
     try {
-      const { data, error } = await supabase.functions.invoke('create-featured-checkout', {
-        body: { listing_id: listingId },
-      });
-      if (error) throw error;
-      const url = (data as { url?: string } | null)?.url;
-      if (!url) throw new Error('Checkout URL missing');
+      const url = productCheckoutUrl('boost-featured-30', listingId);
       window.location.href = url;
     } catch (e) {
       toast({

@@ -1,3 +1,4 @@
+import { productCheckoutUrl, hostedCheckoutUrl } from '@/lib/payments/hostedCheckout';
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, Save, Send, Loader2, Cloud, Check, Eye } from 'lucide-react';
@@ -725,22 +726,7 @@ export const ListingWizard: React.FC = () => {
           }
 
           // Create notary checkout session
-          const { data, error } = await supabase.functions.invoke('create-notary-checkout', {
-            headers: {
-              Authorization: `Bearer ${sessionData.session.access_token}`,
-            },
-            body: { listing_id: listing.id },
-          });
-
-          if (error) {
-            console.error('Failed to create notary checkout:', error);
-            toast({
-              title: 'Failed to create checkout',
-              description: error.message || 'Please try again.',
-              variant: 'destructive',
-            });
-            return;
-          }
+          const data = { url: hostedCheckoutUrl('notary', listing.id, { success: `/listing-published?listing_id=${listing.id}`, cancel: `/listing-published?listing_id=${listing.id}`, label: 'Proof Notary' }) };
 
           if (data?.url) {
             // Clear unsaved changes flag before redirecting
@@ -933,7 +919,7 @@ export const ListingWizard: React.FC = () => {
       setTimeout(refreshStatus, 2000);
     } catch (error) {
       toast({
-        title: 'Error connecting Stripe',
+        title: 'Could not open payout settings',
         description: 'Please try again.',
         variant: 'destructive',
       });
@@ -1140,14 +1126,14 @@ export const ListingWizard: React.FC = () => {
                     <Button
                       onClick={() => saveListing(true)}
                       disabled={isSaving || !canPublish() || (requiresStripeConnect && !isOnboardingComplete)}
-                      title={requiresStripeConnect && !isOnboardingComplete ? 'Connect Stripe to publish' : undefined}
+                      title={requiresStripeConnect && !isOnboardingComplete ? 'Add a payout method to publish' : undefined}
                     >
                       {isSaving ? (
                         <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                       ) : (
                         <Send className="w-4 h-4 mr-2" />
                       )}
-                      {requiresStripeConnect && !isOnboardingComplete ? 'Connect Stripe to Publish' : 'Publish'}
+                      {requiresStripeConnect && !isOnboardingComplete ? 'Add payout method' : 'Publish'}
                     </Button>
                   </>
                 ) : (

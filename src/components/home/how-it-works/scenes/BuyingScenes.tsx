@@ -14,7 +14,7 @@ import {
 /**
  * Buying on Vendibook — 8 scenes, ~10s each. Shows scattered posts becoming
  * an organized marketplace, listing detail, messaging, payment options
- * (Stripe / Affirm eligibility / pay-in-person), the buyer purchase
+ * (PayPal / Affirm eligibility / pay-in-person), the buyer purchase
  * dashboard, a pay-in-person workflow, and handoff confirmations.
  */
 export const buyingScenes = [
@@ -121,14 +121,14 @@ export const buyingScenes = [
     </SceneShell>
   ),
 
-  // 5. Review payment options (Stripe / Affirm / Pay in person)
+  // 5. Review payment options (PayPal / Affirm / Pay in person)
   () => (
     <SceneShell caption="Review your total, then pick an available payment method.">
       <div className="flex h-full w-full items-center justify-center gap-4 px-6">
         <PaymentOptionsPanel price="$34,000" fees="+ platform fee" />
         <div className="max-w-[200px] rounded-xl border border-dashed border-muted-foreground/40 bg-background/70 p-3 text-[10px] leading-relaxed text-muted-foreground">
           <div className="font-bold text-foreground">Disclosure</div>
-          Stripe processes online payments. Affirm is subject to eligibility and approval. Payment options vary by listing.
+          PayPal processes online payments. Affirm is subject to eligibility and approval. Payment options vary by listing.
         </div>
       </div>
     </SceneShell>

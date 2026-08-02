@@ -1,3 +1,4 @@
+import { productCheckoutUrl, hostedCheckoutUrl } from '@/lib/payments/hostedCheckout';
 import { useState } from 'react';
 import { Star, TrendingUp, Eye, Award, Loader2 } from 'lucide-react';
 import {
@@ -54,47 +55,13 @@ export const FeaturedListingModal = ({
   const handleAddNow = async () => {
     setIsLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke('create-featured-checkout', {
-        body: { listing_id: listingId },
-      });
-
-      if (error) {
-        const { referenceCode } = await reportError({
-          action: 'boost.checkout.init',
-          endpoint: '/functions/v1/create-featured-checkout',
-          errorType: 'StripeCheckoutInitFailed',
-          errorMessage: (error as any)?.message ?? String(error),
-          status: (error as any)?.status,
-          listingId,
-        });
-        toast({
-          title: "Couldn't start Stripe Checkout",
-          description: `We couldn't reach payments right now. Please try again in a moment, or contact support at (725) 755-9598. Reference: ${referenceCode}`,
-          variant: 'destructive',
-        });
-        return;
-      }
-      if (!data?.url) {
-        const { referenceCode } = await reportError({
-          action: 'boost.checkout.init',
-          endpoint: '/functions/v1/create-featured-checkout',
-          errorType: 'StripeCheckoutMissingUrl',
-          errorMessage: 'No checkout URL returned',
-          listingId,
-        });
-        toast({
-          title: 'Checkout unavailable',
-          description: `Stripe didn't return a checkout link. Please try again. Reference: ${referenceCode}`,
-          variant: 'destructive',
-        });
-        return;
-      }
+      const data = { url: productCheckoutUrl('boost-featured-30', listingId) };
       const popup = window.open(data.url, '_blank');
       if (!popup || popup.closed) {
         toast({
           title: 'Popup blocked',
           description:
-            'Your browser blocked the Stripe Checkout tab. Allow popups for Vendibook, then click "Add Now" again.',
+            'Your browser blocked the checkout tab. Allow popups for Vendibook, then click "Add Now" again.',
           variant: 'destructive',
         });
         return;

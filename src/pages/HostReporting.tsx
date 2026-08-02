@@ -126,7 +126,7 @@ const HostReporting = () => {
                   Back to Dashboard
                 </Link>
                 <h1 className="text-2xl font-bold tracking-tight">Performance Reporting</h1>
-                <p className="text-sm text-muted-foreground">Track your Stripe earnings and payouts.</p>
+                <p className="text-sm text-muted-foreground">Track your Vendibook earnings and PayPal payouts.</p>
               </div>
             </div>
             
@@ -149,7 +149,7 @@ const HostReporting = () => {
                 disabled={isOpeningDashboard}
               >
                 {isOpeningDashboard ? <Loader2 className="h-4 w-4 animate-spin" /> : <CreditCard className="h-4 w-4" />}
-                Stripe Dashboard
+                Payout settings
               </Button>
               <Button variant="outline" className="gap-2 rounded-xl border-border hover:bg-foreground hover:text-background hover:border-foreground transition-all duration-200">
                 <Download className="h-4 w-4" />
@@ -373,7 +373,7 @@ const HostReporting = () => {
                       disabled={isOpeningDashboard}
                     >
                       {isOpeningDashboard ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-                      View in Stripe
+                      View payout settings
                     </Button>
                   </div>
                 </CardContent>

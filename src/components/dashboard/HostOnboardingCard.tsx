@@ -36,12 +36,12 @@ export const HostOnboardingCard = () => {
   const steps: OnboardingStep[] = [
     {
       id: 'stripe',
-      title: 'Connect Stripe',
+      title: 'Set up payouts',
       description: 'Set up payments to receive earnings',
       icon: CreditCard,
       isComplete: isConnected,
       action: !isConnected ? {
-        label: isConnecting ? 'Connecting...' : 'Connect Stripe',
+        label: isConnecting ? 'Connecting...' : 'Set up payouts',
         onClick: connectStripe,
       } : undefined,
     },

@@ -109,24 +109,18 @@ export function useSubscriptionManagement() {
             (data as { message?: string })?.message ??
             'Access continues until the end of your paid period.',
         });
+        await refetchUntilSynced(
+          (row) => row?.status === 'canceled' || !!row?.cancel_at_period_end,
+        );
       } else {
-        const { data, error } = await supabase.functions.invoke('manage-subscription', {
-          body: { action: 'cancel' },
-        });
-        if (error) throw error;
-        const at = (data as { cancel_at?: number })?.cancel_at;
+        // Legacy memberships are read-only — the old processor is retired and
+        // must never be called. Support cancels these by hand.
         toast({
-          title: 'Cancellation scheduled',
-          description: `Access continues through ${fmtSubDate(
-            at ? new Date(at * 1000).toISOString() : accessEndsAt,
-          )}.`,
+          title: 'Contact support to cancel',
+          description:
+            'This legacy membership is managed by our team. Email support@vendibook.com or call (725) 755-9598 and we’ll cancel it right away.',
         });
       }
-      await refetchUntilSynced((row) =>
-        provider === 'paypal'
-          ? row?.status === 'canceled' || !!row?.cancel_at_period_end
-          : !!row?.cancel_at_period_end,
-      );
     } catch (err) {
       const parsed = await parseEdgeError(err);
       toast({
@@ -137,61 +131,34 @@ export function useSubscriptionManagement() {
     } finally {
       setBusy(null);
     }
-  }, [provider, accessEndsAt, refetchUntilSynced, toast]);
+  }, [provider, refetchUntilSynced, toast]);
 
-  /** Stripe-only: un-schedule a pending cancellation. */
+  /** Legacy memberships can no longer be resumed self-serve. */
   const reactivate = useCallback(async () => {
-    setBusy('reactivate');
-    try {
-      const { error } = await supabase.functions.invoke('manage-subscription', {
-        body: { action: 'reactivate' },
-      });
-      if (error) throw error;
-      toast({
-        title: 'Subscription resumed',
-        description: 'Your plan will renew normally at the end of the current period.',
-      });
-      await refetchUntilSynced((row) => !row?.cancel_at_period_end);
-    } catch (err) {
-      const parsed = await parseEdgeError(err);
-      toast({
-        title: 'Could not resume subscription',
-        description: parsed?.message ?? (err instanceof Error ? err.message : 'Please try again.'),
-        variant: 'destructive',
-      });
-    } finally {
-      setBusy(null);
-    }
-  }, [refetchUntilSynced, toast]);
+    toast({
+      title: 'Contact support',
+      description:
+        'This legacy membership is managed by our team. Email support@vendibook.com and we’ll resume it for you.',
+    });
+  }, [toast]);
 
   /**
-   * Opens the billing surface for the owning provider. PayPal members manage
-   * their funding source in PayPal's automatic-payments settings; legacy
-   * Stripe members get the Customer Portal.
+   * Opens the billing surface. PayPal members manage their funding source in
+   * PayPal's automatic-payments settings; legacy members are pointed at
+   * support because the old billing portal is retired.
    */
   const openBilling = useCallback(async () => {
     if (provider === 'paypal') {
       window.open(PAYPAL_AUTOPAY_URL, '_blank', 'noopener,noreferrer');
       return;
     }
-    setBusy('portal');
-    try {
-      const { data, error } = await supabase.functions.invoke('customer-portal');
-      if (error) throw error;
-      const url = (data as { url?: string })?.url;
-      if (!url) throw new Error('Portal URL missing');
-      window.open(url, '_blank', 'noopener,noreferrer');
-    } catch (err) {
-      const parsed = await parseEdgeError(err);
-      toast({
-        title: 'Could not open billing portal',
-        description: parsed?.message ?? (err instanceof Error ? err.message : 'Please try again.'),
-        variant: 'destructive',
-      });
-    } finally {
-      setBusy(null);
-    }
+    toast({
+      title: 'Billing managed by support',
+      description:
+        'This legacy membership predates PayPal billing. Email support@vendibook.com for invoices or payment changes.',
+    });
   }, [provider, toast]);
+
 
   return {
     sub,

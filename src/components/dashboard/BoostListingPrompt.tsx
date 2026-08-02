@@ -1,3 +1,4 @@
+import { productCheckoutUrl, hostedCheckoutUrl } from '@/lib/payments/hostedCheckout';
 import { useEffect, useMemo, useState } from 'react';
 import { Star, TrendingUp, Eye, Award, Loader2, X } from 'lucide-react';
 import {
@@ -79,40 +80,7 @@ export const BoostListingPrompt = ({ listings, userId }: BoostListingPromptProps
     if (!candidate) return;
     setIsLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke('create-featured-checkout', {
-        body: { listing_id: candidate.id },
-      });
-      if (error) {
-        const { referenceCode } = await reportError({
-          action: 'boost.checkout.init',
-          endpoint: '/functions/v1/create-featured-checkout',
-          errorType: 'StripeCheckoutInitFailed',
-          errorMessage: (error as any)?.message ?? String(error),
-          status: (error as any)?.status,
-          listingId: candidate.id,
-        });
-        toast({
-          title: "Couldn't start Stripe Checkout",
-          description: `Payments are temporarily unreachable. Try again, or boost from your listing card. Reference: ${referenceCode}`,
-          variant: 'destructive',
-        });
-        return;
-      }
-      if (!data?.url) {
-        const { referenceCode } = await reportError({
-          action: 'boost.checkout.init',
-          endpoint: '/functions/v1/create-featured-checkout',
-          errorType: 'StripeCheckoutMissingUrl',
-          errorMessage: 'No checkout URL returned',
-          listingId: candidate.id,
-        });
-        toast({
-          title: 'Checkout unavailable',
-          description: `Stripe didn't return a link. Please try again. Reference: ${referenceCode}`,
-          variant: 'destructive',
-        });
-        return;
-      }
+      const data = { url: productCheckoutUrl('boost-featured-30', candidate.id) };
       const popup = window.open(data.url, '_blank');
       if (!popup || popup.closed) {
         toast({
