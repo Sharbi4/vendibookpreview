@@ -74,19 +74,31 @@ export async function ensureProviderPlan(opts: {
   }
 
   try {
-    let providerProductId: string | null = product.paypal_product_id ?? null;
+    // Catalog IDs are NOT portable across PayPal environments: a sandbox
+    // PROD-* id is meaningless in live and vice versa. Only reuse the stored
+    // product id when it was minted in the environment we are calling now.
+    const storedProductId: string | null = product.paypal_product_id ?? null;
+    const storedProductEnv: string | null = product.paypal_product_env ?? null;
+    const storedUsable = !!storedProductId && storedProductEnv === environment;
+
+    let providerProductId: string | null = storedUsable ? storedProductId : null;
     if (!providerProductId) {
       const created = await provider.createCatalogProduct({
         name: product.name,
         description: product.description,
-        idempotencyKey: `catalog-product:${product.id}`,
+        // Environment-scoped so a sandbox creation can never satisfy a live one.
+        idempotencyKey: `catalog-product:${environment}:${product.id}`,
       });
       providerProductId = created.providerProductId;
       await admin
         .from("monetization_products")
-        .update({ paypal_product_id: providerProductId })
+        .update({
+          paypal_product_id: providerProductId,
+          paypal_product_env: environment,
+        })
         .eq("id", product.id);
     }
+
 
     const createdPlan = await provider.createCatalogPlan({
       providerProductId,
