@@ -11,6 +11,7 @@ import { getPaymentProvider, type ProviderName } from "../_shared/payments/index
 import { auditPayment, requestIp } from "../_shared/paymentAudit.ts";
 import { safeLog } from "../_shared/paypal.ts";
 import { classifyProduct } from "../_shared/productEntitlement.ts";
+import { ensureProviderPlan } from "../_shared/ensureProviderPlan.ts";
 
 /**
  * Starts a recurring membership. The plan (and therefore the price) is always
