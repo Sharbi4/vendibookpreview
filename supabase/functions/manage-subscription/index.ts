@@ -18,8 +18,16 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
+    // Legacy Stripe members only. New memberships bill through PayPal and are
+    // managed by `paypal-subscription-cancel`.
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
-    if (!stripeKey) return jsonError(500, "stripe_not_configured", "Stripe is not configured.");
+    if (!stripeKey) {
+      return jsonError(
+        409,
+        "provider_retired",
+        "Memberships are now managed through PayPal. Please reload the page and try again.",
+      );
+    }
 
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
