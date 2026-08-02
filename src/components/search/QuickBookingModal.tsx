@@ -1,3 +1,4 @@
+import { hostedCheckoutUrl } from '@/lib/payments/hostedCheckout';
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Calendar, Loader2, MapPin, Truck, Building, Info, CreditCard, CheckCircle2, Zap } from 'lucide-react';
@@ -279,20 +280,13 @@ const QuickBookingModal = ({
 
       // For Instant Book listings, redirect to checkout immediately
       if (isInstantBook) {
-        const { data: checkoutData, error: checkoutError } = await supabase.functions.invoke('create-checkout', {
-          body: {
-            booking_id: bookingResult.id,
-            listing_id: listing.id,
-            mode: 'rent',
-            amount: fees.subtotal,
-            delivery_fee: currentDeliveryFee,
-            terms_id: termsGate.termsId,
-          },
-        });
-
-        if (checkoutError) throw checkoutError;
-
-        if (!checkoutData?.url) throw new Error('Failed to create checkout session');
+        const checkoutData = {
+          url: hostedCheckoutUrl('booking', bookingResult.id, {
+            success: '/payment-success',
+            cancel: '/dashboard',
+            label: 'Rental booking',
+          }),
+        };
 
         if (checkoutWindow) {
           checkoutWindow.location.href = checkoutData.url;

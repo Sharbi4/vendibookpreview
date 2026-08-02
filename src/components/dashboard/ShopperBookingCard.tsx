@@ -1,3 +1,4 @@
+import { hostedCheckoutUrl } from '@/lib/payments/hostedCheckout';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { format, isPast, parseISO } from 'date-fns';
@@ -221,20 +222,13 @@ const ShopperBookingCard = ({ booking, onCancel, onPaymentInitiated }: ShopperBo
     setShowCheckoutOverlay(true);
 
     try {
-      const { data, error } = await supabase.functions.invoke('create-checkout', {
-        body: {
-          booking_id: booking.id,
-          listing_id: listing.id,
-          mode: 'rent',
-          amount: booking.total_price,
-          delivery_fee: booking.delivery_fee_snapshot || 0,
-        },
-      });
-
-      if (error) throw error;
-      if (data?.error) throw new Error(data.error);
-
-      if (!data?.url) throw new Error('Failed to create checkout session');
+      const data = {
+        url: hostedCheckoutUrl('booking', booking.id, {
+          success: '/payment-success',
+          cancel: '/dashboard',
+          label: 'Rental booking',
+        }),
+      };
 
       onPaymentInitiated?.();
 

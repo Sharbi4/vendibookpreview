@@ -1,3 +1,4 @@
+import { hostedCheckoutUrl } from '@/lib/payments/hostedCheckout';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Calendar, Loader2, MapPin, Truck, Building, Info, UserCheck, CheckCircle2, Users, Minus, Plus } from 'lucide-react';
@@ -326,18 +327,13 @@ const BookingForm = ({
 
       // For Instant Book: Immediately redirect to payment
       if (instantBook) {
-        const { data: checkoutData, error: checkoutError } = await supabase.functions.invoke('create-checkout', {
-          body: {
-            booking_id: bookingResult.id,
-            listing_id: listingId,
-            mode: 'rent',
-            amount: fees.subtotal,
-            delivery_fee: currentDeliveryFee,
-          },
-        });
-
-        if (checkoutError) throw checkoutError;
-        if (!checkoutData?.url) throw new Error('Failed to create checkout session');
+        const checkoutData = {
+          url: hostedCheckoutUrl('booking', bookingResult.id, {
+            success: '/payment-success',
+            cancel: '/dashboard',
+            label: 'Rental booking',
+          }),
+        };
 
         // Track conversion before redirect
         trackFormSubmitConversion({ form_type: 'instant_book', listing_id: listingId });
