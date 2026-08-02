@@ -159,7 +159,7 @@ export const HostOnboardingCard = () => {
                       size="sm" 
                       variant="dark-shine"
                       onClick={step.action.onClick}
-                      disabled={isConnecting}
+                      disabled={false}
                       className="gap-1 rounded-xl shadow-lg"
                     >
                       {step.action.label}
