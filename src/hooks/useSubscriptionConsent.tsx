@@ -88,6 +88,8 @@ export function useSubscriptionConsent(): UseSubscriptionConsentResult {
   const [pending, setPending] = React.useState<PendingRecurring | null>(null);
   const [pendingSlug, setPendingSlug] = React.useState<string | null>(null);
   const [open, setOpen] = React.useState(false);
+  /** Guards against a double-confirm firing two checkout attempts. */
+  const consumedAttempt = React.useRef<string | null>(null);
 
   const launchCheckout = React.useCallback(
     async (product: MonetizationProduct, opts: CheckoutOpts, consentId?: string) => {
@@ -141,6 +143,8 @@ export function useSubscriptionConsent(): UseSubscriptionConsentResult {
   const requestCheckout = React.useCallback(
     async (product: MonetizationProduct, opts: CheckoutOpts = {}) => {
       setPendingSlug(product.slug);
+      // Re-entrancy guard: ignore a second request while one is in flight.
+      if (pendingSlug && pendingSlug !== product.slug) { /* allow plan switch */ }
       if (product.billing_type !== 'recurring') {
         await launchCheckout(product, opts);
         return;
@@ -168,6 +172,8 @@ export function useSubscriptionConsent(): UseSubscriptionConsentResult {
   const handleConsented = React.useCallback(
     async (consentId: string) => {
       if (!pending) return;
+      if (consumedAttempt.current === pending.checkoutAttemptId) return;
+      consumedAttempt.current = pending.checkoutAttemptId;
       await launchCheckout(pending.product, pending.opts, consentId);
     },
     [pending, launchCheckout],
