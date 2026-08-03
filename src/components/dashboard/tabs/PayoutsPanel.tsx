@@ -1,18 +1,22 @@
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Loader2, Wallet, Clock, ShieldCheck } from 'lucide-react';
-import { useManualPayout, MANUAL_PAYOUT_SETTINGS_PATH } from '@/hooks/useManualPayout';
+import { usePayoutPreference } from '@/hooks/usePayoutPreference';
+import { PAYOUT_METHOD_LABEL, PAYOUT_STATUS_LABEL } from '@/lib/payouts/methods';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import EmptyState from '../shared/EmptyState';
 
-/** Human labels for the internal payable states admins work through. */
+/** Where sellers manage their manual payout preference. */
+const PAYOUT_SETTINGS_PATH = '/account#section-payments';
+
+/** Truthful labels for the internal payable states admins work through. */
 const PAYABLE_STATUS_LABEL: Record<string, string> = {
-  awaiting_payment_confirmation: 'Awaiting payment confirmation',
+  awaiting_payment_confirmation: 'Awaiting confirmation',
   pending_release: 'Pending release',
-  eligible_for_review: 'In review',
-  payout_on_hold: 'On hold',
+  eligible_for_review: 'Eligible for review',
+  payout_on_hold: 'Held',
   payout_approved: 'Approved',
   payout_processing: 'Processing',
   payout_completed: 'Paid',
@@ -24,23 +28,36 @@ const PAYABLE_STATUS_LABEL: Record<string, string> = {
   cancelled: 'Cancelled',
 };
 
+/** States where no release date should be presented as a promise. */
+const NO_TIMING_PROMISE = new Set([
+  'payout_on_hold',
+  'disputed',
+  'reversed',
+  'payout_failed',
+  'partially_refunded',
+  'fully_refunded',
+  'cancelled',
+]);
+
 const money = (cents: number | null | undefined) =>
   `$${(((cents ?? 0) as number) / 100).toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
 
 const PayoutsPanel = () => {
   const { user } = useAuth();
-  const { payoutEmail, hasPayoutInstructions, isLoading } = useManualPayout();
+  const { preference, isLoading } = usePayoutPreference();
 
   const { data: payables = [], isLoading: payablesLoading } = useQuery({
     queryKey: ['seller-payables', user?.id],
     enabled: !!user,
     queryFn: async () => {
-      const { data } = await supabase
+      const { data } = await (supabase as any)
         .from('seller_payables')
-        .select('id, status, seller_amount_cents, gross_amount_cents, created_at')
+        .select(
+          'id, status, transaction_type, gross_collected_cents, platform_fee_cents, adjustments_cents, refunded_cents, net_payout_cents, release_due_at, payout_eligible_at, hold_reason, created_at',
+        )
         .eq('seller_id', user!.id)
         .order('created_at', { ascending: false })
-        .limit(20);
+        .limit(25);
       return data ?? [];
     },
   });
@@ -50,15 +67,15 @@ const PayoutsPanel = () => {
       <header>
         <h1 className="text-2xl font-semibold text-foreground">Earnings &amp; payouts</h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Payments are collected securely through PayPal. Seller earnings are reviewed and paid
-          manually by Vendibook according to the transaction timeline.
+          Buyer payments are processed securely through PayPal. Vendibook records your proceeds and
+          our team reviews and sends every payout manually according to the transaction timeline.
         </p>
       </header>
 
       <div className="rounded-md border border-border bg-card p-6">
         {isLoading ? (
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Loader2 className="h-4 w-4 animate-spin" /> Loading your payout details…
+            <Loader2 className="h-4 w-4 animate-spin" /> Loading your payout preference…
           </div>
         ) : (
           <div className="flex items-start gap-4">
@@ -67,16 +84,18 @@ const PayoutsPanel = () => {
             </div>
             <div className="flex-1">
               <p className="text-sm font-medium text-foreground">
-                {hasPayoutInstructions ? 'Manual payout details on file' : 'Add your payout details'}
+                {preference
+                  ? `${PAYOUT_METHOD_LABEL[preference.method]} · ${preference.masked_destination ?? ''}`
+                  : 'Add your payout preference'}
               </p>
               <p className="text-xs text-muted-foreground mt-1">
-                {hasPayoutInstructions
-                  ? `We'll send your reviewed earnings to ${payoutEmail}. Update it any time — this is payout instruction info for Vendibook operations, not a connected payment account.`
-                  : 'Tell us where to send your earnings. You can list, take bookings and get paid by buyers before adding this.'}
+                {preference
+                  ? `Status: ${PAYOUT_STATUS_LABEL[preference.status]}. This is a payout preference for Vendibook operations — not a connected merchant account. Admins review and send each payout manually.`
+                  : 'Choose PayPal, Venmo, Cash App or bank transfer (ACH). You can list, take bookings and get paid by buyers before adding this — it never affects publishing.'}
               </p>
               <Button asChild variant="outline" size="sm" className="mt-3">
-                <Link to={MANUAL_PAYOUT_SETTINGS_PATH}>
-                  {hasPayoutInstructions ? 'Update payout details' : 'Add payout details'}
+                <Link to={PAYOUT_SETTINGS_PATH}>
+                  {preference ? 'Update payout preference' : 'Add payout preference'}
                 </Link>
               </Button>
             </div>
@@ -103,21 +122,55 @@ const PayoutsPanel = () => {
           </div>
         ) : (
           <ul className="divide-y divide-border">
-            {payables.map((p: any) => (
-              <li key={p.id} className="px-6 py-4 flex items-center justify-between gap-4">
-                <div>
-                  <p className="text-sm font-medium text-foreground">
-                    {money(p.seller_amount_cents ?? p.gross_amount_cents)}
+            {payables.map((p: any) => {
+              const releaseAt = p.payout_eligible_at ?? p.release_due_at;
+              const showTiming = releaseAt && !NO_TIMING_PROMISE.has(p.status);
+              return (
+                <li key={p.id} className="px-6 py-4 space-y-2">
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <p className="text-sm font-semibold text-foreground">
+                        {money(p.net_payout_cents)} <span className="text-xs font-normal text-muted-foreground">net payout</span>
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {(p.transaction_type ?? 'transaction').replace(/_/g, ' ')} ·{' '}
+                        {new Date(p.created_at).toLocaleDateString()}
+                      </p>
+                    </div>
+                    <span className="text-xs font-medium text-foreground/80 shrink-0">
+                      {PAYABLE_STATUS_LABEL[p.status] ?? p.status}
+                    </span>
+                  </div>
+
+                  <dl className="grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-1 text-[11px]">
+                    <div>
+                      <dt className="text-muted-foreground">Gross collected</dt>
+                      <dd className="text-foreground/85">{money(p.gross_collected_cents)}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-muted-foreground">Vendibook fee</dt>
+                      <dd className="text-foreground/85">−{money(p.platform_fee_cents)}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-muted-foreground">Adjustments</dt>
+                      <dd className="text-foreground/85">{money(p.adjustments_cents)}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-muted-foreground">Refunded</dt>
+                      <dd className="text-foreground/85">−{money(p.refunded_cents)}</dd>
+                    </div>
+                  </dl>
+
+                  <p className="text-[11px] text-muted-foreground">
+                    {showTiming
+                      ? `Eligible for review on ${new Date(releaseAt).toLocaleDateString()}. A Vendibook admin approves and sends the payout after review.`
+                      : p.hold_reason
+                        ? `On hold: ${p.hold_reason}. Payout timing changes while this is resolved.`
+                        : 'Timing may change if a hold, refund, dispute, verification issue or operational review applies.'}
                   </p>
-                  <p className="text-xs text-muted-foreground">
-                    {new Date(p.created_at).toLocaleDateString()}
-                  </p>
-                </div>
-                <span className="text-xs text-muted-foreground">
-                  {PAYABLE_STATUS_LABEL[p.status] ?? p.status}
-                </span>
-              </li>
-            ))}
+                </li>
+              );
+            })}
           </ul>
         )}
       </div>
