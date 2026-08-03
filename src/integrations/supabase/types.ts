@@ -4070,6 +4070,47 @@ export type Database = {
           },
         ]
       }
+      payout_ach_details: {
+        Row: {
+          created_at: string
+          encrypted_payload: string | null
+          encryption_version: string
+          id: string
+          intake_mode: string
+          preference_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          encrypted_payload?: string | null
+          encryption_version?: string
+          id?: string
+          intake_mode?: string
+          preference_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          encrypted_payload?: string | null
+          encryption_version?: string
+          id?: string
+          intake_mode?: string
+          preference_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payout_ach_details_preference_id_fkey"
+            columns: ["preference_id"]
+            isOneToOne: true
+            referencedRelation: "payout_preferences"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       payout_actions: {
         Row: {
           action: string
@@ -4082,7 +4123,8 @@ export type Database = {
           id: string
           metadata: Json
           note: string | null
-          payable_id: string
+          payable_id: string | null
+          subject_user_id: string | null
           to_status: Database["public"]["Enums"]["seller_payout_status"] | null
         }
         Insert: {
@@ -4096,7 +4138,8 @@ export type Database = {
           id?: string
           metadata?: Json
           note?: string | null
-          payable_id: string
+          payable_id?: string | null
+          subject_user_id?: string | null
           to_status?: Database["public"]["Enums"]["seller_payout_status"] | null
         }
         Update: {
@@ -4110,7 +4153,8 @@ export type Database = {
           id?: string
           metadata?: Json
           note?: string | null
-          payable_id?: string
+          payable_id?: string | null
+          subject_user_id?: string | null
           to_status?: Database["public"]["Enums"]["seller_payout_status"] | null
         }
         Relationships: [
@@ -4122,6 +4166,72 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      payout_preferences: {
+        Row: {
+          ach_account_holder: string | null
+          ach_account_last4: string | null
+          ach_account_type: string | null
+          ach_bank_name: string | null
+          ach_routing_last4: string | null
+          cash_app_cashtag: string | null
+          created_at: string
+          display_label: string | null
+          id: string
+          masked_destination: string | null
+          method: Database["public"]["Enums"]["payout_method"]
+          needs_attention_reason: string | null
+          paypal_email: string | null
+          status: Database["public"]["Enums"]["payout_preference_status"]
+          updated_at: string
+          user_id: string
+          venmo_identifier_type: string | null
+          venmo_masked_identifier: string | null
+          verified_at: string | null
+        }
+        Insert: {
+          ach_account_holder?: string | null
+          ach_account_last4?: string | null
+          ach_account_type?: string | null
+          ach_bank_name?: string | null
+          ach_routing_last4?: string | null
+          cash_app_cashtag?: string | null
+          created_at?: string
+          display_label?: string | null
+          id?: string
+          masked_destination?: string | null
+          method: Database["public"]["Enums"]["payout_method"]
+          needs_attention_reason?: string | null
+          paypal_email?: string | null
+          status?: Database["public"]["Enums"]["payout_preference_status"]
+          updated_at?: string
+          user_id: string
+          venmo_identifier_type?: string | null
+          venmo_masked_identifier?: string | null
+          verified_at?: string | null
+        }
+        Update: {
+          ach_account_holder?: string | null
+          ach_account_last4?: string | null
+          ach_account_type?: string | null
+          ach_bank_name?: string | null
+          ach_routing_last4?: string | null
+          cash_app_cashtag?: string | null
+          created_at?: string
+          display_label?: string | null
+          id?: string
+          masked_destination?: string | null
+          method?: Database["public"]["Enums"]["payout_method"]
+          needs_attention_reason?: string | null
+          paypal_email?: string | null
+          status?: Database["public"]["Enums"]["payout_preference_status"]
+          updated_at?: string
+          user_id?: string
+          venmo_identifier_type?: string | null
+          venmo_masked_identifier?: string | null
+          verified_at?: string | null
+        }
+        Relationships: []
       }
       paypal_plan_mappings: {
         Row: {
@@ -8642,6 +8752,12 @@ export type Database = {
         | "failed"
         | "cancelled"
       payment_provider: "stripe" | "paypal" | "manual" | "dwolla_future"
+      payout_method: "paypal" | "venmo" | "cash_app" | "ach"
+      payout_preference_status:
+        | "not_set"
+        | "pending_review"
+        | "verified"
+        | "needs_attention"
       paypal_payment_status:
         | "created"
         | "approved"
@@ -8898,6 +9014,13 @@ export const Constants = {
         "cancelled",
       ],
       payment_provider: ["stripe", "paypal", "manual", "dwolla_future"],
+      payout_method: ["paypal", "venmo", "cash_app", "ach"],
+      payout_preference_status: [
+        "not_set",
+        "pending_review",
+        "verified",
+        "needs_attention",
+      ],
       paypal_payment_status: [
         "created",
         "approved",
