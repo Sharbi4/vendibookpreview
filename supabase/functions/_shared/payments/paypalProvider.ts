@@ -100,8 +100,11 @@ export class PayPalProvider implements PaymentProvider {
   }
 
   isConfigured(): boolean {
-    const status = paypalConfigStatus() as Record<string, unknown>;
-    return Boolean(status.configured ?? (status.hasClientId && status.hasSecret));
+    // paypalConfigStatus() reports snake_case flags — read those directly.
+    // (An older camelCase lookup here silently evaluated to false and made
+    // every subscription attempt return "provider_unavailable".)
+    const status = paypalConfigStatus();
+    return Boolean(status.client_id_configured && status.client_secret_configured);
   }
 
   // ------------------------------------------------------------- orders
