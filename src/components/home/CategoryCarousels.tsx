@@ -183,7 +183,7 @@ const CategoryCarousels = () => {
         .select('id, identity_verified')
         .in('id', hostIds);
       if (error) throw error;
-      return filterPubliclyVisible(data ?? []);
+      return data ?? [];
     },
     enabled: hostIds.length > 0,
   });
