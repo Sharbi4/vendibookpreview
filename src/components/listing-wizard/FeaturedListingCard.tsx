@@ -113,7 +113,7 @@ export const FeaturedListingCard: React.FC<FeaturedListingCardProps> = ({
         )}
 
         <p className="mt-4 text-xs text-muted-foreground">
-          Powered by Stripe · Cancel or skip anytime before publishing.
+          Secure PayPal checkout · Cancel or skip anytime before publishing.
         </p>
       </div>
     </div>

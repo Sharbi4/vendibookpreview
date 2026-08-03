@@ -174,7 +174,7 @@ export const PublishWizard: React.FC = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [step]);
 
-  // Handle returns from Stripe Checkout (featured / notary / membership).
+  // Handle returns from PayPal Checkout (featured / notary / membership).
   // - Restore the step the user was on via ?step= (validated above).
   // - Show cancel/success toasts.
   // - Invalidate entitlement caches so any newly-unlocked features go live in
@@ -236,7 +236,7 @@ export const PublishWizard: React.FC = () => {
   }, [searchParams]);
 
   // Refetch entitlements when the tab regains focus — covers the new-tab
-  // Stripe Checkout pattern where success lands in the other tab.
+  // Checkout pattern where success lands in the other tab.
   useEffect(() => {
     const onFocus = () => {
       queryClient.invalidateQueries({ queryKey: ['host-entitlements'] });
@@ -1729,7 +1729,7 @@ export const PublishWizard: React.FC = () => {
         const newWindow = window.open(data.url, '_blank');
         if (!newWindow) {
           toast({
-            title: 'Opening Stripe Checkout…',
+            title: 'Opening PayPal Checkout…',
             description: 'Your browser blocked the popup, so we\'re redirecting this tab instead.',
           });
           window.location.href = data.url;
@@ -1859,8 +1859,6 @@ export const PublishWizard: React.FC = () => {
 
   // Checklist state - with proper validation
   const totalPhotoCount = existingImages.length + images.length;
-  // Stripe is required for rentals and for sale listings that accept card payment.
-  const requiresStripe = false;
   const enabledDocsCount = requiredDocuments.filter(d => d.is_required).length;
 
   // Helper to properly validate price input
@@ -1897,10 +1895,8 @@ export const PublishWizard: React.FC = () => {
         ? !!(hasCompleteStructuredAddress && accessInstructions)
         : !!(hasCompleteStructuredAddress && fulfillmentType)
     ) : false,
-    hasStripe: isOnboardingComplete,
     isRental: listing?.mode === 'rent',
     photoCount: totalPhotoCount,
-    requiresStripe, // Pass whether Stripe is required
     hasDocuments: true, // Documents step is optional, always "complete"
     documentsCount: enabledDocsCount,
     descriptionLength: description.trim().length,
@@ -1961,7 +1957,7 @@ export const PublishWizard: React.FC = () => {
     documents: { label: 'Documents', hint: 'Required rental paperwork' },
     stripe: {
       label: 'Payouts',
-      hint: 'Connect Stripe to accept card payments',
+      hint: 'Where we send your proceeds',
       optional: listing.mode === 'sale' && !acceptCardPayment,
     },
     review: { label: 'Review & publish', hint: 'Preview and go live' },
@@ -2679,12 +2675,12 @@ export const PublishWizard: React.FC = () => {
                                 Pay by Card (Online)
                               </Label>
                               <p className="text-sm text-muted-foreground mt-1">
-                                Accept secure online payments via Stripe. Funds are deposited to your connected Stripe account after sale confirmation.
+                                Accept secure online payments through PayPal. Your proceeds are recorded and paid out to your payout email after sale confirmation.
                               </p>
                               {acceptCardPayment && (
                                 <div className="mt-2 p-2 bg-primary/5 rounded text-xs text-muted-foreground">
                                   <Info className="w-3 h-3 inline mr-1" />
-                                  Requires Stripe Connect setup to receive payments.
+                                  Add your PayPal payout email in Settings to receive your proceeds.
                                 </div>
                               )}
                             </div>
@@ -3955,7 +3951,7 @@ export const PublishWizard: React.FC = () => {
                 </div>
               )}
 
-              {/* Step: Stripe - Only shown if card payment is enabled */}
+              {/* Step: Review */}
               {step === 'review' && (
                 <div className="space-y-6">
                   <div>
@@ -4096,7 +4092,7 @@ export const PublishWizard: React.FC = () => {
                   )}
 
                   {/* Ready to Publish Message */}
-                  {canPublish && (!requiresStripe || isOnboardingComplete) && (
+                  {canPublish && (
                     <div className="relative overflow-hidden rounded-xl p-4 border border-border bg-gradient-to-br from-primary/5 via-primary/3 to-background">
                       <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-primary/3 animate-pulse" />
                       <div className="relative flex items-center gap-3">
@@ -4140,7 +4136,7 @@ export const PublishWizard: React.FC = () => {
                     primary={{
                       label: 'Publish Listing',
                       onClick: () => setShowPublishDialog(true),
-                      disabled: isSaving || !canPublish || (requiresStripe && !isOnboardingComplete),
+                      disabled: isSaving || !canPublish,
                     }}
                   />
                 </div>
@@ -4167,7 +4163,7 @@ export const PublishWizard: React.FC = () => {
                   <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 p-3 text-sm text-amber-700 dark:text-amber-300 flex items-start gap-2">
                     <TrendingUp className="w-4 h-4 mt-0.5 shrink-0" />
                     <div>
-                      You'll be redirected to Stripe to pay <strong>$30</strong> for the Featured add-on.
+                      You'll be redirected to PayPal to pay <strong>$30</strong> for the Featured add-on.
                       Your listing publishes automatically the moment payment clears.
                     </div>
                   </div>

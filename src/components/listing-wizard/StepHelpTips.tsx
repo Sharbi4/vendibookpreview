@@ -75,7 +75,7 @@ const STEP_TIPS: Record<number, TipContent> = {
     title: 'Ready to Publish',
     tips: [
       'Double-check all details for accuracy',
-      'Ensure Stripe is connected to receive payments',
+      'Add your PayPal payout email so we know where to send your money',
       'You can edit your listing anytime after publishing',
     ],
     proTip: 'Publishing today? Share on social media for instant visibility!',

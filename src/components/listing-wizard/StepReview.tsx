@@ -1,20 +1,16 @@
 import React, { useMemo, useEffect, useRef } from 'react';
-import { MapPin, DollarSign, Tag, Calendar, Check, AlertCircle, CreditCard, ChevronRight } from 'lucide-react';
+import { MapPin, DollarSign, Tag, Calendar, Check, AlertCircle, ChevronRight } from 'lucide-react';
 import { ListingFormData, CATEGORY_LABELS, MODE_LABELS } from '@/types/listing';
 import { cn } from '@/lib/utils';
 
 interface StepReviewProps {
   formData: ListingFormData;
   canPublish: boolean;
-  isStripeConnected: boolean;
-  requiresStripeConnect?: boolean;
 }
 
 export const StepReview: React.FC<StepReviewProps> = ({
   formData,
   canPublish,
-  isStripeConnected,
-  requiresStripeConnect = true,
 }) => {
   // Track object URL for cleanup
   const previewUrlRef = useRef<string | null>(null);
@@ -69,7 +65,6 @@ export const StepReview: React.FC<StepReviewProps> = ({
   }
   if (totalPhotos < minPhotos) issues.push(`Minimum ${minPhotos} photos required (${totalPhotos} added)`);
   if (!formData.address && !formData.pickup_location_text) issues.push('Location is required');
-  if (requiresStripeConnect && !isStripeConnected) issues.push('Stripe account not connected');
 
   return (
     <div className="space-y-6">
@@ -170,40 +165,15 @@ export const StepReview: React.FC<StepReviewProps> = ({
       {/* Issues */}
       {issues.length > 0 && (
         <div className="space-y-3">
-          {/* Stripe-specific messaging - only show if Stripe is required */}
-          {requiresStripeConnect && !isStripeConnected && (
-            <div 
-              className="p-4 rounded-xl border-2 border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-900/20 cursor-pointer hover:bg-amber-100 dark:hover:bg-amber-900/30 transition-colors"
-              onClick={() => {
-                // Navigate to the Stripe step in the wizard
-                const stripeStep = document.querySelector('[data-step="stripe"]');
-                if (stripeStep) (stripeStep as HTMLElement).click();
-              }}
-            >
-              <div className="flex items-start gap-3">
-                <CreditCard className="w-5 h-5 text-amber-600 mt-0.5" />
-                <div className="flex-1">
-                  <p className="font-medium text-amber-800 dark:text-amber-200">
-                    Add a payout method to get paid
-                  </p>
-                  <p className="text-sm text-amber-700 dark:text-amber-300 mt-0.5">
-                    To receive card payments, add the PayPal email where we should send your money. Tap here to set it up.
-                  </p>
-                </div>
-                <ChevronRight className="w-5 h-5 text-amber-600 mt-0.5 shrink-0" />
-              </div>
-            </div>
-          )}
-          
           {/* Other issues */}
-          {issues.filter(i => i !== 'Stripe account not connected').length > 0 && (
+          {issues.filter(i => Boolean(i)).length > 0 && (
             <div className="bg-destructive/10 border border-destructive/20 rounded-xl p-4">
               <div className="flex items-center gap-2 text-destructive font-medium mb-2">
                 <AlertCircle className="w-5 h-5" />
                 Cannot Publish
               </div>
               <ul className="space-y-1 text-sm text-destructive/80">
-                {issues.filter(i => i !== 'Stripe account not connected').map((issue, i) => (
+                {issues.filter(i => Boolean(i)).map((issue, i) => (
                   <li key={i}>• {issue}</li>
                 ))}
               </ul>

@@ -131,7 +131,7 @@ export const PromoteListingModal = ({
         toast({
           title: 'Popup blocked',
           description:
-            'Your browser blocked the Stripe Checkout tab. Allow popups for Vendibook, then click "Promote listing" again.',
+            'Your browser blocked the PayPal Checkout tab. Allow popups for Vendibook, then click "Promote listing" again.',
           variant: 'destructive',
         });
         return;
