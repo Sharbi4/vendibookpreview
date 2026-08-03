@@ -1,5 +1,6 @@
 import { excludeTestListings } from '@/lib/excludeTestListings';
 import { useMemo, useState, useEffect } from 'react';
+import { filterPubliclyVisible } from '@/lib/listings/publicVisibility';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import ListingCard from '@/components/listing/ListingCard';
@@ -62,7 +63,7 @@ const FeaturedListings = () => {
       });
 
       if (error) throw error;
-      return data;
+      return filterPubliclyVisible(data ?? []);
     },
     enabled: !!userLocation,
   });
@@ -79,7 +80,7 @@ const FeaturedListings = () => {
       ).order('published_at', { ascending: false });
 
       if (error) throw error;
-      return data;
+      return filterPubliclyVisible(data ?? []);
     },
     enabled: true, // Always fetch immediately
   });
@@ -108,7 +109,7 @@ const FeaturedListings = () => {
         .select('id, identity_verified')
         .in('id', hostIds);
       if (error) throw error;
-      return data;
+      return filterPubliclyVisible(data ?? []);
     },
     enabled: hostIds.length > 0 && !nearbyData?.hostVerificationMap,
   });

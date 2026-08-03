@@ -1,5 +1,6 @@
 import { excludeTestListings } from '@/lib/excludeTestListings';
 import { useEffect, lazy, Suspense } from 'react';
+import { filterPubliclyVisible } from '@/lib/listings/publicVisibility';
 import { useQueryClient } from '@tanstack/react-query';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
@@ -65,7 +66,7 @@ const Index = () => {
           .limit(12);
 
         if (error) throw error;
-        return data;
+        return filterPubliclyVisible(data ?? []);
       },
       staleTime: 60000, // 60 seconds
     });

@@ -1,5 +1,6 @@
 import { excludeTestListings } from '@/lib/excludeTestListings';
 import { useRef } from 'react';
+import { filterPubliclyVisible } from '@/lib/listings/publicVisibility';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -165,7 +166,7 @@ const CategoryCarousels = () => {
       ).order('published_at', { ascending: false });
 
       if (error) throw error;
-      return data;
+      return filterPubliclyVisible(data ?? []);
     },
   });
 
@@ -182,7 +183,7 @@ const CategoryCarousels = () => {
         .select('id, identity_verified')
         .in('id', hostIds);
       if (error) throw error;
-      return data;
+      return filterPubliclyVisible(data ?? []);
     },
     enabled: hostIds.length > 0,
   });
