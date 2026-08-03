@@ -1,3 +1,4 @@
+import { filterPubliclyVisible } from '@/lib/listings/publicVisibility';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -106,7 +107,7 @@ const CategoryIndex = ({ config }: { config: CategoryIndexConfig }) => {
       const { data: d1 } = await q1;
       const primaryRows = (d1 as ListingRow[]) || [];
       if (cancelled) return;
-      setPrimary(primaryRows);
+      setPrimary(filterPubliclyVisible(primaryRows));
 
       const excludeIds = new Set(primaryRows.map((r) => r.id));
 
@@ -117,7 +118,7 @@ const CategoryIndex = ({ config }: { config: CategoryIndexConfig }) => {
         const { data: d2 } = await q2;
         const stateRows = ((d2 as ListingRow[]) || []).filter((r) => !excludeIds.has(r.id));
         if (cancelled) return;
-        setStateFallback(stateRows);
+        setStateFallback(filterPubliclyVisible(stateRows));
         stateRows.forEach((r) => excludeIds.add(r.id));
       }
 
@@ -129,7 +130,7 @@ const CategoryIndex = ({ config }: { config: CategoryIndexConfig }) => {
         const { data: d3 } = await q3;
         const natRows = ((d3 as ListingRow[]) || []).filter((r) => !excludeIds.has(r.id));
         if (cancelled) return;
-        setNationwideFallback(natRows);
+        setNationwideFallback(filterPubliclyVisible(natRows));
       }
 
       setLoading(false);
