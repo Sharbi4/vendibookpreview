@@ -66,6 +66,18 @@ export function isListingPubliclyVisible(
   return true;
 }
 
+/**
+ * Render-time guard for lists of listings. Query filters already exclude
+ * non-public rows, but cached React Query payloads, edge-cached responses and
+ * long-lived tabs can still hold rows that were paused/deleted after fetch.
+ * Run every public collection through this before rendering.
+ */
+export function filterPubliclyVisible<T extends VisibilityShape>(
+  listings: T[] | null | undefined,
+): T[] {
+  return (listings ?? []).filter(isListingPubliclyVisible);
+}
+
 /** Purchase/booking/boost eligibility mirrors public visibility exactly. */
 export function isListingPurchasable(
   listing: VisibilityShape | null | undefined,
