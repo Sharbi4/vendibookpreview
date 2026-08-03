@@ -8449,6 +8449,7 @@ export type Database = {
         }
         Returns: string
       }
+      sweep_non_public_listing_artifacts: { Args: never; Returns: Json }
       update_asset_request_status: {
         Args: {
           new_admin_notes?: string
