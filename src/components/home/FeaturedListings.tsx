@@ -88,7 +88,7 @@ const FeaturedListings = () => {
   // Use nearby listings if available, otherwise fall back to all listings
   const listings = useMemo(() => {
     if (nearbyData?.listings && nearbyData.listings.length > 0) {
-      return nearbyData.listings;
+      return filterPubliclyVisible(nearbyData.listings as any[]);
     }
     return allListings;
   }, [nearbyData, allListings]);
