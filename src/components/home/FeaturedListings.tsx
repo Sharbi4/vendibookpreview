@@ -63,7 +63,11 @@ const FeaturedListings = () => {
       });
 
       if (error) throw error;
-      return filterPubliclyVisible(data ?? []);
+      if (!data) return null;
+      return {
+        ...data,
+        listings: filterPubliclyVisible((data.listings ?? []) as any[]),
+      };
     },
     enabled: !!userLocation,
   });
@@ -109,7 +113,7 @@ const FeaturedListings = () => {
         .select('id, identity_verified')
         .in('id', hostIds);
       if (error) throw error;
-      return filterPubliclyVisible(data ?? []);
+      return data ?? [];
     },
     enabled: hostIds.length > 0 && !nearbyData?.hostVerificationMap,
   });

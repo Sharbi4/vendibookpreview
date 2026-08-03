@@ -1,3 +1,4 @@
+import { filterPubliclyVisible } from '@/lib/listings/publicVisibility';
 import { useParams, Link } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
@@ -64,14 +65,14 @@ const CategoryCityPage = ({ mode }: CategoryCityPageProps) => {
 
       const { data } = await supabase
         .from('listings')
-        .select('id, title, description, cover_image_url, price_daily, price_weekly, price_sale, mode, category, address, status, instant_book')
+        .select('id, title, description, cover_image_url, price_daily, price_weekly, price_sale, mode, category, address, status, published_at, deleted_at, moderation_status, instant_book')
         .eq('status', 'published').not('published_at', 'is', null).is('deleted_at', null).eq('moderation_status', 'clear')
         .eq('category', dbCategory as any)
         .eq('mode', dbMode)
         .or(`city.eq.${city.name},address.ilike.%${city.name}%`)
         .limit(50);
 
-      setListings(data || []);
+      setListings(filterPubliclyVisible(data || []));
       setIsLoading(false);
     };
 

@@ -78,14 +78,25 @@
     </image:image>
   </url>
   <url>
-    <loc>https://vendibook.com/listing/7a273f15-3b68-4319-b6f6-45e04d276d0a</loc>
-    <lastmod>2026-07-30</lastmod>
+    <loc>https://vendibook.com/listing/dd552f16-5099-46b9-b7dd-64c44d7bc0c4</loc>
+    <lastmod>2026-08-03</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
-      <image:loc>https://images.unsplash.com/photo-1563805042-7684c019e1cb?w=800</image:loc>
-      <image:title>Ice Cream Truck - Turnkey Business</image:title>
-      <image:caption>Ice Cream Truck - Turnkey Business on Vendibook</image:caption>
+      <image:loc>https://images.unsplash.com/photo-1529193591184-b1d58069ecdd?w=800</image:loc>
+      <image:title>BBQ Smoker Trailer - Competition Ready</image:title>
+      <image:caption>BBQ Smoker Trailer - Competition Ready on Vendibook</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://vendibook.com/listing/10ae96b2-12c7-413a-a612-92110bc2050e</loc>
+    <lastmod>2026-08-03</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/5fbd89d5-fa6b-424c-97b8-dea19753eda8/10ae96b2-12c7-413a-a612-92110bc2050e/1781406117162-jk7v8.jpeg</image:loc>
+      <image:title>Food Truck renovated inside - out</image:title>
+      <image:caption>Food Truck renovated inside - out on Vendibook</image:caption>
     </image:image>
   </url>
   <url>
@@ -100,17 +111,6 @@
     </image:image>
   </url>
   <url>
-    <loc>https://vendibook.com/listing/10ae96b2-12c7-413a-a612-92110bc2050e</loc>
-    <lastmod>2026-08-01</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/5fbd89d5-fa6b-424c-97b8-dea19753eda8/10ae96b2-12c7-413a-a612-92110bc2050e/1781406117162-jk7v8.jpeg</image:loc>
-      <image:title>Food Truck renovated inside - out</image:title>
-      <image:caption>Food Truck renovated inside - out on Vendibook</image:caption>
-    </image:image>
-  </url>
-  <url>
     <loc>https://vendibook.com/listing/171bf57c-6225-4188-819f-81d4230a9a17</loc>
     <lastmod>2026-08-02</lastmod>
     <changefreq>weekly</changefreq>
@@ -122,14 +122,14 @@
     </image:image>
   </url>
   <url>
-    <loc>https://vendibook.com/listing/dd552f16-5099-46b9-b7dd-64c44d7bc0c4</loc>
-    <lastmod>2026-07-26</lastmod>
+    <loc>https://vendibook.com/listing/7a273f15-3b68-4319-b6f6-45e04d276d0a</loc>
+    <lastmod>2026-08-03</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
-      <image:loc>https://images.unsplash.com/photo-1529193591184-b1d58069ecdd?w=800</image:loc>
-      <image:title>BBQ Smoker Trailer - Competition Ready</image:title>
-      <image:caption>BBQ Smoker Trailer - Competition Ready on Vendibook</image:caption>
+      <image:loc>https://images.unsplash.com/photo-1563805042-7684c019e1cb?w=800</image:loc>
+      <image:title>Ice Cream Truck - Turnkey Business</image:title>
+      <image:caption>Ice Cream Truck - Turnkey Business on Vendibook</image:caption>
     </image:image>
   </url>
   <url>
@@ -276,17 +276,6 @@
     </image:image>
   </url>
   <url>
-    <loc>https://vendibook.com/listing/9fa1aac0-10d3-4c75-8e60-d8e16f7a0a47</loc>
-    <lastmod>2026-08-02</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/3756d71d-fcff-48e2-960f-7f8c565e7c46/9fa1aac0-10d3-4c75-8e60-d8e16f7a0a47/1784143204036-fmnpm.jpeg</image:loc>
-      <image:title>FOOD TRUCK FOR SALE OR LONG-TERM LEASE - $76,000 (Chicago)</image:title>
-      <image:caption>FOOD TRUCK FOR SALE OR LONG-TERM LEASE - $76,000 (Chicago) in Chicago, IL on Vendibook</image:caption>
-    </image:image>
-  </url>
-  <url>
     <loc>https://vendibook.com/listing/33ee8fd3-f9fd-44b3-af28-64d94eb7f9e9</loc>
     <lastmod>2026-07-27</lastmod>
     <changefreq>weekly</changefreq>
@@ -295,6 +284,17 @@
       <image:loc>https://images.unsplash.com/photo-1513104890138-7c749659a591?w=800</image:loc>
       <image:title>Pizza Trailer - Wood-Fired Oven</image:title>
       <image:caption>Pizza Trailer - Wood-Fired Oven in El Paso, TX on Vendibook</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://vendibook.com/listing/9fa1aac0-10d3-4c75-8e60-d8e16f7a0a47</loc>
+    <lastmod>2026-08-03</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/3756d71d-fcff-48e2-960f-7f8c565e7c46/9fa1aac0-10d3-4c75-8e60-d8e16f7a0a47/1784143204036-fmnpm.jpeg</image:loc>
+      <image:title>FOOD TRUCK FOR SALE OR LONG-TERM LEASE - $76,000 (Chicago)</image:title>
+      <image:caption>FOOD TRUCK FOR SALE OR LONG-TERM LEASE - $76,000 (Chicago) in Chicago, IL on Vendibook</image:caption>
     </image:image>
   </url>
   <url>
@@ -603,6 +603,17 @@
       <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/454f16ce-dcff-4a55-a5a1-e91e158758fe/a2a2f761-da8c-4f59-ad5c-6a8b54f67083/1782871635610-hc4b6f.jpeg</image:loc>
       <image:title>Fully Built 1994 S&amp;H mobile Bar</image:title>
       <image:caption>Fully Built 1994 S&amp;H mobile Bar on Vendibook</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://vendibook.com/listing/3c209101-f0d0-4714-b2a1-8a52e31e98b8</loc>
+    <lastmod>2026-08-03</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/3d0c9a80-554a-49d0-8478-525cb79a87b9/3c209101-f0d0-4714-b2a1-8a52e31e98b8/1785776385638-9909n.jpeg</image:loc>
+      <image:title>🔥 2024 8×16 Turn-Key Food Trailer</image:title>
+      <image:caption>🔥 2024 8×16 Turn-Key Food Trailer in Houston, TX on Vendibook</image:caption>
     </image:image>
   </url>
   <url>
