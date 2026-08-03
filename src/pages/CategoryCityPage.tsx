@@ -1,3 +1,4 @@
+import { filterPubliclyVisible } from '@/lib/listings/publicVisibility';
 import { useParams, Link } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
@@ -71,7 +72,7 @@ const CategoryCityPage = ({ mode }: CategoryCityPageProps) => {
         .or(`city.eq.${city.name},address.ilike.%${city.name}%`)
         .limit(50);
 
-      setListings(data || []);
+      setListings(filterPubliclyVisible(data || []));
       setIsLoading(false);
     };
 

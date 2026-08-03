@@ -1,3 +1,4 @@
+import { filterPubliclyVisible } from '@/lib/listings/publicVisibility';
 import { useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -37,7 +38,7 @@ const Favorites = () => {
         .in('id', favorites)
         .eq('status', 'published').not('published_at', 'is', null).is('deleted_at', null).eq('moderation_status', 'clear');
       if (error) throw error;
-      return data ?? [];
+      return filterPubliclyVisible(data ?? []);
     },
     enabled: !!user && favorites.length > 0,
   });
