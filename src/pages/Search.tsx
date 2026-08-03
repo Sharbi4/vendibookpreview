@@ -49,6 +49,7 @@ import {
   PaginationPrevious,
 } from '@/components/ui/pagination';
 import { supabase } from '@/integrations/supabase/client';
+import { filterPubliclyVisible } from '@/lib/listings/publicVisibility';
 import { useQuery } from '@tanstack/react-query';
 import { Listing, CATEGORY_LABELS, ListingCategory, ListingMode, AMENITIES_BY_CATEGORY } from '@/types/listing';
 import { cn } from '@/lib/utils';
@@ -205,7 +206,9 @@ const Search = () => {
     placeholderData: (previousData) => previousData, // Keep previous data while loading
   });
 
-  const listings = searchResults?.listings ?? [];
+  // Defensive: drop rows that stopped being publicly visible after the fetch
+  // (paused/deleted/unpublished) so cached payloads can't surface dead links.
+  const listings = filterPubliclyVisible(searchResults?.listings ?? []);
   const totalCount = searchResults?.total_count ?? 0;
   const totalPages = searchResults?.total_pages ?? 0;
 
