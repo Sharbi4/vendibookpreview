@@ -1,5 +1,5 @@
 import React from 'react';
-import { Eye, Camera, FileText, DollarSign, MapPin, Shield, CreditCard, Check, Calendar } from 'lucide-react';
+import { Eye, Camera, FileText, DollarSign, MapPin, Shield, Check, Calendar } from 'lucide-react';
 import { ListingFormData } from '@/types/listing';
 import { ListingCardPreview } from './ListingCardPreview';
 import { PublishChecklist, createChecklistItems } from './PublishChecklist';
@@ -8,7 +8,6 @@ interface WizardPreviewSidebarProps {
   formData: ListingFormData;
   previewImageUrls: string[];
   currentStep: number;
-  isStripeConnected: boolean;
   onStepClick?: (stepId: string) => void;
 }
 
@@ -21,7 +20,6 @@ const STEP_ID_TO_STEP_NUMBER: Record<string, number> = {
   'availability': 3,
   'location': 4,
   'documents': 5,
-  'stripe': 7,
   'review': 7,
 };
 
@@ -39,7 +37,6 @@ export const WizardPreviewSidebar: React.FC<WizardPreviewSidebarProps> = ({
   formData,
   previewImageUrls,
   currentStep,
-  isStripeConnected,
   onStepClick,
 }) => {
   const isRental = formData.mode === 'rent';
@@ -54,7 +51,6 @@ export const WizardPreviewSidebar: React.FC<WizardPreviewSidebarProps> = ({
     hasAvailability: !!(formData.available_from || formData.available_to),
     hasDescription: formData.description.length >= 20 && formData.title.length >= 5,
     hasLocation: !!(formData.address || formData.pickup_location_text),
-    hasStripe: isStripeConnected,
     isRental,
     photoCount: totalImages,
     priceSet: isRental 
@@ -62,7 +58,6 @@ export const WizardPreviewSidebar: React.FC<WizardPreviewSidebarProps> = ({
       : formData.price_sale ? `$${parseFloat(formData.price_sale).toLocaleString()}` : undefined,
     descriptionLength: formData.description.length,
     locationSet: formData.pickup_location_text || formData.address?.split(',')[0] || undefined,
-    requiresStripe: isRental || formData.accept_card_payment,
     hasDocuments: true, // Documents are optional
     documentsCount: 0,
   }, STEP_NUMBER_TO_STEP_ID[currentStep] || 'type');

@@ -73,7 +73,6 @@ export const ListingWizard: React.FC = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [isAutoSaving, setIsAutoSaving] = useState(false);
   const [lastAutoSaved, setLastAutoSaved] = useState<Date | null>(null);
-  const [showStripeModal, setShowStripeModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [publishedListing, setPublishedListing] = useState<PublishedListing | null>(null);
@@ -507,8 +506,6 @@ export const ListingWizard: React.FC = () => {
 
   // Payouts are handled manually by Vendibook, so publishing is never gated on
   // a seller payment account. Buyers always pay through PayPal.
-  const requiresStripeConnect = false;
-  const isOnboardingComplete = true;
 
   const saveListing = async (publish: boolean) => {
     if (!user) {
@@ -737,7 +734,7 @@ export const ListingWizard: React.FC = () => {
               console.log('BroadcastChannel not supported');
             }
             
-            // Redirect to Stripe checkout - open in new tab with fallback
+            // Open PayPal-backed checkout in a new tab with fallback
             const checkoutWindow = window.open(data.url, '_blank');
             if (!checkoutWindow) {
               window.location.href = data.url;
@@ -856,7 +853,6 @@ export const ListingWizard: React.FC = () => {
             category: formData.category ?? null,
             accept_card: formData.accept_card_payment ?? null,
             accept_cash: formData.accept_cash_payment ?? null,
-            stripe_onboarded: isOnboardingComplete ?? null,
             authed: !!user?.id,
           },
         });
@@ -956,8 +952,6 @@ export const ListingWizard: React.FC = () => {
           <StepReview
             formData={formData}
             canPublish={canPublish()}
-            isStripeConnected={isOnboardingComplete}
-            requiresStripeConnect={requiresStripeConnect}
           />
         );
       default:
@@ -1095,15 +1089,14 @@ export const ListingWizard: React.FC = () => {
                     </Button>
                     <Button
                       onClick={() => saveListing(true)}
-                      disabled={isSaving || !canPublish() || (requiresStripeConnect && !isOnboardingComplete)}
-                      title={requiresStripeConnect && !isOnboardingComplete ? 'Add a payout method to publish' : undefined}
+                      disabled={isSaving || !canPublish()}
                     >
                       {isSaving ? (
                         <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                       ) : (
                         <Send className="w-4 h-4 mr-2" />
                       )}
-                      {requiresStripeConnect && !isOnboardingComplete ? 'Add payout method' : 'Publish'}
+                      Publish
                     </Button>
                   </>
                 ) : (
@@ -1125,7 +1118,6 @@ export const ListingWizard: React.FC = () => {
               formData={formData}
               previewImageUrls={allPreviewImageUrls}
               currentStep={currentStep}
-              isStripeConnected={isOnboardingComplete}
               onStepClick={(stepId) => {
                 const stepMap: Record<string, number> = {
                   'photos': 6,
@@ -1135,7 +1127,6 @@ export const ListingWizard: React.FC = () => {
                   'availability': 3,
                   'location': 4,
                   'documents': 5,
-                  'stripe': 7,
                   'review': 7,
                 };
                 const step = stepMap[stepId];

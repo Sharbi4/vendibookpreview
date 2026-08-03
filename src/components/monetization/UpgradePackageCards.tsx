@@ -201,7 +201,7 @@ export function UpgradePackageCards({
         variant="compact"
         title="What you get with any Vendibook upgrade"
         points={[
-          { icon: ShieldCheck, label: 'Secure checkout', detail: 'Payments processed by Stripe' },
+          { icon: ShieldCheck, label: 'Secure checkout', detail: 'Payments processed by PayPal' },
           { icon: TrendingUp, label: 'Transparent metrics', detail: 'Track views, saves, and inquiries' },
           { icon: Headphones, label: 'Real human support', detail: 'Mon–Fri 9am–5pm AZ time' },
         ]}

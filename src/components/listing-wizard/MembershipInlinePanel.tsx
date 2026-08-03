@@ -22,7 +22,7 @@ interface MembershipInlinePanelProps {
 
 /**
  * Slim, dismissible panel shown once per user inside the publish flow.
- * The "Go Pro" CTA opens the ROSCA/AB 2863 consent gate before Stripe
+ * The "Go Pro" CTA opens the ROSCA/AB 2863 consent gate before PayPal
  * Checkout — same path as every other recurring purchase. The consent
  * dialog is rendered inline so it mounts inside the wizard tree.
  */

@@ -82,7 +82,7 @@ const BoostChargeDetailsModal: React.FC<Props> = ({ charge, open, onOpenChange }
             <Field label="Activated" value={fmt(charge.applied_at)} />
             <Field label={charge.status === 'refunded' ? 'Ended on refund' : 'Expires'} value={fmt(charge.applied_expires_at || charge.featured_expires_at)} />
             {charge.refunded_at && <Field label="Refunded" value={fmt(charge.refunded_at)} />}
-            <Field label="Source" value={isComp ? 'Goodwill credit (Vendibook)' : 'Stripe'} />
+            <Field label="Source" value={isComp ? 'Goodwill credit (Vendibook)' : 'PayPal'} />
             {charge.reason && <Field label="Reason" value={charge.reason} />}
           </div>
 

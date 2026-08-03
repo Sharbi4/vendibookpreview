@@ -192,13 +192,14 @@ export const createChecklistItems = (
     hasAvailability: boolean;
     hasDescription: boolean;
     hasLocation: boolean;
-    hasStripe: boolean;
+    hasStripe?: boolean; // deprecated, ignored
     isRental: boolean;
     photoCount?: number;
     priceSet?: string;
     descriptionLength?: number;
     locationSet?: string;
-    requiresStripe?: boolean; // true if card payment is enabled
+    requiresStripe?: boolean; // deprecated, ignored
+
     hasDocuments?: boolean; // true if documents step was configured
     documentsCount?: number; // number of required documents set
   },
@@ -323,19 +324,6 @@ export const createChecklistItems = (
       progress: (formState.hasDocuments ?? true) ? 1 : 0});
   }
 
-  // Only add Stripe requirement if card payment is enabled
-  const stripeRequired = formState.requiresStripe !== false;
-  if (stripeRequired) {
-    items.push({
-      id: 'stripe',
-      label: 'Payout Setup (Stripe)',
-      icon: <CreditCard className="w-4 h-4" />,
-      completed: formState.hasStripe,
-      required: true,
-      current: currentStep === 'stripe',
-      statusHint: formState.hasStripe ? 'Connected' : 'Not connected',
-      progress: formState.hasStripe ? 1 : 0});
-  }
 
   // Add review step at the end - always shown, required, completed when all other required items are done
   const allOtherRequiredComplete = items.filter(i => i.required).every(i => i.completed);
