@@ -358,7 +358,13 @@ const HostListingCard = ({
 
   return (
     <>
-      <article className="rounded-lg border border-border bg-card overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+      <article
+        className={cn(
+          'rounded-lg border bg-card overflow-hidden shadow-sm hover:shadow-md transition-shadow',
+          isFeatured ? 'border-amber-400/40 featured-ring' : 'border-border',
+        )}
+      >
+
         <div className="flex flex-col sm:flex-row">
           {/* Image — clipped to inherit the card's rounded corner on its side */}
           <div className="sm:w-52 h-44 sm:h-auto flex-shrink-0 overflow-hidden">
