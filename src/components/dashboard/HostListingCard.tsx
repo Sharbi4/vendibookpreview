@@ -19,6 +19,7 @@ import {
   Flame,
   Rocket,
   FileEdit,
+  Wallet,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -51,6 +52,10 @@ import ShareKitModal from './ShareKitModal';
 import { isListingFeatured } from '@/lib/featured';
 import { cn } from '@/lib/utils';
 import { FeaturedBadge } from '@/components/listing/FeaturedBadge';
+import { PayoutSetupDialog } from '@/components/payouts/PayoutSetupDialog';
+import { usePayoutPreference } from '@/hooks/usePayoutPreference';
+import { PayoutBrandMark } from '@/components/payouts/PayoutBrandMark';
+import { PAYOUT_METHOD_LABEL } from '@/lib/payouts/methods';
 import { canBoostListing, canRepublishListing } from '@/lib/listings/publicVisibility';
 import { useNavigate } from 'react-router-dom';
 
@@ -107,6 +112,8 @@ const HostListingCard = ({
   const [showUpgrades, setShowUpgrades] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isLoadingNotary, setIsLoadingNotary] = useState(false);
+  const [showPayoutSetup, setShowPayoutSetup] = useState(false);
+  const { preference: payoutPreference } = usePayoutPreference();
   const { data: favoriteCount = 0 } = useListingFavoriteCount(listing.id);
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -125,6 +132,29 @@ const HostListingCard = ({
   // paused, removed, deleted, archived, rejected, suspended or expired listings.
   const canBoost = canBoostListing(listing as never);
   const canRepublish = canRepublishListing(listing as never);
+
+  // Manual payouts: sellers pick PayPal, Venmo, Cash App or ACH. Never a gate on
+  // publishing or buyer checkout — purely where the money should land.
+  const payoutButton = (
+    <Button
+      variant="outline"
+      size="sm"
+      className="h-10 rounded-md px-4"
+      onClick={() => setShowPayoutSetup(true)}
+    >
+      {payoutPreference ? (
+        <>
+          <PayoutBrandMark method={payoutPreference.method} className="mr-1.5 h-4 w-4" />
+          Payout · {PAYOUT_METHOD_LABEL[payoutPreference.method]}
+        </>
+      ) : (
+        <>
+          <Wallet className="h-4 w-4 mr-1.5" />
+          Set up payout
+        </>
+      )}
+    </Button>
+  );
 
   const handleFeaturedClick = () => {
     if (!canBoost) {
@@ -288,6 +318,7 @@ const HostListingCard = ({
           <Share2 className="h-4 w-4 mr-1.5" />
           Share
         </Button>
+        {payoutButton}
         <div className="flex-1" />
         <KebabMenu>
           <DropdownMenuItem asChild className="gap-2">
@@ -454,6 +485,12 @@ const HostListingCard = ({
         open={showFeaturedModal}
         onOpenChange={setShowFeaturedModal}
         listingId={listing.id}
+        listingTitle={listing.title}
+      />
+
+      <PayoutSetupDialog
+        open={showPayoutSetup}
+        onOpenChange={setShowPayoutSetup}
         listingTitle={listing.title}
       />
 
