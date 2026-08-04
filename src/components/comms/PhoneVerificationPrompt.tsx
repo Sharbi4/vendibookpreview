@@ -275,8 +275,8 @@ export const PhoneVerificationPrompt = () => {
         <DialogFooter className="gap-2 sm:gap-2">
           <Button variant="ghost" onClick={dismiss}>Not now</Button>
           {step === "phone" ? (
-            <Button onClick={sendCode} disabled={sending || !phone.trim()} data-testid="verify-sms-send">
-              {sending ? "Sending…" : "Send code"}
+            <Button onClick={sendCode} disabled={sending || cooldown > 0 || !phone.trim()} data-testid="verify-sms-send">
+              {sending ? "Sending…" : cooldown > 0 ? `Wait ${formatWait(cooldown)}` : "Send code"}
             </Button>
           ) : (
             <Button onClick={verifyCode} disabled={verifying || code.length !== 6} data-testid="verify-sms-submit">
