@@ -21,6 +21,24 @@ import { toast } from "sonner";
 
 const DISMISS_KEY = "vb_phone_verify_dismissed_until_v1";
 const DISMISS_DURATION_MS = 1000 * 60 * 60 * 24; // 24h
+// Verification is only requested during the signup window (fresh accounts).
+const SIGNUP_WINDOW_MS = 1000 * 60 * 60 * 24; // 24h after account creation
+
+const formatWait = (seconds: number) => {
+  if (seconds < 60) return `${seconds}s`;
+  const m = Math.ceil(seconds / 60);
+  return `${m} minute${m === 1 ? "" : "s"}`;
+};
+
+/** Reads the JSON body of a failed edge function response. */
+const readFunctionError = async (fnError: any): Promise<any | null> => {
+  try {
+    const text = await fnError?.context?.text?.();
+    return text ? JSON.parse(text) : null;
+  } catch {
+    return null;
+  }
+};
 
 /**
  * Post-signup phone verification (TCPA-compliant, two-step):
@@ -41,12 +59,23 @@ export const PhoneVerificationPrompt = () => {
   const [code, setCode] = useState("");
   const [sending, setSending] = useState(false);
   const [verifying, setVerifying] = useState(false);
+  const [cooldown, setCooldown] = useState(0);
+  const [limitMessage, setLimitMessage] = useState<string | null>(null);
+
+  // "Only require at sign up": the prompt is limited to freshly created
+  // accounts (including Google/OAuth signups). Established users are never
+  // nagged to verify later on.
+  const isNewSignup = useMemo(() => {
+    const createdAt = user?.created_at ? new Date(user.created_at).getTime() : 0;
+    if (!createdAt) return false;
+    return Date.now() - createdAt < SIGNUP_WINDOW_MS;
+  }, [user?.created_at]);
 
   // Needs verification when there is no subscription row at all (OAuth signups)
   // or the row exists but the number was never confirmed.
   const needsVerification = useMemo(
-    () => !!user?.id && !isLoading && !subscription?.verified,
-    [user?.id, isLoading, subscription?.verified],
+    () => !!user?.id && isNewSignup && !isLoading && !subscription?.verified,
+    [user?.id, isNewSignup, isLoading, subscription?.verified],
   );
 
   useEffect(() => {
@@ -72,12 +101,20 @@ export const PhoneVerificationPrompt = () => {
     return () => clearTimeout(t);
   }, [needsVerification, subscription?.phone_number, subscription?.opted_in, subscription?.verified]);
 
+  // Cooldown ticker
+  useEffect(() => {
+    if (cooldown <= 0) return;
+    const id = setInterval(() => setCooldown((s) => (s <= 1 ? 0 : s - 1)), 1000);
+    return () => clearInterval(id);
+  }, [cooldown]);
+
   const dismiss = () => {
     localStorage.setItem(DISMISS_KEY, String(Date.now() + DISMISS_DURATION_MS));
     setOpen(false);
   };
 
   const sendCode = async () => {
+    if (cooldown > 0 || sending) return;
     const e164 = normalizeNanpToE164(phone);
     if (!e164) {
       setError("Enter a valid US or Canadian mobile number.");
@@ -107,9 +144,25 @@ export const PhoneVerificationPrompt = () => {
       const { data, error: fnError } = await supabase.functions.invoke("send-sms-verification", {
         body: { phone_number: e164 },
       });
-      if (fnError || (data as any)?.error) {
-        throw new Error((data as any)?.error || fnError?.message);
+
+      const payload = (data as any) ?? (await readFunctionError(fnError));
+      if (payload?.error === "rate_limited") {
+        const retry = Number(payload.retry_after_seconds) || 60;
+        setCooldown(retry);
+        const msg =
+          payload.reason === "hourly_limit"
+            ? `Too many code requests. You can try again in ${formatWait(retry)}.`
+            : `Please wait ${formatWait(retry)} before requesting another code.`;
+        setLimitMessage(msg);
+        toast.error(msg);
+        setStep("code");
+        return;
       }
+      if (fnError || payload?.error) {
+        throw new Error(payload?.error || fnError?.message);
+      }
+      setLimitMessage(null);
+      setCooldown(Number(payload?.resend_available_in) || 60);
       toast.success("Code sent — check your phone.");
       setStep("code");
     } catch (e: any) {
@@ -197,20 +250,33 @@ export const PhoneVerificationPrompt = () => {
               <button
                 type="button"
                 onClick={sendCode}
-                disabled={sending}
-                className="text-xs text-muted-foreground hover:text-foreground underline disabled:opacity-50"
+                disabled={sending || cooldown > 0}
+                className="text-xs text-muted-foreground hover:text-foreground underline disabled:opacity-50 disabled:no-underline"
+                data-testid="verify-sms-resend"
               >
-                {sending ? "Resending…" : "Resend code"}
+                {sending
+                  ? "Resending…"
+                  : cooldown > 0
+                    ? `Resend in ${formatWait(cooldown)}`
+                    : "Resend code"}
               </button>
             </div>
+            {limitMessage && (
+              <p className="text-xs text-muted-foreground" role="status">
+                {limitMessage}
+              </p>
+            )}
+            <p className="text-[11px] text-muted-foreground">
+              Codes expire shortly. You can request up to 5 codes per hour.
+            </p>
           </div>
         )}
 
         <DialogFooter className="gap-2 sm:gap-2">
           <Button variant="ghost" onClick={dismiss}>Not now</Button>
           {step === "phone" ? (
-            <Button onClick={sendCode} disabled={sending || !phone.trim()} data-testid="verify-sms-send">
-              {sending ? "Sending…" : "Send code"}
+            <Button onClick={sendCode} disabled={sending || cooldown > 0 || !phone.trim()} data-testid="verify-sms-send">
+              {sending ? "Sending…" : cooldown > 0 ? `Wait ${formatWait(cooldown)}` : "Send code"}
             </Button>
           ) : (
             <Button onClick={verifyCode} disabled={verifying || code.length !== 6} data-testid="verify-sms-submit">
