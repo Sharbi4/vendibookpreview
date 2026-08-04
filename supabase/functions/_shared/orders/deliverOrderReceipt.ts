@@ -92,7 +92,7 @@ async function buildFeaturedBoostOverride(
     .maybeSingle();
 
   const slug: string = purchase?.product?.slug ?? '';
-  if (!slug.startsWith('featured') && !slug.includes('boost')) return undefined;
+  if (!slug.includes('featured')) return undefined;
 
   let listingTitle = detail.listing?.title ?? null;
   let coverImageUrl = detail.listing?.image_url ?? null;
