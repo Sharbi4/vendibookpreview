@@ -47,10 +47,29 @@ export const hostedCheckoutUrl = (
 ): string => `${window.location.origin}${hostedCheckoutPath(kind, id, options)}`;
 
 /** Catalog product (featured boost, add-ons) checkout surface. */
-export const productCheckoutPath = (slug: string, listingId?: string | null): string =>
-  listingId
-    ? `/checkout/product/${slug}?listing_id=${encodeURIComponent(listingId)}`
-    : `/checkout/product/${slug}`;
+export interface ProductCheckoutOptions {
+  /** Where to land after a successful capture. */
+  success?: string;
+  /** Where to land if the payer backs out. */
+  cancel?: string;
+}
 
-export const productCheckoutUrl = (slug: string, listingId?: string | null): string =>
-  `${window.location.origin}${productCheckoutPath(slug, listingId)}`;
+export const productCheckoutPath = (
+  slug: string,
+  listingId?: string | null,
+  options: ProductCheckoutOptions = {},
+): string => {
+  const params = new URLSearchParams();
+  if (listingId) params.set('listing_id', listingId);
+  if (options.success) params.set('success', options.success);
+  if (options.cancel) params.set('cancel', options.cancel);
+  const qs = params.toString();
+  return `/checkout/product/${slug}${qs ? `?${qs}` : ''}`;
+};
+
+export const productCheckoutUrl = (
+  slug: string,
+  listingId?: string | null,
+  options: ProductCheckoutOptions = {},
+): string => `${window.location.origin}${productCheckoutPath(slug, listingId, options)}`;
+
