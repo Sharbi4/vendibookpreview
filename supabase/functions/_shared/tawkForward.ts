@@ -11,7 +11,18 @@
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") ?? "";
 const TAWK_FORWARD_EMAIL = Deno.env.get("TAWK_FORWARD_EMAIL") ?? "";
+// Primary internal support recipient. Server-only: never returned to the
+// caller, never spoken by the voice assistant, never logged.
+const SUPPORT_FORWARD_EMAIL =
+  Deno.env.get("SUPPORT_TICKET_FORWARD_EMAIL") ?? "shawnnaharbin@vendibook.com";
 const FROM_ADDRESS = "Vendibook Support <support@vendibook.com>";
+
+function forwardRecipients(): string[] {
+  const list = [SUPPORT_FORWARD_EMAIL, TAWK_FORWARD_EMAIL]
+    .map((e) => e.trim())
+    .filter((e) => e.length > 0);
+  return [...new Set(list)];
+}
 
 export type ForwardStatus =
   | "delivered"
@@ -100,13 +111,14 @@ function renderText(input: ForwardInput): string {
 }
 
 export async function forwardTicketToTawk(input: ForwardInput): Promise<ForwardResult> {
-  if (!TAWK_FORWARD_EMAIL || !RESEND_API_KEY) {
+  const recipients = forwardRecipients();
+  if (recipients.length === 0 || !RESEND_API_KEY) {
     return { status: "skipped", error: "forwarding_not_configured" };
   }
   const subject = `[${input.priority.toUpperCase()}] ${input.referenceCode} — ${input.subject}`.slice(0, 250);
   const payload: Record<string, unknown> = {
     from: FROM_ADDRESS,
-    to: [TAWK_FORWARD_EMAIL],
+    to: recipients,
     subject,
     html: renderHtml(input),
     text: renderText(input),
