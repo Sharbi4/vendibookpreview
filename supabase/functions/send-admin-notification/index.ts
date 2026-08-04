@@ -6,11 +6,22 @@ const corsHeaders = {
 };
 
 interface NotificationRequest {
-  type: "new_user" | "new_booking" | "booking_paid" | "sale_payment" | "newsletter_signup" | "new_listing" | "featured_purchase";
+  type: string;
   data: Record<string, any>;
 }
 
-const ADMIN_EMAILS = ["support@vendibook.com"];
+// Server-only recipient list. Override with the ADMIN_ALERT_EMAILS secret
+// (comma separated). Never expose these addresses to the browser.
+const DEFAULT_ADMIN_EMAILS = [
+  "support@vendibook.com",
+  "shawnnaharbin@vendibook.com",
+  "atlasmom421@gmail.com",
+];
+const ADMIN_EMAILS = (() => {
+  const raw = Deno.env.get("ADMIN_ALERT_EMAILS") ?? "";
+  const list = raw.split(",").map((e) => e.trim()).filter(Boolean);
+  return [...new Set(list.length ? list : DEFAULT_ADMIN_EMAILS)];
+})();
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -25,6 +36,9 @@ serve(async (req) => {
       newsletter_signup: "New newsletter signup",
       new_listing: "New Vendibook listing published",
       featured_purchase: "Featured listing purchased ⭐",
+      addon_purchase: "Add-on / upgrade purchased 💳",
+      subscription_started: "New membership subscription 🎉",
+      subscription_renewed: "Membership renewed 🔁",
     };
 
     const labelMap: Record<string, string> = {
@@ -54,6 +68,17 @@ serve(async (req) => {
       end_date: "End date",
       stripe_payment_id: "Stripe payment ID",
       featured_source: "Source",
+      product_name: "Product",
+      product_slug: "Product slug",
+      promo_type: "Promotion",
+      duration_days: "Duration (days)",
+      purchase_id: "Purchase ID",
+      tier: "Membership tier",
+      billing_interval: "Billing interval",
+      paypal_subscription_id: "PayPal subscription ID",
+      paypal_order_id: "PayPal order ID",
+      provider: "Payment provider",
+      next_billing_time: "Next billing",
     };
 
     const details = Object.entries(data || {})
