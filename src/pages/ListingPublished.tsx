@@ -281,7 +281,20 @@ const ListingPublished: React.FC = () => {
         </div>
       )}
 
+      {/* Boost checkout abandoned — reassure the listing is still live */}
+      {featuredCancelled && (
+        <div className="border-b bg-muted/40 border-border">
+          <div className="container max-w-2xl mx-auto px-4 py-4">
+            <p className="text-sm text-foreground">
+              <strong>Your listing is published and live.</strong> The Featured boost wasn't
+              purchased — you can add it anytime from your dashboard.
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Featured Boost Success / Syncing / Stuck Banner */}
+
       {featuredPaid && (
         <div
           className={`border-b ${
