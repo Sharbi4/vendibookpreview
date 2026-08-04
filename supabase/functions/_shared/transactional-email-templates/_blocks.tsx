@@ -9,7 +9,7 @@
 
 import * as React from 'npm:react@18.3.1'
 import { Button, Hr, Img, Section, Text } from 'npm:@react-email/components@0.0.22'
-import { s, SITE_URL, LOGO_URL } from './_styles.ts'
+import { s, SITE_URL, LOGO_URL, SUPPORT_PHONE } from './_styles.ts'
 
 // Editorial spot illustrations — flat hand-drawn, dark charcoal + orange.
 // Hosted on the email-assets bucket so they load in every inbox.
@@ -299,6 +299,60 @@ export const TermsBlock = ({ snap, version }: { snap?: TermsSnapshot; version?: 
         <Text key={`ack-${i}`} style={{ color: '#374151', fontSize: 13, margin: '4px 0 0' }}>• {a}</Text>
       ))}
       {v ? <Text style={{ color: '#6b7280', fontSize: 12, margin: '12px 0 0' }}>Terms version {v}</Text> : null}
+    </Section>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────
+// BrandFooter — appended to every Vendibook email. Gives each
+// message a consistent tail with fresh blog reads plus quick
+// links back into the marketplace, tools, and support.
+// ─────────────────────────────────────────────────────────────
+const FOOTER_LINKS: { label: string; href: string }[] = [
+  { label: 'Browse marketplace', href: `${SITE_URL}/browse` },
+  { label: 'List your truck',    href: `${SITE_URL}/list` },
+  { label: 'Pricing & plans',    href: `${SITE_URL}/pricing` },
+  { label: 'Blog',               href: `${SITE_URL}/blog` },
+  { label: 'Help center',        href: `${SITE_URL}/help` },
+]
+
+export const BrandFooter = ({ role }: { role?: Role } = {}) => {
+  const picks = pickArticles(role)
+  return (
+    <Section style={{ padding: '26px 4px 0', textAlign: 'center' as const }}>
+      <a href={SITE_URL} style={{ textDecoration: 'none', display: 'inline-block' }}>
+        <Img
+          src={LOGO_URL}
+          alt="Vendibook"
+          width="360"
+          height="240"
+          style={{ display: 'block', margin: '0 auto 14px', border: 0, outline: 'none', width: '100%', maxWidth: '360px', height: 'auto' }}
+        />
+      </a>
+
+      <Text style={{ fontSize: '10px', letterSpacing: '0.2em', color: '#737373', fontWeight: 700, margin: '0 0 10px' }}>
+        MORE FROM THE VENDIBOOK BLOG
+      </Text>
+      {picks.slice(0, 2).map((p) => (
+        <Text key={p.slug} style={{ fontSize: '14px', lineHeight: 1.45, margin: '0 0 8px' }}>
+          <a href={`${SITE_URL}/blog/${p.slug}`} style={{ color: '#FF5124', textDecoration: 'none', fontWeight: 600 }}>
+            {p.title}
+          </a>
+        </Text>
+      ))}
+
+      <Text style={{ fontSize: '12px', lineHeight: 1.9, color: '#737373', margin: '14px 0 0' }}>
+        {FOOTER_LINKS.map((l, i) => (
+          <React.Fragment key={l.href}>
+            {i > 0 ? <span style={{ color: '#3f3f46' }}>{'  ·  '}</span> : null}
+            <a href={l.href} style={{ color: '#a3a3a3', textDecoration: 'none' }}>{l.label}</a>
+          </React.Fragment>
+        ))}
+      </Text>
+
+      <Text style={{ fontSize: '11px', color: '#525252', margin: '12px 0 0' }}>
+        Vendibook · Questions? {SUPPORT_PHONE} or support@vendibook.com
+      </Text>
     </Section>
   )
 }
