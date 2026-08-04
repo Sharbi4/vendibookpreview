@@ -778,6 +778,14 @@ export const AuthFormPanel = ({ mode, setMode }: AuthFormPanelProps) => {
                     )}
                     Continue with Google
                   </Button>
+
+                  {mode === 'signup' && (
+                    <p className="text-[11px] leading-snug text-muted-foreground text-center">
+                      Continuing with Google creates your account with your Google name and email.
+                      Afterward we'll ask you to add and verify a mobile number with a one-time code —
+                      text messages are optional and never a condition of using Vendibook.
+                    </p>
+                  )}
                 </>
               )}
             </form>
