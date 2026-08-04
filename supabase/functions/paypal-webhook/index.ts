@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
+import { alertAdminsOfPaymentOnce, formatUsd } from "../_shared/adminPaymentAlert.ts";
 import { corsHeaders, jsonResponse } from "../_shared/jsonError.ts";
 import { centsFromPayPalAmount, safeLog, verifyPayPalWebhook } from "../_shared/paypal.ts";
 import { extractCaptureFacts, finalizeCapture } from "../_shared/paypalFinalize.ts";
@@ -295,6 +296,33 @@ async function applyRefundToPayable(
   }).eq("id", payable.id);
 }
 
+async function alertSubscriptionPayment(
+  // deno-lint-ignore no-explicit-any
+  admin: any,
+  sub: any,
+  kind: "subscription_started" | "subscription_renewed",
+) {
+  if (!sub?.user_id || !sub?.paypal_subscription_id) return;
+  const period = kind === "subscription_renewed"
+    ? (sub.last_payment_at ?? new Date().toISOString())
+    : "initial";
+  await alertAdminsOfPaymentOnce(
+    admin,
+    `${sub.paypal_subscription_id}:${kind}:${period}`,
+    sub.user_id,
+    kind,
+    {
+      tier: sub.tier ?? undefined,
+      billing_interval: sub.billing_interval ?? undefined,
+      amount: formatUsd(sub.recurring_amount_cents),
+      provider: "paypal",
+      paypal_subscription_id: sub.paypal_subscription_id,
+      user_id: sub.user_id,
+      next_billing_time: sub.next_billing_time ?? undefined,
+    },
+  );
+}
+
 async function syncSubscription(
   admin: any,
   resource: any,
@@ -351,6 +379,14 @@ async function mirrorHostSubscription(admin: any, paypalSubId: string, status: s
     await admin.from("host_subscriptions").update(payload).eq("id", existing.id);
   } else {
     await admin.from("host_subscriptions").insert(payload);
+  }
+
+  if (entitlementActive) {
+    await alertSubscriptionPayment(
+      admin,
+      sub,
+      sub.last_payment_at ? "subscription_renewed" : "subscription_started",
+    );
   }
 
   await notifySubscriptionState(admin, sub, status);
