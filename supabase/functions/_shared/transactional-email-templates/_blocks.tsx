@@ -52,9 +52,10 @@ export const BrandHeader = ({
       <Img
         src={LOGO_URL}
         alt="Vendibook"
-        width="180"
-        height="120"
-        style={{ display: 'block', margin: '0 auto', border: 0, outline: 'none', maxWidth: '180px', height: 'auto' }}
+        width="360"
+        height="240"
+        style={{ display: 'block', margin: '0 auto', border: 0, outline: 'none', width: '100%', maxWidth: '360px', height: 'auto' }}
+
       />
     </a>
     {listingImageUrl ? (
