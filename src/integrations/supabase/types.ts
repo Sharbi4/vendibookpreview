@@ -4174,13 +4174,23 @@ export type Database = {
           ach_account_type: string | null
           ach_bank_name: string | null
           ach_routing_last4: string | null
+          address_city: string | null
+          address_country: string | null
+          address_line1: string | null
+          address_line2: string | null
+          address_postal_code: string | null
+          address_region: string | null
           cash_app_cashtag: string | null
+          contact_email: string | null
+          contact_phone: string | null
           created_at: string
           display_label: string | null
           id: string
           masked_destination: string | null
           method: Database["public"]["Enums"]["payout_method"]
           needs_attention_reason: string | null
+          payee_first_name: string | null
+          payee_last_name: string | null
           paypal_email: string | null
           status: Database["public"]["Enums"]["payout_preference_status"]
           updated_at: string
@@ -4195,13 +4205,23 @@ export type Database = {
           ach_account_type?: string | null
           ach_bank_name?: string | null
           ach_routing_last4?: string | null
+          address_city?: string | null
+          address_country?: string | null
+          address_line1?: string | null
+          address_line2?: string | null
+          address_postal_code?: string | null
+          address_region?: string | null
           cash_app_cashtag?: string | null
+          contact_email?: string | null
+          contact_phone?: string | null
           created_at?: string
           display_label?: string | null
           id?: string
           masked_destination?: string | null
           method: Database["public"]["Enums"]["payout_method"]
           needs_attention_reason?: string | null
+          payee_first_name?: string | null
+          payee_last_name?: string | null
           paypal_email?: string | null
           status?: Database["public"]["Enums"]["payout_preference_status"]
           updated_at?: string
@@ -4216,13 +4236,23 @@ export type Database = {
           ach_account_type?: string | null
           ach_bank_name?: string | null
           ach_routing_last4?: string | null
+          address_city?: string | null
+          address_country?: string | null
+          address_line1?: string | null
+          address_line2?: string | null
+          address_postal_code?: string | null
+          address_region?: string | null
           cash_app_cashtag?: string | null
+          contact_email?: string | null
+          contact_phone?: string | null
           created_at?: string
           display_label?: string | null
           id?: string
           masked_destination?: string | null
           method?: Database["public"]["Enums"]["payout_method"]
           needs_attention_reason?: string | null
+          payee_first_name?: string | null
+          payee_last_name?: string | null
           paypal_email?: string | null
           status?: Database["public"]["Enums"]["payout_preference_status"]
           updated_at?: string
