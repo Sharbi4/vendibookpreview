@@ -22,6 +22,7 @@ const FavoritesTab = lazy(() => import('@/components/dashboard/tabs/FavoritesTab
 const InsightsReportingTab = lazy(() => import('@/components/dashboard/tabs/InsightsReportingTab'));
 const PromoteUpgradesTab = lazy(() => import('@/components/dashboard/tabs/PromoteUpgradesTab'));
 const PayoutsPanel = lazy(() => import('@/components/dashboard/tabs/PayoutsPanel'));
+const TransactionsDisputesTab = lazy(() => import('@/components/dashboard/tabs/TransactionsDisputesTab'));
 
 const DASHBOARD_MODE_KEY = 'vendibook_dashboard_mode';
 
@@ -93,6 +94,7 @@ const Dashboard = () => {
     if (currentMode === 'shopper') {
       switch (tab) {
         case 'orders': return <BuyerOrdersTab />;
+        case 'transactions': return <TransactionsDisputesTab />;
         case 'bookings': return <BuyerBookingsTab />;
         case 'favorites': return <FavoritesTab />;
         case 'notifications': return <NotificationsTab />;
@@ -106,6 +108,7 @@ const Dashboard = () => {
     // Hosting-side tabs
     switch (tab) {
       case 'sales': return <HostSalesTab />;
+      case 'transactions': return <TransactionsDisputesTab />;
       case 'notifications': return <NotificationsTab />;
       case 'membership': return <MembershipTab />;
       case 'payouts': return <PayoutsPanel />;

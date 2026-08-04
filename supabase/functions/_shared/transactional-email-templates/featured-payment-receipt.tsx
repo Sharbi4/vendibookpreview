@@ -12,14 +12,32 @@ interface FeaturedReceiptProps {
   listingId?: string
   amount?: string
   expiresAt?: string
-  receiptId?: string; coverImageUrl?: string }
+  receiptId?: string
+  coverImageUrl?: string
+  packageName?: string
+  startsAt?: string
+  orderDate?: string
+  orderNumber?: string
+  paypalTransactionId?: string
+  paypalCaptureId?: string
+  paymentMethod?: string
+  orderUrl?: string
+}
 
 const FeaturedPaymentReceiptEmail = ({ firstName,
   listingTitle,
   listingId,
   amount = '$30.00',
   expiresAt,
-  receiptId, coverImageUrl }: FeaturedReceiptProps) => (
+  receiptId, coverImageUrl,
+  packageName,
+  startsAt,
+  orderDate,
+  orderNumber,
+  paypalTransactionId,
+  paypalCaptureId,
+  paymentMethod,
+  orderUrl }: FeaturedReceiptProps) => (
   <Html lang="en" dir="ltr">
     <Head />
     <Preview>Your boost is live — {listingTitle || 'your listing'} is now featured</Preview>
@@ -39,14 +57,63 @@ const FeaturedPaymentReceiptEmail = ({ firstName,
           <Section style={s.detailGrid}>
             <Text style={s.detailLabel}>LISTING</Text>
             <Text style={s.detailValue}>{listingTitle || 'Your listing'}</Text>
+            {packageName && (
+              <>
+                <Hr style={s.hrThin} />
+                <Text style={s.detailLabel}>PACKAGE</Text>
+                <Text style={s.detailValue}>{packageName}</Text>
+              </>
+            )}
             <Hr style={s.hrThin} />
-            <Text style={s.detailLabel}>AMOUNT</Text>
+            <Text style={s.detailLabel}>TOTAL PAID</Text>
             <Text style={s.detailValueOrange}>{amount}</Text>
+            {orderDate && (
+              <>
+                <Hr style={s.hrThin} />
+                <Text style={s.detailLabel}>PAYMENT DATE</Text>
+                <Text style={s.detailValue}>{orderDate}</Text>
+              </>
+            )}
+            {paymentMethod && (
+              <>
+                <Hr style={s.hrThin} />
+                <Text style={s.detailLabel}>PAYMENT METHOD</Text>
+                <Text style={s.detailValue}>{paymentMethod}</Text>
+              </>
+            )}
+            {startsAt && (
+              <>
+                <Hr style={s.hrThin} />
+                <Text style={s.detailLabel}>FEATURED FROM</Text>
+                <Text style={s.detailValue}>{startsAt}</Text>
+              </>
+            )}
             {expiresAt && (
               <>
                 <Hr style={s.hrThin} />
                 <Text style={s.detailLabel}>FEATURED UNTIL</Text>
                 <Text style={s.detailValue}>{expiresAt}</Text>
+              </>
+            )}
+            {orderNumber && (
+              <>
+                <Hr style={s.hrThin} />
+                <Text style={s.detailLabel}>ORDER</Text>
+                <Text style={s.detailMono}>{orderNumber}</Text>
+              </>
+            )}
+            {paypalTransactionId && (
+              <>
+                <Hr style={s.hrThin} />
+                <Text style={s.detailLabel}>PAYPAL ORDER ID</Text>
+                <Text style={s.detailMono}>{paypalTransactionId}</Text>
+              </>
+            )}
+            {paypalCaptureId && (
+              <>
+                <Hr style={s.hrThin} />
+                <Text style={s.detailLabel}>PAYPAL TRANSACTION ID</Text>
+                <Text style={s.detailMono}>{paypalCaptureId}</Text>
               </>
             )}
             {receiptId && (
@@ -58,13 +125,14 @@ const FeaturedPaymentReceiptEmail = ({ firstName,
             )}
           </Section>
 
-          {listingId && (
+          {(orderUrl || listingId) && (
             <Section style={s.ctaWrap}>
-              <Button href={`${SITE_URL}/listing/${listingId}`} style={s.button}>
-                View your live listing
+              <Button href={orderUrl || `${SITE_URL}/listing/${listingId}`} style={s.button}>
+                {orderUrl ? 'View your order & receipt' : 'View your live listing'}
               </Button>
             </Section>
           )}
+
 
           <Hr style={s.hr} />
 

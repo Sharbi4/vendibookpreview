@@ -25,6 +25,7 @@ import {
   Wrench,
   CreditCard,
   Banknote,
+  Receipt,
 } from 'lucide-react';
 import { useUnreadMessageCount } from '@/hooks/useUnreadMessageCount';
 import { useReferralEarnings } from '@/hooks/useReferralEarnings';
@@ -101,6 +102,7 @@ export const DashboardLayout = ({ children, mode, onModeChange, isHost }: Dashbo
             { title: 'Listings', icon: Truck, href: '/host/listings', tab: null },
             { title: 'Sales & Transactions', icon: DollarSign, href: '/dashboard?view=host&tab=sales', tab: 'sales' },
             { title: 'Booking Manager', icon: CalendarDays, href: '/host/bookings', tab: null },
+            { title: 'Payments & Disputes', icon: Receipt, href: '/dashboard?view=host&tab=transactions', tab: 'transactions' },
             { title: 'Insights & Reporting', icon: BarChart3, href: '/dashboard?view=host&tab=insights', tab: 'insights' },
             { title: 'Promote & Upgrades', icon: Megaphone, href: '/dashboard?view=host&tab=promote', tab: 'promote' },
             { title: 'Membership', icon: CreditCard, href: '/dashboard?view=host&tab=membership', tab: 'membership' },
@@ -130,6 +132,7 @@ export const DashboardLayout = ({ children, mode, onModeChange, isHost }: Dashbo
             { title: 'Overview', icon: LayoutGrid, href: '/dashboard?view=shopper', tab: null },
             { title: 'Orders & Transactions', icon: ShoppingBag, href: '/dashboard?view=shopper&tab=orders', tab: 'orders' },
             { title: 'Bookings & Rentals', icon: CalendarDays, href: '/dashboard?view=shopper&tab=bookings', tab: 'bookings' },
+            { title: 'Payments & Disputes', icon: Receipt, href: '/dashboard?view=shopper&tab=transactions', tab: 'transactions' },
             { title: 'Favorites', icon: Heart, href: '/dashboard?view=shopper&tab=favorites', tab: 'favorites' },
             { title: 'Messages', icon: MessageSquare, href: '/messages', tab: null, badge: messagesBadge },
             { title: 'Notifications', icon: Bell, href: '/dashboard?view=shopper&tab=notifications', tab: 'notifications' },
