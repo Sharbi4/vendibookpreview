@@ -33,7 +33,33 @@ export const PAYOUT_STATUS_LABEL: Record<PayoutPreferenceStatus, string> = {
 
 export type VenmoIdentifierType = 'handle' | 'phone' | 'email';
 
-export interface PayoutPreferenceInput {
+export interface PayoutContactInput {
+  payee_first_name?: string;
+  payee_last_name?: string;
+  contact_email?: string;
+  contact_phone?: string;
+  address_line1?: string;
+  address_line2?: string;
+  address_city?: string;
+  address_region?: string;
+  address_postal_code?: string;
+  address_country?: string;
+}
+
+export interface NormalizedPayoutContact {
+  payee_first_name: string;
+  payee_last_name: string;
+  contact_email: string;
+  contact_phone: string;
+  address_line1: string;
+  address_line2: string | null;
+  address_city: string;
+  address_region: string;
+  address_postal_code: string;
+  address_country: string;
+}
+
+export interface PayoutPreferenceInput extends PayoutContactInput {
   method: PayoutMethod;
   paypal_email?: string;
   venmo_identifier_type?: VenmoIdentifierType;
@@ -46,7 +72,7 @@ export interface PayoutPreferenceInput {
   ach_account_number?: string;
 }
 
-export interface NormalizedPayoutPreference {
+export interface NormalizedPayoutPreference extends NormalizedPayoutContact {
   method: PayoutMethod;
   display_label: string;
   masked_destination: string;
@@ -94,6 +120,48 @@ export function digitsOnly(raw: string): string {
 }
 
 /**
+ * Every payout method needs the same payee identity block: legal name, email,
+ * phone and mailing address. Vendibook sends payouts by hand and has to be able
+ * to identify and reach the payee, so these are required regardless of method.
+ */
+export function normalizePayoutContact(input: PayoutContactInput): NormalizedPayoutContact {
+  const first = (input.payee_first_name ?? '').trim();
+  const last = (input.payee_last_name ?? '').trim();
+  const email = (input.contact_email ?? '').trim().toLowerCase();
+  const phoneDigits = digitsOnly(input.contact_phone ?? '');
+  const line1 = (input.address_line1 ?? '').trim();
+  const line2 = (input.address_line2 ?? '').trim();
+  const city = (input.address_city ?? '').trim();
+  const region = (input.address_region ?? '').trim();
+  const postal = (input.address_postal_code ?? '').trim();
+  const country = ((input.address_country ?? 'US').trim() || 'US').toUpperCase();
+
+  if (first.length < 1) fail('Enter your first name.');
+  if (last.length < 1) fail('Enter your last name.');
+  if (!EMAIL_RE.test(email)) fail('Enter a valid email address.');
+  if (phoneDigits.length < 10 || phoneDigits.length > 11) {
+    fail('Enter a valid 10-digit phone number.');
+  }
+  if (line1.length < 3) fail('Enter your street address.');
+  if (city.length < 2) fail('Enter your city.');
+  if (region.length < 2) fail('Enter your state or region.');
+  if (postal.length < 3) fail('Enter your ZIP or postal code.');
+
+  return {
+    payee_first_name: first,
+    payee_last_name: last,
+    contact_email: email,
+    contact_phone: phoneDigits,
+    address_line1: line1,
+    address_line2: line2 || null,
+    address_city: city,
+    address_region: region,
+    address_postal_code: postal,
+    address_country: country,
+  };
+}
+
+/**
  * Validates and normalizes user input into the columns that are safe to store
  * in the client-readable `payout_preferences` row. Raw ACH routing/account
  * numbers are deliberately NOT returned here — they never touch that table.
@@ -103,11 +171,13 @@ export function normalizePayoutPreference(
 ): NormalizedPayoutPreference {
   const method = input.method;
   if (!PAYOUT_METHODS.includes(method)) fail('Choose a supported payout method.');
+  const contact = normalizePayoutContact(input);
 
   if (method === 'paypal') {
     const email = (input.paypal_email ?? '').trim().toLowerCase();
     if (!EMAIL_RE.test(email)) fail('Enter the valid email address on your PayPal account.');
     return {
+      ...contact,
       method,
       status: 'verified',
       display_label: 'PayPal',
@@ -124,6 +194,7 @@ export function normalizePayoutPreference(
       const handle = raw.replace(/^@+/, '');
       if (!/^[A-Za-z0-9_-]{3,30}$/.test(handle)) fail('Enter a valid Venmo handle, e.g. @jane-doe.');
       return {
+        ...contact,
         method,
         status: 'verified',
         display_label: 'Venmo',
@@ -136,6 +207,7 @@ export function normalizePayoutPreference(
       const digits = digitsOnly(raw);
       if (digits.length < 10 || digits.length > 11) fail('Enter a valid 10-digit phone number.');
       return {
+        ...contact,
         method,
         status: 'verified',
         display_label: 'Venmo',
@@ -148,6 +220,7 @@ export function normalizePayoutPreference(
       const email = raw.toLowerCase();
       if (!EMAIL_RE.test(email)) fail('Enter a valid email address for your Venmo account.');
       return {
+        ...contact,
         method,
         status: 'verified',
         display_label: 'Venmo',
@@ -162,6 +235,7 @@ export function normalizePayoutPreference(
   if (method === 'cash_app') {
     const cashtag = normalizeCashtag(input.cash_app_cashtag ?? '');
     return {
+      ...contact,
       method,
       status: 'verified',
       display_label: 'Cash App',
@@ -186,6 +260,7 @@ export function normalizePayoutPreference(
   if (account.length < 4 || account.length > 17) fail('Enter a valid account number.');
 
   return {
+    ...contact,
     method,
     // ACH always goes to manual verification — never auto-mark as verified.
     status: 'pending_review',
