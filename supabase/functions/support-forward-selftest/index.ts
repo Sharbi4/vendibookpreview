@@ -14,6 +14,15 @@ const corsHeaders = {
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
+  const url = new URL(req.url);
+  if (url.searchParams.get("mode") === "domains") {
+    const r = await fetch("https://api.resend.com/domains", {
+      headers: { Authorization: `Bearer ${Deno.env.get("RESEND_API_KEY") ?? ""}` },
+    });
+    const body = await r.text();
+    return new Response(body, { status: r.status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+  }
+
   const stamp = new Date().toISOString();
   const result = await forwardTicketToTawk({
     referenceCode: "VB-TEST-SELFCHECK",
