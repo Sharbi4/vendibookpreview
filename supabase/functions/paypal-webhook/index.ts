@@ -444,7 +444,7 @@ async function notifySubscriptionState(admin: any, sub: any, status: string) {
 async function alertAdmins(admin: any, title: string, message: string) {
   try {
     await admin.functions.invoke("send-admin-notification", {
-      body: { subject: `[Payments] ${title}`, message },
+      body: { type: "payments_alert", data: { title, message } },
     });
   } catch {
     safeLog("admin_alert_failed", { title });

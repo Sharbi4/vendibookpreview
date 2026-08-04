@@ -1,7 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import { corsHeaders, jsonError, jsonResponse, unknownErrorResponse } from "../_shared/jsonError.ts";
-import { alertAdminsOfPayment, formatUsd } from "../_shared/adminPaymentAlert.ts";
+import { alertAdminsOfPaymentOnce, formatUsd } from "../_shared/adminPaymentAlert.ts";
 import { getPayPalSubscription, paypalEnvironment, PayPalError, safeLog } from "../_shared/paypal.ts";
 
 /**
@@ -96,7 +96,12 @@ serve(async (req) => {
     }
 
     if (internalStatus === "active") {
-      await alertAdminsOfPayment(admin, "subscription_started", {
+      await alertAdminsOfPaymentOnce(
+        admin,
+        `${subscription_id}:subscription_started:initial`,
+        user.id,
+        "subscription_started",
+        {
         tier: mapping.tier,
         billing_interval: mapping.billing_interval ?? billing_interval ?? "month",
         amount: formatUsd(mapping.price_cents),
@@ -104,8 +109,9 @@ serve(async (req) => {
         paypal_subscription_id: subscription_id,
         user_id: user.id,
         email: user.email ?? undefined,
-        next_billing_time: subscription?.billing_info?.next_billing_time ?? undefined,
-      });
+          next_billing_time: subscription?.billing_info?.next_billing_time ?? undefined,
+        },
+      );
       await mirrorEntitlement(admin, user.id, mapping.tier, "active", inserted?.next_billing_time, subscription_id);
     }
 
