@@ -25,6 +25,7 @@ import {
   Wrench,
   CreditCard,
   Banknote,
+  Receipt,
 } from 'lucide-react';
 import { useUnreadMessageCount } from '@/hooks/useUnreadMessageCount';
 import { useReferralEarnings } from '@/hooks/useReferralEarnings';
