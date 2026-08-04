@@ -22,6 +22,8 @@ const ListingPublished: React.FC = () => {
   const listingId = listingIdFromParams || searchParams.get('listing_id');
   const notaryPaid = searchParams.get('notary_paid') === 'true';
   const featuredPaid = searchParams.get('featured_paid') === 'true';
+  const featuredCancelled = searchParams.get('featured_cancelled') === 'true';
+
   const { toast } = useToast();
   const navigate = useNavigate();
   const { user, isLoading: authLoading } = useAuth();
