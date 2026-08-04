@@ -5,14 +5,24 @@ import { toZonedTime, formatInTimeZone } from 'date-fns-tz';
 
 const EASTERN_TZ = 'America/New_York';
 
-// Test/admin accounts to exclude
+// Test/admin accounts to exclude.
+// Internal staff addresses are excluded by domain so no private mailbox is
+// ever hardcoded into the client bundle.
 const EXCLUDED_EMAILS = [
   'ellemh13@gmail.com',
   'ellemh13@@gmailc.om',
   'darlingsherla@gmail.com',
-  'support@vendibook.com',
-  'shawnnaharbin@vendibook.com',
 ];
+const EXCLUDED_EMAIL_DOMAINS = ['vendibook.com'];
+
+const isExcludedEmail = (email?: string | null): boolean => {
+  if (!email) return false;
+  const normalized = email.trim().toLowerCase();
+  if (EXCLUDED_EMAILS.includes(normalized)) return true;
+  const domain = normalized.split('@').pop() ?? '';
+  return EXCLUDED_EMAIL_DOMAINS.includes(domain);
+};
+
 
 interface DailyReportRow {
   date: string;
@@ -68,13 +78,17 @@ export const useAdminDailyReport = (startDate: Date = new Date('2025-01-15')) =>
         return format(zonedDate, 'yyyy-MM-dd');
       };
 
-      // Get excluded user IDs
+      // Get excluded user IDs (explicit test accounts + internal staff domains)
+      const domainFilter = EXCLUDED_EMAIL_DOMAINS.map((d) => `email.ilike.%@${d}`).join(',');
       const { data: excludedProfiles } = await supabase
         .from('profiles')
         .select('id, email')
-        .in('email', EXCLUDED_EMAILS);
-      
-      const excludedUserIds = new Set((excludedProfiles || []).map(p => p.id));
+        .or([`email.in.(${EXCLUDED_EMAILS.join(',')})`, domainFilter].join(','));
+
+      const excludedUserIds = new Set(
+        (excludedProfiles || []).filter((p) => isExcludedEmail(p.email)).map((p) => p.id),
+      );
+
 
       // Fetch all data in parallel
       const [
