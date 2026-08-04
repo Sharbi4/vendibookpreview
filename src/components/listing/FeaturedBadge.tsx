@@ -33,15 +33,19 @@ interface FeaturedBadgeProps {
 export function FeaturedBadge({
   listing,
   force,
-  size = 'md',
+  size,
+  variant = 'default',
+  compact = false,
   showDaysLeft = false,
   className,
 }: FeaturedBadgeProps) {
-  const active = force ?? isListingFeatured(listing);
+  // `card` usage is gated by the caller (no listing prop) — treat as active.
+  const active = force ?? (listing ? isListingFeatured(listing) : variant === 'card');
   if (!active) return null;
 
   const days = listing ? featuredDaysRemaining(listing) : 0;
-  const sz = SIZES[size];
+  const sz = SIZES[size ?? (compact ? 'sm' : 'md')];
+
 
   return (
     <span
