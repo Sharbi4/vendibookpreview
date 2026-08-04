@@ -3,7 +3,7 @@ import { Body, Button, Container, Head, Heading, Html, Preview, Section, Text, H
 import type { TemplateEntry } from './registry.ts'
 import { s, SITE_URL, SITE_NAME, SUPPORT_PHONE } from './_styles.ts'
 
-import { BrandHeader } from './_blocks.tsx'
+import { BrandFooter, BrandHeader } from './_blocks.tsx'
 interface Props {
   name?: string
 }
@@ -41,7 +41,7 @@ const E = ({ name }: Props) => (
         <Text style={s.small}>You'll only hear about this once. We won't keep reminding you.</Text>
       </Section>
       <Text style={s.footnote}>Questions? Reply to this email or call {SUPPORT_PHONE}.</Text>
-    </Container></Body></Html>
+    <BrandFooter /></Container></Body></Html>
 )
 
 export const template = {

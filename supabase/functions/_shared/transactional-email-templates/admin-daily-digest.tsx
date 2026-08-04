@@ -2,6 +2,7 @@ import * as React from 'npm:react@18.3.1'
 import { Body, Button, Container, Head, Heading, Html, Preview, Section, Text, Hr } from 'npm:@react-email/components@0.0.22'
 import type { TemplateEntry } from './registry.ts'
 import { s, SITE_URL } from './_styles.ts'
+import { BrandFooter } from './_blocks.tsx'
 
 interface Props {
   dateLabel?: string
@@ -42,7 +43,7 @@ const E = ({ dateLabel, newSignups, newListings, newBookings, grossRevenue, open
 
         <Section style={s.ctaWrap}><Button href={`${SITE_URL}/admin`} style={s.button}>Open admin</Button></Section>
       </Section>
-    </Container></Body></Html>
+    <BrandFooter /></Container></Body></Html>
 )
 
 export const template = {

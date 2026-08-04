@@ -2,7 +2,7 @@ import * as React from 'npm:react@18.3.1'
 import { Body, Button, Container, Head, Heading, Html, Preview, Section, Text } from 'npm:@react-email/components@0.0.22'
 import type { TemplateEntry } from './registry.ts'
 import { s, SITE_URL } from './_styles.ts'
-import {BrandHeader, BlogHighlights, ToolsBlock} from './_blocks.tsx'
+import { BlogHighlights, BrandFooter, BrandHeader, ToolsBlock } from './_blocks.tsx'
 
 interface Props { sellerName?: string; listingTitle?: string; salePrice?: number; buyerName?: string; orderNumber?: string; coverImageUrl?: string }
 
@@ -21,7 +21,7 @@ const E = ({ sellerName, listingTitle, salePrice, buyerName, orderNumber, coverI
         <ToolsBlock role="seller" />
         <BlogHighlights role="seller" />
       </Section>
-    </Container></Body></Html>
+    <BrandFooter /></Container></Body></Html>
 )
 
 export const template = {

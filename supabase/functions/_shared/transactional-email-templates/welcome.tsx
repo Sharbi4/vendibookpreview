@@ -4,7 +4,7 @@ import {
 } from 'npm:@react-email/components@0.0.22'
 import type { TemplateEntry } from './registry.ts'
 import { s, SITE_NAME, SITE_URL, SUPPORT_PHONE } from './_styles.ts'
-import {BrandHeader, BlogHighlights, ToolsBlock} from './_blocks.tsx'
+import { BlogHighlights, BrandFooter, BrandHeader, ToolsBlock } from './_blocks.tsx'
 
 interface WelcomeProps {
   name?: string
@@ -63,7 +63,7 @@ const WelcomeEmail = ({ name, role }: WelcomeProps) => {
           <Text style={s.footnote}>
             Questions? Reply to this email or call {SUPPORT_PHONE}.
           </Text>
-        </Container>
+        <BrandFooter /></Container>
       </Body>
     </Html>
   )

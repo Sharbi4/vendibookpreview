@@ -2,6 +2,7 @@ import * as React from 'npm:react@18.3.1'
 import { Body, Container, Head, Heading, Html, Hr, Preview, Section, Text } from 'npm:@react-email/components@0.0.22'
 import type { TemplateEntry } from './registry.ts'
 import { s } from './_styles.ts'
+import { BrandFooter } from './_blocks.tsx'
 
 interface Theme { title: string; summary: string; suggested_fix?: string; severity?: 'high' | 'medium' | 'low'; count?: number }
 interface Props {
@@ -68,7 +69,7 @@ const E = ({ weekLabel, totalSubmissions = 0, avgNps, promoters = 0, detractors 
           </>
         )}
       </Section>
-    </Container></Body></Html>
+    <BrandFooter /></Container></Body></Html>
 )
 
 export const template = {

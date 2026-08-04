@@ -3,7 +3,7 @@ import { Body, Container, Head, Html, Link, Preview, Section, Text, Heading } fr
 import type { TemplateEntry } from './registry.ts'
 import { s, SITE_URL, SUPPORT_PHONE } from './_styles.ts'
 
-import { BrandHeader } from './_blocks.tsx'
+import { BrandFooter, BrandHeader } from './_blocks.tsx'
 interface Props {
   name?: string
   transactionType?: 'purchase' | 'rental' | 'listing'
@@ -33,7 +33,7 @@ const E = ({ name, transactionType = 'purchase' }: Props) => (
         </Text>
       </Section>
       <Text style={s.footnote}>Questions? Reply to this email or call {SUPPORT_PHONE}.</Text>
-    </Container></Body></Html>
+    <BrandFooter /></Container></Body></Html>
 )
 
 export const template = {

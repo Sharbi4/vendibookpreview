@@ -6,7 +6,7 @@ import {
   Body, Button, Container, Head, Heading, Hr, Html, Preview, Section, Text,
 } from 'npm:@react-email/components@0.0.22'
 import type { TemplateEntry } from './registry.ts'
-import { BrandHeader } from './_blocks.tsx'
+import { BrandFooter, BrandHeader } from './_blocks.tsx'
 
 const SITE_NAME = 'Vendibook'
 const SITE_URL = 'https://vendibook.com'
@@ -118,7 +118,7 @@ const GenericNoticeEmail = ({
           <Text style={brandFoot}>
             <a href={SITE_URL} style={brandFootLink}>{SITE_NAME}</a> · Marketplace for food trucks, trailers & vendor spaces
           </Text>
-        </Container>
+        <BrandFooter /></Container>
       </Body>
     </Html>
   )

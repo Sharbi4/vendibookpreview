@@ -3,7 +3,7 @@ import { Body, Button, Container, Head, Heading, Html, Hr, Link, Preview, Sectio
 import type { TemplateEntry } from './registry.ts'
 import { s, SITE_URL } from './_styles.ts'
 
-import { BrandHeader } from './_blocks.tsx'
+import { BrandFooter, BrandHeader } from './_blocks.tsx'
 interface Props {
   recipientName?: string
   contextLabel?: string
@@ -94,7 +94,7 @@ const E = ({ recipientName, contextLabel, contextType, feedbackToken, aiIntro }:
             — The Vendibook founders. Replies aren't monitored — please use the buttons above.
           </Text>
         </Section>
-      </Container></Body></Html>
+      <BrandFooter /></Container></Body></Html>
   )
 }
 

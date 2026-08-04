@@ -3,7 +3,7 @@ import { Body, Button, Container, Head, Heading, Html, Preview, Section, Text } 
 import type { TemplateEntry } from './registry.ts'
 import { s, SITE_URL } from './_styles.ts'
 
-import { BrandHeader } from './_blocks.tsx'
+import { BrandFooter, BrandHeader } from './_blocks.tsx'
 interface Props { hostName?: string }
 
 const E = ({ hostName }: Props) => (
@@ -16,7 +16,7 @@ const E = ({ hostName }: Props) => (
         <Text style={s.lede}>You can't receive bookings until your Stripe account is connected. It takes ~3 minutes.</Text>
         <Section style={s.ctaWrap}><Button href={`${SITE_URL}/dashboard?stripe=onboard`} style={s.button}>Connect Stripe</Button></Section>
       </Section>
-    </Container></Body></Html>
+    <BrandFooter /></Container></Body></Html>
 )
 
 export const template = {

@@ -3,7 +3,7 @@ import {
   Body, Button, Container, Head, Heading, Hr, Html, Preview, Section, Text,
 } from 'npm:@react-email/components@0.0.22'
 import type { TemplateEntry } from './registry.ts'
-import { BrandHeader } from './_blocks.tsx'
+import { BrandFooter, BrandHeader } from './_blocks.tsx'
 
 const SITE_NAME = 'Vendibook'
 const SITE_URL = 'https://vendibook.com'
@@ -86,7 +86,7 @@ const PaymentReceiptEmail = ({ customerName, orderNumber, amount, paymentMethod,
         <Text style={footnote}>
           Questions about this charge? Call (725) 755-9598 or reply to this email.
         </Text>
-      </Container>
+      <BrandFooter /></Container>
     </Body>
   </Html>
 )

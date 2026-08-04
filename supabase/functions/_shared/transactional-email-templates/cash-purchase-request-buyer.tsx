@@ -2,7 +2,7 @@ import * as React from 'npm:react@18.3.1'
 import { Body, Button, Container, Head, Heading, Html, Preview, Section, Text } from 'npm:@react-email/components@0.0.22'
 import type { TemplateEntry } from './registry.ts'
 import { s, SITE_URL, SUPPORT_PHONE } from './_styles.ts'
-import { BrandHeader, TermsBlock, type TermsSnapshot } from './_blocks.tsx'
+import { BrandFooter, BrandHeader, TermsBlock, type TermsSnapshot } from './_blocks.tsx'
 
 interface Props {
   buyerName?: string
@@ -48,7 +48,7 @@ const E = ({ buyerName, listingTitle, salePrice, sellerName, orderNumber, transa
 
         <Text style={s.footnote}>Meet in a public place, inspect the item before paying, and never wire money in advance. Questions? Call {SUPPORT_PHONE}.</Text>
       </Section>
-    </Container></Body></Html>
+    <BrandFooter /></Container></Body></Html>
 )
 
 export const template = {
