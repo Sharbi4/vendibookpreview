@@ -145,7 +145,13 @@ Deno.serve(async (req) => {
       });
     }
 
-    return new Response(JSON.stringify({ ok: true, sid: twData.sid, phone }), {
+    return new Response(JSON.stringify({
+      ok: true,
+      sid: twData.sid,
+      phone,
+      resend_available_in: RESEND_COOLDOWN_SECONDS,
+      sends_remaining_this_hour: Math.max(0, MAX_PER_HOUR - (sends.length + 1)),
+    }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
