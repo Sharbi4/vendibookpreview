@@ -250,12 +250,25 @@ export const PhoneVerificationPrompt = () => {
               <button
                 type="button"
                 onClick={sendCode}
-                disabled={sending}
-                className="text-xs text-muted-foreground hover:text-foreground underline disabled:opacity-50"
+                disabled={sending || cooldown > 0}
+                className="text-xs text-muted-foreground hover:text-foreground underline disabled:opacity-50 disabled:no-underline"
+                data-testid="verify-sms-resend"
               >
-                {sending ? "Resending…" : "Resend code"}
+                {sending
+                  ? "Resending…"
+                  : cooldown > 0
+                    ? `Resend in ${formatWait(cooldown)}`
+                    : "Resend code"}
               </button>
             </div>
+            {limitMessage && (
+              <p className="text-xs text-muted-foreground" role="status">
+                {limitMessage}
+              </p>
+            )}
+            <p className="text-[11px] text-muted-foreground">
+              Codes expire shortly. You can request up to 5 codes per hour.
+            </p>
           </div>
         )}
 
