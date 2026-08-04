@@ -21,6 +21,24 @@ import { toast } from "sonner";
 
 const DISMISS_KEY = "vb_phone_verify_dismissed_until_v1";
 const DISMISS_DURATION_MS = 1000 * 60 * 60 * 24; // 24h
+// Verification is only requested during the signup window (fresh accounts).
+const SIGNUP_WINDOW_MS = 1000 * 60 * 60 * 24; // 24h after account creation
+
+const formatWait = (seconds: number) => {
+  if (seconds < 60) return `${seconds}s`;
+  const m = Math.ceil(seconds / 60);
+  return `${m} minute${m === 1 ? "" : "s"}`;
+};
+
+/** Reads the JSON body of a failed edge function response. */
+const readFunctionError = async (fnError: any): Promise<any | null> => {
+  try {
+    const text = await fnError?.context?.text?.();
+    return text ? JSON.parse(text) : null;
+  } catch {
+    return null;
+  }
+};
 
 /**
  * Post-signup phone verification (TCPA-compliant, two-step):
