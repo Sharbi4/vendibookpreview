@@ -37,6 +37,7 @@ export async function deliverOrderReceipt(supabase: any, paymentRecordId: string
 
   const detail = await buildOrderDetail(supabase, record, 'buyer');
   const currency = detail.amounts.currency;
+  const override = await buildFeaturedBoostOverride(supabase, record, detail, buyerName, currency);
 
   return await ensureReceiptSent(supabase, record.id, email, {
     orderNumber: detail.order_number,
@@ -59,5 +60,71 @@ export async function deliverOrderReceipt(supabase: any, paymentRecordId: string
     nextActionDescription: detail.next_action.next_action_description,
     orderUrl: `${SITE_URL}/orders/${record.id}`,
     coverImageUrl: detail.listing?.image_url ?? null,
-  });
+  }, override);
+}
+
+const FEATURED_TEMPLATE = 'featured-payment-receipt';
+
+function longDate(value?: string | null) {
+  if (!value) return null;
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return null;
+  return d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+}
+
+/**
+ * Featured-boost purchases get their own branded receipt (listing photo, boost
+ * window, PayPal transaction ids) instead of the generic order receipt.
+ */
+async function buildFeaturedBoostOverride(
+  supabase: any,
+  record: any,
+  detail: any,
+  buyerName: string | null,
+  currency: string,
+) {
+  if (!record.monetization_purchase_id) return undefined;
+
+  const { data: purchase } = await supabase
+    .from('monetization_purchases')
+    .select('id, listing_id, amount_cents, access_starts_at, access_ends_at, paid_at, created_at, product:monetization_products(slug, name)')
+    .eq('id', record.monetization_purchase_id)
+    .maybeSingle();
+
+  const slug: string = purchase?.product?.slug ?? '';
+  if (!slug.startsWith('featured') && !slug.includes('boost')) return undefined;
+
+  let listingTitle = detail.listing?.title ?? null;
+  let coverImageUrl = detail.listing?.image_url ?? null;
+  const listingId = purchase?.listing_id ?? record.listing_id ?? null;
+  if (listingId && (!listingTitle || !coverImageUrl)) {
+    const { data: listing } = await supabase
+      .from('listings')
+      .select('title, cover_image_url')
+      .eq('id', listingId)
+      .maybeSingle();
+    listingTitle = listingTitle ?? listing?.title ?? null;
+    coverImageUrl = coverImageUrl ?? listing?.cover_image_url ?? null;
+  }
+
+  return {
+    templateName: FEATURED_TEMPLATE,
+    templateData: {
+      firstName: buyerName,
+      listingTitle,
+      listingId,
+      coverImageUrl,
+      packageName: purchase?.product?.name ?? 'Featured boost',
+      amount: money(detail.amounts.total_paid_cents ?? purchase?.amount_cents, currency) ?? '—',
+      orderDate: longDate(record.captured_at ?? purchase?.paid_at ?? record.created_at),
+      startsAt: longDate(purchase?.access_starts_at),
+      expiresAt: longDate(purchase?.access_ends_at),
+      orderNumber: detail.order_number,
+      paypalTransactionId: record.paypal_order_id ?? null,
+      paypalCaptureId: record.paypal_capture_id ?? null,
+      paymentMethod: record.payment_source ? String(record.payment_source).replace(/_/g, ' ') : 'PayPal',
+      receiptId: record.id,
+      orderUrl: `${SITE_URL}/orders/${record.id}`,
+    },
+  };
 }

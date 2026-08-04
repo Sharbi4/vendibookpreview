@@ -144,8 +144,7 @@ export async function resetReceiptForResend(supabase: any, paymentRecordId: stri
   await supabase
     .from('payment_receipts')
     .update({ status: 'failed', failure_reason: 'admin_resend_requested' })
-    .eq('payment_record_id', paymentRecordId)
-    .eq('template_name', RECEIPT_TEMPLATE);
+    .eq('payment_record_id', paymentRecordId);
 }
 
 function maskEmail(email: string) {
