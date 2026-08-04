@@ -5,14 +5,24 @@ import { toZonedTime, formatInTimeZone } from 'date-fns-tz';
 
 const EASTERN_TZ = 'America/New_York';
 
-// Test/admin accounts to exclude
+// Test/admin accounts to exclude.
+// Internal staff addresses are excluded by domain so no private mailbox is
+// ever hardcoded into the client bundle.
 const EXCLUDED_EMAILS = [
   'ellemh13@gmail.com',
   'ellemh13@@gmailc.om',
   'darlingsherla@gmail.com',
-  'support@vendibook.com',
-  'shawnnaharbin@vendibook.com',
 ];
+const EXCLUDED_EMAIL_DOMAINS = ['vendibook.com'];
+
+const isExcludedEmail = (email?: string | null): boolean => {
+  if (!email) return false;
+  const normalized = email.trim().toLowerCase();
+  if (EXCLUDED_EMAILS.includes(normalized)) return true;
+  const domain = normalized.split('@').pop() ?? '';
+  return EXCLUDED_EMAIL_DOMAINS.includes(domain);
+};
+
 
 interface DailyReportRow {
   date: string;
