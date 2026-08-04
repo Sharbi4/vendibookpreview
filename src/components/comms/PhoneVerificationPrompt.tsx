@@ -41,12 +41,23 @@ export const PhoneVerificationPrompt = () => {
   const [code, setCode] = useState("");
   const [sending, setSending] = useState(false);
   const [verifying, setVerifying] = useState(false);
+  const [cooldown, setCooldown] = useState(0);
+  const [limitMessage, setLimitMessage] = useState<string | null>(null);
+
+  // "Only require at sign up": the prompt is limited to freshly created
+  // accounts (including Google/OAuth signups). Established users are never
+  // nagged to verify later on.
+  const isNewSignup = useMemo(() => {
+    const createdAt = user?.created_at ? new Date(user.created_at).getTime() : 0;
+    if (!createdAt) return false;
+    return Date.now() - createdAt < SIGNUP_WINDOW_MS;
+  }, [user?.created_at]);
 
   // Needs verification when there is no subscription row at all (OAuth signups)
   // or the row exists but the number was never confirmed.
   const needsVerification = useMemo(
-    () => !!user?.id && !isLoading && !subscription?.verified,
-    [user?.id, isLoading, subscription?.verified],
+    () => !!user?.id && isNewSignup && !isLoading && !subscription?.verified,
+    [user?.id, isNewSignup, isLoading, subscription?.verified],
   );
 
   useEffect(() => {
@@ -72,12 +83,20 @@ export const PhoneVerificationPrompt = () => {
     return () => clearTimeout(t);
   }, [needsVerification, subscription?.phone_number, subscription?.opted_in, subscription?.verified]);
 
+  // Cooldown ticker
+  useEffect(() => {
+    if (cooldown <= 0) return;
+    const id = setInterval(() => setCooldown((s) => (s <= 1 ? 0 : s - 1)), 1000);
+    return () => clearInterval(id);
+  }, [cooldown]);
+
   const dismiss = () => {
     localStorage.setItem(DISMISS_KEY, String(Date.now() + DISMISS_DURATION_MS));
     setOpen(false);
   };
 
   const sendCode = async () => {
+    if (cooldown > 0 || sending) return;
     const e164 = normalizeNanpToE164(phone);
     if (!e164) {
       setError("Enter a valid US or Canadian mobile number.");
@@ -107,9 +126,25 @@ export const PhoneVerificationPrompt = () => {
       const { data, error: fnError } = await supabase.functions.invoke("send-sms-verification", {
         body: { phone_number: e164 },
       });
-      if (fnError || (data as any)?.error) {
-        throw new Error((data as any)?.error || fnError?.message);
+
+      const payload = (data as any) ?? (await readFunctionError(fnError));
+      if (payload?.error === "rate_limited") {
+        const retry = Number(payload.retry_after_seconds) || 60;
+        setCooldown(retry);
+        const msg =
+          payload.reason === "hourly_limit"
+            ? `Too many code requests. You can try again in ${formatWait(retry)}.`
+            : `Please wait ${formatWait(retry)} before requesting another code.`;
+        setLimitMessage(msg);
+        toast.error(msg);
+        setStep("code");
+        return;
       }
+      if (fnError || payload?.error) {
+        throw new Error(payload?.error || fnError?.message);
+      }
+      setLimitMessage(null);
+      setCooldown(Number(payload?.resend_available_in) || 60);
       toast.success("Code sent — check your phone.");
       setStep("code");
     } catch (e: any) {
