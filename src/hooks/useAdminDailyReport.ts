@@ -78,13 +78,17 @@ export const useAdminDailyReport = (startDate: Date = new Date('2025-01-15')) =>
         return format(zonedDate, 'yyyy-MM-dd');
       };
 
-      // Get excluded user IDs
+      // Get excluded user IDs (explicit test accounts + internal staff domains)
+      const domainFilter = EXCLUDED_EMAIL_DOMAINS.map((d) => `email.ilike.%@${d}`).join(',');
       const { data: excludedProfiles } = await supabase
         .from('profiles')
         .select('id, email')
-        .in('email', EXCLUDED_EMAILS);
-      
-      const excludedUserIds = new Set((excludedProfiles || []).map(p => p.id));
+        .or([`email.in.(${EXCLUDED_EMAILS.join(',')})`, domainFilter].join(','));
+
+      const excludedUserIds = new Set(
+        (excludedProfiles || []).filter((p) => isExcludedEmail(p.email)).map((p) => p.id),
+      );
+
 
       // Fetch all data in parallel
       const [
