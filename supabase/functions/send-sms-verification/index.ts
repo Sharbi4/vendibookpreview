@@ -52,10 +52,49 @@ Deno.serve(async (req) => {
       });
     }
 
+    const admin = createClient(SUPABASE_URL, SERVICE_KEY);
+
+    // ---- Resend rate limits: 60s between sends, max 5 per rolling hour ----
+    const RESEND_COOLDOWN_SECONDS = 60;
+    const MAX_PER_HOUR = 5;
+    const hourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+    const { data: recent } = await admin
+      .from("sms_verification_codes")
+      .select("created_at")
+      .eq("user_id", user.id)
+      .gte("created_at", hourAgo)
+      .order("created_at", { ascending: false });
+
+    const sends = recent ?? [];
+    if (sends.length > 0) {
+      const lastMs = new Date(sends[0].created_at as string).getTime();
+      const sinceLast = Math.floor((Date.now() - lastMs) / 1000);
+      if (sinceLast < RESEND_COOLDOWN_SECONDS) {
+        return new Response(
+          JSON.stringify({
+            error: "rate_limited",
+            reason: "cooldown",
+            retry_after_seconds: RESEND_COOLDOWN_SECONDS - sinceLast,
+          }),
+          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+    }
+    if (sends.length >= MAX_PER_HOUR) {
+      const oldestMs = new Date(sends[sends.length - 1].created_at as string).getTime();
+      const retry = Math.max(1, Math.ceil((oldestMs + 60 * 60 * 1000 - Date.now()) / 1000));
+      return new Response(
+        JSON.stringify({
+          error: "rate_limited",
+          reason: "hourly_limit",
+          retry_after_seconds: retry,
+        }),
+        { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+
     const code = String(Math.floor(100000 + Math.random() * 900000));
     const code_hash = await sha256(`${user.id}:${code}`);
-
-    const admin = createClient(SUPABASE_URL, SERVICE_KEY);
 
     // Upsert subscription row (unverified) so we have phone + opt_in saved
     await admin.from("sms_subscriptions").upsert({
