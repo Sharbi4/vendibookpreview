@@ -37,13 +37,25 @@ export interface ReceiptContext {
  * Queues (and sends) the receipt for a payment record. Safe to call from the
  * capture endpoint AND the webhook — whichever wins, the other is a no-op.
  */
+export interface ReceiptTemplateOverride {
+  /** Registered template name, e.g. `featured-payment-receipt`. */
+  templateName: string;
+  /** Props for that template (merged over the generic context). */
+  templateData: Record<string, unknown>;
+}
+
 export async function ensureReceiptSent(
   supabase: any,
   paymentRecordId: string,
   recipientEmail: string,
   ctx: ReceiptContext,
+  override?: ReceiptTemplateOverride,
 ): Promise<{ sent: boolean; reason?: string }> {
   if (!recipientEmail) return { sent: false, reason: 'no_recipient' };
+  const templateName = override?.templateName ?? RECEIPT_TEMPLATE;
+  const templateData: Record<string, unknown> = override
+    ? { ...(ctx as unknown as Record<string, unknown>), ...override.templateData }
+    : (ctx as unknown as Record<string, unknown>);
 
   // Claim the send. Insert wins the race; a conflict means someone already has it.
   const { data: claimed, error: claimError } = await supabase
@@ -51,7 +63,7 @@ export async function ensureReceiptSent(
     .insert({
       payment_record_id: paymentRecordId,
       recipient_email: recipientEmail,
-      template_name: RECEIPT_TEMPLATE,
+      template_name: templateName,
       template_version: TEMPLATE_VERSION,
       status: 'sending',
       attempt_count: 1,
@@ -65,7 +77,7 @@ export async function ensureReceiptSent(
       .from('payment_receipts')
       .select('*')
       .eq('payment_record_id', paymentRecordId)
-      .eq('template_name', RECEIPT_TEMPLATE)
+      .eq('template_name', templateName)
       .maybeSingle();
     if (!existing || existing.status === 'sent' || existing.status === 'suppressed') {
       return { sent: false, reason: 'already_delivered' };
@@ -76,10 +88,10 @@ export async function ensureReceiptSent(
       attempt_count: (existing.attempt_count ?? 0) + 1,
       last_retry_at: new Date().toISOString(),
     }).eq('id', existing.id);
-    return await deliver(supabase, existing.id, paymentRecordId, recipientEmail, ctx);
+    return await deliver(supabase, existing.id, paymentRecordId, recipientEmail, templateName, templateData);
   }
 
-  return await deliver(supabase, claimed.id, paymentRecordId, recipientEmail, ctx);
+  return await deliver(supabase, claimed.id, paymentRecordId, recipientEmail, templateName, templateData);
 }
 
 async function deliver(
@@ -87,15 +99,16 @@ async function deliver(
   receiptId: string,
   paymentRecordId: string,
   recipientEmail: string,
-  ctx: ReceiptContext,
+  templateName: string,
+  templateData: Record<string, unknown>,
 ): Promise<{ sent: boolean; reason?: string }> {
   try {
     const { data, error } = await supabase.functions.invoke('send-transactional-email', {
       body: {
-        templateName: RECEIPT_TEMPLATE,
+        templateName,
         recipientEmail,
-        idempotencyKey: `order-receipt-${paymentRecordId}`,
-        templateData: ctx,
+        idempotencyKey: `${templateName}-${paymentRecordId}`,
+        templateData,
       },
     });
     if (error) throw error;
