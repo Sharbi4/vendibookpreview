@@ -111,13 +111,14 @@ function renderText(input: ForwardInput): string {
 }
 
 export async function forwardTicketToTawk(input: ForwardInput): Promise<ForwardResult> {
-  if (!TAWK_FORWARD_EMAIL || !RESEND_API_KEY) {
+  const recipients = forwardRecipients();
+  if (recipients.length === 0 || !RESEND_API_KEY) {
     return { status: "skipped", error: "forwarding_not_configured" };
   }
   const subject = `[${input.priority.toUpperCase()}] ${input.referenceCode} — ${input.subject}`.slice(0, 250);
   const payload: Record<string, unknown> = {
     from: FROM_ADDRESS,
-    to: [TAWK_FORWARD_EMAIL],
+    to: recipients,
     subject,
     html: renderHtml(input),
     text: renderText(input),
