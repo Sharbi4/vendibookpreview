@@ -15,10 +15,15 @@ interface FeaturedBadgeProps {
   listing?: FeaturedFields | null;
   force?: boolean;
   size?: Size;
+  /** `card` renders inside listing card overlays (already gated by the caller). */
+  variant?: 'default' | 'card';
+  /** Compact card layouts render the smaller pill. */
+  compact?: boolean;
   /** Show "· 12d left" when the boost window is known. */
   showDaysLeft?: boolean;
   className?: string;
 }
+
 
 /**
  * Single source of truth for the Featured Boost badge.
