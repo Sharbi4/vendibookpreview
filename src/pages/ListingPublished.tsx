@@ -22,6 +22,8 @@ const ListingPublished: React.FC = () => {
   const listingId = listingIdFromParams || searchParams.get('listing_id');
   const notaryPaid = searchParams.get('notary_paid') === 'true';
   const featuredPaid = searchParams.get('featured_paid') === 'true';
+  const featuredCancelled = searchParams.get('featured_cancelled') === 'true';
+
   const { toast } = useToast();
   const navigate = useNavigate();
   const { user, isLoading: authLoading } = useAuth();
@@ -279,7 +281,20 @@ const ListingPublished: React.FC = () => {
         </div>
       )}
 
+      {/* Boost checkout abandoned — reassure the listing is still live */}
+      {featuredCancelled && (
+        <div className="border-b bg-muted/40 border-border">
+          <div className="container max-w-2xl mx-auto px-4 py-4">
+            <p className="text-sm text-foreground">
+              <strong>Your listing is published and live.</strong> The Featured boost wasn't
+              purchased — you can add it anytime from your dashboard.
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Featured Boost Success / Syncing / Stuck Banner */}
+
       {featuredPaid && (
         <div
           className={`border-b ${
