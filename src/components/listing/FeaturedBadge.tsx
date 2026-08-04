@@ -1,67 +1,59 @@
 import { Crown } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { featuredDaysRemaining, isListingFeatured, type FeaturedFields } from '@/lib/featured';
 
-/**
- * Premium "Featured" badge. Single source of truth for the visual.
- *
- * Variants:
- *   - card:   compact pill for listing cards (top-left overlay)
- *   - detail: larger ribbon for the listing detail hero
- *   - row:    inline pill for the homepage featured row card
- *
- * Both paid and complimentary featured listings render the same badge —
- * users see no distinction.
- */
-export type FeaturedBadgeVariant = 'card' | 'detail' | 'row';
+type Size = 'sm' | 'md' | 'lg';
+
+const SIZES: Record<Size, { wrap: string; icon: string }> = {
+  sm: { wrap: 'text-[10px] px-2 py-[3px] gap-1', icon: 'h-3 w-3' },
+  md: { wrap: 'text-xs px-2.5 py-1 gap-1.5', icon: 'h-3.5 w-3.5' },
+  lg: { wrap: 'text-sm px-3.5 py-1.5 gap-2', icon: 'h-4 w-4' },
+};
 
 interface FeaturedBadgeProps {
-  variant?: FeaturedBadgeVariant;
-  compact?: boolean;
+  /** Pass the listing to derive live featured state, or use `force` for static contexts. */
+  listing?: FeaturedFields | null;
+  force?: boolean;
+  size?: Size;
+  /** Show "· 12d left" when the boost window is known. */
+  showDaysLeft?: boolean;
   className?: string;
-  label?: string;
 }
 
-const FeaturedBadge = ({
-  variant = 'card',
-  compact = false,
+/**
+ * Single source of truth for the Featured Boost badge.
+ * Gold gradient, soft glow, and a slow specular sweep so a paid boost
+ * reads as premium wherever it appears (detail page, dashboard, cards).
+ */
+export function FeaturedBadge({
+  listing,
+  force,
+  size = 'md',
+  showDaysLeft = false,
   className,
-  label = 'Featured',
-}: FeaturedBadgeProps) => {
-  const sizeClasses =
-    variant === 'detail'
-      ? 'text-sm px-3 py-1.5 gap-1.5'
-      : compact
-      ? 'text-[10px] px-2 py-0.5 gap-1'
-      : 'text-xs px-2.5 py-1 gap-1.5';
+}: FeaturedBadgeProps) {
+  const active = force ?? isListingFeatured(listing);
+  if (!active) return null;
 
-  const iconSize =
-    variant === 'detail' ? 'h-4 w-4' : compact ? 'h-3 w-3' : 'h-3.5 w-3.5';
+  const days = listing ? featuredDaysRemaining(listing) : 0;
+  const sz = SIZES[size];
 
   return (
     <span
       className={cn(
-        'relative inline-flex items-center font-semibold uppercase tracking-[0.08em] rounded-full',
-        'text-[#1a1208] border border-amber-200/50',
-        // Gradient gold→amber with subtle inner highlight
-        'bg-gradient-to-br from-[#fde68a] via-[#f5c042] to-[#d97706]',
-        // Soft warm outer glow
-        'shadow-[0_0_18px_-2px_rgba(245,158,11,0.55),inset_0_1px_0_rgba(255,255,255,0.6)]',
-        // Shimmer sweep (subtle, non-distracting)
-        'overflow-hidden',
-        'before:content-[""] before:absolute before:inset-0 before:rounded-full',
-        'before:bg-gradient-to-r before:from-transparent before:via-white/40 before:to-transparent',
-        'before:translate-x-[-150%] hover:before:translate-x-[150%] before:transition-transform before:duration-1000 before:ease-out',
-        sizeClasses,
+        'featured-gold inline-flex items-center rounded-full font-semibold uppercase tracking-wide whitespace-nowrap',
+        sz.wrap,
         className,
       )}
-      aria-label="Featured listing"
+      title={days > 0 ? `Featured boost · ${days} day${days === 1 ? '' : 's'} left` : 'Featured listing'}
     >
-      <Crown className={cn('relative drop-shadow-sm', iconSize)} aria-hidden="true" />
-      {!(variant === 'card' && compact) && (
-        <span className="relative">{label}</span>
+      <Crown className={cn(sz.icon, 'shrink-0 fill-current')} aria-hidden="true" />
+      Featured
+      {showDaysLeft && days > 0 && (
+        <span className="font-medium opacity-80">· {days}d left</span>
       )}
     </span>
   );
-};
+}
 
 export default FeaturedBadge;
