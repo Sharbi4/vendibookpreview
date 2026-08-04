@@ -15,7 +15,11 @@ const TAWK_FORWARD_EMAIL = Deno.env.get("TAWK_FORWARD_EMAIL") ?? "";
 // caller, never spoken by the voice assistant, never logged.
 const SUPPORT_FORWARD_EMAIL =
   Deno.env.get("SUPPORT_TICKET_FORWARD_EMAIL") ?? "shawnnaharbin@vendibook.com";
-const FROM_ADDRESS = "Vendibook Support <support@vendibook.com>";
+// Must be on a Resend-verified sending domain (updates.vendibook.com).
+// The bare vendibook.com root is NOT verified and hard-fails with 403.
+const FROM_ADDRESS =
+  Deno.env.get("SUPPORT_TICKET_FROM_ADDRESS") ??
+  "Vendibook Support <support@updates.vendibook.com>";
 
 function forwardRecipients(): string[] {
   const list = [SUPPORT_FORWARD_EMAIL, TAWK_FORWARD_EMAIL]
