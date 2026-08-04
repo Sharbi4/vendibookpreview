@@ -49,6 +49,8 @@ import { PromoteListingModal } from './PromoteListingModal';
 import { ListingUpgradesDialog } from '@/components/monetization/ListingUpgradesDialog';
 import ShareKitModal from './ShareKitModal';
 import { isListingFeatured } from '@/lib/featured';
+import { cn } from '@/lib/utils';
+import { FeaturedBadge } from '@/components/listing/FeaturedBadge';
 import { canBoostListing, canRepublishListing } from '@/lib/listings/publicVisibility';
 import { useNavigate } from 'react-router-dom';
 
@@ -357,7 +359,13 @@ const HostListingCard = ({
 
   return (
     <>
-      <article className="rounded-lg border border-border bg-card overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+      <article
+        className={cn(
+          'rounded-lg border bg-card overflow-hidden shadow-sm hover:shadow-md transition-shadow',
+          isFeatured ? 'border-amber-400/40 featured-ring' : 'border-border',
+        )}
+      >
+
         <div className="flex flex-col sm:flex-row">
           {/* Image — clipped to inherit the card's rounded corner on its side */}
           <div className="sm:w-52 h-44 sm:h-auto flex-shrink-0 overflow-hidden">
@@ -377,13 +385,7 @@ const HostListingCard = ({
                     {listing.title}
                   </h3>
                   {isFeatured && (
-                    <Badge
-                      variant="secondary"
-                      className="bg-amber-500/15 text-amber-300 border border-amber-500/30 text-[10px] px-1.5 py-0 h-5"
-                    >
-                      <Star className="w-3 h-3 mr-1 fill-current" />
-                      Featured
-                    </Badge>
+                    <FeaturedBadge listing={listing as any} size="sm" showDaysLeft />
                   )}
                   {hasNotary && isSale && (
                     <Badge

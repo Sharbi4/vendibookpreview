@@ -47,6 +47,7 @@ import { AuthGateOfferModal } from '@/components/offers/AuthGateOfferModal';
 import { useAuth } from '@/contexts/AuthContext';
 import { CATEGORY_LABELS, type ListingCategory } from '@/types/listing';
 import { isListingFeatured } from '@/lib/featured';
+import { FeaturedBadge } from '@/components/listing/FeaturedBadge';
 import { getPublicDisplayName } from '@/lib/displayName';
 import { formatLastActive } from '@/hooks/useActivityTracker';
 import { trackLeadEvent } from '@/lib/leadTracking';
@@ -203,10 +204,7 @@ export const SaleListingMobile = ({
           </div>
           {isFeatured && (
             <div className="absolute top-3 left-3 z-10">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full chip-accent backdrop-blur-md text-xs font-semibold">
-                <Star className="h-3.5 w-3.5 fill-current" />
-                Featured
-              </span>
+              <FeaturedBadge listing={listing} size="md" />
             </div>
           )}
 

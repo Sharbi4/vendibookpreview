@@ -1397,4 +1397,44 @@
       display: none !important;
     }
   }
+
+  /* ── Featured (gold) treatment ─────────────────────────────
+     Used by the Featured Boost badge on listing detail + dashboard.
+     Warm gold gradient, soft outer glow, and a slow specular sweep. */
+  .featured-gold {
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+    background: linear-gradient(135deg, #f7d488 0%, #e8b04b 42%, #b8801f 100%);
+    color: #2a1a05;
+    border: 1px solid rgba(255, 231, 168, 0.55);
+    box-shadow:
+      0 0 0 1px rgba(0, 0, 0, 0.25) inset,
+      0 6px 18px -6px rgba(232, 176, 75, 0.65),
+      0 0 22px -4px rgba(232, 176, 75, 0.45);
+  }
+  .featured-gold::after {
+    content: '';
+    position: absolute;
+    top: 0; bottom: 0;
+    width: 45%;
+    left: -60%;
+    pointer-events: none;
+    background: linear-gradient(100deg, transparent 0%, rgba(255,255,255,0.75) 50%, transparent 100%);
+    animation: featured-sweep 3.6s ease-in-out infinite;
+  }
+  .featured-ring {
+    box-shadow:
+      0 0 0 1px rgba(232, 176, 75, 0.55),
+      0 0 26px -6px rgba(232, 176, 75, 0.5);
+  }
+  @keyframes featured-sweep {
+    0%   { left: -60%; }
+    55%  { left: 120%; }
+    100% { left: 120%; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .featured-gold::after { animation: none; display: none; }
+  }
+
 }

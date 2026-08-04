@@ -70,6 +70,7 @@ import { getPublicDisplayName } from '@/lib/displayName';
 import { formatLastActive } from '@/hooks/useActivityTracker';
 import { resolveListingBrand, getBrandFieldLabel } from '@/lib/resolveListingBrand';
 import { isListingFeatured } from '@/lib/featured';
+import { FeaturedBadge } from '@/components/listing/FeaturedBadge';
 
 const ListingDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -533,10 +534,7 @@ const ListingDetail = () => {
                   {/* Badges - More subtle placement */}
                   <div className="ml-auto flex items-center gap-2">
                     {isFeatured && (
-                      <Badge className="text-xs bg-amber-500 text-white border-0 flex items-center gap-1">
-                        <Star className="h-3 w-3 fill-current" />
-                        Featured
-                      </Badge>
+                      <FeaturedBadge listing={listing as any} size="md" />
                     )}
                     <CategoryTooltip category={listing.category} side="bottom">
                       <Badge variant="secondary" className="text-xs cursor-help font-normal">
