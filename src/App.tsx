@@ -22,6 +22,7 @@ import { usePendingMessage } from "@/hooks/usePendingMessage";
 import { AnimatePresence } from "framer-motion";
 import { Loader2 } from "lucide-react";
 import GoogleOneTap from "@/components/auth/GoogleOneTap";
+import PhoneVerificationPrompt from "@/components/comms/PhoneVerificationPrompt";
 import TawkIdentity from "@/components/support/TawkIdentity";
 
 import MobileBottomNav from "@/components/layout/MobileBottomNav";
@@ -532,6 +533,7 @@ const AppContent = () => {
       <CookieConsent />
 
       <GoogleOneTap />
+      <PhoneVerificationPrompt />
       <TawkIdentity />
       
       
