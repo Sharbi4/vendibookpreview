@@ -4,7 +4,7 @@ import {
 } from 'npm:@react-email/components@0.0.22'
 import type { TemplateEntry } from './registry.ts'
 import { s, SITE_URL, SUPPORT_PHONE } from './_styles.ts'
-import {BrandHeader, BlogHighlights, ToolsBlock} from './_blocks.tsx'
+import { BlogHighlights, BrandFooter, BrandHeader, ToolsBlock } from './_blocks.tsx'
 
 interface TermsLine { label: string; amountCents: number; kind: string; hint?: string }
 interface TermsSnapshot {
@@ -123,7 +123,7 @@ const BookingConfirmationEmail = ({ guestName, listingTitle, startDate, endDate,
         <Text style={s.footnote}>
           Need help? Call {SUPPORT_PHONE} — we're here every day.
         </Text>
-      </Container>
+      <BrandFooter /></Container>
     </Body>
   </Html>
 )

@@ -13,6 +13,7 @@ import {
   Preview,
   Text,
 } from 'npm:@react-email/components@0.0.22'
+import { AuthBrandFooter, AuthBrandHeader } from './_brand.tsx'
 
 interface SignupEmailProps {
   siteName: string
@@ -32,6 +33,7 @@ export const SignupEmail = ({
     <Preview>Confirm your email for {siteName}</Preview>
     <Body style={main}>
       <Container style={container}>
+        <AuthBrandHeader />
         <Heading style={h1}>Confirm your email</Heading>
         <Text style={text}>
           Thanks for signing up for{' '}
@@ -53,6 +55,7 @@ export const SignupEmail = ({
         <Text style={footer}>
           If you didn't create an account, you can safely ignore this email.
         </Text>
+      <AuthBrandFooter />
       </Container>
     </Body>
   </Html>

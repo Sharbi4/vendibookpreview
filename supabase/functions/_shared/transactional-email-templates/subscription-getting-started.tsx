@@ -2,7 +2,7 @@ import * as React from 'npm:react@18.3.1'
 import { Body, Button, Container, Head, Heading, Hr, Html, Link, Preview, Section, Text } from 'npm:@react-email/components@0.0.22'
 import type { TemplateEntry } from './registry.ts'
 import { s, SITE_URL, SUPPORT_PHONE } from './_styles.ts'
-import { BrandHeader } from './_blocks.tsx'
+import { BrandFooter, BrandHeader } from './_blocks.tsx'
 
 interface Action { label: string; href: string; blurb?: string }
 
@@ -49,7 +49,7 @@ const Email = ({ firstName, planName = 'Vendibook Growth', actions = DEFAULT_ACT
           <Hr style={s.hr} />
           <Text style={s.footnote}>Reply anytime — we read every message. Or call {SUPPORT_PHONE}.</Text>
         </Section>
-      </Container>
+      <BrandFooter /></Container>
     </Body>
   </Html>
 )

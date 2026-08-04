@@ -3,7 +3,7 @@ import { Body, Button, Container, Head, Heading, Html, Preview, Section, Text } 
 import type { TemplateEntry } from './registry.ts'
 import { s, SITE_URL } from './_styles.ts'
 
-import { BrandHeader } from './_blocks.tsx'
+import { BrandFooter, BrandHeader } from './_blocks.tsx'
 interface Props { recipientName?: string; documentName?: string; approved?: boolean; reason?: string; bookingId?: string }
 
 const E = ({ recipientName, documentName, approved, reason, bookingId }: Props) => (
@@ -17,7 +17,7 @@ const E = ({ recipientName, documentName, approved, reason, bookingId }: Props) 
         {!approved && reason ? <Section style={s.accentRow}><Text style={s.accentLabel}>REASON</Text><Text style={s.accentValuePlain}>{reason}</Text></Section> : null}
         <Section style={s.ctaWrap}><Button href={`${SITE_URL}/dashboard?booking=${bookingId || ''}`} style={s.button}>{approved ? 'View booking' : 'Upload new document'}</Button></Section>
       </Section>
-    </Container></Body></Html>
+    <BrandFooter /></Container></Body></Html>
 )
 
 export const template = {

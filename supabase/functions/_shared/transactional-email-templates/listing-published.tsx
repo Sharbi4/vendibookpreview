@@ -4,7 +4,7 @@ import {
 } from 'npm:@react-email/components@0.0.22'
 import type { TemplateEntry } from './registry.ts'
 import { s, SITE_URL, SUPPORT_PHONE } from './_styles.ts'
-import { BrandHeader, BlogHighlights, ToolsBlock } from './_blocks.tsx'
+import { BlogHighlights, BrandFooter, BrandHeader, ToolsBlock } from './_blocks.tsx'
 
 interface Props {
   hostName?: string
@@ -315,7 +315,7 @@ const E = ({
             Need a hand promoting your listing? Reply to this email or call {SUPPORT_PHONE}.
             Mon–Fri 9a–5p AZ.
           </Text>
-        </Container>
+        <BrandFooter /></Container>
       </Body>
     </Html>
   )

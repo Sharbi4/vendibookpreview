@@ -2,6 +2,7 @@ import * as React from 'npm:react@18.3.1'
 import { Body, Container, Head, Heading, Html, Preview, Section, Text } from 'npm:@react-email/components@0.0.22'
 import type { TemplateEntry } from './registry.ts'
 import { s } from './_styles.ts'
+import { BrandFooter } from './_blocks.tsx'
 
 interface Props {
   fromEmail?: string
@@ -29,7 +30,7 @@ const E = ({ fromEmail, fromName, rating, nps, message, contextType, contextLabe
         <Text style={s.lede}><strong>Message:</strong></Text>
         <Text style={s.small}>{message || '(no written feedback)'}</Text>
       </Section>
-    </Container></Body></Html>
+    <BrandFooter /></Container></Body></Html>
 )
 
 export const template = {

@@ -3,7 +3,7 @@ import { Body, Button, Container, Head, Heading, Html, Preview, Section, Text } 
 import type { TemplateEntry } from './registry.ts'
 import { s, SITE_URL } from './_styles.ts'
 
-import { BrandHeader } from './_blocks.tsx'
+import { BrandFooter, BrandHeader } from './_blocks.tsx'
 interface Props { recipientName?: string; amount?: number; transferId?: string; arrivesBy?: string }
 
 const E = ({ recipientName, amount, transferId, arrivesBy }: Props) => (
@@ -18,7 +18,7 @@ const E = ({ recipientName, amount, transferId, arrivesBy }: Props) => (
         {transferId ? <Text style={s.small}>Reference: {transferId}</Text> : null}
         <Section style={s.ctaWrap}><Button href={`${SITE_URL}/dashboard`} style={s.button}>View earnings</Button></Section>
       </Section>
-    </Container></Body></Html>
+    <BrandFooter /></Container></Body></Html>
 )
 
 export const template = {

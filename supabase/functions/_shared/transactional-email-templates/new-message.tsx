@@ -3,7 +3,7 @@ import { Body, Button, Container, Head, Heading, Html, Preview, Section, Text } 
 import type { TemplateEntry } from './registry.ts'
 import { s, SITE_URL } from './_styles.ts'
 
-import { BrandHeader } from './_blocks.tsx'
+import { BrandFooter, BrandHeader } from './_blocks.tsx'
 interface Props { recipientName?: string; senderName?: string; messagePreview?: string; conversationId?: string; unreadCount?: number }
 
 const E = ({ recipientName, senderName, messagePreview, conversationId, unreadCount }: Props) => (
@@ -17,7 +17,7 @@ const E = ({ recipientName, senderName, messagePreview, conversationId, unreadCo
         <Section style={s.ctaWrap}><Button href={`${SITE_URL}/messages/${conversationId || ''}`} style={s.button}>Reply</Button></Section>
         <Text style={s.small}>Hosts who reply within an hour book 3× more.</Text>
       </Section>
-    </Container></Body></Html>
+    <BrandFooter /></Container></Body></Html>
 )
 
 export const template = {

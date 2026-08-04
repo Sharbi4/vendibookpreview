@@ -3,7 +3,7 @@ import { Body, Button, Container, Head, Heading, Html, Preview, Section, Text } 
 import type { TemplateEntry } from './registry.ts'
 import { s, SITE_URL } from './_styles.ts'
 
-import { BrandHeader } from './_blocks.tsx'
+import { BrandFooter, BrandHeader } from './_blocks.tsx'
 interface Props { hostName?: string; listingTitle?: string; listingId?: string; coverImageUrl?: string }
 
 const E = ({ hostName, listingTitle, listingId, coverImageUrl }: Props) => (
@@ -17,7 +17,7 @@ const E = ({ hostName, listingTitle, listingId, coverImageUrl }: Props) => (
         <Section style={s.ctaWrap}><Button href={listingId ? `${SITE_URL}/create-listing/${listingId}` : `${SITE_URL}/list`} style={s.button}>Finish & publish</Button></Section>
         <Text style={s.small}>Hosts who publish within 24 hours get 4× more bookings in the first month.</Text>
       </Section>
-    </Container></Body></Html>
+    <BrandFooter /></Container></Body></Html>
 )
 
 export const template = {

@@ -5,7 +5,7 @@ import {
 import type { TemplateEntry } from './registry.ts'
 import { s, SITE_NAME, SITE_URL, SUPPORT_PHONE } from './_styles.ts'
 
-import { BrandHeader } from './_blocks.tsx'
+import { BrandFooter, BrandHeader } from './_blocks.tsx'
 interface FeaturedReceiptProps {
   firstName?: string
   listingTitle?: string
@@ -145,7 +145,7 @@ const FeaturedPaymentReceiptEmail = ({ firstName,
         <Text style={s.footnote}>
           Questions? Reply to this email or call {SUPPORT_PHONE}.
         </Text>
-      </Container>
+      <BrandFooter /></Container>
     </Body>
   </Html>
 )

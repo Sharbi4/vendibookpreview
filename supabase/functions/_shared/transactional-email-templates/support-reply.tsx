@@ -5,7 +5,7 @@ import {
 import type { TemplateEntry } from './registry.ts'
 import { s, SITE_NAME, SUPPORT_PHONE } from './_styles.ts'
 
-import { BrandHeader } from './_blocks.tsx'
+import { BrandFooter, BrandHeader } from './_blocks.tsx'
 interface SupportReplyProps {
   firstName?: string
   subject?: string
@@ -52,7 +52,7 @@ const SupportReplyEmail = ({
         <Text style={s.footnote}>
           You're receiving this because you contacted {SITE_NAME} support.
         </Text>
-      </Container>
+      <BrandFooter /></Container>
     </Body>
   </Html>
 )

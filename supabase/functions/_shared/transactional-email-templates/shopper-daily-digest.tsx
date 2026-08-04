@@ -3,7 +3,7 @@ import { Body, Button, Container, Head, Heading, Html, Preview, Section, Text, H
 import type { TemplateEntry } from './registry.ts'
 import { s, SITE_URL } from './_styles.ts'
 
-import { BrandHeader } from './_blocks.tsx'
+import { BrandFooter, BrandHeader } from './_blocks.tsx'
 interface Listing { id: string; title: string; city?: string; state?: string; price?: number; priceLabel?: string; coverImageUrl?: string }
 interface Props {
   shopperName?: string
@@ -40,7 +40,7 @@ const E = ({ shopperName, area, listings, aiInsight, tip }: Props) => (
 
         <Section style={s.ctaWrap}><Button href={`${SITE_URL}/search`} style={s.button}>Browse marketplace</Button></Section>
       </Section>
-    </Container></Body></Html>
+    <BrandFooter /></Container></Body></Html>
 )
 
 export const template = {

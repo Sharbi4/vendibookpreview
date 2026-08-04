@@ -2,7 +2,7 @@ import * as React from 'npm:react@18.3.1'
 import { Body, Button, Container, Head, Heading, Hr, Html, Preview, Section, Text } from 'npm:@react-email/components@0.0.22'
 import type { TemplateEntry } from './registry.ts'
 import { s, SITE_URL, SUPPORT_PHONE } from './_styles.ts'
-import { BrandHeader } from './_blocks.tsx'
+import { BrandFooter, BrandHeader } from './_blocks.tsx'
 
 interface Props {
   firstName?: string
@@ -49,7 +49,7 @@ const Email = ({ firstName, planName = 'Host Pro', accessEndsAt, immediate, reac
           </Text>
         </Section>
         <Text style={s.footnote}>Anything we could've done better? Reply and let us know. Or call {SUPPORT_PHONE}.</Text>
-      </Container>
+      <BrandFooter /></Container>
     </Body>
   </Html>
 )
