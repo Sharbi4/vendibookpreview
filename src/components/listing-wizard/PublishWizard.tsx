@@ -1709,33 +1709,69 @@ export const PublishWizard: React.FC = () => {
           return;
         }
 
-        const data = { url: productCheckoutUrl('boost-featured-30', listing.id) };
+        // The listing is live now — send the same first-publish confirmation
+        // + admin alert the standard path sends, so the host is never left
+        // wondering whether publishing worked while payment settles.
+        if (isFirstTimePublishForBoost) {
+          const boostPrice = priceSale
+            ? `$${parseFloat(String(priceSale).replace(/[^0-9.]/g, '')).toLocaleString()}`
+            : priceDaily ? `$${priceDaily}/day`
+            : priceHourly ? `$${priceHourly}/hr`
+            : 'Contact for price';
 
-        // Set up listener for cross-tab communication before opening checkout
-        const handleCheckoutComplete = (event: MessageEvent) => {
-          if (event.data?.type === 'featured-checkout-complete' && event.data?.listingId === listing.id) {
-            window.location.href = event.data.url || `/listing-published?listing_id=${listing.id}&featured_paid=true`;
-          }
-        };
-        
-        try {
-          const channel = new BroadcastChannel('featured-checkout');
-          channel.onmessage = handleCheckoutComplete;
-          (window as any).__featuredCheckoutChannel = channel;
-        } catch (e) {
-          console.log('BroadcastChannel not supported');
-        }
-        
-        const newWindow = window.open(data.url, '_blank');
-        if (!newWindow) {
-          toast({
-            title: 'Opening PayPal Checkout…',
-            description: 'Your browser blocked the popup, so we\'re redirecting this tab instead.',
-          });
-          window.location.href = data.url;
+          supabase.functions.invoke('send-listing-live-email', {
+            body: {
+              hostEmail: user?.email,
+              hostName: user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'there',
+              listingTitle: title,
+              listingId: listing.id,
+              listingImageUrl: imageUrlsToSave?.[0],
+              coverImageUrl: imageUrlsToSave?.[0],
+              listingPrice: boostPrice,
+              category: listing.category,
+              address: fullAddress,
+              listingType:
+                listing.mode === 'rent' ? 'rental' :
+                listing.mode === 'sale' ? 'sale' :
+                listing.mode === 'both' ? 'both' : 'rental',
+            },
+          }).catch(err => console.error('Listing live email error:', err));
+
+          supabase.functions.invoke('send-admin-notification', {
+            body: {
+              type: 'new_listing',
+              data: {
+                listing_id: listing.id,
+                title: listing.title,
+                category: listing.category,
+                mode: listing.mode,
+                address: fullAddress,
+                host_id: user?.id,
+                host_name: user?.user_metadata?.full_name || user?.email?.split('@')[0],
+                host_email: user?.email,
+              },
+            },
+          }).catch(err => console.error('Admin notification error:', err));
         }
 
-        return; // Exit early - webhook will handle publishing after payment
+        // Send the payer straight to checkout in THIS tab, and route both
+        // outcomes back to the published-listing page so they always land on
+        // a clear "your listing is live / boost is activating" confirmation.
+        const publishedUrl = `/listing-published?listing_id=${listing.id}`;
+        const checkoutUrl = productCheckoutUrl('boost-featured-30', listing.id, {
+          success: `${publishedUrl}&featured_paid=true`,
+          cancel: `${publishedUrl}&featured_cancelled=true`,
+        });
+
+        toast({
+          title: 'Your listing is live 🎉',
+          description: 'Finish the Featured boost checkout to pin it to the top of search.',
+        });
+
+        window.location.href = checkoutUrl;
+
+        return; // Exit early - boost activates on payment capture
+
       }
 
       // Standard publish flow (no add-on fees)
