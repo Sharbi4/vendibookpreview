@@ -12,14 +12,32 @@ interface FeaturedReceiptProps {
   listingId?: string
   amount?: string
   expiresAt?: string
-  receiptId?: string; coverImageUrl?: string }
+  receiptId?: string
+  coverImageUrl?: string
+  packageName?: string
+  startsAt?: string
+  orderDate?: string
+  orderNumber?: string
+  paypalTransactionId?: string
+  paypalCaptureId?: string
+  paymentMethod?: string
+  orderUrl?: string
+}
 
 const FeaturedPaymentReceiptEmail = ({ firstName,
   listingTitle,
   listingId,
   amount = '$30.00',
   expiresAt,
-  receiptId, coverImageUrl }: FeaturedReceiptProps) => (
+  receiptId, coverImageUrl,
+  packageName,
+  startsAt,
+  orderDate,
+  orderNumber,
+  paypalTransactionId,
+  paypalCaptureId,
+  paymentMethod,
+  orderUrl }: FeaturedReceiptProps) => (
   <Html lang="en" dir="ltr">
     <Head />
     <Preview>Your boost is live — {listingTitle || 'your listing'} is now featured</Preview>
