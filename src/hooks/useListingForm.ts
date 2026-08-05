@@ -1,16 +1,5 @@
-import { useState, useCallback, useMemo } from 'react';
-import {
-  ListingFormData,
-  ListingCategory,
-  isMobileAsset,
-  isStaticLocation,
-} from '@/types/listing';
-import {
-  GuidedStepId,
-  computeFlow,
-  validateGuidedStep,
-  PUBLISH_GATED_STEPS,
-} from '@/components/listing-wizard/guided/guidedFlow';
+import { useState, useCallback } from 'react';
+import { ListingFormData, ListingMode, ListingCategory, FulfillmentType, isMobileAsset, isStaticLocation } from '@/types/listing';
 
 const initialFormData: ListingFormData = {
   mode: null,
@@ -74,52 +63,39 @@ const initialFormData: ListingFormData = {
   // Geocoded coordinates
   latitude: null,
   longitude: null,
-  // Guided wizard specifications (public)
-  year_built: '',
-  make: '',
-  model: '',
-  condition: '',
-  mileage: '',
-  fuel_type: '',
-  space_sqft: '',
-  // Guided wizard ownership (private)
-  title_status: '',
-  lien_holder_name: '',
-  ownership_notes: '',
 };
 
+const TOTAL_STEPS = 7;
+
 export const useListingForm = () => {
-  const [formData, setFormData] = useState<ListingFormData>(() => initialFormData);
-  const [stepId, setStepId] = useState<GuidedStepId>('intent');
-  /** Steps the user has attempted to leave — drives inline error reveal. */
-  const [touchedSteps, setTouchedSteps] = useState<Set<GuidedStepId>>(new Set());
-
-  /** The conditional path of screens for the current answers. */
-  const flow = useMemo(() => computeFlow(formData), [formData]);
-
-  const stepIndex = Math.max(0, flow.indexOf(stepId));
-  const totalSteps = flow.length;
+  const [formData, setFormData] = useState<ListingFormData>(() => {
+    console.log('[useListingForm] Initializing form data - this should only happen once per mount');
+    return initialFormData;
+  });
+  const [currentStep, setCurrentStep] = useState(1);
 
   const updateField = useCallback(<K extends keyof ListingFormData>(
     field: K,
     value: ListingFormData[K]
   ) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-  }, []);
-
-  /** Bulk update so a single answer can set several derived fields at once. */
-  const updateFields = useCallback((patch: Partial<ListingFormData>) => {
-    setFormData(prev => ({ ...prev, ...patch }));
+    console.log('[useListingForm] updateField called:', field, 
+      typeof value === 'string' ? (value.length > 30 ? value.substring(0, 30) + '...' : value) : value
+    );
+    setFormData(prev => {
+      const newData = { ...prev, [field]: value };
+      console.log('[useListingForm] Form data updated, description length:', newData.description?.length || 0);
+      return newData;
+    });
   }, []);
 
   const updateCategory = useCallback((category: ListingCategory) => {
     setFormData(prev => {
-      const newData: ListingFormData = {
-        ...prev,
+      const newData = { 
+        ...prev, 
         category,
         subcategory: null, // Reset subcategory when parent category changes
       };
-
+      
       // Auto-set fulfillment type and static location for inherently static locations
       if (isStaticLocation(category)) {
         newData.fulfillment_type = 'on_site';
@@ -127,86 +103,118 @@ export const useListingForm = () => {
       } else if (prev.fulfillment_type === 'on_site' && !prev.is_static_location) {
         newData.fulfillment_type = null;
       }
-
+      
       return newData;
     });
   }, []);
 
   const toggleStaticLocation = useCallback((isStatic: boolean) => {
-    setFormData(prev => ({
-      ...prev,
-      is_static_location: isStatic,
-      fulfillment_type: isStatic ? 'on_site' : null,
-    }));
+    setFormData(prev => {
+      const newData = { ...prev, is_static_location: isStatic };
+      
+      if (isStatic) {
+        newData.fulfillment_type = 'on_site';
+      } else {
+        newData.fulfillment_type = null;
+      }
+      
+      return newData;
+    });
   }, []);
 
-  const validateStep = useCallback(
-    (id: GuidedStepId): boolean => validateGuidedStep(id, formData),
-    [formData],
-  );
-
-  const markTouched = useCallback((id: GuidedStepId) => {
-    setTouchedSteps(prev => (prev.has(id) ? prev : new Set(prev).add(id)));
+  const nextStep = useCallback(() => {
+    setCurrentStep(prev => Math.min(prev + 1, TOTAL_STEPS));
   }, []);
-
-  /** Advance along the conditional flow. Returns false when the step is invalid. */
-  const nextStep = useCallback((): boolean => {
-    markTouched(stepId);
-    if (!validateGuidedStep(stepId, formData)) return false;
-
-    const path = computeFlow(formData);
-    const idx = path.indexOf(stepId);
-    const next = path[idx + 1];
-    if (next) setStepId(next);
-    return true;
-  }, [stepId, formData, markTouched]);
 
   const prevStep = useCallback(() => {
-    const path = computeFlow(formData);
-    const idx = path.indexOf(stepId);
-    const prev = path[idx - 1];
-    if (prev) setStepId(prev);
-  }, [stepId, formData]);
+    setCurrentStep(prev => Math.max(prev - 1, 1));
+  }, []);
 
-  /** Jump to a step. Forward jumps are only allowed over already-valid steps. */
-  const goToStep = useCallback((target: GuidedStepId) => {
-    const path = computeFlow(formData);
-    const targetIdx = path.indexOf(target);
-    const currentIdx = path.indexOf(stepId);
-    if (targetIdx === -1) return;
-    if (targetIdx <= currentIdx) {
-      setStepId(target);
-      return;
-    }
-    for (let i = 0; i < targetIdx; i++) {
-      if (!validateGuidedStep(path[i], formData)) return;
-    }
-    setStepId(target);
-  }, [formData, stepId]);
+  const goToStep = useCallback((step: number) => {
+    // Only allow going to a step if all previous steps are valid
+    // Or going backwards (which is always allowed)
+    setCurrentStep(prev => {
+      const targetStep = Math.max(1, Math.min(step, TOTAL_STEPS));
+      
+      // Going backwards is always allowed
+      if (targetStep <= prev) {
+        return targetStep;
+      }
+      
+      // Going forwards: check that current step is valid before advancing
+      // This prevents skipping by clicking on future step indicators
+      return prev;
+    });
+  }, []);
 
   const resetForm = useCallback(() => {
     setFormData(initialFormData);
-    setStepId('intent');
-    setTouchedSteps(new Set());
+    setCurrentStep(1);
   }, []);
 
-  const canPublish = useCallback((): boolean => {
-    if (!formData.mode || !formData.category) return false;
-    return PUBLISH_GATED_STEPS.every(id => validateGuidedStep(id, formData));
+  const validateStep = useCallback((step: number): boolean => {
+    switch (step) {
+      case 1:
+        return !!formData.mode && !!formData.category;
+      case 2:
+        // Title required (minimum 5 chars)
+        return formData.title.trim().length >= 5 && formData.description.trim().length > 0;
+      case 3:
+        // Price required, and for sales, at least one payment method
+        if (formData.mode === 'sale') {
+          const hasPaymentMethod = formData.accept_cash_payment || formData.accept_card_payment;
+          return formData.price_sale.trim().length > 0 && parseFloat(formData.price_sale) > 0 && hasPaymentMethod;
+        }
+        return formData.price_daily.trim().length > 0 && parseFloat(formData.price_daily) > 0;
+      case 4:
+        // Location required - validate ZIP code + city/state confirmed + coordinates
+        const isStatic = isStaticLocation(formData.category) || formData.is_static_location;
+        
+        // Wizard step requires: zip code (5 digits) + city + state + coordinates
+        const hasZipAndCityState = 
+          formData.zip_code.trim().length >= 5 &&
+          formData.city.trim().length > 0 &&
+          formData.state.trim().length > 0;
+        
+        // Coordinates must be set (validated by ZIP code lookup)
+        const hasCoordinates = formData.latitude !== null && formData.longitude !== null;
+        
+        if (isStatic) {
+          // Static locations also need access instructions
+          return hasZipAndCityState && hasCoordinates && formData.access_instructions.trim().length > 0;
+        }
+        
+        // Mobile assets need fulfillment type + zip/city/state + coordinates
+        return !!formData.fulfillment_type && hasZipAndCityState && hasCoordinates;
+      case 5:
+        // Documents step - always valid (documents are optional)
+        return true;
+      case 6:
+        // Minimum 3 photos required for quality
+        const totalPhotos = formData.images.length + formData.existingImages.length;
+        return totalPhotos >= 3;
+      case 7:
+        return true;
+      default:
+        return false;
+    }
   }, [formData]);
+
+  const canPublish = useCallback((): boolean => {
+    // Validate steps 1-6 (excluding review step 7)
+    for (let i = 1; i <= 6; i++) {
+      if (!validateStep(i)) return false;
+    }
+    return true;
+  }, [validateStep]);
 
   // Determine if showing static location UI (by category OR user toggle)
   const showStaticLocationUI = isStaticLocation(formData.category) || formData.is_static_location;
 
   return {
     formData,
-    flow,
-    stepId,
-    stepIndex,
-    totalSteps,
-    touched: touchedSteps.has(stepId),
+    currentStep,
     updateField,
-    updateFields,
     updateCategory,
     toggleStaticLocation,
     nextStep,

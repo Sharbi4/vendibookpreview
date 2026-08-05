@@ -35,7 +35,7 @@ import { trackLeadEvent } from '@/lib/leadTracking';
 import { ReportIssueButton } from '@/components/support/ReportIssueButton';
 
 
-import { GuidedStepId, STEP_NAMES } from './guided/guidedFlow';
+const STEPS = ['Type', 'Details', 'Pricing', 'Location', 'Documents', 'Media', 'Review'];
 
 interface PublishedListing {
   id: string;
@@ -55,10 +55,7 @@ export const ListingWizard: React.FC = () => {
   const { user } = useAuth();
   const {
     formData,
-    flow,
-    stepId,
-    stepIndex,
-    totalSteps,
+    currentStep,
     updateField,
     updateCategory,
     toggleStaticLocation,
@@ -138,7 +135,7 @@ export const ListingWizard: React.FC = () => {
   // Scroll to top when step changes
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, [stepId]);
+  }, [currentStep]);
 
   // Check if user has made progress
   const hasProgress = formData.mode || formData.category || formData.title || 
@@ -900,9 +897,8 @@ export const ListingWizard: React.FC = () => {
 
 
   const renderStep = () => {
-    switch (stepId) {
-      case 'intent':
-      case 'category':
+    switch (currentStep) {
+      case 1:
         return (
           <StepListingType
             formData={formData}
@@ -910,24 +906,21 @@ export const ListingWizard: React.FC = () => {
             updateCategory={updateCategory}
           />
         );
-      case 'specs':
-      case 'ownership':
-      case 'story':
-      case 'features':
+      case 2:
         return (
           <StepDetails
             formData={formData}
             updateField={updateField}
           />
         );
-      case 'pricing':
+      case 3:
         return (
           <StepPricing
             formData={formData}
             updateField={updateField}
           />
         );
-      case 'location':
+      case 4:
         return (
           <StepLocation
             formData={formData}
@@ -938,14 +931,14 @@ export const ListingWizard: React.FC = () => {
             onToggleStaticLocation={toggleStaticLocation}
           />
         );
-      case 'documents':
+      case 5:
         return (
           <StepRequiredDocuments
             formData={formData}
             updateField={updateField}
           />
         );
-      case 'photos':
+      case 6:
         return (
           <StepPhotos
             formData={formData}
@@ -954,7 +947,7 @@ export const ListingWizard: React.FC = () => {
             isUploadingVideos={isUploadingVideos}
           />
         );
-      case 'review':
+      case 7:
         return (
           <StepReview
             formData={formData}
@@ -966,11 +959,8 @@ export const ListingWizard: React.FC = () => {
     }
   };
 
-  const stepLabels = flow.map((id) => STEP_NAMES[id]);
-  const completedSteps = flow
-    .map((id, i) => ({ id, num: i + 1 }))
-    .filter(({ id, num }) => num <= stepIndex + 1 && validateStep(id))
-    .map(({ num }) => num);
+  const completedSteps = Array.from({ length: 7 }, (_, i) => i + 1)
+    .filter(step => (step < currentStep || step === currentStep) && validateStep(step));
 
   return (
     <div className="min-h-screen bg-background">
@@ -1017,7 +1007,7 @@ export const ListingWizard: React.FC = () => {
                 label="Report issue"
                 context={{
                   featureArea: "listing_wizard",
-                  wizardStep: STEP_NAMES[stepId],
+                  wizardStep: String(STEPS[currentStep] ?? currentStep),
                   related: { draft_id: draftId ?? undefined },
                 }}
               />
@@ -1025,9 +1015,9 @@ export const ListingWizard: React.FC = () => {
 
           </div>
           <WizardProgress
-            currentStep={stepIndex + 1}
-            steps={stepLabels}
-            onStepClick={(n: number) => goToStep(flow[n - 1])}
+            currentStep={currentStep}
+            steps={STEPS}
+            onStepClick={goToStep}
             completedSteps={completedSteps}
             restrictNavigation={true}
           />
@@ -1041,17 +1031,17 @@ export const ListingWizard: React.FC = () => {
           <div className="lg:col-span-7 xl:col-span-8 space-y-6">
             {/* Contextual help tips */}
             <StepHelpTips
-              currentStep={stepIndex + 1}
+              currentStep={currentStep}
               mode={formData.mode}
-              dismissed={dismissedTips.has(stepIndex + 1)}
-              onDismiss={() => setDismissedTips(prev => new Set([...prev, stepIndex + 1]))}
+              dismissed={dismissedTips.has(currentStep)}
+              onDismiss={() => setDismissedTips(prev => new Set([...prev, currentStep]))}
             />
             
             <div className="bg-card rounded-2xl shadow-sm border p-6 md:p-8">
               {/* Mobile step indicator */}
               <div className="lg:hidden mb-6">
-                <span className="text-sm font-medium text-muted-foreground">Step {stepIndex + 1} of {totalSteps}</span>
-                <h2 className="text-xl font-bold mt-1">{STEP_NAMES[stepId]}</h2>
+                <span className="text-sm font-medium text-muted-foreground">Step {currentStep} of {STEPS.length}</span>
+                <h2 className="text-xl font-bold mt-1">{STEPS[currentStep - 1]}</h2>
               </div>
               
               {renderStep()}
@@ -1063,7 +1053,7 @@ export const ListingWizard: React.FC = () => {
                 <Button
                   variant="outline"
                   onClick={prevStep}
-                  disabled={stepIndex === 0 || isSaving}
+                  disabled={currentStep === 1 || isSaving}
                 >
                   <ArrowLeft className="w-4 h-4 mr-2" />
                   Back
@@ -1083,7 +1073,7 @@ export const ListingWizard: React.FC = () => {
               </div>
 
               <div className="flex items-center gap-3">
-                {stepId === 'review' ? (
+                {currentStep === 7 ? (
                   <>
                     <Button
                       variant="outline"
@@ -1112,7 +1102,7 @@ export const ListingWizard: React.FC = () => {
                 ) : (
                   <Button
                     onClick={nextStep}
-                    disabled={!validateStep(stepId)}
+                    disabled={!validateStep(currentStep)}
                   >
                     Next
                     <ArrowRight className="w-4 h-4 ml-2" />
@@ -1127,20 +1117,20 @@ export const ListingWizard: React.FC = () => {
             <WizardPreviewSidebar
               formData={formData}
               previewImageUrls={allPreviewImageUrls}
-              currentStep={stepIndex + 1}
-              onStepClick={(key) => {
-                const stepMap: Record<string, GuidedStepId> = {
-                  'photos': 'photos',
-                  'headline': 'story',
-                  'includes': 'features',
-                  'pricing': 'pricing',
-                  'availability': 'pricing',
-                  'location': 'location',
-                  'documents': 'documents',
-                  'review': 'review',
+              currentStep={currentStep}
+              onStepClick={(stepId) => {
+                const stepMap: Record<string, number> = {
+                  'photos': 6,
+                  'headline': 2,
+                  'includes': 2,
+                  'pricing': 3,
+                  'availability': 3,
+                  'location': 4,
+                  'documents': 5,
+                  'review': 7,
                 };
-                const target = stepMap[key];
-                if (target) goToStep(target);
+                const step = stepMap[stepId];
+                if (step) goToStep(step);
               }}
             />
           </div>
