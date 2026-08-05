@@ -621,7 +621,49 @@ export interface ListingFormData {
   // Geocoded coordinates (set by LocationMapPreview)
   latitude: number | null;
   longitude: number | null;
+  // --- Guided wizard specifications (public, buyer-facing) ---
+  year_built: string;
+  make: string;
+  model: string;
+  condition: ListingCondition | '';
+  mileage: string;
+  fuel_type: FuelType | '';
+  space_sqft: string;
+  // --- Guided wizard ownership (PRIVATE: stored in listing_ownership_details) ---
+  title_status: TitleStatus | '';
+  lien_holder_name: string;
+  ownership_notes: string;
 }
+
+export type ListingCondition = 'new' | 'like_new' | 'used' | 'project';
+
+export const CONDITION_OPTIONS: { value: ListingCondition; label: string; description: string }[] = [
+  { value: 'new', label: 'New', description: 'Never used, still factory fresh' },
+  { value: 'like_new', label: 'Like new', description: 'Barely used, no visible wear' },
+  { value: 'used', label: 'Used', description: 'Works well, normal wear and tear' },
+  { value: 'project', label: 'Project', description: 'Needs repairs or a build-out' },
+];
+
+export type FuelType = 'gasoline' | 'diesel' | 'hybrid' | 'electric' | 'propane' | 'other';
+
+export const FUEL_TYPE_OPTIONS: { value: FuelType; label: string }[] = [
+  { value: 'gasoline', label: 'Gasoline' },
+  { value: 'diesel', label: 'Diesel' },
+  { value: 'hybrid', label: 'Hybrid' },
+  { value: 'electric', label: 'Electric' },
+  { value: 'propane', label: 'Propane' },
+  { value: 'other', label: 'Other' },
+];
+
+export type TitleStatus = 'clear_title' | 'lien_on_title' | 'no_title_bill_of_sale' | 'not_sure';
+
+export const TITLE_STATUS_OPTIONS: { value: TitleStatus; label: string; description: string }[] = [
+  { value: 'clear_title', label: 'Yes, clear title', description: 'You hold the title and it is paid off' },
+  { value: 'lien_on_title', label: 'Yes, title has a lien', description: 'A lender still has a claim on it' },
+  { value: 'no_title_bill_of_sale', label: 'No title / bill of sale only', description: 'Common for some trailers and builds' },
+  { value: 'not_sure', label: "I'm not sure", description: 'We can help you sort this out later' },
+];
+
 
 export const CATEGORY_LABELS: Record<ListingCategory, string> = {
   food_truck: 'Food Truck',
