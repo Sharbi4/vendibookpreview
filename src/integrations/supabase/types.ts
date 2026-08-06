@@ -2409,6 +2409,54 @@ export type Database = {
           },
         ]
       }
+      listing_ownership_details: {
+        Row: {
+          created_at: string
+          host_id: string
+          id: string
+          lien_holder_name: string | null
+          listing_id: string
+          ownership_notes: string | null
+          title_status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          host_id: string
+          id?: string
+          lien_holder_name?: string | null
+          listing_id: string
+          ownership_notes?: string | null
+          title_status: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          host_id?: string
+          id?: string
+          lien_holder_name?: string | null
+          listing_id?: string
+          ownership_notes?: string | null
+          title_status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "listing_ownership_details_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: true
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "listing_ownership_details_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: true
+            referencedRelation: "public_listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       listing_promotions: {
         Row: {
           active: boolean
@@ -2681,6 +2729,7 @@ export type Database = {
           buffer_time_mins: number | null
           category: Database["public"]["Enums"]["listing_category"]
           city: string | null
+          condition: string | null
           cover_image_url: string | null
           created_at: string
           daily_enabled: boolean | null
@@ -2696,6 +2745,7 @@ export type Database = {
           featured_source: string | null
           freight_category: string | null
           freight_payer: string | null
+          fuel_type: string | null
           fulfillment_type: Database["public"]["Enums"]["fulfillment_type"]
           guest_draft_token: string | null
           height_inches: number | null
@@ -2712,10 +2762,13 @@ export type Database = {
           length_inches: number | null
           location_notes: string | null
           longitude: number | null
+          make: string | null
           max_hours: number | null
+          mileage: number | null
           min_hours: number | null
           min_notice_hours: number | null
           mode: Database["public"]["Enums"]["listing_mode"]
+          model: string | null
           moderation_status: string
           operating_hours_end: string | null
           operating_hours_start: string | null
@@ -2733,6 +2786,7 @@ export type Database = {
           rental_buffer_days: number | null
           rental_min_days: number | null
           slot_names: string[] | null
+          space_sqft: number | null
           state: string | null
           status: Database["public"]["Enums"]["listing_status"]
           subcategory: string | null
@@ -2744,6 +2798,7 @@ export type Database = {
           view_count: number | null
           weight_lbs: number | null
           width_inches: number | null
+          year_built: number | null
         }
         Insert: {
           accept_card_payment?: boolean | null
@@ -2757,6 +2812,7 @@ export type Database = {
           buffer_time_mins?: number | null
           category: Database["public"]["Enums"]["listing_category"]
           city?: string | null
+          condition?: string | null
           cover_image_url?: string | null
           created_at?: string
           daily_enabled?: boolean | null
@@ -2772,6 +2828,7 @@ export type Database = {
           featured_source?: string | null
           freight_category?: string | null
           freight_payer?: string | null
+          fuel_type?: string | null
           fulfillment_type: Database["public"]["Enums"]["fulfillment_type"]
           guest_draft_token?: string | null
           height_inches?: number | null
@@ -2788,10 +2845,13 @@ export type Database = {
           length_inches?: number | null
           location_notes?: string | null
           longitude?: number | null
+          make?: string | null
           max_hours?: number | null
+          mileage?: number | null
           min_hours?: number | null
           min_notice_hours?: number | null
           mode: Database["public"]["Enums"]["listing_mode"]
+          model?: string | null
           moderation_status?: string
           operating_hours_end?: string | null
           operating_hours_start?: string | null
@@ -2809,6 +2869,7 @@ export type Database = {
           rental_buffer_days?: number | null
           rental_min_days?: number | null
           slot_names?: string[] | null
+          space_sqft?: number | null
           state?: string | null
           status?: Database["public"]["Enums"]["listing_status"]
           subcategory?: string | null
@@ -2820,6 +2881,7 @@ export type Database = {
           view_count?: number | null
           weight_lbs?: number | null
           width_inches?: number | null
+          year_built?: number | null
         }
         Update: {
           accept_card_payment?: boolean | null
@@ -2833,6 +2895,7 @@ export type Database = {
           buffer_time_mins?: number | null
           category?: Database["public"]["Enums"]["listing_category"]
           city?: string | null
+          condition?: string | null
           cover_image_url?: string | null
           created_at?: string
           daily_enabled?: boolean | null
@@ -2848,6 +2911,7 @@ export type Database = {
           featured_source?: string | null
           freight_category?: string | null
           freight_payer?: string | null
+          fuel_type?: string | null
           fulfillment_type?: Database["public"]["Enums"]["fulfillment_type"]
           guest_draft_token?: string | null
           height_inches?: number | null
@@ -2864,10 +2928,13 @@ export type Database = {
           length_inches?: number | null
           location_notes?: string | null
           longitude?: number | null
+          make?: string | null
           max_hours?: number | null
+          mileage?: number | null
           min_hours?: number | null
           min_notice_hours?: number | null
           mode?: Database["public"]["Enums"]["listing_mode"]
+          model?: string | null
           moderation_status?: string
           operating_hours_end?: string | null
           operating_hours_start?: string | null
@@ -2885,6 +2952,7 @@ export type Database = {
           rental_buffer_days?: number | null
           rental_min_days?: number | null
           slot_names?: string[] | null
+          space_sqft?: number | null
           state?: string | null
           status?: Database["public"]["Enums"]["listing_status"]
           subcategory?: string | null
@@ -2896,6 +2964,7 @@ export type Database = {
           view_count?: number | null
           weight_lbs?: number | null
           width_inches?: number | null
+          year_built?: number | null
         }
         Relationships: []
       }
@@ -7987,6 +8056,7 @@ export type Database = {
           buffer_time_mins: number | null
           category: Database["public"]["Enums"]["listing_category"]
           city: string | null
+          condition: string | null
           cover_image_url: string | null
           created_at: string
           daily_enabled: boolean | null
@@ -8002,6 +8072,7 @@ export type Database = {
           featured_source: string | null
           freight_category: string | null
           freight_payer: string | null
+          fuel_type: string | null
           fulfillment_type: Database["public"]["Enums"]["fulfillment_type"]
           guest_draft_token: string | null
           height_inches: number | null
@@ -8018,10 +8089,13 @@ export type Database = {
           length_inches: number | null
           location_notes: string | null
           longitude: number | null
+          make: string | null
           max_hours: number | null
+          mileage: number | null
           min_hours: number | null
           min_notice_hours: number | null
           mode: Database["public"]["Enums"]["listing_mode"]
+          model: string | null
           moderation_status: string
           operating_hours_end: string | null
           operating_hours_start: string | null
@@ -8039,6 +8113,7 @@ export type Database = {
           rental_buffer_days: number | null
           rental_min_days: number | null
           slot_names: string[] | null
+          space_sqft: number | null
           state: string | null
           status: Database["public"]["Enums"]["listing_status"]
           subcategory: string | null
@@ -8050,6 +8125,7 @@ export type Database = {
           view_count: number | null
           weight_lbs: number | null
           width_inches: number | null
+          year_built: number | null
         }
         SetofOptions: {
           from: "*"
