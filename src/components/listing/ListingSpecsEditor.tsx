@@ -169,42 +169,52 @@ const SectionCard: React.FC<{
             <p className="mt-0.5 text-sm text-muted-foreground truncate">{section.blurb}</p>
           </div>
           <div className="flex shrink-0 items-center gap-2 text-xs text-muted-foreground">
-            <span>
-              {filledCount}/{section.fields.length}
-            </span>
+            {section.fields.length > 0 && (
+              <span>
+                {filledCount}/{section.fields.length}
+              </span>
+            )}
             <ChevronDown className={`h-4 w-4 transition-transform ${open ? 'rotate-180' : ''}`} />
           </div>
         </CollapsibleTrigger>
 
         <CollapsibleContent>
           <div className="space-y-4 border-t border-border/60 p-4">
-            {section.fields.map((field) => (
-              <div key={field.key} className="space-y-1.5">
-                {field.type !== 'boolean' && (
-                  <Label className="flex items-center gap-1.5 text-sm">
-                    {field.label}
-                    {field.unit && <span className="text-muted-foreground">({field.unit})</span>}
-                    {field.help && <InfoTooltip content={field.help} />}
-                  </Label>
-                )}
-                <FieldInput
-                  field={field}
-                  value={draft[field.key]}
-                  onChange={(v) => setDraft((d) => ({ ...d, [field.key]: v }))}
-                />
-              </div>
-            ))}
-            <div className="flex items-center justify-between pt-1">
-              <p className="text-xs text-muted-foreground">
-                Leave anything blank you are not sure about.
-              </p>
-              <Button size="sm" onClick={handleSave} disabled={saving}>
-                {saving && <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />}
-                Save section
-              </Button>
-            </div>
+            {customContent ? (
+              customContent
+            ) : (
+              <>
+                {section.fields.map((field) => (
+                  <div key={field.key} className="space-y-1.5">
+                    {field.type !== 'boolean' && (
+                      <Label className="flex items-center gap-1.5 text-sm">
+                        {field.label}
+                        {field.unit && <span className="text-muted-foreground">({field.unit})</span>}
+                        {field.help && <InfoTooltip content={field.help} />}
+                      </Label>
+                    )}
+                    <FieldInput
+                      field={field}
+                      value={draft[field.key]}
+                      onChange={(v) => markDirty({ ...draft, [field.key]: v })}
+                    />
+                  </div>
+                ))}
+                {error && <p className="text-sm text-destructive">{error}</p>}
+                <div className="sticky bottom-0 flex items-center justify-between gap-3 bg-background/95 py-2 backdrop-blur">
+                  <p className="text-xs text-muted-foreground">
+                    {dirty ? 'Unsaved changes' : 'Leave anything blank you are not sure about.'}
+                  </p>
+                  <Button size="sm" onClick={handleSave} disabled={saving}>
+                    {saving && <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />}
+                    {error ? 'Retry save' : 'Save section'}
+                  </Button>
+                </div>
+              </>
+            )}
           </div>
         </CollapsibleContent>
+
       </div>
     </Collapsible>
   );
