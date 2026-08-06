@@ -6,6 +6,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import ListingSpecsEditor from '@/components/listing/ListingSpecsEditor';
 import SpecSuggestionsPanel from '@/components/listing/SpecSuggestionsPanel';
+import RentalTermsEditor from '@/components/listing/RentalTermsEditor';
+
 import ListingReadinessCard from '@/components/listing/ListingReadinessCard';
 import { useSpecSuggestions, SpecSuggestion } from '@/hooks/useSpecSuggestions';
 import { useListingSpecs } from '@/hooks/useListingSpecs';
