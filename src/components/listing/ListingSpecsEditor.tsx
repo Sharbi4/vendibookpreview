@@ -29,6 +29,10 @@ interface ListingSpecsEditorProps {
   listingId: string;
   category?: string | null;
   mode?: string | null;
+  /** Section key to open on mount (deep link from a next-action card). */
+  initialSection?: string | null;
+  /** Optional slot rendered above the sections (e.g. AI suggestions). */
+  header?: React.ReactNode;
 }
 
 const FieldInput: React.FC<{
