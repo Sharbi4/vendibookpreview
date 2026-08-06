@@ -24,6 +24,7 @@ import {
   sectionFilledCount,
   sectionsForListing,
 } from '@/lib/listings/readiness';
+import ReadinessDisclaimer from '@/components/listing/ReadinessDisclaimer';
 
 interface ListingSpecsEditorProps {
   listingId: string;
