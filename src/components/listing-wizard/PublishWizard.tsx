@@ -199,7 +199,7 @@ export const PublishWizard: React.FC = () => {
     acceptsOffers: false,
     minOfferAmount: '',
   });
-  const [attestations, setAttestations] = useState<Record<AttestationKey, boolean>>(emptyAttestations);
+  const [attestations, setAttestations] = useState<Record<AttestationKey, boolean>>(emptyAttestations());
   const [listing, setListing] = useState<ListingData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -4271,8 +4271,7 @@ export const PublishWizard: React.FC = () => {
                   <PrivacySummary />
 
                   <PublishAttestations
-                    mode={listing.mode}
-                    values={attestations}
+                    value={attestations}
                     onChange={(key, checked) =>
                       setAttestations((prev) => ({ ...prev, [key]: checked }))
                     }
