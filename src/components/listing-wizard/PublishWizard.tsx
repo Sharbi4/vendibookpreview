@@ -508,6 +508,30 @@ export const PublishWizard: React.FC = () => {
       setListing(data as unknown as ListingData);
       setTitle(data.title || '');
       setDescription(data.description || '');
+      // Phase 2 — six-stage fields (all additive; legacy drafts hydrate to empty)
+      setStageValues({
+        modelYear: (data as any).year_built?.toString() || '',
+        kitchenBuildYear: (data as any).kitchen_build_year?.toString() || '',
+        kitchenBuildYearUnknown: (data as any).kitchen_build_year_unknown ?? false,
+        condition: (data as any).condition || '',
+        operationalStatus: (data as any).operational_status || '',
+        lengthInches: data.length_inches?.toString() || '',
+        widthInches: data.width_inches?.toString() || '',
+        heightInches: data.height_inches?.toString() || '',
+      });
+      setDisclosures({
+        titleStatus: (data as any).title_status || '',
+        hasLien: (data as any).has_lien || '',
+        noKnownProblems: (data as any).no_known_problems ?? false,
+        knownProblems: parseKnownProblems((data as any).known_problems),
+        includedItems: (data as any).included_items || '',
+        photosExclusionsAnswered: (data as any).photos_exclusions_answered ?? false,
+        photosExclusionsNote: (data as any).photos_exclusions_note || '',
+        priceNegotiable: (data as any).price_negotiable ?? false,
+        acceptsOffers: (data as any).accepts_offers ?? false,
+        minOfferAmount: (data as any).min_offer_amount?.toString() || '',
+      });
+
       setPriceDaily(data.price_daily?.toString() || '');
       setPriceWeekly(data.price_weekly?.toString() || '');
       setPriceMonthly(data.price_monthly?.toString() || '');
