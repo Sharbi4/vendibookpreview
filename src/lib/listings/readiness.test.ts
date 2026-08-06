@@ -26,7 +26,9 @@ const fillAll = (category: string, mode: string): SpecValues => {
         title_summary: 'Clean title',
         documents_available: true,
         authority_to_sell_confirmed: true,
+        lien_release_available: true,
       };
+
     } else {
       values[section.key] = Object.fromEntries(section.fields.map((f) => [f.key, 'yes']));
     }
