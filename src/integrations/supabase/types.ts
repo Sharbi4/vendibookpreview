@@ -2456,34 +2456,64 @@ export type Database = {
       }
       listing_ownership_details: {
         Row: {
+          active_lien: boolean | null
+          authority_to_sell: boolean | null
           created_at: string
+          documents_available: boolean | null
           host_id: string
           id: string
           lien_holder_name: string | null
+          lien_release_available: boolean | null
           listing_id: string
+          manufacturer_plate: string | null
           ownership_notes: string | null
+          title_name_type: string | null
+          title_number: string | null
+          title_state: string | null
           title_status: string
+          titled_owner: string | null
           updated_at: string
+          vin_serial: string | null
         }
         Insert: {
+          active_lien?: boolean | null
+          authority_to_sell?: boolean | null
           created_at?: string
+          documents_available?: boolean | null
           host_id: string
           id?: string
           lien_holder_name?: string | null
+          lien_release_available?: boolean | null
           listing_id: string
+          manufacturer_plate?: string | null
           ownership_notes?: string | null
+          title_name_type?: string | null
+          title_number?: string | null
+          title_state?: string | null
           title_status: string
+          titled_owner?: string | null
           updated_at?: string
+          vin_serial?: string | null
         }
         Update: {
+          active_lien?: boolean | null
+          authority_to_sell?: boolean | null
           created_at?: string
+          documents_available?: boolean | null
           host_id?: string
           id?: string
           lien_holder_name?: string | null
+          lien_release_available?: boolean | null
           listing_id?: string
+          manufacturer_plate?: string | null
           ownership_notes?: string | null
+          title_name_type?: string | null
+          title_number?: string | null
+          title_state?: string | null
           title_status?: string
+          titled_owner?: string | null
           updated_at?: string
+          vin_serial?: string | null
         }
         Relationships: [
           {
@@ -2938,60 +2968,105 @@ export type Database = {
       }
       listing_specs: {
         Row: {
+          condition_details: Json
           confirmed_sections: string[]
           cooking: Json
           created_at: string
           dimensions: Json
           electrical: Json
+          equipment_inventory: Json
           hood: Json
           id: string
           inclusions: Json
           inspections: Json
           listing_id: string
           mechanical: Json
+          ownership_public: Json
           plumbing: Json
           propane: Json
+          q_fresh_water_gal: number | null
+          q_grey_water_gal: number | null
+          q_has_generator: boolean | null
+          q_hood_type: string | null
+          q_operational_status: string | null
+          q_shore_power: string | null
           refrigeration: Json
+          revision: number
+          safety: Json
           site: Json
+          space: Json
+          trailer: Json
           updated_at: string
+          utilities: Json
+          vehicle: Json
           viewing: Json
         }
         Insert: {
+          condition_details?: Json
           confirmed_sections?: string[]
           cooking?: Json
           created_at?: string
           dimensions?: Json
           electrical?: Json
+          equipment_inventory?: Json
           hood?: Json
           id?: string
           inclusions?: Json
           inspections?: Json
           listing_id: string
           mechanical?: Json
+          ownership_public?: Json
           plumbing?: Json
           propane?: Json
+          q_fresh_water_gal?: number | null
+          q_grey_water_gal?: number | null
+          q_has_generator?: boolean | null
+          q_hood_type?: string | null
+          q_operational_status?: string | null
+          q_shore_power?: string | null
           refrigeration?: Json
+          revision?: number
+          safety?: Json
           site?: Json
+          space?: Json
+          trailer?: Json
           updated_at?: string
+          utilities?: Json
+          vehicle?: Json
           viewing?: Json
         }
         Update: {
+          condition_details?: Json
           confirmed_sections?: string[]
           cooking?: Json
           created_at?: string
           dimensions?: Json
           electrical?: Json
+          equipment_inventory?: Json
           hood?: Json
           id?: string
           inclusions?: Json
           inspections?: Json
           listing_id?: string
           mechanical?: Json
+          ownership_public?: Json
           plumbing?: Json
           propane?: Json
+          q_fresh_water_gal?: number | null
+          q_grey_water_gal?: number | null
+          q_has_generator?: boolean | null
+          q_hood_type?: string | null
+          q_operational_status?: string | null
+          q_shore_power?: string | null
           refrigeration?: Json
+          revision?: number
+          safety?: Json
           site?: Json
+          space?: Json
+          trailer?: Json
           updated_at?: string
+          utilities?: Json
+          vehicle?: Json
           viewing?: Json
         }
         Relationships: [
