@@ -2289,6 +2289,45 @@ export type Database = {
           },
         ]
       }
+      listing_completeness: {
+        Row: {
+          listing_id: string
+          missing_sections: string[]
+          readiness_level: Database["public"]["Enums"]["listing_readiness_level"]
+          score: number
+          updated_at: string
+        }
+        Insert: {
+          listing_id: string
+          missing_sections?: string[]
+          readiness_level?: Database["public"]["Enums"]["listing_readiness_level"]
+          score?: number
+          updated_at?: string
+        }
+        Update: {
+          listing_id?: string
+          missing_sections?: string[]
+          readiness_level?: Database["public"]["Enums"]["listing_readiness_level"]
+          score?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "listing_completeness_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: true
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "listing_completeness_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: true
+            referencedRelation: "public_listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       listing_events: {
         Row: {
           created_at: string
@@ -2535,6 +2574,48 @@ export type Database = {
           },
         ]
       }
+      listing_rental_terms: {
+        Row: {
+          confirmed: boolean
+          created_at: string
+          id: string
+          listing_id: string
+          terms: Json
+          updated_at: string
+        }
+        Insert: {
+          confirmed?: boolean
+          created_at?: string
+          id?: string
+          listing_id: string
+          terms?: Json
+          updated_at?: string
+        }
+        Update: {
+          confirmed?: boolean
+          created_at?: string
+          id?: string
+          listing_id?: string
+          terms?: Json
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "listing_rental_terms_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: true
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "listing_rental_terms_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: true
+            referencedRelation: "public_listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       listing_required_documents: {
         Row: {
           created_at: string
@@ -2667,6 +2748,247 @@ export type Database = {
             columns: ["promotion_id"]
             isOneToOne: false
             referencedRelation: "promotions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      listing_service_messages: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          order_id: string
+          sender_role: string
+          sender_user_id: string | null
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          order_id: string
+          sender_role?: string
+          sender_user_id?: string | null
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          order_id?: string
+          sender_role?: string
+          sender_user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "listing_service_messages_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "listing_service_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      listing_service_orders: {
+        Row: {
+          admin_user_id: string | null
+          approved_at: string | null
+          buyer_user_id: string
+          created_at: string
+          id: string
+          intake: Json
+          listing_id: string | null
+          product_slug: string
+          published_at: string | null
+          purchase_id: string | null
+          revision_count: number
+          status: Database["public"]["Enums"]["listing_service_order_status"]
+          turnaround_hours: number | null
+          updated_at: string
+        }
+        Insert: {
+          admin_user_id?: string | null
+          approved_at?: string | null
+          buyer_user_id: string
+          created_at?: string
+          id?: string
+          intake?: Json
+          listing_id?: string | null
+          product_slug: string
+          published_at?: string | null
+          purchase_id?: string | null
+          revision_count?: number
+          status?: Database["public"]["Enums"]["listing_service_order_status"]
+          turnaround_hours?: number | null
+          updated_at?: string
+        }
+        Update: {
+          admin_user_id?: string | null
+          approved_at?: string | null
+          buyer_user_id?: string
+          created_at?: string
+          id?: string
+          intake?: Json
+          listing_id?: string | null
+          product_slug?: string
+          published_at?: string | null
+          purchase_id?: string | null
+          revision_count?: number
+          status?: Database["public"]["Enums"]["listing_service_order_status"]
+          turnaround_hours?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "listing_service_orders_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "listing_service_orders_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "public_listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "listing_service_orders_purchase_id_fkey"
+            columns: ["purchase_id"]
+            isOneToOne: false
+            referencedRelation: "monetization_pending_reconciliation"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "listing_service_orders_purchase_id_fkey"
+            columns: ["purchase_id"]
+            isOneToOne: false
+            referencedRelation: "monetization_purchases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      listing_spec_suggestions: {
+        Row: {
+          created_at: string
+          field: string
+          id: string
+          listing_id: string
+          resolved_at: string | null
+          section: string
+          source: string
+          status: string
+          suggested_value: Json
+        }
+        Insert: {
+          created_at?: string
+          field: string
+          id?: string
+          listing_id: string
+          resolved_at?: string | null
+          section: string
+          source?: string
+          status?: string
+          suggested_value?: Json
+        }
+        Update: {
+          created_at?: string
+          field?: string
+          id?: string
+          listing_id?: string
+          resolved_at?: string | null
+          section?: string
+          source?: string
+          status?: string
+          suggested_value?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "listing_spec_suggestions_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "listing_spec_suggestions_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "public_listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      listing_specs: {
+        Row: {
+          confirmed_sections: string[]
+          cooking: Json
+          created_at: string
+          dimensions: Json
+          electrical: Json
+          hood: Json
+          id: string
+          inclusions: Json
+          inspections: Json
+          listing_id: string
+          mechanical: Json
+          plumbing: Json
+          propane: Json
+          refrigeration: Json
+          site: Json
+          updated_at: string
+          viewing: Json
+        }
+        Insert: {
+          confirmed_sections?: string[]
+          cooking?: Json
+          created_at?: string
+          dimensions?: Json
+          electrical?: Json
+          hood?: Json
+          id?: string
+          inclusions?: Json
+          inspections?: Json
+          listing_id: string
+          mechanical?: Json
+          plumbing?: Json
+          propane?: Json
+          refrigeration?: Json
+          site?: Json
+          updated_at?: string
+          viewing?: Json
+        }
+        Update: {
+          confirmed_sections?: string[]
+          cooking?: Json
+          created_at?: string
+          dimensions?: Json
+          electrical?: Json
+          hood?: Json
+          id?: string
+          inclusions?: Json
+          inspections?: Json
+          listing_id?: string
+          mechanical?: Json
+          plumbing?: Json
+          propane?: Json
+          refrigeration?: Json
+          site?: Json
+          updated_at?: string
+          viewing?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "listing_specs_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: true
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "listing_specs_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: true
+            referencedRelation: "public_listings"
             referencedColumns: ["id"]
           },
         ]
@@ -8816,6 +9138,19 @@ export type Database = {
         | "motivated_seller"
         | "email_campaign"
         | "social_feature"
+      listing_readiness_level: "published" | "buyer_ready" | "highly_detailed"
+      listing_service_order_status:
+        | "awaiting_payment"
+        | "paid"
+        | "intake"
+        | "in_progress"
+        | "questions"
+        | "revision"
+        | "seller_review"
+        | "approved"
+        | "published"
+        | "cancelled"
+        | "refunded"
       listing_status: "draft" | "published" | "paused" | "archived"
       marketing_event_type:
         | "delivered"
@@ -9072,6 +9407,20 @@ export const Constants = {
         "motivated_seller",
         "email_campaign",
         "social_feature",
+      ],
+      listing_readiness_level: ["published", "buyer_ready", "highly_detailed"],
+      listing_service_order_status: [
+        "awaiting_payment",
+        "paid",
+        "intake",
+        "in_progress",
+        "questions",
+        "revision",
+        "seller_review",
+        "approved",
+        "published",
+        "cancelled",
+        "refunded",
       ],
       listing_status: ["draft", "published", "paused", "archived"],
       marketing_event_type: [
