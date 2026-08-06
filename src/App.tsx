@@ -143,6 +143,7 @@ const FoodTruckSellingFaq = lazy(() => import("./pages/resources/FoodTruckSellin
 const PricingCalculator = lazy(() => import("./pages/PricingCalculator"));
 const KitchenEarningsCalculator = lazy(() => import("./pages/KitchenEarningsCalculator"));
 const ListingPublished = lazy(() => import("./pages/ListingPublished"));
+const ListingImprove = lazy(() => import("./pages/ListingImprove"));
 const Cities = lazy(() => import("./pages/Cities"));
 const SaleCheckout = lazy(() => import("./pages/SaleCheckout"));
 const BookingCheckout = lazy(() => import("./pages/BookingCheckout"));
