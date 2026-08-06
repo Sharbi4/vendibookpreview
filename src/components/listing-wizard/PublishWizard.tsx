@@ -1383,10 +1383,22 @@ export const PublishWizard: React.FC = () => {
           title,
           description};
       } else if (step === 'includes') {
-        // Save amenities and highlights
+        // Save amenities, highlights and the Stage 3 disclosures
         updateData = {
           amenities,
-          highlights};
+          highlights,
+          title_status: disclosures.titleStatus || null,
+          has_lien: disclosures.hasLien || null,
+          no_known_problems: disclosures.noKnownProblems,
+          known_problems: disclosures.knownProblems.length ? disclosures.knownProblems : null,
+          included_items: disclosures.includedItems || null,
+          photos_exclusions_answered: disclosures.photosExclusionsAnswered,
+          photos_exclusions_note: disclosures.photosExclusionsNote || null,
+          price_negotiable: disclosures.priceNegotiable,
+          accepts_offers: disclosures.acceptsOffers,
+          min_offer_amount: disclosures.minOfferAmount ? parseFloat(disclosures.minOfferAmount) : null,
+        };
+
       } else if (step === 'pricing') {
         // Helper function to safely parse price values
         const safeParsePrice = (value: string): number | null => {
