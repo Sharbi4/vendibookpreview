@@ -143,6 +143,7 @@ const FoodTruckSellingFaq = lazy(() => import("./pages/resources/FoodTruckSellin
 const PricingCalculator = lazy(() => import("./pages/PricingCalculator"));
 const KitchenEarningsCalculator = lazy(() => import("./pages/KitchenEarningsCalculator"));
 const ListingPublished = lazy(() => import("./pages/ListingPublished"));
+const ListingImprove = lazy(() => import("./pages/ListingImprove"));
 const Cities = lazy(() => import("./pages/Cities"));
 const SaleCheckout = lazy(() => import("./pages/SaleCheckout"));
 const BookingCheckout = lazy(() => import("./pages/BookingCheckout"));
@@ -372,6 +373,7 @@ const AnimatedRoutes = () => {
 
           <Route path="/listing-published" element={<PageTransition><ListingPublished /></PageTransition>} />
           <Route path="/listing-published/:listingId" element={<PageTransition><ListingPublished /></PageTransition>} />
+          <Route path="/listings/:listingId/improve" element={<PageTransition><ListingImprove /></PageTransition>} />
           <Route path="/checkout/:listingId" element={<PageTransition><SaleCheckout /></PageTransition>} />
           <Route path="/book/:listingId" element={<PageTransition><BookingCheckout /></PageTransition>} />
 

@@ -24,11 +24,16 @@ import {
   sectionFilledCount,
   sectionsForListing,
 } from '@/lib/listings/readiness';
+import ReadinessDisclaimer from '@/components/listing/ReadinessDisclaimer';
 
 interface ListingSpecsEditorProps {
   listingId: string;
   category?: string | null;
   mode?: string | null;
+  /** Section key to open on mount (deep link from a next-action card). */
+  initialSection?: string | null;
+  /** Optional slot rendered above the sections (e.g. AI suggestions). */
+  header?: React.ReactNode;
 }
 
 const FieldInput: React.FC<{
@@ -87,9 +92,10 @@ const SectionCard: React.FC<{
   initial: Record<string, unknown>;
   confirmed: boolean;
   saving: boolean;
+  defaultOpen?: boolean;
   onSave: (values: Record<string, unknown>) => Promise<boolean>;
-}> = ({ section, initial, confirmed, saving, onSave }) => {
-  const [open, setOpen] = useState(false);
+}> = ({ section, initial, confirmed, saving, defaultOpen = false, onSave }) => {
+  const [open, setOpen] = useState(defaultOpen);
   const [draft, setDraft] = useState<Record<string, unknown>>(initial);
   const { toast } = useToast();
 
@@ -172,6 +178,8 @@ export const ListingSpecsEditor: React.FC<ListingSpecsEditorProps> = ({
   listingId,
   category,
   mode,
+  initialSection,
+  header,
 }) => {
   const { values, confirmedSections, readiness, loading, saving, saveSection } = useListingSpecs({
     listingId,
@@ -191,6 +199,8 @@ export const ListingSpecsEditor: React.FC<ListingSpecsEditorProps> = ({
 
   return (
     <section className="space-y-4">
+      {header}
+
       <div className="rounded-xl border border-border/60 bg-card/60 p-5">
         <div className="flex items-center justify-between gap-4">
           <div>
@@ -206,8 +216,11 @@ export const ListingSpecsEditor: React.FC<ListingSpecsEditorProps> = ({
         </div>
         <div className="mt-4 space-y-1.5">
           <Progress value={readiness.score} className="h-2" />
-          <p className="text-xs text-muted-foreground">{readiness.score}% detail complete</p>
+          <p className="text-xs text-muted-foreground">
+            {readiness.score}% of relevant details added
+          </p>
         </div>
+        <ReadinessDisclaimer className="mt-4" />
       </div>
 
       <div className="space-y-3">
@@ -218,6 +231,7 @@ export const ListingSpecsEditor: React.FC<ListingSpecsEditorProps> = ({
             initial={values[section.key] ?? {}}
             confirmed={confirmedSections.includes(section.key)}
             saving={saving}
+            defaultOpen={section.key === initialSection}
             onSave={(v) => saveSection(section.key, v)}
           />
         ))}

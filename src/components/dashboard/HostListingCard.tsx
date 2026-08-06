@@ -50,6 +50,7 @@ import { PromoteListingModal } from './PromoteListingModal';
 import { ListingUpgradesDialog } from '@/components/monetization/ListingUpgradesDialog';
 import ShareKitModal from './ShareKitModal';
 import { isListingFeatured } from '@/lib/featured';
+import ListingReadinessCard from '@/components/listing/ListingReadinessCard';
 import { cn } from '@/lib/utils';
 import { FeaturedBadge } from '@/components/listing/FeaturedBadge';
 import { PayoutSetupDialog } from '@/components/payouts/PayoutSetupDialog';
@@ -465,6 +466,17 @@ const HostListingCard = ({
                 </>
               )}
             </div>
+
+            {isPublished && (
+              <ListingReadinessCard
+                listingId={listing.id}
+                category={listing.category}
+                mode={listing.mode}
+                variant="compact"
+                showExistingListingPrompt
+                className="mt-4"
+              />
+            )}
 
             {/* Action bar — one row, subtle top divider, no inner box */}
             <div className="flex items-center gap-2 mt-5 pt-4 border-t border-border/70">

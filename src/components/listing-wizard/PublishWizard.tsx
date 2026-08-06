@@ -21,6 +21,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { publishListingIdempotent } from '@/lib/listings/publishListing';
 import { reportError } from '@/lib/errorReporter';
 import { parseEdgeError } from '@/lib/edgeErrors';
 import { usePremiumUpsell, isPremiumError, featureFromParsed } from '@/hooks/usePremiumUpsell';
@@ -1697,19 +1698,15 @@ export const PublishWizard: React.FC = () => {
       // add-on — the listing itself should go live regardless. Webhook flips
       // the notary flag once payment clears.
       if (listing.mode === 'sale' && proofNotaryEnabled) {
-        const isFirstTimePublishForNotary = !listing.published_at;
-        const { error: persistError } = await supabase
-          .from('listings')
-          .update({
+        let isFirstTimePublishForNotary = false;
+        try {
+          const publishResult = await publishListingIdempotent(listing.id, {
             ...baseUpdateData,
             ...pricingUpdateData,
-            status: 'published',
-            ...(isFirstTimePublishForNotary ? { published_at: new Date().toISOString() } : {}),
-          })
-          .eq('id', listing.id);
-
-        if (persistError) {
-          if (typeof persistError.message === 'string' && persistError.message.includes('listing_publish_limit_reached')) {
+          });
+          isFirstTimePublishForNotary = publishResult.firstPublish;
+        } catch (persistError: any) {
+          if (typeof persistError?.message === 'string' && persistError.message.includes('listing_publish_limit_reached')) {
             setShowLimitModal(true);
             setIsSaving(false);
             return;
@@ -1770,18 +1767,15 @@ export const PublishWizard: React.FC = () => {
         // listing) succeeds. If the user abandons payment the listing stays
         // published without the boost — correct fallback. Webhook flips
         // featured_enabled once payment clears.
-        const isFirstTimePublishForBoost = !listing.published_at;
-        const { error: persistError } = await supabase
-          .from('listings')
-          .update({
+        let isFirstTimePublishForBoost = false;
+        try {
+          const publishResult = await publishListingIdempotent(listing.id, {
             ...baseUpdateData,
             ...pricingUpdateData,
-            status: 'published',
-            ...(isFirstTimePublishForBoost ? { published_at: new Date().toISOString() } : {})})
-          .eq('id', listing.id);
-
-        if (persistError) {
-          if (typeof persistError.message === 'string' && persistError.message.includes('listing_publish_limit_reached')) {
+          });
+          isFirstTimePublishForBoost = publishResult.firstPublish;
+        } catch (persistError: any) {
+          if (typeof persistError?.message === 'string' && persistError.message.includes('listing_publish_limit_reached')) {
             setShowLimitModal(true);
             setIsSaving(false);
             return;
@@ -1863,30 +1857,17 @@ export const PublishWizard: React.FC = () => {
 
       // Standard publish flow (no add-on fees)
       // Check if this is a first-time publish or an update to an existing published listing
-      const isFirstTimePublish = !listing.published_at;
-      
-      const { error } = await supabase
-        .from('listings')
-        .update({
+      let isFirstTimePublish = false;
+      {
+        const publishResult = await publishListingIdempotent(listing.id, {
           ...baseUpdateData,
           ...pricingUpdateData,
           ...(listingHasPendingFeatured ? { featured_enabled: false } : {}),
-          status: 'published',
-          // Only set published_at if this is the first time publishing
-          ...(isFirstTimePublish ? { published_at: new Date().toISOString() } : {})})
-        .eq('id', listing.id);
-
-      if (error) {
-        if (typeof error.message === 'string' && error.message.includes('listing_publish_limit_reached')) {
-          setShowLimitModal(true);
-          setIsSaving(false);
-          return;
-        }
-        // Payout onboarding no longer gates publishing — payouts are arranged
-        // separately from your dashboard.
-
-        throw error;
+        });
+        isFirstTimePublish = publishResult.firstPublish;
       }
+
+
 
       // Track analytics - differentiate between new publish and update
       console.log(`[ANALYTICS] Listing ${isFirstTimePublish ? 'published' : 'updated'}`, { listingId: listing.id });
