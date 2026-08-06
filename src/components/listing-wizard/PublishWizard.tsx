@@ -2025,11 +2025,13 @@ export const PublishWizard: React.FC = () => {
   // can't drift apart.
   const isRentalListing = listing.mode === 'rent';
   const wizardStepOrder: PublishStep[] = isRentalListing
-    ? ['photos', 'headline', 'includes', 'pricing', 'availability', 'location', 'documents', 'review']
-    : ['photos', 'headline', 'includes', 'pricing', 'location', 'review'];
+    ? ['basics', 'photos', 'headline', 'includes', 'pricing', 'availability', 'location', 'documents', 'review']
+    : ['basics', 'photos', 'headline', 'includes', 'pricing', 'location', 'review'];
 
   const stepMeta: Record<PublishStep, { label: string; hint?: string; optional?: boolean }> = {
+    basics: { label: 'Basics', hint: 'Category, year and condition' },
     photos: { label: 'Media', hint: 'At least 3 photos — drag to reorder' },
+
     headline: { label: 'Headline', hint: 'Title & description' },
     includes: { label: "What's included", hint: 'Highlights & amenities' },
     pricing: {
