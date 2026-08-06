@@ -69,7 +69,7 @@ import { isListingFeatured } from '@/lib/featured';
 import { trackLeadEvent } from '@/lib/leadTracking';
 import { JourneyProgress, PrimaryActionBar, type JourneyStep } from '@/components/journey';
 
-type PublishStep = 'photos' | 'headline' | 'includes' | 'pricing' | 'details' | 'location' | 'availability' | 'documents' | 'stripe' | 'review';
+type PublishStep = 'photos' | 'headline' | 'includes' | 'pricing' | 'details' | 'location' | 'availability' | 'documents' | 'review';
 
 interface ListingData {
   id: string;
@@ -150,10 +150,9 @@ export const PublishWizard: React.FC = () => {
   // Payouts are manual (Vendibook pays sellers directly), so there is no
   // seller payment-account onboarding and nothing here can block publishing.
   const isOnboardingComplete = true;
-  const isStripeLoading = false;
   const isConnecting = false;
 
-  const VALID_STEPS: PublishStep[] = ['photos', 'headline', 'includes', 'pricing', 'details', 'location', 'availability', 'documents', 'stripe', 'review'];
+  const VALID_STEPS: PublishStep[] = ['photos', 'headline', 'includes', 'pricing', 'details', 'location', 'availability', 'documents', 'review'];
   const initialStep = (() => {
     const s = searchParams.get('step');
     return s && (VALID_STEPS as string[]).includes(s) ? (s as PublishStep) : 'photos';
@@ -795,11 +794,9 @@ export const PublishWizard: React.FC = () => {
       await saveGuestDraftFields();
       // Move to next step manually
       const isRentalListing = listing?.mode === 'rent';
-      const skipStripeStep = true;
-      const baseSteps: PublishStep[] = isRentalListing
-        ? ['photos', 'headline', 'includes', 'pricing', 'availability', 'location', 'documents', 'stripe', 'review']
-        : ['photos', 'headline', 'includes', 'pricing', 'location', 'stripe', 'review'];
-      const steps = skipStripeStep ? baseSteps.filter(s => s !== 'stripe') : baseSteps;
+      const steps: PublishStep[] = isRentalListing
+        ? ['photos', 'headline', 'includes', 'pricing', 'availability', 'location', 'documents', 'review']
+        : ['photos', 'headline', 'includes', 'pricing', 'location', 'review'];
       const currentIndex = steps.indexOf(step);
       if (currentIndex < steps.length - 1) {
         setStep(steps[currentIndex + 1]);
@@ -1435,13 +1432,10 @@ export const PublishWizard: React.FC = () => {
       }
 
       // Move to next step - rental listings have availability and documents steps
-      // Skip stripe step if card payment is not enabled (cash-only sales)
       const isRentalListing = listing.mode === 'rent';
-      const skipStripeStep = true;
-      const baseSteps: PublishStep[] = isRentalListing
-        ? ['photos', 'headline', 'includes', 'pricing', 'availability', 'location', 'documents', 'stripe', 'review']
-        : ['photos', 'headline', 'includes', 'pricing', 'location', 'stripe', 'review'];
-      const steps = skipStripeStep ? baseSteps.filter(s => s !== 'stripe') : baseSteps;
+      const steps: PublishStep[] = isRentalListing
+        ? ['photos', 'headline', 'includes', 'pricing', 'availability', 'location', 'documents', 'review']
+        : ['photos', 'headline', 'includes', 'pricing', 'location', 'review'];
       const currentIndex = steps.indexOf(step);
       if (currentIndex < steps.length - 1) {
         setStep(steps[currentIndex + 1]);
@@ -1971,13 +1965,9 @@ export const PublishWizard: React.FC = () => {
   // indicator, the "Continue" primary action, and the actual navigation
   // can't drift apart.
   const isRentalListing = listing.mode === 'rent';
-  const skipStripeStep = true;
-  const baseWizardSteps: PublishStep[] = isRentalListing
-    ? ['photos', 'headline', 'includes', 'pricing', 'availability', 'location', 'documents', 'stripe', 'review']
-    : ['photos', 'headline', 'includes', 'pricing', 'location', 'stripe', 'review'];
-  const wizardStepOrder: PublishStep[] = skipStripeStep
-    ? baseWizardSteps.filter((s) => s !== 'stripe')
-    : baseWizardSteps;
+  const wizardStepOrder: PublishStep[] = isRentalListing
+    ? ['photos', 'headline', 'includes', 'pricing', 'availability', 'location', 'documents', 'review']
+    : ['photos', 'headline', 'includes', 'pricing', 'location', 'review'];
 
   const stepMeta: Record<PublishStep, { label: string; hint?: string; optional?: boolean }> = {
     photos: { label: 'Media', hint: 'At least 3 photos — drag to reorder' },
@@ -1991,11 +1981,6 @@ export const PublishWizard: React.FC = () => {
     details: { label: 'Details' },
     location: { label: 'Location', hint: 'Where & how it changes hands' },
     documents: { label: 'Documents', hint: 'Required rental paperwork' },
-    stripe: {
-      label: 'Payouts',
-      hint: 'Where we send your proceeds',
-      optional: listing.mode === 'sale' && !acceptCardPayment,
-    },
     review: { label: 'Review & publish', hint: 'Preview and go live' },
   };
 
