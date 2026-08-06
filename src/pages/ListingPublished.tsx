@@ -393,6 +393,18 @@ const ListingPublished: React.FC = () => {
         <BoostListingPrompt listings={[boostCandidate]} userId={user?.id} />
       )}
 
+      {/* Post-publish depth: seller adds structured equipment specs at their own pace. */}
+      {listingId && listing && (
+        <div className="container max-w-4xl mx-auto px-4 pb-4">
+          <ListingSpecsEditor
+            listingId={listingId}
+            category={listing.category}
+            mode={listing.mode}
+          />
+        </div>
+      )}
+
+
       {/* Optional seller upgrades — every listing on Vendibook is free; these are optional tools. */}
       {listingId && (
         <div className="container max-w-4xl mx-auto px-4 pb-16 space-y-10">
