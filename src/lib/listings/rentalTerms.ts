@@ -82,7 +82,7 @@ export const RENTAL_TERMS_GROUPS: RentalTermsGroup[] = [
     blurb: 'Licensing and towing requirements for the renter.',
     categories: MOBILE,
     fields: [
-      { key: 'driver_requirements', label: 'Driver requirements', type: 'textarea', categories: undefined as never, ...( {} ) },
+      { key: 'driver_requirements', label: 'Driver requirements', type: 'textarea' },
       { key: 'tow_vehicle_requirements', label: 'Tow vehicle requirements', type: 'textarea' },
       { key: 'min_driver_age', label: 'Minimum driver age', type: 'number' },
     ],
