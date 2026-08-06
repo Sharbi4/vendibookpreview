@@ -192,13 +192,11 @@ export const createChecklistItems = (
     hasAvailability: boolean;
     hasDescription: boolean;
     hasLocation: boolean;
-    hasStripe?: boolean; // deprecated, ignored
     isRental: boolean;
     photoCount?: number;
     priceSet?: string;
     descriptionLength?: number;
     locationSet?: string;
-    requiresStripe?: boolean; // deprecated, ignored
 
     hasDocuments?: boolean; // true if documents step was configured
     documentsCount?: number; // number of required documents set

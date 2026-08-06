@@ -14,6 +14,8 @@ import PublishStatusSummary from '@/components/listing-wizard/PublishStatusSumma
 import PackagesIntro from '@/components/monetization/PackagesIntro';
 import FeatureThisListingCTA from '@/components/dashboard/FeatureThisListingCTA';
 import { reportError } from '@/lib/errorReporter';
+import ListingSpecsEditor from '@/components/listing/ListingSpecsEditor';
+
 
 const ListingPublished: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -93,7 +95,7 @@ const ListingPublished: React.FC = () => {
           return;
         }
 
-        // If returning from Stripe boost and listing is still a draft, self-heal: publish it.
+        // If returning from a boost checkout and the listing is still a draft, self-heal: publish it.
         if (featuredPaid && data.status !== 'published') {
           const nowIso = new Date().toISOString();
           const { error: pubErr } = await supabase
@@ -150,7 +152,7 @@ const ListingPublished: React.FC = () => {
     }
   }, [listingId, user, authLoading, navigate, featuredPaid]);
 
-  // Poll for featured activation after returning from Stripe (webhook may lag)
+  // Poll for featured activation after returning from checkout (webhook may lag)
   const [featuredWebhookStuck, setFeaturedWebhookStuck] = useState(false);
   const [featuredStuckRef, setFeaturedStuckRef] = useState<string | null>(null);
   useEffect(() => {
@@ -182,9 +184,9 @@ const ListingPublished: React.FC = () => {
         // Webhook didn't update within 30s — surface actionable error state.
         const { referenceCode } = await reportError({
           action: 'boost.webhook.timeout',
-          endpoint: '/functions/v1/stripe-webhook',
+          endpoint: '/functions/v1/paypal-webhook',
           errorType: 'FeaturedActivationTimeout',
-          errorMessage: 'featured_enabled did not become true within 30s after Stripe redirect',
+          errorMessage: 'featured_enabled did not become true within 30s after PayPal redirect',
           listingId,
           metadata: { pollAttempts: attempts },
         });
@@ -192,7 +194,7 @@ const ListingPublished: React.FC = () => {
         setFeaturedWebhookStuck(true);
         toast({
           title: "Payment received, activation delayed",
-          description: `Stripe confirmed your payment but your boost hasn't activated yet. Our team was notified — no need to pay again. Reference: ${referenceCode}`,
+          description: `PayPal confirmed your payment but your boost hasn't activated yet. Our team was notified — no need to pay again. Reference: ${referenceCode}`,
           variant: 'destructive',
         });
         return;
@@ -338,7 +340,7 @@ const ListingPublished: React.FC = () => {
                   {featuredActive
                     ? `Your listing is now published and featured at the top of search for 30 days.`
                     : featuredWebhookStuck
-                      ? `Stripe confirmed your payment, but your boost hasn't activated yet. You haven't been charged twice — our team was notified and will finish activation.`
+                      ? `PayPal confirmed your payment, but your boost hasn't activated yet. You haven't been charged twice — our team was notified and will finish activation.`
                       : 'Your payment was successful. Your listing is published and the boost will appear within a minute.'}
                 </p>
                 {featuredWebhookStuck && (
@@ -390,6 +392,18 @@ const ListingPublished: React.FC = () => {
       {boostCandidate && (
         <BoostListingPrompt listings={[boostCandidate]} userId={user?.id} />
       )}
+
+      {/* Post-publish depth: seller adds structured equipment specs at their own pace. */}
+      {listingId && listing && (
+        <div className="container max-w-4xl mx-auto px-4 pb-4">
+          <ListingSpecsEditor
+            listingId={listingId}
+            category={listing.category}
+            mode={listing.mode}
+          />
+        </div>
+      )}
+
 
       {/* Optional seller upgrades — every listing on Vendibook is free; these are optional tools. */}
       {listingId && (

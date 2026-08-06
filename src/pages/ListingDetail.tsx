@@ -26,6 +26,8 @@ import PromoVideoPlayer from '@/components/listing/PromoVideoPlayer';
 import EnhancedQuickHighlights from '@/components/listing-detail/EnhancedQuickHighlights';
 import PricingSection from '@/components/listing-detail/PricingSection';
 import { AmenitiesSection } from '@/components/listing-detail/AmenitiesSection';
+import EquipmentReadinessSummary from '@/components/listing-detail/EquipmentReadinessSummary';
+
 import { ReportIssueButton } from '@/components/support/ReportIssueButton';
 
 import { StickyMobileCTA } from '@/components/listing-detail/StickyMobileCTA';
@@ -735,6 +737,15 @@ const ListingDetail = () => {
                   {isRental && <div className="border-t border-border" />}
                 </>
               )}
+
+              {/* Seller-confirmed equipment specs and readiness */}
+              <EquipmentReadinessSummary
+                listingId={listing.id}
+                category={listing.category}
+                mode={listing.mode}
+              />
+
+
 
               {/* Pricing Section */}
               <div className={saleGlass || undefined}>

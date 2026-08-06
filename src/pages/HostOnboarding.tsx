@@ -67,7 +67,7 @@ const HostOnboarding = () => {
     { icon: <Truck className="h-6 w-6" />, title: 'Delivery / pickup settings', description: 'Offer pickup, delivery, or buyer-paid delivery coordination (optional).' },
     { icon: <FileCheck className="h-6 w-6" />, title: 'Document requirements', description: 'Request licenses, insurance, or credentials before approval (rentals).' },
     { icon: <MessageSquare className="h-6 w-6" />, title: 'Messaging + booking management', description: 'Keep everything in one place: questions, requests, dates, and terms.' },
-    { icon: <Banknote className="h-6 w-6" />, title: 'Stripe payouts', description: 'Get paid to your bank account through Stripe Connect.' },
+    { icon: <Banknote className="h-6 w-6" />, title: 'Direct payouts', description: 'Choose PayPal, Venmo, Cash App or bank transfer and get paid to your account.' },
     { icon: <Headphones className="h-6 w-6" />, title: '24/7 Zendesk support', description: 'Support for disputes, questions, and account help.' },
     { icon: <Lock className="h-6 w-6" />, title: 'Payment Protection-style sales', description: 'Funds are held securely until the transaction is confirmed by both parties.' },
     { icon: <Share2 className="h-6 w-6" />, title: 'Share on social media', description: 'Use our built-in share kit for Facebook, X.com, Instagram, TikTok, and more.' }];
@@ -76,13 +76,13 @@ const HostOnboarding = () => {
     { step: 1, icon: <Camera className="h-5 w-5" />, title: 'Create listing', description: 'Add photos, rates, availability, delivery options, rules, deposit, and document requirements.' },
     { step: 2, icon: <UserCheck className="h-5 w-5" />, title: 'Get verified', description: 'Complete identity verification to build trust with renters.' },
     { step: 3, icon: <ClipboardCheck className="h-5 w-5" />, title: 'Approve renters', description: 'Review requests, confirm documents, and finalize pickup/delivery details.' },
-    { step: 4, icon: <Wallet className="h-5 w-5" />, title: 'Get paid', description: 'Payouts initiated within 24 hours of rental start via Stripe.' }];
+    { step: 4, icon: <Wallet className="h-5 w-5" />, title: 'Get paid', description: 'Payouts released to your chosen payout method after the rental starts.' }];
 
   const salesSteps = [
     { step: 1, icon: <Camera className="h-5 w-5" />, title: 'Create listing', description: 'Add photos, price, specs, included equipment, and pickup/delivery preferences.' },
     { step: 2, icon: <UserCheck className="h-5 w-5" />, title: 'Get verified', description: 'Verification builds confidence for serious buyers.' },
     { step: 3, icon: <Handshake className="h-5 w-5" />, title: 'Confirm buyer + terms', description: 'Message securely, confirm details, and proceed to protected checkout.' },
-    { step: 4, icon: <Wallet className="h-5 w-5" />, title: 'Get paid', description: 'Payouts initiated after order confirmation via Stripe.' }];
+    { step: 4, icon: <Wallet className="h-5 w-5" />, title: 'Get paid', description: 'Payouts released to your chosen payout method after the order is confirmed.' }];
 
   const trustPills = [
     {
@@ -92,7 +92,7 @@ const HostOnboarding = () => {
     {
       icon: <CreditCard className="h-5 w-5" />,
       label: 'Secure online payments',
-      content: 'Protected checkout through Stripe-powered payments.'},
+      content: 'Protected checkout through PayPal.'},
     {
       icon: <Shield className="h-5 w-5" />,
       label: 'Deposits & disputes',
@@ -134,7 +134,7 @@ const HostOnboarding = () => {
     <div className="min-h-screen flex flex-col bg-background">
       <SEO 
         title="List Your Asset | Vendibook"
-        description="Earn from your mobile food asset. Rent it out, sell it, or do both — with verified users and Stripe-powered payouts."
+        description="Earn from your mobile food asset. Rent it out, sell it, or do both — with verified users and protected payments."
         type="website"
       />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ 
@@ -156,7 +156,7 @@ const HostOnboarding = () => {
                 Book more rentals. Close more sales.
               </h1>
               <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-8">
-                Rent it out, sell it, or do both — with verified users, protected payments, and Stripe-powered payouts.
+                Rent it out, sell it, or do both — with verified users and protected PayPal payments.
               </p>
 
               {/* CTAs */}
