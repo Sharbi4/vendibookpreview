@@ -26,6 +26,8 @@ import PromoVideoPlayer from '@/components/listing/PromoVideoPlayer';
 import EnhancedQuickHighlights from '@/components/listing-detail/EnhancedQuickHighlights';
 import PricingSection from '@/components/listing-detail/PricingSection';
 import { AmenitiesSection } from '@/components/listing-detail/AmenitiesSection';
+import EquipmentReadinessSummary from '@/components/listing-detail/EquipmentReadinessSummary';
+
 import { ReportIssueButton } from '@/components/support/ReportIssueButton';
 
 import { StickyMobileCTA } from '@/components/listing-detail/StickyMobileCTA';
