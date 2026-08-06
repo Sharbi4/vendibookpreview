@@ -4,7 +4,7 @@ import { ArrowLeft, ClipboardList, Clock, MessageSquare, ShieldCheck } from 'luc
 import Header from '@/components/layout/Header';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { SEO } from '@/components/SEO';
+import SEO from '@/components/SEO';
 import FieldHelp from '@/components/common/FieldHelp';
 import VisibilityLabel from '@/components/common/VisibilityLabel';
 import { trackEvent } from '@/lib/analytics';
