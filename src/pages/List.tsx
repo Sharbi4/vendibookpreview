@@ -469,15 +469,16 @@ const ListPage: React.FC = () => {
   const { user } = useAuth();
   const { listings } = useHostListings();
   const [searchParams] = useSearchParams();
-  const [mode, setMode] = useState<'landing' | 'wizard'>(() => {
-    return user ? 'wizard' : 'landing';
-  });
+  const startRequested = searchParams.get('start') === 'true';
+  const [mode, setMode] = useState<'landing' | 'wizard'>(() =>
+    user && startRequested ? 'wizard' : 'landing',
+  );
 
   useEffect(() => {
-    if (user) {
+    if (user && startRequested) {
       setMode('wizard');
     }
-  }, [user]);
+  }, [user, startRequested]);
 
   const drafts = listings.filter(l => l.status === 'draft');
 
@@ -491,12 +492,9 @@ const ListPage: React.FC = () => {
 
   const handleStart = () => {
     trackEvent({ category: 'Supply', action: 'start_listing_clicked' });
-    if (!user) {
-      navigate('/auth?redirect=' + encodeURIComponent('/list?start=true'));
-      return;
-    }
-    setMode('wizard');
+    navigate('/list/start');
   };
+
 
   if (mode === 'wizard') {
     return (
