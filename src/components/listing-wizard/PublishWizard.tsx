@@ -68,8 +68,27 @@ import {
 import { isListingFeatured } from '@/lib/featured';
 import { trackLeadEvent } from '@/lib/leadTracking';
 import { JourneyProgress, PrimaryActionBar, type JourneyStep } from '@/components/journey';
+import {
+  getStageRequirements,
+  parseKnownProblems,
+  stageForStep,
+  isTitledAsset,
+  MIN_GUIDED_PHOTOS,
+} from '@/lib/listings/stages';
+import { StageProgress } from './stages/StageProgress';
+import { StepWhat, type StepWhatValues } from './stages/StepWhat';
+import { ListingDisclosures, type DisclosureValues } from './stages/ListingDisclosures';
+import { PhotoGuidance } from './stages/PhotoGuidance';
+import { PrivacySummary } from './stages/PrivacySummary';
+import {
+  PublishAttestations,
+  emptyAttestations,
+  allAttested,
+  type AttestationKey,
+} from './stages/PublishAttestations';
 
-type PublishStep = 'photos' | 'headline' | 'includes' | 'pricing' | 'details' | 'location' | 'availability' | 'documents' | 'review';
+type PublishStep = 'basics' | 'photos' | 'headline' | 'includes' | 'pricing' | 'details' | 'location' | 'availability' | 'documents' | 'review';
+
 
 interface ListingData {
   id: string;
@@ -152,15 +171,39 @@ export const PublishWizard: React.FC = () => {
   const isOnboardingComplete = true;
   const isConnecting = false;
 
-  const VALID_STEPS: PublishStep[] = ['photos', 'headline', 'includes', 'pricing', 'details', 'location', 'availability', 'documents', 'review'];
+  const VALID_STEPS: PublishStep[] = ['basics', 'photos', 'headline', 'includes', 'pricing', 'details', 'location', 'availability', 'documents', 'review'];
   const initialStep = (() => {
     const s = searchParams.get('step');
-    return s && (VALID_STEPS as string[]).includes(s) ? (s as PublishStep) : 'photos';
+    return s && (VALID_STEPS as string[]).includes(s) ? (s as PublishStep) : 'basics';
   })();
   const [step, setStep] = useState<PublishStep>(initialStep);
+  const [stageValues, setStageValues] = useState<StepWhatValues>({
+    modelYear: '',
+    kitchenBuildYear: '',
+    kitchenBuildYearUnknown: false,
+    condition: '',
+    operationalStatus: '',
+    lengthInches: '',
+    widthInches: '',
+    heightInches: '',
+  });
+  const [disclosures, setDisclosures] = useState<DisclosureValues>({
+    titleStatus: '',
+    hasLien: '',
+    noKnownProblems: false,
+    knownProblems: [],
+    includedItems: '',
+    photosExclusionsAnswered: false,
+    photosExclusionsNote: '',
+    priceNegotiable: false,
+    acceptsOffers: false,
+    minOfferAmount: '',
+  });
+  const [attestations, setAttestations] = useState<Record<AttestationKey, boolean>>(emptyAttestations());
   const [listing, setListing] = useState<ListingData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [isGuestDraft, setIsGuestDraft] = useState(false);
@@ -508,6 +551,30 @@ export const PublishWizard: React.FC = () => {
       setListing(data as unknown as ListingData);
       setTitle(data.title || '');
       setDescription(data.description || '');
+      // Phase 2 — six-stage fields (all additive; legacy drafts hydrate to empty)
+      setStageValues({
+        modelYear: (data as any).year_built?.toString() || '',
+        kitchenBuildYear: (data as any).kitchen_build_year?.toString() || '',
+        kitchenBuildYearUnknown: (data as any).kitchen_build_year_unknown ?? false,
+        condition: (data as any).condition || '',
+        operationalStatus: (data as any).operational_status || '',
+        lengthInches: data.length_inches?.toString() || '',
+        widthInches: data.width_inches?.toString() || '',
+        heightInches: data.height_inches?.toString() || '',
+      });
+      setDisclosures({
+        titleStatus: (data as any).title_status || '',
+        hasLien: (data as any).has_lien || '',
+        noKnownProblems: (data as any).no_known_problems ?? false,
+        knownProblems: parseKnownProblems((data as any).known_problems),
+        includedItems: (data as any).included_items || '',
+        photosExclusionsAnswered: (data as any).photos_exclusions_answered ?? false,
+        photosExclusionsNote: (data as any).photos_exclusions_note || '',
+        priceNegotiable: (data as any).price_negotiable ?? false,
+        acceptsOffers: (data as any).accepts_offers ?? false,
+        minOfferAmount: (data as any).min_offer_amount?.toString() || '',
+      });
+
       setPriceDaily(data.price_daily?.toString() || '');
       setPriceWeekly(data.price_weekly?.toString() || '');
       setPriceMonthly(data.price_monthly?.toString() || '');
@@ -795,8 +862,8 @@ export const PublishWizard: React.FC = () => {
       // Move to next step manually
       const isRentalListing = listing?.mode === 'rent';
       const steps: PublishStep[] = isRentalListing
-        ? ['photos', 'headline', 'includes', 'pricing', 'availability', 'location', 'documents', 'review']
-        : ['photos', 'headline', 'includes', 'pricing', 'location', 'review'];
+        ? ['basics', 'photos', 'headline', 'includes', 'pricing', 'availability', 'location', 'documents', 'review']
+        : ['basics', 'photos', 'headline', 'includes', 'pricing', 'location', 'review'];
       const currentIndex = steps.indexOf(step);
       if (currentIndex < steps.length - 1) {
         setStep(steps[currentIndex + 1]);
@@ -1260,7 +1327,21 @@ export const PublishWizard: React.FC = () => {
     try {
       let updateData: any = {};
 
+      if (step === 'basics') {
+        updateData = {
+          year_built: stageValues.modelYear ? parseInt(stageValues.modelYear, 10) : null,
+          kitchen_build_year: stageValues.kitchenBuildYear ? parseInt(stageValues.kitchenBuildYear, 10) : null,
+          kitchen_build_year_unknown: stageValues.kitchenBuildYearUnknown,
+          condition: stageValues.condition || null,
+          operational_status: stageValues.operationalStatus || null,
+          length_inches: stageValues.lengthInches ? parseFloat(stageValues.lengthInches) : null,
+          width_inches: stageValues.widthInches ? parseFloat(stageValues.widthInches) : null,
+          height_inches: stageValues.heightInches ? parseFloat(stageValues.heightInches) : null,
+        };
+      }
+
       if (step === 'photos') {
+
         const hasNewImages = images.length > 0;
         const hasNewVideos = videos.length > 0;
 
@@ -1302,10 +1383,22 @@ export const PublishWizard: React.FC = () => {
           title,
           description};
       } else if (step === 'includes') {
-        // Save amenities and highlights
+        // Save amenities, highlights and the Stage 3 disclosures
         updateData = {
           amenities,
-          highlights};
+          highlights,
+          title_status: disclosures.titleStatus || null,
+          has_lien: disclosures.hasLien || null,
+          no_known_problems: disclosures.noKnownProblems,
+          known_problems: disclosures.knownProblems.length ? disclosures.knownProblems : null,
+          included_items: disclosures.includedItems || null,
+          photos_exclusions_answered: disclosures.photosExclusionsAnswered,
+          photos_exclusions_note: disclosures.photosExclusionsNote || null,
+          price_negotiable: disclosures.priceNegotiable,
+          accepts_offers: disclosures.acceptsOffers,
+          min_offer_amount: disclosures.minOfferAmount ? parseFloat(disclosures.minOfferAmount) : null,
+        };
+
       } else if (step === 'pricing') {
         // Helper function to safely parse price values
         const safeParsePrice = (value: string): number | null => {
@@ -1434,8 +1527,8 @@ export const PublishWizard: React.FC = () => {
       // Move to next step - rental listings have availability and documents steps
       const isRentalListing = listing.mode === 'rent';
       const steps: PublishStep[] = isRentalListing
-        ? ['photos', 'headline', 'includes', 'pricing', 'availability', 'location', 'documents', 'review']
-        : ['photos', 'headline', 'includes', 'pricing', 'location', 'review'];
+        ? ['basics', 'photos', 'headline', 'includes', 'pricing', 'availability', 'location', 'documents', 'review']
+        : ['basics', 'photos', 'headline', 'includes', 'pricing', 'location', 'review'];
       const currentIndex = steps.indexOf(step);
       if (currentIndex < steps.length - 1) {
         setStep(steps[currentIndex + 1]);
@@ -1927,7 +2020,9 @@ export const PublishWizard: React.FC = () => {
       : (isValidPrice(priceDaily) ? `$${parseFloat(priceDaily.replace(/[^0-9.]/g, ''))}/day` : undefined)};
 
   const checklistItems = createChecklistItems(checklistState, step);
-  const canPublish = checklistItems.filter(i => i.required).every(i => i.completed);
+  const stageRequirementsMet = checklistItems.filter(i => i.required).every(i => i.completed);
+  const canPublish = stageRequirementsMet && allAttested(attestations);
+
   const displayAddress = buildStructuredAddress() || address;
 
   // Collect validation errors for publish attempt
@@ -1958,11 +2053,13 @@ export const PublishWizard: React.FC = () => {
   // can't drift apart.
   const isRentalListing = listing.mode === 'rent';
   const wizardStepOrder: PublishStep[] = isRentalListing
-    ? ['photos', 'headline', 'includes', 'pricing', 'availability', 'location', 'documents', 'review']
-    : ['photos', 'headline', 'includes', 'pricing', 'location', 'review'];
+    ? ['basics', 'photos', 'headline', 'includes', 'pricing', 'availability', 'location', 'documents', 'review']
+    : ['basics', 'photos', 'headline', 'includes', 'pricing', 'location', 'review'];
 
   const stepMeta: Record<PublishStep, { label: string; hint?: string; optional?: boolean }> = {
+    basics: { label: 'Basics', hint: 'Category, year and condition' },
     photos: { label: 'Media', hint: 'At least 3 photos — drag to reorder' },
+
     headline: { label: 'Headline', hint: 'Title & description' },
     includes: { label: "What's included", hint: 'Highlights & amenities' },
     pricing: {
@@ -2044,11 +2141,44 @@ export const PublishWizard: React.FC = () => {
                 hidePublishButton={step === 'review'}
               />
             </div>
+            <StageProgress
+              currentStage={stageForStep(step)}
+              signedIn={!!user}
 
+              className="mb-6"
+            />
 
             <div className="bg-card rounded-2xl shadow-sm border p-6 md:p-8">
+              {/* Stage 1: What are you listing? */}
+              {step === 'basics' && (
+                <div className="space-y-6">
+                  <div>
+                    <h2 className="text-xl font-bold text-foreground mb-2">The basics</h2>
+                    <p className="text-muted-foreground">
+                      A few essentials so buyers can tell at a glance what this is.
+                    </p>
+                  </div>
+
+                  <StepWhat
+                    category={listing.category}
+                    mode={listing.mode}
+                    values={stageValues}
+                    onChange={(patch) => setStageValues((prev) => ({ ...prev, ...patch }))}
+                  />
+
+                  <PrimaryActionBar
+                    primary={{
+                      label: isSaving ? 'Saving…' : 'Continue',
+                      onClick: handleDetailsSave,
+                      disabled: isSaving || !stageValues.condition,
+                    }}
+                  />
+                </div>
+              )}
+
               {/* Step: Media */}
               {step === 'photos' && (
+
                 <div className="space-y-6">
                   <div>
                     <h2 className="text-xl font-bold text-foreground mb-2">Add media</h2>
@@ -2056,6 +2186,15 @@ export const PublishWizard: React.FC = () => {
                       Upload at least 3 photos. Videos are optional. <span className="font-medium text-foreground">Drag to reorder</span> — first image is your cover.
                     </p>
                   </div>
+
+                  <PhotoGuidance
+                    category={listing.category}
+                    photoCount={totalPhotoCount}
+                    hasDisclosedProblems={disclosures.knownProblems.length > 0}
+                  />
+
+
+
 
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                     {allPhotos.map((item, globalIndex) => {
@@ -2461,7 +2600,15 @@ export const PublishWizard: React.FC = () => {
                     )}
                   </div>
 
+                  <ListingDisclosures
+                    category={listing.category}
+                    mode={listing.mode}
+                    values={disclosures}
+                    onChange={(patch) => setDisclosures((prev) => ({ ...prev, ...patch }))}
+                  />
+
                   <PrimaryActionBar
+
                     secondary={{ label: 'Back', onClick: () => setStep('headline') }}
                     primary={{
                       label: isSaving ? 'Saving…' : 'Continue',
@@ -4120,8 +4267,19 @@ export const PublishWizard: React.FC = () => {
                     </div>
                   )}
 
+                  {/* Public vs private summary + mandatory attestations */}
+                  <PrivacySummary />
+
+                  <PublishAttestations
+                    value={attestations}
+                    onChange={(key, checked) =>
+                      setAttestations((prev) => ({ ...prev, [key]: checked }))
+                    }
+                  />
+
                   {/* Featured Listing upsell — final publish step (highest-conversion placement) */}
-                  {canPublish && !((listing as any)?.featured_at) && (
+                  {stageRequirementsMet && !((listing as any)?.featured_at) && (
+
                     <FeaturedListingCard
                       enabled={featuredEnabled}
                       onEnabledChange={setFeaturedEnabled}
