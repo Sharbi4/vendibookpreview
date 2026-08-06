@@ -46,8 +46,8 @@ const SmsOptInProof = lazy(() => import("./pages/legal/SmsOptInProof"));
 const SmsEnrollment = lazy(() => import("./pages/SmsEnrollment"));
 const SmsOptIn = lazy(() => import("./pages/SmsOptIn"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
-const CreateListing = lazy(() => import("./pages/CreateListing"));
 const EditListing = lazy(() => import("./pages/EditListing"));
+const ListingStart = lazy(() => import("./pages/ListingStart"));
 const ListPage = lazy(() => import("./pages/List"));
 const AIListingCreator = lazy(() => import("./pages/AIListingCreator"));
 const ListingDetail = lazy(() => import("./pages/ListingDetail"));
@@ -357,6 +357,7 @@ const AnimatedRoutes = () => {
           
           {/* Supply flow: /list is quick start, then /create-listing/:id for publish wizard */}
           <Route path="/list" element={<PageTransition><ListPage /></PageTransition>} />
+          <Route path="/list/start" element={<PageTransition><ListingStart /></PageTransition>} />
           <Route path="/list/ai" element={<PageTransition><AIListingCreator /></PageTransition>} />
           <Route path="/create-listing/:listingId" element={<PageTransition><EditListing /></PageTransition>} />
           <Route path="/edit-listing/:listingId" element={<PageTransition><EditListing /></PageTransition>} />

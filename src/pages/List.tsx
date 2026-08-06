@@ -453,7 +453,7 @@ const PaymentOptions = () => (
           </div>
           <h3 className="text-lg font-semibold text-foreground mb-2">Pay in Person</h3>
           <p className="text-sm text-muted-foreground leading-relaxed mb-3">
-            Prefer cash? Enable "Pay in Person" and handle payment directly with your customer. No Stripe setup required.
+            Prefer cash? Enable "Pay in Person" and handle payment directly with your customer. No payment setup required.
           </p>
           <p className="text-xs text-muted-foreground">$0 platform fee on in-person payments</p>
         </motion.div>
