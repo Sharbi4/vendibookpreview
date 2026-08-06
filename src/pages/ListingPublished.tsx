@@ -14,6 +14,8 @@ import PublishStatusSummary from '@/components/listing-wizard/PublishStatusSumma
 import PackagesIntro from '@/components/monetization/PackagesIntro';
 import FeatureThisListingCTA from '@/components/dashboard/FeatureThisListingCTA';
 import { reportError } from '@/lib/errorReporter';
+import ListingSpecsEditor from '@/components/listing/ListingSpecsEditor';
+
 
 const ListingPublished: React.FC = () => {
   const [searchParams] = useSearchParams();
