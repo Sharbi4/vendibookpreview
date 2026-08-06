@@ -234,7 +234,6 @@ export const ListingSpecsEditor: React.FC<ListingSpecsEditorProps> = ({
             defaultOpen={section.key === initialSection}
             onSave={(v) => saveSection(section.key, v)}
           />
-          />
         ))}
       </div>
     </section>
