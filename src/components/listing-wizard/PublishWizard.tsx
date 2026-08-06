@@ -2141,7 +2141,8 @@ export const PublishWizard: React.FC = () => {
             </div>
             <StageProgress
               currentStage={stageForStep(step)}
-              mode={listing.mode}
+              signedIn={!!user}
+
               className="mb-6"
             />
 
