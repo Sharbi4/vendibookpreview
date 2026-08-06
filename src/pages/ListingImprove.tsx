@@ -92,6 +92,7 @@ const ListingImprove: React.FC = () => {
         <ListingSpecsEditor
           key={editorKey}
           listingId={listing.id}
+          hostId={listing.host_id}
           category={listing.category}
           mode={listing.mode}
           initialSection={initialSection}
@@ -106,6 +107,15 @@ const ListingImprove: React.FC = () => {
             />
           }
         />
+
+        {listing.mode === 'rent' && (
+          <RentalTermsEditor
+            listingId={listing.id}
+            category={listing.category}
+            initialSection={initialSection}
+          />
+        )}
+
       </div>
     </div>
   );
