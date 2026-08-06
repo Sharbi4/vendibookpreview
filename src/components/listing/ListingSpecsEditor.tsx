@@ -92,9 +92,10 @@ const SectionCard: React.FC<{
   initial: Record<string, unknown>;
   confirmed: boolean;
   saving: boolean;
+  defaultOpen?: boolean;
   onSave: (values: Record<string, unknown>) => Promise<boolean>;
-}> = ({ section, initial, confirmed, saving, onSave }) => {
-  const [open, setOpen] = useState(false);
+}> = ({ section, initial, confirmed, saving, defaultOpen = false, onSave }) => {
+  const [open, setOpen] = useState(defaultOpen);
   const [draft, setDraft] = useState<Record<string, unknown>>(initial);
   const { toast } = useToast();
 
