@@ -862,8 +862,8 @@ export const PublishWizard: React.FC = () => {
       // Move to next step manually
       const isRentalListing = listing?.mode === 'rent';
       const steps: PublishStep[] = isRentalListing
-        ? ['photos', 'headline', 'includes', 'pricing', 'availability', 'location', 'documents', 'review']
-        : ['photos', 'headline', 'includes', 'pricing', 'location', 'review'];
+        ? ['basics', 'photos', 'headline', 'includes', 'pricing', 'availability', 'location', 'documents', 'review']
+        : ['basics', 'photos', 'headline', 'includes', 'pricing', 'location', 'review'];
       const currentIndex = steps.indexOf(step);
       if (currentIndex < steps.length - 1) {
         setStep(steps[currentIndex + 1]);
@@ -1527,8 +1527,8 @@ export const PublishWizard: React.FC = () => {
       // Move to next step - rental listings have availability and documents steps
       const isRentalListing = listing.mode === 'rent';
       const steps: PublishStep[] = isRentalListing
-        ? ['photos', 'headline', 'includes', 'pricing', 'availability', 'location', 'documents', 'review']
-        : ['photos', 'headline', 'includes', 'pricing', 'location', 'review'];
+        ? ['basics', 'photos', 'headline', 'includes', 'pricing', 'availability', 'location', 'documents', 'review']
+        : ['basics', 'photos', 'headline', 'includes', 'pricing', 'location', 'review'];
       const currentIndex = steps.indexOf(step);
       if (currentIndex < steps.length - 1) {
         setStep(steps[currentIndex + 1]);
