@@ -2598,7 +2598,15 @@ export const PublishWizard: React.FC = () => {
                     )}
                   </div>
 
+                  <ListingDisclosures
+                    category={listing.category}
+                    mode={listing.mode}
+                    values={disclosures}
+                    onChange={(patch) => setDisclosures((prev) => ({ ...prev, ...patch }))}
+                  />
+
                   <PrimaryActionBar
+
                     secondary={{ label: 'Back', onClick: () => setStep('headline') }}
                     primary={{
                       label: isSaving ? 'Saving…' : 'Continue',
