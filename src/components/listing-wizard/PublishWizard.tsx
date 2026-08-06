@@ -171,15 +171,39 @@ export const PublishWizard: React.FC = () => {
   const isOnboardingComplete = true;
   const isConnecting = false;
 
-  const VALID_STEPS: PublishStep[] = ['photos', 'headline', 'includes', 'pricing', 'details', 'location', 'availability', 'documents', 'review'];
+  const VALID_STEPS: PublishStep[] = ['basics', 'photos', 'headline', 'includes', 'pricing', 'details', 'location', 'availability', 'documents', 'review'];
   const initialStep = (() => {
     const s = searchParams.get('step');
-    return s && (VALID_STEPS as string[]).includes(s) ? (s as PublishStep) : 'photos';
+    return s && (VALID_STEPS as string[]).includes(s) ? (s as PublishStep) : 'basics';
   })();
   const [step, setStep] = useState<PublishStep>(initialStep);
+  const [stageValues, setStageValues] = useState<StepWhatValues>({
+    modelYear: '',
+    kitchenBuildYear: '',
+    kitchenBuildYearUnknown: false,
+    condition: '',
+    operationalStatus: '',
+    lengthInches: '',
+    widthInches: '',
+    heightInches: '',
+  });
+  const [disclosures, setDisclosures] = useState<DisclosureValues>({
+    titleStatus: '',
+    hasLien: '',
+    noKnownProblems: false,
+    knownProblems: [],
+    includedItems: '',
+    photosExclusionsAnswered: false,
+    photosExclusionsNote: '',
+    priceNegotiable: false,
+    acceptsOffers: false,
+    minOfferAmount: '',
+  });
+  const [attestations, setAttestations] = useState<Record<AttestationKey, boolean>>(emptyAttestations);
   const [listing, setListing] = useState<ListingData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [isGuestDraft, setIsGuestDraft] = useState(false);
