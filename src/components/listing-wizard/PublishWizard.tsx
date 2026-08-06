@@ -1327,7 +1327,21 @@ export const PublishWizard: React.FC = () => {
     try {
       let updateData: any = {};
 
+      if (step === 'basics') {
+        updateData = {
+          year_built: stageValues.modelYear ? parseInt(stageValues.modelYear, 10) : null,
+          kitchen_build_year: stageValues.kitchenBuildYear ? parseInt(stageValues.kitchenBuildYear, 10) : null,
+          kitchen_build_year_unknown: stageValues.kitchenBuildYearUnknown,
+          condition: stageValues.condition || null,
+          operational_status: stageValues.operationalStatus || null,
+          length_inches: stageValues.lengthInches ? parseFloat(stageValues.lengthInches) : null,
+          width_inches: stageValues.widthInches ? parseFloat(stageValues.widthInches) : null,
+          height_inches: stageValues.heightInches ? parseFloat(stageValues.heightInches) : null,
+        };
+      }
+
       if (step === 'photos') {
+
         const hasNewImages = images.length > 0;
         const hasNewVideos = videos.length > 0;
 
