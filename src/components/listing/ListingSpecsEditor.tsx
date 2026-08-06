@@ -176,6 +176,8 @@ export const ListingSpecsEditor: React.FC<ListingSpecsEditorProps> = ({
   listingId,
   category,
   mode,
+  initialSection,
+  header,
 }) => {
   const { values, confirmedSections, readiness, loading, saving, saveSection } = useListingSpecs({
     listingId,
@@ -195,6 +197,8 @@ export const ListingSpecsEditor: React.FC<ListingSpecsEditorProps> = ({
 
   return (
     <section className="space-y-4">
+      {header}
+
       <div className="rounded-xl border border-border/60 bg-card/60 p-5">
         <div className="flex items-center justify-between gap-4">
           <div>
@@ -210,8 +214,11 @@ export const ListingSpecsEditor: React.FC<ListingSpecsEditorProps> = ({
         </div>
         <div className="mt-4 space-y-1.5">
           <Progress value={readiness.score} className="h-2" />
-          <p className="text-xs text-muted-foreground">{readiness.score}% detail complete</p>
+          <p className="text-xs text-muted-foreground">
+            {readiness.score}% of relevant details added
+          </p>
         </div>
+        <ReadinessDisclaimer className="mt-4" />
       </div>
 
       <div className="space-y-3">
