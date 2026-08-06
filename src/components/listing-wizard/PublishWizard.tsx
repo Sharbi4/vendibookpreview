@@ -1789,17 +1789,9 @@ export const PublishWizard: React.FC = () => {
           setIsSaving(false);
           return;
         }
-        // Legacy guard retired with Stripe Connect — no merchant account is
-        // required to publish. Surface a plain message if the old trigger fires.
-        if (typeof error.message === 'string' && error.message.includes('STRIPE_CONNECT_REQUIRED')) {
-          setIsSaving(false);
-          toast({
-            title: 'Add your payout details to accept card payments',
-            description: 'Or switch to cash-only (Pay in Person) on the Pricing step to publish now.',
-            variant: 'destructive',
-          });
-          return;
-        }
+        // Payout onboarding no longer gates publishing — payouts are arranged
+        // separately from your dashboard.
+
         throw error;
       }
 
