@@ -4267,8 +4267,20 @@ export const PublishWizard: React.FC = () => {
                     </div>
                   )}
 
+                  {/* Public vs private summary + mandatory attestations */}
+                  <PrivacySummary />
+
+                  <PublishAttestations
+                    mode={listing.mode}
+                    values={attestations}
+                    onChange={(key, checked) =>
+                      setAttestations((prev) => ({ ...prev, [key]: checked }))
+                    }
+                  />
+
                   {/* Featured Listing upsell — final publish step (highest-conversion placement) */}
-                  {canPublish && !((listing as any)?.featured_at) && (
+                  {stageRequirementsMet && !((listing as any)?.featured_at) && (
+
                     <FeaturedListingCard
                       enabled={featuredEnabled}
                       onEnabledChange={setFeaturedEnabled}
