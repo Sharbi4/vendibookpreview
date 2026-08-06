@@ -3042,6 +3042,7 @@ export type Database = {
         Row: {
           accept_card_payment: boolean | null
           accept_cash_payment: boolean | null
+          accepts_offers: boolean
           access_instructions: string | null
           address: string | null
           amenities: string[] | null
@@ -3070,6 +3071,7 @@ export type Database = {
           fuel_type: string | null
           fulfillment_type: Database["public"]["Enums"]["fulfillment_type"]
           guest_draft_token: string | null
+          has_lien: string | null
           height_inches: number | null
           highlights: string[] | null
           host_id: string | null
@@ -3079,7 +3081,11 @@ export type Database = {
           hours_of_access: string | null
           id: string
           image_urls: string[] | null
+          included_items: string | null
           instant_book: boolean | null
+          kitchen_build_year: number | null
+          kitchen_build_year_unknown: boolean
+          known_problems: Json
           latitude: number | null
           length_inches: number | null
           location_notes: string | null
@@ -3089,18 +3095,24 @@ export type Database = {
           mileage: number | null
           min_hours: number | null
           min_notice_hours: number | null
+          min_offer_amount: number | null
           mode: Database["public"]["Enums"]["listing_mode"]
           model: string | null
           moderation_status: string
+          no_known_problems: boolean
           operating_hours_end: string | null
           operating_hours_start: string | null
+          operational_status: string | null
           pending_featured_payment: Json | null
+          photos_exclusions_answered: boolean
+          photos_exclusions_note: string | null
           pickup_instructions: string | null
           pickup_location_text: string | null
           postal_code: string | null
           price_daily: number | null
           price_hourly: number | null
           price_monthly: number | null
+          price_negotiable: boolean
           price_sale: number | null
           price_weekly: number | null
           proof_notary_enabled: boolean | null
@@ -3113,6 +3125,7 @@ export type Database = {
           status: Database["public"]["Enums"]["listing_status"]
           subcategory: string | null
           title: string
+          title_status: string | null
           total_slots: number | null
           updated_at: string
           vendibook_freight_enabled: boolean | null
@@ -3125,6 +3138,7 @@ export type Database = {
         Insert: {
           accept_card_payment?: boolean | null
           accept_cash_payment?: boolean | null
+          accepts_offers?: boolean
           access_instructions?: string | null
           address?: string | null
           amenities?: string[] | null
@@ -3153,6 +3167,7 @@ export type Database = {
           fuel_type?: string | null
           fulfillment_type: Database["public"]["Enums"]["fulfillment_type"]
           guest_draft_token?: string | null
+          has_lien?: string | null
           height_inches?: number | null
           highlights?: string[] | null
           host_id?: string | null
@@ -3162,7 +3177,11 @@ export type Database = {
           hours_of_access?: string | null
           id?: string
           image_urls?: string[] | null
+          included_items?: string | null
           instant_book?: boolean | null
+          kitchen_build_year?: number | null
+          kitchen_build_year_unknown?: boolean
+          known_problems?: Json
           latitude?: number | null
           length_inches?: number | null
           location_notes?: string | null
@@ -3172,18 +3191,24 @@ export type Database = {
           mileage?: number | null
           min_hours?: number | null
           min_notice_hours?: number | null
+          min_offer_amount?: number | null
           mode: Database["public"]["Enums"]["listing_mode"]
           model?: string | null
           moderation_status?: string
+          no_known_problems?: boolean
           operating_hours_end?: string | null
           operating_hours_start?: string | null
+          operational_status?: string | null
           pending_featured_payment?: Json | null
+          photos_exclusions_answered?: boolean
+          photos_exclusions_note?: string | null
           pickup_instructions?: string | null
           pickup_location_text?: string | null
           postal_code?: string | null
           price_daily?: number | null
           price_hourly?: number | null
           price_monthly?: number | null
+          price_negotiable?: boolean
           price_sale?: number | null
           price_weekly?: number | null
           proof_notary_enabled?: boolean | null
@@ -3196,6 +3221,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["listing_status"]
           subcategory?: string | null
           title: string
+          title_status?: string | null
           total_slots?: number | null
           updated_at?: string
           vendibook_freight_enabled?: boolean | null
@@ -3208,6 +3234,7 @@ export type Database = {
         Update: {
           accept_card_payment?: boolean | null
           accept_cash_payment?: boolean | null
+          accepts_offers?: boolean
           access_instructions?: string | null
           address?: string | null
           amenities?: string[] | null
@@ -3236,6 +3263,7 @@ export type Database = {
           fuel_type?: string | null
           fulfillment_type?: Database["public"]["Enums"]["fulfillment_type"]
           guest_draft_token?: string | null
+          has_lien?: string | null
           height_inches?: number | null
           highlights?: string[] | null
           host_id?: string | null
@@ -3245,7 +3273,11 @@ export type Database = {
           hours_of_access?: string | null
           id?: string
           image_urls?: string[] | null
+          included_items?: string | null
           instant_book?: boolean | null
+          kitchen_build_year?: number | null
+          kitchen_build_year_unknown?: boolean
+          known_problems?: Json
           latitude?: number | null
           length_inches?: number | null
           location_notes?: string | null
@@ -3255,18 +3287,24 @@ export type Database = {
           mileage?: number | null
           min_hours?: number | null
           min_notice_hours?: number | null
+          min_offer_amount?: number | null
           mode?: Database["public"]["Enums"]["listing_mode"]
           model?: string | null
           moderation_status?: string
+          no_known_problems?: boolean
           operating_hours_end?: string | null
           operating_hours_start?: string | null
+          operational_status?: string | null
           pending_featured_payment?: Json | null
+          photos_exclusions_answered?: boolean
+          photos_exclusions_note?: string | null
           pickup_instructions?: string | null
           pickup_location_text?: string | null
           postal_code?: string | null
           price_daily?: number | null
           price_hourly?: number | null
           price_monthly?: number | null
+          price_negotiable?: boolean
           price_sale?: number | null
           price_weekly?: number | null
           proof_notary_enabled?: boolean | null
@@ -3279,6 +3317,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["listing_status"]
           subcategory?: string | null
           title?: string
+          title_status?: string | null
           total_slots?: number | null
           updated_at?: string
           vendibook_freight_enabled?: boolean | null
@@ -8369,6 +8408,7 @@ export type Database = {
         Returns: {
           accept_card_payment: boolean | null
           accept_cash_payment: boolean | null
+          accepts_offers: boolean
           access_instructions: string | null
           address: string | null
           amenities: string[] | null
@@ -8397,6 +8437,7 @@ export type Database = {
           fuel_type: string | null
           fulfillment_type: Database["public"]["Enums"]["fulfillment_type"]
           guest_draft_token: string | null
+          has_lien: string | null
           height_inches: number | null
           highlights: string[] | null
           host_id: string | null
@@ -8406,7 +8447,11 @@ export type Database = {
           hours_of_access: string | null
           id: string
           image_urls: string[] | null
+          included_items: string | null
           instant_book: boolean | null
+          kitchen_build_year: number | null
+          kitchen_build_year_unknown: boolean
+          known_problems: Json
           latitude: number | null
           length_inches: number | null
           location_notes: string | null
@@ -8416,18 +8461,24 @@ export type Database = {
           mileage: number | null
           min_hours: number | null
           min_notice_hours: number | null
+          min_offer_amount: number | null
           mode: Database["public"]["Enums"]["listing_mode"]
           model: string | null
           moderation_status: string
+          no_known_problems: boolean
           operating_hours_end: string | null
           operating_hours_start: string | null
+          operational_status: string | null
           pending_featured_payment: Json | null
+          photos_exclusions_answered: boolean
+          photos_exclusions_note: string | null
           pickup_instructions: string | null
           pickup_location_text: string | null
           postal_code: string | null
           price_daily: number | null
           price_hourly: number | null
           price_monthly: number | null
+          price_negotiable: boolean
           price_sale: number | null
           price_weekly: number | null
           proof_notary_enabled: boolean | null
@@ -8440,6 +8491,7 @@ export type Database = {
           status: Database["public"]["Enums"]["listing_status"]
           subcategory: string | null
           title: string
+          title_status: string | null
           total_slots: number | null
           updated_at: string
           vendibook_freight_enabled: boolean | null
