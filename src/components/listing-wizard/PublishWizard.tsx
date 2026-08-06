@@ -2020,7 +2020,9 @@ export const PublishWizard: React.FC = () => {
       : (isValidPrice(priceDaily) ? `$${parseFloat(priceDaily.replace(/[^0-9.]/g, ''))}/day` : undefined)};
 
   const checklistItems = createChecklistItems(checklistState, step);
-  const canPublish = checklistItems.filter(i => i.required).every(i => i.completed);
+  const stageRequirementsMet = checklistItems.filter(i => i.required).every(i => i.completed);
+  const canPublish = stageRequirementsMet && allAttested(attestations);
+
   const displayAddress = buildStructuredAddress() || address;
 
   // Collect validation errors for publish attempt
