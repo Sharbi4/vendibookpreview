@@ -66,16 +66,40 @@ export const FieldHelp: React.FC<FieldHelpProps> = ({
     closeTimer.current = window.setTimeout(() => setOpen(false), 120);
   };
 
+  // Escape / outside click returns focus to the trigger; without this guard the
+  // returning focus would immediately reopen the tip.
+  const suppressFocusUntil = useRef(0);
+  // Pointer-driven focus should not open the tip — click handles that.
+  const pointerFocus = useRef(false);
+
+  const handleOpenChange = (next: boolean) => {
+    if (!next) suppressFocusUntil.current = Date.now() + 300;
+    setOpen(next);
+  };
+
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover open={open} onOpenChange={handleOpenChange}>
       <PopoverTrigger asChild>
         <button
           type="button"
           aria-label={`More information about ${label}`}
-          onClick={() => setOpen((v) => !v)}
-          onFocus={() => setOpen(true)}
+          onPointerDown={() => {
+            pointerFocus.current = true;
+          }}
+          onClick={() => {
+            pointerFocus.current = false;
+            handleOpenChange(!open);
+          }}
+          onFocus={() => {
+            if (pointerFocus.current || Date.now() < suppressFocusUntil.current) return;
+            setOpen(true);
+          }}
+          onBlur={() => {
+            pointerFocus.current = false;
+          }}
           onMouseEnter={hoverOpen}
           onMouseLeave={hoverClose}
+
           className={cn(
             'inline-flex h-6 w-6 items-center justify-center rounded-full text-muted-foreground',
             'transition-colors hover:text-foreground focus:outline-none',
