@@ -27,10 +27,15 @@ import {
   sectionsForListing,
 } from '@/lib/listings/readiness';
 import ReadinessDisclaimer from '@/components/listing/ReadinessDisclaimer';
+import EquipmentInventoryEditor from '@/components/listing/EquipmentInventoryEditor';
+import OwnershipDetailsForm from '@/components/listing/OwnershipDetailsForm';
 
 interface ListingSpecsEditorProps {
   listingId: string;
+  /** Owner of the listing; required for private ownership storage paths. */
+  hostId?: string | null;
   category?: string | null;
+
   mode?: string | null;
   /** Section key to open on mount (deep link from a next-action card). */
   initialSection?: string | null;
