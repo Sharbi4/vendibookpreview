@@ -107,17 +107,24 @@ const SectionCard: React.FC<{
   confirmed: boolean;
   saving: boolean;
   defaultOpen?: boolean;
+  /** Replaces the generic field grid for custom sections (equipment, ownership). */
+  customContent?: React.ReactNode;
   onSave: (values: Record<string, unknown>) => Promise<boolean>;
-}> = ({ section, initial, confirmed, saving, defaultOpen = false, onSave }) => {
+  onDirtyChange?: (dirty: boolean) => void;
+}> = ({ section, initial, confirmed, saving, defaultOpen = false, customContent, onSave, onDirtyChange }) => {
   const [open, setOpen] = useState(defaultOpen);
   const [draft, setDraft] = useState<Record<string, unknown>>(initial);
+  const [dirty, setDirty] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
     setDraft(initial);
+    setDirty(false);
   }, [initial]);
 
   const filledCount = sectionFilledCount(section, { [section.key]: draft });
+
 
   const handleSave = async () => {
     const ok = await onSave(draft);
