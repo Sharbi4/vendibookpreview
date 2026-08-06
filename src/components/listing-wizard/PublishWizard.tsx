@@ -68,8 +68,27 @@ import {
 import { isListingFeatured } from '@/lib/featured';
 import { trackLeadEvent } from '@/lib/leadTracking';
 import { JourneyProgress, PrimaryActionBar, type JourneyStep } from '@/components/journey';
+import {
+  getStageRequirements,
+  parseKnownProblems,
+  stageForStep,
+  isTitledAsset,
+  MIN_GUIDED_PHOTOS,
+} from '@/lib/listings/stages';
+import { StageProgress } from './stages/StageProgress';
+import { StepWhat, type StepWhatValues } from './stages/StepWhat';
+import { ListingDisclosures, type DisclosureValues } from './stages/ListingDisclosures';
+import { PhotoGuidance } from './stages/PhotoGuidance';
+import { PrivacySummary } from './stages/PrivacySummary';
+import {
+  PublishAttestations,
+  emptyAttestations,
+  allAttested,
+  type AttestationKey,
+} from './stages/PublishAttestations';
 
-type PublishStep = 'photos' | 'headline' | 'includes' | 'pricing' | 'details' | 'location' | 'availability' | 'documents' | 'review';
+type PublishStep = 'basics' | 'photos' | 'headline' | 'includes' | 'pricing' | 'details' | 'location' | 'availability' | 'documents' | 'review';
+
 
 interface ListingData {
   id: string;
