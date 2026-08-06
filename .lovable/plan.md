@@ -1,80 +1,79 @@
+# Vendibook Listing Experience — Audit + Implementation Plan (Phase 0)
 
-# Post-signup plan selection + app-wide Stripe trust
+## 1. Current production route map
 
-This is a big surface change touching auth flow, dashboard entry, monetization catalog, consent, and every Stripe surface. Because it modifies conversion-critical routes and adds branding to ~10 surfaces, I want your sign-off on the shape before I write it. **No product code changes yet.**
+| Purpose | Route | Renders | Notes |
+|---|---|---|---|
+| Entry / marketing | `/list` | `List.tsx` → `QuickStartWizard` | 3 steps: category → mode → location; requires sign-in before draft creation; sessionStorage keys `vendibook_quickstart_draft` / `_resume` |
+| Legacy create | `/create-listing`, `/host` | `<Navigate to="/list">` | `CreateListing.tsx` + `ListingWizard.tsx` (1,213 lines) are unreachable dead code |
+| AI/import create | `/list/ai` | `AIListingCreator`, `ImportListingWizard` | creates draft, then routes to `/create-listing/:id` |
+| Resume / edit / publish | `/create-listing/:listingId`, `/edit-listing/:listingId` | `EditListing.tsx` → `PublishWizard` (4,332 lines) | canonical editor; steps `photos, headline, includes, pricing, details, location, availability, documents, stripe, review` — `stripe` is always filtered out (`skipStripeStep = true`) |
+| Post-publish | `/listing-published`, `/listing-published/:listingId` | `ListingPublished.tsx` | boost polling + self-heal publish |
+| Buyer detail | `/listing/:id` (plus `/listings/:id`, `/share/listing/:id` redirects) | `ListingDetail.tsx` | owner sees `OwnerBanner` with edit links |
+| Dashboard | `/dashboard`, `/host/listings` | `DraftsSection`, `HostListingCard`, `OperationsTable` | all deep-link to `/create-listing/:id` |
 
-## 1. Current behavior found
+Data today: 139 drafts, 85 published, 6 archived.
 
-- **Post-signup path:** `src/pages/Auth.tsx` (lines ~38–51) reads `profiles.onboarded_at`. If null, it redirects to `/welcome?returnTo=...`.
-- **Welcome page:** `src/pages/Welcome.tsx` is a **full route**, not a modal. It renders `MiniPlansComparison` and two buttons: "Start free" / "See member benefits". A top-right `X` also marks onboarded and returns. **`X` is a silent-dismiss** — violates your rule. Persistence is server-side (`onboarded_at`) — good.
-- **Wizard panel:** `src/components/listing-wizard/MembershipInlinePanel.tsx` is a second upsell inside publish flow, gated by `profiles.membership_panel_dismissed_at` + `vb:mship-panel-dismissed:v1` localStorage. Uses `useSubscriptionConsent` correctly.
-- **No first-sign-in modal component exists** despite prior summary — only the `/welcome` route.
-- **Catalog truth:** `MiniPlansComparison` hardcodes Free / Starter $39 / Growth $89 and does NOT read `useMonetizationProducts`. `MembershipInlinePanel` upgrades to slug `host_growth`. Need to reconcile against live `monetization_products` rows.
-- **Free-tier limit:** `useListingQuota` — must confirm actual free limit before writing copy (may not be 2).
-- **Founding/grandfathered:** `MiniPlansComparison` swaps row 0 to "Unlimited — early member" when `isFoundingMember`. Welcome doesn't pass the flag, so grandfathered users see misleading "Up to 2".
-- **Stripe trust today:** `TrustRow.tsx` (checkout only), `stripe-wordmark-blurple.png`, `powered-by-stripe-white.svg`, `stripe-wordmark-white.png` assets exist and are the owner-supplied ones. No shared component. `SecurePaymentStrip` exists but does not use the Stripe wordmark.
+## 2. Canonical wizard decision
 
-## 2. Changes I'll make
+**`PublishWizard` becomes the single canonical creation + edit engine**, re-organized into the six stages you specified. `QuickStartWizard` is absorbed as stage 1 (“What”) inside it rather than a separate pre-flow. `ListingWizard.tsx` + `CreateListing.tsx` are deleted (already unreachable).
 
-### A. Canonical first-dashboard plan decision
-- **Keep `/welcome` route as canonical** (server-persisted, survives device/storage changes).
-- Remove the silent-dismiss `X`. Escape moves focus to "Continue with Free" (announced via `aria-live`).
-- Layout: premium dark-glass hero, host-tools ember treatment, Sofia Pro display / Manrope body, real food-truck photo (reuse existing `hero-hosttools-bg.png`).
-- Free path has equal dignity: full-width outline card at top with a bold "Continue with Free" CTA, supporting line pulled from the verified free limit (I'll read `useListingQuota`/`entitlements` before writing copy — if the free limit isn't 2, I'll use the true value).
-- Secondary "Continue to dashboard with Free" link below the comparison.
-- Paid CTAs route through existing `useSubscriptionConsent` → `create-monetization-checkout`. On cancel: return to `/welcome`, calm banner, free path intact.
-- Grandfathered / already-paid users: skip selector — go straight to dashboard with a small plan-aware toast. Detected via `useHostEntitlements` + `useListingQuota.isGrandfathered`.
-- Analytics events (via existing `analytics_events` table): `plan_selector_viewed`, `plan_selector_free_selected`, `plan_selector_paid_selected`, `plan_selector_comparison_expanded`, `plan_selector_checkout_started/cancelled/completed`.
+Safe consolidation rules:
+- `/list` keeps its marketing content but its CTA now opens the new **gateway page** (`/list/start`) rather than the QuickStart modal.
+- All existing deep links (`/create-listing/:id`, `/edit-listing/:id`, `/create-listing`, `/host`) keep working — the same route renders the consolidated wizard, resuming from the draft’s saved stage.
+- Draft schema is unchanged, so all 139 drafts resume normally. Guest-draft token access (`guest-draft-access`) is preserved verbatim.
+- Featured Boost, Proof Notary, membership entitlements, manual payouts, analytics events, and `send-listing-live-email` keep their existing call sites; only the surrounding step container changes.
 
-### B. Live catalog truth
-- Rewrite `MiniPlansComparison` to read from `useMonetizationProducts('host_subscription')`. Loading skeleton while fetching. If catalog fails, fall back to a safe "See plans" link — never render stale prices.
-- Single shared `PlanCard` primitive (already partly exists per earlier design pass — I'll confirm and consolidate) used by: Welcome selector, `/pricing`, Membership tab, dashboard upgrade ribbons, `MembershipInlinePanel`.
-- Recommended pill: middle tier resolved by catalog `is_recommended` (or heuristic if the column doesn't exist — I'll check).
-- Monthly/annual toggle only if `monetization_products` has both intervals live.
+## 3. Reusable existing schema
 
-### C. Wizard panel
-- `MembershipInlinePanel` continues to exist but re-uses the same `PlanCard` + catalog source, so it can't drift. Still dismissible (secondary upsell, not first-run gate).
+`listings` already has: mode, category, subcategory, title, description, condition, year_built, make, model, mileage, fuel_type, highlights[], amenities[], image_urls[], video_urls[], cover_image_url, all pricing columns, deposit_amount, delivery fee/radius/instructions, city/state/postal_code/address/lat/long, freight dims (weight/length/width/height), accept_cash/card, featured_*, proof_notary_enabled, moderation_status, published_at, deleted_at, guest_draft_token, total_slots/slot_names, hourly schedule JSONB.
 
-### D. Shared Stripe trust component (`StripeTrustBadge`)
-New file `src/components/trust/StripeTrustBadge.tsx`.
-- Props: `context: 'payments' | 'payouts' | 'identity' | 'combined'`, `surface: 'light' | 'dark'`, `size: 'sm' | 'md'`, optional `className`.
-- Uses `powered-by-stripe-white.svg` on dark surfaces, `powered-by-stripe-blurple.svg` on light — never recolored or stretched. `alt` reflects context.
-- Copy per context matches your spec exactly ("Secure payments powered by Stripe", etc.).
-- One instance per viewport max — component is idempotent via a lightweight context guard.
+Also reusable: `monetization_products` / `monetization_product_plans` (admin-configurable price + config — the Concierge $149 becomes a row here, **no hardcoded price**), `monetization_purchases`, `listing_promotions`, `listing_required_documents`, `admin_notes`, `app_feature_flags`.
 
-**Placed on:**
-1. `/welcome` plan selector (combined footer)
-2. `/pricing` + Membership tab (payments)
-3. `SubscriptionConsentDialog` (payments)
-4. `AccountSubscription` / `MembershipSummaryCard` (payments)
-5. Stripe Connect onboarding banner (`StripeConnectBanner`) + Payouts panel (payouts)
-6. Listing wizard card-payment publish step (payments)
-7. `SaleCheckout` + `BookingCheckout` (payments) — replaces the ad-hoc `TrustRow` wordmark with the shared component; keeps the card-network row
-8. Payment confirmation / receipt surfaces (payments)
-9. `IdentityVerification` page (identity)
-10. Help Center payments/payouts sections (contextual)
+Structured specs (cooking equipment, refrigeration, electrical, propane, plumbing/tanks, hood/suppression, towing, mechanical, inspections, rental terms) **do not exist** — today they are free-text labels inside `amenities: string[]`.
 
-Explicitly NOT added: home hero, blog, general marketing, dashboards (unless the payouts card is present).
+## 4. New schema (all additive, no destructive migration)
 
-### E. Guardrails preserved
-- No changes to `create-monetization-checkout`, `create-checkout`, `stripe-webhook`, consent versioning, `host_payment_eligibility` trigger, RLS, or entitlements math.
-- No amber/yellow. Gold stays reserved for PRO chip.
-- No "escrow" — "payment protection" only.
+- `listing_specs` — one row per listing, JSONB sections (`cooking`, `refrigeration`, `electrical`, `propane`, `plumbing`, `hood`, `dimensions`, `mechanical`, `inspections`, `inclusions`, `viewing`, `site`) + `confirmed_sections text[]`. RLS: owner full access; public read only when the listing is publicly visible.
+- `listing_rental_terms` — structured rental terms (min/max period, deposit, fees, mileage/generator allowances, fuel/propane, pickup/return, late fees, driver/towing, insurance, permitted/prohibited uses, cancellation, condition photos).
+- `listing_completeness` — computed score + `readiness_level` enum (`published`, `buyer_ready`, `highly_detailed`), `updated_at`; refreshed by a trigger on `listings` / `listing_specs`.
+- `listing_spec_suggestions` — AI-extracted candidate specs with `status` (`suggested`, `confirmed`, `rejected`); never public until confirmed.
+- `listing_service_orders` — Concierge orders: `listing_id` (nullable), `buyer_user_id`, `product_slug`, `purchase_id`, `status` enum (`awaiting_payment`, `paid`, `intake`, `in_progress`, `questions`, `revision`, `seller_review`, `approved`, `published`, `cancelled`, `refunded`), `intake` JSONB, `revision_count`, timestamps.
+- `listing_service_messages` — admin ↔ seller thread for a service order.
+- Enum additions: `readiness_level`, `service_order_status`.
+- Indexes: `listing_specs(listing_id)`, `listing_completeness(readiness_level)`, `listing_service_orders(status, created_at)`, partial index on `listings(host_id) where status='draft'`.
+- GRANTs on every new public table (`authenticated` + `service_role`; `anon` read only on `listing_specs`/`listing_completeness`/`listing_rental_terms` scoped to publicly visible listings).
+- No table is required for publish — every new table is optional-depth, so publishing never blocks on it.
 
-## 3. Verification I'll run before reporting
+## 5. Six implementation phases
 
-- `bunx tsgo --noEmit`
-- `bun run build`
-- `bunx vitest run` (entitlement + consent suites)
-- Playwright: capture `/welcome` and `/pricing` at 390px & 1440px; capture Connect banner and buyer checkout at both viewports. Attach to the final report.
-- Manual matrix from your section 7 — I'll list pass/fail per row.
+**Phase 1 — Gateway + consolidation.** New `/list/start` gateway with the exact headline/body/reassurance copy and two paths (Create it myself — Free; Concierge — price read from `monetization_products`). Delete `ListingWizard.tsx` / `CreateListing.tsx`, keep redirects. Tests: gateway renders both paths with DB-driven price; every legacy route still resolves; draft resume smoke test on existing drafts.
 
-## 4. What I need from you
+**Phase 2 — Six-stage free flow.** Rebuild the wizard shell into What / Account / Details / Photos / Location & delivery / Confirm & publish with progressive disclosure by category and mode. Auth stage only when signed out, preserving all answers and returning to the exact next stage. Tests: category matrices (trailer hides engine/mileage; static space hides title/towing; rental vs sale fields); signed-out → auth → resume at correct stage; draft autosave.
 
-**Approve or adjust before I start:**
+**Phase 3 — Instant publish + copy cleanup.** Remove the vestigial `stripe` step/type/meta, all fake review/countdown language, and stale Stripe copy in `ListingPublished.tsx` (toasts at lines 195/341, `stripe-webhook` error endpoint), `List.tsx:456`, `HostOnboarding.tsx`. Keep real states (draft, paused, sold, archived, flagged, restricted, suspended, removed). Tests: publish → immediately viewable/shareable; no `pending_review` reachable from the wizard; grep guard test asserting zero active Stripe strings in listing-flow files.
 
-1. **Keep `/welcome` as a route** (current pattern) vs. move to a blocking modal on `/dashboard`. Route is safer for SEO/back-button; modal is what your spec implies. My recommendation: route, because `onboarded_at` already gates it and it survives refresh cleanly.
-2. **Grandfathered users on `/welcome`:** auto-skip to dashboard and set `onboarded_at`? Or show a "welcome back" state with plan summary and a single "Continue" CTA? I'll do the second unless you say otherwise.
-3. **Monthly/annual toggle:** I'll only show it if the live catalog has annual SKUs. If it doesn't, I'll ship monthly-only and note it.
+**Phase 4 — Readiness system.** `listing_specs`, `listing_completeness`, suggestions table + seller-facing improvement cards, status labels, public Equipment Readiness Summary from confirmed data only, with the required disclaimer. Backfill completeness for the 85 published listings. Tests: score/label thresholds; unconfirmed suggestions never render publicly; disclaimer always present; “verified” wording never used.
 
-Reply "go" (with any adjustments) and I'll implement, verify, and report back with screenshots.
+**Phase 5 — Deep detail sections + guidance.** All conditional detail sections and full rental terms, each saved independently post-publish, plus `InfoTooltip` guidance (reuse `src/components/ui/info-tooltip.tsx`) beside field labels, option groups, privacy and status labels, and improvement cards. Tests: section save isolation; conditional rendering by category; keyboard + screen-reader tooltip access; requirements/public-private status visible without hovering.
+
+**Phase 6 — Concierge service order.** Product row + admin config, PayPal one-time checkout, idempotent return/webhook handling, service order + separate draft listing, abbreviated intake, admin work queue, seller Q&A, one revision, seller approval before publication, configurable turnaround/terms. Tests: duplicate webhook produces one order; abandoned payment leaves no phantom listing; publication blocked until seller approval; no “human specialist reviewed” claim unless an admin actually completed the step.
+
+## 6. Risks
+
+- **Drafts (139)** — stage remapping must never lose answers; mitigate with a pure mapping function + read-only rehearsal against real draft rows before rollout.
+- **Media** — image/video arrays stay untouched; cover selection writes only `cover_image_url`.
+- **Auth return** — the existing `?redirect=` pattern must carry stage + draft id; regression test for OAuth (Google) round trip.
+- **PayPal boost/notary** — publish-first ordering must be preserved so an abandoned payment never strands a listing.
+- **Emails** — `send-listing-live-email` and admin revenue alerts must still fire exactly once on the new publish path.
+- **Analytics** — existing event names should be kept and only added to, so historical funnels stay comparable.
+- **RLS** — new tables must not widen access to private address or seller PII; public reads gated on `is_listing_publicly_visible`.
+
+## 7. Contradictions found in current code
+
+- Three creation surfaces coexist (`ListingWizard` dead, `QuickStartWizard` live, `PublishWizard` live) with `/create-listing` redirecting away from the component that still imports it.
+- A `'stripe'` step remains in the `PublishStep` type, `VALID_STEPS`, and `stepMeta` while permanently filtered out.
+- User-facing toasts on `ListingPublished.tsx` say “Stripe confirmed your payment” on a PayPal-only rail; `HostOnboarding.tsx` still advertises Stripe Connect payouts; `List.tsx` says “No Stripe setup required”.
+- `pending_review` exists in the status enum, `publicVisibility.ts`, and journey copy (“We’re reviewing your listing”) but is never set by the wizard — a latent fake-review state.
+- Equipment specs are stored as free-text checkbox labels in `amenities[]`, so nothing can be filtered, summarized, or displayed as structured data today.
+- `HowItWorks*` pages state 24-hour automated payouts, which conflicts with the documented manual payout process.
