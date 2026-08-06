@@ -212,7 +212,18 @@ export interface ReadinessResult {
   score: number;
   level: ReadinessLevel;
   missingSections: string[];
+  version: number;
 }
+
+/**
+ * Deterministic scoring definition version. Bump whenever section weights,
+ * fields or thresholds change so stored scores can be recomputed instead of
+ * silently compared across definitions.
+ */
+export const READINESS_SCORE_VERSION = 1;
+
+/** Score thresholds, part of the versioned definition. */
+export const READINESS_THRESHOLDS = { buyer_ready: 40, highly_detailed: 80 } as const;
 
 export const READINESS_LABELS: Record<ReadinessLevel, string> = {
   published: 'Published',
@@ -220,13 +231,22 @@ export const READINESS_LABELS: Record<ReadinessLevel, string> = {
   highly_detailed: 'Highly detailed',
 };
 
+export const READINESS_LEVEL_BLURBS: Record<ReadinessLevel, string> = {
+  published: 'Live with the essential information buyers need to reach you.',
+  buyer_ready: 'Live with the major details most buyers ask about.',
+  highly_detailed: 'Live with comprehensive details for this type of listing.',
+};
+
+/** Required, reusable seller-information disclaimer. */
 export const READINESS_DISCLAIMER =
-  'These details were provided by the seller and have not been independently inspected by Vendibook. Confirm anything important before you buy.';
+  'Information provided by the seller. Buyers must independently verify condition, ownership, title, permits, inspections, and local requirements.';
 
 export const computeReadiness = (
   sections: SpecSection[],
   values: SpecValues,
 ): ReadinessResult => {
+  // Only sections relevant to this listing's category and mode are passed in,
+  // so non-applicable fields can never lower the score.
   const totalWeight = sections.reduce((sum, s) => sum + s.weight, 0) || 1;
   let earned = 0;
   const missing: string[] = [];
@@ -240,7 +260,85 @@ export const computeReadiness = (
 
   const score = Math.round((earned / totalWeight) * 100);
   const level: ReadinessLevel =
-    score >= 80 ? 'highly_detailed' : score >= 40 ? 'buyer_ready' : 'published';
+    score >= READINESS_THRESHOLDS.highly_detailed
+      ? 'highly_detailed'
+      : score >= READINESS_THRESHOLDS.buyer_ready
+        ? 'buyer_ready'
+        : 'published';
 
-  return { score, level, missingSections: missing };
+  return { score, level, missingSections: missing, version: READINESS_SCORE_VERSION };
 };
+
+/**
+ * Highest-value next actions for a live listing. Each one explains the buyer
+ * benefit and deep-links into a single section that saves independently.
+ */
+export interface NextAction {
+  /** Spec section key, or 'rental_terms' for the rental terms editor. */
+  section: string;
+  title: string;
+  why: string;
+}
+
+const NEXT_ACTION_LIBRARY: NextAction[] = [
+  {
+    section: 'electrical',
+    title: 'Add power information',
+    why: 'Buyers need to know what power this runs on before they can plan where to operate it.',
+  },
+  {
+    section: 'plumbing',
+    title: 'Add water capacity',
+    why: 'Fresh and grey water capacity decides which events and health departments will accept it.',
+  },
+  {
+    section: 'cooking',
+    title: 'Describe installed equipment',
+    why: 'The equipment list is the first thing a buyer compares against their menu.',
+  },
+  {
+    section: 'hood',
+    title: 'Add hood and fire suppression',
+    why: 'Health and fire inspectors ask about this first, so buyers ask too.',
+  },
+  {
+    section: 'inclusions',
+    title: 'Confirm what is included',
+    why: 'Setting expectations early prevents surprises and back-and-forth at handoff.',
+  },
+  {
+    section: 'inspections',
+    title: 'Add inspection and maintenance',
+    why: 'Recent service and inspection history gives serious buyers confidence.',
+  },
+  {
+    section: 'viewing',
+    title: 'Add viewing and testing',
+    why: 'Buyers move faster when they know how they can see and test it in person.',
+  },
+  {
+    section: 'rental_terms',
+    title: 'Complete rental terms',
+    why: 'Clear terms let renters book without messaging you for the basics.',
+  },
+];
+
+/** Returns the ordered next actions that still apply to this listing. */
+export const nextActionsForListing = (
+  category: string | null | undefined,
+  mode: string | null | undefined,
+  values: SpecValues,
+  rentalTermsConfirmed = false,
+): NextAction[] => {
+  const applicable = new Set(sectionsForListing(category, mode).map((s) => s.key));
+  return NEXT_ACTION_LIBRARY.filter((action) => {
+    if (action.section === 'rental_terms') {
+      return mode === 'rent' && !rentalTermsConfirmed;
+    }
+    if (!applicable.has(action.section)) return false;
+    const section = SPEC_SECTIONS.find((s) => s.key === action.section);
+    if (!section) return false;
+    return sectionFilledCount(section, values) < Math.ceil(section.fields.length / 2);
+  });
+};
+

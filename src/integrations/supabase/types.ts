@@ -2291,24 +2291,30 @@ export type Database = {
       }
       listing_completeness: {
         Row: {
+          computed_at: string
           listing_id: string
           missing_sections: string[]
           readiness_level: Database["public"]["Enums"]["listing_readiness_level"]
           score: number
+          score_version: number
           updated_at: string
         }
         Insert: {
+          computed_at?: string
           listing_id: string
           missing_sections?: string[]
           readiness_level?: Database["public"]["Enums"]["listing_readiness_level"]
           score?: number
+          score_version?: number
           updated_at?: string
         }
         Update: {
+          computed_at?: string
           listing_id?: string
           missing_sections?: string[]
           readiness_level?: Database["public"]["Enums"]["listing_readiness_level"]
           score?: number
+          score_version?: number
           updated_at?: string
         }
         Relationships: [
@@ -2869,6 +2875,8 @@ export type Database = {
       }
       listing_spec_suggestions: {
         Row: {
+          accepted_value: Json | null
+          confidence: number | null
           created_at: string
           field: string
           id: string
@@ -2876,10 +2884,14 @@ export type Database = {
           resolved_at: string | null
           section: string
           source: string
+          source_text: string | null
           status: string
           suggested_value: Json
+          updated_at: string
         }
         Insert: {
+          accepted_value?: Json | null
+          confidence?: number | null
           created_at?: string
           field: string
           id?: string
@@ -2887,10 +2899,14 @@ export type Database = {
           resolved_at?: string | null
           section: string
           source?: string
+          source_text?: string | null
           status?: string
           suggested_value?: Json
+          updated_at?: string
         }
         Update: {
+          accepted_value?: Json | null
+          confidence?: number | null
           created_at?: string
           field?: string
           id?: string
@@ -2898,8 +2914,10 @@ export type Database = {
           resolved_at?: string | null
           section?: string
           source?: string
+          source_text?: string | null
           status?: string
           suggested_value?: Json
+          updated_at?: string
         }
         Relationships: [
           {
