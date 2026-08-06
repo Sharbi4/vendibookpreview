@@ -222,18 +222,30 @@ const SectionCard: React.FC<{
 
 export const ListingSpecsEditor: React.FC<ListingSpecsEditorProps> = ({
   listingId,
+  hostId,
   category,
   mode,
   initialSection,
   header,
 }) => {
-  const { values, confirmedSections, readiness, loading, saving, saveSection } = useListingSpecs({
-    listingId,
-    category,
-    mode,
-  });
+  const {
+    values, confirmedSections, readiness, loading, saving, conflict, reload, saveSection,
+  } = useListingSpecs({ listingId, category, mode });
+  const [dirtySections, setDirtySections] = useState<Record<string, boolean>>({});
 
   const sections = sectionsForListing(category, mode);
+  const hasUnsaved = Object.values(dirtySections).some(Boolean);
+
+  // Unsaved-change warning (browser-level; section saves are independent).
+  useEffect(() => {
+    if (!hasUnsaved) return;
+    const handler = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = '';
+    };
+    window.addEventListener('beforeunload', handler);
+    return () => window.removeEventListener('beforeunload', handler);
+  }, [hasUnsaved]);
 
   if (loading) {
     return (
@@ -243,9 +255,44 @@ export const ListingSpecsEditor: React.FC<ListingSpecsEditorProps> = ({
     );
   }
 
+  const renderCustom = (section: SpecSection): React.ReactNode => {
+    if (section.custom === 'equipment') {
+      return (
+        <EquipmentInventoryEditor
+          value={values[section.key] ?? {}}
+          saving={saving}
+          onSave={(v) => saveSection(section.key, v)}
+          onDirtyChange={(d) => setDirtySections((s) => ({ ...s, [section.key]: d }))}
+        />
+      );
+    }
+    if (section.custom === 'ownership') {
+      return (
+        <OwnershipDetailsForm
+          listingId={listingId}
+          hostId={hostId}
+          onSavePublicSummary={(summary) => saveSection('ownership_public', summary)}
+        />
+      );
+    }
+    return undefined;
+  };
+
   return (
     <section className="space-y-4">
       {header}
+
+      {conflict && (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-500/40 bg-amber-500/10 p-4">
+          <p className="text-sm text-foreground">
+            This listing was updated somewhere else. Reload before saving so you do not overwrite
+            the newer details.
+          </p>
+          <Button size="sm" variant="outline" onClick={() => void reload()}>
+            Reload details
+          </Button>
+        </div>
+      )}
 
       <div className="rounded-xl border border-border/60 bg-card/60 p-5">
         <div className="flex items-center justify-between gap-4">
@@ -278,12 +325,15 @@ export const ListingSpecsEditor: React.FC<ListingSpecsEditorProps> = ({
             confirmed={confirmedSections.includes(section.key)}
             saving={saving}
             defaultOpen={section.key === initialSection}
+            customContent={renderCustom(section)}
             onSave={(v) => saveSection(section.key, v)}
+            onDirtyChange={(d) => setDirtySections((s) => ({ ...s, [section.key]: d }))}
           />
         ))}
       </div>
     </section>
   );
 };
+
 
 export default ListingSpecsEditor;
