@@ -50,6 +50,18 @@ const FieldInput: React.FC<{
     );
   }
 
+  if (field.type === 'textarea') {
+    return (
+      <Textarea
+        className="text-base"
+        placeholder={field.placeholder}
+        value={(value as string) ?? ''}
+        onChange={(e) => onChange(e.target.value)}
+      />
+    );
+  }
+
+
   if (field.type === 'select') {
     return (
       <Select value={(value as string) ?? ''} onValueChange={onChange}>
