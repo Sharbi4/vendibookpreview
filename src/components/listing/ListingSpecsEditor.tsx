@@ -125,18 +125,33 @@ const SectionCard: React.FC<{
 
   const filledCount = sectionFilledCount(section, { [section.key]: draft });
 
+  const markDirty = (next: Record<string, unknown>) => {
+    setDraft(next);
+    setDirty(true);
+    onDirtyChange?.(true);
+  };
 
   const handleSave = async () => {
+    setError(null);
     const ok = await onSave(draft);
+    if (!ok) {
+      setError('Could not save. Your changes are still here — try again.');
+      toast({
+        title: 'Could not save',
+        description: 'Please try again in a moment.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    setDirty(false);
+    onDirtyChange?.(false);
     toast({
-      title: ok ? `${section.title} saved` : 'Could not save',
-      description: ok
-        ? 'Your listing detail is updated. Buyers see it right away.'
-        : 'Please try again in a moment.',
-      variant: ok ? undefined : 'destructive',
+      title: `${section.title} saved`,
+      description: 'Your listing detail is updated. Buyers see it right away.',
     });
-    if (ok) setOpen(false);
+    setOpen(false);
   };
+
 
   return (
     <Collapsible open={open} onOpenChange={setOpen}>
