@@ -48,6 +48,8 @@ const SmsOptIn = lazy(() => import("./pages/SmsOptIn"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const EditListing = lazy(() => import("./pages/EditListing"));
 const ListingStart = lazy(() => import("./pages/ListingStart"));
+const ConciergeIntro = lazy(() => import("./pages/ConciergeIntro"));
+
 const ListPage = lazy(() => import("./pages/List"));
 const AIListingCreator = lazy(() => import("./pages/AIListingCreator"));
 const ListingDetail = lazy(() => import("./pages/ListingDetail"));
@@ -249,7 +251,11 @@ const AnimatedRoutes = () => {
           <Route path="/host/listings" element={<PageTransition><HostListings /></PageTransition>} />
           <Route path="/host/reporting" element={<PageTransition><HostReporting /></PageTransition>} />
           <Route path="/host/analytics" element={<PageTransition><HostAnalytics /></PageTransition>} />
-          <Route path="/create-listing" element={<Navigate to="/list" replace />} />
+          {/* Legacy listing-creation entries → canonical opening gateway */}
+          <Route path="/create-listing" element={<Navigate to="/list/start" replace />} />
+          <Route path="/new-listing" element={<Navigate to="/list/start" replace />} />
+          <Route path="/listing-wizard" element={<Navigate to="/list/start" replace />} />
+
           <Route path="/host" element={<Navigate to="/list" replace />} />
           <Route path="/listing/:id" element={<PageTransition><ListingDetail /></PageTransition>} />
           {/* Common typo/plural alias — redirect to canonical singular route */}
@@ -358,6 +364,8 @@ const AnimatedRoutes = () => {
           {/* Supply flow: /list is quick start, then /create-listing/:id for publish wizard */}
           <Route path="/list" element={<PageTransition><ListPage /></PageTransition>} />
           <Route path="/list/start" element={<PageTransition><ListingStart /></PageTransition>} />
+          <Route path="/list/concierge" element={<PageTransition><ConciergeIntro /></PageTransition>} />
+
           <Route path="/list/ai" element={<PageTransition><AIListingCreator /></PageTransition>} />
           <Route path="/create-listing/:listingId" element={<PageTransition><EditListing /></PageTransition>} />
           <Route path="/edit-listing/:listingId" element={<PageTransition><EditListing /></PageTransition>} />
