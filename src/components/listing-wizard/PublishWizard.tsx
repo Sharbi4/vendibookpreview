@@ -2185,6 +2185,10 @@ export const PublishWizard: React.FC = () => {
                     </p>
                   </div>
 
+                  <PhotoGuidance category={listing.category} photoCount={totalPhotoCount} />
+
+
+
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                     {allPhotos.map((item, globalIndex) => {
                       const isDragging = photoDraggedIndex === globalIndex;
