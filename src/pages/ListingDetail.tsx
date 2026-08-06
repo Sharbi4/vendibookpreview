@@ -736,6 +736,15 @@ const ListingDetail = () => {
                 </>
               )}
 
+              {/* Seller-confirmed equipment specs and readiness */}
+              <EquipmentReadinessSummary
+                listingId={listing.id}
+                category={listing.category}
+                mode={listing.mode}
+              />
+
+
+
               {/* Pricing Section */}
               <div className={saleGlass || undefined}>
                 <PricingSection
