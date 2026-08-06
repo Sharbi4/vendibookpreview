@@ -2185,7 +2185,12 @@ export const PublishWizard: React.FC = () => {
                     </p>
                   </div>
 
-                  <PhotoGuidance category={listing.category} photoCount={totalPhotoCount} />
+                  <PhotoGuidance
+                    category={listing.category}
+                    photoCount={totalPhotoCount}
+                    hasDisclosedProblems={disclosures.knownProblems.length > 0}
+                  />
+
 
 
 
