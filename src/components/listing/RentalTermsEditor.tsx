@@ -177,7 +177,11 @@ export const RentalTermsEditor: React.FC<Props> = ({ listingId, category, initia
           group={group}
           terms={terms}
           saving={saving}
-          defaultOpen={group.key === initialSection}
+          defaultOpen={
+            group.key === initialSection ||
+            // The dashboard next-action card deep-links to the branch as a whole.
+            (initialSection === 'rental_terms' && group.key === groups[0].key)
+          }
           onSave={saveGroup}
         />
       ))}
