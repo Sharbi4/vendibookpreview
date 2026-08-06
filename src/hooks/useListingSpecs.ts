@@ -5,6 +5,7 @@ import {
   computeReadiness,
   sectionsForListing,
   ReadinessResult,
+  READINESS_SCORE_VERSION,
 } from '@/lib/listings/readiness';
 
 // The generated Supabase types lag behind new tables; these tables are simple
@@ -107,6 +108,8 @@ export const useListingSpecs = ({
           score: readiness.score,
           readiness_level: readiness.level,
           missing_sections: readiness.missingSections,
+          score_version: READINESS_SCORE_VERSION,
+          computed_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         },
         { onConflict: 'listing_id' },
