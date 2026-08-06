@@ -48,6 +48,8 @@ const SmsOptIn = lazy(() => import("./pages/SmsOptIn"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const EditListing = lazy(() => import("./pages/EditListing"));
 const ListingStart = lazy(() => import("./pages/ListingStart"));
+const ConciergeIntro = lazy(() => import("./pages/ConciergeIntro"));
+
 const ListPage = lazy(() => import("./pages/List"));
 const AIListingCreator = lazy(() => import("./pages/AIListingCreator"));
 const ListingDetail = lazy(() => import("./pages/ListingDetail"));
