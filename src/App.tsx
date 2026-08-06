@@ -362,6 +362,8 @@ const AnimatedRoutes = () => {
           {/* Supply flow: /list is quick start, then /create-listing/:id for publish wizard */}
           <Route path="/list" element={<PageTransition><ListPage /></PageTransition>} />
           <Route path="/list/start" element={<PageTransition><ListingStart /></PageTransition>} />
+          <Route path="/list/concierge" element={<PageTransition><ConciergeIntro /></PageTransition>} />
+
           <Route path="/list/ai" element={<PageTransition><AIListingCreator /></PageTransition>} />
           <Route path="/create-listing/:listingId" element={<PageTransition><EditListing /></PageTransition>} />
           <Route path="/edit-listing/:listingId" element={<PageTransition><EditListing /></PageTransition>} />
