@@ -2139,11 +2139,43 @@ export const PublishWizard: React.FC = () => {
                 hidePublishButton={step === 'review'}
               />
             </div>
-
+            <StageProgress
+              currentStage={stageForStep(step)}
+              mode={listing.mode}
+              className="mb-6"
+            />
 
             <div className="bg-card rounded-2xl shadow-sm border p-6 md:p-8">
+              {/* Stage 1: What are you listing? */}
+              {step === 'basics' && (
+                <div className="space-y-6">
+                  <div>
+                    <h2 className="text-xl font-bold text-foreground mb-2">The basics</h2>
+                    <p className="text-muted-foreground">
+                      A few essentials so buyers can tell at a glance what this is.
+                    </p>
+                  </div>
+
+                  <StepWhat
+                    category={listing.category}
+                    mode={listing.mode}
+                    values={stageValues}
+                    onChange={(patch) => setStageValues((prev) => ({ ...prev, ...patch }))}
+                  />
+
+                  <PrimaryActionBar
+                    primary={{
+                      label: isSaving ? 'Saving…' : 'Continue',
+                      onClick: handleDetailsSave,
+                      disabled: isSaving || !stageValues.condition,
+                    }}
+                  />
+                </div>
+              )}
+
               {/* Step: Media */}
               {step === 'photos' && (
+
                 <div className="space-y-6">
                   <div>
                     <h2 className="text-xl font-bold text-foreground mb-2">Add media</h2>
