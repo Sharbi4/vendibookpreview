@@ -136,6 +136,9 @@ export async function createIdentityVerification(opts: {
   templateId: string;
 }): Promise<PlaidIdvSession> {
   return await plaidRequest<PlaidIdvSession>("/identity_verification/create", {
+    // Current Plaid IDV guidance puts client_user_id at the ROOT of the
+    // request. `user` stays for the fields Plaid still reads from it.
+    client_user_id: opts.clientUserId,
     is_shareable: false,
     template_id: opts.templateId,
     gave_consent: false,
