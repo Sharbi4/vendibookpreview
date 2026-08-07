@@ -481,9 +481,9 @@ export const SaleListingMobile = ({
             {host?.identity_verified ? (
               <VerificationRow label="ID verified" verified />
             ) : (
-              <VerificationRow label="ID verification pending" verified={false} />
+              <VerificationRow label="ID verification not completed" verified={false} />
             )}
-            <VerificationRow label="Vendibook Protected" verified />
+            <VerificationRow label="PayPal checkout supported" verified />
           </div>
         </SaleCard>
 
