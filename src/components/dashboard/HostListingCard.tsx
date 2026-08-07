@@ -330,6 +330,11 @@ const HostListingCard = ({
           <DropdownMenuItem onClick={() => setShowUpgrades(true)} className="gap-2">
             <Rocket className="h-4 w-4" /> Upgrades
           </DropdownMenuItem>
+          <DropdownMenuItem asChild className="gap-2">
+            <Link to={`/listings/${listing.id}/payments-financing`}>
+              <Wallet className="h-4 w-4" /> Payments &amp; financing
+            </Link>
+          </DropdownMenuItem>
           {isRental && (
             <DropdownMenuItem onClick={() => setShowCalendar(true)} className="gap-2">
               <Calendar className="h-4 w-4" /> Availability
