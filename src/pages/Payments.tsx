@@ -154,8 +154,37 @@ const Payments = () => {
                 <ExternalLink className="h-3 w-3" aria-hidden="true" />
               </a>
             </div>
+
+            {/* Equipment lending partner */}
+            <div className="mx-auto mt-6 max-w-5xl rounded-2xl border-2 border-foreground/[0.10] bg-foreground/[0.03] p-6 backdrop-blur-xl sm:p-8">
+              <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <div className="mb-4 flex flex-wrap items-center gap-4">
+                    <PayPalMonogram className="h-8" />
+                    <span aria-hidden className="h-7 w-px bg-foreground/15" />
+                    <EquinoxFundingLogo className="h-9" />
+                  </div>
+                  <h2 className="mb-2 text-lg font-semibold tracking-tight text-foreground">
+                    Pay with PayPal, or finance with Equinox
+                  </h2>
+                  <p className="max-w-xl text-sm leading-relaxed text-muted-foreground">
+                    Checkout payments are processed by PayPal. For larger equipment purchases,
+                    Equinox Funding LLC offers business loans and equipment financing from
+                    $2.5K – $25M, with online applications. Approval, rates, and terms are
+                    determined by Equinox Funding LLC.
+                  </p>
+                </div>
+                <Button size="lg" variant="glass-cta" asChild className="shrink-0">
+                  <Link to="/financing">
+                    Explore financing
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Link>
+                </Button>
+              </div>
+            </div>
           </div>
         </section>
+
       </main>
 
       <Footer />
