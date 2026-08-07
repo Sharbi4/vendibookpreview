@@ -4,16 +4,13 @@ import { Link } from 'react-router-dom';
 import { Banknote, ExternalLink, FileDown, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { SaleCard } from '@/components/listing-detail/sale/SaleCard';
-import { getPublicDisplayName } from '@/lib/displayName';
 import { generateFinancingPurchaseSheet } from '@/lib/financing/purchaseSheet';
+import { FinancingAvailableBadge } from '@/components/financing/FinancingAvailableBadge';
+import { useEquinoxFinancingEnabled } from '@/hooks/useListingFinancing';
+import { EQUINOX_APPLY_URL, isFinanceableSaleListing } from '@/lib/financing/disclosure';
 import { toast } from 'sonner';
 
-const FINANCEABLE_CATEGORIES = ['food_truck', 'food_trailer'];
-
-export const isFinanceableSaleListing = (listing: any) =>
-  !!listing &&
-  listing.mode === 'sale' &&
-  FINANCEABLE_CATEGORIES.includes(String(listing.category));
+export { isFinanceableSaleListing };
 
 interface FinancingActionPanelProps {
   listing: any;
@@ -21,32 +18,27 @@ interface FinancingActionPanelProps {
   className?: string;
 }
 
-export const FinancingActionPanel = ({ listing, host, className }: FinancingActionPanelProps) => {
+/**
+ * Per-listing financing surface. Renders ONLY when the global
+ * `equinox_financing_enabled` flag is on AND this seller opted this listing in.
+ * All sheet data comes from the authoritative server path.
+ */
+export const FinancingActionPanel = ({ listing, className }: FinancingActionPanelProps) => {
   const [busy, setBusy] = useState(false);
+  const enabled = useEquinoxFinancingEnabled(listing);
 
-  if (!isFinanceableSaleListing(listing)) return null;
+  if (!enabled) return null;
 
   const handleDownload = async () => {
     setBusy(true);
     try {
-      // RLS keeps this row owner-only; buyers simply get no value back.
-      let vinSerial: string | null = null;
-      try {
-        const { data } = await (supabase as any)
-          .from('listing_ownership_details')
-          .select('vin_serial')
-          .eq('listing_id', listing.id)
-          .maybeSingle();
-        vinSerial = data?.vin_serial ?? null;
-      } catch {
-        vinSerial = null;
-      }
-      generateFinancingPurchaseSheet(
-        { ...listing, vin_serial: vinSerial },
-        getPublicDisplayName(host, 'Vendibook member'),
-      );
+      const { data, error } = await supabase.functions.invoke('financing-purchase-sheet', {
+        body: { listingId: listing.id },
+      });
+      if (error || !data?.listing) throw new Error('sheet_unavailable');
+      generateFinancingPurchaseSheet(data.listing, data.sellerName || 'Vendibook member');
     } catch {
-      toast.error('Could not generate the purchase sheet. Please try again.');
+      toast.error('Could not generate the purchase summary. Please try again.');
     } finally {
       setBusy(false);
     }
@@ -59,10 +51,13 @@ export const FinancingActionPanel = ({ listing, host, className }: FinancingActi
           <Banknote className="h-4 w-4 text-primary" />
         </div>
         <div className="min-w-0">
-          <h3 className="text-base font-semibold">Need financing for this equipment?</h3>
+          <div className="mb-2">
+            <FinancingAvailableBadge />
+          </div>
+          <h3 className="text-base font-semibold">Financing options for this equipment</h3>
           <p className="text-xs text-muted-foreground leading-relaxed mt-1">
-            Explore equipment financing options or download a purchase summary to share with a
-            financing provider.
+            This seller offers financing options through Equinox Funding. Apply directly with
+            Equinox, or download a pro forma purchase summary to share with a financing provider.
           </p>
         </div>
       </div>
@@ -72,11 +67,7 @@ export const FinancingActionPanel = ({ listing, host, className }: FinancingActi
           <Link to="/financing">Learn About Financing</Link>
         </Button>
         <Button asChild variant="outline" size="sm" className="justify-center">
-          <a
-            href="https://equinox-funding.com/efapplication/"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
+          <a href={EQUINOX_APPLY_URL} target="_blank" rel="noopener noreferrer">
             Apply with Equinox
             <ExternalLink className="h-3.5 w-3.5 ml-1.5" />
           </a>
@@ -98,7 +89,9 @@ export const FinancingActionPanel = ({ listing, host, className }: FinancingActi
       </div>
 
       <p className="text-[11px] text-muted-foreground/80 mt-3 leading-relaxed">
-        Vendibook is not a lender and does not guarantee approval, rates, or terms.
+        The purchase summary is a pro forma document, not proof of sale, ownership, or financing
+        approval. Financing is subject to Equinox Funding and/or its funding providers&rsquo;
+        approval and terms. Vendibook is not a lender.
       </p>
     </SaleCard>
   );
