@@ -2,9 +2,10 @@ import { useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import {
   Clock,
-  ShieldAlert,
+  BadgeCheck,
   Inbox,
 } from 'lucide-react';
+
 import PermitsTab from './PermitsTab';
 import ActionRequiredStack, { type ActionItem } from './shared/ActionRequiredStack';
 import OverviewGreeting from './overview/OverviewGreeting';
