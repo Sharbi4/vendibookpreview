@@ -26,10 +26,12 @@ import {
   isBadgeEligible,
   needsPaymentOnly,
   canSelfServiceRetry,
+  type PaymentPurpose,
   publicOfferConfig,
   VERIFIED_SELLER,
 } from "../_shared/verifiedSellerLogic.ts";
 import {
+  authorizationIsUsable,
   captureAuthorizationOnce,
   capturedPayment,
   ensureVerification,
@@ -37,6 +39,7 @@ import {
   latestOpenPayment,
   log,
   reconcileVerification,
+  syncPaymentState,
   voidAuthorizationOnce,
   type PaymentRow,
   type VerificationRow,
