@@ -1,6 +1,8 @@
 import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, ExternalLink } from 'lucide-react';
+import SEO, { generateFAQSchema } from '@/components/SEO';
+import JsonLd from '@/components/JsonLd';
 import equinoxLogo from '@/assets/brand/equinox-funding-logo.png.asset.json';
 
 const LIME = '#8CC63F';
@@ -88,29 +90,31 @@ const ApplyCta = ({ className = '', wide = false }: { className?: string; wide?:
 
 const Financing = () => {
   useEffect(() => {
-    const prevTitle = document.title;
-    document.title = 'Equipment Financing for Food Trucks & Trailers | Vendibook';
-    const meta =
-      document.querySelector('meta[name="description"]') ??
-      (() => {
-        const m = document.createElement('meta');
-        m.setAttribute('name', 'description');
-        document.head.appendChild(m);
-        return m;
-      })();
-    const prevDesc = meta.getAttribute('content');
-    meta.setAttribute(
-      'content',
-      'Explore equipment financing with Equinox Funding for food trucks, trailers, and commercial kitchen equipment. Apply online — subject to prequalification and underwriting.',
-    );
-    return () => {
-      document.title = prevTitle;
-      if (prevDesc) meta.setAttribute('content', prevDesc);
-    };
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
 
+  const title = 'Equipment Financing for Food Trucks & Trailers | Vendibook';
+  const description =
+    'Explore equipment financing with Equinox Funding for food trucks, trailers, and commercial kitchen equipment. Apply online — subject to prequalification and underwriting.';
+  const canonical = '/financing';
+
   return (
-    <main className="relative min-h-screen overflow-hidden bg-[#050506] text-white">
+    <>
+      <SEO
+        title={title}
+        description={description}
+        canonical={canonical}
+        type="website"
+      />
+      <JsonLd
+        schema={[
+          generateFAQSchema(
+            FAQ.map((item) => ({ question: item.q, answer: item.a })),
+          ),
+        ]}
+      />
+
+      <main className="relative min-h-screen overflow-hidden bg-[#050506] text-white">
       {/* polished onyx shine — layered black glass luminescence */}
       <div
         aria-hidden
@@ -301,6 +305,7 @@ const Financing = () => {
         </section>
       </div>
     </main>
+  </>
   );
 };
 
