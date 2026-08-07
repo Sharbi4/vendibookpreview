@@ -138,14 +138,14 @@ export async function createIdentityVerification(opts: {
   templateId: string;
 }): Promise<PlaidIdvSession> {
   return await plaidRequest<PlaidIdvSession>("/identity_verification/create", {
-    // Current Plaid IDV guidance puts client_user_id at the ROOT of the
-    // request. `user` stays for the fields Plaid still reads from it.
+    // Plaid's current IDV contract puts client_user_id at the ROOT of the
+    // request. The nested `user.client_user_id` field is deprecated here and
+    // is sent ONLY to /link/token/create, where it still belongs.
     client_user_id: opts.clientUserId,
     is_shareable: false,
     template_id: opts.templateId,
     gave_consent: false,
     is_idempotent: true,
-    user: { client_user_id: opts.clientUserId },
   });
 }
 
