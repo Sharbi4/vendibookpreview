@@ -132,14 +132,14 @@ const Financing = () => {
         style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent)' }}
       />
 
-      <div className="relative mx-auto max-w-5xl px-5 py-16 sm:px-8 sm:py-24">
+      <div className="relative mx-auto max-w-5xl px-5 pt-24 sm:px-8 sm:pt-32">
         {/* Home */}
         <Link
           to="/"
           aria-label="Vendibook home"
-          className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/[0.14] bg-white/[0.04] px-3 py-2 text-sm text-white/80 backdrop-blur-sm transition-colors hover:bg-white/[0.08] hover:text-white"
+          className="fixed left-4 top-4 z-50 flex flex-col items-center gap-1 text-[10px] font-medium uppercase tracking-wider text-white/60 transition-opacity hover:text-white/90"
         >
-          <img src="/favicon.png" alt="" aria-hidden className="h-5 w-5 rounded-sm" />
+          <img src="/favicon.png" alt="" aria-hidden className="h-10 w-10 rounded-md shadow-lg shadow-black/30" />
           <span>Home</span>
         </Link>
 
