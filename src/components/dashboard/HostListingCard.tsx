@@ -53,7 +53,9 @@ import { isListingFeatured } from '@/lib/featured';
 import ListingReadinessCard from '@/components/listing/ListingReadinessCard';
 import { cn } from '@/lib/utils';
 import { FeaturedBadge } from '@/components/listing/FeaturedBadge';
+import IdentityVerifiedBadge from '@/components/verification/IdentityVerifiedBadge';
 import { PayoutSetupDialog } from '@/components/payouts/PayoutSetupDialog';
+
 import { usePayoutPreference } from '@/hooks/usePayoutPreference';
 import { PayoutBrandMark } from '@/components/payouts/PayoutBrandMark';
 import { PAYOUT_METHOD_LABEL } from '@/lib/payouts/methods';
