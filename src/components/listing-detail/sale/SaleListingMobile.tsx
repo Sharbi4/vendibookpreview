@@ -53,6 +53,7 @@ import { formatLastActive } from '@/hooks/useActivityTracker';
 import { trackLeadEvent } from '@/lib/leadTracking';
 import { resolveListingBrand, getBrandFieldLabel } from '@/lib/resolveListingBrand';
 import { SaleCard } from './SaleCard';
+import { FinancingActionPanel } from './FinancingActionPanel';
 import { SaleStickyActionBar } from './SaleStickyActionBar';
 import ListingHowItWorks from '@/components/listing-detail/ListingHowItWorks';
 
@@ -648,6 +649,9 @@ export const SaleListingMobile = ({
             </div>
           </div>
         </SaleCard>
+
+        {/* FINANCING */}
+        <FinancingActionPanel listing={listing} host={host} />
 
         {/* SIMILAR LISTINGS */}
         <div>
