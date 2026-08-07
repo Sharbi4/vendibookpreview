@@ -19,10 +19,11 @@ const POINTS = [
     body: 'Eligible purchases may include PayPal Purchase Protection. Eligibility, terms, and limitations are determined by PayPal.',
   },
   {
-    icon: PayPalMonogram as unknown as typeof Lock,
+    icon: Lock,
     title: 'Familiar checkout',
     body: 'Buyers complete payment in PayPal’s hosted checkout, then return to Vendibook to track the order.',
   },
+
 ];
 
 const Payments = () => {
