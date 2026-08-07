@@ -312,6 +312,7 @@ const Financing = () => {
         </section>
       </div>
     </main>
+  </>
   );
 };
 
