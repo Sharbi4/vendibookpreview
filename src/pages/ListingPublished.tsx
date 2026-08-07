@@ -341,6 +341,10 @@ const ListingPublished: React.FC = () => {
 
         {showShare && <ShareKit listing={listing} onClose={() => setShowShare(false)} />}
 
+        {/* Optional trust upsell — secondary to the core success actions. */}
+        <VerifiedSellerCTA variant="success" />
+
+
         {/* Buyer readiness */}
         <section className="rounded-xl border border-border/60 bg-card/60 p-5">
           <h2 className="text-lg font-semibold text-foreground">
