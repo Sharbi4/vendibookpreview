@@ -83,7 +83,7 @@ export const BLOG_POSTS: BlogPost[] = [
   <li><strong>Download the financing purchase summary.</strong> Vendibook generates a pro forma invoice with the asking price, asset details, and the VIN or serial number when the seller has provided one.</li>
   <li><strong>Apply with Equinox Funding</strong> using that summary as your supporting documentation.</li>
   <li><strong>Work with an Equinox representative.</strong> They may request additional business information as part of the review.</li>
-  <li><strong>Equinox handles the decision.</strong> Prequalification, underwriting, credit decisions, terms, and funding are handled by Equinox alone. Approval and timing vary.</li>
+  <li><strong>Equinox handles the decision.</strong> Prequalification, underwriting, credit decisions, terms, and funding are handled by Equinox and, where applicable, its third-party funding providers—not Vendibook. Approval and timing vary.</li>
 </ol>
 
 <div class="not-prose my-10 rounded-2xl border border-border bg-card p-6 md:p-8">
