@@ -64,6 +64,7 @@ import { template as weeklyPassEnding } from './weekly-pass-ending.tsx'
 import { template as subscriptionTrialStarted } from './subscription-trial-started.tsx'
 import { template as weeklyPassActivated } from './weekly-pass-activated.tsx'
 import { template as subscriptionGettingStarted } from './subscription-getting-started.tsx'
+import { template as verifiedSellerReceipt } from './verified-seller-receipt.tsx'
 
 
 
@@ -123,6 +124,7 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'subscription-trial-started': subscriptionTrialStarted,
   'weekly-pass-activated': weeklyPassActivated,
   'subscription-getting-started': subscriptionGettingStarted,
+  'verified-seller-receipt': verifiedSellerReceipt,
 
   // Alias: monetization webhook dispatches 'refund-issued' for add-on refunds;
   // route to the shared refund-processed template so the send does not silently fail.

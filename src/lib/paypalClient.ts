@@ -37,19 +37,38 @@ export function getPayPalConfig(): Promise<PayPalRuntimeConfig> {
 
 /** Loads (once) and resolves the global `window.paypal` namespace. */
 export function loadPayPalSdk(): Promise<any> {
-  if (sdkPromise) return sdkPromise;
+  return loadSdk('capture');
+}
 
-  sdkPromise = getPayPalConfig().then((config) => {
+/**
+ * Loads a SECOND, isolated SDK instance configured with `intent=authorize`.
+ *
+ * Used by flows that must hold funds and capture later (Verified Seller).
+ * PayPal only allows one intent per SDK instance, so this mounts under its own
+ * `data-namespace` and never disturbs the standard capture checkout.
+ */
+export function loadPayPalAuthorizeSdk(): Promise<any> {
+  return loadSdk('authorize');
+}
+
+const sdkPromises: Partial<Record<'capture' | 'authorize', Promise<any>>> = {};
+
+function loadSdk(intent: 'capture' | 'authorize'): Promise<any> {
+  const namespace = intent === 'authorize' ? 'paypalAuthorize' : 'paypal';
+  const cached = intent === 'capture' ? sdkPromise : sdkPromises[intent];
+  if (cached) return cached;
+
+  const promise = getPayPalConfig().then((config) => {
     if (!config.enabled || !config.client_id) {
       throw new Error('PayPal is not configured yet.');
     }
-    const existing = (window as any).paypal;
+    const existing = (window as any)[namespace];
     if (existing) return existing;
 
     const params = new URLSearchParams({
       'client-id': config.client_id,
       currency: config.currency || 'USD',
-      intent: 'capture',
+      intent,
       components: (config.components ?? ['buttons']).join(','),
     });
     if (config.enable_funding?.length) {
@@ -60,21 +79,28 @@ export function loadPayPalSdk(): Promise<any> {
       const script = document.createElement('script');
       script.src = `https://www.paypal.com/sdk/js?${params.toString()}`;
       script.async = true;
+      if (namespace !== 'paypal') script.setAttribute('data-namespace', namespace);
       script.onload = () => {
-        const ns = (window as any).paypal;
+        const ns = (window as any)[namespace];
         if (ns) resolve(ns);
         else reject(new Error('PayPal did not finish loading.'));
       };
       script.onerror = () => {
-        sdkPromise = null;
+        if (intent === 'capture') sdkPromise = null;
+        else delete sdkPromises[intent];
         reject(new Error('We could not reach PayPal. Check your connection and try again.'));
       };
       document.head.appendChild(script);
     });
   }).catch((err) => {
-    sdkPromise = null;
+    if (intent === 'capture') sdkPromise = null;
+    else delete sdkPromises[intent];
     throw err;
   });
 
-  return sdkPromise;
+  if (intent === 'capture') sdkPromise = promise;
+  else sdkPromises[intent] = promise;
+
+  return promise;
 }
+

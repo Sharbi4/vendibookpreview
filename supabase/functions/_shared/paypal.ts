@@ -282,6 +282,92 @@ export async function refundPayPalCapture(opts: {
   );
 }
 
+// ------------------------------------------------- authorize / capture later
+/**
+ * Creates an order with intent AUTHORIZE. Nothing is charged when the payer
+ * approves — funds are only held until an explicit capture or void.
+ *
+ * Used by flows where Vendibook must confirm an off-PayPal outcome (e.g. an
+ * identity check) before taking the money.
+ */
+export async function createPayPalAuthorizeOrder(input: CreateOrderInput) {
+  const currency = (input.currency ?? "USD").toUpperCase();
+  return await paypalRequest("/v2/checkout/orders", {
+    method: "POST",
+    idempotencyKey: input.idempotencyKey,
+    body: {
+      intent: "AUTHORIZE",
+      purchase_units: [{
+        reference_id: input.reference,
+        invoice_id: input.reference,
+        description: input.description.slice(0, 127),
+        custom_id: input.reference,
+        amount: money(input.amountCents, currency),
+        ...(input.softDescriptor
+          ? { soft_descriptor: input.softDescriptor.slice(0, 22) }
+          : {}),
+      }],
+      payment_source: {
+        paypal: {
+          experience_context: {
+            brand_name: "Vendibook",
+            shipping_preference: "NO_SHIPPING",
+            user_action: "CONTINUE",
+            landing_page: "LOGIN",
+          },
+        },
+      },
+    },
+  });
+}
+
+/** Turns an approved AUTHORIZE order into a held authorization. */
+export async function authorizePayPalOrder(orderId: string, idempotencyKey: string) {
+  return await paypalRequest(
+    `/v2/checkout/orders/${encodeURIComponent(orderId)}/authorize`,
+    { method: "POST", idempotencyKey, body: {}, retries: 1 },
+  );
+}
+
+export async function getPayPalAuthorization(authorizationId: string) {
+  return await paypalRequest(
+    `/v2/payments/authorizations/${encodeURIComponent(authorizationId)}`,
+  );
+}
+
+export async function capturePayPalAuthorization(opts: {
+  authorizationId: string;
+  amountCents: number;
+  currency?: string;
+  invoiceId?: string;
+  idempotencyKey: string;
+}) {
+  return await paypalRequest(
+    `/v2/payments/authorizations/${encodeURIComponent(opts.authorizationId)}/capture`,
+    {
+      method: "POST",
+      idempotencyKey: opts.idempotencyKey,
+      retries: 1,
+      body: {
+        amount: money(opts.amountCents, opts.currency ?? "USD"),
+        final_capture: true,
+        ...(opts.invoiceId ? { invoice_id: opts.invoiceId } : {}),
+      },
+    },
+  );
+}
+
+/** Releases a held authorization. PayPal returns 204 with an empty body. */
+export async function voidPayPalAuthorization(
+  authorizationId: string,
+  idempotencyKey: string,
+) {
+  return await paypalRequest(
+    `/v2/payments/authorizations/${encodeURIComponent(authorizationId)}/void`,
+    { method: "POST", idempotencyKey, retries: 1 },
+  );
+}
+
 // ---------------------------------------------------------------- subscriptions
 export async function getPayPalSubscription(subscriptionId: string) {
   return await paypalRequest(

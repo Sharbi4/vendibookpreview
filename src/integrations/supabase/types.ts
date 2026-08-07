@@ -7112,6 +7112,249 @@ export type Database = {
           },
         ]
       }
+      seller_verification_attempts: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          id: string
+          plaid_verification_id: string
+          previous_verification_id: string | null
+          reason_code: string | null
+          request_id: string | null
+          shareable_url_issued: boolean
+          status: string
+          template_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          plaid_verification_id: string
+          previous_verification_id?: string | null
+          reason_code?: string | null
+          request_id?: string | null
+          shareable_url_issued?: boolean
+          status?: string
+          template_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          plaid_verification_id?: string
+          previous_verification_id?: string | null
+          reason_code?: string | null
+          request_id?: string | null
+          shareable_url_issued?: boolean
+          status?: string
+          template_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      seller_verification_events: {
+        Row: {
+          created_at: string
+          event_key: string
+          event_type: string | null
+          id: string
+          outcome: string | null
+          processed_at: string
+          provider: string
+          user_id: string | null
+          verification_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          event_key: string
+          event_type?: string | null
+          id?: string
+          outcome?: string | null
+          processed_at?: string
+          provider: string
+          user_id?: string | null
+          verification_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          event_key?: string
+          event_type?: string | null
+          id?: string
+          outcome?: string | null
+          processed_at?: string
+          provider?: string
+          user_id?: string | null
+          verification_id?: string | null
+        }
+        Relationships: []
+      }
+      seller_verification_payments: {
+        Row: {
+          amount_cents: number
+          attempt_verification_id: string | null
+          authorized_at: string | null
+          captured_at: string | null
+          created_at: string
+          currency: string
+          error_code: string | null
+          expires_at: string | null
+          id: string
+          idempotency_key: string
+          paypal_authorization_id: string | null
+          paypal_capture_id: string | null
+          paypal_order_id: string | null
+          paypal_refund_id: string | null
+          provider: string
+          reference: string
+          refunded_at: string | null
+          state: string
+          updated_at: string
+          user_id: string
+          voided_at: string | null
+        }
+        Insert: {
+          amount_cents: number
+          attempt_verification_id?: string | null
+          authorized_at?: string | null
+          captured_at?: string | null
+          created_at?: string
+          currency?: string
+          error_code?: string | null
+          expires_at?: string | null
+          id?: string
+          idempotency_key: string
+          paypal_authorization_id?: string | null
+          paypal_capture_id?: string | null
+          paypal_order_id?: string | null
+          paypal_refund_id?: string | null
+          provider?: string
+          reference: string
+          refunded_at?: string | null
+          state?: string
+          updated_at?: string
+          user_id: string
+          voided_at?: string | null
+        }
+        Update: {
+          amount_cents?: number
+          attempt_verification_id?: string | null
+          authorized_at?: string | null
+          captured_at?: string | null
+          created_at?: string
+          currency?: string
+          error_code?: string | null
+          expires_at?: string | null
+          id?: string
+          idempotency_key?: string
+          paypal_authorization_id?: string | null
+          paypal_capture_id?: string | null
+          paypal_order_id?: string | null
+          paypal_refund_id?: string | null
+          provider?: string
+          reference?: string
+          refunded_at?: string | null
+          state?: string
+          updated_at?: string
+          user_id?: string
+          voided_at?: string | null
+        }
+        Relationships: []
+      }
+      seller_verification_terms: {
+        Row: {
+          accepted_at: string
+          created_at: string
+          id: string
+          ip_address: string | null
+          terms_version: string
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          accepted_at?: string
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          terms_version: string
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          accepted_at?: string
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          terms_version?: string
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      seller_verifications: {
+        Row: {
+          created_at: string
+          current_attempt_id: string | null
+          identity_status: string | null
+          identity_succeeded_at: string | null
+          last_reason_code: string | null
+          payment_state: string
+          retry_allowance: number
+          retry_count: number
+          revoked_at: string | null
+          revoked_by: string | null
+          revoked_reason: string | null
+          status: string
+          template_id: string | null
+          terms_version: string | null
+          updated_at: string
+          user_id: string
+          verified_at: string | null
+        }
+        Insert: {
+          created_at?: string
+          current_attempt_id?: string | null
+          identity_status?: string | null
+          identity_succeeded_at?: string | null
+          last_reason_code?: string | null
+          payment_state?: string
+          retry_allowance?: number
+          retry_count?: number
+          revoked_at?: string | null
+          revoked_by?: string | null
+          revoked_reason?: string | null
+          status?: string
+          template_id?: string | null
+          terms_version?: string | null
+          updated_at?: string
+          user_id: string
+          verified_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          current_attempt_id?: string | null
+          identity_status?: string | null
+          identity_succeeded_at?: string | null
+          last_reason_code?: string | null
+          payment_state?: string
+          retry_allowance?: number
+          retry_count?: number
+          revoked_at?: string | null
+          revoked_by?: string | null
+          revoked_reason?: string | null
+          status?: string
+          template_id?: string | null
+          terms_version?: string | null
+          updated_at?: string
+          user_id?: string
+          verified_at?: string | null
+        }
+        Relationships: []
+      }
       service_partners: {
         Row: {
           admin_notes: string | null
@@ -9095,6 +9338,7 @@ export type Database = {
           updated_at: string
         }[]
       }
+      get_my_seller_verification: { Args: never; Returns: Json }
       get_referral_leaderboard: {
         Args: { p_limit?: number }
         Returns: {
@@ -9155,6 +9399,10 @@ export type Database = {
       is_host_account_active: { Args: { _host_id: string }; Returns: boolean }
       is_listing_publicly_visible: {
         Args: { _listing_id: string }
+        Returns: boolean
+      }
+      is_seller_identity_verified: {
+        Args: { _user_id: string }
         Returns: boolean
       }
       list_payable_referrers: {
