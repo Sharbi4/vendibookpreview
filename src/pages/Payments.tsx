@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import SEO from '@/components/SEO';
-import { PayPalWordmark, PayPalMonogram } from '@/components/brand/ProviderLogos';
+import { PayPalWordmark, PayPalMonogram, EquinoxFundingLogo } from '@/components/brand/ProviderLogos';
 import paypalAppImage from '@/assets/brand/paypal-app-2025.webp.asset.json';
 
 const POINTS = [
