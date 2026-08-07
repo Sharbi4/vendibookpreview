@@ -218,15 +218,19 @@ async function persistSession(
   previousFallback?: string | null,
 ) {
   await recordAttempt(admin, userId, templateId, session, payment, previousFallback);
-  await admin
+  const { error: updateErr } = await admin
     .from("seller_verifications")
     .update({
       current_attempt_id: session.id,
       identity_status: session.status ?? "active",
-      status: "identity_pending",
+      status: "identity_in_progress",
       updated_at: new Date().toISOString(),
     })
     .eq("user_id", userId);
+
+  if (updateErr) {
+    throw new Error(`Failed to persist verification session: ${updateErr.message}`);
+  }
 }
 
 /**
