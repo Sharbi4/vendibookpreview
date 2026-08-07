@@ -867,6 +867,9 @@ const ListingDetail = () => {
                 longitude={listing.longitude}
               />
 
+              {/* Payment methods — every listing (sale and rent) */}
+              <ListingPaymentMethods listing={listing} />
+
               {/* Purchase protection + browse — sale listings */}
               {!isRental && (
                 <>
