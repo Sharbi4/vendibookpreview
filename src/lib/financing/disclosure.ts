@@ -13,9 +13,9 @@ export const EQUINOX_APPLY_URL = 'https://equinox-funding.com/efapplication/';
 /** Launch switch — nothing financing-related renders publicly while this is off. */
 export const EQUINOX_FLAG_KEY = 'equinox_financing_enabled';
 
-export const FINANCEABLE_SALE_CATEGORIES = ['food_truck', 'food_trailer'] as const;
-
+/**
+ * Financing is offered on every for-sale listing category — not only trucks
+ * and trailers. Category is no longer part of eligibility.
+ */
 export const isFinanceableSaleListing = (listing: any) =>
-  !!listing &&
-  listing.mode === 'sale' &&
-  FINANCEABLE_SALE_CATEGORIES.includes(String(listing.category) as any);
+  !!listing && listing.mode === 'sale';
