@@ -1,6 +1,7 @@
 import { Lock } from 'lucide-react';
 import verifiedBadge from '@/assets/verified-badge.png';
 import { PaymentTrustBadge } from '@/components/trust/PaymentTrustBadge';
+import { PayPalMonogram, PayPalWordmark } from '@/components/brand/ProviderLogos';
 
 /**
  * Compact trust row: payment trust badge, verified badge, card-network

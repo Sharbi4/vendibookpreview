@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
-import { Banknote, ChevronRight } from 'lucide-react';
+import { ChevronRight } from 'lucide-react';
+import { PayPalMonogram } from '@/components/brand/ProviderLogos';
 import { usePaymentsTransition } from '@/hooks/usePaymentsTransition';
 
 /**
