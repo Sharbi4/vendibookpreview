@@ -89,6 +89,7 @@ function publicState(
 async function createAuthorizeOrder(
   admin: any,
   userId: string,
+  purpose: PaymentPurpose = "initial",
 ): Promise<{ payment: PaymentRow; orderId: string } | Response> {
   const reference = `VS-${crypto.randomUUID().slice(0, 12).toUpperCase()}`;
   const idempotencyKey = `vs-order-${userId}-${reference}`;
@@ -102,11 +103,24 @@ async function createAuthorizeOrder(
       amount_cents: VERIFIED_SELLER.priceCents,
       currency: VERIFIED_SELLER.currency,
       state: "created",
+      purpose,
     })
     .select()
     .single();
 
   if (insertErr || !inserted) {
+    /**
+     * The one-open-payment unique index won the race (double-click, two tabs).
+     * Return the order that already exists rather than a generic failure —
+     * never create a second hold.
+     */
+    if ((insertErr as { code?: string })?.code === "23505") {
+      const existing = await latestOpenPayment(admin, userId);
+      if (existing?.paypal_order_id) {
+        log("reusing_open_order", { payment_id: existing.id });
+        return { payment: existing, orderId: existing.paypal_order_id };
+      }
+    }
     return jsonError(500, "payment_setup_failed", "We couldn't start the payment. Please try again.");
   }
 
@@ -151,19 +165,27 @@ async function createAuthorizeOrder(
   }
 }
 
-/** Creates or resumes the Plaid session and returns a Link token. */
-async function openPlaidSession(
+async function issueLinkToken(userId: string, templateId: string) {
+  const link = await createIdvLinkToken({
+    clientUserId: userId,
+    templateId,
+    webhook: `${Deno.env.get("SUPABASE_URL")}/functions/v1/verified-seller-webhook`,
+  });
+  return link.link_token;
+}
+
+async function recordAttempt(
   admin: any,
   userId: string,
   templateId: string,
+  session: { id: string; status?: string; previous_attempt_id?: string | null; request_id?: string },
   payment: PaymentRow | null,
+  previousFallback?: string | null,
 ) {
-  const session = await createIdentityVerification({ clientUserId: userId, templateId });
-
   await admin.from("seller_verification_attempts").upsert({
     user_id: userId,
     plaid_verification_id: session.id,
-    previous_verification_id: session.previous_attempt_id ?? null,
+    previous_verification_id: session.previous_attempt_id ?? previousFallback ?? null,
     template_id: templateId,
     status: session.status ?? "active",
     request_id: session.request_id ?? null,
@@ -175,11 +197,51 @@ async function openPlaidSession(
       .update({ attempt_verification_id: session.id })
       .eq("id", payment.id);
   }
+}
 
-  const webhook = `${Deno.env.get("SUPABASE_URL")}/functions/v1/verified-seller-webhook`;
-  const link = await createIdvLinkToken({ clientUserId: userId, templateId, webhook });
+/**
+ * Starts the Plaid work that belongs to an authorized payment.
+ *
+ * A payment recorded with purpose `retry` ALWAYS uses Plaid's
+ * /identity_verification/retry endpoint — never /create, which would start a
+ * second billable session. The retry allowance is consumed atomically in the
+ * database and released again if Plaid never created the attempt.
+ */
+async function startPlaidForPayment(
+  admin: any,
+  userId: string,
+  templateId: string,
+  payment: PaymentRow | null,
+  record: VerificationRow,
+): Promise<{ linkToken: string; sessionId: string } | Response> {
+  const isRetry = payment?.purpose === "retry";
 
-  return { session, linkToken: link.link_token };
+  if (isRetry) {
+    const { data: claimed } = await admin.rpc("claim_seller_verification_retry", {
+      _user_id: userId,
+    });
+    if (claimed !== true) {
+      return jsonError(
+        403,
+        "retry_limit_reached",
+        "You've used your free retry. Contact support and we'll review your verification.",
+      );
+    }
+
+    try {
+      const session = await retryIdentityVerification({ clientUserId: userId, templateId });
+      await recordAttempt(admin, userId, templateId, session, payment, record.current_attempt_id);
+      return { linkToken: await issueLinkToken(userId, templateId), sessionId: session.id };
+    } catch (err) {
+      // Plaid never created the attempt — give the allowance back.
+      await admin.rpc("release_seller_verification_retry", { _user_id: userId });
+      throw err;
+    }
+  }
+
+  const session = await createIdentityVerification({ clientUserId: userId, templateId });
+  await recordAttempt(admin, userId, templateId, session, payment);
+  return { linkToken: await issueLinkToken(userId, templateId), sessionId: session.id };
 }
 
 serve(async (req) => {
