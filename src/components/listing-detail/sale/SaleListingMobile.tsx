@@ -649,6 +649,9 @@ export const SaleListingMobile = ({
           </div>
         </SaleCard>
 
+        {/* FINANCING */}
+        <FinancingActionPanel listing={listing} host={host} />
+
         {/* SIMILAR LISTINGS */}
         <div>
           <RelatedListings
