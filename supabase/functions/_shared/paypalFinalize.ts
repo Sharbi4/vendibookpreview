@@ -12,6 +12,8 @@ import { recordOrderEvent } from "./orders/orderEvents.ts";
 import { deliverOrderReceipt } from "./orders/deliverOrderReceipt.ts";
 import { notifyOrderParties, notifyUser } from "./notify.ts";
 import { fulfillMonetizationPurchase } from "./fulfillMonetizationPurchase.ts";
+import { fulfillConciergeOrder } from "./concierge.ts";
+
 
 export interface CaptureFacts {
   captureId: string;
@@ -253,7 +255,13 @@ async function propagateToDomainRecord(
 
     // Vendibook service charges (freight, notary, protected-sale deposit).
     const fulfillment = record.fee_breakdown?.fulfillment as
-      | { kind?: string; sale_transaction_id?: string; protected_sale_id?: string; listing_id?: string }
+      | {
+        kind?: string;
+        sale_transaction_id?: string;
+        protected_sale_id?: string;
+        listing_id?: string;
+        concierge_order_id?: string;
+      }
       | undefined;
 
     if (fulfillment?.kind === "freight" && fulfillment.sale_transaction_id) {
@@ -270,6 +278,17 @@ async function propagateToDomainRecord(
         deposit_paid_at: nowIso,
       }).eq("id", fulfillment.protected_sale_id).neq("status", "deposit_paid");
     }
+
+    // Listing Concierge: mark paid and provision exactly one draft listing.
+    if (fulfillment?.kind === "concierge" && fulfillment.concierge_order_id) {
+      await fulfillConciergeOrder(supabase, {
+        orderId: fulfillment.concierge_order_id,
+        paypalOrderId: record.paypal_order_id ?? null,
+        captureId: facts.captureId,
+        paymentRecordId: record.id,
+      });
+    }
+
   } catch (err) {
     safeLog("domain_propagation_failed", {
       reference: record.reference,

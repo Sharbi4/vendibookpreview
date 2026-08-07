@@ -2334,6 +2334,328 @@ export type Database = {
           },
         ]
       }
+      listing_concierge_agreements: {
+        Row: {
+          accepted_at: string
+          agreement_kind: string
+          agreement_version: string
+          id: string
+          ip_address: string | null
+          order_id: string | null
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          accepted_at?: string
+          agreement_kind: string
+          agreement_version: string
+          id?: string
+          ip_address?: string | null
+          order_id?: string | null
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          accepted_at?: string
+          agreement_kind?: string
+          agreement_version?: string
+          id?: string
+          ip_address?: string | null
+          order_id?: string | null
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "listing_concierge_agreements_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "listing_concierge_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      listing_concierge_config: {
+        Row: {
+          copy: Json
+          created_at: string
+          currency: string
+          id: boolean
+          included_revisions: number
+          is_available: boolean
+          price_cents: number
+          specialist_contact_enabled: boolean
+          terms_version: string
+          turnaround_business_days: number
+          updated_at: string
+        }
+        Insert: {
+          copy?: Json
+          created_at?: string
+          currency?: string
+          id?: boolean
+          included_revisions?: number
+          is_available?: boolean
+          price_cents?: number
+          specialist_contact_enabled?: boolean
+          terms_version?: string
+          turnaround_business_days?: number
+          updated_at?: string
+        }
+        Update: {
+          copy?: Json
+          created_at?: string
+          currency?: string
+          id?: boolean
+          included_revisions?: number
+          is_available?: boolean
+          price_cents?: number
+          specialist_contact_enabled?: boolean
+          terms_version?: string
+          turnaround_business_days?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      listing_concierge_events: {
+        Row: {
+          actor_id: string | null
+          actor_role: string
+          code: string
+          created_at: string
+          from_status:
+            | Database["public"]["Enums"]["concierge_order_status"]
+            | null
+          id: string
+          metadata: Json
+          order_id: string
+          to_status:
+            | Database["public"]["Enums"]["concierge_order_status"]
+            | null
+        }
+        Insert: {
+          actor_id?: string | null
+          actor_role?: string
+          code: string
+          created_at?: string
+          from_status?:
+            | Database["public"]["Enums"]["concierge_order_status"]
+            | null
+          id?: string
+          metadata?: Json
+          order_id: string
+          to_status?:
+            | Database["public"]["Enums"]["concierge_order_status"]
+            | null
+        }
+        Update: {
+          actor_id?: string | null
+          actor_role?: string
+          code?: string
+          created_at?: string
+          from_status?:
+            | Database["public"]["Enums"]["concierge_order_status"]
+            | null
+          id?: string
+          metadata?: Json
+          order_id?: string
+          to_status?:
+            | Database["public"]["Enums"]["concierge_order_status"]
+            | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "listing_concierge_events_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "listing_concierge_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      listing_concierge_messages: {
+        Row: {
+          answered_at: string | null
+          author_id: string | null
+          author_role: string
+          body: string
+          created_at: string
+          id: string
+          internal: boolean
+          kind: string
+          order_id: string
+        }
+        Insert: {
+          answered_at?: string | null
+          author_id?: string | null
+          author_role?: string
+          body: string
+          created_at?: string
+          id?: string
+          internal?: boolean
+          kind?: string
+          order_id: string
+        }
+        Update: {
+          answered_at?: string | null
+          author_id?: string | null
+          author_role?: string
+          body?: string
+          created_at?: string
+          id?: string
+          internal?: boolean
+          kind?: string
+          order_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "listing_concierge_messages_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "listing_concierge_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      listing_concierge_orders: {
+        Row: {
+          approved_at: string | null
+          assigned_reviewer_id: string | null
+          canceled_at: string | null
+          config_snapshot: Json
+          contact_availability: string | null
+          contact_method: string | null
+          created_at: string
+          currency: string
+          draft_delivered_at: string | null
+          id: string
+          idempotency_key: string
+          intake: Json
+          intake_submitted_at: string | null
+          intake_version: number
+          internal_notes: string | null
+          listing_id: string | null
+          paid_at: string | null
+          payment_record_id: string | null
+          payment_status: string
+          paypal_capture_id: string | null
+          paypal_order_id: string | null
+          price_cents: number
+          published_at: string | null
+          refund_status: string | null
+          refunded_at: string | null
+          refunded_cents: number
+          reviewer_completed_at: string | null
+          reviewer_completed_by: string | null
+          revision_count: number
+          revision_requested_at: string | null
+          revisions_included: number
+          specialist_contact_requested: boolean
+          status: Database["public"]["Enums"]["concierge_order_status"]
+          updated_at: string
+          uploads: Json
+          user_id: string
+        }
+        Insert: {
+          approved_at?: string | null
+          assigned_reviewer_id?: string | null
+          canceled_at?: string | null
+          config_snapshot?: Json
+          contact_availability?: string | null
+          contact_method?: string | null
+          created_at?: string
+          currency?: string
+          draft_delivered_at?: string | null
+          id?: string
+          idempotency_key: string
+          intake?: Json
+          intake_submitted_at?: string | null
+          intake_version?: number
+          internal_notes?: string | null
+          listing_id?: string | null
+          paid_at?: string | null
+          payment_record_id?: string | null
+          payment_status?: string
+          paypal_capture_id?: string | null
+          paypal_order_id?: string | null
+          price_cents: number
+          published_at?: string | null
+          refund_status?: string | null
+          refunded_at?: string | null
+          refunded_cents?: number
+          reviewer_completed_at?: string | null
+          reviewer_completed_by?: string | null
+          revision_count?: number
+          revision_requested_at?: string | null
+          revisions_included?: number
+          specialist_contact_requested?: boolean
+          status?: Database["public"]["Enums"]["concierge_order_status"]
+          updated_at?: string
+          uploads?: Json
+          user_id: string
+        }
+        Update: {
+          approved_at?: string | null
+          assigned_reviewer_id?: string | null
+          canceled_at?: string | null
+          config_snapshot?: Json
+          contact_availability?: string | null
+          contact_method?: string | null
+          created_at?: string
+          currency?: string
+          draft_delivered_at?: string | null
+          id?: string
+          idempotency_key?: string
+          intake?: Json
+          intake_submitted_at?: string | null
+          intake_version?: number
+          internal_notes?: string | null
+          listing_id?: string | null
+          paid_at?: string | null
+          payment_record_id?: string | null
+          payment_status?: string
+          paypal_capture_id?: string | null
+          paypal_order_id?: string | null
+          price_cents?: number
+          published_at?: string | null
+          refund_status?: string | null
+          refunded_at?: string | null
+          refunded_cents?: number
+          reviewer_completed_at?: string | null
+          reviewer_completed_by?: string | null
+          revision_count?: number
+          revision_requested_at?: string | null
+          revisions_included?: number
+          specialist_contact_requested?: boolean
+          status?: Database["public"]["Enums"]["concierge_order_status"]
+          updated_at?: string
+          uploads?: Json
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "listing_concierge_orders_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "listing_concierge_orders_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "public_listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "listing_concierge_orders_payment_record_id_fkey"
+            columns: ["payment_record_id"]
+            isOneToOne: false
+            referencedRelation: "payment_records"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       listing_events: {
         Row: {
           created_at: string
@@ -9251,6 +9573,18 @@ export type Database = {
         | "declined"
         | "cancelled"
         | "completed"
+      concierge_order_status:
+        | "payment_required"
+        | "intake_not_started"
+        | "intake_in_progress"
+        | "information_needed"
+        | "listing_being_created"
+        | "ready_for_seller_review"
+        | "revision_requested"
+        | "approved_for_publication"
+        | "published"
+        | "canceled"
+        | "refunded"
       document_deadline_type:
         | "before_booking_request"
         | "before_approval"
@@ -9516,6 +9850,19 @@ export const Constants = {
         "declined",
         "cancelled",
         "completed",
+      ],
+      concierge_order_status: [
+        "payment_required",
+        "intake_not_started",
+        "intake_in_progress",
+        "information_needed",
+        "listing_being_created",
+        "ready_for_seller_review",
+        "revision_requested",
+        "approved_for_publication",
+        "published",
+        "canceled",
+        "refunded",
       ],
       document_deadline_type: [
         "before_booking_request",
