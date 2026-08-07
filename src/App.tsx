@@ -65,6 +65,7 @@ const Search = lazy(() => import("./pages/Search"));
 const HowItWorks = lazy(() => import("./pages/HowItWorks"));
 const Contact = lazy(() => import("./pages/Contact"));
 const IdentityVerification = lazy(() => import("./pages/IdentityVerification"));
+const IdentityVerificationInfo = lazy(() => import("./pages/IdentityVerificationInfo"));
 const VerificationComplete = lazy(() => import("./pages/VerificationComplete"));
 const PaymentSuccess = lazy(() => import("./pages/PaymentSuccess"));
 const PaymentCancelled = lazy(() => import("./pages/PaymentCancelled"));
@@ -438,6 +439,7 @@ const AnimatedRoutes = () => {
           
           {/* Payments & Protection */}
           <Route path="/payments" element={<PageTransition><Payments /></PageTransition>} />
+          <Route path="/identity-verification" element={<PageTransition><IdentityVerificationInfo /></PageTransition>} />
           
           
           {/* Renter Landing Page */}
