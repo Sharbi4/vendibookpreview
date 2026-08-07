@@ -11,8 +11,9 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import RatingBadge from '@/components/reviews/RatingBadge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import VerificationBadge from '@/components/verification/VerificationBadge';
+import IdentityVerifiedBadge from '@/components/verification/IdentityVerifiedBadge';
 import { CategoryTooltip } from '@/components/categories/CategoryGuide';
+
 import { FavoriteButton } from '@/components/listing/FavoriteButton';
 import { AffirmBadge } from '@/components/ui/AffirmBadge';
 import { AfterpayBadge } from '@/components/ui/AfterpayBadge';
