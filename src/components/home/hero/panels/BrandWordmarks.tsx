@@ -1,4 +1,3 @@
-import stripeLogo from '@/assets/stripe-logo.svg.asset.json';
 import affirmLogo from '@/assets/affirm-logo.svg.asset.json';
 import afterpayLogo from '@/assets/afterpay-logo.svg.asset.json';
 
@@ -7,15 +6,6 @@ import afterpayLogo from '@/assets/afterpay-logo.svg.asset.json';
  * Rendered as <img> because Lovable assets serve SVGs with
  * Content-Disposition: attachment, which precludes inline <use>.
  */
-
-export const StripeWordmark = ({ className = '' }: { className?: string }) => (
-  <img
-    src={stripeLogo.url}
-    alt="Stripe"
-    className={className}
-    draggable={false}
-  />
-);
 
 export const AffirmWordmark = ({ className = '' }: { className?: string }) => (
   <img

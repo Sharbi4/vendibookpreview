@@ -6,7 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { MiniPlansComparison } from '@/components/monetization/MiniPlansComparison';
-import { StripeTrustBadge } from '@/components/trust/StripeTrustBadge';
+import { PaymentTrustBadge } from '@/components/trust/PaymentTrustBadge';
 import { cn } from '@/lib/utils';
 import heroBg from '@/assets/hero-hosttools-bg.jpg';
 
@@ -255,7 +255,7 @@ const Welcome: React.FC = () => {
             {/* Truthful context: billing is PayPal-powered. Do not imply PayPal covers
                 every part of Vendibook. Badge asset already reads "Powered by PayPal" —
                 no repeat copy alongside it. */}
-            <StripeTrustBadge context="subscription" surface="dark" size="sm" withCopy={false} />
+            <PaymentTrustBadge context="subscription" surface="dark" size="sm" withCopy={false} />
           </div>
         </div>
       </section>

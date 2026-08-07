@@ -29,7 +29,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import SEO from '@/components/SEO';
-import { StripeTrustBadge } from '@/components/trust/StripeTrustBadge';
+import { PaymentTrustBadge } from '@/components/trust/PaymentTrustBadge';
 import { useMonetizationProducts } from '@/hooks/useMonetizationProducts';
 import { ProductPricingCard } from '@/components/monetization/ProductPricingCard';
 import { useHostEntitlements, type HostTier } from '@/hooks/useHostEntitlements';
@@ -126,7 +126,7 @@ export default function AccountSubscription() {
             Change your plan, schedule a cancellation, or open the secure billing
             portal to update your payment method and download invoices.
           </p>
-          <StripeTrustBadge
+          <PaymentTrustBadge
             context="subscription"
             surface="light"
             size="sm"
