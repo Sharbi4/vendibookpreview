@@ -26,7 +26,7 @@ const terms = buildTerms({
     rules: null,
     price_daily: 100,
     security_deposit: 200,
-    accept_card_payment: true,
+    accept_paypal_checkout: true,
     required_documents: [{ label: 'Drivers License' }],
   },
   selection: {

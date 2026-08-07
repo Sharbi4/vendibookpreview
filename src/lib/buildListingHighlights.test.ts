@@ -91,18 +91,18 @@ describe('buildListingHighlights — sale payment posture', () => {
     );
   });
 
-  it('cash + card sale → dual-option copy', () => {
+  it('cash + paypal sale → dual-option copy', () => {
     const { bullets } = buildListingHighlights(
       base({ mode: 'sale', accept_cash_payment: true, accept_paypal_checkout: true }),
     );
-    expect(bullets).toContain('Pay online or in person');
+    expect(bullets).toContain('Pay online via PayPal or in person');
   });
 
-  it('card-only sale → secure checkout copy', () => {
+  it('paypal-only sale → secure checkout copy', () => {
     const { bullets } = buildListingHighlights(
       base({ mode: 'sale', accept_cash_payment: false, accept_paypal_checkout: true }),
     );
-    expect(bullets).toContain('Payment is completed securely at checkout');
+    expect(bullets).toContain('Payment is completed securely via PayPal at checkout');
   });
 
   it('rental never renders a payment-posture bullet', () => {
@@ -110,7 +110,7 @@ describe('buildListingHighlights — sale payment posture', () => {
       base({ mode: 'rent', accept_cash_payment: true, accept_paypal_checkout: true }),
     );
     for (const b of bullets) {
-      expect(b).not.toMatch(/Pay in Person|Pay online|completed securely/);
+      expect(b).not.toMatch(/Pay in Person|Pay online via PayPal|completed securely via PayPal/);
     }
   });
 });

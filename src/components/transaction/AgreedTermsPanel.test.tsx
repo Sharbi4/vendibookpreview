@@ -109,7 +109,7 @@ describe('AgreedTermsPanel', () => {
 
     // Terms version + payment method badges
     expect(screen.getByText(/Terms v3/i)).toBeInTheDocument();
-    expect(screen.getByText(/stripe card/i)).toBeInTheDocument();
+    expect(screen.getByText(/paypal checkout/i)).toBeInTheDocument();
 
     // Primary lookup must NOT display the "legacy lookup" flag
     expect(screen.queryByText(/legacy lookup/i)).not.toBeInTheDocument();
