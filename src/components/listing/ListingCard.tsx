@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { MapPin, Plug, Zap, Droplet, Refrigerator, Flame, Wind, Wifi, Car, Shield, Sun, Truck, Calendar, Clock, ArrowRight } from 'lucide-react';
 import FeaturedBadge from '@/components/listing/FeaturedBadge';
+import { FinancingAvailableBadge } from '@/components/financing/FinancingAvailableBadge';
+import { useEquinoxFinancingEnabled } from '@/hooks/useListingFinancing';
 import ListingCardOverlay from '@/components/listing/ListingCardOverlay';
 import { Listing, CATEGORY_LABELS } from '@/types/listing';
 import { Badge } from '@/components/ui/badge';
