@@ -311,15 +311,15 @@ const Account = () => {
                 <RowLink
                   icon={ShieldCheck}
                   label="Identity verification"
-                  hint={row.identity_verified ? 'Verified — manage or re-run at any time.' : 'Verify your ID to unlock trust badges.'}
-                  to="/verify-identity"
+                  hint={row.identity_verified ? 'Verified — manage or re-run at any time.' : 'Optional paid Plaid add-on. Never required to buy, sell, or publish.'}
+                  to="/identity-verification"
                   rightSlot={row.identity_verified ? (
                     <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 text-emerald-600 text-[10px] font-semibold px-2 py-0.5 border border-emerald-500/30">
                       Verified
                     </span>
                   ) : (
                     <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/15 text-amber-600 text-[10px] font-semibold px-2 py-0.5 border border-amber-500/30">
-                      Recommended
+                      Optional
                     </span>
                   )}
                 />

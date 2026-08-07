@@ -72,9 +72,9 @@ const IdentitySummaryCard = ({
           </Button>
           {!verified && (
             <Button asChild variant="ghost" size="sm">
-              <Link to="/verify-identity">
+              <Link to="/identity-verification">
                 <ShieldCheck className="h-3.5 w-3.5 mr-1.5" />
-                Verify identity
+                Get verified (optional)
               </Link>
             </Button>
           )}
