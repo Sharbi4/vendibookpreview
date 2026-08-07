@@ -232,6 +232,7 @@ export async function captureAuthorizationOnce(
   } catch (err) {
     const code = (err as { errorCode?: string })?.errorCode ?? "CAPTURE_FAILED";
     await markPayment(admin, payment.id, { state: "failed", error_code: code });
+    await syncPaymentState(admin, payment.user_id, "failed");
     log("capture_failed", { payment_id: payment.id, code });
     return { ok: false, errorCode: code };
   }
