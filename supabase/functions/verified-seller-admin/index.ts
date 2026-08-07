@@ -138,8 +138,14 @@ serve(async (req) => {
       const payment = await latestOpenPayment(admin, targetUserId);
       if (!payment) return jsonResponse(200, { ok: true, message: "Nothing open to void." });
       const result = await voidAuthorizationOnce(admin, payment, "admin_void");
-      if (!result.ok) return jsonError(502, "void_failed", `Void failed (${result.errorCode}).`);
-      return jsonResponse(200, { ok: true });
+      if (!result.ok) {
+        return jsonError(
+          502,
+          "void_failed",
+          `Void did not complete (${result.errorCode ?? "unknown"}). Money state: ${result.moneyState}.`,
+        );
+      }
+      return jsonResponse(200, { ok: true, money_state: result.moneyState });
     }
 
     // ----------------------------------------------------------- refund
