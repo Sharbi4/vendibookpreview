@@ -437,12 +437,36 @@ export const PublishWizard: React.FC = () => {
     (async () => {
       const { data } = await supabase
         .from('listing_financing_preferences')
-        .select('equinox_opt_in')
+        .select('equinox_opt_in, include_vin, disclosure_version, disclosure_accepted_at')
         .eq('listing_id', listing.id)
         .maybeSingle();
       if (cancelled || !data) return;
       setEquinoxOptIn(!!data.equinox_opt_in);
-      setEquinoxDisclosureAccepted(!!data.equinox_opt_in);
+      setEquinoxIncludeVin(!!data.include_vin);
+      setEquinoxDisclosureAccepted(
+        !!data.disclosure_accepted_at && data.disclosure_version === EQUINOX_DISCLOSURE_VERSION,
+      );
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [listing?.id]);
+
+  // Hydrate the private VIN / serial from the owner-only ownership row.
+  useEffect(() => {
+    if (!listing?.id || !isTitledSaleCategory(listing)) return;
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from('listing_ownership_details')
+        .select('vin_serial')
+        .eq('listing_id', listing.id)
+        .maybeSingle();
+      if (cancelled || !data) return;
+      const vin = (data.vin_serial ?? '').trim();
+      setVinSerial(vin);
+      setVinUnavailable(!vin);
     })();
     return () => {
       cancelled = true;
