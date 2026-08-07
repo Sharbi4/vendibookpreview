@@ -5,6 +5,8 @@ interface TabPill {
   label: string;
   href: string;
   tab: string | null;
+  /** Pills that navigate to a real route instead of a ?tab= value. */
+  path?: string;
 }
 
 interface Props {
@@ -22,6 +24,8 @@ const DashboardMobileTabs = ({ mode }: Props) => {
   const pills: TabPill[] = mode === 'host'
     ? [
         { label: 'Overview', href: '/dashboard?view=host', tab: null },
+        { label: 'Listings', href: '/host/listings', tab: null, path: '/host/listings' },
+        { label: 'My Account', href: '/account', tab: null, path: '/account' },
         { label: 'Sales', href: '/dashboard?view=host&tab=sales', tab: 'sales' },
         { label: 'Insights', href: '/dashboard?view=host&tab=insights', tab: 'insights' },
         { label: 'Promote', href: '/dashboard?view=host&tab=promote', tab: 'promote' },
@@ -32,6 +36,7 @@ const DashboardMobileTabs = ({ mode }: Props) => {
       ]
     : [
         { label: 'Overview', href: '/dashboard?view=shopper', tab: null },
+        { label: 'My Account', href: '/account', tab: null, path: '/account' },
         { label: 'Orders', href: '/dashboard?view=shopper&tab=orders', tab: 'orders' },
         { label: 'Bookings', href: '/dashboard?view=shopper&tab=bookings', tab: 'bookings' },
         { label: 'Favorites', href: '/dashboard?view=shopper&tab=favorites', tab: 'favorites' },
@@ -45,7 +50,9 @@ const DashboardMobileTabs = ({ mode }: Props) => {
     <div className="md:hidden -mx-4 px-4 mb-4 relative">
       <div className="no-scrollbar overflow-x-auto flex gap-2 py-1">
         {pills.map((p) => {
-          const active = (p.tab ?? null) === (currentTab ?? null);
+          const active = p.path
+            ? location.pathname === p.path
+            : location.pathname === '/dashboard' && (p.tab ?? null) === (currentTab ?? null);
           return (
             <Link
               key={p.label}
