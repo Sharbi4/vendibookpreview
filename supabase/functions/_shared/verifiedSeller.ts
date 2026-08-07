@@ -49,6 +49,7 @@ export interface PaymentRow {
   amount_cents: number;
   currency: string;
   state: string;
+  purpose?: string | null;
   attempt_verification_id: string | null;
   expires_at: string | null;
   created_at: string;
