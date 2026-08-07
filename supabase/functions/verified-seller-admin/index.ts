@@ -143,14 +143,34 @@ serve(async (req) => {
     }
 
     // ----------------------------------------------------------- refund
+    /**
+     * A refund must make the badge ineligible in the same operation —
+     * refundPaymentOnce updates the authoritative seller record atomically.
+     */
     if (action === "refund") {
       const reason = String(body?.reason ?? "").trim();
-      if (!reason) return jsonError(400, "reason_required", "A reason is required.");
+      if (reason.length < 4) return jsonError(400, "reason_required", "A reason is required.");
       const paid = await capturedPayment(admin, targetUserId);
       if (!paid) return jsonError(400, "no_capture", "There's no captured payment to refund.");
-      const result = await refundPaymentOnce(admin, paid, reason);
+
+      const result = await refundPaymentOnce(admin, paid, reason, { adminId: actor.id });
       if (!result.ok) return jsonError(502, "refund_failed", "PayPal refused the refund.");
-      return jsonResponse(200, { ok: true, refund_id: result.refundId });
+
+      const after = await ensureVerification(admin, targetUserId);
+      await admin.from("seller_verification_events").insert({
+        provider: "admin",
+        event_key: `refund:${targetUserId}:${Date.now()}`,
+        event_type: "refund",
+        user_id: targetUserId,
+        outcome: `by=${actor.id} reason=${reason.slice(0, 160)}`,
+      });
+      log("refunded_by_admin", { user_id: targetUserId, by: actor.id });
+      return jsonResponse(200, {
+        ok: true,
+        refund_id: result.refundId,
+        badge_active: isBadgeEligible(after),
+        payment_state: after.payment_state,
+      });
     }
 
     // ------------------------------------------------------------ revoke
@@ -174,36 +194,54 @@ serve(async (req) => {
         event_key: `revoke:${targetUserId}:${Date.now()}`,
         event_type: "revoke",
         user_id: targetUserId,
-        outcome: reason.slice(0, 200),
+        outcome: `by=${actor.id} reason=${reason.slice(0, 160)}`,
       });
       log("badge_revoked", { user_id: targetUserId, by: actor.id });
       return jsonResponse(200, { ok: true });
     }
 
     // ----------------------------------------------------------- restore
+    /**
+     * Restore may only reactivate a badge that would be eligible on its own
+     * terms: Plaid success, payment still captured, and that capture not
+     * refunded. Anything else clears the revocation without granting a badge.
+     */
     if (action === "restore") {
       const reason = String(body?.reason ?? "").trim();
       if (reason.length < 4) {
         return jsonError(400, "reason_required", "Please give a reason for restoring the badge.");
       }
+
+      const paid = await capturedPayment(admin, targetUserId);
+      const eligible = record.identity_status === "success" && !!paid && !paid.paypal_refund_id;
+
       await admin
         .from("seller_verifications")
         .update({
-          status: record.identity_status === "success" ? "verified" : record.status,
+          status: eligible ? "verified" : (record.identity_status === "success" ? "payment_required" : record.status),
+          payment_state: eligible ? "captured" : record.payment_state,
+          verified_at: eligible ? record.verified_at ?? new Date().toISOString() : null,
           revoked_at: null,
           revoked_reason: null,
           revoked_by: null,
           updated_at: new Date().toISOString(),
         })
         .eq("user_id", targetUserId);
+
       await admin.from("seller_verification_events").insert({
         provider: "admin",
         event_key: `restore:${targetUserId}:${Date.now()}`,
         event_type: "restore",
         user_id: targetUserId,
-        outcome: reason.slice(0, 200),
+        outcome: `by=${actor.id} eligible=${eligible} reason=${reason.slice(0, 140)}`,
       });
-      return jsonResponse(200, { ok: true });
+      return jsonResponse(200, {
+        ok: true,
+        badge_active: eligible,
+        message: eligible
+          ? "Badge restored."
+          : "Revocation cleared, but the badge stays off — identity success and an unrefunded capture are both required.",
+      });
     }
 
     // ------------------------------------------------------ grant-retry
