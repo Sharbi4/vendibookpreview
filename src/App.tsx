@@ -315,6 +315,8 @@ const AnimatedRoutes = () => {
           <Route path="/orders/:orderId" element={<PageTransition><OrderDetail /></PageTransition>} />
           <Route path="/orders/:orderId/payment" element={<PageTransition><OrderDetail /></PageTransition>} />
           <Route path="/admin/payouts" element={<PageTransition><AdminPayouts /></PageTransition>} />
+          <Route path="/admin/verified-sellers" element={<PageTransition><AdminVerifiedSellers /></PageTransition>} />
+
 
           <Route path="/admin/digest" element={<PageTransition><AdminDigest /></PageTransition>} />
           <Route path="/admin/orchestration" element={<PageTransition><AdminOrchestration /></PageTransition>} />
