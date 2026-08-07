@@ -578,7 +578,6 @@ export const PublishWizard: React.FC = () => {
         updateData.accept_paypal_checkout = acceptPayPalCheckout;
         updateData.accept_cash_payment = acceptCashPayment;
         // Keep legacy flag in sync for any remaining audit references during transition
-        updateData.accept_card_payment = acceptPayPalCheckout;
         updateData.proof_notary_enabled = proofNotaryEnabled;
         updateData.featured_enabled = featuredEnabled;
       } else {
@@ -959,7 +958,6 @@ export const PublishWizard: React.FC = () => {
         updateData.accept_paypal_checkout = acceptPayPalCheckout;
         updateData.accept_cash_payment = acceptCashPayment;
         // Keep legacy flag in sync for any remaining audit references during transition
-        updateData.accept_card_payment = acceptPayPalCheckout;
         updateData.proof_notary_enabled = proofNotaryEnabled;
         updateData.featured_enabled = featuredEnabled;
       } else {
@@ -1587,12 +1585,13 @@ export const PublishWizard: React.FC = () => {
             accept_paypal_checkout: acceptPayPalCheckout,
             accept_cash_payment: acceptCashPayment,
             // Keep legacy flag in sync during transition
-            accept_card_payment: acceptPayPalCheckout,
             proof_notary_enabled: proofNotaryEnabled,
             featured_enabled: featuredEnabled};
 
           // Optional Equinox opt-in is stored separately so Review can't lose it.
           await persistFinancingPreference();
+      await persistVinSerial();
+          await persistVinSerial();
         } else {
           updateData = {
             price_daily: safeParsePrice(priceDaily),
@@ -1821,6 +1820,7 @@ export const PublishWizard: React.FC = () => {
       await saveSellerPhone();
       // Equinox opt-in is stored separately — re-upsert so Review can't discard it.
       await persistFinancingPreference();
+      await persistVinSerial();
 
       const baseUpdateData: any = {
         // Media
@@ -1889,7 +1889,6 @@ export const PublishWizard: React.FC = () => {
             accept_paypal_checkout: acceptPayPalCheckout,
             accept_cash_payment: acceptCashPayment,
             // Keep legacy flag in sync during transition
-            accept_card_payment: acceptPayPalCheckout,
             proof_notary_enabled: proofNotaryEnabled,
             featured_enabled: featuredEnabled}
         : {
