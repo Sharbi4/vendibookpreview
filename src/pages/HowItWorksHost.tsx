@@ -33,7 +33,7 @@ const steps: WalkthroughStep[] = [
   { number: 5, title: 'Get paid in 24 hours', description: 'Funds release directly to your bank account 24 hours after the rental ends. Track everything from your dashboard.', icon: DollarSign, mock: 'payout' }];
 
 const pillars: Pillar[] = [
-  { icon: ShieldCheck, title: 'Verified renters only', description: 'Every renter passes Stripe Identity verification before booking.' },
+  { icon: ShieldCheck, title: 'Verified renters only', description: 'Every renter passes Identity verification before booking.' },
   { icon: DollarSign, title: '24-hour payouts', description: 'Direct deposit to your bank within 24 hours of rental completion.' },
   { icon: FileCheck, title: 'Automated docs', description: 'We collect, verify, and store insurance + permit documents.' },
   { icon: TrendingUp, title: 'AI price optimization', description: 'Vendi suggests rates based on local demand to maximize earnings.' }];

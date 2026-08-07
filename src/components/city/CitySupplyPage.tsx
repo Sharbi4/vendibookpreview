@@ -41,7 +41,7 @@ const HOW_IT_WORKS = [
   { step: 1, title: 'Create your listing', desc: 'Add photos, set your price, define availability.' },
   { step: 2, title: 'Get verified', desc: 'Build trust with identity and asset verification.' },
   { step: 3, title: 'Accept bookings', desc: 'Review requests or enable instant booking.' },
-  { step: 4, title: 'Get paid', desc: 'Secure payments via Stripe. Funds release after confirmation.' },
+  { step: 4, title: 'Get paid', desc: 'Secure payments via PayPal. Funds release after confirmation.' },
 ];
 
 const FAQS = [
@@ -51,7 +51,7 @@ const FAQS = [
   },
   {
     q: 'How do I get paid?',
-    a: 'Payments are processed securely through Stripe. Funds are released after the booking is confirmed by both parties.',
+    a: 'Payments are processed securely through PayPal. Funds are released after the booking is confirmed by both parties.',
   },
   {
     q: 'What if something goes wrong?',

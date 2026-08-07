@@ -69,10 +69,10 @@ const Privacy = () => {
             <ul className="list-disc list-inside text-muted-foreground space-y-2 ml-4">
               <li>Name and contact information (email address, phone number)</li>
               <li>Account credentials (username and password)</li>
-              <li>Payment information (processed securely through Stripe)</li>
+              <li>Payment information (processed securely through PayPal)</li>
               <li>Profile information (avatar, bio, preferences)</li>
               <li>Business information for hosts (business name, tax ID)</li>
-              <li>Identity verification documents (processed through Stripe Identity)</li>
+              <li>Identity verification documents (processed through Vendibook identity verification)</li>
             </ul>
 
             <h3 className="text-lg font-medium text-foreground mt-6 mb-3">Automatically Collected Information</h3>

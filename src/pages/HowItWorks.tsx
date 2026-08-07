@@ -49,7 +49,7 @@ const roleConfig: Record<Role, {
     cta: { label: 'Browse rentals', href: '/search?mode=rent' },
     steps: [
       { number: 1, title: 'Search by city & date', description: 'Filter by location, dates, asset type, and price. Every listing shows verified-host status, real photos, and live availability.', icon: Search, mock: 'search' },
-      { number: 2, title: 'Compare verified listings', description: 'Inspect specs, amenities, and reviews. All hosts pass Stripe Identity verification before they can list.', icon: ShieldCheck, mock: 'listing' },
+      { number: 2, title: 'Compare verified listings', description: 'Inspect specs, amenities, and reviews. All hosts pass Identity verification before they can list.', icon: ShieldCheck, mock: 'listing' },
       { number: 3, title: 'Message the host', description: 'Ask about availability, equipment, or access instructions. Most hosts reply within an hour.', icon: MessageSquare, mock: 'message' },
       { number: 4, title: 'Book & pay securely', description: 'Pay by card, ACH, Affirm, Klarna, or Afterpay. Funds are held in payment protection — released to the host after handoff.', icon: CreditCard, mock: 'payment' },
       { number: 5, title: 'Pick up or get it delivered', description: 'Coordinate pickup, on-site setup, or nationwide freight shipping. Hosts share access details once payment clears.', icon: Truck, mock: 'truck' }],
@@ -59,7 +59,7 @@ const roleConfig: Record<Role, {
       { icon: Clock, title: 'Fast host replies', description: 'Most renters get a response within an hour during business hours.' },
       { icon: MapPin, title: 'Coast-to-coast inventory', description: 'Trucks, trailers, kitchens, and vendor spaces in every major US city.' }],
     faqs: [
-      { q: 'How do I know the listing is real?', a: 'Every host completes Stripe Identity verification before publishing. You\'ll see a verified badge on their profile and listings.' },
+      { q: 'How do I know the listing is real?', a: 'Every host completes Identity verification before publishing. You\'ll see a verified badge on their profile and listings.' },
       { q: 'What payment methods can I use?', a: 'Card, ACH (for $5K+), Apple/Google Pay, Affirm and Klarna ($35–$30K), and Afterpay (up to $4K). Funds are held in payment protection.' },
       { q: 'Can I inspect before paying?', a: 'Yes. Message the host directly to schedule an in-person inspection before booking.' },
       { q: 'What if the equipment isn\'t as described?', a: 'Open a dispute within 24 hours of handoff. We hold funds and mediate until resolved.' }]},

@@ -1500,7 +1500,7 @@ const FilterContent = ({
                 Verified Hosts only
               </span>
               <p className="text-xs text-muted-foreground">
-                ID verified via Stripe Identity
+                ID verified by Vendibook
               </p>
             </div>
           </label>

@@ -35,7 +35,7 @@ const trustItems: TrustItem[] = [
     icon: <ShieldCheck className="h-4 w-4" />,
     label: 'Secure Payments',
     title: 'Secure Payments',
-    description: 'Your payments are protected with industry-standard security powered by Stripe.',
+    description: 'Your payments are protected with industry-standard security powered by PayPal.',
     bullets: [
       'PCI-compliant payment processing',
       'Funds held securely until delivery',

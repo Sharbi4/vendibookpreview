@@ -86,7 +86,7 @@ const ProfileHeader = ({
                   </TooltipTrigger>
                   <TooltipContent>
                     {profile.identity_verified 
-                      ? 'Identity verified via Stripe Identity'
+                      ? 'Identity verified by Vendibook'
                       : 'Identity not yet verified'}
                   </TooltipContent>
                 </Tooltip>

@@ -12,7 +12,7 @@ const BENEFITS = [
   { h: 'Photos and video', p: 'High-quality images and short video walkthroughs drive far more serious inquiries.' },
   { h: 'Equipment details', p: 'Capture hood, fryer, grill, generator, refrigeration, water tanks, and inspection status.' },
   { h: 'Optional secure transactions', p: 'Use payment protection-style protection where available, including identity-verified parties.' },
-  { h: 'Stripe Identity verification', p: 'Verified badges on profiles and listings raise buyer and renter confidence.' },
+  { h: 'Identity verification', p: 'Verified badges on profiles and listings raise buyer and renter confidence.' },
   { h: 'Reviews and trust signals', p: 'Build a trusted reputation through reviews after completed transactions.' },
   { h: 'Feature or boost a listing', p: 'Optional paid placement on category, city, and homepage discovery rows.' },
   { h: 'Rent while waiting to sell', p: 'Earn rental revenue from chefs, caterers, and food entrepreneurs in the meantime.' },
@@ -42,7 +42,7 @@ const FAQS = [
   {
     question: 'Does Vendibook verify users?',
     answer:
-      'Yes — buyers and sellers can verify their identity through Stripe Identity. Verified badges appear on profiles and listings where applicable.',
+      'Yes — buyers and sellers can verify their identity through Vendibook identity verification. Verified badges appear on profiles and listings where applicable.',
   },
   {
     question: 'Does Vendibook offer secure transactions?',

@@ -25,7 +25,7 @@ const PILLARS = [
   {
     icon: ShieldCheck,
     title: 'Secure payments',
-    body: 'Funds protected through booking and transfer. Powered by Stripe.'},
+    body: 'Funds protected through booking and transfer. Powered by PayPal.'},
   {
     icon: FileCheck,
     title: 'Document collection',

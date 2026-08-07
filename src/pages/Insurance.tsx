@@ -181,7 +181,7 @@ const Insurance = () => {
                   <UserCheck className="h-5 w-5 text-foreground/60 flex-shrink-0" />
                   <div>
                     <h4 className="font-medium">Identity Verification</h4>
-                    <p className="text-sm text-muted-foreground">Stripe Identity verification</p>
+                    <p className="text-sm text-muted-foreground">Identity verification</p>
                   </div>
                 </CardContent>
               </Card>

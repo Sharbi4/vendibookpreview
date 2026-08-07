@@ -282,7 +282,7 @@ const MockVisual = ({ variant, tone }: { variant: WalkthroughStep['mock']; tone:
           </motion.div>
           <div>
             <div className="text-base font-semibold text-foreground">Identity Verified</div>
-            <div className="text-xs text-muted-foreground">via Stripe Identity</div>
+            <div className="text-xs text-muted-foreground">through Vendibook identity verification</div>
           </div>
           <div className="grid grid-cols-2 gap-2 w-full">
             {['Government ID', 'Selfie match', 'Address verified', 'Phone verified'].map((label) => (

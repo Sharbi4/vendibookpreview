@@ -28,7 +28,7 @@ const INSIGHT_THEMES = [
 
 const TOOL_CATALOG = [
   { id: "verified", label: "Verified Listings", description: "Every listing reviewed before it goes live." },
-  { id: "secure", label: "Secure Payments", description: "All transactions processed through Stripe." },
+  { id: "secure", label: "Secure Payments", description: "All transactions processed through PayPal." },
   { id: "support", label: "24/7 Support", description: "Real people, real answers, any time." },
   { id: "instant", label: "Instant Booking", description: "Reserve a kitchen or space in minutes." },
   { id: "seller", label: "Seller Dashboard", description: "Track inquiries, views, and offers in one place." },

@@ -530,7 +530,7 @@ export function BookingInfoModal({
 
                     <h5 className="font-medium text-foreground mt-4">5. Payment Terms</h5>
                     <p>
-                      All payments are processed through Stripe. By making a payment, you authorize VendiBook to 
+                      All payments are processed through PayPal. By making a payment, you authorize VendiBook to 
                       charge your payment method for the total rental amount plus any applicable fees. Refunds are 
                       subject to our cancellation policy and the Host's specific terms.
                     </p>

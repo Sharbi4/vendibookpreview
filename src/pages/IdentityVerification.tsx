@@ -210,7 +210,7 @@ const IdentityVerification = () => {
                     withCopy={false}
                   />
                 }
-                title="Powered by Stripe Identity"
+                title="Powered by Vendibook identity verification"
                 body="Bank-grade verification, trusted worldwide."
               />
               <TrustCell
@@ -233,7 +233,7 @@ const IdentityVerification = () => {
 
             <p className="text-[13px] text-foreground/70 mt-8 leading-relaxed text-center">
               By continuing you agree to share the information required for
-              Stripe Identity to verify you. See our{' '}
+              Vendibook identity verification to verify you. See our{' '}
               <a
                 href="/privacy"
                 className="underline underline-offset-2 hover:text-foreground"

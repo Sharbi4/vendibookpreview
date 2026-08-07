@@ -34,7 +34,7 @@ const BookingFAQ = ({ isRental }: BookingFAQProps) => {
     },
     {
       question: "How is payment protected?",
-      answer: "All payments are processed securely through Stripe. Your payment information is never shared with the host, and funds are protected until you receive the rental."
+      answer: "All payments are processed securely through PayPal. Your payment information is never shared with the host, and funds are protected until you receive the rental."
     }
   ];
 
@@ -49,7 +49,7 @@ const BookingFAQ = ({ isRental }: BookingFAQProps) => {
     },
     {
       question: "Is my payment secure?",
-      answer: "Yes, all payments are processed securely through Stripe. Your payment information is never shared with the seller."
+      answer: "Yes, all payments are processed securely through PayPal. Your payment information is never shared with the seller."
     },
     {
       question: "What if the item isn't as described?",

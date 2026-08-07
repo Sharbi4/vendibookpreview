@@ -6,7 +6,7 @@ const FAQ = [
   { q: 'Can I cancel anytime?', a: 'Yes. Cancel online from Account → Subscription in one click. Your plan stays active through the end of the current paid period — no early-termination fees, no phone calls.' },
   { q: 'What happens to my listings if I downgrade?', a: 'Your listings stay live. If a downgrade would exceed your new plan\'s active-listing count, the newest ones are auto-paused and you can choose which to keep active. Nothing is deleted.' },
   { q: 'Is basic listing still free?', a: 'Yes. Free hosts and sellers keep every core tool: unlimited photos on your first listing, booking calendar basics, messaging, and payment protection at checkout.' },
-  { q: 'How do the fees work?', a: 'We charge a 12.9% host commission and a 12.9% renter fee on rentals, and a 12.9% seller commission on Stripe-paid sales. Cash sales are 100% free. Plans currently add tools, not fee discounts.' },
+  { q: 'How do the fees work?', a: 'We charge a 12.9% host commission and a 12.9% renter fee on rentals, and a 12.9% seller commission on card and PayPal sales. Cash sales are 100% free. Plans currently add tools, not fee discounts.' },
   { q: 'Do you offer refunds?', a: 'Subscription charges are non-refundable, but you can cancel anytime and access continues through the paid period. One-time boosts follow the refund policy shown at purchase.' },
 ];
 
