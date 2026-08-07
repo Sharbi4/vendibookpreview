@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, ExternalLink } from 'lucide-react';
+import { ArrowRight, ExternalLink, BadgeCheck } from 'lucide-react';
 import SEO, { generateFAQSchema } from '@/components/SEO';
 import JsonLd from '@/components/JsonLd';
 import Header from '@/components/layout/Header';
