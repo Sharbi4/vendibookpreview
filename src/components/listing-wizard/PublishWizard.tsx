@@ -90,6 +90,12 @@ import {
   allAttested,
   type AttestationKey,
 } from './stages/PublishAttestations';
+import { PayPalMonogram, PayPalWordmark, EquinoxFundingLogo } from '@/components/brand/ProviderLogos';
+import {
+  EQUINOX_DISCLOSURE_TEXT,
+  EQUINOX_DISCLOSURE_VERSION,
+  isFinanceableSaleListing,
+} from '@/lib/financing/disclosure';
 
 type PublishStep = 'basics' | 'photos' | 'headline' | 'includes' | 'pricing' | 'details' | 'location' | 'availability' | 'documents' | 'review';
 
@@ -319,6 +325,79 @@ export const PublishWizard: React.FC = () => {
   const [acceptCashPayment, setAcceptCashPayment] = useState(false);
   const [proofNotaryEnabled, setProofNotaryEnabled] = useState(false);
   const [featuredEnabled, setFeaturedEnabled] = useState(false);
+
+  // ─── Optional Equinox Funding opt-in (for-sale food trucks / trailers only) ───
+  const [equinoxOptIn, setEquinoxOptIn] = useState(false);
+  const [equinoxDisclosureAccepted, setEquinoxDisclosureAccepted] = useState(false);
+  // Seller phone lives on the private profile — never in public listing text.
+  const [sellerPhone, setSellerPhone] = useState('');
+
+  const persistFinancingPreference = useCallback(async () => {
+    if (!user || !listing || !isFinanceableSaleListing(listing)) return;
+    try {
+      await supabase
+        .from('listing_financing_preferences')
+        .upsert(
+          {
+            listing_id: listing.id,
+            host_id: user.id,
+            equinox_opt_in: equinoxOptIn,
+            disclosure_version: equinoxOptIn ? EQUINOX_DISCLOSURE_VERSION : null,
+            disclosure_accepted_at:
+              equinoxOptIn && equinoxDisclosureAccepted ? new Date().toISOString() : null,
+          },
+          { onConflict: 'listing_id' },
+        );
+    } catch (err) {
+      console.error('Failed to save financing preference', err);
+    }
+  }, [user, listing, equinoxOptIn, equinoxDisclosureAccepted]);
+
+  const saveSellerPhone = useCallback(async () => {
+    if (!user?.id) return;
+    const phone = sellerPhone.trim();
+    if (!phone) return;
+    try {
+      await supabase.from('profiles').update({ phone_number: phone }).eq('id', user.id);
+    } catch (err) {
+      console.error('Failed to save seller phone', err);
+    }
+  }, [user?.id, sellerPhone]);
+
+  useEffect(() => {
+    if (!user?.id) return;
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from('profiles')
+        .select('phone_number')
+        .eq('id', user.id)
+        .maybeSingle();
+      if (!cancelled && data?.phone_number) setSellerPhone((prev) => prev || data.phone_number || '');
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.id]);
+
+  useEffect(() => {
+    if (!listing?.id || !isFinanceableSaleListing(listing)) return;
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from('listing_financing_preferences')
+        .select('equinox_opt_in')
+        .eq('listing_id', listing.id)
+        .maybeSingle();
+      if (cancelled || !data) return;
+      setEquinoxOptIn(!!data.equinox_opt_in);
+      setEquinoxDisclosureAccepted(!!data.equinox_opt_in);
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [listing?.id]);
   
   // AI suggestions state
   const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
@@ -354,7 +433,7 @@ export const PublishWizard: React.FC = () => {
   const [locCity, setLocCity] = useState('');
   const [locState, setLocState] = useState('');
   const [locZipCode, setLocZipCode] = useState('');
-  const [locPhoneNumber, setLocPhoneNumber] = useState('');
+  
   const [deliveryFee, setDeliveryFee] = useState('');
   const [deliveryRadiusMiles, setDeliveryRadiusMiles] = useState('');
   const [pickupInstructions, setPickupInstructions] = useState('');
@@ -609,28 +688,36 @@ export const PublishWizard: React.FC = () => {
       setSlotNames((data as any).slot_names || []);
       // Set location step fields
       setFulfillmentType((data.fulfillment_type as FulfillmentType) || null);
-      setPickupLocationText(data.pickup_location_text || '');
+      // Legacy drafts sometimes stored a phone number in the public pickup text.
+      // Never hydrate that back into a public field.
+      const legacyPickupText = data.pickup_location_text || '';
+      const pickupLooksLikePhone = /^\(?\d{3}/.test(legacyPickupText.trim());
+      setPickupLocationText(pickupLooksLikePhone ? '' : legacyPickupText);
       setAddress(data.address || '');
-      // Parse structured address from address field if available
+
+      // Prefer the structured columns; fall back to parsing legacy address text.
+      const cityCol = ((data as any).city || '').trim();
+      const stateCol = ((data as any).state || '').trim();
+      const zipCol = ((data as any).postal_code || '').trim();
+      if (cityCol) setLocCity(cityCol);
+      if (stateCol) setLocState(stateCol);
+      if (zipCol) setLocZipCode(zipCol);
+
       if (data.address) {
         const parts = data.address.split(',').map((p: string) => p.trim());
+        setStreetAddress(parts[0] || '');
         if (parts.length >= 3) {
-          setStreetAddress(parts[0] || '');
-          setLocCity(parts[parts.length - 2] || '');
+          if (!cityCol) setLocCity(parts[parts.length - 2] || '');
           // Last part might be "STATE ZIP"
           const lastPart = parts[parts.length - 1] || '';
           const stateZipMatch = lastPart.match(/^([A-Z]{2})\s+(\d{5})/);
           if (stateZipMatch) {
-            setLocState(stateZipMatch[1]);
-            setLocZipCode(stateZipMatch[2]);
-          } else {
+            if (!stateCol) setLocState(stateZipMatch[1]);
+            if (!zipCol) setLocZipCode(stateZipMatch[2]);
+          } else if (!stateCol) {
             setLocState(lastPart);
           }
         }
-      }
-      // Load phone number from pickup_location_text if it looks like a phone
-      if (data.pickup_location_text && /^\(?\d{3}/.test(data.pickup_location_text)) {
-        setLocPhoneNumber(data.pickup_location_text);
       }
       setDeliveryFee(data.delivery_fee?.toString() || '');
       setDeliveryRadiusMiles(data.delivery_radius_miles?.toString() || '');
@@ -1428,6 +1515,9 @@ export const PublishWizard: React.FC = () => {
             accept_card_payment: acceptPayPalCheckout,
             proof_notary_enabled: proofNotaryEnabled,
             featured_enabled: featuredEnabled};
+
+          // Optional Equinox opt-in is stored separately so Review can't lose it.
+          await persistFinancingPreference();
         } else {
           updateData = {
             price_daily: safeParsePrice(priceDaily),
@@ -1456,10 +1546,16 @@ export const PublishWizard: React.FC = () => {
         // Build structured address string
         const fullAddress = buildStructuredAddress();
 
+        // Public pickup text is the approximate "City, ST" — never a phone number.
+        const approxLocation = [locCity.trim(), locState.trim()].filter(Boolean).join(', ');
+
         updateData = {
           fulfillment_type: effectiveFulfillmentType,
-          pickup_location_text: locPhoneNumber || pickupLocationText || null,
+          pickup_location_text: approxLocation || pickupLocationText || null,
           address: fullAddress || address || null,
+          city: locCity.trim() || null,
+          state: locState.trim() || null,
+          postal_code: locZipCode.trim() || null,
           delivery_fee: parseFloat(deliveryFee) || null,
           delivery_radius_miles: parseFloat(deliveryRadiusMiles) || null,
           pickup_instructions: pickupInstructions || null,
@@ -1467,6 +1563,8 @@ export const PublishWizard: React.FC = () => {
           access_instructions: accessInstructions || null,
           hours_of_access: hoursOfAccess || null,
           location_notes: locationNotes || null};
+
+        await saveSellerPhone();
       } else if (step === 'availability') {
         // Validate hourly schedule if hourly is enabled
         if (hourlyEnabled && !availabilityStepValid) {
@@ -1640,7 +1738,14 @@ export const PublishWizard: React.FC = () => {
         ? 'on_site'
         : (fulfillmentType || 'pickup');
       const fullAddress = buildStructuredAddress() || address;
-      const pickupText = locPhoneNumber || pickupLocationText;
+      // Public pickup text is the approximate "City, ST" — never a phone number.
+      const approxLocation = [locCity.trim(), locState.trim()].filter(Boolean).join(', ');
+      const pickupText = approxLocation || pickupLocationText;
+
+      // Seller phone belongs on the private profile, never on the listing.
+      await saveSellerPhone();
+      // Equinox opt-in is stored separately — re-upsert so Review can't discard it.
+      await persistFinancingPreference();
 
       const baseUpdateData: any = {
         // Media
@@ -1659,10 +1764,36 @@ export const PublishWizard: React.FC = () => {
         height_inches: parseFloat(heightInches) || null,
         freight_category: freightCategory,
 
+        // Stage 1 basics (Review must never discard unsaved wizard state)
+        year_built: stageValues.modelYear ? parseInt(stageValues.modelYear, 10) : null,
+        kitchen_build_year: stageValues.kitchenBuildYear
+          ? parseInt(stageValues.kitchenBuildYear, 10)
+          : null,
+        kitchen_build_year_unknown: stageValues.kitchenBuildYearUnknown,
+        condition: stageValues.condition || null,
+        operational_status: stageValues.operationalStatus || null,
+
+        // Disclosures
+        title_status: disclosures.titleStatus || null,
+        has_lien: disclosures.hasLien || null,
+        no_known_problems: disclosures.noKnownProblems,
+        known_problems: disclosures.knownProblems.length ? disclosures.knownProblems : null,
+        included_items: disclosures.includedItems || null,
+        photos_exclusions_answered: disclosures.photosExclusionsAnswered,
+        photos_exclusions_note: disclosures.photosExclusionsNote || null,
+        price_negotiable: disclosures.priceNegotiable,
+        accepts_offers: disclosures.acceptsOffers,
+        min_offer_amount: disclosures.minOfferAmount
+          ? parseFloat(disclosures.minOfferAmount)
+          : null,
+
         // Location
         fulfillment_type: effectiveFulfillmentType,
         pickup_location_text: pickupText || null,
         address: fullAddress || null,
+        city: locCity.trim() || null,
+        state: locState.trim() || null,
+        postal_code: locZipCode.trim() || null,
         delivery_fee: parseFloat(deliveryFee) || null,
         delivery_radius_miles: parseFloat(deliveryRadiusMiles) || null,
         pickup_instructions: pickupInstructions || null,
@@ -2013,7 +2144,26 @@ export const PublishWizard: React.FC = () => {
       : (isValidPrice(priceDaily) ? `$${parseFloat(priceDaily.replace(/[^0-9.]/g, ''))}/day` : undefined)};
 
   const checklistItems = createChecklistItems(checklistState, step);
-  const stageRequirementsMet = checklistItems.filter(i => i.required).every(i => i.completed);
+
+  // Content requirements (single source of truth for the Phase 2 fields).
+  // This never contains identity-verification, payout or merchant-onboarding gates.
+  const stageMissing = listing
+    ? getStageRequirements({
+        mode: listing.mode,
+        category: listing.category,
+        condition: stageValues.condition || null,
+        operationalStatus: stageValues.operationalStatus || null,
+        titleStatus: disclosures.titleStatus || null,
+        hasLien: disclosures.hasLien || null,
+        noKnownProblems: disclosures.noKnownProblems,
+        knownProblems: disclosures.knownProblems,
+        includedItems: disclosures.includedItems || null,
+        photosExclusionsAnswered: disclosures.photosExclusionsAnswered,
+      })
+    : [];
+
+  const stageRequirementsMet =
+    checklistItems.filter(i => i.required).every(i => i.completed) && stageMissing.length === 0;
   const canPublish = stageRequirementsMet && allAttested(attestations);
 
   const displayAddress = buildStructuredAddress() || address;
@@ -2023,10 +2173,11 @@ export const PublishWizard: React.FC = () => {
     const errors: string[] = [];
     if (totalPhotoCount < 3) errors.push(`Add at least 3 photos (currently ${totalPhotoCount})`);
     if (!hasPriceAmount) errors.push(listing?.mode === 'sale' ? 'Set a sale price greater than $0' : 'Set a daily rate greater than $0');
-    if (listing?.mode === 'sale' && !hasSalePaymentMethod) errors.push('Select at least one payment method: Pay by Card or Pay in Person');
+    if (listing?.mode === 'sale' && !hasSalePaymentMethod) errors.push('Select at least one payment method: PayPal Checkout or Pay in Person');
     if (!hasValidTitle) errors.push(`Title must be at least ${MIN_TITLE_LENGTH} characters`);
     if (!hasValidDescription) errors.push(`Description must be at least ${MIN_DESCRIPTION_LENGTH} characters (currently ${description.trim().length})`);
     if (!checklistState.hasLocation) errors.push('Complete the location and logistics section');
+    for (const req of stageMissing) errors.push(req.label);
     return errors;
   };
 
@@ -2793,7 +2944,7 @@ export const PublishWizard: React.FC = () => {
                                 <span>
                                   {acceptCashPayment && !acceptPayPalCheckout
                                     ? 'Pay in Person sales have no platform commission.'
-                                    : `Platform fee is ${SALE_SELLER_FEE_PERCENT}% of the sale price for card payments`}
+                                    : `Platform fee is ${SALE_SELLER_FEE_PERCENT}% of the sale price for online PayPal payments`}
                                 </span>
                               </div>
                             </div>
@@ -2804,8 +2955,8 @@ export const PublishWizard: React.FC = () => {
                       {/* Payment Method Options */}
                       <div className="pt-6 border-t">
                         <div className="flex items-center gap-2 mb-4">
-                          <CreditCard className="w-5 h-5 text-primary" />
-                          <h3 className="text-lg font-semibold">Accepted Payment Methods</h3>
+                          <PayPalMonogram className="h-5 w-5" />
+                          <h3 className="text-lg font-semibold">How buyers can pay</h3>
                         </div>
                         <p className="text-sm text-muted-foreground mb-4">
                           Select how buyers can pay for your item. You can enable both options.
@@ -2824,16 +2975,17 @@ export const PublishWizard: React.FC = () => {
                                 htmlFor="accept_paypal_checkout"
                                 className="flex items-center gap-2 text-base font-medium cursor-pointer"
                               >
-                                <CreditCard className="w-4 h-4 text-primary" />
-                                PayPal Checkout (Online)
+                                <PayPalWordmark className="h-4 w-auto" />
+                                Pay online with PayPal
                               </Label>
                               <p className="text-sm text-muted-foreground mt-1">
-                                Accept secure online payments through PayPal. Your proceeds are recorded and paid out to your payout email after sale confirmation.
+                                Buyers check out securely with PayPal. Your sale proceeds are recorded to
+                                your account and paid out to your payout details after the sale is confirmed.
                               </p>
                               {acceptPayPalCheckout && (
                                 <div className="mt-2 p-2 bg-primary/5 rounded text-xs text-muted-foreground">
                                   <Info className="w-3 h-3 inline mr-1" />
-                                  Add your PayPal payout email in Settings to receive your proceeds.
+                                  Add your payout details in Settings so we know where to send your proceeds.
                                 </div>
                               )}
                             </div>
@@ -2870,6 +3022,66 @@ export const PublishWizard: React.FC = () => {
                           )}
                         </div>
                       </div>
+
+                      {/* Optional buyer financing — Equinox Funding */}
+                      {isFinanceableSaleListing(listing) && (
+                        <div className="pt-6 border-t">
+                          <div className="flex items-center gap-2 mb-4">
+                            <EquinoxFundingLogo className="h-6 w-auto" />
+                            <h3 className="text-lg font-semibold">Buyer financing (optional)</h3>
+                          </div>
+                          <div className="rounded-lg border border-border bg-card p-4 space-y-3">
+                            <div className="flex items-start space-x-3">
+                              <Checkbox
+                                id="equinox_opt_in"
+                                checked={equinoxOptIn}
+                                onCheckedChange={(checked) => {
+                                  const next = !!checked;
+                                  setEquinoxOptIn(next);
+                                  if (!next) setEquinoxDisclosureAccepted(false);
+                                }}
+                                className="mt-0.5"
+                              />
+                              <div className="flex-1">
+                                <Label
+                                  htmlFor="equinox_opt_in"
+                                  className="flex items-center gap-2 text-base font-medium cursor-pointer"
+                                >
+                                  Let buyers apply for financing with
+                                  <EquinoxFundingLogo className="h-4 w-auto" />
+                                </Label>
+                                <p className="text-sm text-muted-foreground mt-1">
+                                  Buyers can request an equipment loan through Equinox Funding instead of
+                                  paying the full amount upfront. This is optional and never required to
+                                  publish your listing.
+                                </p>
+                              </div>
+                            </div>
+
+                            {equinoxOptIn && (
+                              <div className="rounded-md border border-border bg-muted/40 p-3 space-y-3">
+                                <p className="text-xs leading-relaxed text-muted-foreground">
+                                  {EQUINOX_DISCLOSURE_TEXT}
+                                </p>
+                                <div className="flex items-start space-x-3">
+                                  <Checkbox
+                                    id="equinox_disclosure"
+                                    checked={equinoxDisclosureAccepted}
+                                    onCheckedChange={(checked) => setEquinoxDisclosureAccepted(!!checked)}
+                                    className="mt-0.5"
+                                  />
+                                  <Label
+                                    htmlFor="equinox_disclosure"
+                                    className="text-sm font-medium cursor-pointer"
+                                  >
+                                    I have read and accept this financing disclosure.
+                                  </Label>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
 
                       {/* Freight Settings */}
                       <div className="pt-6 border-t">
@@ -3148,7 +3360,9 @@ export const PublishWizard: React.FC = () => {
                         disabled:
                           isSaving ||
                           (listing.mode === 'sale'
-                            ? !isValidPrice(priceSale) || (!acceptPayPalCheckout && !acceptCashPayment)
+                            ? !isValidPrice(priceSale) ||
+                              (!acceptPayPalCheckout && !acceptCashPayment) ||
+                              (equinoxOptIn && !equinoxDisclosureAccepted)
                             : !isValidPrice(priceDaily)),
                       }}
                     />
@@ -3737,10 +3951,13 @@ export const PublishWizard: React.FC = () => {
                           <Input
                             id="loc_phone"
                             type="tel"
-                            value={locPhoneNumber}
-                            onChange={(e) => setLocPhoneNumber(e.target.value)}
+                            value={sellerPhone}
+                            onChange={(e) => setSellerPhone(e.target.value)}
                             placeholder="(555) 123-4567"
                           />
+                          <p className="text-xs text-muted-foreground">
+                            Saved privately to your account — never shown on your public listing.
+                          </p>
                         </div>
                       </div>
                     </div>
@@ -4225,6 +4442,35 @@ export const PublishWizard: React.FC = () => {
                     hasLocation={!!(displayAddress || pickupLocationText)}
                     mode={listing.mode as 'rent' | 'sale' | null}
                   />
+
+                  {/* Missing listing details — actionable, jumps to the exact step */}
+                  {stageMissing.length > 0 && (
+                    <div className="rounded-xl border border-destructive/40 bg-destructive/5 p-4 space-y-3">
+                      <div className="flex items-center gap-2">
+                        <AlertCircle className="w-4 h-4 text-destructive" />
+                        <p className="font-medium text-foreground">
+                          {stageMissing.length === 1
+                            ? '1 detail still needs an answer'
+                            : `${stageMissing.length} details still need answers`}
+                        </p>
+                      </div>
+                      <ul className="space-y-2">
+                        {stageMissing.map((req) => (
+                          <li key={req.fieldId} className="flex items-center justify-between gap-3">
+                            <span className="text-sm text-muted-foreground">{req.label}</span>
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="outline"
+                              onClick={() => setStep(req.step as PublishStep)}
+                            >
+                              Fix this
+                            </Button>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
 
                   {/* Persisted AI health score */}
                   <ListingHealthScoreCard listingId={listing?.id} />
