@@ -298,34 +298,48 @@ const HostListingCard = ({
     // Published / paused
     return (
       <>
-        <Button variant="outline" size="sm" className="h-10 rounded-md px-4" asChild>
+        <Button
+          variant="outline"
+          size="sm"
+          className={cn(ACTION_BTN, 'border-white/15 bg-white/[0.04] hover:bg-white/[0.08]')}
+          asChild
+        >
           <Link to={`/create-listing/${listing.id}`}>
-            <Edit2 className="h-4 w-4 mr-1.5" />
-            Edit
+            <Edit2 className="h-4 w-4 mr-1.5 shrink-0" />
+            Edit Listing
           </Link>
         </Button>
         {!isFeatured && canBoost && (
           <Button
             size="sm"
             onClick={handleFeaturedClick}
-            className="h-10 rounded-md px-4 bg-[hsl(14,100%,57%)] hover:bg-[hsl(14,100%,52%)] text-white border-0 shadow-[0_0_20px_-6px_hsl(14,100%,57%)]"
+            className={cn(
+              ACTION_BTN,
+              'bg-[hsl(14,100%,57%)] hover:bg-[hsl(14,100%,52%)] text-white border-0 shadow-[0_0_24px_-8px_hsl(14,100%,57%)]',
+            )}
           >
-            <Flame className="h-4 w-4 mr-1.5" />
-            Boost
+            <Flame className="h-4 w-4 mr-1.5 shrink-0" />
+            Boost Listing
           </Button>
         )}
         <Button
           variant="outline"
           size="sm"
-          className="h-10 rounded-md px-4"
+          className={cn(ACTION_BTN, 'border-white/15 bg-white/[0.04] hover:bg-white/[0.08]')}
+          onClick={handleShareListing}
+        >
+          <Share2 className="h-4 w-4 mr-1.5 shrink-0" />
+          Share Listing
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          className={cn(ACTION_BTN, 'border-white/15 bg-white/[0.04] hover:bg-white/[0.08]')}
           onClick={() => setShowShareKit(true)}
         >
-          <Share2 className="h-4 w-4 mr-1.5" />
-          Share
+          <Rocket className="h-4 w-4 mr-1.5 shrink-0" />
+          Share Kit
         </Button>
-        <GetVerifiedButton size="sm" showPrice />
-        {payoutButton}
-        <div className="flex-1" />
 
         <KebabMenu>
           <DropdownMenuItem asChild className="gap-2">
@@ -399,6 +413,7 @@ const HostListingCard = ({
       </>
     );
   };
+
 
   return (
     <>
