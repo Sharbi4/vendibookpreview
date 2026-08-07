@@ -229,13 +229,16 @@ export async function voidAuthorizationOnce(
   reason: string,
 ): Promise<{ ok: boolean; errorCode?: string }> {
   if (payment.state === "voided") return { ok: true };
-  if (payment.state === "captured") return { ok: false, errorCode: "ALREADY_CAPTURED" };
+  if (payment.state === "captured") {
+    return await reconcileUnexpectedCapture(admin, payment, reason);
+  }
   if (!payment.paypal_authorization_id) {
     await markPayment(admin, payment.id, {
       state: "voided",
       voided_at: new Date().toISOString(),
       error_code: reason,
     });
+    await syncPaymentState(admin, payment.user_id, "voided");
     return { ok: true };
   }
 
@@ -246,10 +249,18 @@ export async function voidAuthorizationOnce(
     );
   } catch (err) {
     const code = (err as { errorCode?: string })?.errorCode ?? "";
-    // Already voided / already captured / expired are all acceptable ends.
-    const benign = /VOIDED|ALREADY|EXPIRED|NOT_FOUND|RESOURCE_NOT_FOUND/i.test(
-      `${code} ${(err as Error).message ?? ""}`,
-    );
+    const text = `${code} ${(err as Error).message ?? ""}`;
+
+    /**
+     * ALREADY_CAPTURED is NOT a successful void — money moved. Reconcile the
+     * real authorization state and refund if identity did not succeed. Only
+     * confirmed voided / expired / not-found outcomes may be recorded as void.
+     */
+    if (/ALREADY_CAPTURED|AUTHORIZATION_ALREADY_CAPTURED/i.test(text)) {
+      return await reconcileUnexpectedCapture(admin, payment, reason);
+    }
+
+    const benign = /VOIDED|EXPIRED|NOT_FOUND|RESOURCE_NOT_FOUND/i.test(text);
     if (!benign) {
       await markPayment(admin, payment.id, { error_code: code || "VOID_FAILED" });
       log("void_failed", { payment_id: payment.id, code });
@@ -262,8 +273,57 @@ export async function voidAuthorizationOnce(
     voided_at: new Date().toISOString(),
     error_code: reason,
   });
+  await syncPaymentState(admin, payment.user_id, "voided");
   log("voided", { payment_id: payment.id, reason });
   return { ok: true };
+}
+
+/**
+ * PayPal says the authorization was already captured. Record the true state
+ * and, if the identity check did not succeed, refund it — a void that cannot
+ * void must never be reported as a released hold.
+ */
+async function reconcileUnexpectedCapture(
+  admin: Admin,
+  payment: PaymentRow,
+  reason: string,
+): Promise<{ ok: boolean; errorCode?: string }> {
+  let captureId = payment.paypal_capture_id;
+  if (!captureId && payment.paypal_authorization_id) {
+    try {
+      const auth = await getPayPalAuthorization(payment.paypal_authorization_id) as {
+        status?: string;
+      };
+      log("void_reconcile", { payment_id: payment.id, auth_status: auth?.status ?? null });
+    } catch {
+      /* best effort — the refund path below still guards the money */
+    }
+  }
+
+  await markPayment(admin, payment.id, {
+    state: "captured",
+    captured_at: payment.created_at ?? new Date().toISOString(),
+    error_code: "ALREADY_CAPTURED",
+  });
+  await syncPaymentState(admin, payment.user_id, "captured");
+
+  const record = await ensureVerification(admin, payment.user_id);
+  if (record?.identity_status === "success") {
+    // Legitimately paid — nothing to release.
+    return { ok: true };
+  }
+
+  const refreshed = { ...payment, state: "captured", paypal_capture_id: captureId } as PaymentRow;
+  const refunded = await refundPaymentOnce(
+    admin,
+    refreshed,
+    `already_captured:${reason}`.slice(0, 120),
+  );
+  if (!refunded.ok) {
+    await alertAdminsOfIssue(admin, payment.id, payment.user_id, "already_captured_refund_failed");
+    return { ok: false, errorCode: "ALREADY_CAPTURED" };
+  }
+  return { ok: false, errorCode: "ALREADY_CAPTURED_REFUNDED" };
 }
 
 /**
