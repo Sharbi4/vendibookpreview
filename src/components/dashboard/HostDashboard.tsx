@@ -50,7 +50,7 @@ const HostDashboard = () => {
   const firstName = profile?.full_name?.split(' ')[0];
   const monthlyRevenue = revenueAnalytics?.revenueThisMonth || 0;
   const nextPayoutHint = monthlyRevenue > 0
-    ? 'Rentals settle in 24h · sales in 25d'
+    ? 'Payout status updates as orders complete'
     : 'Nothing pending';
 
   const actionItems: ActionItem[] = useMemo(() => {
