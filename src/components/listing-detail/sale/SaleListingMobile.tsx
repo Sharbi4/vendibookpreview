@@ -644,7 +644,7 @@ export const SaleListingMobile = ({
             <div>
               <div className="text-sm font-medium">All sales are final. Please review all details and ask questions before purchasing.</div>
               <div className="text-xs text-muted-foreground mt-1">
-                Your payment is only released to the seller once you confirm delivery or pickup.
+                Payment disputes are handled through PayPal&rsquo;s buyer protection process and Vendibook support.
               </div>
             </div>
           </div>
