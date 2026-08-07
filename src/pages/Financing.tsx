@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { ArrowRight, ExternalLink } from 'lucide-react';
 import SEO, { generateFAQSchema } from '@/components/SEO';
 import JsonLd from '@/components/JsonLd';
+import Header from '@/components/layout/Header';
 import equinoxLogo from '@/assets/brand/equinox-funding-logo.png.asset.json';
 
 const LIME = '#8CC63F';
