@@ -114,6 +114,8 @@ const Financing = () => {
         ]}
       />
 
+      <Header />
+
       <main className="relative min-h-screen overflow-hidden bg-[#050506] text-white">
       {/* polished onyx shine — layered black glass luminescence */}
       <div
@@ -132,16 +134,8 @@ const Financing = () => {
         style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent)' }}
       />
 
-      <div className="relative mx-auto max-w-5xl px-5 pt-24 sm:px-8 sm:pt-32">
-        {/* Home */}
-        <Link
-          to="/"
-          aria-label="Vendibook home"
-          className="fixed left-4 top-4 z-50 flex flex-col items-center gap-1 text-[10px] font-medium uppercase tracking-wider text-white/60 transition-opacity hover:text-white/90"
-        >
-          <img src="/favicon.png" alt="" aria-hidden className="h-10 w-10 rounded-md shadow-lg shadow-black/30" />
-          <span>Home</span>
-        </Link>
+      <div className="relative mx-auto max-w-5xl px-5 pt-12 sm:px-8 sm:pt-16">
+
 
         {/* Hero */}
 
