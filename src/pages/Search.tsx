@@ -741,7 +741,14 @@ const Search = () => {
                   <ToggleGroupItem value="list" aria-label="List view" title="List view" className="h-8 px-2.5 rounded-lg data-[state=on]:bg-foreground data-[state=on]:text-background data-[state=on]:shadow-sm transition-all">
                     <Rows3 className="h-3.5 w-3.5" />
                   </ToggleGroupItem>
+                  <ToggleGroupItem value="split" aria-label="Split view" title="Split view (list + map)" className="hidden md:flex h-8 px-2.5 rounded-lg data-[state=on]:bg-foreground data-[state=on]:text-background data-[state=on]:shadow-sm transition-all">
+                    <Columns className="h-3.5 w-3.5" />
+                  </ToggleGroupItem>
+                  <ToggleGroupItem value="map" aria-label="Map view" title="Map view" className="h-8 px-2.5 rounded-lg data-[state=on]:bg-foreground data-[state=on]:text-background data-[state=on]:shadow-sm transition-all">
+                    <Map className="h-3.5 w-3.5" />
+                  </ToggleGroupItem>
                 </ToggleGroup>
+
 
                 <div className="relative">
                   <select
