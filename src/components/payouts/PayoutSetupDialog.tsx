@@ -74,12 +74,22 @@ export function PayoutSetupDialog({ open, onOpenChange, listingTitle }: Props) {
             <Loader2 className="h-4 w-4 animate-spin" /> Loading your payout method…
           </div>
         ) : showForm ? (
-          <PayoutMethodForm
-            initialMethod={preference?.method ?? 'paypal'}
-            isSaving={isSaving}
-            onCancel={preference ? () => setEditing(false) : () => onOpenChange(false)}
-            onSubmit={handleSubmit}
-          />
+          <div className="space-y-4">
+            <div className="overflow-hidden rounded-xl border border-border">
+              <img
+                src={paypalAppImage.url}
+                alt="Someone checking a payout in the PayPal app on their phone"
+                loading="lazy"
+                className="h-32 w-full object-cover sm:h-40"
+              />
+            </div>
+            <PayoutMethodForm
+              initialMethod={preference?.method ?? 'paypal'}
+              isSaving={isSaving}
+              onCancel={preference ? () => setEditing(false) : () => onOpenChange(false)}
+              onSubmit={handleSubmit}
+            />
+          </div>
         ) : (
           <div className="space-y-4">
             <div className="flex items-center gap-3 rounded-xl border border-border bg-card/60 p-4">
