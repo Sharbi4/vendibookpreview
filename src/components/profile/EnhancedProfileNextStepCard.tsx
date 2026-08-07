@@ -99,11 +99,11 @@ const EnhancedProfileNextStepCard = ({
       iconBg: 'bg-pink-100 dark:bg-pink-900/50'}];
 
   const getApplicableStep = (): NextStepConfig | null => {
-    if (!isVerified) return allSteps.find(s => s.id === 'verify')!;
     if (isHost && !payoutReady && !isLoadingPayout) return allSteps.find(s => s.id === 'payouts')!;
     if (draftCount > 0) return allSteps.find(s => s.id === 'drafts')!;
     if (pendingRequestCount > 0) return allSteps.find(s => s.id === 'requests')!;
     if (!isHost) return allSteps.find(s => s.id === 'create')!;
+    if (!isVerified) return allSteps.find(s => s.id === 'verify')!;
     return null;
   };
 
