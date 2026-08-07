@@ -667,11 +667,11 @@ export const SaleListingMobile = ({
 
         {/* PURCHASE PROTECTION */}
         <div>
-          <h2 className="text-base font-semibold mb-3">Your purchase is protected</h2>
+          <h2 className="text-base font-semibold mb-3">How Vendibook supports your purchase</h2>
           <div className="grid grid-cols-2 gap-2.5">
-            <ProtectionCard icon={ShieldCheck} title="Verified Users" body="All users are verified to keep our marketplace safe." tone="emerald" />
-            <ProtectionCard icon={Lock} title="Secure Payments" body="Your payment is protected with industry-standard encryption." tone="primary" />
-            <ProtectionCard icon={FileText} title="Document Workflow" body="We help verify documents and important information." tone="blue" />
+            <ProtectionCard icon={ShieldCheck} title="Optional ID Verification" body="Sellers can choose to complete identity verification and display a badge." tone="emerald" />
+            <ProtectionCard icon={Lock} title="PayPal Checkout" body="Supported payments are processed by PayPal, not handled on Vendibook." tone="primary" />
+            <ProtectionCard icon={FileText} title="Document Workflow" body="We help collect and organize documents and important information." tone="blue" />
             <ProtectionCard icon={HeadphonesIcon} title="Dispute Support" body="Our team is here to help if something doesn't go as planned." tone="amber" />
           </div>
         </div>
