@@ -155,25 +155,68 @@ const Payments = () => {
               </a>
             </div>
 
-            {/* Equipment lending partner */}
-            <div className="mx-auto mt-6 max-w-5xl rounded-2xl border-2 border-foreground/[0.10] bg-foreground/[0.03] p-6 backdrop-blur-xl sm:p-8">
-              <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                  <div className="mb-4 flex flex-wrap items-center gap-4">
-                    <PayPalMonogram className="h-8" />
-                    <span aria-hidden className="h-7 w-px bg-foreground/15" />
-                    <EquinoxFundingLogo className="h-9" />
+            {/* Trust & partner infrastructure */}
+            <div className="mx-auto mt-6 max-w-5xl overflow-hidden rounded-2xl border-2 border-foreground/[0.10] bg-[linear-gradient(140deg,#0a0a0c_0%,#08080a_50%,#101014_100%)] p-6 backdrop-blur-xl sm:p-8">
+              <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+                <div className="space-y-5">
+                  {/* Partner lockup */}
+                  <div className="flex flex-wrap items-center gap-5">
+                    <div className="flex items-center gap-2.5">
+                      <PayPalMonogram className="h-7" />
+                      <PayPalWordmark className="h-5" />
+                    </div>
+                    <span
+                      aria-hidden="true"
+                      className="hidden h-7 w-px bg-foreground/15 sm:block"
+                    />
+                    <div className="flex items-center gap-2">
+                      <EquinoxFundingLogo className="h-8" />
+                      <span className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                        Funding partner
+                      </span>
+                    </div>
                   </div>
-                  <h2 className="mb-2 text-lg font-semibold tracking-tight text-foreground">
-                    Pay with PayPal, or finance with Equinox
-                  </h2>
-                  <p className="max-w-xl text-sm leading-relaxed text-muted-foreground">
-                    Checkout payments are processed by PayPal. For larger equipment purchases,
-                    Equinox Funding LLC offers business loans and equipment financing from
-                    $2.5K – $25M, with online applications. Approval, rates, and terms are
-                    determined by Equinox Funding LLC.
+
+                  <div className="space-y-2">
+                    <h2 className="text-lg font-semibold tracking-tight text-foreground">
+                      Two trusted providers, one seamless checkout
+                    </h2>
+                    <p className="max-w-2xl text-sm leading-relaxed text-muted-foreground">
+                      <span className="font-medium text-foreground">PayPal</span> processes every
+                      Vendibook checkout. For eligible business equipment purchases,{' '}
+                      <span className="font-medium text-foreground">Equinox Funding LLC</span>{' '}
+                      offers business loans and equipment financing from $2.5K to $25M with online
+                      applications. Approval, rates, and terms are determined by Equinox Funding
+                      LLC.
+                    </p>
+                  </div>
+
+                  <ul className="grid gap-2 text-xs text-muted-foreground sm:grid-cols-2">
+                    <li className="flex items-start gap-2">
+                      <ShieldCheck className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-400" />
+                      <span>PayPal Purchase Protection eligibility on eligible purchases</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <ShieldCheck className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-400" />
+                      <span>Equinox Funding LLC — NMLS licensed lending partner</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <Lock className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary/80" />
+                      <span>Vendibook does not store full card or bank details</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <Lock className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary/80" />
+                      <span>Financing applications are handled directly by Equinox</span>
+                    </li>
+                  </ul>
+
+                  <p className="text-[11px] leading-relaxed text-muted-foreground/70">
+                    Equinox Funding LLC is a licensed lender. Loan approval, rates, and terms are
+                    subject to credit review and underwriting. PayPal is a separate payment
+                    processor and Vendibook is not a bank or lender.
                   </p>
                 </div>
+
                 <Button size="lg" variant="glass-cta" asChild className="shrink-0">
                   <Link to="/financing">
                     Explore financing
@@ -182,6 +225,7 @@ const Payments = () => {
                 </Button>
               </div>
             </div>
+
           </div>
         </section>
 
