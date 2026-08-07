@@ -55,7 +55,7 @@ const ProfileTrustSection = ({
       icon: CreditCard,
       label: 'Payouts Enabled',
       status: stripeConnected,
-      description: 'Connected to Stripe for secure payments',
+      description: 'Payout details saved for secure payouts',
       hideIfNotHost: true,
     },
     {

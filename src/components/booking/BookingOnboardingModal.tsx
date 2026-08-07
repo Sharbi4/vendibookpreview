@@ -55,7 +55,7 @@ const steps: OnboardingStep[] = [
   {
     icon: CreditCard,
     title: 'Review & Pay',
-    description: 'Check your booking details and complete secure payment via Stripe.',
+    description: 'Check your booking details and complete secure payment via PayPal.',
     color: 'text-emerald-600',
     bgColor: 'bg-emerald-100 dark:bg-emerald-900/30',
   },

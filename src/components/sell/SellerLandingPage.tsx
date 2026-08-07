@@ -329,7 +329,7 @@ const SellerLandingPage = ({
             </h2>
             <p className="text-muted-foreground max-w-3xl leading-relaxed">
               When you and your buyer want extra protection, Vendibook supports optional secure
-              transaction tools where available — including identity verification through Stripe
+              transaction tools where available — including identity verification
               Identity, offer tracking, supporting documents, and reviews after the sale. Use them
               when it makes sense, or keep your sale fully off-platform if you prefer.
             </p>

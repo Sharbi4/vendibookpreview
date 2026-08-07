@@ -145,7 +145,7 @@ export const ListingBadges = ({
               </Badge>
             </TooltipTrigger>
             <TooltipContent side="bottom" className="text-xs max-w-[200px]">
-              This host accepts secure payments through Stripe
+              This host accepts secure payments through PayPal
             </TooltipContent>
           </Tooltip>
         )}

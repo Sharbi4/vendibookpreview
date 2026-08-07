@@ -279,7 +279,7 @@ export default function AccountSubscription() {
                 {hasSubscription
                   ? provider === 'paypal'
                     ? 'Switch tiers anytime. Cancel your current membership first, then start the new plan — PayPal bills the new plan from its next cycle.'
-                    : 'Switch tiers anytime. Upgrades and downgrades are handled in the secure billing portal — Stripe prorates the difference automatically.'
+                    : 'Switch tiers anytime. Upgrades and downgrades are handled in the secure billing portal, which prorates the difference automatically.'
                   : 'Every plan includes payment protection. Cancel or change anytime.'}
               </p>
             </div>
