@@ -122,7 +122,7 @@ interface ListingData {
   deposit_amount: number | null;
   vendibook_freight_enabled: boolean;
   freight_payer: FreightPayer;
-  accept_card_payment: boolean; // Legacy Stripe flag; kept for audit
+  accept_card_payment: boolean; // Legacy Stripe column — read-only history, never written here
   accept_cash_payment: boolean;
   accept_paypal_checkout: boolean;
   proof_notary_enabled: boolean;
