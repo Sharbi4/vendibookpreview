@@ -133,7 +133,18 @@ const Financing = () => {
       />
 
       <div className="relative mx-auto max-w-5xl px-5 py-16 sm:px-8 sm:py-24">
+        {/* Home */}
+        <Link
+          to="/"
+          aria-label="Vendibook home"
+          className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/[0.14] bg-white/[0.04] px-3 py-2 text-sm text-white/80 backdrop-blur-sm transition-colors hover:bg-white/[0.08] hover:text-white"
+        >
+          <img src="/favicon.png" alt="" aria-hidden className="h-5 w-5 rounded-sm" />
+          <span>Home</span>
+        </Link>
+
         {/* Hero */}
+
         <section className="rounded-3xl border-2 border-white/[0.12] bg-white/[0.03] p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-sm sm:p-10">
           <p
             className="text-[11px] font-semibold uppercase tracking-[0.22em]"
