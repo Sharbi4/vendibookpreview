@@ -97,6 +97,7 @@ const Pricing = lazy(() => import("./pages/Pricing"));
 const Purchases = lazy(() => import("./pages/Purchases"));
 const PermitPathUpgrades = lazy(() => import("./pages/PermitPathUpgrades"));
 const Partners = lazy(() => import("./pages/Partners"));
+const Financing = lazy(() => import("./pages/Financing"));
 const ListingPurchaseReviewIntake = lazy(() => import("./pages/ListingPurchaseReviewIntake"));
 const ProtectedSalePage = lazy(() => import("./pages/ProtectedSale"));
 const TransactionDetail = lazy(() => import("./pages/TransactionDetail"));
@@ -340,6 +341,7 @@ const AnimatedRoutes = () => {
           <Route path="/account/purchases" element={<PageTransition><Purchases /></PageTransition>} />
           <Route path="/tools/permitpath/upgrades" element={<PageTransition><PermitPathUpgrades /></PageTransition>} />
           <Route path="/partners" element={<PageTransition><Partners /></PageTransition>} />
+          <Route path="/financing" element={<PageTransition><Financing /></PageTransition>} />
 
           <Route path="/admin/email/dashboard" element={<PageTransition><AdminEmailDashboard /></PageTransition>} />
           <Route path="/admin/campaigns/new-exit-plan" element={<PageTransition><AdminCampaignNewExitPlan /></PageTransition>} />
