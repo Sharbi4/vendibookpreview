@@ -4,7 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Menu, X, Plus, UserPlus, Info, Search,
-  LayoutDashboard, MessageSquare, HelpCircle, LogOut, Mail,
+  LayoutDashboard, MessageSquare, HelpCircle, LogOut, Mail, Landmark,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -123,6 +123,9 @@ const AppDropdownMenu = ({ variant = 'dark', className = '' }: AppDropdownMenuPr
                         <Link to="/search" onClick={handleClose} className="relative flex items-center gap-2.5 px-3.5 py-2.5 text-white/90 text-sm font-medium hover:bg-white/8 hover:text-white transition-all border-b border-white/[0.04]">
                           <Search className="w-4 h-4 text-white/50" /> Browse All
                         </Link>
+                        <Link to="/financing" onClick={handleClose} className="relative flex items-center gap-2.5 px-3.5 py-2.5 text-white/90 text-sm font-medium hover:bg-white/8 hover:text-white transition-all border-b border-white/[0.04]">
+                          <Landmark className="w-4 h-4 text-white/50" /> Equipment Financing
+                        </Link>
                         <Link to="/help" onClick={handleClose} className="relative flex items-center gap-2.5 px-3.5 py-2.5 text-white/90 text-sm font-medium hover:bg-white/8 hover:text-white transition-all border-b border-white/[0.04]">
                           <HelpCircle className="w-4 h-4 text-white/50" /> Help Center
                         </Link>
@@ -152,6 +155,9 @@ const AppDropdownMenu = ({ variant = 'dark', className = '' }: AppDropdownMenuPr
                         </Link>
                         <Link to="/search" onClick={handleClose} className="relative flex items-center gap-2.5 px-3.5 py-2.5 text-white/90 text-sm font-medium hover:bg-white/8 hover:text-white transition-all border-b border-white/[0.04]">
                           <Search className="w-4 h-4 text-white/50" /> Browse All
+                        </Link>
+                        <Link to="/financing" onClick={handleClose} className="relative flex items-center gap-2.5 px-3.5 py-2.5 text-white/90 text-sm font-medium hover:bg-white/8 hover:text-white transition-all border-b border-white/[0.04]">
+                          <Landmark className="w-4 h-4 text-white/50" /> Equipment Financing
                         </Link>
                         <Link to="/help" onClick={handleClose} className="relative flex items-center gap-2.5 px-3.5 py-2.5 text-white/90 text-sm font-medium hover:bg-white/8 hover:text-white transition-all border-b border-white/[0.04]">
                           <HelpCircle className="w-4 h-4 text-white/50" /> Help Center
