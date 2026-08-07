@@ -177,6 +177,17 @@
     </image:image>
   </url>
   <url>
+    <loc>https://vendibook.com/listing/c649440f-d3df-4f3a-a622-e118767efb4d</loc>
+    <lastmod>2026-08-07</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/20434a7d-a365-4d4a-ab9b-5cff26815f33/c649440f-d3df-4f3a-a622-e118767efb4d/1773684471904-n7qn7c.jpeg</image:loc>
+      <image:title>My Food Trailer</image:title>
+      <image:caption>My Food Trailer on Vendibook</image:caption>
+    </image:image>
+  </url>
+  <url>
     <loc>https://vendibook.com/listing/f60f584d-38db-4aa3-a7e0-2c5c65a82c82</loc>
     <lastmod>2026-08-07</lastmod>
     <changefreq>weekly</changefreq>
@@ -900,17 +911,6 @@
       <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/4bcf4516-26c3-44f5-8ac1-d2555a52a0de/ede54357-a79d-4325-bb1f-153c75fd89dc/1769731206306-ljk3x6.jpg</image:loc>
       <image:title>Commercial Kitchen Rental</image:title>
       <image:caption>Commercial Kitchen Rental in Dallas, OR on Vendibook</image:caption>
-    </image:image>
-  </url>
-  <url>
-    <loc>https://vendibook.com/listing/c649440f-d3df-4f3a-a622-e118767efb4d</loc>
-    <lastmod>2026-08-06</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/20434a7d-a365-4d4a-ab9b-5cff26815f33/c649440f-d3df-4f3a-a622-e118767efb4d/1773684471904-n7qn7c.jpeg</image:loc>
-      <image:title>My Food Trailer</image:title>
-      <image:caption>My Food Trailer on Vendibook</image:caption>
     </image:image>
   </url>
   <url>
