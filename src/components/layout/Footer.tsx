@@ -2,6 +2,11 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import { ChevronDown, Facebook, Instagram, Twitter, Linkedin } from 'lucide-react';
 import vendibookFavicon from '@/assets/vendibook-favicon.png';
+import {
+  PayPalMonogram,
+  PayPalWordmark,
+  EquinoxFundingLogo,
+} from '@/components/brand/ProviderLogos';
 import { cn } from '@/lib/utils';
 import { trackFooterCitiesClicked } from '@/lib/analytics';
 
@@ -208,8 +213,16 @@ const Footer = () => {
             </div>
 
             {/* Payments badge */}
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <span>Payments by PayPal</span>
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <span>Payments by</span>
+                <PayPalMonogram className="h-4" />
+                <PayPalWordmark className="h-3.5" />
+              </div>
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <span>Financing by</span>
+                <EquinoxFundingLogo className="h-5" />
+              </div>
             </div>
           </div>
         </div>

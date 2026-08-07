@@ -1,6 +1,7 @@
 import { Lock } from 'lucide-react';
 import verifiedBadge from '@/assets/verified-badge.png';
 import { PaymentTrustBadge } from '@/components/trust/PaymentTrustBadge';
+import { PayPalMonogram, PayPalWordmark } from '@/components/brand/ProviderLogos';
 
 /**
  * Compact trust row: payment trust badge, verified badge, card-network
@@ -26,9 +27,12 @@ const TrustRow = () => (
         ))}
       </div>
     </div>
-    <p className="text-[11px] text-muted-foreground flex items-center gap-1.5">
+    <p className="text-[11px] text-muted-foreground flex items-center gap-1.5 flex-wrap">
       <Lock className="h-3 w-3" />
-      Secure payments powered by PayPal · encrypted end to end · Vendibook never sees your full card number.
+      <span>Secure payments powered by</span>
+      <PayPalMonogram className="h-3.5" />
+      <PayPalWordmark className="h-3" />
+      <span>· encrypted end to end · Vendibook never sees your full card number.</span>
     </p>
   </div>
 );

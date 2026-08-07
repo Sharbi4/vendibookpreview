@@ -1,6 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Banknote, ExternalLink, Loader2, ShieldCheck, Wallet } from 'lucide-react';
+import { ArrowLeft, ExternalLink, Loader2, ShieldCheck } from 'lucide-react';
+import {
+  PayPalMonogram,
+  PayPalWordmark,
+  EquinoxFundingLogo,
+} from '@/components/brand/ProviderLogos';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -151,11 +156,14 @@ export default function ListingPaymentsFinancing() {
         {/* How you get paid */}
         <section className={PANEL}>
           <div className="flex items-start gap-3">
-            <span className="shrink-0 w-9 h-9 rounded-full bg-primary/10 ring-1 ring-primary/25 flex items-center justify-center">
-              <Wallet className="h-4 w-4 text-primary" />
+            <span className="shrink-0 w-9 h-9 rounded-full bg-white/[0.06] ring-1 ring-white/15 flex items-center justify-center">
+              <PayPalMonogram className="h-4" />
             </span>
             <div className="min-w-0">
-              <h2 className="text-base font-semibold">How buyers pay and how you get paid</h2>
+              <div className="flex items-center gap-2 flex-wrap">
+                <h2 className="text-base font-semibold">How buyers pay and how you get paid</h2>
+                <PayPalWordmark className="h-3.5" />
+              </div>
               <p className="text-xs text-muted-foreground leading-relaxed mt-1">
                 Supported buyer payments run through PayPal checkout. Seller proceeds are recorded
                 by Vendibook and paid out manually to your chosen destination: PayPal, Venmo, Cash
@@ -179,8 +187,8 @@ export default function ListingPaymentsFinancing() {
           <section className={PANEL}>
             <div className="flex items-start justify-between gap-4">
               <div className="min-w-0">
-                <div className="flex items-center gap-2 mb-2">
-                  <Banknote className="h-4 w-4 text-primary" />
+                <div className="flex items-center gap-2 mb-2 flex-wrap">
+                  <EquinoxFundingLogo className="h-5" />
                   <h2 className="text-base font-semibold">Offer financing options through Equinox Funding</h2>
                 </div>
                 <p className="text-xs text-muted-foreground leading-relaxed">
