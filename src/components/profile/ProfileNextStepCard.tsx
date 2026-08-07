@@ -95,29 +95,29 @@ const ProfileNextStepCard = ({
 
   // Determine which step to show based on conditions
   const getApplicableStep = (): NextStepConfig | null => {
-    // Priority 1: Not verified
-    if (!isVerified) {
-      return allSteps.find(s => s.id === 'verify')!;
-    }
-
-    // Priority 2: Host without payout details saved
+    // Priority 1: Host without payout details saved
     if (isHost && !payoutReady && !isLoadingPayout) {
       return allSteps.find(s => s.id === 'payouts')!;
     }
 
-    // Priority 3: Has drafts
+    // Priority 2: Has drafts
     if (draftCount > 0) {
       return allSteps.find(s => s.id === 'drafts')!;
     }
 
-    // Priority 4: Has pending requests
+    // Priority 3: Has pending requests
     if (pendingRequestCount > 0) {
       return allSteps.find(s => s.id === 'requests')!;
     }
 
-    // Priority 5: Create first listing (only if not a host yet)
+    // Priority 4: Create first listing (only if not a host yet)
     if (!isHost) {
       return allSteps.find(s => s.id === 'create')!;
+    }
+
+    // Last: optional paid verification add-on (never a gate)
+    if (!isVerified) {
+      return allSteps.find(s => s.id === 'verify')!;
     }
 
     return null;
