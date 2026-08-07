@@ -33,10 +33,18 @@ const Auth = () => {
     }
   }, [searchParams]);
 
+  // Only show the post-signup welcome to newly-created accounts. Existing
+  // users who sign in without an onboarded_at timestamp should land on their
+  // dashboard, not the new-user onboarding flow.
+  const isNewUser = (user: User): boolean => {
+    const createdAt = new Date(user.created_at);
+    const now = new Date();
+    const diffMinutes = (now.getTime() - createdAt.getTime()) / (1000 * 60);
+    return diffMinutes < 10;
+  };
+
   useEffect(() => {
     if (user && !isLoading) {
-      // New signups (no onboarded_at) get the one-time welcome. It never blocks —
-      // the welcome page persists onboarded_at on any exit.
       let cancelled = false;
       (async () => {
         try {
@@ -46,7 +54,7 @@ const Auth = () => {
             .eq('id', user.id)
             .maybeSingle();
           if (cancelled) return;
-          if (!data?.onboarded_at) {
+          if (!data?.onboarded_at && isNewUser(user)) {
             const rt = redirectUrl || '/dashboard';
             navigate(`/welcome?returnTo=${encodeURIComponent(rt)}`, { replace: true });
             return;
