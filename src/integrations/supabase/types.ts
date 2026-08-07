@@ -2725,6 +2725,54 @@ export type Database = {
           },
         ]
       }
+      listing_financing_preferences: {
+        Row: {
+          created_at: string
+          disclosure_accepted_at: string | null
+          disclosure_version: string | null
+          equinox_opt_in: boolean
+          host_id: string
+          include_vin: boolean
+          listing_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          disclosure_accepted_at?: string | null
+          disclosure_version?: string | null
+          equinox_opt_in?: boolean
+          host_id: string
+          include_vin?: boolean
+          listing_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          disclosure_accepted_at?: string | null
+          disclosure_version?: string | null
+          equinox_opt_in?: boolean
+          host_id?: string
+          include_vin?: boolean
+          listing_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "listing_financing_preferences_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: true
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "listing_financing_preferences_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: true
+            referencedRelation: "public_listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       listing_leads: {
         Row: {
           created_at: string
@@ -5516,6 +5564,7 @@ export type Database = {
           membership_panel_dismissed_at: string | null
           name_parts_confirmed: boolean
           onboarded_at: string | null
+          payments_transition_ack_at: string | null
           paypal_payout_email: string | null
           paypal_payout_updated_at: string | null
           paypal_payout_verified_at: string | null
@@ -5573,6 +5622,7 @@ export type Database = {
           membership_panel_dismissed_at?: string | null
           name_parts_confirmed?: boolean
           onboarded_at?: string | null
+          payments_transition_ack_at?: string | null
           paypal_payout_email?: string | null
           paypal_payout_updated_at?: string | null
           paypal_payout_verified_at?: string | null
@@ -5630,6 +5680,7 @@ export type Database = {
           membership_panel_dismissed_at?: string | null
           name_parts_confirmed?: boolean
           onboarded_at?: string | null
+          payments_transition_ack_at?: string | null
           paypal_payout_email?: string | null
           paypal_payout_updated_at?: string | null
           paypal_payout_verified_at?: string | null
