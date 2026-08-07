@@ -11,12 +11,10 @@ import Hero from '@/components/home/Hero';
 import AnnouncementBanner from '@/components/home/AnnouncementBanner';
 import HeroBelowFold from '@/components/home/HeroBelowFold';
 import ReferralPromoCard from '@/components/home/ReferralPromoCard';
-import VerificationBanner from '@/components/home/VerificationBanner';
 import ConciergeSection from '@/components/home/ConciergeSection';
 import SellerHomeBlock from '@/components/home/SellerHomeBlock';
 import HowVendibookWorks from '@/components/home/how-it-works/HowVendibookWorks';
 
-import { useAuth } from '@/contexts/AuthContext';
 import { usePageTracking } from '@/hooks/usePageTracking';
 import { Skeleton } from '@/components/ui/skeleton';
 import SEO, { generateOrganizationSchema, generateWebSiteSchema } from '@/components/SEO';
@@ -45,7 +43,6 @@ const SectionSkeleton = () => (
 );
 
 const Index = () => {
-  const { user, isVerified, isLoading } = useAuth();
   const queryClient = useQueryClient();
   
   // Track page views with Google Analytics
@@ -72,9 +69,6 @@ const Index = () => {
     });
   }, [queryClient]);
 
-  // Show verification banner for logged-in, unverified users
-  const showVerificationBanner = !isLoading && user && !isVerified;
-
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <SEO
@@ -85,8 +79,6 @@ const Index = () => {
       <JsonLd schema={[generateOrganizationSchema(), generateWebSiteSchema()]} />
       <Header />
 
-      {showVerificationBanner && <VerificationBanner userId={user.id} />}
-      
       <main className="flex-1">
         {/* 1. Hero */}
         <Hero />

@@ -1,18 +1,15 @@
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import {
-  ShieldCheck,
   FileCheck,
   UserCheck,
   CalendarCheck,
   Wallet,
   MessageSquare,
-  CreditCard,
   Truck,
   BadgeCheck,
   ArrowRight} from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { ProviderTrustFeature } from '@/components/home/ProviderTrustFeature';
 import trustKitchen from '@/assets/home/trust-kitchen.jpg';
 import trustHandoff from '@/assets/home/trust-handoff.jpg';
 import ownersFoodTruck from '@/assets/home/owners-food-truck.jpg';
@@ -24,17 +21,13 @@ const TRUST_PHOTOS = [
 
 const PILLARS = [
   {
-    icon: ShieldCheck,
-    title: 'Secure payments',
-    body: 'Online checkout is processed by PayPal. Vendibook does not hold or escrow your funds.'},
-  {
     icon: FileCheck,
     title: 'Document collection',
     body: 'COI, licenses, permits, and contracts collected before pickup.'},
   {
     icon: UserCheck,
-    title: 'Verified profiles',
-    body: 'Profiles, listing history, and reviews. Identity verification is optional, not universal.'},
+    title: 'Owner profiles',
+    body: 'Profiles, listing history, and reviews help you evaluate who you are dealing with.'},
   {
     icon: CalendarCheck,
     title: 'Booking requests',
@@ -47,10 +40,6 @@ const PILLARS = [
     icon: MessageSquare,
     title: 'Messaging',
     body: 'In-platform messages keep details, files, and history in one place.'},
-  {
-    icon: CreditCard,
-    title: 'Financing options',
-    body: 'Equipment financing through Equinox Funding. Separate application and underwriting apply.'},
   {
     icon: Truck,
     title: 'Delivery coordination',
@@ -89,8 +78,6 @@ const TrustInfrastructure = () => {
             Vendibook gives buyers, renters, owners, and sellers tools for secure payments, document collection, owner profiles, messaging, and booking requests — so every deal has a clearer path forward.
           </p>
         </motion.div>
-
-        <ProviderTrustFeature />
 
         {/* Real photos strip */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-10 sm:mb-14">
