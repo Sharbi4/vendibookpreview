@@ -116,13 +116,13 @@ const Profile = () => {
           {isOwnProfile && (
             <EnhancedProfileNextStepCard
               isVerified={profile.identity_verified || false}
-              stripeConnected={stripeConnected}
+              payoutReady={stripeConnected}
               isHost={isHost}
               draftCount={draftCount}
               pendingRequestCount={pendingRequestCount}
-              isLoadingStripe={stripeLoading}
-              onConnectStripe={goToPayoutSettings}
-              isConnectingStripe={false}
+              isLoadingPayout={stripeLoading}
+              onSetUpPayouts={goToPayoutSettings}
+              isSavingPayouts={false}
             />
           )}
 
