@@ -69,13 +69,13 @@ const TrustInfrastructure = () => {
           transition={{ duration: 0.6 }}
         >
           <span className="inline-flex items-center gap-1.5 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] bg-foreground/[0.06] text-foreground/70 rounded-full mb-5 border-2 border-foreground/[0.10]">
-            Trust Infrastructure
+            MARKETPLACE TOOLS
           </span>
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-foreground leading-[1.1] tracking-tight mb-4 max-w-2xl mx-auto">
-            Tools that move every deal forward.
+            Keep every detail organized.
           </h2>
           <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-            Vendibook gives buyers, renters, owners, and sellers tools for secure payments, document collection, owner profiles, messaging, and booking requests — so every deal has a clearer path forward.
+            Documents, owner profiles, messaging, booking requests, delivery details, and reviews stay together—giving buyers, renters, owners, and sellers a clearer path forward.
           </p>
         </motion.div>
 
