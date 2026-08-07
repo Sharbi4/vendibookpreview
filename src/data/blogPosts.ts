@@ -56,7 +56,7 @@ export const BLOG_POSTS: BlogPost[] = [
 <ul class="mb-6">
   <li><strong>Help qualified buyers explore financing</strong> for food trucks, food trailers, carts, custom builds, and related equipment found through Vendibook — instead of assuming an all-cash purchase is the only option.</li>
   <li><strong>Make listings more finance-ready.</strong> Vendibook already generates a financing purchase summary for eligible sale listings, including price, asset details, and VIN or serial number when the seller provides one. That documentation is exactly what a funding review typically asks for first.</li>
-  <li><strong>Help sellers reach more buyers.</strong> Some buyers who cannot write one large check can comfortably support fixed monthly payments. Being open to financed offers widens the buyer pool without changing how the seller gets paid.</li>
+  <li><strong>Help sellers reach more buyers.</strong> Some buyers who cannot write one large check can comfortably support fixed monthly payments. Being open to financed offers can widen the buyer pool without requiring the seller to extend credit to the buyer.</li>
 </ul>
 
 <div class="not-prose my-10 rounded-2xl border border-primary/20 bg-primary/5 p-6 md:p-8">
