@@ -32,31 +32,46 @@ const TITLE_STATUS = [
  * details and uploads stay in an owner-only table and a private bucket. Buyers
  * only ever see the summarized facts derived on save.
  */
+const normalizeVin = (v?: string | null) => {
+  const trimmed = (v ?? '').trim().toUpperCase();
+  return trimmed.length ? trimmed : null;
+};
+
 export const OwnershipDetailsForm: React.FC<Props> = ({ listingId, hostId, onSavePublicSummary }) => {
   const { values, loading, saving, save } = useOwnershipDetails(listingId, hostId);
   const { docs, busy, upload, remove, openSigned } = useOwnershipDocuments(listingId, hostId);
   const [draft, setDraft] = useState<OwnershipPrivateValues>({});
+  const [vinMode, setVinMode] = useState<'provide' | 'none'>('provide');
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
-  useEffect(() => setDraft(values), [values]);
+  useEffect(() => {
+    setDraft(values);
+    setVinMode(values.vin_serial ? 'provide' : vinMode);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [values]);
 
   const set = (key: keyof OwnershipPrivateValues, value: unknown) =>
     setDraft((d) => ({ ...d, [key]: value }));
 
   const handleSave = async () => {
     setError(null);
-    const ok = await save(draft);
+    const next: OwnershipPrivateValues = {
+      ...draft,
+      vin_serial: vinMode === 'none' ? null : normalizeVin(draft.vin_serial),
+    };
+    const ok = await save(next);
     if (!ok) {
       setError('We could not save your ownership details. Nothing was published. Try again.');
       return;
     }
-    await onSavePublicSummary(buildOwnershipPublicSummary(draft));
+    await onSavePublicSummary(buildOwnershipPublicSummary(next));
     toast({
       title: 'Ownership details saved',
       description: 'Only a short summary such as title status is shown publicly.',
     });
   };
+
 
   if (loading) {
     return (
@@ -109,13 +124,51 @@ export const OwnershipDetailsForm: React.FC<Props> = ({ listingId, hostId, onSav
             </SelectContent>
           </Select>
         </div>
-        <div className="space-y-1.5">
+        <div className="space-y-1.5 sm:col-span-2">
           <Label className="flex items-center gap-1.5 text-sm">
             VIN or serial number
             <InfoTooltip content="Stored privately. Never displayed on your public listing." />
           </Label>
-          <Input className="text-base" value={draft.vin_serial ?? ''} onChange={(e) => set('vin_serial', e.target.value)} />
+          <div className="flex flex-wrap gap-2">
+            <Button
+              type="button"
+              size="sm"
+              variant={vinMode === 'provide' ? 'default' : 'outline'}
+              onClick={() => setVinMode('provide')}
+              aria-pressed={vinMode === 'provide'}
+            >
+              Provide VIN or serial number
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant={vinMode === 'none' ? 'default' : 'outline'}
+              onClick={() => {
+                setVinMode('none');
+                set('vin_serial', null);
+              }}
+              aria-pressed={vinMode === 'none'}
+            >
+              No VIN available
+            </Button>
+          </div>
+          {vinMode === 'provide' && (
+            <div className="space-y-1.5 pt-1">
+              <Label htmlFor="vin-serial" className="text-sm">VIN or serial number</Label>
+              <Input
+                id="vin-serial"
+                className="text-base uppercase"
+                value={draft.vin_serial ?? ''}
+                onChange={(e) => set('vin_serial', e.target.value)}
+                onBlur={(e) => set('vin_serial', normalizeVin(e.target.value))}
+              />
+              <p className="text-xs text-muted-foreground">
+                Optional, but providing it helps identify the equipment and may speed financing review.
+              </p>
+            </div>
+          )}
         </div>
+
         <div className="space-y-1.5">
           <Label className="text-sm">Manufacturer plate</Label>
           <Input className="text-base" value={draft.manufacturer_plate ?? ''} onChange={(e) => set('manufacturer_plate', e.target.value)} />
