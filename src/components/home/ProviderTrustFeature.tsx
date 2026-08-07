@@ -3,6 +3,7 @@ import { Lock, ShieldCheck, ExternalLink } from 'lucide-react';
 import { PayPalWordmark, PlaidLogo } from '@/components/brand/ProviderLogos';
 import paypalAppImage from '@/assets/brand/paypal-app-2025.webp.asset.json';
 import { usePublicFeatureFlag } from '@/hooks/usePublicFeatureFlag';
+import { IdentityAddOnNote } from '@/components/verification/IdentityAddOnNote';
 
 /**
  * Premium two-column provider feature for the homepage trust section.
@@ -81,6 +82,7 @@ export function ProviderTrustFeature() {
             <p className="mt-3 text-xs leading-relaxed text-muted-foreground/80">
               Not every seller is identity verified.
             </p>
+            <IdentityAddOnNote className="mt-3" />
           </div>
         )}
       </div>

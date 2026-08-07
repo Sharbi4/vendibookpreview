@@ -9,6 +9,7 @@ import {
 } from '@/components/ui/accordion';
 import { PayPalWordmark, PlaidLogo } from '@/components/brand/ProviderLogos';
 import equinoxLogo from '@/assets/brand/equinox-funding-logo.png.asset.json';
+import { IdentityAddOnNote } from '@/components/verification/IdentityAddOnNote';
 
 /**
  * Single consolidated trust section for the homepage.
@@ -95,6 +96,7 @@ const ConciergeSection = () => {
               Secure online checkout, seller identity verification*, and equipment
               financing—supported by providers built for serious transactions.
             </p>
+            <IdentityAddOnNote align="center" showLogo className="mt-4" />
           </div>
 
           {/* Provider cards */}
