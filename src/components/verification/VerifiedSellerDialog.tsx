@@ -16,6 +16,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { failedResultCopy } from '@/lib/verifiedSellerCopy';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useSellerVerification } from '@/hooks/useSellerVerification';
@@ -356,7 +357,7 @@ const VerifiedSellerDialog = ({ open, onOpenChange, onVerified }: VerifiedSeller
                     Verification not completed
                   </p>
                   <p className="text-sm text-muted-foreground">
-                    You were not charged and any hold has been released.
+                    {failedResultCopy(v.state?.payment_state)}
                   </p>
                   {v.state?.can_retry && (
                     <Button

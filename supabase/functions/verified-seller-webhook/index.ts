@@ -1,16 +1,25 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import { corsHeaders, jsonResponse } from "../_shared/jsonError.ts";
-import { plaidLog, verifyPlaidWebhook } from "../_shared/plaid.ts";
-import { webhookEventKey } from "../_shared/verifiedSellerLogic.ts";
+import {
+  getIdentityVerification,
+  plaidEnvironment,
+  plaidLog,
+  verifyPlaidWebhook,
+} from "../_shared/plaid.ts";
+import {
+  plaidEnvironmentMatches,
+  webhookConvergenceKey,
+} from "../_shared/verifiedSellerLogic.ts";
 import { claimEvent, log, reconcileVerification } from "../_shared/verifiedSeller.ts";
 
 /**
  * Plaid Identity Verification webhook.
  *
  * Signature is verified with Plaid's JWK process BEFORE anything is read from
- * the payload. Events are deduplicated, and we never trust the event body for
- * status — we re-query Plaid for the authoritative result.
+ * the payload. We never trust the event body for status — the authoritative
+ * result is re-queried from Plaid, and that authoritative status is what the
+ * dedupe key converges on.
  *
  * Configure in the Plaid dashboard as:
  *   <SUPABASE_URL>/functions/v1/verified-seller-webhook
@@ -45,6 +54,12 @@ serve(async (req) => {
     return jsonResponse(200, { received: true, processed: false });
   }
 
+  // A sandbox notification must never touch production records (or vice versa).
+  if (!plaidEnvironmentMatches(payload.environment, plaidEnvironment())) {
+    plaidLog("webhook_environment_mismatch", { verification_id: verificationId });
+    return jsonResponse(200, { received: true, processed: false, reason: "environment_mismatch" });
+  }
+
   // STATUS_UPDATED and RETRIED carry outcomes. STEP_UPDATED is progress noise
   // that must never be allowed to downgrade a settled result.
   if (!["STATUS_UPDATED", "RETRIED"].includes(webhookCode)) {
@@ -70,14 +85,21 @@ serve(async (req) => {
     }
 
     /**
-     * Dedupe on a digest of the VERIFIED raw body. Plaid does not always send
-     * a timestamp, so composing a key from a few fields would collapse every
-     * STATUS_UPDATED for one verification into a single processed event.
-     * A body digest processes active -> pending_review -> success in turn
-     * while still dropping an exact duplicate delivery.
+     * Official STATUS_UPDATED bodies are byte-identical across transitions, so
+     * the dedupe key is composed from the AUTHORITATIVE Plaid state instead.
+     * Duplicate deliveries of one state coalesce; active -> pending_review ->
+     * success each process.
      */
-    const eventKey = await webhookEventKey(webhookCode, raw);
-
+    const authoritative = await getIdentityVerification(verificationId) as {
+      status?: string;
+      completed_at?: string | null;
+    };
+    const eventKey = webhookConvergenceKey({
+      webhookCode,
+      verificationId,
+      authoritativeStatus: String(authoritative?.status ?? "unknown"),
+      completedAt: authoritative?.completed_at ?? null,
+    });
 
     const claimed = await claimEvent(admin, {
       provider: "plaid",
@@ -117,3 +139,4 @@ serve(async (req) => {
     return jsonResponse(500, { received: true, processed: false });
   }
 });
+

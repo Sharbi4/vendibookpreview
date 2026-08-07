@@ -164,19 +164,46 @@ export async function sha256Hex(value: string): Promise<string> {
 }
 
 /**
- * Deduplication key for a Plaid webhook.
+ * Deduplication / convergence key for a Plaid Identity Verification webhook.
  *
- * Derived from a digest of the VERIFIED raw body, so two legitimate status
- * updates for the same identity_verification_id (active -> pending_review ->
- * success) each process, while an exact duplicate delivery is dropped. Plaid
- * does not always send a timestamp, so a field-composed key is not safe.
+ * Plaid's official STATUS_UPDATED body carries only `webhook_type`,
+ * `webhook_code`, `identity_verification_id` and `environment` — so every
+ * legitimate transition for one verification has a BYTE-IDENTICAL raw body.
+ * Keying on the body digest would therefore collapse active -> pending_review
+ * -> success into a single processed event and strand the money.
+ *
+ * The key is instead composed from the verification id plus the AUTHORITATIVE
+ * status we just fetched from Plaid (and `completed_at` when Plaid supplies
+ * it). Exact duplicate deliveries of the same authoritative state coalesce;
+ * real status changes always process.
  */
-export async function webhookEventKey(
-  webhookCode: string,
-  rawBody: string,
-): Promise<string> {
-  return `${webhookCode}:${await sha256Hex(rawBody)}`;
+export function webhookConvergenceKey(input: {
+  webhookCode: string;
+  verificationId: string;
+  authoritativeStatus: string;
+  completedAt?: string | null;
+}): string {
+  return [
+    input.webhookCode,
+    input.verificationId,
+    input.authoritativeStatus,
+    input.completedAt ?? "",
+  ].join(":");
 }
+
+/**
+ * True when the webhook body's `environment` matches the environment this
+ * server is configured for. A mismatch means a sandbox notification hit a
+ * production deployment (or vice versa) and must never be processed.
+ */
+export function plaidEnvironmentMatches(
+  payloadEnvironment: unknown,
+  configuredEnvironment: string,
+): boolean {
+  if (typeof payloadEnvironment !== "string" || !payloadEnvironment) return false;
+  return payloadEnvironment.toLowerCase() === configuredEnvironment.toLowerCase();
+}
+
 
 /**
  * Plaid signs webhooks with a short-lived JWT. Reject anything older than five
@@ -260,6 +287,127 @@ export function extractCaptureStatus(result: any): string | null {
     null
   );
 }
+
+/**
+ * Capture id from a PayPal ORDER resource. A GET on the AUTHORIZATION only
+ * reports a status — it never carries the capture id — so an ALREADY_CAPTURED
+ * recovery must read the order's purchase_units[].payments.captures[].
+ */
+export function extractCaptureIdFromOrder(order: any): string | null {
+  const units = order?.purchase_units;
+  if (!Array.isArray(units)) return null;
+  for (const unit of units) {
+    const captures = unit?.payments?.captures;
+    if (Array.isArray(captures)) {
+      for (const capture of captures) {
+        if (capture?.id) return String(capture.id);
+      }
+    }
+  }
+  return null;
+}
+
+// ------------------------------------------------- money resolution (pure)
+/**
+ * The authoritative final position of the seller's money after an attempted
+ * release. Callers MUST persist this rather than re-writing an earlier state:
+ * a successful emergency refund must never be overwritten back to `captured`.
+ */
+export type MoneyState = "voided" | "refunded" | "captured" | "unresolved";
+
+export interface MoneyResolution {
+  /** True only when the seller definitively owes nothing. */
+  ok: boolean;
+  moneyState: MoneyState;
+  errorCode?: string;
+  /** True when a human must look at this. */
+  needsAdminAttention: boolean;
+  /** Safe to tell the seller "you were not charged". */
+  safeToSayNotCharged: boolean;
+}
+
+/** Classifies a PayPal void error message into an actionable outcome. */
+export type VoidErrorKind = "benign" | "already_captured" | "failed";
+
+export function classifyVoidError(text: string | null | undefined): VoidErrorKind {
+  const value = `${text ?? ""}`;
+  if (/ALREADY_CAPTURED|AUTHORIZATION_ALREADY_CAPTURED/i.test(value)) return "already_captured";
+  if (/VOIDED|EXPIRED|NOT_FOUND|RESOURCE_NOT_FOUND/i.test(value)) return "benign";
+  return "failed";
+}
+
+/**
+ * Single source of truth for "what is the money doing now" after a release
+ * attempt. Pure so every branch is directly testable.
+ */
+export function resolveMoneyOutcome(input: {
+  /** Result of the void call: confirmed release, benign no-op, or failure. */
+  void?: "confirmed" | "benign" | "failed";
+  /** PayPal reported the authorization was already captured. */
+  alreadyCaptured?: boolean;
+  /** Outcome of the emergency refund of that capture, when attempted. */
+  refund?: "succeeded" | "failed" | "not_attempted";
+  /** Identity genuinely succeeded, so the capture is legitimate. */
+  identitySucceeded?: boolean;
+  errorCode?: string;
+}): MoneyResolution {
+  if (input.alreadyCaptured) {
+    if (input.identitySucceeded) {
+      return {
+        ok: true,
+        moneyState: "captured",
+        needsAdminAttention: false,
+        safeToSayNotCharged: false,
+      };
+    }
+    if (input.refund === "succeeded") {
+      return {
+        ok: true,
+        moneyState: "refunded",
+        errorCode: "ALREADY_CAPTURED_REFUNDED",
+        needsAdminAttention: false,
+        safeToSayNotCharged: false,
+      };
+    }
+    return {
+      ok: false,
+      moneyState: "captured",
+      errorCode: input.errorCode ?? "ALREADY_CAPTURED",
+      needsAdminAttention: true,
+      safeToSayNotCharged: false,
+    };
+  }
+
+  if (input.void === "failed") {
+    return {
+      ok: false,
+      moneyState: "unresolved",
+      errorCode: input.errorCode ?? "VOID_FAILED",
+      needsAdminAttention: true,
+      safeToSayNotCharged: false,
+    };
+  }
+
+  return {
+    ok: true,
+    moneyState: "voided",
+    needsAdminAttention: false,
+    safeToSayNotCharged: true,
+  };
+}
+
+/**
+ * The badge may only show when identity genuinely succeeded AND a live,
+ * unrefunded capture funds it. Any unresolved money suppresses it.
+ */
+export function badgeAllowedForMoneyState(
+  identitySucceeded: boolean,
+  moneyState: MoneyState | string,
+): boolean {
+  return identitySucceeded && moneyState === "captured";
+}
+
+
 
 /** PayPal issues that mean "this account cannot authorize" — never fall back. */
 export const AUTHORIZATION_CAPABILITY_ISSUES = [

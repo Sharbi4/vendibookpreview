@@ -203,12 +203,55 @@ async function recordAttempt(
 }
 
 /**
+ * Persists a freshly created Plaid session as the CURRENT attempt.
+ *
+ * This runs the moment Plaid returns a session id — before a Link token is
+ * requested — so a Link-token failure can never orphan a session that Plaid
+ * has already created (and, for a retry, already counted).
+ */
+async function persistSession(
+  admin: any,
+  userId: string,
+  templateId: string,
+  session: { id: string; status?: string; previous_attempt_id?: string | null; request_id?: string },
+  payment: PaymentRow | null,
+  previousFallback?: string | null,
+) {
+  await recordAttempt(admin, userId, templateId, session, payment, previousFallback);
+  await admin
+    .from("seller_verifications")
+    .update({
+      current_attempt_id: session.id,
+      identity_status: session.status ?? "active",
+      status: "identity_pending",
+      updated_at: new Date().toISOString(),
+    })
+    .eq("user_id", userId);
+}
+
+/**
+ * Best-effort Link token issuance. A failure here is RECOVERABLE: the Plaid
+ * session and the PayPal authorization both stay valid and the seller resumes
+ * the very same session via the `link-token` action.
+ */
+async function tryIssueLinkToken(userId: string, templateId: string): Promise<string | null> {
+  try {
+    return await issueLinkToken(userId, templateId);
+  } catch (err) {
+    log("link_token_failed", { message: (err as Error).message });
+    return null;
+  }
+}
+
+/**
  * Starts the Plaid work that belongs to an authorized payment.
  *
  * A payment recorded with purpose `retry` ALWAYS uses Plaid's
  * /identity_verification/retry endpoint — never /create, which would start a
  * second billable session. The retry allowance is consumed atomically in the
- * database and released again if Plaid never created the attempt.
+ * database and released ONLY when the retry call itself failed before Plaid
+ * returned a session. Once Plaid returns a session the retry is consumed for
+ * good, even if the Link token cannot be issued right away.
  */
 async function startPlaidForPayment(
   admin: any,
@@ -216,7 +259,7 @@ async function startPlaidForPayment(
   templateId: string,
   payment: PaymentRow | null,
   record: VerificationRow,
-): Promise<{ linkToken: string; sessionId: string } | Response> {
+): Promise<{ linkToken: string | null; sessionId: string } | Response> {
   const isRetry = payment?.purpose === "retry";
 
   if (isRetry) {
@@ -231,20 +274,43 @@ async function startPlaidForPayment(
       );
     }
 
+    let session;
     try {
-      const session = await retryIdentityVerification({ clientUserId: userId, templateId });
-      await recordAttempt(admin, userId, templateId, session, payment, record.current_attempt_id);
-      return { linkToken: await issueLinkToken(userId, templateId), sessionId: session.id };
+      session = await retryIdentityVerification({ clientUserId: userId, templateId });
     } catch (err) {
       // Plaid never created the attempt — give the allowance back.
       await admin.rpc("release_seller_verification_retry", { _user_id: userId });
       throw err;
     }
+
+    // The retry now exists at Plaid. It stays consumed from here on.
+    await persistSession(
+      admin,
+      userId,
+      templateId,
+      session,
+      payment,
+      record.current_attempt_id,
+    );
+    return { linkToken: await tryIssueLinkToken(userId, templateId), sessionId: session.id };
   }
 
   const session = await createIdentityVerification({ clientUserId: userId, templateId });
-  await recordAttempt(admin, userId, templateId, session, payment);
-  return { linkToken: await issueLinkToken(userId, templateId), sessionId: session.id };
+  await persistSession(admin, userId, templateId, session, payment);
+  return { linkToken: await tryIssueLinkToken(userId, templateId), sessionId: session.id };
+}
+
+/** Recoverable response when Plaid has a session but no Link token yet. */
+function linkTokenPending(sessionId: string) {
+  return jsonResponse(200, {
+    ok: false,
+    error_code: "link_token_unavailable",
+    session_id: sessionId,
+    resumable: true,
+    message:
+      "Your identity check is reserved and your payment is still on hold — nothing extra was charged. " +
+      "Reopen the check in a moment to finish it.",
+  });
 }
 
 serve(async (req) => {
@@ -389,6 +455,9 @@ serve(async (req) => {
               error_code: authStatus && authStatus !== "CREATED" ? authStatus : null,
             })
             .eq("id", payment.id);
+
+          // Keep the authoritative seller record truthful about the hold.
+          await syncPaymentState(admin, userId, "authorized");
         } catch (err) {
           const issue = (err as PayPalError)?.issue ?? null;
           await admin
@@ -460,12 +529,20 @@ serve(async (req) => {
           })
           .eq("user_id", userId);
 
+        /**
+         * Plaid has the session but the Link token could not be minted. The
+         * hold stays put and the session is resumable — voiding here would
+         * strand a consumed Plaid attempt.
+         */
+        if (!started.linkToken) return linkTokenPending(started.sessionId);
+
         return jsonResponse(200, {
           status: "identity_in_progress",
           link_token: started.linkToken,
           badge_active: false,
         });
       } catch (err) {
+        // Only a failure to CREATE the session releases the money.
         const open = await latestOpenPayment(admin, userId);
         if (open) await voidAuthorizationOnce(admin, open, "plaid_session_failed");
         log("plaid_session_failed", { code: (err as PlaidError)?.errorCode });
@@ -515,13 +592,21 @@ serve(async (req) => {
               updated_at: new Date().toISOString(),
             })
             .eq("user_id", userId);
+          if (!started.linkToken) return linkTokenPending(started.sessionId);
           return jsonResponse(200, {
             link_token: started.linkToken,
             status: "identity_in_progress",
             resumed: true,
           });
         }
-        await voidAuthorizationOnce(admin, open, "unusable_authorization");
+        const released = await voidAuthorizationOnce(admin, open, "unusable_authorization");
+        if (!released.ok) {
+          return jsonError(
+            502,
+            "hold_not_released",
+            "We couldn't confirm the release of your payment hold. Our team has been alerted and will resolve it — please don't start again yet.",
+          );
+        }
         return jsonError(
           409,
           "authorization_expired",
@@ -585,6 +670,7 @@ serve(async (req) => {
             updated_at: new Date().toISOString(),
           })
           .eq("user_id", userId);
+        if (!started.linkToken) return linkTokenPending(started.sessionId);
         return jsonResponse(200, {
           status: "identity_in_progress",
           link_token: started.linkToken,
@@ -638,22 +724,47 @@ serve(async (req) => {
       }
       const open = await latestOpenPayment(admin, userId);
       if (open?.paypal_order_id && open.state === "created") {
+        // Relabel: this order buys the badge only, it must never start Plaid.
+        if (open.purpose !== "payment_only") {
+          await admin
+            .from("seller_verification_payments")
+            .update({ purpose: "payment_only" })
+            .eq("id", open.id);
+        }
         return jsonResponse(200, { status: "payment_required", order_id: open.paypal_order_id });
       }
-      const created = await createAuthorizeOrder(admin, userId);
+      const created = await createAuthorizeOrder(admin, userId, "payment_only");
       if (created instanceof Response) return created;
       return jsonResponse(200, { status: "payment_required", order_id: created.orderId });
     }
 
     // ------------------------------------------------------------ cancel
+    /**
+     * Cancel may only claim "nothing was charged" when PayPal actually
+     * confirms the release. An unresolved or captured hold stays truthful in
+     * the authoritative record and is escalated instead of being papered over.
+     */
     if (action === "cancel") {
       const open = await latestOpenPayment(admin, userId);
-      if (open) await voidAuthorizationOnce(admin, open, "user_canceled");
+      const released = open
+        ? await voidAuthorizationOnce(admin, open, "user_canceled")
+        : null;
+
+      if (released && !released.ok) {
+        return jsonError(
+          502,
+          "hold_not_released",
+          released.moneyState === "captured"
+            ? "Your payment went through before we could cancel, so we're sorting it out now. Our team has been alerted and will follow up — please don't try again yet."
+            : "We couldn't confirm that your payment hold was released. Our team has been alerted and will resolve it — please don't try again yet.",
+        );
+      }
+
       await admin
         .from("seller_verifications")
         .update({
           status: "canceled",
-          payment_state: open ? "voided" : record.payment_state,
+          payment_state: released ? released.moneyState : record.payment_state,
           updated_at: new Date().toISOString(),
         })
         .eq("user_id", userId)
@@ -661,7 +772,9 @@ serve(async (req) => {
 
       return jsonResponse(200, {
         ...publicState(await ensureVerification(admin, userId), null, enabled),
-        message: "Verification canceled. Nothing was charged and any hold was released.",
+        message: released?.moneyState === "refunded"
+          ? "Verification canceled and your payment was refunded."
+          : "Verification canceled. Nothing was charged and any hold was released.",
       });
     }
 
@@ -671,3 +784,4 @@ serve(async (req) => {
     return unknownErrorResponse(err);
   }
 });
+
