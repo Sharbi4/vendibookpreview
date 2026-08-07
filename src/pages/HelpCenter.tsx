@@ -75,7 +75,7 @@ const intentLanes = [
     icon: Tag,
     tasks: [
       { label: 'Create a listing checklist', slug: 'host-listing-checklist' },
-      { label: 'Stripe Connect setup (required)', slug: 'stripe-connect-setup' },
+      { label: 'Payout setup', slug: 'payout-setup' },
       { label: 'Payout timing & fees', slug: 'payout-timing-fees' },
     ],
     cta: { label: 'Start a listing', href: '/list' },
