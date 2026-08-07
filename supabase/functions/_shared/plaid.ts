@@ -290,12 +290,15 @@ export async function verifyPlaidWebhook(
     return false;
   }
 
-  // Replay window: Plaid recommends rejecting tokens older than 5 minutes.
+  // Replay window: reject tokens older than five minutes, and reject tokens
+  // materially in the future (only a small clock-skew allowance).
   const iat = Number(payload.iat ?? 0);
-  if (!iat || Date.now() / 1000 - iat > 300) {
+  if (!isFreshPlaidIat(iat)) {
     plaidLog("webhook_stale", { age_seconds: Math.round(Date.now() / 1000 - iat) });
     return false;
   }
+
+
 
   const bodyHash = await sha256Hex(rawBody);
   if (bodyHash !== payload.request_body_sha256) {
