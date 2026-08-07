@@ -430,6 +430,13 @@ const HostListingCard = ({
                   {isFeatured && (
                     <FeaturedBadge listing={listing as any} size="sm" showDaysLeft />
                   )}
+                  {(listing as any).host_verified && (
+                    <IdentityVerifiedBadge
+                      verified={(listing as any).host_verified ?? false}
+                      size="sm"
+                      withDetails={false}
+                    />
+                  )}
                   {hasNotary && isSale && (
                     <Badge
                       variant="secondary"
@@ -439,6 +446,7 @@ const HostListingCard = ({
                       Notary
                     </Badge>
                   )}
+
                 </div>
                 <p className="text-xs text-muted-foreground mt-1 truncate">
                   {location}
