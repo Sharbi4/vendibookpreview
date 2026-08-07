@@ -20,6 +20,7 @@ import {
   Rocket,
   FileEdit,
   Wallet,
+  Lightbulb,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -39,6 +40,12 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { CATEGORY_LABELS } from '@/types/listing';
 import AvailabilityCalendar from './AvailabilityCalendar';
 import { useListingFavoriteCount } from '@/hooks/useFavorites';
@@ -184,7 +191,7 @@ const HostListingCard = ({
     <Button
       variant="outline"
       size="sm"
-      className="h-10 rounded-md px-4"
+      className="h-9 rounded-lg px-3 text-xs border-white/10 bg-white/[0.02] hover:bg-white/[0.06]"
       onClick={() => setShowPayoutSetup(true)}
     >
       {payoutPreference ? (
@@ -616,6 +623,20 @@ const HostListingCard = ({
         onOpenChange={setShowPayoutSetup}
         listingTitle={listing.title}
       />
+
+      <Dialog open={showSuggestions} onOpenChange={setShowSuggestions}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Suggestions for this listing</DialogTitle>
+          </DialogHeader>
+          <ListingReadinessCard
+            listingId={listing.id}
+            category={listing.category}
+            mode={listing.mode}
+            showExistingListingPrompt
+          />
+        </DialogContent>
+      </Dialog>
 
       <ShareKitModal
         open={showShareKit}
