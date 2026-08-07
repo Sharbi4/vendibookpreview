@@ -1,328 +1,227 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
-import { Button } from '@/components/ui/button';
-import { useToast } from '@/hooks/use-toast';
+import { useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import {
-  Shield,
+  ArrowRight,
+  BadgeCheck,
   CheckCircle2,
   Loader2,
-  Camera,
-  UserRound,
-  IdCard,
   Lock,
-  ExternalLink,
-  ArrowRight,
+  ShieldCheck,
 } from 'lucide-react';
 import Header from '@/components/layout/Header';
-import verifiedBadge from '@/assets/verified-badge.png';
-import { PaymentTrustBadge } from '@/components/trust/PaymentTrustBadge';
+import Footer from '@/components/layout/Footer';
+import SEO from '@/components/SEO';
+import { Button } from '@/components/ui/button';
+import { useAuth } from '@/contexts/AuthContext';
+import { useSellerVerification } from '@/hooks/useSellerVerification';
+import { GetVerifiedButton } from '@/components/verification/GetVerifiedButton';
+import { IDENTITY_VERIFIED_DISCLOSURE } from '@/components/verification/IdentityVerifiedBadge';
+import { PayPalMonogram, PlaidLogo } from '@/components/brand/ProviderLogos';
 import { goBackToOrigin } from '@/lib/originNav';
 
-type Status = 'checking' | 'not_started' | 'pending' | 'processing' | 'verified';
+const PANEL =
+  'rounded-2xl border-2 border-foreground/[0.10] bg-foreground/[0.035] backdrop-blur-xl';
 
+/**
+ * Verified Seller upsell.
+ *
+ * The single destination for every "identity verification" entry point
+ * (dashboard menu, mobile menu, account rows). Identity is checked by Plaid and
+ * the one-time fee is authorized as a PayPal hold that is captured only after a
+ * successful check. Verification is always optional — never a gate on
+ * publishing, buying, renting, or selling.
+ */
 const IdentityVerification = () => {
-  const [isLoading, setIsLoading] = useState(false);
-  const [status, setStatus] = useState<Status>('checking');
-  const { user, isVerified, refreshProfile, isLoading: authLoading } = useAuth();
   const navigate = useNavigate();
-  const { toast } = useToast();
+  const { user, isLoading: authLoading } = useAuth();
+  const v = useSellerVerification();
 
   useEffect(() => {
-    if (!authLoading && !user) {
-      navigate('/auth');
-      return;
-    }
-    if (isVerified) {
-      setStatus('verified');
-    } else if (user) {
-      void checkStatus();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, authLoading, isVerified]);
+    if (!authLoading && !user) navigate('/auth?redirect=/verify-identity');
+  }, [authLoading, user, navigate]);
 
-  const checkStatus = async () => {
-    try {
-      const { data, error } = await supabase.functions.invoke(
-        'check-identity-verification',
-      );
-      if (error) {
-        setStatus('not_started');
-        return;
-      }
-      setStatus((data?.status as Status) || 'not_started');
-      if (data?.verified) await refreshProfile();
-    } catch {
-      setStatus('not_started');
-    }
-  };
+  const loading = authLoading || (!v.state && v.phase === 'loading');
+  const offerEnabled = v.offer.enabled !== false;
+  const verified = v.state?.badge_active === true;
 
-  const startVerification = async () => {
-    setIsLoading(true);
-    try {
-      const { data, error } = await supabase.functions.invoke(
-        'create-identity-verification',
-      );
-      if (error || !data?.url) {
-        toast({
-          title: 'Could not start verification',
-          description: 'Please try again in a moment.',
-          variant: 'destructive',
-        });
-        return;
-      }
-      window.open(data.url, '_blank');
-      setStatus('pending');
-      toast({
-        title: 'Verification opened in a new tab',
-        description: 'Finish the steps, then come back here to check status.',
-      });
-    } catch {
-      toast({
-        title: 'Something went wrong',
-        description: 'Please try again.',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  if (authLoading || status === 'checking') {
-    return (
-      <div className="min-h-screen flex flex-col bg-background">
-        <Header />
-        <div className="flex-1 flex items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        </div>
-      </div>
-    );
-  }
-
-  if (status === 'verified' || isVerified) {
-    return <VerifiedState onDone={() => goBackToOrigin(navigate)} />;
-  }
-
-  const isInProgress = status === 'pending' || status === 'processing';
+  const steps = [
+    {
+      icon: ShieldCheck,
+      title: 'Review and accept the terms',
+      body: 'A short, plain-language disclosure of what the badge does and does not mean.',
+    },
+    {
+      icon: PayPalMonogram,
+      title: `PayPal places a ${v.offer.display_price} hold`,
+      body: 'An authorization only. Nothing is charged unless your identity check succeeds.',
+      brand: true,
+    },
+    {
+      icon: Lock,
+      title: 'Plaid runs the identity check',
+      body: 'Plaid confirms your identity in a secure window. Vendibook never stores your ID documents.',
+    },
+    {
+      icon: BadgeCheck,
+      title: 'Your badge goes live',
+      body: 'The hold is captured, a receipt is emailed, and the badge appears on your profile and every active listing.',
+    },
+  ];
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <div className="flex min-h-screen flex-col bg-background">
+      <SEO
+        title="Become a Verified Seller | Vendibook"
+        description="Optional one-time identity verification by Plaid, paid securely through PayPal. Add an Identity Verified badge to your Vendibook profile and listings."
+        canonical="/verify-identity"
+      />
       <Header />
-      <main className="flex-1 flex items-start justify-center px-4 py-10 md:py-16">
-        <div className="w-full max-w-xl">
-          <div className="rounded-lg border border-border bg-card p-6 md:p-8 shadow-sm">
-            {/* Icon + hierarchy */}
-            <div className="flex items-center justify-center w-14 h-14 rounded-full bg-primary/10 mb-5">
-              <Shield className="h-7 w-7 text-primary" />
+
+      <main className="flex-1">
+        {/* ------------------------------------------------------- hero */}
+        <section className="relative overflow-hidden py-14 sm:py-20">
+          <div
+            className="pointer-events-none absolute left-1/2 top-0 h-[440px] w-[720px] -translate-x-1/2 rounded-full blur-[150px]"
+            style={{
+              background: 'radial-gradient(ellipse, rgba(16,185,129,0.10) 0%, transparent 70%)',
+            }}
+          />
+          <div className="container relative z-10">
+            <div className="mx-auto max-w-3xl text-center">
+              <span className="verified-metallic mb-5 inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em]">
+                <BadgeCheck className="h-3.5 w-3.5" strokeWidth={2.4} aria-hidden="true" />
+                Verified Seller
+              </span>
+              <h1 className="mb-4 text-3xl font-bold tracking-tight text-foreground sm:text-4xl md:text-5xl">
+                Show buyers it&rsquo;s really you.
+              </h1>
+              <p className="mb-7 text-base leading-relaxed text-muted-foreground sm:text-lg">
+                A one-time identity check by Plaid adds a green Identity Verified badge to your
+                profile and every active listing. Optional, never a subscription, and never required
+                to publish, buy, rent, or sell.
+              </p>
+
+              <div className="flex flex-col items-center gap-4">
+                {loading ? (
+                  <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" aria-hidden="true" />
+                ) : offerEnabled ? (
+                  <GetVerifiedButton size="md" showPrice />
+                ) : (
+                  <span className="inline-flex items-center rounded-full border-2 border-primary/25 bg-primary/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-primary">
+                    Coming soon
+                  </span>
+                )}
+
+                <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2">
+                  <span className="flex items-center gap-2 text-xs text-muted-foreground">
+                    Identity by
+                    <PlaidLogo surface="dark" className="h-4" />
+                  </span>
+                  <span className="flex items-center gap-2 text-xs text-muted-foreground">
+                    Payment by
+                    <PayPalMonogram className="h-4 w-4" />
+                    PayPal
+                  </span>
+                </div>
+              </div>
             </div>
+          </div>
+        </section>
 
-            <h1 className="text-2xl md:text-[28px] font-semibold text-foreground leading-tight">
-              Verify your identity
-            </h1>
-            <p className="text-foreground/70 mt-2 text-[15px] leading-relaxed">
-              Verification keeps Vendibook safe for high-value sales and unlocks
-              publishing.
-            </p>
+        {/* ------------------------------------------------ how it works */}
+        <section className="pb-14 sm:pb-20">
+          <div className="container">
+            <div className="mx-auto max-w-4xl">
+              <p className="mb-5 text-center text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                How verification works
+              </p>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                {steps.map((step, index) => {
+                  const Icon = step.icon;
+                  return (
+                    <div key={step.title} className={`${PANEL} p-6 sm:p-7`}>
+                      <div className="mb-4 flex items-center gap-3">
+                        <span className="flex h-9 w-9 items-center justify-center rounded-xl border-2 border-foreground/[0.10] bg-foreground/[0.06]">
+                          {step.brand ? (
+                            <Icon className="h-4 w-4" />
+                          ) : (
+                            <Icon className="h-4 w-4 text-foreground/70" strokeWidth={1.75} />
+                          )}
+                        </span>
+                        <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                          Step {index + 1}
+                        </span>
+                      </div>
+                      <h2 className="mb-1.5 text-base font-semibold tracking-tight text-foreground">
+                        {step.title}
+                      </h2>
+                      <p className="text-sm leading-relaxed text-muted-foreground">{step.body}</p>
+                    </div>
+                  );
+                })}
+              </div>
 
-            {/* What to expect */}
-            <ol className="mt-6 space-y-3">
-              <ExpectStep
-                index={1}
-                icon={IdCard}
-                title="Take a photo of your government ID"
-              />
-              <ExpectStep
-                index={2}
-                icon={UserRound}
-                title="Take a quick selfie"
-              />
-              <ExpectStep
-                index={3}
-                icon={CheckCircle2}
-                title="Get verified — usually under a minute"
-              />
-            </ol>
-
-            {/* In-progress banner */}
-            {isInProgress && (
-              <div className="mt-6 rounded-md border border-amber-500/30 bg-amber-500/10 p-4">
-                <p className="text-sm font-medium text-amber-200">
-                  Verification in progress
-                </p>
-                <p className="text-sm text-amber-100/80 mt-1">
-                  Finish the steps in the other tab, then tap below to refresh
-                  your status.
+              {/* ------------------------------------------- what you get */}
+              <div className={`${PANEL} mt-4 p-6 sm:p-8`}>
+                <h2 className="mb-4 text-base font-semibold tracking-tight text-foreground">
+                  What the badge does for you
+                </h2>
+                <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  {[
+                    'Green Identity Verified badge on your public profile',
+                    'Badge on every active listing, card, and map preview',
+                    'Higher buyer confidence on high-value equipment',
+                    'One-time fee — not a subscription, cancel nothing',
+                  ].map((item) => (
+                    <li key={item} className="flex gap-2 text-sm text-muted-foreground">
+                      <CheckCircle2
+                        className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500"
+                        aria-hidden="true"
+                      />
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+                <p className="mt-5 border-t border-foreground/[0.08] pt-4 text-xs leading-relaxed text-muted-foreground">
+                  {IDENTITY_VERIFIED_DISCLOSURE}
                 </p>
               </div>
-            )}
 
-            {/* Primary CTA */}
-            <div className="mt-7 space-y-3">
-              {isInProgress ? (
-                <Button
-                  onClick={() => {
-                    setIsLoading(true);
-                    void checkStatus().finally(() => setIsLoading(false));
-                  }}
-                  size="lg"
-                  className="w-full"
-                  disabled={isLoading}
+              {/* -------------------------------------------- footer CTA */}
+              <div className="mt-6 flex flex-col items-center gap-3 text-center">
+                {verified ? (
+                  <Button asChild variant="outline" className="min-h-11">
+                    <Link to="/dashboard?view=host">
+                      Review your listings
+                      <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
+                    </Link>
+                  </Button>
+                ) : (
+                  !loading &&
+                  offerEnabled && <GetVerifiedButton size="md" showPrice />
+                )}
+                <button
+                  type="button"
+                  onClick={() => goBackToOrigin(navigate)}
+                  className="py-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
                 >
-                  {isLoading ? (
-                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                  ) : null}
-                  Check verification status
-                </Button>
-              ) : (
-                <Button
-                  onClick={startVerification}
-                  size="lg"
-                  className="w-full"
-                  disabled={isLoading}
+                  Not now
+                </button>
+                <Link
+                  to="/identity-verification"
+                  className="text-xs text-muted-foreground underline underline-offset-4 hover:text-foreground"
                 >
-                  {isLoading ? (
-                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                  ) : (
-                    <ExternalLink className="h-4 w-4 mr-2" />
-                  )}
-                  Start verification
-                </Button>
-              )}
-
-              <button
-                type="button"
-                onClick={() => goBackToOrigin(navigate)}
-                className="w-full text-sm text-foreground/60 hover:text-foreground transition-colors py-2"
-              >
-                Skip for now
-              </button>
+                  Learn more about identity verification
+                </Link>
+              </div>
             </div>
-
-            {/* Trust row */}
-            <div className="mt-8 pt-6 border-t border-border grid gap-4 md:grid-cols-3">
-              <TrustCell
-                media={
-                  <PaymentTrustBadge
-                    context="identity"
-                    surface="light"
-                    size="sm"
-                    withCopy={false}
-                  />
-                }
-                title="Powered by Vendibook identity verification"
-                body="Bank-grade verification, trusted worldwide."
-              />
-              <TrustCell
-                media={<Lock className="h-5 w-5 text-foreground/80" />}
-                title="Encrypted end-to-end"
-                body="Your ID is reviewed securely. Vendibook never stores your document."
-              />
-              <TrustCell
-                media={
-                  <img
-                    src={verifiedBadge}
-                    alt="Verified"
-                    className="h-6 w-6 object-contain"
-                  />
-                }
-                title="Get a Verified badge"
-                body="Buyers can see it — it earns trust and closes deals faster."
-              />
-            </div>
-
-            <p className="text-[13px] text-foreground/70 mt-8 leading-relaxed text-center">
-              By continuing you agree to share the information required for
-              Vendibook identity verification to verify you. See our{' '}
-              <a
-                href="/privacy"
-                className="underline underline-offset-2 hover:text-foreground"
-              >
-                Privacy Policy
-              </a>
-              .
-            </p>
           </div>
-        </div>
+        </section>
       </main>
+
+      <Footer />
     </div>
   );
 };
 
-const ExpectStep = ({
-  index,
-  icon: Icon,
-  title,
-}: {
-  index: number;
-  icon: React.ComponentType<{ className?: string }>;
-  title: string;
-}) => (
-  <li className="flex items-center gap-3">
-    <div className="flex items-center justify-center h-8 w-8 rounded-md border border-border bg-muted/40 text-sm font-medium text-foreground/80 shrink-0">
-      {index}
-    </div>
-    <Icon className="h-4 w-4 text-foreground/60 shrink-0" />
-    <span className="text-[15px] text-foreground">{title}</span>
-  </li>
-);
-
-const TrustCell = ({
-  media,
-  title,
-  body,
-}: {
-  media: React.ReactNode;
-  title: string;
-  body: string;
-}) => (
-  <div className="flex flex-col gap-2">
-    <div className="h-6 flex items-center">{media}</div>
-    <p className="text-sm font-medium text-foreground leading-snug">{title}</p>
-    <p className="text-xs text-foreground/60 leading-relaxed">{body}</p>
-  </div>
-);
-
-const VerifiedState = ({ onDone }: { onDone: () => void }) => (
-  <div className="min-h-screen flex flex-col bg-background">
-    <Header />
-    <main className="flex-1 flex items-start justify-center px-4 py-10 md:py-16">
-      <div className="w-full max-w-lg rounded-lg border border-border bg-card p-6 md:p-8 shadow-sm text-center">
-        <div className="mx-auto w-20 h-20 flex items-center justify-center">
-          <img
-            src={verifiedBadge}
-            alt="Verified"
-            className="h-20 w-20 object-contain"
-          />
-        </div>
-        <h1 className="text-2xl font-semibold mt-4">You're verified</h1>
-        <p className="text-foreground/70 mt-2">
-          Your Verified badge is now live on your profile and listings.
-        </p>
-
-        <ul className="mt-6 text-left space-y-2 border-t border-border pt-6">
-          <UnlockedRow text="Publish listings without holds" />
-          <UnlockedRow text="Higher visibility in search" />
-          <UnlockedRow text="Buyers see a Verified badge on your profile" />
-        </ul>
-
-        <Button onClick={onDone} size="lg" className="w-full mt-6">
-          Continue
-          <ArrowRight className="h-4 w-4 ml-2" />
-        </Button>
-      </div>
-    </main>
-  </div>
-);
-
-const UnlockedRow = ({ text }: { text: string }) => (
-  <li className="flex items-center gap-2 text-sm text-foreground">
-    <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
-    {text}
-  </li>
-);
-
 export default IdentityVerification;
-
-// unused import guard for tree-shakers keeping the icon in bundle
-export const _kept = Camera;
