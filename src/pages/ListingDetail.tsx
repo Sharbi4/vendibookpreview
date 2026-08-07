@@ -56,6 +56,7 @@ import { ListingHighlightsCard } from '@/components/transaction';
 import OwnerBanner from '@/components/listing-detail/OwnerBanner';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { useSellerIdentityBadgeMap } from '@/hooks/useSellerIdentityBadgeMap';
 import { useListing } from '@/hooks/useListing';
 import ListingUnavailable from '@/components/listing-detail/ListingUnavailable';
 import { isListingPubliclyVisible } from '@/lib/listings/publicVisibility';
@@ -590,7 +591,7 @@ const ListingDetail = () => {
                   <SellerTrustPanel
                     hostId={listing.host_id}
                     hostName={host ? getPublicDisplayName(host) : null}
-                    isVerified={host?.identity_verified || false}
+                    isVerified={sellerIdentityVerified}
                     memberSince={host?.created_at}
                     lastActiveAt={host?.last_active_at}
                     city={listing.city || (host as any)?.public_city}
@@ -608,7 +609,7 @@ const ListingDetail = () => {
                     listingId={listing.id}
                     hostName={host ? getPublicDisplayName(host) : null}
                     hostAvatar={host?.avatar_url}
-                    isVerified={host?.identity_verified || false}
+                    isVerified={sellerIdentityVerified}
                     memberSince={host?.created_at}
                     lastActiveAt={host?.last_active_at}
                     isRental={isRental}
