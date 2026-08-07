@@ -110,20 +110,27 @@ const Financing = () => {
   }, []);
 
   return (
-    <main className="relative min-h-screen bg-[#050506] text-white">
-      {/* polished onyx shine */}
+    <main className="relative min-h-screen overflow-hidden bg-[#050506] text-white">
+      {/* polished onyx shine — layered black glass luminescence */}
       <div
         aria-hidden
         className="pointer-events-none absolute inset-0"
         style={{
           background:
-            'radial-gradient(80% 50% at 50% -10%, rgba(140,198,63,0.10) 0%, transparent 65%), radial-gradient(60% 40% at 100% 20%, rgba(255,255,255,0.05) 0%, transparent 70%)',
+            'radial-gradient(85% 55% at 50% -8%, rgba(140,198,63,0.12) 0%, transparent 60%), radial-gradient(70% 45% at 100% 15%, rgba(255,255,255,0.07) 0%, transparent 60%), radial-gradient(70% 45% at 0% 15%, rgba(255,255,255,0.04) 0%, transparent 60%), radial-gradient(120% 60% at 50% 110%, rgba(0,0,0,0.9) 0%, transparent 70%)',
         }}
+      />
+
+      {/* top horizon sheen */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 top-0 h-px"
+        style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent)' }}
       />
 
       <div className="relative mx-auto max-w-5xl px-5 py-16 sm:px-8 sm:py-24">
         {/* Hero */}
-        <section>
+        <section className="rounded-3xl border-2 border-white/[0.12] bg-white/[0.03] p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-sm sm:p-10">
           <p
             className="text-[11px] font-semibold uppercase tracking-[0.22em]"
             style={{ color: LIME }}
@@ -143,7 +150,7 @@ const Financing = () => {
             <ApplyCta />
             <Link
               to="/browse"
-              className="inline-flex items-center justify-center gap-2 rounded-full border border-white/15 bg-white/[0.04] px-7 py-3.5 text-sm font-semibold text-white transition-colors hover:bg-white/[0.09] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
+              className="inline-flex items-center justify-center gap-2 rounded-full border-2 border-white/15 bg-white/[0.04] px-7 py-3.5 text-sm font-semibold text-white transition-colors hover:bg-white/[0.09] hover:border-white/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
             >
               Browse Equipment
               <ArrowRight className="h-4 w-4" aria-hidden />
@@ -153,11 +160,11 @@ const Financing = () => {
             You’ll continue to Equinox Funding to submit your application securely.
           </p>
 
-          <div className="mt-10 flex items-center gap-4 border-t border-white/10 pt-8">
+          <div className="mt-10 flex flex-col items-start gap-4 rounded-2xl border-2 border-white/[0.12] bg-white/[0.04] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] backdrop-blur-sm sm:flex-row sm:items-center">
             <img
               src={equinoxLogo.url}
               alt="Equinox Funding"
-              className="h-8 w-auto"
+              className="h-9 w-auto"
               loading="lazy"
             />
             <span className="text-xs text-white/45">Financing partner</span>
