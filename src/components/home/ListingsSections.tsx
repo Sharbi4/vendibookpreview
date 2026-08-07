@@ -137,27 +137,12 @@ const ListingsSections = () => {
     return [...new Set(ids)] as string[];
   }, [allListings]);
 
-  const { data: hostProfiles = [] } = useQuery({
-    queryKey: ['home-host-profiles', hostIds],
-    queryFn: async () => {
-      if (hostIds.length === 0) return [];
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('id, identity_verified')
-        .in('id', hostIds);
-      if (error) throw error;
-      return data ?? [];
-    },
-    enabled: hostIds.length > 0,
-  });
+  /**
+   * Authoritative paid Identity Verified badges, batched. The legacy
+   * profiles.identity_verified column is history, not a badge source.
+   */
+  const hostVerificationMap = useSellerVerifiedMap(hostIds);
 
-  const hostVerificationMap = useMemo(() => {
-    const map: Record<string, boolean> = {};
-    hostProfiles.forEach((p) => {
-      map[p.id] = p.identity_verified ?? false;
-    });
-    return map;
-  }, [hostProfiles]);
 
   const isLoading = rentLoading || saleLoading || trucksLoading || trailersLoading;
 
