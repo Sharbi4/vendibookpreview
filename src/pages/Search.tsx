@@ -1204,7 +1204,17 @@ const Search = () => {
         initialEndDate={dateRange?.to}
       />
 
-      {/* Mobile floating Map/List toggle temporarily disabled while Maps API is offline */}
+      {/* Mobile floating Map/List toggle */}
+      <button
+        type="button"
+        onClick={() => setViewMode(viewMode === 'map' ? 'list' : 'map')}
+        className="md:hidden fixed bottom-24 left-1/2 -translate-x-1/2 z-40 flex items-center gap-2 rounded-full bg-foreground text-background px-4 py-2.5 text-xs font-semibold shadow-lg"
+        aria-label={viewMode === 'map' ? 'Show list' : 'Show map'}
+      >
+        {viewMode === 'map' ? <Rows3 className="h-4 w-4" /> : <Map className="h-4 w-4" />}
+        {viewMode === 'map' ? 'List' : 'Map'}
+      </button>
+
 
       {/* Mobile Sticky Bar */}
       <MobileStickyBar
