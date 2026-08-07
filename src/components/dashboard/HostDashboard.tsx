@@ -174,7 +174,7 @@ const HostDashboard = () => {
           <section aria-labelledby="dash-attention">
             <header className="section-header">
               <h2 id="dash-attention" className="section-title">Needs your attention</h2>
-              <p className="section-subtitle">Clear these to keep bookings and payouts moving.</p>
+              <p className="section-subtitle">Optional steps that help you stay on top of your listings.</p>
             </header>
             <ActionRequiredStack items={actionItems} />
           </section>
