@@ -71,15 +71,15 @@ const FAQ = [
 ];
 
 const panel =
-  'rounded-2xl border border-white/10 bg-white/[0.035] backdrop-blur-sm p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]';
+  'rounded-2xl border-2 border-white/[0.14] bg-white/[0.045] backdrop-blur-md p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] transition-colors hover:border-white/20';
 
-const ApplyCta = ({ className = '' }: { className?: string }) => (
+const ApplyCta = ({ className = '', wide = false }: { className?: string; wide?: boolean }) => (
   <a
     href={APPLY_URL}
     target="_blank"
     rel="noopener noreferrer"
-    className={`inline-flex items-center justify-center gap-2 rounded-full px-7 py-3.5 text-sm font-semibold text-black transition-transform hover:scale-[1.02] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-black ${className}`}
-    style={{ background: LIME, boxShadow: `0 10px 34px ${LIME}33` }}
+    className={`inline-flex items-center justify-center gap-2 rounded-full px-7 py-3.5 text-sm font-semibold text-black transition-transform hover:scale-[1.02] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-black ${wide ? 'w-full sm:w-auto' : ''} ${className}`}
+    style={{ background: LIME, boxShadow: `0 10px 38px ${LIME}40` }}
   >
     Apply for Equipment Financing
     <ExternalLink className="h-4 w-4" aria-hidden />
