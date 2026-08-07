@@ -1590,7 +1590,6 @@ export const PublishWizard: React.FC = () => {
 
           // Optional Equinox opt-in is stored separately so Review can't lose it.
           await persistFinancingPreference();
-      await persistVinSerial();
           await persistVinSerial();
         } else {
           updateData = {
