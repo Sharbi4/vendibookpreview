@@ -6,7 +6,7 @@ import PayPalPaymentPanel, { type PayPalCheckoutTarget } from '@/components/chec
 import { formatUsd } from '@/lib/monetization/products';
 import { useToast } from '@/hooks/use-toast';
 
-const SUPPORTED = ['sale', 'booking', 'freight', 'notary', 'protected_sale_deposit'] as const;
+const SUPPORTED = ['sale', 'booking', 'freight', 'notary', 'protected_sale_deposit', 'concierge'] as const;
 type HostedKind = (typeof SUPPORTED)[number];
 
 /**
