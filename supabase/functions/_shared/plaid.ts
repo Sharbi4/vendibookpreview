@@ -9,6 +9,8 @@
  *   PLAID_IDV_TEMPLATE_ID   production Identity Verification template
  */
 
+import { isFreshPlaidIat } from "./verifiedSellerLogic.ts";
+
 export type PlaidEnvironment = "production" | "sandbox";
 
 export function plaidEnvironment(): PlaidEnvironment {
