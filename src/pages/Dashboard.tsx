@@ -116,6 +116,8 @@ const Dashboard = () => {
       case 'payouts': return <PayoutsPanel />;
       case 'insights': return <InsightsReportingTab />;
       case 'promote': return <PromoteUpgradesTab />;
+      case 'permits': return <PermitsTab />;
+      case 'kitchen': return <KitchenProSuite />;
       default: return <HostDashboard />;
     }
   };
