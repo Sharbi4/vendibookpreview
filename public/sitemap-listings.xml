@@ -100,17 +100,6 @@
     </image:image>
   </url>
   <url>
-    <loc>https://vendibook.com/listing/10ae96b2-12c7-413a-a612-92110bc2050e</loc>
-    <lastmod>2026-08-06</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/5fbd89d5-fa6b-424c-97b8-dea19753eda8/10ae96b2-12c7-413a-a612-92110bc2050e/1781406117162-jk7v8.jpeg</image:loc>
-      <image:title>Food Truck renovated inside - out</image:title>
-      <image:caption>Food Truck renovated inside - out on Vendibook</image:caption>
-    </image:image>
-  </url>
-  <url>
     <loc>https://vendibook.com/listing/34eb359a-71ec-46e8-8cca-357634bb95ac</loc>
     <lastmod>2026-07-26</lastmod>
     <changefreq>weekly</changefreq>
@@ -255,7 +244,7 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/26bd6a6a-f814-4f31-923d-68e7e326ff06</loc>
-    <lastmod>2026-08-06</lastmod>
+    <lastmod>2026-08-07</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
@@ -449,6 +438,17 @@
       <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/47f2051d-318e-4f40-b9ae-b6984e7fc5d2/99d179ad-16ad-4bb3-9ccb-cd1a8e157284/1771012875547-2ec6o.jpg</image:loc>
       <image:title>Food Trailer (Best financing option in the market $680-$980)</image:title>
       <image:caption>Food Trailer (Best financing option in the market $680-$980) in Scottsdale, AZ on Vendibook</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://vendibook.com/listing/10ae96b2-12c7-413a-a612-92110bc2050e</loc>
+    <lastmod>2026-08-07</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/5fbd89d5-fa6b-424c-97b8-dea19753eda8/10ae96b2-12c7-413a-a612-92110bc2050e/1781406117162-jk7v8.jpeg</image:loc>
+      <image:title>Food Truck renovated inside - out</image:title>
+      <image:caption>Food Truck renovated inside - out on Vendibook</image:caption>
     </image:image>
   </url>
   <url>
