@@ -56,18 +56,8 @@ export const HostOnboardingCard = () => {
         to: '/list',
       } : undefined,
     },
-    {
-      id: 'verify',
-      title: 'Verify Identity',
-      description: 'Build trust with verification',
-      icon: UserCheck,
-      isComplete: isIdentityVerified,
-      action: !isIdentityVerified ? {
-        label: 'Verify Now',
-        to: '/verify-identity',
-      } : undefined,
-    },
   ];
+
 
   const completedSteps = steps.filter(s => s.isComplete).length;
   const progress = (completedSteps / steps.length) * 100;

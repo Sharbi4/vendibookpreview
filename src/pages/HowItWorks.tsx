@@ -59,7 +59,7 @@ const roleConfig: Record<Role, {
       { icon: Clock, title: 'Fast host replies', description: 'Most renters get a response within an hour during business hours.' },
       { icon: MapPin, title: 'Coast-to-coast inventory', description: 'Trucks, trailers, kitchens, and vendor spaces in every major US city.' }],
     faqs: [
-      { q: 'How do I know the listing is real?', a: 'Every host completes Identity verification before publishing. You\'ll see a verified badge on their profile and listings.' },
+      { q: 'How do I know the listing is real?', a: 'Listings are reviewed for completeness, and hosts can optionally purchase identity verification to display a verified badge on their profile and listings.' },
       { q: 'What payment methods can I use?', a: 'Card, ACH (for $5K+), Apple/Google Pay, Affirm and Klarna ($35–$30K), and Afterpay (up to $4K). Funds are held in payment protection.' },
       { q: 'Can I inspect before paying?', a: 'Yes. Message the host directly to schedule an in-person inspection before booking.' },
       { q: 'What if the equipment isn\'t as described?', a: 'Open a dispute within 24 hours of handoff. We hold funds and mediate until resolved.' }]},

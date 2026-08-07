@@ -2,9 +2,10 @@ import { useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import {
   Clock,
-  ShieldAlert,
+  BadgeCheck,
   Inbox,
 } from 'lucide-react';
+
 import PermitsTab from './PermitsTab';
 import ActionRequiredStack, { type ActionItem } from './shared/ActionRequiredStack';
 import OverviewGreeting from './overview/OverviewGreeting';
@@ -49,11 +50,12 @@ const ShopperDashboard = () => {
   const actionItems: ActionItem[] = useMemo(() => {
     const items: ActionItem[] = [];
     if (!isVerified) items.push({
-      id: 'verify-identity', icon: ShieldAlert,
-      title: 'Verify your identity',
-      description: 'One tap unlocks publishing and higher-trust checkout.',
-      href: '/verify-identity', cta: 'Verify', tone: 'warning',
+      id: 'verify-identity', icon: BadgeCheck,
+      title: 'Get verified (optional)',
+      description: 'A paid add-on that adds a verified badge to your profile. Never required to buy, sell, or publish.',
+      href: '/identity-verification', cta: 'Learn more',
     });
+
     if (stats.pending > 0) items.push({
       id: 'pending', icon: Clock,
       title: `${stats.pending} booking request${stats.pending > 1 ? 's' : ''} awaiting host`,
