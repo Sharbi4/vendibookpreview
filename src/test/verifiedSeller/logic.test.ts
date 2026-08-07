@@ -53,6 +53,7 @@ describe('badge eligibility', () => {
   const eligible = {
     identity_status: 'success',
     payment_state: 'captured',
+    verified_at: '2026-01-01T00:00:00Z',
     revoked_at: null,
   };
 
