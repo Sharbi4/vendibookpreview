@@ -32,31 +32,46 @@ const TITLE_STATUS = [
  * details and uploads stay in an owner-only table and a private bucket. Buyers
  * only ever see the summarized facts derived on save.
  */
+const normalizeVin = (v?: string | null) => {
+  const trimmed = (v ?? '').trim().toUpperCase();
+  return trimmed.length ? trimmed : null;
+};
+
 export const OwnershipDetailsForm: React.FC<Props> = ({ listingId, hostId, onSavePublicSummary }) => {
   const { values, loading, saving, save } = useOwnershipDetails(listingId, hostId);
   const { docs, busy, upload, remove, openSigned } = useOwnershipDocuments(listingId, hostId);
   const [draft, setDraft] = useState<OwnershipPrivateValues>({});
+  const [vinMode, setVinMode] = useState<'provide' | 'none'>('provide');
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
-  useEffect(() => setDraft(values), [values]);
+  useEffect(() => {
+    setDraft(values);
+    setVinMode(values.vin_serial ? 'provide' : vinMode);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [values]);
 
   const set = (key: keyof OwnershipPrivateValues, value: unknown) =>
     setDraft((d) => ({ ...d, [key]: value }));
 
   const handleSave = async () => {
     setError(null);
-    const ok = await save(draft);
+    const next: OwnershipPrivateValues = {
+      ...draft,
+      vin_serial: vinMode === 'none' ? null : normalizeVin(draft.vin_serial),
+    };
+    const ok = await save(next);
     if (!ok) {
       setError('We could not save your ownership details. Nothing was published. Try again.');
       return;
     }
-    await onSavePublicSummary(buildOwnershipPublicSummary(draft));
+    await onSavePublicSummary(buildOwnershipPublicSummary(next));
     toast({
       title: 'Ownership details saved',
       description: 'Only a short summary such as title status is shown publicly.',
     });
   };
+
 
   if (loading) {
     return (
