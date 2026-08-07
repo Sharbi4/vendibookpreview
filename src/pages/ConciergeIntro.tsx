@@ -98,24 +98,13 @@ const ConciergeIntro: React.FC = () => {
           </div>
         </div>
 
-        <div className="mt-8 rounded-2xl border border-border/60 bg-muted/30 p-6">
-          <h2 className="text-base font-semibold text-foreground">
-            Secure purchase and intake is coming next
-          </h2>
-          <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-            The concierge purchase and intake form are being finished now. Nothing is charged on
-            this page and no order is created. In the meantime you can publish a free listing
-            yourself and request concierge help afterward — you never lose your work.
-          </p>
-          <div className="mt-4 flex flex-wrap gap-3">
-            <Button onClick={() => navigate(LISTING_ROUTES.quickStart)}>
-              Create my free listing instead
-            </Button>
-            <Button variant="outline" asChild>
-              <Link to="/contact">Ask a question first</Link>
-            </Button>
-          </div>
+        <div className="mt-8 space-y-4">
+          <ConciergePurchasePanel />
+          <Button variant="outline" onClick={() => navigate(LISTING_ROUTES.quickStart)}>
+            Create my free listing instead
+          </Button>
         </div>
+
 
         <div className="mt-8 space-y-3">
           <VisibilityLabel kind="private" />
