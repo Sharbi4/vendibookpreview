@@ -9,6 +9,7 @@ import SpecSuggestionsPanel from '@/components/listing/SpecSuggestionsPanel';
 import RentalTermsEditor from '@/components/listing/RentalTermsEditor';
 
 import ListingReadinessCard from '@/components/listing/ListingReadinessCard';
+import VerifiedSellerCTA from '@/components/verification/VerifiedSellerCTA';
 import { useSpecSuggestions, SpecSuggestion } from '@/hooks/useSpecSuggestions';
 import { useListingSpecs } from '@/hooks/useListingSpecs';
 
@@ -90,6 +91,8 @@ const ListingImprove: React.FC = () => {
           mode={listing.mode}
           variant="compact"
         />
+
+        <VerifiedSellerCTA variant="compact" />
 
         <ListingSpecsEditor
           key={editorKey}

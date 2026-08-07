@@ -13,6 +13,7 @@ import {
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
+import VerifiedSellerCTA from '@/components/verification/VerifiedSellerCTA';
 import { ShareKit, ShareKitListing } from '@/components/listing-wizard/ShareKit';
 import { ListingCategory, ListingMode } from '@/types/listing';
 import { useToast } from '@/hooks/use-toast';
