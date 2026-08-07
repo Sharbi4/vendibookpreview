@@ -2231,7 +2231,7 @@ If you disagree with findings:
 
 **What You'll Need**
 - Valid government-issued ID
-- Bank account for payouts (via Stripe)
+- Payout details (PayPal email or bank account)
 - Photos of your asset(s)
 - Any relevant permits or licenses (optional but recommended)`
       },
@@ -2243,18 +2243,17 @@ If you disagree with findings:
 - [ ] Complete your profile (name, phone, photo)
 - [ ] Add your business name (optional)
 
-**Pro tip:** A complete profile with a professional photo increases booking rates by 40%.`
+**Pro tip:** A complete profile with a clear photo helps buyers and renters trust your listing.`
       },
       {
-        id: 'step-2-stripe',
-        title: 'Step 2: Set Up Stripe Connect',
+        id: 'step-2-payouts',
+        title: 'Step 2: Save Your Payout Details',
         content: `- [ ] Click "Set Up Payouts" in your dashboard
-- [ ] Connect or create a Stripe account
-- [ ] Verify your identity (government ID required)
-- [ ] Add your bank account for payouts
-- [ ] Complete any additional Stripe requirements
+- [ ] Choose how you want to be paid (PayPal, Venmo, Cash App, or bank transfer)
+- [ ] Enter your payout destination
+- [ ] Save
 
-**Important:** You must complete Stripe setup before your listing can go live. Payouts are processed automatically after each completed booking.`
+**Note:** Payout details are not required to publish. Vendibook reviews and releases seller payouts manually once a transaction is eligible, so add them before your first payout.`
       },
       {
         id: 'step-3-listing',
@@ -2311,7 +2310,7 @@ You'll receive email and in-app notifications for new requests.
 Great reviews build trust and increase future bookings.`
       }
     ],
-    relatedArticles: ['stripe-connect-setup', 'host-listing-checklist', 'payout-timing-fees']
+    relatedArticles: ['payout-setup', 'host-listing-checklist', 'payout-timing-fees']
   },
   {
     slug: 'host-listing-checklist',
@@ -2402,64 +2401,52 @@ Examples:
     relatedArticles: ['host-onboarding', 'pricing-guidance']
   },
   {
-    slug: 'stripe-connect-setup',
-    title: 'Stripe Connect Setup Guide',
-    description: 'How to set up Stripe Connect to receive payouts from your Vendibook listings.',
+    slug: 'payout-setup',
+    title: 'Payout Setup Guide',
+    description: 'How to save your payout details so Vendibook can send you proceeds from your listings.',
     category: 'Payments & Payouts',
     categorySlug: 'payments-payouts',
     sections: [
       {
         id: 'overview',
-        title: 'Why Stripe Connect?',
-        content: `Vendibook uses Stripe Connect to process payments securely. This ensures:
-- Fast, reliable payouts directly to your bank
-- Protection for both hosts and renters
-- Compliance with financial regulations
-- Support for multiple currencies
+        title: 'How Payouts Work',
+        content: `Buyers and renters pay through PayPal. Vendibook records what you are owed, reviews the transaction, and releases your payout manually to the destination you save.
 
-**You must complete Stripe setup before publishing your first listing.**`
+- Payout destinations: PayPal, Venmo, Cash App, or bank transfer
+- Protection for both hosts and renters
+- A clear record of every payable in your dashboard
+
+**You do not need payout details to publish a listing — only to receive money.**`
       },
       {
         id: 'requirements',
         title: 'What You Will Need',
         content: `**For Individuals**
-- Valid government-issued ID (drivers license or passport)
-- Social Security Number (last 4 digits)
-- Bank account routing and account numbers
-- Home address
+- A PayPal, Venmo, or Cash App account, or a bank account
+- The name on the payout destination should match your Vendibook account
 
 **For Businesses**
-- EIN (Employer Identification Number)
-- Business address
-- Beneficial owner information
-- Business bank account details`
+- Business name and address
+- A business PayPal account or business bank account
+- Tax information may be requested for larger payouts`
       },
       {
         id: 'setup-steps',
         title: 'Step-by-Step Setup',
         content: `**1. Start the Process**
 - Log in to your Vendibook dashboard
-- Click "Set Up Payouts" or go to Account → Stripe Connect
-- Click "Connect with Stripe"
+- Click "Set Up Payouts" on any listing, or go to Account → Payments & payouts
 
-**2. Choose Account Type**
-- Individual or Business
-- Select your country
+**2. Choose a Payout Method**
+- PayPal, Venmo, Cash App, or bank transfer
 
-**3. Verify Your Identity**
-- Enter personal information
-- Upload ID document (takes 2-5 minutes to verify)
-- May require a selfie for verification
+**3. Enter Your Destination**
+- PayPal/Venmo/Cash App: the email, phone, or handle on the account
+- Bank transfer: account holder name, routing number, account number
 
-**4. Add Bank Account**
-- Enter routing number
-- Enter account number
-- Verify with micro-deposits (if required)
-
-**5. Complete Setup**
-- Review all information
-- Accept Stripe terms of service
-- Submit for verification`
+**4. Save**
+- Review the details for typos
+- Save — you can update them any time before a payout is released`
       },
       {
         id: 'verification',
@@ -2517,7 +2504,7 @@ Contact our support team via Zendesk chat. We can help troubleshoot verification
 - Or automatically after 7 days if no disputes
 
 **Payout Methods**
-Payouts are sent directly to the bank account connected via Stripe.`
+Payouts are sent to the payout destination saved in your account (PayPal, Venmo, Cash App, or bank transfer).`
       },
       {
         id: 'fee-breakdown',
@@ -2528,7 +2515,7 @@ Payouts are sent directly to the bank account connected via Stripe.`
 - Deducted automatically from your payout
 
 **What is Included in the Fee**
-- Stripe payment processing
+- PayPal payment processing
 - Customer support for you and your renters
 - Dispute resolution services
 - Platform maintenance and features
@@ -2546,10 +2533,9 @@ Payouts are sent directly to the bank account connected via Stripe.`
 - View pending, processing, and completed payouts
 - Download reports for accounting
 
-**In Stripe**
-- Access your Stripe Express dashboard
-- View detailed transaction history
-- Download 1099 tax forms (US hosts)`
+**In PayPal**
+- Payments you receive from Vendibook appear in your PayPal activity
+- Keep your payout email current so releases are not delayed`
       },
       {
         id: 'delays',
@@ -2561,12 +2547,12 @@ Payouts are sent directly to the bank account connected via Stripe.`
 - Disputes or holds on your account
 
 **If Your Payout is Late**
-1. Check Stripe dashboard for status
+1. Check Dashboard → Earnings for the payout status
 2. Verify bank account details are correct
 3. Contact support if over 7 business days`
       }
     ],
-    relatedArticles: ['stripe-connect-setup', 'cancellations-refunds']
+    relatedArticles: ['payout-setup', 'cancellations-refunds']
   },
   {
     slug: 'deposits-protection',
@@ -3025,9 +3011,9 @@ Review your listing and go live. Your truck will appear in search results immedi
 Buyers don't pay a platform fee (though shipping/freight may apply if selected).
 
 **Payouts:**
-- Processed via Stripe Connect
-- Funds released after transaction confirmation
-- Deposited to your linked bank account
+- Buyer pays through PayPal
+- Funds released after transaction confirmation and Vendibook review
+- Sent to the payout destination saved in your account
 
 [Learn more about selling →](/sell-my-food-truck)`
       }
