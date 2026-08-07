@@ -37,8 +37,8 @@ const TrustItem = ({
 export const SaleTrustStrip = ({ className }: { className?: string }) => (
   <SaleCard variant="default" padding="md" className={className}>
     <div className="grid grid-cols-3 gap-3">
-      <TrustItem icon={ShieldCheck} title="Verified Listing" sub="Reviewed for quality and authenticity" />
-      <TrustItem icon={Lock} title="Secure Payments" sub="Your payment is safe with Vendibook" />
+      <TrustItem icon={ShieldCheck} title="Detailed Listing" sub="Specs, documents, and owner details in one place" />
+      <TrustItem icon={Lock} title="PayPal Checkout" sub="Supported payments run through PayPal" />
       <TrustItem icon={Zap} title="Responsive Seller" sub="Typically responds within 1 hour" />
     </div>
   </SaleCard>
