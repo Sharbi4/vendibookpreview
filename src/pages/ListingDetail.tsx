@@ -55,7 +55,9 @@ import ListingExplainerVideo from '@/components/listing-detail/ListingExplainerV
 
 import { ListingHighlightsCard } from '@/components/transaction';
 import OwnerBanner from '@/components/listing-detail/OwnerBanner';
+import { GetVerifiedButton } from '@/components/verification/GetVerifiedButton';
 import { useQuery } from '@tanstack/react-query';
+
 import { supabase } from '@/integrations/supabase/client';
 import { useSellerIdentityBadgeMap } from '@/hooks/useSellerIdentityBadgeMap';
 import { useListing } from '@/hooks/useListing';
@@ -454,13 +456,17 @@ const ListingDetail = () => {
                     )}
                   </h1>
                   {isOwner && (
-                    <Button asChild size="sm" variant="outline" className="shrink-0">
-                      <Link to={`/edit-listing/${listing.id}`}>
-                        <Edit className="h-4 w-4 mr-1.5" />
-                        Edit
-                      </Link>
-                    </Button>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <GetVerifiedButton size="sm" showPrice={false} />
+                      <Button asChild size="sm" variant="outline">
+                        <Link to={`/edit-listing/${listing.id}`}>
+                          <Edit className="h-4 w-4 mr-1.5" />
+                          Edit
+                        </Link>
+                      </Button>
+                    </div>
                   )}
+
                 </div>
 
                 {/* Meta Info Row */}

@@ -11,8 +11,9 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import RatingBadge from '@/components/reviews/RatingBadge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import VerificationBadge from '@/components/verification/VerificationBadge';
+import IdentityVerifiedBadge from '@/components/verification/IdentityVerifiedBadge';
 import { CategoryTooltip } from '@/components/categories/CategoryGuide';
+
 import { FavoriteButton } from '@/components/listing/FavoriteButton';
 import { AffirmBadge } from '@/components/ui/AffirmBadge';
 import { AfterpayBadge } from '@/components/ui/AfterpayBadge';
@@ -273,6 +274,30 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
               </Tooltip>
             </TooltipProvider>
           )}
+
+          {/* Identity Verified badge — green shine metallic */}
+          {hostVerified && (
+            <TooltipProvider delayDuration={200}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span>
+                    <IdentityVerifiedBadge
+                      verified={hostVerified}
+                      size={compact ? 'sm' : 'md'}
+                      withDetails={false}
+                    />
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent side="bottom" className="max-w-[220px] text-xs">
+                  {`
+                    The seller has completed a paid identity check through Plaid.
+                    Identity verification does not verify ownership, condition, or transaction safety.
+                  `}
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
+
 
           {/* Financing badge — gated by launch flag + this listing's opt-in */}
           {financingEnabled && <FinancingAvailableBadge compact />}

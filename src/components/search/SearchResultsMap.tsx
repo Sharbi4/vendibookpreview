@@ -5,6 +5,8 @@ import { GOOGLE_MAPS_LIBRARIES, GOOGLE_MAPS_LOADER_ID } from '@/lib/googleMapsLo
 import { Listing } from '@/types/listing';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Zap } from 'lucide-react';
+import IdentityVerifiedBadge from '@/components/verification/IdentityVerifiedBadge';
+
 
 interface ListingWithCoords extends Listing {
   latitude?: number | null;
@@ -322,7 +324,17 @@ const SearchResultsMapLoaded = forwardRef<
                 <span className="absolute left-2 top-2 rounded-full bg-black/60 px-2 py-0.5 text-[10px] font-medium text-white backdrop-blur">
                   {activeListing.mode === 'rent' ? 'For Rent' : 'For Sale'}
                 </span>
+                {(activeListing as any).host_verified && (
+                  <span className="absolute right-2 top-2">
+                    <IdentityVerifiedBadge
+                      verified={(activeListing as any).host_verified ?? false}
+                      size="sm"
+                      withDetails={false}
+                    />
+                  </span>
+                )}
                 {activeListing.mode === 'rent' && activeListing.instant_book && (
+
                   <span className="absolute right-2 top-2 flex items-center gap-1 rounded-full bg-primary px-2 py-0.5 text-[10px] font-medium text-primary-foreground">
                     <Zap className="h-3 w-3" /> Instant
                   </span>

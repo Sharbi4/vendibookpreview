@@ -53,12 +53,16 @@ import { isListingFeatured } from '@/lib/featured';
 import ListingReadinessCard from '@/components/listing/ListingReadinessCard';
 import { cn } from '@/lib/utils';
 import { FeaturedBadge } from '@/components/listing/FeaturedBadge';
+import IdentityVerifiedBadge from '@/components/verification/IdentityVerifiedBadge';
 import { PayoutSetupDialog } from '@/components/payouts/PayoutSetupDialog';
+
 import { usePayoutPreference } from '@/hooks/usePayoutPreference';
 import { PayoutBrandMark } from '@/components/payouts/PayoutBrandMark';
 import { PAYOUT_METHOD_LABEL } from '@/lib/payouts/methods';
 import { canBoostListing, canRepublishListing } from '@/lib/listings/publicVisibility';
 import { useNavigate } from 'react-router-dom';
+import { GetVerifiedButton } from '@/components/verification/GetVerifiedButton';
+
 
 type Listing = Tables<'listings'>;
 
@@ -319,8 +323,10 @@ const HostListingCard = ({
           <Share2 className="h-4 w-4 mr-1.5" />
           Share
         </Button>
+        <GetVerifiedButton size="sm" showPrice />
         {payoutButton}
         <div className="flex-1" />
+
         <KebabMenu>
           <DropdownMenuItem asChild className="gap-2">
             <Link to={`/listing/${listing.id}`}>
@@ -424,6 +430,13 @@ const HostListingCard = ({
                   {isFeatured && (
                     <FeaturedBadge listing={listing as any} size="sm" showDaysLeft />
                   )}
+                  {(listing as any).host_verified && (
+                    <IdentityVerifiedBadge
+                      verified={(listing as any).host_verified ?? false}
+                      size="sm"
+                      withDetails={false}
+                    />
+                  )}
                   {hasNotary && isSale && (
                     <Badge
                       variant="secondary"
@@ -433,6 +446,7 @@ const HostListingCard = ({
                       Notary
                     </Badge>
                   )}
+
                 </div>
                 <p className="text-xs text-muted-foreground mt-1 truncate">
                   {location}
