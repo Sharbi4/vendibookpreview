@@ -261,7 +261,7 @@ const HostListingCard = ({
         <>
           <Button
             size="sm"
-            className="h-10 rounded-md px-4"
+            className={ACTION_BTN}
             asChild
           >
             <Link to={`/create-listing/${listing.id}`}>
@@ -269,7 +269,6 @@ const HostListingCard = ({
               Continue editing
             </Link>
           </Button>
-          <div className="flex-1" />
           <KebabMenu>
             {onPublish && (
               <DropdownMenuItem onClick={() => onPublish(listing.id)} className="gap-2">
@@ -303,20 +302,19 @@ const HostListingCard = ({
           {onPublish && (
             <Button
               size="sm"
-              className="h-10 rounded-md px-4"
+              className={ACTION_BTN}
               onClick={() => onPublish(listing.id)}
             >
               <Rocket className="h-4 w-4 mr-1.5" />
               Republish
             </Button>
           )}
-          <Button variant="outline" size="sm" className="h-10 rounded-md px-4" asChild>
+          <Button variant="outline" size="sm" className={cn(ACTION_BTN, 'border-white/15 bg-white/[0.04] hover:bg-white/[0.08]')} asChild>
             <Link to={`/listing/${listing.id}`}>
               <Eye className="h-4 w-4 mr-1.5" />
               View
             </Link>
           </Button>
-          <div className="flex-1" />
           <KebabMenu>
             <DropdownMenuItem onClick={() => setShowShareKit(true)} className="gap-2">
               <Share2 className="h-4 w-4" /> Share
