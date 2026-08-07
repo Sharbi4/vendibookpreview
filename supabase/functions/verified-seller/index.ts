@@ -724,22 +724,47 @@ serve(async (req) => {
       }
       const open = await latestOpenPayment(admin, userId);
       if (open?.paypal_order_id && open.state === "created") {
+        // Relabel: this order buys the badge only, it must never start Plaid.
+        if (open.purpose !== "payment_only") {
+          await admin
+            .from("seller_verification_payments")
+            .update({ purpose: "payment_only" })
+            .eq("id", open.id);
+        }
         return jsonResponse(200, { status: "payment_required", order_id: open.paypal_order_id });
       }
-      const created = await createAuthorizeOrder(admin, userId);
+      const created = await createAuthorizeOrder(admin, userId, "payment_only");
       if (created instanceof Response) return created;
       return jsonResponse(200, { status: "payment_required", order_id: created.orderId });
     }
 
     // ------------------------------------------------------------ cancel
+    /**
+     * Cancel may only claim "nothing was charged" when PayPal actually
+     * confirms the release. An unresolved or captured hold stays truthful in
+     * the authoritative record and is escalated instead of being papered over.
+     */
     if (action === "cancel") {
       const open = await latestOpenPayment(admin, userId);
-      if (open) await voidAuthorizationOnce(admin, open, "user_canceled");
+      const released = open
+        ? await voidAuthorizationOnce(admin, open, "user_canceled")
+        : null;
+
+      if (released && !released.ok) {
+        return jsonError(
+          502,
+          "hold_not_released",
+          released.moneyState === "captured"
+            ? "Your payment went through before we could cancel, so we're sorting it out now. Our team has been alerted and will follow up — please don't try again yet."
+            : "We couldn't confirm that your payment hold was released. Our team has been alerted and will resolve it — please don't try again yet.",
+        );
+      }
+
       await admin
         .from("seller_verifications")
         .update({
           status: "canceled",
-          payment_state: open ? "voided" : record.payment_state,
+          payment_state: released ? released.moneyState : record.payment_state,
           updated_at: new Date().toISOString(),
         })
         .eq("user_id", userId)
@@ -747,7 +772,9 @@ serve(async (req) => {
 
       return jsonResponse(200, {
         ...publicState(await ensureVerification(admin, userId), null, enabled),
-        message: "Verification canceled. Nothing was charged and any hold was released.",
+        message: released?.moneyState === "refunded"
+          ? "Verification canceled and your payment was refunded."
+          : "Verification canceled. Nothing was charged and any hold was released.",
       });
     }
 
@@ -757,3 +784,4 @@ serve(async (req) => {
     return unknownErrorResponse(err);
   }
 });
+
