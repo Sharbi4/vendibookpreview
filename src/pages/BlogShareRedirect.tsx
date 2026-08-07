@@ -1,23 +1,29 @@
 import { useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import { getBlogPostBySlug } from '@/data/blogPosts';
 
-// Maps share source slug → { source label, default campaign }
-const SOURCE_MAP: Record<string, { source: string; campaign: string }> = {
-  linkedin: { source: 'linkedin', campaign: 'food_truck_fleet_owner_article' },
-};
+// Supported share networks. Unknown sources fall back safely to the raw value.
+const SUPPORTED_SOURCES = ['x', 'linkedin', 'facebook'] as const;
+
+// Legacy default campaign for older shared links that predate per-post campaigns.
+const LEGACY_DEFAULT_CAMPAIGN = 'food_truck_fleet_owner_article';
 
 const BlogShareRedirect = () => {
   const { source = 'linkedin', slug = '' } = useParams<{ source: string; slug: string }>();
 
   useEffect(() => {
-    const config = SOURCE_MAP[source] ?? { source, campaign: slug };
+    const network = (SUPPORTED_SOURCES as readonly string[]).includes(source) ? source : source || 'link';
+
+    const post = slug ? getBlogPostBySlug(slug) : undefined;
+    const campaign = post?.campaign || (post ? post.slug : LEGACY_DEFAULT_CAMPAIGN);
+    const utmContent = post?.campaign ? 'shared_article' : 'founder_post';
 
     const destination = `https://vendibook.com/blog/${slug}` +
-      `?utm_source=${encodeURIComponent(config.source)}` +
+      `?utm_source=${encodeURIComponent(network)}` +
       `&utm_medium=social` +
-      `&utm_campaign=${encodeURIComponent(config.campaign)}` +
-      `&utm_content=founder_post`;
+      `&utm_campaign=${encodeURIComponent(campaign)}` +
+      `&utm_content=${utmContent}`;
 
     const urlParams = new URLSearchParams(window.location.search);
 
@@ -26,8 +32,8 @@ const BlogShareRedirect = () => {
       try {
         await supabase.from('blog_share_clicks').insert({
           article_slug: slug,
-          source: config.source,
-          campaign: config.campaign,
+          source: network,
+          campaign,
           destination_url: destination,
           referrer: document.referrer || null,
           user_agent: navigator.userAgent,
