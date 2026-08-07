@@ -3,6 +3,7 @@ import { Lock, ShieldCheck, ExternalLink } from 'lucide-react';
 import { PayPalWordmark, PlaidLogo } from '@/components/brand/ProviderLogos';
 import paypalAppImage from '@/assets/brand/paypal-app-2025.webp.asset.json';
 import { usePublicFeatureFlag } from '@/hooks/usePublicFeatureFlag';
+import { IdentityAddOnNote } from '@/components/verification/IdentityAddOnNote';
 
 /**
  * Premium two-column provider feature for the homepage trust section.
@@ -72,7 +73,7 @@ export function ProviderTrustFeature() {
               <PlaidLogo surface="dark" className="h-4" />
             </div>
             <h3 className="mb-2 text-lg font-semibold tracking-tight text-foreground sm:text-xl">
-              Optional seller identity verification with Plaid
+              Seller identity verification with Plaid*
             </h3>
             <p className="text-sm leading-relaxed text-muted-foreground">
               An Identity Verified badge means Plaid helped confirm that person's identity. It does
@@ -81,6 +82,7 @@ export function ProviderTrustFeature() {
             <p className="mt-3 text-xs leading-relaxed text-muted-foreground/80">
               Not every seller is identity verified.
             </p>
+            <IdentityAddOnNote className="mt-3" />
           </div>
         )}
       </div>

@@ -33,14 +33,14 @@ const IdentityChip = ({ verified, className, prominent }: IdentityChipProps) => 
     return (
       <Link
         to="/identity-verification"
-        title="Optional paid add-on — not required to publish"
+        title="Optional paid add-on — not required to publish. See details on the identity verification page."
         className={cn(
           'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[13px] font-medium bg-muted/60 text-muted-foreground border border-border hover:text-foreground hover:bg-muted transition-colors',
           className,
         )}
       >
         <BadgeCheck className="h-3.5 w-3.5" />
-        Get verified (optional)
+        Get verified*
       </Link>
     );
   }
@@ -48,7 +48,7 @@ const IdentityChip = ({ verified, className, prominent }: IdentityChipProps) => 
   return (
     <Link
       to="/identity-verification"
-      title="Optional paid add-on — not required to publish"
+      title="Optional paid add-on — not required to publish. See details on the identity verification page."
       className={cn(
         'inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-muted/60 text-muted-foreground border border-border hover:text-foreground hover:bg-muted transition-colors',
         className,

@@ -18,6 +18,7 @@ import { GetVerifiedButton } from '@/components/verification/GetVerifiedButton';
 import { IDENTITY_VERIFIED_DISCLOSURE } from '@/components/verification/IdentityVerifiedBadge';
 import { PayPalMonogram, PlaidLogo } from '@/components/brand/ProviderLogos';
 import { goBackToOrigin } from '@/lib/originNav';
+import { IdentityAddOnNote } from '@/components/verification/IdentityAddOnNote';
 
 const PANEL =
   'rounded-2xl border-2 border-foreground/[0.10] bg-foreground/[0.035] backdrop-blur-xl';
@@ -97,9 +98,11 @@ const IdentityVerification = () => {
               </h1>
               <p className="mb-7 text-base leading-relaxed text-muted-foreground sm:text-lg">
                 A one-time identity check by Plaid adds a green Identity Verified badge to your
-                profile and every active listing. Optional, never a subscription, and never required
-                to publish, buy, rent, or sell.
+                profile and every active listing.
               </p>
+              <div className="mb-7">
+                <IdentityAddOnNote align="center" />
+              </div>
 
               <div className="flex flex-col items-center gap-4">
                 {loading ? (
