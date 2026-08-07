@@ -102,7 +102,10 @@ const HostDashboard = () => {
 
   return (
     <div className="max-w-[1320px] mx-auto section-stack">
+      <PaymentsTransitionModal />
       <OverviewGreeting firstName={firstName} persona="Hosting" isVerified={isVerified} />
+
+      <PaymentsTransitionReminder />
 
       <VerifiedSellerCTA variant="card" />
 
