@@ -2,6 +2,11 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import { ChevronDown, Facebook, Instagram, Twitter, Linkedin } from 'lucide-react';
 import vendibookFavicon from '@/assets/vendibook-favicon.png';
+import {
+  PayPalMonogram,
+  PayPalWordmark,
+  EquinoxFundingLogo,
+} from '@/components/brand/ProviderLogos';
 import { cn } from '@/lib/utils';
 import { trackFooterCitiesClicked } from '@/lib/analytics';
 

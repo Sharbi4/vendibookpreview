@@ -27,8 +27,8 @@ export function PaymentsTransitionReminder() {
       to={to}
       className="group relative flex items-center gap-3 rounded-2xl border-2 border-white/12 bg-[linear-gradient(140deg,#101014_0%,#08080a_60%,#15151b_100%)] px-4 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] transition-colors hover:border-white/20"
     >
-      <span className="shrink-0 w-8 h-8 rounded-full bg-primary/10 ring-1 ring-primary/25 flex items-center justify-center">
-        <Banknote className="h-4 w-4 text-primary" />
+      <span className="shrink-0 w-8 h-8 rounded-full bg-white/[0.06] ring-1 ring-white/15 flex items-center justify-center">
+        <PayPalMonogram className="h-4" />
       </span>
       <p className="min-w-0 flex-1 text-xs sm:text-sm text-muted-foreground leading-relaxed">
         {message}
