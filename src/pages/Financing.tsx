@@ -1,7 +1,8 @@
 import { useEffect } from 'react';
-import { Helmet } from 'react-helmet-async';
 import { Link } from 'react-router-dom';
 import { ArrowRight, ExternalLink } from 'lucide-react';
+import SEO, { generateFAQSchema } from '@/components/SEO';
+import JsonLd from '@/components/JsonLd';
 import equinoxLogo from '@/assets/brand/equinox-funding-logo.png.asset.json';
 
 const LIME = '#8CC63F';
@@ -95,31 +96,23 @@ const Financing = () => {
   const title = 'Equipment Financing for Food Trucks & Trailers | Vendibook';
   const description =
     'Explore equipment financing with Equinox Funding for food trucks, trailers, and commercial kitchen equipment. Apply online — subject to prequalification and underwriting.';
-  const canonical = 'https://vendibook.com/financing';
-  const ogImage = 'https://vendibook.com/images/vendibook-og-image.jpg';
+  const canonical = '/financing';
 
   return (
     <>
-      <Helmet>
-        <title>{title}</title>
-        <meta name="description" content={description} />
-        <link rel="canonical" href={canonical} />
-
-        <meta property="og:type" content="website" />
-        <meta property="og:url" content={canonical} />
-        <meta property="og:site_name" content="Vendibook" />
-        <meta property="og:title" content={title} />
-        <meta property="og:description" content={description} />
-        <meta property="og:image" content={ogImage} />
-        <meta property="og:image:width" content="1200" />
-        <meta property="og:image:height" content="630" />
-        <meta property="og:locale" content="en_US" />
-
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content={title} />
-        <meta name="twitter:description" content={description} />
-        <meta name="twitter:image" content={ogImage} />
-      </Helmet>
+      <SEO
+        title={title}
+        description={description}
+        canonical={canonical}
+        type="website"
+      />
+      <JsonLd
+        schema={[
+          generateFAQSchema(
+            FAQ.map((item) => ({ question: item.q, answer: item.a })),
+          ),
+        ]}
+      />
 
       <main className="relative min-h-screen overflow-hidden bg-[#050506] text-white">
       {/* polished onyx shine — layered black glass luminescence */}
