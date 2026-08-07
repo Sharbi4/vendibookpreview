@@ -37,8 +37,8 @@ const TrustItem = ({
 export const SaleTrustStrip = ({ className }: { className?: string }) => (
   <SaleCard variant="default" padding="md" className={className}>
     <div className="grid grid-cols-3 gap-3">
-      <TrustItem icon={ShieldCheck} title="Verified Listing" sub="Reviewed for quality and authenticity" />
-      <TrustItem icon={Lock} title="Secure Payments" sub="Your payment is safe with Vendibook" />
+      <TrustItem icon={ShieldCheck} title="Detailed Listing" sub="Specs, documents, and owner details in one place" />
+      <TrustItem icon={Lock} title="PayPal Checkout" sub="Supported payments run through PayPal" />
       <TrustItem icon={Zap} title="Responsive Seller" sub="Typically responds within 1 hour" />
     </div>
   </SaleCard>
@@ -73,11 +73,11 @@ const ProtectionCard = ({
 export const SaleProtectionSection = () => (
   <div className="space-y-4">
     <div>
-      <h2 className="text-lg font-semibold mb-3">Your purchase is protected</h2>
+      <h2 className="text-lg font-semibold mb-3">How Vendibook supports your purchase</h2>
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5">
-        <ProtectionCard icon={ShieldCheck} title="Verified Users" body="All users are verified to keep our marketplace safe." tone="emerald" />
-        <ProtectionCard icon={Lock} title="Secure Payments" body="Your payment is protected with industry-standard encryption." tone="primary" />
-        <ProtectionCard icon={FileText} title="Document Workflow" body="We help verify documents and important information." tone="blue" />
+        <ProtectionCard icon={ShieldCheck} title="Optional ID Verification" body="Sellers can choose to complete identity verification and display a badge." tone="emerald" />
+        <ProtectionCard icon={Lock} title="PayPal Checkout" body="Supported payments are processed by PayPal, not handled on Vendibook." tone="primary" />
+        <ProtectionCard icon={FileText} title="Document Workflow" body="We help collect and organize documents and important information." tone="blue" />
         <ProtectionCard icon={HeadphonesIcon} title="Dispute Support" body="Our team is here to help if something doesn't go as planned." tone="amber" />
       </div>
     </div>
@@ -89,7 +89,8 @@ export const SaleProtectionSection = () => (
             All sales are final. Please review all details and ask questions before purchasing.
           </div>
           <div className="text-xs text-muted-foreground mt-1">
-            Your payment is only released to the seller once you confirm delivery or pickup.
+            Payment disputes are handled through PayPal&rsquo;s buyer protection process and
+            Vendibook support.
           </div>
         </div>
       </div>

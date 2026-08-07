@@ -47,6 +47,7 @@ const SmsEnrollment = lazy(() => import("./pages/SmsEnrollment"));
 const SmsOptIn = lazy(() => import("./pages/SmsOptIn"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const EditListing = lazy(() => import("./pages/EditListing"));
+const ListingPaymentsFinancing = lazy(() => import("./pages/ListingPaymentsFinancing"));
 const ListingStart = lazy(() => import("./pages/ListingStart"));
 const ConciergeIntro = lazy(() => import("./pages/ConciergeIntro"));
 const ConciergeOrderPage = lazy(() => import("./pages/ConciergeOrder"));
@@ -380,6 +381,7 @@ const AnimatedRoutes = () => {
           <Route path="/list/ai" element={<PageTransition><AIListingCreator /></PageTransition>} />
           <Route path="/create-listing/:listingId" element={<PageTransition><EditListing /></PageTransition>} />
           <Route path="/edit-listing/:listingId" element={<PageTransition><EditListing /></PageTransition>} />
+          <Route path="/listings/:listingId/payments-financing" element={<PageTransition><ListingPaymentsFinancing /></PageTransition>} />
 
           <Route path="/listing-published" element={<PageTransition><ListingPublished /></PageTransition>} />
           <Route path="/listing-published/:listingId" element={<PageTransition><ListingPublished /></PageTransition>} />

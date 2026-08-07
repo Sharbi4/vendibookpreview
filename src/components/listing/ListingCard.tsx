@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { MapPin, Plug, Zap, Droplet, Refrigerator, Flame, Wind, Wifi, Car, Shield, Sun, Truck, Calendar, Clock, ArrowRight } from 'lucide-react';
 import FeaturedBadge from '@/components/listing/FeaturedBadge';
+import { FinancingAvailableBadge } from '@/components/financing/FinancingAvailableBadge';
+import { useEquinoxFinancingEnabled } from '@/hooks/useListingFinancing';
 import ListingCardOverlay from '@/components/listing/ListingCardOverlay';
 import { Listing, CATEGORY_LABELS } from '@/types/listing';
 import { Badge } from '@/components/ui/badge';
@@ -151,6 +153,7 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
   
   // Featured badge: dynamic, source of truth in src/lib/featured.ts
   const isFeatured = isListingFeatured(listing as any);
+  const financingEnabled = useEquinoxFinancingEnabled(listing as any);
 
 
   // Safely format price with proper null handling
@@ -270,6 +273,9 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
               </Tooltip>
             </TooltipProvider>
           )}
+
+          {/* Financing badge — gated by launch flag + this listing's opt-in */}
+          {financingEnabled && <FinancingAvailableBadge compact />}
           
           {/* Instant Book Badge */}
           {!compact && listing.mode === 'rent' && listing.instant_book && (

@@ -309,8 +309,8 @@ export const SaleListingMobile = ({
         <SaleCard variant="default" padding="md">
 
           <div className="grid grid-cols-3 gap-3">
-            <TrustItem icon={ShieldCheck} title="Verified Listing" sub="Reviewed for quality" tone="primary" />
-            <TrustItem icon={Lock} title="Secure Payments" sub="Protected checkout" tone="primary" />
+            <TrustItem icon={ShieldCheck} title="Detailed Listing" sub="Specs and documents" tone="primary" />
+            <TrustItem icon={Lock} title="PayPal Checkout" sub="Processed by PayPal" tone="primary" />
             <TrustItem icon={Zap} title="Responsive Seller" sub="Typically replies fast" tone="primary" />
           </div>
         </SaleCard>
@@ -481,9 +481,9 @@ export const SaleListingMobile = ({
             {host?.identity_verified ? (
               <VerificationRow label="ID verified" verified />
             ) : (
-              <VerificationRow label="ID verification pending" verified={false} />
+              <VerificationRow label="ID verification not completed" verified={false} />
             )}
-            <VerificationRow label="Vendibook Protected" verified />
+            <VerificationRow label="PayPal checkout supported" verified />
           </div>
         </SaleCard>
 
@@ -644,7 +644,7 @@ export const SaleListingMobile = ({
             <div>
               <div className="text-sm font-medium">All sales are final. Please review all details and ask questions before purchasing.</div>
               <div className="text-xs text-muted-foreground mt-1">
-                Your payment is only released to the seller once you confirm delivery or pickup.
+                Payment disputes are handled through PayPal&rsquo;s buyer protection process and Vendibook support.
               </div>
             </div>
           </div>
@@ -667,11 +667,11 @@ export const SaleListingMobile = ({
 
         {/* PURCHASE PROTECTION */}
         <div>
-          <h2 className="text-base font-semibold mb-3">Your purchase is protected</h2>
+          <h2 className="text-base font-semibold mb-3">How Vendibook supports your purchase</h2>
           <div className="grid grid-cols-2 gap-2.5">
-            <ProtectionCard icon={ShieldCheck} title="Verified Users" body="All users are verified to keep our marketplace safe." tone="emerald" />
-            <ProtectionCard icon={Lock} title="Secure Payments" body="Your payment is protected with industry-standard encryption." tone="primary" />
-            <ProtectionCard icon={FileText} title="Document Workflow" body="We help verify documents and important information." tone="blue" />
+            <ProtectionCard icon={ShieldCheck} title="Optional ID Verification" body="Sellers can choose to complete identity verification and display a badge." tone="emerald" />
+            <ProtectionCard icon={Lock} title="PayPal Checkout" body="Supported payments are processed by PayPal, not handled on Vendibook." tone="primary" />
+            <ProtectionCard icon={FileText} title="Document Workflow" body="We help collect and organize documents and important information." tone="blue" />
             <ProtectionCard icon={HeadphonesIcon} title="Dispute Support" body="Our team is here to help if something doesn't go as planned." tone="amber" />
           </div>
         </div>
