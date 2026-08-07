@@ -249,7 +249,7 @@ const Financing = () => {
         </section>
 
         {/* CTA repeat */}
-        <section className="mt-16 rounded-2xl border border-white/10 bg-white/[0.03] p-8 text-center">
+        <section className="mt-16 rounded-3xl border-2 border-white/[0.12] bg-gradient-to-b from-white/[0.06] to-white/[0.02] p-8 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-sm">
           <h2 className="text-xl font-semibold tracking-tight">Ready to apply?</h2>
           <p className="mx-auto mt-2 max-w-lg text-sm text-white/60">
             You’ll continue to Equinox Funding to submit your application securely.
@@ -260,7 +260,7 @@ const Financing = () => {
         </section>
 
         {/* Compliance */}
-        <section className="mt-16 space-y-4 border-t border-white/10 pt-8" aria-label="Disclosures">
+        <section className="mt-16 space-y-4 rounded-3xl border-2 border-white/[0.10] bg-white/[0.02] p-6 sm:p-8" aria-label="Disclosures">
           <p className="text-xs leading-relaxed text-white/50">
             Vendibook is not a lender, does not make credit decisions, and does not guarantee
             approval, rates, terms, or funding. Financing is for business purposes and is subject to
