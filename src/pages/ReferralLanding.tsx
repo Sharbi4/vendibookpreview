@@ -50,8 +50,8 @@ const PROGRAMS = [
 
 const FAQ = [
   ["Who counts as a new user?", "Anyone without a prior Vendibook account using their email, phone, or device. We check at signup."],
-  ["When do I get paid?", "After your referral qualifies, our team reviews it. Once approved and any hold window has passed, payouts run weekly on Mondays via Stripe Connect once you've accumulated at least $50."],
-  ["How is the money sent?", "Through Stripe Connect, batched weekly on Mondays. Minimum $50 accumulated before a transfer is initiated."],
+  ["When do I get paid?", "After your referral qualifies, our team reviews it. Once approved and any hold window has passed, payouts run weekly on Mondays once you've accumulated at least $50."],
+  ["How is the money sent?", "Sent to your saved payout destination, batched weekly on Mondays. Minimum $50 accumulated before a transfer is initiated."],
   ["Can I refer myself with a second account?", "No. Self-referrals are auto-detected and voided. Fraud also triggers account suspension."],
   ["Are referral rewards taxable?", "Yes. If you earn $600+ in a calendar year, we collect W-9 info and issue a 1099 form."],
   ["What if the buyer files a chargeback?", "Purchase referrals are held 14 days. If a dispute resolves in the buyer's favor within that window, the reward is forfeited."],
@@ -133,7 +133,7 @@ const ReferralLanding = () => {
                   Turn your network into eligible rewards.
                 </h1>
                 <p className="text-lg md:text-xl text-white/70 mb-8 leading-relaxed">
-                  Refer buyers, sellers, and renters to Vendibook. Eligible rewards are paid through Stripe after the referred transaction completes and our team reviews it.
+                  Refer buyers, sellers, and renters to Vendibook. Eligible rewards are paid out after the referred transaction completes and our team reviews it.
                 </p>
                 {programEnabled ? (
                   <div className="flex flex-wrap gap-3">
@@ -189,7 +189,7 @@ const ReferralLanding = () => {
             {[
               { icon: LinkIcon, t: "1. Get your link", d: "Sign up and we generate a unique referral code and link for you." },
               { icon: Share2, t: "2. Share it", d: "Text, email, post, or hand out the QR code at events. We track every click." },
-              { icon: DollarSign, t: "3. Get paid", d: "Stripe deposits your reward to your bank when the referral qualifies." },
+              { icon: DollarSign, t: "3. Get paid", d: "Vendibook sends your reward to your saved payout destination when the referral qualifies." },
             ].map(({ icon: Icon, t, d }) => (
               <div key={t} className="text-center">
                 <div className="inline-flex p-4 rounded-full bg-[#FF5124]/15 mb-4">
@@ -206,7 +206,7 @@ const ReferralLanding = () => {
         <section className="border-y border-white/5 bg-white/[0.02]">
           <div className="container mx-auto px-4 py-8">
             <div className="flex flex-wrap justify-center gap-x-10 gap-y-3 text-sm text-white/60">
-              <span className="flex items-center gap-2"><Shield className="h-4 w-4 text-[#FF5124]" /> Payouts via Stripe</span>
+              <span className="flex items-center gap-2"><Shield className="h-4 w-4 text-[#FF5124]" /> Payouts to your saved destination</span>
               <span className="flex items-center gap-2"><Clock className="h-4 w-4 text-[#FF5124]" /> 30-day cookie tracking</span>
               <span className="flex items-center gap-2"><DollarSign className="h-4 w-4 text-[#FF5124]" /> Real-time dashboard</span>
               <span className="flex items-center gap-2"><FileText className="h-4 w-4 text-[#FF5124]" /> 1099 issued at $600+</span>

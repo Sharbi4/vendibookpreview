@@ -54,7 +54,7 @@ const roleConfig: Record<Role, {
       { number: 4, title: 'Book & pay securely', description: 'Pay by card, ACH, Affirm, Klarna, or Afterpay. Funds are held in payment protection — released to the host after handoff.', icon: CreditCard, mock: 'payment' },
       { number: 5, title: 'Pick up or get it delivered', description: 'Coordinate pickup, on-site setup, or nationwide freight shipping. Hosts share access details once payment clears.', icon: Truck, mock: 'truck' }],
     pillars: [
-      { icon: ShieldCheck, title: 'Verified hosts only', description: 'Identity-verified via Stripe before any listing goes live.' },
+      { icon: ShieldCheck, title: 'Verified hosts only', description: 'Identity-verified before any listing goes live.' },
       { icon: CreditCard, title: 'Payment Protection protection', description: 'Funds are held until you confirm the equipment is as described.' },
       { icon: Clock, title: 'Fast host replies', description: 'Most renters get a response within an hour during business hours.' },
       { icon: MapPin, title: 'Coast-to-coast inventory', description: 'Trucks, trailers, kitchens, and vendor spaces in every major US city.' }],

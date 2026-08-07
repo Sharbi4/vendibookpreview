@@ -49,7 +49,7 @@ const MAP: Record<string, CheckoutErrorCopy> = {
   },
   no_stripe_customer: {
     title: "No billing account found",
-    description: "We couldn't find a Stripe billing account for you yet.",
+    description: "We couldn't find a billing account for you yet.",
   },
   payment_not_completed: {
     title: "Payment not completed",

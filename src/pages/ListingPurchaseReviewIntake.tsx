@@ -24,7 +24,7 @@ const schema = z.object({
 /**
  * Intake form for the $149 Listing Purchase Review.
  * Flow: capture intake → create pending buyer_service_request →
- * open Stripe checkout via create-monetization-checkout.
+ * open PayPal checkout via create-monetization-checkout.
  */
 const ListingPurchaseReviewIntake = () => {
   const { listingId } = useParams<{ listingId: string }>();
@@ -160,7 +160,7 @@ const ListingPurchaseReviewIntake = () => {
             Continue to secure checkout — $149
           </Button>
           <p className="text-xs text-muted-foreground">
-            You will be redirected to Stripe. No charge until you confirm.
+            You will be redirected to PayPal. No charge until you confirm.
           </p>
         </div>
       </section>

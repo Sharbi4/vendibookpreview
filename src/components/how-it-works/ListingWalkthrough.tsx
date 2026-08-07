@@ -178,7 +178,7 @@ const ListingWalkthrough = () => {
           >
             <div className="text-sm font-medium text-muted-foreground mb-2 mt-4">Payment Options</div>
             <div className="space-y-2">
-              {['Accept cash/check (in-person)', 'Accept card payments (Stripe)'].map((opt, i) => (
+              {['Accept cash/check (in-person)', 'Accept card payments (PayPal)'].map((opt, i) => (
                 <motion.div
                   key={opt}
                   initial={{ opacity: 0, x: -10 }}

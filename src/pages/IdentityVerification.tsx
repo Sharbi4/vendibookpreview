@@ -216,7 +216,7 @@ const IdentityVerification = () => {
               <TrustCell
                 media={<Lock className="h-5 w-5 text-foreground/80" />}
                 title="Encrypted end-to-end"
-                body="Your ID is reviewed by Stripe. Vendibook never stores your document."
+                body="Your ID is reviewed securely. Vendibook never stores your document."
               />
               <TrustCell
                 media={
