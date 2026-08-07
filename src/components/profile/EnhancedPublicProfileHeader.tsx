@@ -92,6 +92,14 @@ const EnhancedPublicProfileHeader = ({
   const displayName = getPublicDisplayName(profile);
   const initials = getDisplayInitials(profile);
   const memberSince = format(new Date(profile.created_at), 'MMMM yyyy');
+
+  /**
+   * Paid Identity Verified badge, read from the sanitized server function.
+   * profiles.identity_verified is legacy history and never drives this badge.
+   */
+  const badgeMap = useSellerIdentityBadgeMap([profile.id]);
+  const identityVerified = !!badgeMap[profile.id]?.verified;
+  const identityVerifiedAt = badgeMap[profile.id]?.verifiedAt ?? null;
   
   // Upload state for own profile
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
