@@ -783,7 +783,9 @@ export async function cleanupAbandonedAuthorizations(
     if (row.paypal_authorization_id && record.identity_status === "success") continue;
 
     const result = await voidAuthorizationOnce(admin, row, "abandoned_authorization");
-    if (!result.ok) continue;
+    // Only a CONFIRMED release counts. Captured/unresolved money is left for
+    // the admin queue rather than being silently marked as canceled.
+    if (result.moneyState !== "voided") continue;
     voided += 1;
 
     /**
