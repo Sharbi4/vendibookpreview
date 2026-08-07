@@ -13,6 +13,8 @@ export interface BlogPost {
   image?: string;
   readingTime: number;
   featured?: boolean;
+  /** Optional marketing campaign identifier used for CTA + share click tracking */
+  campaign?: string;
 }
 
 export const BLOG_CATEGORIES = [
