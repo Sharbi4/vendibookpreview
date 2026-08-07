@@ -60,7 +60,7 @@ const build = (
 
 const BUYING_SENTENCES = [
   'Buying a food truck is a big deal — Vendibook makes it safe.',
-  'Browse verified listings with real photos and specs.',
+  'Browse detailed listings with real photos and specs.',
   'Message sellers and make offers directly.',
   'Pay by card, or split it into monthly payments with Affirm.',
   'Your money stays protected until you confirm delivery.',
@@ -101,14 +101,14 @@ export const explainers: Explainer[] = [
     title: 'Buying on Vendibook',
     tileHeadline: 'How Buying Works',
     description:
-      'Browse verified listings, message sellers, and pay protected — all from one dashboard.',
+      'Browse listings, message sellers, and pay through secure checkout — all from one dashboard.',
     durationSeconds: 28,
     accessory: 'none',
     heroImage: buyingHero,
     narrationScript: BUYING_SENTENCES.join(' '),
     // Sentence -> scene:
     // 1) Marketplace intro (0)
-    // 2) Verified listings & search (1)
+    // 2) Detailed listings & search (1)
     // 3) Listing detail + messaging (3)
     // 4) Checkout with card & Affirm (4)
     // 5) Protected payment status (5)
@@ -120,7 +120,7 @@ export const explainers: Explainer[] = [
       BUYING_SENTENCES,
       [
         'Intro',
-        'Verified listings',
+        'Detailed listings',
         'Message & offer',
         'Card or Affirm',
         'Protected payment',

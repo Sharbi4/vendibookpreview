@@ -73,7 +73,7 @@ const Index = () => {
     <div className="min-h-screen flex flex-col bg-background">
       <SEO
         title="Buy & Rent Food Trucks and Food Trailers | Vendibook"
-        description="The #1 US marketplace for food trucks and food trailers. Verified listings, secure payments, 24/7 support. Rent or buy your next mobile kitchen."
+        description="The #1 US marketplace for food trucks and food trailers. Detailed listings, secure PayPal checkout, and 24/7 support. Rent or buy your next mobile kitchen."
         canonical="/"
       />
       <JsonLd schema={[generateOrganizationSchema(), generateWebSiteSchema()]} />
