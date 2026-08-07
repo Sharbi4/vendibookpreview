@@ -65,7 +65,7 @@ const HostDashboard = () => {
       id: 'payout-details', icon: Banknote,
       title: 'Add your payout details',
       description: 'Optional — tell us where to send earnings when you make a sale. Publishing and bookings work without it.',
-      href: '/dashboard?view=host&tab=payouts', cta: 'Add', tone: 'info',
+      href: '/dashboard?view=host&tab=payouts', cta: 'Add', tone: 'default',
     });
     // Identity verification is optional on Vendibook — never surfaced as a
     // publishing requirement.
