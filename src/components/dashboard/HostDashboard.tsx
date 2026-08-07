@@ -9,6 +9,7 @@ import {
 import ActionRequiredStack, { type ActionItem } from './shared/ActionRequiredStack';
 import { BoostListingPrompt } from './BoostListingPrompt';
 import OverviewGreeting from './overview/OverviewGreeting';
+import VerifiedSellerCTA from '@/components/verification/VerifiedSellerCTA';
 import { KpiCard } from './overview/KpiCard';
 import RecentActivityStrip, { ActivityItem } from './overview/RecentActivityStrip';
 import PremiumSpotlight from './overview/PremiumSpotlight';
@@ -106,6 +107,8 @@ const HostDashboard = () => {
   return (
     <div className="max-w-[1320px] mx-auto section-stack">
       <OverviewGreeting firstName={firstName} persona="Hosting" isVerified={isVerified} />
+
+      <VerifiedSellerCTA variant="card" />
 
       {/* KPI row — ember reserved for Earnings */}
       <section aria-labelledby="dash-glance">

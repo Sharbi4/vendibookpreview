@@ -1438,3 +1438,106 @@
   }
 
 }
+
+/* ------------------------------------------------------------------
+   Verified Seller — metallic green badge, CTA and card sheen.
+   Deliberately a single self-contained treatment so the trust surface
+   reads as premium without borrowing the gold Featured language.
+------------------------------------------------------------------ */
+@layer components {
+  .verified-metallic {
+    position: relative;
+    overflow: hidden;
+    color: hsl(150 85% 96%);
+    background:
+      linear-gradient(155deg,
+        hsl(152 62% 42%) 0%,
+        hsl(158 70% 30%) 42%,
+        hsl(150 55% 22%) 72%,
+        hsl(155 68% 34%) 100%);
+    border: 1px solid hsl(152 60% 46% / 0.75);
+    box-shadow:
+      0 1px 0 hsl(150 90% 80% / 0.35) inset,
+      0 -1px 0 hsl(150 60% 10% / 0.45) inset,
+      0 4px 14px -6px hsl(155 70% 25% / 0.8);
+    text-shadow: 0 1px 1px hsl(155 70% 12% / 0.45);
+  }
+  .verified-metallic::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: -70%;
+    width: 45%;
+    pointer-events: none;
+    background: linear-gradient(
+      100deg,
+      transparent 0%,
+      hsl(0 0% 100% / 0.55) 50%,
+      transparent 100%
+    );
+    animation: verified-sweep 5.2s ease-in-out infinite;
+  }
+
+  .verified-cta {
+    position: relative;
+    overflow: hidden;
+    color: hsl(150 90% 97%);
+    background:
+      linear-gradient(150deg,
+        hsl(152 60% 38%) 0%,
+        hsl(158 72% 26%) 55%,
+        hsl(153 64% 32%) 100%);
+    border: 1px solid hsl(152 58% 48% / 0.8);
+    box-shadow:
+      0 1px 0 hsl(150 90% 85% / 0.3) inset,
+      0 8px 22px -12px hsl(155 75% 22% / 0.95);
+  }
+  .verified-cta:hover {
+    background:
+      linear-gradient(150deg,
+        hsl(152 64% 43%) 0%,
+        hsl(158 74% 30%) 55%,
+        hsl(153 68% 36%) 100%);
+  }
+  .verified-cta::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: -70%;
+    width: 40%;
+    pointer-events: none;
+    background: linear-gradient(
+      100deg,
+      transparent 0%,
+      hsl(0 0% 100% / 0.4) 50%,
+      transparent 100%
+    );
+    animation: verified-sweep 5.2s ease-in-out infinite;
+  }
+
+  /* Soft green wash behind the dashboard trust card. */
+  .verified-sheen {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+      radial-gradient(120% 80% at 0% 0%, hsl(152 60% 40% / 0.10) 0%, transparent 60%),
+      radial-gradient(90% 70% at 100% 100%, hsl(158 70% 30% / 0.08) 0%, transparent 65%);
+  }
+
+  @keyframes verified-sweep {
+    0% { left: -70%; }
+    55% { left: 130%; }
+    100% { left: 130%; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .verified-metallic::after,
+    .verified-cta::after {
+      animation: none;
+      display: none;
+    }
+  }
+}

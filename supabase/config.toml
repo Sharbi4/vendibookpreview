@@ -1,6 +1,8 @@
 project_id = "nbrehbwfsmedbelzntqs"
 
 [functions]
+  [functions.verified-seller-webhook]
+    verify_jwt = false
   [functions.monetization-webhook]
     verify_jwt = false
   [functions.paypal-webhook]

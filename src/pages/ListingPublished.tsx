@@ -13,6 +13,7 @@ import {
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
+import VerifiedSellerCTA from '@/components/verification/VerifiedSellerCTA';
 import { ShareKit, ShareKitListing } from '@/components/listing-wizard/ShareKit';
 import { ListingCategory, ListingMode } from '@/types/listing';
 import { useToast } from '@/hooks/use-toast';
@@ -340,6 +341,10 @@ const ListingPublished: React.FC = () => {
         </header>
 
         {showShare && <ShareKit listing={listing} onClose={() => setShowShare(false)} />}
+
+        {/* Optional trust upsell — secondary to the core success actions. */}
+        <VerifiedSellerCTA variant="success" />
+
 
         {/* Buyer readiness */}
         <section className="rounded-xl border border-border/60 bg-card/60 p-5">
