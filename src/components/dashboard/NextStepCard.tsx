@@ -91,8 +91,6 @@ export const NextStepCard = ({ onSetUpPayouts, isSavingPayouts }: NextStepCardPr
         return hasPendingRequests;
       case 'drafts':
         return hasDrafts && isConnected;
-      case 'verify':
-        return !isIdentityVerified && isConnected;
       case 'listing':
         return stats.total === 0 && isConnected;
       default:
