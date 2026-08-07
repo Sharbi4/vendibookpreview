@@ -21,7 +21,7 @@ import {
 
 interface RevenueAnalyticsCardProps {
   analytics: RevenueAnalytics;
-  onOpenStripeDashboard?: () => void;
+  onOpenPayoutHistory?: () => void;
   isOpeningDashboard?: boolean;
 }
 
@@ -43,7 +43,7 @@ const formatCurrencyFull = (value: number) => {
   }).format(value / 100);
 };
 
-export const RevenueAnalyticsCard = ({ analytics, onOpenStripeDashboard, isOpeningDashboard }: RevenueAnalyticsCardProps) => {
+export const RevenueAnalyticsCard = ({ analytics, onOpenPayoutHistory, isOpeningDashboard }: RevenueAnalyticsCardProps) => {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'completed':
@@ -289,7 +289,7 @@ export const RevenueAnalyticsCard = ({ analytics, onOpenStripeDashboard, isOpeni
       <PayoutScheduleCard
         pendingPayout={analytics.pendingPayout}
         payoutHistory={analytics.payoutHistory}
-        onOpenStripeDashboard={onOpenStripeDashboard}
+        onOpenPayoutHistory={onOpenPayoutHistory}
         isOpeningDashboard={isOpeningDashboard}
       />
 
