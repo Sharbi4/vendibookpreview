@@ -11,6 +11,7 @@ import PayoutMethodForm from '@/components/account/PayoutMethodForm';
 import { usePayoutPreference } from '@/hooks/usePayoutPreference';
 import { useToast } from '@/hooks/use-toast';
 import { PayoutBrandMark } from '@/components/payouts/PayoutBrandMark';
+import paypalAppImage from '@/assets/brand/paypal-app-2025.webp.asset.json';
 import {
   PAYOUT_METHOD_LABEL,
   PAYOUT_PREFERENCE_DISCLOSURE,
