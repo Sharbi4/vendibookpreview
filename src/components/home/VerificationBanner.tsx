@@ -27,7 +27,7 @@ const VerificationBanner = ({ userId }: VerificationBannerProps) => {
         <div className="flex items-center gap-3">
           <ShieldCheck className="h-5 w-5 text-amber-600 dark:text-amber-400 flex-shrink-0" />
           <AlertDescription className="text-amber-800 dark:text-amber-200">
-            Verify your identity to unlock booking and build trust with hosts.
+            Optional: add a verified badge to your profile with our paid Plaid identity add-on. Never required to book, buy, sell, or publish.
           </AlertDescription>
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
@@ -37,7 +37,7 @@ const VerificationBanner = ({ userId }: VerificationBannerProps) => {
             className="border-amber-300 dark:border-amber-700 text-amber-700 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-900/50"
             asChild
           >
-            <Link to="/verify-identity">Verify Now</Link>
+            <Link to="/identity-verification">Learn more</Link>
           </Button>
           <Button
             variant="ghost"
