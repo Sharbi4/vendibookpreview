@@ -203,12 +203,55 @@ async function recordAttempt(
 }
 
 /**
+ * Persists a freshly created Plaid session as the CURRENT attempt.
+ *
+ * This runs the moment Plaid returns a session id — before a Link token is
+ * requested — so a Link-token failure can never orphan a session that Plaid
+ * has already created (and, for a retry, already counted).
+ */
+async function persistSession(
+  admin: any,
+  userId: string,
+  templateId: string,
+  session: { id: string; status?: string; previous_attempt_id?: string | null; request_id?: string },
+  payment: PaymentRow | null,
+  previousFallback?: string | null,
+) {
+  await recordAttempt(admin, userId, templateId, session, payment, previousFallback);
+  await admin
+    .from("seller_verifications")
+    .update({
+      current_attempt_id: session.id,
+      identity_status: session.status ?? "active",
+      status: "identity_pending",
+      updated_at: new Date().toISOString(),
+    })
+    .eq("user_id", userId);
+}
+
+/**
+ * Best-effort Link token issuance. A failure here is RECOVERABLE: the Plaid
+ * session and the PayPal authorization both stay valid and the seller resumes
+ * the very same session via the `link-token` action.
+ */
+async function tryIssueLinkToken(userId: string, templateId: string): Promise<string | null> {
+  try {
+    return await issueLinkToken(userId, templateId);
+  } catch (err) {
+    log("link_token_failed", { message: (err as Error).message });
+    return null;
+  }
+}
+
+/**
  * Starts the Plaid work that belongs to an authorized payment.
  *
  * A payment recorded with purpose `retry` ALWAYS uses Plaid's
  * /identity_verification/retry endpoint — never /create, which would start a
  * second billable session. The retry allowance is consumed atomically in the
- * database and released again if Plaid never created the attempt.
+ * database and released ONLY when the retry call itself failed before Plaid
+ * returned a session. Once Plaid returns a session the retry is consumed for
+ * good, even if the Link token cannot be issued right away.
  */
 async function startPlaidForPayment(
   admin: any,
@@ -216,7 +259,7 @@ async function startPlaidForPayment(
   templateId: string,
   payment: PaymentRow | null,
   record: VerificationRow,
-): Promise<{ linkToken: string; sessionId: string } | Response> {
+): Promise<{ linkToken: string | null; sessionId: string } | Response> {
   const isRetry = payment?.purpose === "retry";
 
   if (isRetry) {
@@ -231,20 +274,43 @@ async function startPlaidForPayment(
       );
     }
 
+    let session;
     try {
-      const session = await retryIdentityVerification({ clientUserId: userId, templateId });
-      await recordAttempt(admin, userId, templateId, session, payment, record.current_attempt_id);
-      return { linkToken: await issueLinkToken(userId, templateId), sessionId: session.id };
+      session = await retryIdentityVerification({ clientUserId: userId, templateId });
     } catch (err) {
       // Plaid never created the attempt — give the allowance back.
       await admin.rpc("release_seller_verification_retry", { _user_id: userId });
       throw err;
     }
+
+    // The retry now exists at Plaid. It stays consumed from here on.
+    await persistSession(
+      admin,
+      userId,
+      templateId,
+      session,
+      payment,
+      record.current_attempt_id,
+    );
+    return { linkToken: await tryIssueLinkToken(userId, templateId), sessionId: session.id };
   }
 
   const session = await createIdentityVerification({ clientUserId: userId, templateId });
-  await recordAttempt(admin, userId, templateId, session, payment);
-  return { linkToken: await issueLinkToken(userId, templateId), sessionId: session.id };
+  await persistSession(admin, userId, templateId, session, payment);
+  return { linkToken: await tryIssueLinkToken(userId, templateId), sessionId: session.id };
+}
+
+/** Recoverable response when Plaid has a session but no Link token yet. */
+function linkTokenPending(sessionId: string) {
+  return jsonResponse(200, {
+    ok: false,
+    error_code: "link_token_unavailable",
+    session_id: sessionId,
+    resumable: true,
+    message:
+      "Your identity check is reserved and your payment is still on hold — nothing extra was charged. " +
+      "Reopen the check in a moment to finish it.",
+  });
 }
 
 serve(async (req) => {
