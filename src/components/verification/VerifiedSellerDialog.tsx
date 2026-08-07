@@ -1,4 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
+
 import {
   AlertTriangle,
   BadgeCheck,
@@ -20,6 +23,8 @@ import { failedResultCopy } from '@/lib/verifiedSellerCopy';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useSellerVerification } from '@/hooks/useSellerVerification';
+import { refreshSellerBadgeSurfaces } from '@/hooks/useSellerVerifiedBadge';
+
 import { PayPalMonogram, PlaidLogo } from '@/components/brand/ProviderLogos';
 import { IDENTITY_VERIFIED_DISCLOSURE } from './IdentityVerifiedBadge';
 import { cn } from '@/lib/utils';
@@ -41,6 +46,8 @@ type Step = 'terms' | 'resume' | 'pay' | 'working' | 'result';
  */
 const VerifiedSellerDialog = ({ open, onOpenChange, onVerified }: VerifiedSellerDialogProps) => {
   const v = useSellerVerification({ enabled: open });
+  const queryClient = useQueryClient();
+
   const [accepted, setAccepted] = useState(false);
   const [step, setStep] = useState<Step>('terms');
   const [orderId, setOrderId] = useState<string | null>(null);
@@ -80,9 +87,12 @@ const VerifiedSellerDialog = ({ open, onOpenChange, onVerified }: VerifiedSeller
     if (v.state?.badge_active && !notifiedRef.current) {
       notifiedRef.current = true;
       setStep('result');
+      // Push the new badge onto every listing surface without a page reload.
+      refreshSellerBadgeSurfaces(queryClient);
       onVerified?.();
     }
-  }, [v.state?.badge_active, onVerified]);
+  }, [v.state?.badge_active, onVerified, queryClient]);
+
 
   const beginPayment = useCallback(async () => {
     const id = paymentOnly ? await v.completePayment() : await v.start(accepted);
@@ -340,8 +350,21 @@ const VerifiedSellerDialog = ({ open, onOpenChange, onVerified }: VerifiedSeller
                     Your Identity Verified badge is live on your seller profile and every active
                     listing. A receipt is on its way to your inbox.
                   </p>
+                  <div className="flex flex-col gap-2 pt-1 sm:flex-row">
+                    <Button asChild variant="outline" className="w-full min-h-11">
+                      <Link to="/dashboard?view=host" onClick={() => onOpenChange(false)}>
+                        Review your listings
+                      </Link>
+                    </Button>
+                    <Button asChild variant="ghost" className="w-full min-h-11">
+                      <Link to="/account" onClick={() => onOpenChange(false)}>
+                        View your profile badge
+                      </Link>
+                    </Button>
+                  </div>
                 </>
               ) : status === 'pending_review' ? (
+
                 <>
                   <Clock className="mx-auto h-10 w-10 text-amber-500" aria-hidden="true" />
                   <p className="text-base font-semibold text-foreground">Pending review</p>

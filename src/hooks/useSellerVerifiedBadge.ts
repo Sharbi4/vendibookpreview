@@ -1,7 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useQuery, type QueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-
-const cache = new Map<string, boolean>();
 
 /**
  * Public read of a seller's Identity Verified badge.
@@ -9,41 +7,43 @@ const cache = new Map<string, boolean>();
  * Backed by the server-side `is_seller_identity_verified` function, which
  * derives eligibility from Plaid success + captured payment + no revocation.
  * Never reads a user-editable profile column directly.
+ *
+ * Cached through react-query so a seller who just finished the paid check can
+ * have every badge surface refreshed immediately (see
+ * `refreshSellerBadgeSurfaces`) instead of waiting for a full page reload.
  */
 export function useSellerVerifiedBadge(sellerId?: string | null) {
-  const [verified, setVerified] = useState<boolean>(() =>
-    sellerId ? cache.get(sellerId) ?? false : false,
-  );
-  const [loading, setLoading] = useState(!!sellerId && !cache.has(sellerId ?? ''));
-
-  useEffect(() => {
-    if (!sellerId) {
-      setVerified(false);
-      setLoading(false);
-      return;
-    }
-    if (cache.has(sellerId)) {
-      setVerified(cache.get(sellerId)!);
-      setLoading(false);
-      return;
-    }
-
-    let cancelled = false;
-    setLoading(true);
-    supabase
-      .rpc('is_seller_identity_verified', { _user_id: sellerId })
-      .then(({ data, error }) => {
-        if (cancelled) return;
-        const value = !error && data === true;
-        cache.set(sellerId, value);
-        setVerified(value);
-        setLoading(false);
+  const { data, isLoading } = useQuery({
+    queryKey: ['seller-verified-badge', sellerId],
+    enabled: !!sellerId,
+    staleTime: 5 * 60 * 1000,
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc('is_seller_identity_verified', {
+        _user_id: sellerId as string,
       });
+      if (error) return false;
+      return data === true;
+    },
+  });
 
-    return () => {
-      cancelled = true;
-    };
-  }, [sellerId]);
+  return { verified: data === true, loading: !!sellerId && isLoading };
+}
 
-  return { verified, loading };
+/**
+ * Invalidate every surface that renders the Identity Verified badge so a
+ * freshly verified seller sees it on their listings right away: single-seller
+ * reads, batched listing lists, and the host's own listing collections.
+ */
+export function refreshSellerBadgeSurfaces(queryClient: QueryClient) {
+  const keys = [
+    'seller-verified-badge',
+    'seller-identity-badges',
+    'host-listings',
+    'listings',
+    'listing',
+    'profile',
+  ];
+  keys.forEach((key) => {
+    void queryClient.invalidateQueries({ queryKey: [key] });
+  });
 }
