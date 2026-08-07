@@ -122,7 +122,7 @@ interface ListingData {
   deposit_amount: number | null;
   vendibook_freight_enabled: boolean;
   freight_payer: FreightPayer;
-  accept_card_payment: boolean; // Legacy Stripe flag; kept for audit
+  accept_card_payment: boolean; // Legacy Stripe column — read-only history, never written here
   accept_cash_payment: boolean;
   accept_paypal_checkout: boolean;
   proof_notary_enabled: boolean;
@@ -167,6 +167,14 @@ interface SaleSuggestions {
   sale_high: number;
   reasoning: string;
 }
+
+/**
+ * Categories where a VIN / serial is meaningful. Used only to decide whether
+ * to show the optional VIN control — it never gates publishing.
+ */
+const TITLED_SALE_CATEGORIES = ['food_truck', 'food_trailer'];
+const isTitledSaleCategory = (l: { mode?: string | null; category?: string | null } | null) =>
+  !!l && l.mode === 'sale' && TITLED_SALE_CATEGORIES.includes(String(l.category));
 
 export const PublishWizard: React.FC = () => {
   const { listingId } = useParams<{ listingId: string }>();
@@ -326,9 +334,15 @@ export const PublishWizard: React.FC = () => {
   const [proofNotaryEnabled, setProofNotaryEnabled] = useState(false);
   const [featuredEnabled, setFeaturedEnabled] = useState(false);
 
-  // ─── Optional Equinox Funding opt-in (for-sale food trucks / trailers only) ───
+  // ─── Optional Equinox Funding opt-in (any for-sale listing) ───
   const [equinoxOptIn, setEquinoxOptIn] = useState(false);
   const [equinoxDisclosureAccepted, setEquinoxDisclosureAccepted] = useState(false);
+  // Separate, always-unchecked-by-default consent to put the full VIN/serial on
+  // the private, server-generated purchase sheet.
+  const [equinoxIncludeVin, setEquinoxIncludeVin] = useState(false);
+  // VIN / serial lives only in the private listing_ownership_details row.
+  const [vinSerial, setVinSerial] = useState('');
+  const [vinUnavailable, setVinUnavailable] = useState(false);
   // Seller phone lives on the private profile — never in public listing text.
   const [sellerPhone, setSellerPhone] = useState('');
 
@@ -342,6 +356,7 @@ export const PublishWizard: React.FC = () => {
             listing_id: listing.id,
             host_id: user.id,
             equinox_opt_in: equinoxOptIn,
+            include_vin: equinoxOptIn ? equinoxIncludeVin : false,
             disclosure_version: equinoxOptIn ? EQUINOX_DISCLOSURE_VERSION : null,
             disclosure_accepted_at:
               equinoxOptIn && equinoxDisclosureAccepted ? new Date().toISOString() : null,
@@ -351,7 +366,43 @@ export const PublishWizard: React.FC = () => {
     } catch (err) {
       console.error('Failed to save financing preference', err);
     }
-  }, [user, listing, equinoxOptIn, equinoxDisclosureAccepted]);
+  }, [user, listing, equinoxOptIn, equinoxDisclosureAccepted, equinoxIncludeVin]);
+
+  /**
+   * VIN / serial is private data: it is stored only on
+   * listing_ownership_details, never on `listings`, and never blocks publish.
+   * The row's NOT NULL title_status is filled from the already-selected
+   * listing title status so the existing DB constraint is satisfied.
+   */
+  const persistVinSerial = useCallback(async () => {
+    if (!user?.id || !listing?.id) return;
+    if (!isTitledSaleCategory(listing)) return;
+    const normalized = vinUnavailable ? null : vinSerial.trim().toUpperCase() || null;
+    try {
+      const { data: existing } = await supabase
+        .from('listing_ownership_details')
+        .select('id, title_status')
+        .eq('listing_id', listing.id)
+        .maybeSingle();
+
+      if (existing?.id) {
+        await supabase
+          .from('listing_ownership_details')
+          .update({ vin_serial: normalized })
+          .eq('id', existing.id);
+        return;
+      }
+
+      await supabase.from('listing_ownership_details').insert({
+        listing_id: listing.id,
+        host_id: user.id,
+        title_status: disclosures.titleStatus || 'unknown',
+        vin_serial: normalized,
+      });
+    } catch (err) {
+      console.error('Failed to save VIN / serial', err);
+    }
+  }, [user?.id, listing, vinSerial, vinUnavailable, disclosures.titleStatus]);
 
   const saveSellerPhone = useCallback(async () => {
     if (!user?.id) return;
@@ -386,12 +437,36 @@ export const PublishWizard: React.FC = () => {
     (async () => {
       const { data } = await supabase
         .from('listing_financing_preferences')
-        .select('equinox_opt_in')
+        .select('equinox_opt_in, include_vin, disclosure_version, disclosure_accepted_at')
         .eq('listing_id', listing.id)
         .maybeSingle();
       if (cancelled || !data) return;
       setEquinoxOptIn(!!data.equinox_opt_in);
-      setEquinoxDisclosureAccepted(!!data.equinox_opt_in);
+      setEquinoxIncludeVin(!!data.include_vin);
+      setEquinoxDisclosureAccepted(
+        !!data.disclosure_accepted_at && data.disclosure_version === EQUINOX_DISCLOSURE_VERSION,
+      );
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [listing?.id]);
+
+  // Hydrate the private VIN / serial from the owner-only ownership row.
+  useEffect(() => {
+    if (!listing?.id || !isTitledSaleCategory(listing)) return;
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from('listing_ownership_details')
+        .select('vin_serial')
+        .eq('listing_id', listing.id)
+        .maybeSingle();
+      if (cancelled || !data) return;
+      const vin = (data.vin_serial ?? '').trim();
+      setVinSerial(vin);
+      setVinUnavailable(!vin);
     })();
     return () => {
       cancelled = true;
@@ -503,7 +578,6 @@ export const PublishWizard: React.FC = () => {
         updateData.accept_paypal_checkout = acceptPayPalCheckout;
         updateData.accept_cash_payment = acceptCashPayment;
         // Keep legacy flag in sync for any remaining audit references during transition
-        updateData.accept_card_payment = acceptPayPalCheckout;
         updateData.proof_notary_enabled = proofNotaryEnabled;
         updateData.featured_enabled = featuredEnabled;
       } else {
@@ -884,7 +958,6 @@ export const PublishWizard: React.FC = () => {
         updateData.accept_paypal_checkout = acceptPayPalCheckout;
         updateData.accept_cash_payment = acceptCashPayment;
         // Keep legacy flag in sync for any remaining audit references during transition
-        updateData.accept_card_payment = acceptPayPalCheckout;
         updateData.proof_notary_enabled = proofNotaryEnabled;
         updateData.featured_enabled = featuredEnabled;
       } else {
@@ -1512,12 +1585,12 @@ export const PublishWizard: React.FC = () => {
             accept_paypal_checkout: acceptPayPalCheckout,
             accept_cash_payment: acceptCashPayment,
             // Keep legacy flag in sync during transition
-            accept_card_payment: acceptPayPalCheckout,
             proof_notary_enabled: proofNotaryEnabled,
             featured_enabled: featuredEnabled};
 
           // Optional Equinox opt-in is stored separately so Review can't lose it.
           await persistFinancingPreference();
+          await persistVinSerial();
         } else {
           updateData = {
             price_daily: safeParsePrice(priceDaily),
@@ -1746,6 +1819,7 @@ export const PublishWizard: React.FC = () => {
       await saveSellerPhone();
       // Equinox opt-in is stored separately — re-upsert so Review can't discard it.
       await persistFinancingPreference();
+      await persistVinSerial();
 
       const baseUpdateData: any = {
         // Media
@@ -1814,7 +1888,6 @@ export const PublishWizard: React.FC = () => {
             accept_paypal_checkout: acceptPayPalCheckout,
             accept_cash_payment: acceptCashPayment,
             // Keep legacy flag in sync during transition
-            accept_card_payment: acceptPayPalCheckout,
             proof_notary_enabled: proofNotaryEnabled,
             featured_enabled: featuredEnabled}
         : {
@@ -2749,6 +2822,16 @@ export const PublishWizard: React.FC = () => {
                     mode={listing.mode}
                     values={disclosures}
                     onChange={(patch) => setDisclosures((prev) => ({ ...prev, ...patch }))}
+                    vinSerial={vinSerial}
+                    vinUnavailable={vinUnavailable}
+                    onVinChange={
+                      isTitledSaleCategory(listing)
+                        ? (patch) => {
+                            if (patch.vinSerial !== undefined) setVinSerial(patch.vinSerial);
+                            if (patch.vinUnavailable !== undefined) setVinUnavailable(patch.vinUnavailable);
+                          }
+                        : undefined
+                    }
                   />
 
                   <PrimaryActionBar
@@ -3077,6 +3160,23 @@ export const PublishWizard: React.FC = () => {
                                     I have read and accept this financing disclosure.
                                   </Label>
                                 </div>
+                                {isTitledSaleCategory(listing) && (
+                                  <div className="flex items-start space-x-3">
+                                    <Checkbox
+                                      id="equinox_include_vin"
+                                      checked={equinoxIncludeVin}
+                                      onCheckedChange={(checked) => setEquinoxIncludeVin(!!checked)}
+                                      className="mt-0.5"
+                                    />
+                                    <Label
+                                      htmlFor="equinox_include_vin"
+                                      className="text-sm font-medium cursor-pointer"
+                                    >
+                                      Include my full VIN / serial number on the private purchase sheet
+                                      shared with financing applicants.
+                                    </Label>
+                                  </div>
+                                )}
                               </div>
                             )}
                           </div>

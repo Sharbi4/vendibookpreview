@@ -1,7 +1,11 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { usePublicFeatureFlag } from '@/hooks/usePublicFeatureFlag';
-import { EQUINOX_FLAG_KEY, isFinanceableSaleListing } from '@/lib/financing/disclosure';
+import {
+  EQUINOX_FLAG_KEY,
+  EQUINOX_DISCLOSURE_VERSION,
+  isFinanceableSaleListing,
+} from '@/lib/financing/disclosure';
 
 export interface ListingFinancingPreference {
   listing_id: string;
@@ -34,15 +38,21 @@ export function useListingFinancingPreference(listingId?: string | null) {
 
 /**
  * Public gate for every Equinox surface (badge, apply link, purchase sheet).
- * Requires the global launch flag, a supported financeable for-sale listing,
- * the seller's per-listing opt-in, AND that this listing actually accepts
- * online (card/PayPal) payment — financing settles through checkout, so a
- * cash-only listing never shows the Equinox apply/purchase-sheet actions.
+ * Requires the global launch flag, a for-sale listing (any category), the
+ * seller's per-listing opt-in, and a current, accepted disclosure.
+ *
+ * Financing is arranged directly with Equinox Funding, so this deliberately
+ * does NOT require PayPal checkout — cash / pay-in-person sellers may opt in.
  */
 export function useEquinoxFinancingEnabled(listing: any): boolean {
   const flagOn = usePublicFeatureFlag(EQUINOX_FLAG_KEY);
-  const acceptsOnlinePayment = listing?.accept_paypal_checkout === true;
-  const eligible = isFinanceableSaleListing(listing) && acceptsOnlinePayment;
+  const eligible = isFinanceableSaleListing(listing);
   const { data } = useListingFinancingPreference(flagOn && eligible ? listing?.id : null);
-  return flagOn && eligible && data?.equinox_opt_in === true;
+  return (
+    flagOn &&
+    eligible &&
+    data?.equinox_opt_in === true &&
+    data?.disclosure_version === EQUINOX_DISCLOSURE_VERSION &&
+    !!data?.disclosure_accepted_at
+  );
 }

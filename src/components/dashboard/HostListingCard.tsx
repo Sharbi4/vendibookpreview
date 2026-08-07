@@ -149,9 +149,11 @@ const HostListingCard = ({
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  const publishedOn = formatPublished(
-    (listing as { published_at?: string | null }).published_at ?? listing.created_at,
-  );
+  // A listing that has ever gone live keeps its published date even while
+  // paused or archived — only never-published drafts show "Created".
+  const publishedAt = (listing as { published_at?: string | null }).published_at ?? null;
+  const hasBeenPublished = !!publishedAt;
+  const publishedOn = formatPublished(publishedAt ?? listing.created_at);
   const listingRef = shortListingId(listing.id);
 
   const handleShareListing = async () => {
@@ -538,7 +540,7 @@ const HostListingCard = ({
                   <Divider />
                   <span className="inline-flex items-center gap-1">
                     <Calendar className="h-3.5 w-3.5" aria-hidden />
-                    {isPublished ? 'Published' : 'Created'} {publishedOn}
+                    {hasBeenPublished ? 'Published' : 'Created'} {publishedOn}
                   </span>
                 </>
               )}

@@ -50,7 +50,7 @@ const HostDashboard = () => {
   const firstName = profile?.full_name?.split(' ')[0];
   const monthlyRevenue = revenueAnalytics?.revenueThisMonth || 0;
   const nextPayoutHint = monthlyRevenue > 0
-    ? 'Rentals settle in 24h · sales in 25d'
+    ? 'Payout status updates as orders complete'
     : 'Nothing pending';
 
   const actionItems: ActionItem[] = useMemo(() => {
@@ -64,8 +64,8 @@ const HostDashboard = () => {
     if (!payoutLoading && !hasPayoutInstructions) items.push({
       id: 'payout-details', icon: Banknote,
       title: 'Add your payout details',
-      description: 'Tell us where to send earnings.',
-      href: '/dashboard?view=host&tab=payouts', cta: 'Add', tone: 'warning',
+      description: 'Optional — tell us where to send earnings when you make a sale. Publishing and bookings work without it.',
+      href: '/dashboard?view=host&tab=payouts', cta: 'Add', tone: 'default',
     });
     // Identity verification is optional on Vendibook — never surfaced as a
     // publishing requirement.
@@ -174,7 +174,7 @@ const HostDashboard = () => {
           <section aria-labelledby="dash-attention">
             <header className="section-header">
               <h2 id="dash-attention" className="section-title">Needs your attention</h2>
-              <p className="section-subtitle">Clear these to keep bookings and payouts moving.</p>
+              <p className="section-subtitle">Optional steps that help you stay on top of your listings.</p>
             </header>
             <ActionRequiredStack items={actionItems} />
           </section>

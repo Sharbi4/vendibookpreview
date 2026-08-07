@@ -143,7 +143,7 @@ export default function ListingPaymentsFinancing() {
       <Header />
       <main className="max-w-3xl mx-auto px-4 py-8 space-y-5">
         <Button variant="ghost" size="sm" asChild className="-ml-2">
-          <Link to="/dashboard?view=host&tab=listings">
+          <Link to="/host/listings">
             <ArrowLeft className="h-4 w-4 mr-1.5" /> Back to listings
           </Link>
         </Button>

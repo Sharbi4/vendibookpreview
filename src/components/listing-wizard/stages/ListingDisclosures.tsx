@@ -34,6 +34,10 @@ export interface ListingDisclosuresProps {
   mode: 'rent' | 'sale';
   values: DisclosureValues;
   onChange: (patch: Partial<DisclosureValues>) => void;
+  /** Private VIN / serial — stored on listing_ownership_details only. */
+  vinSerial?: string;
+  vinUnavailable?: boolean;
+  onVinChange?: (patch: { vinSerial?: string; vinUnavailable?: boolean }) => void;
 }
 
 /**
@@ -49,6 +53,9 @@ export const ListingDisclosures: React.FC<ListingDisclosuresProps> = ({
   mode,
   values,
   onChange,
+  vinSerial = '',
+  vinUnavailable = false,
+  onVinChange,
 }) => {
   const titled = isTitledAsset(category, mode);
 
@@ -133,6 +140,38 @@ export const ListingDisclosures: React.FC<ListingDisclosuresProps> = ({
               ))}
             </RadioGroup>
           </div>
+
+          {onVinChange && (
+            <div className="space-y-2 border-t border-border pt-4">
+              <div className="flex items-center justify-between gap-2">
+                <Label className="text-sm">Provide VIN or serial number</Label>
+                <VisibilityLabel kind="private" />
+              </div>
+              <label className="flex items-center gap-2 text-sm">
+                <Checkbox
+                  checked={vinUnavailable}
+                  onCheckedChange={(c) =>
+                    onVinChange({ vinUnavailable: c === true, ...(c === true ? { vinSerial: '' } : {}) })
+                  }
+                />
+                No VIN available
+              </label>
+              {!vinUnavailable && (
+                <Input
+                  id="listing-vin-serial"
+                  className="text-base"
+                  placeholder="VIN or serial number"
+                  value={vinSerial}
+                  onChange={(e) => onVinChange({ vinSerial: e.target.value })}
+                  onBlur={(e) => onVinChange({ vinSerial: e.target.value.trim().toUpperCase() })}
+                />
+              )}
+              <p className="text-xs text-muted-foreground">
+                Optional and never shown publicly. It is only used on private paperwork such as a
+                financing purchase sheet, and it never affects publishing.
+              </p>
+            </div>
+          )}
         </section>
       )}
 

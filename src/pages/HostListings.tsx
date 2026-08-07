@@ -166,7 +166,7 @@ const HostListings = () => {
         ) : (
           <div className="rounded-xl border border-border bg-card overflow-hidden">
             <div className="p-4 border-b border-border">
-              <h3 className="text-sm font-semibold text-foreground">Published Listings ({publishedListings.length})</h3>
+              <h3 className="text-sm font-semibold text-foreground">Your listings ({publishedListings.length})</h3>
             </div>
             <div className="p-4 space-y-3">
               {publishedListings.map((listing) => (
