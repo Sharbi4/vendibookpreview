@@ -603,18 +603,26 @@ export async function cleanupAbandonedAuthorizations(
     if (row.paypal_authorization_id && record.identity_status === "success") continue;
 
     const result = await voidAuthorizationOnce(admin, row, "abandoned_authorization");
-    if (result.ok) {
-      voided += 1;
-      await admin
-        .from("seller_verifications")
-        .update({
-          status: record.status === "verified" ? record.status : "canceled",
-          payment_state: "voided",
-          updated_at: new Date().toISOString(),
-        })
-        .eq("user_id", row.user_id)
-        .neq("status", "verified");
-    }
+    if (!result.ok) continue;
+    voided += 1;
+
+    /**
+     * A pending_review seller keeps their identity session. Only the money is
+     * released — if Plaid later reports success they move to payment_required
+     * and pay without ever rerunning the check.
+     */
+    const stillPending = record.identity_status === "pending_review" ||
+      record.status === "pending_review";
+
+    await admin
+      .from("seller_verifications")
+      .update({
+        status: stillPending ? "pending_review" : "canceled",
+        payment_state: "voided",
+        updated_at: new Date().toISOString(),
+      })
+      .eq("user_id", row.user_id)
+      .neq("status", "verified");
   }
   log("cleanup_complete", { scanned: rows.length, voided });
   return { scanned: rows.length, voided };
