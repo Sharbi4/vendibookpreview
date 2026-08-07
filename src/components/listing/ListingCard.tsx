@@ -275,6 +275,30 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
             </TooltipProvider>
           )}
 
+          {/* Identity Verified badge — green shine metallic */}
+          {hostVerified && (
+            <TooltipProvider delayDuration={200}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span>
+                    <IdentityVerifiedBadge
+                      verified={hostVerified}
+                      size={compact ? 'sm' : 'md'}
+                      withDetails={false}
+                    />
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent side="bottom" className="max-w-[220px] text-xs">
+                  {`
+                    The seller has completed a paid identity check through Plaid.
+                    Identity verification does not verify ownership, condition, or transaction safety.
+                  `}
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
+
+
           {/* Financing badge — gated by launch flag + this listing's opt-in */}
           {financingEnabled && <FinancingAvailableBadge compact />}
           
