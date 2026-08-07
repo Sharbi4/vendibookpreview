@@ -47,6 +47,7 @@ const SmsEnrollment = lazy(() => import("./pages/SmsEnrollment"));
 const SmsOptIn = lazy(() => import("./pages/SmsOptIn"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const EditListing = lazy(() => import("./pages/EditListing"));
+const ListingPaymentsFinancing = lazy(() => import("./pages/ListingPaymentsFinancing"));
 const ListingStart = lazy(() => import("./pages/ListingStart"));
 const ConciergeIntro = lazy(() => import("./pages/ConciergeIntro"));
 const ConciergeOrderPage = lazy(() => import("./pages/ConciergeOrder"));
