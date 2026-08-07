@@ -1,143 +1,150 @@
 import { motion } from 'framer-motion';
-import { ShieldCheck, Lock } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { ArrowUpRight } from 'lucide-react';
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
+import { PayPalWordmark, PlaidLogo } from '@/components/brand/ProviderLogos';
+import equinoxLogo from '@/assets/brand/equinox-funding-logo.png.asset.json';
+
+/**
+ * Single consolidated trust section for the homepage.
+ * PayPal, Plaid and Equinox are each explained exactly once here — provider
+ * detail lives on their dedicated pages.
+ */
+
+const PROVIDERS = [
+  {
+    id: 'paypal',
+    to: '/payments',
+    title: 'Secure online checkout.',
+    body: 'Payments completed through Vendibook checkout are processed by PayPal. Eligible purchases may include PayPal Purchase Protection; terms and limitations apply.',
+    logo: <PayPalWordmark className="h-5" />,
+    name: 'PayPal',
+  },
+  {
+    id: 'plaid',
+    to: '/identity-verification',
+    title: 'Optional identity verification.',
+    body: 'An Identity Verified badge means Plaid helped confirm that seller’s identity. It does not verify ownership, title, condition, value, or listing accuracy.',
+    logo: <PlaidLogo surface="dark" className="h-4" />,
+    name: 'Plaid',
+  },
+  {
+    id: 'equinox',
+    to: '/financing',
+    title: 'Equipment financing.',
+    body: 'Explore financing for eligible food trucks, trailers, and related equipment. Separate application, underwriting, and provider terms apply. Vendibook is not a lender.',
+    logo: (
+      <img
+        src={equinoxLogo.url}
+        alt="Equinox Funding"
+        loading="lazy"
+        className="h-6 w-auto object-contain"
+      />
+    ),
+    name: 'Equinox Funding',
+  },
+];
+
+const FAQS = [
+  {
+    q: 'How are online payments handled?',
+    a: 'Vendibook checkout payments are processed through PayPal. Vendibook does not store full card details. Purchase Protection eligibility is determined by PayPal.',
+  },
+  {
+    q: 'What does Identity Verified mean?',
+    a: 'Plaid helped confirm the seller’s identity. It does not verify the listing or equipment.',
+  },
+  {
+    q: 'How does equipment financing work?',
+    a: 'Buyers apply separately through Equinox Funding. Decisions, terms, and funding depend on underwriting and may involve third-party providers.',
+  },
+];
 
 const ConciergeSection = () => {
   return (
-    <section className="py-16 sm:py-24 relative overflow-hidden">
+    <section id="trusted-infrastructure" className="relative overflow-hidden py-16 scroll-mt-24 sm:py-24">
       <div
-        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[500px] rounded-full blur-[140px]"
+        className="pointer-events-none absolute left-1/2 top-1/2 h-[520px] w-[720px] -translate-x-1/2 -translate-y-1/2 rounded-full blur-[150px]"
         style={{
           background:
-            'radial-gradient(ellipse, rgba(255,81,36,0.03) 0%, rgba(255,186,8,0.01) 40%, transparent 70%)',
+            'radial-gradient(ellipse, rgba(255,81,36,0.05) 0%, rgba(255,186,8,0.02) 45%, transparent 72%)',
         }}
       />
 
       <div className="container relative z-10">
         <motion.div
-          initial={{ opacity: 0, y: 24 }}
+          initial={{ opacity: 0, y: 22 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: '-100px' }}
           transition={{ duration: 0.6 }}
-          className="max-w-3xl mx-auto"
+          className="mx-auto max-w-5xl"
         >
-          <div className="glass-premium rounded-3xl p-8 sm:p-12 text-center">
-            {/* Dynamic animated trust icon */}
-            <div className="relative mx-auto mb-6 w-24 h-24 flex items-center justify-center">
-              {/* Pulsing rings */}
-              {[0, 1, 2].map((i) => (
-                <motion.span
-                  key={i}
-                  className="absolute inset-0 rounded-full border border-[#FF6B00]/40"
-                  initial={{ scale: 0.6, opacity: 0.6 }}
-                  animate={{ scale: 1.6, opacity: 0 }}
-                  transition={{
-                    duration: 2.4,
-                    repeat: Infinity,
-                    delay: i * 0.8,
-                    ease: 'easeOut',
-                  }}
-                />
-              ))}
-              {/* Rotating conic gradient ring */}
-              <motion.div
-                className="absolute inset-0 rounded-full"
-                style={{
-                  background:
-                    'conic-gradient(from 0deg, transparent 0%, rgba(255,107,0,0.55) 25%, transparent 50%, rgba(255,186,8,0.4) 75%, transparent 100%)',
-                  mask: 'radial-gradient(circle, transparent 58%, black 60%)',
-                  WebkitMask: 'radial-gradient(circle, transparent 58%, black 60%)',
-                }}
-                animate={{ rotate: 360 }}
-                transition={{ duration: 8, repeat: Infinity, ease: 'linear' }}
-              />
-              {/* Inner glass disc */}
-              <div className="relative w-16 h-16 rounded-full flex items-center justify-center glass-premium">
-                <motion.div
-                  animate={{ y: [0, -2, 0] }}
-                  transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut' }}
-                >
-                  <ShieldCheck className="w-8 h-8 text-[#FF6B00]" strokeWidth={2.2} />
-                </motion.div>
-              </div>
-            </div>
-
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-foreground/10 border border-foreground/15 text-foreground text-[10px] font-semibold uppercase tracking-widest mb-5">
-              <Lock className="w-3 h-3" />
-              Secure Payments
-            </div>
-
-            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground mb-4">
-              Pay with confidence on{' '}
-              <span className="text-[#FF6B00]">Vendibook</span>
+          <div className="mx-auto mb-10 max-w-2xl text-center sm:mb-14">
+            <span className="mb-5 inline-flex items-center rounded-full border-2 border-foreground/[0.10] bg-foreground/[0.06] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-foreground/70">
+              Trusted Infrastructure
+            </span>
+            <h2 className="mb-4 text-3xl font-bold tracking-tight text-foreground sm:text-4xl md:text-5xl">
+              Confidence at every step.
             </h2>
-
-            <p className="text-muted-foreground text-base sm:text-lg mb-8 max-w-xl mx-auto leading-relaxed">
-              Every transaction is processed through enterprise-grade infrastructure with buyer
-              protection, encrypted card data, and flexible financing options.
+            <p className="text-base leading-relaxed text-muted-foreground sm:text-lg">
+              Secure online checkout, optional seller identity verification, and equipment
+              financing—supported by providers built for serious transactions.
             </p>
+          </div>
 
-            {/* Payment partner logos */}
-            <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4 mb-10">
-              {[
-                { name: 'PayPal', sub: 'Card processing' },
-                { name: 'Affirm', sub: 'Monthly financing' },
-                { name: 'Afterpay', sub: 'Pay in 4' },
-              ].map((p) => (
-                <div
-                  key={p.name}
-                  className="glass-premium rounded-xl px-4 py-3 min-w-[110px] flex flex-col items-center"
+          {/* Provider cards */}
+          <div className="mb-10 grid grid-cols-1 gap-4 sm:mb-14 md:grid-cols-3 md:gap-5">
+            {PROVIDERS.map((p, i) => (
+              <motion.div
+                key={p.id}
+                initial={{ opacity: 0, y: 16 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: '-60px' }}
+                transition={{ duration: 0.5, delay: 0.05 + i * 0.07 }}
+              >
+                <Link
+                  to={p.to}
+                  aria-label={`${p.name} — ${p.title}`}
+                  className="group relative flex h-full flex-col overflow-hidden rounded-2xl border-2 border-foreground/[0.10] bg-foreground/[0.035] p-6 backdrop-blur-xl transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:ring-offset-2 focus-visible:ring-offset-background sm:p-7"
                 >
-                  <span className="text-foreground font-bold text-base tracking-tight">
-                    {p.name}
+                  {/* sheen sweep */}
+                  <span
+                    aria-hidden
+                    className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-foreground/[0.05] to-transparent transition-transform duration-[900ms] ease-out group-hover:translate-x-full"
+                  />
+                  <span className="relative mb-6 flex h-9 items-center">{p.logo}</span>
+                  <h3 className="relative mb-2 text-base font-semibold tracking-tight text-foreground sm:text-lg">
+                    {p.title}
+                  </h3>
+                  <p className="relative text-sm leading-relaxed text-muted-foreground">{p.body}</p>
+                  <span className="relative mt-5 inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.14em] text-foreground/70 transition-colors group-hover:text-primary">
+                    Learn more
+                    <ArrowUpRight className="h-3.5 w-3.5" aria-hidden="true" />
                   </span>
-                  <span className="text-[10px] text-muted-foreground uppercase tracking-wider mt-0.5">
-                    {p.sub}
-                  </span>
-                </div>
-              ))}
-            </div>
+                </Link>
+              </motion.div>
+            ))}
+          </div>
 
-            {/* FAQ */}
-            <div className="text-left max-w-2xl mx-auto">
-              <Accordion type="single" collapsible className="w-full">
-                <AccordionItem value="q1" className="border-foreground/10">
-                  <AccordionTrigger className="text-foreground hover:no-underline text-sm sm:text-base">
-                    Is my payment information secure?
+          {/* FAQ */}
+          <div className="mx-auto max-w-3xl rounded-2xl border-2 border-foreground/[0.10] bg-foreground/[0.03] p-5 backdrop-blur-xl sm:p-8">
+            <Accordion type="single" collapsible className="w-full">
+              {FAQS.map((f, i) => (
+                <AccordionItem key={f.q} value={`q${i}`} className="border-foreground/10">
+                  <AccordionTrigger className="text-left text-sm text-foreground hover:no-underline sm:text-base">
+                    {f.q}
                   </AccordionTrigger>
-                  <AccordionContent className="text-muted-foreground text-sm leading-relaxed">
-                    Yes. All payments are processed by PayPal, a PCI-DSS Level 1 certified provider.
-                    Vendibook never sees or stores your full card number — data is tokenized and
-                    encrypted end-to-end.
+                  <AccordionContent className="text-sm leading-relaxed text-muted-foreground">
+                    {f.a}
                   </AccordionContent>
                 </AccordionItem>
-                <AccordionItem value="q2" className="border-foreground/10">
-                  <AccordionTrigger className="text-foreground hover:no-underline text-sm sm:text-base">
-                    Can I finance a food truck purchase?
-                  </AccordionTrigger>
-                  <AccordionContent className="text-muted-foreground text-sm leading-relaxed">
-                    Yes. Affirm offers monthly installments up to 36 months on eligible purchases,
-                    and Afterpay lets you split smaller charges into 4 interest-free payments at
-                    checkout.
-                  </AccordionContent>
-                </AccordionItem>
-                <AccordionItem value="q3" className="border-foreground/10">
-                  <AccordionTrigger className="text-foreground hover:no-underline text-sm sm:text-base">
-                    When is my money released to the seller?
-                  </AccordionTrigger>
-                  <AccordionContent className="text-muted-foreground text-sm leading-relaxed">
-                    Funds are held in payment protection until the transaction is complete — 24 hours for
-                    rentals and 25 days for sales — so you have time to confirm everything is as
-                    described.
-                  </AccordionContent>
-                </AccordionItem>
-              </Accordion>
-            </div>
+              ))}
+            </Accordion>
           </div>
         </motion.div>
       </div>

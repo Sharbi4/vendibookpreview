@@ -7,7 +7,7 @@ const TRUST_BITS = [
   'Owner profiles',
   'Document collection',
   'Booking requests',
-  'Verified buyers'];
+  'Serious buyers'];
 
 /**
  * Below-hero section (mobile-focused). Sell-focused soft conversion +
@@ -33,7 +33,7 @@ const HeroBelowFold = () => {
           </h2>
           <p className="text-[13px] text-muted-foreground leading-relaxed mb-4">
             See how owners list food trucks, trailers, and concession units — pricing
-            guidance, verified buyers, and payouts handled for you.
+            guidance, serious buyers, and payouts handled for you.
           </p>
           <Button
             asChild

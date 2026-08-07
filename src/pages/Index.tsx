@@ -11,12 +11,10 @@ import Hero from '@/components/home/Hero';
 import AnnouncementBanner from '@/components/home/AnnouncementBanner';
 import HeroBelowFold from '@/components/home/HeroBelowFold';
 import ReferralPromoCard from '@/components/home/ReferralPromoCard';
-import VerificationBanner from '@/components/home/VerificationBanner';
 import ConciergeSection from '@/components/home/ConciergeSection';
 import SellerHomeBlock from '@/components/home/SellerHomeBlock';
 import HowVendibookWorks from '@/components/home/how-it-works/HowVendibookWorks';
 
-import { useAuth } from '@/contexts/AuthContext';
 import { usePageTracking } from '@/hooks/usePageTracking';
 import { Skeleton } from '@/components/ui/skeleton';
 import SEO, { generateOrganizationSchema, generateWebSiteSchema } from '@/components/SEO';
@@ -45,7 +43,6 @@ const SectionSkeleton = () => (
 );
 
 const Index = () => {
-  const { user, isVerified, isLoading } = useAuth();
   const queryClient = useQueryClient();
   
   // Track page views with Google Analytics
@@ -72,21 +69,16 @@ const Index = () => {
     });
   }, [queryClient]);
 
-  // Show verification banner for logged-in, unverified users
-  const showVerificationBanner = !isLoading && user && !isVerified;
-
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <SEO
         title="Buy & Rent Food Trucks and Food Trailers | Vendibook"
-        description="The #1 US marketplace for food trucks and food trailers. Verified listings, secure payments, 24/7 support. Rent or buy your next mobile kitchen."
+        description="The #1 US marketplace for food trucks and food trailers. Detailed listings, secure PayPal checkout, and 24/7 support. Rent or buy your next mobile kitchen."
         canonical="/"
       />
       <JsonLd schema={[generateOrganizationSchema(), generateWebSiteSchema()]} />
       <Header />
 
-      {showVerificationBanner && <VerificationBanner userId={user.id} />}
-      
       <main className="flex-1">
         {/* 1. Hero */}
         <Hero />
