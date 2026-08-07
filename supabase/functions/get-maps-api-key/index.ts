@@ -11,11 +11,11 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    // Prefer the Lovable-managed Google Maps connector browser key (referrer-restricted, safe for client).
+    // Prefer the project-configured Google API key (billing enabled), then browser/maps keys.
     const BROWSER_KEY =
+      Deno.env.get("GOOGLE_API_KEY") ||
       Deno.env.get("GOOGLE_MAPS_BROWSER_KEY") ||
-      Deno.env.get("GOOGLE_MAPS_API_KEY") ||
-      Deno.env.get("GOOGLE_API_KEY");
+      Deno.env.get("GOOGLE_MAPS_API_KEY");
 
     if (!BROWSER_KEY) {
       return new Response(

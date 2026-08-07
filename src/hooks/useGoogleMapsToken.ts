@@ -21,39 +21,32 @@ export const useGoogleMapsToken = (enabled = true) => {
     }
 
     const fetchApiKey = async () => {
-      try {
-        // Prefer the Lovable-managed Google Maps connector browser key (referrer-restricted, safe for client).
+      const envFallback = () => {
         const connectorKey = import.meta.env.VITE_LOVABLE_CONNECTOR_GOOGLE_MAPS_BROWSER_KEY;
-        if (connectorKey) {
-          setApiKey(connectorKey);
-          setError(null);
-          setIsLoading(false);
-          return;
-        }
-
         const envKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
-        if (envKey && envKey !== 'YOUR_GOOGLE_MAPS_API_KEY_HERE') {
-          setApiKey(envKey);
+        const fallback =
+          connectorKey || (envKey && envKey !== 'YOUR_GOOGLE_MAPS_API_KEY_HERE' ? envKey : null);
+        if (fallback) {
+          setApiKey(fallback);
           setError(null);
-          setIsLoading(false);
-          return;
+          return true;
         }
+        return false;
+      };
 
+      try {
+        // Prefer the project-configured server key (billing-enabled), then fall back to bundled env keys.
         const { data, error: fetchError } = await supabase.functions.invoke('get-maps-api-key');
 
-        if (fetchError) throw fetchError;
-
-        if (data?.apiKey) {
+        if (!fetchError && data?.apiKey) {
           setApiKey(data.apiKey);
           setError(null);
-        } else if (data?.error) {
-          setError(data.error);
-        } else {
-          setError('Google Maps API key not configured');
+        } else if (!envFallback()) {
+          setError(data?.error || 'Google Maps API key not configured');
         }
       } catch (err) {
         console.error('Error fetching Google Maps API key:', err);
-        setError('Failed to load Google Maps');
+        if (!envFallback()) setError('Failed to load Google Maps');
       } finally {
         setIsLoading(false);
       }
