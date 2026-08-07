@@ -1,13 +1,17 @@
-import { useEffect, useState, useRef, forwardRef, useCallback, memo } from 'react';
-import { GoogleMap, useJsApiLoader, MarkerF, Circle, InfoWindowF, MarkerClustererF } from '@react-google-maps/api';
+import { useEffect, useState, useRef, forwardRef, useCallback, useMemo, memo } from 'react';
+import { GoogleMap, useJsApiLoader, MarkerF, Circle, OverlayViewF, MarkerClustererF } from '@react-google-maps/api';
+import { Link } from 'react-router-dom';
 import { GOOGLE_MAPS_LIBRARIES, GOOGLE_MAPS_LOADER_ID } from '@/lib/googleMapsLoader';
 import { Listing } from '@/types/listing';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Zap } from 'lucide-react';
 
 interface ListingWithCoords extends Listing {
   latitude?: number | null;
   longitude?: number | null;
 }
+
+type PositionedListing = ListingWithCoords & { mapLat: number; mapLng: number };
 
 interface SearchResultsMapProps {
   listings: ListingWithCoords[];
@@ -30,6 +34,42 @@ const formatPrice = (listing: ListingWithCoords) => {
   const p = listing.price_sale || 0;
   return p >= 1000 ? `$${Math.round(p / 1000)}k` : `$${p}`;
 };
+
+/**
+ * Spread markers that share (or nearly share) the same coordinates so every
+ * listing point stays individually hoverable/clickable instead of stacking.
+ */
+const spreadOverlappingListings = (listings: ListingWithCoords[]): PositionedListing[] => {
+  const buckets = new Map<string, ListingWithCoords[]>();
+  listings.forEach((l) => {
+    const key = `${l.latitude!.toFixed(4)}|${l.longitude!.toFixed(4)}`;
+    const bucket = buckets.get(key);
+    if (bucket) bucket.push(l);
+    else buckets.set(key, [l]);
+  });
+
+  const out: PositionedListing[] = [];
+  buckets.forEach((bucket) => {
+    if (bucket.length === 1) {
+      const l = bucket[0];
+      out.push({ ...l, mapLat: l.latitude!, mapLng: l.longitude! });
+      return;
+    }
+    // Deterministic ring layout around the shared point (~35m spacing)
+    const radius = 0.00042 * Math.max(1, Math.ceil(bucket.length / 8));
+    bucket.forEach((l, i) => {
+      const angle = (2 * Math.PI * i) / bucket.length;
+      const latScale = Math.max(0.2, Math.cos((l.latitude! * Math.PI) / 180));
+      out.push({
+        ...l,
+        mapLat: l.latitude! + radius * Math.sin(angle),
+        mapLng: l.longitude! + (radius * Math.cos(angle)) / latScale,
+      });
+    });
+  });
+  return out;
+};
+
 
 const SearchResultsMapLoaded = forwardRef<
   HTMLDivElement,
