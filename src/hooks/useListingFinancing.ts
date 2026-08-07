@@ -34,12 +34,15 @@ export function useListingFinancingPreference(listingId?: string | null) {
 
 /**
  * Public gate for every Equinox surface (badge, apply link, purchase sheet).
- * Requires BOTH the global launch flag and this listing's seller opt-in,
- * on a currently supported financeable for-sale listing.
+ * Requires the global launch flag, a supported financeable for-sale listing,
+ * the seller's per-listing opt-in, AND that this listing actually accepts
+ * online (card/PayPal) payment — financing settles through checkout, so a
+ * cash-only listing never shows the Equinox apply/purchase-sheet actions.
  */
 export function useEquinoxFinancingEnabled(listing: any): boolean {
   const flagOn = usePublicFeatureFlag(EQUINOX_FLAG_KEY);
-  const eligible = isFinanceableSaleListing(listing);
+  const acceptsOnlinePayment = listing?.accept_card_payment === true;
+  const eligible = isFinanceableSaleListing(listing) && acceptsOnlinePayment;
   const { data } = useListingFinancingPreference(flagOn && eligible ? listing?.id : null);
   return flagOn && eligible && data?.equinox_opt_in === true;
 }
