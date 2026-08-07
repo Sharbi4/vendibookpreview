@@ -102,6 +102,24 @@ const StatusPill = ({ status }: { status: Listing['status'] }) => (
   </span>
 );
 
+/** Evenly sized primary action buttons — never crowd or overflow. */
+const ACTION_BTN =
+  'h-10 rounded-lg px-3 sm:px-4 text-[13px] font-medium justify-center flex-1 min-w-[140px] sm:min-w-0 sm:basis-0';
+
+const shortListingId = (id: string) =>
+  id ? `#${id.replace(/-/g, '').slice(0, 8).toUpperCase()}` : '';
+
+const formatPublished = (value: unknown) => {
+  if (typeof value !== 'string' || !value) return null;
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return null;
+  return d.toLocaleDateString(undefined, {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  });
+};
+
 const HostListingCard = ({
   listing,
   onPause,
@@ -118,10 +136,32 @@ const HostListingCard = ({
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isLoadingNotary, setIsLoadingNotary] = useState(false);
   const [showPayoutSetup, setShowPayoutSetup] = useState(false);
+  const [showSuggestions, setShowSuggestions] = useState(false);
   const { preference: payoutPreference } = usePayoutPreference();
   const { data: favoriteCount = 0 } = useListingFavoriteCount(listing.id);
   const { toast } = useToast();
   const navigate = useNavigate();
+
+  const publishedOn = formatPublished(
+    (listing as { published_at?: string | null }).published_at ?? listing.created_at,
+  );
+  const listingRef = shortListingId(listing.id);
+
+  const handleShareListing = async () => {
+    const url = `${window.location.origin}/listing/${listing.id}`;
+    try {
+      if (typeof navigator !== 'undefined' && navigator.share) {
+        await navigator.share({ title: listing.title, url });
+        return;
+      }
+      await navigator.clipboard.writeText(url);
+      toast({ title: 'Link copied', description: 'Listing link copied to your clipboard.' });
+    } catch {
+      /* user dismissed the share sheet — nothing to report */
+    }
+  };
+
+
 
   const isSale = listing.mode === 'sale';
   const isPublished = listing.status === 'published';
