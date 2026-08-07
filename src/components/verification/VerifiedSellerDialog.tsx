@@ -20,6 +20,7 @@ import { failedResultCopy } from '@/lib/verifiedSellerCopy';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useSellerVerification } from '@/hooks/useSellerVerification';
+import { PayPalMonogram, PlaidLogo } from '@/components/brand/ProviderLogos';
 import { IDENTITY_VERIFIED_DISCLOSURE } from './IdentityVerifiedBadge';
 import { cn } from '@/lib/utils';
 
