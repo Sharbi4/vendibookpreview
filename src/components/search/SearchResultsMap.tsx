@@ -5,6 +5,8 @@ import { GOOGLE_MAPS_LIBRARIES, GOOGLE_MAPS_LOADER_ID } from '@/lib/googleMapsLo
 import { Listing } from '@/types/listing';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Zap } from 'lucide-react';
+import IdentityVerifiedBadge from '@/components/verification/IdentityVerifiedBadge';
+
 
 interface ListingWithCoords extends Listing {
   latitude?: number | null;
