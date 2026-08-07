@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import { corsHeaders, jsonResponse } from "../_shared/jsonError.ts";
 import { plaidLog, verifyPlaidWebhook } from "../_shared/plaid.ts";
+import { webhookEventKey } from "../_shared/verifiedSellerLogic.ts";
 import { claimEvent, log, reconcileVerification } from "../_shared/verifiedSeller.ts";
 
 /**
