@@ -1,6 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Banknote, ExternalLink, Loader2, ShieldCheck, Wallet } from 'lucide-react';
+import { ArrowLeft, ExternalLink, Loader2, ShieldCheck } from 'lucide-react';
+import {
+  PayPalMonogram,
+  PayPalWordmark,
+  EquinoxFundingLogo,
+} from '@/components/brand/ProviderLogos';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
