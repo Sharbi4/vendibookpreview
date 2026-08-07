@@ -50,7 +50,8 @@ type Phase =
   | 'settling';
 
 const FALLBACK_OFFER: VerificationOffer = {
-  enabled: true,
+  // Fail closed: the offer only appears once the server says it is enabled.
+  enabled: false,
   price_cents: 1999,
   currency: 'USD',
   display_price: '$19.99',
