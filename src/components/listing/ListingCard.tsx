@@ -151,6 +151,7 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
   
   // Featured badge: dynamic, source of truth in src/lib/featured.ts
   const isFeatured = isListingFeatured(listing as any);
+  const financingEnabled = useEquinoxFinancingEnabled(listing as any);
 
 
   // Safely format price with proper null handling
