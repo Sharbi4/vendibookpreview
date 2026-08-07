@@ -164,19 +164,46 @@ export async function sha256Hex(value: string): Promise<string> {
 }
 
 /**
- * Deduplication key for a Plaid webhook.
+ * Deduplication / convergence key for a Plaid Identity Verification webhook.
  *
- * Derived from a digest of the VERIFIED raw body, so two legitimate status
- * updates for the same identity_verification_id (active -> pending_review ->
- * success) each process, while an exact duplicate delivery is dropped. Plaid
- * does not always send a timestamp, so a field-composed key is not safe.
+ * Plaid's official STATUS_UPDATED body carries only `webhook_type`,
+ * `webhook_code`, `identity_verification_id` and `environment` — so every
+ * legitimate transition for one verification has a BYTE-IDENTICAL raw body.
+ * Keying on the body digest would therefore collapse active -> pending_review
+ * -> success into a single processed event and strand the money.
+ *
+ * The key is instead composed from the verification id plus the AUTHORITATIVE
+ * status we just fetched from Plaid (and `completed_at` when Plaid supplies
+ * it). Exact duplicate deliveries of the same authoritative state coalesce;
+ * real status changes always process.
  */
-export async function webhookEventKey(
-  webhookCode: string,
-  rawBody: string,
-): Promise<string> {
-  return `${webhookCode}:${await sha256Hex(rawBody)}`;
+export function webhookConvergenceKey(input: {
+  webhookCode: string;
+  verificationId: string;
+  authoritativeStatus: string;
+  completedAt?: string | null;
+}): string {
+  return [
+    input.webhookCode,
+    input.verificationId,
+    input.authoritativeStatus,
+    input.completedAt ?? "",
+  ].join(":");
 }
+
+/**
+ * True when the webhook body's `environment` matches the environment this
+ * server is configured for. A mismatch means a sandbox notification hit a
+ * production deployment (or vice versa) and must never be processed.
+ */
+export function plaidEnvironmentMatches(
+  payloadEnvironment: unknown,
+  configuredEnvironment: string,
+): boolean {
+  if (typeof payloadEnvironment !== "string" || !payloadEnvironment) return false;
+  return payloadEnvironment.toLowerCase() === configuredEnvironment.toLowerCase();
+}
+
 
 /**
  * Plaid signs webhooks with a short-lived JWT. Reject anything older than five
