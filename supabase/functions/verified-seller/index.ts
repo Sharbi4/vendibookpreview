@@ -670,6 +670,7 @@ serve(async (req) => {
             updated_at: new Date().toISOString(),
           })
           .eq("user_id", userId);
+        if (!started.linkToken) return linkTokenPending(started.sessionId);
         return jsonResponse(200, {
           status: "identity_in_progress",
           link_token: started.linkToken,
