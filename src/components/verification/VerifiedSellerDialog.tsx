@@ -207,6 +207,17 @@ const VerifiedSellerDialog = ({ open, onOpenChange, onVerified }: VerifiedSeller
                 </p>
               </div>
 
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-lg border border-border bg-muted/20 px-3 py-2 text-[11px] text-muted-foreground">
+                <span className="inline-flex items-center gap-1.5">
+                  Identity check by <PlaidLogo surface="light" className="h-3" />
+                </span>
+                <span className="inline-flex items-center gap-1.5">
+                  Payment by <PayPalMonogram className="h-3.5" />
+                </span>
+              </div>
+
+
+
               {!paymentOnly && (
                 <label className="flex items-start gap-3 rounded-lg border border-border p-3 cursor-pointer">
                   <Checkbox
