@@ -50,11 +50,11 @@ const EnhancedProfileNextStepCard = ({
     {
       id: 'verify',
       icon: Shield,
-      title: 'Verify your identity',
-      description: 'Build trust with renters and hosts by verifying your identity.',
-      actionLabel: 'Verify Now',
+      title: 'Get verified (optional)',
+      description: 'A paid Plaid identity add-on that adds a verified badge to your profile. Never required to buy, sell, or publish.',
+      actionLabel: 'Learn more',
       actionHref: '/identity-verification',
-      priority: 1,
+      priority: 6,
       gradient: 'from-amber-500 to-orange-500',
       iconBg: 'bg-amber-100 dark:bg-amber-900/50'},
     {
