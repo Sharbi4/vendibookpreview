@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import ListingCard from '@/components/listing/ListingCard';
 import { supabase } from '@/integrations/supabase/client';
+import { useSellerVerifiedMap } from '@/hooks/useSellerIdentityBadgeMap';
 import { Skeleton } from '@/components/ui/skeleton';
 import { motion } from 'framer-motion';
 import { trackLeadEvent } from '@/lib/leadTracking';

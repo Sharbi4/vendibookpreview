@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import ListingCard from '@/components/listing/ListingCard';
 import ListingPreviewDrawer from '@/components/listing/ListingPreviewDrawer';
 import { supabase } from '@/integrations/supabase/client';
+import { useSellerVerifiedMap } from '@/hooks/useSellerIdentityBadgeMap';
 import { Skeleton } from '@/components/ui/skeleton';
 import { MapPin, Navigation, Map, List, Columns, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';

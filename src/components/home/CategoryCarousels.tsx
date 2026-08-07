@@ -4,6 +4,7 @@ import { filterPubliclyVisible } from '@/lib/listings/publicVisibility';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import { useSellerVerifiedMap } from '@/hooks/useSellerIdentityBadgeMap';
 import ListingCard from '@/components/listing/ListingCard';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
