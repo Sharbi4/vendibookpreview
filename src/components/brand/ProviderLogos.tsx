@@ -51,3 +51,14 @@ export function PlaidLogo({
     />
   );
 }
+
+export function EquinoxFundingLogo({ className }: { className?: string }) {
+  return (
+    <img
+      src={equinoxLogo.url}
+      alt="Equinox Funding"
+      loading="lazy"
+      className={cn('h-6 w-auto', className)}
+    />
+  );
+}
