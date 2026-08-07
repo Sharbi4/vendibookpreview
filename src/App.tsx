@@ -49,6 +49,8 @@ const Dashboard = lazy(() => import("./pages/Dashboard"));
 const EditListing = lazy(() => import("./pages/EditListing"));
 const ListingStart = lazy(() => import("./pages/ListingStart"));
 const ConciergeIntro = lazy(() => import("./pages/ConciergeIntro"));
+const ConciergeOrderPage = lazy(() => import("./pages/ConciergeOrder"));
+
 
 const ListPage = lazy(() => import("./pages/List"));
 const AIListingCreator = lazy(() => import("./pages/AIListingCreator"));
@@ -366,6 +368,8 @@ const AnimatedRoutes = () => {
           <Route path="/list" element={<PageTransition><ListPage /></PageTransition>} />
           <Route path="/list/start" element={<PageTransition><ListingStart /></PageTransition>} />
           <Route path="/list/concierge" element={<PageTransition><ConciergeIntro /></PageTransition>} />
+          <Route path="/list/concierge/:orderId" element={<PageTransition><ConciergeOrderPage /></PageTransition>} />
+
 
           <Route path="/list/ai" element={<PageTransition><AIListingCreator /></PageTransition>} />
           <Route path="/create-listing/:listingId" element={<PageTransition><EditListing /></PageTransition>} />

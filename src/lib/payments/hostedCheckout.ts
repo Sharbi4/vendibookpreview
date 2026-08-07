@@ -12,7 +12,8 @@ export type HostedCheckoutKind =
   | 'booking'
   | 'freight'
   | 'notary'
-  | 'protected_sale_deposit';
+  | 'protected_sale_deposit'
+  | 'concierge';
 
 export interface HostedCheckoutOptions {
   /** Where to land after a successful capture. */

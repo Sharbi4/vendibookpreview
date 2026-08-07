@@ -13,7 +13,9 @@ export type PayPalCheckoutTarget =
   | { kind: 'product'; slug: string; listing_id?: string }
   | { kind: 'freight'; id: string }
   | { kind: 'notary'; id: string }
-  | { kind: 'protected_sale_deposit'; id: string };
+  | { kind: 'protected_sale_deposit'; id: string }
+  | { kind: 'concierge'; id: string };
+
 
 interface PayPalPaymentPanelProps {
   /** What is being paid for. Amounts are always re-derived server-side. */

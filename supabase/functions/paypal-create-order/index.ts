@@ -182,7 +182,42 @@ serve(async (req) => {
         buyerId: user.id,
       });
       fulfillment = { kind: "notary", listing_id: listing.id, key: `notary:${listing.id}` };
+    } else if (kind === "concierge") {
+      if (!targetId) return jsonError(400, "missing_fields", "Missing concierge order id.");
+      const { data: order } = await admin
+        .from("listing_concierge_orders")
+        .select("*")
+        .eq("id", targetId)
+        .maybeSingle();
+      if (!order) return jsonError(404, "not_found", "We couldn't find that concierge order.");
+      if (order.user_id !== user.id) {
+        return jsonError(403, "forbidden", "This concierge order belongs to another account.");
+      }
+      if (order.payment_status === "paid") {
+        return jsonError(409, "already_paid", "This concierge order is already paid.");
+      }
+      if (order.status !== "payment_required") {
+        return jsonError(409, "not_ready", "This concierge order isn't awaiting payment.");
+      }
+      if (!order.price_cents || order.price_cents <= 0) {
+        return jsonError(400, "invalid_amount", "This concierge order has no amount due.");
+      }
+      quote = quoteServiceCharge({
+        prefix: "VB-CON",
+        transactionType: "addon",
+        amountCents: order.price_cents,
+        description: "VendiBook Listing Concierge — listing preparation service",
+        lineLabel: "VendiBook Listing Concierge",
+        listingId: null,
+        buyerId: user.id,
+      });
+      fulfillment = {
+        kind: "concierge",
+        concierge_order_id: order.id,
+        key: `concierge:${order.id}`,
+      };
     } else if (kind === "protected_sale_deposit") {
+
       if (!targetId) return jsonError(400, "missing_fields", "Missing protected sale id.");
       const { data: ps } = await admin
         .from("protected_sales")
