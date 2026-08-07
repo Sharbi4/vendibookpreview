@@ -381,6 +381,7 @@ const AnimatedRoutes = () => {
           <Route path="/list/ai" element={<PageTransition><AIListingCreator /></PageTransition>} />
           <Route path="/create-listing/:listingId" element={<PageTransition><EditListing /></PageTransition>} />
           <Route path="/edit-listing/:listingId" element={<PageTransition><EditListing /></PageTransition>} />
+          <Route path="/listings/:listingId/payments-financing" element={<PageTransition><ListingPaymentsFinancing /></PageTransition>} />
 
           <Route path="/listing-published" element={<PageTransition><ListingPublished /></PageTransition>} />
           <Route path="/listing-published/:listingId" element={<PageTransition><ListingPublished /></PageTransition>} />
