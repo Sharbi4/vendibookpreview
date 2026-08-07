@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { usePaymentsTransition } from '@/hooks/usePaymentsTransition';
-import { PayPalMonogram } from '@/components/brand/ProviderLogos';
+import { PayPalWordmark } from '@/components/brand/ProviderLogos';
 import { EquinoxFundingLogo } from '@/components/brand/ProviderLogos';
 import { GetVerifiedButton } from '@/components/verification/GetVerifiedButton';
 
@@ -41,21 +41,21 @@ export function PaymentsTransitionModal() {
     <Dialog open={open} onOpenChange={(v) => { if (!v) void close(); }}>
       <DialogContent className="max-w-xl border-2 border-white/12 bg-[#08080a]/95 backdrop-blur-xl">
         <DialogHeader>
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 rounded-full bg-primary/10 ring-1 ring-primary/25 flex items-center justify-center">
-              <Banknote className="h-5 w-5 text-primary" />
+          <div className="flex flex-col items-center gap-4 mb-2">
+            <div className="w-16 h-16 rounded-full bg-primary/10 ring-1 ring-primary/25 flex items-center justify-center">
+              <Banknote className="h-7 w-7 text-primary" />
             </div>
-            <div className="flex items-center gap-2.5">
-              <PayPalMonogram className="h-6" />
+            <div className="flex flex-col items-center gap-2">
+              <PayPalWordmark className="h-8" />
               <span className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
                 Payments partner
               </span>
             </div>
           </div>
-          <DialogTitle className="text-lg">
+          <DialogTitle className="text-center text-lg">
             Vendibook payments are now powered by PayPal.
           </DialogTitle>
-          <DialogDescription className="text-sm leading-relaxed">
+          <DialogDescription className="text-center text-sm leading-relaxed">
             Your listings stay live exactly as they are. Stripe is no longer used on Vendibook.
             Financing is provided by Equinox Funding LLC.
           </DialogDescription>
