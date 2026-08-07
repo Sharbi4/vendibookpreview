@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 import { Link } from 'react-router-dom';
 import { Banknote, ExternalLink, FileDown, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -25,10 +26,25 @@ export const FinancingActionPanel = ({ listing, host, className }: FinancingActi
 
   if (!isFinanceableSaleListing(listing)) return null;
 
-  const handleDownload = () => {
+  const handleDownload = async () => {
     setBusy(true);
     try {
-      generateFinancingPurchaseSheet(listing, getPublicDisplayName(host, 'Vendibook member'));
+      // RLS keeps this row owner-only; buyers simply get no value back.
+      let vinSerial: string | null = null;
+      try {
+        const { data } = await (supabase as any)
+          .from('listing_ownership_details')
+          .select('vin_serial')
+          .eq('listing_id', listing.id)
+          .maybeSingle();
+        vinSerial = data?.vin_serial ?? null;
+      } catch {
+        vinSerial = null;
+      }
+      generateFinancingPurchaseSheet(
+        { ...listing, vin_serial: vinSerial },
+        getPublicDisplayName(host, 'Vendibook member'),
+      );
     } catch {
       toast.error('Could not generate the purchase sheet. Please try again.');
     } finally {
@@ -68,7 +84,7 @@ export const FinancingActionPanel = ({ listing, host, className }: FinancingActi
         <Button
           variant="outline"
           size="sm"
-          onClick={handleDownload}
+          onClick={() => void handleDownload()}
           disabled={busy}
           className="justify-center sm:col-span-2"
         >
