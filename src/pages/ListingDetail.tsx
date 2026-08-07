@@ -454,13 +454,17 @@ const ListingDetail = () => {
                     )}
                   </h1>
                   {isOwner && (
-                    <Button asChild size="sm" variant="outline" className="shrink-0">
-                      <Link to={`/edit-listing/${listing.id}`}>
-                        <Edit className="h-4 w-4 mr-1.5" />
-                        Edit
-                      </Link>
-                    </Button>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <GetVerifiedButton size="sm" showPrice={false} />
+                      <Button asChild size="sm" variant="outline">
+                        <Link to={`/edit-listing/${listing.id}`}>
+                          <Edit className="h-4 w-4 mr-1.5" />
+                          Edit
+                        </Link>
+                      </Button>
+                    </div>
                   )}
+
                 </div>
 
                 {/* Meta Info Row */}
