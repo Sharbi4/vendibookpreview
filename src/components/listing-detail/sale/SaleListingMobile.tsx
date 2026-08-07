@@ -650,7 +650,8 @@ export const SaleListingMobile = ({
           </div>
         </SaleCard>
 
-        {/* FINANCING */}
+        {/* PAYMENT METHODS + FINANCING */}
+        <ListingPaymentMethods listing={listing} />
         <FinancingActionPanel listing={listing} host={host} />
 
         {/* SIMILAR LISTINGS */}
