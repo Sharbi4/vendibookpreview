@@ -109,13 +109,51 @@ export const OwnershipDetailsForm: React.FC<Props> = ({ listingId, hostId, onSav
             </SelectContent>
           </Select>
         </div>
-        <div className="space-y-1.5">
+        <div className="space-y-1.5 sm:col-span-2">
           <Label className="flex items-center gap-1.5 text-sm">
             VIN or serial number
             <InfoTooltip content="Stored privately. Never displayed on your public listing." />
           </Label>
-          <Input className="text-base" value={draft.vin_serial ?? ''} onChange={(e) => set('vin_serial', e.target.value)} />
+          <div className="flex flex-wrap gap-2">
+            <Button
+              type="button"
+              size="sm"
+              variant={vinMode === 'provide' ? 'default' : 'outline'}
+              onClick={() => setVinMode('provide')}
+              aria-pressed={vinMode === 'provide'}
+            >
+              Provide VIN or serial number
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant={vinMode === 'none' ? 'default' : 'outline'}
+              onClick={() => {
+                setVinMode('none');
+                set('vin_serial', null);
+              }}
+              aria-pressed={vinMode === 'none'}
+            >
+              No VIN available
+            </Button>
+          </div>
+          {vinMode === 'provide' && (
+            <div className="space-y-1.5 pt-1">
+              <Label htmlFor="vin-serial" className="text-sm">VIN or serial number</Label>
+              <Input
+                id="vin-serial"
+                className="text-base uppercase"
+                value={draft.vin_serial ?? ''}
+                onChange={(e) => set('vin_serial', e.target.value)}
+                onBlur={(e) => set('vin_serial', normalizeVin(e.target.value))}
+              />
+              <p className="text-xs text-muted-foreground">
+                Optional, but providing it helps identify the equipment and may speed financing review.
+              </p>
+            </div>
+          )}
         </div>
+
         <div className="space-y-1.5">
           <Label className="text-sm">Manufacturer plate</Label>
           <Input className="text-base" value={draft.manufacturer_plate ?? ''} onChange={(e) => set('manufacturer_plate', e.target.value)} />
