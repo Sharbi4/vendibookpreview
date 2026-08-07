@@ -70,17 +70,6 @@ export const NextStepCard = ({ onSetUpPayouts, isSavingPayouts }: NextStepCardPr
       priority: 3,
     },
     {
-      id: 'verify',
-      title: 'Verify your identity',
-      description: 'Earn your verified badge and build trust.',
-      icon: UserCheck,
-      action: {
-        label: 'Verify Identity',
-        to: '/verify-identity',
-      },
-      priority: 4,
-    },
-    {
       id: 'listing',
       title: 'Create your first listing',
       description: 'Add a truck, trailer, kitchen, or lot.',
