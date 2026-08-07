@@ -4,6 +4,8 @@ import { VideoTile } from './VideoTile';
 import { ExplainerVideoModal } from './ExplainerVideoModal';
 import { explainers, getExplainer, type ExplainerType } from './data/explainers';
 import { trackLeadEvent } from '@/lib/leadTracking';
+import { PayPalMonogram, PlaidLogo } from '@/components/brand/ProviderLogos';
+import { usePublicFeatureFlag } from '@/hooks/usePublicFeatureFlag';
 
 /**
  * "See How Vendibook Works" — 4 clickable video tiles (Buying, Renting,
@@ -12,6 +14,7 @@ import { trackLeadEvent } from '@/lib/leadTracking';
  */
 export const HowVendibookWorks = () => {
   const [activeId, setActiveId] = useState<ExplainerType | null>(null);
+  const verifiedSellerEnabled = usePublicFeatureFlag('verified_seller_enabled');
 
   const handleOpen = (id: ExplainerType) => {
     setActiveId(id);
@@ -44,6 +47,22 @@ export const HowVendibookWorks = () => {
             </div>
           ))}
         </div>
+        {/* Compact trust strip */}
+        <a
+          href="#trust-and-security"
+          className="mt-6 flex flex-wrap items-center justify-center gap-x-6 gap-y-3 rounded-2xl border border-border/60 bg-card/40 px-5 py-4 text-xs text-muted-foreground transition-colors hover:border-border sm:mt-8 sm:text-sm"
+        >
+          <span className="inline-flex items-center gap-2">
+            <PayPalMonogram className="h-4" />
+            Online checkout processed by PayPal.
+          </span>
+          {verifiedSellerEnabled && (
+            <span className="inline-flex items-center gap-2">
+              <PlaidLogo surface="dark" className="h-3.5" />
+              Optional identity checks powered by Plaid.
+            </span>
+          )}
+        </a>
       </div>
 
       <ExplainerVideoModal

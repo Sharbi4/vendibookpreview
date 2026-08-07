@@ -11,7 +11,6 @@ import PayoutMethodForm from '@/components/account/PayoutMethodForm';
 import { usePayoutPreference } from '@/hooks/usePayoutPreference';
 import { useToast } from '@/hooks/use-toast';
 import { PayoutBrandMark } from '@/components/payouts/PayoutBrandMark';
-import paypalAppImage from '@/assets/brand/paypal-app-2025.webp.asset.json';
 import {
   PAYOUT_METHOD_LABEL,
   PAYOUT_PREFERENCE_DISCLOSURE,
@@ -76,14 +75,6 @@ export function PayoutSetupDialog({ open, onOpenChange, listingTitle }: Props) {
           </div>
         ) : showForm ? (
           <div className="space-y-4">
-            <div className="overflow-hidden rounded-xl border border-border">
-              <img
-                src={paypalAppImage.url}
-                alt="Someone checking a payout in the PayPal app on their phone"
-                loading="lazy"
-                className="h-32 w-full object-cover sm:h-40"
-              />
-            </div>
             <PayoutMethodForm
               initialMethod={preference?.method ?? 'paypal'}
               isSaving={isSaving}
