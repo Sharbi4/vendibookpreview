@@ -6,8 +6,13 @@ import { failedResultCopy } from '@/lib/verifiedSellerCopy';
  * Plaid Link may fire onSuccess and close WITHOUT ever firing onExit, so the
  * promise must settle exactly once from whichever callback arrives first.
  */
-function fakePlaid(): { ns: PlaidLinkNamespace; fire: Record<string, any> } {
-  const fire: Record<string, any> = {};
+type Callbacks = {
+  onSuccess?: (publicToken: unknown, metadata: unknown) => void;
+  onExit?: (err: { display_message?: string; error_message?: string } | null) => void;
+};
+
+function fakePlaid(): { ns: PlaidLinkNamespace; fire: Callbacks } {
+  const fire: Callbacks = {};
   const ns: PlaidLinkNamespace = {
     create: (config) => {
       fire.onSuccess = config.onSuccess;
@@ -22,14 +27,14 @@ describe('openPlaidLinkWith', () => {
   it('resolves on onSuccess even when onExit never fires', async () => {
     const { ns, fire } = fakePlaid();
     const promise = openPlaidLinkWith(ns, 'link-token');
-    fire.onSuccess('public', {});
+    fire.onSuccess?.('public', {});
     await expect(promise).resolves.toEqual({ submitted: true, exited: false });
   });
 
   it('resolves on onExit with the display message', async () => {
     const { ns, fire } = fakePlaid();
     const promise = openPlaidLinkWith(ns, 'link-token');
-    fire.onExit({ display_message: 'You closed the check.' });
+    fire.onExit?.({ display_message: 'You closed the check.' });
     await expect(promise).resolves.toEqual({
       submitted: false,
       exited: true,
@@ -40,9 +45,9 @@ describe('openPlaidLinkWith', () => {
   it('settles once when both callbacks fire', async () => {
     const { ns, fire } = fakePlaid();
     const promise = openPlaidLinkWith(ns, 'link-token');
-    fire.onSuccess('public', {});
-    fire.onExit(null);
-    fire.onSuccess('public', {});
+    fire.onSuccess?.('public', {});
+    fire.onExit?.(null);
+    fire.onSuccess?.('public', {});
     await expect(promise).resolves.toEqual({ submitted: true, exited: false });
   });
 });
