@@ -51,8 +51,9 @@ export const FinancingActionPanel = ({ listing, className }: FinancingActionPane
           <Banknote className="h-4 w-4 text-primary" />
         </div>
         <div className="min-w-0">
-          <div className="mb-2">
+          <div className="mb-2 flex items-center gap-3 flex-wrap">
             <FinancingAvailableBadge />
+            <EquinoxFundingLogo className="h-5" />
           </div>
           <h3 className="text-base font-semibold">Financing options for this equipment</h3>
           <p className="text-xs text-muted-foreground leading-relaxed mt-1">
@@ -63,30 +64,37 @@ export const FinancingActionPanel = ({ listing, className }: FinancingActionPane
       </div>
 
       <div className="grid gap-2 sm:grid-cols-2">
-        <Button asChild variant="outline" size="sm" className="justify-center">
-          <Link to="/financing">Learn About Financing</Link>
-        </Button>
-        <Button asChild variant="outline" size="sm" className="justify-center">
+        <Button asChild size="sm" className="finance-cta justify-center font-semibold">
           <a href={EQUINOX_APPLY_URL} target="_blank" rel="noopener noreferrer">
-            Apply with Equinox
+            Apply Now with Equinox
             <ExternalLink className="h-3.5 w-3.5 ml-1.5" />
           </a>
         </Button>
         <Button
-          variant="outline"
           size="sm"
           onClick={() => void handleDownload()}
           disabled={busy}
-          className="justify-center sm:col-span-2"
+          className="finance-cta justify-center font-semibold"
         >
           {busy ? (
             <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
           ) : (
             <FileDown className="h-3.5 w-3.5 mr-1.5" />
           )}
-          Download Financing Purchase Sheet
+          Download Purchase Sheet (PDF)
+        </Button>
+        <Button asChild size="sm" className="finance-cta-outline justify-center sm:col-span-2">
+          <Link to="/financing">Learn About Financing</Link>
         </Button>
       </div>
+
+      <div className="mt-4 pt-3 border-t border-border/50 flex items-center gap-2 flex-wrap">
+        <Lock className="h-3.5 w-3.5 text-muted-foreground" aria-hidden />
+        <span className="text-xs text-muted-foreground">Purchase payment by</span>
+        <PayPalMonogram className="h-4" />
+        <PayPalWordmark className="h-3.5" />
+      </div>
+
 
       <p className="text-[11px] text-muted-foreground/80 mt-3 leading-relaxed">
         The purchase summary is a pro forma document, not proof of sale, ownership, or financing
