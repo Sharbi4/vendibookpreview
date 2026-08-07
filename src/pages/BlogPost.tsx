@@ -13,9 +13,18 @@ import { Card, CardContent } from '@/components/ui/card';
 import { getBlogPostBySlug, getRelatedPosts, BLOG_CATEGORIES } from '@/data/blogPosts';
 import { toast } from 'sonner';
 
+type ShareNetwork = 'x' | 'linkedin' | 'facebook';
+
+const SHARE_NETWORKS: { id: ShareNetwork; label: string; composer: string }[] = [
+  { id: 'x', label: 'X', composer: 'https://x.com/intent/post' },
+  { id: 'linkedin', label: 'LinkedIn', composer: 'https://www.linkedin.com/sharing/share-offsite/' },
+  { id: 'facebook', label: 'Facebook', composer: 'https://www.facebook.com/sharer/sharer.php' },
+];
+
 const BlogPost = () => {
   const { slug } = useParams<{ slug: string }>();
   const post = slug ? getBlogPostBySlug(slug) : undefined;
+  const campaign = post?.campaign || post?.slug || slug || '';
 
   // Delegated CTA click logger: any anchor with data-cta inside the article
   // is logged to blog_share_clicks before navigation continues.
@@ -29,7 +38,7 @@ const BlogPost = () => {
       supabase.from('blog_share_clicks').insert({
         article_slug: slug || '',
         source: 'blog_article',
-        campaign: 'food_truck_fleet_owner_article',
+        campaign,
         cta_label: label,
         destination_url: href,
         referrer: document.referrer || null,
@@ -38,7 +47,7 @@ const BlogPost = () => {
     };
     document.addEventListener('click', handler);
     return () => document.removeEventListener('click', handler);
-  }, [slug]);
+  }, [slug, campaign]);
 
   if (!post) {
     return <Navigate to="/blog" replace />;
@@ -64,6 +73,30 @@ const BlogPost = () => {
       toast.success('Link copied to clipboard');
     }
   };
+
+  const handleNetworkShare = async (network: ShareNetwork, composer: string) => {
+    const trackedUrl = `https://vendibook.com/share/${network}/${post.slug}`;
+    const composerUrl =
+      network === 'x'
+        ? `${composer}?text=${encodeURIComponent(post.title)}&url=${encodeURIComponent(trackedUrl)}`
+        : `${composer}?url=${encodeURIComponent(trackedUrl)}`;
+
+    try {
+      await supabase.from('blog_share_clicks').insert({
+        article_slug: post.slug,
+        source: network,
+        campaign,
+        cta_label: `share_${network}`,
+        destination_url: trackedUrl,
+        referrer: document.referrer || null,
+        user_agent: navigator.userAgent,
+      });
+    } catch (e) {
+      // Never block the share on a logging failure
+    }
+    window.open(composerUrl, '_blank', 'noopener,noreferrer');
+  };
+
 
   const breadcrumbs = [
     { name: 'Home', url: '/' },
