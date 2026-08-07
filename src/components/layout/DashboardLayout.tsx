@@ -297,8 +297,14 @@ export const DashboardLayout = ({ children, mode, onModeChange, isHost }: Dashbo
           <div className="flex items-center gap-2">
             <Sheet open={isMobileOpen} onOpenChange={setIsMobileOpen}>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-9 w-9" aria-label="Open menu">
-                  <Menu className="h-5 w-5" />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-9 gap-1.5 rounded-full border-white/15 bg-white/[0.04] px-3 text-xs font-semibold"
+                  aria-label="Open dashboard menu"
+                >
+                  <Menu className="h-4 w-4" />
+                  Menu
                 </Button>
               </SheetTrigger>
               <SheetContent side="left" className="w-72 p-0">
@@ -334,10 +340,11 @@ export const DashboardLayout = ({ children, mode, onModeChange, isHost }: Dashbo
             </Link>
             <button
               onClick={() => setIsMobileOpen(true)}
-              className="h-10 w-10 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-white/[0.04]"
-              aria-label="Expand sidebar"
+              className="w-12 rounded-lg flex flex-col items-center justify-center gap-0.5 py-1.5 text-muted-foreground hover:text-foreground hover:bg-white/[0.04]"
+              aria-label="Expand dashboard menu"
             >
               <Menu className="h-4 w-4" />
+              <span className="text-[9px] font-semibold uppercase tracking-wide">Menu</span>
             </button>
             <Sheet open={isMobileOpen} onOpenChange={setIsMobileOpen}>
               <SheetContent side="left" className="w-72 p-0">
