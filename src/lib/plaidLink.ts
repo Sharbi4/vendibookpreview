@@ -46,32 +46,64 @@ export interface PlaidLinkOutcome {
   errorMessage?: string;
 }
 
+export interface PlaidLinkNamespace {
+  create: (config: {
+    token: string;
+    onSuccess: (publicToken: unknown, metadata: unknown) => void;
+    onExit: (err: { display_message?: string; error_message?: string } | null) => void;
+  }) => { open: () => void; exit?: (opts?: unknown) => void; destroy?: () => void };
+}
+
 /**
- * Opens Plaid Link and resolves when the modal closes.
+ * Opens Plaid Link and resolves exactly once.
+ *
+ * Plaid may fire `onSuccess` and then close WITHOUT ever firing `onExit`, so
+ * success resolves immediately. `onExit` only resolves when success has not
+ * already settled the promise — otherwise the caller would hang forever.
  *
  * IMPORTANT: `submitted` only means information was handed to Plaid. The badge
  * and the payment capture are decided exclusively by the server after it reads
  * the authoritative Plaid status.
  */
+export function openPlaidLinkWith(
+  Plaid: PlaidLinkNamespace,
+  linkToken: string,
+): Promise<PlaidLinkOutcome> {
+  return new Promise<PlaidLinkOutcome>((resolve) => {
+    let settled = false;
+    let handler: ReturnType<PlaidLinkNamespace['create']> | null = null;
+
+    const teardown = () => {
+      try {
+        handler?.destroy?.();
+      } catch {
+        /* Link already torn down */
+      }
+    };
+
+    const settle = (outcome: PlaidLinkOutcome) => {
+      if (settled) return;
+      settled = true;
+      // Defer teardown so Plaid can finish its own close sequence first.
+      setTimeout(teardown, 0);
+      resolve(outcome);
+    };
+
+    handler = Plaid.create({
+      token: linkToken,
+      onSuccess: () => settle({ submitted: true, exited: false }),
+      onExit: (err) =>
+        settle({
+          submitted: false,
+          exited: true,
+          errorMessage: err?.display_message ?? err?.error_message,
+        }),
+    });
+
+    handler.open();
+  });
+}
+
 export function openPlaidLink(linkToken: string): Promise<PlaidLinkOutcome> {
-  return loadPlaidLink().then(
-    (Plaid) =>
-      new Promise<PlaidLinkOutcome>((resolve) => {
-        let submitted = false;
-        const handler = Plaid.create({
-          token: linkToken,
-          onSuccess: () => {
-            submitted = true;
-          },
-          onExit: (err: { display_message?: string; error_message?: string } | null) => {
-            resolve({
-              submitted,
-              exited: !submitted,
-              errorMessage: err?.display_message ?? err?.error_message,
-            });
-          },
-        });
-        handler.open();
-      }),
-  );
+  return loadPlaidLink().then((Plaid) => openPlaidLinkWith(Plaid as PlaidLinkNamespace, linkToken));
 }
