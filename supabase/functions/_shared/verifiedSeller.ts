@@ -274,8 +274,12 @@ export async function refundPaymentOnce(
   admin: Admin,
   payment: PaymentRow,
   reason: string,
+  opts: { adminId?: string | null } = {},
 ): Promise<{ ok: boolean; refundId?: string }> {
-  if (payment.paypal_refund_id) return { ok: true, refundId: payment.paypal_refund_id };
+  if (payment.paypal_refund_id) {
+    await applyRefundToVerification(admin, payment.user_id, reason);
+    return { ok: true, refundId: payment.paypal_refund_id };
+  }
   if (!payment.paypal_capture_id) return { ok: false };
 
   try {
@@ -291,14 +295,39 @@ export async function refundPaymentOnce(
       state: "refunded",
       paypal_refund_id: refundId,
       refunded_at: new Date().toISOString(),
+      refund_reason: reason.slice(0, 500),
+      refunded_by: opts.adminId ?? null,
       error_code: reason,
     });
+    // The badge must die with the money, in the same operation.
+    await applyRefundToVerification(admin, payment.user_id, reason);
     log("refunded", { payment_id: payment.id, reason });
     return { ok: true, refundId: refundId ?? undefined };
   } catch (err) {
     log("refund_failed", { payment_id: payment.id, message: (err as Error).message });
     return { ok: false };
   }
+}
+
+/**
+ * A refunded verification is never badge-eligible. Applied atomically with the
+ * refund so `payment_state` can never stay `captured` behind a refunded charge.
+ * Runs only when no OTHER capture still stands for the seller.
+ */
+async function applyRefundToVerification(admin: Admin, userId: string, reason: string) {
+  const remaining = await capturedPayment(admin, userId);
+  if (remaining) return; // another live capture still funds the badge
+
+  await admin
+    .from("seller_verifications")
+    .update({
+      payment_state: "refunded",
+      status: "payment_required",
+      verified_at: null,
+      last_reason_code: `refunded:${reason}`.slice(0, 200),
+      updated_at: new Date().toISOString(),
+    })
+    .eq("user_id", userId);
 }
 
 /** Collapses accidental duplicate captures down to a single charge. */
