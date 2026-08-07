@@ -71,15 +71,15 @@ const FAQ = [
 ];
 
 const panel =
-  'rounded-2xl border border-white/10 bg-white/[0.035] backdrop-blur-sm p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]';
+  'rounded-2xl border-2 border-white/[0.14] bg-white/[0.045] backdrop-blur-md p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] transition-colors hover:border-white/20';
 
-const ApplyCta = ({ className = '' }: { className?: string }) => (
+const ApplyCta = ({ className = '', wide = false }: { className?: string; wide?: boolean }) => (
   <a
     href={APPLY_URL}
     target="_blank"
     rel="noopener noreferrer"
-    className={`inline-flex items-center justify-center gap-2 rounded-full px-7 py-3.5 text-sm font-semibold text-black transition-transform hover:scale-[1.02] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-black ${className}`}
-    style={{ background: LIME, boxShadow: `0 10px 34px ${LIME}33` }}
+    className={`inline-flex items-center justify-center gap-2 rounded-full px-7 py-3.5 text-sm font-semibold text-black transition-transform hover:scale-[1.02] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-black ${wide ? 'w-full sm:w-auto' : ''} ${className}`}
+    style={{ background: LIME, boxShadow: `0 10px 38px ${LIME}40` }}
   >
     Apply for Equipment Financing
     <ExternalLink className="h-4 w-4" aria-hidden />
@@ -110,20 +110,27 @@ const Financing = () => {
   }, []);
 
   return (
-    <main className="relative min-h-screen bg-[#050506] text-white">
-      {/* polished onyx shine */}
+    <main className="relative min-h-screen overflow-hidden bg-[#050506] text-white">
+      {/* polished onyx shine — layered black glass luminescence */}
       <div
         aria-hidden
         className="pointer-events-none absolute inset-0"
         style={{
           background:
-            'radial-gradient(80% 50% at 50% -10%, rgba(140,198,63,0.10) 0%, transparent 65%), radial-gradient(60% 40% at 100% 20%, rgba(255,255,255,0.05) 0%, transparent 70%)',
+            'radial-gradient(85% 55% at 50% -8%, rgba(140,198,63,0.12) 0%, transparent 60%), radial-gradient(70% 45% at 100% 15%, rgba(255,255,255,0.07) 0%, transparent 60%), radial-gradient(70% 45% at 0% 15%, rgba(255,255,255,0.04) 0%, transparent 60%), radial-gradient(120% 60% at 50% 110%, rgba(0,0,0,0.9) 0%, transparent 70%)',
         }}
+      />
+
+      {/* top horizon sheen */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 top-0 h-px"
+        style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent)' }}
       />
 
       <div className="relative mx-auto max-w-5xl px-5 py-16 sm:px-8 sm:py-24">
         {/* Hero */}
-        <section>
+        <section className="rounded-3xl border-2 border-white/[0.12] bg-white/[0.03] p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-sm sm:p-10">
           <p
             className="text-[11px] font-semibold uppercase tracking-[0.22em]"
             style={{ color: LIME }}
@@ -143,7 +150,7 @@ const Financing = () => {
             <ApplyCta />
             <Link
               to="/browse"
-              className="inline-flex items-center justify-center gap-2 rounded-full border border-white/15 bg-white/[0.04] px-7 py-3.5 text-sm font-semibold text-white transition-colors hover:bg-white/[0.09] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
+              className="inline-flex items-center justify-center gap-2 rounded-full border-2 border-white/15 bg-white/[0.04] px-7 py-3.5 text-sm font-semibold text-white transition-colors hover:bg-white/[0.09] hover:border-white/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
             >
               Browse Equipment
               <ArrowRight className="h-4 w-4" aria-hidden />
@@ -153,11 +160,11 @@ const Financing = () => {
             You’ll continue to Equinox Funding to submit your application securely.
           </p>
 
-          <div className="mt-10 flex items-center gap-4 border-t border-white/10 pt-8">
+          <div className="mt-10 flex flex-col items-start gap-4 rounded-2xl border-2 border-white/[0.12] bg-white/[0.04] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] backdrop-blur-sm sm:flex-row sm:items-center">
             <img
               src={equinoxLogo.url}
               alt="Equinox Funding"
-              className="h-8 w-auto"
+              className="h-9 w-auto"
               loading="lazy"
             />
             <span className="text-xs text-white/45">Financing partner</span>
@@ -242,7 +249,7 @@ const Financing = () => {
         </section>
 
         {/* CTA repeat */}
-        <section className="mt-16 rounded-2xl border border-white/10 bg-white/[0.03] p-8 text-center">
+        <section className="mt-16 rounded-3xl border-2 border-white/[0.12] bg-gradient-to-b from-white/[0.06] to-white/[0.02] p-8 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-sm">
           <h2 className="text-xl font-semibold tracking-tight">Ready to apply?</h2>
           <p className="mx-auto mt-2 max-w-lg text-sm text-white/60">
             You’ll continue to Equinox Funding to submit your application securely.
@@ -253,7 +260,7 @@ const Financing = () => {
         </section>
 
         {/* Compliance */}
-        <section className="mt-16 space-y-4 border-t border-white/10 pt-8" aria-label="Disclosures">
+        <section className="mt-16 space-y-4 rounded-3xl border-2 border-white/[0.10] bg-white/[0.02] p-6 sm:p-8" aria-label="Disclosures">
           <p className="text-xs leading-relaxed text-white/50">
             Vendibook is not a lender, does not make credit decisions, and does not guarantee
             approval, rates, terms, or funding. Financing is for business purposes and is subject to
