@@ -675,10 +675,18 @@ export async function reconcileVerification(
     if (payment) {
       const voided = await voidAuthorizationOnce(admin, payment, incoming);
       actionTaken = "void";
-      paymentState = voided.ok ? "voided" : payment.state;
-      if (!voided.ok) {
-        await alertAdminsOfIssue(admin, payment.id, userId, "void_failed", {
+      /**
+       * Preserve the AUTHORITATIVE final money state. A successful emergency
+       * refund must never be overwritten back to the earlier payment row
+       * state, and an unresolved void must never be reported as released.
+       */
+      paymentState = voided.moneyState === "unresolved"
+        ? payment.state
+        : voided.moneyState;
+      if (voided.needsAdminAttention) {
+        await alertAdminsOfIssue(admin, payment.id, userId, "void_needs_attention", {
           error_code: voided.errorCode,
+          money_state: voided.moneyState,
         });
       }
     } else {
