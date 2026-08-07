@@ -4,7 +4,7 @@ import { resolveWalkthrough } from '../ListingHowItWorks';
 describe('resolveWalkthrough', () => {
   it('sale + card → sale_card variant', () => {
     const c = resolveWalkthrough({
-      id: '1', mode: 'sale', accept_card_payment: true, category: 'food_truck',
+      id: '1', mode: 'sale', accept_paypal_checkout: true, category: 'food_truck',
     });
     expect(c.variant).toBe('sale_card');
     expect(c.finalCtaLabel).toMatch(/purchase/i);
@@ -12,7 +12,7 @@ describe('resolveWalkthrough', () => {
 
   it('sale + no card → sale_pay_in_person variant', () => {
     const c = resolveWalkthrough({
-      id: '2', mode: 'sale', accept_card_payment: false, category: 'food_truck',
+      id: '2', mode: 'sale', accept_paypal_checkout: false, category: 'food_truck',
     });
     expect(c.variant).toBe('sale_pay_in_person');
     // Payment method must be different — no Stripe language
@@ -59,7 +59,7 @@ describe('resolveWalkthrough', () => {
 
   it('sale with delivery fulfillment shows delivery/freight step', () => {
     const c = resolveWalkthrough({
-      id: '7', mode: 'sale', accept_card_payment: true, category: 'food_truck',
+      id: '7', mode: 'sale', accept_paypal_checkout: true, category: 'food_truck',
       fulfillment_type: 'delivery',
     });
     const titles = c.fullSteps.map(s => s.title).join(' | ');
@@ -68,7 +68,7 @@ describe('resolveWalkthrough', () => {
 
   it('sale with fulfillment_type=both shows combined pickup+delivery step', () => {
     const c = resolveWalkthrough({
-      id: '8', mode: 'sale', accept_card_payment: true, category: 'food_truck',
+      id: '8', mode: 'sale', accept_paypal_checkout: true, category: 'food_truck',
       fulfillment_type: 'both',
     });
     expect(c.fulfillment).toBe('pickup_or_delivery');
@@ -97,7 +97,7 @@ describe('resolveWalkthrough', () => {
   it('mode=both → sale_and_rent variant with both branches', () => {
     const c = resolveWalkthrough({
       id: '11', mode: 'both', category: 'food_truck',
-      accept_card_payment: true, instant_book: true,
+      accept_paypal_checkout: true, instant_book: true,
       price_sale: 40000, price_daily: 300,
     });
     expect(c.variant).toBe('sale_and_rent');
@@ -111,7 +111,7 @@ describe('resolveWalkthrough', () => {
   it('both prices present with mode=sale still resolves to dual', () => {
     const c = resolveWalkthrough({
       id: '12', mode: 'sale', category: 'food_trailer',
-      accept_card_payment: true, instant_book: false,
+      accept_paypal_checkout: true, instant_book: false,
       price_sale: 25000, price_hourly: 50,
     });
     expect(c.variant).toBe('sale_and_rent');
@@ -121,7 +121,7 @@ describe('resolveWalkthrough', () => {
   it('sale price only (no rental price) with mode=sale stays sale_card', () => {
     const c = resolveWalkthrough({
       id: '13', mode: 'sale', category: 'food_truck',
-      accept_card_payment: true, price_sale: 25000,
+      accept_paypal_checkout: true, price_sale: 25000,
     });
     expect(c.variant).toBe('sale_card');
   });
@@ -129,7 +129,7 @@ describe('resolveWalkthrough', () => {
   it('dual mode with pay-in-person seller uses sale_pay_in_person branch', () => {
     const c = resolveWalkthrough({
       id: '14', mode: 'both', category: 'food_truck',
-      accept_card_payment: false, price_sale: 30000, price_daily: 250,
+      accept_paypal_checkout: false, price_sale: 30000, price_daily: 250,
     });
     expect(c.variant).toBe('sale_and_rent');
     expect(c.branches!.sale.variant).toBe('sale_pay_in_person');

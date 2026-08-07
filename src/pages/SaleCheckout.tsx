@@ -231,7 +231,7 @@ const SaleCheckout = () => {
         setFulfillmentSelected('pickup');
       }
       
-      if (listing.accept_card_payment) {
+      if (listing.accept_paypal_checkout) {
         setPaymentMethod('card');
       } else if (listing.accept_cash_payment) {
         setPaymentMethod('cash');
@@ -286,7 +286,7 @@ const SaleCheckout = () => {
   const fulfillmentType = listing?.fulfillment_type || 'pickup';
   const vendibookFreightEnabled = listing?.vendibook_freight_enabled || false;
   const freightPayer = (listing?.freight_payer as 'buyer' | 'seller') || 'buyer';
-  const acceptCardPayment = listing?.accept_card_payment ?? true;
+  const acceptPayPalCheckout = listing?.accept_paypal_checkout ?? true;
   const acceptCashPayment = listing?.accept_cash_payment ?? false;
   const isFreightSellerPaid = vendibookFreightEnabled && freightPayer === 'seller';
   const freightCost = estimate?.total_cost ?? 0;
@@ -443,11 +443,11 @@ const SaleCheckout = () => {
         city: listing.city ?? null,
         state: listing.state ?? null,
         price_sale: priceSale,
-        accept_card_payment: acceptCardPayment,
+        accept_paypal_checkout: acceptPayPalCheckout,
       },
       selection: {
         mode: 'sale',
-        paymentMethod: paymentMethod === 'cash' ? 'pay_in_person' : 'stripe_card',
+        paymentMethod: paymentMethod === 'cash' ? 'pay_in_person' : 'paypal_checkout',
         basePriceDollars: priceSale,
         deliveryFeeDollars: fulfillmentSelected === 'delivery' ? deliveryFee : (fulfillmentSelected === 'vendibook_freight' ? freightCost : 0),
         isSellerPaidFreight: isFreightSellerPaid,
@@ -680,7 +680,7 @@ const SaleCheckout = () => {
     );
   }
 
-  const hasMultiplePaymentOptions = acceptCardPayment && acceptCashPayment;
+  const hasMultiplePaymentOptions = acceptPayPalCheckout && acceptCashPayment;
   const currentStepNumber = getStepNumber(currentStep);
 
   // ─── Journey progress + primary-action wiring ───
@@ -770,7 +770,7 @@ const SaleCheckout = () => {
             sellerName={sellerName}
             sellerVerified={Boolean((host as { identity_verified?: boolean } | null | undefined)?.identity_verified)}
             flow="sale"
-            financingEligible={priceSale >= 150 && acceptCardPayment}
+            financingEligible={priceSale >= 150 && acceptPayPalCheckout}
             onBack={() => navigate(`/listing/${listingId}`)}
             onContinue={() => setCurrentStep('confirm')}
           />

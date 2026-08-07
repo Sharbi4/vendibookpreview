@@ -152,7 +152,7 @@ const AIListingCreator: React.FC = () => {
         slot_names: listingData.slot_names?.length ? listingData.slot_names : null,
         image_urls: uploadedImages.length > 0 ? uploadedImages : null,
         cover_image_url: uploadedImages.length > 0 ? uploadedImages[0] : null,
-        accept_card_payment: listingData.accept_card_payment ?? (listingData.mode === 'sale' ? true : null),
+        accept_paypal_checkout: listingData.accept_paypal_checkout ?? (listingData.mode === 'sale' ? true : null),
         accept_cash_payment: listingData.accept_cash_payment ?? null};
       const { error } = await supabase.from('listings').update(updateData).eq('id', draft.id);
       if (error) throw error;

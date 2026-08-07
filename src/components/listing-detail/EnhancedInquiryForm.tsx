@@ -29,7 +29,7 @@ interface EnhancedInquiryFormProps {
   widthInches?: number | null;
   heightInches?: number | null;
   freightCategory?: string | null;
-  acceptCardPayment?: boolean;
+  acceptPayPalCheckout?: boolean;
   acceptCashPayment?: boolean;
 }
 

@@ -91,7 +91,7 @@ Deno.serve(async (req) => {
     const { data: listing, error: listingErr } = await supabase
       .from('listings')
       .select(
-        'id, host_id, title, cover_image_url, mode, category, cancellation_policy, city, state, price_sale, deposit_amount, accept_cash_payment, accept_card_payment',
+        'id, host_id, title, cover_image_url, mode, category, cancellation_policy, city, state, price_sale, deposit_amount, accept_cash_payment, accept_paypal_checkout',
       )
       .eq('id', body.listing_id)
       .maybeSingle();

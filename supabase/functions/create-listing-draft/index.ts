@@ -96,7 +96,7 @@ serve(async (req) => {
         postal_code: zipCode || null,
         latitude: latitude ?? null,
         longitude: longitude ?? null,
-        accept_card_payment: mode === "sale" ? true : null,
+        accept_paypal_checkout: mode === "sale" ? true : null,
         accept_cash_payment: mode === "sale" ? false : null,
       })
       .select("id")

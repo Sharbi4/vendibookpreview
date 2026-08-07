@@ -27,7 +27,7 @@ vi.mock('@/integrations/supabase/client', () => ({
 
 const baseSnapshot = {
   termsVersion: 'v3',
-  payment_method: 'stripe_card',
+  payment_method: 'paypal_checkout',
   pricing: {
     lines: [
       { label: 'Base price', amountCents: 10000, kind: 'base' },
@@ -48,7 +48,7 @@ const primaryRow: AgreedTermsRow = {
   sale_transaction_id: 'sale_1',
   terms_version: 'v3',
   transaction_mode: 'sale',
-  payment_method: 'stripe_card',
+  payment_method: 'paypal_checkout',
   subtotal_cents: 10000,
   deposit_cents: 20000,
   commission_cents: 1290,
@@ -109,7 +109,7 @@ describe('AgreedTermsPanel', () => {
 
     // Terms version + payment method badges
     expect(screen.getByText(/Terms v3/i)).toBeInTheDocument();
-    expect(screen.getByText(/stripe card/i)).toBeInTheDocument();
+    expect(screen.getByText(/paypal checkout/i)).toBeInTheDocument();
 
     // Primary lookup must NOT display the "legacy lookup" flag
     expect(screen.queryByText(/legacy lookup/i)).not.toBeInTheDocument();

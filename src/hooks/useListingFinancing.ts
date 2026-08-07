@@ -41,7 +41,7 @@ export function useListingFinancingPreference(listingId?: string | null) {
  */
 export function useEquinoxFinancingEnabled(listing: any): boolean {
   const flagOn = usePublicFeatureFlag(EQUINOX_FLAG_KEY);
-  const acceptsOnlinePayment = listing?.accept_card_payment === true;
+  const acceptsOnlinePayment = listing?.accept_paypal_checkout === true;
   const eligible = isFinanceableSaleListing(listing) && acceptsOnlinePayment;
   const { data } = useListingFinancingPreference(flagOn && eligible ? listing?.id : null);
   return flagOn && eligible && data?.equinox_opt_in === true;

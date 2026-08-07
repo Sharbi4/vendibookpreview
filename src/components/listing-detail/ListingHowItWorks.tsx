@@ -44,7 +44,7 @@ type ListingLike = {
   mode: 'rent' | 'sale' | 'both' | string | null | undefined;
   category?: string | null;
   instant_book?: boolean | null;
-  accept_card_payment?: boolean | null;
+  accept_paypal_checkout?: boolean | null;
   accept_cash_payment?: boolean | null;
   fulfillment_type?: string | null;
   price_sale?: number | null;
@@ -131,8 +131,8 @@ export function resolveWalkthrough(listing: ListingLike): WalkthroughConfig {
 
   // Dual-mode: build a wrapper config with both branches available.
   if (isDual) {
-    const acceptsCard = listing.accept_card_payment !== false;
-    const saleBranch = acceptsCard ? buildSaleCard(fulfillment) : buildSalePayInPerson(fulfillment);
+    const acceptsPayPal = listing.accept_paypal_checkout !== false;
+    const saleBranch = acceptsPayPal ? buildSaleCard(fulfillment) : buildSalePayInPerson(fulfillment);
     const rentBranch = listing.instant_book
       ? buildRentInstant(fulfillment)
       : buildRentRequest(fulfillment);
@@ -142,8 +142,8 @@ export function resolveWalkthrough(listing: ListingLike): WalkthroughConfig {
 
   // Sale variants
   if (isSale) {
-    const acceptsCard = listing.accept_card_payment !== false; // default to card if flag absent
-    return acceptsCard ? buildSaleCard(fulfillment) : buildSalePayInPerson(fulfillment);
+    const acceptsPayPal = listing.accept_paypal_checkout !== false; // default to PayPal if flag absent
+    return acceptsPayPal ? buildSaleCard(fulfillment) : buildSalePayInPerson(fulfillment);
   }
 
   // Rental variants (default when mode is missing or unusual)

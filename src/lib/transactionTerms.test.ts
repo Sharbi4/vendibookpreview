@@ -24,7 +24,7 @@ describe('buildTerms', () => {
       listing: { ...listing },
       selection: {
         mode: 'rent',
-        paymentMethod: 'stripe_card',
+        paymentMethod: 'paypal_checkout',
         basePriceDollars: 100,
         deliveryFeeDollars: 25,
         depositDollars: 200,
@@ -50,7 +50,7 @@ describe('buildTerms', () => {
       listing: { ...listing, mode: 'sale' },
       selection: {
         mode: 'sale',
-        paymentMethod: 'stripe_card',
+        paymentMethod: 'paypal_checkout',
         basePriceDollars: 5000,
       },
     });
@@ -81,7 +81,7 @@ describe('buildTerms', () => {
       listing: { ...listing, mode: 'sale' },
       selection: {
         mode: 'sale',
-        paymentMethod: 'stripe_card',
+        paymentMethod: 'paypal_checkout',
         basePriceDollars: 1000,
         deliveryFeeDollars: 250,
         isSellerPaidFreight: true,
@@ -96,7 +96,7 @@ describe('buildTerms', () => {
       listing: { ...listing },
       selection: {
         mode: 'rent',
-        paymentMethod: 'stripe_card',
+        paymentMethod: 'paypal_checkout',
         basePriceDollars: 100,
         depositDollars: 200,
       },

@@ -33,8 +33,9 @@ export interface ListingPreview {
   subcategory?: string | null;
   total_slots?: number | null;
   slot_names?: string[];
-  accept_card_payment?: boolean | null;
+  accept_card_payment?: boolean | null; // Legacy Stripe flag
   accept_cash_payment?: boolean | null;
+  accept_paypal_checkout?: boolean | null;
 }
 
 const CATEGORY_LABELS: Record<string, string> = {

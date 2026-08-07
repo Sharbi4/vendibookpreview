@@ -3505,6 +3505,7 @@ export type Database = {
         Row: {
           accept_card_payment: boolean | null
           accept_cash_payment: boolean | null
+          accept_paypal_checkout: boolean
           accepts_offers: boolean
           access_instructions: string | null
           address: string | null
@@ -3601,6 +3602,7 @@ export type Database = {
         Insert: {
           accept_card_payment?: boolean | null
           accept_cash_payment?: boolean | null
+          accept_paypal_checkout?: boolean
           accepts_offers?: boolean
           access_instructions?: string | null
           address?: string | null
@@ -3697,6 +3699,7 @@ export type Database = {
         Update: {
           accept_card_payment?: boolean | null
           accept_cash_payment?: boolean | null
+          accept_paypal_checkout?: boolean
           accepts_offers?: boolean
           access_instructions?: string | null
           address?: string | null
@@ -9126,6 +9129,7 @@ export type Database = {
         Returns: {
           accept_card_payment: boolean | null
           accept_cash_payment: boolean | null
+          accept_paypal_checkout: boolean
           accepts_offers: boolean
           access_instructions: string | null
           address: string | null

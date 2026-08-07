@@ -16,15 +16,15 @@ interface ListingPaymentMethodsProps {
 export const ListingPaymentMethods = ({ listing, className }: ListingPaymentMethodsProps) => {
   const financing = useEquinoxFinancingEnabled(listing);
 
-  // Sale listings honor the seller's saved payment settings. Rentals always
-  // settle through Vendibook checkout (PayPal) unless the row says otherwise.
+  // Sale listings honor the seller's saved payment settings. Rentals default to
+  // PayPal checkout unless the seller explicitly disables it.
   const isSale = listing?.mode === 'sale';
-  const onlinePayments = isSale
-    ? listing?.accept_card_payment === true
-    : listing?.accept_card_payment !== false;
+  const paypalEnabled = isSale
+    ? listing?.accept_paypal_checkout === true
+    : listing?.accept_paypal_checkout !== false;
   const cashPayments = listing?.accept_cash_payment === true;
 
-  if (!onlinePayments && !cashPayments && !financing) return null;
+  if (!paypalEnabled && !cashPayments && !financing) return null;
 
   return (
     <div
@@ -33,7 +33,7 @@ export const ListingPaymentMethods = ({ listing, className }: ListingPaymentMeth
         className,
       )}
     >
-      {onlinePayments && (
+      {paypalEnabled && (
         <>
           <div className="flex items-center gap-2 flex-wrap">
             <Lock className="h-3.5 w-3.5 text-muted-foreground" aria-hidden />
@@ -49,12 +49,12 @@ export const ListingPaymentMethods = ({ listing, className }: ListingPaymentMeth
       )}
 
       {cashPayments && (
-        <div
-          className={cn(
-            'flex items-start gap-2 flex-wrap',
-            onlinePayments ? 'mt-3 pt-3 border-t border-border/50' : '',
-          )}
-        >
+          <div
+            className={cn(
+              'flex items-start gap-2 flex-wrap',
+              paypalEnabled ? 'mt-3 pt-3 border-t border-border/50' : '',
+            )}
+          >
           <Banknote className="h-3.5 w-3.5 text-muted-foreground mt-0.5" aria-hidden />
           <span className="text-xs text-muted-foreground">
             This seller also accepts payment in person at pickup or delivery.

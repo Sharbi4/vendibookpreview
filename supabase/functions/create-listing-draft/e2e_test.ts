@@ -121,7 +121,7 @@ async function fillAndPublish(
   // Verify status
   const { data: verify, error: verifyErr } = await client
     .from("listings")
-    .select("id, status, mode, accept_card_payment, accept_cash_payment, price_sale, price_daily")
+    .select("id, status, mode, accept_paypal_checkout, accept_cash_payment, price_sale, price_daily")
     .eq("id", listingId)
     .single();
   assertEquals(verifyErr, null, verifyErr?.message);
@@ -140,12 +140,12 @@ Deno.test("e2e: cash-only sale listing publishes without Stripe", async () => {
   });
   const row = await fillAndPublish(client, id, {
     price_sale: 25000,
-    accept_card_payment: false,
+    accept_paypal_checkout: false,
     accept_cash_payment: true,
   });
   assertEquals(row?.mode, "sale");
   assertEquals(row?.accept_cash_payment, true);
-  assertEquals(row?.accept_card_payment, false);
+  assertEquals(row?.accept_paypal_checkout, false);
   assert(Number(row?.price_sale) > 0, "expected sale price to be set");
 });
 
@@ -160,11 +160,11 @@ Deno.test("e2e: stripe/card sale listing publishes", async () => {
   });
   const row = await fillAndPublish(client, id, {
     price_sale: 35000,
-    accept_card_payment: true,
+    accept_paypal_checkout: true,
     accept_cash_payment: false,
   });
   assertEquals(row?.mode, "sale");
-  assertEquals(row?.accept_card_payment, true);
+  assertEquals(row?.accept_paypal_checkout, true);
   assert(Number(row?.price_sale) > 0);
 });
 
@@ -196,11 +196,11 @@ Deno.test("e2e: standard for-sale listing publishes with cash + card enabled", a
   });
   const row = await fillAndPublish(client, id, {
     price_sale: 42000,
-    accept_card_payment: true,
+    accept_paypal_checkout: true,
     accept_cash_payment: true,
   });
   assertEquals(row?.mode, "sale");
-  assertEquals(row?.accept_card_payment, true);
+  assertEquals(row?.accept_paypal_checkout, true);
   assertEquals(row?.accept_cash_payment, true);
   assert(Number(row?.price_sale) > 0, "expected sale price to be set");
 });
@@ -251,10 +251,10 @@ Deno.test("e2e: card sale is gated by Stripe Connect and publishes once connecte
     assertEquals(gateJson.connected, false);
     assertEquals(gateJson.onboarding_complete, false);
 
-    // 4. Wizard-equivalent guard: requiresStripe && !onboarding_complete → blocked.
-    const acceptCardPayment = true;
-    const requiresStripe = acceptCardPayment; // mode === "sale" && accept_card_payment
-    const blocked = requiresStripe && !gateJson.onboarding_complete;
+    // 4. Wizard-equivalent guard: requiresPayPalCheckout && !onboarding_complete → blocked.
+    const acceptPayPalCheckout = true;
+    const requiresPayPalCheckout = acceptPayPalCheckout; // mode === "sale" && accept_paypal_checkout
+    const blocked = requiresPayPalCheckout && !gateJson.onboarding_complete;
     assert(blocked, "publish must be blocked while Stripe Connect is missing");
 
     // Confirm the listing did not slip into published state.
@@ -283,18 +283,18 @@ Deno.test("e2e: card sale is gated by Stripe Connect and publishes once connecte
       .single();
     assertEquals(reconnected?.stripe_onboarding_complete, true);
     assert(
-      !(requiresStripe && !reconnected?.stripe_onboarding_complete),
+      !(requiresPayPalCheckout && !reconnected?.stripe_onboarding_complete),
       "publish must be unblocked once onboarding is complete",
     );
 
     // 6. Publish succeeds now.
     const row = await fillAndPublish(client, listingId, {
       price_sale: 32000,
-      accept_card_payment: true,
+      accept_paypal_checkout: true,
       accept_cash_payment: false,
     });
     assertEquals(row?.status, "published");
-    assertEquals(row?.accept_card_payment, true);
+    assertEquals(row?.accept_paypal_checkout, true);
   } finally {
     // Always restore the profile's original Stripe state.
     await client
@@ -408,7 +408,7 @@ Deno.test("e2e: pay-in-person sale completes buyer + seller confirmation flow", 
   });
   const listing = await fillAndPublish(sellerClient, listingId, {
     price_sale: 12500,
-    accept_card_payment: false,
+    accept_paypal_checkout: false,
     accept_cash_payment: true,
   });
   assertEquals(listing?.status, "published");
@@ -514,7 +514,7 @@ Deno.test("e2e: pay-in-person cash sale routed through confirm-sale edge functio
   });
   await fillAndPublish(sellerClient, listingId, {
     price_sale: 8000,
-    accept_card_payment: false,
+    accept_paypal_checkout: false,
     accept_cash_payment: true,
   });
 
