@@ -12,6 +12,7 @@ import {
   BadgeCheck,
   ArrowRight} from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { ProviderTrustFeature } from '@/components/home/ProviderTrustFeature';
 import trustKitchen from '@/assets/home/trust-kitchen.jpg';
 import trustHandoff from '@/assets/home/trust-handoff.jpg';
 import ownersFoodTruck from '@/assets/home/owners-food-truck.jpg';
@@ -25,7 +26,7 @@ const PILLARS = [
   {
     icon: ShieldCheck,
     title: 'Secure payments',
-    body: 'Funds protected through booking and transfer. Powered by PayPal.'},
+    body: 'Online checkout is processed by PayPal. Vendibook does not hold or escrow your funds.'},
   {
     icon: FileCheck,
     title: 'Document collection',
@@ -33,7 +34,7 @@ const PILLARS = [
   {
     icon: UserCheck,
     title: 'Verified profiles',
-    body: 'Identity-verified hosts, sellers, and renters. Built-in trust.'},
+    body: 'Profiles, listing history, and reviews. Identity verification is optional, not universal.'},
   {
     icon: CalendarCheck,
     title: 'Booking requests',
@@ -41,7 +42,7 @@ const PILLARS = [
   {
     icon: Wallet,
     title: 'Deposits & payouts',
-    body: 'Hold security deposits. Automatic payouts after the booking.'},
+    body: 'Set security deposit terms. Seller and host payouts are reviewed and sent manually.'},
   {
     icon: MessageSquare,
     title: 'Messaging',
@@ -49,7 +50,7 @@ const PILLARS = [
   {
     icon: CreditCard,
     title: 'Financing options',
-    body: 'Affirm, Afterpay, and SBA-ready paths for qualifying purchases.'},
+    body: 'Equipment financing through Equinox Funding. Separate application and underwriting apply.'},
   {
     icon: Truck,
     title: 'Delivery coordination',
@@ -61,7 +62,7 @@ const PILLARS = [
 
 const TrustInfrastructure = () => {
   return (
-    <section className="py-20 sm:py-28 relative overflow-hidden">
+    <section id="trust-and-security" className="py-20 sm:py-28 relative overflow-hidden scroll-mt-24">
       {/* Very subtle ambient */}
       <div
         className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[700px] h-[400px] rounded-full blur-[140px] pointer-events-none"
@@ -88,6 +89,8 @@ const TrustInfrastructure = () => {
             Vendibook gives buyers, renters, owners, and sellers tools for secure payments, document collection, owner profiles, messaging, and booking requests — so every deal has a clearer path forward.
           </p>
         </motion.div>
+
+        <ProviderTrustFeature />
 
         {/* Real photos strip */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-10 sm:mb-14">
@@ -181,7 +184,7 @@ const TrustInfrastructure = () => {
                   <span className="gradient-text-warm">Start in minutes.</span>
                 </h3>
                 <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
-                  Create your account, list an asset, or book a rental in under five minutes. No subscriptions, no listing fees — pay only when business closes.
+                  Create your account, list an asset, or book a rental in under five minutes. Free to list. The 12.9% platform fee applies only when a transaction is paid through Vendibook or funded through the financing flow; cash/pay-in-person sales are not charged this platform fee.
                 </p>
               </div>
               <div className="flex flex-col sm:flex-row gap-2.5 shrink-0">
