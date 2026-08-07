@@ -2,7 +2,6 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import { ChevronDown, Facebook, Instagram, Twitter, Linkedin } from 'lucide-react';
 import vendibookFavicon from '@/assets/vendibook-favicon.png';
-import { StripeLogo } from '@/components/ui/StripeLogo';
 import { cn } from '@/lib/utils';
 import { trackFooterCitiesClicked } from '@/lib/analytics';
 
@@ -208,10 +207,9 @@ const Footer = () => {
               </span>
             </div>
 
-            {/* Stripe Badge */}
+            {/* Payments badge */}
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <span>Payments by</span>
-              <StripeLogo className="h-5 opacity-70" />
+              <span>Payments by PayPal</span>
             </div>
           </div>
         </div>

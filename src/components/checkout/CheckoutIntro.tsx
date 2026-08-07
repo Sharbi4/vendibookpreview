@@ -14,7 +14,6 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import SmartImage from '@/components/ui/SmartImage';
-import { StripeLogo } from '@/components/ui/StripeLogo';
 import { AffirmBadge } from '@/components/ui/AffirmBadge';
 import {
   trackCheckoutIntroViewed,
@@ -108,7 +107,7 @@ const CheckoutIntro = ({
   );
 
   const trustPoints = useMemo(() => {
-    const points: Array<{ icon: typeof ShieldCheck; label: string; kind?: 'stripe' }> = [
+    const points: Array<{ icon: typeof ShieldCheck; label: string; kind?: 'paypal' }> = [
       {
         icon: ShieldCheck,
         label:
@@ -116,7 +115,7 @@ const CheckoutIntro = ({
             ? 'Your payment is protected until you confirm delivery'
             : 'Your payment is protected until check-in is confirmed',
       },
-      { icon: Lock, label: 'Secured by Stripe', kind: 'stripe' },
+      { icon: Lock, label: 'Secure checkout powered by PayPal', kind: 'paypal' },
       { icon: FileSignature, label: 'Bill of sale e-signed free' },
     ];
     if (sellerVerified) {
@@ -254,11 +253,7 @@ const CheckoutIntro = ({
             const Icon = p.icon;
             return (
               <li key={p.label} className="flex items-start gap-2 text-[13px] text-foreground/85">
-                {p.kind === 'stripe' ? (
-                  <StripeLogo size="xs" className="mt-0.5" />
-                ) : (
-                  <Icon className="mt-0.5 h-4 w-4 text-primary" strokeWidth={1.75} />
-                )}
+                <Icon className="mt-0.5 h-4 w-4 text-primary" strokeWidth={1.75} aria-hidden />
                 <span className="leading-relaxed">{p.label}</span>
               </li>
             );

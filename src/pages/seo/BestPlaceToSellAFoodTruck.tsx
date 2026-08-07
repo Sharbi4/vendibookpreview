@@ -171,7 +171,7 @@ const BestPlaceToSellAFoodTruck = () => (
         <li>• You want photos and video to do the heavy lifting.</li>
         <li>• You want optional secure transaction support when closing.</li>
         <li>• You want to rent the truck or trailer while waiting to sell.</li>
-        <li>• You want verified buyer and seller signals through Stripe Identity.</li>
+        <li>• You want verified buyer and seller signals through Vendibook identity verification.</li>
       </ul>
     </section>
 

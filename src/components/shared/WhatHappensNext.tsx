@@ -75,7 +75,7 @@ export const getSalePickupSteps = (): TimelineStep[] => [
     icon: CreditCard,
     iconColor: "text-primary",
     iconBg: "bg-primary/10",
-    title: "Pay securely via Stripe",
+    title: "Pay securely via PayPal",
     isActive: true,
   },
   {
@@ -106,7 +106,7 @@ export const getSaleFreightSteps = (): TimelineStep[] => [
     icon: CreditCard,
     iconColor: "text-primary",
     iconBg: "bg-primary/10",
-    title: "Pay securely via Stripe",
+    title: "Pay securely via PayPal",
     isActive: true,
   },
   {
@@ -137,7 +137,7 @@ export const getSaleLocalDeliverySteps = (): TimelineStep[] => [
     icon: CreditCard,
     iconColor: "text-primary",
     iconBg: "bg-primary/10",
-    title: "Pay securely via Stripe",
+    title: "Pay securely via PayPal",
     isActive: true,
   },
   {
@@ -168,7 +168,7 @@ export const getBookingInstantSteps = (): TimelineStep[] => [
     icon: CreditCard,
     iconColor: "text-primary",
     iconBg: "bg-primary/10",
-    title: "Pay securely via Stripe",
+    title: "Pay securely via PayPal",
     isActive: true,
   },
   {

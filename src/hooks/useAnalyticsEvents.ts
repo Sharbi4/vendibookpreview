@@ -124,8 +124,8 @@ export const useAdminFunnelMetrics = (days: number = 7) => {
         'draft_created',
         'photos_added',
         'pricing_added',
-        'stripe_connect_clicked',
-        'stripe_connected',
+        'payout_setup_clicked',
+        'payout_setup_completed',
         'listing_published'
       ];
 

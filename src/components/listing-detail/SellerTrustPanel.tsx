@@ -136,7 +136,7 @@ export const SellerTrustPanel = ({
       <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-[11px] text-muted-foreground/90">
         <span className="flex items-center gap-1.5">
           <ShieldCheck className="h-3.5 w-3.5 text-emerald-400" />
-          Secure payments via Stripe
+          Secure payments via PayPal
         </span>
         <span className="flex items-center gap-1.5">
           <Award className="h-3.5 w-3.5 text-amber-400" />

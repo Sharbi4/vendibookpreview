@@ -4,7 +4,6 @@ import HeroPanelShell from './HeroPanelShell';
 import GlassCard from './GlassCard';
 import { Button } from '@/components/ui/button';
 import { trackLeadEvent } from '@/lib/leadTracking';
-import { StripeWordmark } from './BrandWordmarks';
 import paymentsBg from '@/assets/hero-payments-bg.png.asset.json';
 
 const FeatureRow = ({ icon: Icon, title, text }: { icon: typeof Lock; title: string; text: string }) => (
@@ -29,10 +28,10 @@ const PaymentsBelow = () => (
   </div>
 );
 
-const StripeModule = () => (
+const PaymentsModule = () => (
   <GlassCard className="w-[230px] !p-5" rotate={-2}>
     <div className="text-xs text-neutral-600 mb-1">Powered by</div>
-    <StripeWordmark className="h-9 mb-3" />
+    <div className="text-lg font-semibold text-neutral-800 mb-3">PayPal</div>
     <div className="flex items-start gap-2 pt-3 border-t border-orange-200/50">
       <ShieldCheck className="w-4 h-4 text-orange-500 mt-0.5 shrink-0" />
       <div className="text-xs text-neutral-700 leading-snug">
@@ -44,7 +43,7 @@ const StripeModule = () => (
 
 const PaymentsModules = () => (
   <div className="hidden md:block absolute top-1/2 right-8 -translate-y-1/2 pointer-events-auto">
-    <StripeModule />
+    <PaymentsModule />
   </div>
 );
 

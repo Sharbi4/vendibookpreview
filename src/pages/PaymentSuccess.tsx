@@ -374,7 +374,7 @@ const PaymentSuccess = () => {
                         Payment didn't go through
                       </h1>
                       <p className="mt-2 text-muted-foreground">
-                        Stripe couldn't complete this purchase. You have not been charged for a successful subscription. Try again or reach out to support.
+                        We couldn't complete this purchase. You have not been charged for a successful subscription. Try again or reach out to support.
                       </p>
                       <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
                         <Button asChild size="lg">
@@ -435,7 +435,7 @@ const PaymentSuccess = () => {
                         Finalizing your purchase…
                       </h1>
                       <p className="mt-2 text-muted-foreground">
-                        Stripe has your payment. We're waiting on the confirmation event to provision your upgrades — this usually lands in a few seconds.
+                        PayPal has your payment. We're waiting on the confirmation event to provision your upgrades — this usually lands in a few seconds.
                       </p>
                       <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
                         <Button size="lg" onClick={() => window.location.reload()}>
@@ -980,7 +980,7 @@ const PaymentSuccess = () => {
                             Host Payout Timeline
                           </h4>
                           <p className="text-xs text-muted-foreground mt-1">
-                            Your host will receive their payout within <span className="font-medium text-blue-600 dark:text-blue-400">2-3 business days</span> after the booking begins. Payouts are processed automatically via Stripe.
+                            Your host will receive their payout within <span className="font-medium text-blue-600 dark:text-blue-400">2-3 business days</span> after the booking begins. Vendibook reviews and releases host payouts.
                           </p>
                           <div className="mt-2 flex items-center gap-4 text-xs">
                             <div className="flex items-center gap-1.5">

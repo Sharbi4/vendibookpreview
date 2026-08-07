@@ -31,7 +31,7 @@ const FAQS = [
   {
     question: 'Are renters verified?',
     answer:
-      'Renters can verify their identity through Stripe Identity, and verified badges appear on their profile. You can also require business information for commercial bookings.',
+      'Renters can verify their identity through Vendibook identity verification, and verified badges appear on their profile. You can also require business information for commercial bookings.',
   },
 ];
 
@@ -66,7 +66,7 @@ const RentOutMyFoodTruck = () => (
         { h: 'Add equipment rules', p: 'Specify what renters can and can’t use, how to handle fryer oil, hood cleaning, and water tanks.' },
         { h: 'Add maintenance notes', p: 'Document required cleaning, inspection cadence, and any care quirks your truck or trailer has.' },
         { h: 'Communicate with renters', p: 'In-platform messaging keeps every conversation, document, and detail in one place.' },
-        { h: 'Verification and trust', p: 'Renters can verify identity through Stripe Identity. Require business info for commercial bookings.' },
+        { h: 'Verification and trust', p: 'Renters can verify identity through Vendibook identity verification. Require business info for commercial bookings.' },
         { h: 'Calendar control', p: 'Block dates, set lead times, and toggle availability anytime.' },
       ].map((c) => (
         <div key={c.h} className="rounded-2xl border border-border bg-card p-5 space-y-1.5">

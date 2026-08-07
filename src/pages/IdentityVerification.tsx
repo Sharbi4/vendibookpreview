@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 import Header from '@/components/layout/Header';
 import verifiedBadge from '@/assets/verified-badge.png';
-import { StripeTrustBadge } from '@/components/trust/StripeTrustBadge';
+import { PaymentTrustBadge } from '@/components/trust/PaymentTrustBadge';
 import { goBackToOrigin } from '@/lib/originNav';
 
 type Status = 'checking' | 'not_started' | 'pending' | 'processing' | 'verified';
@@ -203,20 +203,20 @@ const IdentityVerification = () => {
             <div className="mt-8 pt-6 border-t border-border grid gap-4 md:grid-cols-3">
               <TrustCell
                 media={
-                  <StripeTrustBadge
+                  <PaymentTrustBadge
                     context="identity"
                     surface="light"
                     size="sm"
                     withCopy={false}
                   />
                 }
-                title="Powered by Stripe Identity"
+                title="Powered by Vendibook identity verification"
                 body="Bank-grade verification, trusted worldwide."
               />
               <TrustCell
                 media={<Lock className="h-5 w-5 text-foreground/80" />}
                 title="Encrypted end-to-end"
-                body="Your ID is reviewed by Stripe. Vendibook never stores your document."
+                body="Your ID is reviewed securely. Vendibook never stores your document."
               />
               <TrustCell
                 media={
@@ -233,7 +233,7 @@ const IdentityVerification = () => {
 
             <p className="text-[13px] text-foreground/70 mt-8 leading-relaxed text-center">
               By continuing you agree to share the information required for
-              Stripe Identity to verify you. See our{' '}
+              Vendibook identity verification to verify you. See our{' '}
               <a
                 href="/privacy"
                 className="underline underline-offset-2 hover:text-foreground"

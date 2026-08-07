@@ -48,23 +48,23 @@ export const trustTiles: TrustTile[] = [
     id: 'identity-verified',
     icon: ShieldCheck,
     title: 'Identity Verified',
-    explainer: 'Every host completes Stripe Identity verification before listing.',
+    explainer: 'Sellers confirm their identity and business details before transacting.',
     modal: {
       title: 'Identity Verified',
       description: [
-        'All Vendibook hosts complete government ID verification through Stripe Identity - the same technology trusted by Airbnb, Lyft, and Shopify. This prevents impersonation, builds buyer confidence, and ensures accountability.',
+        'Vendibook hosts confirm their identity and contact details before they can transact. This prevents impersonation, builds buyer confidence, and ensures accountability.',
         'Verified sellers earn trust badges that appear on their profile and every listing. For high-value transactions (over $5,000), buyers may also be prompted to verify their identity to protect both parties.',
-        'Verification data is processed securely by Stripe and never shared with other users. You control your data, and verification typically completes in under 2 minutes.'
+        'Verification data is handled securely and is never shared with other users. Vendibook stores only your verification status.'
       ],
       steps: [
-        { step: 1, title: 'Connect Stripe', description: 'Host creates a Stripe Connect account to receive payments.' },
-        { step: 2, title: 'Complete Verification', description: 'Submit government ID and take a selfie via Stripe Identity.' },
+        { step: 1, title: 'Add payout details', description: 'Host saves a payout destination so Vendibook can release proceeds.' },
+        { step: 2, title: 'Complete verification', description: 'Confirm identity and contact details with Vendibook.' },
         { step: 3, title: 'Earn Your Badge', description: 'Identity Verified badge appears on your profile and listings.' },
         { step: 4, title: 'High-Value Protection', description: 'Some transactions require buyer verification for added security.' }
       ],
       faqs: [
-        { question: 'What data is collected during verification?', answer: 'Stripe collects your government ID (front/back) and a live selfie to confirm your identity. Vendibook does not store your ID - only the verification status.' },
-        { question: 'How long does verification take?', answer: 'Most verifications complete in under 2 minutes. In rare cases, manual review may take up to 24 hours.' },
+        { question: 'What data is collected during verification?', answer: 'Verification confirms your identity and contact details. Vendibook stores only the verification status, never a copy of your ID.' },
+        { question: 'How long does verification take?', answer: 'Most verifications are quick. In some cases manual review may take up to 24 hours.' },
         { question: 'What if my verification fails?', answer: 'You can retry with a different ID or contact support. Common issues include blurry photos, expired IDs, or mismatched names.' }
       ],
       primaryCta: { label: 'Learn how Vendibook works', href: '/how-it-works', requiresAuth: true, authLabel: 'Start Listing', authHref: '/list' },
@@ -75,23 +75,23 @@ export const trustTiles: TrustTile[] = [
     id: 'secure-payments',
     icon: CreditCard,
     title: 'Secure Payments',
-    explainer: 'Payments processed through Stripe with fraud protection built in.',
+    explainer: 'Payments are processed through PayPal with fraud protection built in.',
     modal: {
       title: 'Secure Payments',
       description: [
-        'Every Vendibook transaction is processed through Stripe - the payment infrastructure trusted by millions of businesses worldwide. Your card details are never shared with hosts or stored on our servers.',
-        'Stripe fraud detection uses machine learning to identify suspicious activity in real time. Combined with 3D Secure authentication and PCI-compliant encryption, your payment is protected at every step.',
+        'Every Vendibook transaction is processed through PayPal, used by millions of businesses worldwide. Your card details are never shared with hosts and are never stored on Vendibook servers.',
+        'PayPal screens transactions for suspicious activity and supports card authentication and PCI-compliant encryption, so your payment is protected at every step.',
         'You will receive instant email receipts, transaction history in your dashboard, and full visibility into every charge. No surprises, no hidden fees, no off-platform payment requests.'
       ],
       steps: [
-        { step: 1, title: 'Checkout Securely', description: 'Enter payment details on our Stripe-powered checkout page.' },
-        { step: 2, title: 'Payment Authorized', description: 'Stripe verifies your card and checks for fraud signals.' },
+        { step: 1, title: 'Checkout Securely', description: 'Complete payment on our PayPal-powered checkout.' },
+        { step: 2, title: 'Payment Authorized', description: 'PayPal verifies the payment method and checks for fraud signals.' },
         { step: 3, title: 'Funds Held Safely', description: 'Payment is captured and held until the transaction milestone is met.' }
       ],
       faqs: [
         { question: 'Can I pay off-platform?', answer: 'No. Off-platform payments bypass all buyer protections, payment protection, and dispute resolution. We strongly discourage this and cannot assist with off-platform issues.' },
         { question: 'Are fees included in the listed price?', answer: 'Yes. The price you see includes platform fees. Payment processing fees are transparent and shown at checkout.' },
-        { question: 'Is my card information stored?', answer: 'Card details are stored securely by Stripe (not Vendibook) if you opt to save your card. You can manage or delete saved cards anytime.' }
+        { question: 'Is my card information stored?', answer: 'Card details are held by PayPal, never by Vendibook. You can manage saved payment methods in your PayPal account.' }
       ],
       primaryCta: { label: 'Learn how Vendibook works', href: '/how-it-works', requiresAuth: true, authLabel: 'Start Listing', authHref: '/list' },
       secondaryCta: { label: 'Contact Support', href: '/contact' }
@@ -113,7 +113,7 @@ export const trustTiles: TrustTile[] = [
         { step: 1, title: 'Complete Checkout', description: 'Buyer pays at booking. Funds are captured and held securely.' },
         { step: 2, title: 'Asset Handoff', description: 'Delivery, pickup, or rental start date is scheduled between parties.' },
         { step: 3, title: 'Confirm Receipt', description: 'Buyer confirms condition within 48 hours - or window auto-completes.' },
-        { step: 4, title: 'Payout Released', description: 'Host receives funds via Stripe after confirmation or window closes.' }
+        { step: 4, title: 'Payout Released', description: 'Vendibook reviews and releases the host payout after confirmation or once the window closes.' }
       ],
       faqs: [
         { question: 'When do hosts get paid?', answer: 'For sales: 48 hours after delivery confirmation (or auto-release if no dispute). For rentals: after return date + condition confirmation. Payout arrives in 2-3 business days.' },

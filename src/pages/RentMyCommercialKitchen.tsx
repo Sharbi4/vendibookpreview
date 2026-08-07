@@ -333,7 +333,7 @@ const ComplianceFeature = () => {
     "General Liability Insurance ($1M+)",
     "ServSafe / Food Manager Certification",
     "Business License & Permits",
-    "Stripe Identity Verification"
+    "Vendibook identity verification Verification"
   ];
 
   return (

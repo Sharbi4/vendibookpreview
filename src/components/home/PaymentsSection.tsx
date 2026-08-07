@@ -86,18 +86,8 @@ const PaymentsSection = () => {
 
             <div className="relative mt-8 pt-6 border-t border-border/50">
               <div className="flex items-center gap-4">
-                <img 
-                  src="/stripe-badge.png" 
-                  alt="Powered by Stripe" 
-                  width={120}
-                  height={32}
-                  className="h-8 w-auto opacity-70"
-                  onError={(e) => {
-                    e.currentTarget.style.display = 'none';
-                  }}
-                />
                 <span className="text-sm text-muted-foreground">
-                  Payments processed securely by Stripe
+                  Payments processed securely by PayPal
                 </span>
               </div>
             </div>

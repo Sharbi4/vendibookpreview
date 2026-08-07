@@ -22,14 +22,13 @@ import Footer from '@/components/layout/Footer';
 import SEO from '@/components/SEO';
 import affirmLogo from '@/assets/affirm-logo.png';
 import afterpayLogo from '@/assets/afterpay-logo.jpg';
-import stripeLogo from '@/assets/stripe-wordmark-blurple.png';
 
 const Payments = () => {
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <SEO
         title="Secure Payments & Buyer Protection | Vendibook"
-        description="Secure Stripe-powered payments, protected holds, and flexible checkout options for food truck rentals and purchases. Buy Now Pay Later with Affirm and Afterpay."
+        description="Secure PayPal-powered payments, protected holds, and flexible checkout options for food truck rentals and purchases. Buy Now Pay Later with Affirm and Afterpay."
         canonical="/payments"
       />
       <Header />
@@ -47,7 +46,7 @@ const Payments = () => {
                 Secure Payments, Protected Transactions, Flexible Checkout
               </h1>
               <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
-                Vendibook is built to keep transactions safe, trackable, and fair—with Stripe-powered payments, protected holds, and flexible checkout options for both rentals and purchases.
+                Vendibook is built to keep transactions safe, trackable, and fair—with PayPal-powered payments, protected holds, and flexible checkout options for both rentals and purchases.
               </p>
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
                 <Button size="lg" variant="dark-shine" asChild>
@@ -455,10 +454,9 @@ const Payments = () => {
                 List For Sale • List For Rent
               </p>
 
-              {/* Stripe Badge */}
+              {/* Payments badge */}
               <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
-                <span>Powered by</span>
-                <img src={stripeLogo} alt="Stripe" className="h-6 w-auto" />
+                <span>Payments powered by PayPal</span>
               </div>
             </div>
           </div>

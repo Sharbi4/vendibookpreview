@@ -20,13 +20,13 @@ interface NextStepConfig {
 }
 
 interface NextStepCardProps {
-  onConnectStripe: () => void;
-  isConnectingStripe: boolean;
+  onSetUpPayouts: () => void;
+  isSavingPayouts: boolean;
 }
 
-export const NextStepCard = ({ onConnectStripe, isConnectingStripe }: NextStepCardProps) => {
+export const NextStepCard = ({ onSetUpPayouts, isSavingPayouts }: NextStepCardProps) => {
   const { user, profile } = useAuth();
-  const { hasPayoutInstructions: isConnected, isLoading: stripeLoading } = useManualPayout();
+  const { hasPayoutInstructions: isConnected, isLoading: payoutLoading } = useManualPayout();
   const { stats, isLoading: listingsLoading } = useHostListings();
   const { stats: bookingStats, isLoading: bookingsLoading } = useHostBookings();
 
@@ -37,13 +37,13 @@ export const NextStepCard = ({ onConnectStripe, isConnectingStripe }: NextStepCa
   // Define all possible next steps in priority order
   const possibleSteps: NextStepConfig[] = [
     {
-      id: 'stripe',
+      id: 'payouts',
       title: 'Set up payouts to get paid',
       description: 'Set up payouts so you can accept bookings and sales.',
       icon: CreditCard,
       action: {
         label: 'Set up payouts',
-        onClick: onConnectStripe,
+        onClick: onSetUpPayouts,
       },
       priority: 1,
     },
@@ -96,7 +96,7 @@ export const NextStepCard = ({ onConnectStripe, isConnectingStripe }: NextStepCa
   // Filter to only applicable steps
   const applicableSteps = possibleSteps.filter(step => {
     switch (step.id) {
-      case 'stripe':
+      case 'payouts':
         return !isConnected;
       case 'bookings':
         return hasPendingRequests;
@@ -115,7 +115,7 @@ export const NextStepCard = ({ onConnectStripe, isConnectingStripe }: NextStepCa
   const nextStep = applicableSteps.sort((a, b) => a.priority - b.priority)[0];
 
   // Loading state
-  if (stripeLoading || listingsLoading || bookingsLoading) {
+  if (payoutLoading || listingsLoading || bookingsLoading) {
     return (
       <div className="flex items-center justify-center py-4 rounded-xl border border-border bg-card">
         <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
@@ -159,10 +159,10 @@ export const NextStepCard = ({ onConnectStripe, isConnectingStripe }: NextStepCa
               size="sm" 
               className="bg-foreground text-background hover:bg-foreground/90 gap-1.5"
               onClick={nextStep.action.onClick}
-              disabled={isConnectingStripe}
+              disabled={isSavingPayouts}
             >
-              {isConnectingStripe ? 'Connecting...' : nextStep.action.label}
-              {!isConnectingStripe && <ArrowRight className="h-3.5 w-3.5" />}
+              {isSavingPayouts ? 'Connecting...' : nextStep.action.label}
+              {!isSavingPayouts && <ArrowRight className="h-3.5 w-3.5" />}
             </Button>
           )}
         </div>

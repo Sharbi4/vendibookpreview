@@ -46,7 +46,7 @@ const GROUPS: LegalGroup[] = [
   {
     id: 'sellers',
     title: 'For sellers & hosts',
-    description: 'Listing, host, payout, and Stripe Connect terms.',
+    description: 'Listing, host, and payout terms.',
     icon: ShoppingBag,
     links: [
       { href: '/legal/seller-terms', title: 'Seller & Host Terms', summary: 'Listing accuracy, payouts, cancellations, and conduct.' },

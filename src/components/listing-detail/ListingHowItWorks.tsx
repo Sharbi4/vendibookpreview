@@ -306,7 +306,7 @@ function buildSaleCard(fulfillment: FulfillmentContext): WalkthroughConfig {
       icon: CreditCard,
       title: 'Start the purchase and pay with card',
       description:
-        'Checkout runs through Stripe. Your card is charged when you place the order. Vendibook holds the funds until you confirm the item.',
+        'Checkout runs through PayPal. Your payment method is charged when you place the order. Vendibook holds the funds until you confirm the item.',
     },
     fulfillmentStepForSale(fulfillment),
     {

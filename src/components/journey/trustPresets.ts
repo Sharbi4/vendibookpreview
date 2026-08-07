@@ -1,16 +1,16 @@
 import { ShieldCheck, Lock, FileCheck, Eye, CreditCard, RefreshCcw, BadgeCheck, Server } from 'lucide-react';
 import type { TrustPoint } from '@/components/journey/TrustModule';
 
-/** Trust points to render next to Stripe Identity verification CTAs. */
+/** Trust points to render next to Identity verification CTAs. */
 export const IDENTITY_TRUST_POINTS: TrustPoint[] = [
-  { icon: BadgeCheck, label: 'Stripe Identity', detail: 'Government-grade document + selfie match.' },
+  { icon: BadgeCheck, label: 'Vendibook identity verification', detail: 'Government-grade document + selfie match.' },
   { icon: Lock, label: 'Encrypted end-to-end', detail: 'We never see or store your ID image.' },
   { icon: Eye, label: 'Never public', detail: 'Only a "Verified" badge appears on your profile.' },
   { icon: ShieldCheck, label: 'Fraud protection', detail: 'Keeps bad actors off the marketplace.' },
 ];
 
 export const IDENTITY_DISCLAIMER =
-  'Verification is powered by Stripe Identity. Vendibook does not receive, store, or share your document images.';
+  'Verification is powered by Vendibook identity verification. Vendibook does not receive, store, or share your document images.';
 
 /** Trust points to render next to document upload widgets. */
 export const DOCUMENT_TRUST_POINTS: TrustPoint[] = [
@@ -24,7 +24,7 @@ export const DOCUMENT_DISCLAIMER =
 
 /** Trust points to render next to payment/checkout CTAs. */
 export const PAYMENT_TRUST_POINTS: TrustPoint[] = [
-  { icon: CreditCard, label: 'Stripe-secured checkout', detail: 'PCI DSS Level 1 processing — we never see card numbers.' },
+  { icon: CreditCard, label: 'PayPal-secured checkout', detail: 'PCI DSS Level 1 processing — we never see card numbers.' },
   { icon: ShieldCheck, label: 'Held, not spent', detail: 'Funds stay in payment protection until both parties confirm.' },
   { icon: RefreshCcw, label: 'Dispute support', detail: 'Open a case anytime — our team reviews within 1 business day.' },
   { icon: Lock, label: 'Address masked', detail: 'Exact pickup location is only shared after payment.' },

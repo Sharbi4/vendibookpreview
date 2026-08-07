@@ -85,7 +85,7 @@ const ConciergeSection = () => {
             {/* Payment partner logos */}
             <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4 mb-10">
               {[
-                { name: 'Stripe', sub: 'Card processing' },
+                { name: 'PayPal', sub: 'Card processing' },
                 { name: 'Affirm', sub: 'Monthly financing' },
                 { name: 'Afterpay', sub: 'Pay in 4' },
               ].map((p) => (
@@ -111,7 +111,7 @@ const ConciergeSection = () => {
                     Is my payment information secure?
                   </AccordionTrigger>
                   <AccordionContent className="text-muted-foreground text-sm leading-relaxed">
-                    Yes. All payments are processed by Stripe with PCI-DSS Level 1 certification.
+                    Yes. All payments are processed by PayPal, a PCI-DSS Level 1 certified provider.
                     Vendibook never sees or stores your full card number — data is tokenized and
                     encrypted end-to-end.
                   </AccordionContent>

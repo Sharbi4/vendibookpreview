@@ -94,8 +94,8 @@ export const faqCategories: FaqCategory[] = [
         id: "identity-verification",
         question: "What is identity verification and who needs it?",
         answer:
-          "We run identity checks through Stripe Identity to fight fraud and keep payouts flowing. Everyone selling, hosting, or making a high-ticket purchase gets verified. You upload a government photo ID (driver's license, passport, or state ID) and take a quick selfie. Most checks complete in a few minutes; manual review takes 1–2 business days. Verified users get the checkmark badge, unlock high-value payments and payouts, and rank higher in search.",
-        keywords: ["kyc", "identity", "stripe identity", "badge", "verified"],
+          "We run identity checks to fight fraud and keep payouts flowing. Everyone selling, hosting, or making a high-ticket purchase gets verified. You upload a government photo ID (driver's license, passport, or state ID) and take a quick selfie. Most checks complete in a few minutes; manual review takes 1–2 business days. Verified users get the checkmark badge, unlock high-value payments and payouts, and rank higher in search.",
+        keywords: ["kyc", "identity", "verification", "badge", "verified"],
         actions: [A.verify],
       },
       {
@@ -135,7 +135,7 @@ export const faqCategories: FaqCategory[] = [
         id: "how-buying-works",
         question: "How does buying work start to finish?",
         answer:
-          "Browse listings, message the seller with any questions, and either buy at the asking price or make an offer. When the seller accepts, you check out with card, ACH, or financing. Funds sit in payment protection until you confirm you got the truck and everything you were promised. Once you confirm — or 7 days after delivery if you don't — the seller is paid out 25 days later (Stripe's dispute window). You get a bill of sale, e-signed by both sides, in your dashboard.",
+          "Browse listings, message the seller with any questions, and either buy at the asking price or make an offer. When the seller accepts, you check out with card, ACH, or financing. Funds sit in payment protection until you confirm you got the truck and everything you were promised. Once you confirm — or 7 days after delivery if you don't — the seller is paid out 25 days later (the card dispute window). You get a bill of sale, e-signed by both sides, in your dashboard.",
         actions: [A.browseSales],
       },
       {
@@ -168,7 +168,7 @@ export const faqCategories: FaqCategory[] = [
         id: "payment-protection",
         question: "How does payment protection work?",
         answer:
-          "When you pay through Vendibook, your money is held by our payment processor — not sent to the seller yet. The seller only gets paid after you confirm you received exactly what was listed. If you never confirm, we auto-complete 7 days after delivery; the seller's payout still doesn't release for a full 25 days after that (Stripe's dispute window), so you have time to raise an issue. This replaces the old-school payment protection model with something faster and integrated with your card's chargeback rights.",
+          "When you pay through Vendibook, your money is held by our payment processor, PayPal — not sent to the seller yet. The seller only gets paid after you confirm you received exactly what was listed. If you never confirm, we auto-complete 7 days after delivery; the seller's payout still doesn't release for a full 25 days after that (the card dispute window), so you have time to raise an issue. This replaces the old-school payment protection model with something faster and integrated with your card's chargeback rights.",
         keywords: ["payment protection", "protection", "hold", "safe"],
       },
       {
@@ -195,7 +195,7 @@ export const faqCategories: FaqCategory[] = [
         id: "refund-window",
         question: "How long do I have to request a refund?",
         answer:
-          "Up to 7 days after delivery to auto-complete, and up to 25 days after that if a dispute is opened (Stripe's chargeback window). The listing's cancellation policy governs pre-delivery cancellations — you'll see the exact refund amount before you confirm any cancellation.",
+          "Up to 7 days after delivery to auto-complete, and up to 25 days after that if a dispute is opened (the card chargeback window). The listing's cancellation policy governs pre-delivery cancellations — you'll see the exact refund amount before you confirm any cancellation.",
         actions: [A.refundPolicy],
       },
       {
@@ -311,13 +311,13 @@ export const faqCategories: FaqCategory[] = [
         id: "payout-timing",
         question: "When do I get paid?",
         answer:
-          "Sale payouts release 25 days after the buyer confirms receipt (matches Stripe's dispute window). If the buyer doesn't confirm within 7 days of delivery, we auto-complete and the 25-day clock starts. Rental payouts release 24 hours after the booking's scheduled start. Once released, funds land in your bank within 1–2 business days via Stripe.",
+          "Sale payouts release 25 days after the buyer confirms receipt (matches the card dispute window). If the buyer doesn't confirm within 7 days of delivery, we auto-complete and the 25-day clock starts. Rental payouts release 24 hours after the booking's scheduled start. Once released, Vendibook sends your payout to the destination you saved (PayPal, Venmo, Cash App, or bank transfer).",
       },
       {
-        id: "connect-stripe",
+        id: "payout-setup",
         question: "How do I get paid — how do I connect my bank?",
         answer:
-          "The first time you publish a for-sale or for-rent listing, you'll be prompted to connect Stripe Express. It takes 3–5 minutes: identity, business info, and routing + account numbers. Stripe stores your bank details — Vendibook never sees them. Update your bank later from Account → Payments & payouts.",
+          "After you publish, save your payout details from your dashboard or Account → Payments & payouts. Choose PayPal, Venmo, Cash App, or bank transfer. Payout details are never required to publish — only to get paid. Vendibook reviews and releases seller payouts manually.",
         actions: [A.account],
       },
       {
@@ -444,21 +444,21 @@ export const faqCategories: FaqCategory[] = [
         id: "receipts-invoices",
         question: "Where do I get receipts and invoices?",
         answer:
-          "Every payment sends a receipt email. Invoices for subscription charges are also available from Stripe's Billing Portal — open Account → Payments & payouts → Manage billing. Download PDFs of every past invoice from there.",
+          "Every payment sends a receipt email. Subscription charges also appear in your PayPal account activity, and every Vendibook receipt is stored under Account → Payments & payouts.",
         actions: [A.account],
       },
       {
         id: "payment-method-update",
         question: "How do I update my card?",
         answer:
-          "Account → Payments & payouts → Manage billing opens the Stripe Billing Portal. Add or remove cards, set a default, and update your billing address there. Stripe handles it; Vendibook never sees your card details.",
+          "Payment methods for Vendibook memberships are managed inside your PayPal account. Vendibook never sees or stores your card details.",
         actions: [A.account],
       },
       {
         id: "sub-payment-failed",
         question: "My subscription payment failed — what happens?",
         answer:
-          "Stripe retries automatically for up to a week. You'll get an email with a one-click link to update your card. During retry, you keep full access. If every retry fails, access pauses and you drop to Free — nothing on your account is deleted; upgrade again anytime to restore everything.",
+          "PayPal retries a failed subscription payment automatically for up to a week. You'll get an email with a link to fix the payment method. During retry, you keep full access. If every retry fails, access pauses and you drop to Free — nothing on your account is deleted; upgrade again anytime to restore everything.",
       },
     ],
   },
@@ -559,13 +559,13 @@ export const faqCategories: FaqCategory[] = [
         id: "how-protection-works",
         question: "How does payment protection actually work?",
         answer:
-          "When you pay on Vendibook, your money is held by our payment processor (Stripe) — not sent to the seller. The seller only gets paid after you confirm you got exactly what was listed. For sales, the seller's payout is held a further 25 days (Stripe's chargeback window) so we can reverse the payment if there's a dispute. This gives you strong buyer protection without the friction of traditional payment protection companies.",
+          "When you pay on Vendibook, your money is held by our payment processor (PayPal) — not sent to the seller. The seller only gets paid after you confirm you got exactly what was listed. For sales, the seller's payout is held a further 25 days (the card chargeback window) so we can reverse the payment if there's a dispute. This gives you strong buyer protection without the friction of traditional payment protection companies.",
       },
       {
         id: "verified-badges",
         question: "What does the verified badge mean?",
         answer:
-          "The green checkmark means we've verified the person's government ID through Stripe Identity. Sellers and hosts also verify their bank/payout details. It's a strong signal — but not a guarantee of behavior. Always keep messages on-platform and follow the safety tips.",
+          "The green checkmark means we've verified the person's government ID. Sellers and hosts also verify their bank/payout details. It's a strong signal — but not a guarantee of behavior. Always keep messages on-platform and follow the safety tips.",
       },
       {
         id: "avoid-scams",
@@ -633,14 +633,14 @@ export const faqCategories: FaqCategory[] = [
         id: "update-bank",
         question: "How do I update my bank / payout account?",
         answer:
-          "Account → Payments & payouts → Update payout details opens Stripe Express, where you can change routing/account numbers, add a debit card for instant payouts, and see payout history. Vendibook never touches these details — Stripe manages them directly.",
+          "Account → Payments & payouts → Update payout details lets you change your payout destination (PayPal, Venmo, Cash App, or bank transfer) and see your payout history. Bank details are stored encrypted and are only used to send your payout.",
         actions: [A.account],
       },
       {
         id: "update-card",
         question: "How do I update my card on file?",
         answer:
-          "Account → Payments & payouts → Manage billing opens Stripe's Billing Portal for card updates, saved payment methods, and past invoices.",
+          "Account → Payments & payouts shows your Vendibook receipts. Saved payment methods and card updates are managed in your PayPal account.",
         actions: [A.account],
       },
       {

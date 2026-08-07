@@ -51,7 +51,7 @@ const FAQS = [
   {
     question: 'Does Vendibook verify buyers and sellers?',
     answer:
-      'Yes. Buyers and sellers can verify their identity through Stripe Identity, and verified badges appear on profiles and listings.',
+      'Yes. Buyers and sellers can verify their identity through Vendibook identity verification, and verified badges appear on profiles and listings.',
   },
   {
     question: 'Does Vendibook offer secure transactions?',

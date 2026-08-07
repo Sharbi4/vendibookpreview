@@ -11,7 +11,7 @@
  *     action: 'listing.publish',
  *     endpoint: '/functions/v1/create-featured-checkout',
  *     status: 500,
- *     errorType: 'StripeCheckoutFailed',
+ *     errorType: 'PayPalCheckoutFailed',
  *     errorMessage: err.message,
  *     listingId: listing.id,
  *   });

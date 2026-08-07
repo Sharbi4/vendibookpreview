@@ -41,7 +41,7 @@ const TRUST_BULLETS = [
   'Free to list',
   'Buyer offers and messaging',
   'Optional secure transaction support',
-  'Verified users through Stripe Identity',
+  'Verified users through Vendibook identity verification',
   'Photos, video, and equipment details',
   'Rent while you wait to sell',
 ];
@@ -73,7 +73,7 @@ const FAQ_DATA = (asset: string): { q: string; a: string }[] => [
   },
   {
     q: 'Does Vendibook verify users?',
-    a: 'Yes. Buyers and sellers can verify their identity through Stripe Identity, and verified badges appear on profiles and listings.',
+    a: 'Yes. Buyers and sellers can verify their identity through Vendibook identity verification, and verified badges appear on profiles and listings.',
   },
   {
     q: 'Does Vendibook offer secure transaction tools?',
@@ -201,7 +201,7 @@ const SellerLandingPage = ({
                 { icon: Tag, t: 'Free to list', d: `Create a full listing for your ${asset} with photos, video, specs, and price at no cost.` },
                 { icon: MessageSquare, t: 'Built-in buyer chat', d: 'Answer questions, negotiate, and share documents — all inside Vendibook.' },
                 { icon: Handshake, t: 'Offers, not just price tags', d: 'Buyers can submit offers. Accept, decline, or counter in a few taps.' },
-                { icon: ShieldCheck, t: 'Verified users', d: 'Buyers and sellers can verify identity through Stripe Identity.' },
+                { icon: ShieldCheck, t: 'Verified users', d: 'Buyers and sellers can verify identity through Vendibook identity verification.' },
                 { icon: Camera, t: 'Photos, video, and specs', d: 'Show the kitchen, hood, generator, fridge, and water tanks — not just a side shot.' },
                 { icon: Star, t: 'Reviews after sales', d: 'Build a trusted seller profile through reviews on completed transactions.' },
               ].map((c) => (
@@ -329,7 +329,7 @@ const SellerLandingPage = ({
             </h2>
             <p className="text-muted-foreground max-w-3xl leading-relaxed">
               When you and your buyer want extra protection, Vendibook supports optional secure
-              transaction tools where available — including identity verification through Stripe
+              transaction tools where available — including identity verification
               Identity, offer tracking, supporting documents, and reviews after the sale. Use them
               when it makes sense, or keep your sale fully off-platform if you prefer.
             </p>
