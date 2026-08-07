@@ -111,14 +111,14 @@ const BlogPost = () => {
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <SEO
-        title={post.title}
+        title={post.metaTitle || post.title}
         description={post.description}
         canonical={`/blog/${post.slug}`}
         type="article"
         image={post.image}
-        ogTitle={post.title}
+        ogTitle={post.metaTitle || post.title}
         ogDescription={post.description}
-        twitterTitle={post.title}
+        twitterTitle={post.metaTitle || post.title}
         twitterDescription={post.description}
         article={{
           publishedTime: post.datePublished,
