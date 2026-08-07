@@ -23,6 +23,8 @@ const InsightsReportingTab = lazy(() => import('@/components/dashboard/tabs/Insi
 const PromoteUpgradesTab = lazy(() => import('@/components/dashboard/tabs/PromoteUpgradesTab'));
 const PayoutsPanel = lazy(() => import('@/components/dashboard/tabs/PayoutsPanel'));
 const TransactionsDisputesTab = lazy(() => import('@/components/dashboard/tabs/TransactionsDisputesTab'));
+const PermitsTab = lazy(() => import('@/components/dashboard/PermitsTab'));
+const KitchenProSuite = lazy(() => import('@/components/dashboard/KitchenProSuite'));
 
 const DASHBOARD_MODE_KEY = 'vendibook_dashboard_mode';
 
