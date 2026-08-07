@@ -326,9 +326,15 @@ export const PublishWizard: React.FC = () => {
   const [proofNotaryEnabled, setProofNotaryEnabled] = useState(false);
   const [featuredEnabled, setFeaturedEnabled] = useState(false);
 
-  // ─── Optional Equinox Funding opt-in (for-sale food trucks / trailers only) ───
+  // ─── Optional Equinox Funding opt-in (any for-sale listing) ───
   const [equinoxOptIn, setEquinoxOptIn] = useState(false);
   const [equinoxDisclosureAccepted, setEquinoxDisclosureAccepted] = useState(false);
+  // Separate, always-unchecked-by-default consent to put the full VIN/serial on
+  // the private, server-generated purchase sheet.
+  const [equinoxIncludeVin, setEquinoxIncludeVin] = useState(false);
+  // VIN / serial lives only in the private listing_ownership_details row.
+  const [vinSerial, setVinSerial] = useState('');
+  const [vinUnavailable, setVinUnavailable] = useState(false);
   // Seller phone lives on the private profile — never in public listing text.
   const [sellerPhone, setSellerPhone] = useState('');
 
@@ -342,6 +348,7 @@ export const PublishWizard: React.FC = () => {
             listing_id: listing.id,
             host_id: user.id,
             equinox_opt_in: equinoxOptIn,
+            include_vin: equinoxOptIn ? equinoxIncludeVin : false,
             disclosure_version: equinoxOptIn ? EQUINOX_DISCLOSURE_VERSION : null,
             disclosure_accepted_at:
               equinoxOptIn && equinoxDisclosureAccepted ? new Date().toISOString() : null,
@@ -351,7 +358,43 @@ export const PublishWizard: React.FC = () => {
     } catch (err) {
       console.error('Failed to save financing preference', err);
     }
-  }, [user, listing, equinoxOptIn, equinoxDisclosureAccepted]);
+  }, [user, listing, equinoxOptIn, equinoxDisclosureAccepted, equinoxIncludeVin]);
+
+  /**
+   * VIN / serial is private data: it is stored only on
+   * listing_ownership_details, never on `listings`, and never blocks publish.
+   * The row's NOT NULL title_status is filled from the already-selected
+   * listing title status so the existing DB constraint is satisfied.
+   */
+  const persistVinSerial = useCallback(async () => {
+    if (!user?.id || !listing?.id) return;
+    if (!isTitledSaleCategory(listing)) return;
+    const normalized = vinUnavailable ? null : vinSerial.trim().toUpperCase() || null;
+    try {
+      const { data: existing } = await supabase
+        .from('listing_ownership_details')
+        .select('id, title_status')
+        .eq('listing_id', listing.id)
+        .maybeSingle();
+
+      if (existing?.id) {
+        await supabase
+          .from('listing_ownership_details')
+          .update({ vin_serial: normalized })
+          .eq('id', existing.id);
+        return;
+      }
+
+      await supabase.from('listing_ownership_details').insert({
+        listing_id: listing.id,
+        host_id: user.id,
+        title_status: disclosures.titleStatus || 'unknown',
+        vin_serial: normalized,
+      });
+    } catch (err) {
+      console.error('Failed to save VIN / serial', err);
+    }
+  }, [user?.id, listing, vinSerial, vinUnavailable, disclosures.titleStatus]);
 
   const saveSellerPhone = useCallback(async () => {
     if (!user?.id) return;
