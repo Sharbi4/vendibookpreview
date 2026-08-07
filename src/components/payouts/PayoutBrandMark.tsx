@@ -1,26 +1,24 @@
 import type { PayoutMethod } from '@/lib/payouts/methods';
 import { cn } from '@/lib/utils';
+import paypalMonogram from '@/assets/brand/paypal-monogram-color.png.asset.json';
 
 /**
- * Brand marks for the manual payout methods, drawn as inline SVG so they stay
- * crisp at any size and never depend on a remote logo host. Colors match each
- * company's published brand palette.
+ * Brand marks for the manual payout methods. Venmo, Cash App and ACH are drawn
+ * as inline SVG so they stay crisp at any size; PayPal uses the official
+ * full-color monogram asset.
  */
 
 function PayPalMark({ className }: { className?: string }) {
   return (
-    <svg viewBox="0 0 24 28" className={className} role="img" aria-label="PayPal">
-      <path
-        fill="#002F86"
-        d="M4.9 27.3H1.1c-.5 0-.9-.5-.8-1L4.4 1.5c.1-.6.6-1 1.2-1h8.1c4.7 0 7.7 2.3 7.1 6.8-.1.4-.1.8-.2 1.2-1 4.7-4.2 6.8-8.8 6.8H8.3c-.6 0-1.1.4-1.2 1L5.9 26.3c-.1.6-.5 1-1 1Z"
-      />
-      <path
-        fill="#009CDE"
-        d="M20.8 8.5c-.9 4.7-4.1 7.1-9 7.1H8.3c-.6 0-1.1.4-1.2 1L5.6 25.3c-.1.5.3 1 .8 1h3.4c.5 0 .9-.4 1-.9l.9-5.6c.1-.5.5-.9 1-.9h1.6c4.2 0 7.4-1.7 8.4-6.6.4-2 .2-3.5-.9-4.6-.2-.1-.4-.2-.6-.3.1.4.1.7 0 1.1Z"
-      />
-    </svg>
+    <img
+      src={paypalMonogram.url}
+      alt="PayPal"
+      loading="lazy"
+      className={cn('object-contain', className)}
+    />
   );
 }
+
 
 function VenmoMark({ className }: { className?: string }) {
   return (
