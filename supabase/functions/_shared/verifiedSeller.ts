@@ -173,6 +173,19 @@ async function markPayment(
 }
 
 /**
+ * Mirrors a money transition onto the authoritative seller record so the UI
+ * never shows a stale payment state. Never downgrades a live paid badge.
+ */
+export async function syncPaymentState(admin: Admin, userId: string, state: string) {
+  const query = admin
+    .from("seller_verifications")
+    .update({ payment_state: state, updated_at: new Date().toISOString() })
+    .eq("user_id", userId);
+  if (state !== "captured") query.neq("status", "verified");
+  await query;
+}
+
+/**
  * Captures a held authorization exactly once. A row already in `captured`
  * short-circuits, and PayPal's own idempotency key covers concurrent callers.
  */
