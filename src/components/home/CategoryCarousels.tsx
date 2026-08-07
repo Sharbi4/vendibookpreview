@@ -180,19 +180,16 @@ const CategoryCarousels = () => {
       if (hostIds.length === 0) return [];
       const { data, error } = await supabase
         .from('profiles')
-        .select('id, identity_verified')
+        .select('id')
         .in('id', hostIds);
       if (error) throw error;
       return data ?? [];
     },
-    enabled: hostIds.length > 0,
+    enabled: false,
   });
 
-  // Create verification map
-  const hostVerificationMap: Record<string, boolean> = {};
-  hostProfiles.forEach((profile) => {
-    hostVerificationMap[profile.id] = profile.identity_verified ?? false;
-  });
+  // Authoritative paid Identity Verified badges, batched into one request.
+  const hostVerificationMap = useSellerVerifiedMap(hostIds);
 
   // Group listings by category
   const listingsByCategory = CATEGORIES.reduce((acc, config) => {
