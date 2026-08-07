@@ -10,6 +10,7 @@ import VisibilityLabel from '@/components/common/VisibilityLabel';
 import { trackEvent } from '@/lib/analytics';
 import { LISTING_ROUTES } from '@/lib/listings/routes';
 import { CONCIERGE_BENEFITS, LISTING_CONCIERGE } from '@/config/listingConcierge';
+import ConciergePurchasePanel from '@/components/concierge/ConciergePurchasePanel';
 
 /**
  * Concierge introduction / intake placeholder.
