@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { createChecklistItems } from '../PublishChecklist';
+import { getStageRequirements } from '@/lib/listings/stages';
 
 /**
  * Publish-eligibility tests.
@@ -85,5 +86,72 @@ describe('Listing publish eligibility', () => {
       );
       expect(canPublish(items)).toBe(false);
     });
+  });
+});
+
+/**
+ * Content requirements are the single source of truth on Review/Publish.
+ * They must never include an account-level gate (identity verification,
+ * payout setup, or legacy merchant onboarding).
+ */
+describe('getStageRequirements is content-only', () => {
+  const completeSale = {
+    mode: 'sale' as const,
+    category: 'food_truck' as const,
+    condition: 'good',
+    operationalStatus: 'runs_drives',
+    titleStatus: 'clean',
+    hasLien: 'no',
+    noKnownProblems: true,
+    knownProblems: [],
+    includedItems: 'Full kitchen build-out',
+    photosExclusionsAnswered: true,
+  };
+
+  it('returns no requirements when all content answers exist', () => {
+    expect(getStageRequirements(completeSale)).toHaveLength(0);
+  });
+
+  it('never asks for identity verification, payout, or merchant onboarding', () => {
+    const missing = getStageRequirements({
+      ...completeSale,
+      condition: null,
+      operationalStatus: null,
+      titleStatus: null,
+      hasLien: null,
+      noKnownProblems: false,
+      includedItems: null,
+      photosExclusionsAnswered: false,
+    });
+    expect(missing.length).toBeGreaterThan(0);
+    for (const req of missing) {
+      expect(`${req.fieldId} ${req.label}`).not.toMatch(
+        /verif|identity|plaid|payout|bank|stripe|connect|onboard/i,
+      );
+      // Every requirement must be navigable to a real wizard step.
+      expect(typeof req.step).toBe('string');
+      expect(req.step.length).toBeGreaterThan(0);
+    }
+  });
+
+  it('does not require title or lien answers for rentals', () => {
+    const missing = getStageRequirements({
+      ...completeSale,
+      mode: 'rent',
+      titleStatus: null,
+      hasLien: null,
+    });
+    expect(missing).toHaveLength(0);
+  });
+
+  it('requires the title and lien disclosures for titled sale assets', () => {
+    const missing = getStageRequirements({
+      ...completeSale,
+      titleStatus: null,
+      hasLien: null,
+    });
+    expect(missing.map((m) => m.fieldId)).toEqual(
+      expect.arrayContaining(['listing-title-status', 'listing-lien']),
+    );
   });
 });
