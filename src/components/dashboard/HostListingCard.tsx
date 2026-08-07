@@ -321,8 +321,10 @@ const HostListingCard = ({
           <Share2 className="h-4 w-4 mr-1.5" />
           Share
         </Button>
+        <GetVerifiedButton size="sm" showPrice />
         {payoutButton}
         <div className="flex-1" />
+
         <KebabMenu>
           <DropdownMenuItem asChild className="gap-2">
             <Link to={`/listing/${listing.id}`}>
