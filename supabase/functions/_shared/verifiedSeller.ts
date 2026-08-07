@@ -515,7 +515,31 @@ export async function reconcileVerification(
     };
   }
 
-  const attemptId = opts.verificationId ?? record.current_attempt_id;
+  /**
+   * Attempt lineage. A webhook can arrive for a superseded attempt after a
+   * retry created a newer one. We still record that attempt's own status, but
+   * the seller's authoritative record must always follow the CURRENT attempt.
+   */
+  const eventAttemptId = opts.verificationId ?? null;
+  const currentAttemptId = record.current_attempt_id ?? null;
+  const isStaleAttempt = !!eventAttemptId && !!currentAttemptId &&
+    eventAttemptId !== currentAttemptId;
+
+  if (isStaleAttempt) {
+    try {
+      const stale = await getIdentityVerification(eventAttemptId!);
+      await admin
+        .from("seller_verification_attempts")
+        .update({ status: stale.status ?? "active", updated_at: new Date().toISOString() })
+        .eq("plaid_verification_id", eventAttemptId);
+    } catch {
+      /* recording history is best effort */
+    }
+    log("stale_attempt_ignored", { event_attempt: eventAttemptId, current: currentAttemptId });
+    // Fall through and reconcile the CURRENT attempt instead.
+  }
+
+  const attemptId = isStaleAttempt ? currentAttemptId! : (eventAttemptId ?? currentAttemptId);
   if (!attemptId) {
     return {
       status: record.status,
