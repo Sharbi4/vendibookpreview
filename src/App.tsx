@@ -368,6 +368,8 @@ const AnimatedRoutes = () => {
           <Route path="/list" element={<PageTransition><ListPage /></PageTransition>} />
           <Route path="/list/start" element={<PageTransition><ListingStart /></PageTransition>} />
           <Route path="/list/concierge" element={<PageTransition><ConciergeIntro /></PageTransition>} />
+          <Route path="/list/concierge/:orderId" element={<PageTransition><ConciergeOrderPage /></PageTransition>} />
+
 
           <Route path="/list/ai" element={<PageTransition><AIListingCreator /></PageTransition>} />
           <Route path="/create-listing/:listingId" element={<PageTransition><EditListing /></PageTransition>} />
