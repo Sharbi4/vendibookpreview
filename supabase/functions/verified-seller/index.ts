@@ -437,27 +437,29 @@ serve(async (req) => {
       }
 
       try {
-        const { session, linkToken } = await openPlaidSession(
-          admin,
-          userId,
-          templateId,
-          payment,
-        );
+        const started = await startPlaidForPayment(admin, userId, templateId, payment, record);
+        if (started instanceof Response) {
+          // Retry allowance exhausted — release the fresh hold, never charge.
+          const open = await latestOpenPayment(admin, userId);
+          if (open) await voidAuthorizationOnce(admin, open, "retry_not_allowed");
+          return started;
+        }
 
         await admin
           .from("seller_verifications")
           .update({
             status: "identity_in_progress",
-            identity_status: session.status ?? "active",
-            current_attempt_id: session.id,
+            identity_status: "active",
+            current_attempt_id: started.sessionId,
             template_id: templateId,
+            last_reason_code: null,
             updated_at: new Date().toISOString(),
           })
           .eq("user_id", userId);
 
         return jsonResponse(200, {
           status: "identity_in_progress",
-          link_token: linkToken,
+          link_token: started.linkToken,
           badge_active: false,
         });
       } catch (err) {
@@ -473,17 +475,60 @@ serve(async (req) => {
     }
 
     // -------------------------------------------------------- link-token
+    /**
+     * Resume. Reopens Plaid Link for an identity check already in flight so
+     * the seller never accepts terms twice or authorizes a second payment.
+     */
     if (action === "link-token") {
-      if (!templateId || !record.current_attempt_id) {
-        return jsonError(400, "no_session", "There's no identity check in progress.");
+      if (!templateId) {
+        return jsonError(503, "verification_unavailable", "Identity verification isn't available right now.");
       }
-      const link = await createIdvLinkToken({
-        clientUserId: userId,
-        templateId,
-        webhook: `${Deno.env.get("SUPABASE_URL")}/functions/v1/verified-seller-webhook`,
-      });
-      return jsonResponse(200, { link_token: link.link_token });
+
+      if (record.current_attempt_id) {
+        return jsonResponse(200, {
+          link_token: await issueLinkToken(userId, templateId),
+          status: record.status,
+          resumed: true,
+        });
+      }
+
+      /**
+       * An authorization is held but no Plaid session exists — reconcile
+       * safely rather than stranding the hold: open the session now if the
+       * money is still usable, otherwise release it.
+       */
+      const open = await latestOpenPayment(admin, userId);
+      if (open?.state === "authorized") {
+        if (open.paypal_authorization_id && await authorizationIsUsable(open.paypal_authorization_id)) {
+          const started = await startPlaidForPayment(admin, userId, templateId, open, record);
+          if (started instanceof Response) return started;
+          await admin
+            .from("seller_verifications")
+            .update({
+              status: "identity_in_progress",
+              identity_status: "active",
+              current_attempt_id: started.sessionId,
+              template_id: templateId,
+              updated_at: new Date().toISOString(),
+            })
+            .eq("user_id", userId);
+          return jsonResponse(200, {
+            link_token: started.linkToken,
+            status: "identity_in_progress",
+            resumed: true,
+          });
+        }
+        await voidAuthorizationOnce(admin, open, "unusable_authorization");
+        return jsonError(
+          409,
+          "authorization_expired",
+          "Your payment hold expired before the identity check started. Nothing was charged — you can start again.",
+        );
+      }
+
+      return jsonError(400, "no_session", "There's no identity check in progress.");
     }
+
 
     // ----------------------------------------------------------- refresh
     /**
