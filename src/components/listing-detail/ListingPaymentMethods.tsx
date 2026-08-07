@@ -1,4 +1,4 @@
-import { Lock } from 'lucide-react';
+import { Banknote, Lock } from 'lucide-react';
 import { PayPalMonogram, PayPalWordmark, EquinoxFundingLogo } from '@/components/brand/ProviderLogos';
 import { useEquinoxFinancingEnabled } from '@/hooks/useListingFinancing';
 import { cn } from '@/lib/utils';
@@ -16,6 +16,16 @@ interface ListingPaymentMethodsProps {
 export const ListingPaymentMethods = ({ listing, className }: ListingPaymentMethodsProps) => {
   const financing = useEquinoxFinancingEnabled(listing);
 
+  // Sale listings honor the seller's saved payment settings. Rentals always
+  // settle through Vendibook checkout (PayPal) unless the row says otherwise.
+  const isSale = listing?.mode === 'sale';
+  const onlinePayments = isSale
+    ? listing?.accept_card_payment === true
+    : listing?.accept_card_payment !== false;
+  const cashPayments = listing?.accept_cash_payment === true;
+
+  if (!onlinePayments && !cashPayments && !financing) return null;
+
   return (
     <div
       className={cn(
@@ -23,16 +33,34 @@ export const ListingPaymentMethods = ({ listing, className }: ListingPaymentMeth
         className,
       )}
     >
-      <div className="flex items-center gap-2 flex-wrap">
-        <Lock className="h-3.5 w-3.5 text-muted-foreground" aria-hidden />
-        <span className="text-xs text-muted-foreground">Payment by</span>
-        <PayPalMonogram className="h-4" />
-        <PayPalWordmark className="h-3.5" />
-      </div>
-      <p className="text-[11px] text-muted-foreground/80 leading-relaxed mt-2">
-        Checkout is processed by PayPal. Card and PayPal balance are accepted — a PayPal account is
-        not required to pay by card.
-      </p>
+      {onlinePayments && (
+        <>
+          <div className="flex items-center gap-2 flex-wrap">
+            <Lock className="h-3.5 w-3.5 text-muted-foreground" aria-hidden />
+            <span className="text-xs text-muted-foreground">Payment by</span>
+            <PayPalMonogram className="h-4" />
+            <PayPalWordmark className="h-3.5" />
+          </div>
+          <p className="text-[11px] text-muted-foreground/80 leading-relaxed mt-2">
+            Checkout is processed by PayPal. Card and PayPal balance are accepted — a PayPal account
+            is not required to pay by card.
+          </p>
+        </>
+      )}
+
+      {cashPayments && (
+        <div
+          className={cn(
+            'flex items-start gap-2 flex-wrap',
+            onlinePayments ? 'mt-3 pt-3 border-t border-border/50' : '',
+          )}
+        >
+          <Banknote className="h-3.5 w-3.5 text-muted-foreground mt-0.5" aria-hidden />
+          <span className="text-xs text-muted-foreground">
+            This seller also accepts payment in person at pickup or delivery.
+          </span>
+        </div>
+      )}
 
       {financing && (
         <div className="mt-3 pt-3 border-t border-border/50 flex items-center gap-2 flex-wrap">
