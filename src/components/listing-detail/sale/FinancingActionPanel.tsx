@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Link } from 'react-router-dom';
-import { Banknote, ExternalLink, FileDown, Loader2 } from 'lucide-react';
+import { Banknote, ExternalLink, FileDown, Loader2, Lock } from 'lucide-react';
+import { PayPalMonogram, PayPalWordmark, EquinoxFundingLogo } from '@/components/brand/ProviderLogos';
 import { Button } from '@/components/ui/button';
 import { SaleCard } from '@/components/listing-detail/sale/SaleCard';
 import { generateFinancingPurchaseSheet } from '@/lib/financing/purchaseSheet';
