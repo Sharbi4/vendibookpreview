@@ -6,7 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Header } from '@/components/layout/Header';
+import Header from '@/components/layout/Header';
 import SEO from '@/components/SEO';
 import { toast } from 'sonner';
 import { usePayoutPreference } from '@/hooks/usePayoutPreference';
