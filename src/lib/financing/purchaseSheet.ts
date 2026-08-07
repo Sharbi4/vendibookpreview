@@ -5,8 +5,8 @@ export interface PurchaseSheetListing {
   title?: string | null;
   category?: string | null;
   price?: number | null;
-  sale_price?: number | null;
-  year?: number | string | null;
+  price_sale?: number | null;
+  year_built?: number | string | null;
   make?: string | null;
   model?: string | null;
   condition?: string | null;
@@ -15,6 +15,8 @@ export interface PurchaseSheetListing {
   city?: string | null;
   state?: string | null;
   description?: string | null;
+  /** Private VIN/serial, only supplied when the viewer is authorized to read it. */
+  vin_serial?: string | null;
 }
 
 const DISCLAIMER =
@@ -64,9 +66,9 @@ export function generateFinancingPurchaseSheet(
     ['Vendibook listing ID', listing.id],
     ['Listing URL', canonicalUrl],
     ['Item', listing.title || 'Untitled listing'],
-    ['Asking price', money(listing.sale_price ?? listing.price ?? null)],
+    ['Asking price', money(listing.price_sale ?? listing.price ?? null)],
     ['Category', titleCase(listing.category) || 'Not listed'],
-    ['Year', listing.year ? String(listing.year) : 'Not listed'],
+    ['Year', listing.year_built ? String(listing.year_built) : 'Not listed'],
     ['Make', listing.make || 'Not listed'],
     ['Model', listing.model || 'Not listed'],
     ['Condition', titleCase(listing.condition) || 'Not listed'],
@@ -74,6 +76,10 @@ export function generateFinancingPurchaseSheet(
   if (listing.mileage !== null && listing.mileage !== undefined && String(listing.mileage) !== '') {
     rows.push(['Mileage', `${Number(listing.mileage).toLocaleString('en-US')} mi`]);
   }
+  rows.push([
+    'VIN / serial number',
+    (listing.vin_serial || '').trim() || 'Not provided / unavailable',
+  ]);
   rows.push(['Title status', titleCase(listing.title_status) || 'Not listed']);
   rows.push([
     'Location',
