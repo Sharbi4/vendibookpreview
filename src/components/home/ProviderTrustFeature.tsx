@@ -72,7 +72,7 @@ export function ProviderTrustFeature() {
               <PlaidLogo surface="dark" className="h-4" />
             </div>
             <h3 className="mb-2 text-lg font-semibold tracking-tight text-foreground sm:text-xl">
-              Optional seller identity verification with Plaid
+              Seller identity verification with Plaid*
             </h3>
             <p className="text-sm leading-relaxed text-muted-foreground">
               An Identity Verified badge means Plaid helped confirm that person's identity. It does

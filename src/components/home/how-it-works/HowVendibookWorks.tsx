@@ -59,7 +59,7 @@ export const HowVendibookWorks = () => {
           {verifiedSellerEnabled && (
             <span className="inline-flex items-center gap-2">
               <PlaidLogo surface="dark" className="h-3.5" />
-              Optional identity checks powered by Plaid.
+              Identity checks powered by Plaid.*
             </span>
           )}
         </a>

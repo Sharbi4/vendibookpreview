@@ -27,7 +27,7 @@ const VerificationBanner = ({ userId }: VerificationBannerProps) => {
         <div className="flex items-center gap-3">
           <ShieldCheck className="h-5 w-5 text-amber-600 dark:text-amber-400 flex-shrink-0" />
           <AlertDescription className="text-amber-800 dark:text-amber-200">
-            Optional: add a verified badge to your profile with our paid Plaid identity add-on. Never required to book, buy, sell, or publish.
+            Add an Identity Verified badge to your profile with Plaid identity verification.*
           </AlertDescription>
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">

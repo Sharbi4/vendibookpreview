@@ -51,7 +51,7 @@ const ShopperDashboard = () => {
     const items: ActionItem[] = [];
     if (!isVerified) items.push({
       id: 'verify-identity', icon: BadgeCheck,
-      title: 'Get verified (optional)',
+      title: 'Get verified*',
       description: 'A paid add-on that adds a verified badge to your profile. Never required to buy, sell, or publish.',
       href: '/identity-verification', cta: 'Learn more',
     });

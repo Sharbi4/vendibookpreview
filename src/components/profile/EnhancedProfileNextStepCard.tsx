@@ -50,7 +50,7 @@ const EnhancedProfileNextStepCard = ({
     {
       id: 'verify',
       icon: Shield,
-      title: 'Get verified (optional)',
+      title: 'Get verified*',
       description: 'A paid Plaid identity add-on that adds a verified badge to your profile. Never required to buy, sell, or publish.',
       actionLabel: 'Learn more',
       actionHref: '/identity-verification',

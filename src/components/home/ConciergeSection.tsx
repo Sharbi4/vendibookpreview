@@ -28,7 +28,7 @@ const PROVIDERS = [
   {
     id: 'plaid',
     to: '/identity-verification',
-    title: 'Optional identity verification.',
+    title: 'Identity verification.*',
     body: 'An Identity Verified badge means Plaid helped confirm that seller’s identity. It does not verify ownership, title, condition, value, or listing accuracy.',
     logo: <PlaidLogo surface="dark" className="h-4" />,
     name: 'Plaid',
@@ -92,7 +92,7 @@ const ConciergeSection = () => {
               Confidence at every step.
             </h2>
             <p className="text-base leading-relaxed text-muted-foreground sm:text-lg">
-              Secure online checkout, optional seller identity verification, and equipment
+              Secure online checkout, seller identity verification*, and equipment
               financing—supported by providers built for serious transactions.
             </p>
           </div>

@@ -97,8 +97,7 @@ const IdentityVerification = () => {
               </h1>
               <p className="mb-7 text-base leading-relaxed text-muted-foreground sm:text-lg">
                 A one-time identity check by Plaid adds a green Identity Verified badge to your
-                profile and every active listing. Optional, never a subscription, and never required
-                to publish, buy, rent, or sell.
+                profile and every active listing.*
               </p>
 
               <div className="flex flex-col items-center gap-4">
