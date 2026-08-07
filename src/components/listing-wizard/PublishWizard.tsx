@@ -2822,6 +2822,16 @@ export const PublishWizard: React.FC = () => {
                     mode={listing.mode}
                     values={disclosures}
                     onChange={(patch) => setDisclosures((prev) => ({ ...prev, ...patch }))}
+                    vinSerial={vinSerial}
+                    vinUnavailable={vinUnavailable}
+                    onVinChange={
+                      isTitledSaleCategory(listing)
+                        ? (patch) => {
+                            if (patch.vinSerial !== undefined) setVinSerial(patch.vinSerial);
+                            if (patch.vinUnavailable !== undefined) setVinUnavailable(patch.vinUnavailable);
+                          }
+                        : undefined
+                    }
                   />
 
                   <PrimaryActionBar
@@ -3150,6 +3160,23 @@ export const PublishWizard: React.FC = () => {
                                     I have read and accept this financing disclosure.
                                   </Label>
                                 </div>
+                                {isTitledSaleCategory(listing) && (
+                                  <div className="flex items-start space-x-3">
+                                    <Checkbox
+                                      id="equinox_include_vin"
+                                      checked={equinoxIncludeVin}
+                                      onCheckedChange={(checked) => setEquinoxIncludeVin(!!checked)}
+                                      className="mt-0.5"
+                                    />
+                                    <Label
+                                      htmlFor="equinox_include_vin"
+                                      className="text-sm font-medium cursor-pointer"
+                                    >
+                                      Include my full VIN / serial number on the private purchase sheet
+                                      shared with financing applicants.
+                                    </Label>
+                                  </div>
+                                )}
                               </div>
                             )}
                           </div>
