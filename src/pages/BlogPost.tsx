@@ -185,10 +185,24 @@ const BlogPost = () => {
                 <Clock className="h-4 w-4" />
                 {post.readingTime} min read
               </span>
-              <Button variant="ghost" size="sm" onClick={handleShare} className="ml-auto">
-                <Share2 className="h-4 w-4 mr-2" />
-                Share
-              </Button>
+              <div className="ml-auto flex items-center gap-1">
+                <Button variant="ghost" size="sm" onClick={handleShare}>
+                  <Share2 className="h-4 w-4 mr-2" />
+                  Share
+                </Button>
+                {SHARE_NETWORKS.map((n) => (
+                  <Button
+                    key={n.id}
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleNetworkShare(n.id, n.composer)}
+                    aria-label={`Share this article on ${n.label}`}
+                    title={`Share on ${n.label}`}
+                  >
+                    {n.label}
+                  </Button>
+                ))}
+              </div>
             </div>
 
             {/* Featured Image */}
