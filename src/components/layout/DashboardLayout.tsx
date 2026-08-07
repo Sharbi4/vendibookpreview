@@ -418,7 +418,7 @@ export const DashboardLayout = ({ children, mode, onModeChange, isHost }: Dashbo
             : [
                 { to: '/search', match: (p: string) => p === '/search', icon: Search, label: 'Explore' },
                 { to: '/dashboard?view=shopper&tab=orders', match: (p: string, s: string) => p === '/dashboard' && s.includes('tab=orders'), icon: ShoppingBag, label: 'Orders' },
-                { to: '/dashboard?view=shopper', match: (p: string, s: string) => p === '/dashboard' && !s.includes('tab='), icon: CalendarDays, label: 'Bookings' },
+                { to: '/dashboard?view=shopper&tab=bookings', match: (p: string, s: string) => p === '/dashboard' && s.includes('tab=bookings'), icon: CalendarDays, label: 'Bookings' },
                 { to: '/messages', match: (p: string) => p === '/messages', icon: MessageSquare, label: 'Inbox', badge: messagesBadge },
                 { to: '/account', match: (p: string) => p === '/account', icon: User, label: 'Profile' },
               ]
