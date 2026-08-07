@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, ExternalLink } from 'lucide-react';
+import { ArrowRight, ExternalLink, BadgeCheck } from 'lucide-react';
 import SEO, { generateFAQSchema } from '@/components/SEO';
 import JsonLd from '@/components/JsonLd';
 import Header from '@/components/layout/Header';
@@ -170,14 +170,29 @@ const Financing = () => {
             You’ll continue to Equinox Funding to submit your application securely.
           </p>
 
-          <div className="mt-10 flex flex-col items-start gap-4 rounded-2xl border-2 border-white/[0.12] bg-white/[0.04] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] backdrop-blur-sm sm:flex-row sm:items-center">
-            <img
-              src={equinoxLogo.url}
-              alt="Equinox Funding"
-              className="h-9 w-auto"
-              loading="lazy"
-            />
-            <span className="text-xs text-white/45">Financing partner</span>
+          <div className="mt-10 flex flex-col items-start gap-5 rounded-2xl border-2 border-white/[0.12] bg-white/[0.04] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] backdrop-blur-sm sm:flex-row sm:items-center">
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center gap-3">
+                <img
+                  src={equinoxLogo.url}
+                  alt="Equinox Funding"
+                  className="h-10 w-auto"
+                  loading="lazy"
+                />
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-[#8CC63F]/30 bg-[#8CC63F]/10 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-[#8CC63F]">
+                  <BadgeCheck className="h-3.5 w-3.5" aria-hidden />
+                  Preferred partner
+                </span>
+              </div>
+              <p className="text-xs text-white/50">
+                Business loans & equipment financing · $2.5K – $25M · Apply online in minutes
+              </p>
+            </div>
+            <div className="hidden h-10 w-px bg-white/10 sm:block" aria-hidden />
+            <div className="flex flex-col gap-1">
+              <span className="text-xs font-semibold text-white/80">Equinox Funding LLC</span>
+              <span className="text-[11px] text-white/45">Licensing & disclosures available at equinox-funding.com</span>
+            </div>
           </div>
         </section>
 
