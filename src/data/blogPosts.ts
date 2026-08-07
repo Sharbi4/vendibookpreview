@@ -56,7 +56,7 @@ export const BLOG_POSTS: BlogPost[] = [
 <ul class="mb-6">
   <li><strong>Help qualified buyers explore financing</strong> for food trucks, food trailers, carts, custom builds, and related equipment found through Vendibook — instead of assuming an all-cash purchase is the only option.</li>
   <li><strong>Make listings more finance-ready.</strong> Vendibook already generates a financing purchase summary for eligible sale listings, including price, asset details, and VIN or serial number when the seller provides one. That documentation is exactly what a funding review typically asks for first.</li>
-  <li><strong>Help sellers reach more buyers.</strong> Some buyers who cannot write one large check can comfortably support fixed monthly payments. Being open to financed offers widens the buyer pool without changing how the seller gets paid.</li>
+  <li><strong>Help sellers reach more buyers.</strong> Some buyers who cannot write one large check can comfortably support fixed monthly payments. Being open to financed offers can widen the buyer pool without requiring the seller to extend credit to the buyer.</li>
 </ul>
 
 <div class="not-prose my-10 rounded-2xl border border-primary/20 bg-primary/5 p-6 md:p-8">
@@ -83,7 +83,7 @@ export const BLOG_POSTS: BlogPost[] = [
   <li><strong>Download the financing purchase summary.</strong> Vendibook generates a pro forma invoice with the asking price, asset details, and the VIN or serial number when the seller has provided one.</li>
   <li><strong>Apply with Equinox Funding</strong> using that summary as your supporting documentation.</li>
   <li><strong>Work with an Equinox representative.</strong> They may request additional business information as part of the review.</li>
-  <li><strong>Equinox handles the decision.</strong> Prequalification, underwriting, credit decisions, terms, and funding are handled by Equinox alone. Approval and timing vary.</li>
+  <li><strong>Equinox handles the decision.</strong> Prequalification, underwriting, credit decisions, terms, and funding are handled by Equinox and, where applicable, its third-party funding providers—not Vendibook. Approval and timing vary.</li>
 </ol>
 
 <div class="not-prose my-10 rounded-2xl border border-border bg-card p-6 md:p-8">
