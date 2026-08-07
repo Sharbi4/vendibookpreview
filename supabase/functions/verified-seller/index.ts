@@ -503,6 +503,12 @@ serve(async (req) => {
     }
 
     // ------------------------------------------------------------- retry
+    /**
+     * One free self-service retry. This action only ARRANGES the money: it
+     * records a payment whose purpose is `retry`, so once PayPal approval
+     * comes back through `authorize` the server calls Plaid's
+     * /identity_verification/retry endpoint — never /create.
+     */
     if (action === "retry") {
       if (!templateId) {
         return jsonError(503, "verification_unavailable", "Identity verification isn't available right now.");
@@ -515,53 +521,57 @@ serve(async (req) => {
         );
       }
 
-      // Fresh authorization for the retry — captured only if the retry passes.
-      let payment = await latestOpenPayment(admin, userId);
-      if (!payment) {
-        const created = await createAuthorizeOrder(admin, userId);
-        if (created instanceof Response) return created;
-        payment = created.payment;
+      const open = await latestOpenPayment(admin, userId);
+
+      // An authorization is already held for this retry — go straight to Plaid.
+      if (open?.state === "authorized" && open.purpose === "retry") {
+        const started = await startPlaidForPayment(admin, userId, templateId, open, record);
+        if (started instanceof Response) return started;
         await admin
           .from("seller_verifications")
-          .update({ status: "awaiting_authorization", updated_at: new Date().toISOString() })
+          .update({
+            status: "identity_in_progress",
+            identity_status: "active",
+            current_attempt_id: started.sessionId,
+            last_reason_code: null,
+            updated_at: new Date().toISOString(),
+          })
           .eq("user_id", userId);
         return jsonResponse(200, {
-          ...publicState(record, payment, enabled),
+          status: "identity_in_progress",
+          link_token: started.linkToken,
+          badge_active: false,
+        });
+      }
+
+      // Reuse an unapproved order, otherwise create a fresh retry order.
+      if (open?.state === "created" && open.paypal_order_id) {
+        await admin
+          .from("seller_verification_payments")
+          .update({ purpose: "retry" })
+          .eq("id", open.id);
+        return jsonResponse(200, {
+          ...publicState(record, open, enabled),
           status: "awaiting_authorization",
-          order_id: created.orderId,
+          order_id: open.paypal_order_id,
           retrying: true,
         });
       }
 
-      // Plaid's dedicated retry endpoint — never `create`, which would bill again.
-      const session = await retryIdentityVerification({ clientUserId: userId, templateId });
-      await admin.from("seller_verification_attempts").upsert({
-        user_id: userId,
-        plaid_verification_id: session.id,
-        previous_verification_id: session.previous_attempt_id ?? record.current_attempt_id,
-        template_id: templateId,
-        status: session.status ?? "active",
-      }, { onConflict: "plaid_verification_id" });
-
+      const created = await createAuthorizeOrder(admin, userId, "retry");
+      if (created instanceof Response) return created;
       await admin
         .from("seller_verifications")
-        .update({
-          status: "identity_in_progress",
-          identity_status: session.status ?? "active",
-          current_attempt_id: session.id,
-          retry_count: (record.retry_count ?? 0) + 1,
-          last_reason_code: null,
-          updated_at: new Date().toISOString(),
-        })
+        .update({ status: "awaiting_authorization", updated_at: new Date().toISOString() })
         .eq("user_id", userId);
-
-      const link = await createIdvLinkToken({
-        clientUserId: userId,
-        templateId,
-        webhook: `${Deno.env.get("SUPABASE_URL")}/functions/v1/verified-seller-webhook`,
+      return jsonResponse(200, {
+        ...publicState(record, created.payment, enabled),
+        status: "awaiting_authorization",
+        order_id: created.orderId,
+        retrying: true,
       });
-      return jsonResponse(200, { status: "identity_in_progress", link_token: link.link_token });
     }
+
 
     // -------------------------------------------------- complete-payment
     /**
