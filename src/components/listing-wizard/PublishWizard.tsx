@@ -57,6 +57,18 @@ import { FeaturedListingCard } from './FeaturedListingCard';
 import { ListingQualityGate } from './ListingQualityGate';
 import { ListingHealthScoreCard } from './ListingHealthScoreCard';
 import { AdditionalSellerSupportCards } from '@/components/monetization/AdditionalSellerSupportCards';
+import VerifiedSellerCTA from '@/components/verification/VerifiedSellerCTA';
+import { GetVerifiedButton } from '@/components/verification/GetVerifiedButton';
+import { EquinoxFundingLogo } from '@/components/brand/ProviderLogos';
+import { useEquinoxFinancingEnabled } from '@/hooks/useListingFinancing';
+import {
+  EQUINOX_APPLY_URL,
+  EQUINOX_DISCLOSURE_TEXT,
+  EQUINOX_FLAG_KEY,
+  isFinanceableSaleListing,
+} from '@/lib/financing/disclosure';
+import { usePublicFeatureFlag } from '@/hooks/usePublicFeatureFlag';
+
 import { InfoTooltip } from '@/components/ui/info-tooltip';
 import { ConsentModal } from '@/components/consent/ConsentModal';
 import { DOCUMENT_TYPES, CONSENT_TRIGGERS } from '@/lib/legalDocuments';
