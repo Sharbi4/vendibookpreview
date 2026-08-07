@@ -540,7 +540,7 @@ const HostListingCard = ({
                   <Divider />
                   <span className="inline-flex items-center gap-1">
                     <Calendar className="h-3.5 w-3.5" aria-hidden />
-                    {isPublished ? 'Published' : 'Created'} {publishedOn}
+                    {hasBeenPublished ? 'Published' : 'Created'} {publishedOn}
                   </span>
                 </>
               )}
