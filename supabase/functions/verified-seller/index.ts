@@ -455,6 +455,9 @@ serve(async (req) => {
               error_code: authStatus && authStatus !== "CREATED" ? authStatus : null,
             })
             .eq("id", payment.id);
+
+          // Keep the authoritative seller record truthful about the hold.
+          await syncPaymentState(admin, userId, "authorized");
         } catch (err) {
           const issue = (err as PayPalError)?.issue ?? null;
           await admin
