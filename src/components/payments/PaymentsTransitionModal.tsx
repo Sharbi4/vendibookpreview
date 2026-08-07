@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { usePaymentsTransition } from '@/hooks/usePaymentsTransition';
-import { PayPalMonogram } from '@/components/brand/ProviderLogos';
+import { PayPalWordmark } from '@/components/brand/ProviderLogos';
 import { EquinoxFundingLogo } from '@/components/brand/ProviderLogos';
 import { GetVerifiedButton } from '@/components/verification/GetVerifiedButton';
 
