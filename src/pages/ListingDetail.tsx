@@ -79,6 +79,13 @@ const ListingDetail = () => {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
   const { listing, host, isLoading, error } = useListing(id);
+
+  /**
+   * Paid Identity Verified state for the seller/host, read from the sanitized
+   * server function — never the legacy profiles.identity_verified column.
+   */
+  const sellerBadges = useSellerIdentityBadgeMap([listing?.host_id]);
+  const sellerIdentityVerified = !!(listing?.host_id && sellerBadges[listing.host_id]?.verified);
   
   // Track page views with Google Analytics
   usePageTracking();
