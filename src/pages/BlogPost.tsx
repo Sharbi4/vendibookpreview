@@ -74,15 +74,22 @@ const BlogPost = () => {
     }
   };
 
-  const handleNetworkShare = async (network: ShareNetwork, composer: string) => {
+  const handleNetworkShare = (network: ShareNetwork, composer: string) => {
     const trackedUrl = `https://vendibook.com/share/${network}/${post.slug}`;
     const composerUrl =
       network === 'x'
         ? `${composer}?text=${encodeURIComponent(post.title)}&url=${encodeURIComponent(trackedUrl)}`
-        : `${composer}?url=${encodeURIComponent(trackedUrl)}`;
+        : network === 'facebook'
+          ? `${composer}?u=${encodeURIComponent(trackedUrl)}`
+          : `${composer}?url=${encodeURIComponent(trackedUrl)}`;
 
-    try {
-      await supabase.from('blog_share_clicks').insert({
+    // Open synchronously inside the click handler so popup blockers allow it.
+    window.open(composerUrl, '_blank', 'noopener,noreferrer');
+
+    // Fire-and-forget tracking; must never block or fail the share.
+    void supabase
+      .from('blog_share_clicks')
+      .insert({
         article_slug: post.slug,
         source: network,
         campaign,
@@ -90,11 +97,8 @@ const BlogPost = () => {
         destination_url: trackedUrl,
         referrer: document.referrer || null,
         user_agent: navigator.userAgent,
-      });
-    } catch (e) {
-      // Never block the share on a logging failure
-    }
-    window.open(composerUrl, '_blank', 'noopener,noreferrer');
+      })
+      .then(() => {}, () => {});
   };
 
 
