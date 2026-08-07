@@ -592,13 +592,21 @@ serve(async (req) => {
               updated_at: new Date().toISOString(),
             })
             .eq("user_id", userId);
+          if (!started.linkToken) return linkTokenPending(started.sessionId);
           return jsonResponse(200, {
             link_token: started.linkToken,
             status: "identity_in_progress",
             resumed: true,
           });
         }
-        await voidAuthorizationOnce(admin, open, "unusable_authorization");
+        const released = await voidAuthorizationOnce(admin, open, "unusable_authorization");
+        if (!released.ok) {
+          return jsonError(
+            502,
+            "hold_not_released",
+            "We couldn't confirm the release of your payment hold. Our team has been alerted and will resolve it — please don't start again yet.",
+          );
+        }
         return jsonError(
           409,
           "authorization_expired",
