@@ -69,9 +69,15 @@ serve(async (req) => {
       return jsonResponse(200, { received: true, processed: false });
     }
 
-    const eventKey = `${webhookCode}:${verificationId}:${
-      String(payload.environment ?? "")
-    }:${String((payload as { timestamp?: string }).timestamp ?? "")}`;
+    /**
+     * Dedupe on a digest of the VERIFIED raw body. Plaid does not always send
+     * a timestamp, so composing a key from a few fields would collapse every
+     * STATUS_UPDATED for one verification into a single processed event.
+     * A body digest processes active -> pending_review -> success in turn
+     * while still dropping an exact duplicate delivery.
+     */
+    const eventKey = await webhookEventKey(webhookCode, raw);
+
 
     const claimed = await claimEvent(admin, {
       provider: "plaid",
