@@ -214,7 +214,7 @@ const BlogPost = () => {
               <div className="rounded-xl overflow-hidden mb-8">
                 <img 
                   src={post.image} 
-                  alt={post.title}
+                  alt={post.imageAlt || post.title}
                   className="w-full h-auto object-contain bg-black"
                 />
               </div>
