@@ -4,6 +4,7 @@ import { CheckCircle2, Loader2, Lock, ShieldCheck, X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { loadPayPalSdk } from '@/lib/paypalClient';
 import { TRUST_COPY } from '@/lib/transactionVocabulary';
+import { PayPalMonogram } from '@/components/brand/ProviderLogos';
 import PaymentFormSkeleton from './PaymentFormSkeleton';
 import TrustRow from './TrustRow';
 
@@ -271,8 +272,10 @@ const PayPalPaymentPanel = ({
                     </div>
                   ) : null}
 
-                  <p className="text-[11px] text-muted-foreground text-center">
-                    Payments are processed securely by PayPal. Vendibook never sees your card number.
+                  <p className="text-[11px] text-muted-foreground text-center inline-flex w-full items-center justify-center gap-1.5">
+                    Payments are processed securely by
+                    <PayPalMonogram className="h-3.5" />
+                    PayPal. Vendibook never sees your card number.
                   </p>
                 </>
               )}

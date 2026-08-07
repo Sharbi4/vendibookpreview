@@ -1,5 +1,6 @@
 import React from 'react';
 import { Lock } from 'lucide-react';
+import { PayPalMonogram } from '@/components/brand/ProviderLogos';
 import { cn } from '@/lib/utils';
 
 /**
@@ -57,6 +58,7 @@ export const PaymentTrustBadge: React.FC<PaymentTrustBadgeProps> = ({
 }) => {
   const copy = COPY[context];
   const textColor = surface === 'dark' ? 'text-white/70' : 'text-muted-foreground';
+  const showPayPal = context === 'payments' || context === 'combined' || context === 'subscription';
 
   return (
     <span
@@ -65,6 +67,7 @@ export const PaymentTrustBadge: React.FC<PaymentTrustBadgeProps> = ({
       aria-label={copy}
     >
       <Lock className="h-3 w-3" aria-hidden />
+      {showPayPal && <PayPalMonogram className={size === 'sm' ? 'h-3.5' : 'h-4'} />}
       {withCopy ? copy : SHORT[context]}
     </span>
   );
