@@ -9,7 +9,7 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
 import { corsHeaders, jsonError, jsonResponse, unknownErrorResponse } from '../_shared/jsonError.ts';
 
-const FINANCEABLE = ['food_truck', 'food_trailer'];
+const DISCLOSURE_VERSION = 'equinox-financing-v1';
 const FLAG_KEY = 'equinox_financing_enabled';
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -55,8 +55,8 @@ Deno.serve(async (req) => {
 
     const isOwner = !!viewerId && viewerId === listing.host_id;
 
-    if (listing.mode !== 'sale' || !FINANCEABLE.includes(String(listing.category))) {
-      return jsonError(400, 'not_financeable', 'Financing summaries are only available for food truck and trailer sale listings.');
+    if (listing.mode !== 'sale') {
+      return jsonError(400, 'not_financeable', 'Financing summaries are only available for listings that are for sale.');
     }
 
     if (!isOwner) {
@@ -72,13 +72,17 @@ Deno.serve(async (req) => {
       supabase.from('app_feature_flags').select('enabled').eq('key', FLAG_KEY).maybeSingle(),
       supabase
         .from('listing_financing_preferences')
-        .select('equinox_opt_in, include_vin')
+        .select('equinox_opt_in, include_vin, disclosure_version, disclosure_accepted_at')
         .eq('listing_id', listingId)
         .maybeSingle(),
     ]);
 
     const flagOn = flagRow?.enabled === true;
-    const optedIn = pref?.equinox_opt_in === true;
+    // Opt-in only counts with a current, accepted disclosure on file.
+    const optedIn =
+      pref?.equinox_opt_in === true &&
+      pref?.disclosure_version === DISCLOSURE_VERSION &&
+      !!pref?.disclosure_accepted_at;
 
     // Buyers only see the sheet through the public, fully gated surface.
     if (!isOwner && !(flagOn && optedIn)) {
