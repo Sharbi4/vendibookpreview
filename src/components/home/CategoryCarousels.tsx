@@ -173,21 +173,6 @@ const CategoryCarousels = () => {
   // Get unique host IDs
   const hostIds = [...new Set(allListings.map((l) => l.host_id).filter(Boolean))] as string[];
 
-  // Fetch host verification status
-  const { data: hostProfiles = [] } = useQuery({
-    queryKey: ['category-carousel-hosts', hostIds],
-    queryFn: async () => {
-      if (hostIds.length === 0) return [];
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('id')
-        .in('id', hostIds);
-      if (error) throw error;
-      return data ?? [];
-    },
-    enabled: false,
-  });
-
   // Authoritative paid Identity Verified badges, batched into one request.
   const hostVerificationMap = useSellerVerifiedMap(hostIds);
 
