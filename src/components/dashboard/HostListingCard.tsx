@@ -59,6 +59,8 @@ import { PayoutBrandMark } from '@/components/payouts/PayoutBrandMark';
 import { PAYOUT_METHOD_LABEL } from '@/lib/payouts/methods';
 import { canBoostListing, canRepublishListing } from '@/lib/listings/publicVisibility';
 import { useNavigate } from 'react-router-dom';
+import { GetVerifiedButton } from '@/components/verification/GetVerifiedButton';
+
 
 type Listing = Tables<'listings'>;
 
