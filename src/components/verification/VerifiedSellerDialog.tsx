@@ -356,7 +356,7 @@ const VerifiedSellerDialog = ({ open, onOpenChange, onVerified }: VerifiedSeller
                     Verification not completed
                   </p>
                   <p className="text-sm text-muted-foreground">
-                    You were not charged and any hold has been released.
+                    {failedResultCopy(v.state?.payment_state)}
                   </p>
                   {v.state?.can_retry && (
                     <Button
