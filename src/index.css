@@ -1541,3 +1541,68 @@
     }
   }
 }
+
+/* ------------------------------------------------------------------
+   Equinox financing — deep steel/gold "capital" CTA treatment.
+   Distinct from the orange marketplace CTA and the green verified CTA
+   so financing reads as an institutional, lender-grade action.
+------------------------------------------------------------------ */
+@layer components {
+  .finance-cta {
+    position: relative;
+    overflow: hidden;
+    color: hsl(40 60% 96%);
+    background:
+      linear-gradient(150deg,
+        hsl(215 32% 22%) 0%,
+        hsl(218 38% 13%) 52%,
+        hsl(212 30% 20%) 100%);
+    border: 1px solid hsl(42 55% 62% / 0.42);
+    box-shadow:
+      0 1px 0 hsl(42 70% 85% / 0.18) inset,
+      0 8px 24px -14px hsl(216 45% 6% / 0.95);
+  }
+  .finance-cta:hover {
+    background:
+      linear-gradient(150deg,
+        hsl(215 34% 26%) 0%,
+        hsl(218 40% 16%) 52%,
+        hsl(212 32% 24%) 100%);
+    border-color: hsl(42 60% 66% / 0.6);
+  }
+  .finance-cta::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: -70%;
+    width: 42%;
+    pointer-events: none;
+    background: linear-gradient(
+      100deg,
+      transparent 0%,
+      hsl(44 90% 88% / 0.32) 50%,
+      transparent 100%
+    );
+    animation: verified-sweep 6s ease-in-out infinite;
+  }
+
+  .finance-cta-outline {
+    position: relative;
+    overflow: hidden;
+    color: hsl(42 45% 88%);
+    background: linear-gradient(150deg, hsl(216 30% 12% / 0.85), hsl(218 34% 9% / 0.9));
+    border: 1px solid hsl(42 50% 62% / 0.3);
+  }
+  .finance-cta-outline:hover {
+    border-color: hsl(42 55% 66% / 0.5);
+    color: hsl(42 60% 94%);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .finance-cta::after {
+      animation: none;
+      display: none;
+    }
+  }
+}

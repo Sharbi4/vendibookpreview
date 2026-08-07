@@ -44,6 +44,7 @@ import SellerTrustPanel from '@/components/listing-detail/SellerTrustPanel';
 import KeySpecsStrip from '@/components/listing-detail/KeySpecsStrip';
 import SaleListingMobile from '@/components/listing-detail/sale/SaleListingMobile';
 import { FinancingActionPanel } from '@/components/listing-detail/sale/FinancingActionPanel';
+import { ListingPaymentMethods } from '@/components/listing-detail/ListingPaymentMethods';
 import { SaleTrustStrip, SaleProtectionSection, SaleLocationCard, SaleBrowseMore } from '@/components/listing-detail/sale/SaleSharedSections';
 
 import { VendorSlotAvailability } from '@/components/listing-detail/VendorSlotAvailability';
@@ -866,6 +867,9 @@ const ListingDetail = () => {
                 latitude={listing.latitude}
                 longitude={listing.longitude}
               />
+
+              {/* Payment methods — every listing (sale and rent) */}
+              <ListingPaymentMethods listing={listing} />
 
               {/* Purchase protection + browse — sale listings */}
               {!isRental && (
