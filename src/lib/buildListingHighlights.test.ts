@@ -11,7 +11,7 @@ const base = (over: Partial<HighlightsListing> = {}): HighlightsListing => ({
   city: null,
   state: null,
   instant_book: false,
-  accept_card_payment: true,
+  accept_paypal_checkout: true,
   accept_cash_payment: false,
   deposit_amount: 0,
   security_deposit: 0,
@@ -84,7 +84,7 @@ describe('buildListingHighlights — approval vs instant book', () => {
 describe('buildListingHighlights — sale payment posture', () => {
   it('cash-only sale → Pay-in-Person copy', () => {
     const { bullets } = buildListingHighlights(
-      base({ mode: 'sale', accept_cash_payment: true, accept_card_payment: false }),
+      base({ mode: 'sale', accept_cash_payment: true, accept_paypal_checkout: false }),
     );
     expect(bullets).toContain(
       'Pay in Person — Vendibook records the transaction but does not hold funds',
@@ -93,21 +93,21 @@ describe('buildListingHighlights — sale payment posture', () => {
 
   it('cash + card sale → dual-option copy', () => {
     const { bullets } = buildListingHighlights(
-      base({ mode: 'sale', accept_cash_payment: true, accept_card_payment: true }),
+      base({ mode: 'sale', accept_cash_payment: true, accept_paypal_checkout: true }),
     );
     expect(bullets).toContain('Pay online or in person');
   });
 
   it('card-only sale → secure checkout copy', () => {
     const { bullets } = buildListingHighlights(
-      base({ mode: 'sale', accept_cash_payment: false, accept_card_payment: true }),
+      base({ mode: 'sale', accept_cash_payment: false, accept_paypal_checkout: true }),
     );
     expect(bullets).toContain('Payment is completed securely at checkout');
   });
 
   it('rental never renders a payment-posture bullet', () => {
     const { bullets } = buildListingHighlights(
-      base({ mode: 'rent', accept_cash_payment: true, accept_card_payment: true }),
+      base({ mode: 'rent', accept_cash_payment: true, accept_paypal_checkout: true }),
     );
     for (const b of bullets) {
       expect(b).not.toMatch(/Pay in Person|Pay online|completed securely/);
@@ -234,7 +234,7 @@ describe('buildListingHighlights — cap and ordering', () => {
       base({
         mode: 'sale',
         accept_cash_payment: true,
-        accept_card_payment: false,
+        accept_paypal_checkout: false,
         vendibook_freight_enabled: true,
         city: 'Phoenix',
         state: 'AZ',

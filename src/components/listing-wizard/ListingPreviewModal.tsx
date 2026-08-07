@@ -43,7 +43,7 @@ interface ListingPreviewModalProps {
     hoursOfAccess?: string;
     availableFrom?: string;
     availableTo?: string;
-    acceptCardPayment?: boolean;
+    acceptPayPalCheckout?: boolean;
     acceptCashPayment?: boolean;
   };
   host?: {
@@ -352,14 +352,14 @@ export const ListingPreviewModal: React.FC<ListingPreviewModalProps> = ({
                   </div>
 
                   {/* Payment Methods */}
-                  {(listing.acceptCardPayment || listing.acceptCashPayment) && (
+                  {(listing.acceptPayPalCheckout || listing.acceptCashPayment) && (
                     <div className="mt-4 pt-3 border-t">
                       <p className="text-xs text-muted-foreground mb-2">Accepted payment methods</p>
                       <div className="flex gap-2">
-                        {listing.acceptCardPayment && (
+                        {listing.acceptPayPalCheckout && (
                           <Badge variant="outline" className="text-xs gap-1">
                             <CreditCard className="w-3 h-3" />
-                            Card
+                            PayPal
                           </Badge>
                         )}
                         {listing.acceptCashPayment && (

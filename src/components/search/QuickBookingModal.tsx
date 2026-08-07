@@ -184,11 +184,11 @@ const QuickBookingModal = ({
         price_daily: listing.price_daily ?? null,
         price_weekly: listing.price_weekly ?? null,
         security_deposit: (listing as { deposit_amount?: number | null }).deposit_amount ?? null,
-        accept_card_payment: listing.accept_card_payment ?? true,
+        accept_paypal_checkout: listing.accept_paypal_checkout ?? true,
       },
       selection: {
         mode: 'rent',
-        paymentMethod: 'stripe_card',
+        paymentMethod: 'paypal_checkout',
         basePriceDollars: fees.subtotal - currentDeliveryFee,
         deliveryFeeDollars: currentDeliveryFee,
         startDate: format(startDate, 'yyyy-MM-dd'),

@@ -163,7 +163,8 @@ export interface Listing {
   freight_payer?: FreightPayer | string;
   // Payment method preferences (for sales)
   accept_cash_payment?: boolean;
-  accept_card_payment?: boolean;
+  accept_card_payment?: boolean; // Legacy Stripe flag; prefer accept_paypal_checkout
+  accept_paypal_checkout?: boolean;
   // Multi-slot capacity for Vendor Spaces
   total_slots?: number;
   slot_names?: string[] | null;
@@ -609,7 +610,8 @@ export interface ListingFormData {
   }[];
   // Payment method preferences (for sales)
   accept_cash_payment: boolean;
-  accept_card_payment: boolean;
+  accept_card_payment: boolean; // Legacy Stripe flag; prefer accept_paypal_checkout
+  accept_paypal_checkout: boolean;
   // Proof Notary add-on (for sales)
   proof_notary_enabled: boolean;
   // Featured Listing add-on (for both rentals and sales)

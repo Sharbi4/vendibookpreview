@@ -39,13 +39,14 @@ export interface TermsListing {
   price_weekly?: number | null;
   price_monthly?: number | null;
   security_deposit?: number | null;
-  accept_card_payment?: boolean | null;
+  accept_paypal_checkout?: boolean | null;
+  accept_card_payment?: boolean | null; // Legacy Stripe flag retained for audit
   required_documents?: unknown; // jsonb list from listing_required_documents
 }
 
 export interface TermsSelection {
   mode: 'rent' | 'sale';
-  paymentMethod: 'stripe_card' | 'pay_in_person' | 'offer' | 'other';
+  paymentMethod: 'paypal_checkout' | 'pay_in_person' | 'offer' | 'other';
   basePriceDollars: number;      // rental subtotal or sale price (before fees, before deposit)
   depositDollars?: number;       // security deposit (rental)
   deliveryFeeDollars?: number;   // buyer-visible delivery / freight
@@ -234,11 +235,11 @@ export function buildTerms(input: {
       ? `You are booking "${listing.title}" for the dates shown above.`
       : `You are buying "${listing.title}" from the seller.`,
   );
-  if (selection.paymentMethod === 'stripe_card') {
+  if (selection.paymentMethod === 'paypal_checkout') {
     acknowledgements.push(
       selection.mode === 'rent'
-        ? 'Your card is authorized now; funds are held by Vendibook until 24 hours after the rental ends.'
-        : 'Your card is charged now; funds are held in payment protection and released to the seller 25 days after you confirm the item.',
+        ? 'Your PayPal payment is authorized now; funds are held by Vendibook until 24 hours after the rental ends.'
+        : 'Your PayPal payment is charged now; funds are held in payment protection and released to the seller 25 days after you confirm the item.',
     );
   } else if (selection.paymentMethod === 'pay_in_person') {
     acknowledgements.push(
@@ -342,7 +343,8 @@ export interface HighlightsListing {
   city?: string | null;
   state?: string | null;
   instant_book?: boolean | null;
-  accept_card_payment?: boolean | null;
+  accept_paypal_checkout?: boolean | null;
+  accept_card_payment?: boolean | null; // Legacy Stripe flag retained for audit
   accept_cash_payment?: boolean | null;
   deposit_amount?: number | null;
   security_deposit?: number | null;
@@ -407,10 +409,12 @@ export function buildListingHighlights(listing: HighlightsListing): ListingHighl
 
   // 2. Payment posture (spec §7, §10)
   if (isSale) {
-    if (listing.accept_cash_payment && !listing.accept_card_payment) {
+    if (listing.accept_cash_payment && !listing.accept_paypal_checkout) {
       bullets.push('Pay in Person — Vendibook records the transaction but does not hold funds');
-    } else if (listing.accept_cash_payment && listing.accept_card_payment) {
-      bullets.push('Pay online or in person');
+    } else if (listing.accept_cash_payment && listing.accept_paypal_checkout) {
+      bullets.push('Pay online via PayPal or in person');
+    } else if (listing.accept_paypal_checkout) {
+      bullets.push('Payment is completed securely via PayPal at checkout');
     } else {
       bullets.push('Payment is completed securely at checkout');
     }

@@ -31,7 +31,7 @@ const terms = buildTerms({
   },
   selection: {
     mode: 'rent',
-    paymentMethod: 'stripe_card',
+    paymentMethod: 'paypal_checkout',
     basePriceDollars: 100,
     deliveryFeeDollars: 25,
     depositDollars: 200,

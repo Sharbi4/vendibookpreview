@@ -60,8 +60,8 @@ export const StepReview: React.FC<StepReviewProps> = ({
   if (!formData.description.trim()) issues.push('Description is required');
   if (formData.mode === 'rent' && !formData.price_daily) issues.push('Daily price is required');
   if (formData.mode === 'sale' && !formData.price_sale) issues.push('Sale price is required');
-  if (formData.mode === 'sale' && !formData.accept_cash_payment && !formData.accept_card_payment) {
-    issues.push('At least one payment method is required');
+  if (formData.mode === 'sale' && !formData.accept_cash_payment && !formData.accept_paypal_checkout) {
+    issues.push('At least one payment method is required (PayPal checkout or Pay in Person)');
   }
   if (totalPhotos < minPhotos) issues.push(`Minimum ${minPhotos} photos required (${totalPhotos} added)`);
   if (!formData.address && !formData.pickup_location_text) issues.push('Location is required');

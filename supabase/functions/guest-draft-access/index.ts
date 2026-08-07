@@ -83,7 +83,7 @@ const PATCH_ALLOWLIST = new Set([
   "freight_category",
   "required_documents",
   "accept_cash_payment",
-  "accept_card_payment",
+  "accept_paypal_checkout",
   "proof_notary_enabled",
   "total_slots",
   "slot_names",

@@ -116,8 +116,9 @@ interface ListingData {
   deposit_amount: number | null;
   vendibook_freight_enabled: boolean;
   freight_payer: FreightPayer;
-  accept_card_payment: boolean;
+  accept_card_payment: boolean; // Legacy Stripe flag; kept for audit
   accept_cash_payment: boolean;
+  accept_paypal_checkout: boolean;
   proof_notary_enabled: boolean;
   highlights: string[] | null;
   amenities: string[] | null;
@@ -314,7 +315,7 @@ export const PublishWizard: React.FC = () => {
   // New pricing fields
   const [vendibookFreightEnabled, setVendibookFreightEnabled] = useState(false);
   const [freightPayer, setFreightPayer] = useState<FreightPayer>('buyer');
-  const [acceptCardPayment, setAcceptCardPayment] = useState(true);
+  const [acceptPayPalCheckout, setAcceptPayPalCheckout] = useState(true);
   const [acceptCashPayment, setAcceptCashPayment] = useState(false);
   const [proofNotaryEnabled, setProofNotaryEnabled] = useState(false);
   const [featuredEnabled, setFeaturedEnabled] = useState(false);
@@ -420,8 +421,10 @@ export const PublishWizard: React.FC = () => {
         updateData.price_sale = safeParsePrice(priceSale);
         updateData.vendibook_freight_enabled = vendibookFreightEnabled;
         updateData.freight_payer = freightPayer;
-        updateData.accept_card_payment = acceptCardPayment;
+        updateData.accept_paypal_checkout = acceptPayPalCheckout;
         updateData.accept_cash_payment = acceptCashPayment;
+        // Keep legacy flag in sync for any remaining audit references during transition
+        updateData.accept_card_payment = acceptPayPalCheckout;
         updateData.proof_notary_enabled = proofNotaryEnabled;
         updateData.featured_enabled = featuredEnabled;
       } else {
@@ -589,7 +592,7 @@ export const PublishWizard: React.FC = () => {
       setExistingVideos(((data as any).video_urls as string[] | null) || []);
       setVendibookFreightEnabled(data.vendibook_freight_enabled || false);
       setFreightPayer((data.freight_payer as FreightPayer) || 'buyer');
-      setAcceptCardPayment(data.accept_card_payment ?? true);
+      setAcceptPayPalCheckout(data.accept_paypal_checkout ?? true);
       setAcceptCashPayment(data.accept_cash_payment ?? false);
       setProofNotaryEnabled(data.proof_notary_enabled ?? false);
       setFeaturedEnabled((data as any).featured_enabled ?? false);
@@ -791,8 +794,10 @@ export const PublishWizard: React.FC = () => {
         updateData.price_sale = safeParsePrice(priceSale) || listing.price_sale || null;
         updateData.vendibook_freight_enabled = vendibookFreightEnabled;
         updateData.freight_payer = freightPayer;
-        updateData.accept_card_payment = acceptCardPayment;
+        updateData.accept_paypal_checkout = acceptPayPalCheckout;
         updateData.accept_cash_payment = acceptCashPayment;
+        // Keep legacy flag in sync for any remaining audit references during transition
+        updateData.accept_card_payment = acceptPayPalCheckout;
         updateData.proof_notary_enabled = proofNotaryEnabled;
         updateData.featured_enabled = featuredEnabled;
       } else {
@@ -912,10 +917,10 @@ export const PublishWizard: React.FC = () => {
     
     const isSellerPaidFreight = vendibookFreightEnabled && freightPayer === 'seller';
     const freightCost = vendibookFreightEnabled ? estimatedFreightCost : 0;
-    const isCashOnlySale = listing?.mode === 'sale' && acceptCashPayment && !acceptCardPayment;
+    const isCashOnlySale = listing?.mode === 'sale' && acceptCashPayment && !acceptPayPalCheckout;
     
     return calculateSaleFees(salePriceNum, freightCost, isSellerPaidFreight, isCashOnlySale);
-  }, [priceSale, vendibookFreightEnabled, freightPayer, listing?.mode, acceptCashPayment, acceptCardPayment]);
+  }, [priceSale, vendibookFreightEnabled, freightPayer, listing?.mode, acceptCashPayment, acceptPayPalCheckout]);
 
   const getLocation = () => {
     if (listing?.address) return listing.address;
@@ -1417,8 +1422,10 @@ export const PublishWizard: React.FC = () => {
             price_sale: safeParsePrice(priceSale),
             vendibook_freight_enabled: vendibookFreightEnabled,
             freight_payer: freightPayer,
-            accept_card_payment: acceptCardPayment,
+            accept_paypal_checkout: acceptPayPalCheckout,
             accept_cash_payment: acceptCashPayment,
+            // Keep legacy flag in sync during transition
+            accept_card_payment: acceptPayPalCheckout,
             proof_notary_enabled: proofNotaryEnabled,
             featured_enabled: featuredEnabled};
         } else {
@@ -1673,8 +1680,10 @@ export const PublishWizard: React.FC = () => {
             price_sale: safeParsePrice(priceSale),
             vendibook_freight_enabled: vendibookFreightEnabled,
             freight_payer: freightPayer,
-            accept_card_payment: acceptCardPayment,
+            accept_paypal_checkout: acceptPayPalCheckout,
             accept_cash_payment: acceptCashPayment,
+            // Keep legacy flag in sync during transition
+            accept_card_payment: acceptPayPalCheckout,
             proof_notary_enabled: proofNotaryEnabled,
             featured_enabled: featuredEnabled}
         : {
@@ -1972,7 +1981,7 @@ export const PublishWizard: React.FC = () => {
   const MIN_DESCRIPTION_LENGTH = 50;
   const MIN_TITLE_LENGTH = 5;
 
-  const hasSalePaymentMethod = listing?.mode !== 'sale' || acceptCardPayment || acceptCashPayment;
+  const hasSalePaymentMethod = listing?.mode !== 'sale' || acceptPayPalCheckout || acceptCashPayment;
   const hasPriceAmount = listing?.mode === 'sale'
     ? isValidPrice(priceSale)
     : isValidPrice(priceDaily);
@@ -2782,7 +2791,7 @@ export const PublishWizard: React.FC = () => {
                               <div className="flex items-start gap-1.5 mt-3 text-xs text-muted-foreground">
                                 <Info className="w-3 h-3 mt-0.5 shrink-0" />
                                 <span>
-                                  {acceptCashPayment && !acceptCardPayment
+                                  {acceptCashPayment && !acceptPayPalCheckout
                                     ? 'Pay in Person sales have no platform commission.'
                                     : `Platform fee is ${SALE_SELLER_FEE_PERCENT}% of the sale price for card payments`}
                                 </span>
@@ -2805,23 +2814,23 @@ export const PublishWizard: React.FC = () => {
                         <div className="space-y-4">
                           <div className="flex items-start space-x-3 p-4 rounded-lg border border-border bg-card hover:border-primary/30 transition-colors">
                             <Checkbox
-                              id="accept_card_payment"
-                              checked={acceptCardPayment}
-                              onCheckedChange={(checked) => setAcceptCardPayment(!!checked)}
+                              id="accept_paypal_checkout"
+                              checked={acceptPayPalCheckout}
+                              onCheckedChange={(checked) => setAcceptPayPalCheckout(!!checked)}
                               className="mt-0.5"
                             />
                             <div className="flex-1">
                               <Label
-                                htmlFor="accept_card_payment"
+                                htmlFor="accept_paypal_checkout"
                                 className="flex items-center gap-2 text-base font-medium cursor-pointer"
                               >
                                 <CreditCard className="w-4 h-4 text-primary" />
-                                Pay by Card (Online)
+                                PayPal Checkout (Online)
                               </Label>
                               <p className="text-sm text-muted-foreground mt-1">
                                 Accept secure online payments through PayPal. Your proceeds are recorded and paid out to your payout email after sale confirmation.
                               </p>
-                              {acceptCardPayment && (
+                              {acceptPayPalCheckout && (
                                 <div className="mt-2 p-2 bg-primary/5 rounded text-xs text-muted-foreground">
                                   <Info className="w-3 h-3 inline mr-1" />
                                   Add your PayPal payout email in Settings to receive your proceeds.
@@ -2851,7 +2860,7 @@ export const PublishWizard: React.FC = () => {
                             </div>
                           </div>
 
-                          {!acceptCardPayment && !acceptCashPayment && (
+                          {!acceptPayPalCheckout && !acceptCashPayment && (
                             <div className="p-3 bg-muted/50 border border-border rounded-lg">
                               <p className="text-sm text-muted-foreground flex items-center gap-2">
                                 <Info className="w-4 h-4" />
@@ -3139,7 +3148,7 @@ export const PublishWizard: React.FC = () => {
                         disabled:
                           isSaving ||
                           (listing.mode === 'sale'
-                            ? !isValidPrice(priceSale) || (!acceptCardPayment && !acceptCashPayment)
+                            ? !isValidPrice(priceSale) || (!acceptPayPalCheckout && !acceptCashPayment)
                             : !isValidPrice(priceDaily)),
                       }}
                     />
@@ -4444,7 +4453,7 @@ export const PublishWizard: React.FC = () => {
             hoursOfAccess,
             availableFrom: availableFrom || undefined,
             availableTo: availableTo || undefined,
-            acceptCardPayment,
+            acceptPayPalCheckout,
             acceptCashPayment}}
           host={user ? {
             name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'You',

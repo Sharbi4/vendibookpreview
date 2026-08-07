@@ -319,7 +319,7 @@ async function createListingDraft(supabase: any, args: any) {
     rental_min_days,
     // Sale pricing
     price_sale,
-    accept_card_payment,
+    accept_paypal_checkout,
     accept_cash_payment,
     // Dimensions
     weight_lbs,
@@ -372,7 +372,7 @@ async function createListingDraft(supabase: any, args: any) {
     instant_book: instant_book ?? false,
     rental_min_days: rental_min_days || null,
     // Payment preferences
-    accept_card_payment: accept_card_payment ?? true,
+    accept_paypal_checkout: accept_paypal_checkout ?? true,
     accept_cash_payment: accept_cash_payment ?? false,
     // Dimensions
     weight_lbs: weight_lbs || null,

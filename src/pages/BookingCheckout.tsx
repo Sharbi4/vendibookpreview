@@ -302,11 +302,11 @@ const BookingCheckout = () => {
         price_weekly: listing.price_weekly ?? null,
         price_hourly: (listing as { price_hourly?: number | null }).price_hourly ?? null,
         security_deposit: listing.deposit_amount ?? null,
-        accept_card_payment: listing.accept_card_payment ?? true,
+        accept_paypal_checkout: listing.accept_paypal_checkout ?? true,
       },
       selection: {
         mode: 'rent',
-        paymentMethod: 'stripe_card',
+        paymentMethod: 'paypal_checkout',
         basePriceDollars: fees.subtotal - currentDeliveryFee,
         deliveryFeeDollars: currentDeliveryFee,
         depositDollars: depositAmount,

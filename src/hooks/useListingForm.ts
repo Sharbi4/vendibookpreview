@@ -50,9 +50,10 @@ const initialFormData: ListingFormData = {
   height_inches: '',
   freight_category: null,
   required_documents: [],
-  // Payment method preferences (for sales) - both enabled by default
+  // Payment method preferences (for sales) - PayPal checkout + in-person cash
   accept_cash_payment: true,
-  accept_card_payment: true,
+  accept_card_payment: true, // Legacy; retained for audit
+  accept_paypal_checkout: true,
   // Proof Notary add-on (for sales)
   proof_notary_enabled: false,
   // Featured Listing add-on (for both rentals and sales)
@@ -162,7 +163,7 @@ export const useListingForm = () => {
       case 3:
         // Price required, and for sales, at least one payment method
         if (formData.mode === 'sale') {
-          const hasPaymentMethod = formData.accept_cash_payment || formData.accept_card_payment;
+          const hasPaymentMethod = formData.accept_cash_payment || formData.accept_paypal_checkout;
           return formData.price_sale.trim().length > 0 && parseFloat(formData.price_sale) > 0 && hasPaymentMethod;
         }
         return formData.price_daily.trim().length > 0 && parseFloat(formData.price_daily) > 0;
