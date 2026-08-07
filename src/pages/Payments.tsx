@@ -58,11 +58,21 @@ const Payments = () => {
                   Payments completed through Vendibook checkout are processed by PayPal. Eligible
                   purchases may include PayPal Purchase Protection; terms and limitations apply.
                 </p>
-                <div className="mb-6 flex items-center gap-3">
-                  <span className="text-xs uppercase tracking-[0.16em] text-muted-foreground">
-                    Processed by
-                  </span>
-                  <PayPalWordmark className="h-5" />
+                <div className="mb-6 flex flex-wrap items-center gap-x-5 gap-y-3">
+                  <div className="flex items-center gap-2.5">
+                    <span className="text-xs uppercase tracking-[0.16em] text-muted-foreground">
+                      Processed by
+                    </span>
+                    <PayPalMonogram className="h-6" />
+                    <PayPalWordmark className="h-5" />
+                  </div>
+                  <span aria-hidden className="hidden h-6 w-px bg-foreground/15 sm:block" />
+                  <div className="flex items-center gap-2.5">
+                    <span className="text-xs uppercase tracking-[0.16em] text-muted-foreground">
+                      Financing by
+                    </span>
+                    <EquinoxFundingLogo className="h-7" />
+                  </div>
                 </div>
                 <div className="flex flex-col gap-3 sm:flex-row">
                   <Button size="lg" variant="dark-shine" asChild>
