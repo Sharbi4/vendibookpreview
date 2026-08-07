@@ -34,14 +34,17 @@ const Auth = () => {
     }
   }, [searchParams]);
 
-  // Only show the post-signup welcome to newly-created accounts. Existing
-  // users who sign in without an onboarded_at timestamp should land on their
-  // dashboard, not the new-user onboarding flow.
-  const isNewUser = (user: User): boolean => {
-    const createdAt = new Date(user.created_at);
-    const now = new Date();
-    const diffMinutes = (now.getTime() - createdAt.getTime()) / (1000 * 60);
-    return diffMinutes < 10;
+  // The welcome flow is a one-time, new-account-only experience.
+  // Source of truth: profiles.onboarded_at (persisted by /welcome).
+  // A signed-in account only qualifies when it has no onboarded_at AND the
+  // account itself was created moments ago. Any older account missing the
+  // timestamp is backfilled immediately so it can never qualify again.
+  const NEW_ACCOUNT_WINDOW_MS = 10 * 60 * 1000;
+
+  const isFreshAccount = (user: User, profileCreatedAt?: string | null): boolean => {
+    const created = new Date(user.created_at || profileCreatedAt || 0).getTime();
+    if (!created) return false;
+    return Date.now() - created < NEW_ACCOUNT_WINDOW_MS;
   };
 
   useEffect(() => {
@@ -51,14 +54,23 @@ const Auth = () => {
         try {
           const { data } = await supabase
             .from('profiles')
-            .select('onboarded_at')
+            .select('onboarded_at, created_at')
             .eq('id', user.id)
             .maybeSingle();
           if (cancelled) return;
-          if (!data?.onboarded_at && isNewUser(user)) {
-            const rt = redirectUrl || '/dashboard';
-            navigate(`/welcome?returnTo=${encodeURIComponent(rt)}`, { replace: true });
-            return;
+
+          if (!data?.onboarded_at) {
+            if (isFreshAccount(user, data?.created_at)) {
+              const rt = redirectUrl || '/dashboard';
+              navigate(`/welcome?returnTo=${encodeURIComponent(rt)}`, { replace: true });
+              return;
+            }
+            // Existing account without the flag: mark as onboarded so the
+            // welcome screen is never evaluated for them again.
+            await supabase
+              .from('profiles')
+              .update({ onboarded_at: new Date().toISOString() })
+              .eq('id', user.id);
           }
         } catch {
           /* fall through to normal redirect */
