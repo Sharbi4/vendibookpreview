@@ -44,7 +44,6 @@ import IdentityChip from '@/components/dashboard/shared/IdentityChip';
 import DashboardMobileTabs from '@/components/dashboard/overview/DashboardMobileTabs';
 import GoProButton from '@/components/dashboard/GoProButton';
 import SidebarUpgradeCard from '@/components/dashboard/SidebarUpgradeCard';
-import VerifyReminderModal from '@/components/dashboard/VerifyReminderModal';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 
@@ -291,7 +290,6 @@ export const DashboardLayout = ({ children, mode, onModeChange, isHost }: Dashbo
 
   return (
     <div className="dashboard-shell vendibook-dashboard-luxury min-h-screen flex flex-col bg-background">
-      <VerifyReminderModal />
       {/* Mobile Header — only real mobile, tablets get the icon rail */}
       <header className="md:hidden sticky top-0 z-50 dash-utility-header">
 
