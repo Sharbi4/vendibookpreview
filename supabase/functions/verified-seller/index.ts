@@ -529,12 +529,20 @@ serve(async (req) => {
           })
           .eq("user_id", userId);
 
+        /**
+         * Plaid has the session but the Link token could not be minted. The
+         * hold stays put and the session is resumable — voiding here would
+         * strand a consumed Plaid attempt.
+         */
+        if (!started.linkToken) return linkTokenPending(started.sessionId);
+
         return jsonResponse(200, {
           status: "identity_in_progress",
           link_token: started.linkToken,
           badge_active: false,
         });
       } catch (err) {
+        // Only a failure to CREATE the session releases the money.
         const open = await latestOpenPayment(admin, userId);
         if (open) await voidAuthorizationOnce(admin, open, "plaid_session_failed");
         log("plaid_session_failed", { code: (err as PlaidError)?.errorCode });
