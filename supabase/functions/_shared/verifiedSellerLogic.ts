@@ -288,6 +288,127 @@ export function extractCaptureStatus(result: any): string | null {
   );
 }
 
+/**
+ * Capture id from a PayPal ORDER resource. A GET on the AUTHORIZATION only
+ * reports a status — it never carries the capture id — so an ALREADY_CAPTURED
+ * recovery must read the order's purchase_units[].payments.captures[].
+ */
+export function extractCaptureIdFromOrder(order: any): string | null {
+  const units = order?.purchase_units;
+  if (!Array.isArray(units)) return null;
+  for (const unit of units) {
+    const captures = unit?.payments?.captures;
+    if (Array.isArray(captures)) {
+      for (const capture of captures) {
+        if (capture?.id) return String(capture.id);
+      }
+    }
+  }
+  return null;
+}
+
+// ------------------------------------------------- money resolution (pure)
+/**
+ * The authoritative final position of the seller's money after an attempted
+ * release. Callers MUST persist this rather than re-writing an earlier state:
+ * a successful emergency refund must never be overwritten back to `captured`.
+ */
+export type MoneyState = "voided" | "refunded" | "captured" | "unresolved";
+
+export interface MoneyResolution {
+  /** True only when the seller definitively owes nothing. */
+  ok: boolean;
+  moneyState: MoneyState;
+  errorCode?: string;
+  /** True when a human must look at this. */
+  needsAdminAttention: boolean;
+  /** Safe to tell the seller "you were not charged". */
+  safeToSayNotCharged: boolean;
+}
+
+/** Classifies a PayPal void error message into an actionable outcome. */
+export type VoidErrorKind = "benign" | "already_captured" | "failed";
+
+export function classifyVoidError(text: string | null | undefined): VoidErrorKind {
+  const value = `${text ?? ""}`;
+  if (/ALREADY_CAPTURED|AUTHORIZATION_ALREADY_CAPTURED/i.test(value)) return "already_captured";
+  if (/VOIDED|EXPIRED|NOT_FOUND|RESOURCE_NOT_FOUND/i.test(value)) return "benign";
+  return "failed";
+}
+
+/**
+ * Single source of truth for "what is the money doing now" after a release
+ * attempt. Pure so every branch is directly testable.
+ */
+export function resolveMoneyOutcome(input: {
+  /** Result of the void call: confirmed release, benign no-op, or failure. */
+  void?: "confirmed" | "benign" | "failed";
+  /** PayPal reported the authorization was already captured. */
+  alreadyCaptured?: boolean;
+  /** Outcome of the emergency refund of that capture, when attempted. */
+  refund?: "succeeded" | "failed" | "not_attempted";
+  /** Identity genuinely succeeded, so the capture is legitimate. */
+  identitySucceeded?: boolean;
+  errorCode?: string;
+}): MoneyResolution {
+  if (input.alreadyCaptured) {
+    if (input.identitySucceeded) {
+      return {
+        ok: true,
+        moneyState: "captured",
+        needsAdminAttention: false,
+        safeToSayNotCharged: false,
+      };
+    }
+    if (input.refund === "succeeded") {
+      return {
+        ok: true,
+        moneyState: "refunded",
+        errorCode: "ALREADY_CAPTURED_REFUNDED",
+        needsAdminAttention: false,
+        safeToSayNotCharged: false,
+      };
+    }
+    return {
+      ok: false,
+      moneyState: "captured",
+      errorCode: input.errorCode ?? "ALREADY_CAPTURED",
+      needsAdminAttention: true,
+      safeToSayNotCharged: false,
+    };
+  }
+
+  if (input.void === "failed") {
+    return {
+      ok: false,
+      moneyState: "unresolved",
+      errorCode: input.errorCode ?? "VOID_FAILED",
+      needsAdminAttention: true,
+      safeToSayNotCharged: false,
+    };
+  }
+
+  return {
+    ok: true,
+    moneyState: "voided",
+    needsAdminAttention: false,
+    safeToSayNotCharged: true,
+  };
+}
+
+/**
+ * The badge may only show when identity genuinely succeeded AND a live,
+ * unrefunded capture funds it. Any unresolved money suppresses it.
+ */
+export function badgeAllowedForMoneyState(
+  identitySucceeded: boolean,
+  moneyState: MoneyState | string,
+): boolean {
+  return identitySucceeded && moneyState === "captured";
+}
+
+
+
 /** PayPal issues that mean "this account cannot authorize" — never fall back. */
 export const AUTHORIZATION_CAPABILITY_ISSUES = [
   "AUTH_CAPTURE_NOT_ENABLED",
