@@ -65,12 +65,8 @@ const HostDashboard = () => {
       description: 'Tell us where to send earnings — Vendibook pays sellers manually.',
       href: '/dashboard?view=host&tab=payouts', cta: 'Add', tone: 'warning',
     });
-    if (!isVerified) items.push({
-      id: 'verify', icon: ShieldAlert,
-      title: 'Verify your identity',
-      description: 'Required before publishing. Drafts stay safe.',
-      href: '/verify-identity', cta: 'Verify', tone: 'warning',
-    });
+    // Identity verification is optional on Vendibook — never surfaced as a
+    // publishing requirement.
     if (pendingOffers.length > 0) items.push({
       id: 'offers', icon: DollarSign,
       title: `${pendingOffers.length} open offer${pendingOffers.length > 1 ? 's' : ''}`,
