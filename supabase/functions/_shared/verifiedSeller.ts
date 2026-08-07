@@ -63,13 +63,21 @@ export function log(step: string, details?: Record<string, unknown>) {
 }
 
 // ------------------------------------------------------------------- config
+/**
+ * Reads the offer switch. FAILS CLOSED: any error, missing row or missing
+ * flag means the offer is unavailable, never silently enabled.
+ */
 export async function isOfferEnabled(admin: Admin): Promise<boolean> {
-  const { data } = await admin
+  const { data, error } = await admin
     .from("app_feature_flags")
     .select("enabled")
-    .eq("flag_key", VERIFIED_SELLER.flagKey)
+    .eq("key", VERIFIED_SELLER.flagKey)
     .maybeSingle();
-  return data?.enabled !== false;
+  if (error) {
+    log("offer_flag_read_failed", { code: error.code ?? null });
+    return false;
+  }
+  return data?.enabled === true;
 }
 
 // -------------------------------------------------------------------- reads
