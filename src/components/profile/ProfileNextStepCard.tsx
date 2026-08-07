@@ -25,24 +25,24 @@ interface NextStepConfig {
 
 interface ProfileNextStepCardProps {
   isVerified: boolean;
-  stripeConnected: boolean;
+  payoutReady: boolean;
   isHost: boolean;
   draftCount: number;
   pendingRequestCount: number;
-  isLoadingStripe?: boolean;
-  onConnectStripe?: () => void;
-  isConnectingStripe?: boolean;
+  isLoadingPayout?: boolean;
+  onSetUpPayouts?: () => void;
+  isSavingPayouts?: boolean;
 }
 
 const ProfileNextStepCard = ({
   isVerified,
-  stripeConnected,
+  payoutReady,
   isHost,
   draftCount,
   pendingRequestCount,
-  isLoadingStripe,
-  onConnectStripe,
-  isConnectingStripe,
+  isLoadingPayout,
+  onSetUpPayouts,
+  isSavingPayouts,
 }: ProfileNextStepCardProps) => {
   // Define all possible next steps with priority
   const allSteps: NextStepConfig[] = [
@@ -56,12 +56,12 @@ const ProfileNextStepCard = ({
       priority: 1,
     },
     {
-      id: 'stripe',
+      id: 'payouts',
       icon: CreditCard,
-      title: 'Connect Stripe to get paid',
+      title: 'Set up payouts to get paid',
       description: 'Set up payouts so you can receive payments for your listings.',
-      actionLabel: 'Connect Stripe',
-      actionOnClick: onConnectStripe,
+      actionLabel: 'Set up payouts',
+      actionOnClick: onSetUpPayouts,
       priority: 2,
     },
     {
@@ -100,9 +100,9 @@ const ProfileNextStepCard = ({
       return allSteps.find(s => s.id === 'verify')!;
     }
 
-    // Priority 2: Host without Stripe connected
-    if (isHost && !stripeConnected && !isLoadingStripe) {
-      return allSteps.find(s => s.id === 'stripe')!;
+    // Priority 2: Host without payout details saved
+    if (isHost && !payoutReady && !isLoadingPayout) {
+      return allSteps.find(s => s.id === 'payouts')!;
     }
 
     // Priority 3: Has drafts
@@ -155,9 +155,9 @@ const ProfileNextStepCard = ({
               size="sm" 
               className="flex-shrink-0" 
               onClick={step.actionOnClick}
-              disabled={isConnectingStripe}
+              disabled={isSavingPayouts}
             >
-              {isConnectingStripe ? (
+              {isSavingPayouts ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-1 animate-spin" />
                   Connecting...
