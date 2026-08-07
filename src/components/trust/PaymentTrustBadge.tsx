@@ -1,5 +1,6 @@
 import React from 'react';
 import { Lock } from 'lucide-react';
+import { PayPalMonogram } from '@/components/brand/ProviderLogos';
 import { cn } from '@/lib/utils';
 
 /**
