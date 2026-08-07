@@ -82,8 +82,8 @@ const HeroLegacy = () => {
             transition={{ duration: 0.5, delay: 0.15 }}
             className="text-base md:text-lg text-muted-foreground max-w-xl mx-auto mb-8 leading-relaxed"
           >
-            Search verified food trucks and trailers, compare real listings, and connect with
-            owners through a safer, more structured marketplace.
+            Search detailed food truck and trailer listings, compare options, and connect with
+            owners through a more structured marketplace.
           </motion.p>
 
           {/* Search */}
