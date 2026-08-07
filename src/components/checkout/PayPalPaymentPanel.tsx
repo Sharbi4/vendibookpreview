@@ -271,8 +271,10 @@ const PayPalPaymentPanel = ({
                     </div>
                   ) : null}
 
-                  <p className="text-[11px] text-muted-foreground text-center">
-                    Payments are processed securely by PayPal. Vendibook never sees your card number.
+                  <p className="text-[11px] text-muted-foreground text-center inline-flex w-full items-center justify-center gap-1.5">
+                    Payments are processed securely by
+                    <PayPalMonogram className="h-3.5" />
+                    PayPal. Vendibook never sees your card number.
                   </p>
                 </>
               )}
