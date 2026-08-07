@@ -265,7 +265,7 @@ const HowItWorks = () => {
                 </p>
                 <ol className="space-y-2 mb-5 text-sm text-foreground/80">
                   <li className="flex gap-2"><span className="text-foreground/40 font-mono text-xs mt-0.5">01</span> List in minutes — free, no subscription</li>
-                  <li className="flex gap-2"><span className="text-foreground/40 font-mono text-xs mt-0.5">02</span> Verify your identity and documents</li>
+                  <li className="flex gap-2"><span className="text-foreground/40 font-mono text-xs mt-0.5">02</span> Add photos, pricing, and any documents — identity verification is an optional paid add-on</li>
                   <li className="flex gap-2"><span className="text-foreground/40 font-mono text-xs mt-0.5">03</span> Get paid — rentals in 24h, sales in 2–5 days</li>
                 </ol>
                 <div className="flex flex-wrap gap-2">
