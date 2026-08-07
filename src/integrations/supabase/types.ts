@@ -7210,8 +7210,11 @@ export type Database = {
           paypal_order_id: string | null
           paypal_refund_id: string | null
           provider: string
+          purpose: string
           reference: string
+          refund_reason: string | null
           refunded_at: string | null
+          refunded_by: string | null
           state: string
           updated_at: string
           user_id: string
@@ -7233,8 +7236,11 @@ export type Database = {
           paypal_order_id?: string | null
           paypal_refund_id?: string | null
           provider?: string
+          purpose?: string
           reference: string
+          refund_reason?: string | null
           refunded_at?: string | null
+          refunded_by?: string | null
           state?: string
           updated_at?: string
           user_id: string
@@ -7256,8 +7262,11 @@ export type Database = {
           paypal_order_id?: string | null
           paypal_refund_id?: string | null
           provider?: string
+          purpose?: string
           reference?: string
+          refund_reason?: string | null
           refunded_at?: string | null
+          refunded_by?: string | null
           state?: string
           updated_at?: string
           user_id?: string
@@ -9208,6 +9217,10 @@ export type Database = {
         }
         Returns: Json
       }
+      claim_seller_verification_retry: {
+        Args: { _user_id: string }
+        Returns: boolean
+      }
       count_purchase_referrals_this_month: {
         Args: { p_referrer_id: string }
         Returns: number
@@ -9555,6 +9568,10 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      release_seller_verification_retry: {
+        Args: { _user_id: string }
+        Returns: undefined
+      }
       rename_permit_document: {
         Args: { p_document_id: string; p_file_name: string }
         Returns: {
@@ -9646,6 +9663,13 @@ export type Database = {
       revoke_user_consent: {
         Args: { _consent_id: string; _reason: string }
         Returns: undefined
+      }
+      seller_identity_badges: {
+        Args: { _user_ids: string[] }
+        Returns: {
+          user_id: string
+          verified_at: string
+        }[]
       }
       soft_delete_permit_document: {
         Args: { p_document_id: string }

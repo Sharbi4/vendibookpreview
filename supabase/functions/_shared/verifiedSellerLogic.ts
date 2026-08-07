@@ -154,6 +154,53 @@ export function shouldApplyPlaidStatus(
   return true;
 }
 
+// ------------------------------------------------------- webhook integrity
+/** Hex SHA-256. Available in Deno, browsers and Node 18+ via Web Crypto. */
+export async function sha256Hex(value: string): Promise<string> {
+  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(value));
+  return Array.from(new Uint8Array(digest))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+}
+
+/**
+ * Deduplication key for a Plaid webhook.
+ *
+ * Derived from a digest of the VERIFIED raw body, so two legitimate status
+ * updates for the same identity_verification_id (active -> pending_review ->
+ * success) each process, while an exact duplicate delivery is dropped. Plaid
+ * does not always send a timestamp, so a field-composed key is not safe.
+ */
+export async function webhookEventKey(
+  webhookCode: string,
+  rawBody: string,
+): Promise<string> {
+  return `${webhookCode}:${await sha256Hex(rawBody)}`;
+}
+
+/**
+ * Plaid signs webhooks with a short-lived JWT. Reject anything older than five
+ * minutes AND anything materially in the future (clock-skew tolerance only),
+ * which would otherwise widen the replay window arbitrarily.
+ */
+export function isFreshPlaidIat(
+  iat: number | undefined | null,
+  nowSeconds: number = Date.now() / 1000,
+  opts: { maxAgeSeconds?: number; maxSkewSeconds?: number } = {},
+): boolean {
+  const maxAge = opts.maxAgeSeconds ?? 300;
+  const maxSkew = opts.maxSkewSeconds ?? 30;
+  if (!iat || !Number.isFinite(iat)) return false;
+  const age = nowSeconds - iat;
+  if (age > maxAge) return false;
+  if (age < -maxSkew) return false;
+  return true;
+}
+
+/** Purpose recorded on a Verified Seller payment row. */
+export type PaymentPurpose = "initial" | "retry" | "payment_only";
+
+
 // ------------------------------------------------------------------ badge
 /** The single authoritative badge rule. Mirrors is_seller_identity_verified(). */
 export function isBadgeEligible(record: Partial<VerificationRecord> | null | undefined): boolean {

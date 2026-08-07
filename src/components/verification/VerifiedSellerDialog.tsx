@@ -29,7 +29,7 @@ interface VerifiedSellerDialogProps {
   onVerified?: () => void;
 }
 
-type Step = 'terms' | 'pay' | 'working' | 'result';
+type Step = 'terms' | 'resume' | 'pay' | 'working' | 'result';
 
 /**
  * Verified Seller purchase flow.
@@ -55,9 +55,24 @@ const VerifiedSellerDialog = ({ open, onOpenChange, onVerified }: VerifiedSeller
     setAccepted(false);
     setOrderId(null);
     notifiedRef.current = false;
-    setStep(status === 'verified' || status === 'pending_review' ? 'result' : 'terms');
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
+
+  /**
+   * Land on the step that matches the server's state. A check already in
+   * flight resumes — it must never send the seller back through terms or a
+   * second payment authorization.
+   */
+  useEffect(() => {
+    if (!open) return;
+    setStep((current) => {
+      if (current === 'pay' || current === 'working') return current;
+      if (status === 'verified' || status === 'pending_review') return 'result';
+      if (status === 'identity_in_progress') return 'resume';
+      if (current === 'result') return 'result';
+      return 'terms';
+    });
+  }, [open, status]);
 
   useEffect(() => {
     if (v.state?.badge_active && !notifiedRef.current) {
@@ -220,6 +235,46 @@ const VerifiedSellerDialog = ({ open, onOpenChange, onVerified }: VerifiedSeller
                     Continue to PayPal — {v.offer.display_price}
                   </>
                 )}
+              </Button>
+            </div>
+          )}
+
+          {/* --------------------------------------------------- resume */}
+          {step === 'resume' && (
+            <div className="space-y-4 pb-2">
+              <div className="rounded-xl border border-border bg-muted/30 p-4">
+                <p className="text-sm font-medium text-foreground">
+                  Pick your identity check back up
+                </p>
+                <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+                  Your check is already started and your {v.offer.display_price} is still only a
+                  hold. Nothing new is charged and there is nothing to accept again — we&rsquo;ll
+                  reopen the check exactly where you left off.
+                </p>
+              </div>
+              <Button onClick={() => v.resume()} disabled={v.busy} className="w-full min-h-11">
+                {v.busy ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                    Reopening…
+                  </>
+                ) : (
+                  <>
+                    <ShieldCheck className="h-4 w-4" aria-hidden="true" />
+                    Resume verification
+                  </>
+                )}
+              </Button>
+              <Button
+                variant="ghost"
+                className="w-full min-h-11"
+                disabled={v.busy}
+                onClick={async () => {
+                  await v.cancel();
+                  setStep('result');
+                }}
+              >
+                Cancel and release the hold
               </Button>
             </div>
           )}

@@ -19,6 +19,8 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { VerifiedBadgeImage } from '@/components/verification/VerificationBadge';
 import { cn } from '@/lib/utils';
+import IdentityVerifiedBadge from '@/components/verification/IdentityVerifiedBadge';
+import { useSellerIdentityBadgeMap } from '@/hooks/useSellerIdentityBadgeMap';
 import { getPublicDisplayName, getDisplayInitials } from '@/lib/displayName';
 import TopRatedBadge from './TopRatedBadge';
 import AboutSection from './AboutSection';
@@ -90,6 +92,14 @@ const EnhancedPublicProfileHeader = ({
   const displayName = getPublicDisplayName(profile);
   const initials = getDisplayInitials(profile);
   const memberSince = format(new Date(profile.created_at), 'MMMM yyyy');
+
+  /**
+   * Paid Identity Verified badge, read from the sanitized server function.
+   * profiles.identity_verified is legacy history and never drives this badge.
+   */
+  const badgeMap = useSellerIdentityBadgeMap([profile.id]);
+  const identityVerified = !!badgeMap[profile.id]?.verified;
+  const identityVerifiedAt = badgeMap[profile.id]?.verifiedAt ?? null;
   
   // Upload state for own profile
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
@@ -352,7 +362,7 @@ const EnhancedPublicProfileHeader = ({
               )}
               
               {/* Verified badge overlay - positioned at bottom-right with proper offset */}
-              {profile.identity_verified && (
+              {identityVerified && (
                 <motion.div 
                   className="absolute bottom-0 right-0 translate-x-1 translate-y-1 bg-background rounded-full p-0.5 shadow-lg border-2 border-background"
                   initial={{ scale: 0 }}
@@ -441,34 +451,16 @@ const EnhancedPublicProfileHeader = ({
                   </motion.div>
                 )}
 
-                {/* Verified Badge */}
-                <motion.div variants={badgeVariants}>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <motion.div 
-                        whileHover={{ scale: 1.05 }}
-                        className={cn(
-                          'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border shadow-sm',
-                          profile.identity_verified
-                            ? 'bg-secondary/80 backdrop-blur-xl text-foreground border-border/60'
-                            : 'bg-secondary/50 backdrop-blur-sm text-muted-foreground border-border/40'
-                        )}
-                      >
-                        {profile.identity_verified ? (
-                          <ShieldCheck className="h-3.5 w-3.5 text-primary" />
-                        ) : (
-                          <ShieldCheck className="h-3.5 w-3.5" />
-                        )}
-                        {profile.identity_verified ? 'Verified' : 'Not Verified'}
-                      </motion.div>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      {profile.identity_verified 
-                        ? 'Identity verified via secure verification'
-                        : 'Identity not yet verified'}
-                    </TooltipContent>
-                  </Tooltip>
-                </motion.div>
+                {/* Identity Verified — paid, server-derived. Never a negative state. */}
+                {identityVerified && (
+                  <motion.div variants={badgeVariants}>
+                    <IdentityVerifiedBadge
+                      verified
+                      size="md"
+                      verifiedAt={identityVerifiedAt}
+                    />
+                  </motion.div>
+                )}
 
                 {/* Response Time Badge */}
                 {responseTime && (

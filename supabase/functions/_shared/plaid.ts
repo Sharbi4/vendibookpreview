@@ -9,6 +9,8 @@
  *   PLAID_IDV_TEMPLATE_ID   production Identity Verification template
  */
 
+import { isFreshPlaidIat } from "./verifiedSellerLogic.ts";
+
 export type PlaidEnvironment = "production" | "sandbox";
 
 export function plaidEnvironment(): PlaidEnvironment {
@@ -136,6 +138,9 @@ export async function createIdentityVerification(opts: {
   templateId: string;
 }): Promise<PlaidIdvSession> {
   return await plaidRequest<PlaidIdvSession>("/identity_verification/create", {
+    // Current Plaid IDV guidance puts client_user_id at the ROOT of the
+    // request. `user` stays for the fields Plaid still reads from it.
+    client_user_id: opts.clientUserId,
     is_shareable: false,
     template_id: opts.templateId,
     gave_consent: false,
@@ -287,12 +292,15 @@ export async function verifyPlaidWebhook(
     return false;
   }
 
-  // Replay window: Plaid recommends rejecting tokens older than 5 minutes.
+  // Replay window: reject tokens older than five minutes, and reject tokens
+  // materially in the future (only a small clock-skew allowance).
   const iat = Number(payload.iat ?? 0);
-  if (!iat || Date.now() / 1000 - iat > 300) {
+  if (!isFreshPlaidIat(iat)) {
     plaidLog("webhook_stale", { age_seconds: Math.round(Date.now() / 1000 - iat) });
     return false;
   }
+
+
 
   const bodyHash = await sha256Hex(rawBody);
   if (bodyHash !== payload.request_body_sha256) {

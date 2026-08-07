@@ -49,6 +49,7 @@ export interface PaymentRow {
   amount_cents: number;
   currency: string;
   state: string;
+  purpose?: string | null;
   attempt_verification_id: string | null;
   expires_at: string | null;
   created_at: string;
@@ -63,13 +64,21 @@ export function log(step: string, details?: Record<string, unknown>) {
 }
 
 // ------------------------------------------------------------------- config
+/**
+ * Reads the offer switch. FAILS CLOSED: any error, missing row or missing
+ * flag means the offer is unavailable, never silently enabled.
+ */
 export async function isOfferEnabled(admin: Admin): Promise<boolean> {
-  const { data } = await admin
+  const { data, error } = await admin
     .from("app_feature_flags")
     .select("enabled")
-    .eq("flag_key", VERIFIED_SELLER.flagKey)
+    .eq("key", VERIFIED_SELLER.flagKey)
     .maybeSingle();
-  return data?.enabled !== false;
+  if (error) {
+    log("offer_flag_read_failed", { code: error.code ?? null });
+    return false;
+  }
+  return data?.enabled === true;
 }
 
 // -------------------------------------------------------------------- reads
@@ -165,6 +174,19 @@ async function markPayment(
 }
 
 /**
+ * Mirrors a money transition onto the authoritative seller record so the UI
+ * never shows a stale payment state. Never downgrades a live paid badge.
+ */
+export async function syncPaymentState(admin: Admin, userId: string, state: string) {
+  const query = admin
+    .from("seller_verifications")
+    .update({ payment_state: state, updated_at: new Date().toISOString() })
+    .eq("user_id", userId);
+  if (state !== "captured") query.neq("status", "verified");
+  await query;
+}
+
+/**
  * Captures a held authorization exactly once. A row already in `captured`
  * short-circuits, and PayPal's own idempotency key covers concurrent callers.
  */
@@ -195,6 +217,7 @@ export async function captureAuthorizationOnce(
         state: "failed",
         error_code: status || "CAPTURE_NOT_COMPLETED",
       });
+      await syncPaymentState(admin, payment.user_id, "failed");
       return { ok: false, errorCode: status || "CAPTURE_NOT_COMPLETED" };
     }
 
@@ -204,11 +227,13 @@ export async function captureAuthorizationOnce(
       captured_at: new Date().toISOString(),
       error_code: null,
     });
+    await syncPaymentState(admin, payment.user_id, "captured");
     log("captured", { payment_id: payment.id });
     return { ok: true, captureId };
   } catch (err) {
     const code = (err as { errorCode?: string })?.errorCode ?? "CAPTURE_FAILED";
     await markPayment(admin, payment.id, { state: "failed", error_code: code });
+    await syncPaymentState(admin, payment.user_id, "failed");
     log("capture_failed", { payment_id: payment.id, code });
     return { ok: false, errorCode: code };
   }
@@ -221,13 +246,16 @@ export async function voidAuthorizationOnce(
   reason: string,
 ): Promise<{ ok: boolean; errorCode?: string }> {
   if (payment.state === "voided") return { ok: true };
-  if (payment.state === "captured") return { ok: false, errorCode: "ALREADY_CAPTURED" };
+  if (payment.state === "captured") {
+    return await reconcileUnexpectedCapture(admin, payment, reason);
+  }
   if (!payment.paypal_authorization_id) {
     await markPayment(admin, payment.id, {
       state: "voided",
       voided_at: new Date().toISOString(),
       error_code: reason,
     });
+    await syncPaymentState(admin, payment.user_id, "voided");
     return { ok: true };
   }
 
@@ -238,10 +266,18 @@ export async function voidAuthorizationOnce(
     );
   } catch (err) {
     const code = (err as { errorCode?: string })?.errorCode ?? "";
-    // Already voided / already captured / expired are all acceptable ends.
-    const benign = /VOIDED|ALREADY|EXPIRED|NOT_FOUND|RESOURCE_NOT_FOUND/i.test(
-      `${code} ${(err as Error).message ?? ""}`,
-    );
+    const text = `${code} ${(err as Error).message ?? ""}`;
+
+    /**
+     * ALREADY_CAPTURED is NOT a successful void — money moved. Reconcile the
+     * real authorization state and refund if identity did not succeed. Only
+     * confirmed voided / expired / not-found outcomes may be recorded as void.
+     */
+    if (/ALREADY_CAPTURED|AUTHORIZATION_ALREADY_CAPTURED/i.test(text)) {
+      return await reconcileUnexpectedCapture(admin, payment, reason);
+    }
+
+    const benign = /VOIDED|EXPIRED|NOT_FOUND|RESOURCE_NOT_FOUND/i.test(text);
     if (!benign) {
       await markPayment(admin, payment.id, { error_code: code || "VOID_FAILED" });
       log("void_failed", { payment_id: payment.id, code });
@@ -254,8 +290,57 @@ export async function voidAuthorizationOnce(
     voided_at: new Date().toISOString(),
     error_code: reason,
   });
+  await syncPaymentState(admin, payment.user_id, "voided");
   log("voided", { payment_id: payment.id, reason });
   return { ok: true };
+}
+
+/**
+ * PayPal says the authorization was already captured. Record the true state
+ * and, if the identity check did not succeed, refund it — a void that cannot
+ * void must never be reported as a released hold.
+ */
+async function reconcileUnexpectedCapture(
+  admin: Admin,
+  payment: PaymentRow,
+  reason: string,
+): Promise<{ ok: boolean; errorCode?: string }> {
+  let captureId = payment.paypal_capture_id;
+  if (!captureId && payment.paypal_authorization_id) {
+    try {
+      const auth = await getPayPalAuthorization(payment.paypal_authorization_id) as {
+        status?: string;
+      };
+      log("void_reconcile", { payment_id: payment.id, auth_status: auth?.status ?? null });
+    } catch {
+      /* best effort — the refund path below still guards the money */
+    }
+  }
+
+  await markPayment(admin, payment.id, {
+    state: "captured",
+    captured_at: payment.created_at ?? new Date().toISOString(),
+    error_code: "ALREADY_CAPTURED",
+  });
+  await syncPaymentState(admin, payment.user_id, "captured");
+
+  const record = await ensureVerification(admin, payment.user_id);
+  if (record?.identity_status === "success") {
+    // Legitimately paid — nothing to release.
+    return { ok: true };
+  }
+
+  const refreshed = { ...payment, state: "captured", paypal_capture_id: captureId } as PaymentRow;
+  const refunded = await refundPaymentOnce(
+    admin,
+    refreshed,
+    `already_captured:${reason}`.slice(0, 120),
+  );
+  if (!refunded.ok) {
+    await alertAdminsOfIssue(admin, payment.id, payment.user_id, "already_captured_refund_failed");
+    return { ok: false, errorCode: "ALREADY_CAPTURED" };
+  }
+  return { ok: false, errorCode: "ALREADY_CAPTURED_REFUNDED" };
 }
 
 /**
@@ -266,8 +351,12 @@ export async function refundPaymentOnce(
   admin: Admin,
   payment: PaymentRow,
   reason: string,
+  opts: { adminId?: string | null } = {},
 ): Promise<{ ok: boolean; refundId?: string }> {
-  if (payment.paypal_refund_id) return { ok: true, refundId: payment.paypal_refund_id };
+  if (payment.paypal_refund_id) {
+    await applyRefundToVerification(admin, payment.user_id, reason);
+    return { ok: true, refundId: payment.paypal_refund_id };
+  }
   if (!payment.paypal_capture_id) return { ok: false };
 
   try {
@@ -283,14 +372,39 @@ export async function refundPaymentOnce(
       state: "refunded",
       paypal_refund_id: refundId,
       refunded_at: new Date().toISOString(),
+      refund_reason: reason.slice(0, 500),
+      refunded_by: opts.adminId ?? null,
       error_code: reason,
     });
+    // The badge must die with the money, in the same operation.
+    await applyRefundToVerification(admin, payment.user_id, reason);
     log("refunded", { payment_id: payment.id, reason });
     return { ok: true, refundId: refundId ?? undefined };
   } catch (err) {
     log("refund_failed", { payment_id: payment.id, message: (err as Error).message });
     return { ok: false };
   }
+}
+
+/**
+ * A refunded verification is never badge-eligible. Applied atomically with the
+ * refund so `payment_state` can never stay `captured` behind a refunded charge.
+ * Runs only when no OTHER capture still stands for the seller.
+ */
+async function applyRefundToVerification(admin: Admin, userId: string, reason: string) {
+  const remaining = await capturedPayment(admin, userId);
+  if (remaining) return; // another live capture still funds the badge
+
+  await admin
+    .from("seller_verifications")
+    .update({
+      payment_state: "refunded",
+      status: "payment_required",
+      verified_at: null,
+      last_reason_code: `refunded:${reason}`.slice(0, 200),
+      updated_at: new Date().toISOString(),
+    })
+    .eq("user_id", userId);
 }
 
 /** Collapses accidental duplicate captures down to a single charge. */
@@ -402,7 +516,31 @@ export async function reconcileVerification(
     };
   }
 
-  const attemptId = opts.verificationId ?? record.current_attempt_id;
+  /**
+   * Attempt lineage. A webhook can arrive for a superseded attempt after a
+   * retry created a newer one. We still record that attempt's own status, but
+   * the seller's authoritative record must always follow the CURRENT attempt.
+   */
+  const eventAttemptId = opts.verificationId ?? null;
+  const currentAttemptId = record.current_attempt_id ?? null;
+  const isStaleAttempt = !!eventAttemptId && !!currentAttemptId &&
+    eventAttemptId !== currentAttemptId;
+
+  if (isStaleAttempt) {
+    try {
+      const stale = await getIdentityVerification(eventAttemptId!);
+      await admin
+        .from("seller_verification_attempts")
+        .update({ status: stale.status ?? "active", updated_at: new Date().toISOString() })
+        .eq("plaid_verification_id", eventAttemptId);
+    } catch {
+      /* recording history is best effort */
+    }
+    log("stale_attempt_ignored", { event_attempt: eventAttemptId, current: currentAttemptId });
+    // Fall through and reconcile the CURRENT attempt instead.
+  }
+
+  const attemptId = isStaleAttempt ? currentAttemptId! : (eventAttemptId ?? currentAttemptId);
   if (!attemptId) {
     return {
       status: record.status,
@@ -595,18 +733,26 @@ export async function cleanupAbandonedAuthorizations(
     if (row.paypal_authorization_id && record.identity_status === "success") continue;
 
     const result = await voidAuthorizationOnce(admin, row, "abandoned_authorization");
-    if (result.ok) {
-      voided += 1;
-      await admin
-        .from("seller_verifications")
-        .update({
-          status: record.status === "verified" ? record.status : "canceled",
-          payment_state: "voided",
-          updated_at: new Date().toISOString(),
-        })
-        .eq("user_id", row.user_id)
-        .neq("status", "verified");
-    }
+    if (!result.ok) continue;
+    voided += 1;
+
+    /**
+     * A pending_review seller keeps their identity session. Only the money is
+     * released — if Plaid later reports success they move to payment_required
+     * and pay without ever rerunning the check.
+     */
+    const stillPending = record.identity_status === "pending_review" ||
+      record.status === "pending_review";
+
+    await admin
+      .from("seller_verifications")
+      .update({
+        status: stillPending ? "pending_review" : "canceled",
+        payment_state: "voided",
+        updated_at: new Date().toISOString(),
+      })
+      .eq("user_id", row.user_id)
+      .neq("status", "verified");
   }
   log("cleanup_complete", { scanned: rows.length, voided });
   return { scanned: rows.length, voided };

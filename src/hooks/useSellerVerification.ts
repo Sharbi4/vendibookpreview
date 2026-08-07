@@ -261,6 +261,43 @@ export function useSellerVerification(options: { enabled?: boolean } = {}) {
     }
   }, []);
 
+  /**
+   * Resume an identity check that is already in flight.
+   *
+   * Never accepts terms again and never creates or authorizes a second PayPal
+   * order — the server reopens Plaid Link against the existing session (or
+   * safely releases an unusable hold and says so).
+   */
+  const resume = useCallback(async () => {
+    setError(null);
+    setNotice(null);
+    setPhase('verifying');
+    try {
+      const data = await call({ action: 'link-token' });
+      if (!data.link_token) throw new Error('There is no identity check to resume.');
+      await openPlaidLink(data.link_token);
+      setPhase('settling');
+      const settled = await call({ action: 'refresh' });
+      if (mounted.current) {
+        setState(settled);
+        setPhase('idle');
+        if (settled.badge_active) {
+          setNotice('You\u2019re verified. Your Identity Verified badge is live.');
+        } else if (settled.message) {
+          setNotice(settled.message);
+        }
+      }
+      return settled;
+    } catch (err) {
+      if (mounted.current) {
+        setError((err as Error).message);
+        setPhase('idle');
+      }
+      await refresh();
+      return null;
+    }
+  }, [refresh]);
+
   /** Identity already passed — pay without repeating the identity check. */
   const completePayment = useCallback(async () => {
     setError(null);
@@ -305,6 +342,7 @@ export function useSellerVerification(options: { enabled?: boolean } = {}) {
     start,
     authorizeAndVerify,
     retry,
+    resume,
     completePayment,
     cancel,
     mountAuthorizeButtons,

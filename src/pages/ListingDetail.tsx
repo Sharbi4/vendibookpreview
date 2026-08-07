@@ -56,6 +56,7 @@ import { ListingHighlightsCard } from '@/components/transaction';
 import OwnerBanner from '@/components/listing-detail/OwnerBanner';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { useSellerIdentityBadgeMap } from '@/hooks/useSellerIdentityBadgeMap';
 import { useListing } from '@/hooks/useListing';
 import ListingUnavailable from '@/components/listing-detail/ListingUnavailable';
 import { isListingPubliclyVisible } from '@/lib/listings/publicVisibility';
@@ -78,6 +79,13 @@ const ListingDetail = () => {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
   const { listing, host, isLoading, error } = useListing(id);
+
+  /**
+   * Paid Identity Verified state for the seller/host, read from the sanitized
+   * server function — never the legacy profiles.identity_verified column.
+   */
+  const sellerBadges = useSellerIdentityBadgeMap([listing?.host_id]);
+  const sellerIdentityVerified = !!(listing?.host_id && sellerBadges[listing.host_id]?.verified);
   
   // Track page views with Google Analytics
   usePageTracking();
@@ -590,7 +598,7 @@ const ListingDetail = () => {
                   <SellerTrustPanel
                     hostId={listing.host_id}
                     hostName={host ? getPublicDisplayName(host) : null}
-                    isVerified={host?.identity_verified || false}
+                    isVerified={sellerIdentityVerified}
                     memberSince={host?.created_at}
                     lastActiveAt={host?.last_active_at}
                     city={listing.city || (host as any)?.public_city}
@@ -608,7 +616,7 @@ const ListingDetail = () => {
                     listingId={listing.id}
                     hostName={host ? getPublicDisplayName(host) : null}
                     hostAvatar={host?.avatar_url}
-                    isVerified={host?.identity_verified || false}
+                    isVerified={sellerIdentityVerified}
                     memberSince={host?.created_at}
                     lastActiveAt={host?.last_active_at}
                     isRental={isRental}

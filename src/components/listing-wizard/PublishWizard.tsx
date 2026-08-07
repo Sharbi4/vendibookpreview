@@ -4248,6 +4248,16 @@ export const PublishWizard: React.FC = () => {
                     </div>
                   )}
 
+                  {/*
+                    Quiet, informational only. Identity verification is never a
+                    publish gate — no modal, no CTA and no fee in the wizard.
+                  */}
+                  <p className="text-xs text-muted-foreground">
+                    Optional identity verification is available after your listing is published.
+                  </p>
+
+
+
                   {/* Public vs private summary + mandatory attestations */}
                   <PrivacySummary />
 
