@@ -216,6 +216,7 @@ export async function captureAuthorizationOnce(
         state: "failed",
         error_code: status || "CAPTURE_NOT_COMPLETED",
       });
+      await syncPaymentState(admin, payment.user_id, "failed");
       return { ok: false, errorCode: status || "CAPTURE_NOT_COMPLETED" };
     }
 
@@ -225,6 +226,7 @@ export async function captureAuthorizationOnce(
       captured_at: new Date().toISOString(),
       error_code: null,
     });
+    await syncPaymentState(admin, payment.user_id, "captured");
     log("captured", { payment_id: payment.id });
     return { ok: true, captureId };
   } catch (err) {
