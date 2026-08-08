@@ -89,12 +89,12 @@ const IdentityVerification = () => {
           />
           <div className="container relative z-10">
             <div className="mx-auto max-w-3xl text-center">
-                <IdentityVerifiedBadge
-                  verified={true}
-                  size="lg"
-                  withDetails
-                  className="mx-auto mb-5"
-                />
+              <IdentityVerifiedBadge
+                verified={true}
+                size="lg"
+                withDetails
+                className="mb-5 inline-flex"
+              />
               <h1 className="mb-4 text-3xl font-bold tracking-tight text-foreground sm:text-4xl md:text-5xl">
                 Show buyers it&rsquo;s really you.
               </h1>
