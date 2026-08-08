@@ -1,3 +1,4 @@
+import { deliveryRateLabel } from '@/lib/fulfillment/delivery';
 import { useParams, Link } from 'react-router-dom';
 import { 
   ArrowLeft, 
@@ -686,11 +687,26 @@ const ListingDetail = () => {
                       <dd className="font-medium text-foreground">{locationShort}</dd>
                     </div>
                   )}
-                  {!isRental && ['food_truck', 'food_trailer'].includes(listing.category) && (
+                  {!isRental && (
                     <div className="col-span-2">
-                      <dt className="text-muted-foreground">Pickup & Transfer</dt>
-                      <dd className="text-foreground">
-                        Pickup, delivery, or transfer details are coordinated directly with the seller and may vary by listing.
+                      <dt className="text-muted-foreground">Pickup &amp; delivery</dt>
+                      <dd className="text-foreground space-y-1">
+                        {(listing.fulfillment_type === 'pickup' || listing.fulfillment_type === 'both') && (
+                          <p>
+                            Pickup{locationShort ? ` near ${locationShort}` : ''} — the exact pickup address unlocks for the buyer right after payment, then you and the seller confirm the pickup.
+                          </p>
+                        )}
+                        {(listing.fulfillment_type === 'delivery' || listing.fulfillment_type === 'both') && (
+                          <p>
+                            Seller delivers{listing.delivery_radius_miles ? ` within ${listing.delivery_radius_miles} miles` : ''}
+                            {deliveryRateLabel(listing.delivery_fee, (listing as any).delivery_fee_type)
+                              ? ` — ${deliveryRateLabel(listing.delivery_fee, (listing as any).delivery_fee_type)}`
+                              : ''}. You enter your delivery address at checkout.
+                          </p>
+                        )}
+                        {!listing.fulfillment_type && (
+                          <p>Pickup, delivery, or transfer details are coordinated directly with the seller.</p>
+                        )}
                       </dd>
                     </div>
                   )}

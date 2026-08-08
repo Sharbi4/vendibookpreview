@@ -3522,6 +3522,7 @@ export type Database = {
           daily_enabled: boolean | null
           deleted_at: string | null
           delivery_fee: number | null
+          delivery_fee_type: string
           delivery_instructions: string | null
           delivery_radius_miles: number | null
           deposit_amount: number | null
@@ -3619,6 +3620,7 @@ export type Database = {
           daily_enabled?: boolean | null
           deleted_at?: string | null
           delivery_fee?: number | null
+          delivery_fee_type?: string
           delivery_instructions?: string | null
           delivery_radius_miles?: number | null
           deposit_amount?: number | null
@@ -3716,6 +3718,7 @@ export type Database = {
           daily_enabled?: boolean | null
           deleted_at?: string | null
           delivery_fee?: number | null
+          delivery_fee_type?: string
           delivery_instructions?: string | null
           delivery_radius_miles?: number | null
           deposit_amount?: number | null
@@ -9146,6 +9149,7 @@ export type Database = {
           daily_enabled: boolean | null
           deleted_at: string | null
           delivery_fee: number | null
+          delivery_fee_type: string
           delivery_instructions: string | null
           delivery_radius_miles: number | null
           deposit_amount: number | null

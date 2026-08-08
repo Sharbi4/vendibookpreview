@@ -1,3 +1,4 @@
+import { isPickupLocationRevealed, PICKUP_LOCKED_MESSAGE } from '@/lib/fulfillment/pickupReveal';
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link, useSearchParams } from 'react-router-dom';
 import OrderPaymentLink from '@/components/orders/OrderPaymentLink';
@@ -907,9 +908,17 @@ const OrderTracking = () => {
                   <MapPin className="h-4 w-4 text-muted-foreground mt-1" />
                   <div>
                     <p className="text-sm text-muted-foreground">Pickup Location</p>
-                    <p className="text-sm font-medium">
-                      {transaction.listing?.pickup_location_text || 'Contact seller for pickup details'}
-                    </p>
+                    {isPickupLocationRevealed({
+                      fulfillmentType: transaction.fulfillment_type,
+                      status: transaction.status,
+                      paymentStatus: (transaction as any).payment_status,
+                    }) ? (
+                      <p className="text-sm font-medium">
+                        {transaction.listing?.pickup_location_text || 'Contact seller for pickup details'}
+                      </p>
+                    ) : (
+                      <p className="text-sm text-muted-foreground">{PICKUP_LOCKED_MESSAGE}</p>
+                    )}
                   </div>
                 </div>
               )}
