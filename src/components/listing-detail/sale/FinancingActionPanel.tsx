@@ -111,17 +111,20 @@ export const FinancingActionPanel = ({ listing, className }: FinancingActionPane
       </div>
 
       <div className="grid gap-2 sm:grid-cols-2">
-        <Button asChild size="sm" className="finance-cta justify-center font-semibold">
-          <a
-            href={EQUINOX_APPLY_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={() => trackFinancingApplyClick('listing_panel', listing.id)}
-          >
-            Apply Now with Equinox
+        <Button
+          size="sm"
+          className="finance-cta justify-center font-semibold"
+          onClick={() => void handleApply()}
+          disabled={applying}
+        >
+          Apply Now with Equinox
+          {applying ? (
+            <Loader2 className="h-3.5 w-3.5 ml-1.5 animate-spin" />
+          ) : (
             <ExternalLink className="h-3.5 w-3.5 ml-1.5" />
-          </a>
+          )}
         </Button>
+
         <Button
           size="sm"
           onClick={() => void handleDownload()}
