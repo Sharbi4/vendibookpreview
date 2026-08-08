@@ -167,7 +167,7 @@ export const DashboardLayout = ({ children, mode, onModeChange, isHost }: Dashbo
   };
 
   const ModeSwitch = ({ small = false }: { small?: boolean }) => (
-    <div className={cn('flex border border-border rounded-lg overflow-hidden', small ? '' : '')}>
+    <div className={cn('flex w-full border border-border rounded-lg overflow-hidden')}>
       <button
         onClick={() => onModeChange('shopper')}
         className={cn(
