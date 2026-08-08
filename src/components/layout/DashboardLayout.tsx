@@ -315,15 +315,20 @@ export const DashboardLayout = ({ children, mode, onModeChange, isHost }: Dashbo
               <img src={vendibookFavicon} alt="Vendibook" className="h-7 w-7" />
             </Link>
           </div>
-          {isHost && <ModeSwitch small />}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 shrink-0">
             <GoProButton compact />
             {user && <ConciergeInbox userId={user.id} />}
             <NotificationCenter />
             <AppDropdownMenu variant="light" />
           </div>
         </div>
+        {isHost && (
+          <div className="px-4 pb-2">
+            <ModeSwitch small />
+          </div>
+        )}
       </header>
+
 
       <div className="flex flex-1 min-h-0">
         {/* Full sidebar — lg+, sticky to viewport height */}
