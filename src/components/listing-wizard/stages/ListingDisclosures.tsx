@@ -77,6 +77,21 @@ export const ListingDisclosures: React.FC<ListingDisclosuresProps> = ({
   const includedMissing = showErrors && values.includedItems.trim().length < 3;
   const exclusionsMissing = showErrors && !values.photosExclusionsAnswered;
 
+  // Explicit yes/no choice — never inferred from the note text, so picking
+  // "Yes" and typing nothing does not silently flip back to "No".
+  const [exclusionChoice, setExclusionChoice] = React.useState<'no' | 'yes' | ''>(() =>
+    values.photosExclusionsAnswered ? (values.photosExclusionsNote.trim() ? 'yes' : 'no') : '',
+  );
+
+  React.useEffect(() => {
+    if (!values.photosExclusionsAnswered) {
+      setExclusionChoice('');
+    } else if (!exclusionChoice) {
+      setExclusionChoice(values.photosExclusionsNote.trim() ? 'yes' : 'no');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [values.photosExclusionsAnswered]);
+
   const toggleProblem = (value: string, checked: boolean) => {
     if (checked) {
       onChange({
