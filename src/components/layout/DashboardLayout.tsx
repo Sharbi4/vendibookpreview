@@ -172,7 +172,7 @@ export const DashboardLayout = ({ children, mode, onModeChange, isHost }: Dashbo
         onClick={() => onModeChange('shopper')}
         className={cn(
           'flex-1 font-medium transition-all',
-          small ? 'text-xs px-4 py-1.5' : 'text-sm py-2.5',
+          small ? 'text-xs px-4 py-1.5 whitespace-nowrap' : 'text-sm py-2.5 whitespace-nowrap',
           mode === 'shopper' ? 'bg-foreground text-background' : 'text-muted-foreground hover:bg-muted',
         )}
       >
@@ -182,7 +182,7 @@ export const DashboardLayout = ({ children, mode, onModeChange, isHost }: Dashbo
         onClick={() => onModeChange('host')}
         className={cn(
           'flex-1 font-medium transition-all',
-          small ? 'text-xs px-4 py-1.5' : 'text-sm py-2.5',
+          small ? 'text-xs px-4 py-1.5 whitespace-nowrap' : 'text-sm py-2.5 whitespace-nowrap',
           mode === 'host' ? 'bg-foreground text-background' : 'text-muted-foreground hover:bg-muted',
         )}
       >
