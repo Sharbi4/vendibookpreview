@@ -116,7 +116,7 @@ const equinoxRail = (audience: RailsAudience): RailDef => ({
   link: { label: 'See financing details', href: '/financing' },
   flowLink:
     audience === 'buyer'
-      ? { label: 'See the exact steps to apply', href: '/financing' }
+      ? { label: 'See the exact steps on eligible listings', href: '/search?mode=sale' }
       : { label: 'See the exact steps to enable financing', href: '/financing/enable' },
 });
 
