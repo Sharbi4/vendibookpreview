@@ -2786,13 +2786,20 @@ export const PublishWizard: React.FC = () => {
                     secondary={{ label: 'Back', onClick: () => setStep('photos') }}
                     primary={{
                       label: isSaving ? 'Saving…' : 'Continue',
-                      onClick: saveStep,
-                      disabled:
-                        isSaving ||
-                        title.trim().length < MIN_TITLE_LENGTH ||
-                        description.trim().length < MIN_DESCRIPTION_LENGTH,
+                      onClick: guardNext(
+                        [
+                          title.trim().length < MIN_TITLE_LENGTH &&
+                            `Title must be at least ${MIN_TITLE_LENGTH} characters`,
+                          description.trim().length < MIN_DESCRIPTION_LENGTH &&
+                            `Description must be at least ${MIN_DESCRIPTION_LENGTH} characters`,
+                        ].filter(Boolean) as string[],
+                        null,
+                        saveStep,
+                      ),
+                      disabled: isSaving,
                     }}
                   />
+
                 </div>
               )}
 
