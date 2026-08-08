@@ -4314,15 +4314,42 @@ export const PublishWizard: React.FC = () => {
                               : 'Any special instructions for pickup?'}
                             rows={2}
                           />
+                          <p className="text-xs text-muted-foreground">
+                            Private. Your exact pickup address and these notes stay hidden — buyers only see the city, state and ZIP until they pay. The address unlocks for the buyer right after payment, when the next step is confirming pickup.
+                          </p>
                         </div>
                       )}
 
                       {(fulfillmentType === 'delivery' || fulfillmentType === 'both') && (
                         <>
+                          <div className="space-y-2">
+                            <Label className="text-base font-medium">How do you charge for delivery?</Label>
+                            <div className="grid grid-cols-2 gap-3">
+                              {([
+                                { value: 'flat' as const, label: 'Flat fee', hint: 'One price per delivery' },
+                                { value: 'per_mile' as const, label: 'Per mile', hint: 'Rate × miles to the buyer' },
+                              ]).map((opt) => (
+                                <button
+                                  key={opt.value}
+                                  type="button"
+                                  onClick={() => setDeliveryFeeType(opt.value)}
+                                  className={cn(
+                                    'rounded-xl border p-3 text-left transition-all',
+                                    deliveryFeeType === opt.value
+                                      ? 'border-primary bg-primary/5 ring-1 ring-primary/30'
+                                      : 'border-border hover:border-primary/40'
+                                  )}
+                                >
+                                  <span className="block text-sm font-medium text-foreground">{opt.label}</span>
+                                  <span className="block text-xs text-muted-foreground mt-0.5">{opt.hint}</span>
+                                </button>
+                              ))}
+                            </div>
+                          </div>
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div className="space-y-2">
                               <Label className="text-base font-medium">
-                                {listing.mode === 'sale' ? 'Delivery charge (optional)' : 'Delivery Fee (Optional)'}
+                                {deliveryFeeType === 'per_mile' ? 'Rate per mile (optional)' : (listing.mode === 'sale' ? 'Delivery charge (optional)' : 'Delivery Fee (Optional)')}
                               </Label>
                               <div className="relative">
                                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
@@ -4332,14 +4359,17 @@ export const PublishWizard: React.FC = () => {
                                   step="0.01"
                                   value={deliveryFee}
                                   onChange={(e) => setDeliveryFee(e.target.value)}
-                                  placeholder="0.00"
-                                  className="pl-7"
+                                  placeholder={deliveryFeeType === 'per_mile' ? '4.50' : '0.00'}
+                                  className={deliveryFeeType === 'per_mile' ? 'pl-7 pr-16' : 'pl-7'}
                                 />
+                                {deliveryFeeType === 'per_mile' && (
+                                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">/mile</span>
+                                )}
                               </div>
                             </div>
                             <div className="space-y-2">
                               <Label className="text-base font-medium">
-                                {listing.mode === 'sale' ? 'Delivery area (optional)' : 'Delivery Radius (Optional)'}
+                                {listing.mode === 'sale' ? 'Delivery radius (optional)' : 'Delivery Radius (Optional)'}
                               </Label>
                               <div className="relative">
                                 <Input
@@ -4354,17 +4384,14 @@ export const PublishWizard: React.FC = () => {
                               </div>
                             </div>
                           </div>
-                          <div className="space-y-2">
-                            <Label className="text-base font-medium">Delivery Instructions (Optional)</Label>
-                            <Textarea
-                              value={deliveryInstructions}
-                              onChange={(e) => setDeliveryInstructions(e.target.value)}
-                              placeholder="Any special requirements for delivery?"
-                              rows={2}
-                            />
-                          </div>
+                          <p className="text-xs text-muted-foreground">
+                            The buyer enters their own delivery address at checkout. We measure the distance from your location and
+                            {deliveryFeeType === 'per_mile' ? ' multiply it by your per-mile rate.' : ' apply your flat delivery charge.'}
+                            {' '}Addresses beyond your radius are flagged so you can approve or decline.
+                          </p>
                         </>
                       )}
+
                     </div>
                   )}
 
