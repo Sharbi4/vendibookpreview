@@ -180,6 +180,8 @@ const ReferralAdmin = lazy(() => import("./pages/ReferralAdmin"));
 const RHandler = lazy(() => import("./pages/RHandler"));
 const AdminEmailDashboard = lazy(() => import("./pages/AdminEmailDashboard"));
 const AdminCampaignNewExitPlan = lazy(() => import("./pages/AdminCampaignNewExitPlan"));
+const AdminCampaignEquinoxPartnership = lazy(() => import("./pages/AdminCampaignEquinoxPartnership"));
+const FinancingEnable = lazy(() => import("./pages/FinancingEnable"));
 const Subscribe = lazy(() => import("./pages/Subscribe"));
 const EmailFeedbackThanks = lazy(() => import("./pages/EmailFeedbackThanks"));
 const CategoryCityPage = lazy(() => import("./pages/CategoryCityPage"));
