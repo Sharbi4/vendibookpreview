@@ -24,6 +24,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { publishListingIdempotent } from '@/lib/listings/publishListing';
 import { reportError } from '@/lib/errorReporter';
 import { parseEdgeError } from '@/lib/edgeErrors';
+import { invokeEdge } from '@/lib/edge/invokeFunction';
 import { usePremiumUpsell, isPremiumError, featureFromParsed } from '@/hooks/usePremiumUpsell';
 import { PremiumChip } from '@/components/monetization/PremiumChip';
 
@@ -112,6 +113,10 @@ interface ListingData {
   pickup_location_text: string | null;
   cover_image_url: string | null;
   image_urls: string[] | null;
+  video_urls: string[] | null;
+  city: string | null;
+  state: string | null;
+  postal_code: string | null;
   price_daily: number | null;
   price_weekly: number | null;
   price_monthly: number | null;
@@ -175,6 +180,28 @@ interface SaleSuggestions {
 const TITLED_SALE_CATEGORIES = ['food_truck', 'food_trailer'];
 const isTitledSaleCategory = (l: { mode?: string | null; category?: string | null } | null) =>
   !!l && l.mode === 'sale' && TITLED_SALE_CATEGORIES.includes(String(l.category));
+
+const PUBLISH_GATE_MESSAGES: Record<string, string> = {
+  category_mode: 'Choose what you are listing and whether it is for rent or sale.',
+  title: 'Add a title with at least 5 characters.',
+  description: 'Add a description with at least 50 characters.',
+  photos: 'Add at least 3 photos.',
+  location: 'Add a valid city, state, and 5-digit ZIP code.',
+  condition: 'Select the overall condition.',
+  operational_status: 'Select the current operational status.',
+  included_items: 'Describe what is included in the advertised price.',
+  photos_exclusions: 'Answer whether anything shown in the photos is excluded.',
+  known_problems: 'Select any known problems, or confirm there are none.',
+  known_problem_detail: 'Add a short explanation for every known problem.',
+  fulfillment: 'Choose pickup, delivery, or the appropriate on-site option.',
+  fulfillment_on_site: 'This location-based listing must use on-site fulfillment.',
+  address: 'Add the required private street address.',
+  price_sale: 'Set a sale price greater than $0.',
+  price_rent: 'Set at least one rental rate greater than $0.',
+  payment_option: 'Choose PayPal Checkout or Pay in Person.',
+  title_status: 'Select the title status.',
+  has_lien: 'Disclose whether there is a lien on the asset.',
+};
 
 export const PublishWizard: React.FC = () => {
   const { listingId } = useParams<{ listingId: string }>();
@@ -595,13 +622,14 @@ export const PublishWizard: React.FC = () => {
   const [deadlineHours, setDeadlineHours] = useState<number>(48);
   const [openDocGroups, setOpenDocGroups] = useState<string[]>(['Identity & Legal']);
 
-  // Auto-save guest draft fields (title, description, pricing) periodically
-  // This uses RLS policy "Allow guest draft updates with token"
-  const saveGuestDraftFields = async () => {
-    if (!isGuestDraft || !listing || !listingId) return;
+  // Auto-save guest draft fields through the token-validated edge boundary.
+  const saveGuestDraftFields = async (
+    { silent = false }: { silent?: boolean } = {},
+  ): Promise<boolean> => {
+    if (!isGuestDraft || !listing || !listingId) return true;
     
     const guestDraft = getGuestDraft();
-    if (!guestDraft || guestDraft.listingId !== listingId) return;
+    if (!guestDraft || guestDraft.listingId !== listingId) return true;
 
     try {
       const safeParsePrice = (value: string): number | null => {
@@ -616,11 +644,30 @@ export const PublishWizard: React.FC = () => {
         description: description || listing.description,
         highlights: highlights.length > 0 ? highlights : (listing.highlights || []),
         amenities: amenities.length > 0 ? amenities : (listing.amenities || []),
+        image_urls: existingImages.length > 0 ? existingImages : (listing.image_urls || []),
+        cover_image_url: existingImages.length > 0 ? existingImages[0] : (listing.cover_image_url || null),
+        video_urls: existingVideos.length > 0 ? existingVideos : (listing.video_urls || []),
+        // Required basics and disclosures must survive guest sign-in/claim.
+        year_built: stageValues.modelYear ? parseInt(stageValues.modelYear, 10) : null,
+        kitchen_build_year: stageValues.kitchenBuildYear ? parseInt(stageValues.kitchenBuildYear, 10) : null,
+        kitchen_build_year_unknown: stageValues.kitchenBuildYearUnknown,
+        condition: stageValues.condition || null,
+        operational_status: stageValues.operationalStatus || null,
+        title_status: disclosures.titleStatus || null,
+        has_lien: disclosures.hasLien || null,
+        no_known_problems: disclosures.noKnownProblems,
+        known_problems: disclosures.knownProblems,
+        included_items: disclosures.includedItems || null,
+        photos_exclusions_answered: disclosures.photosExclusionsAnswered,
+        photos_exclusions_note: disclosures.photosExclusionsNote || null,
+        price_negotiable: disclosures.priceNegotiable,
+        accepts_offers: disclosures.acceptsOffers,
+        min_offer_amount: disclosures.minOfferAmount ? parseFloat(disclosures.minOfferAmount) : null,
         // Dimensions
         weight_lbs: parseFloat(weightLbs) || listing.weight_lbs || null,
-        length_inches: parseFloat(lengthInches) || listing.length_inches || null,
-        width_inches: parseFloat(widthInches) || listing.width_inches || null,
-        height_inches: parseFloat(heightInches) || listing.height_inches || null,
+        length_inches: parseFloat(stageValues.lengthInches) || listing.length_inches || null,
+        width_inches: parseFloat(stageValues.widthInches) || listing.width_inches || null,
+        height_inches: parseFloat(stageValues.heightInches) || listing.height_inches || null,
         freight_category: freightCategory || listing.freight_category || null};
 
       // Add pricing based on mode
@@ -655,10 +702,18 @@ export const PublishWizard: React.FC = () => {
       // Add location fields
       const categoryIsStatic = isStaticLocationFn(listing.category);
       const effectiveFulfillmentType = (categoryIsStatic || isStaticLocation) ? 'on_site' : (fulfillmentType || listing.fulfillment_type || 'pickup');
+      const stateZip = [locState.trim(), locZipCode.trim()].filter(Boolean).join(' ');
+      const fullAddress = [streetAddress.trim(), aptSuite.trim(), locCity.trim(), stateZip]
+        .filter(Boolean)
+        .join(', ');
+      const approximateLocation = [locCity.trim(), locState.trim()].filter(Boolean).join(', ');
       
       updateData.fulfillment_type = effectiveFulfillmentType;
-      updateData.pickup_location_text = pickupLocationText || listing.pickup_location_text || null;
-      updateData.address = address || listing.address || null;
+      updateData.pickup_location_text = approximateLocation || pickupLocationText || listing.pickup_location_text || null;
+      updateData.address = fullAddress || address || listing.address || null;
+      updateData.city = locCity.trim() || listing.city || null;
+      updateData.state = locState.trim() || listing.state || null;
+      updateData.postal_code = locZipCode.trim() || listing.postal_code || null;
       updateData.delivery_fee = parseFloat(deliveryFee) || listing.delivery_fee || null;
       updateData.delivery_radius_miles = parseFloat(deliveryRadiusMiles) || listing.delivery_radius_miles || null;
       (updateData as any).delivery_fee_type = deliveryFeeType;
@@ -674,26 +729,18 @@ export const PublishWizard: React.FC = () => {
 
       // Guest drafts can no longer be updated via direct RLS — route through
       // the guest-draft-access edge function which validates the token.
-      const guestDraft = getGuestDraft();
-      const { error } = guestDraft && guestDraft.listingId === listingId
-        ? await (async () => {
-            const res = await supabase.functions.invoke('guest-draft-access', {
-              body: { action: 'update', id: listingId, token: guestDraft.token, patch: updateData },
-            });
-            return { error: res.error as any };
-          })()
-        : await supabase
-            .from('listings')
-            .update(updateData)
-            .eq('id', listingId);
+      const { error } = await invokeEdge('guest-draft-access', {
+        body: { action: 'update', id: listingId, token: guestDraft.token, patch: updateData },
+      });
+      if (error) throw new Error(error);
 
-      if (error) {
-        console.warn('Guest draft auto-save failed:', (error as any).message);
-      } else {
-        console.log('Guest draft auto-saved successfully');
-      }
+      return true;
     } catch (err) {
-      console.warn('Guest draft auto-save error:', err);
+      if (silent) {
+        console.warn('Guest draft auto-save error:', err);
+        return false;
+      }
+      throw err;
     }
   };
 
@@ -702,11 +749,11 @@ export const PublishWizard: React.FC = () => {
     if (!isGuestDraft || !listing) return;
 
     // Save when step changes
-    saveGuestDraftFields();
+    void saveGuestDraftFields({ silent: true });
 
     // Set up periodic auto-save
     const interval = setInterval(() => {
-      saveGuestDraftFields();
+      void saveGuestDraftFields({ silent: true });
     }, 30000);
 
     return () => clearInterval(interval);
@@ -718,7 +765,7 @@ export const PublishWizard: React.FC = () => {
     if (!isGuestDraft || !listing) return;
 
     const handleBeforeUnload = () => {
-      saveGuestDraftFields();
+      void saveGuestDraftFields({ silent: true });
     };
 
     window.addEventListener('beforeunload', handleBeforeUnload);
@@ -994,6 +1041,11 @@ export const PublishWizard: React.FC = () => {
       const effectiveFulfillmentType = (categoryIsStatic || isStaticLocation)
         ? 'on_site'
         : (fulfillmentType || listing.fulfillment_type || 'pickup');
+      const stateZip = [locState.trim(), locZipCode.trim()].filter(Boolean).join(' ');
+      const fullAddress = [streetAddress.trim(), aptSuite.trim(), locCity.trim(), stateZip]
+        .filter(Boolean)
+        .join(', ');
+      const approximateLocation = [locCity.trim(), locState.trim()].filter(Boolean).join(', ');
 
       // Build the update payload with ALL current in-memory form data
       // This ensures title, description, photos, prices etc. are not lost during auth
@@ -1008,17 +1060,37 @@ export const PublishWizard: React.FC = () => {
         highlights: highlights.length > 0 ? highlights : (listing.highlights || []),
         amenities: amenities.length > 0 ? amenities : (listing.amenities || []),
 
+        // Required basics and disclosures
+        year_built: stageValues.modelYear ? parseInt(stageValues.modelYear, 10) : null,
+        kitchen_build_year: stageValues.kitchenBuildYear ? parseInt(stageValues.kitchenBuildYear, 10) : null,
+        kitchen_build_year_unknown: stageValues.kitchenBuildYearUnknown,
+        condition: stageValues.condition || null,
+        operational_status: stageValues.operationalStatus || null,
+        title_status: disclosures.titleStatus || null,
+        has_lien: disclosures.hasLien || null,
+        no_known_problems: disclosures.noKnownProblems,
+        known_problems: disclosures.knownProblems,
+        included_items: disclosures.includedItems || null,
+        photos_exclusions_answered: disclosures.photosExclusionsAnswered,
+        photos_exclusions_note: disclosures.photosExclusionsNote || null,
+        price_negotiable: disclosures.priceNegotiable,
+        accepts_offers: disclosures.acceptsOffers,
+        min_offer_amount: disclosures.minOfferAmount ? parseFloat(disclosures.minOfferAmount) : null,
+
         // Dimensions (for sale listings)
         weight_lbs: parseFloat(weightLbs) || listing.weight_lbs || null,
-        length_inches: parseFloat(lengthInches) || listing.length_inches || null,
-        width_inches: parseFloat(widthInches) || listing.width_inches || null,
-        height_inches: parseFloat(heightInches) || listing.height_inches || null,
+        length_inches: parseFloat(stageValues.lengthInches) || listing.length_inches || null,
+        width_inches: parseFloat(stageValues.widthInches) || listing.width_inches || null,
+        height_inches: parseFloat(stageValues.heightInches) || listing.height_inches || null,
         freight_category: freightCategory || listing.freight_category || null,
 
         // Location
         fulfillment_type: effectiveFulfillmentType,
-        pickup_location_text: pickupLocationText || listing.pickup_location_text || null,
-        address: address || listing.address || null,
+        pickup_location_text: approximateLocation || pickupLocationText || listing.pickup_location_text || null,
+        address: fullAddress || address || listing.address || null,
+        city: locCity.trim() || listing.city || null,
+        state: locState.trim() || listing.state || null,
+        postal_code: locZipCode.trim() || listing.postal_code || null,
         delivery_fee: parseFloat(deliveryFee) || listing.delivery_fee || null,
         delivery_radius_miles: parseFloat(deliveryRadiusMiles) || listing.delivery_radius_miles || null,
         delivery_fee_type: deliveryFeeType,
@@ -1034,7 +1106,9 @@ export const PublishWizard: React.FC = () => {
 
         // Existing images (new uploads require auth so we only save existingImages here)
         image_urls: existingImages.length > 0 ? existingImages : (listing.image_urls || []),
-        cover_image_url: existingImages.length > 0 ? existingImages[0] : (listing.cover_image_url || null)};
+        cover_image_url: existingImages.length > 0 ? existingImages[0] : (listing.cover_image_url || null),
+        video_urls: existingVideos.length > 0 ? existingVideos : (listing.video_urls || []),
+      };
 
       // Add pricing fields based on mode
       if (listing.mode === 'sale') {
@@ -1100,20 +1174,21 @@ export const PublishWizard: React.FC = () => {
     }
   };
 
-  // For guest drafts, save data to DB before progressing
-  // Auth is only required for publishing, not for step navigation
-  const handleGuestStepSave = async () => {
-    if (isGuestDraft && !user) {
-      // Save guest draft fields to database (RLS allows this with token)
-      await saveGuestDraftFields();
-    }
-  };
-
   // Allow guests to navigate steps freely; auth is gated at publish
   const handleDetailsSave = async () => {
     if (isGuestDraft && !user) {
-      // Save guest draft data and proceed to next step
-      await saveGuestDraftFields();
+      // Explicit Continue is transactional from the user's perspective: do
+      // not move forward and imply success if the token-validated save fails.
+      try {
+        await saveGuestDraftFields();
+      } catch (error) {
+        toast({
+          title: 'Could not save this step',
+          description: error instanceof Error ? error.message : 'Please try again. Your answers are still on this screen.',
+          variant: 'destructive',
+        });
+        return;
+      }
       // Move to next step manually
       const isRentalListing = listing?.mode === 'rent';
       const steps: PublishStep[] = isRentalListing
@@ -1158,12 +1233,13 @@ export const PublishWizard: React.FC = () => {
     isStaticLocationFn((listing?.category ?? '') as ListingCategory) ||
     isStaticLocation ||
     needsFullAddressForSale;
+  const hasValidLocationZip = /^\d{5}$/.test(locZipCode.trim());
 
   const hasCompleteStructuredAddress = !!(
     (streetAddress.trim() || !streetAddressRequired) &&
     locCity.trim() &&
     locState.trim() &&
-    locZipCode.trim()
+    hasValidLocationZip
   );
   
   const salePayoutEstimate = useMemo(() => {
@@ -1654,7 +1730,7 @@ export const PublishWizard: React.FC = () => {
           title_status: disclosures.titleStatus || null,
           has_lien: disclosures.hasLien || null,
           no_known_problems: disclosures.noKnownProblems,
-          known_problems: disclosures.knownProblems.length ? disclosures.knownProblems : null,
+          known_problems: disclosures.knownProblems,
           included_items: disclosures.includedItems || null,
           photos_exclusions_answered: disclosures.photosExclusionsAnswered,
           photos_exclusions_note: disclosures.photosExclusionsNote || null,
@@ -1943,7 +2019,7 @@ export const PublishWizard: React.FC = () => {
         title_status: disclosures.titleStatus || null,
         has_lien: disclosures.hasLien || null,
         no_known_problems: disclosures.noKnownProblems,
-        known_problems: disclosures.knownProblems.length ? disclosures.knownProblems : null,
+        known_problems: disclosures.knownProblems,
         included_items: disclosures.includedItems || null,
         photos_exclusions_answered: disclosures.photosExclusionsAnswered,
         photos_exclusions_note: disclosures.photosExclusionsNote || null,
@@ -2244,6 +2320,12 @@ export const PublishWizard: React.FC = () => {
       } else if (/network|fetch failed|failed to fetch/i.test(raw)) {
         title = 'Network problem';
         description = "Couldn't reach the server. Check your connection and try again — your draft is safe.";
+      } else {
+        const gate = raw.match(/publish_(?:incomplete|invalid|conflict):([a-z_]+)/i)?.[1];
+        if (gate) {
+          title = 'Cannot publish yet';
+          description = PUBLISH_GATE_MESSAGES[gate] || 'Review the required listing details and try again.';
+        }
       }
       toast({ title, description, variant: 'destructive' });
     } finally {
@@ -2346,6 +2428,7 @@ export const PublishWizard: React.FC = () => {
     if (!hasValidDescription) errors.push(`Description must be at least ${MIN_DESCRIPTION_LENGTH} characters (currently ${description.trim().length})`);
     if (!checklistState.hasLocation) errors.push('Complete the location and logistics section');
     for (const req of stageMissing) errors.push(req.label);
+    if (!allAttested(attestations)) errors.push('Confirm all seller attestations');
     return errors;
   };
 
@@ -4187,7 +4270,7 @@ export const PublishWizard: React.FC = () => {
                             onChange={(e) => setLocZipCode(e.target.value.replace(/\D/g, '').slice(0, 5))}
                             placeholder="78701"
                             maxLength={5}
-                            className={cn(!locZipCode.trim() && "border-destructive/50")}
+                            className={cn(!hasValidLocationZip && "border-destructive/50")}
                           />
                         </div>
                         <div className="space-y-2">
@@ -4207,7 +4290,7 @@ export const PublishWizard: React.FC = () => {
                     </div>
 
                     {/* Validation */}
-                    {((streetAddressRequired && !streetAddress.trim()) || !locCity.trim() || !locState.trim() || !locZipCode.trim()) && (
+                    {((streetAddressRequired && !streetAddress.trim()) || !locCity.trim() || !locState.trim() || !hasValidLocationZip) && (
                       <p className="text-sm text-destructive flex items-center gap-1.5">
                         <AlertCircle className="w-4 h-4" />
                         Please fill in all required address fields
@@ -4418,7 +4501,7 @@ export const PublishWizard: React.FC = () => {
                             streetAddressRequired && !streetAddress.trim() && 'Street address',
                             !locCity.trim() && 'City',
                             !locState.trim() && 'State',
-                            !locZipCode.trim() && 'ZIP code',
+                            !hasValidLocationZip && 'Valid 5-digit ZIP code',
                             isStaticLocationFn(listing.category) || isStaticLocation
                               ? !accessInstructions && 'Access instructions'
                               : !fulfillmentType && 'How it changes hands (pickup or delivery)',
@@ -4433,7 +4516,7 @@ export const PublishWizard: React.FC = () => {
                         streetAddressRequired && !streetAddress.trim() && 'Street address',
                         !locCity.trim() && 'City',
                         !locState.trim() && 'State',
-                        !locZipCode.trim() && 'ZIP code',
+                        !hasValidLocationZip && 'Valid 5-digit ZIP code',
                         isStaticLocationFn(listing.category) || isStaticLocation
                           ? !accessInstructions && 'Access instructions'
                           : !fulfillmentType && 'How it changes hands (pickup or delivery)',
