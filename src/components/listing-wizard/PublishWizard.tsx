@@ -230,10 +230,39 @@ export const PublishWizard: React.FC = () => {
   const [showLimitModal, setShowLimitModal] = useState(false);
   const quota = useListingQuota();
 
+  // Turns on inline red validation after a failed "Continue" attempt.
+  const [showStepErrors, setShowStepErrors] = useState(false);
+
   // Scroll to top when step changes
   useEffect(() => {
+    setShowStepErrors(false);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [step]);
+
+  /**
+   * Blocks navigation when a step still has required answers missing:
+   * highlights the fields in red, scrolls to the first one and toasts.
+   */
+  const guardNext = (blockers: string[], firstFieldId: string | null, proceed: () => void) => () => {
+    if (blockers.length > 0) {
+      setShowStepErrors(true);
+      toast({
+        title: 'A few answers are still needed',
+        description: blockers[0],
+        variant: 'destructive',
+      });
+      if (firstFieldId) {
+        requestAnimationFrame(() => {
+          document
+            .getElementById(firstFieldId)
+            ?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        });
+      }
+      return;
+    }
+    proceed();
+  };
+
 
   // Keep ?step= in sync with the wizard position so leaving for an upgrade
   // (or a refresh) always returns the seller to the exact same screen.
@@ -2293,6 +2322,12 @@ export const PublishWizard: React.FC = () => {
     checklistItems.filter(i => i.required).every(i => i.completed) && stageMissing.length === 0;
   const canPublish = stageRequirementsMet && allAttested(attestations);
 
+  // Per-step required answers. Steps can't be skipped while these are missing.
+  const basicsMissing = stageMissing.filter((r) => r.step === 'basics');
+  // Disclosure requirements are collected on the "What's included" step.
+  const includesMissing = stageMissing.filter((r) => r.step === 'details');
+
+
   const displayAddress = buildStructuredAddress() || address;
 
   // Collect validation errors for publish attempt
@@ -2435,15 +2470,23 @@ export const PublishWizard: React.FC = () => {
                     mode={listing.mode}
                     values={stageValues}
                     onChange={(patch) => setStageValues((prev) => ({ ...prev, ...patch }))}
+                    showErrors={showStepErrors}
                   />
+
 
                   <PrimaryActionBar
                     primary={{
                       label: isSaving ? 'Saving…' : 'Continue',
-                      onClick: handleDetailsSave,
-                      disabled: isSaving || !stageValues.condition,
+                      onClick: guardNext(
+                        basicsMissing.map((r) => r.label),
+                        basicsMissing[0]?.fieldId ?? null,
+                        handleDetailsSave,
+                      ),
+                      disabled: isSaving,
                     }}
+                    blockers={basicsMissing.map((r) => r.label)}
                   />
+
                 </div>
               )}
 
@@ -2603,10 +2646,17 @@ export const PublishWizard: React.FC = () => {
                     helper="At least 3 photos are required to continue."
                     primary={{
                       label: isSaving ? 'Saving…' : 'Continue',
-                      onClick: isGuestDraft && !user ? handleDetailsSave : saveStep,
-                      disabled: isSaving || allPhotos.length < 3,
+                      onClick: guardNext(
+                        allPhotos.length < 3
+                          ? [`Add at least 3 photos (currently ${allPhotos.length})`]
+                          : [],
+                        null,
+                        isGuestDraft && !user ? handleDetailsSave : saveStep,
+                      ),
+                      disabled: isSaving,
                     }}
                   />
+
                 </div>
               )}
 
@@ -2738,13 +2788,20 @@ export const PublishWizard: React.FC = () => {
                     secondary={{ label: 'Back', onClick: () => setStep('photos') }}
                     primary={{
                       label: isSaving ? 'Saving…' : 'Continue',
-                      onClick: saveStep,
-                      disabled:
-                        isSaving ||
-                        title.trim().length < MIN_TITLE_LENGTH ||
-                        description.trim().length < MIN_DESCRIPTION_LENGTH,
+                      onClick: guardNext(
+                        [
+                          title.trim().length < MIN_TITLE_LENGTH &&
+                            `Title must be at least ${MIN_TITLE_LENGTH} characters`,
+                          description.trim().length < MIN_DESCRIPTION_LENGTH &&
+                            `Description must be at least ${MIN_DESCRIPTION_LENGTH} characters`,
+                        ].filter(Boolean) as string[],
+                        null,
+                        saveStep,
+                      ),
+                      disabled: isSaving,
                     }}
                   />
+
                 </div>
               )}
 
@@ -2886,17 +2943,23 @@ export const PublishWizard: React.FC = () => {
                           }
                         : undefined
                     }
+                    showErrors={showStepErrors}
                   />
 
                   <PrimaryActionBar
-
                     secondary={{ label: 'Back', onClick: () => setStep('headline') }}
                     primary={{
                       label: isSaving ? 'Saving…' : 'Continue',
-                      onClick: saveStep,
+                      onClick: guardNext(
+                        includesMissing.map((r) => r.label),
+                        includesMissing[0]?.fieldId ?? null,
+                        saveStep,
+                      ),
                       disabled: isSaving,
                     }}
+                    blockers={includesMissing.map((r) => r.label)}
                   />
+
                 </div>
               )}
 
@@ -3500,14 +3563,18 @@ export const PublishWizard: React.FC = () => {
                       secondary={{ label: 'Back', onClick: () => setStep('includes') }}
                       primary={{
                         label: isSaving ? 'Saving…' : 'Continue',
-                        onClick: saveStep,
-                        disabled:
-                          isSaving ||
-                          (listing.mode === 'sale'
-                            ? !isValidPrice(priceSale) ||
-                              (!acceptPayPalCheckout && !acceptCashPayment) ||
-                              (equinoxOptIn && !equinoxDisclosureAccepted)
-                            : !isValidPrice(priceDaily)),
+                        onClick: guardNext(
+                          listing.mode === 'sale'
+                            ? ([
+                                !isValidPrice(priceSale) && 'An asking price',
+                                !acceptPayPalCheckout && !acceptCashPayment && 'At least one way to get paid',
+                                equinoxOptIn && !equinoxDisclosureAccepted && 'Accept the financing disclosure',
+                              ].filter(Boolean) as string[])
+                            : ([!isValidPrice(priceDaily) && 'A daily rate'].filter(Boolean) as string[]),
+                          null,
+                          saveStep,
+                        ),
+                        disabled: isSaving,
                       }}
                       blockers={
                         listing.mode === 'sale'
@@ -3518,6 +3585,7 @@ export const PublishWizard: React.FC = () => {
                             ].filter(Boolean) as string[])
                           : ([!isValidPrice(priceDaily) && 'A daily rate'].filter(Boolean) as string[])
                       }
+
                     />
                   </div>
                 </div>
@@ -4302,17 +4370,22 @@ export const PublishWizard: React.FC = () => {
                       }}
                       primary={{
                         label: isSaving ? 'Saving…' : 'Continue',
-                        onClick: saveStep,
-                        disabled:
-                          isSaving ||
-                          (streetAddressRequired && !streetAddress.trim()) ||
-                          !locCity.trim() ||
-                          !locState.trim() ||
-                          !locZipCode.trim() ||
-                          (isStaticLocationFn(listing.category) || isStaticLocation
-                            ? !accessInstructions
-                            : !fulfillmentType),
+                        onClick: guardNext(
+                          [
+                            streetAddressRequired && !streetAddress.trim() && 'Street address',
+                            !locCity.trim() && 'City',
+                            !locState.trim() && 'State',
+                            !locZipCode.trim() && 'ZIP code',
+                            isStaticLocationFn(listing.category) || isStaticLocation
+                              ? !accessInstructions && 'Access instructions'
+                              : !fulfillmentType && 'How it changes hands (pickup or delivery)',
+                          ].filter(Boolean) as string[],
+                          null,
+                          saveStep,
+                        ),
+                        disabled: isSaving,
                       }}
+
                       blockers={[
                         streetAddressRequired && !streetAddress.trim() && 'Street address',
                         !locCity.trim() && 'City',

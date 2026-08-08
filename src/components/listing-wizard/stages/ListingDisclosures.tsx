@@ -8,6 +8,7 @@ import { FieldHelp } from '@/components/common/FieldHelp';
 import { VisibilityLabel } from '@/components/common/VisibilityLabel';
 import { RequiredMark, RequiredLegend } from '@/components/common/RequiredMark';
 import { FIELD_HELP } from '@/lib/listings/fieldHelp';
+import { cn } from '@/lib/utils';
 import {
   KNOWN_PROBLEM_CATEGORIES,
   LIEN_OPTIONS,
@@ -39,7 +40,15 @@ export interface ListingDisclosuresProps {
   vinSerial?: string;
   vinUnavailable?: boolean;
   onVinChange?: (patch: { vinSerial?: string; vinUnavailable?: boolean }) => void;
+  /** Set after a failed "Continue" attempt so missing answers turn red. */
+  showErrors?: boolean;
 }
+
+const errorRing = 'border-destructive ring-1 ring-destructive/40';
+
+const FieldError: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+  <p className="text-xs font-medium text-destructive">{children}</p>
+);
 
 /**
  * Stage 3 sections that carry legal/disclosure weight: title + lien (titled
@@ -57,8 +66,16 @@ export const ListingDisclosures: React.FC<ListingDisclosuresProps> = ({
   vinSerial = '',
   vinUnavailable = false,
   onVinChange,
+  showErrors = false,
 }) => {
   const titled = isTitledAsset(category, mode);
+
+  const titleMissing = showErrors && titled && !values.titleStatus;
+  const lienMissing = showErrors && titled && !values.hasLien;
+  const problemsMissing =
+    showErrors && !values.noKnownProblems && values.knownProblems.length === 0;
+  const includedMissing = showErrors && values.includedItems.trim().length < 3;
+  const exclusionsMissing = showErrors && !values.photosExclusionsAnswered;
 
   const toggleProblem = (value: string, checked: boolean) => {
     if (checked) {
@@ -93,7 +110,10 @@ export const ListingDisclosures: React.FC<ListingDisclosuresProps> = ({
           </p>
           <RequiredLegend />
 
-          <div className="space-y-2">
+          <div
+            id="listing-title-status"
+            className={cn('space-y-2 rounded-lg p-2 -m-2', titleMissing && errorRing)}
+          >
             <Label className="flex items-center gap-1 text-sm">
               Title status
               <RequiredMark />
@@ -102,7 +122,6 @@ export const ListingDisclosures: React.FC<ListingDisclosuresProps> = ({
               </FieldHelp>
             </Label>
             <RadioGroup
-              id="listing-title-status"
               value={values.titleStatus}
               onValueChange={(v) => onChange({ titleStatus: v })}
               className="grid gap-2 sm:grid-cols-2"
@@ -111,23 +130,29 @@ export const ListingDisclosures: React.FC<ListingDisclosuresProps> = ({
                 <label
                   key={opt.value}
                   htmlFor={`title-${opt.value}`}
-                  className="flex cursor-pointer items-center gap-2 rounded-lg border border-border p-3 text-sm hover:border-primary/50"
+                  className={cn(
+                    'flex cursor-pointer items-center gap-2 rounded-lg border border-border p-3 text-sm hover:border-primary/50',
+                    titleMissing && 'border-destructive/60',
+                  )}
                 >
                   <RadioGroupItem id={`title-${opt.value}`} value={opt.value} />
                   {opt.label}
                 </label>
               ))}
             </RadioGroup>
+            {titleMissing && <FieldError>Select the title status to continue.</FieldError>}
           </div>
 
-          <div className="space-y-2">
+          <div
+            id="listing-lien"
+            className={cn('space-y-2 rounded-lg p-2 -m-2', lienMissing && errorRing)}
+          >
             <Label className="flex items-center gap-1 text-sm">
               Lien disclosure
               <RequiredMark />
               <FieldHelp label={FIELD_HELP.lien.label}>{FIELD_HELP.lien.text}</FieldHelp>
             </Label>
             <RadioGroup
-              id="listing-lien"
               value={values.hasLien}
               onValueChange={(v) => onChange({ hasLien: v })}
               className="grid gap-2"
@@ -136,13 +161,17 @@ export const ListingDisclosures: React.FC<ListingDisclosuresProps> = ({
                 <label
                   key={opt.value}
                   htmlFor={`lien-${opt.value}`}
-                  className="flex cursor-pointer items-center gap-2 rounded-lg border border-border p-3 text-sm hover:border-primary/50"
+                  className={cn(
+                    'flex cursor-pointer items-center gap-2 rounded-lg border border-border p-3 text-sm hover:border-primary/50',
+                    lienMissing && 'border-destructive/60',
+                  )}
                 >
                   <RadioGroupItem id={`lien-${opt.value}`} value={opt.value} />
                   {opt.label}
                 </label>
               ))}
             </RadioGroup>
+            {lienMissing && <FieldError>Answer the lien question to continue.</FieldError>}
           </div>
 
           {onVinChange && (
@@ -183,7 +212,10 @@ export const ListingDisclosures: React.FC<ListingDisclosuresProps> = ({
 
       <section
         id="listing-known-problems"
-        className="space-y-4 rounded-xl border border-border bg-card/40 p-4"
+        className={cn(
+          'space-y-4 rounded-xl border border-border bg-card/40 p-4',
+          problemsMissing && errorRing,
+        )}
       >
         <div className="flex items-center justify-between gap-2">
           <Label className="flex items-center gap-1 text-sm font-semibold">
@@ -195,8 +227,17 @@ export const ListingDisclosures: React.FC<ListingDisclosuresProps> = ({
           </Label>
           <VisibilityLabel kind="public" />
         </div>
+        <p className="text-xs text-muted-foreground">
+          Either confirm there are no known problems, or tick every area that needs work and
+          explain it. Pick <strong>Other</strong> for anything that isn't listed.
+        </p>
 
-        <label className="flex items-center gap-2 rounded-lg border border-border p-3 text-sm">
+        <label
+          className={cn(
+            'flex items-center gap-2 rounded-lg border border-border p-3 text-sm',
+            problemsMissing && 'border-destructive/60',
+          )}
+        >
           <Checkbox
             checked={values.noKnownProblems}
             onCheckedChange={(c) =>
@@ -215,7 +256,10 @@ export const ListingDisclosures: React.FC<ListingDisclosuresProps> = ({
             return (
               <label
                 key={opt.value}
-                className="flex items-center gap-2 rounded-lg border border-border p-3 text-sm"
+                className={cn(
+                  'flex items-center gap-2 rounded-lg border border-border p-3 text-sm',
+                  problemsMissing && 'border-destructive/60',
+                )}
               >
                 <Checkbox
                   checked={selected}
@@ -228,21 +272,30 @@ export const ListingDisclosures: React.FC<ListingDisclosuresProps> = ({
           })}
         </div>
 
+        {problemsMissing && (
+          <FieldError>
+            Choose “No known problems” or select at least one problem area to continue.
+          </FieldError>
+        )}
+
         {values.knownProblems.map((p) => {
           const meta = KNOWN_PROBLEM_CATEGORIES.find((k) => k.value === p.category);
+          const noteMissing = showErrors && p.note.trim().length < 3;
           return (
             <div key={p.category} className="space-y-1.5">
-              <Label htmlFor={`known-problem-${p.category}`} className="text-xs">
+              <Label htmlFor={`known-problem-${p.category}`} className="flex items-center gap-1 text-xs">
                 Briefly explain: {meta?.label ?? p.category}
+                <RequiredMark />
               </Label>
               <Textarea
                 id={`known-problem-${p.category}`}
                 rows={2}
-                className="text-base"
+                className={cn('text-base', noteMissing && errorRing)}
                 placeholder="What is wrong, and what would it take to fix?"
                 value={p.note}
                 onChange={(e) => setNote(p.category, e.target.value)}
               />
+              {noteMissing && <FieldError>Add a short explanation for this problem.</FieldError>}
             </div>
           );
         })}
@@ -252,6 +305,7 @@ export const ListingDisclosures: React.FC<ListingDisclosuresProps> = ({
         <div className="flex items-center justify-between gap-2">
           <Label htmlFor="listing-included-items" className="flex items-center gap-1 text-sm font-semibold">
             What is included in the price
+            <RequiredMark />
             <FieldHelp label={FIELD_HELP.itemsIncluded.label}>
               {FIELD_HELP.itemsIncluded.text}
             </FieldHelp>
@@ -261,18 +315,24 @@ export const ListingDisclosures: React.FC<ListingDisclosuresProps> = ({
         <Textarea
           id="listing-included-items"
           rows={3}
-          className="text-base"
+          className={cn('text-base', includedMissing && errorRing)}
           placeholder="e.g. flat top, 6-burner range, fryer, prep tables, 7kW generator, propane tanks"
           value={values.includedItems}
           onChange={(e) => onChange({ includedItems: e.target.value })}
         />
+        {includedMissing && (
+          <FieldError>Describe what the buyer receives for the advertised price.</FieldError>
+        )}
 
-        <div className="space-y-2 border-t border-border pt-4">
-          <Label className="text-sm font-semibold">
+        <div
+          id="listing-photo-exclusions"
+          className={cn('space-y-2 border-t border-border pt-4', exclusionsMissing && 'rounded-lg p-2')}
+        >
+          <Label className="flex items-center gap-1 text-sm font-semibold">
             Is anything shown in the photos not included?
+            <RequiredMark />
           </Label>
           <RadioGroup
-            id="listing-photo-exclusions"
             value={
               values.photosExclusionsAnswered
                 ? values.photosExclusionsNote.trim()
@@ -290,19 +350,26 @@ export const ListingDisclosures: React.FC<ListingDisclosuresProps> = ({
           >
             <label
               htmlFor="photo-excl-no"
-              className="flex cursor-pointer items-center gap-2 rounded-lg border border-border p-3 text-sm hover:border-primary/50"
+              className={cn(
+                'flex cursor-pointer items-center gap-2 rounded-lg border border-border p-3 text-sm hover:border-primary/50',
+                exclusionsMissing && 'border-destructive/60',
+              )}
             >
               <RadioGroupItem id="photo-excl-no" value="no" />
               No — everything shown is included
             </label>
             <label
               htmlFor="photo-excl-yes"
-              className="flex cursor-pointer items-center gap-2 rounded-lg border border-border p-3 text-sm hover:border-primary/50"
+              className={cn(
+                'flex cursor-pointer items-center gap-2 rounded-lg border border-border p-3 text-sm hover:border-primary/50',
+                exclusionsMissing && 'border-destructive/60',
+              )}
             >
               <RadioGroupItem id="photo-excl-yes" value="yes" />
               Yes — some items are excluded
             </label>
           </RadioGroup>
+          {exclusionsMissing && <FieldError>Pick one answer to continue.</FieldError>}
           {values.photosExclusionsAnswered && (
             <Textarea
               rows={2}

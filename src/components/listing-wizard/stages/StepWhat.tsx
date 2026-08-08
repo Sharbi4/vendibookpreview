@@ -3,9 +3,18 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { FieldHelp } from '@/components/common/FieldHelp';
 import { VisibilityLabel } from '@/components/common/VisibilityLabel';
+import { RequiredMark, RequiredLegend } from '@/components/common/RequiredMark';
 import { FIELD_HELP } from '@/lib/listings/fieldHelp';
+import { cn } from '@/lib/utils';
 import {
   CONDITION_OPTIONS,
   READINESS_OPTIONS,
@@ -30,15 +39,33 @@ export interface StepWhatProps {
   mode: 'rent' | 'sale';
   values: StepWhatValues;
   onChange: (patch: Partial<StepWhatValues>) => void;
+  /** Set after a failed "Continue" attempt so missing answers turn red. */
+  showErrors?: boolean;
 }
+
+const CURRENT_YEAR = new Date().getFullYear();
+const YEAR_OPTIONS = Array.from({ length: CURRENT_YEAR + 1 - 1960 + 1 }, (_, i) =>
+  String(CURRENT_YEAR + 1 - i),
+);
+
+const errorRing = 'border-destructive ring-1 ring-destructive/40';
 
 /**
  * Stage 1 — WHAT. Category-aware basics only. Deep specifications are collected
  * after publishing through the readiness system, never here.
  */
-export const StepWhat: React.FC<StepWhatProps> = ({ category, mode, values, onChange }) => {
+export const StepWhat: React.FC<StepWhatProps> = ({
+  category,
+  mode,
+  values,
+  onChange,
+  showErrors = false,
+}) => {
   const basics = getCategoryBasics(category);
   const readinessOptions = READINESS_OPTIONS[basics.readiness];
+
+  const conditionMissing = showErrors && !values.condition;
+  const statusMissing = showErrors && !values.operationalStatus;
 
   return (
     <div className="space-y-8">
@@ -54,6 +81,7 @@ export const StepWhat: React.FC<StepWhatProps> = ({ category, mode, values, onCh
           </span>
           <VisibilityLabel kind="public" />
         </div>
+        <RequiredLegend className="mt-3" />
       </div>
 
       {(basics.modelYear || basics.kitchenBuildYear) && (
@@ -68,14 +96,21 @@ export const StepWhat: React.FC<StepWhatProps> = ({ category, mode, values, onCh
                   {FIELD_HELP.modelYear.text}
                 </FieldHelp>
               </Label>
-              <Input
-                id="listing-model-year"
-                inputMode="numeric"
-                placeholder="e.g. 2016"
-                className="text-base"
-                value={values.modelYear}
-                onChange={(e) => onChange({ modelYear: e.target.value.replace(/[^0-9]/g, '') })}
-              />
+              <Select
+                value={values.modelYear || undefined}
+                onValueChange={(v) => onChange({ modelYear: v })}
+              >
+                <SelectTrigger id="listing-model-year" className="text-base">
+                  <SelectValue placeholder="Select year" />
+                </SelectTrigger>
+                <SelectContent className="max-h-72">
+                  {YEAR_OPTIONS.map((y) => (
+                    <SelectItem key={y} value={y}>
+                      {y}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           )}
 
@@ -87,17 +122,22 @@ export const StepWhat: React.FC<StepWhatProps> = ({ category, mode, values, onCh
                   {FIELD_HELP.kitchenBuildYear.text}
                 </FieldHelp>
               </Label>
-              <Input
-                id="listing-kitchen-year"
-                inputMode="numeric"
-                placeholder="e.g. 2021"
-                className="text-base"
+              <Select
+                value={values.kitchenBuildYearUnknown ? undefined : values.kitchenBuildYear || undefined}
+                onValueChange={(v) => onChange({ kitchenBuildYear: v })}
                 disabled={values.kitchenBuildYearUnknown}
-                value={values.kitchenBuildYearUnknown ? '' : values.kitchenBuildYear}
-                onChange={(e) =>
-                  onChange({ kitchenBuildYear: e.target.value.replace(/[^0-9]/g, '') })
-                }
-              />
+              >
+                <SelectTrigger id="listing-kitchen-year" className="text-base">
+                  <SelectValue placeholder="Select year" />
+                </SelectTrigger>
+                <SelectContent className="max-h-72">
+                  {YEAR_OPTIONS.map((y) => (
+                    <SelectItem key={y} value={y}>
+                      {y}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <label className="flex items-center gap-2 pt-1 text-sm text-muted-foreground">
                 <Checkbox
                   checked={values.kitchenBuildYearUnknown}
@@ -115,13 +155,19 @@ export const StepWhat: React.FC<StepWhatProps> = ({ category, mode, values, onCh
         </section>
       )}
 
-      <section className="space-y-3 rounded-xl border border-border bg-card/40 p-4">
+      <section
+        id="listing-condition"
+        className={cn(
+          'space-y-3 rounded-xl border border-border bg-card/40 p-4',
+          conditionMissing && errorRing,
+        )}
+      >
         <Label className="flex items-center gap-1 text-sm font-semibold">
           Condition
+          <RequiredMark />
           <FieldHelp label={FIELD_HELP.condition.label}>{FIELD_HELP.condition.text}</FieldHelp>
         </Label>
         <RadioGroup
-          id="listing-condition"
           value={values.condition}
           onValueChange={(v) => onChange({ condition: v })}
           className="grid gap-2 sm:grid-cols-2"
@@ -130,24 +176,36 @@ export const StepWhat: React.FC<StepWhatProps> = ({ category, mode, values, onCh
             <label
               key={opt.value}
               htmlFor={`condition-${opt.value}`}
-              className="flex cursor-pointer items-center gap-2 rounded-lg border border-border p-3 text-sm hover:border-primary/50"
+              className={cn(
+                'flex cursor-pointer items-center gap-2 rounded-lg border border-border p-3 text-sm hover:border-primary/50',
+                conditionMissing && 'border-destructive/60',
+              )}
             >
               <RadioGroupItem id={`condition-${opt.value}`} value={opt.value} />
               {opt.label}
             </label>
           ))}
         </RadioGroup>
+        {conditionMissing && (
+          <p className="text-xs font-medium text-destructive">Select the overall condition to continue.</p>
+        )}
       </section>
 
-      <section className="space-y-3 rounded-xl border border-border bg-card/40 p-4">
+      <section
+        id="listing-operational-status"
+        className={cn(
+          'space-y-3 rounded-xl border border-border bg-card/40 p-4',
+          statusMissing && errorRing,
+        )}
+      >
         <Label className="flex items-center gap-1 text-sm font-semibold">
           Operational status
+          <RequiredMark />
           <FieldHelp label={FIELD_HELP.operationalStatus.label}>
             {FIELD_HELP.operationalStatus.text}
           </FieldHelp>
         </Label>
         <RadioGroup
-          id="listing-operational-status"
           value={values.operationalStatus}
           onValueChange={(v) => onChange({ operationalStatus: v })}
           className="grid gap-2"
@@ -156,13 +214,21 @@ export const StepWhat: React.FC<StepWhatProps> = ({ category, mode, values, onCh
             <label
               key={opt.value}
               htmlFor={`readiness-${opt.value}`}
-              className="flex cursor-pointer items-center gap-2 rounded-lg border border-border p-3 text-sm hover:border-primary/50"
+              className={cn(
+                'flex cursor-pointer items-center gap-2 rounded-lg border border-border p-3 text-sm hover:border-primary/50',
+                statusMissing && 'border-destructive/60',
+              )}
             >
               <RadioGroupItem id={`readiness-${opt.value}`} value={opt.value} />
               {opt.label}
             </label>
           ))}
         </RadioGroup>
+        {statusMissing && (
+          <p className="text-xs font-medium text-destructive">
+            Pick one option so buyers know its current state.
+          </p>
+        )}
       </section>
 
       {basics.dimensions && (
