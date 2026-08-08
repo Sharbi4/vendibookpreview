@@ -2406,7 +2406,10 @@ export const PublishWizard: React.FC = () => {
       }
 
 
+      // Published — the saved row is now the source of truth.
+      clearWizardDraft(listingId);
       setShowSuccessModal(true);
+
     } catch (error) {
       console.error('Error publishing:', error);
       const raw = error instanceof Error ? error.message : String(error);
