@@ -1,4 +1,5 @@
 import { deliveryRateLabel } from '@/lib/fulfillment/delivery';
+import { DeliveryAvailabilityPanel } from '@/components/listing-detail/DeliveryAvailabilityPanel';
 import { useParams, Link } from 'react-router-dom';
 import { 
   ArrowLeft, 
@@ -794,6 +795,21 @@ const ListingDetail = () => {
                 />
                 <ListingHighlightsCard listing={listing as any} />
               </div>
+
+              {/* Delivery area + buyer ZIP checker */}
+              <DeliveryAvailabilityPanel
+                latitude={listing.latitude}
+                longitude={listing.longitude}
+                city={listing.city}
+                state={listing.state}
+                fulfillmentType={listing.fulfillment_type}
+                deliveryRadiusMiles={listing.delivery_radius_miles}
+                deliveryFee={listing.delivery_fee}
+                deliveryFeeType={(listing as any).delivery_fee_type}
+                vendibookFreightEnabled={Boolean((listing as any).vendibook_freight_enabled)}
+                freightPayer={(listing as any).freight_payer}
+              />
+
 
               {/* Divider */}
               {isRental && <div className="border-t border-border" />}
