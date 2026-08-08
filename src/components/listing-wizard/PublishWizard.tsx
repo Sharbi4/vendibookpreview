@@ -563,6 +563,7 @@ export const PublishWizard: React.FC = () => {
   
   const [deliveryFee, setDeliveryFee] = useState('');
   const [deliveryRadiusMiles, setDeliveryRadiusMiles] = useState('');
+  const [deliveryFeeType, setDeliveryFeeType] = useState<'flat' | 'per_mile'>('flat');
   const [pickupInstructions, setPickupInstructions] = useState('');
   const [deliveryInstructions, setDeliveryInstructions] = useState('');
   const [accessInstructions, setAccessInstructions] = useState('');
@@ -660,6 +661,7 @@ export const PublishWizard: React.FC = () => {
       updateData.address = address || listing.address || null;
       updateData.delivery_fee = parseFloat(deliveryFee) || listing.delivery_fee || null;
       updateData.delivery_radius_miles = parseFloat(deliveryRadiusMiles) || listing.delivery_radius_miles || null;
+      (updateData as any).delivery_fee_type = deliveryFeeType;
       updateData.pickup_instructions = pickupInstructions || listing.pickup_instructions || null;
       updateData.delivery_instructions = deliveryInstructions || listing.delivery_instructions || null;
       updateData.access_instructions = accessInstructions || listing.access_instructions || null;
@@ -847,6 +849,7 @@ export const PublishWizard: React.FC = () => {
       }
       setDeliveryFee(data.delivery_fee?.toString() || '');
       setDeliveryRadiusMiles(data.delivery_radius_miles?.toString() || '');
+      setDeliveryFeeType(((data as any).delivery_fee_type === 'per_mile') ? 'per_mile' : 'flat');
       setPickupInstructions(data.pickup_instructions || '');
       setDeliveryInstructions(data.delivery_instructions || '');
       setAccessInstructions(data.access_instructions || '');
@@ -1018,6 +1021,7 @@ export const PublishWizard: React.FC = () => {
         address: address || listing.address || null,
         delivery_fee: parseFloat(deliveryFee) || listing.delivery_fee || null,
         delivery_radius_miles: parseFloat(deliveryRadiusMiles) || listing.delivery_radius_miles || null,
+        delivery_fee_type: deliveryFeeType,
         pickup_instructions: pickupInstructions || listing.pickup_instructions || null,
         delivery_instructions: deliveryInstructions || listing.delivery_instructions || null,
         access_instructions: accessInstructions || listing.access_instructions || null,
@@ -1718,6 +1722,7 @@ export const PublishWizard: React.FC = () => {
           postal_code: locZipCode.trim() || null,
           delivery_fee: parseFloat(deliveryFee) || null,
           delivery_radius_miles: parseFloat(deliveryRadiusMiles) || null,
+          delivery_fee_type: deliveryFeeType,
           pickup_instructions: pickupInstructions || null,
           delivery_instructions: deliveryInstructions || null,
           access_instructions: accessInstructions || null,
@@ -1957,6 +1962,7 @@ export const PublishWizard: React.FC = () => {
         postal_code: locZipCode.trim() || null,
         delivery_fee: parseFloat(deliveryFee) || null,
         delivery_radius_miles: parseFloat(deliveryRadiusMiles) || null,
+        delivery_fee_type: deliveryFeeType,
         pickup_instructions: pickupInstructions || null,
         delivery_instructions: deliveryInstructions || null,
         access_instructions: accessInstructions || null,
