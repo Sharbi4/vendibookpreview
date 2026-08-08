@@ -239,13 +239,22 @@ export const PaymentRailsSection = ({ audience }: { audience: RailsAudience }) =
               <p className="mt-3 text-xs text-muted-foreground leading-relaxed border-t border-border pt-3">
                 {open.detailNote}
               </p>
-              {open.link && (
-                <Button variant="outline" className="rounded-full w-full" asChild>
-                  <Link to={open.link.href} onClick={() => setOpen(null)}>
-                    {open.link.label} <ArrowRight className="ml-1.5 w-4 h-4" />
-                  </Link>
-                </Button>
-              )}
+              <div className="mt-1 grid gap-2">
+                {open.flowLink && (
+                  <Button className="rounded-full w-full" asChild>
+                    <Link to={open.flowLink.href} onClick={() => setOpen(null)}>
+                      {open.flowLink.label} <ArrowRight className="ml-1.5 w-4 h-4" />
+                    </Link>
+                  </Button>
+                )}
+                {open.link && (
+                  <Button variant="outline" className="rounded-full w-full" asChild>
+                    <Link to={open.link.href} onClick={() => setOpen(null)}>
+                      {open.link.label} <ArrowRight className="ml-1.5 w-4 h-4" />
+                    </Link>
+                  </Button>
+                )}
+              </div>
             </>
           )}
         </DialogContent>
