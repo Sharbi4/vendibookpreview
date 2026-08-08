@@ -2470,7 +2470,9 @@ export const PublishWizard: React.FC = () => {
                     mode={listing.mode}
                     values={stageValues}
                     onChange={(patch) => setStageValues((prev) => ({ ...prev, ...patch }))}
+                    showErrors={showStepErrors}
                   />
+
 
                   <PrimaryActionBar
                     primary={{
