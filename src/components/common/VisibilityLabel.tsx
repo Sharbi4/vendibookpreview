@@ -1,8 +1,8 @@
 import React from 'react';
-import { Eye, Lock, Plus } from 'lucide-react';
+import { Asterisk, Eye, FileText, Lock, Plus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-export type VisibilityKind = 'public' | 'private' | 'optional';
+export type VisibilityKind = 'public' | 'private' | 'optional' | 'required' | 'paperwork';
 
 const CONFIG: Record<
   VisibilityKind,
@@ -23,7 +23,20 @@ const CONFIG: Record<
     icon: Plus,
     classes: 'border-dashed border-border bg-transparent text-muted-foreground',
   },
+  required: {
+    text: 'Required — Needed before you can publish',
+    icon: Asterisk,
+    classes: 'border-destructive/40 bg-destructive/10 text-destructive',
+  },
+  // Not public, but not strictly private either: it is printed on paperwork the
+  // buyer receives, such as the financing purchase sheet / pro forma invoice.
+  paperwork: {
+    text: 'Not shown on your listing — appears on financing paperwork',
+    icon: FileText,
+    classes: 'border-border bg-muted/40 text-muted-foreground',
+  },
 };
+
 
 export interface VisibilityLabelProps {
   kind: VisibilityKind;
