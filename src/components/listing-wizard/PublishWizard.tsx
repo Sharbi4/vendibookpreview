@@ -235,6 +235,16 @@ export const PublishWizard: React.FC = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [step]);
 
+  // Keep ?step= in sync with the wizard position so leaving for an upgrade
+  // (or a refresh) always returns the seller to the exact same screen.
+  useEffect(() => {
+    const next = new URLSearchParams(window.location.search);
+    if (next.get('step') === step) return;
+    next.set('step', step);
+    setSearchParams(next, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step]);
+
   // Handle returns from PayPal Checkout (featured / notary / membership).
   // - Restore the step the user was on via ?step= (validated above).
   // - Show cancel/success toasts.
