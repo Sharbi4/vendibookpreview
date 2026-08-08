@@ -622,8 +622,11 @@ export const SaleListingMobile = ({
               </span>
             </div>
             <div className="text-sm">{locationShort}{listing.zip_code ? ` ${listing.zip_code}` : ''}</div>
-            <div className="text-xs text-muted-foreground">
-              Exact location provided after purchase confirmation.
+            <div className="flex items-start gap-2 text-xs text-muted-foreground">
+              <EyeOff className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+              <span>
+                Only city, state, and ZIP are shown publicly. The exact street address and pickup details stay private until your purchase is confirmed.
+              </span>
             </div>
             <div className="rounded-xl overflow-hidden ring-hairline" style={{ height: 200 }}>
               <ListingLocationMap
