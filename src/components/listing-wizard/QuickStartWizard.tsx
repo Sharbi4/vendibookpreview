@@ -238,7 +238,7 @@ export const QuickStartWizard: React.FC = () => {
       }
 
       // Create draft through the backend so new users receive the host role safely.
-      const { data: listing, error } = await supabase.functions.invoke('create-listing-draft', {
+      const { data: listing, error } = await invokeEdge<{ id?: string }>('create-listing-draft', {
         headers: { Authorization: `Bearer ${sessionData.session.access_token}` },
         body: {
           mode: data.mode,
@@ -252,7 +252,7 @@ export const QuickStartWizard: React.FC = () => {
         },
       });
 
-      if (error) throw error;
+      if (error) throw new Error(error);
       if (!listing?.id) throw new Error('Draft was not created. Please try again.');
       await refreshProfile();
 
