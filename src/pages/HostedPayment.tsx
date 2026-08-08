@@ -5,6 +5,7 @@ import SEO from '@/components/SEO';
 import PayPalPaymentPanel, { type PayPalCheckoutTarget } from '@/components/checkout/PayPalPaymentPanel';
 import { formatUsd } from '@/lib/monetization/products';
 import { useToast } from '@/hooks/use-toast';
+import { isSafeInternalPath } from '@/lib/originNav';
 
 const SUPPORTED = ['sale', 'booking', 'freight', 'notary', 'protected_sale_deposit', 'concierge'] as const;
 type HostedKind = (typeof SUPPORTED)[number];
