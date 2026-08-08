@@ -1,4 +1,5 @@
 import { deliveryRateLabel } from '@/lib/fulfillment/delivery';
+import { DeliveryAvailabilityPanel } from '@/components/listing-detail/DeliveryAvailabilityPanel';
 import { useParams, Link } from 'react-router-dom';
 import { 
   ArrowLeft, 
