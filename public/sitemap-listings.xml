@@ -254,17 +254,6 @@
     </image:image>
   </url>
   <url>
-    <loc>https://vendibook.com/listing/6c9c3033-edb9-441c-9b3c-eb8e84421e4c</loc>
-    <lastmod>2026-08-06</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/ae113745-a942-4f19-8c6d-9dafaf6a3004/6c9c3033-edb9-441c-9b3c-eb8e84421e4c/1785072968314-psjjwk.jpg</image:loc>
-      <image:title>2025 18 Ft Food Trailer Fully Equipped With Additional Appliances, Cookware Etc</image:title>
-      <image:caption>2025 18 Ft Food Trailer Fully Equipped With Additional Appliances, Cookware Etc in Staunton, VA on Vendibook</image:caption>
-    </image:image>
-  </url>
-  <url>
     <loc>https://vendibook.com/listing/33ee8fd3-f9fd-44b3-af28-64d94eb7f9e9</loc>
     <lastmod>2026-07-27</lastmod>
     <changefreq>weekly</changefreq>
@@ -273,6 +262,17 @@
       <image:loc>https://images.unsplash.com/photo-1513104890138-7c749659a591?w=800</image:loc>
       <image:title>Pizza Trailer - Wood-Fired Oven</image:title>
       <image:caption>Pizza Trailer - Wood-Fired Oven in El Paso, TX on Vendibook</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://vendibook.com/listing/6c9c3033-edb9-441c-9b3c-eb8e84421e4c</loc>
+    <lastmod>2026-08-08</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/ae113745-a942-4f19-8c6d-9dafaf6a3004/6c9c3033-edb9-441c-9b3c-eb8e84421e4c/1785072968314-psjjwk.jpg</image:loc>
+      <image:title>2025 18 Ft Food Trailer Fully Equipped With Additional Appliances, Cookware Etc</image:title>
+      <image:caption>2025 18 Ft Food Trailer Fully Equipped With Additional Appliances, Cookware Etc in Staunton, VA on Vendibook</image:caption>
     </image:image>
   </url>
   <url>
