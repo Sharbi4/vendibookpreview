@@ -13,6 +13,7 @@ import { deliverOrderReceipt } from "./orders/deliverOrderReceipt.ts";
 import { notifyOrderParties, notifyUser } from "./notify.ts";
 import { fulfillMonetizationPurchase } from "./fulfillMonetizationPurchase.ts";
 import { fulfillConciergeOrder } from "./concierge.ts";
+import { getListingPurchaseState, LISTING_UNAVAILABLE_MESSAGE } from "./listingGuard.ts";
 
 
 export interface CaptureFacts {
@@ -217,6 +218,8 @@ export async function finalizeCapture(
       last_reconciled_at: new Date().toISOString(),
     })
     .eq("id", record.id)
+    // Race-safe: only transition out of a non-terminal state.
+    .not("payment_status", "in", `(${[...TERMINAL_PAYMENT_STATES].join(",")})`)
     .select()
     .maybeSingle();
 
