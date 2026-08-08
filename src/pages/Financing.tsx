@@ -1,13 +1,31 @@
 import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, ExternalLink, BadgeCheck } from 'lucide-react';
+import { ArrowRight, ExternalLink, BadgeCheck, ShieldCheck, Truck, Wrench, Building2 } from 'lucide-react';
 import SEO, { generateFAQSchema } from '@/components/SEO';
 import JsonLd from '@/components/JsonLd';
 import Header from '@/components/layout/Header';
-import equinoxLogo from '@/assets/brand/equinox-funding-logo.png.asset.json';
+import { EquinoxFundingLogo } from '@/components/brand/ProviderLogos';
 
-const LIME = '#8CC63F';
+const LIME = '#34d399';
 const APPLY_URL = 'https://equinox-funding.com/efapplication/';
+
+const OPTIONS = [
+  {
+    icon: Truck,
+    title: 'Trucks & trailers',
+    body: 'Finance a turnkey food truck, concession trailer, or a fully custom build from a manufacturer.',
+  },
+  {
+    icon: Wrench,
+    title: 'Equipment & build-outs',
+    body: 'Cooking lines, refrigeration, generators, wraps, and conversion work can be included in a package.',
+  },
+  {
+    icon: Building2,
+    title: 'Working capital',
+    body: 'Business loans and revenue-based financing for opening costs, permits, inventory, and expansion.',
+  },
+];
 
 const PROCESS = [
   {
