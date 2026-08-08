@@ -604,9 +604,15 @@ export const QuickStartWizard: React.FC = () => {
 
           <div className="flex flex-col gap-3 pt-2">
             <div className="flex items-center gap-2 sm:gap-3">
-              <Button variant="ghost" onClick={() => setStep('mode')} size="sm" className="text-xs sm:text-sm">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setStep('mode')}
+                className="min-w-[96px]"
+              >
                 ← Back
               </Button>
+
               <Button 
                 variant="dark-shine"
                 onClick={handleCreateDraft} 
