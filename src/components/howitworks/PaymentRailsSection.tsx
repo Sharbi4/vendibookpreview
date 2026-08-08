@@ -67,6 +67,10 @@ const paypalRail = (audience: RailsAudience): RailDef => ({
   detailNote:
     'PayPal Checkout only appears on listings where the seller or host has enabled it. Payout destinations are saved privately in your dashboard.',
   link: { label: 'More about payments', href: '/payments' },
+  flowLink:
+    audience === 'buyer'
+      ? { label: 'See the exact steps in your orders', href: '/dashboard?view=shopper&tab=orders' }
+      : { label: 'See the exact steps in Payouts', href: '/dashboard?view=host&tab=payouts' },
 });
 
 const inPersonRail = (audience: RailsAudience): RailDef => ({
