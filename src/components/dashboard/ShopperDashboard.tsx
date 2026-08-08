@@ -15,6 +15,7 @@ import PremiumSpotlight from './overview/PremiumSpotlight';
 import { useShopperBookings } from '@/hooks/useShopperBookings';
 import { useUnreadMessageCount } from '@/hooks/useUnreadMessageCount';
 import { useFavorites } from '@/hooks/useFavorites';
+import { useSellerVerification } from '@/hooks/useSellerVerification';
 import { useAuth } from '@/contexts/AuthContext';
 
 /**
@@ -29,6 +30,12 @@ import { useAuth } from '@/contexts/AuthContext';
 const ShopperDashboard = () => {
   const { bookings, stats } = useShopperBookings();
   const { profile, isVerified } = useAuth();
+  const sellerVerification = useSellerVerification();
+  // Authoritative badge state — the offer disappears once verified.
+  const verified =
+    isVerified ||
+    sellerVerification.state?.badge_active === true ||
+    sellerVerification.offer.enabled === false;
   const { count: unreadMessageCount } = useUnreadMessageCount();
   const { favorites } = useFavorites();
   const [searchParams] = useSearchParams();
@@ -49,7 +56,7 @@ const ShopperDashboard = () => {
 
   const actionItems: ActionItem[] = useMemo(() => {
     const items: ActionItem[] = [];
-    if (!isVerified) items.push({
+    if (!verified) items.push({
       id: 'verify-identity', icon: BadgeCheck,
       title: 'Get verified*',
       description: 'A paid add-on that adds a verified badge to your profile. Never required to buy, sell, or publish.',
@@ -68,7 +75,7 @@ const ShopperDashboard = () => {
       href: '/messages', cta: 'Open',
     });
     return items;
-  }, [isVerified, stats.pending, unreadMessageCount]);
+  }, [verified, stats.pending, unreadMessageCount]);
 
   const activity: ActivityItem[] = useMemo(() => {
     return bookings.slice(0, 3).map((b) => {
