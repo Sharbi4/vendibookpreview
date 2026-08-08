@@ -28,6 +28,11 @@ export type RailsAudience = 'buyer' | 'seller' | 'host';
 
 type RailKey = 'paypal' | 'inperson' | 'equinox' | 'plaid';
 
+interface RailLink {
+  label: string;
+  href: string;
+}
+
 interface RailDef {
   key: RailKey;
   logo: JSX.Element;
@@ -36,7 +41,9 @@ interface RailDef {
   detailTitle: string;
   detailSteps: string[];
   detailNote: string;
-  link?: { label: string; href: string };
+  link?: RailLink;
+  /** Deep-link into the actual product flow (dashboard / publish wizard). */
+  flowLink?: RailLink;
 }
 
 const paypalRail = (audience: RailsAudience): RailDef => ({
