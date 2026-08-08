@@ -230,10 +230,39 @@ export const PublishWizard: React.FC = () => {
   const [showLimitModal, setShowLimitModal] = useState(false);
   const quota = useListingQuota();
 
+  // Turns on inline red validation after a failed "Continue" attempt.
+  const [showStepErrors, setShowStepErrors] = useState(false);
+
   // Scroll to top when step changes
   useEffect(() => {
+    setShowStepErrors(false);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [step]);
+
+  /**
+   * Blocks navigation when a step still has required answers missing:
+   * highlights the fields in red, scrolls to the first one and toasts.
+   */
+  const guardNext = (blockers: string[], firstFieldId: string | null, proceed: () => void) => () => {
+    if (blockers.length > 0) {
+      setShowStepErrors(true);
+      toast({
+        title: 'A few answers are still needed',
+        description: blockers[0],
+        variant: 'destructive',
+      });
+      if (firstFieldId) {
+        requestAnimationFrame(() => {
+          document
+            .getElementById(firstFieldId)
+            ?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        });
+      }
+      return;
+    }
+    proceed();
+  };
+
 
   // Keep ?step= in sync with the wizard position so leaving for an upgrade
   // (or a refresh) always returns the seller to the exact same screen.
