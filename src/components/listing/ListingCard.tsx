@@ -1,3 +1,4 @@
+import { deliveryRateLabel } from '@/lib/fulfillment/delivery';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { MapPin, Plug, Zap, Droplet, Refrigerator, Flame, Wind, Wifi, Car, Shield, Sun, Truck, Calendar, Clock, ArrowRight } from 'lucide-react';
@@ -467,7 +468,7 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
             <Truck className="h-3 w-3" />
             <span>Delivers within {listing.delivery_radius_miles} mi</span>
             {listing.delivery_fee && (
-              <span className="text-white/80 font-medium">· ${listing.delivery_fee} fee</span>
+              <span className="text-white/80 font-medium">· {deliveryRateLabel(listing.delivery_fee, (listing as any).delivery_fee_type)}</span>
             )}
           </div>
         )}
