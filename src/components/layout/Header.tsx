@@ -416,7 +416,7 @@ const Header = ({ hideSearch = false }: HeaderProps) => {
         )}
 
         {/* Desktop Navigation */}
-        <nav className="hidden lg:flex items-center gap-3">
+        <nav className="hidden lg:flex items-center gap-3 shrink-0">
           {!user && (
             <Link 
               to="/become-a-host" 
