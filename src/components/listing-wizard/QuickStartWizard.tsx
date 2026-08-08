@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { invokeEdge } from '@/lib/edge/invokeFunction';
 import { ListingCategory, ListingMode, CATEGORY_LABELS } from '@/types/listing';
 import { cn } from '@/lib/utils';
 import { trackDraftCreated, trackEvent } from '@/lib/analytics';
@@ -91,10 +92,10 @@ export const QuickStartWizard: React.FC = () => {
     setZipConfirmed(false);
 
     try {
-      const { data: geoData, error } = await supabase.functions.invoke('geocode-location', {
-        body: { query: zip, limit: 1 }});
+      const { data: geoData, error } = await invokeEdge<{ results?: any[] }>('geocode-location', {
+        body: { query: zip, limit: 1 }}, { retries: 2 });
 
-      if (error) throw error;
+      if (error) throw new Error(error);
 
       const result = geoData?.results?.[0];
       if (!result) {
@@ -238,7 +239,7 @@ export const QuickStartWizard: React.FC = () => {
       }
 
       // Create draft through the backend so new users receive the host role safely.
-      const { data: listing, error } = await supabase.functions.invoke('create-listing-draft', {
+      const { data: listing, error } = await invokeEdge<{ id?: string }>('create-listing-draft', {
         headers: { Authorization: `Bearer ${sessionData.session.access_token}` },
         body: {
           mode: data.mode,
@@ -252,7 +253,7 @@ export const QuickStartWizard: React.FC = () => {
         },
       });
 
-      if (error) throw error;
+      if (error) throw new Error(error);
       if (!listing?.id) throw new Error('Draft was not created. Please try again.');
       await refreshProfile();
 

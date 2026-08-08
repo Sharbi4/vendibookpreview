@@ -16,6 +16,8 @@ interface Props {
   tertiary?: JourneyAction;
   /** Short helper text — what happens after primary is clicked. */
   helper?: React.ReactNode;
+  /** When the primary action is disabled, these explain exactly what's missing. */
+  blockers?: string[];
   /** Stick to the bottom on mobile for tap accessibility. */
   sticky?: boolean;
   className?: string;
@@ -30,10 +32,12 @@ export function PrimaryActionBar({
   secondary,
   tertiary,
   helper,
+  blockers,
   sticky = false,
   className,
 }: Props) {
   const { label: pLabel, ...pRest } = primary;
+  const showBlockers = !!pRest.disabled && !!blockers?.length;
   return (
     <div
       className={cn(
@@ -43,6 +47,16 @@ export function PrimaryActionBar({
         className,
       )}
     >
+      {showBlockers && (
+        <div className="mb-3 rounded-lg border border-amber-500/30 bg-amber-500/[0.06] px-3 py-2">
+          <p className="text-xs font-medium text-amber-500">Add these to continue</p>
+          <ul className="mt-1 space-y-0.5">
+            {blockers!.map((b) => (
+              <li key={b} className="text-xs text-muted-foreground">• {b}</li>
+            ))}
+          </ul>
+        </div>
+      )}
       <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-3">
         {helper ? (
           <p className="text-xs text-muted-foreground max-w-sm">{helper}</p>

@@ -3505,6 +3505,15 @@ export const PublishWizard: React.FC = () => {
                               (equinoxOptIn && !equinoxDisclosureAccepted)
                             : !isValidPrice(priceDaily)),
                       }}
+                      blockers={
+                        listing.mode === 'sale'
+                          ? ([
+                              !isValidPrice(priceSale) && 'An asking price',
+                              !acceptPayPalCheckout && !acceptCashPayment && 'At least one way to get paid',
+                              equinoxOptIn && !equinoxDisclosureAccepted && 'Accept the financing disclosure',
+                            ].filter(Boolean) as string[])
+                          : ([!isValidPrice(priceDaily) && 'A daily rate'].filter(Boolean) as string[])
+                      }
                     />
                   </div>
                 </div>
@@ -4270,6 +4279,15 @@ export const PublishWizard: React.FC = () => {
                           ? !accessInstructions
                           : !fulfillmentType),
                     }}
+                    blockers={[
+                      !streetAddress.trim() && 'Street address',
+                      !locCity.trim() && 'City',
+                      !locState.trim() && 'State',
+                      !locZipCode.trim() && 'ZIP code',
+                      isStaticLocationFn(listing.category) || isStaticLocation
+                        ? !accessInstructions && 'Access instructions'
+                        : !fulfillmentType && 'How it changes hands (pickup or delivery)',
+                    ].filter(Boolean) as string[]}
                   />
                 </div>
               )}
