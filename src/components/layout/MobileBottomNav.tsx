@@ -29,6 +29,9 @@ const MobileBottomNav = () => {
 
   // Hide on specific flows
   if (HIDDEN_PATTERNS.some((p) => p.test(location.pathname))) return null;
+  // The quick-start listing wizard renders at /list?start=true — hide the nav
+  // there too so it can't cover the wizard's actions.
+  if (location.pathname === '/list' && new URLSearchParams(location.search).get('start') === 'true') return null;
 
   const items = [
     { to: '/search', label: 'Search', icon: Search },

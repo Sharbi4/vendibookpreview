@@ -506,16 +506,10 @@ const ListPage: React.FC = () => {
         <div className="fixed inset-0 z-0">
           <div className="absolute inset-0 bg-background" />
         </div>
-        <div className="relative z-10 max-w-4xl mx-auto py-6 sm:py-8 px-4">
-          <Button
-            variant="ghost"
-            onClick={() => navigate(-1)}
-            className="mb-6 pl-0 hover:pl-2 transition-all"
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back
-          </Button>
-
+        {/* Single back control lives inside the wizard (step-aware), so no
+            duplicate page-level Back button here. Extra bottom padding keeps
+            the final actions clear of the mobile bottom nav. */}
+        <div className="relative z-10 max-w-4xl mx-auto py-6 sm:py-8 px-4 pb-28 md:pb-10">
           <QuickStartWizard />
         </div>
       </div>
