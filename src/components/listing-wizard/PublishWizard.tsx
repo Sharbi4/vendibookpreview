@@ -2532,6 +2532,17 @@ export const PublishWizard: React.FC = () => {
     checklistItems.filter(i => i.required).every(i => i.completed) && stageMissing.length === 0;
   const canPublish = stageRequirementsMet && allAttested(attestations);
 
+  // Everything still standing between this draft and publishing, in plain
+  // language, so the review step never shows an unexplained disabled button.
+  const publishBlockers: string[] = [
+    ...checklistItems
+      .filter((i) => i.required && !i.completed)
+      .map((i) => (i as any).label ?? (i as any).title ?? 'Incomplete step'),
+    ...stageMissing.map((r) => r.label),
+    ...(allAttested(attestations) ? [] : ['Confirm the statements at the bottom of this page']),
+  ];
+
+
   // Per-step required answers. Steps can't be skipped while these are missing.
   const basicsMissing = stageMissing.filter((r) => r.step === 'basics');
   // Disclosure requirements are collected on the "What's included" step.
