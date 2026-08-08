@@ -595,6 +595,189 @@ export const PublishWizard: React.FC = () => {
   const [deadlineHours, setDeadlineHours] = useState<number>(48);
   const [openDocGroups, setOpenDocGroups] = useState<string[]>(['Identity & Legal']);
 
+  // ─── Never lose typed input ───────────────────────────────────────────────
+  // Everything the seller types is mirrored to a local per-listing cache, so
+  // stepping back and forth, refreshing, or returning from a payment page
+  // always restores the exact answers they already gave.
+  const [draftRestored, setDraftRestored] = useState(false);
+
+  const draftSnapshot = useMemo(
+    () => ({
+      stageValues,
+      disclosures,
+      attestations,
+      title,
+      description,
+      priceDaily,
+      priceWeekly,
+      priceMonthly,
+      priceSale,
+      priceHourly,
+      depositAmount,
+      instantBook,
+      highlights,
+      amenities,
+      weightLbs,
+      lengthInches,
+      widthInches,
+      heightInches,
+      totalSlots,
+      slotNames,
+      freightCategory,
+      vendibookFreightEnabled,
+      freightPayer,
+      acceptPayPalCheckout,
+      acceptCashPayment,
+      equinoxOptIn,
+      equinoxDisclosureAccepted,
+      vinSerial,
+      vinUnavailable,
+      sellerPhone,
+      fulfillmentType,
+      pickupLocationText,
+      address,
+      streetAddress,
+      aptSuite,
+      locCity,
+      locState,
+      locZipCode,
+      deliveryFee,
+      deliveryRadiusMiles,
+      deliveryFeeType,
+      pickupInstructions,
+      deliveryInstructions,
+      accessInstructions,
+      hoursOfAccess,
+      locationNotes,
+      isStaticLocation,
+      availableFrom,
+      availableTo,
+      hourlyEnabled,
+      dailyEnabled,
+      minHours,
+      maxHours,
+      bufferTimeMins,
+      minNoticeHours,
+      hourlySchedule,
+      rentalMinDays,
+      hourlySpecialPricing,
+      requiredDocuments,
+      globalDeadline,
+      deadlineHours,
+    }),
+    [
+      stageValues, disclosures, attestations, title, description, priceDaily, priceWeekly,
+      priceMonthly, priceSale, priceHourly, depositAmount, instantBook, highlights, amenities,
+      weightLbs, lengthInches, widthInches, heightInches, totalSlots, slotNames, freightCategory,
+      vendibookFreightEnabled, freightPayer, acceptPayPalCheckout, acceptCashPayment, equinoxOptIn,
+      equinoxDisclosureAccepted, vinSerial, vinUnavailable, sellerPhone, fulfillmentType,
+      pickupLocationText, address, streetAddress, aptSuite, locCity, locState, locZipCode,
+      deliveryFee, deliveryRadiusMiles, deliveryFeeType, pickupInstructions, deliveryInstructions,
+      accessInstructions, hoursOfAccess, locationNotes, isStaticLocation, availableFrom, availableTo,
+      hourlyEnabled, dailyEnabled, minHours, maxHours, bufferTimeMins, minNoticeHours, hourlySchedule,
+      rentalMinDays, hourlySpecialPricing, requiredDocuments, globalDeadline, deadlineHours,
+    ],
+  );
+
+  type WizardDraftSnapshot = typeof draftSnapshot;
+
+  // Restore once, right after the listing row finished loading.
+  useEffect(() => {
+    if (isLoading || draftRestored || !listingId) return;
+    setDraftRestored(true);
+    const cached = loadWizardDraft<Partial<WizardDraftSnapshot>>(listingId);
+    if (!cached) return;
+
+    const apply = <T,>(value: T | undefined, setter: (v: T) => void) => {
+      if (hasContent(value)) setter(value as T);
+    };
+
+    if (cached.stageValues) setStageValues((prev) => mergeCached(prev, cached.stageValues));
+    if (cached.disclosures) setDisclosures((prev) => mergeCached(prev, cached.disclosures));
+    if (cached.attestations) setAttestations((prev) => mergeCached(prev, cached.attestations));
+
+    apply(cached.title, setTitle);
+    apply(cached.description, setDescription);
+    apply(cached.priceDaily, setPriceDaily);
+    apply(cached.priceWeekly, setPriceWeekly);
+    apply(cached.priceMonthly, setPriceMonthly);
+    apply(cached.priceSale, setPriceSale);
+    apply(cached.priceHourly, setPriceHourly);
+    apply(cached.depositAmount, setDepositAmount);
+    apply(cached.instantBook, setInstantBook);
+    apply(cached.highlights, setHighlights);
+    apply(cached.amenities, setAmenities);
+    apply(cached.weightLbs, setWeightLbs);
+    apply(cached.lengthInches, setLengthInches);
+    apply(cached.widthInches, setWidthInches);
+    apply(cached.heightInches, setHeightInches);
+    apply(cached.slotNames, setSlotNames);
+    apply(cached.freightCategory, setFreightCategory);
+    apply(cached.vendibookFreightEnabled, setVendibookFreightEnabled);
+    apply(cached.freightPayer, setFreightPayer);
+    apply(cached.equinoxOptIn, setEquinoxOptIn);
+    apply(cached.equinoxDisclosureAccepted, setEquinoxDisclosureAccepted);
+    apply(cached.vinSerial, setVinSerial);
+    apply(cached.vinUnavailable, setVinUnavailable);
+    apply(cached.sellerPhone, setSellerPhone);
+    apply(cached.fulfillmentType, setFulfillmentType);
+    apply(cached.pickupLocationText, setPickupLocationText);
+    apply(cached.address, setAddress);
+    apply(cached.streetAddress, setStreetAddress);
+    apply(cached.aptSuite, setAptSuite);
+    apply(cached.locCity, setLocCity);
+    apply(cached.locState, setLocState);
+    apply(cached.locZipCode, setLocZipCode);
+    apply(cached.deliveryFee, setDeliveryFee);
+    apply(cached.deliveryRadiusMiles, setDeliveryRadiusMiles);
+    apply(cached.deliveryFeeType, setDeliveryFeeType);
+    apply(cached.pickupInstructions, setPickupInstructions);
+    apply(cached.deliveryInstructions, setDeliveryInstructions);
+    apply(cached.accessInstructions, setAccessInstructions);
+    apply(cached.hoursOfAccess, setHoursOfAccess);
+    apply(cached.locationNotes, setLocationNotes);
+    apply(cached.availableFrom, setAvailableFrom);
+    apply(cached.availableTo, setAvailableTo);
+    apply(cached.hourlyEnabled, setHourlyEnabled);
+    apply(cached.hourlySchedule, setHourlySchedule);
+    apply(cached.hourlySpecialPricing, setHourlySpecialPricing);
+    apply(cached.requiredDocuments, setRequiredDocuments);
+    apply(cached.globalDeadline, setGlobalDeadline);
+    if (typeof cached.dailyEnabled === 'boolean') setDailyEnabled(cached.dailyEnabled);
+    if (typeof cached.isStaticLocation === 'boolean') setIsStaticLocation(cached.isStaticLocation);
+    if (typeof cached.acceptPayPalCheckout === 'boolean') setAcceptPayPalCheckout(cached.acceptPayPalCheckout);
+    if (typeof cached.acceptCashPayment === 'boolean') setAcceptCashPayment(cached.acceptCashPayment);
+    if (typeof cached.totalSlots === 'number' && cached.totalSlots > 0) setTotalSlots(cached.totalSlots);
+    if (typeof cached.minHours === 'number') setMinHours(cached.minHours);
+    if (typeof cached.maxHours === 'number') setMaxHours(cached.maxHours);
+    if (typeof cached.bufferTimeMins === 'number') setBufferTimeMins(cached.bufferTimeMins);
+    if (typeof cached.minNoticeHours === 'number') setMinNoticeHours(cached.minNoticeHours);
+    if (typeof cached.rentalMinDays === 'number') setRentalMinDays(cached.rentalMinDays);
+    if (typeof cached.deadlineHours === 'number') setDeadlineHours(cached.deadlineHours);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLoading, draftRestored, listingId]);
+
+  // Mirror every change to the cache (debounced) once restore has happened.
+  useEffect(() => {
+    if (!draftRestored || !listingId) return;
+    const t = window.setTimeout(() => saveWizardDraft(listingId, draftSnapshot), 400);
+    return () => window.clearTimeout(t);
+  }, [draftSnapshot, draftRestored, listingId]);
+
+  // Flush immediately if the tab is hidden or closed mid-edit.
+  useEffect(() => {
+    if (!draftRestored || !listingId) return;
+    const flush = () => saveWizardDraft(listingId, draftSnapshot);
+    window.addEventListener('pagehide', flush);
+    document.addEventListener('visibilitychange', flush);
+    return () => {
+      window.removeEventListener('pagehide', flush);
+      document.removeEventListener('visibilitychange', flush);
+    };
+  }, [draftSnapshot, draftRestored, listingId]);
+
+
+
   // Auto-save guest draft fields (title, description, pricing) periodically
   // This uses RLS policy "Allow guest draft updates with token"
   const saveGuestDraftFields = async () => {
