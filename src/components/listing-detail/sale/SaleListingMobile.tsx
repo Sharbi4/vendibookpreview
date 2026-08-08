@@ -495,7 +495,7 @@ export const SaleListingMobile = ({
               <SpecCell icon={Building2} label={getBrandFieldLabel(listing.category)} value={brandValue} />
             )}
             {fulfillmentLabelText && (
-              <SpecCell icon={Truck} label="Pickup type" value={fulfillmentLabelText} />
+              <SpecCell icon={Truck} label="Fulfillment" value={fulfillmentLabelText} />
             )}
             {locationShort && (
               <SpecCell icon={MapPin} label="Location" value={locationShort} />
