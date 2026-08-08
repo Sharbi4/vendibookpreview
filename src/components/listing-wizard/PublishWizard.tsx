@@ -22,6 +22,8 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { publishListingIdempotent } from '@/lib/listings/publishListing';
+import { saveWizardDraft, loadWizardDraft, clearWizardDraft, hasContent, mergeCached } from '@/lib/listings/wizardDraftCache';
+
 import { reportError } from '@/lib/errorReporter';
 import { parseEdgeError } from '@/lib/edgeErrors';
 import { usePremiumUpsell, isPremiumError, featureFromParsed } from '@/hooks/usePremiumUpsell';
