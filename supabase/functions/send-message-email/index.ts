@@ -18,8 +18,9 @@ Deno.serve(async (req) => {
     }
     const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
 
+    const linkPath = typeof b.link === 'string' && b.link.startsWith('/') ? b.link : undefined;
     const conversationId = b.conversation_id || b.conversationId || (b.link ? String(b.link).split('/').pop() : undefined);
-    const idemKey = `msg-${conversationId || recipientEmail}-${b.message_id || Date.now()}`;
+    const idemKey = `msg-${b.message_id || `${conversationId || recipientEmail}-${Date.now()}`}`;
 
     const { error } = await supabase.functions.invoke('send-transactional-email', {
       body: {
@@ -32,6 +33,7 @@ Deno.serve(async (req) => {
           messagePreview: b.message_preview || b.messagePreview,
           conversationId,
           unreadCount: b.unread_count || 1,
+          linkPath,
         },
       },
     });
