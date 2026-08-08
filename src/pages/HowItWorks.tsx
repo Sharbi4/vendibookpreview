@@ -228,12 +228,12 @@ const HowItWorks = () => {
                 </div>
                 <h3 className="text-xl md:text-2xl font-bold text-foreground mb-2">I want to find or book something</h3>
                 <p className="text-sm md:text-base text-muted-foreground mb-5 leading-relaxed">
-                  Search verified trucks, trailers, kitchens, and vendor spaces. Check availability, message hosts, or let our concierge confirm everything before you commit.
+                  Search trucks, trailers, kitchens, and vendor spaces. Check availability, message hosts, or let our concierge confirm everything before you commit.
                 </p>
                 <ol className="space-y-2 mb-5 text-sm text-foreground/80">
                   <li className="flex gap-2"><span className="text-foreground/40 font-mono text-xs mt-0.5">01</span> Search by city, date, and category</li>
                   <li className="flex gap-2"><span className="text-foreground/40 font-mono text-xs mt-0.5">02</span> Check availability or ask Vendibook for help</li>
-                  <li className="flex gap-2"><span className="text-foreground/40 font-mono text-xs mt-0.5">03</span> Book securely with payment protection protection</li>
+                  <li className="flex gap-2"><span className="text-foreground/40 font-mono text-xs mt-0.5">03</span> Pay with PayPal Checkout or in person</li>
                 </ol>
                 <div className="flex flex-wrap gap-2">
                   <Button size="sm" variant="dark-shine" asChild className="rounded-full">
@@ -351,7 +351,7 @@ const HowItWorks = () => {
           <div className="container max-w-5xl mx-auto px-4">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
               {[
-                { v: '12k+', l: 'Verified users' },
+                { v: '12k+', l: 'Members' },
                 { v: '$4.2M', l: 'Transacted' },
                 { v: '47 states', l: 'Active inventory' },
                 { v: '4.9★', l: 'Average rating' }].map((s) => (
