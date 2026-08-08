@@ -37,7 +37,7 @@ export function PrimaryActionBar({
   className,
 }: Props) {
   const { label: pLabel, ...pRest } = primary;
-  const showBlockers = !!pRest.disabled && !!blockers?.length;
+  const showBlockers = !!blockers?.length;
   return (
     <div
       className={cn(
