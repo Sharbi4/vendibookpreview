@@ -20,6 +20,7 @@ const PRIVATE_ITEMS = [
   'Your phone number and email address',
   'Any private minimum offer amount',
   'Ownership and identity documents',
+  'Your VIN / serial number — not on your public listing, but printed on the financing purchase sheet a buyer generates',
 ];
 
 /** Explicit public-vs-private summary shown on the confirm stage. */
