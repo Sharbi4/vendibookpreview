@@ -1117,6 +1117,15 @@ export const PublishWizard: React.FC = () => {
       .join(', ');
   }, [streetAddress, aptSuite, locCity, locState, locZipCode]);
 
+  // For-sale listings that are delivery-only don't need a public pickup street address.
+  const needsFullAddressForSale =
+    listing?.mode !== 'sale' || fulfillmentType !== 'delivery';
+  const streetAddressRequired =
+    listing?.mode !== 'sale' ||
+    isStaticLocationFn((listing?.category ?? '') as ListingCategory) ||
+    isStaticLocation ||
+    needsFullAddressForSale;
+
   const hasCompleteStructuredAddress = !!(
     (streetAddress.trim() || !streetAddressRequired) &&
     locCity.trim() &&
@@ -2240,15 +2249,6 @@ export const PublishWizard: React.FC = () => {
   const hasValidTitle = title.trim().length >= MIN_TITLE_LENGTH;
   const hasValidDescription = description.trim().length >= MIN_DESCRIPTION_LENGTH;
   const hasDescription = hasValidTitle && hasValidDescription;
-
-  // For-sale listings that are delivery-only don't need a public pickup street address.
-  const needsFullAddressForSale =
-    listing?.mode !== 'sale' || fulfillmentType !== 'delivery';
-  const streetAddressRequired =
-    listing?.mode !== 'sale' ||
-    isStaticLocationFn((listing?.category ?? '') as ListingCategory) ||
-    isStaticLocation ||
-    needsFullAddressForSale;
 
 
   const checklistState = {
