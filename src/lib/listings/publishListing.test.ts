@@ -13,12 +13,14 @@ const state: {
   updateRows: Row[];
   verify: Row;
   updateError: unknown;
+  pendingSelect: () => Row;
 } = {
   current: null,
   claimRows: [],
   updateRows: [],
   verify: null,
   updateError: null,
+  pendingSelect: () => null,
 };
 
 vi.mock('@/integrations/supabase/client', () => {
@@ -54,7 +56,7 @@ vi.mock('@/integrations/supabase/client', () => {
 
 // Two `maybeSingle()` reads happen: the pre-check, then the verification.
 let readCount = 0;
-(state as any).pendingSelect = () => {
+state.pendingSelect = () => {
   readCount += 1;
   return readCount === 1 ? state.current : state.verify;
 };
