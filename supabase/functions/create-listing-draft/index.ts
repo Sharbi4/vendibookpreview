@@ -71,12 +71,17 @@ serve(async (req) => {
         },
         { onConflict: "id", ignoreDuplicates: false },
       );
-    if (profileError) return json({ error: `profile_upsert_failed: ${profileError.message}` }, 400);
+    if (profileError) {
+      console.error("[create-listing-draft] profile upsert failed", profileError.message);
+      return json({ error: `We couldn't prepare your account: ${profileError.message}` }, 400);
+    }
 
+    // Granting the host role is best-effort: a duplicate or transient failure
+    // must never block someone from starting a listing.
     const { error: roleError } = await admin
       .from("user_roles")
       .upsert({ user_id: user.id, role: "host" }, { onConflict: "user_id,role" });
-    if (roleError) return json({ error: roleError.message }, 400);
+    if (roleError) console.error("[create-listing-draft] role upsert failed", roleError.message);
 
     const { data: listing, error: listingError } = await admin
       .from("listings")
@@ -102,7 +107,13 @@ serve(async (req) => {
       .select("id")
       .single();
 
-    if (listingError) return json({ error: listingError.message }, 400);
+    if (listingError) {
+      console.error("[create-listing-draft] insert failed", listingError);
+      return json(
+        { error: `We couldn't start your draft: ${listingError.message}`, code: listingError.code ?? null },
+        400,
+      );
+    }
 
     return json({ id: listing.id });
   } catch (error) {
