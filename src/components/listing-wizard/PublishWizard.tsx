@@ -389,30 +389,45 @@ export const PublishWizard: React.FC = () => {
     if (!isTitledSaleCategory(listing)) return;
     const normalized = vinUnavailable ? null : vinSerial.trim().toUpperCase() || null;
     try {
-      const { data: existing } = await supabase
+      const { data: existing, error: readError } = await supabase
         .from('listing_ownership_details')
         .select('id, title_status')
         .eq('listing_id', listing.id)
         .maybeSingle();
+      if (readError) throw readError;
 
       if (existing?.id) {
-        await supabase
+        const { error: updateError } = await supabase
           .from('listing_ownership_details')
           .update({ vin_serial: normalized })
           .eq('id', existing.id);
+        if (updateError) throw updateError;
         return;
       }
 
-      await supabase.from('listing_ownership_details').insert({
+      // The row's title_status is NOT NULL and constrained. Never invent an
+      // invalid "unknown"; if the seller hasn't answered yet there is simply
+      // nothing to insert — VIN is optional and must never block anything.
+      const titleStatus = disclosures.titleStatus?.trim();
+      if (!titleStatus) return;
+
+      const { error: insertError } = await supabase.from('listing_ownership_details').insert({
         listing_id: listing.id,
         host_id: user.id,
-        title_status: disclosures.titleStatus || 'unknown',
+        title_status: titleStatus,
         vin_serial: normalized,
       });
+      if (insertError) throw insertError;
     } catch (err) {
       console.error('Failed to save VIN / serial', err);
+      toast({
+        title: "We couldn't save your VIN / serial",
+        description:
+          'It is optional and does not block publishing — you can add it later from the listing editor.',
+      });
     }
-  }, [user?.id, listing, vinSerial, vinUnavailable, disclosures.titleStatus]);
+  }, [user?.id, listing, vinSerial, vinUnavailable, disclosures.titleStatus, toast]);
+
 
   const saveSellerPhone = useCallback(async () => {
     if (!user?.id) return;
