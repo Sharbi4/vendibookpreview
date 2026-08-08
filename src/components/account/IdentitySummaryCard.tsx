@@ -3,6 +3,7 @@ import { Camera, Eye, ShieldCheck, Loader2 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import verifiedBadge from '@/assets/verified-badge.png';
+import { useSellerVerification } from '@/hooks/useSellerVerification';
 
 interface Props {
   name: string;
@@ -20,11 +21,19 @@ const IdentitySummaryCard = ({
   subtitle,
   avatarUrl,
   initials,
-  verified,
+  verified: verifiedProp,
   onAvatarClick,
   isUploadingAvatar,
   publicProfileHref,
-}: Props) => (
+}: Props) => {
+  const sellerVerification = useSellerVerification();
+  // Once the badge is active the "Get verified" offer disappears for good.
+  const verified =
+    verifiedProp ||
+    sellerVerification.state?.badge_active === true ||
+    sellerVerification.offer.enabled === false;
+
+  return (
   <section className="rounded-lg border border-border bg-card p-5 md:p-6">
     <div className="flex items-center gap-4 md:gap-5">
       <button
@@ -80,8 +89,9 @@ const IdentitySummaryCard = ({
           )}
         </div>
       </div>
-    </div>
-  </section>
-);
+      </div>
+    </section>
+  );
+};
 
 export default IdentitySummaryCard;
