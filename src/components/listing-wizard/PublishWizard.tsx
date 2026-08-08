@@ -86,6 +86,8 @@ import { StepWhat, type StepWhatValues } from './stages/StepWhat';
 import { ListingDisclosures, type DisclosureValues } from './stages/ListingDisclosures';
 import { PhotoGuidance } from './stages/PhotoGuidance';
 import { PrivacySummary } from './stages/PrivacySummary';
+import { MissingRequirementsAlert } from './MissingRequirementsAlert';
+
 import {
   PublishAttestations,
   emptyAttestations,
