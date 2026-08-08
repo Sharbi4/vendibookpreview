@@ -32,6 +32,7 @@ import AnimatedHeroScene from '@/components/howitworks/AnimatedHeroScene';
 import ScrollWalkthrough, { WalkthroughStep } from '@/components/howitworks/ScrollWalkthrough';
 import ValuePillars, { Pillar } from '@/components/howitworks/ValuePillars';
 import { TellVendibookButton } from '@/components/lead/TellVendibookButton';
+import { PaymentRailsSection, ProviderTrustStrip, KeepExploring } from '@/components/howitworks/PaymentRailsSection';
 
 type Role = 'rent' | 'buy' | 'host' | 'sell';
 
@@ -382,6 +383,10 @@ const HowItWorks = () => {
             </Accordion>
           </div>
         </section>
+
+        <PaymentRailsSection audience={role === 'host' ? 'host' : role === 'sell' ? 'seller' : 'buyer'} />
+
+        <KeepExploring current="overview" />
 
         {/* FINAL CTA */}
         <section className="py-16 md:py-20">
