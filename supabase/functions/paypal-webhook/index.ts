@@ -88,8 +88,9 @@ serve(async (req) => {
       .update({ processing_error: message })
       .eq("event_id", eventId);
     await alertAdmins(admin, `PayPal webhook ${eventType} failed`, message);
-    // 200 so PayPal doesn't hot-loop; the row is flagged for reconciliation.
-    return jsonResponse(200, { received: true, processing_error: true });
+    // Retryable: the row stays unprocessed and re-claimable, so PayPal's retry
+    // (and our reconciliation sweep) can complete the fulfillment.
+    return jsonResponse(500, { received: false, processing_error: true });
   }
 
   return jsonResponse(200, { received: true });
