@@ -29,18 +29,18 @@ const steps: WalkthroughStep[] = [
   { number: 1, title: 'Create your listing in minutes', description: 'Add photos, write a description, set hourly/daily/weekly/monthly rates. Our wizard takes about 8 minutes.', icon: Camera, mock: 'photo' },
   { number: 2, title: 'Set your availability', description: 'Block dates, set operating hours, define buffer time between rentals. Smart calendar prevents double-bookings.', icon: Calendar, mock: 'calendar' },
   { number: 3, title: 'Require the right documents', description: 'Need insurance, business licenses, or health permits? We collect, verify, and store them automatically.', icon: FileCheck, mock: 'docs' },
-  { number: 4, title: 'Approve verified renters', description: 'Every renter is identity-verified. Review profiles and accept with one tap — or enable Instant Book.', icon: MessageSquare, mock: 'message' },
-  { number: 5, title: 'Get paid in 24 hours', description: 'Funds release directly to your bank account 24 hours after the rental ends. Track everything from your dashboard.', icon: DollarSign, mock: 'payout' }];
+  { number: 4, title: 'Approve booking requests', description: 'Review renter profiles and accept with one tap — or enable Instant Book for faster turnover.', icon: MessageSquare, mock: 'message' },
+  { number: 5, title: 'Get paid', description: 'PayPal-paid bookings are recorded automatically, the 12.9% platform fee is deducted, and Vendibook issues your payout to the destination you saved.', icon: DollarSign, mock: 'payout' }];
 
 const pillars: Pillar[] = [
-  { icon: ShieldCheck, title: 'Verified renters only', description: 'Every renter passes Identity verification before booking.' },
-  { icon: DollarSign, title: '24-hour payouts', description: 'Direct deposit to your bank within 24 hours of rental completion.' },
+  { icon: ShieldCheck, title: 'Know who you book', description: 'Renter profiles, reviews, and required documents before you approve.' },
+  { icon: DollarSign, title: 'Clear 12.9% fee', description: 'Free to list. One platform fee applies when a booking completes.' },
   { icon: FileCheck, title: 'Automated docs', description: 'We collect, verify, and store insurance + permit documents.' },
   { icon: TrendingUp, title: 'AI price optimization', description: 'Vendi suggests rates based on local demand to maximize earnings.' }];
 
 const faqs = [
   { q: 'How much does it cost to list?', a: 'Listing is completely free. We take a 12.9% platform fee only when you complete a booking. No subscriptions.' },
-  { q: 'How fast do I get paid?', a: 'Funds release to your bank account within 24 hours after the rental ends and the renter confirms.' },
+  { q: 'How do payouts work?', a: 'Save a payout destination in your dashboard. Once a booking completes, Vendibook records your proceeds and issues the payout. Payout setup is never required to publish or receive bookings.' },
   { q: 'What if a renter damages my equipment?', a: 'Set a security deposit at the listing level. We collect it at booking and release or refund based on your damage report.' },
   { q: 'Can I choose who rents?', a: 'Yes. Unless you enable Instant Book, you review every booking request and approve or decline manually.' },
   { q: 'How long until my first booking?', a: 'Most hosts with complete listings and competitive pricing receive their first inquiry within 1–2 weeks.' },
@@ -53,7 +53,7 @@ const HowItWorksHost = () => {
     <div className="min-h-screen bg-background flex flex-col">
       <SEO
         title="Host on Vendibook: Earn from Your Truck or Kitchen"
-        description="Free to list. Verified renters, 24-hour payouts, and full damage protection. Turn your truck, trailer, kitchen, or vendor space into recurring income."
+        description="Free to list. Control your calendar, choose PayPal checkout or in-person payment, and turn your truck, trailer, kitchen, or vendor space into recurring income."
         canonical="/how-it-works-host"
       />
       <Header />
@@ -77,7 +77,7 @@ const HowItWorksHost = () => {
                   Earn while your assets work for you.
                 </h1>
                 <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-xl leading-relaxed">
-                  List your food truck, trailer, commercial kitchen, or vendor space. Set your rates, control your calendar, and get paid in 24 hours.
+                  List your food truck, trailer, commercial kitchen, or vendor space. Set your rates, control your calendar, and choose how renters pay.
                 </p>
                 <div className="flex flex-wrap gap-3">
                   <Button size="lg" variant="glass-cta" className="rounded-full" asChild>
@@ -93,7 +93,7 @@ const HowItWorksHost = () => {
                 <div className="flex items-center gap-5 mt-7 text-sm text-muted-foreground">
                   <div className="flex items-center gap-1.5"><CheckCircle2 className="w-4 h-4 text-emerald-500" /> Free to list</div>
                   <div className="flex items-center gap-1.5"><CheckCircle2 className="w-4 h-4 text-emerald-500" /> 24hr payouts</div>
-                  <div className="flex items-center gap-1.5"><CheckCircle2 className="w-4 h-4 text-emerald-500" /> Verified renters</div>
+                  <div className="flex items-center gap-1.5"><CheckCircle2 className="w-4 h-4 text-emerald-500" /> PayPal checkout</div>
                 </div>
               </motion.div>
 
@@ -131,7 +131,7 @@ const HowItWorksHost = () => {
               {[
                 { v: '$3.2k', l: 'Avg monthly host earnings' },
                 { v: '24hr', l: 'Payout speed' },
-                { v: '100%', l: 'ID-verified renters' },
+                { v: '12.9%', l: 'Flat platform fee' },
                 { v: '12.9%', l: 'Platform fee — that\'s it' }].map((s) => (
                 <div key={s.l}>
                   <div className="text-2xl md:text-3xl font-bold text-foreground">{s.v}</div>
