@@ -24,8 +24,12 @@ const HostedPayment = () => {
 
   const kind = params.get('kind') as HostedKind | null;
   const id = params.get('id') ?? '';
-  const successPath = params.get('success') ?? '/dashboard';
-  const cancelPath = params.get('cancel') ?? '/dashboard';
+  // Open-redirect guard: an attacker-supplied `success`/`cancel` must never be
+  // able to send the payer off-site. Both default to /dashboard.
+  const rawSuccess = params.get('success');
+  const rawCancel = params.get('cancel');
+  const successPath = isSafeInternalPath(rawSuccess) ? rawSuccess : '/dashboard';
+  const cancelPath = isSafeInternalPath(rawCancel) ? rawCancel : '/dashboard';
   const label = params.get('label') ?? 'Vendibook payment';
   const amountCents = Number(params.get('amount_cents') ?? 0);
 
