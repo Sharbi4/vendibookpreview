@@ -114,6 +114,10 @@ const equinoxRail = (audience: RailsAudience): RailDef => ({
   detailNote:
     'Financing is offered by Equinox Funding LLC, not Vendibook, and is subject to credit approval. A 12.9% platform fee applies to financed sales. PayPal does not process an Equinox-funded purchase.',
   link: { label: 'See financing details', href: '/financing' },
+  flowLink:
+    audience === 'buyer'
+      ? { label: 'See the exact steps to apply', href: '/financing#apply' }
+      : { label: 'See the exact steps to enable financing', href: '/financing/enable' },
 });
 
 const plaidRail = (audience: RailsAudience): RailDef => ({
