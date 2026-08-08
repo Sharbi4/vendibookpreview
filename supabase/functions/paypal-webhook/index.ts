@@ -34,32 +34,47 @@ serve(async (req) => {
     return jsonResponse(400, { error: "Missing event id or type." });
   }
 
-  // Idempotency gate: first insert wins, duplicates short-circuit.
+  // ------------------------------------------------------------------ verify
+  // Signature verification happens BEFORE the event id is reserved. Otherwise a
+  // forged payload could "poison" a legitimate retry by claiming its id first.
+  const verified = await verifyPayPalWebhook(req.headers, rawBody);
+  if (!verified) {
+    safeLog("webhook_rejected_unverified", { eventId, eventType });
+    return jsonResponse(401, { error: "Signature verification failed." });
+  }
+
+  // --------------------------------------------------------------- idempotency
+  // Reserve the event. A duplicate short-circuits ONLY when the earlier copy was
+  // already processed successfully; an unprocessed or failed row stays claimable
+  // so PayPal's retry (or reconciliation) can finish the job.
   const { error: insertErr } = await admin.from("paypal_webhook_events").insert({
     event_id: eventId,
     event_type: eventType,
     resource_type: event?.resource_type ?? null,
     resource_id: event?.resource?.id ?? null,
     raw_event: event,
+    verification_status: "verified",
   });
   if (insertErr) {
     if (insertErr.code === "23505") {
-      safeLog("webhook_duplicate_ignored", { eventId, eventType });
-      return jsonResponse(200, { received: true, duplicate: true });
+      const { data: existing } = await admin.from("paypal_webhook_events")
+        .select("processed").eq("event_id", eventId).maybeSingle();
+      if (existing?.processed) {
+        safeLog("webhook_duplicate_ignored", { eventId, eventType });
+        return jsonResponse(200, { received: true, duplicate: true });
+      }
+      // Verified retry of an event that never completed — mark verified and
+      // fall through so processing is attempted again (handlers are idempotent).
+      await admin.from("paypal_webhook_events")
+        .update({ verification_status: "verified", raw_event: event })
+        .eq("event_id", eventId);
+      safeLog("webhook_retry_claimed", { eventId, eventType });
+    } else {
+      safeLog("webhook_store_failed", { eventId, message: insertErr.message });
+      return jsonResponse(500, { error: "Could not store event." });
     }
-    safeLog("webhook_store_failed", { eventId, message: insertErr.message });
-    return jsonResponse(500, { error: "Could not store event." });
   }
 
-  const verified = await verifyPayPalWebhook(req.headers, rawBody);
-  await admin.from("paypal_webhook_events")
-    .update({ verification_status: verified ? "verified" : "failed" })
-    .eq("event_id", eventId);
-
-  if (!verified) {
-    safeLog("webhook_rejected_unverified", { eventId, eventType });
-    return jsonResponse(401, { error: "Signature verification failed." });
-  }
 
   try {
     await handleEvent(admin, event);
