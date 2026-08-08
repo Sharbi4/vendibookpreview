@@ -587,9 +587,10 @@ export const PublishWizard: React.FC = () => {
         updateData.freight_payer = freightPayer;
         updateData.accept_paypal_checkout = acceptPayPalCheckout;
         updateData.accept_cash_payment = acceptCashPayment;
-        // Keep legacy flag in sync for any remaining audit references during transition
-        updateData.proof_notary_enabled = proofNotaryEnabled;
-        updateData.featured_enabled = featuredEnabled;
+        // Paid entitlements (Proof Notary / Featured) are NEVER written from the
+        // browser. They are granted only by a verified PayPal capture or an
+        // admin/complimentary path. The seller's selection lives in wizard state
+        // and only decides whether checkout is offered after publishing.
       } else {
         updateData.price_daily = safeParsePrice(priceDaily);
         updateData.price_weekly = safeParsePrice(priceWeekly);
@@ -606,7 +607,6 @@ export const PublishWizard: React.FC = () => {
         updateData.rental_min_days = rentalMinDays;
         updateData.instant_book = instantBook;
         updateData.deposit_amount = safeParsePrice(depositAmount);
-        updateData.featured_enabled = featuredEnabled;
       }
 
       // Add location fields
@@ -997,9 +997,10 @@ export const PublishWizard: React.FC = () => {
         updateData.freight_payer = freightPayer;
         updateData.accept_paypal_checkout = acceptPayPalCheckout;
         updateData.accept_cash_payment = acceptCashPayment;
-        // Keep legacy flag in sync for any remaining audit references during transition
-        updateData.proof_notary_enabled = proofNotaryEnabled;
-        updateData.featured_enabled = featuredEnabled;
+        // Paid entitlements (Proof Notary / Featured) are NEVER written from the
+        // browser. They are granted only by a verified PayPal capture or an
+        // admin/complimentary path. The seller's selection lives in wizard state
+        // and only decides whether checkout is offered after publishing.
       } else {
         updateData.price_daily = safeParsePrice(priceDaily) || listing.price_daily || null;
         updateData.price_weekly = safeParsePrice(priceWeekly) || listing.price_weekly || null;
@@ -1016,7 +1017,6 @@ export const PublishWizard: React.FC = () => {
         updateData.rental_min_days = rentalMinDays;
         updateData.instant_book = instantBook;
         updateData.deposit_amount = safeParsePrice(depositAmount) || listing.deposit_amount || null;
-        updateData.featured_enabled = featuredEnabled;
       }
 
       // Claim the draft via the token-validated edge function. host_id and
@@ -1623,10 +1623,7 @@ export const PublishWizard: React.FC = () => {
             vendibook_freight_enabled: vendibookFreightEnabled,
             freight_payer: freightPayer,
             accept_paypal_checkout: acceptPayPalCheckout,
-            accept_cash_payment: acceptCashPayment,
-            // Keep legacy flag in sync during transition
-            proof_notary_enabled: proofNotaryEnabled,
-            featured_enabled: featuredEnabled};
+            accept_cash_payment: acceptCashPayment};
 
           // Optional Equinox opt-in is stored separately so Review can't lose it.
           await persistFinancingPreference();
@@ -1637,8 +1634,7 @@ export const PublishWizard: React.FC = () => {
             price_weekly: safeParsePrice(priceWeekly),
             price_monthly: safeParsePrice(priceMonthly),
             instant_book: instantBook,
-            deposit_amount: safeParsePrice(depositAmount),
-            featured_enabled: featuredEnabled};
+            deposit_amount: safeParsePrice(depositAmount)};
         }
       } else if (step === 'details') {
         updateData = {
@@ -1926,10 +1922,7 @@ export const PublishWizard: React.FC = () => {
             vendibook_freight_enabled: vendibookFreightEnabled,
             freight_payer: freightPayer,
             accept_paypal_checkout: acceptPayPalCheckout,
-            accept_cash_payment: acceptCashPayment,
-            // Keep legacy flag in sync during transition
-            proof_notary_enabled: proofNotaryEnabled,
-            featured_enabled: featuredEnabled}
+            accept_cash_payment: acceptCashPayment}
         : {
             price_daily: safeParsePrice(priceDaily),
             price_weekly: safeParsePrice(priceWeekly),
@@ -1945,8 +1938,7 @@ export const PublishWizard: React.FC = () => {
             hourly_special_pricing: hourlySpecialPricing,
             rental_min_days: rentalMinDays,
             instant_book: instantBook,
-            deposit_amount: safeParsePrice(depositAmount),
-            featured_enabled: featuredEnabled};
+            deposit_amount: safeParsePrice(depositAmount)};
 
       // If Proof Notary is enabled for a sale listing, redirect to checkout for the $45 fee.
       // MIRRORS THE FEATURED BOOST PATTERN: publish FIRST so cancelling the notary
@@ -2118,7 +2110,6 @@ export const PublishWizard: React.FC = () => {
         const publishResult = await publishListingIdempotent(listing.id, {
           ...baseUpdateData,
           ...pricingUpdateData,
-          ...(listingHasPendingFeatured ? { featured_enabled: false } : {}),
         });
         isFirstTimePublish = publishResult.firstPublish;
       }
