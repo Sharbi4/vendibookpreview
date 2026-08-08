@@ -167,12 +167,12 @@ export const DashboardLayout = ({ children, mode, onModeChange, isHost }: Dashbo
   };
 
   const ModeSwitch = ({ small = false }: { small?: boolean }) => (
-    <div className={cn('flex border border-border rounded-lg overflow-hidden', small ? '' : '')}>
+    <div className={cn('flex w-full border border-border rounded-lg overflow-hidden')}>
       <button
         onClick={() => onModeChange('shopper')}
         className={cn(
           'flex-1 font-medium transition-all',
-          small ? 'text-xs px-4 py-1.5' : 'text-sm py-2.5',
+          small ? 'text-xs px-4 py-1.5 whitespace-nowrap' : 'text-sm py-2.5 whitespace-nowrap',
           mode === 'shopper' ? 'bg-foreground text-background' : 'text-muted-foreground hover:bg-muted',
         )}
       >
@@ -182,7 +182,7 @@ export const DashboardLayout = ({ children, mode, onModeChange, isHost }: Dashbo
         onClick={() => onModeChange('host')}
         className={cn(
           'flex-1 font-medium transition-all',
-          small ? 'text-xs px-4 py-1.5' : 'text-sm py-2.5',
+          small ? 'text-xs px-4 py-1.5 whitespace-nowrap' : 'text-sm py-2.5 whitespace-nowrap',
           mode === 'host' ? 'bg-foreground text-background' : 'text-muted-foreground hover:bg-muted',
         )}
       >
@@ -315,15 +315,20 @@ export const DashboardLayout = ({ children, mode, onModeChange, isHost }: Dashbo
               <img src={vendibookFavicon} alt="Vendibook" className="h-7 w-7" />
             </Link>
           </div>
-          {isHost && <ModeSwitch small />}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 shrink-0">
             <GoProButton compact />
             {user && <ConciergeInbox userId={user.id} />}
             <NotificationCenter />
             <AppDropdownMenu variant="light" />
           </div>
         </div>
+        {isHost && (
+          <div className="px-4 pb-2">
+            <ModeSwitch small />
+          </div>
+        )}
       </header>
+
 
       <div className="flex flex-1 min-h-0">
         {/* Full sidebar — lg+, sticky to viewport height */}
