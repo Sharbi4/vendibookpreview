@@ -31,9 +31,41 @@ interface FinancingActionPanelProps {
  */
 export const FinancingActionPanel = ({ listing, className }: FinancingActionPanelProps) => {
   const [busy, setBusy] = useState(false);
+  const [applying, setApplying] = useState(false);
   const enabled = useEquinoxFinancingEnabled(listing);
 
   if (!enabled) return null;
+
+  const financingBlockedMessage = (error: any, data: any) =>
+    (error?.context?.body?.code ?? data?.code) === 'financing_not_available'
+      ? 'Financing is not enabled for this listing.'
+      : null;
+
+  // The apply URL is issued by the server only after it re-verifies the launch
+  // flag and this seller's per-listing opt-in.
+  const handleApply = async () => {
+    trackFinancingApplyClick('listing_panel', listing.id);
+    setApplying(true);
+    // Open synchronously so mobile browsers don't block the popup.
+    const win = window.open('', '_blank', 'noopener,noreferrer');
+    try {
+      const { data, error } = await supabase.functions.invoke('financing-apply-link', {
+        body: { listingId: listing.id },
+      });
+      if (error || !data?.applyUrl) throw new Error(data?.code || 'apply_unavailable');
+      if (win) win.location.href = data.applyUrl;
+      else window.location.href = data.applyUrl;
+    } catch (err: any) {
+      win?.close();
+      toast.error(
+        err?.message === 'financing_not_available'
+          ? 'Financing is not enabled for this listing.'
+          : 'Could not open the financing application. Please try again.',
+      );
+    } finally {
+      setApplying(false);
+    }
+  };
 
   const handleDownload = async () => {
     setBusy(true);
@@ -41,16 +73,23 @@ export const FinancingActionPanel = ({ listing, className }: FinancingActionPane
       const { data, error } = await supabase.functions.invoke('financing-purchase-sheet', {
         body: { listingId: listing.id },
       });
-      if (error || !data?.listing) throw new Error('sheet_unavailable');
+      if (error || !data?.listing) {
+        throw new Error(financingBlockedMessage(error, data) ?? 'sheet_unavailable');
+      }
       generateFinancingPurchaseSheet(data.listing, data.sellerName || 'Vendibook member');
       trackFinancingSheetDownloaded(listing.id, true);
-    } catch {
+    } catch (err: any) {
       trackFinancingSheetDownloaded(listing.id, false);
-      toast.error('Could not generate the purchase summary. Please try again.');
+      toast.error(
+        err?.message && err.message !== 'sheet_unavailable'
+          ? err.message
+          : 'Could not generate the purchase summary. Please try again.',
+      );
     } finally {
       setBusy(false);
     }
   };
+
 
   return (
     <SaleCard padding="lg" className={className}>
