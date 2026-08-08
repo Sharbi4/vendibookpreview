@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils';
 import { Loader2, ArrowLeft } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useListing } from '@/hooks/useListing';
+import { computeDeliveryFee, deliveryRateLabel, normalizeDeliveryFeeType } from '@/lib/fulfillment/delivery';
 import { useToast } from '@/hooks/use-toast';
 import { useFreightEstimate } from '@/hooks/useFreightEstimate';
 import { supabase } from '@/integrations/supabase/client';
@@ -282,7 +283,8 @@ const SaleCheckout = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentStep, isListingLoading, priceSale]);
 
-  const deliveryFee = listing?.delivery_fee || 0;
+  const deliveryRate = listing?.delivery_fee || 0;
+  const deliveryFeeType = normalizeDeliveryFeeType((listing as any)?.delivery_fee_type);
   const fulfillmentType = listing?.fulfillment_type || 'pickup';
   const vendibookFreightEnabled = listing?.vendibook_freight_enabled || false;
   const freightPayer = (listing?.freight_payer as 'buyer' | 'seller') || 'buyer';
@@ -363,8 +365,8 @@ const SaleCheckout = () => {
     if (fulfillmentSelected === 'vendibook_freight') {
       return isFreightSellerPaid ? 0 : freightCost;
     }
-    if (fulfillmentSelected === 'delivery' && deliveryFee) {
-      return deliveryFee;
+    if (fulfillmentSelected === 'delivery' && deliveryRate) {
+      return computeDeliveryFee(deliveryRate, deliveryFeeType, deliveryDistanceInfo.distance);
     }
     return 0;
   };
@@ -449,7 +451,7 @@ const SaleCheckout = () => {
         mode: 'sale',
         paymentMethod: paymentMethod === 'cash' ? 'pay_in_person' : 'paypal_checkout',
         basePriceDollars: priceSale,
-        deliveryFeeDollars: fulfillmentSelected === 'delivery' ? deliveryFee : (fulfillmentSelected === 'vendibook_freight' ? freightCost : 0),
+        deliveryFeeDollars: fulfillmentSelected === 'delivery' ? currentDeliveryFee : (fulfillmentSelected === 'vendibook_freight' ? freightCost : 0),
         isSellerPaidFreight: isFreightSellerPaid,
         isCashSale: paymentMethod === 'cash',
         fulfillmentType: fulfillmentSelected,
@@ -501,7 +503,7 @@ const SaleCheckout = () => {
               listing_id: listingId,
               amount: priceSale,
               fulfillment_type: isVendibookFreight ? 'vendibook_freight' : fulfillmentSelected,
-              delivery_fee: fulfillmentSelected === 'delivery' ? deliveryFee : 0,
+              delivery_fee: fulfillmentSelected === 'delivery' ? currentDeliveryFee : 0,
               freight_cost: isVendibookFreight ? freightCost : 0,
               delivery_address:
                 fulfillmentSelected === 'delivery' || isVendibookFreight
@@ -568,7 +570,7 @@ const SaleCheckout = () => {
       const { data, error } = await supabase.functions.invoke('create-sale-intent', {
         body: {
           listing_id: listingId,
-          delivery_fee: fulfillmentSelected === 'delivery' ? deliveryFee : 0,
+          delivery_fee: fulfillmentSelected === 'delivery' ? currentDeliveryFee : 0,
           fulfillment_type: isVendibookFreight ? 'vendibook_freight' : fulfillmentSelected,
           delivery_address: (fulfillmentSelected === 'delivery' || isVendibookFreight) ? deliveryAddress.trim() : null,
           delivery_instructions: (fulfillmentSelected === 'delivery' || isVendibookFreight) ? deliveryInstructions.trim() : null,
@@ -858,7 +860,7 @@ const SaleCheckout = () => {
                           deliveryAddress={deliveryAddress}
                           setDeliveryAddress={setDeliveryAddress}
                           setDeliveryCoords={setDeliveryCoords}
-                          deliveryFee={deliveryFee}
+                          deliveryFee={currentDeliveryFee}
                           deliveryRadiusMiles={deliveryRadiusMiles}
                           deliveryDistanceInfo={deliveryDistanceInfo}
                           isFreightSellerPaid={isFreightSellerPaid}
