@@ -285,7 +285,7 @@ const Header = ({ hideSearch = false }: HeaderProps) => {
         willChange: 'transform',
       }}
     >
-      <div className="container max-w-7xl mx-auto pl-4 pr-3 sm:px-4 flex h-[72px] items-center justify-between gap-3">
+      <div className="container max-w-7xl mx-auto pl-3 pr-2 sm:px-4 flex h-[72px] items-center gap-2 sm:gap-3">
         {/* Logo - hide when mobile search is open */}
         <Link 
           to="/" 
