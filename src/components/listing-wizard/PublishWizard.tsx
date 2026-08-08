@@ -1855,7 +1855,8 @@ export const PublishWizard: React.FC = () => {
           title_status: disclosures.titleStatus || null,
           has_lien: disclosures.hasLien || null,
           no_known_problems: disclosures.noKnownProblems,
-          known_problems: disclosures.knownProblems.length ? disclosures.knownProblems : null,
+          // known_problems is NOT NULL in the database — always write an array.
+          known_problems: disclosures.knownProblems ?? [],
           included_items: disclosures.includedItems || null,
           photos_exclusions_answered: disclosures.photosExclusionsAnswered,
           photos_exclusions_note: disclosures.photosExclusionsNote || null,
@@ -2150,7 +2151,8 @@ export const PublishWizard: React.FC = () => {
         title_status: disclosures.titleStatus || null,
         has_lien: disclosures.hasLien || null,
         no_known_problems: disclosures.noKnownProblems,
-        known_problems: disclosures.knownProblems.length ? disclosures.knownProblems : null,
+        // known_problems is NOT NULL in the database — always write an array.
+        known_problems: disclosures.knownProblems ?? [],
         included_items: disclosures.includedItems || null,
         photos_exclusions_answered: disclosures.photosExclusionsAnswered,
         photos_exclusions_note: disclosures.photosExclusionsNote || null,
