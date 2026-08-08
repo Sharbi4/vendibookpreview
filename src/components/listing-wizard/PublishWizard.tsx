@@ -2943,17 +2943,23 @@ export const PublishWizard: React.FC = () => {
                           }
                         : undefined
                     }
+                    showErrors={showStepErrors}
                   />
 
                   <PrimaryActionBar
-
                     secondary={{ label: 'Back', onClick: () => setStep('headline') }}
                     primary={{
                       label: isSaving ? 'Saving…' : 'Continue',
-                      onClick: saveStep,
+                      onClick: guardNext(
+                        includesMissing.map((r) => r.label),
+                        includesMissing[0]?.fieldId ?? null,
+                        saveStep,
+                      ),
                       disabled: isSaving,
                     }}
+                    blockers={includesMissing.map((r) => r.label)}
                   />
+
                 </div>
               )}
 
