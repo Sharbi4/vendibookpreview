@@ -298,7 +298,7 @@ export const QuickStartWizard: React.FC = () => {
       await refreshProfile();
 
       setCreatedListingId(listing.id);
-      setStep('created');
+      setStep('created', true);
 
       // Clear persisted quick-start progress now that the draft is safely on the server.
       try {
