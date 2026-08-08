@@ -92,10 +92,10 @@ export const QuickStartWizard: React.FC = () => {
     setZipConfirmed(false);
 
     try {
-      const { data: geoData, error } = await supabase.functions.invoke('geocode-location', {
-        body: { query: zip, limit: 1 }});
+      const { data: geoData, error } = await invokeEdge<{ results?: any[] }>('geocode-location', {
+        body: { query: zip, limit: 1 }}, { retries: 2 });
 
-      if (error) throw error;
+      if (error) throw new Error(error);
 
       const result = geoData?.results?.[0];
       if (!result) {
