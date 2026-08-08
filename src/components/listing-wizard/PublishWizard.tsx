@@ -4370,17 +4370,22 @@ export const PublishWizard: React.FC = () => {
                       }}
                       primary={{
                         label: isSaving ? 'Saving…' : 'Continue',
-                        onClick: saveStep,
-                        disabled:
-                          isSaving ||
-                          (streetAddressRequired && !streetAddress.trim()) ||
-                          !locCity.trim() ||
-                          !locState.trim() ||
-                          !locZipCode.trim() ||
-                          (isStaticLocationFn(listing.category) || isStaticLocation
-                            ? !accessInstructions
-                            : !fulfillmentType),
+                        onClick: guardNext(
+                          [
+                            streetAddressRequired && !streetAddress.trim() && 'Street address',
+                            !locCity.trim() && 'City',
+                            !locState.trim() && 'State',
+                            !locZipCode.trim() && 'ZIP code',
+                            isStaticLocationFn(listing.category) || isStaticLocation
+                              ? !accessInstructions && 'Access instructions'
+                              : !fulfillmentType && 'How it changes hands (pickup or delivery)',
+                          ].filter(Boolean) as string[],
+                          null,
+                          saveStep,
+                        ),
+                        disabled: isSaving,
                       }}
+
                       blockers={[
                         streetAddressRequired && !streetAddress.trim() && 'Street address',
                         !locCity.trim() && 'City',
