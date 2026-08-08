@@ -2644,10 +2644,17 @@ export const PublishWizard: React.FC = () => {
                     helper="At least 3 photos are required to continue."
                     primary={{
                       label: isSaving ? 'Saving…' : 'Continue',
-                      onClick: isGuestDraft && !user ? handleDetailsSave : saveStep,
-                      disabled: isSaving || allPhotos.length < 3,
+                      onClick: guardNext(
+                        allPhotos.length < 3
+                          ? [`Add at least 3 photos (currently ${allPhotos.length})`]
+                          : [],
+                        null,
+                        isGuestDraft && !user ? handleDetailsSave : saveStep,
+                      ),
+                      disabled: isSaving,
                     }}
                   />
+
                 </div>
               )}
 
