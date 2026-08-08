@@ -234,36 +234,50 @@ export const PublishWizard: React.FC = () => {
 
   // Turns on inline red validation after a failed "Continue" attempt.
   const [showStepErrors, setShowStepErrors] = useState(false);
+  // Every requirement still missing on the current step, surfaced at the top
+  // of the card after a failed Continue/Publish attempt.
+  const [stepBlockers, setStepBlockers] = useState<string[]>([]);
 
   // Scroll to top when step changes
   useEffect(() => {
     setShowStepErrors(false);
+    setStepBlockers([]);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [step]);
 
   /**
    * Blocks navigation when a step still has required answers missing:
-   * highlights the fields in red, scrolls to the first one and toasts.
+   * lists them at the top of the step, highlights the fields in red,
+   * scrolls to the summary and toasts.
    */
   const guardNext = (blockers: string[], firstFieldId: string | null, proceed: () => void) => () => {
     if (blockers.length > 0) {
       setShowStepErrors(true);
+      setStepBlockers(blockers);
       toast({
-        title: 'A few answers are still needed',
-        description: blockers[0],
+        title:
+          blockers.length === 1
+            ? '1 required field is missing'
+            : `${blockers.length} required fields are missing`,
+        description: blockers.join(' · '),
         variant: 'destructive',
       });
-      if (firstFieldId) {
-        requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        const summary = document.getElementById('wizard-missing-required');
+        if (summary) {
+          summary.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        } else if (firstFieldId) {
           document
             .getElementById(firstFieldId)
             ?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        });
-      }
+        }
+      });
       return;
     }
+    setStepBlockers([]);
     proceed();
   };
+
 
 
   // Keep ?step= in sync with the wizard position so leaving for an upgrade
