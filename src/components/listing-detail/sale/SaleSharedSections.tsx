@@ -11,6 +11,7 @@ import {
   Building2,
   ExternalLink,
   ChevronRight,
+  EyeOff,
 } from 'lucide-react';
 import ListingLocationMap from '@/components/listing-detail/ListingLocationMap';
 import { SaleCard } from './SaleCard';
@@ -125,8 +126,11 @@ export const SaleLocationCard = ({ city, state, zipCode, latitude, longitude, ma
         </span>
       </div>
       <div className="text-sm">{locationShort}{zipCode ? ` ${zipCode}` : ''}</div>
-      <div className="text-xs text-muted-foreground">
-        Exact location provided after purchase confirmation.
+      <div className="flex items-start gap-2 text-xs text-muted-foreground">
+        <EyeOff className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+        <span>
+          Only city, state, and ZIP are shown publicly. The exact street address and pickup details stay private until your purchase is confirmed.
+        </span>
       </div>
       <div className="rounded-xl overflow-hidden ring-hairline" style={{ height: mapHeight }}>
         <ListingLocationMap
