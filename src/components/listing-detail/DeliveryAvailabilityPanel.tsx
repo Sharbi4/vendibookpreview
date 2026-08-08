@@ -5,7 +5,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { invokeEdge } from '@/lib/edge/invokeFunction';
-import { computeDeliveryFee, deliveryRateLabel, normalizeDeliveryFeeType } from '@/lib/fulfillment/delivery';
+import {
+  deliveryRateLabel,
+  estimateDelivery,
+  formatUsd,
+  normalizeDeliveryFeeType,
+  type DeliveryEstimate,
+} from '@/lib/fulfillment/delivery';
 import { cn } from '@/lib/utils';
 
 interface DeliveryAvailabilityPanelProps {
@@ -37,7 +43,7 @@ type CheckResult = {
   place: string;
   miles: number;
   inRadius: boolean;
-  fee: number;
+  estimate: DeliveryEstimate;
 };
 
 export const DeliveryAvailabilityPanel = ({
@@ -93,7 +99,7 @@ export const DeliveryAvailabilityPanel = ({
         place: [hit?.city || hit?.text, hit?.state || hit?.context].filter(Boolean).join(', '),
         miles,
         inRadius: miles <= radius,
-        fee: computeDeliveryFee(deliveryFee, deliveryFeeType, miles),
+        estimate: estimateDelivery(deliveryFee, deliveryFeeType, miles),
       });
     } catch (e) {
       console.error('[DeliveryAvailabilityPanel] ZIP check failed:', e);
@@ -184,13 +190,27 @@ export const DeliveryAvailabilityPanel = ({
               </p>
               <p className="text-muted-foreground mt-1 flex items-center gap-2">
                 <Route className="h-4 w-4" />
-                About {result.miles} miles from {originLabel} (approximate).
+                About {result.miles} miles straight-line from {originLabel} (~{result.estimate.roadMiles} mi by road).
               </p>
-              {result.inRadius && result.fee > 0 && (
-                <p className="mt-1 text-muted-foreground">
-                  Estimated delivery: <span className="text-foreground font-medium">${result.fee.toLocaleString()}</span>
-                  {perMile ? ` (${rateLabel} × ${result.miles} miles)` : ''}. Final amount is confirmed at checkout.
-                </p>
+              {result.inRadius && result.estimate.maxFee > 0 && (
+                <div className="mt-3 rounded-lg border border-border/60 bg-background/40 p-3">
+                  <div className="flex items-baseline justify-between gap-3">
+                    <span className="text-muted-foreground">Estimated delivery</span>
+                    <span className="text-foreground font-semibold">
+                      {result.estimate.isRange
+                        ? `${formatUsd(result.estimate.minFee)}–${formatUsd(result.estimate.maxFee)}`
+                        : formatUsd(result.estimate.fee)}
+                    </span>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {perMile
+                      ? `${rateLabel} × ~${result.estimate.minMiles}–${result.estimate.maxMiles} driving miles (about ${result.estimate.roadMiles} mi by road).`
+                      : `${rateLabel} — flat rate set by the seller.`}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Based on ZIP-center distance, so the final amount is confirmed at checkout once you enter your full address.
+                  </p>
+                </div>
               )}
               {!result.inRadius && (
                 <p className="mt-1 text-muted-foreground">
