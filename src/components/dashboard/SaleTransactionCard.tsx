@@ -346,11 +346,16 @@ const SaleTransactionCard = ({
                         ) : (
                           <p className="text-xs text-muted-foreground mt-1">{PICKUP_LOCKED_MESSAGE}</p>
                         )}
-                        {transaction.listing?.pickup_instructions && (
+                        {isPickupLocationRevealed({
+                          fulfillmentType: transaction.fulfillment_type,
+                          status: transaction.status,
+                          paymentStatus: (transaction as any).payment_status,
+                        }) && transaction.listing?.pickup_instructions && (
                           <p className="text-xs text-muted-foreground mt-1 italic">
                             "{transaction.listing.pickup_instructions}"
                           </p>
                         )}
+
                       </>
                     )}
                   </div>
