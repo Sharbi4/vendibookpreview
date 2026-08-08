@@ -1,6 +1,8 @@
+import { useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, ShieldCheck } from 'lucide-react';
 import { EquinoxFundingLogo } from '@/components/brand/ProviderLogos';
+import { trackFinancingApplyClick, trackFinancingBannerImpression } from '@/lib/analytics';
 
 /**
  * Enterprise-grade financing banner for the top of the homepage.
@@ -8,11 +10,19 @@ import { EquinoxFundingLogo } from '@/components/brand/ProviderLogos';
  * sheen along the top edge. Routes to the /financing page.
  */
 const FinancingTopBanner = () => {
+  const seen = useRef(false);
+  useEffect(() => {
+    if (seen.current) return;
+    seen.current = true;
+    trackFinancingBannerImpression();
+  }, []);
+
   return (
     <section aria-label="Equipment financing" className="w-full px-3 pt-3 sm:px-4">
       <div className="container mx-auto max-w-7xl">
         <Link
           to="/financing"
+          onClick={() => trackFinancingApplyClick('home_banner')}
           className="group relative block overflow-hidden rounded-2xl border border-white/10 bg-[hsl(160_30%_4%)] shadow-[0_18px_50px_-20px_rgba(0,0,0,0.9)] transition-transform duration-300 hover:-translate-y-0.5"
         >
           {/* aurora wash */}

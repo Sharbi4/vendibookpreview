@@ -10,6 +10,11 @@ import { FinancingAvailableBadge } from '@/components/financing/FinancingAvailab
 import { useEquinoxFinancingEnabled } from '@/hooks/useListingFinancing';
 import { EQUINOX_APPLY_URL, isFinanceableSaleListing } from '@/lib/financing/disclosure';
 import { toast } from 'sonner';
+import {
+  trackFinancingApplyClick,
+  trackFinancingLearnMoreClick,
+  trackFinancingSheetDownloaded,
+} from '@/lib/analytics';
 
 export { isFinanceableSaleListing };
 
@@ -38,7 +43,9 @@ export const FinancingActionPanel = ({ listing, className }: FinancingActionPane
       });
       if (error || !data?.listing) throw new Error('sheet_unavailable');
       generateFinancingPurchaseSheet(data.listing, data.sellerName || 'Vendibook member');
+      trackFinancingSheetDownloaded(listing.id, true);
     } catch {
+      trackFinancingSheetDownloaded(listing.id, false);
       toast.error('Could not generate the purchase summary. Please try again.');
     } finally {
       setBusy(false);
@@ -66,7 +73,12 @@ export const FinancingActionPanel = ({ listing, className }: FinancingActionPane
 
       <div className="grid gap-2 sm:grid-cols-2">
         <Button asChild size="sm" className="finance-cta justify-center font-semibold">
-          <a href={EQUINOX_APPLY_URL} target="_blank" rel="noopener noreferrer">
+          <a
+            href={EQUINOX_APPLY_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() => trackFinancingApplyClick('listing_panel', listing.id)}
+          >
             Apply Now with Equinox
             <ExternalLink className="h-3.5 w-3.5 ml-1.5" />
           </a>
@@ -85,7 +97,12 @@ export const FinancingActionPanel = ({ listing, className }: FinancingActionPane
           Download Purchase Sheet (PDF)
         </Button>
         <Button asChild size="sm" className="finance-cta-outline justify-center sm:col-span-2">
-          <Link to="/financing">Learn About Financing</Link>
+          <Link
+            to="/financing"
+            onClick={() => trackFinancingLearnMoreClick('listing_panel', listing.id)}
+          >
+            Learn About Financing
+          </Link>
         </Button>
       </div>
 
