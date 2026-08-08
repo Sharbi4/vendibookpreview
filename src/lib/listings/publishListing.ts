@@ -73,22 +73,51 @@ export async function publishListingIdempotent(
     .select('published_at');
 
   if (claimError) throw claimError;
+
+  let firstPublish = false;
+  let publishedAt = current.published_at ?? nowIso;
+
   if (claimed && claimed.length > 0) {
-    return { firstPublish: true, publishedAt: claimed[0].published_at ?? nowIso };
+    firstPublish = true;
+    publishedAt = claimed[0].published_at ?? nowIso;
+  } else {
+    // Already published once before (or by a parallel click): re-save fields
+    // and keep the original published_at.
+    const { data: rows, error: updateError } = await supabase
+      .from('listings')
+      .update({ ...extraFields, status: 'published' } as never)
+      .eq('id', listingId)
+      .select('published_at');
+
+    if (updateError) throw updateError;
+    if (!rows || rows.length === 0) {
+      // A zero-row update means RLS or a trigger silently rejected the write.
+      // It is NOT a publish — never report success from it.
+      throw new Error(
+        'We could not publish this listing. Please refresh and try again — your draft is saved.',
+      );
+    }
+    publishedAt = rows[0].published_at ?? current.published_at ?? nowIso;
   }
 
-  // Already published once before (or by a parallel click): re-save fields and
-  // keep the original published_at.
-  const { data: rows, error: updateError } = await supabase
+  // Authoritative proof: re-read the row and confirm the database really has
+  // it live. Anything else is reported as a failure, never as "published".
+  const { data: verified, error: verifyError } = await supabase
     .from('listings')
-    .update({ ...extraFields, status: 'published' } as never)
+    .select('status, published_at')
     .eq('id', listingId)
-    .select('published_at');
+    .maybeSingle();
 
-  if (updateError) throw updateError;
+  if (verifyError) throw verifyError;
+  if (!verified || verified.status !== 'published' || !verified.published_at) {
+    throw new Error(
+      'Publishing did not complete. Your listing is still a draft — please try again.',
+    );
+  }
 
   return {
-    firstPublish: false,
-    publishedAt: rows?.[0]?.published_at ?? current.published_at ?? nowIso,
+    firstPublish,
+    publishedAt: verified.published_at ?? publishedAt,
+
   };
 }
