@@ -5,6 +5,11 @@ import SEO, { generateFAQSchema } from '@/components/SEO';
 import JsonLd from '@/components/JsonLd';
 import Header from '@/components/layout/Header';
 import { EquinoxFundingLogo } from '@/components/brand/ProviderLogos';
+import {
+  trackFinancingApplyClick,
+  trackFinancingPageViewed,
+  type FinancingSource,
+} from '@/lib/analytics';
 
 const LIME = '#34d399';
 const APPLY_URL = 'https://equinox-funding.com/efapplication/';
@@ -94,11 +99,20 @@ const FAQ = [
 const panel =
   'rounded-2xl border border-white/10 bg-white/[0.04] backdrop-blur-md p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.10)] transition-colors hover:border-emerald-300/25';
 
-const ApplyCta = ({ className = '', wide = false }: { className?: string; wide?: boolean }) => (
+const ApplyCta = ({
+  className = '',
+  wide = false,
+  source,
+}: {
+  className?: string;
+  wide?: boolean;
+  source: FinancingSource;
+}) => (
   <a
     href={APPLY_URL}
     target="_blank"
     rel="noopener noreferrer"
+    onClick={() => trackFinancingApplyClick(source)}
     className={`group/cta relative inline-flex items-center justify-center gap-2 overflow-hidden rounded-xl bg-gradient-to-b from-emerald-400 to-emerald-600 px-6 py-3.5 text-sm font-semibold text-emerald-950 shadow-[0_10px_30px_-12px_rgba(16,185,129,0.9)] ring-1 ring-inset ring-white/25 transition-shadow duration-300 hover:shadow-[0_14px_36px_-10px_rgba(16,185,129,1)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-200 ${wide ? 'w-full sm:w-auto' : ''} ${className}`}
   >
     <span
@@ -115,6 +129,7 @@ const ApplyCta = ({ className = '', wide = false }: { className?: string; wide?:
 const Financing = () => {
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
+    trackFinancingPageViewed();
   }, []);
 
   const title = 'Equipment Financing for Food Trucks & Trailers | Vendibook';
@@ -197,7 +212,7 @@ const Financing = () => {
             </div>
 
             <div className="flex shrink-0 flex-col items-start gap-2 sm:items-end">
-              <ApplyCta />
+              <ApplyCta source="financing_page_hero" />
               <p className="text-xs text-white/50">You’ll continue to Equinox Funding securely.</p>
             </div>
           </div>
@@ -224,7 +239,7 @@ const Financing = () => {
             ))}
           </div>
           <div className="mt-6">
-            <ApplyCta wide />
+            <ApplyCta wide source="financing_page_mid" />
           </div>
         </section>
 
@@ -312,7 +327,7 @@ const Financing = () => {
             You’ll continue to Equinox Funding to submit your application securely.
           </p>
           <div className="mt-6 flex justify-center">
-            <ApplyCta />
+            <ApplyCta source="financing_page_footer" />
           </div>
         </section>
 

@@ -825,3 +825,60 @@ export {
 // Generic analytics exports for other parts of the app
 export { trackEvent };
 export type { AnalyticsEvent };
+
+// ========== Equipment financing (Equinox) ==========
+export type FinancingSource =
+  | 'home_banner'
+  | 'financing_page_hero'
+  | 'financing_page_mid'
+  | 'financing_page_footer'
+  | 'listing_panel';
+
+export const trackFinancingBannerImpression = (): void => {
+  trackEvent({
+    category: 'Financing',
+    action: 'financing_banner_impression',
+    label: 'home_banner',
+  });
+};
+
+export const trackFinancingPageViewed = (): void => {
+  trackEvent({
+    category: 'Financing',
+    action: 'financing_page_viewed',
+    label: '/financing',
+  });
+};
+
+/** Click on any "Apply now for financing" CTA. */
+export const trackFinancingApplyClick = (
+  source: FinancingSource,
+  listingId?: string,
+): void => {
+  trackEvent({
+    category: 'Financing',
+    action: 'financing_apply_click',
+    label: source,
+    metadata: { source, listing_id: listingId ?? null, provider: 'equinox' },
+  });
+  trackGA4GenerateLead({ value: 0, currency: 'USD', lead_source: `financing_${source}` });
+};
+
+/** Click on the CTA that routes to the /financing information page. */
+export const trackFinancingLearnMoreClick = (source: FinancingSource, listingId?: string): void => {
+  trackEvent({
+    category: 'Financing',
+    action: 'financing_learn_more_click',
+    label: source,
+    metadata: { source, listing_id: listingId ?? null },
+  });
+};
+
+export const trackFinancingSheetDownloaded = (listingId: string, success: boolean): void => {
+  trackEvent({
+    category: 'Financing',
+    action: 'financing_purchase_sheet_download',
+    label: success ? 'success' : 'error',
+    metadata: { listing_id: listingId, success },
+  });
+};
