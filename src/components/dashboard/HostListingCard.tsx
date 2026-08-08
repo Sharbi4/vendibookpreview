@@ -61,6 +61,7 @@ import ListingReadinessCard from '@/components/listing/ListingReadinessCard';
 import { cn } from '@/lib/utils';
 import { FeaturedBadge } from '@/components/listing/FeaturedBadge';
 import IdentityVerifiedBadge from '@/components/verification/IdentityVerifiedBadge';
+import { useSellerVerifiedBadge } from '@/hooks/useSellerVerifiedBadge';
 import { PayoutSetupDialog } from '@/components/payouts/PayoutSetupDialog';
 
 import { usePayoutPreference } from '@/hooks/usePayoutPreference';
@@ -146,6 +147,11 @@ const HostListingCard = ({
   const [showSuggestions, setShowSuggestions] = useState(false);
   const { preference: payoutPreference } = usePayoutPreference();
   const { data: favoriteCount = 0 } = useListingFavoriteCount(listing.id);
+  // Server-derived Identity Verified state for this listing's seller.
+  const { verified: sellerVerified } = useSellerVerifiedBadge(
+    (listing as any).host_id ?? null,
+  );
+
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -506,9 +512,9 @@ const HostListingCard = ({
                   {isFeatured && (
                     <FeaturedBadge listing={listing as any} size="sm" showDaysLeft />
                   )}
-                  {(listing as any).host_verified && (
+                  {sellerVerified && (
                     <IdentityVerifiedBadge
-                      verified={(listing as any).host_verified ?? false}
+                      verified={sellerVerified}
                       size="sm"
                       withDetails={false}
                     />

@@ -12,6 +12,7 @@ import { cn } from '@/lib/utils';
 import RatingBadge from '@/components/reviews/RatingBadge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import IdentityVerifiedBadge from '@/components/verification/IdentityVerifiedBadge';
+import { useSellerVerifiedBadge } from '@/hooks/useSellerVerifiedBadge';
 import { CategoryTooltip } from '@/components/categories/CategoryGuide';
 
 import { FavoriteButton } from '@/components/listing/FavoriteButton';
@@ -151,6 +152,13 @@ const popularAmenityIcons: Record<string, { icon: React.ElementType; label: stri
 
 const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickBook, canDeliverToUser, distanceMiles, compact = false }: ListingCardProps) => {
   const [showOverlay, setShowOverlay] = useState(false);
+
+  // Authoritative fallback so a freshly verified seller's badge shows on every
+  // card even when the caller didn't pre-resolve `hostVerified`.
+  const { verified: sellerBadgeActive } = useSellerVerifiedBadge(
+    hostVerified ? null : ((listing as any).host_id ?? null),
+  );
+  const showVerifiedBadge = hostVerified || sellerBadgeActive;
   
   // Featured badge: dynamic, source of truth in src/lib/featured.ts
   const isFeatured = isListingFeatured(listing as any);
@@ -276,13 +284,13 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
           )}
 
           {/* Identity Verified badge — green shine metallic */}
-          {hostVerified && (
+          {showVerifiedBadge && (
             <TooltipProvider delayDuration={200}>
               <Tooltip>
                 <TooltipTrigger asChild>
                   <span>
                     <IdentityVerifiedBadge
-                      verified={hostVerified}
+                      verified={showVerifiedBadge}
                       size={compact ? 'sm' : 'md'}
                       withDetails={false}
                     />

@@ -29,6 +29,9 @@ const VerifiedSellerCTA = ({ variant = 'card', className }: VerifiedSellerCTAPro
   if (!v.state || v.offer.enabled === false) return null;
 
   const verified = v.state.badge_active;
+  // Once verified the offer disappears everywhere — the metallic badge on the
+  // profile, listings and dashboard chip is the only remaining surface.
+  if (verified) return null;
   const pending = v.state.status === 'pending_review';
   const inProgress = v.state.status === 'identity_in_progress';
   const paymentOnly = v.state.needs_payment_only;

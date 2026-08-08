@@ -108,7 +108,7 @@ const IdentityVerification = () => {
                 {loading ? (
                   <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" aria-hidden="true" />
                 ) : offerEnabled ? (
-                  <GetVerifiedButton size="md" showPrice />
+                  <GetVerifiedButton size="md" showPrice badgeWhenVerified />
                 ) : (
                   <span className="inline-flex items-center rounded-full border-2 border-primary/25 bg-primary/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-primary">
                     Coming soon
@@ -201,7 +201,7 @@ const IdentityVerification = () => {
                   </Button>
                 ) : (
                   !loading &&
-                  offerEnabled && <GetVerifiedButton size="md" showPrice />
+                  offerEnabled && <GetVerifiedButton size="md" showPrice badgeWhenVerified />
                 )}
                 <button
                   type="button"
