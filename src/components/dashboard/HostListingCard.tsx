@@ -147,6 +147,11 @@ const HostListingCard = ({
   const [showSuggestions, setShowSuggestions] = useState(false);
   const { preference: payoutPreference } = usePayoutPreference();
   const { data: favoriteCount = 0 } = useListingFavoriteCount(listing.id);
+  // Server-derived Identity Verified state for this listing's seller.
+  const { verified: sellerVerified } = useSellerVerifiedBadge(
+    (listing as any).host_id ?? null,
+  );
+
   const { toast } = useToast();
   const navigate = useNavigate();
 
