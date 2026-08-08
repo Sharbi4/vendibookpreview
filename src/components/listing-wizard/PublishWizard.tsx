@@ -3207,22 +3207,11 @@ export const PublishWizard: React.FC = () => {
                                   </Label>
                                 </div>
                                 {isTitledSaleCategory(listing) && (
-                                  <div className="flex items-start space-x-3">
-                                    <Checkbox
-                                      id="equinox_include_vin"
-                                      checked={equinoxIncludeVin}
-                                      onCheckedChange={(checked) => setEquinoxIncludeVin(!!checked)}
-                                      className="mt-0.5"
-                                    />
-                                    <Label
-                                      htmlFor="equinox_include_vin"
-                                      className="text-sm font-medium cursor-pointer"
-                                    >
-                                      Include my full VIN / serial number on the financing purchase
-                                      sheet. It stays off my public listing, but it will be printed
-                                      on the pro forma invoice the buyer and lender receive.
-                                    </Label>
-                                  </div>
+                                  <p className="text-xs text-muted-foreground">
+                                    If you provided a VIN / serial number, it stays off your public
+                                    listing but is printed on the financing purchase sheet the buyer
+                                    and lender receive.
+                                  </p>
                                 )}
                               </div>
                             )}
