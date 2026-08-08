@@ -20,6 +20,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
 import { Loader2, Receipt, ShieldAlert, ExternalLink } from 'lucide-react';
+import BoostHistoryPanel from '../BoostHistoryPanel';
 
 type FilterId = 'all' | 'purchases' | 'sales' | 'refunded' | 'disputes';
 
@@ -103,6 +104,10 @@ const TransactionsDisputesTab = () => {
           Every payment you've made or received through Vendibook, with PayPal transaction IDs, refunds and dispute status.
         </p>
       </header>
+
+      <BoostHistoryPanel />
+
+
 
       <div className="flex flex-wrap gap-2">
         {FILTERS.map((f) => (
