@@ -90,6 +90,10 @@ const inPersonRail = (audience: RailsAudience): RailDef => ({
   ],
   detailNote:
     'Pay-in-person sales carry no Vendibook commission and no buyer fee. Vendibook does not process or hold these funds, so inspect before you pay.',
+  flowLink:
+    audience === 'buyer'
+      ? { label: 'See the exact steps in Transactions', href: '/dashboard?view=shopper&tab=transactions' }
+      : { label: 'See the exact steps in the listing flow', href: '/list/start' },
 });
 
 const equinoxRail = (audience: RailsAudience): RailDef => ({
