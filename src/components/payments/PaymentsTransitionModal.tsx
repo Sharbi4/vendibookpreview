@@ -110,24 +110,26 @@ export function PaymentsTransitionModal() {
             Optional upgrades for your listings
           </p>
 
-          <div className={`${PANEL} p-4`}>
-            <div className="flex items-start gap-3">
-              <span className="verified-metallic flex h-9 w-9 shrink-0 items-center justify-center rounded-full">
-                <BadgeCheck className="h-4.5 w-4.5" strokeWidth={2.4} aria-hidden="true" />
-              </span>
-              <div className="min-w-0 flex-1">
-                <p className="text-sm font-semibold text-foreground">
-                  Stand out as a Verified Seller
-                </p>
-                <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
-                  Add a green Identity Verified badge to your profile and every active listing. One-time fee. Not a subscription, never required.
-                </p>
-                <div className="mt-3">
-                  <GetVerifiedButton size="sm" showPrice />
+          {!alreadyVerified && (
+            <div className={`${PANEL} p-4`}>
+              <div className="flex items-start gap-3">
+                <span className="verified-metallic flex h-9 w-9 shrink-0 items-center justify-center rounded-full">
+                  <BadgeCheck className="h-4.5 w-4.5" strokeWidth={2.4} aria-hidden="true" />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-semibold text-foreground">
+                    Stand out as a Verified Seller
+                  </p>
+                  <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
+                    Add a green Identity Verified badge to your profile and every active listing. One-time fee. Not a subscription, never required.
+                  </p>
+                  <div className="mt-3">
+                    <GetVerifiedButton size="sm" showPrice />
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
+          )}
 
           <div className={`${PANEL} p-4`}>
             <div className="flex items-start gap-3">
