@@ -74,7 +74,7 @@ export const PhoneVerificationPrompt = () => {
 
   // Never interrupt a high-intent flow (listing builder, checkout, payment
   // return). The prompt waits until the seller is on a calmer surface.
-  const path = location.pathname;
+  const path = useLocation().pathname;
   const inFocusedFlow = useMemo(() => {
     const p = path.toLowerCase();
     return (
