@@ -20,6 +20,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
 import { Loader2, Receipt, ShieldAlert, ExternalLink } from 'lucide-react';
+import BoostHistoryPanel from '../BoostHistoryPanel';
 
 type FilterId = 'all' | 'purchases' | 'sales' | 'refunded' | 'disputes';
 
