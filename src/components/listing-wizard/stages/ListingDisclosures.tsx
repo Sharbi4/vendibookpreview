@@ -250,24 +250,59 @@ export const ListingDisclosures: React.FC<ListingDisclosuresProps> = ({
           No known problems
         </label>
 
+        {/*
+          The explanation box lives directly under the problem it belongs to.
+          Sellers previously ticked a problem, saw a "add an explanation"
+          error, and could not find the box because it rendered far below the
+          checkbox grid.
+        */}
         <div className="grid gap-2 sm:grid-cols-2">
           {KNOWN_PROBLEM_CATEGORIES.map((opt) => {
-            const selected = values.knownProblems.some((p) => p.category === opt.value);
+            const problem = values.knownProblems.find((p) => p.category === opt.value);
+            const selected = Boolean(problem);
+            const noteMissing =
+              showErrors && !values.noKnownProblems && selected && (problem?.note ?? '').trim().length < 3;
             return (
-              <label
+              <div
                 key={opt.value}
                 className={cn(
-                  'flex items-center gap-2 rounded-lg border border-border p-3 text-sm',
-                  problemsMissing && 'border-destructive/60',
+                  'rounded-lg border border-border p-3 text-sm',
+                  selected && 'sm:col-span-2 bg-muted/20',
+                  (problemsMissing || noteMissing) && 'border-destructive/60',
                 )}
               >
-                <Checkbox
-                  checked={selected}
-                  disabled={values.noKnownProblems}
-                  onCheckedChange={(c) => toggleProblem(opt.value, c === true)}
-                />
-                {opt.label}
-              </label>
+                <label className="flex items-center gap-2">
+                  <Checkbox
+                    checked={selected}
+                    disabled={values.noKnownProblems}
+                    onCheckedChange={(c) => toggleProblem(opt.value, c === true)}
+                  />
+                  {opt.label}
+                </label>
+
+                {selected && (
+                  <div className="mt-3 space-y-1.5">
+                    <Label
+                      htmlFor={`known-problem-${opt.value}`}
+                      className="flex items-center gap-1 text-xs"
+                    >
+                      Briefly explain: {opt.label}
+                      <RequiredMark />
+                    </Label>
+                    <Textarea
+                      id={`known-problem-${opt.value}`}
+                      rows={2}
+                      className={cn('text-base', noteMissing && errorRing)}
+                      placeholder="What is wrong, and what would it take to fix?"
+                      value={problem?.note ?? ''}
+                      onChange={(e) => setNote(opt.value, e.target.value)}
+                    />
+                    {noteMissing && (
+                      <FieldError>Add a short explanation for this problem.</FieldError>
+                    )}
+                  </div>
+                )}
+              </div>
             );
           })}
         </div>
@@ -278,26 +313,39 @@ export const ListingDisclosures: React.FC<ListingDisclosuresProps> = ({
           </FieldError>
         )}
 
-        {values.knownProblems.map((p) => {
-          const meta = KNOWN_PROBLEM_CATEGORIES.find((k) => k.value === p.category);
-          const noteMissing = showErrors && p.note.trim().length < 3;
-          return (
-            <div key={p.category} className="space-y-1.5">
-              <Label htmlFor={`known-problem-${p.category}`} className="flex items-center gap-1 text-xs">
-                Briefly explain: {meta?.label ?? p.category}
-                <RequiredMark />
-              </Label>
-              <Textarea
-                id={`known-problem-${p.category}`}
-                rows={2}
-                className={cn('text-base', noteMissing && errorRing)}
-                placeholder="What is wrong, and what would it take to fix?"
-                value={p.note}
-                onChange={(e) => setNote(p.category, e.target.value)}
-              />
-              {noteMissing && <FieldError>Add a short explanation for this problem.</FieldError>}
-            </div>
+        {(() => {
+          // Any stored problem whose category is no longer in the preset list
+          // still needs its explanation box, otherwise it becomes unfixable.
+          const orphans = values.knownProblems.filter(
+            (p) => !KNOWN_PROBLEM_CATEGORIES.some((k) => k.value === p.category),
           );
+          return orphans.map((p) => {
+            const noteMissing = showErrors && (p.note ?? '').trim().length < 3;
+            return (
+              <div key={p.category} className="space-y-1.5">
+                <Label
+                  htmlFor={`known-problem-${p.category}`}
+                  className="flex items-center gap-1 text-xs"
+                >
+                  Briefly explain: {p.category}
+                  <RequiredMark />
+                </Label>
+                <Textarea
+                  id={`known-problem-${p.category}`}
+                  rows={2}
+                  className={cn('text-base', noteMissing && errorRing)}
+                  placeholder="What is wrong, and what would it take to fix?"
+                  value={p.note ?? ''}
+                  onChange={(e) => setNote(p.category, e.target.value)}
+                />
+                {noteMissing && <FieldError>Add a short explanation for this problem.</FieldError>}
+              </div>
+            );
+          });
+        })()}
+        {false && (() => {
+          const p = { category: '', note: '' };
+          return null;
         })}
       </section>
 
