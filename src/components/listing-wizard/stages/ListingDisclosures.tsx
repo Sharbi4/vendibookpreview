@@ -77,6 +77,21 @@ export const ListingDisclosures: React.FC<ListingDisclosuresProps> = ({
   const includedMissing = showErrors && values.includedItems.trim().length < 3;
   const exclusionsMissing = showErrors && !values.photosExclusionsAnswered;
 
+  // Explicit yes/no choice — never inferred from the note text, so picking
+  // "Yes" and typing nothing does not silently flip back to "No".
+  const [exclusionChoice, setExclusionChoice] = React.useState<'no' | 'yes' | ''>(() =>
+    values.photosExclusionsAnswered ? (values.photosExclusionsNote.trim() ? 'yes' : 'no') : '',
+  );
+
+  React.useEffect(() => {
+    if (!values.photosExclusionsAnswered) {
+      setExclusionChoice('');
+    } else if (!exclusionChoice) {
+      setExclusionChoice(values.photosExclusionsNote.trim() ? 'yes' : 'no');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [values.photosExclusionsAnswered]);
+
   const toggleProblem = (value: string, checked: boolean) => {
     if (checked) {
       onChange({
@@ -377,19 +392,14 @@ export const ListingDisclosures: React.FC<ListingDisclosuresProps> = ({
             <RequiredMark />
           </Label>
           <RadioGroup
-            value={
-              values.photosExclusionsAnswered
-                ? values.photosExclusionsNote.trim()
-                  ? 'yes'
-                  : 'no'
-                : ''
-            }
-            onValueChange={(v) =>
+            value={exclusionChoice}
+            onValueChange={(v) => {
+              setExclusionChoice(v as 'no' | 'yes');
               onChange({
                 photosExclusionsAnswered: true,
                 photosExclusionsNote: v === 'no' ? '' : values.photosExclusionsNote,
-              })
-            }
+              });
+            }}
             className="grid gap-2 sm:grid-cols-2"
           >
             <label
@@ -414,11 +424,11 @@ export const ListingDisclosures: React.FC<ListingDisclosuresProps> = ({
             </label>
           </RadioGroup>
           {exclusionsMissing && <FieldError>Pick one answer to continue.</FieldError>}
-          {values.photosExclusionsAnswered && (
+          {exclusionChoice === 'yes' && (
             <Textarea
               rows={2}
               className="text-base"
-              placeholder="List anything visible in the photos that the buyer does not receive (leave blank if everything is included)."
+              placeholder="List anything visible in the photos that the buyer does not receive."
               value={values.photosExclusionsNote}
               onChange={(e) => onChange({ photosExclusionsNote: e.target.value })}
             />
