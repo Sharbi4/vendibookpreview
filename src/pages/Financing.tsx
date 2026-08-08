@@ -92,18 +92,23 @@ const FAQ = [
 ];
 
 const panel =
-  'rounded-2xl border-2 border-white/[0.14] bg-white/[0.045] backdrop-blur-md p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] transition-colors hover:border-white/20';
+  'rounded-2xl border border-white/10 bg-white/[0.04] backdrop-blur-md p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.10)] transition-colors hover:border-emerald-300/25';
 
 const ApplyCta = ({ className = '', wide = false }: { className?: string; wide?: boolean }) => (
   <a
     href={APPLY_URL}
     target="_blank"
     rel="noopener noreferrer"
-    className={`inline-flex items-center justify-center gap-2 rounded-full px-7 py-3.5 text-sm font-semibold text-black transition-transform hover:scale-[1.02] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-black ${wide ? 'w-full sm:w-auto' : ''} ${className}`}
-    style={{ background: LIME, boxShadow: `0 10px 38px ${LIME}40` }}
+    className={`group/cta relative inline-flex items-center justify-center gap-2 overflow-hidden rounded-xl bg-gradient-to-b from-emerald-400 to-emerald-600 px-6 py-3.5 text-sm font-semibold text-emerald-950 shadow-[0_10px_30px_-12px_rgba(16,185,129,0.9)] ring-1 ring-inset ring-white/25 transition-shadow duration-300 hover:shadow-[0_14px_36px_-10px_rgba(16,185,129,1)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-200 ${wide ? 'w-full sm:w-auto' : ''} ${className}`}
   >
-    Apply for Equipment Financing
-    <ExternalLink className="h-4 w-4" aria-hidden />
+    <span
+      aria-hidden
+      className="pointer-events-none absolute inset-y-0 -left-1/3 w-1/3 -skew-x-12 bg-gradient-to-r from-transparent via-white/40 to-transparent opacity-0 transition-all duration-700 group-hover/cta:left-[110%] group-hover/cta:opacity-100"
+    />
+    <span className="relative inline-flex items-center gap-2">
+      Apply now for financing
+      <ExternalLink className="h-4 w-4" aria-hidden />
+    </span>
   </a>
 );
 
