@@ -267,12 +267,12 @@ const HowItWorks = () => {
                 </div>
                 <h3 className="text-xl md:text-2xl font-bold text-foreground mb-2">I want to list or sell something</h3>
                 <p className="text-sm md:text-base text-muted-foreground mb-5 leading-relaxed">
-                  Turn your truck, trailer, kitchen, or vendor space into income. Verified buyers and renters, automated documents, and 24-hour payouts.
+                  Turn your truck, trailer, kitchen, or vendor space into income. Real buyers and renters, automated documents, and PayPal or in-person payment.
                 </p>
                 <ol className="space-y-2 mb-5 text-sm text-foreground/80">
                   <li className="flex gap-2"><span className="text-foreground/40 font-mono text-xs mt-0.5">01</span> List in minutes — free, no subscription</li>
                   <li className="flex gap-2"><span className="text-foreground/40 font-mono text-xs mt-0.5">02</span> Add photos, pricing, and any documents — identity verification is an optional paid add-on</li>
-                  <li className="flex gap-2"><span className="text-foreground/40 font-mono text-xs mt-0.5">03</span> Get paid — rentals in 24h, sales in 2–5 days</li>
+                  <li className="flex gap-2"><span className="text-foreground/40 font-mono text-xs mt-0.5">03</span> Get paid — PayPal checkout, in person, or optional Equinox financing</li>
                 </ol>
                 <div className="flex flex-wrap gap-2">
                   <Button size="sm" variant="dark-shine" asChild className="rounded-full">
