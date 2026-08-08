@@ -1,5 +1,5 @@
-import React, { useState, useCallback, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Truck, Store, Building2, MapPin, Tag, ShoppingBag, MapPinned, Loader2, Check, CheckCircle2, AlertCircle} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -50,14 +50,54 @@ const loadPersistedQuickStart = (): { data: QuickStartData; step: QuickStartStep
   }
 };
 
+const QUICKSTART_STEPS: QuickStartStep[] = ['category', 'mode', 'location', 'created'];
+const isQuickStartStep = (v: string | null): v is QuickStartStep =>
+  !!v && (QUICKSTART_STEPS as string[]).includes(v);
+
 export const QuickStartWizard: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user, refreshProfile } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const persisted = typeof window !== 'undefined' ? loadPersistedQuickStart() : null;
 
-  const [step, setStep] = useState<QuickStartStep>(persisted?.step ?? 'category');
+  // The step lives in the URL (?qs=) so browser back/forward moves between
+  // wizard screens instead of leaving the flow entirely.
+  const urlStep = searchParams.get('qs');
+  const [step, setStepState] = useState<QuickStartStep>(
+    isQuickStartStep(urlStep) ? urlStep : (persisted?.step ?? 'category'),
+  );
+
+  const goToStep = useCallback(
+    (next: QuickStartStep, replace = false) => {
+      setStepState(next);
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('qs') === next) return;
+      params.set('qs', next);
+      setSearchParams(params, { replace });
+    },
+    [setSearchParams],
+  );
+
+  // Write the initial step into the URL without adding a history entry.
+  const didSeedUrl = useRef(false);
+  useEffect(() => {
+    if (didSeedUrl.current) return;
+    didSeedUrl.current = true;
+    if (!isQuickStartStep(searchParams.get('qs'))) goToStep(step, true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // URL → state (browser back / forward).
+  useEffect(() => {
+    const s = searchParams.get('qs');
+    if (isQuickStartStep(s) && s !== step) setStepState(s);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
+
+  const setStep = goToStep;
+
   const [data, setData] = useState<QuickStartData>(persisted?.data ?? {
     category: null,
     mode: null,
@@ -258,7 +298,7 @@ export const QuickStartWizard: React.FC = () => {
       await refreshProfile();
 
       setCreatedListingId(listing.id);
-      setStep('created');
+      setStep('created', true);
 
       // Clear persisted quick-start progress now that the draft is safely on the server.
       try {
@@ -461,9 +501,10 @@ export const QuickStartWizard: React.FC = () => {
               </div>
             </div>
           </div>
-          <Button variant="ghost" onClick={() => setStep('category')} className="mt-2">
+          <Button type="button" variant="outline" onClick={() => setStep('category')} className="mt-2 min-w-[96px]">
             ← Back
           </Button>
+
         </div>
       )}
 
@@ -564,9 +605,15 @@ export const QuickStartWizard: React.FC = () => {
 
           <div className="flex flex-col gap-3 pt-2">
             <div className="flex items-center gap-2 sm:gap-3">
-              <Button variant="ghost" onClick={() => setStep('mode')} size="sm" className="text-xs sm:text-sm">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setStep('mode')}
+                className="min-w-[96px]"
+              >
                 ← Back
               </Button>
+
               <Button 
                 variant="dark-shine"
                 onClick={handleCreateDraft} 
