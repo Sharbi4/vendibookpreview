@@ -1,3 +1,4 @@
+import { isPickupLocationRevealed, PICKUP_LOCKED_MESSAGE } from '@/lib/fulfillment/pickupReveal';
 import { useState } from 'react';
 import { format } from 'date-fns';
 import { Link } from 'react-router-dom';
@@ -332,10 +333,18 @@ const SaleTransactionCard = ({
                       </>
                     ) : (
                       <>
-                        {transaction.listing?.pickup_location_text && (
-                          <p className="text-sm text-muted-foreground mt-1">
-                            {transaction.listing.pickup_location_text}
-                          </p>
+                        {isPickupLocationRevealed({
+                          fulfillmentType: transaction.fulfillment_type,
+                          status: transaction.status,
+                          paymentStatus: (transaction as any).payment_status,
+                        }) ? (
+                          transaction.listing?.pickup_location_text && (
+                            <p className="text-sm text-muted-foreground mt-1">
+                              {transaction.listing.pickup_location_text}
+                            </p>
+                          )
+                        ) : (
+                          <p className="text-xs text-muted-foreground mt-1">{PICKUP_LOCKED_MESSAGE}</p>
                         )}
                         {transaction.listing?.pickup_instructions && (
                           <p className="text-xs text-muted-foreground mt-1 italic">
