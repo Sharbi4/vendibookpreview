@@ -2010,9 +2010,15 @@ export const PublishWizard: React.FC = () => {
       }
     } catch (error) {
       console.error('Error saving:', error);
+      // Surface the real reason (constraint, policy, network) instead of a
+      // generic message — sellers were stuck with no way to know what failed.
+      const err = error as { message?: string; details?: string; hint?: string; code?: string } | null;
+      const reason = [err?.message, err?.details, err?.hint].filter(Boolean).join(' — ');
       toast({
-        title: 'Error saving',
-        description: error instanceof Error ? error.message : 'Please try again.',
+        title: "We couldn't save this step",
+        description: reason
+          ? `${reason}${err?.code ? ` (${err.code})` : ''}`
+          : 'Your changes were not saved. Check your connection and try again.',
         variant: 'destructive'});
     } finally {
       setIsSaving(false);
