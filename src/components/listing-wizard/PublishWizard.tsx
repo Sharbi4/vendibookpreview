@@ -5092,9 +5092,11 @@ export const PublishWizard: React.FC = () => {
                     }}
                     primary={{
                       label: 'Publish Listing',
-                      onClick: () => setShowPublishDialog(true),
-                      disabled: isSaving || !canPublish,
+                      onClick: guardNext(publishBlockers, null, () => setShowPublishDialog(true)),
+                      disabled: isSaving,
                     }}
+                    blockers={publishBlockers}
+
                   />
                 </div>
               )}
