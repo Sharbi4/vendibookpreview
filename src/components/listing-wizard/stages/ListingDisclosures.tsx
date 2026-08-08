@@ -377,19 +377,14 @@ export const ListingDisclosures: React.FC<ListingDisclosuresProps> = ({
             <RequiredMark />
           </Label>
           <RadioGroup
-            value={
-              values.photosExclusionsAnswered
-                ? values.photosExclusionsNote.trim()
-                  ? 'yes'
-                  : 'no'
-                : ''
-            }
-            onValueChange={(v) =>
+            value={exclusionChoice}
+            onValueChange={(v) => {
+              setExclusionChoice(v as 'no' | 'yes');
               onChange({
                 photosExclusionsAnswered: true,
                 photosExclusionsNote: v === 'no' ? '' : values.photosExclusionsNote,
-              })
-            }
+              });
+            }}
             className="grid gap-2 sm:grid-cols-2"
           >
             <label
@@ -414,11 +409,11 @@ export const ListingDisclosures: React.FC<ListingDisclosuresProps> = ({
             </label>
           </RadioGroup>
           {exclusionsMissing && <FieldError>Pick one answer to continue.</FieldError>}
-          {values.photosExclusionsAnswered && (
+          {exclusionChoice === 'yes' && (
             <Textarea
               rows={2}
               className="text-base"
-              placeholder="List anything visible in the photos that the buyer does not receive (leave blank if everything is included)."
+              placeholder="List anything visible in the photos that the buyer does not receive."
               value={values.photosExclusionsNote}
               onChange={(e) => onChange({ photosExclusionsNote: e.target.value })}
             />
