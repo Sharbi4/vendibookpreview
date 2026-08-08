@@ -140,22 +140,21 @@ const Financing = () => {
 
       <Header />
 
-      <main className="relative min-h-screen overflow-hidden bg-[#050506] text-white">
-      {/* polished onyx shine — layered black glass luminescence */}
+      <main className="relative min-h-screen overflow-hidden bg-[hsl(160_30%_4%)] text-white">
+      {/* emerald aurora wash — matches the homepage financing banner */}
       <div
         aria-hidden
         className="pointer-events-none absolute inset-0"
         style={{
           background:
-            'radial-gradient(85% 55% at 50% -8%, rgba(140,198,63,0.12) 0%, transparent 60%), radial-gradient(70% 45% at 100% 15%, rgba(255,255,255,0.07) 0%, transparent 60%), radial-gradient(70% 45% at 0% 15%, rgba(255,255,255,0.04) 0%, transparent 60%), radial-gradient(120% 60% at 50% 110%, rgba(0,0,0,0.9) 0%, transparent 70%)',
+            'radial-gradient(120% 90% at 0% 0%, rgba(16,185,129,0.30) 0%, rgba(6,78,59,0.20) 38%, rgba(0,0,0,0) 70%), radial-gradient(90% 70% at 100% 8%, rgba(52,211,153,0.16) 0%, rgba(0,0,0,0) 65%), radial-gradient(120% 60% at 50% 110%, rgba(0,0,0,0.9) 0%, transparent 70%)',
         }}
       />
 
       {/* top horizon sheen */}
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-x-0 top-0 h-px"
-        style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent)' }}
+        className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/45 to-transparent"
       />
 
       <div className="relative mx-auto max-w-5xl px-5 pt-12 sm:px-8 sm:pt-16">
@@ -163,14 +162,23 @@ const Financing = () => {
 
         {/* Hero */}
 
-        <section className="rounded-3xl border-2 border-white/[0.12] bg-white/[0.03] p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-sm sm:p-10">
-          <p
-            className="text-[11px] font-semibold uppercase tracking-[0.22em]"
-            style={{ color: LIME }}
-          >
-            Vendibook × Equinox Funding
-          </p>
-          <h1 className="mt-4 text-4xl font-bold leading-[1.08] tracking-tight sm:text-5xl">
+        <section className="relative overflow-hidden rounded-3xl border border-white/10 bg-white/[0.035] p-6 shadow-[0_18px_50px_-20px_rgba(0,0,0,0.9),inset_0_1px_0_rgba(255,255,255,0.10)] backdrop-blur-md sm:p-10">
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent"
+          />
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-300/25 bg-emerald-400/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-emerald-200 backdrop-blur-sm">
+              <ShieldCheck className="h-3 w-3" aria-hidden />
+              Financing
+            </span>
+            <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.06] px-2.5 py-1 backdrop-blur-sm">
+              <span className="text-[11px] font-medium tracking-tight text-white/70">Vendibook</span>
+              <span className="text-white/25">×</span>
+              <EquinoxFundingLogo className="h-4 w-auto" />
+            </span>
+          </div>
+          <h1 className="mt-5 text-balance text-4xl font-bold leading-[1.08] tracking-tight sm:text-5xl">
             Get the equipment you need — fast
           </h1>
           <p className="mt-5 max-w-2xl text-base leading-relaxed text-white/70">
@@ -183,9 +191,9 @@ const Financing = () => {
             <ApplyCta />
             <Link
               to="/browse"
-              className="inline-flex items-center justify-center gap-2 rounded-full border-2 border-white/15 bg-white/[0.04] px-7 py-3.5 text-sm font-semibold text-white transition-colors hover:bg-white/[0.09] hover:border-white/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
+              className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/[0.05] px-6 py-3.5 text-sm font-semibold text-white backdrop-blur-sm transition-colors hover:border-white/25 hover:bg-white/[0.09] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
             >
-              Browse Equipment
+              Browse equipment
               <ArrowRight className="h-4 w-4" aria-hidden />
             </Link>
           </div>
@@ -193,16 +201,11 @@ const Financing = () => {
             You’ll continue to Equinox Funding to submit your application securely.
           </p>
 
-          <div className="mt-10 flex flex-col items-start gap-5 rounded-2xl border-2 border-white/[0.12] bg-white/[0.04] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] backdrop-blur-sm sm:flex-row sm:items-center">
+          <div className="mt-10 flex flex-col items-start gap-5 rounded-2xl border border-white/10 bg-white/[0.05] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-sm sm:flex-row sm:items-center">
             <div className="flex flex-col gap-2">
               <div className="flex items-center gap-3">
-                <img
-                  src={equinoxLogo.url}
-                  alt="Equinox Funding"
-                  className="h-10 w-auto"
-                  loading="lazy"
-                />
-                <span className="inline-flex items-center gap-1.5 rounded-full border border-[#8CC63F]/30 bg-[#8CC63F]/10 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-[#8CC63F]">
+                <EquinoxFundingLogo className="h-8 w-auto" />
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-300/25 bg-emerald-400/10 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-emerald-200">
                   <BadgeCheck className="h-3.5 w-3.5" aria-hidden />
                   Preferred partner
                 </span>
@@ -216,6 +219,31 @@ const Financing = () => {
               <span className="text-xs font-semibold text-white/80">Equinox Funding LLC</span>
               <span className="text-[11px] text-white/45">Licensing & disclosures available at equinox-funding.com</span>
             </div>
+          </div>
+        </section>
+
+        {/* Options */}
+        <section className="mt-16" aria-labelledby="options-heading">
+          <h2 id="options-heading" className="text-2xl font-semibold tracking-tight">
+            What you can finance
+          </h2>
+          <p className="mt-2 max-w-2xl text-sm text-white/60">
+            One application covers the equipment and the capital behind it. Structures vary by
+            applicant and are subject to underwriting.
+          </p>
+          <div className="mt-6 grid gap-4 md:grid-cols-3">
+            {OPTIONS.map(({ icon: Icon, title: t, body }) => (
+              <div key={t} className={panel}>
+                <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-emerald-300/25 bg-emerald-400/10 text-emerald-200">
+                  <Icon className="h-4 w-4" aria-hidden />
+                </span>
+                <h3 className="mt-4 text-base font-semibold">{t}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-white/65">{body}</p>
+              </div>
+            ))}
+          </div>
+          <div className="mt-6">
+            <ApplyCta wide />
           </div>
         </section>
 
