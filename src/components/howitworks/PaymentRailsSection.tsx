@@ -28,6 +28,11 @@ export type RailsAudience = 'buyer' | 'seller' | 'host';
 
 type RailKey = 'paypal' | 'inperson' | 'equinox' | 'plaid';
 
+interface RailLink {
+  label: string;
+  href: string;
+}
+
 interface RailDef {
   key: RailKey;
   logo: JSX.Element;
@@ -36,7 +41,9 @@ interface RailDef {
   detailTitle: string;
   detailSteps: string[];
   detailNote: string;
-  link?: { label: string; href: string };
+  link?: RailLink;
+  /** Deep-link into the actual product flow (dashboard / publish wizard). */
+  flowLink?: RailLink;
 }
 
 const paypalRail = (audience: RailsAudience): RailDef => ({
@@ -60,6 +67,10 @@ const paypalRail = (audience: RailsAudience): RailDef => ({
   detailNote:
     'PayPal Checkout only appears on listings where the seller or host has enabled it. Payout destinations are saved privately in your dashboard.',
   link: { label: 'More about payments', href: '/payments' },
+  flowLink:
+    audience === 'buyer'
+      ? { label: 'See the exact steps in your orders', href: '/dashboard?view=shopper&tab=orders' }
+      : { label: 'See the exact steps in Payouts', href: '/dashboard?view=host&tab=payouts' },
 });
 
 const inPersonRail = (audience: RailsAudience): RailDef => ({
@@ -79,6 +90,10 @@ const inPersonRail = (audience: RailsAudience): RailDef => ({
   ],
   detailNote:
     'Pay-in-person sales carry no Vendibook commission and no buyer fee. Vendibook does not process or hold these funds, so inspect before you pay.',
+  flowLink:
+    audience === 'buyer'
+      ? { label: 'See the exact steps in Transactions', href: '/dashboard?view=shopper&tab=transactions' }
+      : { label: 'See the exact steps in the listing flow', href: '/list/start' },
 });
 
 const equinoxRail = (audience: RailsAudience): RailDef => ({
@@ -99,6 +114,10 @@ const equinoxRail = (audience: RailsAudience): RailDef => ({
   detailNote:
     'Financing is offered by Equinox Funding LLC, not Vendibook, and is subject to credit approval. A 12.9% platform fee applies to financed sales. PayPal does not process an Equinox-funded purchase.',
   link: { label: 'See financing details', href: '/financing' },
+  flowLink:
+    audience === 'buyer'
+      ? { label: 'See the exact steps on eligible listings', href: '/search?mode=sale' }
+      : { label: 'See the exact steps to enable financing', href: '/financing/enable' },
 });
 
 const plaidRail = (audience: RailsAudience): RailDef => ({
@@ -119,6 +138,10 @@ const plaidRail = (audience: RailsAudience): RailDef => ({
   detailNote:
     '*Identity verification is an optional paid add-on. It is never required to publish a listing, receive bookings, or get paid.',
   link: { label: 'Identity verification details', href: '/identity-verification' },
+  flowLink:
+    audience === 'buyer'
+      ? undefined
+      : { label: 'See the exact steps to get verified', href: '/verify-identity' },
 });
 
 const audienceCopy: Record<RailsAudience, { eyebrow: string; heading: string; sub: string }> = {
@@ -216,13 +239,22 @@ export const PaymentRailsSection = ({ audience }: { audience: RailsAudience }) =
               <p className="mt-3 text-xs text-muted-foreground leading-relaxed border-t border-border pt-3">
                 {open.detailNote}
               </p>
-              {open.link && (
-                <Button variant="outline" className="rounded-full w-full" asChild>
-                  <Link to={open.link.href} onClick={() => setOpen(null)}>
-                    {open.link.label} <ArrowRight className="ml-1.5 w-4 h-4" />
-                  </Link>
-                </Button>
-              )}
+              <div className="mt-1 grid gap-2">
+                {open.flowLink && (
+                  <Button className="rounded-full w-full" asChild>
+                    <Link to={open.flowLink.href} onClick={() => setOpen(null)}>
+                      {open.flowLink.label} <ArrowRight className="ml-1.5 w-4 h-4" />
+                    </Link>
+                  </Button>
+                )}
+                {open.link && (
+                  <Button variant="outline" className="rounded-full w-full" asChild>
+                    <Link to={open.link.href} onClick={() => setOpen(null)}>
+                      {open.link.label} <ArrowRight className="ml-1.5 w-4 h-4" />
+                    </Link>
+                  </Button>
+                )}
+              </div>
             </>
           )}
         </DialogContent>
