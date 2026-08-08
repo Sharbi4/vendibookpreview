@@ -461,7 +461,7 @@ const Header = ({ hideSearch = false }: HeaderProps) => {
         </div>
 
         {/* Mobile & Tablet Actions - hide when search is open */}
-        <div className={`flex lg:hidden items-center gap-1 transition-opacity duration-200 ${isMobileSearchOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}> 
+        <div className={`flex lg:hidden items-center gap-1 shrink-0 ${isMobileSearchOpen ? 'hidden' : 'flex'}`}> 
           {user && <ConciergeInbox userId={user.id} />}
           {user && <NotificationCenter />}
           <AppDropdownMenu variant="light" />
