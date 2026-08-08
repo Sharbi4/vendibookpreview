@@ -11,6 +11,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
+import { useSellerVerification } from '@/hooks/useSellerVerification';
 
 interface NextStepConfig {
   id: string;
@@ -116,7 +117,7 @@ const ProfileNextStepCard = ({
     }
 
     // Last: optional paid verification add-on (never a gate)
-    if (!isVerified) {
+    if (!verified) {
       return allSteps.find(s => s.id === 'verify')!;
     }
 
