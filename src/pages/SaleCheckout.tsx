@@ -861,6 +861,8 @@ const SaleCheckout = () => {
                           setDeliveryAddress={setDeliveryAddress}
                           setDeliveryCoords={setDeliveryCoords}
                           deliveryFee={currentDeliveryFee}
+                          deliveryRateText={deliveryRateLabel(deliveryRate, deliveryFeeType)}
+                          deliveryFeeType={deliveryFeeType}
                           deliveryRadiusMiles={deliveryRadiusMiles}
                           deliveryDistanceInfo={deliveryDistanceInfo}
                           isFreightSellerPaid={isFreightSellerPaid}

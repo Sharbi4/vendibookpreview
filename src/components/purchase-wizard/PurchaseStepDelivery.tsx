@@ -17,6 +17,9 @@ interface PurchaseStepDeliveryProps {
   setDeliveryAddress: (value: string) => void;
   setDeliveryCoords: (coords: [number, number] | null) => void;
   deliveryFee: number;
+  /** e.g. "$4.50/mile" or "$150 per delivery" — how the seller prices delivery */
+  deliveryRateText?: string | null;
+  deliveryFeeType?: 'flat' | 'per_mile';
   deliveryRadiusMiles: number | null;
   deliveryDistanceInfo: { distance: number | null; isOutsideRadius: boolean };
   isFreightSellerPaid: boolean;
@@ -209,6 +212,8 @@ const PurchaseStepDelivery = ({
   setDeliveryAddress,
   setDeliveryCoords,
   deliveryFee,
+  deliveryRateText,
+  deliveryFeeType = 'flat',
   deliveryRadiusMiles,
   deliveryDistanceInfo,
   isFreightSellerPaid,
@@ -237,7 +242,9 @@ const PurchaseStepDelivery = ({
   const pickupPriceNode = <span className="text-emerald-500">FREE</span>;
   const deliveryPriceNode = deliveryFee
     ? <span className="text-foreground">+${deliveryFee.toLocaleString()}</span>
-    : <span className="text-emerald-500">FREE</span>;
+    : deliveryFeeType === 'per_mile' && deliveryRateText
+      ? <span className="text-xs font-normal text-muted-foreground">{deliveryRateText}</span>
+      : <span className="text-emerald-500">FREE</span>;
   const freightPriceNode = isFreightSellerPaid
     ? <span className="text-emerald-500">FREE</span>
     : hasValidEstimate && freightCost > 0
@@ -304,6 +311,13 @@ const PurchaseStepDelivery = ({
                 }}
                 placeholder="Start typing your delivery address"
               />
+              {deliveryRateText && (
+                <p className="text-xs text-muted-foreground mt-2">
+                  {deliveryFeeType === 'per_mile'
+                    ? `The seller charges ${deliveryRateText}. Your delivery charge is calculated from the distance to this address.`
+                    : `The seller charges a flat ${deliveryRateText}.`}
+                </p>
+              )}
             </div>
 
             {deliveryDistanceInfo.distance !== null && (
