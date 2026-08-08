@@ -1117,8 +1117,17 @@ export const PublishWizard: React.FC = () => {
       .join(', ');
   }, [streetAddress, aptSuite, locCity, locState, locZipCode]);
 
+  // For-sale listings that are delivery-only don't need a public pickup street address.
+  const needsFullAddressForSale =
+    listing?.mode !== 'sale' || fulfillmentType !== 'delivery';
+  const streetAddressRequired =
+    listing?.mode !== 'sale' ||
+    isStaticLocationFn((listing?.category ?? '') as ListingCategory) ||
+    isStaticLocation ||
+    needsFullAddressForSale;
+
   const hasCompleteStructuredAddress = !!(
-    streetAddress.trim() &&
+    (streetAddress.trim() || !streetAddressRequired) &&
     locCity.trim() &&
     locState.trim() &&
     locZipCode.trim()
@@ -2240,6 +2249,7 @@ export const PublishWizard: React.FC = () => {
   const hasValidTitle = title.trim().length >= MIN_TITLE_LENGTH;
   const hasValidDescription = description.trim().length >= MIN_DESCRIPTION_LENGTH;
   const hasDescription = hasValidTitle && hasValidDescription;
+
 
   const checklistState = {
     hasPhotos: totalPhotoCount >= 3,
@@ -3995,16 +4005,20 @@ export const PublishWizard: React.FC = () => {
 
               {/* Step: Location */}
               {step === 'location' && (
-                <div className="space-y-6">
-                  <div>
-                    <h2 className="text-xl font-bold text-foreground mb-2">Full Address & Fulfillment</h2>
+                <div className="flex flex-col gap-6">
+                  <div className="order-1">
+                    <h2 className="text-xl font-bold text-foreground mb-2">
+                      {listing.mode === 'sale' ? 'Pickup & delivery details' : 'Full Address & Fulfillment'}
+                    </h2>
                     <p className="text-muted-foreground">
-                      Provide your complete address. It will only be shared after a booking is confirmed.
+                      {listing.mode === 'sale'
+                        ? 'Tell buyers how this changes hands. Only the city, state and ZIP are public — your full address stays private until a sale is confirmed.'
+                        : 'Provide your complete address. It will only be shared after a booking is confirmed.'}
                     </p>
                   </div>
 
-                  {/* Static Location Toggle - Only for mobile assets */}
-                  {isMobileAsset(listing.category) && (
+                  {/* Static Location Toggle - Only for mobile rentals */}
+                  {isMobileAsset(listing.category) && listing.mode !== 'sale' && (
                     <div className="p-4 bg-muted/50 rounded-xl border">
                       <div className="flex items-center justify-between">
                         <div className="flex items-start gap-3">
@@ -4032,17 +4046,30 @@ export const PublishWizard: React.FC = () => {
                   )}
 
                   {/* Structured Address Form */}
-                  <div className="space-y-4">
-                    <Label className="text-base font-semibold">Address *</Label>
+                  <div className="space-y-4 order-3">
+                    <Label className="text-base font-semibold">
+                      {listing.mode === 'sale'
+                        ? (needsFullAddressForSale ? 'Pickup address *' : 'Where it is located *')
+                        : 'Address *'}
+                    </Label>
+                    {listing.mode === 'sale' && !needsFullAddressForSale && (
+                      <p className="text-sm text-muted-foreground -mt-2">
+                        Delivery only — just the city, state and ZIP where the unit sits today.
+                      </p>
+                    )}
                     <div className="space-y-3">
                       <div className="space-y-2">
-                        <Label htmlFor="street_address" className="text-sm font-medium">Address Line 1</Label>
+                        <Label htmlFor="street_address" className="text-sm font-medium">
+                          {listing.mode === 'sale'
+                            ? (needsFullAddressForSale ? 'Street address' : 'Street address (optional)')
+                            : 'Address Line 1'}
+                        </Label>
                         <Input
                           id="street_address"
                           value={streetAddress}
                           onChange={(e) => setStreetAddress(e.target.value)}
                           placeholder="123 Main Street"
-                          className={cn(!streetAddress.trim() && "border-destructive/50")}
+                          className={cn(!streetAddress.trim() && streetAddressRequired && "border-destructive/50")}
                         />
                       </div>
                       <div className="space-y-2">
@@ -4106,7 +4133,7 @@ export const PublishWizard: React.FC = () => {
                     </div>
 
                     {/* Validation */}
-                    {(!streetAddress.trim() || !locCity.trim() || !locState.trim() || !locZipCode.trim()) && (
+                    {((streetAddressRequired && !streetAddress.trim()) || !locCity.trim() || !locState.trim() || !locZipCode.trim()) && (
                       <p className="text-sm text-destructive flex items-center gap-1.5">
                         <AlertCircle className="w-4 h-4" />
                         Please fill in all required address fields
@@ -4117,14 +4144,16 @@ export const PublishWizard: React.FC = () => {
                     <div className="p-3 rounded-lg bg-muted/50 border border-border space-y-1">
                       <p className="text-xs text-muted-foreground flex items-center gap-1.5">
                         <Info className="w-3.5 h-3.5 shrink-0" />
-                        Your full address and phone number are kept private until a booking is confirmed.
+                        {listing.mode === 'sale'
+                          ? 'Buyers only see your city, state and ZIP. Your street address and phone number stay private until a sale is confirmed.'
+                          : 'Your full address and phone number are kept private until a booking is confirmed.'}
                       </p>
                     </div>
                   </div>
 
                   {/* Static Location extras */}
                   {(isStaticLocationFn(listing.category) || isStaticLocation) && (
-                    <div className="space-y-4">
+                    <div className="space-y-4 order-4">
                       <div className="space-y-2">
                         <Label htmlFor="access_instructions" className="text-base font-medium">Access Instructions *</Label>
                         <Textarea
@@ -4159,14 +4188,16 @@ export const PublishWizard: React.FC = () => {
 
                   {/* Fulfillment - for non-static mobile assets */}
                   {!(isStaticLocationFn(listing.category) || isStaticLocation) && (
-                    <div className="space-y-6">
+                    <div className="space-y-6 order-2">
                       <div className="space-y-3">
-                        <Label className="text-base font-medium">Fulfillment Options *</Label>
+                        <Label className="text-base font-medium">
+                          {listing.mode === 'sale' ? 'How does the buyer get it? *' : 'Fulfillment Options *'}
+                        </Label>
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                           {[
-                            { value: 'pickup' as FulfillmentType, label: 'Pickup Only', icon: <MapPin className="w-5 h-5" />, description: 'Buyer/renter picks up from your location' },
-                            { value: 'delivery' as FulfillmentType, label: 'Delivery Only', icon: <Truck className="w-5 h-5" />, description: 'You deliver to their location' },
-                            { value: 'both' as FulfillmentType, label: 'Pickup + Delivery', icon: <Package className="w-5 h-5" />, description: 'Offer both options' }].map((option) => (
+                            { value: 'pickup' as FulfillmentType, label: listing.mode === 'sale' ? 'Buyer picks up' : 'Pickup Only', icon: <MapPin className="w-5 h-5" />, description: listing.mode === 'sale' ? 'Buyer collects it from your address' : 'Buyer/renter picks up from your location' },
+                            { value: 'delivery' as FulfillmentType, label: listing.mode === 'sale' ? 'I deliver it' : 'Delivery Only', icon: <Truck className="w-5 h-5" />, description: listing.mode === 'sale' ? 'You deliver to the buyer' : 'You deliver to their location' },
+                            { value: 'both' as FulfillmentType, label: listing.mode === 'sale' ? 'Either one' : 'Pickup + Delivery', icon: <Package className="w-5 h-5" />, description: listing.mode === 'sale' ? 'Buyer chooses pickup or delivery' : 'Offer both options' }].map((option) => (
                             <button
                               key={option.value}
                               type="button"
@@ -4198,11 +4229,15 @@ export const PublishWizard: React.FC = () => {
 
                       {(fulfillmentType === 'pickup' || fulfillmentType === 'both') && (
                         <div className="space-y-2">
-                          <Label className="text-base font-medium">Pickup Instructions (Optional)</Label>
+                          <Label className="text-base font-medium">
+                            {listing.mode === 'sale' ? 'Pickup notes (optional)' : 'Pickup Instructions (Optional)'}
+                          </Label>
                           <Textarea
                             value={pickupInstructions}
                             onChange={(e) => setPickupInstructions(e.target.value)}
-                            placeholder="Any special instructions for pickup?"
+                            placeholder={listing.mode === 'sale'
+                              ? 'Gate code, best hours, towing or loading help, what to bring…'
+                              : 'Any special instructions for pickup?'}
                             rows={2}
                           />
                         </div>
@@ -4212,7 +4247,9 @@ export const PublishWizard: React.FC = () => {
                         <>
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div className="space-y-2">
-                              <Label className="text-base font-medium">Delivery Fee (Optional)</Label>
+                              <Label className="text-base font-medium">
+                                {listing.mode === 'sale' ? 'Delivery charge (optional)' : 'Delivery Fee (Optional)'}
+                              </Label>
                               <div className="relative">
                                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
                                 <Input
@@ -4227,7 +4264,9 @@ export const PublishWizard: React.FC = () => {
                               </div>
                             </div>
                             <div className="space-y-2">
-                              <Label className="text-base font-medium">Delivery Radius (Optional)</Label>
+                              <Label className="text-base font-medium">
+                                {listing.mode === 'sale' ? 'Delivery area (optional)' : 'Delivery Radius (Optional)'}
+                              </Label>
                               <div className="relative">
                                 <Input
                                   type="number"
@@ -4255,34 +4294,36 @@ export const PublishWizard: React.FC = () => {
                     </div>
                   )}
 
-                  <PrimaryActionBar
-                    secondary={{
-                      label: 'Back',
-                      onClick: () => setStep(listing.mode === 'rent' ? 'availability' : 'pricing'),
-                    }}
-                    primary={{
-                      label: isSaving ? 'Saving…' : 'Continue',
-                      onClick: saveStep,
-                      disabled:
-                        isSaving ||
-                        !streetAddress.trim() ||
-                        !locCity.trim() ||
-                        !locState.trim() ||
-                        !locZipCode.trim() ||
-                        (isStaticLocationFn(listing.category) || isStaticLocation
-                          ? !accessInstructions
-                          : !fulfillmentType),
-                    }}
-                    blockers={[
-                      !streetAddress.trim() && 'Street address',
-                      !locCity.trim() && 'City',
-                      !locState.trim() && 'State',
-                      !locZipCode.trim() && 'ZIP code',
-                      isStaticLocationFn(listing.category) || isStaticLocation
-                        ? !accessInstructions && 'Access instructions'
-                        : !fulfillmentType && 'How it changes hands (pickup or delivery)',
-                    ].filter(Boolean) as string[]}
-                  />
+                  <div className="order-last">
+                    <PrimaryActionBar
+                      secondary={{
+                        label: 'Back',
+                        onClick: () => setStep(listing.mode === 'rent' ? 'availability' : 'pricing'),
+                      }}
+                      primary={{
+                        label: isSaving ? 'Saving…' : 'Continue',
+                        onClick: saveStep,
+                        disabled:
+                          isSaving ||
+                          (streetAddressRequired && !streetAddress.trim()) ||
+                          !locCity.trim() ||
+                          !locState.trim() ||
+                          !locZipCode.trim() ||
+                          (isStaticLocationFn(listing.category) || isStaticLocation
+                            ? !accessInstructions
+                            : !fulfillmentType),
+                      }}
+                      blockers={[
+                        streetAddressRequired && !streetAddress.trim() && 'Street address',
+                        !locCity.trim() && 'City',
+                        !locState.trim() && 'State',
+                        !locZipCode.trim() && 'ZIP code',
+                        isStaticLocationFn(listing.category) || isStaticLocation
+                          ? !accessInstructions && 'Access instructions'
+                          : !fulfillmentType && 'How it changes hands (pickup or delivery)',
+                      ].filter(Boolean) as string[]}
+                    />
+                  </div>
                 </div>
               )}
 
