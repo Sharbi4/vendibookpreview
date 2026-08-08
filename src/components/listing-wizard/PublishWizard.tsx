@@ -2322,6 +2322,12 @@ export const PublishWizard: React.FC = () => {
     checklistItems.filter(i => i.required).every(i => i.completed) && stageMissing.length === 0;
   const canPublish = stageRequirementsMet && allAttested(attestations);
 
+  // Per-step required answers. Steps can't be skipped while these are missing.
+  const basicsMissing = stageMissing.filter((r) => r.step === 'basics');
+  // Disclosure requirements are collected on the "What's included" step.
+  const includesMissing = stageMissing.filter((r) => r.step === 'details');
+
+
   const displayAddress = buildStructuredAddress() || address;
 
   // Collect validation errors for publish attempt
