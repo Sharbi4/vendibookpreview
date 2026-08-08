@@ -72,7 +72,9 @@ const HostedPayment = () => {
               ? 'PayPal is still confirming this payment. We’ll update your order the moment it clears.'
               : `${label} is paid.`,
           });
-          navigate(successPath);
+          // A pending capture is NOT paid: keep the payer here with an honest
+          // status. The panel owns navigation for a confirmed capture
+          // (`returnUrl`), so we never double-navigate.
         }}
         summary={
           <div className="space-y-1">
