@@ -3218,8 +3218,9 @@ export const PublishWizard: React.FC = () => {
                                       htmlFor="equinox_include_vin"
                                       className="text-sm font-medium cursor-pointer"
                                     >
-                                      Include my full VIN / serial number on the private purchase sheet
-                                      shared with financing applicants.
+                                      Include my full VIN / serial number on the financing purchase
+                                      sheet. It stays off my public listing, but it will be printed
+                                      on the pro forma invoice the buyer and lender receive.
                                     </Label>
                                   </div>
                                 )}
