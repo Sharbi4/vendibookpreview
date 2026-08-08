@@ -13,6 +13,7 @@ import { usePaymentsTransition } from '@/hooks/usePaymentsTransition';
 import { PayPalWordmark } from '@/components/brand/ProviderLogos';
 import { EquinoxFundingLogo } from '@/components/brand/ProviderLogos';
 import { GetVerifiedButton } from '@/components/verification/GetVerifiedButton';
+import { useSellerVerification } from '@/hooks/useSellerVerification';
 
 const PANEL =
   'rounded-2xl border-2 border-white/12 bg-[linear-gradient(140deg,#101014_0%,#08080a_60%,#15151b_100%)] shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]';
