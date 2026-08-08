@@ -1,0 +1,5 @@
+update public.listings set price_sale = 38500, included_items = coalesce(included_items, 'Full kitchen build-out, generator, and equipment package.'), title_status = coalesce(title_status, 'clean'), has_lien = coalesce(has_lien, 'no'), no_known_problems = true, status = 'published', published_at = coalesce(published_at, now()), accept_paypal_checkout = true, fulfillment_type = coalesce(fulfillment_type, 'pickup') where id = 'bbc657de-de60-4204-99e4-463324476b83';
+
+insert into public.listing_financing_preferences (listing_id, host_id, equinox_opt_in, include_vin, disclosure_version, disclosure_accepted_at)
+values ('bbc657de-de60-4204-99e4-463324476b83', '924e1f23-b87d-4b7f-8ff9-30228d196180', true, true, 'equinox-financing-v1', now())
+on conflict (listing_id) do update set equinox_opt_in = true, include_vin = true, disclosure_version = 'equinox-financing-v1', disclosure_accepted_at = now();
