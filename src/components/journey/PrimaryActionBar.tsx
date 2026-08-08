@@ -43,7 +43,7 @@ export function PrimaryActionBar({
       className={cn(
         'w-full',
         sticky &&
-          'sticky bottom-0 left-0 right-0 z-30 border-t border-border/60 bg-background/85 backdrop-blur-md px-4 py-3 md:static md:border-0 md:bg-transparent md:backdrop-blur-none md:p-0',
+          'sticky bottom-0 left-0 right-0 z-40 border-t border-border/60 bg-background/95 backdrop-blur-md px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] -mx-4 sm:-mx-0 lg:static lg:z-auto lg:mx-0 lg:border-0 lg:bg-transparent lg:backdrop-blur-none lg:p-0',
         className,
       )}
     >
