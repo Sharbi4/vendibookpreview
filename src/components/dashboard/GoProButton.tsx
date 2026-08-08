@@ -21,13 +21,13 @@ export const GoProButton = ({ className, compact }: Props) => {
     return (
       <span
         className={cn(
-          'inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-bold uppercase tracking-[0.14em] pro-chip',
+          'inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-1 text-[11px] font-bold uppercase tracking-[0.14em] pro-chip',
           className,
         )}
         title={planLabel}
       >
-        <Crown className="h-3 w-3" />
-        {tier === 'premium' ? 'Premium' : 'Pro'}
+        <Crown className="h-3 w-3 shrink-0" />
+        <span className="whitespace-nowrap">{tier === 'premium' ? 'Premium' : 'Pro'}</span>
       </span>
     );
   }
@@ -35,15 +35,16 @@ export const GoProButton = ({ className, compact }: Props) => {
   return (
     <Link
       to="/pricing"
-      aria-label="Upgrade to Vendibook Pro"
+      aria-label="Go Pro — upgrade your Vendibook plan"
+      title="Go Pro"
       className={cn(
-        'gold-pill inline-flex items-center gap-1.5 rounded-full font-semibold',
-        compact ? 'px-3 py-1 text-[12px]' : 'px-3.5 py-1.5 text-[13px]',
+        'gold-pill inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full font-semibold leading-none',
+        compact ? 'px-3 py-1.5 text-[12px]' : 'px-3.5 py-1.5 text-[13px]',
         className,
       )}
     >
-      <Crown className={cn(compact ? 'h-3.5 w-3.5' : 'h-4 w-4')} strokeWidth={2.4} />
-      <span>Go Pro</span>
+      <Crown className={cn('shrink-0', compact ? 'h-3.5 w-3.5' : 'h-4 w-4')} strokeWidth={2.4} />
+      <span className="whitespace-nowrap">Go Pro</span>
     </Link>
   );
 };
