@@ -74,13 +74,13 @@ const HostOnboarding = () => {
 
   const rentalSteps = [
     { step: 1, icon: <Camera className="h-5 w-5" />, title: 'Create listing', description: 'Add photos, rates, availability, delivery options, rules, deposit, and document requirements.' },
-    { step: 2, icon: <UserCheck className="h-5 w-5" />, title: 'Get verified', description: 'Complete identity verification to build trust with renters.' },
+    { step: 2, icon: <UserCheck className="h-5 w-5" />, title: 'Set your terms', description: 'Set rental rules, deposit, documents, and delivery options before you go live.' },
     { step: 3, icon: <ClipboardCheck className="h-5 w-5" />, title: 'Approve renters', description: 'Review requests, confirm documents, and finalize pickup/delivery details.' },
     { step: 4, icon: <Wallet className="h-5 w-5" />, title: 'Get paid', description: 'Payouts released to your chosen payout method after the rental starts.' }];
 
   const salesSteps = [
     { step: 1, icon: <Camera className="h-5 w-5" />, title: 'Create listing', description: 'Add photos, price, specs, included equipment, and pickup/delivery preferences.' },
-    { step: 2, icon: <UserCheck className="h-5 w-5" />, title: 'Get verified', description: 'Verification builds confidence for serious buyers.' },
+    { step: 2, icon: <UserCheck className="h-5 w-5" />, title: 'Set your terms', description: 'Set your price, pickup or delivery, and how buyers can pay.' },
     { step: 3, icon: <Handshake className="h-5 w-5" />, title: 'Confirm buyer + terms', description: 'Message securely, confirm details, and proceed to protected checkout.' },
     { step: 4, icon: <Wallet className="h-5 w-5" />, title: 'Get paid', description: 'Payouts released to your chosen payout method after the order is confirmed.' }];
 
