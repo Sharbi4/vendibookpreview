@@ -11,6 +11,7 @@ import {
   Building2,
   ExternalLink,
   ChevronRight,
+  EyeOff,
 } from 'lucide-react';
 import ListingLocationMap from '@/components/listing-detail/ListingLocationMap';
 import { SaleCard } from './SaleCard';
