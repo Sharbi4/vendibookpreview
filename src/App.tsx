@@ -346,9 +346,11 @@ const AnimatedRoutes = () => {
           <Route path="/tools/permitpath/upgrades" element={<PageTransition><PermitPathUpgrades /></PageTransition>} />
           <Route path="/partners" element={<PageTransition><Partners /></PageTransition>} />
           <Route path="/financing" element={<PageTransition><Financing /></PageTransition>} />
+          <Route path="/financing/enable" element={<PageTransition><FinancingEnable /></PageTransition>} />
 
           <Route path="/admin/email/dashboard" element={<PageTransition><AdminEmailDashboard /></PageTransition>} />
           <Route path="/admin/campaigns/new-exit-plan" element={<PageTransition><AdminCampaignNewExitPlan /></PageTransition>} />
+          <Route path="/admin/campaigns/equinox-partnership" element={<PageTransition><AdminCampaignEquinoxPartnership /></PageTransition>} />
           <Route path="/email/thanks" element={<PageTransition><EmailFeedbackThanks /></PageTransition>} />
           <Route path="/notification-preferences" element={<PageTransition><NotificationPreferences /></PageTransition>} />
           <Route path="/account/support" element={<PageTransition><MyTickets /></PageTransition>} />
