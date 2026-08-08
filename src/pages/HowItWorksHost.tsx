@@ -93,7 +93,7 @@ const HowItWorksHost = () => {
                 {/* Quick proof */}
                 <div className="flex items-center gap-5 mt-7 text-sm text-muted-foreground">
                   <div className="flex items-center gap-1.5"><CheckCircle2 className="w-4 h-4 text-emerald-500" /> Free to list</div>
-                  <div className="flex items-center gap-1.5"><CheckCircle2 className="w-4 h-4 text-emerald-500" /> 24hr payouts</div>
+                  <div className="flex items-center gap-1.5"><CheckCircle2 className="w-4 h-4 text-emerald-500" /> No subscription</div>
                   <div className="flex items-center gap-1.5"><CheckCircle2 className="w-4 h-4 text-emerald-500" /> PayPal checkout</div>
                 </div>
               </motion.div>
@@ -131,8 +131,8 @@ const HowItWorksHost = () => {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
               {[
                 { v: '$3.2k', l: 'Avg monthly host earnings' },
-                { v: '24hr', l: 'Payout speed' },
-                { v: '12.9%', l: 'Flat platform fee' },
+                { v: 'PayPal', l: 'Secure checkout' },
+                { v: 'Optional', l: 'Identity verification add-on' },
                 { v: '12.9%', l: 'Platform fee — that\'s it' }].map((s) => (
                 <div key={s.l}>
                   <div className="text-2xl md:text-3xl font-bold text-foreground">{s.v}</div>

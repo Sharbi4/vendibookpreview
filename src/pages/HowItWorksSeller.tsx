@@ -31,12 +31,12 @@ const steps: WalkthroughStep[] = [
   { number: 2, title: 'Receive offers', description: 'Buyers send full-price purchases or counter-offers. Review, negotiate, or accept with one click.', icon: MessageSquare, mock: 'message' },
   { number: 3, title: 'Choose how you get paid', description: 'Enable PayPal Checkout, accept payment in person, or both — and optionally add Equinox Funding so buyers can finance.', icon: CreditCard, mock: 'payment' },
   { number: 4, title: 'Coordinate handoff', description: 'Local pickup or use Vendibook Freight ($4.50/mile) for nationwide delivery. We handle logistics quotes automatically.', icon: Truck, mock: 'truck' },
-  { number: 5, title: 'Get paid', description: 'Once the buyer confirms receipt, funds release to your bank instantly. Track everything in your dashboard.', icon: DollarSign, mock: 'payout' }];
+  { number: 5, title: 'Get paid', description: 'Once the buyer confirms receipt, Vendibook records your proceeds and issues your payout to the destination you saved. Track everything in your dashboard.', icon: DollarSign, mock: 'payout' }];
 
 const pillars: Pillar[] = [
   { icon: Users, title: 'Real buyers', description: 'Message, negotiate, and accept offers inside Vendibook.' },
   { icon: CreditCard, title: 'Buyer financing option', description: 'Add Equinox Funding to eligible sale listings to widen your buyer pool.' },
-  { icon: ShieldCheck, title: 'Payment Protection protection', description: 'Funds held until handoff is confirmed — fraud protection both ways.' },
+  { icon: ShieldCheck, title: 'Payment protection', description: 'PayPal-paid orders include PayPal\u2019s buyer and seller dispute protection.' },
   { icon: DollarSign, title: 'No upfront fees', description: 'Free to list. Pay only when the sale completes.' }];
 
 const faqs = [
