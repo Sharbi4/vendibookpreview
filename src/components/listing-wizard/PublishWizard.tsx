@@ -2704,6 +2704,7 @@ export const PublishWizard: React.FC = () => {
 
 
                   <PrimaryActionBar
+                    sticky
                     primary={{
                       label: isSaving ? 'Saving…' : 'Continue',
                       onClick: guardNext(
@@ -2872,6 +2873,7 @@ export const PublishWizard: React.FC = () => {
                   </div>
 
                   <PrimaryActionBar
+                    sticky
                     helper="At least 3 photos are required to continue."
                     primary={{
                       label: isSaving ? 'Saving…' : 'Continue',
@@ -3014,6 +3016,7 @@ export const PublishWizard: React.FC = () => {
                   </div>
 
                   <PrimaryActionBar
+                    sticky
                     secondary={{ label: 'Back', onClick: () => setStep('photos') }}
                     primary={{
                       label: isSaving ? 'Saving…' : 'Continue',
@@ -3176,6 +3179,7 @@ export const PublishWizard: React.FC = () => {
                   />
 
                   <PrimaryActionBar
+                    sticky
                     secondary={{ label: 'Back', onClick: () => setStep('headline') }}
                     primary={{
                       label: isSaving ? 'Saving…' : 'Continue',
@@ -3789,6 +3793,7 @@ export const PublishWizard: React.FC = () => {
 
                   <div className="pt-4">
                     <PrimaryActionBar
+                      sticky
                       secondary={{ label: 'Back', onClick: () => setStep('includes') }}
                       primary={{
                         label: isSaving ? 'Saving…' : 'Continue',
@@ -3932,6 +3937,7 @@ export const PublishWizard: React.FC = () => {
 
                   <div className="pt-4">
                     <PrimaryActionBar
+                      sticky
                       secondary={{ label: 'Back', onClick: () => setStep('pricing') }}
                       primary={{
                         label: isSaving ? 'Saving…' : 'Continue',
@@ -4281,6 +4287,7 @@ export const PublishWizard: React.FC = () => {
                   </div>
 
                   <PrimaryActionBar
+                    sticky
                     helper={
                       !user && isGuestDraft
                         ? 'Sign-in required to save your details.'
@@ -4630,6 +4637,7 @@ export const PublishWizard: React.FC = () => {
 
                   <div className="order-last">
                     <PrimaryActionBar
+                      sticky
                       secondary={{
                         label: 'Back',
                         onClick: () => setStep(listing.mode === 'rent' ? 'availability' : 'pricing'),
@@ -4843,6 +4851,7 @@ export const PublishWizard: React.FC = () => {
                   </div>
 
                   <PrimaryActionBar
+                    sticky
                     secondary={{ label: 'Back', onClick: () => setStep('location') }}
                     primary={{
                       label: isSaving ? 'Saving…' : 'Continue',
@@ -5087,6 +5096,7 @@ export const PublishWizard: React.FC = () => {
                   )}
 
                   <PrimaryActionBar
+                    sticky
                     sticky
                     secondary={{
                       label: 'Back',
