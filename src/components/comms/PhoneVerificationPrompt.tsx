@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useLocation } from "react-router-dom";
 import {
   Dialog,
   DialogContent,
@@ -71,11 +72,27 @@ export const PhoneVerificationPrompt = () => {
     return Date.now() - createdAt < SIGNUP_WINDOW_MS;
   }, [user?.created_at]);
 
+  // Never interrupt a high-intent flow (listing builder, checkout, payment
+  // return). The prompt waits until the seller is on a calmer surface.
+  const path = useLocation().pathname;
+  const inFocusedFlow = useMemo(() => {
+    const p = path.toLowerCase();
+    return (
+      p.startsWith('/list') ||
+      p.startsWith('/create-listing') ||
+      p.startsWith('/edit-listing') ||
+      p.startsWith('/checkout') ||
+      p.includes('checkout') ||
+      p.startsWith('/payment') ||
+      p.startsWith('/auth')
+    );
+  }, [path]);
+
   // Needs verification when there is no subscription row at all (OAuth signups)
   // or the row exists but the number was never confirmed.
   const needsVerification = useMemo(
-    () => !!user?.id && isNewSignup && !isLoading && !subscription?.verified,
-    [user?.id, isNewSignup, isLoading, subscription?.verified],
+    () => !!user?.id && isNewSignup && !isLoading && !subscription?.verified && !inFocusedFlow,
+    [user?.id, isNewSignup, isLoading, subscription?.verified, inFocusedFlow],
   );
 
   useEffect(() => {

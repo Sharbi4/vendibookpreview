@@ -235,6 +235,16 @@ export const PublishWizard: React.FC = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [step]);
 
+  // Keep ?step= in sync with the wizard position so leaving for an upgrade
+  // (or a refresh) always returns the seller to the exact same screen.
+  useEffect(() => {
+    const next = new URLSearchParams(window.location.search);
+    if (next.get('step') === step) return;
+    next.set('step', step);
+    setSearchParams(next, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step]);
+
   // Handle returns from PayPal Checkout (featured / notary / membership).
   // - Restore the step the user was on via ?step= (validated above).
   // - Show cancel/success toasts.
@@ -853,6 +863,36 @@ export const PublishWizard: React.FC = () => {
             deadline_offset_hours: undefined}));
           setRequiredDocuments(initialDocs);
         }
+      }
+
+      // Resume where the seller left off. Only when the URL does not already
+      // pin a step (deep links and post-payment returns keep their target).
+      if (!searchParams.get('step')) {
+        const d: any = data;
+        const isRent = d.mode === 'rent';
+        const hasBasics = !!d.condition && !!d.operational_status;
+        const hasPhotos = Array.isArray(d.image_urls) && d.image_urls.length >= 3;
+        const hasHeadline = !!d.title && !!d.description;
+        const hasIncludes =
+          typeof d.included_items === 'string' && d.included_items.trim().length >= 3;
+        const hasPrice = isRent
+          ? !!(d.price_daily || d.price_hourly || d.price_weekly || d.price_monthly)
+          : !!d.price_sale;
+        const hasLocation = !!(d.city && d.postal_code);
+        const resume: PublishStep = !hasBasics
+          ? 'basics'
+          : !hasPhotos
+            ? 'photos'
+            : !hasHeadline
+              ? 'headline'
+              : !hasIncludes
+                ? 'includes'
+                : !hasPrice
+                  ? 'pricing'
+                  : !hasLocation
+                    ? 'location'
+                    : 'review';
+        if (resume !== 'basics') setStep(resume);
       }
 
       setIsLoading(false);
