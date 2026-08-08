@@ -501,9 +501,10 @@ export const QuickStartWizard: React.FC = () => {
               </div>
             </div>
           </div>
-          <Button variant="ghost" onClick={() => setStep('category')} className="mt-2">
+          <Button type="button" variant="outline" onClick={() => setStep('category')} className="mt-2 min-w-[96px]">
             ← Back
           </Button>
+
         </div>
       )}
 
