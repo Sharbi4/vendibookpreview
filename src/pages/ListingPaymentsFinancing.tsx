@@ -44,7 +44,6 @@ export default function ListingPaymentsFinancing() {
   const [saving, setSaving] = useState(false);
 
   const [optIn, setOptIn] = useState(false);
-  const [includeVin, setIncludeVin] = useState(false);
   const [accepted, setAccepted] = useState(false);
   const [savedVersion, setSavedVersion] = useState<string | null>(null);
 
@@ -78,7 +77,6 @@ export default function ListingPaymentsFinancing() {
         if (!active) return;
         if (pref) {
           setOptIn(!!pref.equinox_opt_in);
-          setIncludeVin(!!pref.include_vin);
           setSavedVersion(pref.disclosure_version ?? null);
           setAccepted(pref.disclosure_version === EQUINOX_DISCLOSURE_VERSION);
         }
@@ -109,7 +107,7 @@ export default function ListingPaymentsFinancing() {
             listing_id: listing.id,
             host_id: user.id,
             equinox_opt_in: optIn,
-            include_vin: optIn ? includeVin : false,
+            include_vin: optIn,
             disclosure_version: optIn ? EQUINOX_DISCLOSURE_VERSION : savedVersion,
             disclosure_accepted_at: optIn ? new Date().toISOString() : null,
           },
@@ -211,18 +209,10 @@ export default function ListingPaymentsFinancing() {
 
             {optIn && (
               <div className="mt-5 space-y-4">
-                <label className="flex items-start gap-3 cursor-pointer">
-                  <Checkbox
-                    checked={includeVin}
-                    onCheckedChange={(v) => setIncludeVin(v === true)}
-                    className="mt-0.5"
-                  />
-                  <span className="text-xs text-muted-foreground leading-relaxed">
-                    Include the full VIN / serial number on the financing purchase summary. The full
-                    VIN is never shown on the public listing page &mdash; it only appears on the
-                    generated summary when you check this box.
-                  </span>
-                </label>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  If you provided a VIN / serial number, it is never shown on your public listing,
+                  but it is printed on the financing purchase summary the buyer and lender receive.
+                </p>
 
                 <div className="rounded-xl border-2 border-white/10 bg-black/40 p-4">
                   <div className="flex items-center gap-2 mb-2">
