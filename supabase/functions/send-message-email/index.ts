@@ -33,6 +33,7 @@ Deno.serve(async (req) => {
           messagePreview: b.message_preview || b.messagePreview,
           conversationId,
           unreadCount: b.unread_count || 1,
+          linkPath,
         },
       },
     });
