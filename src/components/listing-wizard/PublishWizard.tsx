@@ -5001,20 +5001,32 @@ export const PublishWizard: React.FC = () => {
                   {/* Persisted AI health score */}
                   <ListingHealthScoreCard listingId={listing?.id} />
 
-                  {/* Missing Requirements Warning */}
+                  {/* Missing Requirements Warning — names every outstanding item */}
                   {!canPublish && (
-                    <div className="p-4 rounded-xl border border-border bg-muted/30">
+                    <div className="p-4 rounded-xl border border-destructive/40 bg-destructive/10">
                       <div className="flex items-start gap-3">
-                        <AlertCircle className="w-5 h-5 text-foreground mt-0.5" />
-                        <div>
-                          <p className="font-medium text-foreground">Cannot publish yet</p>
-                          <p className="text-sm text-muted-foreground mt-0.5">
-                            Complete all required checklist items before publishing.
+                        <AlertCircle className="w-5 h-5 text-destructive mt-0.5 shrink-0" />
+                        <div className="min-w-0">
+                          <p className="font-medium text-foreground">
+                            Cannot publish yet — {publishBlockers.length}{' '}
+                            {publishBlockers.length === 1 ? 'item is' : 'items are'} still required
                           </p>
+                          <ul className="mt-2 space-y-1">
+                            {publishBlockers.map((blocker) => (
+                              <li key={blocker} className="flex items-start gap-2 text-sm text-foreground">
+                                <span
+                                  aria-hidden="true"
+                                  className="mt-[7px] h-1.5 w-1.5 shrink-0 rounded-full bg-destructive"
+                                />
+                                <span>{blocker}</span>
+                              </li>
+                            ))}
+                          </ul>
                         </div>
                       </div>
                     </div>
                   )}
+
 
                   {/* Ready to Publish Message */}
                   {canPublish && (
