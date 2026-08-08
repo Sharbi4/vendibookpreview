@@ -13,6 +13,7 @@ import { usePaymentsTransition } from '@/hooks/usePaymentsTransition';
 import { PayPalWordmark } from '@/components/brand/ProviderLogos';
 import { EquinoxFundingLogo } from '@/components/brand/ProviderLogos';
 import { GetVerifiedButton } from '@/components/verification/GetVerifiedButton';
+import { useSellerVerification } from '@/hooks/useSellerVerification';
 
 const PANEL =
   'rounded-2xl border-2 border-white/12 bg-[linear-gradient(140deg,#101014_0%,#08080a_60%,#15151b_100%)] shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]';
@@ -24,7 +25,13 @@ const PANEL =
  */
 export function PaymentsTransitionModal() {
   const { isLoading, isEligible, acknowledged, membership, acknowledge } = usePaymentsTransition();
+  const sellerVerification = useSellerVerification();
   const [open, setOpen] = useState(false);
+  // Once the badge is active the offer disappears everywhere — no upsell card,
+  // no "Get verified" prompt, just the badge already on their listings.
+  const alreadyVerified =
+    sellerVerification.state?.badge_active === true ||
+    sellerVerification.offer.enabled === false;
 
   useEffect(() => {
     if (!isLoading && isEligible && !acknowledged) setOpen(true);
@@ -103,24 +110,26 @@ export function PaymentsTransitionModal() {
             Optional upgrades for your listings
           </p>
 
-          <div className={`${PANEL} p-4`}>
-            <div className="flex items-start gap-3">
-              <span className="verified-metallic flex h-9 w-9 shrink-0 items-center justify-center rounded-full">
-                <BadgeCheck className="h-4.5 w-4.5" strokeWidth={2.4} aria-hidden="true" />
-              </span>
-              <div className="min-w-0 flex-1">
-                <p className="text-sm font-semibold text-foreground">
-                  Stand out as a Verified Seller
-                </p>
-                <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
-                  Add a green Identity Verified badge to your profile and every active listing. One-time fee. Not a subscription, never required.
-                </p>
-                <div className="mt-3">
-                  <GetVerifiedButton size="sm" showPrice />
+          {!alreadyVerified && (
+            <div className={`${PANEL} p-4`}>
+              <div className="flex items-start gap-3">
+                <span className="verified-metallic flex h-9 w-9 shrink-0 items-center justify-center rounded-full">
+                  <BadgeCheck className="h-4.5 w-4.5" strokeWidth={2.4} aria-hidden="true" />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-semibold text-foreground">
+                    Stand out as a Verified Seller
+                  </p>
+                  <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
+                    Add a green Identity Verified badge to your profile and every active listing. One-time fee. Not a subscription, never required.
+                  </p>
+                  <div className="mt-3">
+                    <GetVerifiedButton size="sm" showPrice />
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
+          )}
 
           <div className={`${PANEL} p-4`}>
             <div className="flex items-start gap-3">

@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { useSellerVerification } from '@/hooks/useSellerVerification';
 
 interface NextStepConfig {
   id: string;
@@ -46,6 +47,12 @@ const EnhancedProfileNextStepCard = ({
   isLoadingPayout,
   onSetUpPayouts,
   isSavingPayouts}: EnhancedProfileNextStepCardProps) => {
+  const sellerVerification = useSellerVerification();
+  // Verified sellers never see the offer again, even if the profile flag lags.
+  const verified =
+    isVerified ||
+    sellerVerification.state?.badge_active === true ||
+    sellerVerification.offer.enabled === false;
   const allSteps: NextStepConfig[] = [
     {
       id: 'verify',
@@ -103,7 +110,7 @@ const EnhancedProfileNextStepCard = ({
     if (draftCount > 0) return allSteps.find(s => s.id === 'drafts')!;
     if (pendingRequestCount > 0) return allSteps.find(s => s.id === 'requests')!;
     if (!isHost) return allSteps.find(s => s.id === 'create')!;
-    if (!isVerified) return allSteps.find(s => s.id === 'verify')!;
+    if (!verified) return allSteps.find(s => s.id === 'verify')!;
     return null;
   };
 

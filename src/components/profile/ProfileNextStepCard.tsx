@@ -11,6 +11,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
+import { useSellerVerification } from '@/hooks/useSellerVerification';
 
 interface NextStepConfig {
   id: string;
@@ -44,6 +45,12 @@ const ProfileNextStepCard = ({
   onSetUpPayouts,
   isSavingPayouts,
 }: ProfileNextStepCardProps) => {
+  const sellerVerification = useSellerVerification();
+  // Verified sellers never see the offer again, even if the profile flag lags.
+  const verified =
+    isVerified ||
+    sellerVerification.state?.badge_active === true ||
+    sellerVerification.offer.enabled === false;
   // Define all possible next steps with priority
   const allSteps: NextStepConfig[] = [
     {
@@ -116,7 +123,7 @@ const ProfileNextStepCard = ({
     }
 
     // Last: optional paid verification add-on (never a gate)
-    if (!isVerified) {
+    if (!verified) {
       return allSteps.find(s => s.id === 'verify')!;
     }
 
