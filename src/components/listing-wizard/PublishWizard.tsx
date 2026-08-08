@@ -4384,11 +4384,21 @@ export const PublishWizard: React.FC = () => {
                               </div>
                             </div>
                           </div>
+                          <div className="space-y-2">
+                            <Label className="text-base font-medium">Delivery instructions (optional)</Label>
+                            <Textarea
+                              value={deliveryInstructions}
+                              onChange={(e) => setDeliveryInstructions(e.target.value)}
+                              placeholder="Any special requirements for delivery?"
+                              rows={2}
+                            />
+                          </div>
                           <p className="text-xs text-muted-foreground">
                             The buyer enters their own delivery address at checkout. We measure the distance from your location and
                             {deliveryFeeType === 'per_mile' ? ' multiply it by your per-mile rate.' : ' apply your flat delivery charge.'}
                             {' '}Addresses beyond your radius are flagged so you can approve or decline.
                           </p>
+
                         </>
                       )}
 
