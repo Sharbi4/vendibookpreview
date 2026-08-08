@@ -5097,7 +5097,6 @@ export const PublishWizard: React.FC = () => {
 
                   <PrimaryActionBar
                     sticky
-                    sticky
                     secondary={{
                       label: 'Back',
                       onClick: () => setStep('location'),

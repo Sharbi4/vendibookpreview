@@ -101,8 +101,9 @@ serve(async (req) => {
         postal_code: zipCode || null,
         latitude: latitude ?? null,
         longitude: longitude ?? null,
-        accept_paypal_checkout: mode === "sale" ? true : null,
-        accept_cash_payment: mode === "sale" ? false : null,
+        // accept_paypal_checkout is NOT NULL in the database — never write null.
+        accept_paypal_checkout: mode === "sale",
+        accept_cash_payment: false,
       })
       .select("id")
       .single();
