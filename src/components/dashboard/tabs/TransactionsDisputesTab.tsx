@@ -104,6 +104,10 @@ const TransactionsDisputesTab = () => {
         </p>
       </header>
 
+      <BoostHistoryPanel />
+
+
+
       <div className="flex flex-wrap gap-2">
         {FILTERS.map((f) => (
           <button
