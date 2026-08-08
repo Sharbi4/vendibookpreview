@@ -86,6 +86,8 @@ import { StepWhat, type StepWhatValues } from './stages/StepWhat';
 import { ListingDisclosures, type DisclosureValues } from './stages/ListingDisclosures';
 import { PhotoGuidance } from './stages/PhotoGuidance';
 import { PrivacySummary } from './stages/PrivacySummary';
+import { MissingRequirementsAlert } from './MissingRequirementsAlert';
+
 import {
   PublishAttestations,
   emptyAttestations,
@@ -234,36 +236,50 @@ export const PublishWizard: React.FC = () => {
 
   // Turns on inline red validation after a failed "Continue" attempt.
   const [showStepErrors, setShowStepErrors] = useState(false);
+  // Every requirement still missing on the current step, surfaced at the top
+  // of the card after a failed Continue/Publish attempt.
+  const [stepBlockers, setStepBlockers] = useState<string[]>([]);
 
   // Scroll to top when step changes
   useEffect(() => {
     setShowStepErrors(false);
+    setStepBlockers([]);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [step]);
 
   /**
    * Blocks navigation when a step still has required answers missing:
-   * highlights the fields in red, scrolls to the first one and toasts.
+   * lists them at the top of the step, highlights the fields in red,
+   * scrolls to the summary and toasts.
    */
   const guardNext = (blockers: string[], firstFieldId: string | null, proceed: () => void) => () => {
     if (blockers.length > 0) {
       setShowStepErrors(true);
+      setStepBlockers(blockers);
       toast({
-        title: 'A few answers are still needed',
-        description: blockers[0],
+        title:
+          blockers.length === 1
+            ? '1 required field is missing'
+            : `${blockers.length} required fields are missing`,
+        description: blockers.join(' · '),
         variant: 'destructive',
       });
-      if (firstFieldId) {
-        requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        const summary = document.getElementById('wizard-missing-required');
+        if (summary) {
+          summary.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        } else if (firstFieldId) {
           document
             .getElementById(firstFieldId)
             ?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        });
-      }
+        }
+      });
       return;
     }
+    setStepBlockers([]);
     proceed();
   };
+
 
 
   // Keep ?step= in sync with the wizard position so leaving for an upgrade
@@ -2516,6 +2532,17 @@ export const PublishWizard: React.FC = () => {
     checklistItems.filter(i => i.required).every(i => i.completed) && stageMissing.length === 0;
   const canPublish = stageRequirementsMet && allAttested(attestations);
 
+  // Everything still standing between this draft and publishing, in plain
+  // language, so the review step never shows an unexplained disabled button.
+  const publishBlockers: string[] = [
+    ...checklistItems
+      .filter((i) => i.required && !i.completed)
+      .map((i) => (i as any).label ?? (i as any).title ?? 'Incomplete step'),
+    ...stageMissing.map((r) => r.label),
+    ...(allAttested(attestations) ? [] : ['Confirm the statements at the bottom of this page']),
+  ];
+
+
   // Per-step required answers. Steps can't be skipped while these are missing.
   const basicsMissing = stageMissing.filter((r) => r.step === 'basics');
   // Disclosure requirements are collected on the "What's included" step.
@@ -2649,6 +2676,8 @@ export const PublishWizard: React.FC = () => {
             />
 
             <div className="bg-card rounded-2xl shadow-sm border p-6 md:p-8">
+              <MissingRequirementsAlert blockers={stepBlockers} className="mb-6" />
+
               {/* Stage 1: What are you listing? */}
               {step === 'basics' && (
                 <div className="space-y-6">
@@ -4972,20 +5001,32 @@ export const PublishWizard: React.FC = () => {
                   {/* Persisted AI health score */}
                   <ListingHealthScoreCard listingId={listing?.id} />
 
-                  {/* Missing Requirements Warning */}
+                  {/* Missing Requirements Warning — names every outstanding item */}
                   {!canPublish && (
-                    <div className="p-4 rounded-xl border border-border bg-muted/30">
+                    <div className="p-4 rounded-xl border border-destructive/40 bg-destructive/10">
                       <div className="flex items-start gap-3">
-                        <AlertCircle className="w-5 h-5 text-foreground mt-0.5" />
-                        <div>
-                          <p className="font-medium text-foreground">Cannot publish yet</p>
-                          <p className="text-sm text-muted-foreground mt-0.5">
-                            Complete all required checklist items before publishing.
+                        <AlertCircle className="w-5 h-5 text-destructive mt-0.5 shrink-0" />
+                        <div className="min-w-0">
+                          <p className="font-medium text-foreground">
+                            Cannot publish yet — {publishBlockers.length}{' '}
+                            {publishBlockers.length === 1 ? 'item is' : 'items are'} still required
                           </p>
+                          <ul className="mt-2 space-y-1">
+                            {publishBlockers.map((blocker) => (
+                              <li key={blocker} className="flex items-start gap-2 text-sm text-foreground">
+                                <span
+                                  aria-hidden="true"
+                                  className="mt-[7px] h-1.5 w-1.5 shrink-0 rounded-full bg-destructive"
+                                />
+                                <span>{blocker}</span>
+                              </li>
+                            ))}
+                          </ul>
                         </div>
                       </div>
                     </div>
                   )}
+
 
                   {/* Ready to Publish Message */}
                   {canPublish && (
@@ -5051,9 +5092,11 @@ export const PublishWizard: React.FC = () => {
                     }}
                     primary={{
                       label: 'Publish Listing',
-                      onClick: () => setShowPublishDialog(true),
-                      disabled: isSaving || !canPublish,
+                      onClick: guardNext(publishBlockers, null, () => setShowPublishDialog(true)),
+                      disabled: isSaving,
                     }}
+                    blockers={publishBlockers}
+
                   />
                 </div>
               )}
