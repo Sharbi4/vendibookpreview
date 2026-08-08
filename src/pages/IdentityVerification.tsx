@@ -89,10 +89,12 @@ const IdentityVerification = () => {
           />
           <div className="container relative z-10">
             <div className="mx-auto max-w-3xl text-center">
-              <span className="verified-metallic mb-5 inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em]">
-                <BadgeCheck className="h-3.5 w-3.5" strokeWidth={2.4} aria-hidden="true" />
-                Verified Seller
-              </span>
+                <IdentityVerifiedBadge
+                  verified={true}
+                  size="lg"
+                  withDetails
+                  className="mx-auto mb-5"
+                />
               <h1 className="mb-4 text-3xl font-bold tracking-tight text-foreground sm:text-4xl md:text-5xl">
                 Show buyers it&rsquo;s really you.
               </h1>
