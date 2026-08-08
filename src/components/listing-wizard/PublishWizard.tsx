@@ -349,7 +349,6 @@ export const PublishWizard: React.FC = () => {
   const [equinoxDisclosureAccepted, setEquinoxDisclosureAccepted] = useState(false);
   // Separate, always-unchecked-by-default consent to put the full VIN/serial on
   // the private, server-generated purchase sheet.
-  const [equinoxIncludeVin, setEquinoxIncludeVin] = useState(false);
   // VIN / serial lives only in the private listing_ownership_details row.
   const [vinSerial, setVinSerial] = useState('');
   const [vinUnavailable, setVinUnavailable] = useState(false);
@@ -366,7 +365,7 @@ export const PublishWizard: React.FC = () => {
             listing_id: listing.id,
             host_id: user.id,
             equinox_opt_in: equinoxOptIn,
-            include_vin: equinoxOptIn ? equinoxIncludeVin : false,
+            include_vin: equinoxOptIn,
             disclosure_version: equinoxOptIn ? EQUINOX_DISCLOSURE_VERSION : null,
             disclosure_accepted_at:
               equinoxOptIn && equinoxDisclosureAccepted ? new Date().toISOString() : null,
@@ -376,7 +375,7 @@ export const PublishWizard: React.FC = () => {
     } catch (err) {
       console.error('Failed to save financing preference', err);
     }
-  }, [user, listing, equinoxOptIn, equinoxDisclosureAccepted, equinoxIncludeVin]);
+  }, [user, listing, equinoxOptIn, equinoxDisclosureAccepted]);
 
   /**
    * VIN / serial is private data: it is stored only on
@@ -467,7 +466,6 @@ export const PublishWizard: React.FC = () => {
         .maybeSingle();
       if (cancelled || !data) return;
       setEquinoxOptIn(!!data.equinox_opt_in);
-      setEquinoxIncludeVin(!!data.include_vin);
       setEquinoxDisclosureAccepted(
         !!data.disclosure_accepted_at && data.disclosure_version === EQUINOX_DISCLOSURE_VERSION,
       );
@@ -3207,22 +3205,11 @@ export const PublishWizard: React.FC = () => {
                                   </Label>
                                 </div>
                                 {isTitledSaleCategory(listing) && (
-                                  <div className="flex items-start space-x-3">
-                                    <Checkbox
-                                      id="equinox_include_vin"
-                                      checked={equinoxIncludeVin}
-                                      onCheckedChange={(checked) => setEquinoxIncludeVin(!!checked)}
-                                      className="mt-0.5"
-                                    />
-                                    <Label
-                                      htmlFor="equinox_include_vin"
-                                      className="text-sm font-medium cursor-pointer"
-                                    >
-                                      Include my full VIN / serial number on the financing purchase
-                                      sheet. It stays off my public listing, but it will be printed
-                                      on the pro forma invoice the buyer and lender receive.
-                                    </Label>
-                                  </div>
+                                  <p className="text-xs text-muted-foreground">
+                                    If you provided a VIN / serial number, it stays off your public
+                                    listing but is printed on the financing purchase sheet the buyer
+                                    and lender receive.
+                                  </p>
                                 )}
                               </div>
                             )}
