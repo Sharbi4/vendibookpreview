@@ -50,9 +50,17 @@ const FeaturedPaymentReceiptEmail = ({ firstName,
             {firstName ? `You're featured, ${firstName}.` : "You're featured."}
           </Heading>
           <Text style={s.lede}>
-            Your boost payment was successful and your listing is now pinned to
-            the top of search results for the next 30 days.
+            Your boost payment was successful and your listing is now pinned to the
+            top of search results
+            {startsAt && expiresAt
+              ? ` from ${startsAt} through ${expiresAt}.`
+              : expiresAt
+                ? ` through ${expiresAt}.`
+                : durationLabel
+                  ? ` for the next ${durationLabel}.`
+                  : '.'}
           </Text>
+
 
           <Section style={s.detailGrid}>
             <Text style={s.detailLabel}>LISTING</Text>
