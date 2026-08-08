@@ -171,8 +171,12 @@ const HowItWorks = () => {
                   Rent, buy, host, or sell —<br className="hidden md:block" /> all in one place.
                 </h1>
                 <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-xl leading-relaxed">
-                  Vendibook connects verified buyers, renters, hosts, and sellers of food trucks, trailers, commercial kitchens, and vendor spaces. Secure payments, automated documents, nationwide delivery.
+                  Vendibook connects buyers, renters, hosts, and sellers of food trucks, trailers, commercial kitchens, and vendor spaces. PayPal checkout, optional Equinox financing, automated documents, nationwide delivery.
                 </p>
+                <div className="mb-7">
+                  <ProviderTrustStrip />
+                </div>
+
                 <div className="flex flex-wrap gap-3">
                   <Button size="lg" variant="glass-cta" className="rounded-full" asChild>
                     <Link to="/search">
