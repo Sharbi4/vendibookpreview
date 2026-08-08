@@ -364,6 +364,14 @@ export const QuickStartWizard: React.FC = () => {
       {/* Step: Category */}
       {step === 'category' && (
         <div className="space-y-6">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate('/list/start')}
+            className="pl-0 text-xs sm:text-sm text-muted-foreground"
+          >
+            ← Back
+          </Button>
           <div className="relative overflow-hidden rounded-2xl border-0 shadow-xl bg-card/80 backdrop-blur-sm">
             {/* Header */}
             <div className="relative bg-muted/30 border-b border-border px-4 sm:px-6 py-4 sm:py-5">
