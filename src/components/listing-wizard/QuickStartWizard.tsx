@@ -1,6 +1,6 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Truck, Store, Building2, MapPin, Tag, ShoppingBag, MapPinned, Loader2, Check, CheckCircle2, AlertCircle} from 'lucide-react';
+import { Truck, Building2, MapPin, Tag, ShoppingBag, Loader2, Check, CheckCircle2, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -8,11 +8,15 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { invokeEdge } from '@/lib/edge/invokeFunction';
-import { ListingCategory, ListingMode, CATEGORY_LABELS } from '@/types/listing';
+import { ListingCategory, ListingMode } from '@/types/listing';
 import { cn } from '@/lib/utils';
-import { trackDraftCreated, trackEvent } from '@/lib/analytics';
-
-type QuickStartStep = 'category' | 'mode' | 'location' | 'created';
+import { trackDraftCreated } from '@/lib/analytics';
+import {
+  createQuickStartRequestKey,
+  isQuickStartLocationReady,
+  previousQuickStartStep,
+  type QuickStartStep,
+} from '@/lib/listings/quickStart';
 
 interface QuickStartData {
   category: ListingCategory | null;
@@ -23,6 +27,14 @@ interface QuickStartData {
   state: string;
   latitude: number | null;
   longitude: number | null;
+}
+
+interface GeocodeResult {
+  city?: string;
+  text?: string;
+  state?: string;
+  context?: string;
+  center?: [number, number];
 }
 
 const categoryOptions = [
@@ -38,7 +50,13 @@ const modeOptions = [
 const QUICKSTART_STORAGE_KEY = 'vendibook_quickstart_draft';
 const QUICKSTART_RESUME_KEY = 'vendibook_quickstart_resume';
 
-const loadPersistedQuickStart = (): { data: QuickStartData; step: QuickStartStep } | null => {
+interface PersistedQuickStart {
+  data: QuickStartData;
+  step: QuickStartStep;
+  requestKey?: string;
+}
+
+const loadPersistedQuickStart = (): PersistedQuickStart | null => {
   try {
     const raw = sessionStorage.getItem(QUICKSTART_STORAGE_KEY);
     if (!raw) return null;
@@ -58,6 +76,7 @@ export const QuickStartWizard: React.FC = () => {
   const persisted = typeof window !== 'undefined' ? loadPersistedQuickStart() : null;
 
   const [step, setStep] = useState<QuickStartStep>(persisted?.step ?? 'category');
+  const [requestKey] = useState(() => persisted?.requestKey ?? createQuickStartRequestKey());
   const [data, setData] = useState<QuickStartData>(persisted?.data ?? {
     category: null,
     mode: null,
@@ -70,8 +89,15 @@ export const QuickStartWizard: React.FC = () => {
   const [isCreating, setIsCreating] = useState(false);
   const [isLookingUpZip, setIsLookingUpZip] = useState(false);
   const [zipError, setZipError] = useState<string | null>(null);
-  const [zipConfirmed, setZipConfirmed] = useState(!!persisted?.data?.latitude);
+  const [zipConfirmed, setZipConfirmed] = useState(
+    !!persisted?.data?.latitude && isQuickStartLocationReady(persisted.data),
+  );
   const [createdListingId, setCreatedListingId] = useState<string | null>(null);
+  const latestZipLookupRef = useRef(0);
+  const manualLocationEditedRef = useRef(false);
+  const isCreatingRef = useRef(false);
+
+  const locationReady = isQuickStartLocationReady(data);
 
   // Persist wizard progress so it survives sign-in redirects and refreshes.
   useEffect(() => {
@@ -79,27 +105,31 @@ export const QuickStartWizard: React.FC = () => {
     try {
       sessionStorage.setItem(
         QUICKSTART_STORAGE_KEY,
-        JSON.stringify({ data, step })
+        JSON.stringify({ data, step, requestKey })
       );
-    } catch {}
-  }, [data, step]);
+    } catch {
+      // sessionStorage can be unavailable in privacy-restricted browsers.
+    }
+  }, [data, requestKey, step]);
 
   const lookupZipCode = useCallback(async (zip: string) => {
     if (zip.length !== 5) return;
 
+    const lookupId = ++latestZipLookupRef.current;
     setIsLookingUpZip(true);
     setZipError(null);
     setZipConfirmed(false);
 
     try {
-      const { data: geoData, error } = await invokeEdge<{ results?: any[] }>('geocode-location', {
+      const { data: geoData, error } = await invokeEdge<{ results?: GeocodeResult[] }>('geocode-location', {
         body: { query: zip, limit: 1 }}, { retries: 2 });
 
       if (error) throw new Error(error);
 
       const result = geoData?.results?.[0];
+      if (lookupId !== latestZipLookupRef.current) return;
       if (!result) {
-        setZipError("We couldn't find that ZIP code. Double-check the digits or try a nearby ZIP.");
+        setZipError("We couldn't auto-fill that ZIP. Enter the city and state below to continue.");
         return;
       }
 
@@ -108,40 +138,61 @@ export const QuickStartWizard: React.FC = () => {
       const [lng, lat] = Array.isArray(result.center) ? result.center : [];
 
       if (!city || !state || typeof lat !== 'number' || typeof lng !== 'number') {
-        setZipError("We found the ZIP, but couldn't confirm the city/state. Try a nearby ZIP code.");
+        setZipError("We couldn't auto-fill the city and state. Enter them below to continue.");
         return;
       }
 
-      setData(prev => ({
-        ...prev,
-        city,
-        state,
-        latitude: lat,
-        longitude: lng,
-        location: `${city}, ${state}`}));
-      setZipConfirmed(true);
+      if (!manualLocationEditedRef.current) {
+        setData(prev => prev.zipCode === zip ? ({
+          ...prev,
+          city,
+          state,
+          latitude: lat,
+          longitude: lng,
+          location: `${city}, ${state}`,
+        }) : prev);
+        setZipConfirmed(true);
+      }
     } catch (error) {
+      if (lookupId !== latestZipLookupRef.current) return;
       console.error('[QuickStartWizard] ZIP lookup failed:', error);
-      setZipError("We're having trouble looking up that ZIP right now. Please try again.");
+      setZipError("We couldn't auto-fill the ZIP right now. Enter the city and state below to continue.");
     } finally {
-      setIsLookingUpZip(false);
+      if (lookupId === latestZipLookupRef.current) setIsLookingUpZip(false);
     }
   }, []);
 
   const handleZipChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value.replace(/\D/g, '').slice(0, 5);
 
-    setData(prev => ({
+    latestZipLookupRef.current += 1;
+    manualLocationEditedRef.current = false;
+    setData(prev => prev.zipCode === val ? prev : ({
       ...prev,
       zipCode: val,
-      ...(val.length < 5
-        ? { city: '', state: '', latitude: null, longitude: null, location: '' }
-        : {})}));
+      city: '',
+      state: '',
+      latitude: null,
+      longitude: null,
+      location: '',
+    }));
 
-    if (val.length < 5) {
+    if (val.length !== 5) {
       setZipConfirmed(false);
       setZipError(null);
     }
+  }, []);
+
+  const handleManualLocationChange = useCallback((field: 'city' | 'state', value: string) => {
+    manualLocationEditedRef.current = true;
+    setZipConfirmed(false);
+    setData(prev => {
+      const next = { ...prev, [field]: value, latitude: null, longitude: null };
+      return {
+        ...next,
+        location: [next.city.trim(), next.state.trim()].filter(Boolean).join(', '),
+      };
+    });
   }, []);
 
   useEffect(() => {
@@ -161,63 +212,43 @@ export const QuickStartWizard: React.FC = () => {
     setStep('location');
   };
 
-  const handleLocationChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setData(prev => ({ ...prev, location: e.target.value }));
-  };
-
-  const handleUseMyLocation = () => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        async (position) => {
-          try {
-            // Use the geocode-location edge function for reverse geocoding
-            const { data: geocodeData } = await supabase.functions.invoke('geocode-location', {
-              body: { 
-                query: `${position.coords.latitude},${position.coords.longitude}`,
-                limit: 1 
-              }
-            });
-            
-            if (geocodeData?.results?.[0]?.placeName) {
-              setData(prev => ({ 
-                ...prev, 
-                location: geocodeData.results[0].placeName 
-              }));
-            } else {
-              // Fallback to coordinates if geocoding fails
-              setData(prev => ({ 
-                ...prev, 
-                location: `${position.coords.latitude.toFixed(4)}, ${position.coords.longitude.toFixed(4)}` 
-              }));
-            }
-          } catch {
-            setData(prev => ({ 
-              ...prev, 
-              location: `${position.coords.latitude.toFixed(4)}, ${position.coords.longitude.toFixed(4)}` 
-            }));
-          }
-        },
-        () => {
-          toast({ title: 'Could not get location', variant: 'destructive' });
-        }
-      );
+  const handleBack = () => {
+    const previous = previousQuickStartStep(step);
+    if (previous) {
+      setStep(previous);
+      return;
     }
+    navigate('/list/start');
   };
 
   const handleCreateDraft = async () => {
     if (!data.category || !data.mode) return;
+    if (!locationReady) {
+      toast({
+        title: 'Add the listing location',
+        description: 'Enter a valid 5-digit ZIP, city, and state to continue.',
+        variant: 'destructive',
+      });
+      return;
+    }
 
     // User must be authenticated to create a listing
     if (!user) {
       // Mark that we want to auto-resume draft creation after sign-in.
-      try { sessionStorage.setItem(QUICKSTART_RESUME_KEY, '1'); } catch {}
+      try {
+        sessionStorage.setItem(QUICKSTART_RESUME_KEY, '1');
+      } catch {
+        // The form state still remains in React memory for this visit.
+      }
       toast({
         title: 'Almost there — sign in to save your listing',
         description: "We saved your progress. Sign in and we'll finish creating your draft."});
-      navigate('/auth?redirect=/list');
+      navigate(`/auth?redirect=${encodeURIComponent('/list?start=true')}`);
       return;
     }
 
+    if (isCreatingRef.current) return;
+    isCreatingRef.current = true;
     setIsCreating(true);
 
     try {
@@ -230,7 +261,11 @@ export const QuickStartWizard: React.FC = () => {
         // User exists but has no active session — most commonly they just
         // signed up and haven't confirmed their email yet. Guide them
         // instead of showing a generic red error.
-        try { sessionStorage.setItem(QUICKSTART_RESUME_KEY, '1'); } catch {}
+        try {
+          sessionStorage.setItem(QUICKSTART_RESUME_KEY, '1');
+        } catch {
+          // The form state still remains in React memory for this visit.
+        }
         toast({
           title: 'Check your email to confirm your account',
           description: "We saved your listing progress. Click the confirmation link, then return to /list and we'll finish creating your draft.",
@@ -244,12 +279,13 @@ export const QuickStartWizard: React.FC = () => {
         body: {
           mode: data.mode,
           category: data.category,
-          location: data.location || null,
-          city: data.city || null,
-          state: data.state || null,
-          zipCode: data.zipCode || null,
+          location: [data.city.trim(), data.state.trim()].join(', '),
+          city: data.city.trim(),
+          state: data.state.trim(),
+          zipCode: data.zipCode,
           latitude,
           longitude,
+          idempotencyKey: requestKey,
         },
       });
 
@@ -264,7 +300,9 @@ export const QuickStartWizard: React.FC = () => {
       try {
         sessionStorage.removeItem(QUICKSTART_STORAGE_KEY);
         sessionStorage.removeItem(QUICKSTART_RESUME_KEY);
-      } catch {}
+      } catch {
+        // Draft creation already succeeded; storage cleanup is best-effort.
+      }
 
       // Track analytics event
       trackDraftCreated(data.category || undefined);
@@ -277,6 +315,7 @@ export const QuickStartWizard: React.FC = () => {
         description: raw || 'Please try again — your progress is saved.',
         variant: 'destructive'});
     } finally {
+      isCreatingRef.current = false;
       setIsCreating(false);
     }
   };
@@ -287,9 +326,15 @@ export const QuickStartWizard: React.FC = () => {
     let shouldResume = false;
     try {
       shouldResume = sessionStorage.getItem(QUICKSTART_RESUME_KEY) === '1';
-    } catch {}
-    if (shouldResume && data.category && data.mode && data.latitude && data.longitude && !isCreating && step !== 'created') {
-      try { sessionStorage.removeItem(QUICKSTART_RESUME_KEY); } catch {}
+    } catch {
+      // No persisted resume marker is equivalent to a normal wizard visit.
+    }
+    if (shouldResume && data.category && data.mode && locationReady && !isCreating && step !== 'created') {
+      try {
+        sessionStorage.removeItem(QUICKSTART_RESUME_KEY);
+      } catch {
+        // The in-flight guard still prevents duplicate draft creation.
+      }
       handleCreateDraft();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -333,6 +378,15 @@ export const QuickStartWizard: React.FC = () => {
 
   return (
     <div className="max-w-2xl mx-auto">
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={handleBack}
+        className="mb-4 pl-0 text-xs sm:text-sm text-muted-foreground"
+      >
+        ← Back
+      </Button>
+
       {/* Progress indicator */}
       <div className="flex items-center gap-2 mb-6 sm:mb-8">
         {[1, 2, 3].map((num) => (
@@ -364,14 +418,6 @@ export const QuickStartWizard: React.FC = () => {
       {/* Step: Category */}
       {step === 'category' && (
         <div className="space-y-6">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => navigate('/list/start')}
-            className="pl-0 text-xs sm:text-sm text-muted-foreground"
-          >
-            ← Back
-          </Button>
           <div className="relative overflow-hidden rounded-2xl border-0 shadow-xl bg-card/80 backdrop-blur-sm">
             {/* Header */}
             <div className="relative bg-muted/30 border-b border-border px-4 sm:px-6 py-4 sm:py-5">
@@ -461,9 +507,6 @@ export const QuickStartWizard: React.FC = () => {
               </div>
             </div>
           </div>
-          <Button variant="ghost" onClick={() => setStep('category')} className="mt-2">
-            ← Back
-          </Button>
         </div>
       )}
 
@@ -536,14 +579,43 @@ export const QuickStartWizard: React.FC = () => {
                     </div>
                   )}
 
-                  {zipConfirmed && data.city && data.state && (
+                  {data.zipCode.length === 5 && (
+                    <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_140px]">
+                      <div className="space-y-2">
+                        <Label htmlFor="quickStartCity">City *</Label>
+                        <Input
+                          id="quickStartCity"
+                          autoComplete="address-level2"
+                          value={data.city}
+                          onChange={(event) => handleManualLocationChange('city', event.target.value)}
+                          placeholder="Tucson"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="quickStartState">State *</Label>
+                        <Input
+                          id="quickStartState"
+                          autoComplete="address-level1"
+                          value={data.state}
+                          onChange={(event) => handleManualLocationChange('state', event.target.value)}
+                          placeholder="AZ"
+                          maxLength={40}
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {locationReady && (
                     <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-4 animate-in fade-in-50 slide-in-from-top-2 duration-300">
                       <div className="flex items-start gap-3">
                         <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-emerald-500" />
                         <div>
                           <p className="text-sm font-medium text-foreground">Your listing will appear in</p>
                           <p className="mt-1 text-lg font-bold text-foreground">{data.city}, {data.state}</p>
-                          <p className="mt-2 text-xs text-muted-foreground">Your exact street address stays private and gets added later in the full setup.</p>
+                          <p className="mt-2 text-xs text-muted-foreground">
+                            {zipConfirmed ? 'Location confirmed automatically. ' : 'Location entered manually. '}
+                            Your exact street address stays private and gets added later in the full setup.
+                          </p>
                         </div>
                       </div>
                     </div>
@@ -564,13 +636,10 @@ export const QuickStartWizard: React.FC = () => {
 
           <div className="flex flex-col gap-3 pt-2">
             <div className="flex items-center gap-2 sm:gap-3">
-              <Button variant="ghost" onClick={() => setStep('mode')} size="sm" className="text-xs sm:text-sm">
-                ← Back
-              </Button>
               <Button 
                 variant="dark-shine"
                 onClick={handleCreateDraft} 
-                disabled={isCreating || !zipConfirmed}
+                disabled={isCreating || !locationReady}
                 className="flex-1 shadow-lg"
               >
                 {isCreating ? (

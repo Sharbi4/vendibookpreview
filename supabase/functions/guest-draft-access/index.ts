@@ -31,10 +31,10 @@ const admin = createClient(SUPABASE_URL, SERVICE_KEY, {
   auth: { persistSession: false },
 });
 
-// Fields a guest is allowed to patch. Anything not in this allowlist is
-// silently stripped — prevents privilege escalation via crafted requests
-// (e.g. flipping status to 'published', mutating host_id, or setting
-// featured_enabled without payment).
+// Fields a guest is allowed to patch. Anything else rejects the entire request
+// so the UI cannot advance after a silent partial save. This also prevents
+// privilege escalation (publishing, changing ownership, moderation, or paid
+// entitlement fields).
 const PATCH_ALLOWLIST = new Set([
   "title",
   "description",
@@ -44,17 +44,13 @@ const PATCH_ALLOWLIST = new Set([
   "subcategory",
   "mode",
   "fulfillment_type",
-  "is_static_location",
   "pickup_location_text",
   "address",
-  "country",
-  "street_address",
-  "apt_suite",
   "city",
   "state",
-  "zip_code",
-  "show_precise_location",
+  "postal_code",
   "delivery_fee",
+  "delivery_fee_type",
   "delivery_radius_miles",
   "pickup_instructions",
   "delivery_instructions",
@@ -71,6 +67,7 @@ const PATCH_ALLOWLIST = new Set([
   "available_from",
   "available_to",
   "image_urls",
+  "cover_image_url",
   "video_urls",
   "instant_book",
   "deposit_amount",
@@ -81,16 +78,45 @@ const PATCH_ALLOWLIST = new Set([
   "width_inches",
   "height_inches",
   "freight_category",
-  "required_documents",
   "accept_cash_payment",
   "accept_paypal_checkout",
-  "proof_notary_enabled",
   "total_slots",
   "slot_names",
   "hourly_schedule",
   "hourly_special_pricing",
   "rental_min_days",
+  "hourly_enabled",
+  "daily_enabled",
+  "min_hours",
+  "max_hours",
+  "buffer_time_mins",
+  "min_notice_hours",
+  "year_built",
+  "kitchen_build_year",
+  "kitchen_build_year_unknown",
+  "condition",
+  "operational_status",
+  "title_status",
+  "has_lien",
+  "known_problems",
+  "no_known_problems",
+  "included_items",
+  "photos_exclusions_answered",
+  "photos_exclusions_note",
+  "price_negotiable",
+  "accepts_offers",
+  "min_offer_amount",
 ]);
+
+function sanitizePatch(patch: Record<string, unknown>) {
+  const clean: Record<string, unknown> = {};
+  const rejected: string[] = [];
+  for (const [key, value] of Object.entries(patch)) {
+    if (PATCH_ALLOWLIST.has(key)) clean[key] = value;
+    else rejected.push(key);
+  }
+  return { clean, rejected };
+}
 
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
@@ -110,6 +136,11 @@ function safeEqual(a: string, b: string): boolean {
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   if (req.method !== "POST") return json({ error: "method_not_allowed" }, 405);
+
+  const contentLength = Number(req.headers.get("content-length") || "0");
+  if (Number.isFinite(contentLength) && contentLength > 256_000) {
+    return json({ error: "request_too_large" }, 413);
+  }
 
   let body: any;
   try {
@@ -144,9 +175,9 @@ Deno.serve(async (req) => {
 
   if (action === "update") {
     if (!patch || typeof patch !== "object") return json({ error: "missing_patch" }, 400);
-    const clean: Record<string, unknown> = {};
-    for (const [k, v] of Object.entries(patch)) {
-      if (PATCH_ALLOWLIST.has(k)) clean[k] = v;
+    const { clean, rejected } = sanitizePatch(patch as Record<string, unknown>);
+    if (rejected.length > 0) {
+      return json({ error: "unsupported_patch_fields", fields: rejected.slice(0, 20) }, 400);
     }
     if (Object.keys(clean).length === 0) return json({ error: "empty_patch" }, 400);
 
@@ -177,9 +208,11 @@ Deno.serve(async (req) => {
 
     const clean: Record<string, unknown> = { host_id: uid, guest_draft_token: null };
     if (patch && typeof patch === "object") {
-      for (const [k, v] of Object.entries(patch)) {
-        if (PATCH_ALLOWLIST.has(k)) clean[k] = v;
+      const sanitized = sanitizePatch(patch as Record<string, unknown>);
+      if (sanitized.rejected.length > 0) {
+        return json({ error: "unsupported_patch_fields", fields: sanitized.rejected.slice(0, 20) }, 400);
       }
+      Object.assign(clean, sanitized.clean);
     }
 
     const { data, error } = await admin
