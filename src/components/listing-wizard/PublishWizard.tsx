@@ -2475,10 +2475,16 @@ export const PublishWizard: React.FC = () => {
                   <PrimaryActionBar
                     primary={{
                       label: isSaving ? 'Saving…' : 'Continue',
-                      onClick: handleDetailsSave,
-                      disabled: isSaving || !stageValues.condition,
+                      onClick: guardNext(
+                        basicsMissing.map((r) => r.label),
+                        basicsMissing[0]?.fieldId ?? null,
+                        handleDetailsSave,
+                      ),
+                      disabled: isSaving,
                     }}
+                    blockers={basicsMissing.map((r) => r.label)}
                   />
+
                 </div>
               )}
 
