@@ -157,67 +157,48 @@ const Financing = () => {
         className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/45 to-transparent"
       />
 
-      <div className="relative mx-auto max-w-5xl px-5 pt-12 sm:px-8 sm:pt-16">
+      <div className="relative mx-auto max-w-5xl px-5 pt-6 sm:px-8 sm:pt-8">
 
-
-        {/* Hero */}
-
-        <section className="relative overflow-hidden rounded-3xl border border-white/10 bg-white/[0.035] p-6 shadow-[0_18px_50px_-20px_rgba(0,0,0,0.9),inset_0_1px_0_rgba(255,255,255,0.10)] backdrop-blur-md sm:p-10">
+        {/* Hero — thin horizontal banner */}
+        <section className="relative overflow-hidden rounded-2xl border border-white/10 bg-white/[0.035] p-4 shadow-[0_18px_50px_-20px_rgba(0,0,0,0.9),inset_0_1px_0_rgba(255,255,255,0.10)] backdrop-blur-md sm:p-5">
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-0 opacity-80"
+            style={{
+              background:
+                'radial-gradient(120% 160% at 0% 0%, rgba(16,185,129,0.28) 0%, rgba(6,78,59,0.18) 38%, rgba(0,0,0,0) 70%), radial-gradient(90% 140% at 100% 100%, rgba(52,211,153,0.14) 0%, rgba(0,0,0,0) 65%)',
+            }}
+          />
           <div
             aria-hidden
             className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent"
           />
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-300/25 bg-emerald-400/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-emerald-200 backdrop-blur-sm">
-              <ShieldCheck className="h-3 w-3" aria-hidden />
-              Financing
-            </span>
-            <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.06] px-2.5 py-1 backdrop-blur-sm">
-              <span className="text-[11px] font-medium tracking-tight text-white/70">Vendibook</span>
-              <span className="text-white/25">×</span>
-              <EquinoxFundingLogo className="h-4 w-auto" />
-            </span>
-          </div>
-          <h1 className="mt-5 text-balance text-4xl font-bold leading-[1.08] tracking-tight sm:text-5xl">
-            Get the equipment you need — fast
-          </h1>
-          <p className="mt-5 max-w-2xl text-base leading-relaxed text-white/70">
-            Whether you’re launching your first business or expanding an established operation,
-            explore equipment financing with flexible structures designed around your business and
-            equipment.
-          </p>
 
-          <div className="mt-8 flex flex-col items-start gap-3 sm:flex-row sm:items-center">
-            <ApplyCta />
-            <Link
-              to="/browse"
-              className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/[0.05] px-6 py-3.5 text-sm font-semibold text-white backdrop-blur-sm transition-colors hover:border-white/25 hover:bg-white/[0.09] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
-            >
-              Browse equipment
-              <ArrowRight className="h-4 w-4" aria-hidden />
-            </Link>
-          </div>
-          <p className="mt-3 text-xs text-white/50">
-            You’ll continue to Equinox Funding to submit your application securely.
-          </p>
-
-          <div className="mt-10 flex flex-col items-start gap-5 rounded-2xl border border-white/10 bg-white/[0.05] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-sm sm:flex-row sm:items-center">
-            <div className="flex flex-col gap-2">
-              <div className="flex items-center gap-3">
-                <EquinoxFundingLogo className="h-8 w-auto" />
-                <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-300/25 bg-emerald-400/10 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-emerald-200">
-                  <BadgeCheck className="h-3.5 w-3.5" aria-hidden />
-                  Preferred partner
+          <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-300/25 bg-emerald-400/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-emerald-200 backdrop-blur-sm">
+                  <ShieldCheck className="h-3 w-3" aria-hidden />
+                  Financing
+                </span>
+                <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.06] px-2.5 py-1 backdrop-blur-sm">
+                  <span className="text-[11px] font-medium tracking-tight text-white/70">Vendibook</span>
+                  <span className="text-white/25">×</span>
+                  <EquinoxFundingLogo className="h-4 w-auto" />
                 </span>
               </div>
-              <p className="text-xs text-white/50">
-                Business loans & equipment financing · $2.5K – $25M · Apply online in minutes
+              <h1 className="mt-2 text-balance text-lg font-semibold leading-snug tracking-tight text-white sm:text-xl">
+                Vendibook &amp; Equinox Funding make it easy to get started.
+              </h1>
+              <p className="mt-1 max-w-xl text-sm text-white/60">
+                Financing options for trucks, trailers and equipment — check your options without
+                slowing down your purchase.
               </p>
             </div>
-            <div className="hidden h-10 w-px bg-white/10 sm:block" aria-hidden />
-            <div className="flex flex-col gap-1">
-              <span className="text-xs font-semibold text-white/80">Equinox Funding LLC</span>
-              <span className="text-[11px] text-white/45">Licensing & disclosures available at equinox-funding.com</span>
+
+            <div className="flex shrink-0 flex-col items-start gap-2 sm:items-end">
+              <ApplyCta />
+              <p className="text-xs text-white/50">You’ll continue to Equinox Funding securely.</p>
             </div>
           </div>
         </section>
