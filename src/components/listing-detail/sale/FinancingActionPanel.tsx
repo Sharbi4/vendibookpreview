@@ -8,7 +8,7 @@ import { SaleCard } from '@/components/listing-detail/sale/SaleCard';
 import { generateFinancingPurchaseSheet } from '@/lib/financing/purchaseSheet';
 import { FinancingAvailableBadge } from '@/components/financing/FinancingAvailableBadge';
 import { useEquinoxFinancingEnabled } from '@/hooks/useListingFinancing';
-import { EQUINOX_APPLY_URL, isFinanceableSaleListing } from '@/lib/financing/disclosure';
+import { isFinanceableSaleListing } from '@/lib/financing/disclosure';
 import { toast } from 'sonner';
 import {
   trackFinancingApplyClick,
