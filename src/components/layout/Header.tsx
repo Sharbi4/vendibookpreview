@@ -428,7 +428,7 @@ const Header = ({ hideSearch = false }: HeaderProps) => {
         </nav>
 
         {/* Desktop Actions */}
-        <div className="hidden lg:flex items-center gap-2 ml-4">
+        <div className="hidden lg:flex items-center gap-2 ml-4 shrink-0">
           {user && (
             <Button 
               variant="dark-shine"
