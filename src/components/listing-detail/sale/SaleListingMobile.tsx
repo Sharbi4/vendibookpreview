@@ -52,6 +52,7 @@ import { FeaturedBadge } from '@/components/listing/FeaturedBadge';
 import { getPublicDisplayName } from '@/lib/displayName';
 import { formatLastActive } from '@/hooks/useActivityTracker';
 import { trackLeadEvent } from '@/lib/leadTracking';
+import { fulfillmentLabel } from '@/components/listing-detail/FulfillmentTypeBadge';
 import { resolveListingBrand, getBrandFieldLabel } from '@/lib/resolveListingBrand';
 import { SaleCard } from './SaleCard';
 import { FinancingActionPanel } from './FinancingActionPanel';
@@ -116,18 +117,10 @@ export const SaleListingMobile = ({
   const lastActiveLabel = host?.last_active_at ? formatLastActive(host.last_active_at) : null;
   const respondsQuickly = lastActiveLabel === 'Active now' || /min|hour/i.test(lastActiveLabel || '');
 
-  const fulfillmentLabel = useMemo(() => {
-    switch (listing.fulfillment_type) {
-      case 'pickup':
-        return 'Pickup only';
-      case 'delivery':
-        return 'Delivery available';
-      case 'both':
-        return 'Pickup or delivery';
-      default:
-        return null;
-    }
-  }, [listing.fulfillment_type]);
+  const fulfillmentLabelText = useMemo(
+    () => fulfillmentLabel(listing.fulfillment_type),
+    [listing.fulfillment_type],
+  );
 
   const brandValue = resolveListingBrand({
     category: listing.category,
@@ -288,10 +281,10 @@ export const SaleListingMobile = ({
                 In stock
               </span>
             )}
-            {fulfillmentLabel && (
+            {fulfillmentLabelText && (
               <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-card/60 ring-hairline text-xs font-medium">
                 <Truck className="h-3.5 w-3.5 text-muted-foreground" />
-                {fulfillmentLabel}
+                {fulfillmentLabelText}
               </span>
             )}
             <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-card/60 ring-hairline text-xs font-medium">
@@ -501,8 +494,8 @@ export const SaleListingMobile = ({
             {brandValue && (
               <SpecCell icon={Building2} label={getBrandFieldLabel(listing.category)} value={brandValue} />
             )}
-            {fulfillmentLabel && (
-              <SpecCell icon={Truck} label="Pickup type" value={fulfillmentLabel} />
+            {fulfillmentLabelText && (
+              <SpecCell icon={Truck} label="Fulfillment" value={fulfillmentLabelText} />
             )}
             {locationShort && (
               <SpecCell icon={MapPin} label="Location" value={locationShort} />
