@@ -2663,6 +2663,8 @@ export const PublishWizard: React.FC = () => {
             />
 
             <div className="bg-card rounded-2xl shadow-sm border p-6 md:p-8">
+              <MissingRequirementsAlert blockers={stepBlockers} className="mb-6" />
+
               {/* Stage 1: What are you listing? */}
               {step === 'basics' && (
                 <div className="space-y-6">
