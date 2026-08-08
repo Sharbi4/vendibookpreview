@@ -2241,6 +2241,16 @@ export const PublishWizard: React.FC = () => {
   const hasValidDescription = description.trim().length >= MIN_DESCRIPTION_LENGTH;
   const hasDescription = hasValidTitle && hasValidDescription;
 
+  // For-sale listings that are delivery-only don't need a public pickup street address.
+  const needsFullAddressForSale =
+    listing?.mode !== 'sale' || fulfillmentType !== 'delivery';
+  const streetAddressRequired =
+    listing?.mode !== 'sale' ||
+    isStaticLocationFn((listing?.category ?? '') as ListingCategory) ||
+    isStaticLocation ||
+    needsFullAddressForSale;
+
+
   const checklistState = {
     hasPhotos: totalPhotoCount >= 3,
     hasPricing,
