@@ -343,10 +343,6 @@ export const ListingDisclosures: React.FC<ListingDisclosuresProps> = ({
             );
           });
         })()}
-        {false && (() => {
-          const p = { category: '', note: '' };
-          return null;
-        })}
       </section>
 
       <section className="space-y-4 rounded-xl border border-border bg-card/40 p-4">
