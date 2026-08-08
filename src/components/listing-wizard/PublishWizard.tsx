@@ -3563,14 +3563,18 @@ export const PublishWizard: React.FC = () => {
                       secondary={{ label: 'Back', onClick: () => setStep('includes') }}
                       primary={{
                         label: isSaving ? 'Saving…' : 'Continue',
-                        onClick: saveStep,
-                        disabled:
-                          isSaving ||
-                          (listing.mode === 'sale'
-                            ? !isValidPrice(priceSale) ||
-                              (!acceptPayPalCheckout && !acceptCashPayment) ||
-                              (equinoxOptIn && !equinoxDisclosureAccepted)
-                            : !isValidPrice(priceDaily)),
+                        onClick: guardNext(
+                          listing.mode === 'sale'
+                            ? ([
+                                !isValidPrice(priceSale) && 'An asking price',
+                                !acceptPayPalCheckout && !acceptCashPayment && 'At least one way to get paid',
+                                equinoxOptIn && !equinoxDisclosureAccepted && 'Accept the financing disclosure',
+                              ].filter(Boolean) as string[])
+                            : ([!isValidPrice(priceDaily) && 'A daily rate'].filter(Boolean) as string[]),
+                          null,
+                          saveStep,
+                        ),
+                        disabled: isSaving,
                       }}
                       blockers={
                         listing.mode === 'sale'
@@ -3581,6 +3585,7 @@ export const PublishWizard: React.FC = () => {
                             ].filter(Boolean) as string[])
                           : ([!isValidPrice(priceDaily) && 'A daily rate'].filter(Boolean) as string[])
                       }
+
                     />
                   </div>
                 </div>
