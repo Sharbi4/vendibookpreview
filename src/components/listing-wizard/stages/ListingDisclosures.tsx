@@ -6,6 +6,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { FieldHelp } from '@/components/common/FieldHelp';
 import { VisibilityLabel } from '@/components/common/VisibilityLabel';
+import { RequiredMark, RequiredLegend } from '@/components/common/RequiredMark';
 import { FIELD_HELP } from '@/lib/listings/fieldHelp';
 import {
   KNOWN_PROBLEM_CATEGORIES,
@@ -90,10 +91,12 @@ export const ListingDisclosures: React.FC<ListingDisclosuresProps> = ({
             Only the status below is shown publicly. Do not enter a VIN, title number or
             lienholder details anywhere in your listing.
           </p>
+          <RequiredLegend />
 
           <div className="space-y-2">
             <Label className="flex items-center gap-1 text-sm">
               Title status
+              <RequiredMark />
               <FieldHelp label={FIELD_HELP.titleStatus.label}>
                 {FIELD_HELP.titleStatus.text}
               </FieldHelp>
@@ -120,6 +123,7 @@ export const ListingDisclosures: React.FC<ListingDisclosuresProps> = ({
           <div className="space-y-2">
             <Label className="flex items-center gap-1 text-sm">
               Lien disclosure
+              <RequiredMark />
               <FieldHelp label={FIELD_HELP.lien.label}>{FIELD_HELP.lien.text}</FieldHelp>
             </Label>
             <RadioGroup
@@ -145,7 +149,7 @@ export const ListingDisclosures: React.FC<ListingDisclosuresProps> = ({
             <div className="space-y-2 border-t border-border pt-4">
               <div className="flex items-center justify-between gap-2">
                 <Label className="text-sm">Provide VIN or serial number</Label>
-                <VisibilityLabel kind="private" />
+                <VisibilityLabel kind="paperwork" />
               </div>
               <label className="flex items-center gap-2 text-sm">
                 <Checkbox
@@ -167,8 +171,10 @@ export const ListingDisclosures: React.FC<ListingDisclosuresProps> = ({
                 />
               )}
               <p className="text-xs text-muted-foreground">
-                Optional and never shown publicly. It is only used on private paperwork such as a
-                financing purchase sheet, and it never affects publishing.
+                Optional, and never shown on your public listing or in search. It <strong>is</strong>{' '}
+                printed on the financing purchase sheet / pro forma invoice when a buyer generates
+                one, and it may be shared with the lender and on sale paperwork. It never affects
+                publishing.
               </p>
             </div>
           )}
