@@ -1,5 +1,6 @@
 import { deliveryRateLabel } from '@/lib/fulfillment/delivery';
 import { DeliveryAvailabilityPanel } from '@/components/listing-detail/DeliveryAvailabilityPanel';
+import { FulfillmentTypeBadge } from '@/components/listing-detail/FulfillmentTypeBadge';
 import { useParams, Link } from 'react-router-dom';
 import { 
   ArrowLeft, 
@@ -795,6 +796,13 @@ const ListingDetail = () => {
                 />
                 <ListingHighlightsCard listing={listing as any} />
               </div>
+
+              {/* How this is handed off */}
+              <FulfillmentTypeBadge
+                fulfillmentType={listing.fulfillment_type}
+                isRental={isRental}
+                variant="panel"
+              />
 
               {/* Delivery area + buyer ZIP checker */}
               <DeliveryAvailabilityPanel
