@@ -1118,7 +1118,7 @@ export const PublishWizard: React.FC = () => {
   }, [streetAddress, aptSuite, locCity, locState, locZipCode]);
 
   const hasCompleteStructuredAddress = !!(
-    streetAddress.trim() &&
+    (streetAddress.trim() || !streetAddressRequired) &&
     locCity.trim() &&
     locState.trim() &&
     locZipCode.trim()
