@@ -333,7 +333,11 @@ export function getStageRequirements(input: StageRequirementInput): StageRequire
     });
   }
 
-  const unexplained = input.knownProblems.filter((p) => p.note.trim().length < 3);
+  // When "no known problems" is confirmed, any leftover rows are ignored —
+  // otherwise a stale saved problem could block the step with no visible field.
+  const unexplained = input.noKnownProblems
+    ? []
+    : input.knownProblems.filter((p) => (p.note ?? '').trim().length < 3);
   if (unexplained.length > 0) {
     missing.push({
       fieldId: `known-problem-${unexplained[0].category}`,
