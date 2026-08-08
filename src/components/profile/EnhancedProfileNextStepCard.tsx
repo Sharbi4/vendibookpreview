@@ -47,6 +47,12 @@ const EnhancedProfileNextStepCard = ({
   isLoadingPayout,
   onSetUpPayouts,
   isSavingPayouts}: EnhancedProfileNextStepCardProps) => {
+  const sellerVerification = useSellerVerification();
+  // Verified sellers never see the offer again, even if the profile flag lags.
+  const verified =
+    isVerified ||
+    sellerVerification.state?.badge_active === true ||
+    sellerVerification.offer.enabled === false;
   const allSteps: NextStepConfig[] = [
     {
       id: 'verify',
