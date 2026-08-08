@@ -24,7 +24,13 @@ const PANEL =
  */
 export function PaymentsTransitionModal() {
   const { isLoading, isEligible, acknowledged, membership, acknowledge } = usePaymentsTransition();
+  const sellerVerification = useSellerVerification();
   const [open, setOpen] = useState(false);
+  // Once the badge is active the offer disappears everywhere — no upsell card,
+  // no "Get verified" prompt, just the badge already on their listings.
+  const alreadyVerified =
+    sellerVerification.state?.badge_active === true ||
+    sellerVerification.offer.enabled === false;
 
   useEffect(() => {
     if (!isLoading && isEligible && !acknowledged) setOpen(true);
