@@ -61,6 +61,7 @@ import ListingReadinessCard from '@/components/listing/ListingReadinessCard';
 import { cn } from '@/lib/utils';
 import { FeaturedBadge } from '@/components/listing/FeaturedBadge';
 import IdentityVerifiedBadge from '@/components/verification/IdentityVerifiedBadge';
+import { useSellerVerifiedBadge } from '@/hooks/useSellerVerifiedBadge';
 import { PayoutSetupDialog } from '@/components/payouts/PayoutSetupDialog';
 
 import { usePayoutPreference } from '@/hooks/usePayoutPreference';
@@ -506,9 +507,9 @@ const HostListingCard = ({
                   {isFeatured && (
                     <FeaturedBadge listing={listing as any} size="sm" showDaysLeft />
                   )}
-                  {(listing as any).host_verified && (
+                  {sellerVerified && (
                     <IdentityVerifiedBadge
-                      verified={(listing as any).host_verified ?? false}
+                      verified={sellerVerified}
                       size="sm"
                       withDetails={false}
                     />

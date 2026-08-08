@@ -18,6 +18,11 @@ interface GetVerifiedButtonProps {
   className?: string;
   /** Show the price in the label when the seller isn't verified yet. */
   showPrice?: boolean;
+  /**
+   * Render the metallic badge once verified. Default false: this is an offer
+   * control, so it disappears entirely for sellers who already hold the badge.
+   */
+  badgeWhenVerified?: boolean;
 }
 
 /**
@@ -30,6 +35,7 @@ export const GetVerifiedButton = ({
   size = 'sm',
   className,
   showPrice = true,
+  badgeWhenVerified = false,
 }: GetVerifiedButtonProps) => {
   const [open, setOpen] = useState(false);
   const v = useSellerVerification();
@@ -42,6 +48,7 @@ export const GetVerifiedButton = ({
   const paymentOnly = v.state.needs_payment_only;
 
   if (verified) {
+    if (!badgeWhenVerified) return null;
     return (
       <TooltipProvider>
         <Tooltip delayDuration={200}>
