@@ -855,6 +855,36 @@ export const PublishWizard: React.FC = () => {
         }
       }
 
+      // Resume where the seller left off. Only when the URL does not already
+      // pin a step (deep links and post-payment returns keep their target).
+      if (!searchParams.get('step')) {
+        const d: any = data;
+        const isRent = d.mode === 'rent';
+        const hasBasics = !!d.condition && !!d.operational_status;
+        const hasPhotos = Array.isArray(d.image_urls) && d.image_urls.length >= 3;
+        const hasHeadline = !!d.title && !!d.description;
+        const hasIncludes =
+          typeof d.included_items === 'string' && d.included_items.trim().length >= 3;
+        const hasPrice = isRent
+          ? !!(d.price_daily || d.price_hourly || d.price_weekly || d.price_monthly)
+          : !!d.price_sale;
+        const hasLocation = !!(d.city && d.postal_code);
+        const resume: PublishStep = !hasBasics
+          ? 'basics'
+          : !hasPhotos
+            ? 'photos'
+            : !hasHeadline
+              ? 'headline'
+              : !hasIncludes
+                ? 'includes'
+                : !hasPrice
+                  ? 'pricing'
+                  : !hasLocation
+                    ? 'location'
+                    : 'review';
+        if (resume !== 'basics') setStep(resume);
+      }
+
       setIsLoading(false);
     };
 
