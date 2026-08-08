@@ -138,6 +138,10 @@ const plaidRail = (audience: RailsAudience): RailDef => ({
   detailNote:
     '*Identity verification is an optional paid add-on. It is never required to publish a listing, receive bookings, or get paid.',
   link: { label: 'Identity verification details', href: '/identity-verification' },
+  flowLink:
+    audience === 'buyer'
+      ? undefined
+      : { label: 'See the exact steps to get verified', href: '/verify-identity' },
 });
 
 const audienceCopy: Record<RailsAudience, { eyebrow: string; heading: string; sub: string }> = {
