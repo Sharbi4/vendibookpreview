@@ -2,7 +2,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import { corsHeaders, jsonError, jsonResponse, unknownErrorResponse } from "../_shared/jsonError.ts";
 import { capturePayPalOrder, getPayPalOrder, PayPalError, safeLog } from "../_shared/paypal.ts";
-import { extractCaptureFacts, finalizeCapture } from "../_shared/paypalFinalize.ts";
+import { CaptureRejectedError, extractCaptureFacts, finalizeCapture } from "../_shared/paypalFinalize.ts";
 import { auditPayment, requestIp } from "../_shared/paymentAudit.ts";
 import { getListingPurchaseState, LISTING_UNAVAILABLE_MESSAGE } from "../_shared/listingGuard.ts";
 import { recordOrderEvent } from "../_shared/orders/orderEvents.ts";
@@ -155,7 +155,18 @@ serve(async (req) => {
       );
     }
 
-    const updated = await finalizeCapture(admin, record, facts, "capture_endpoint");
+    let updated;
+    try {
+      updated = await finalizeCapture(admin, record, facts, "capture_endpoint");
+    } catch (err) {
+      if (err instanceof CaptureRejectedError) {
+        // Money may have moved at PayPal, but nothing was fulfilled and the
+        // record is flagged for review. Never report this as a success.
+        safeLog("capture_rejected", { reference: record.reference, reason: err.reason });
+        return jsonError(409, err.reason, err.message);
+      }
+      throw err;
+    }
     safeLog("capture_finalized", { reference: record.reference, status: facts.status });
 
     await auditPayment(admin, {

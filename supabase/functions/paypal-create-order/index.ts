@@ -169,8 +169,12 @@ serve(async (req) => {
       if (listing.host_id !== user.id) {
         return jsonError(403, "forbidden", "You don't own this listing.");
       }
-      if (!listing.proof_notary_enabled) {
-        return jsonError(409, "not_applicable", "Proof Notary isn't enabled on this listing.");
+      // NOTE: we deliberately do NOT require `proof_notary_enabled` here — that
+      // column is the *paid entitlement*, granted only by a verified capture.
+      // The owner buys the add-on while it is still off; a second purchase of an
+      // already-active add-on is the only thing worth refusing.
+      if (listing.proof_notary_enabled) {
+        return jsonError(409, "already_active", "Proof Notary is already active on this listing.");
       }
       quote = quoteServiceCharge({
         prefix: "VB-NOT",

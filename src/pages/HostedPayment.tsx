@@ -5,6 +5,7 @@ import SEO from '@/components/SEO';
 import PayPalPaymentPanel, { type PayPalCheckoutTarget } from '@/components/checkout/PayPalPaymentPanel';
 import { formatUsd } from '@/lib/monetization/products';
 import { useToast } from '@/hooks/use-toast';
+import { isSafeInternalPath } from '@/lib/originNav';
 
 const SUPPORTED = ['sale', 'booking', 'freight', 'notary', 'protected_sale_deposit', 'concierge'] as const;
 type HostedKind = (typeof SUPPORTED)[number];
@@ -24,8 +25,12 @@ const HostedPayment = () => {
 
   const kind = params.get('kind') as HostedKind | null;
   const id = params.get('id') ?? '';
-  const successPath = params.get('success') ?? '/dashboard';
-  const cancelPath = params.get('cancel') ?? '/dashboard';
+  // Open-redirect guard: an attacker-supplied `success`/`cancel` must never be
+  // able to send the payer off-site. Both default to /dashboard.
+  const rawSuccess = params.get('success');
+  const rawCancel = params.get('cancel');
+  const successPath = isSafeInternalPath(rawSuccess) ? rawSuccess : '/dashboard';
+  const cancelPath = isSafeInternalPath(rawCancel) ? rawCancel : '/dashboard';
   const label = params.get('label') ?? 'Vendibook payment';
   const amountCents = Number(params.get('amount_cents') ?? 0);
 
@@ -67,7 +72,9 @@ const HostedPayment = () => {
               ? 'PayPal is still confirming this payment. We’ll update your order the moment it clears.'
               : `${label} is paid.`,
           });
-          navigate(successPath);
+          // A pending capture is NOT paid: keep the payer here with an honest
+          // status. The panel owns navigation for a confirmed capture
+          // (`returnUrl`), so we never double-navigate.
         }}
         summary={
           <div className="space-y-1">

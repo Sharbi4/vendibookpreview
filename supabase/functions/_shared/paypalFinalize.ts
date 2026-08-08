@@ -13,6 +13,7 @@ import { deliverOrderReceipt } from "./orders/deliverOrderReceipt.ts";
 import { notifyOrderParties, notifyUser } from "./notify.ts";
 import { fulfillMonetizationPurchase } from "./fulfillMonetizationPurchase.ts";
 import { fulfillConciergeOrder } from "./concierge.ts";
+import { getListingPurchaseState, LISTING_UNAVAILABLE_MESSAGE } from "./listingGuard.ts";
 
 
 export interface CaptureFacts {
@@ -58,6 +59,33 @@ function mapCaptureStatus(status: string) {
 }
 
 /**
+ * Internal states that are final. Once a payment reaches one of these it may
+ * never be "re-finalised" back into a paid/completed state by a late or
+ * replayed capture event.
+ */
+export const TERMINAL_PAYMENT_STATES = new Set([
+  "refunded",
+  "partially_refunded",
+  "reversed",
+  "cancelled",
+  "declined",
+  "failed",
+  "chargeback",
+  "disputed_lost",
+]);
+
+export class CaptureRejectedError extends Error {
+  constructor(public reason: string, message: string) {
+    super(message);
+    this.name = "CaptureRejectedError";
+  }
+}
+
+export function normalizeCurrency(value: unknown): string {
+  return String(value ?? "USD").trim().toUpperCase();
+}
+
+/**
  * Applies a capture to the internal records. Safe to call repeatedly.
  * Returns the up-to-date payment record.
  */
@@ -70,19 +98,113 @@ export async function finalizeCapture(
   const paymentStatus = mapCaptureStatus(facts.status);
   const isPaid = paymentStatus === "completed";
 
-  // Amount sanity check — never accept a capture that doesn't match the quote.
-  if (isPaid && facts.amountCents !== record.gross_amount_cents) {
-    safeLog("capture_amount_mismatch", {
+  // ------------------------------------------------------------ terminal guard
+  // A refunded / reversed / cancelled / declined payment is never revived.
+  if (TERMINAL_PAYMENT_STATES.has(String(record.payment_status))) {
+    safeLog("capture_terminal_state_ignored", {
       reference: record.reference,
-      expected: record.gross_amount_cents,
-      got: facts.amountCents,
+      state: record.payment_status,
+      source,
+    });
+    return record;
+  }
+
+  // ------------------------------------------------------- capture association
+  // If this record already carries a different capture id, the event does not
+  // belong to it. Never fulfil on a foreign capture.
+  if (
+    record.paypal_capture_id &&
+    facts.captureId &&
+    record.paypal_capture_id !== facts.captureId
+  ) {
+    safeLog("capture_id_mismatch", {
+      reference: record.reference,
+      expected: record.paypal_capture_id,
+      got: facts.captureId,
     });
     await supabase.from("payment_records").update({
       internal_status: "needs_review",
-      last_error: { reason: "amount_mismatch", expected: record.gross_amount_cents, got: facts.amountCents },
-      updated_at: new Date().toISOString(),
+      last_error: {
+        reason: "capture_id_mismatch",
+        expected: record.paypal_capture_id,
+        got: facts.captureId,
+      },
     }).eq("id", record.id);
+    throw new CaptureRejectedError(
+      "capture_id_mismatch",
+      `Capture ${facts.captureId} does not belong to ${record.reference}.`,
+    );
   }
+
+  // ------------------------------------------------------ amount + currency
+  // A mismatch must abort BEFORE any paid state, ledger entry, payable,
+  // membership, boost, notary or other fulfillment is written.
+  if (isPaid) {
+    const expectedCurrency = normalizeCurrency(record.currency ?? "USD");
+    const gotCurrency = normalizeCurrency(facts.currency);
+
+    if (facts.amountCents !== record.gross_amount_cents || expectedCurrency !== gotCurrency) {
+      const reason = facts.amountCents !== record.gross_amount_cents
+        ? "amount_mismatch"
+        : "currency_mismatch";
+      safeLog(`capture_${reason}`, {
+        reference: record.reference,
+        expectedAmount: record.gross_amount_cents,
+        gotAmount: facts.amountCents,
+        expectedCurrency,
+        gotCurrency,
+      });
+      await supabase.from("payment_records").update({
+        internal_status: "needs_review",
+        last_error: {
+          reason,
+          expected_amount_cents: record.gross_amount_cents,
+          got_amount_cents: facts.amountCents,
+          expected_currency: expectedCurrency,
+          got_currency: gotCurrency,
+        },
+        paypal_capture_id: facts.captureId ?? record.paypal_capture_id,
+        updated_at: new Date().toISOString(),
+      }).eq("id", record.id);
+      throw new CaptureRejectedError(
+        reason,
+        `Capture for ${record.reference} did not match the quoted amount or currency.`,
+      );
+    }
+
+    // ------------------------------------------------ listing availability
+    // Canonical guard, enforced here so BOTH the capture endpoint and a
+    // webhook-first delivery refuse to fulfil a withdrawn/sold listing, and
+    // so a seller can never buy from themselves.
+    if (record.listing_id) {
+      const state = await getListingPurchaseState(supabase, record.listing_id);
+      if (!state.purchasable) {
+        safeLog("capture_listing_unavailable", {
+          reference: record.reference,
+          reason: state.reason,
+        });
+        await supabase.from("payment_records").update({
+          payment_status: "completed",
+          internal_status: "refund_review_listing_unavailable",
+          paypal_capture_id: facts.captureId ?? record.paypal_capture_id,
+          last_error: { reason: "listing_unavailable", listing_reason: state.reason },
+        }).eq("id", record.id);
+        throw new CaptureRejectedError("listing_unavailable", LISTING_UNAVAILABLE_MESSAGE);
+      }
+      if (state.host_id && record.buyer_id && state.host_id === record.buyer_id) {
+        await supabase.from("payment_records").update({
+          internal_status: "refund_review_self_purchase",
+          paypal_capture_id: facts.captureId ?? record.paypal_capture_id,
+          last_error: { reason: "self_purchase" },
+        }).eq("id", record.id);
+        throw new CaptureRejectedError(
+          "self_purchase",
+          "You can't purchase your own listing.",
+        );
+      }
+    }
+  }
+
 
   const { data: updated } = await supabase
     .from("payment_records")
@@ -96,6 +218,8 @@ export async function finalizeCapture(
       last_reconciled_at: new Date().toISOString(),
     })
     .eq("id", record.id)
+    // Race-safe: only transition out of a non-terminal state.
+    .not("payment_status", "in", `(${[...TERMINAL_PAYMENT_STATES].join(",")})`)
     .select()
     .maybeSingle();
 
