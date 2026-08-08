@@ -8,7 +8,7 @@ import { SaleCard } from '@/components/listing-detail/sale/SaleCard';
 import { generateFinancingPurchaseSheet } from '@/lib/financing/purchaseSheet';
 import { FinancingAvailableBadge } from '@/components/financing/FinancingAvailableBadge';
 import { useEquinoxFinancingEnabled } from '@/hooks/useListingFinancing';
-import { EQUINOX_APPLY_URL, isFinanceableSaleListing } from '@/lib/financing/disclosure';
+import { isFinanceableSaleListing } from '@/lib/financing/disclosure';
 import { toast } from 'sonner';
 import {
   trackFinancingApplyClick,
@@ -31,9 +31,41 @@ interface FinancingActionPanelProps {
  */
 export const FinancingActionPanel = ({ listing, className }: FinancingActionPanelProps) => {
   const [busy, setBusy] = useState(false);
+  const [applying, setApplying] = useState(false);
   const enabled = useEquinoxFinancingEnabled(listing);
 
   if (!enabled) return null;
+
+  const financingBlockedMessage = (error: any, data: any) =>
+    (error?.context?.body?.code ?? data?.code) === 'financing_not_available'
+      ? 'Financing is not enabled for this listing.'
+      : null;
+
+  // The apply URL is issued by the server only after it re-verifies the launch
+  // flag and this seller's per-listing opt-in.
+  const handleApply = async () => {
+    trackFinancingApplyClick('listing_panel', listing.id);
+    setApplying(true);
+    // Open synchronously so mobile browsers don't block the popup.
+    const win = window.open('', '_blank', 'noopener,noreferrer');
+    try {
+      const { data, error } = await supabase.functions.invoke('financing-apply-link', {
+        body: { listingId: listing.id },
+      });
+      if (error || !data?.applyUrl) throw new Error(data?.code || 'apply_unavailable');
+      if (win) win.location.href = data.applyUrl;
+      else window.location.href = data.applyUrl;
+    } catch (err: any) {
+      win?.close();
+      toast.error(
+        err?.message === 'financing_not_available'
+          ? 'Financing is not enabled for this listing.'
+          : 'Could not open the financing application. Please try again.',
+      );
+    } finally {
+      setApplying(false);
+    }
+  };
 
   const handleDownload = async () => {
     setBusy(true);
@@ -41,16 +73,23 @@ export const FinancingActionPanel = ({ listing, className }: FinancingActionPane
       const { data, error } = await supabase.functions.invoke('financing-purchase-sheet', {
         body: { listingId: listing.id },
       });
-      if (error || !data?.listing) throw new Error('sheet_unavailable');
+      if (error || !data?.listing) {
+        throw new Error(financingBlockedMessage(error, data) ?? 'sheet_unavailable');
+      }
       generateFinancingPurchaseSheet(data.listing, data.sellerName || 'Vendibook member');
       trackFinancingSheetDownloaded(listing.id, true);
-    } catch {
+    } catch (err: any) {
       trackFinancingSheetDownloaded(listing.id, false);
-      toast.error('Could not generate the purchase summary. Please try again.');
+      toast.error(
+        err?.message && err.message !== 'sheet_unavailable'
+          ? err.message
+          : 'Could not generate the purchase summary. Please try again.',
+      );
     } finally {
       setBusy(false);
     }
   };
+
 
   return (
     <SaleCard padding="lg" className={className}>
@@ -72,17 +111,20 @@ export const FinancingActionPanel = ({ listing, className }: FinancingActionPane
       </div>
 
       <div className="grid gap-2 sm:grid-cols-2">
-        <Button asChild size="sm" className="finance-cta justify-center font-semibold">
-          <a
-            href={EQUINOX_APPLY_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={() => trackFinancingApplyClick('listing_panel', listing.id)}
-          >
-            Apply Now with Equinox
+        <Button
+          size="sm"
+          className="finance-cta justify-center font-semibold"
+          onClick={() => void handleApply()}
+          disabled={applying}
+        >
+          Apply Now with Equinox
+          {applying ? (
+            <Loader2 className="h-3.5 w-3.5 ml-1.5 animate-spin" />
+          ) : (
             <ExternalLink className="h-3.5 w-3.5 ml-1.5" />
-          </a>
+          )}
         </Button>
+
         <Button
           size="sm"
           onClick={() => void handleDownload()}
