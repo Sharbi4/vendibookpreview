@@ -22,6 +22,7 @@ interface FeaturedReceiptProps {
   paypalCaptureId?: string
   paymentMethod?: string
   orderUrl?: string
+  durationLabel?: string
 }
 
 const FeaturedPaymentReceiptEmail = ({ firstName,
@@ -37,7 +38,8 @@ const FeaturedPaymentReceiptEmail = ({ firstName,
   paypalTransactionId,
   paypalCaptureId,
   paymentMethod,
-  orderUrl }: FeaturedReceiptProps) => (
+  orderUrl,
+  durationLabel }: FeaturedReceiptProps) => (
   <Html lang="en" dir="ltr">
     <Head />
     <Preview>Your boost is live — {listingTitle || 'your listing'} is now featured</Preview>
@@ -50,9 +52,17 @@ const FeaturedPaymentReceiptEmail = ({ firstName,
             {firstName ? `You're featured, ${firstName}.` : "You're featured."}
           </Heading>
           <Text style={s.lede}>
-            Your boost payment was successful and your listing is now pinned to
-            the top of search results for the next 30 days.
+            Your boost payment was successful and your listing is now pinned to the
+            top of search results
+            {startsAt && expiresAt
+              ? ` from ${startsAt} through ${expiresAt}.`
+              : expiresAt
+                ? ` through ${expiresAt}.`
+                : durationLabel
+                  ? ` for the next ${durationLabel}.`
+                  : '.'}
           </Text>
+
 
           <Section style={s.detailGrid}>
             <Text style={s.detailLabel}>LISTING</Text>
@@ -139,7 +149,10 @@ const FeaturedPaymentReceiptEmail = ({ firstName,
           <Text style={s.smallHeader}>WHAT HAPPENS NEXT</Text>
           <Text style={s.listItem}>1. Your listing appears first in relevant searches.</Text>
           <Text style={s.listItem}>2. You'll get a featured badge across the marketplace.</Text>
-          <Text style={s.listItem}>3. Boost ends automatically after 30 days — no auto-renewal.</Text>
+          <Text style={s.listItem}>
+            3. Boost ends automatically{expiresAt ? ` on ${expiresAt}` : durationLabel ? ` after ${durationLabel}` : ''} — no auto-renewal.
+          </Text>
+          <Text style={s.listItem}>4. Track views and saves anytime from your dashboard.</Text>
         </Section>
 
         <Text style={s.footnote}>
@@ -159,7 +172,10 @@ export const template = {
     firstName: 'Alex',
     listingTitle: '2023 Food Trailer with Generator', coverImageUrl: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=800&q=80', listingId: 'abc-123',
     amount: '$30.00',
+    startsAt: 'May 29, 2026',
     expiresAt: 'June 28, 2026',
+    durationLabel: '30 days',
+    packageName: 'Featured — 30 days',
     receiptId: 'pi_3TWF84A6Qt4pF0fM1RXYc3H2',
   },
 } satisfies TemplateEntry

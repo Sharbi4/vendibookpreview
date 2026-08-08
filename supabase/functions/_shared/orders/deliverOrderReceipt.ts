@@ -94,6 +94,24 @@ async function buildFeaturedBoostOverride(
   const slug: string = purchase?.product?.slug ?? '';
   if (!slug.includes('featured')) return undefined;
 
+  // Fall back to the promotion row when the purchase window isn't stamped yet.
+  let startsIso: string | null = purchase?.access_starts_at ?? null;
+  let endsIso: string | null = purchase?.access_ends_at ?? null;
+  if (!endsIso && (purchase?.listing_id ?? record.listing_id)) {
+    const { data: promo } = await supabase
+      .from('listing_promotions')
+      .select('starts_at, ends_at')
+      .eq('listing_id', purchase?.listing_id ?? record.listing_id)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    startsIso = startsIso ?? promo?.starts_at ?? null;
+    endsIso = endsIso ?? promo?.ends_at ?? null;
+  }
+  const durationDays = startsIso && endsIso
+    ? Math.max(1, Math.round((new Date(endsIso).getTime() - new Date(startsIso).getTime()) / 86_400_000))
+    : null;
+
   let listingTitle = detail.listing?.title ?? null;
   let coverImageUrl = detail.listing?.image_url ?? null;
   const listingId = purchase?.listing_id ?? record.listing_id ?? null;
@@ -117,8 +135,9 @@ async function buildFeaturedBoostOverride(
       packageName: purchase?.product?.name ?? 'Featured boost',
       amount: money(detail.amounts.total_paid_cents ?? purchase?.amount_cents, currency) ?? '—',
       orderDate: longDate(record.captured_at ?? purchase?.paid_at ?? record.created_at),
-      startsAt: longDate(purchase?.access_starts_at),
-      expiresAt: longDate(purchase?.access_ends_at),
+      startsAt: longDate(startsIso),
+      expiresAt: longDate(endsIso),
+      durationLabel: durationDays ? `${durationDays} day${durationDays === 1 ? '' : 's'}` : null,
       orderNumber: detail.order_number,
       paypalTransactionId: record.paypal_order_id ?? null,
       paypalCaptureId: record.paypal_capture_id ?? null,
