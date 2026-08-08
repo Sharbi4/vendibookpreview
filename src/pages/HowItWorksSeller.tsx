@@ -23,6 +23,7 @@ import Footer from '@/components/layout/Footer';
 import SEO from '@/components/SEO';
 import AnimatedHeroScene from '@/components/howitworks/AnimatedHeroScene';
 import ScrollWalkthrough, { WalkthroughStep } from '@/components/howitworks/ScrollWalkthrough';
+import { PaymentRailsSection, KeepExploring } from '@/components/howitworks/PaymentRailsSection';
 import ValuePillars, { Pillar } from '@/components/howitworks/ValuePillars';
 
 const steps: WalkthroughStep[] = [
@@ -171,6 +172,10 @@ const HowItWorksSeller = () => {
             </div>
           </div>
         </section>
+        <PaymentRailsSection audience="seller" />
+
+        <KeepExploring current="seller" />
+
       </main>
 
       <Footer />
