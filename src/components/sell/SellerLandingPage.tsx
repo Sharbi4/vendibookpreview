@@ -5,6 +5,7 @@ import Footer from '@/components/layout/Footer';
 import SEO from '@/components/SEO';
 import JsonLd from '@/components/JsonLd';
 import { Button } from '@/components/ui/button';
+import SellerPaymentsExplainer from '@/components/sell/SellerPaymentsExplainer';
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -38,11 +39,11 @@ export interface SellerLandingProps {
 }
 
 const TRUST_BULLETS = [
-  'Free to list',
-  'Buyer offers and messaging',
-  'Optional secure transaction support',
-  'Verified users through Vendibook identity verification',
-  'Photos, video, and equipment details',
+  'Free to publish — nothing to set up first',
+  'Buyer offers and in-platform messaging',
+  'PayPal Checkout, pay in person, or both',
+  'Optional Equinox Funding on eligible sale listings',
+  'Photos, video, and full equipment details',
   'Rent while you wait to sell',
 ];
 
@@ -57,27 +58,31 @@ const FAQ_DATA = (asset: string): { q: string; a: string }[] => [
   },
   {
     q: 'Is it free to list?',
-    a: 'Yes — creating a listing on Vendibook is free. Optional paid boosts and featured placement are available if you want extra visibility.',
+    a: 'Yes — creating and publishing a listing on Vendibook is free. Publishing never requires identity verification, payout setup, PayPal setup, financing, a membership, or a paid add-on. Optional paid boosts and featured placement are available if you want extra visibility.',
   },
   {
     q: 'Can buyers make offers?',
     a: 'Yes. Buyers can submit offers directly through your listing, and you can accept, decline, or counter inside Vendibook.',
   },
   {
+    q: 'How do I get paid?',
+    a: 'You choose how your listing accepts payment: PayPal Checkout online, payment in person, or both. For a completed Vendibook-processed sale, Vendibook records your proceeds minus the 12.9% seller platform fee and issues the payout through Vendibook\u2019s current reviewed payout workflow to the PayPal, Venmo, Cash App, or ACH destination you saved. Pay-in-person sales are arranged directly with the buyer and carry no Vendibook seller platform fee.',
+  },
+  {
     q: `Can I upload a video of my ${asset}?`,
-    a: `Yes. Video walkthroughs significantly improve buyer confidence and tend to drive faster, more serious inquiries.`,
+    a: `Yes. Video walkthroughs help buyers understand condition and equipment, and tend to reduce back-and-forth before an inquiry becomes an offer.`,
   },
   {
     q: `Can I rent my ${asset} while trying to sell it?`,
     a: `Yes — eligible owners can list for sale and rent at the same time. You can earn rental revenue from chefs, caterers, and food entrepreneurs while you wait for the right buyer.`,
   },
   {
-    q: 'Does Vendibook verify users?',
-    a: 'Yes. Buyers and sellers can verify their identity through Vendibook identity verification, and verified badges appear on profiles and listings.',
+    q: 'Does Vendibook verify sellers?',
+    a: 'Identity verification is an optional one-time $19.99 seller upgrade, powered by Plaid and paid through PayPal. It is never required to publish or to get paid. The badge confirms identity only \u2014 not ownership, title, condition, value, or listing accuracy.',
   },
   {
-    q: 'Does Vendibook offer secure transaction tools?',
-    a: 'Yes. Optional payment protection-style secure transaction support is available where the transaction type supports it, including identity verification, offer tracking, and reviews after completed sales.',
+    q: 'Can buyers finance the purchase?',
+    a: 'On eligible for-sale trucks, trailers, and carts you can turn on the optional Equinox Funding add-on. Buyers can then apply and download the financing purchase sheet. A 12.9% platform fee applies to an Equinox-financed Vendibook sale. Vendibook is not a lender \u2014 approval and terms are determined by Equinox and/or its funding providers.',
   },
   {
     q: 'What should I include in my listing?',
@@ -93,6 +98,7 @@ const FAQ_DATA = (asset: string): { q: string; a: string }[] => [
   },
 ];
 
+
 const SellerLandingPage = ({
   asset,
   assetPlural,
@@ -101,7 +107,7 @@ const SellerLandingPage = ({
   description,
   h1,
   subheadline,
-  primaryCtaHref = '/list',
+  primaryCtaHref = '/list/start',
   primaryCtaLabel,
   secondaryCtaHref,
   secondaryCtaLabel,
@@ -201,9 +207,9 @@ const SellerLandingPage = ({
                 { icon: Tag, t: 'Free to list', d: `Create a full listing for your ${asset} with photos, video, specs, and price at no cost.` },
                 { icon: MessageSquare, t: 'Built-in buyer chat', d: 'Answer questions, negotiate, and share documents — all inside Vendibook.' },
                 { icon: Handshake, t: 'Offers, not just price tags', d: 'Buyers can submit offers. Accept, decline, or counter in a few taps.' },
-                { icon: ShieldCheck, t: 'Verified users', d: 'Buyers and sellers can verify identity through Vendibook identity verification.' },
+                { icon: ShieldCheck, t: 'Optional verified badge', d: 'Add the optional Plaid-powered identity check. Never required to publish or get paid.' },
                 { icon: Camera, t: 'Photos, video, and specs', d: 'Show the kitchen, hood, generator, fridge, and water tanks — not just a side shot.' },
-                { icon: Star, t: 'Reviews after sales', d: 'Build a trusted seller profile through reviews on completed transactions.' },
+                { icon: Star, t: 'Reviews after sales', d: 'Build a seller profile through reviews on completed transactions.' },
               ].map((c) => (
                 <div key={c.t} className="rounded-2xl border border-border bg-card p-5 space-y-2">
                   <c.icon className="h-5 w-5 text-primary" />
@@ -318,22 +324,13 @@ const SellerLandingPage = ({
             </ul>
           </section>
 
-          {/* Secure transaction tools */}
-          <section aria-labelledby="secure-heading" className="rounded-2xl border border-border bg-gradient-to-br from-card to-background p-8 md:p-10 space-y-5">
-            <div className="flex items-center gap-2 text-primary">
-              <ShieldCheck className="h-5 w-5" />
-              <span className="text-xs uppercase tracking-wide">Optional secure transaction</span>
-            </div>
-            <h2 id="secure-heading" className="text-2xl md:text-3xl font-semibold text-foreground max-w-3xl">
-              Close the deal with confidence
-            </h2>
-            <p className="text-muted-foreground max-w-3xl leading-relaxed">
-              When you and your buyer want extra protection, Vendibook supports optional secure
-              transaction tools where available — including identity verification
-              Identity, offer tracking, supporting documents, and reviews after the sale. Use them
-              when it makes sense, or keep your sale fully off-platform if you prefer.
-            </p>
-          </section>
+          {/* How selling and getting paid works — single source of payment copy */}
+          <SellerPaymentsExplainer
+            asset={asset}
+            ctaHref={primaryCtaHref}
+            ctaLabel={primaryCtaLabel ?? `List Your ${asset.charAt(0).toUpperCase() + asset.slice(1)} Free`}
+            nested
+          />
 
           {/* Equipment types */}
           <section aria-labelledby="types-heading" className="space-y-4">

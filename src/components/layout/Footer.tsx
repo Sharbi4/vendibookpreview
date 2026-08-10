@@ -208,8 +208,9 @@ const Footer = () => {
               </span>
               <span className="flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-green-400" />
-                24/7 Support
+                Support Mon&ndash;Fri, 9am&ndash;5pm AZ
               </span>
+
             </div>
 
             {/* Payments badge */}
