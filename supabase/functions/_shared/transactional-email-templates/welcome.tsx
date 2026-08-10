@@ -53,7 +53,7 @@ const WelcomeEmail = ({ name, role }: WelcomeProps) => {
               2. {isHost ? 'Publish your first listing with great photos.' : 'Save a few favorites to track availability.'}
             </Text>
             <Text style={s.listItem}>
-              3. {isHost ? 'Connect Stripe to receive payouts.' : 'Verify your identity for instant booking.'}
+              3. {isHost ? 'Add your payout details to get paid.' : 'Save a payment method for faster checkout.'}
             </Text>
 
             <ToolsBlock role={role} />

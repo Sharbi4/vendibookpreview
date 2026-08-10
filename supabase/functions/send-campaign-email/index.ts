@@ -379,7 +379,7 @@ const campaigns: Record<string, { subject: string; html: string }> = {
 
   <div style="margin-bottom: 16px;">
     <p style="margin: 0 0 8px 0;"><strong>✅ Verified vendors (optional)</strong></p>
-    <p style="margin: 0; font-size: 15px; color: #444;">Require Stripe Identity verification so you're only working with verified profiles.</p>
+    <p style="margin: 0; font-size: 15px; color: #444;">Look for the Verified Seller badge so you're only working with verified profiles.</p>
   </div>
 
   <div style="margin-bottom: 16px;">

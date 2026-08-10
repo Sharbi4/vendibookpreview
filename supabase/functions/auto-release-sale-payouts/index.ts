@@ -122,7 +122,7 @@ serve(async (req) => {
             .from('sale_transactions')
             .update({
               status: 'completed',
-              message: 'Auto-completed after 25 days. Payout pending - seller needs to connect Stripe account.',
+              message: 'Auto-completed after 25 days. Payout pending - seller needs payout details on file.',
             })
             .eq('id', transaction.id);
           results.skipped++;
