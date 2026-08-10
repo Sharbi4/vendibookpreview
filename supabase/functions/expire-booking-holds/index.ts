@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import Stripe from "https://esm.sh/stripe@18.5.0";
+import { releaseHeldPayment } from "../_shared/paymentOps.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 
 const corsHeaders = {
@@ -20,8 +20,6 @@ serve(async (req) => {
   try {
     logStep("Cron job started - checking for expired booking holds");
 
-    const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
-    if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
 
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
@@ -29,13 +27,11 @@ serve(async (req) => {
       { auth: { persistSession: false } }
     );
 
-    const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
-
     // Find bookings with expired holds that haven't been processed
     // Give 24-hour buffer before auto-expiring (host has 6 days to respond)
     const { data: expiredBookings, error: fetchError } = await supabaseClient
       .from('booking_requests')
-      .select('id, payment_intent_id, host_id, shopper_id, listing_id, hold_expires_at')
+      .select('id, payment_intent_id, payment_provider, host_id, shopper_id, listing_id, hold_expires_at')
       .eq('hold_status', 'held')
       .eq('status', 'pending')
       .lt('hold_expires_at', new Date().toISOString());
@@ -61,15 +57,19 @@ serve(async (req) => {
         logStep("Processing expired hold", { booking_id: booking.id });
 
         if (booking.payment_intent_id) {
-          // Cancel the payment intent to release the hold
-          const paymentIntent = await stripe.paymentIntents.retrieve(booking.payment_intent_id);
-          
-          if (paymentIntent.status === 'requires_capture') {
-            await stripe.paymentIntents.cancel(booking.payment_intent_id, {
-              cancellation_reason: 'abandoned',
-            });
-            logStep("Payment hold released", { payment_intent_id: booking.payment_intent_id });
-          }
+          // Vendibook releases authorizations through PayPal only. Legacy
+          // references resolve to a manual outcome for administrator cleanup.
+          const release = await releaseHeldPayment({
+            authorizationId: booking.payment_intent_id,
+            provider: booking.payment_provider,
+            idempotencyKey: `booking-expire-${booking.id}`,
+          });
+          logStep("Hold release outcome", {
+            booking_id: booking.id,
+            success: release.success,
+            manual: release.manual ?? false,
+            status: release.status,
+          });
         }
 
         // Update booking status

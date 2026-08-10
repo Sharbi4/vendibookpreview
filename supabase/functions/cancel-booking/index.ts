@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import Stripe from "https://esm.sh/stripe@18.5.0";
+import { refundPayment } from "../_shared/paymentOps.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 
 const corsHeaders = {
@@ -26,9 +26,6 @@ serve(async (req) => {
 
   try {
     logStep("Function started");
-
-    const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
-    if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
 
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
@@ -115,53 +112,46 @@ serve(async (req) => {
     if (isPaid && process_refund && booking.payment_intent_id) {
       logStep("Processing refund for paid booking");
       
-      const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
-      
       try {
         // Calculate refund: partial or full
         const isPartialRefund = typeof refund_amount === 'number' && refund_amount > 0 && refund_amount < booking.total_price;
-        const refundAmountCents = isPartialRefund 
-          ? Math.round(refund_amount * 100) 
+        const refundAmountCents = isPartialRefund
+          ? Math.round(refund_amount * 100)
           : undefined; // undefined means full refund
-        
-        logStep("Refund calculation", { 
-          isPartialRefund, 
-          requestedAmount: refund_amount, 
+
+        logStep("Refund calculation", {
+          isPartialRefund,
+          requestedAmount: refund_amount,
           totalPrice: booking.total_price,
-          refundAmountCents 
+          refundAmountCents,
         });
-        
+
         // Validate partial refund amount
         if (isPartialRefund && refund_amount > booking.total_price) {
           throw new Error(`Refund amount ($${refund_amount}) cannot exceed booking total ($${booking.total_price})`);
         }
-        
-        const refundParams: Stripe.RefundCreateParams = {
-          payment_intent: booking.payment_intent_id,
-          reason: 'requested_by_customer',
-          metadata: {
-            booking_id,
-            initiated_by: initiatedBy,
-            cancellation_reason: cancellation_reason || '',
-            is_partial: isPartialRefund ? 'true' : 'false',
-          },
-        };
-        
-        // Add amount only for partial refunds
-        if (refundAmountCents) {
-          refundParams.amount = refundAmountCents;
+
+        // Vendibook refunds through PayPal only.
+        const refund = await refundPayment({
+          paymentReference: booking.payment_intent_id,
+          provider: booking.payment_provider,
+          amountCents: refundAmountCents,
+          reason: cancellation_reason || 'Booking cancelled',
+          idempotencyKey: `booking-cancel-refund-${booking_id}-${refundAmountCents ?? "full"}`,
+        });
+
+        if (!refund.success) {
+          throw new Error(refund.error ?? "Refund failed");
         }
-        
-        const refund = await stripe.refunds.create(refundParams);
-        
+
         refundResult = {
           refund_id: refund.id,
           refund_status: refund.status,
-          refund_amount: refund.amount / 100,
+          refund_amount: (refund.amountCents ?? refundAmountCents ?? Math.round(booking.total_price * 100)) / 100,
           is_partial: isPartialRefund,
           original_amount: booking.total_price,
         };
-        
+
         logStep("Refund processed", refundResult);
       } catch (refundError) {
         logStep("ERROR: Refund failed", { error: String(refundError) });

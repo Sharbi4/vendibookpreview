@@ -40,14 +40,16 @@ type Sub = {
 };
 type Evt = {
   id: string;
-  stripe_event_id: string;
+  event_id: string;
   event_type: string;
-  status: string;
-  error_message: string | null;
-  retry_count: number;
-  last_retry_at: string | null;
-  processed_at: string;
+  processed: boolean | null;
+  processing_error: string | null;
+  verification_status: string | null;
+  processed_at: string | null;
+  created_at: string | null;
 };
+
+const evtStatus = (e: Evt) => (e.processed ? 'processed' : e.processing_error ? 'failed' : 'pending');
 
 function fmt(iso?: string | null) {
   if (!iso) return '—';
@@ -77,7 +79,7 @@ export default function AdminBilling() {
     setLoading(true);
     const [subsRes, evRes] = await Promise.all([
       supabase.from('host_subscriptions').select('*').order('updated_at', { ascending: false }).limit(500),
-      supabase.from('stripe_webhook_events').select('*').order('processed_at', { ascending: false }).limit(200),
+      supabase.from('paypal_webhook_events').select('*').order('created_at', { ascending: false }).limit(200),
     ]);
     setSubs((subsRes.data as Sub[]) ?? []);
     setEvents((evRes.data as Evt[]) ?? []);
@@ -138,7 +140,7 @@ export default function AdminBilling() {
   if (!user) return <Navigate to="/auth" replace />;
   if (!isAdmin) return <Navigate to="/" replace />;
 
-  const failedCount = events.filter(e => e.status === 'failed').length;
+  const failedCount = events.filter(e => evtStatus(e) === 'failed').length;
   const activeCount = subs.filter(s => s.status === 'active' || s.status === 'trialing').length;
   const flaggedCount = subs.filter(s => s.flagged_at).length;
 
@@ -261,7 +263,7 @@ export default function AdminBilling() {
                           <TableHead>Type</TableHead>
                           <TableHead>Status</TableHead>
                           <TableHead>Processed</TableHead>
-                          <TableHead>Retries</TableHead>
+                          <TableHead>Verification</TableHead>
                           <TableHead className="text-right">Actions</TableHead>
                         </TableRow>
                       </TableHeader>
@@ -270,14 +272,14 @@ export default function AdminBilling() {
                           <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">No events yet.</TableCell></TableRow>
                         ) : events.map(e => (
                           <TableRow key={e.id}>
-                            <TableCell className="font-mono text-[11px]">{e.stripe_event_id}</TableCell>
+                            <TableCell className="font-mono text-[11px]">{e.event_id}</TableCell>
                             <TableCell className="text-xs">{e.event_type}</TableCell>
                             <TableCell>
-                              <Badge variant="outline" className={e.status === 'processed' ? STATUS_TONE.active : e.status === 'failed' ? STATUS_TONE.unpaid : STATUS_TONE.incomplete}>{e.status}</Badge>
-                              {e.error_message && <div className="text-[11px] text-red-500 mt-1 max-w-xs truncate" title={e.error_message}>{e.error_message}</div>}
+                              <Badge variant="outline" className={evtStatus(e) === 'processed' ? STATUS_TONE.active : evtStatus(e) === 'failed' ? STATUS_TONE.unpaid : STATUS_TONE.incomplete}>{evtStatus(e)}</Badge>
+                              {e.processing_error && <div className="text-[11px] text-red-500 mt-1 max-w-xs truncate" title={e.processing_error}>{e.processing_error}</div>}
                             </TableCell>
                             <TableCell className="text-xs">{fmt(e.processed_at)}</TableCell>
-                            <TableCell className="text-xs">{e.retry_count ?? 0}{e.last_retry_at ? ` · ${fmt(e.last_retry_at)}` : ''}</TableCell>
+                            <TableCell className="text-xs">{e.verification_status ?? '—'}</TableCell>
                             <TableCell className="text-right">
                               <Button size="sm" variant="outline" onClick={() => retryEvent(e.id)} disabled={busy === `retry:${e.id}`}>
                                 {busy === `retry:${e.id}` ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <><RotateCw className="h-3.5 w-3.5 mr-1.5" />Retry</>}

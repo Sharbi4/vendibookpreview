@@ -177,16 +177,9 @@ const PaymentSuccess = () => {
 
       try {
         if (isEscrow) {
-          // First, try to create the transaction via edge function
-          // This handles the case where webhook hasn't fired or user returns before it processes
-          // The edge function is idempotent - if transaction exists, it returns success
-          try {
-            await supabase.functions.invoke('create-sale-transaction', {
-              body: { session_id: sessionId }});
-          } catch (createError) {
-            // Log but don't fail - transaction might already exist from webhook
-            console.log('Create transaction attempt:', createError);
-          }
+          // The PayPal order finalizer writes the protected-sale transaction, so
+          // we simply poll until it lands instead of creating it from the client.
+
 
           // Now poll for the transaction (should exist after create call or from webhook)
           let attempts = 0;

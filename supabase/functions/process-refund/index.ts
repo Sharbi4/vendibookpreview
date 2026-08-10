@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import Stripe from "https://esm.sh/stripe@18.5.0";
+import { refundPayment } from "../_shared/paymentOps.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 
 const corsHeaders = {
@@ -27,9 +27,6 @@ serve(async (req) => {
 
   try {
     logStep("Function started");
-
-    const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
-    if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
 
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
@@ -101,9 +98,7 @@ serve(async (req) => {
       throw new Error("No payment intent found for this booking");
     }
 
-    const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
-
-    // Calculate refund amount in cents
+    // Calculate refund amount in cents (omitted means full refund)
     let refundAmountCents: number | undefined;
     if (refund_amount !== undefined) {
       refundAmountCents = Math.round(refund_amount * 100);
@@ -112,27 +107,24 @@ serve(async (req) => {
       logStep("Full refund requested");
     }
 
-    // Create the refund in Stripe
-    const refundParams: Stripe.RefundCreateParams = {
-      payment_intent: booking.payment_intent_id,
-      reason,
-      metadata: {
-        booking_id,
-        initiated_by,
-        initiated_by_user_id: user.id,
-        cancellation_reason: cancellation_reason || '',
-      },
-    };
+    // Vendibook refunds through PayPal only.
+    const refund = await refundPayment({
+      paymentReference: booking.payment_intent_id,
+      provider: booking.payment_provider,
+      amountCents: refundAmountCents,
+      reason: cancellation_reason || reason,
+      idempotencyKey: `booking-refund-${booking_id}-${refundAmountCents ?? "full"}`,
+    });
 
-    if (refundAmountCents) {
-      refundParams.amount = refundAmountCents;
+    if (!refund.success) {
+      logStep("Refund not completed", { error: refund.error, manual: refund.manual });
+      throw new Error(refund.error ?? "Refund failed");
     }
 
-    const refund = await stripe.refunds.create(refundParams);
-    logStep("Refund created", { 
-      refundId: refund.id, 
+    logStep("Refund created", {
+      refundId: refund.id,
       status: refund.status,
-      amount: refund.amount 
+      amountCents: refund.amountCents,
     });
 
     // Update booking status
@@ -180,7 +172,7 @@ serve(async (req) => {
               fullName: shopperProfile.full_name || "Valued Customer",
               bookingId: booking_id,
               listingTitle: booking.listings?.title || "Booking",
-              refundAmount: refund.amount / 100,
+              refundAmount: ((refund.amountCents ?? 0) / 100),
               reason: cancellation_reason || "Booking cancelled",
               recipientType: 'shopper',
             }),
@@ -208,7 +200,7 @@ serve(async (req) => {
               fullName: hostProfile.full_name || "Host",
               bookingId: booking_id,
               listingTitle: booking.listings?.title || "Booking",
-              refundAmount: refund.amount / 100,
+              refundAmount: ((refund.amountCents ?? 0) / 100),
               reason: cancellation_reason || "Booking cancelled",
               recipientType: 'host',
               initiatedBy: initiated_by,
@@ -227,7 +219,7 @@ serve(async (req) => {
         user_id: booking.shopper_id,
         type: 'refund',
         title: 'Refund Processed',
-        message: `Your refund of $${(refund.amount / 100).toFixed(2)} for "${booking.listings?.title || 'booking'}" has been processed.`,
+        message: `Your refund of $${(((refund.amountCents ?? 0) / 100)).toFixed(2)} for "${booking.listings?.title || 'booking'}" has been processed.`,
         link: '/dashboard',
       });
       logStep("In-app notification created for shopper");
@@ -240,7 +232,7 @@ serve(async (req) => {
         success: true,
         refund_id: refund.id,
         refund_status: refund.status,
-        refund_amount: refund.amount / 100,
+        refund_amount: ((refund.amountCents ?? 0) / 100),
         booking_status: 'cancelled',
         payment_status: 'refunded',
       }),

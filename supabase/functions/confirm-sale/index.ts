@@ -1,5 +1,4 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 
 declare const EdgeRuntime: { waitUntil: (promise: Promise<unknown>) => void };
@@ -27,8 +26,6 @@ serve(async (req) => {
   try {
     logStep("Function started");
 
-    const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
-    if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
 
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
@@ -132,133 +129,55 @@ serve(async (req) => {
       throw new Error(`Failed to update transaction: ${updateError.message}`);
     }
 
-    // If both parties confirmed, initiate payout.
-    // Cash / Pay-in-Person sales have no online payment (payment_intent_id is null),
-    // so there is nothing to transfer via Stripe — the money is settled off-platform.
-    // In that case we mark the transaction completed and skip the Stripe balance/transfer flow.
+    // If both parties confirmed, the seller's proceeds become eligible for
+    // release. Vendibook settles seller payouts manually: we only flip the
+    // payable to eligible and notify the seller — no automated transfer runs.
+    // Cash / Pay-in-Person sales settle off-platform and have no payable.
     const isCashSale = !transaction.payment_intent_id;
 
     if (newStatus === 'completed' && !isCashSale) {
-      logStep("Both parties confirmed - initiating payout");
+      logStep("Both parties confirmed - releasing payable for manual payout");
 
-      const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
+      const nowIso = new Date().toISOString();
 
-      // Get seller's Stripe account
-      const { data: sellerProfile, error: profileError } = await supabaseClient
-        .from('profiles')
-        .select('stripe_account_id')
-        .eq('id', transaction.seller_id)
-        .single();
+      const { error: payableError } = await supabaseClient
+        .from('seller_payables')
+        .update({ payout_eligible_at: nowIso })
+        .eq('seller_id', transaction.seller_id)
+        .eq('listing_id', transaction.listing_id)
+        .eq('status', 'pending_release');
 
-      if (profileError || !sellerProfile?.stripe_account_id) {
-        // Mark as completed but note payout issue
-        await supabaseClient
-          .from('sale_transactions')
-          .update({ status: 'completed', message: 'Seller has no connected Stripe account - payout pending setup' })
-          .eq('id', transaction_id);
-        logStep("Seller has no Stripe account - transaction completed, payout pending");
-        // Don't throw - transaction is still valid, just payout is pending
-      } else {
-        // Create transfer to seller
-        // seller_payout is stored in dollars, convert to cents
-        const payoutAmount = Math.round(Number(transaction.seller_payout) * 100);
-        
-        logStep("Creating transfer", { 
-          amount: payoutAmount, 
-          amountDollars: transaction.seller_payout,
-          destination: sellerProfile.stripe_account_id 
-        });
-
-        // Check available balance first
-        let hasAvailableBalance = false;
-        try {
-          const balance = await stripe.balance.retrieve();
-          const usdBalance = balance.available.find((b: { currency: string; amount: number }) => b.currency === 'usd');
-          hasAvailableBalance = usdBalance && usdBalance.amount >= payoutAmount;
-          logStep("Balance check", { 
-            available: usdBalance?.amount || 0, 
-            needed: payoutAmount,
-            hasEnough: hasAvailableBalance 
-          });
-        } catch (balanceError) {
-          logStep("Balance check failed", { error: balanceError instanceof Error ? balanceError.message : String(balanceError) });
-        }
-
-        if (!hasAvailableBalance) {
-          // Mark as completed but with pending payout message
-          await supabaseClient
-            .from('sale_transactions')
-            .update({ 
-              status: 'completed',
-              message: 'Payout pending - funds will be transferred when available balance is sufficient',
-            })
-            .eq('id', transaction_id);
-          
-          logStep("Insufficient balance - payout marked as pending");
-        } else {
-          try {
-            const transfer = await stripe.transfers.create({
-              amount: payoutAmount,
-              currency: 'usd',
-              destination: sellerProfile.stripe_account_id,
-              metadata: {
-                transaction_id: transaction.id,
-                listing_id: transaction.listing_id,
-              },
-            });
-
-            logStep("Transfer created", { transferId: transfer.id });
-
-            // Update transaction with transfer info
-            await supabaseClient
-              .from('sale_transactions')
-              .update({ 
-                transfer_id: transfer.id,
-                payout_completed_at: new Date().toISOString(),
-              })
-              .eq('id', transaction_id);
-
-            // Send payout completed notification to seller
-            const supabaseUrlForPayout = Deno.env.get("SUPABASE_URL") ?? "";
-            const supabaseAnonKeyForPayout = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
-            
-            EdgeRuntime.waitUntil(
-              fetch(`${supabaseUrlForPayout}/functions/v1/send-sale-notification`, {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                  'Authorization': `Bearer ${supabaseAnonKeyForPayout}`,
-                },
-                body: JSON.stringify({
-                  transaction_id: transaction_id,
-                  notification_type: 'payout_completed',
-                }),
-              }).then(res => {
-                logStep("Payout notification sent", { status: res.status });
-              }).catch(err => {
-                logStep("Payout notification failed", { error: err.message });
-              })
-            );
-
-          } catch (stripeError) {
-            const errorMessage = stripeError instanceof Error ? stripeError.message : String(stripeError);
-            logStep("Transfer failed", { error: errorMessage });
-            
-            // Transaction is still completed, payout is pending
-            // Mark message but don't change status to disputed
-            await supabaseClient
-              .from('sale_transactions')
-              .update({ 
-                status: 'completed',
-                message: `Payout pending: ${errorMessage}`,
-              })
-              .eq('id', transaction_id);
-            
-            // Don't throw - transaction is completed successfully, payout will be retried
-            logStep("Transaction completed but payout pending retry");
-          }
-        }
+      if (payableError) {
+        logStep("Warning: failed to mark payable eligible", { error: payableError.message });
       }
+
+      await supabaseClient
+        .from('sale_transactions')
+        .update({
+          status: 'completed',
+          message: 'Both parties confirmed. Your payout is queued for release by our team.',
+        })
+        .eq('id', transaction_id);
+
+      // Let the seller know their proceeds are queued.
+      const supabaseUrlForPayout = Deno.env.get("SUPABASE_URL") ?? "";
+      const supabaseAnonKeyForPayout = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
+
+      EdgeRuntime.waitUntil(
+        fetch(`${supabaseUrlForPayout}/functions/v1/send-sale-notification`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${supabaseAnonKeyForPayout}`,
+          },
+          body: JSON.stringify({
+            transaction_id: transaction_id,
+            notification_type: 'payout_completed',
+          }),
+        })
+          .then((res) => logStep("Payout notification sent", { status: res.status }))
+          .catch((err) => logStep("Payout notification failed", { error: err.message })),
+      );
     }
 
     // Send notification email (background task)
