@@ -291,7 +291,7 @@ const Header = ({ hideSearch = false }: HeaderProps) => {
           to="/" 
           className={`flex items-center shrink-0 transition-opacity duration-200 ${isMobileSearchOpen ? 'opacity-0 pointer-events-none absolute' : 'opacity-100'} md:opacity-100 md:pointer-events-auto md:relative`}
         >
-          <div className="flex items-center justify-center w-11 h-11">
+          <div className="flex items-center justify-center w-9 h-9 sm:w-11 sm:h-11 shrink-0">
             <img 
               src={vendibookFavicon} 
               alt="Vendibook" 
