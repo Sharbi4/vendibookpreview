@@ -240,9 +240,24 @@ Deno.serve(async (req) => {
       );
     }
 
-
+    // ---- broadcast guard -------------------------------------------------
+    // The Resend broadcast path mails the entire audience. It must never fire
+    // from an accidental or automated call: require an explicit opt-in flag.
+    if (body?.confirmBroadcast !== true) {
+      return new Response(
+        JSON.stringify({
+          success: false,
+          skipped: "broadcast_not_confirmed",
+          message: "Broadcast requires confirmBroadcast: true. Use mode 'gap' for catch-up sends.",
+          subject,
+          listingCount: listings.length,
+        }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
 
     // Resolve General audience (first one in the account)
+
     const audiences = await resend("/audiences", { method: "GET" }, RESEND_KEY);
     const general = audiences?.data?.find((a: any) => a.name?.toLowerCase() === "general") || audiences?.data?.[0];
     if (!general?.id) throw new Error("No Resend audience found. Create one in Resend dashboard.");
