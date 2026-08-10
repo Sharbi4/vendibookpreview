@@ -53,6 +53,11 @@ const BlogPost = () => {
     return <Navigate to="/blog" replace />;
   }
 
+  // Alias or truncated slug resolved to a real post — normalise the URL.
+  if (slug && post.slug !== slug) {
+    return <Navigate to={`/blog/${post.slug}`} replace />;
+  }
+
   const relatedPosts = getRelatedPosts(post.slug, 3);
   const categoryLabel = BLOG_CATEGORIES.find(c => c.slug === post.category)?.label || post.category;
 

@@ -31,6 +31,7 @@ import {
 import AnimatedHeroScene from '@/components/howitworks/AnimatedHeroScene';
 import ScrollWalkthrough, { WalkthroughStep } from '@/components/howitworks/ScrollWalkthrough';
 import ValuePillars, { Pillar } from '@/components/howitworks/ValuePillars';
+import PricingFaqSection from '@/components/shared/PricingFaqSection';
 import { TellVendibookButton } from '@/components/lead/TellVendibookButton';
 import { PaymentRailsSection, ProviderTrustStrip, KeepExploring } from '@/components/howitworks/PaymentRailsSection';
 
@@ -384,6 +385,10 @@ const HowItWorks = () => {
           </div>
         </section>
 
+        <PricingFaqSection
+          audience={role === 'host' ? 'host' : role === 'sell' ? 'seller' : role === 'rent' ? 'renter' : 'buyer'}
+          includeSchema
+        />
         <PaymentRailsSection audience={role === 'host' ? 'host' : role === 'sell' ? 'seller' : 'buyer'} />
 
         <KeepExploring current="overview" />

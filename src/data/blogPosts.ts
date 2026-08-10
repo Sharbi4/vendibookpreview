@@ -2449,8 +2449,58 @@ function sortByDateDesc(posts: BlogPost[]): BlogPost[] {
   );
 }
 
+/** Legacy or shortened slugs still linked from older pages, emails, and ads. */
+export const BLOG_SLUG_ALIASES: Record<string, string> = {
+  'how-to-start-food-truck-business': 'how-to-start-food-truck-business-2025',
+  'vendibook-equinox-partnership': 'vendibook-equinox-food-truck-financing-partnership',
+  'equinox-partnership': 'vendibook-equinox-food-truck-financing-partnership',
+  'new-exit-plan-food-truck': 'new-exit-plan-food-truck-after-layoffs',
+  'parked-food-truck-rental': 'parked-food-truck-losing-money-rent-it-out',
+  'sell-vs-rent-food-truck': 'sell-vs-rent-food-trailer-truck-ghost-kitchen',
+  'food-truck-marketplace-2026': 'modern-food-truck-marketplace-2026',
+  'texas-mobile-food-vendor-law': 'texas-mobile-food-vendor-law-2026',
+  'restaurant-proof-of-concept': 'restaurant-proof-of-concept-shared-kitchens',
+  'sell-my-food-truck': 'sell-my-food-truck-valuation-guide-2026',
+  financing: 'food-truck-financing-options',
+};
+
+const normalizeBlogSlug = (slug: string) =>
+  slug.trim().toLowerCase().replace(/^\/+|\/+$/g, '').replace(/[_\s]+/g, '-');
+
+/**
+ * Resolve a slug to a post, tolerating aliases, casing, trailing slashes, and
+ * truncated slugs so shared links never dead-end on "article not found".
+ */
 export function getBlogPostBySlug(slug: string): BlogPost | undefined {
-  return BLOG_POSTS.find(post => post.slug === slug);
+  const normalized = normalizeBlogSlug(slug || '');
+  if (!normalized) return undefined;
+
+  const exact = BLOG_POSTS.find(post => post.slug === normalized);
+  if (exact) return exact;
+
+  const aliased = BLOG_SLUG_ALIASES[normalized];
+  if (aliased) {
+    const hit = BLOG_POSTS.find(post => post.slug === aliased);
+    if (hit) return hit;
+  }
+
+  const prefix = BLOG_POSTS.find(
+    post => post.slug.startsWith(normalized) || normalized.startsWith(post.slug),
+  );
+  if (prefix) return prefix;
+
+  const words = normalized.split('-').filter(w => w.length > 2);
+  if (words.length) {
+    let best: { post: BlogPost; score: number } | null = null;
+    for (const post of BLOG_POSTS) {
+      const target = post.slug.split('-');
+      const score = words.filter(w => target.includes(w)).length / words.length;
+      if (score >= 0.6 && (!best || score > best.score)) best = { post, score };
+    }
+    if (best) return best.post;
+  }
+
+  return undefined;
 }
 
 export function getBlogPostsByCategory(category: string): BlogPost[] {

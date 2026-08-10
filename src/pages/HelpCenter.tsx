@@ -30,6 +30,7 @@ import {
 } from 'lucide-react';
 import HelpCenterSearch from '@/components/support/HelpCenterSearch';
 import RequestCallCard from '@/components/support/RequestCallCard';
+import PricingFaqSection from '@/components/shared/PricingFaqSection';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { trackEventToDb } from '@/hooks/useAnalyticsEvents';
 
@@ -549,6 +550,8 @@ const HelpCenter = () => {
             </div>
           </div>
         </section>
+
+        <PricingFaqSection audience="all" includeSchema className="border-t border-white/[0.06]" />
 
         {/* ===== Bottom CTAs ===== */}
         <section className="relative py-12 md:py-16 border-t border-white/[0.06]">
