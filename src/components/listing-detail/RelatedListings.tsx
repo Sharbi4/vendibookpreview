@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import { filterPubliclyVisible } from '@/lib/listings/publicVisibility';
 import { MapPin } from 'lucide-react';
 import { CATEGORY_LABELS } from '@/types/listing';
 import { calculateDistance } from '@/lib/geolocation';
@@ -33,19 +34,20 @@ const RelatedListings = ({ listingId, category, mode, address, latitude, longitu
     const fetchRelated = async () => {
       const { data } = await supabase
         .from('listings')
-        .select('id, title, cover_image_url, price_daily, price_sale, mode, category, address, latitude, longitude')
+        .select('id, title, cover_image_url, price_daily, price_sale, mode, category, address, latitude, longitude, status, published_at, deleted_at, moderation_status')
         .eq('status', 'published').not('published_at', 'is', null).is('deleted_at', null).eq('moderation_status', 'clear')
         .neq('id', listingId)
         .eq('category', category as any)
         .eq('mode', mode as any)
         .limit(50);
 
-      if (data && data.length > 0) {
+      const visible = filterPubliclyVisible(data ?? []);
+      if (visible.length > 0) {
         let sorted: RelatedListing[];
 
         if (latitude && longitude) {
           // Calculate actual distance and sort by proximity
-          sorted = data
+          sorted = visible
             .map(l => ({
               ...l,
               distance_miles: (l.latitude && l.longitude)
@@ -55,7 +57,7 @@ const RelatedListings = ({ listingId, category, mode, address, latitude, longitu
             .sort((a, b) => (a.distance_miles ?? Infinity) - (b.distance_miles ?? Infinity))
             .slice(0, 6);
         } else {
-          sorted = data.slice(0, 6);
+          sorted = visible.slice(0, 6);
         }
 
         setListings(sorted);
