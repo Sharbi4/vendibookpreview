@@ -7,6 +7,7 @@ import { supabase } from '@/integrations/supabase/client';
 import ListingCard from '@/components/listing/ListingCard';
 import { Skeleton } from '@/components/ui/skeleton';
 import { isListingFeatured, sortFeaturedFirstFair } from '@/lib/featured';
+import { filterPubliclyVisible } from '@/lib/listings/publicVisibility';
 import { trackLeadEvent } from '@/lib/leadTracking';
 
 const FEATURED_LIMIT = 12;
@@ -39,9 +40,12 @@ const HomepageFeaturedRow = () => {
         .limit(FEATURED_LIMIT);
       if (error) throw error;
       // Defensive: re-check with helper, then rotate fairly among the featured cohort.
-      return sortFeaturedFirstFair((data ?? []).filter((l) => isListingFeatured(l as any)) as any);
+      return sortFeaturedFirstFair(
+        filterPubliclyVisible(data ?? []).filter((l) => isListingFeatured(l as any)) as any,
+      );
     },
-    staleTime: 60000,
+    staleTime: 15000,
+    refetchOnWindowFocus: true,
   });
 
   const updateScrollState = useCallback(() => {

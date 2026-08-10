@@ -3,6 +3,8 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { useListingsLiveSync } from "@/lib/listings/liveSync";
+
 import { BrowserRouter, Routes, Route, useLocation, Navigate, useParams } from "react-router-dom";
 
 // Redirects /listings/:id (plural) to the canonical /listing/:id, preserving querystring + hash
@@ -551,6 +553,8 @@ const FloatingConciergeButton = lazy(() => import("@/components/FloatingConcierg
 const AppContent = () => {
   useGlobalErrorHandler();
   useOfflineQueueSync();
+  useListingsLiveSync();
+
 
   return (
     <>
