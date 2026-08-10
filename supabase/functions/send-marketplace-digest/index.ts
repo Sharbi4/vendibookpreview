@@ -11,7 +11,7 @@ const corsHeaders = {
 };
 
 const RESEND_API = "https://api.resend.com";
-const FROM = "Vendibook <hello@vendibook.com>";
+const FROM = "Vendibook <hello@updates.vendibook.com>";
 const SITE_URL = "https://vendibook.com";
 
 interface Listing {
@@ -171,12 +171,40 @@ Deno.serve(async (req) => {
     const general = audiences?.data?.find((a: any) => a.name?.toLowerCase() === "general") || audiences?.data?.[0];
     if (!general?.id) throw new Error("No Resend audience found. Create one in Resend dashboard.");
 
+    // Sync opted-in newsletter subscribers into the audience (skip suppressed/unsubscribed)
+    const { data: subs } = await supabase
+      .from("newsletter_subscribers")
+      .select("email")
+      .is("unsubscribed_at", null);
+    const { data: suppressed } = await supabase.from("suppressed_emails").select("email");
+    const { data: unsubbed } = await supabase.from("email_unsubscribes").select("email");
+    const blocked = new Set([
+      ...(suppressed ?? []).map((r: any) => String(r.email).toLowerCase()),
+      ...(unsubbed ?? []).map((r: any) => String(r.email).toLowerCase()),
+    ]);
+    const emails = Array.from(
+      new Set((subs ?? []).map((r: any) => String(r.email).toLowerCase()).filter((e: string) => e && !blocked.has(e) && !e.endsWith("example.com") && !e.endsWith(".test"))),
+    );
+
+    let synced = 0;
+    for (const email of emails) {
+      try {
+        await resend(`/audiences/${general.id}/contacts`, {
+          method: "POST",
+          body: JSON.stringify({ email, unsubscribed: false }),
+        }, RESEND_KEY);
+        synced++;
+      } catch (_e) {
+        // Contact already exists (409) or invalid — skip
+      }
+    }
+
     // Create + send broadcast
     const broadcast = await resend(
       "/broadcasts",
       {
         method: "POST",
-        body: JSON.stringify({ audience_id: general.id, from: FROM, subject, html, name: `Digest ${new Date().toISOString().split("T")[0]}` }),
+        body: JSON.stringify({ audience_id: general.id, from: FROM, reply_to: "support@vendibook.com", subject, html, name: `Digest ${new Date().toISOString().split("T")[0]}` }),
       },
       RESEND_KEY,
     );
@@ -184,7 +212,7 @@ Deno.serve(async (req) => {
     await resend(`/broadcasts/${broadcast.id}/send`, { method: "POST", body: JSON.stringify({}) }, RESEND_KEY);
 
     return new Response(
-      JSON.stringify({ success: true, broadcastId: broadcast.id, audienceId: general.id, subject, listingCount: listings.length }),
+      JSON.stringify({ success: true, broadcastId: broadcast.id, audienceId: general.id, contactsSynced: synced, audienceSize: emails.length, subject, listingCount: listings.length }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   } catch (err) {
