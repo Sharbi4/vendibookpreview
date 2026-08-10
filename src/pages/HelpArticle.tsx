@@ -1,4 +1,4 @@
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, Link, useNavigate, Navigate } from 'react-router-dom';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import SEO, { generateArticleSchema, generateBreadcrumbSchema } from '@/components/SEO';
@@ -15,6 +15,11 @@ const HelpArticle = () => {
   const article = slug ? getArticleBySlug(slug) : undefined;
   const { prev, next } = slug ? getAdjacentArticles(slug) : { prev: null, next: null };
   const relatedArticles = article ? getRelatedArticles(article) : [];
+
+  // Slug resolved via alias/near-miss — send the reader to the canonical URL.
+  if (article && slug && article.slug !== slug) {
+    return <Navigate to={`/help/${article.slug}`} replace />;
+  }
 
   if (!article) {
     return (
