@@ -70,11 +70,6 @@ serve(async (req) => {
         listings!inner (
           id,
           title
-        ),
-        profiles!booking_requests_shopper_id_fkey (
-          id,
-          email,
-          full_name
         )
       `)
       .eq("is_instant_book", true)
@@ -86,6 +81,17 @@ serve(async (req) => {
     if (bookingsError) {
       logStep("Error fetching bookings", { error: bookingsError });
       throw bookingsError;
+    }
+
+    // shopper_id references auth.users, not profiles — fetch profiles separately.
+    const shopperIds = Array.from(new Set((bookings || []).map((b: any) => b.shopper_id).filter(Boolean)));
+    const profilesById = new Map<string, { id: string; email: string | null; full_name: string | null }>();
+    if (shopperIds.length > 0) {
+      const { data: profileRows } = await supabaseClient
+        .from("profiles")
+        .select("id, email, full_name")
+        .in("id", shopperIds);
+      (profileRows || []).forEach((p: any) => profilesById.set(p.id, p));
     }
 
     logStep("Found bookings to check", { count: bookings?.length || 0 });
@@ -167,8 +173,7 @@ serve(async (req) => {
         });
 
         // Get renter info
-        const profileData = booking.profiles as unknown as { id: string; email: string | null; full_name: string | null }[] | null;
-        const profile = profileData?.[0] ?? null;
+        const profile = profilesById.get(booking.shopper_id) ?? null;
         const renterEmail = profile?.email;
         const renterName = profile?.full_name || "Renter";
 
