@@ -285,13 +285,13 @@ const Header = ({ hideSearch = false }: HeaderProps) => {
         willChange: 'transform',
       }}
     >
-      <div className="container max-w-7xl mx-auto pl-4 pr-3 sm:px-4 flex h-[72px] items-center justify-between gap-3">
+      <div className="container max-w-7xl mx-auto pl-3 pr-2 sm:px-4 flex h-[72px] items-center justify-between gap-2 sm:gap-3">
         {/* Logo - hide when mobile search is open */}
         <Link 
           to="/" 
           className={`flex items-center shrink-0 transition-opacity duration-200 ${isMobileSearchOpen ? 'opacity-0 pointer-events-none absolute' : 'opacity-100'} md:opacity-100 md:pointer-events-auto md:relative`}
         >
-          <div className="flex items-center justify-center w-11 h-11">
+          <div className="flex items-center justify-center w-9 h-9 sm:w-11 sm:h-11 shrink-0">
             <img 
               src={vendibookFavicon} 
               alt="Vendibook" 
@@ -384,7 +384,7 @@ const Header = ({ hideSearch = false }: HeaderProps) => {
           ) : (
             <button
               onClick={() => setIsMobileSearchOpen(true)}
-              className="flex items-center gap-2 px-4 h-[46px] rounded-full text-sm font-medium text-white/70 transition-all flex-1 mx-3 min-w-0"
+              className="flex items-center gap-2 px-3 sm:px-4 h-[44px] rounded-full text-sm font-medium text-white/70 transition-all flex-1 mx-1.5 sm:mx-3 min-w-0"
               style={{
                 background: 'rgba(18,18,18,0.92)',
                 border: '1px solid rgba(255,255,255,0.08)',
