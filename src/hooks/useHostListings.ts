@@ -78,6 +78,12 @@ export const useHostListings = () => {
 
       if (error) throw error;
 
+      // Drop it from (or add it back to) every public surface immediately.
+      invalidateListingQueries(queryClient);
+      broadcastListingChanged(id);
+
+
+
       if (status === 'published' && user?.id) {
         triggerOrchestrator({
           user_id: user.id,
