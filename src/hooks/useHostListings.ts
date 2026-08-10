@@ -129,7 +129,11 @@ export const useHostListings = () => {
 
       if (error) throw error;
 
+      invalidateListingQueries(queryClient);
+      broadcastListingChanged(id);
+
       toast({ title: 'Deleted', description: 'Listing has been removed' });
+
     } catch (error) {
       console.error('Error deleting listing:', error);
       setListings(snapshot); // rollback
