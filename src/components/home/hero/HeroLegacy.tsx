@@ -18,14 +18,14 @@ const HeroLegacy = () => {
     <section className="relative overflow-hidden bg-background">
       <HeroBackground />
 
-      <div className="container relative z-10 max-w-3xl mx-auto px-5 pt-12 pb-16 md:pt-20 md:pb-24">
+      <div className="container relative z-10 max-w-3xl mx-auto px-5 pt-5 pb-12 sm:pt-12 sm:pb-16 md:pt-20 md:pb-24">
         <div className="text-center">
           {/* Vendibook logo with pulsating spotlight */}
           <motion.div
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4 }}
-            className="relative flex justify-center mb-8"
+            className="relative flex justify-center mb-3 sm:mb-8"
           >
             {/* Outer ambient spotlight glow */}
             <motion.div
@@ -58,7 +58,7 @@ const HeroLegacy = () => {
             <img
               src={vendibookLogo}
               alt="Vendibook"
-              className="relative h-48 sm:h-64 md:h-80 w-auto"
+              className="relative h-28 sm:h-64 md:h-80 w-auto"
             />
           </motion.div>
 
@@ -67,7 +67,7 @@ const HeroLegacy = () => {
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.05 }}
-            className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight text-foreground leading-[1.05] mb-5"
+            className="text-3xl sm:text-5xl md:text-6xl font-bold tracking-tight text-foreground leading-[1.08] mb-3 sm:mb-5"
           >
             Find, rent, buy, or sell{' '}
             <span className="bg-gradient-to-r from-[#FF4500] via-[#FF5A1F] to-[#FF6A2C] bg-clip-text text-transparent">
@@ -80,11 +80,12 @@ const HeroLegacy = () => {
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.15 }}
-            className="text-base md:text-lg text-muted-foreground max-w-xl mx-auto mb-8 leading-relaxed"
+            className="hidden sm:block text-base md:text-lg text-muted-foreground max-w-xl mx-auto mb-8 leading-relaxed"
           >
             Search detailed food truck and trailer listings, compare options, and connect with
             owners through a more structured marketplace.
           </motion.p>
+
 
           {/* Search */}
           <motion.div
