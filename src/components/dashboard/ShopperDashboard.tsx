@@ -56,12 +56,7 @@ const ShopperDashboard = () => {
 
   const actionItems: ActionItem[] = useMemo(() => {
     const items: ActionItem[] = [];
-    if (!verified) items.push({
-      id: 'verify-identity', icon: BadgeCheck,
-      title: 'Get verified*',
-      description: 'A paid add-on that adds a verified badge to your profile. Never required to buy, sell, or publish.',
-      href: '/identity-verification', cta: 'Learn more',
-    });
+
 
     if (stats.pending > 0) items.push({
       id: 'pending', icon: Clock,
