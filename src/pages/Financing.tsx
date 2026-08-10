@@ -1,10 +1,11 @@
 import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ExternalLink, ShieldCheck, Truck, Wrench, Building2 } from 'lucide-react';
+import { ExternalLink, ShieldCheck, Truck, Caravan, ShoppingCart } from 'lucide-react';
 import SEO, { generateFAQSchema } from '@/components/SEO';
 import JsonLd from '@/components/JsonLd';
 import Header from '@/components/layout/Header';
 import { EquinoxFundingLogo } from '@/components/brand/ProviderLogos';
+import { FinancingAvailableBadge } from '@/components/financing/FinancingAvailableBadge';
 import {
   trackFinancingApplyClick,
   trackFinancingPageViewed,
@@ -17,18 +18,18 @@ const APPLY_URL = 'https://equinox-funding.com/efapplication/';
 const OPTIONS = [
   {
     icon: Truck,
-    title: 'Trucks & trailers',
-    body: 'Finance a turnkey food truck, concession trailer, or a fully custom build from a manufacturer.',
+    title: 'Food trucks',
+    body: 'Finance a turnkey or fully built food truck listed on Vendibook, including the kitchen build already installed.',
   },
   {
-    icon: Wrench,
-    title: 'Equipment & build-outs',
-    body: 'Cooking lines, refrigeration, generators, wraps, and conversion work can be included in a package.',
+    icon: Caravan,
+    title: 'Food trailers',
+    body: 'Concession and kitchen trailers listed for sale on Vendibook, from compact units to full production trailers.',
   },
   {
-    icon: Building2,
-    title: 'Working capital',
-    body: 'Business loans and revenue-based financing for opening costs, permits, inventory, and expansion.',
+    icon: ShoppingCart,
+    title: 'Food carts',
+    body: 'Carts and small mobile units listed for sale on Vendibook — a lower-cost way to start serving.',
   },
 ];
 
@@ -132,9 +133,9 @@ const Financing = () => {
     trackFinancingPageViewed();
   }, []);
 
-  const title = 'Equipment Financing for Food Trucks & Trailers | Vendibook';
+  const title = 'Financing for Food Trucks, Trailers & Carts | Vendibook';
   const description =
-    'Explore equipment financing with Equinox Funding for food trucks, trailers, and commercial kitchen equipment. Apply online — subject to prequalification and underwriting.';
+    'Financing with Equinox Funding for food trucks, food trailers, and food carts listed on Vendibook. Apply online — subject to prequalification and underwriting.';
   const canonical = '/financing';
 
   return (
@@ -206,8 +207,8 @@ const Financing = () => {
                 Vendibook &amp; Equinox Funding make it easy to get started.
               </h1>
               <p className="mt-1 max-w-xl text-sm text-white/60">
-                Financing options for trucks, trailers and equipment — check your options without
-                slowing down your purchase.
+                Financing options for food trucks, food trailers, and food carts listed on
+                Vendibook — check your options without slowing down your purchase.
               </p>
             </div>
 
@@ -224,8 +225,8 @@ const Financing = () => {
             What you can finance
           </h2>
           <p className="mt-2 max-w-2xl text-sm text-white/60">
-            One application covers the equipment and the capital behind it. Structures vary by
-            applicant and are subject to underwriting.
+            Financing applies to food trucks, food trailers, and food carts listed for sale on
+            Vendibook. Terms vary by applicant and are subject to underwriting.
           </p>
           <div className="mt-6 grid gap-4 md:grid-cols-3">
             {OPTIONS.map(({ icon: Icon, title: t, body }) => (
@@ -238,7 +239,14 @@ const Financing = () => {
               </div>
             ))}
           </div>
-          <div className="mt-6">
+          <div className="mt-6 flex flex-col items-start gap-4">
+            <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 backdrop-blur-sm">
+              <FinancingAvailableBadge asLink={false} />
+              <p className="text-sm text-white/60">
+                Look for this badge on a listing — it means the seller has enabled financing for
+                that truck, trailer, or cart.
+              </p>
+            </div>
             <ApplyCta wide source="financing_page_mid" />
           </div>
         </section>
