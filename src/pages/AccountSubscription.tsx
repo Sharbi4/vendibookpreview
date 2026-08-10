@@ -393,7 +393,7 @@ export default function AccountSubscription() {
                             {openingPortal ? (
                               <><Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />Opening…</>
                             ) : direction === 'upgrade' ? (
-                              <><ArrowUpRight className="h-3.5 w-3.5 mr-1.5" />Upgrade in portal</>
+                              <><ArrowUpRight className="h-3.5 w-3.5 mr-1.5" />Manage billing to upgrade</>
                             ) : (
                               <>Switch to this plan</>
                             )}
