@@ -25,8 +25,8 @@ import {
  *    PayPal setup, financing, membership, or any paid add-on.
  *  - PayPal is the active online checkout provider.
  *  - Vendibook records seller proceeds minus the 12.9% seller platform fee and
- *    issues payouts through its reviewed payout workflow. No instant or
- *    automated payout, split settlement, or escrow language.
+ *    issues payouts through its reviewed payout workflow. Never describe payouts
+ *    as instant, automated, split-settled, or held by a third party.
  *  - Pay-in-person sales carry no Vendibook seller platform fee.
  *  - Plaid identity verification is an optional $19.99 one-time upgrade.
  *  - Equinox Funding is an optional per-listing add-on; Vendibook is not a lender.
