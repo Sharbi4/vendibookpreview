@@ -384,7 +384,7 @@ const Header = ({ hideSearch = false }: HeaderProps) => {
           ) : (
             <button
               onClick={() => setIsMobileSearchOpen(true)}
-              className="flex items-center gap-2 px-4 h-[46px] rounded-full text-sm font-medium text-white/70 transition-all flex-1 mx-3 min-w-0"
+              className="flex items-center gap-2 px-3 sm:px-4 h-[44px] rounded-full text-sm font-medium text-white/70 transition-all flex-1 mx-1.5 sm:mx-3 min-w-0"
               style={{
                 background: 'rgba(18,18,18,0.92)',
                 border: '1px solid rgba(255,255,255,0.08)',
