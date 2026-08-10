@@ -14,9 +14,13 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { toast } from "@/hooks/use-toast";
-import { Loader2, Send, Eye, Monitor, Smartphone, ShieldAlert } from "lucide-react";
+import { Loader2, Send, Eye, Monitor, Smartphone, ShieldAlert, Copy, MessageSquare } from "lucide-react";
 
 const CAMPAIGN_ID = "2026-08-equinox-partnership";
+const BLOG_SLUG = "vendibook-equinox-food-truck-financing-partnership";
+const SMS_CONTENT_TAG = "sms_blast";
+const SMS_SHARE_LINK = `https://vendibook.com/share/sms/${BLOG_SLUG}?c=${SMS_CONTENT_TAG}`;
+const SMS_MESSAGE = `Vendibook: financing for food trucks, trailers & carts is here via Equinox Funding. Details: ${SMS_SHARE_LINK} Reply STOP to opt out.`;
 type Variant = "buyer" | "seller";
 
 export default function AdminCampaignEquinoxPartnership() {
@@ -46,6 +50,15 @@ export default function AdminCampaignEquinoxPartnership() {
       if (!data) navigate("/");
     })();
   }, [user, navigate]);
+
+  const copyText = async (text: string, label: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      toast({ title: label });
+    } catch {
+      toast({ title: "Copy failed", description: "Select and copy manually.", variant: "destructive" });
+    }
+  };
 
   const refreshLog = async () => {
     const { data } = await supabase
@@ -146,6 +159,44 @@ export default function AdminCampaignEquinoxPartnership() {
             This campaign is limited to the confirmed newsletter list, minus unsubscribes and
             suppressed addresses. Registered users who never subscribed will not receive it.
             {consentNote && <span className="block mt-2 text-xs">{consentNote}</span>}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <MessageSquare className="h-4 w-4" /> Tracked SMS share link
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4 text-sm">
+            <p className="text-muted-foreground leading-relaxed">
+              Every click is logged, then redirected to the article with
+              <code className="mx-1 rounded bg-muted px-1 py-0.5 text-xs">utm_source=sms</code>,
+              <code className="mx-1 rounded bg-muted px-1 py-0.5 text-xs">utm_medium=sms</code>,
+              <code className="mx-1 rounded bg-muted px-1 py-0.5 text-xs">utm_campaign=vendibook_equinox_partnership</code>, and
+              <code className="mx-1 rounded bg-muted px-1 py-0.5 text-xs">utm_content={SMS_CONTENT_TAG}</code>.
+            </p>
+            <div className="space-y-2">
+              <Label className="text-xs">Share link</Label>
+              <div className="flex gap-2">
+                <Input readOnly value={SMS_SHARE_LINK} className="font-mono text-xs" />
+                <Button variant="outline" size="icon" onClick={() => void copyText(SMS_SHARE_LINK, "Link copied")}>
+                  <Copy className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs">Suggested message (includes opt-out)</Label>
+              <div className="flex gap-2">
+                <Input readOnly value={SMS_MESSAGE} className="text-xs" />
+                <Button variant="outline" size="icon" onClick={() => void copyText(SMS_MESSAGE, "Message copied")}>
+                  <Copy className="h-4 w-4" />
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Send only to numbers with recorded SMS consent.
+              </p>
+            </div>
           </CardContent>
         </Card>
 
