@@ -64,6 +64,7 @@ export const FavoriteButton = ({
   // Underline variant - text style like Airbnb
   if (variant === 'underline') {
     return (
+      <>
       <Button
         variant="ghost"
         size="sm"
@@ -84,11 +85,14 @@ export const FavoriteButton = ({
         />
         {isFav ? 'Saved' : 'Save'}
       </Button>
+      {signupDialog}
+      </>
     );
   }
 
   // Default icon variant
   return (
+    <>
     <Button
       variant="ghost"
       size="icon"
@@ -110,5 +114,8 @@ export const FavoriteButton = ({
         )} 
       />
     </Button>
+    {signupDialog}
+    </>
   );
+
 };
