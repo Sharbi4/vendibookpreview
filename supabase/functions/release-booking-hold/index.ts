@@ -126,7 +126,7 @@ serve(async (req) => {
     }
 
     // Send notification to shopper that their hold was released
-    if (booking.shopper?.email) {
+    if (shopperProfile?.email) {
       await supabaseClient.functions.invoke('send-booking-notification', {
         body: { 
           booking_id, 
