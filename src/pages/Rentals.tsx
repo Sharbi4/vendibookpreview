@@ -240,7 +240,7 @@ const Rentals = () => {
                       </Link>
                     </Button>
                     <Button asChild variant="outline">
-                      <Link to="/help/rentals">
+                      <Link to="/help/rentals-end-to-end">
                         Learn how rentals work
                       </Link>
                     </Button>

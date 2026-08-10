@@ -25,6 +25,7 @@ import AnimatedHeroScene from '@/components/howitworks/AnimatedHeroScene';
 import ScrollWalkthrough, { WalkthroughStep } from '@/components/howitworks/ScrollWalkthrough';
 import { PaymentRailsSection, KeepExploring } from '@/components/howitworks/PaymentRailsSection';
 import ValuePillars, { Pillar } from '@/components/howitworks/ValuePillars';
+import PricingFaqSection from '@/components/shared/PricingFaqSection';
 
 const steps: WalkthroughStep[] = [
   { number: 1, title: 'List with great photos', description: 'Upload high-res photos, write specs, set asking price. Listings with 8+ photos sell 3x faster.', icon: Camera, mock: 'photo' },
@@ -172,6 +173,7 @@ const HowItWorksSeller = () => {
             </div>
           </div>
         </section>
+        <PricingFaqSection audience="seller" includeSchema />
         <PaymentRailsSection audience="seller" />
 
         <KeepExploring current="seller" />

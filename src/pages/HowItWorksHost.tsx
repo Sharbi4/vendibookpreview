@@ -25,6 +25,7 @@ import AnimatedHeroScene from '@/components/howitworks/AnimatedHeroScene';
 import ScrollWalkthrough, { WalkthroughStep } from '@/components/howitworks/ScrollWalkthrough';
 import { PaymentRailsSection, KeepExploring } from '@/components/howitworks/PaymentRailsSection';
 import ValuePillars, { Pillar } from '@/components/howitworks/ValuePillars';
+import PricingFaqSection from '@/components/shared/PricingFaqSection';
 
 const steps: WalkthroughStep[] = [
   { number: 1, title: 'Create your listing in minutes', description: 'Add photos, write a description, set hourly/daily/weekly/monthly rates. Our wizard takes about 8 minutes.', icon: Camera, mock: 'photo' },
@@ -173,6 +174,7 @@ const HowItWorksHost = () => {
             </div>
           </div>
         </section>
+        <PricingFaqSection audience="host" includeSchema />
         <PaymentRailsSection audience="host" />
 
         <KeepExploring current="host" />

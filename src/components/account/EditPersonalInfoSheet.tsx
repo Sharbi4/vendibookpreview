@@ -73,7 +73,7 @@ export default function EditPersonalInfoSheet({ open, onOpenChange, userId, init
             </div>
             <Input value={initial.full_name} disabled className="h-10 bg-muted/50" />
             <p className="text-xs text-muted-foreground">
-              Locked for security. <Link to="/help/contact" className="underline">Contact support</Link> to change.
+              Locked for security. <Link to="/contact" className="underline">Contact support</Link> to change.
             </p>
           </div>
 
@@ -111,7 +111,7 @@ export default function EditPersonalInfoSheet({ open, onOpenChange, userId, init
               className="h-10 bg-muted/50 tabular"
             />
             <p className="text-xs text-muted-foreground">
-              Locked for security. <Link to="/help/contact" className="underline">Contact support</Link> to change.
+              Locked for security. <Link to="/contact" className="underline">Contact support</Link> to change.
             </p>
           </div>
 

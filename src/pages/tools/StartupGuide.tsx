@@ -2046,7 +2046,7 @@ const StartupGuide = () => {
             <div className="grid md:grid-cols-3 gap-6">
               <Card className="border-0 shadow-xl bg-card/80 backdrop-blur-sm hover:shadow-2xl transition-all group">
                 <CardContent className="p-6">
-                  <Link to="/blog/how-to-start-food-truck-business" className="block">
+                  <Link to="/blog/how-to-start-food-truck-business-2025" className="block">
                     <Badge variant="secondary" className="mb-3">Guide</Badge>
                     <h3 className="font-semibold text-lg mb-2 group-hover:text-primary transition-colors">How to Start a Food Truck Business in 2024</h3>
                     <p className="text-sm text-muted-foreground mb-3">Complete step-by-step guide from concept to launch, including financing options and marketing strategies.</p>
@@ -2059,7 +2059,7 @@ const StartupGuide = () => {
 
               <Card className="border-0 shadow-xl bg-card/80 backdrop-blur-sm hover:shadow-2xl transition-all group">
                 <CardContent className="p-6">
-                  <Link to="/help/permits-and-licensing" className="block">
+                  <Link to="/help/mobile-vending-permits" className="block">
                     <Badge variant="secondary" className="mb-3">Help Center</Badge>
                     <h3 className="font-semibold text-lg mb-2 group-hover:text-primary transition-colors">Understanding Food Truck Permits</h3>
                     <p className="text-sm text-muted-foreground mb-3">Learn about the different types of permits, inspection requirements, and how to stay compliant.</p>
