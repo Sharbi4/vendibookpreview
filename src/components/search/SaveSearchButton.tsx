@@ -12,6 +12,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { useNavigate } from 'react-router-dom';
+import SignupIntentDialog from '@/components/auth/SignupIntentDialog';
 
 interface SaveSearchButtonProps {
   category?: string;
@@ -113,7 +114,12 @@ export const SaveSearchButton = ({
         <span className="hidden sm:inline">Get alerts</span>
       </Button>
 
-      <Dialog open={showLoginPrompt} onOpenChange={setShowLoginPrompt}>
+      <SignupIntentDialog
+        open={showLoginPrompt}
+        onOpenChange={setShowLoginPrompt}
+        intent="save_search"
+      />
+      <Dialog open={false} onOpenChange={setShowLoginPrompt}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Sign in to save this search</DialogTitle>
