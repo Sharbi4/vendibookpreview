@@ -4,14 +4,6 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSavedSearches } from '@/hooks/useSavedSearches';
 import { trackEvent } from '@/lib/analytics';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import { useNavigate } from 'react-router-dom';
 import SignupIntentDialog from '@/components/auth/SignupIntentDialog';
 
 interface SaveSearchButtonProps {
@@ -40,7 +32,6 @@ export const SaveSearchButton = ({
   amenities,
 }: SaveSearchButtonProps) => {
   const { user } = useAuth();
-  const navigate = useNavigate();
   const { savedSearches, saveSearch, isSaving } = useSavedSearches();
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
 
