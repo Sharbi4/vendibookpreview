@@ -311,6 +311,7 @@ serve(async (req) => {
                 paymentReference: booking.deposit_charge_id,
                 amountCents: Math.round(refundAmount * 100),
                 reason: 'Automatic deposit release after rental completion',
+                idempotencyKey: `deposit-auto-refund:${booking.id}`,
               });
               refundId = outcome.refundId ?? null;
               logStep("Deposit refund outcome", { mode: outcome.mode, refundId, amount: refundAmount });
