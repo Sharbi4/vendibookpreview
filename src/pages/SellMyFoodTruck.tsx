@@ -35,8 +35,7 @@ import Footer from '@/components/layout/Footer';
 import SEO from '@/components/SEO';
 import JsonLd from '@/components/JsonLd';
 import { TellVendibookButton } from '@/components/lead/TellVendibookButton';
-import affirmLogo from '@/assets/affirm-logo.png';
-import afterpayLogo from '@/assets/afterpay-logo.jpg';
+import SellerPaymentsExplainer from '@/components/sell/SellerPaymentsExplainer';
 
 // Food truck photos - Sell page uses wedding/event themed trailers
 import trailerWeddingFlowers from '@/assets/trailer-wedding-flowers.jpg';
@@ -48,7 +47,7 @@ const SellMyFoodTruck = () => {
   const faqs = [
     {
       question: "How do I sell my food truck on Vendibook?",
-      answer: "Create a for-sale listing, add photos and details, and publish. You'll manage inquiries and confirmations from your dashboard."
+      answer: "Create a for-sale listing, add photos and details, and publish \u2014 publishing is free and never requires identity verification, payout setup, PayPal setup, financing, or a paid add-on. You'll manage inquiries, offers, and confirmations from your dashboard."
     },
     {
       question: "How do I know what to price it at?",
@@ -56,7 +55,7 @@ const SellMyFoodTruck = () => {
     },
     {
       question: "What happens after the buyer checks out?",
-      answer: "You'll see the sale in your dashboard and confirm it to lock in next steps. Then you'll coordinate pickup or freight based on what was selected."
+      answer: "You'll see the sale in your dashboard and confirm it to lock in next steps, then coordinate pickup or freight based on what was selected."
     },
     {
       question: "Can I sell a food trailer or equipment too?",
@@ -72,11 +71,11 @@ const SellMyFoodTruck = () => {
     },
     {
       question: "How do payouts work?",
-      answer: "Payments are handled securely online. Payout timing depends on confirmation and the transaction flow shown in your dashboard."
+      answer: "For a completed Vendibook-processed sale, Vendibook records your proceeds minus the 12.9% seller platform fee and issues the payout through Vendibook's current reviewed payout workflow to the PayPal, Venmo, Cash App, or ACH destination you saved. Pay-in-person sales are arranged directly with the buyer and carry no Vendibook seller platform fee."
     },
     {
       question: "What if there's a dispute?",
-      answer: "Our support team helps document the issue and follow the dispute process so both sides have a clear path to resolution."
+      answer: "Our support team helps document the issue and follow the dispute process. Eligible purchases may include PayPal Purchase Protection; PayPal determines eligibility and outcomes."
     }
   ];
 
@@ -112,8 +111,8 @@ const SellMyFoodTruck = () => {
     "description": "A step-by-step guide to selling your food truck, trailer, or commercial kitchen equipment on Vendibook's marketplace.",
     "totalTime": "PT30M",
     "step": [
-      { "@type": "HowToStep", "position": 1, "name": "Create your listing", "text": "Add photos, specs, equipment, and your terms to create a compelling listing.", "url": "https://vendibook.com/list?mode=sale" },
-      { "@type": "HowToStep", "position": 2, "name": "Get verified", "text": "Complete identity verification to build trust with buyers and help them move faster.", "url": "https://vendibook.com/verify-identity" },
+      { "@type": "HowToStep", "position": 1, "name": "Create and publish your listing", "text": "Add photos, specs, equipment, and your terms, then publish for free.", "url": "https://vendibook.com/list/start" },
+      { "@type": "HowToStep", "position": 2, "name": "Choose how you get paid", "text": "Enable PayPal Checkout, accept payment in person, or both, and optionally add Equinox Funding on an eligible for-sale listing.", "url": "https://vendibook.com/payments" },
       { "@type": "HowToStep", "position": 3, "name": "Confirm the sale and handoff", "text": "When a buyer checks out, confirm the sale in your dashboard and coordinate pickup or freight.", "url": "https://vendibook.com/dashboard" }
     ]
   };
@@ -123,7 +122,7 @@ const SellMyFoodTruck = () => {
     "@context": "https://schema.org",
     "@type": "Service",
     "name": "Food Truck Sales Marketplace",
-    "description": "Sell your food truck, trailer, or commercial kitchen with verified buyers, secure checkout, and transparent fees.",
+    "description": "Sell your food truck, trailer, or commercial kitchen with PayPal Checkout, pay-in-person options, optional financing, and transparent fees.",
     "provider": { "@type": "Organization", "name": "Vendibook", "url": "https://vendibook.com" },
     "serviceType": "Marketplace",
     "areaServed": { "@type": "Country", "name": "United States" },
@@ -140,17 +139,17 @@ const SellMyFoodTruck = () => {
 
   const benefits = [
     { icon: Truck, title: "Built for mobile food assets", description: "Trucks, trailers, kitchens, equipment, and Vendor Spaces." },
-    { icon: Users, title: "Verified buyers", description: "Reduce tire-kickers and spam." },
-    { icon: CreditCard, title: "Secure checkout", description: "Clear steps and protection for both sides." },
+    { icon: Users, title: "Buyers searching on purpose", description: "Inquiries come from people browsing mobile food assets, not a general feed." },
+    { icon: CreditCard, title: "PayPal Checkout", description: "Online payment through PayPal, or arrange payment in person." },
     { icon: Package, title: "Nationwide freight", description: "Ship across the 48 contiguous U.S. states with coordinated freight." },
     { icon: FileCheck, title: "Notarized receipts", description: "Optional Proof Notary add-on for remote, online notarization." },
     { icon: LayoutDashboard, title: "Dashboard control", description: "Manage inquiries, documents, and confirmations." },
-    { icon: Percent, title: "Flexible payment options", description: "Pay in person for free, or use our secure platform (12.9%) for extra protection." }
+    { icon: Percent, title: "Flexible payment options", description: "Pay in person with no Vendibook seller fee, or take PayPal Checkout at a 12.9% seller platform fee." }
   ];
 
   const steps = [
-    { number: "1", title: "Create your listing", description: "Add photos, specs, equipment, and your terms." },
-    { number: "2", title: "Get verified", description: "Verified profiles help buyers move faster and build trust." },
+    { number: "1", title: "Create and publish free", description: "Add photos, specs, equipment, and your terms, then publish at no cost." },
+    { number: "2", title: "Choose how you get paid", description: "Enable PayPal Checkout, accept payment in person, or both." },
     { number: "3", title: "Confirm the sale + handoff", description: "When a buyer checks out, you confirm the sale in your dashboard and follow the pickup or freight steps." }
   ];
 
@@ -158,13 +157,13 @@ const SellMyFoodTruck = () => {
     <>
       <SEO
         title="Sell Your Food Truck — Without Getting Buried on Facebook Marketplace"
-        description="List your food truck or trailer on Vendibook and reach buyers who are actively searching — not scrolling. Verified inquiries, secure checkout, financing-friendly buyers, and nationwide freight."
+        description="List your food truck or trailer free on Vendibook and reach buyers actively searching. PayPal Checkout or pay in person, optional Equinox financing, and nationwide freight."
         canonical="/sell-my-food-truck"
         type="website"
         ogTitle="Sell Your Food Truck — Without Getting Buried on Facebook Marketplace"
-        ogDescription="Reach buyers actively searching for food trucks. Verified inquiries, secure checkout, financing-friendly traffic, nationwide freight."
+        ogDescription="Reach buyers actively searching for food trucks. Free to publish, PayPal Checkout or pay in person, optional financing, nationwide freight."
         twitterTitle="Sell Your Food Truck — Without Getting Buried on Facebook Marketplace"
-        twitterDescription="Buyers come to Vendibook ready to buy. List in minutes, get serious inquiries."
+        twitterDescription="Publish free in minutes and reach buyers shopping for food trucks and trailers."
       />
 
       <JsonLd schema={[faqSchema, breadcrumbSchema, howToSchema, serviceSchema]} />
@@ -194,12 +193,12 @@ const SellMyFoodTruck = () => {
                   Sell your food truck — without getting buried on Facebook Marketplace.
                 </h1>
                 <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-                  List once and reach buyers actively searching for food trucks and trailers — not scrolling past your post. Verified inquiries, secure checkout, financing-friendly buyers.
+                  Publish once, free, and reach buyers actively searching for food trucks and trailers — not scrolling past your post. PayPal Checkout or pay in person, with optional buyer financing.
                 </p>
                 
                 <div className="flex flex-col sm:flex-row gap-3 justify-center mb-4">
                   <Button size="lg" variant="glass-cta" asChild className="text-base">
-                    <Link to="/list?mode=sale">
+                    <Link to="/list/start">
                       List Your Food Truck
                       <ArrowRight className="ml-2 h-4 w-4" />
                     </Link>
@@ -226,22 +225,26 @@ const SellMyFoodTruck = () => {
                 {/* Trust Row */}
                 <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm text-muted-foreground">
                   <span className="flex items-center gap-1.5">
-                    <BadgeCheck className="h-4 w-4 text-foreground/50" />
-                    Verified users
+                    <CheckCircle2 className="h-4 w-4 text-foreground/50" />
+                    Free to publish
                   </span>
                   <span className="flex items-center gap-1.5">
                     <ShieldCheck className="h-4 w-4 text-foreground/50" />
-                    Secure checkout
+                    PayPal Checkout
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <button className="ml-0.5">
+                        <button className="ml-0.5" aria-label="About PayPal Checkout">
                           <Info className="h-3.5 w-3.5 text-muted-foreground/70 hover:text-muted-foreground transition-colors" />
                         </button>
                       </TooltipTrigger>
                       <TooltipContent className="max-w-xs text-sm">
-                        Payments are handled securely online. Sellers confirm the sale in their dashboard before payout is initiated.
+                        PayPal is the online checkout provider. Sellers confirm the sale in their dashboard, and eligible purchases may include PayPal Purchase Protection — PayPal determines eligibility and outcomes.
                       </TooltipContent>
                     </Tooltip>
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <BadgeCheck className="h-4 w-4 text-foreground/50" />
+                    Optional verified badge
                   </span>
                   <span className="flex items-center gap-1.5">
                     <Package className="h-4 w-4 text-foreground/50" />
@@ -250,10 +253,6 @@ const SellMyFoodTruck = () => {
                   <span className="flex items-center gap-1.5">
                     <FileCheck className="h-4 w-4 text-foreground/50" />
                     Notarized receipts
-                  </span>
-                  <span className="flex items-center gap-1.5">
-                    <CheckCircle2 className="h-4 w-4 text-foreground/50" />
-                    24/7 support
                   </span>
                 </div>
               </motion.div>
@@ -287,7 +286,7 @@ const SellMyFoodTruck = () => {
                       <li>• "Is this still available?" from people who never reply</li>
                       <li>• No verification — scams and lowballers everywhere</li>
                       <li>• Cash-only handoffs with no buyer protection</li>
-                      <li>• No financing — buyers walk if they can't pay cash</li>
+                      <li>• No financing option — buyers walk if they can't pay cash</li>
                       <li>• No freight — buyer has to live nearby</li>
                     </ul>
                   </CardContent>
@@ -298,10 +297,10 @@ const SellMyFoodTruck = () => {
                     <div className="text-xs font-medium uppercase tracking-wider text-foreground mb-3">Vendibook</div>
                     <ul className="space-y-2.5 text-sm">
                       <li className="flex gap-2"><CheckCircle2 className="h-4 w-4 text-foreground/70 shrink-0 mt-0.5" /><span>Buyers come searching specifically for trucks &amp; trailers</span></li>
-                      <li className="flex gap-2"><CheckCircle2 className="h-4 w-4 text-foreground/70 shrink-0 mt-0.5" /><span>Verified inquiries from real operators</span></li>
-                      <li className="flex gap-2"><CheckCircle2 className="h-4 w-4 text-foreground/70 shrink-0 mt-0.5" /><span>Identity verification &amp; secure checkout</span></li>
+                      <li className="flex gap-2"><CheckCircle2 className="h-4 w-4 text-foreground/70 shrink-0 mt-0.5" /><span>Inquiries from operators shopping for mobile food assets</span></li>
+                      <li className="flex gap-2"><CheckCircle2 className="h-4 w-4 text-foreground/70 shrink-0 mt-0.5" /><span>PayPal Checkout, pay in person, or both</span></li>
                       <li className="flex gap-2"><CheckCircle2 className="h-4 w-4 text-foreground/70 shrink-0 mt-0.5" /><span>Optional notarized sale receipts</span></li>
-                      <li className="flex gap-2"><CheckCircle2 className="h-4 w-4 text-foreground/70 shrink-0 mt-0.5" /><span>Affirm &amp; Afterpay — buyers finance, you get paid upfront</span></li>
+                      <li className="flex gap-2"><CheckCircle2 className="h-4 w-4 text-foreground/70 shrink-0 mt-0.5" /><span>Optional Equinox Funding so eligible buyers can apply to finance</span></li>
                       <li className="flex gap-2"><CheckCircle2 className="h-4 w-4 text-foreground/70 shrink-0 mt-0.5" /><span>Nationwide freight across all 48 states</span></li>
                     </ul>
                   </CardContent>
@@ -310,12 +309,12 @@ const SellMyFoodTruck = () => {
 
               <div className="text-center mt-8">
                 <Button size="lg" variant="glass-cta" asChild>
-                  <Link to="/list?mode=sale">
+                  <Link to="/list/start">
                     List Your Food Truck
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Link>
                 </Button>
-                <p className="text-xs text-muted-foreground mt-3">Free to list. Pay 0% if you handle payment in person.</p>
+                <p className="text-xs text-muted-foreground mt-3">Free to publish. No Vendibook seller platform fee when you handle payment in person.</p>
               </div>
             </div>
           </section>
@@ -476,7 +475,7 @@ const SellMyFoodTruck = () => {
               <div className="grid md:grid-cols-3 gap-6 max-w-3xl mx-auto">
                 {[
                   { label: "Food Truck Owner", quote: "Clean process from listing to payout." },
-                  { label: "Trailer Seller", quote: "Verified buyers made a real difference." },
+                  { label: "Trailer Seller", quote: "Offers and messages stayed in one place." },
                   { label: "Food Truck Owner", quote: "Dashboard made it easy to track everything." }
                 ].map((testimonial, index) => (
                   <motion.div
@@ -498,110 +497,17 @@ const SellMyFoodTruck = () => {
             </div>
           </section>
 
-          {/* Fee Section */}
-          <section className="py-16 bg-muted/30">
-            <div className="container">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5 }}
-                className="max-w-2xl mx-auto text-center"
-              >
-                <h2 className="text-2xl md:text-3xl font-bold mb-4">Flexible payment options</h2>
-                <p className="text-muted-foreground mb-4">You choose how you get paid.</p>
-                
-                <div className="grid sm:grid-cols-2 gap-4 text-left mb-6">
-                  <Card className="bg-background border-foreground/10">
-                    <CardContent className="p-4 flex items-start gap-3">
-                      <div className="p-2 rounded-lg bg-foreground/10 shrink-0">
-                        <CreditCard className="h-4 w-4 text-foreground/60" />
-                      </div>
-                      <div>
-                        <h4 className="font-medium text-sm mb-1">Pay in Person</h4>
-                        <p className="text-xs text-muted-foreground">
-                          Handle payment directly with the buyer — <strong className="text-foreground">completely free</strong>.
-                        </p>
-                      </div>
-                    </CardContent>
-                  </Card>
-                  <Card className="bg-background border-foreground/10">
-                    <CardContent className="p-4 flex items-start gap-3">
-                      <div className="p-2 rounded-lg bg-foreground/10 shrink-0">
-                        <ShieldCheck className="h-4 w-4 text-foreground/60" />
-                      </div>
-                      <div>
-                        <h4 className="font-medium text-sm mb-1">Secure Platform Payment</h4>
-                        <p className="text-xs text-muted-foreground">
-                          Use our secure checkout for <strong className="text-foreground">extra protection</strong> — 12.9% seller commission.
-                        </p>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
-                
-                <div className="grid sm:grid-cols-2 gap-4 text-left mb-6">
-                  <Card className="bg-background">
-                    <CardContent className="p-4 flex items-start gap-3">
-                      <div className="p-2 rounded-lg bg-foreground/10 shrink-0">
-                        <Package className="h-4 w-4 text-foreground/60" />
-                      </div>
-                      <div>
-                        <h4 className="font-medium text-sm mb-1">Nationwide Freight</h4>
-                        <p className="text-xs text-muted-foreground">
-                          Coordinate shipping across the 48 contiguous U.S. states. Freight cost is calculated at checkout based on distance and item specs.
-                        </p>
-                      </div>
-                    </CardContent>
-                  </Card>
-                  <Card className="bg-background">
-                    <CardContent className="p-4 flex items-start gap-3">
-                      <div className="p-2 rounded-lg bg-foreground/10 shrink-0">
-                        <FileCheck className="h-4 w-4 text-foreground/60" />
-                      </div>
-                      <div>
-                        <h4 className="font-medium text-sm mb-1">Proof Notary (Optional)</h4>
-                        <p className="text-xs text-muted-foreground">
-                          Add remote, online notarization for your sale receipt. Extra legal protection for both buyer and seller.
-                        </p>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
-                
-                <Card className="bg-background border-foreground/10 mb-6">
-                  <CardContent className="p-4">
-                    <div className="flex flex-col sm:flex-row items-center gap-4">
-                      <div className="flex items-center gap-4">
-                        <Link to="/payments" className="hover:opacity-80 transition-opacity">
-                          <img src={affirmLogo} alt="Affirm" className="h-6 md:h-8 object-contain dark:invert" />
-                        </Link>
-                        <Link to="/payments" className="hover:opacity-80 transition-opacity">
-                          <img src={afterpayLogo} alt="Afterpay" className="h-5 md:h-6 object-contain dark:invert" />
-                        </Link>
-                      </div>
-                      <div className="flex-1 text-center sm:text-left">
-                        <p className="text-xs text-muted-foreground">
-                          Let buyers pay over time — you get paid upfront, no extra fees.
-                        </p>
-                      </div>
-                      <Button variant="glass-cta" size="sm" asChild className="gap-1 shrink-0">
-                        <Link to="/payments">
-                          Learn more
-                          <ChevronRight className="h-3 w-3" />
-                        </Link>
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-                <Button variant="glass-cta" size="sm" asChild>
-                  <Link to="/pricing-calculator">
-                    See fee breakdown
-                    <ChevronRight className="ml-1 h-4 w-4" />
-                  </Link>
-                </Button>
-              </motion.div>
-            </div>
+          {/* How selling and getting paid works — single source of payment copy */}
+          <SellerPaymentsExplainer asset="food truck" ctaHref="/list/start" ctaLabel="List Your Food Truck Free" />
+
+          {/* Pricing tools link */}
+          <section className="py-10 text-center">
+            <Button variant="glass-cta" size="sm" asChild>
+              <Link to="/pricing-calculator">
+                See fee breakdown
+                <ChevronRight className="ml-1 h-4 w-4" />
+              </Link>
+            </Button>
           </section>
 
           {/* FAQ Section */}
@@ -661,7 +567,7 @@ const SellMyFoodTruck = () => {
                 </p>
                 <div className="flex flex-col sm:flex-row gap-3 justify-center mb-6">
                   <Button size="lg" className="bg-background text-foreground hover:bg-background/90" asChild>
-                    <Link to="/list?mode=sale">
+                    <Link to="/list/start">
                       List Your Food Truck
                       <ArrowRight className="ml-2 h-4 w-4" />
                     </Link>
@@ -691,7 +597,7 @@ const SellMyFoodTruck = () => {
         <div className="fixed bottom-0 left-0 right-0 p-3 bg-background/95 backdrop-blur-sm border-t md:hidden z-40">
           <div className="flex gap-2">
             <Button variant="glass-cta" asChild className="flex-1">
-              <Link to="/list?mode=sale">List Your Food Truck</Link>
+              <Link to="/list/start">List Your Food Truck</Link>
             </Button>
             <Button variant="glass-cta" asChild className="flex-1">
               <Link to="/food-trucks-for-sale">For Sale</Link>
