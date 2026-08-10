@@ -2,14 +2,18 @@
 //
 // Scans `monetization_pending_reconciliation` for purchases that look stuck —
 // either paid but never fulfilled, or pending long enough that a webhook was
-// likely lost — and re-plays them against Stripe as the source of truth.
+// likely lost — and re-plays them against PayPal as the source of truth.
+//
+// Vendibook processes payments through PayPal only. Legacy rows from the
+// retired processor are read-only accounting history and are never re-played.
 //
 // Auth: admin JWT required (verify_jwt = false in config, checked in-function).
 // Trigger: manual admin button + can be wired to a cron.
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
+import { getPayPalOrder, getPayPalSubscription } from "../_shared/paypal.ts";
+import { fulfillMonetizationPurchase } from "../_shared/fulfillMonetizationPurchase.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
