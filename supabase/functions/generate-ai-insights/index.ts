@@ -132,9 +132,9 @@ serve(async (req) => {
       // Seller proceeds awaiting Vendibook's manual payout run
       supabaseClient
         .from("seller_payables")
-        .select("net_amount_cents, status, paid_out_at")
+        .select("net_payout_cents, status, payout_completed_at")
         .eq("seller_id", userId)
-        .is("paid_out_at", null)
+        .is("payout_completed_at", null)
     ]);
 
     // Process listings data
@@ -210,8 +210,8 @@ serve(async (req) => {
       : viewsThisMonth > 0 ? 100 : 0;
 
     // Seller proceeds recorded for Vendibook's manual payout run.
-    const pendingPayoutBalance = ((payablesResult.data as Array<{ net_amount_cents: number | null }> | null) ?? [])
-      .reduce((sum, r) => sum + (r.net_amount_cents ?? 0), 0) / 100;
+    const pendingPayoutBalance = ((payablesResult.data as Array<{ net_payout_cents: number | null }> | null) ?? [])
+      .reduce((sum, r) => sum + (r.net_payout_cents ?? 0), 0) / 100;
 
     // Compile insight data
     const insightData: InsightData = {
