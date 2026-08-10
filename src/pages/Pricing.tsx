@@ -38,7 +38,7 @@ const Pricing = () => {
   const permitUpgrades = useMemo(() => applyOneLiners(permitRaw), [permitRaw]);
 
   // Wizard-originated visits pass ?returnTo=/create-listing/{id}?step=... and
-  // optionally ?listingContext=<draftId>. When present we route Stripe cancel/success
+  // optionally ?listingContext=<draftId>. When present we route checkout cancel/success
   // back to the wizard and auto-scope listing-scoped boosts to that draft so the
   // user is never dumped on /dashboard mid-listing-creation.
   const [searchParams] = useSearchParams();

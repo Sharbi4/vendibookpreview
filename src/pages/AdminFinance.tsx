@@ -340,7 +340,7 @@ const AdminFinance = () => {
                 Rental Commission: 12.9% host + 12.9% renter
               </Badge>
               <span className="text-sm text-muted-foreground ml-auto">
-                Commission retained in platform Stripe account upon checkout
+                Commission retained by Vendibook on checkout
               </span>
             </div>
           </CardContent>

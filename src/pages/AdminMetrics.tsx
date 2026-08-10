@@ -356,7 +356,7 @@ const AdminMetrics = () => {
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <MetricCard icon={Package} label="Drafts" value={supplyHealth.totalDrafts} />
                   <MetricCard icon={Package} label="Published" value={supplyHealth.totalPublished} iconColor="text-emerald-600" />
-                  <MetricCard icon={DollarSign} label="Stripe Complete" value={supplyHealth.withStripeComplete} subtext={`of ${[...new Set([])].length || '?'} hosts`} />
+                  <MetricCard icon={DollarSign} label="Payouts Ready" value={supplyHealth.withStripeComplete} subtext={`of ${[...new Set([])].length || '?'} hosts`} />
                   <MetricCard icon={Shield} label="Verification Rate" value={`${supplyHealth.verificationRate.toFixed(0)}%`} />
                 </div>
 

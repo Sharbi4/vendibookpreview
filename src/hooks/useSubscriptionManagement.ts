@@ -1,15 +1,16 @@
 /**
  * useSubscriptionManagement — provider-aware subscription state + controls.
  *
- * Vendibook bills new memberships through PayPal; legacy members may still be
- * on Stripe. This hook resolves the row in `host_subscriptions`, detects which
- * provider owns it, and exposes the right management action for that provider:
+ * Vendibook bills new memberships through PayPal; a small number of legacy
+ * members remain on a retired processor. This hook resolves the row in
+ * `host_subscriptions`, detects which provider owns it, and exposes the right
+ * management action for that provider:
  *
  *   PayPal  → cancel via `paypal-subscription-cancel` (cancels at PayPal first,
  *             access continues through the paid period). Payment-method changes
  *             happen in the member's PayPal automatic-payments settings.
- *   Stripe  → legacy: `manage-subscription` (cancel / reactivate scheduling)
- *             and the Stripe Customer Portal.
+ *   Legacy  → read-only: cancellations and billing changes are handled by
+ *             support; no provider API is ever called.
  *
  * No money logic lives here — every mutation is an edge-function call.
  */
@@ -20,7 +21,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { parseEdgeError } from '@/lib/edgeErrors';
 
-export type SubscriptionProvider = 'paypal' | 'stripe' | 'none';
+export type SubscriptionProvider = 'paypal' | 'legacy' | 'none';
 
 /** Where PayPal members manage the funding source for a recurring plan. */
 export const PAYPAL_AUTOPAY_URL = 'https://www.paypal.com/myaccount/autopay/';
@@ -73,7 +74,7 @@ export function useSubscriptionManagement() {
     sub?.payment_provider === 'paypal' || sub?.paypal_subscription_id
       ? 'paypal'
       : sub?.stripe_subscription_id
-      ? 'stripe'
+      ? 'legacy'
       : 'none';
 
   const hasSubscription =
@@ -168,7 +169,7 @@ export function useSubscriptionManagement() {
     isPastDue,
     accessEndsAt,
     /** PayPal cancellations are immediate-at-provider, so there's no resume. */
-    canReactivate: provider === 'stripe' && scheduledCancel,
+    canReactivate: false,
     isLoading: query.isLoading,
     isFetching: query.isFetching,
     refetch: query.refetch,

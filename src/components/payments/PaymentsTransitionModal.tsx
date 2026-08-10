@@ -63,7 +63,7 @@ export function PaymentsTransitionModal() {
             Vendibook payments are now powered by PayPal.
           </DialogTitle>
           <DialogDescription className="text-center text-sm leading-relaxed">
-            Your listings stay live exactly as they are. Stripe is no longer used on Vendibook.
+            Your listings stay live exactly as they are. All checkout runs through PayPal.
             Financing is provided by Equinox Funding LLC.
           </DialogDescription>
         </DialogHeader>

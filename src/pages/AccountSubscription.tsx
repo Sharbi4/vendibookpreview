@@ -2,13 +2,13 @@
  * AccountSubscription — dedicated subscription management page.
  *
  * Combines: current plan detail, in-app cancel/reactivate scheduling,
- * Stripe Customer Portal launch (for payment methods / invoices / plan
+ * billing management (payment methods / invoices / plan
  * switches with proration), and an upgrade/downgrade tier grid that
  * highlights the current plan.
  *
  * Money logic is unchanged: new subscribes use the existing checkout
  * flow via ProductPricingCard; tier switches for existing subscribers
- * route to the Stripe Portal so proration stays authoritative on Stripe.
+ * route to their provider so billing stays authoritative there.
  */
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
@@ -279,16 +279,10 @@ export default function AccountSubscription() {
                 {hasSubscription
                   ? provider === 'paypal'
                     ? 'Switch tiers anytime. Cancel your current membership first, then start the new plan — PayPal bills the new plan from its next cycle.'
-                    : 'Switch tiers anytime. Upgrades and downgrades are handled in the secure billing portal, which prorates the difference automatically.'
+                    : 'Switch tiers anytime. Contact support and we’ll move your legacy membership over to the new plan.'
                   : 'Every plan includes payment protection. Cancel or change anytime.'}
               </p>
             </div>
-            {hasSubscription && provider === 'stripe' && (
-              <Button variant="outline" size="sm" onClick={openPortal} disabled={openingPortal}>
-                <ArrowUpRight className="h-3.5 w-3.5 mr-1.5" />
-                Open portal to switch plan
-              </Button>
-            )}
           </div>
 
           {productsLoading ? (
@@ -344,15 +338,15 @@ export default function AccountSubscription() {
                         <div className="pt-1 text-[11px] text-muted-foreground">
                           You're on this plan. {provider === 'paypal'
                             ? 'Cancel above to switch tiers or end billing.'
-                            : 'Use the portal to switch tiers or cancel.'}
+                            : 'Contact support to switch tiers or cancel.'}
                         </div>
                       </CardContent>
                     </Card>
                   );
                 }
 
-                // Existing subscribers: any tier change routes through the Stripe
-                // Portal (proration handled by Stripe, no double-charging).
+                // Existing subscribers: tier changes route through their
+                // billing provider so proration stays authoritative there.
                 if (hasSubscription) {
                   return (
                     <Card key={p.id} className="rounded-2xl border border-border bg-card">
@@ -399,7 +393,7 @@ export default function AccountSubscription() {
                             {openingPortal ? (
                               <><Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />Opening…</>
                             ) : direction === 'upgrade' ? (
-                              <><ArrowUpRight className="h-3.5 w-3.5 mr-1.5" />Upgrade in portal</>
+                              <><ArrowUpRight className="h-3.5 w-3.5 mr-1.5" />Manage billing to upgrade</>
                             ) : (
                               <>Switch to this plan</>
                             )}
