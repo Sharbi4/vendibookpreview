@@ -3915,10 +3915,77 @@ Sellers receive an invoice for their commission, payable via credit card or bank
   }
 ];
 
+// Legacy / shorthand slugs that used to be linked from older pages and emails.
+// Keeping them resolvable prevents "Article not found" dead ends.
+export const HELP_SLUG_ALIASES: Record<string, string> = {
+  contact: 'host-onboarding',
+  rentals: 'rentals-end-to-end',
+  renting: 'rentals-end-to-end',
+  buying: 'buying-end-to-end',
+  selling: 'selling-end-to-end',
+  permits: 'mobile-vending-permits',
+  'permits-and-licensing': 'mobile-vending-permits',
+  'permits-licensing': 'mobile-vending-permits',
+  payouts: 'payout-setup',
+  'payout-fees': 'payout-timing-fees',
+  fees: 'payout-timing-fees',
+  shipping: 'shipping-freight',
+  freight: 'shipping-freight',
+  offers: 'making-offers',
+  'pay-in-person': 'pay-in-person-guide',
+  financing: 'affirm-financing',
+  refunds: 'cancellations-refunds',
+  disputes: 'dispute-evidence',
+  pricing: 'pricing-guidance',
+};
+
+const normalizeSlug = (slug: string) =>
+  slug.trim().toLowerCase().replace(/^\/+|\/+$/g, '').replace(/[_\s]+/g, '-');
+
+/**
+ * Resolve a slug to a real article, tolerating legacy aliases, trailing
+ * slashes, casing, and near-miss/truncated slugs. Returns undefined only when
+ * nothing plausible matches.
+ */
+export const resolveArticleSlug = (rawSlug: string): HelpArticle | undefined => {
+  const slug = normalizeSlug(rawSlug || '');
+  if (!slug) return undefined;
+
+  const exact = helpArticles.find((a) => a.slug === slug);
+  if (exact) return exact;
+
+  const aliased = HELP_SLUG_ALIASES[slug];
+  if (aliased) {
+    const hit = helpArticles.find((a) => a.slug === aliased);
+    if (hit) return hit;
+  }
+
+  // Truncated or extended slug (e.g. /help/rentals-end → rentals-end-to-end)
+  const prefix = helpArticles.find(
+    (a) => a.slug.startsWith(slug) || slug.startsWith(a.slug),
+  );
+  if (prefix) return prefix;
+
+  // Token overlap fallback — needs a strong majority of words to match.
+  const words = slug.split('-').filter((w) => w.length > 2);
+  if (words.length) {
+    let best: { article: HelpArticle; score: number } | null = null;
+    for (const article of helpArticles) {
+      const target = article.slug.split('-');
+      const score = words.filter((w) => target.includes(w)).length / words.length;
+      if (score >= 0.6 && (!best || score > best.score)) best = { article, score };
+    }
+    if (best) return best.article;
+  }
+
+  return undefined;
+};
+
 // Helper to get article by slug
 export const getArticleBySlug = (slug: string): HelpArticle | undefined => {
-  return helpArticles.find(article => article.slug === slug);
+  return resolveArticleSlug(slug);
 };
+
 
 // Helper to get related articles
 export const getRelatedArticles = (article: HelpArticle): HelpArticle[] => {
