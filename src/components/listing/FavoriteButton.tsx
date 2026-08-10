@@ -1,10 +1,11 @@
+import { useState } from 'react';
 import { Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useFavorites } from '@/hooks/useFavorites';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
-import { useNavigate } from 'react-router-dom';
-import { trackListingFavorited, trackListingUnfavorited } from '@/lib/analytics';
+import { trackEvent, trackListingFavorited, trackListingUnfavorited } from '@/lib/analytics';
+import SignupIntentDialog from '@/components/auth/SignupIntentDialog';
 
 interface FavoriteButtonProps {
   listingId: string;
@@ -26,8 +27,8 @@ export const FavoriteButton = ({
   variant = 'icon'
 }: FavoriteButtonProps) => {
   const { user } = useAuth();
-  const navigate = useNavigate();
   const { isFavorite, toggleFavorite, isToggling } = useFavorites();
+  const [showSignupIntent, setShowSignupIntent] = useState(false);
   
   const isFav = isFavorite(listingId);
 
@@ -36,7 +37,8 @@ export const FavoriteButton = ({
     e.stopPropagation();
     
     if (!user) {
-      navigate('/auth?redirect=' + encodeURIComponent(window.location.pathname));
+      trackEvent({ category: 'Activation', action: 'signup_intent_shown', label: 'favorite' });
+      setShowSignupIntent(true);
       return;
     }
     
@@ -49,6 +51,15 @@ export const FavoriteButton = ({
     
     toggleFavorite(listingId);
   };
+
+  const signupDialog = (
+    <SignupIntentDialog
+      open={showSignupIntent}
+      onOpenChange={setShowSignupIntent}
+      intent="favorite"
+    />
+  );
+
 
   // Underline variant - text style like Airbnb
   if (variant === 'underline') {
