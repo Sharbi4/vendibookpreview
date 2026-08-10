@@ -6,6 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { trackEvent } from '@/lib/analytics';
+import SignupIntentDialog from '@/components/auth/SignupIntentDialog';
 
 interface GetAlertsCardProps {
   category?: string;
@@ -19,6 +20,7 @@ export const GetAlertsCard = ({ category, location, radius }: GetAlertsCardProps
   const [searchParams] = useSearchParams();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isEnabled, setIsEnabled] = useState(false);
+  const [showSignupIntent, setShowSignupIntent] = useState(false);
 
   // Build zip code from search params if available
   const zipCode = searchParams.get('zip') || location || '';
@@ -28,7 +30,8 @@ export const GetAlertsCard = ({ category, location, radius }: GetAlertsCardProps
     if (!user) {
       // Store intent to return here
       localStorage.setItem('alert_return_url', window.location.href);
-      navigate('/auth');
+      trackEvent({ category: 'Activation', action: 'signup_intent_shown', label: 'alerts' });
+      setShowSignupIntent(true);
       return;
     }
 
@@ -92,6 +95,7 @@ export const GetAlertsCard = ({ category, location, radius }: GetAlertsCardProps
   }
 
   return (
+    <>
     <div className="bg-card border-0 shadow-lg rounded-2xl p-5">
       <div className="flex items-start gap-4">
         <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center shadow-lg shrink-0">
@@ -112,6 +116,12 @@ export const GetAlertsCard = ({ category, location, radius }: GetAlertsCardProps
         </div>
       </div>
     </div>
+    <SignupIntentDialog
+      open={showSignupIntent}
+      onOpenChange={setShowSignupIntent}
+      intent="alerts"
+    />
+    </>
   );
 };
 
