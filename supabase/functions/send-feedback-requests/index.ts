@@ -30,14 +30,25 @@ Deno.serve(async (req) => {
   try {
     const { data: bookings } = await supabase
       .from('booking_requests')
-      .select('id, shopper_id, listing_id, booking_end_timestamp, end_date, listings(title), profiles!booking_requests_shopper_id_fkey(email, full_name, first_name)')
+      .select('id, shopper_id, listing_id, booking_end_timestamp, end_date, listings(title)')
       .eq('status', 'approved')
       .lt('booking_end_timestamp', minAge)
       .gt('booking_end_timestamp', cutoff)
       .limit(200)
 
+    // shopper_id references auth.users, not profiles — fetch profiles separately.
+    const shopperIds = Array.from(new Set((bookings || []).map((b: any) => b.shopper_id).filter(Boolean)))
+    const profilesById = new Map<string, any>()
+    if (shopperIds.length > 0) {
+      const { data: profileRows } = await supabase
+        .from('profiles')
+        .select('id, email, full_name, first_name')
+        .in('id', shopperIds)
+      ;(profileRows || []).forEach((p: any) => profilesById.set(p.id, p))
+    }
+
     for (const b of bookings || []) {
-      const profile: any = (b as any).profiles
+      const profile: any = profilesById.get((b as any).shopper_id)
       const listing: any = (b as any).listings
       const email = profile?.email
       if (!email) continue
