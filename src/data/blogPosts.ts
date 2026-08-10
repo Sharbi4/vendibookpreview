@@ -2045,7 +2045,7 @@ Vendibook listings include information about local permit requirements to help y
 <p class="mb-6">Security is one of the biggest concerns in online equipment transactions. A professional marketplace includes:</p>
 
 <ul class="list-disc pl-6 mb-6 space-y-2">
-  <li>Stripe-backed ID verification</li>
+  <li>Bank-grade ID verification</li>
   <li>Payment Protection-based payments</li>
   <li>Digital agreements</li>
   <li>Authorization holds for rentals</li>
