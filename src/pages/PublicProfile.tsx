@@ -155,6 +155,8 @@ const PublicProfile = () => {
   const isOwnProfile = user?.id === actualUserId;
   
   // Other data hooks
+  /** Authoritative badge: paid Plaid verification or a grandfathered seller. */
+  const { verified: sellerVerified } = useSellerVerifiedBadge(actualUserId);
   const { data: stats, isLoading: statsLoading } = useUserStats(actualUserId);
   const { data: listings, isLoading: listingsLoading } = useUserListings(actualUserId);
   const { data: reviewsReceived, isLoading: reviewsReceivedLoading } = useUserReviewsReceived(actualUserId);

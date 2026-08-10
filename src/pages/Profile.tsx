@@ -21,6 +21,7 @@ import { useHostBookings } from '@/hooks/useHostBookings';
 import { useManualPayout, MANUAL_PAYOUT_SETTINGS_PATH } from '@/hooks/useManualPayout';
 import { useHostResponseTime } from '@/hooks/useHostResponseTime';
 import { useAuth } from '@/contexts/AuthContext';
+import { useSellerVerifiedBadge } from '@/hooks/useSellerVerifiedBadge';
 import { Listing } from '@/types/listing';
 
 const Profile = () => {
@@ -37,6 +38,12 @@ const Profile = () => {
   const { data: listings, isLoading: listingsLoading } = useUserListings(profileUserId);
   const { data: reviewsReceived, isLoading: reviewsReceivedLoading } = useUserReviewsReceived(profileUserId);
   const { data: reviewsGiven, isLoading: reviewsGivenLoading } = useUserReviewsGiven(profileUserId);
+
+  /**
+   * Identity Verified badge — authoritative server read. Covers both the paid
+   * Plaid check and sellers grandfathered in from the retired provider.
+   */
+  const { verified: sellerVerified } = useSellerVerifiedBadge(profileUserId);
 
   // Host-specific data (only for own profile)
   const { listings: hostListings, stats: hostStats } = useHostListings();
