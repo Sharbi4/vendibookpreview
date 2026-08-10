@@ -283,12 +283,6 @@ export default function AccountSubscription() {
                   : 'Every plan includes payment protection. Cancel or change anytime.'}
               </p>
             </div>
-            {false && (
-              <Button variant="outline" size="sm" onClick={openPortal} disabled={openingPortal}>
-                <ArrowUpRight className="h-3.5 w-3.5 mr-1.5" />
-                Open portal to switch plan
-              </Button>
-            )}
           </div>
 
           {productsLoading ? (
