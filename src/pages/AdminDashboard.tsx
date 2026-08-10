@@ -644,7 +644,7 @@ const AdminDashboard = () => {
                   </Card>
                   <Card>
                     <CardContent className="pt-4 pb-4">
-                      <p className="text-sm text-muted-foreground">Stripe Connected</p>
+                      <p className="text-sm text-muted-foreground">Payout method on file</p>
                       <p className="text-2xl font-bold text-blue-600">{userStats.stripeConnected}</p>
                     </CardContent>
                   </Card>

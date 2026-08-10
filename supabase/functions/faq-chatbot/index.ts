@@ -64,7 +64,7 @@ const knowledgeBase = `
 
 ## Account & Verification
 - Create account with email
-- Verify identity through Stripe Identity
+- Verify identity through Vendibook's optional Verified Seller check (Plaid)
 - Hosts need to complete Stripe Connect onboarding
 - Identity verification increases trust and booking approval rates
 
