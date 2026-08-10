@@ -187,7 +187,7 @@ serve(async (req) => {
 
   // ---- Subscription drift sweep ----------------------------------
   // Refresh any host_subscriptions row whose status is active/trialing/past_due
-  // by re-reading from Stripe. Guarantees a missed webhook cannot leave a
+  // by re-reading from PayPal. Guarantees a missed webhook cannot leave a
   // paying user without access (or a cancelled user with lingering access).
   let subsChecked = 0;
   let subsRepaired = 0;
