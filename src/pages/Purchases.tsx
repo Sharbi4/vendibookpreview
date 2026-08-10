@@ -50,9 +50,8 @@ export default function Purchases() {
   const services = all.filter((e) => e.kind === 'one_time' && (e.status === 'paid' || e.status === 'pending'));
   const completed = all.filter((e) => e.kind === 'one_time' && (e.status === 'fulfilled' || e.status === 'refunded'));
 
-  // Provider-aware billing management (PayPal autopay vs legacy Stripe portal).
+  // Provider-aware billing management (PayPal autopay vs legacy support-managed).
   const { openBilling, busy } = useSubscriptionManagement();
-  const openStripePortal = openBilling;
 
   return (
     <>
@@ -68,7 +67,7 @@ export default function Purchases() {
             </div>
             <div className="flex flex-wrap gap-2">
               {hasActiveSubscription && (
-                <Button onClick={openStripePortal} variant="outline" size="sm" disabled={busy === 'portal'}>
+                <Button onClick={openBilling} variant="outline" size="sm" disabled={busy === 'portal'}>
                   {busy === 'portal' ? (
                     <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
                   ) : (

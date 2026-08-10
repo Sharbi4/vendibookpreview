@@ -63,7 +63,7 @@ export function HostSubscriptionCard() {
   }, [sub]);
 
   // Billing management is provider-aware: PayPal members go to PayPal's
-  // automatic payments, legacy Stripe members get the Customer Portal.
+  // automatic payments; legacy members are routed to support.
   const { provider, openBilling, busy } = useSubscriptionManagement();
   const openPortal = openBilling;
 
