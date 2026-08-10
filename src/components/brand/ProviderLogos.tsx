@@ -57,7 +57,8 @@ export function EquinoxFundingLogo({ className }: { className?: string }) {
     <img
       src={equinoxLogo.url}
       alt="Equinox Funding"
-      loading="lazy"
+      loading="eager"
+      decoding="async"
       className={cn('h-6 w-auto', className)}
     />
   );

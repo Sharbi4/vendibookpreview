@@ -45,7 +45,7 @@ const FinancingTopBanner = () => {
             className="pointer-events-none absolute inset-y-0 -left-1/3 w-1/3 -skew-x-12 bg-gradient-to-r from-transparent via-white/10 to-transparent opacity-0 transition-all duration-700 group-hover:left-[110%] group-hover:opacity-100"
           />
 
-          <div className="relative flex flex-col gap-4 px-5 py-5 sm:px-7 sm:py-6 md:flex-row md:items-center md:justify-between">
+          <div className="relative flex flex-col gap-3 px-4 py-3.5 sm:gap-4 sm:px-7 sm:py-6 md:flex-row md:items-center md:justify-between">
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
                 <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-300/25 bg-emerald-400/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-emerald-200 backdrop-blur-sm">
@@ -61,22 +61,23 @@ const FinancingTopBanner = () => {
                 </span>
               </div>
 
-              <h2 className="mt-3 text-balance text-lg font-semibold leading-snug tracking-tight text-white sm:text-xl">
+              <h2 className="mt-2 text-balance text-base font-semibold leading-snug tracking-tight text-white sm:mt-3 sm:text-xl">
                 Vendibook &amp; Equinox Funding make it easy to get started.
               </h2>
-              <p className="mt-1 text-sm text-white/60">
+              <p className="mt-1 hidden text-sm text-white/60 sm:block">
                 Financing options for trucks, trailers and equipment — check your options without
                 slowing down your purchase.
               </p>
             </div>
 
             <div className="flex shrink-0 items-center gap-3">
-              <span className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-b from-emerald-400 to-emerald-600 px-5 py-3 text-sm font-semibold text-emerald-950 shadow-[0_10px_30px_-12px_rgba(16,185,129,0.9)] ring-1 ring-inset ring-white/25 transition-shadow duration-300 group-hover:shadow-[0_14px_36px_-10px_rgba(16,185,129,1)]">
+              <span className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-b from-emerald-400 to-emerald-600 px-4 py-2.5 text-[13px] font-semibold text-emerald-950 shadow-[0_10px_30px_-12px_rgba(16,185,129,0.9)] ring-1 ring-inset ring-white/25 transition-shadow duration-300 group-hover:shadow-[0_14px_36px_-10px_rgba(16,185,129,1)] sm:px-5 sm:py-3 sm:text-sm">
                 Apply now for financing
                 <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-0.5" />
               </span>
             </div>
           </div>
+
         </Link>
       </div>
     </section>
