@@ -294,19 +294,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         return { error };
       }
 
-      // Role is now assigned by the handle_new_user trigger (SECURITY DEFINER)
-      // using the `role` field in user_metadata above. We still attempt a
-      // best-effort client insert as belt-and-suspenders for legacy sessions,
-      // but ON CONFLICT prevents duplicates and RLS failures are non-fatal.
+      // Role is assigned server-side by the handle_new_user trigger
+      // (SECURITY DEFINER) using the `role` field in user_metadata above.
+      // No client-side user_roles insert — it would be blocked by RLS.
       if (data.user) {
-        const { error: roleError } = await supabase
-          .from('user_roles')
-          .insert({ user_id: data.user.id, role });
 
-        if (roleError && !/(duplicate|already exists|conflict)/i.test(roleError.message)) {
-          // Trigger is the source of truth — log but don't fail signup.
-          console.warn('[signUp] client user_roles insert skipped:', roleError.message);
-        }
 
         // Send welcome email to the new user
         try {
