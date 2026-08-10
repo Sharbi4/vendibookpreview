@@ -26,7 +26,6 @@ import { template as saleCompletedSeller } from './sale-completed-seller.tsx'
 import { template as payoutSent } from './payout-sent.tsx'
 import { template as listingPublished } from './listing-published.tsx'
 import { template as listingDraftNudge } from './listing-draft-nudge.tsx'
-import { template as stripeOnboardingNudge } from './stripe-onboarding-nudge.tsx'
 import { template as documentStatus } from './document-status.tsx'
 import { template as newMessage } from './new-message.tsx'
 import { template as hostWeeklyDigest } from './host-weekly-digest.tsx'
@@ -88,7 +87,6 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'listing-published': listingPublished,
   'listing-draft-nudge': listingDraftNudge,
   'listing-recovery-cs': listingRecoveryCs,
-  'stripe-onboarding-nudge': stripeOnboardingNudge,
   'document-status': documentStatus,
   'new-message': newMessage,
   'host-weekly-digest': hostWeeklyDigest,

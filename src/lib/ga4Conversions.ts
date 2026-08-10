@@ -250,15 +250,6 @@ export const trackGA4ListingPublished = (params: {
 };
 
 /**
- * Track Stripe Connect completion (for hosts)
- */
-export const trackGA4StripeConnected = () => {
-  sendGA4Event('stripe_connected', {
-    method: 'stripe_connect',
-  });
-};
-
-/**
  * Track offer made (for sale listings)
  */
 export const trackGA4OfferMade = (params: {

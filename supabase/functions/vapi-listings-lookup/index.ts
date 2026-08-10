@@ -407,7 +407,7 @@ async function createListingDraft(supabase: any, args: any) {
     title: data.title,
     status: data.status,
     draft_token: guest_draft_token,
-    message: `Draft listing "${data.title}" created with all details! The user just needs to add photos and connect Stripe to publish.`,
+    message: `Draft listing "${data.title}" created with all details! The user just needs to add photos to publish.`,
     url: `https://vendibook.com/create-listing/${data.id}`,
   };
 }

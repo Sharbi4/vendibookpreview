@@ -64,8 +64,8 @@ const knowledgeBase = `
 
 ## Account & Verification
 - Create account with email
-- Verify identity through Stripe Identity
-- Hosts need to complete Stripe Connect onboarding
+- Verify identity through Vendibook's optional Verified Seller check (Plaid)
+- Hosts add payout details in the dashboard; Vendibook pays out manually
 - Identity verification increases trust and booking approval rates
 
 ## Delivery & Freight
