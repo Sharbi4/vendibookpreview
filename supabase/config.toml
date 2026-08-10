@@ -3,8 +3,6 @@ project_id = "nbrehbwfsmedbelzntqs"
 [functions]
   [functions.verified-seller-webhook]
     verify_jwt = false
-  [functions.monetization-webhook]
-    verify_jwt = false
   [functions.paypal-webhook]
     verify_jwt = false
   [functions.ai-equipment-guide]
@@ -27,11 +25,7 @@ project_id = "nbrehbwfsmedbelzntqs"
     verify_jwt = false
   [functions.cancel-booking]
     verify_jwt = false
-  [functions.check-identity-verification]
-    verify_jwt = false
   [functions.check-promo-eligibility]
-    verify_jwt = false
-  [functions.check-stripe-connect]
     verify_jwt = false
   [functions.check-ticket-status]
     verify_jwt = false
@@ -43,15 +37,11 @@ project_id = "nbrehbwfsmedbelzntqs"
     verify_jwt = false
   [functions.create-checkout]
     verify_jwt = false
-  [functions.create-identity-verification]
-    verify_jwt = false
   [functions.create-notary-checkout]
     verify_jwt = false
   [functions.create-notification]
     verify_jwt = false
   [functions.create-sale-transaction]
-    verify_jwt = false
-  [functions.create-stripe-connect]
     verify_jwt = false
   [functions.create-zendesk-ticket]
     verify_jwt = false
@@ -179,8 +169,6 @@ project_id = "nbrehbwfsmedbelzntqs"
     verify_jwt = false
   [functions.tawk-webhook]
     verify_jwt = false
-  [functions.send-stripe-onboarding-reminder]
-    verify_jwt = false
   [functions.send-welcome-email]
     verify_jwt = false
   [functions.send-host-weekly-digests]
@@ -190,8 +178,6 @@ project_id = "nbrehbwfsmedbelzntqs"
   [functions.send-feedback-requests]
     verify_jwt = false
   [functions.seo-prerender]
-    verify_jwt = false
-  [functions.stripe-webhook]
     verify_jwt = false
   [functions.suggest-pricing]
     verify_jwt = false
