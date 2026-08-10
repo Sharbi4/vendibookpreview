@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
+import { refundPayment } from "../_shared/paymentOps.ts";
 
 declare const EdgeRuntime: { waitUntil: (promise: Promise<unknown>) => void };
 
@@ -22,16 +22,11 @@ serve(async (req) => {
   try {
     logStep("Function started - checking for ended bookings and pending releases");
 
-    const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
-    if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
-
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
       { auth: { persistSession: false } }
     );
-
-    const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
 
     // Get current date and 24 hours ago
     const now = new Date();
@@ -192,52 +187,33 @@ serve(async (req) => {
             continue;
           }
 
-          // Get host's Stripe account
-          const { data: hostProfile } = await supabaseClient
-            .from('profiles')
-            .select('stripe_account_id, full_name')
-            .eq('id', booking.host_id)
-            .single();
-
-          if (!hostProfile?.stripe_account_id) {
-            logStep("Host has no Stripe account - skipping payout", { bookingId: booking.id });
-            continue;
-          }
-
-          // Calculate payout (10% platform fee)
+          // Vendibook settles host payouts manually. Mark the payable eligible
+          // for release; an administrator records the actual transfer.
           const platformFeePercent = 0.10;
           const payoutAmount = Math.round(Number(booking.total_price) * (1 - platformFeePercent) * 100);
 
-          logStep("Processing payout", { 
-            bookingId: booking.id, 
+          logStep("Marking host payout eligible", {
+            bookingId: booking.id,
             amount: payoutAmount / 100,
-            stripeAccount: hostProfile.stripe_account_id 
           });
 
-          // Create transfer
-          const transfer = await stripe.transfers.create({
-            amount: payoutAmount,
-            currency: 'usd',
-            destination: hostProfile.stripe_account_id,
-            metadata: {
-              booking_id: booking.id,
-              listing_id: booking.listing_id,
-              type: 'booking_payout',
-            },
-          });
+          await supabaseClient
+            .from('seller_payables')
+            .update({ payout_eligible_at: now.toISOString() })
+            .eq('seller_id', booking.host_id)
+            .eq('listing_id', booking.listing_id)
+            .eq('status', 'pending_release');
 
-          // Mark payout as processed
           await supabaseClient
             .from('booking_requests')
-            .update({ 
+            .update({
               payout_processed: true,
               payout_processed_at: now.toISOString(),
-              payout_transfer_id: transfer.id,
             })
             .eq('id', booking.id);
 
           results.payoutsProcessed++;
-          logStep("Payout processed", { bookingId: booking.id, transferId: transfer.id });
+          logStep("Payout marked eligible for manual settlement", { bookingId: booking.id });
 
           // Notify host
           EdgeRuntime.waitUntil(
@@ -326,20 +302,22 @@ serve(async (req) => {
             depositAmount: refundAmount 
           });
 
-          // Process Stripe refund if we have a charge ID
-          let refundId = null;
+          // Refund the deposit through PayPal. Legacy references from the
+          // retired processor resolve to a manual outcome for admin settlement.
+          let refundId: string | null = null;
           if (booking.deposit_charge_id) {
             try {
-              const refund = await stripe.refunds.create({
-                charge: booking.deposit_charge_id,
-                amount: Math.round(refundAmount * 100),
-                reason: 'requested_by_customer',
+              const outcome = await refundPayment({
+                paymentReference: booking.deposit_charge_id,
+                amountCents: Math.round(refundAmount * 100),
+                reason: 'Automatic deposit release after rental completion',
               });
-              refundId = refund.id;
-              logStep("Stripe deposit refund processed", { refundId, amount: refundAmount });
-            } catch (stripeError: any) {
-              logStep("Stripe deposit refund failed", { error: stripeError.message });
-              results.errors.push(`Deposit refund failed for ${booking.id}: ${stripeError.message}`);
+              refundId = outcome.refundId ?? null;
+              logStep("Deposit refund outcome", { mode: outcome.mode, refundId, amount: refundAmount });
+            } catch (refundError) {
+              const message = refundError instanceof Error ? refundError.message : String(refundError);
+              logStep("Deposit refund failed", { error: message });
+              results.errors.push(`Deposit refund failed for ${booking.id}: ${message}`);
               continue;
             }
           }
