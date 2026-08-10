@@ -308,6 +308,10 @@ export const ShareKit: React.FC<ShareKitProps> = ({ listing, onClose }) => {
   };
 
   const openShare = (platform: string) => {
+    if (shareBlocked) {
+      toast({ title: 'Resolve the share preview issues first', variant: 'destructive' });
+      return;
+    }
     const url = withUtm(platform);
     const u = encodeURIComponent(url);
     const t = encodeURIComponent(currentCaption);
@@ -697,42 +701,23 @@ const generateStoryImageBlob = (
         </p>
       </div>
 
-      {/* LISTING PREVIEW CARD */}
+      {/* LISTING PREVIEW CARD — verified before copy/post */}
       <motion.div
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.15 }}
-        className="rounded-2xl border bg-card overflow-hidden shadow-sm"
       >
-        <div className="flex gap-3 p-3">
-          <div className="w-20 h-20 rounded-xl overflow-hidden bg-muted shrink-0 ring-1 ring-border">
-            {listing.coverImageUrl ? (
-              <img src={listing.coverImageUrl} alt={listing.title} className="w-full h-full object-cover" />
-            ) : (
-              <div className="w-full h-full bg-gradient-to-br from-muted to-muted-foreground/10" />
-            )}
-          </div>
-          <div className="flex-1 min-w-0 py-0.5">
-            <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground uppercase tracking-wide font-medium">
-              <span>{categoryLabel}</span>
-              <span>·</span>
-              <span>{listing.mode === 'sale' ? 'For Sale' : 'For Rent'}</span>
-            </div>
-            <h3 className="font-semibold text-[15px] mt-0.5 line-clamp-1">{listing.title}</h3>
-            {city && (
-              <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
-                <MapPin className="w-3 h-3" />
-                <span>{city}</span>
-              </div>
-            )}
-            {price && (
-              <div className="text-sm font-semibold mt-1">
-                ${price.toLocaleString()}
-                <span className="text-xs font-normal text-muted-foreground ml-1">{priceLabel}</span>
-              </div>
-            )}
-          </div>
-        </div>
+        <SharePreviewCard
+          title={listing.title}
+          imageUrl={listing.coverImageUrl}
+          shareUrl={listingUrl}
+          subtitle={[categoryLabel, city, priceText].filter(Boolean).join(' · ')}
+          checks={preflight.checks}
+          running={preflight.running}
+          verified={preflight.verified}
+          blocked={shareBlocked}
+          onRecheck={preflight.recheck}
+        />
       </motion.div>
 
       {/* SHARE LINK + PRIMARY ACTIONS */}
