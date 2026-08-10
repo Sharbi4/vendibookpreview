@@ -86,7 +86,7 @@ serve(async (req) => {
       reviewsResult,
       viewsThisMonthResult,
       viewsLastMonthResult,
-      profileResult
+      payablesResult
     ] = await Promise.all([
       // Listings
       supabaseClient
@@ -210,7 +210,7 @@ serve(async (req) => {
       : viewsThisMonth > 0 ? 100 : 0;
 
     // Seller proceeds recorded for Vendibook's manual payout run.
-    const pendingPayoutBalance = ((profileResult.data as Array<{ net_amount_cents: number | null }> | null) ?? [])
+    const pendingPayoutBalance = ((payablesResult.data as Array<{ net_amount_cents: number | null }> | null) ?? [])
       .reduce((sum, r) => sum + (r.net_amount_cents ?? 0), 0) / 100;
 
     // Compile insight data
