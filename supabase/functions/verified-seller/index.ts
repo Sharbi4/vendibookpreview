@@ -372,7 +372,7 @@ serve(async (req) => {
       );
     }
 
-    if (isBadgeEligible(record) && action !== "refresh") {
+    if ((isBadgeEligible(record) || legacyVerified) && action !== "refresh") {
       return jsonResponse(200, {
         ...publicState(record, null, enabled, legacyVerified),
         message: "You're already verified.",
