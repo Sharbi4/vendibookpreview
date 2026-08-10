@@ -115,7 +115,7 @@ const Profile = () => {
           {/* Next Step Card - Only show for own profile */}
           {isOwnProfile && (
             <EnhancedProfileNextStepCard
-              isVerified={profile.identity_verified || false}
+              isVerified={sellerVerified}
               payoutReady={stripeConnected}
               isHost={isHost}
               draftCount={draftCount}
@@ -129,14 +129,14 @@ const Profile = () => {
           {/* Stats Row */}
           <EnhancedProfileStatsRow
             stats={stats}
-            isVerified={profile.identity_verified || false}
+            isVerified={sellerVerified}
             stripeConnected={stripeConnected}
             isHost={isHost}
           />
 
           {/* Trust Section - Collapsible */}
           <EnhancedProfileTrustSection
-            isVerified={profile.identity_verified || false}
+            isVerified={sellerVerified}
             stripeConnected={stripeConnected}
             isHost={isHost}
             isOwnProfile={isOwnProfile}
@@ -151,7 +151,7 @@ const Profile = () => {
             reviewsReceivedLoading={reviewsReceivedLoading}
             reviewsGivenLoading={reviewsGivenLoading}
             isOwnProfile={isOwnProfile}
-            hostVerified={profile.identity_verified || false}
+            hostVerified={sellerVerified}
             isHost={isHost}
             stats={stats}
           />
