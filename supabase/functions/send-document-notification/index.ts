@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
-import Stripe from "https://esm.sh/stripe@18.5.0";
+import { refundPayment } from "../_shared/paymentOps.ts";
 
 // Emails are sent via the Lovable Emails queue (send-transactional-email),
 // using the premium Satin Lux `generic-notice` template. No direct Resend usage.
@@ -53,32 +53,26 @@ async function processInstantBookRefund(
   listingTitle: string,
   rejectionReason: string
 ): Promise<{ success: boolean; refundId?: string; error?: string }> {
-  const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
-  if (!stripeKey) {
-    logStep("Cannot process refund - STRIPE_SECRET_KEY not set");
-    return { success: false, error: "Stripe key not configured" };
-  }
-
   if (!booking.payment_intent_id) {
-    logStep("Cannot process refund - no payment intent found");
-    return { success: false, error: "No payment intent found" };
+    logStep("Cannot process refund - no payment reference found");
+    return { success: false, error: "No payment reference found" };
   }
 
   try {
-    const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
-    
-    // Create full refund
-    const refund = await stripe.refunds.create({
-      payment_intent: booking.payment_intent_id,
-      reason: 'requested_by_customer',
-      metadata: {
-        booking_id: booking.id,
-        reason: 'instant_book_document_rejected',
-        rejection_reason: rejectionReason,
-      },
+    // Vendibook refunds through PayPal only.
+    const refund = await refundPayment({
+      paymentReference: booking.payment_intent_id,
+      provider: booking.payment_provider,
+      reason: `Instant Book document rejected: ${rejectionReason}`.slice(0, 200),
+      idempotencyKey: `doc-reject-refund-${booking.id}`,
     });
 
-    logStep("Instant Book refund created", { refundId: refund.id, amount: refund.amount });
+    if (!refund.success) {
+      logStep("Refund not completed automatically", { error: refund.error, manual: refund.manual });
+      return { success: false, error: refund.error };
+    }
+
+    logStep("Instant Book refund created", { refundId: refund.id, amountCents: refund.amountCents });
 
     // Update booking status
     await supabaseClient

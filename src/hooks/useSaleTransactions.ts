@@ -296,28 +296,5 @@ export const useSellerSaleTransactions = (userId: string | undefined) => {
   };
 };
 
-// Hook to create transaction from checkout session
-export const useCreateSaleTransaction = () => {
-  const { toast } = useToast();
-
-  return useMutation({
-    mutationFn: async (sessionId: string) => {
-      const { data, error } = await supabase.functions.invoke('create-sale-transaction', {
-        body: { session_id: sessionId },
-      });
-      
-      if (error) throw error;
-      if (data.error) throw new Error(data.error);
-      return data;
-    },
-    onSuccess: () => {
-      toast({
-        title: 'Purchase Recorded',
-        description: 'Your purchase is now in payment protection. Please confirm receipt of the item to release payment to the seller.',
-      });
-    },
-    onError: (error: Error) => {
-      console.error('Failed to create sale transaction:', error);
-    },
-  });
-};
+// Protected-sale transactions are written server-side by the PayPal order
+// finalizer, so there is no client-side creation hook.

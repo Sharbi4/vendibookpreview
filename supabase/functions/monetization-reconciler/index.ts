@@ -2,14 +2,18 @@
 //
 // Scans `monetization_pending_reconciliation` for purchases that look stuck —
 // either paid but never fulfilled, or pending long enough that a webhook was
-// likely lost — and re-plays them against Stripe as the source of truth.
+// likely lost — and re-plays them against PayPal as the source of truth.
+//
+// Vendibook processes payments through PayPal only. Legacy rows from the
+// retired processor are read-only accounting history and are never re-played.
 //
 // Auth: admin JWT required (verify_jwt = false in config, checked in-function).
 // Trigger: manual admin button + can be wired to a cron.
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
+import { getPayPalOrder, getPayPalSubscription } from "../_shared/paypal.ts";
+import { fulfillMonetizationPurchase } from "../_shared/fulfillMonetizationPurchase.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -32,11 +36,6 @@ interface ReconResult {
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
-
-  const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
-  if (!stripeKey) {
-    return json({ error: "Stripe not configured" }, 500);
-  }
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
   const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -73,7 +72,6 @@ serve(async (req) => {
   const admin = createClient(supabaseUrl, serviceKey, {
     auth: { persistSession: false },
   });
-  const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
 
   // Optional filter: reconcile a specific purchase id
   let onlyId: string | undefined;
@@ -99,53 +97,65 @@ serve(async (req) => {
 
   for (const row of candidates ?? []) {
     try {
-      const sessionId = row.stripe_session_id as string | null;
-      if (!sessionId) {
-        results.push({ purchase_id: row.id, action: "no_change", detail: "no session id" });
-        continue;
-      }
+      // Resolve the PayPal order backing this purchase.
+      const { data: record } = await admin
+        .from("payment_records")
+        .select("paypal_order_id, payment_status, internal_status")
+        .eq("monetization_purchase_id", row.id)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
 
-      const session = await stripe.checkout.sessions.retrieve(sessionId, {
-        expand: ["payment_intent"],
-      });
-
-      if (session.status === "expired" || session.status === "canceled") {
-        if (row.status === "pending") {
-          const { error } = await admin
-            .from("monetization_purchases")
-            .update({ status: session.status === "expired" ? "failed" : "cancelled" })
-            .eq("id", row.id);
-          results.push({
-            purchase_id: row.id,
-            action: "marked_failed",
-            detail: error ? error.message : session.status,
-          });
-        } else {
-          results.push({ purchase_id: row.id, action: "no_change", detail: session.status });
-        }
-        continue;
-      }
-
-      if (session.payment_status !== "paid") {
+      const orderId = (record as { paypal_order_id?: string | null } | null)?.paypal_order_id ?? null;
+      if (!orderId) {
         results.push({
           purchase_id: row.id,
           action: "no_change",
-          detail: `session ${session.payment_status}`,
+          detail: "no PayPal order on file (legacy or abandoned checkout)",
         });
         continue;
       }
 
-      // Paid at Stripe. Bring our row up to speed.
-      const pi = typeof session.payment_intent === "string"
-        ? session.payment_intent
-        : session.payment_intent?.id ?? null;
+      const order = await getPayPalOrder(orderId);
+      const orderStatus = String(order?.status ?? "").toUpperCase();
 
+      if (orderStatus === "VOIDED" || orderStatus === "EXPIRED") {
+        if (row.status === "pending") {
+          const { error } = await admin
+            .from("monetization_purchases")
+            .update({ status: "failed" })
+            .eq("id", row.id);
+          results.push({
+            purchase_id: row.id,
+            action: "marked_failed",
+            detail: error ? error.message : orderStatus.toLowerCase(),
+          });
+        } else {
+          results.push({ purchase_id: row.id, action: "no_change", detail: orderStatus });
+        }
+        continue;
+      }
+
+      const capture = order?.purchase_units?.[0]?.payments?.captures?.[0];
+      const captured = orderStatus === "COMPLETED" &&
+        String(capture?.status ?? "").toUpperCase() === "COMPLETED";
+
+      if (!captured) {
+        results.push({
+          purchase_id: row.id,
+          action: "no_change",
+          detail: `order ${orderStatus || "unknown"}`,
+        });
+        continue;
+      }
+
+      // Paid at PayPal. Bring our row up to speed, then fulfil idempotently.
       if (row.status === "pending") {
         const { error } = await admin
           .from("monetization_purchases")
           .update({
             status: "paid",
-            stripe_payment_intent_id: pi,
+            payment_provider: "paypal",
             paid_at: new Date().toISOString(),
           })
           .eq("id", row.id);
@@ -153,104 +163,20 @@ serve(async (req) => {
         results.push({ purchase_id: row.id, action: "promoted_to_paid" });
       }
 
-      // If paid + listing product but no active promo, activate it (with stacking + listings sync)
-      if (row.listing_id) {
-        const { data: existingPromo } = await admin
+      const { data: existingPromo } = row.listing_id
+        ? await admin
           .from("listing_promotions")
           .select("id")
           .eq("purchase_id", row.id)
-          .maybeSingle();
+          .maybeSingle()
+        : { data: null };
 
-        if (!existingPromo) {
-          const { data: product } = await admin
-            .from("monetization_products")
-            .select("id, promo_type, duration_days")
-            .eq("id", row.product_id)
-            .maybeSingle();
-          // deno-lint-ignore no-explicit-any
-          const prod = product as any;
-          if (prod?.promo_type && prod?.duration_days) {
-            const durationMs = prod.duration_days * 24 * 60 * 60 * 1000;
-            const nowMs = Date.now();
-            const isFeaturedProduct =
-              prod.promo_type === "featured_7" ||
-              prod.promo_type === "featured_30" ||
-              prod.promo_type === "top_of_search";
-
-            // Read current featured expiry for stacking.
-            let currentFeaturedExpiresMs = 0;
-            if (isFeaturedProduct) {
-              const { data: lr } = await admin
-                .from("listings")
-                .select("featured_enabled, featured_expires_at")
-                .eq("id", row.listing_id)
-                .maybeSingle();
-              // deno-lint-ignore no-explicit-any
-              const lrAny = lr as any;
-              if (lrAny?.featured_enabled && lrAny?.featured_expires_at) {
-                currentFeaturedExpiresMs = new Date(lrAny.featured_expires_at).getTime();
-              }
-            }
-
-            // Stack against existing active promo of the same type.
-            const { data: samePromo } = await admin
-              .from("listing_promotions")
-              .select("id, ends_at")
-              .eq("listing_id", row.listing_id)
-              .eq("promo_type", prod.promo_type)
-              .eq("active", true)
-              .maybeSingle();
-            // deno-lint-ignore no-explicit-any
-            const existingEndsMs = samePromo && (samePromo as any).ends_at
-              ? new Date((samePromo as any).ends_at).getTime()
-              : 0;
-            const promoStartMs = existingEndsMs > nowMs ? existingEndsMs : nowMs;
-            const promoEndMs = promoStartMs + durationMs;
-
-            if (samePromo) {
-              await admin
-                .from("listing_promotions")
-                // deno-lint-ignore no-explicit-any
-                .update({ ends_at: new Date(promoEndMs).toISOString(), purchase_id: row.id } as any)
-                // deno-lint-ignore no-explicit-any
-                .eq("id", (samePromo as any).id);
-            } else {
-              const { error: promoErr } = await admin.from("listing_promotions").insert({
-                listing_id: row.listing_id,
-                product_id: row.product_id,
-                purchase_id: row.id,
-                promo_type: prod.promo_type,
-                starts_at: new Date(nowMs).toISOString(),
-                ends_at: new Date(promoEndMs).toISOString(),
-                active: true,
-              });
-              if (promoErr && (promoErr as { code?: string }).code !== "23505") {
-                throw promoErr;
-              }
-            }
-
-            if (isFeaturedProduct) {
-              const featuredStartMs = currentFeaturedExpiresMs > nowMs ? currentFeaturedExpiresMs : nowMs;
-              const featuredEndsAt = new Date(featuredStartMs + durationMs).toISOString();
-              await admin
-                .from("listings")
-                // deno-lint-ignore no-explicit-any
-                .update({
-                  featured_enabled: true,
-                  featured_at: currentFeaturedExpiresMs > nowMs ? undefined : new Date(nowMs).toISOString(),
-                  featured_expires_at: featuredEndsAt,
-                  featured_source: "paid",
-                } as any)
-                .eq("id", row.listing_id);
-            }
-
-            await admin
-              .from("monetization_purchases")
-              .update({ status: "fulfilled", fulfillment_status: "active" })
-              .eq("id", row.id);
-            results.push({ purchase_id: row.id, action: "activated_promotion" });
-          }
-        }
+      if (row.listing_id && !existingPromo) {
+        await fulfillMonetizationPurchase(admin, row.id);
+        results.push({ purchase_id: row.id, action: "activated_promotion" });
+      } else if (!row.listing_id && row.fulfillment_status !== "active") {
+        await fulfillMonetizationPurchase(admin, row.id);
+        results.push({ purchase_id: row.id, action: "activated_promotion" });
       }
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
@@ -261,16 +187,16 @@ serve(async (req) => {
 
   // ---- Subscription drift sweep ----------------------------------
   // Refresh any host_subscriptions row whose status is active/trialing/past_due
-  // by re-reading from Stripe. Guarantees a missed webhook cannot leave a
+  // by re-reading from PayPal. Guarantees a missed webhook cannot leave a
   // paying user without access (or a cancelled user with lingering access).
   let subsChecked = 0;
   let subsRepaired = 0;
   try {
     const { data: subs } = await admin
       .from("host_subscriptions")
-      .select("id, stripe_subscription_id, status, current_period_end")
-      .in("status", ["active", "trialing", "past_due", "unpaid", "incomplete"])
-      .not("stripe_subscription_id", "is", null)
+      .select("id, paypal_subscription_id, status, current_period_end")
+      .in("status", ["active", "trialing", "past_due", "unpaid", "incomplete", "paused"])
+      .not("paypal_subscription_id", "is", null)
       .limit(200);
 
     for (const row of subs ?? []) {
@@ -278,18 +204,19 @@ serve(async (req) => {
       try {
         // deno-lint-ignore no-explicit-any
         const rowAny = row as any;
-        const sub = await stripe.subscriptions.retrieve(rowAny.stripe_subscription_id);
-        const item = sub.items?.data?.[0];
-        // deno-lint-ignore no-explicit-any
-        const itemAny = item as any;
-        const periodEndUnix: number | null =
-          itemAny?.current_period_end ?? sub.current_period_end ?? null;
+        const sub = await getPayPalSubscription(rowAny.paypal_subscription_id);
+        const paypalStatus = String(sub?.status ?? "").toUpperCase();
+        const mapped = paypalStatus === "ACTIVE"
+          ? "active"
+          : paypalStatus === "SUSPENDED"
+          ? "paused"
+          : paypalStatus === "CANCELLED" || paypalStatus === "EXPIRED"
+          ? "canceled"
+          : "incomplete";
         const patch = {
-          status: sub.status,
-          stripe_price_id: item?.price?.id ?? null,
-          current_period_end: periodEndUnix ? new Date(periodEndUnix * 1000).toISOString() : null,
-          cancel_at: sub.cancel_at ? new Date(sub.cancel_at * 1000).toISOString() : null,
-          cancel_at_period_end: !!sub.cancel_at_period_end,
+          status: mapped,
+          payment_provider: "paypal",
+          current_period_end: sub?.billing_info?.next_billing_time ?? null,
           updated_at: new Date().toISOString(),
         };
         await admin.from("host_subscriptions").update(patch).eq("id", rowAny.id);
