@@ -45,16 +45,25 @@ serve(async (req) => {
     // ---- admin gate ----
     const token = (req.headers.get("Authorization") ?? "").replace("Bearer ", "");
     if (!token) return json({ error: "Unauthorized" }, 401);
-    const userClient = createClient(supabaseUrl, anonKey, {
-      global: { headers: { Authorization: `Bearer ${token}` } },
-    });
-    const { data: userRes } = await userClient.auth.getUser();
-    const callerId = userRes?.user?.id;
-    if (!callerId) return json({ error: "Unauthorized" }, 401);
 
     const admin = createClient(supabaseUrl, serviceKey);
+    // Verify the caller's JWT with the service-role client so the gate keeps
+    // working under the asymmetric signing-key setup.
+    let callerId: string | null = null;
+    const { data: userRes } = await admin.auth.getUser(token);
+    callerId = userRes?.user?.id ?? null;
+    if (!callerId) {
+      const fallback = createClient(supabaseUrl, anonKey, {
+        global: { headers: { Authorization: `Bearer ${token}` } },
+      });
+      const { data: alt } = await fallback.auth.getUser();
+      callerId = alt?.user?.id ?? null;
+    }
+    if (!callerId) return json({ error: "Unauthorized" }, 401);
+
     const { data: isAdmin } = await admin.rpc("has_role", { _user_id: callerId, _role: "admin" });
     if (!isAdmin) return json({ error: "Forbidden" }, 403);
+
 
     const body = await req.json().catch(() => ({}));
     const mode: "preview_count" | "preview_html" | "test" | "broadcast" =
