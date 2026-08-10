@@ -14,6 +14,8 @@
  *  - Answers link to real routes; long legalese defers to policy pages.
  */
 
+import { PRICING_FAQ } from "./pricingFaq";
+
 export interface FaqAction {
   label: string;
   href: string;
@@ -61,7 +63,22 @@ const A = {
   terms: { label: "Terms of service", href: "/legal/terms" },
 } satisfies Record<string, FaqAction>;
 
+const PRICING_CATEGORY: FaqCategory = {
+  id: "pricing-fees",
+  title: "Pricing, fees & financing",
+  blurb:
+    "Free to list. 12.9% only when a transaction runs through Vendibook — and $0 when a sale is paid in person.",
+  entries: PRICING_FAQ.map((e) => ({
+    id: e.id,
+    question: e.question,
+    answer: e.answer,
+    keywords: ["fees", "pricing", "commission", "cost", "paypal", "financing"],
+    actions: e.cta ? [{ label: e.cta.label, href: e.cta.href }] : undefined,
+  })),
+};
+
 export const faqCategories: FaqCategory[] = [
+  PRICING_CATEGORY,
   // ── 1. Getting started ─────────────────────────────────────────
   {
     id: "getting-started",
@@ -94,7 +111,7 @@ export const faqCategories: FaqCategory[] = [
         id: "identity-verification",
         question: "What is identity verification and who needs it?",
         answer:
-          "We run identity checks to fight fraud and keep payouts flowing. Everyone selling, hosting, or making a high-ticket purchase gets verified. You upload a government photo ID (driver's license, passport, or state ID) and take a quick selfie. Most checks complete in a few minutes; manual review takes 1–2 business days. Verified users get the checkmark badge, unlock high-value payments and payouts, and rank higher in search.",
+          "Identity verification is an optional paid add-on ($19.99, one time) powered by Plaid. It is never required to buy, sell, rent, publish a listing, or get paid. What it does is put the Identity Verified badge on your profile and listings — sellers who carry it typically get more replies and faster offers because buyers know a real person is behind the truck.",
         keywords: ["kyc", "identity", "verification", "badge", "verified"],
         actions: [A.verify],
       },
@@ -102,7 +119,7 @@ export const faqCategories: FaqCategory[] = [
         id: "verification-fails",
         question: "My identity check failed — what now?",
         answer:
-          "You'll see the exact reason on the verification page and can retry with a clearer photo or a different document. After two failed attempts, email support@vendibook.com and we'll review manually.",
+          "You'll see the exact reason on the verification page and can retry with a clearer document. Nothing on your account is blocked in the meantime — verification is optional, so you can keep listing, selling, and getting paid. If a retry still fails, email support@vendibook.com and we'll review manually.",
         actions: [A.verify, A.contactSupport],
       },
       {
@@ -155,14 +172,15 @@ export const faqCategories: FaqCategory[] = [
         id: "payment-methods",
         question: "What payment methods do you accept?",
         answer:
-          "Credit and debit cards, Apple Pay, and Google Pay for every transaction. ACH bank transfer for eligible sales above $5,000. Financing (Affirm, Klarna, Afterpay) on eligible listings. Pay in Person (cash) when the seller has enabled it.",
+          "Vendibook checkout runs on PayPal Business: pay with your PayPal balance, a linked bank account, or any major debit/credit card through PayPal — no PayPal account required to use a card. Equipment financing through Equinox Funding is available on eligible for-sale listings, and Pay in Person (cash) is available when the seller has enabled it. Vendibook never sees or stores your card number.",
       },
       {
         id: "financing",
-        question: "Can I finance a purchase with Affirm, Klarna, or Afterpay?",
+        question: "Can I finance a food truck or trailer instead of paying cash?",
         answer:
-          "Yes, on eligible listings. Affirm handles $35–$30,000 with monthly plans up to 36 months. Klarna splits into 4 interest-free payments or a longer plan. Afterpay covers up to $4,000 in 4 payments. You pick your plan at checkout, see your exact rate before committing, and Affirm/Klarna/Afterpay handle collection — Vendibook is paid in full up front.",
-        keywords: ["financing", "monthly", "bnpl", "affirm", "klarna", "afterpay"],
+          "Yes — Vendibook partners with Equinox Funding for equipment financing on eligible for-sale listings. Apply in minutes from the listing, get a decision from Equinox, and the seller is paid in full at closing while you repay Equinox on monthly terms. You can also download a Pro Forma Invoice (with the VIN/serial) directly from the listing to submit with your application. Rates, terms, and approval come from Equinox — not Vendibook.",
+        keywords: ["financing", "monthly", "loan", "equinox", "equipment financing"],
+        actions: [{ label: "Explore financing", href: "/financing" }],
       },
       {
         id: "payment-protection",
@@ -565,7 +583,7 @@ export const faqCategories: FaqCategory[] = [
         id: "verified-badges",
         question: "What does the verified badge mean?",
         answer:
-          "The green checkmark means we've verified the person's government ID. Sellers and hosts also verify their bank/payout details. It's a strong signal — but not a guarantee of behavior. Always keep messages on-platform and follow the safety tips.",
+          "It means that person paid for the optional Plaid identity check and it passed, so their legal identity is confirmed. It's a strong trust signal — not a guarantee of behavior, and its absence doesn't mean someone is unsafe, since the badge is a voluntary add-on. Either way, keep messages and payment on-platform.",
       },
       {
         id: "avoid-scams",
