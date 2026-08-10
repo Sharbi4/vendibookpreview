@@ -26,12 +26,21 @@ export function paypalApiBase(): string {
   return paypalEnvironment() === "live" ? LIVE_BASE : SANDBOX_BASE;
 }
 
+export function paypalWebhookId(): string | null {
+  // In live we prefer the live-specific id so a leftover sandbox
+  // PAYPAL_WEBHOOK_ID can never be used to verify a live event.
+  if (paypalEnvironment() === "live") {
+    return Deno.env.get("PAYPAL_WEBHOOK_ID_LIVE") ?? Deno.env.get("PAYPAL_WEBHOOK_ID") ?? null;
+  }
+  return Deno.env.get("PAYPAL_WEBHOOK_ID") ?? null;
+}
+
 export function paypalConfigStatus() {
   return {
     environment: paypalEnvironment(),
     client_id_configured: !!Deno.env.get("PAYPAL_CLIENT_ID"),
     client_secret_configured: !!Deno.env.get("PAYPAL_CLIENT_SECRET"),
-    webhook_id_configured: !!Deno.env.get("PAYPAL_WEBHOOK_ID"),
+    webhook_id_configured: !!paypalWebhookId(),
   };
 }
 
@@ -398,7 +407,7 @@ export async function verifyPayPalWebhook(
   headers: Headers,
   rawBody: string,
 ): Promise<boolean> {
-  const webhookId = Deno.env.get("PAYPAL_WEBHOOK_ID");
+  const webhookId = paypalWebhookId();
   if (!webhookId) {
     safeLog("webhook_verify_skipped_no_id");
     return false;
