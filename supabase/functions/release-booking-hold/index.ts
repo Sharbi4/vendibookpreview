@@ -45,13 +45,20 @@ serve(async (req) => {
     // Fetch booking
     const { data: booking, error: bookingError } = await supabaseClient
       .from('booking_requests')
-      .select('*, listing:listings(title), shopper:profiles!booking_requests_shopper_id_fkey(email, full_name)')
+      .select('*, listing:listings(title)')
       .eq('id', booking_id)
       .single();
 
     if (bookingError || !booking) {
       throw new Error("Booking not found");
     }
+
+    // shopper_id references auth.users, not profiles — fetch the profile separately.
+    const { data: shopperProfile } = await supabaseClient
+      .from('profiles')
+      .select('email, full_name')
+      .eq('id', booking.shopper_id)
+      .maybeSingle();
 
     // Verify caller is the host or admin
     if (booking.host_id !== user.id) {
