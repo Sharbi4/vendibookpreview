@@ -42,35 +42,9 @@ const IdentityChip = ({ verified, className, prominent }: IdentityChipProps) => 
     );
   }
 
-  if (prominent) {
-    return (
-      <Link
-        to="/identity-verification"
-        title="Optional paid add-on — not required to publish. See details on the identity verification page."
-        className={cn(
-          'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[13px] font-medium bg-muted/60 text-muted-foreground border border-border hover:text-foreground hover:bg-muted transition-colors',
-          className,
-        )}
-      >
-        <ShieldCheck className="h-3.5 w-3.5" />
-        Get verified*
-      </Link>
-    );
-  }
-
-  return (
-    <Link
-      to="/identity-verification"
-      title="Optional paid add-on — not required to publish. See details on the identity verification page."
-      className={cn(
-        'inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-muted/60 text-muted-foreground border border-border hover:text-foreground hover:bg-muted transition-colors',
-        className,
-      )}
-    >
-      <ShieldCheck className="h-3 w-3" />
-      Get verified
-    </Link>
-  );
+  // Unverified users are never nagged: identity verification is an optional
+  // paid add-on discoverable from the Account nav, not a dashboard prompt.
+  return null;
 };
 
 
