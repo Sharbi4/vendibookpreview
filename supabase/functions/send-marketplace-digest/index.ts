@@ -11,7 +11,7 @@ const corsHeaders = {
 };
 
 const RESEND_API = "https://api.resend.com";
-const FROM = "Vendibook <hello@vendibook.com>";
+const FROM = "Vendibook <hello@updates.vendibook.com>";
 const SITE_URL = "https://vendibook.com";
 
 interface Listing {
@@ -176,7 +176,7 @@ Deno.serve(async (req) => {
       "/broadcasts",
       {
         method: "POST",
-        body: JSON.stringify({ audience_id: general.id, from: FROM, subject, html, name: `Digest ${new Date().toISOString().split("T")[0]}` }),
+        body: JSON.stringify({ audience_id: general.id, from: FROM, reply_to: "support@vendibook.com", subject, html, name: `Digest ${new Date().toISOString().split("T")[0]}` }),
       },
       RESEND_KEY,
     );
