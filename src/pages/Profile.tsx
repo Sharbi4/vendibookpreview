@@ -21,6 +21,7 @@ import { useHostBookings } from '@/hooks/useHostBookings';
 import { useManualPayout, MANUAL_PAYOUT_SETTINGS_PATH } from '@/hooks/useManualPayout';
 import { useHostResponseTime } from '@/hooks/useHostResponseTime';
 import { useAuth } from '@/contexts/AuthContext';
+import { useSellerVerifiedBadge } from '@/hooks/useSellerVerifiedBadge';
 import { Listing } from '@/types/listing';
 
 const Profile = () => {
@@ -37,6 +38,12 @@ const Profile = () => {
   const { data: listings, isLoading: listingsLoading } = useUserListings(profileUserId);
   const { data: reviewsReceived, isLoading: reviewsReceivedLoading } = useUserReviewsReceived(profileUserId);
   const { data: reviewsGiven, isLoading: reviewsGivenLoading } = useUserReviewsGiven(profileUserId);
+
+  /**
+   * Identity Verified badge — authoritative server read. Covers both the paid
+   * Plaid check and sellers grandfathered in from the retired provider.
+   */
+  const { verified: sellerVerified } = useSellerVerifiedBadge(profileUserId);
 
   // Host-specific data (only for own profile)
   const { listings: hostListings, stats: hostStats } = useHostListings();
@@ -115,7 +122,7 @@ const Profile = () => {
           {/* Next Step Card - Only show for own profile */}
           {isOwnProfile && (
             <EnhancedProfileNextStepCard
-              isVerified={profile.identity_verified || false}
+              isVerified={sellerVerified}
               payoutReady={stripeConnected}
               isHost={isHost}
               draftCount={draftCount}
@@ -129,14 +136,14 @@ const Profile = () => {
           {/* Stats Row */}
           <EnhancedProfileStatsRow
             stats={stats}
-            isVerified={profile.identity_verified || false}
+            isVerified={sellerVerified}
             stripeConnected={stripeConnected}
             isHost={isHost}
           />
 
           {/* Trust Section - Collapsible */}
           <EnhancedProfileTrustSection
-            isVerified={profile.identity_verified || false}
+            isVerified={sellerVerified}
             stripeConnected={stripeConnected}
             isHost={isHost}
             isOwnProfile={isOwnProfile}
@@ -151,7 +158,7 @@ const Profile = () => {
             reviewsReceivedLoading={reviewsReceivedLoading}
             reviewsGivenLoading={reviewsGivenLoading}
             isOwnProfile={isOwnProfile}
-            hostVerified={profile.identity_verified || false}
+            hostVerified={sellerVerified}
             isHost={isHost}
             stats={stats}
           />

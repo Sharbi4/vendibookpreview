@@ -36,6 +36,7 @@ import { useSoldListings } from '@/hooks/useSoldListings';
 import { useHostEvents } from '@/hooks/useHostEvents';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery } from '@tanstack/react-query';
+import { useSellerVerifiedBadge } from '@/hooks/useSellerVerifiedBadge';
 import { supabase } from '@/integrations/supabase/client';
 import { Listing } from '@/types/listing';
 import { useToast } from '@/hooks/use-toast';
@@ -154,6 +155,8 @@ const PublicProfile = () => {
   const isOwnProfile = user?.id === actualUserId;
   
   // Other data hooks
+  /** Authoritative badge: paid Plaid verification or a grandfathered seller. */
+  const { verified: sellerVerified } = useSellerVerifiedBadge(actualUserId);
   const { data: stats, isLoading: statsLoading } = useUserStats(actualUserId);
   const { data: listings, isLoading: listingsLoading } = useUserListings(actualUserId);
   const { data: reviewsReceived, isLoading: reviewsReceivedLoading } = useUserReviewsReceived(actualUserId);
@@ -427,7 +430,7 @@ const PublicProfile = () => {
         {/* ══ TRUST & SOCIAL PROOF STRIP ══ */}
         <div className="container py-4">
           <StorefrontTrustStrip
-            isVerified={vis.verifiedBadge && (profile.identity_verified || false)}
+            isVerified={vis.verifiedBadge && sellerVerified}
             responseTime={responseTimeData?.avgResponseTime}
             completedBookings={completedBookings || 0}
             averageRating={stats?.averageRating}
@@ -477,7 +480,7 @@ const PublicProfile = () => {
           reviewsReceivedLoading={reviewsReceivedLoading}
           reviewsGivenLoading={reviewsGivenLoading}
           isOwnProfile={isOwnProfile}
-          hostVerified={vis.verifiedBadge && (profile.identity_verified || false)}
+          hostVerified={vis.verifiedBadge && sellerVerified}
           isHost={isHost}
           hostId={actualUserId}
           stats={stats}

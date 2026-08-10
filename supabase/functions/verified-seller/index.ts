@@ -70,8 +70,14 @@ function publicState(
   record: VerificationRow | null,
   payment: PaymentRow | null,
   enabled: boolean,
+  /**
+   * Legacy grandfathering: sellers who completed the retired identity check
+   * keep the badge forever. They are never asked to pay again, and the badge
+   * is derived server-side from `profiles.identity_verified`.
+   */
+  legacyVerified = false,
 ) {
-  const badge = isBadgeEligible(record);
+  const badge = isBadgeEligible(record) || legacyVerified;
   return {
     offer: publicOfferConfig(enabled),
     status: badge ? "verified" : record?.status ?? "not_started",
@@ -344,10 +350,18 @@ serve(async (req) => {
     const enabled = await isOfferEnabled(admin);
     const record = await ensureVerification(admin, userId);
 
+    // Grandfathered sellers from the retired identity provider stay verified.
+    const { data: legacyProfile } = await admin
+      .from("profiles")
+      .select("identity_verified")
+      .eq("id", userId)
+      .maybeSingle();
+    const legacyVerified = legacyProfile?.identity_verified === true;
+
     // ------------------------------------------------------------ status
     if (action === "status") {
       const payment = await latestOpenPayment(admin, userId);
-      return jsonResponse(200, publicState(record, payment, enabled));
+      return jsonResponse(200, publicState(record, payment, enabled, legacyVerified));
     }
 
     if (!enabled) {
@@ -358,9 +372,9 @@ serve(async (req) => {
       );
     }
 
-    if (isBadgeEligible(record) && action !== "refresh") {
+    if ((isBadgeEligible(record) || legacyVerified) && action !== "refresh") {
       return jsonResponse(200, {
-        ...publicState(record, null, enabled),
+        ...publicState(record, null, enabled, legacyVerified),
         message: "You're already verified.",
       });
     }
@@ -392,14 +406,14 @@ serve(async (req) => {
       const open = await latestOpenPayment(admin, userId);
       if (open?.state === "authorized") {
         return jsonResponse(200, {
-          ...publicState(record, open, enabled),
+          ...publicState(record, open, enabled, legacyVerified),
           resume: true,
           message: "Your payment is already authorized — continue to the identity check.",
         });
       }
       if (open?.state === "created" && open.paypal_order_id) {
         return jsonResponse(200, {
-          ...publicState(record, open, enabled),
+          ...publicState(record, open, enabled, legacyVerified),
           order_id: open.paypal_order_id,
         });
       }
@@ -418,7 +432,7 @@ serve(async (req) => {
         .eq("user_id", userId);
 
       return jsonResponse(200, {
-        ...publicState(record, created.payment, enabled),
+        ...publicState(record, created.payment, enabled, legacyVerified),
         status: "awaiting_authorization",
         order_id: created.orderId,
       });
@@ -497,7 +511,7 @@ serve(async (req) => {
             );
           }
           const settled = await reconcileVerification(admin, userId);
-          return jsonResponse(200, { ...publicState(await ensureVerification(admin, userId), null, enabled), ...settled });
+          return jsonResponse(200, { ...publicState(await ensureVerification(admin, userId), null, enabled, legacyVerified), ...settled });
         }
       }
 
@@ -633,7 +647,7 @@ serve(async (req) => {
       const fresh = await ensureVerification(admin, userId);
       const payment = await latestOpenPayment(admin, userId);
       return jsonResponse(200, {
-        ...publicState(fresh, payment, enabled),
+        ...publicState(fresh, payment, enabled, legacyVerified),
         action_taken: result.action_taken,
         message: result.message,
       });
@@ -689,7 +703,7 @@ serve(async (req) => {
           .update({ purpose: "retry" })
           .eq("id", open.id);
         return jsonResponse(200, {
-          ...publicState(record, open, enabled),
+          ...publicState(record, open, enabled, legacyVerified),
           status: "awaiting_authorization",
           order_id: open.paypal_order_id,
           retrying: true,
@@ -703,7 +717,7 @@ serve(async (req) => {
         .update({ status: "awaiting_authorization", updated_at: new Date().toISOString() })
         .eq("user_id", userId);
       return jsonResponse(200, {
-        ...publicState(record, created.payment, enabled),
+        ...publicState(record, created.payment, enabled, legacyVerified),
         status: "awaiting_authorization",
         order_id: created.orderId,
         retrying: true,
@@ -775,7 +789,7 @@ serve(async (req) => {
         .neq("status", "verified");
 
       return jsonResponse(200, {
-        ...publicState(await ensureVerification(admin, userId), null, enabled),
+        ...publicState(await ensureVerification(admin, userId), null, enabled, legacyVerified),
         message: released?.moneyState === "refunded"
           ? "Verification canceled and your payment was refunded."
           : "Verification canceled. Nothing was charged and any hold was released.",

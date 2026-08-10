@@ -721,6 +721,12 @@ export async function reconcileVerification(
     .eq("user_id", userId);
 
   if (verified) {
+    // Mirror onto the profile so every legacy badge reader agrees. The column
+    // is protected from user edits by a database trigger.
+    await admin
+      .from("profiles")
+      .update({ identity_verified: true, identity_verified_at: nowIso })
+      .eq("id", userId);
     await refundDuplicateCaptures(admin, userId);
     const paid = await capturedPayment(admin, userId);
     if (paid) {
