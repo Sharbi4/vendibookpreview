@@ -29,6 +29,8 @@ import {
   trackShareImageDownloaded,
   trackShareKitDismissed} from '@/lib/analytics';
 import { useShareKit as useShareKitHook, type ShareChannel } from '@/hooks/useShareKit';
+import { useSharePreflight } from '@/hooks/useSharePreflight';
+import SharePreviewCard from '@/components/share/SharePreviewCard';
 
 export interface ShareKitListing {
   id: string;
@@ -187,7 +189,21 @@ export const ShareKit: React.FC<ShareKitProps> = ({ listing, onClose }) => {
       color: { dark: '#111111', light: '#FFFFFF' }}).then(setQrCodeDataUrl).catch(console.error);
   }, [listingUrl, withUtm]);
 
+  // Verify image, title and destination link before anything is copied or posted.
+  const preflight = useSharePreflight({
+    listingId: listing.id,
+    title: listing.title,
+    imageUrl: listing.coverImageUrl,
+    shareUrl: listingUrl,
+  });
+  const shareBlocked = preflight.blocked;
+
   const copy = useCallback(async (text: string, setFlag: (b: boolean) => void, msg: string) => {
+    if (shareBlocked) {
+      toast({ title: 'Resolve the share preview issues first', variant: 'destructive' });
+      return;
+    }
+
     try {
       await navigator.clipboard.writeText(text);
       setFlag(true);
