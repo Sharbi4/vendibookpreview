@@ -46,7 +46,7 @@ type Evt = {
   processing_error: string | null;
   verification_status: string | null;
   processed_at: string | null;
-  created_at: string | null;
+  received_at: string | null;
 };
 
 const evtStatus = (e: Evt) => (e.processed ? 'processed' : e.processing_error ? 'failed' : 'pending');
@@ -79,7 +79,7 @@ export default function AdminBilling() {
     setLoading(true);
     const [subsRes, evRes] = await Promise.all([
       supabase.from('host_subscriptions').select('*').order('updated_at', { ascending: false }).limit(500),
-      supabase.from('paypal_webhook_events').select('*').order('created_at', { ascending: false }).limit(200),
+      supabase.from('paypal_webhook_events').select('*').order('received_at', { ascending: false }).limit(200),
     ]);
     setSubs((subsRes.data as Sub[]) ?? []);
     setEvents((evRes.data as Evt[]) ?? []);
