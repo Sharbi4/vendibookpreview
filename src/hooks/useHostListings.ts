@@ -13,6 +13,8 @@ type Listing = Tables<'listings'>;
 export const useHostListings = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
+
   const [listings, setListings] = useState<Listing[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
