@@ -551,6 +551,8 @@ const FloatingConciergeButton = lazy(() => import("@/components/FloatingConcierg
 const AppContent = () => {
   useGlobalErrorHandler();
   useOfflineQueueSync();
+  useListingsLiveSync();
+
 
   return (
     <>
