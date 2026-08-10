@@ -173,8 +173,7 @@ serve(async (req) => {
         });
 
         // Get renter info
-        const profileData = booking.profiles as unknown as { id: string; email: string | null; full_name: string | null }[] | null;
-        const profile = profileData?.[0] ?? null;
+        const profile = profilesById.get(booking.shopper_id) ?? null;
         const renterEmail = profile?.email;
         const renterName = profile?.full_name || "Renter";
 
