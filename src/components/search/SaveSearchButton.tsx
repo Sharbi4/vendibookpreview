@@ -119,35 +119,6 @@ export const SaveSearchButton = ({
         onOpenChange={setShowLoginPrompt}
         intent="save_search"
       />
-      <Dialog open={false} onOpenChange={setShowLoginPrompt}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Sign in to save this search</DialogTitle>
-            <DialogDescription>
-              Create an account to get notified when new matching listings are posted.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="flex gap-3 mt-4">
-            <Button
-              variant="outline"
-              className="flex-1"
-              onClick={() => setShowLoginPrompt(false)}
-            >
-              Cancel
-            </Button>
-            <Button
-              variant="dark-shine"
-              className="flex-1"
-              onClick={() => {
-                setShowLoginPrompt(false);
-                navigate('/auth?redirect=' + encodeURIComponent(window.location.pathname + window.location.search));
-              }}
-            >
-              Sign in
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
     </>
   );
 };
