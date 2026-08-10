@@ -71,12 +71,11 @@ serve(async (req) => {
           id,
           title
         ),
-        profiles!booking_requests_shopper_id_fkey (
+        listings!inner (
           id,
-          email,
-          full_name
+          title
         )
-      `)
+      `.replace(/listings!inner \([\s\S]*?\)\s*$/, "listings!inner (\n          id,\n          title\n        )"))
       .eq("is_instant_book", true)
       .in("status", ["pending", "approved"])
       .in("payment_status", ["paid", "pending"])
