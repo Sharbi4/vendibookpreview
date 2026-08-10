@@ -1,9 +1,12 @@
 import { useState, useEffect } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { triggerOrchestrator } from '@/lib/orchestrator';
+import { broadcastListingChanged, invalidateListingQueries } from '@/lib/listings/liveSync';
 import type { Tables } from '@/integrations/supabase/types';
+
 
 type Listing = Tables<'listings'>;
 
