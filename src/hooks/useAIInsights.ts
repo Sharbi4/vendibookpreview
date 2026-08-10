@@ -15,7 +15,7 @@ interface DataSnapshot {
   totalViews: number;
   avgRating: number;
   pendingBookings: number;
-  stripeBalance: number;
+  pendingPayoutBalance: number;
 }
 
 interface UseAIInsightsReturn {

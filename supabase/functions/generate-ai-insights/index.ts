@@ -1,5 +1,4 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { resolveHostTier, tierAtLeast, tierRequiredBody } from "../_shared/resolveHostTier.ts";
 
@@ -130,12 +129,12 @@ serve(async (req) => {
         .lt("viewed_at", thirtyDaysAgo.toISOString())
         .in("listing_id", (await supabaseClient.from("listings").select("id").eq("host_id", userId)).data?.map(l => l.id) || []),
       
-      // Profile for Stripe account
+      // Seller proceeds awaiting Vendibook's manual payout run
       supabaseClient
-        .from("profiles")
-        .select("stripe_account_id")
-        .eq("id", userId)
-        .maybeSingle()
+        .from("seller_payables")
+        .select("net_amount_cents, status, paid_out_at")
+        .eq("seller_id", userId)
+        .is("paid_out_at", null)
     ]);
 
     // Process listings data
@@ -210,21 +209,9 @@ serve(async (req) => {
       ? ((viewsThisMonth - viewsLastMonth) / viewsLastMonth) * 100 
       : viewsThisMonth > 0 ? 100 : 0;
 
-    // Fetch Stripe balance if connected
-    let stripeBalance = 0;
-    if (profileResult.data?.stripe_account_id) {
-      try {
-        const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
-          apiVersion: "2023-10-16",
-        });
-        const balance = await stripe.balance.retrieve({
-          stripeAccount: profileResult.data.stripe_account_id
-        });
-        stripeBalance = balance.available.reduce((sum: number, b: { amount: number }) => sum + b.amount, 0) / 100;
-      } catch (e) {
-        console.log("Could not fetch Stripe balance:", e);
-      }
-    }
+    // Seller proceeds recorded for Vendibook's manual payout run.
+    const pendingPayoutBalance = ((profileResult.data as Array<{ net_amount_cents: number | null }> | null) ?? [])
+      .reduce((sum, r) => sum + (r.net_amount_cents ?? 0), 0) / 100;
 
     // Compile insight data
     const insightData: InsightData = {
@@ -276,7 +263,7 @@ Analyze this host's performance data and provide 3-4 actionable insights. Be spe
 HOST DATA:
 ${JSON.stringify(insightData, null, 2)}
 
-Stripe Available Balance: $${stripeBalance.toFixed(2)}
+Seller proceeds awaiting payout: $${pendingPayoutBalance.toFixed(2)}
 
 Respond with a JSON array of insights. Each insight must have:
 - type: "success" | "warning" | "tip" | "opportunity"
@@ -347,7 +334,7 @@ Return ONLY valid JSON array, no markdown or explanation.`;
           totalViews,
           avgRating,
           pendingBookings: pendingBookings.length,
-          stripeBalance
+          pendingPayoutBalance
         }
       }),
       {
