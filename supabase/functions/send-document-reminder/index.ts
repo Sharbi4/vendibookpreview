@@ -70,12 +70,8 @@ serve(async (req) => {
         listings!inner (
           id,
           title
-        ),
-        listings!inner (
-          id,
-          title
         )
-      `.replace(/listings!inner \([\s\S]*?\)\s*$/, "listings!inner (\n          id,\n          title\n        )"))
+      `)
       .eq("is_instant_book", true)
       .in("status", ["pending", "approved"])
       .in("payment_status", ["paid", "pending"])
@@ -85,6 +81,17 @@ serve(async (req) => {
     if (bookingsError) {
       logStep("Error fetching bookings", { error: bookingsError });
       throw bookingsError;
+    }
+
+    // shopper_id references auth.users, not profiles — fetch profiles separately.
+    const shopperIds = Array.from(new Set((bookings || []).map((b: any) => b.shopper_id).filter(Boolean)));
+    const profilesById = new Map<string, { id: string; email: string | null; full_name: string | null }>();
+    if (shopperIds.length > 0) {
+      const { data: profileRows } = await supabaseClient
+        .from("profiles")
+        .select("id, email, full_name")
+        .in("id", shopperIds);
+      (profileRows || []).forEach((p: any) => profilesById.set(p.id, p));
     }
 
     logStep("Found bookings to check", { count: bookings?.length || 0 });
