@@ -212,7 +212,7 @@ export const ShareKit: React.FC<ShareKitProps> = ({ listing, onClose }) => {
     } catch {
       toast({ title: 'Failed to copy', variant: 'destructive' });
     }
-  }, [toast]);
+  }, [toast, shareBlocked]);
 
   const handleCopyLink = () => {
     const url = withUtm('copy_link', 'clipboard');
@@ -233,6 +233,10 @@ export const ShareKit: React.FC<ShareKitProps> = ({ listing, onClose }) => {
   };
 
   const handleNativeShare = async () => {
+    if (shareBlocked) {
+      toast({ title: 'Resolve the share preview issues first', variant: 'destructive' });
+      return;
+    }
     if (navigator.share) {
       try {
         const url = withUtm('native', 'share');
