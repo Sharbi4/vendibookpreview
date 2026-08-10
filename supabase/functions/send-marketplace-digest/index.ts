@@ -4,6 +4,7 @@
 // Triggered by pg_cron every 2 days OR manually by an admin via the dashboard.
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { buildMarketingAudience } from "../_shared/marketingAudience.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -165,6 +166,81 @@ Deno.serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+    // ---- catch-up mode -------------------------------------------------
+    // Sends this digest individually to every mailable contact that has NOT
+    // already received the given campaignId. Used to top up an audience after
+    // a broadcast reached only part of the list. Never double-sends.
+    if (body?.mode === "gap") {
+      const campaignId = String(body.campaignId ?? `digest-${new Date().toISOString().slice(0, 10)}`);
+      const audience = await buildMarketingAudience(supabase, campaignId);
+      const limit = Number.isFinite(body?.limit) ? Number(body.limit) : audience.recipients.length;
+      const queue = audience.recipients.slice(0, Math.max(0, limit));
+
+      if (body?.previewOnly === true) {
+        return new Response(
+          JSON.stringify({ success: true, mode: "gap", campaignId, subject, counts: audience.counts, wouldSend: queue.length }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+
+      let sent = 0;
+      let failed = 0;
+      for (const r of queue) {
+        const unsubUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/marketing-unsubscribe?e=${encodeURIComponent(r.email)}`;
+        const personalizedHtml = html.replace(
+          "</body>",
+          `<table width="100%" cellpadding="0" cellspacing="0" style="background:#f8fafc;padding:0 16px 32px;"><tr><td align="center"><p style="font-size:12px;color:#94a3b8;margin:0;">You're receiving this because you have a Vendibook account or joined our list. <a href="${unsubUrl}" style="color:#64748b;">Unsubscribe</a></p></td></tr></table></body>`,
+        );
+        try {
+          const res = await resend(
+            "/emails",
+            {
+              method: "POST",
+              body: JSON.stringify({
+                from: FROM,
+                to: [r.email],
+                reply_to: "support@vendibook.com",
+                subject,
+                html: personalizedHtml,
+                headers: {
+                  "List-Unsubscribe": `<${unsubUrl}>`,
+                  "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+                },
+              }),
+            },
+            RESEND_KEY,
+          );
+          sent++;
+          await supabase.from("blog_campaign_sends").insert({
+            campaign_id: campaignId,
+            user_id: r.user_id,
+            email: r.email,
+            status: "sent",
+            resend_message_id: res?.id ?? null,
+            is_test: false,
+          });
+        } catch (e) {
+          failed++;
+          await supabase.from("blog_campaign_sends").insert({
+            campaign_id: campaignId,
+            user_id: r.user_id,
+            email: r.email,
+            status: "failed",
+            error_message: e instanceof Error ? e.message : String(e),
+            is_test: false,
+          });
+        }
+        await new Promise((r2) => setTimeout(r2, 550)); // ~2 req/s Resend limit
+      }
+
+      return new Response(
+        JSON.stringify({ success: true, mode: "gap", campaignId, subject, attempted: queue.length, sent, failed, counts: audience.counts }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+
+
 
     // Resolve General audience (first one in the account)
     const audiences = await resend("/audiences", { method: "GET" }, RESEND_KEY);

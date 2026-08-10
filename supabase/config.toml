@@ -241,3 +241,6 @@ verify_jwt = false
 verify_jwt = true
   [functions.monetization-reconciler]
     verify_jwt = false
+
+[functions.send-digest-catchup]
+verify_jwt = false

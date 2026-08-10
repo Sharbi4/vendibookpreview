@@ -1,13 +1,14 @@
-// Admin-gated one-time Vendibook x Equinox Funding partnership campaign (Resend).
+// Admin-gated Vendibook x Equinox Funding partnership campaign (Resend).
 // Modes: preview_count | preview_html | test | broadcast.
 //
-// CONSENT POLICY: this project stores no marketing-consent flag for registered
-// users, so the broadcast audience is restricted to the confirmed newsletter
-// list (newsletter_subscribers with unsubscribed_at IS NULL). Registered users
-// are never mailed unless they are on that list.
+// AUDIENCE: confirmed newsletter subscribers plus registered account holders.
+// Every message includes a one-click List-Unsubscribe header and footer link,
+// and blog_campaign_sends dedupes recipients so re-running the broadcast only
+// mails people who have not received this campaign yet.
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 import { Resend } from "https://esm.sh/resend@2.0.0";
+import { buildMarketingAudience } from "../_shared/marketingAudience.ts";
 import {
   EQUINOX_CAMPAIGN_ID,
   SUBJECTS,
@@ -82,53 +83,24 @@ serve(async (req) => {
     }
 
     // ---- build audience ----
-    const suppression = new Set<string>();
-    const [{ data: unsubs }, { data: suppressed }] = await Promise.all([
-      admin.from("email_unsubscribes").select("email"),
-      admin.from("suppressed_emails").select("email"),
-    ]);
-    for (const r of [...(unsubs ?? []), ...(suppressed ?? [])]) {
-      if (r?.email) suppression.add(String(r.email).toLowerCase());
-    }
+    // Confirmed newsletter list + registered account holders. Suppressed,
+    // unsubscribed and already-sent addresses are excluded, so re-running this
+    // campaign only tops up the people who have not received it yet.
+    const includeRegisteredUsers = body.includeRegisteredUsers !== false;
+    const audience = await buildMarketingAudience(admin, EQUINOX_CAMPAIGN_ID, {
+      includeRegisteredUsers,
+    });
 
-    const { data: alreadySent } = await admin
-      .from("blog_campaign_sends")
-      .select("email")
-      .eq("campaign_id", EQUINOX_CAMPAIGN_ID)
-      .eq("status", "sent")
-      .eq("is_test", false);
-    const sentSet = new Set((alreadySent ?? []).map((r: any) => String(r.email).toLowerCase()));
+    const baseEmails = audience.recipients.map((m) => m.email).filter(isValidEmail);
 
-    const { data: subs } = await admin
-      .from("newsletter_subscribers")
-      .select("email, unsubscribed_at")
-      .is("unsubscribed_at", null);
-
-    const emails: string[] = [];
-    const seen = new Set<string>();
-    for (const s of subs ?? []) {
-      const e = String(s.email ?? "").trim().toLowerCase();
-      if (!e || !isValidEmail(e) || seen.has(e)) continue;
-      seen.add(e);
-      if (suppression.has(e) || sentSet.has(e)) continue;
-      emails.push(e);
-    }
-
-    // Segment: sellers = subscriber email owns at least one for-sale listing.
+    // Segment: sellers = recipient owns at least one for-sale listing.
     const sellerEmails = new Set<string>();
     const emailToUser = new Map<string, string>();
-    if (emails.length) {
-      const { data: profiles } = await admin
-        .from("profiles")
-        .select("id, email")
-        .in("email", emails);
-      const ids: string[] = [];
-      for (const p of profiles ?? []) {
-        const e = String(p.email ?? "").toLowerCase();
-        if (!e) continue;
-        emailToUser.set(e, p.id);
-        ids.push(p.id);
-      }
+    for (const m of audience.recipients) {
+      if (m.user_id) emailToUser.set(m.email, m.user_id);
+    }
+    if (baseEmails.length) {
+      const ids = Array.from(new Set(emailToUser.values()));
       if (ids.length) {
         const { data: saleListings } = await admin
           .from("listings")
@@ -140,7 +112,7 @@ serve(async (req) => {
       }
     }
 
-    const recipients: Recipient[] = emails.map((e) => ({
+    const recipients: Recipient[] = baseEmails.map((e) => ({
       email: e,
       user_id: emailToUser.get(e) ?? null,
       variant: sellerEmails.has(e) ? "seller" : "buyer",
@@ -150,8 +122,10 @@ serve(async (req) => {
       total: recipients.length,
       seller: recipients.filter((r) => r.variant === "seller").length,
       buyer: recipients.filter((r) => r.variant === "buyer").length,
-      suppressed: suppression.size,
-      alreadySent: sentSet.size,
+      newsletter: audience.counts.newsletter,
+      registered: audience.counts.registered,
+      suppressed: audience.counts.blocked,
+      alreadySent: audience.counts.alreadySent,
     };
 
     if (mode === "preview_count") {
@@ -160,9 +134,10 @@ serve(async (req) => {
         eligibleRecipients: counts.total,
         counts,
         consentNote:
-          "No marketing-consent flag exists for registered users, so this campaign is limited to the confirmed newsletter list.",
+          "Audience is the confirmed newsletter list plus registered account holders. Every message carries a one-click unsubscribe, and addresses already sent this campaign are skipped.",
       });
     }
+
 
     const resendKey = Deno.env.get("RESEND_API_KEY");
     if (!resendKey) return json({ error: "RESEND_API_KEY not configured" }, 500);
