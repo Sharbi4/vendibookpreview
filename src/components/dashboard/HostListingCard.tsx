@@ -580,6 +580,11 @@ const HostListingCard = ({
               </span>
             </div>
 
+            {/* Buyer financing (Equinox) — for-sale listings only */}
+            {isSale && (
+              <ListingFinancingToggle listingId={listing.id} optedIn={!!financingOptedIn} />
+            )}
+
             {/* Primary actions — even spacing, no crowding */}
             <div className="flex flex-wrap items-center gap-2 pt-4 border-t-2 border-white/10">
               {renderActions()}
