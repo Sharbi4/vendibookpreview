@@ -243,7 +243,7 @@ const Financing = () => {
             </div>
 
             <div className="flex shrink-0 flex-col items-start gap-2 sm:items-end">
-              <ApplyCta source="financing_page_hero" />
+              <ApplyCta source="financing_page_hero" listingId={listingId} />
               <p className="text-xs text-white/50">You’ll continue to Equinox Funding securely.</p>
             </div>
           </div>
@@ -277,7 +277,7 @@ const Financing = () => {
                 that truck, trailer, or cart.
               </p>
             </div>
-            <ApplyCta wide source="financing_page_mid" />
+            <ApplyCta wide source="financing_page_mid" listingId={listingId} />
           </div>
         </section>
 
@@ -365,7 +365,7 @@ const Financing = () => {
             You’ll continue to Equinox Funding to submit your application securely.
           </p>
           <div className="mt-6 flex justify-center">
-            <ApplyCta source="financing_page_footer" />
+            <ApplyCta source="financing_page_footer" listingId={listingId} />
           </div>
         </section>
 
