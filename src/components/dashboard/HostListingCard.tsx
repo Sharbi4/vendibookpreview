@@ -70,6 +70,7 @@ import { PAYOUT_METHOD_LABEL } from '@/lib/payouts/methods';
 import { canBoostListing, canRepublishListing } from '@/lib/listings/publicVisibility';
 import { useNavigate } from 'react-router-dom';
 import { GetVerifiedButton } from '@/components/verification/GetVerifiedButton';
+import { ListingFinancingToggle } from '@/components/financing/ListingFinancingToggle';
 
 
 type Listing = Tables<'listings'>;
