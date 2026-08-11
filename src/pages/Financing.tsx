@@ -1,5 +1,7 @@
 import { useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import { ExternalLink, ShieldCheck, Truck, Caravan, ShoppingCart } from 'lucide-react';
 import SEO, { generateFAQSchema } from '@/components/SEO';
 import JsonLd from '@/components/JsonLd';
@@ -11,6 +13,26 @@ import {
   trackFinancingPageViewed,
   type FinancingSource,
 } from '@/lib/analytics';
+
+/** Loads a publicly visible listing for the optional ?listing_id= context. */
+const useFinancingListingContext = (listingId: string | null) =>
+  useQuery({
+    queryKey: ['financing-listing-context', listingId],
+    enabled: !!listingId,
+    staleTime: 60 * 1000,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('listings')
+        .select('id, title, cover_image_url, price_sale, category, city, state, mode, status')
+        .eq('id', listingId as string)
+        .eq('status', 'published')
+        .eq('mode', 'sale')
+        .maybeSingle();
+      if (error) return null;
+      return data ?? null;
+    },
+  });
+
 
 const LIME = '#34d399';
 const APPLY_URL = 'https://equinox-funding.com/efapplication/';
