@@ -20,6 +20,7 @@ import {
   trackPurchase,
   trackContact,
 } from '@/lib/facebookCAPI';
+import { trackLeadEvent } from '@/lib/leadTracking';
 
 type AnalyticsEvent = {
   category: string;
