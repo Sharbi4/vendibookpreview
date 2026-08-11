@@ -286,6 +286,11 @@ const EVENT_CATEGORY: Record<LeadEventName, string> = {
   video_progress_75: 'homepage',
   video_complete: 'homepage',
   video_replay: 'homepage',
+  // Equipment financing (Equinox)
+  financing_page_view: 'financing',
+  financing_apply_click: 'financing',
+  seller_financing_enabled: 'financing',
+  seller_financing_disabled: 'financing',
 };
 
 
