@@ -17,8 +17,6 @@ import { useSellerVerifiedBadge } from '@/hooks/useSellerVerifiedBadge';
 import { CategoryTooltip } from '@/components/categories/CategoryGuide';
 
 import { FavoriteButton } from '@/components/listing/FavoriteButton';
-import { AffirmBadge } from '@/components/ui/AffirmBadge';
-import { AfterpayBadge } from '@/components/ui/AfterpayBadge';
 import { trackListingCardClick } from '@/lib/analytics';
 import { trackLeadEvent } from '@/lib/leadTracking';
 // AvailabilityCalendarModal removed — calendar lives inside ListingCardOverlay now
