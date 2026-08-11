@@ -4,8 +4,6 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import WhatsIncluded from './WhatsIncluded';
-import { AffirmBadge, isAffirmEligible } from '@/components/ui/AffirmBadge';
-import { AfterpayBadge, isAfterpayEligible } from '@/components/ui/AfterpayBadge';
 
 interface PriceLine {
   label: string;
@@ -234,12 +232,6 @@ const StickySummary = ({
               </div>
             )}
 
-            {financingEligiblePrice && (isAfterpayEligible(financingEligiblePrice) || isAffirmEligible(financingEligiblePrice)) && (
-              <div className="flex items-center gap-2 pt-2 flex-wrap">
-                <AfterpayBadge price={financingEligiblePrice} showEstimate={false} />
-                <AffirmBadge price={financingEligiblePrice} showEstimate={false} />
-              </div>
-            )}
 
             <p className="text-[11px] text-[#8A8A93] flex items-center gap-1.5 pt-2">
               <ShieldCheck className="h-3 w-3 text-[#FF5124]" />

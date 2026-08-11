@@ -140,10 +140,10 @@ export const FinancingActionPanel = ({ listing, className }: FinancingActionPane
         </Button>
         <Button asChild size="sm" className="finance-cta-outline justify-center sm:col-span-2">
           <Link
-            to="/financing"
+            to={`/financing?listing_id=${listing.id}`}
             onClick={() => trackFinancingLearnMoreClick('listing_panel', listing.id)}
           >
-            Learn About Financing
+            Apply for financing
           </Link>
         </Button>
       </div>

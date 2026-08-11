@@ -14,7 +14,6 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import SmartImage from '@/components/ui/SmartImage';
-import { AffirmBadge } from '@/components/ui/AffirmBadge';
 import {
   trackCheckoutIntroViewed,
   trackCheckoutIntroContinued,
@@ -261,19 +260,6 @@ const CheckoutIntro = ({
         </ul>
       </motion.div>
 
-      {/* FINANCING LINE */}
-      {financingEligible && flow === 'sale' && (
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: dur, delay: stagger * (3 + beats.length) }}
-          className="mt-4 flex items-center justify-center gap-2 text-[12px] text-muted-foreground"
-        >
-          <span>Or pay monthly with</span>
-          <AffirmBadge price={price} className="h-4" showTooltip={false} />
-          <span>&mdash; we&rsquo;ll show options at payment.</span>
-        </motion.p>
-      )}
 
       {/* CTA ROW */}
       <motion.div

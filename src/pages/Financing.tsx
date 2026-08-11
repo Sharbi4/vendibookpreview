@@ -1,5 +1,7 @@
 import { useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import { ExternalLink, ShieldCheck, Truck, Caravan, ShoppingCart } from 'lucide-react';
 import SEO, { generateFAQSchema } from '@/components/SEO';
 import JsonLd from '@/components/JsonLd';
@@ -11,6 +13,26 @@ import {
   trackFinancingPageViewed,
   type FinancingSource,
 } from '@/lib/analytics';
+
+/** Loads a publicly visible listing for the optional ?listing_id= context. */
+const useFinancingListingContext = (listingId: string | null) =>
+  useQuery({
+    queryKey: ['financing-listing-context', listingId],
+    enabled: !!listingId,
+    staleTime: 60 * 1000,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('listings')
+        .select('id, title, cover_image_url, price_sale, category, city, state, mode, status')
+        .eq('id', listingId as string)
+        .eq('status', 'published')
+        .eq('mode', 'sale')
+        .maybeSingle();
+      if (error) return null;
+      return data ?? null;
+    },
+  });
+
 
 const LIME = '#34d399';
 const APPLY_URL = 'https://equinox-funding.com/efapplication/';
@@ -104,16 +126,18 @@ const ApplyCta = ({
   className = '',
   wide = false,
   source,
+  listingId,
 }: {
   className?: string;
   wide?: boolean;
   source: FinancingSource;
+  listingId?: string;
 }) => (
   <a
     href={APPLY_URL}
     target="_blank"
     rel="noopener noreferrer"
-    onClick={() => trackFinancingApplyClick(source)}
+    onClick={() => trackFinancingApplyClick(source, listingId)}
     className={`group/cta relative inline-flex items-center justify-center gap-2 overflow-hidden rounded-xl bg-gradient-to-b from-emerald-400 to-emerald-600 px-6 py-3.5 text-sm font-semibold text-emerald-950 shadow-[0_10px_30px_-12px_rgba(16,185,129,0.9)] ring-1 ring-inset ring-white/25 transition-shadow duration-300 hover:shadow-[0_14px_36px_-10px_rgba(16,185,129,1)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-200 ${wide ? 'w-full sm:w-auto' : ''} ${className}`}
   >
     <span
@@ -128,10 +152,16 @@ const ApplyCta = ({
 );
 
 const Financing = () => {
+  const [params] = useSearchParams();
+  const listingIdParam = params.get('listing_id');
+  const { data: contextListing } = useFinancingListingContext(listingIdParam);
+  const listingId = contextListing?.id;
+
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
-    trackFinancingPageViewed();
-  }, []);
+    trackFinancingPageViewed(listingIdParam ?? undefined);
+  }, [listingIdParam]);
+
 
   const title = 'Financing for Food Trucks, Trailers & Carts | Vendibook';
   const description =
@@ -213,11 +243,36 @@ const Financing = () => {
             </div>
 
             <div className="flex shrink-0 flex-col items-start gap-2 sm:items-end">
-              <ApplyCta source="financing_page_hero" />
+              <ApplyCta source="financing_page_hero" listingId={listingId} />
               <p className="text-xs text-white/50">You’ll continue to Equinox Funding securely.</p>
             </div>
           </div>
         </section>
+
+        {/* Listing context — only for a publicly visible for-sale listing */}
+        {contextListing && (
+          <section className="mt-4 flex items-center gap-4 rounded-2xl border border-white/10 bg-white/[0.04] p-3 backdrop-blur-md sm:p-4">
+            <img
+              src={contextListing.cover_image_url || '/placeholder.svg'}
+              alt={contextListing.title}
+              loading="lazy"
+              className="h-16 w-24 shrink-0 rounded-xl object-cover ring-1 ring-white/10"
+            />
+            <div className="min-w-0">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-emerald-200">
+                Financing this listing
+              </p>
+              <p className="truncate text-sm font-semibold text-white">{contextListing.title}</p>
+              <p className="mt-0.5 text-xs text-white/60">
+                {contextListing.price_sale
+                  ? `$${Number(contextListing.price_sale).toLocaleString()}`
+                  : 'Price on request'}
+                {contextListing.category ? ` · ${String(contextListing.category).replace(/_/g, ' ')}` : ''}
+                {contextListing.city ? ` · ${contextListing.city}${contextListing.state ? `, ${contextListing.state}` : ''}` : ''}
+              </p>
+            </div>
+          </section>
+        )}
 
         {/* Options */}
         <section className="mt-16" aria-labelledby="options-heading">
@@ -247,7 +302,7 @@ const Financing = () => {
                 that truck, trailer, or cart.
               </p>
             </div>
-            <ApplyCta wide source="financing_page_mid" />
+            <ApplyCta wide source="financing_page_mid" listingId={listingId} />
           </div>
         </section>
 
@@ -335,7 +390,7 @@ const Financing = () => {
             You’ll continue to Equinox Funding to submit your application securely.
           </p>
           <div className="mt-6 flex justify-center">
-            <ApplyCta source="financing_page_footer" />
+            <ApplyCta source="financing_page_footer" listingId={listingId} />
           </div>
         </section>
 

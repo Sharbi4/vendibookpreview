@@ -57,8 +57,6 @@ import { parseHourlySelections, getSelectedDaysCount, getTotalSelectedHours } fr
 import DateSelectionModal from '@/components/listing-detail/DateSelectionModal';
 import type { ListingCategory, FulfillmentType } from '@/types/listing';
 import type { DocumentType } from '@/types/documents';
-import { AffirmBadge } from '@/components/ui/AffirmBadge';
-import { AfterpayBadge } from '@/components/ui/AfterpayBadge';
 import { AuthGateOfferModal } from '@/components/offers/AuthGateOfferModal';
 import {
   TrustModule,
@@ -1369,13 +1367,6 @@ const BookingCheckout = () => {
                   <span className="font-semibold">${(fees.customerTotal + (depositAmount || 0)).toLocaleString()}</span>
                 </div>
 
-                {/* Financing badges for rentals */}
-                {!isHourlyBooking && listing.price_daily && (
-                  <div className="flex items-center gap-2 pt-3 flex-wrap">
-                    <AfterpayBadge price={listing.price_daily * 7} showEstimate={false} />
-                    <AffirmBadge price={listing.price_daily * 30} showEstimate={false} />
-                  </div>
-                )}
               </div>
             </div>
           </div>

@@ -70,12 +70,15 @@ import { PAYOUT_METHOD_LABEL } from '@/lib/payouts/methods';
 import { canBoostListing, canRepublishListing } from '@/lib/listings/publicVisibility';
 import { useNavigate } from 'react-router-dom';
 import { GetVerifiedButton } from '@/components/verification/GetVerifiedButton';
+import { ListingFinancingToggle } from '@/components/financing/ListingFinancingToggle';
 
 
 type Listing = Tables<'listings'>;
 
 interface HostListingCardProps {
   listing: Listing;
+  /** Batch-loaded Equinox opt-in state for this listing (sale listings only). */
+  financingOptedIn?: boolean;
   onPause?: (id: string) => void;
   onPublish?: (id: string) => void;
   onUnpause?: (id: string) => void;
@@ -130,6 +133,7 @@ const formatPublished = (value: unknown) => {
 
 const HostListingCard = ({
   listing,
+  financingOptedIn,
   onPause,
   onPublish,
   onUnpause,
@@ -579,6 +583,11 @@ const HostListingCard = ({
                 favorites
               </span>
             </div>
+
+            {/* Buyer financing (Equinox) — for-sale listings only */}
+            {isSale && (
+              <ListingFinancingToggle listingId={listing.id} optedIn={!!financingOptedIn} />
+            )}
 
             {/* Primary actions — even spacing, no crowding */}
             <div className="flex flex-wrap items-center gap-2 pt-4 border-t-2 border-white/10">

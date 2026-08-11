@@ -140,7 +140,12 @@ export type LeadEventName =
   | 'video_progress_50'
   | 'video_progress_75'
   | 'video_complete'
-  | 'video_replay';
+  | 'video_replay'
+  // Equipment financing (Equinox)
+  | 'financing_page_view'
+  | 'financing_apply_click'
+  | 'seller_financing_enabled'
+  | 'seller_financing_disabled';
 
 
 
@@ -281,6 +286,11 @@ const EVENT_CATEGORY: Record<LeadEventName, string> = {
   video_progress_75: 'homepage',
   video_complete: 'homepage',
   video_replay: 'homepage',
+  // Equipment financing (Equinox)
+  financing_page_view: 'financing',
+  financing_apply_click: 'financing',
+  seller_financing_enabled: 'financing',
+  seller_financing_disabled: 'financing',
 };
 
 

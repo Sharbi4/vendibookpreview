@@ -20,6 +20,7 @@ import {
   trackPurchase,
   trackContact,
 } from '@/lib/facebookCAPI';
+import { trackLeadEvent } from '@/lib/leadTracking';
 
 type AnalyticsEvent = {
   category: string;
@@ -832,7 +833,9 @@ export type FinancingSource =
   | 'financing_page_hero'
   | 'financing_page_mid'
   | 'financing_page_footer'
-  | 'listing_panel';
+  | 'financing_page_context'
+  | 'listing_panel'
+  | 'listing_card';
 
 export const trackFinancingBannerImpression = (): void => {
   trackEvent({
@@ -842,11 +845,17 @@ export const trackFinancingBannerImpression = (): void => {
   });
 };
 
-export const trackFinancingPageViewed = (): void => {
+/** Financing page view — recorded internally (analytics_events) and in GA4. */
+export const trackFinancingPageViewed = (listingId?: string): void => {
   trackEvent({
     category: 'Financing',
     action: 'financing_page_viewed',
     label: '/financing',
+    metadata: { listing_id: listingId ?? null },
+  });
+  trackLeadEvent('financing_page_view', {
+    source: 'financing_page',
+    listing_id: listingId,
   });
 };
 
@@ -861,8 +870,29 @@ export const trackFinancingApplyClick = (
     label: source,
     metadata: { source, listing_id: listingId ?? null, provider: 'equinox' },
   });
+  trackLeadEvent('financing_apply_click', {
+    source,
+    listing_id: listingId,
+    provider: 'equinox',
+  });
   trackGA4GenerateLead({ value: 0, currency: 'USD', lead_source: `financing_${source}` });
 };
+
+/** Seller toggled buyer financing on/off for one listing. */
+export const trackSellerFinancingToggled = (listingId: string, enabled: boolean): void => {
+  trackEvent({
+    category: 'Financing',
+    action: enabled ? 'seller_financing_enabled' : 'seller_financing_disabled',
+    label: listingId,
+    metadata: { listing_id: listingId, provider: 'equinox' },
+  });
+  trackLeadEvent(enabled ? 'seller_financing_enabled' : 'seller_financing_disabled', {
+    listing_id: listingId,
+    source: 'host_listings',
+    provider: 'equinox',
+  });
+};
+
 
 /** Click on the CTA that routes to the /financing information page. */
 export const trackFinancingLearnMoreClick = (source: FinancingSource, listingId?: string): void => {
