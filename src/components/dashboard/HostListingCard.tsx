@@ -132,6 +132,7 @@ const formatPublished = (value: unknown) => {
 
 const HostListingCard = ({
   listing,
+  financingOptedIn,
   onPause,
   onPublish,
   onUnpause,
