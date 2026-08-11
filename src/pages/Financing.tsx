@@ -249,6 +249,31 @@ const Financing = () => {
           </div>
         </section>
 
+        {/* Listing context — only for a publicly visible for-sale listing */}
+        {contextListing && (
+          <section className="mt-4 flex items-center gap-4 rounded-2xl border border-white/10 bg-white/[0.04] p-3 backdrop-blur-md sm:p-4">
+            <img
+              src={contextListing.cover_image_url || '/placeholder.svg'}
+              alt={contextListing.title}
+              loading="lazy"
+              className="h-16 w-24 shrink-0 rounded-xl object-cover ring-1 ring-white/10"
+            />
+            <div className="min-w-0">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-emerald-200">
+                Financing this listing
+              </p>
+              <p className="truncate text-sm font-semibold text-white">{contextListing.title}</p>
+              <p className="mt-0.5 text-xs text-white/60">
+                {contextListing.price_sale
+                  ? `$${Number(contextListing.price_sale).toLocaleString()}`
+                  : 'Price on request'}
+                {contextListing.category ? ` · ${String(contextListing.category).replace(/_/g, ' ')}` : ''}
+                {contextListing.city ? ` · ${contextListing.city}${contextListing.state ? `, ${contextListing.state}` : ''}` : ''}
+              </p>
+            </div>
+          </section>
+        )}
+
         {/* Options */}
         <section className="mt-16" aria-labelledby="options-heading">
           <h2 id="options-heading" className="text-2xl font-semibold tracking-tight">
