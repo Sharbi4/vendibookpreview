@@ -140,7 +140,12 @@ export type LeadEventName =
   | 'video_progress_50'
   | 'video_progress_75'
   | 'video_complete'
-  | 'video_replay';
+  | 'video_replay'
+  // Equipment financing (Equinox)
+  | 'financing_page_view'
+  | 'financing_apply_click'
+  | 'seller_financing_enabled'
+  | 'seller_financing_disabled';
 
 
 
