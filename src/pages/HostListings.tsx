@@ -15,6 +15,7 @@ import { useHostEntitlements } from '@/hooks/useHostEntitlements';
 import { useListingQuota } from '@/hooks/useListingQuota';
 import { Link as RouterLink } from 'react-router-dom';
 import { Lock } from 'lucide-react';
+import { useHostFinancingPreferences } from '@/hooks/useListingFinancing';
 
 const HostListings = () => {
   const { user, isLoading: authLoading, hasRole } = useAuth();
