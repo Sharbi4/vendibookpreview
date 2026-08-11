@@ -57,3 +57,64 @@ export function useEquinoxFinancingEnabled(listing: any): boolean {
     !!data?.disclosure_accepted_at
   );
 }
+
+/**
+ * Batch-loads financing preferences for a set of the seller's listings.
+ * Returns a map of listing_id -> equinox_opt_in (missing = false).
+ */
+export function useHostFinancingPreferences(listingIds: string[]) {
+  const key = [...listingIds].sort().join(',');
+  return useQuery({
+    queryKey: ['host-financing-preferences', key],
+    enabled: listingIds.length > 0,
+    staleTime: 30 * 1000,
+    queryFn: async (): Promise<Record<string, boolean>> => {
+      const { data, error } = await (supabase as any)
+        .from('listing_financing_preferences')
+        .select('listing_id, equinox_opt_in')
+        .in('listing_id', listingIds);
+      if (error) return {};
+      const map: Record<string, boolean> = {};
+      for (const row of (data ?? []) as { listing_id: string; equinox_opt_in: boolean }[]) {
+        map[row.listing_id] = !!row.equinox_opt_in;
+      }
+      return map;
+    },
+  });
+}
+
+/**
+ * Seller-controlled opt-in toggle for a single listing. Enabling always
+ * records the exact disclosure version the seller accepted; disabling only
+ * flips that one listing to false.
+ */
+export function useSetListingFinancing() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ listingId, enabled }: { listingId: string; enabled: boolean }) => {
+      const { data: auth } = await supabase.auth.getUser();
+      const hostId = auth?.user?.id;
+      if (!hostId) throw new Error('You must be signed in.');
+
+      const { error } = await (supabase as any)
+        .from('listing_financing_preferences')
+        .upsert(
+          {
+            listing_id: listingId,
+            host_id: hostId,
+            equinox_opt_in: enabled,
+            disclosure_version: enabled ? EQUINOX_DISCLOSURE_VERSION : null,
+            disclosure_accepted_at: enabled ? new Date().toISOString() : null,
+          },
+          { onConflict: 'listing_id' },
+        );
+      if (error) throw error;
+      return { listingId, enabled };
+    },
+    onSuccess: ({ listingId, enabled }) => {
+      trackSellerFinancingToggled(listingId, enabled);
+      void qc.invalidateQueries({ queryKey: ['host-financing-preferences'] });
+      void qc.invalidateQueries({ queryKey: ['listing-financing-preference', listingId] });
+    },
+  });
+}
