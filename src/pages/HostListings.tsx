@@ -40,6 +40,11 @@ const HostListings = () => {
   const draftListings = listings.filter(l => l.status === 'draft');
   const publishedListings = listings.filter(l => l.status !== 'draft');
 
+  // Batch-load Equinox opt-in state for all for-sale listings (avoids N+1).
+  const saleListingIds = listings.filter(l => l.mode === 'sale').map(l => l.id);
+  const { data: financingMap } = useHostFinancingPreferences(saleListingIds);
+
+
   const handlePublish = async (id: string) => {
     // Payouts are handled manually by Vendibook, so publishing is never gated
     // on a seller payment account.
