@@ -944,6 +944,9 @@ const ListingDetail = () => {
                     instantBook={listing.instant_book || false}
                     hourlyEnabled={(listing as any).hourly_enabled || false}
                     dailyEnabled={(listing as any).daily_enabled !== false}
+                    minHours={(listing as any).min_hours}
+                    minDays={(listing as any).rental_min_days}
+                    minNoticeHours={(listing as any).min_notice_hours}
                     totalSlots={listing.total_slots || 1}
                     slotNames={listing.slot_names}
                     fulfillmentType={listing.fulfillment_type}
