@@ -35,7 +35,7 @@ const DynamicCityPage = ({ mode, category }: DynamicCityPageProps) => {
   
   const pageDescription = categoryLabel
     ? `Browse ${categoryLabel.toLowerCase()}s ${modeLabel.toLowerCase()} in ${city.name}, ${city.state}. Find the perfect ${categoryLabel.toLowerCase()} for your business.`
-    : `Rent or buy food trucks, food trailers, shared kitchens, and Vendor Spaces in ${city.name}, ${city.state}. ${city.tagline}.`;
+    : `Shop food trucks, food trailers, carts and mobile food equipment nationwide. Buy, sell or rent with financing options, verified sellers and delivery. Find listings in ${city.name}, ${city.state}. ${city.tagline}.`;
 
   const canonicalPath = category 
     ? `/${city.slug}/${category.replace('_', '-')}${mode ? `/${mode}` : ''}`
