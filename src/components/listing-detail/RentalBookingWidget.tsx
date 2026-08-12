@@ -452,13 +452,49 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
   // ─────────────────────────────────────────────────────────────────────────────
   // CAN CONTINUE CHECK
   // ─────────────────────────────────────────────────────────────────────────────
-  const canContinue = useMemo(() => {
+  // Host-defined minimums (normalized)
+  const requiredHours = Math.max(1, Number(minHours) > 0 ? Number(minHours) : 1);
+  const requiredDays = Math.max(1, Number(minDays) > 0 ? Number(minDays) : 1);
+  const noticeHours = Number(minNoticeHours) > 0 ? Number(minNoticeHours) : 0;
+
+  const selectedDays = useMemo(() => {
+    if (mode !== 'daily' || !startDate) return 0;
+    return endDate ? differenceInDays(endDate, startDate) + 1 : 1;
+  }, [mode, startDate, endDate]);
+
+  const noticeViolation = useMemo(() => {
+    if (noticeHours <= 0) return false;
+    const earliest = new Date(Date.now() + noticeHours * 60 * 60 * 1000);
+    const firstDate = mode === 'hourly'
+      ? (sortedSelectedDates[0] ? parseISO(sortedSelectedDates[0]) : undefined)
+      : startDate;
+    if (!firstDate) return false;
+    // Compare against end of the selected day so same-day notice windows still work
+    return isBefore(addDays(startOfDay(firstDate), 1), earliest);
+  }, [noticeHours, mode, sortedSelectedDates, startDate]);
+
+  const minimumMessage = useMemo(() => {
     if (mode === 'hourly') {
-      return totalSelectedHours > 0;
+      if (totalSelectedHours > 0 && totalSelectedHours < requiredHours) {
+        return `This host requires a minimum of ${requiredHours} hour${requiredHours > 1 ? 's' : ''}.`;
+      }
+    } else if (startDate && selectedDays < requiredDays) {
+      return `This host requires a minimum of ${requiredDays} day${requiredDays > 1 ? 's' : ''}.`;
     }
-    // Daily mode: need at least a start date
-    return startDate !== undefined;
-  }, [mode, totalSelectedHours, startDate]);
+    if (noticeViolation) {
+      return `This host requires at least ${noticeHours} hour${noticeHours > 1 ? 's' : ''} advance notice.`;
+    }
+    return null;
+  }, [mode, totalSelectedHours, requiredHours, startDate, selectedDays, requiredDays, noticeViolation, noticeHours]);
+
+  const canContinue = useMemo(() => {
+    if (noticeViolation) return false;
+    if (mode === 'hourly') {
+      return totalSelectedHours >= requiredHours;
+    }
+    // Daily mode: need a start date meeting the host's minimum stay
+    return startDate !== undefined && selectedDays >= requiredDays;
+  }, [mode, totalSelectedHours, requiredHours, startDate, selectedDays, requiredDays, noticeViolation]);
 
   // ─────────────────────────────────────────────────────────────────────────────
   // CONTINUE TO BOOKING HANDLER
