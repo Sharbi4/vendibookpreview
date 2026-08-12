@@ -1013,6 +1013,13 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
         {/* ─────────────────────────────────────────────────────────────────────── */}
         {/* CTA BUTTON */}
         {/* ─────────────────────────────────────────────────────────────────────── */}
+        {minimumMessage && (
+          <div className="flex items-start gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-200">
+            <Info className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+            <span>{minimumMessage}</span>
+          </div>
+        )}
+
         <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
           <Button
             variant={instantBook ? 'dark-shine' : 'outline'}
