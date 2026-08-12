@@ -149,6 +149,14 @@ const BookingCheckout = () => {
   const [selectedSlot, setSelectedSlot] = useState<number | null>(null);
   const [selectedSlotName, setSelectedSlotName] = useState<string | null>(null);
 
+  // "Step 0" intro dismissal — must stay above any early return (hook order).
+  const introSessionKey = `booking_intro_seen:${listingId ?? 'unknown'}`;
+  const [introDismissed, setIntroDismissed] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return true;
+    return sessionStorage.getItem(introSessionKey) === '1';
+  });
+
+
   const isMobileAsset = listing?.category === 'food_truck' || listing?.category === 'food_trailer';
   const isStaticLocation = listing?.category === 'ghost_kitchen' || listing?.category === 'vendor_lot' || listing?.category === 'vendor_space';
   // Categories that require business info (food-related)
@@ -706,12 +714,8 @@ const BookingCheckout = () => {
   // "Step 0" intro for high-value rentals. Shown once per checkout session
   // per listing; small bookings skip straight to the wizard.
   const RENTAL_INTRO_MIN_TOTAL = 500;
-  const introSessionKey = `booking_intro_seen:${listingId ?? 'unknown'}`;
   const shouldOfferIntro = fees.subtotal >= RENTAL_INTRO_MIN_TOTAL;
-  const [introDismissed, setIntroDismissed] = useState<boolean>(() => {
-    if (typeof window === 'undefined') return true;
-    return sessionStorage.getItem(introSessionKey) === '1';
-  });
+
 
   if (shouldOfferIntro && !introDismissed) {
     return (
