@@ -66,6 +66,10 @@ interface RentalBookingWidgetProps {
   hourlyEnabled?: boolean;
   dailyEnabled?: boolean;
   instantBook?: boolean;
+  // Host-defined minimums
+  minHours?: number | null;
+  minDays?: number | null;
+  minNoticeHours?: number | null;
   // Multi-slot support
   totalSlots?: number;
   slotNames?: string[] | null;
