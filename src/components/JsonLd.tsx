@@ -58,7 +58,7 @@ export const generateLocalBusinessSchema = (city: string, state: string) => ({
   '@context': 'https://schema.org',
   '@type': 'LocalBusiness',
   name: `Vendibook - ${city}`,
-  description: `Rent or buy food trucks, food trailers, shared kitchens, and Vendor Spaces in ${city}, ${state}.`,
+  description: `Shop food trucks, food trailers, carts and mobile food equipment nationwide. Buy, sell or rent with financing options, verified sellers and delivery. Find listings in ${city}, ${state}.`,
   url: `https://vendibook.com/${city.toLowerCase().replace(' ', '-')}/browse`,
   areaServed: {
     '@type': 'City',
@@ -78,14 +78,14 @@ export const generateLocalBusinessSchema = (city: string, state: string) => ({
 export const generateServiceSchema = () => ({
   '@context': 'https://schema.org',
   '@type': 'Service',
-  name: 'Food Truck & Mobile Vendor Marketplace',
+  name: 'Vendibook',
   provider: {
     '@type': 'Organization',
     name: 'Vendibook',
     url: 'https://vendibook.com',
   },
   serviceType: 'Marketplace',
-  description: 'Rent or buy food trucks, food trailers, shared kitchens, and Vendor Spaces across the United States.',
+  description: 'Shop food trucks, food trailers, carts and mobile food equipment nationwide. Buy, sell or rent with financing options, verified sellers and delivery.',
   areaServed: {
     '@type': 'Country',
     name: 'United States',
