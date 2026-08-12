@@ -998,6 +998,9 @@ const ListingDetail = () => {
         listingTitle={listing.title}
         totalSlots={listing.total_slots || 1}
         slotNames={listing.slot_names}
+        minHours={(listing as any).min_hours}
+        minDays={(listing as any).rental_min_days}
+        minNoticeHours={(listing as any).min_notice_hours}
       />
       )}
 
