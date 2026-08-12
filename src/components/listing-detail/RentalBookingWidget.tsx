@@ -66,6 +66,10 @@ interface RentalBookingWidgetProps {
   hourlyEnabled?: boolean;
   dailyEnabled?: boolean;
   instantBook?: boolean;
+  // Host-defined minimums
+  minHours?: number | null;
+  minDays?: number | null;
+  minNoticeHours?: number | null;
   // Multi-slot support
   totalSlots?: number;
   slotNames?: string[] | null;
@@ -127,6 +131,9 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
   hourlyEnabled: hourlyEnabledProp = false,
   dailyEnabled: dailyEnabledProp = true,
   instantBook = false,
+  minHours,
+  minDays,
+  minNoticeHours,
   totalSlots = 1,
   slotNames,
   fulfillmentType = 'pickup',
@@ -445,13 +452,49 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
   // ─────────────────────────────────────────────────────────────────────────────
   // CAN CONTINUE CHECK
   // ─────────────────────────────────────────────────────────────────────────────
-  const canContinue = useMemo(() => {
+  // Host-defined minimums (normalized)
+  const requiredHours = Math.max(1, Number(minHours) > 0 ? Number(minHours) : 1);
+  const requiredDays = Math.max(1, Number(minDays) > 0 ? Number(minDays) : 1);
+  const noticeHours = Number(minNoticeHours) > 0 ? Number(minNoticeHours) : 0;
+
+  const selectedDays = useMemo(() => {
+    if (mode !== 'daily' || !startDate) return 0;
+    return endDate ? differenceInDays(endDate, startDate) + 1 : 1;
+  }, [mode, startDate, endDate]);
+
+  const noticeViolation = useMemo(() => {
+    if (noticeHours <= 0) return false;
+    const earliest = new Date(Date.now() + noticeHours * 60 * 60 * 1000);
+    const firstDate = mode === 'hourly'
+      ? (sortedSelectedDates[0] ? parseISO(sortedSelectedDates[0]) : undefined)
+      : startDate;
+    if (!firstDate) return false;
+    // Compare against end of the selected day so same-day notice windows still work
+    return isBefore(addDays(startOfDay(firstDate), 1), earliest);
+  }, [noticeHours, mode, sortedSelectedDates, startDate]);
+
+  const minimumMessage = useMemo(() => {
     if (mode === 'hourly') {
-      return totalSelectedHours > 0;
+      if (totalSelectedHours > 0 && totalSelectedHours < requiredHours) {
+        return `This host requires a minimum of ${requiredHours} hour${requiredHours > 1 ? 's' : ''}.`;
+      }
+    } else if (startDate && selectedDays < requiredDays) {
+      return `This host requires a minimum of ${requiredDays} day${requiredDays > 1 ? 's' : ''}.`;
     }
-    // Daily mode: need at least a start date
-    return startDate !== undefined;
-  }, [mode, totalSelectedHours, startDate]);
+    if (noticeViolation) {
+      return `This host requires at least ${noticeHours} hour${noticeHours > 1 ? 's' : ''} advance notice.`;
+    }
+    return null;
+  }, [mode, totalSelectedHours, requiredHours, startDate, selectedDays, requiredDays, noticeViolation, noticeHours]);
+
+  const canContinue = useMemo(() => {
+    if (noticeViolation) return false;
+    if (mode === 'hourly') {
+      return totalSelectedHours >= requiredHours;
+    }
+    // Daily mode: need a start date meeting the host's minimum stay
+    return startDate !== undefined && selectedDays >= requiredDays;
+  }, [mode, totalSelectedHours, requiredHours, startDate, selectedDays, requiredDays, noticeViolation]);
 
   // ─────────────────────────────────────────────────────────────────────────────
   // CONTINUE TO BOOKING HANDLER
@@ -970,6 +1013,13 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
         {/* ─────────────────────────────────────────────────────────────────────── */}
         {/* CTA BUTTON */}
         {/* ─────────────────────────────────────────────────────────────────────── */}
+        {minimumMessage && (
+          <div className="flex items-start gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-200">
+            <Info className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+            <span>{minimumMessage}</span>
+          </div>
+        )}
+
         <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
           <Button
             variant={instantBook ? 'dark-shine' : 'outline'}

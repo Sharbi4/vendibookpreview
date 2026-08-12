@@ -36,6 +36,9 @@ interface StickyMobileCTAProps {
   // Multi-slot support
   totalSlots?: number;
   slotNames?: string[] | null;
+  minHours?: number | null;
+  minDays?: number | null;
+  minNoticeHours?: number | null;
 }
 
 export const StickyMobileCTA = ({
@@ -59,6 +62,9 @@ export const StickyMobileCTA = ({
   listingTitle = 'Listing',
   totalSlots = 1,
   slotNames,
+  minHours,
+  minDays,
+  minNoticeHours,
 }: StickyMobileCTAProps) => {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -236,6 +242,9 @@ export const StickyMobileCTA = ({
             dailyEnabled={dailyEnabled}
             totalSlots={totalSlots}
             slotNames={slotNames}
+            minHours={minHours}
+            minDays={minDays}
+            minNoticeHours={minNoticeHours}
             fulfillmentType={fulfillmentType}
             deliveryFee={deliveryFee}
           />

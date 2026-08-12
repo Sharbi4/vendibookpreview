@@ -359,13 +359,43 @@ async function propagateToDomainRecord(
       }).eq("id", record.sale_transaction_id).neq("status", "paid");
     }
     if (record.booking_request_id) {
-      await supabase.from("booking_requests").update({
+      const { data: bookingRow } = await supabase
+        .from("booking_requests")
+        .select("id, status, is_instant_book, payment_status")
+        .eq("id", record.booking_request_id)
+        .maybeSingle();
+
+      const alreadyPaid = bookingRow?.payment_status === "paid";
+      const update: Record<string, unknown> = {
         payment_status: "paid",
         payment_provider: "paypal",
         payment_intent_id: facts.captureId,
         checkout_session_id: record.paypal_order_id,
         paid_at: nowIso,
-      }).eq("id", record.booking_request_id).neq("payment_status", "paid");
+      };
+      // Instant book: payment confirms the dates immediately.
+      if (bookingRow?.is_instant_book && bookingRow?.status === "pending") {
+        update.status = "approved";
+      }
+
+      await supabase.from("booking_requests")
+        .update(update)
+        .eq("id", record.booking_request_id)
+        .neq("payment_status", "paid");
+
+      // Notify host + guest with full booking details once money has landed.
+      if (!alreadyPaid) {
+        try {
+          await supabase.functions.invoke("send-booking-notification", {
+            body: { booking_id: record.booking_request_id, event_type: "paid" },
+          });
+        } catch (err) {
+          safeLog("booking_paid_notification_failed", {
+            bookingId: record.booking_request_id,
+            message: (err as Error).message,
+          });
+        }
+      }
     }
     if (record.monetization_purchase_id) {
       await supabase.from("monetization_purchases").update({
