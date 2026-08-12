@@ -128,7 +128,7 @@ export const usePageTracking = () => {
     // Set a fallback page title if the current page hasn't set one via <SEO>
     // We use a small delay to let <SEO> components set the title first
     const titleTimeout = setTimeout(() => {
-      const defaultTitle = 'Vendibook | Food Truck & Mobile Vendor Marketplace';
+      const defaultTitle = 'Vendibook | Buy, Sell & Rent Food Trucks & Trailers';
       if (document.title === defaultTitle || !document.title) {
         const pageTitle = getPageTitle(location.pathname);
         document.title = `${pageTitle} | Vendibook`;

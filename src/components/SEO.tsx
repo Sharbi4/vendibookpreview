@@ -152,7 +152,7 @@ const SEO = ({
 
     // Cleanup on unmount - reset to defaults
     return () => {
-      document.title = 'Vendibook | Food Truck & Mobile Vendor Marketplace';
+      document.title = 'Vendibook | Buy, Sell & Rent Food Trucks & Trailers';
     };
   }, [fullTitle, description, canonicalUrl, type, imageUrl, ogTitleFinal, ogDescriptionFinal, twitterTitleFinal, twitterDescriptionFinal, article, product, noindex]);
 
@@ -168,7 +168,7 @@ export const generateOrganizationSchema = () => ({
   name: 'Vendibook',
   url: 'https://vendibook.com',
   logo: 'https://vendibook.com/images/vendibook-logo.png',
-  description: 'Rent or buy food trucks, food trailers, shared kitchens, and Vendor Spaces.',
+  description: 'Shop food trucks, food trailers, carts and mobile food equipment nationwide. Buy, sell or rent with financing options, verified sellers and delivery.',
   contactPoint: {
     '@type': 'ContactPoint',
     telephone: '+1-725-755-9598',
