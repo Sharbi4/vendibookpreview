@@ -9391,6 +9391,19 @@ export type Database = {
           identity_verified: boolean
         }[]
       }
+      get_listing_busy_slots: {
+        Args: { _listing_id: string }
+        Returns: {
+          end_date: string
+          end_time: string
+          hourly_slots: Json
+          is_hourly_booking: boolean
+          slot_number: number
+          start_date: string
+          start_time: string
+          status: string
+        }[]
+      }
       get_listing_favorite_count: {
         Args: { listing_uuid: string }
         Returns: number
