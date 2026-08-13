@@ -372,6 +372,33 @@ const SaleCheckout = () => {
 
   const fulfillmentOptions = getAvailableFulfillmentOptions();
 
+  // Pickup-only listings need no fulfillment input — skip the step entirely.
+  const skipDeliveryStep = fulfillmentOptions.length === 1 && fulfillmentOptions[0] === 'pickup';
+
+  // ── Buyer identity ────────────────────────────────────────────────
+  // Server-derived (never a client flag). Verified buyers skip the step.
+  const { verified: buyerVerified, loading: buyerVerificationLoading } =
+    useSellerVerifiedBadge(user?.id ?? null);
+  const skipIdentityStep = Boolean(user?.id) && buyerVerified;
+
+  /**
+   * Scheduling is captured as structured fields, then folded into the
+   * instructions text the seller already receives. No money logic, no schema
+   * change — the seller simply gets a target date instead of guessing.
+   */
+  const composedDeliveryInstructions = useMemo(() => {
+    if (fulfillmentSelected === 'pickup') return '';
+    const lines: string[] = [];
+    if (preferredDate) {
+      const windowText = preferredWindow ? ` — ${DELIVERY_WINDOW_LABELS[preferredWindow]}` : '';
+      lines.push(`Preferred date: ${preferredDate}${windowText}`);
+    }
+    if (onSiteContact.trim()) lines.push(`On-site contact: ${onSiteContact.trim()}`);
+    if (deliveryInstructions.trim()) lines.push(deliveryInstructions.trim());
+    return lines.join('\n');
+  }, [fulfillmentSelected, preferredDate, preferredWindow, onSiteContact, deliveryInstructions]);
+
+
   // Freight estimation
   const fetchFreightEstimate = useCallback(async (destinationAddress: string) => {
     const originText =
