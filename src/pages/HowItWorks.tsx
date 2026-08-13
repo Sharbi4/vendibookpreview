@@ -31,6 +31,7 @@ import {
 import AnimatedHeroScene from '@/components/howitworks/AnimatedHeroScene';
 import ScrollWalkthrough, { WalkthroughStep } from '@/components/howitworks/ScrollWalkthrough';
 import ValuePillars, { Pillar } from '@/components/howitworks/ValuePillars';
+import EquinoxFinancingCallout from '@/components/howitworks/EquinoxFinancingCallout';
 import PricingFaqSection from '@/components/shared/PricingFaqSection';
 import { TellVendibookButton } from '@/components/lead/TellVendibookButton';
 import { PaymentRailsSection, ProviderTrustStrip, KeepExploring } from '@/components/howitworks/PaymentRailsSection';
@@ -347,6 +348,11 @@ const HowItWorks = () => {
           pillars={config.pillars}
           tone={role === 'host' ? 'host' : role === 'sell' ? 'seller' : 'neutral'}
         />
+
+        {/* EQUINOX FINANCING — sellers and buyers */}
+        {(role === 'sell' || role === 'buy') && (
+          <EquinoxFinancingCallout audience={role === 'sell' ? 'seller' : 'buyer'} />
+        )}
 
         {/* SOCIAL PROOF STRIP */}
         <section className="py-10 border-y border-border bg-card/40">
