@@ -454,7 +454,7 @@ const PurchaseStepDelivery = ({
                     <div>
                       <p className="font-medium text-foreground">Outside the seller's delivery zone</p>
                       <p className="text-muted-foreground text-xs mt-1">
-                        Your address is {deliveryDistanceInfo.distance} mi away — the seller delivers within {deliveryRadiusMiles} mi. Consider pickup or freight, or message the seller.
+                        Your address is {deliveryDistanceInfo.distance} mi away — the seller delivers within {deliveryRadiusMiles} mi. Choose pickup or freight if offered, or message the seller to arrange it. You can't book delivery to this address.
                       </p>
                     </div>
                   </>
@@ -471,6 +471,18 @@ const PurchaseStepDelivery = ({
                   </>
                 )}
               </div>
+            )}
+
+            {!outsideRadius && (
+              <SchedulingFields
+                mode="delivery"
+                preferredDate={preferredDate}
+                setPreferredDate={setPreferredDate}
+                preferredWindow={preferredWindow}
+                setPreferredWindow={setPreferredWindow}
+                onSiteContact={onSiteContact}
+                setOnSiteContact={setOnSiteContact}
+              />
             )}
           </MethodCard>
         )}
