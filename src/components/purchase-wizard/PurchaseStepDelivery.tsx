@@ -1,4 +1,4 @@
-import { MapPin, Truck, Package, Check, Loader2, AlertCircle, CheckCircle2, AlertTriangle, Clock, MessageSquare, Info } from 'lucide-react';
+import { MapPin, Truck, Package, Check, Loader2, AlertCircle, CheckCircle2, AlertTriangle, Clock, MessageSquare, Info, CalendarClock } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
