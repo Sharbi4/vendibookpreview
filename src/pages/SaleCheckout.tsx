@@ -1087,12 +1087,13 @@ const SaleCheckout = () => {
                             freightCost={freightCost}
                             paymentMethod={paymentMethod}
                             setPaymentMethod={setPaymentMethod}
-                            hasMultiplePaymentOptions={hasMultiplePaymentOptions}
+                            /* Payment method is chosen in its own step now. */
+                            hasMultiplePaymentOptions={false}
                             agreedToTerms={agreedToTerms}
                             setAgreedToTerms={setAgreedToTerms}
                             isPurchasing={isPurchasing}
                             hideAddress={fulfillmentSelected === 'pickup'}
-                            onBack={() => setCurrentStep('details')}
+                            onBack={() => goBack('review')}
                             onEditDelivery={() => setCurrentStep('delivery')}
                             onEditInfo={() => setCurrentStep('details')}
                             onSubmit={handlePurchase}
