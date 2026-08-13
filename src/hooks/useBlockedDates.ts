@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { format, parseISO, eachDayOfInterval, addDays, subDays } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
+import { resolveListingTimeZone, todayInTimeZone } from '@/lib/listingTimezone';
 
 interface UseBlockedDatesOptions {
   listingId: string;
@@ -37,6 +38,7 @@ const useBlockedDatesInternal = (listingId: string) => {
   const [bufferDates, setBufferDates] = useState<Date[]>([]);
   const [upcomingBookings, setUpcomingBookings] = useState<BookingInfo[]>([]);
   const [bufferDays, setBufferDays] = useState<number>(0);
+  const [timeZone, setTimeZone] = useState<string>(() => resolveListingTimeZone(null));
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -48,12 +50,19 @@ const useBlockedDatesInternal = (listingId: string) => {
         // Fetch listing to get buffer days
         const { data: listingData } = await supabase
           .from('listings')
-          .select('rental_buffer_days')
+          .select('rental_buffer_days, state, longitude')
           .eq('id', listingId)
           .single();
 
         const buffer = (listingData as any)?.rental_buffer_days || 0;
         setBufferDays(buffer);
+
+        // Availability dates are wall-clock dates at the listing's location.
+        const listingTz = resolveListingTimeZone({
+          state: (listingData as any)?.state,
+          longitude: (listingData as any)?.longitude,
+        });
+        setTimeZone(listingTz);
 
         // Fetch blocked dates
         const { data: blockedData } = await supabase
@@ -109,7 +118,7 @@ const useBlockedDatesInternal = (listingId: string) => {
           setBufferDates(buffers);
           
           // Store upcoming bookings for display
-          const today = format(new Date(), 'yyyy-MM-dd');
+          const today = todayInTimeZone(listingTz);
           const upcoming = bookingData.filter(b => b.end_date >= today);
           setUpcomingBookings(upcoming.sort((a, b) => a.start_date.localeCompare(b.start_date)));
         }
@@ -219,6 +228,7 @@ const useBlockedDatesInternal = (listingId: string) => {
     bookedDates,
     bufferDates,
     bufferDays,
+    timeZone,
     upcomingBookings,
     allUnavailableDates,
     isDateUnavailable,
