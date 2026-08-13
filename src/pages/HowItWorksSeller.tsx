@@ -142,6 +142,9 @@ const HowItWorksSeller = () => {
         {/* PILLARS */}
         <ValuePillars pillars={pillars} tone="seller" />
 
+        {/* EQUINOX FINANCING */}
+        <EquinoxFinancingCallout audience="seller" />
+
         {/* PROOF — factual, no performance claims */}
         <section className="py-10 border-y border-border bg-card/40">
           <div className="container max-w-5xl mx-auto px-4">
