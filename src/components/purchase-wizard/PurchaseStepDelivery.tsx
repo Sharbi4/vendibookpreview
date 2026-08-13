@@ -336,10 +336,23 @@ const PurchaseStepDelivery = ({
   onContinue,
   listingCity,
   listingState,
+  preferredDate,
+  setPreferredDate,
+  preferredWindow,
+  setPreferredWindow,
+  onSiteContact,
+  setOnSiteContact,
 }: PurchaseStepDeliveryProps) => {
+  // A delivery the seller can't legally perform must never reach payment.
+  const outsideRadius =
+    fulfillmentSelected === 'delivery' && deliveryDistanceInfo.isOutsideRadius;
+
   const canContinue =
     fulfillmentSelected === 'pickup' ||
-    (fulfillmentSelected === 'delivery' && deliveryAddress.trim()) ||
+    (fulfillmentSelected === 'delivery' &&
+      Boolean(deliveryAddress.trim()) &&
+      Boolean(preferredDate) &&
+      !outsideRadius) ||
     (fulfillmentSelected === 'vendibook_freight' && hasValidEstimate);
 
   const isSingleMethod = fulfillmentOptions.length === 1;
