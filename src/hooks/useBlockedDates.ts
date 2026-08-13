@@ -70,11 +70,12 @@ const useBlockedDatesInternal = (listingId: string) => {
         // - Pending bookings (awaiting approval/payment) should block to prevent double-booking
         // - Approved bookings that are paid (confirmed)
         // - Completed bookings
-        const { data: bookingData } = await supabase
-          .from('booking_requests')
-          .select('start_date, end_date, status, payment_status')
-          .eq('listing_id', listingId)
-          .in('status', ['pending', 'approved', 'completed']);
+        // Uses a security-definer RPC so shoppers (who cannot read other users'
+        // booking rows under RLS) still see which dates are already taken.
+        const { data: bookingData, error: bookingError } = await supabase
+          .rpc('get_listing_busy_slots', { _listing_id: listingId });
+
+        if (bookingError) console.error('Error loading busy slots:', bookingError);
 
         if (bookingData) {
           const dates: Date[] = [];
