@@ -37,9 +37,115 @@ interface PurchaseStepDeliveryProps {
   // Optional listing context for richer pickup/next-step copy
   listingCity?: string | null;
   listingState?: string | null;
+  // Structured scheduling — replaces "tell the seller in Messages later"
+  preferredDate: string;
+  setPreferredDate: (value: string) => void;
+  preferredWindow: DeliveryWindow | '';
+  setPreferredWindow: (value: DeliveryWindow | '') => void;
+  onSiteContact: string;
+  setOnSiteContact: (value: string) => void;
 }
 
+export type DeliveryWindow = 'morning' | 'afternoon' | 'evening' | 'flexible';
+
+export const DELIVERY_WINDOW_LABELS: Record<DeliveryWindow, string> = {
+  morning: 'Morning (8am – 12pm)',
+  afternoon: 'Afternoon (12pm – 4pm)',
+  evening: 'Evening (4pm – 8pm)',
+  flexible: 'Flexible — any time that day',
+};
+
 export type { PurchaseStepDeliveryProps };
+
+/** Earliest date a buyer can request: tomorrow, in the buyer's local time. */
+const minPreferredDate = (): string => {
+  const d = new Date();
+  d.setDate(d.getDate() + 1);
+  return d.toISOString().slice(0, 10);
+};
+
+interface SchedulingFieldsProps {
+  mode: 'delivery' | 'vendibook_freight';
+  preferredDate: string;
+  setPreferredDate: (value: string) => void;
+  preferredWindow: DeliveryWindow | '';
+  setPreferredWindow: (value: DeliveryWindow | '') => void;
+  onSiteContact: string;
+  setOnSiteContact: (value: string) => void;
+}
+
+const SchedulingFields = ({
+  mode,
+  preferredDate,
+  setPreferredDate,
+  preferredWindow,
+  setPreferredWindow,
+  onSiteContact,
+  setOnSiteContact,
+}: SchedulingFieldsProps) => (
+  <div className="rounded-lg border border-border bg-background/40 p-4 space-y-4">
+    <div className="flex items-center gap-2">
+      <CalendarClock className="h-4 w-4 text-primary" />
+      <h4 className="text-sm font-semibold text-foreground">
+        {mode === 'delivery' ? 'Preferred delivery window' : 'Preferred receiving window'}
+      </h4>
+    </div>
+    <p className="text-xs text-muted-foreground -mt-2">
+      {mode === 'delivery'
+        ? 'The seller confirms the exact time after checkout — this gives them your target.'
+        : 'Freight scheduling uses this as your target receiving day. Carriers confirm a final window.'}
+    </p>
+
+    <div className="grid sm:grid-cols-2 gap-3">
+      <div>
+        <Label htmlFor="preferredDate" className="text-sm font-medium mb-1.5 block">
+          Preferred date {mode === 'delivery' ? '*' : ''}
+        </Label>
+        <input
+          id="preferredDate"
+          type="date"
+          min={minPreferredDate()}
+          value={preferredDate}
+          onChange={(e) => setPreferredDate(e.target.value)}
+          className="flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        />
+      </div>
+      <div>
+        <Label htmlFor="preferredWindow" className="text-sm font-medium mb-1.5 block">
+          Time of day
+        </Label>
+        <select
+          id="preferredWindow"
+          value={preferredWindow}
+          onChange={(e) => setPreferredWindow(e.target.value as DeliveryWindow | '')}
+          className="flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          <option value="">Select a window</option>
+          {(Object.keys(DELIVERY_WINDOW_LABELS) as DeliveryWindow[]).map((w) => (
+            <option key={w} value={w}>{DELIVERY_WINDOW_LABELS[w]}</option>
+          ))}
+        </select>
+      </div>
+    </div>
+
+    <div>
+      <Label htmlFor="onSiteContact" className="text-sm font-medium mb-1.5 block">
+        On-site contact at drop-off
+      </Label>
+      <input
+        id="onSiteContact"
+        type="text"
+        value={onSiteContact}
+        onChange={(e) => setOnSiteContact(e.target.value)}
+        placeholder="Name and phone of whoever will receive it"
+        className="flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      />
+      <p className="text-xs text-muted-foreground mt-1.5">
+        Leave blank if that's you — we'll use your checkout phone number.
+      </p>
+    </div>
+  </div>
+);
 
 const NEXT_STEPS: Record<FulfillmentSelection, { title: string; body: string }[]> = {
   pickup: [
