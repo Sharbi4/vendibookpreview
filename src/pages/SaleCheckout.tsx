@@ -593,7 +593,7 @@ const SaleCheckout = () => {
                   : null,
               delivery_instructions:
                 fulfillmentSelected === 'delivery' || isVendibookFreight
-                  ? deliveryInstructions.trim()
+                  ? (composedDeliveryInstructions.trim() || null)
                   : null,
               buyer_name: `${buyerInfo.firstName} ${buyerInfo.lastName}`.trim(),
               buyer_email: buyerInfo.email.trim(),
@@ -655,7 +655,7 @@ const SaleCheckout = () => {
           delivery_fee: fulfillmentSelected === 'delivery' ? currentDeliveryFee : 0,
           fulfillment_type: isVendibookFreight ? 'vendibook_freight' : fulfillmentSelected,
           delivery_address: (fulfillmentSelected === 'delivery' || isVendibookFreight) ? deliveryAddress.trim() : null,
-          delivery_instructions: (fulfillmentSelected === 'delivery' || isVendibookFreight) ? deliveryInstructions.trim() : null,
+          delivery_instructions: (fulfillmentSelected === 'delivery' || isVendibookFreight) ? (composedDeliveryInstructions.trim() || null) : null,
           buyer_name: `${buyerInfo.firstName} ${buyerInfo.lastName}`.trim(),
           buyer_email: buyerInfo.email.trim(),
           buyer_phone: buyerInfo.phone.trim() || null,
