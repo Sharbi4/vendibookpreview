@@ -546,7 +546,15 @@ const SaleCheckout = () => {
     });
   };
 
+  /**
+   * Hard double-submit lock. React state alone is not enough: two clicks in
+   * the same tick both read the stale `isPurchasing === false`. A ref flips
+   * synchronously, so only the first click ever reaches the edge function.
+   */
+  const submitLockRef = useRef(false);
+
   const handlePurchase = async () => {
+    if (submitLockRef.current || isPurchasing || termsGate.preparing) return;
     if (!user) {
       navigate(`/auth?redirect=/checkout/${listingId}`);
       return;
@@ -566,11 +574,20 @@ const SaleCheckout = () => {
     }
     const t = buildCurrentTerms();
     if (!t) return;
-    await termsGate.prepare(t);
+    submitLockRef.current = true;
+    try {
+      await termsGate.prepare(t);
+    } finally {
+      // Preparing only opens the review sheet — release so the buyer can
+      // still cancel and re-open it. runPurchase re-locks on real submit.
+      submitLockRef.current = false;
+    }
   };
 
   const runPurchase = async () => {
+    if (submitLockRef.current || isPurchasing) return;
     if (!listingId || !listing?.host_id) return;
+    submitLockRef.current = true;
     const termsId = termsGate.termsId;
 
     if (paymentMethod === 'cash') {
@@ -637,6 +654,7 @@ const SaleCheckout = () => {
         });
       } finally {
         setIsPurchasing(false);
+        submitLockRef.current = false;
       }
       return;
     }
@@ -676,6 +694,7 @@ const SaleCheckout = () => {
           variant: 'destructive',
         });
         setIsPurchasing(false);
+        submitLockRef.current = false;
         return;
       }
 
@@ -711,6 +730,7 @@ const SaleCheckout = () => {
       });
     } finally {
       setIsPurchasing(false);
+      submitLockRef.current = false;
     }
   };
 
@@ -1058,6 +1078,8 @@ const SaleCheckout = () => {
                           titleStatus={(listing as { title_status?: string | null }).title_status ?? null}
                           hasLien={(listing as { has_lien?: string | null }).has_lien ?? null}
                           vin={(listing as { vin?: string | null }).vin ?? null}
+                          totalPrice={totalPrice}
+                          submitting={isPurchasing || termsGate.preparing}
                           onBack={() => goBack('payment')}
                           onContinue={() => goNext('payment')}
                         />
