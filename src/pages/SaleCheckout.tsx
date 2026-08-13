@@ -118,6 +118,10 @@ const SaleCheckout = () => {
     deliveryAddress: string;
     deliveryInstructions: string;
     addOnSelections: Record<string, boolean>;
+    preferredDate: string;
+    preferredWindow: DeliveryWindow | '';
+    onSiteContact: string;
+    identityAcknowledged: boolean;
   }
   const persist = useCheckoutState<PersistedState>(sessionKey, {
     step: 'intro',
@@ -129,6 +133,10 @@ const SaleCheckout = () => {
     deliveryAddress: '',
     deliveryInstructions: '',
     addOnSelections: {},
+    preferredDate: '',
+    preferredWindow: '',
+    onSiteContact: '',
+    identityAcknowledged: false,
   });
 
   const currentStep = persist.state.step;
