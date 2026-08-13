@@ -771,36 +771,70 @@ const SaleCheckout = () => {
   // Uses the existing CHECKOUT_STEPS + listing identifier so the roadmap
   // and CTA stay in lock-step with the wizard's real state.
   type WizardStep = Exclude<CheckoutStep, 'intro'>;
-  const WIZARD_STEP_ORDER: WizardStep[] = ['confirm', 'delivery', 'addons', 'details', 'review'];
-  const journeySteps: JourneyStep[] = CHECKOUT_STEPS.map((s, i) => ({
-    id: WIZARD_STEP_ORDER[i],
-    label: s.label,
-    optional: WIZARD_STEP_ORDER[i] === 'addons',
+  const FULL_STEP_ORDER: WizardStep[] = [
+    'confirm', 'identity', 'delivery', 'addons', 'details', 'payment', 'review',
+  ];
+  // Steps that carry no decision for this listing/buyer are removed from the
+  // roadmap AND from navigation, so the progress bar never lies.
+  const WIZARD_STEP_ORDER: WizardStep[] = FULL_STEP_ORDER.filter((s) => {
+    if (s === 'identity') return !skipIdentityStep;
+    if (s === 'delivery') return !skipDeliveryStep;
+    return true;
+  });
+  const stepLabel = (s: WizardStep) =>
+    CHECKOUT_STEPS[FULL_STEP_ORDER.indexOf(s)]?.label ?? 'Next';
+  const journeySteps: JourneyStep[] = WIZARD_STEP_ORDER.map((s) => ({
+    id: s,
+    label: stepLabel(s),
+    optional: s === 'addons',
   }));
   const journeyIndex = Math.max(0, WIZARD_STEP_ORDER.indexOf(currentStep as WizardStep));
   const nextWizardStep: WizardStep | null =
     WIZARD_STEP_ORDER[Math.min(journeyIndex + 1, WIZARD_STEP_ORDER.length - 1)] ?? null;
 
+  /** Skip-aware neighbours so Back/Continue never land on a hidden step. */
+  const stepAfter = (s: WizardStep): WizardStep => {
+    const i = WIZARD_STEP_ORDER.indexOf(s);
+    return WIZARD_STEP_ORDER[Math.min(i + 1, WIZARD_STEP_ORDER.length - 1)];
+  };
+  const stepBefore = (s: WizardStep): WizardStep => {
+    const i = WIZARD_STEP_ORDER.indexOf(s);
+    return WIZARD_STEP_ORDER[Math.max(i - 1, 0)];
+  };
+  const goNext = (from: WizardStep) => setCurrentStep(stepAfter(from));
+  const goBack = (from: WizardStep) => setCurrentStep(stepBefore(from));
+
   const advanceFromCurrent = () => {
-    if (currentStep === 'confirm') return setCurrentStep('delivery');
-    if (currentStep === 'delivery') {
-      if (validateStep('delivery')) setCurrentStep('addons');
+    if (currentStep === 'intro' || currentStep === 'review') return;
+    const step = currentStep as WizardStep;
+    if (step === 'delivery' && !validateStep('delivery')) return;
+    if (step === 'details' && !validateStep('details')) return;
+    if (step === 'identity' && !skipIdentityStep && !identityAcknowledged) {
+      toast({
+        title: 'One more thing',
+        description: 'Verify your identity, or tick the box to continue without it.',
+        variant: 'destructive',
+      });
       return;
     }
-    if (currentStep === 'addons') return setCurrentStep('details');
-    if (currentStep === 'details') {
-      if (validateStep('details')) setCurrentStep('review');
-      return;
-    }
+    goNext(step);
   };
 
   const primaryLabel =
     currentStep === 'review'
       ? 'Complete purchase below'
       : nextWizardStep && nextWizardStep !== (currentStep as WizardStep)
-        ? `Continue to ${CHECKOUT_STEPS[WIZARD_STEP_ORDER.indexOf(nextWizardStep)]?.label ?? 'next step'}`
+        ? `Continue to ${stepLabel(nextWizardStep)}`
         : 'Continue';
   const primaryDisabled = currentStep === 'review';
+
+  /** Prefill the details step from the delivery address the buyer already typed. */
+  const prefillFromDeliveryAddress = () => {
+    if (fulfillmentSelected === 'pickup' || buyerInfo.address1.trim()) return;
+    const parsed = parseFormattedAddress(deliveryAddress);
+    if (!parsed) return;
+    setBuyerInfo((prev) => ({ ...prev, ...parsed }));
+  };
 
 
   // Price lines for sticky summary — real listing title, never "Item price"
