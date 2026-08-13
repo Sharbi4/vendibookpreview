@@ -129,7 +129,7 @@ const HeroSection = () => {
 // --- Value Props ---
 const ValuePropsSection = () => {
   const values = [
-    { icon: QrCode, title: "Free QR Signage", desc: "We send you professional signage. Trucks scan to book and pay instantly—no phone calls needed." },
+    { icon: QrCode, title: "QR Code & Share Link", desc: "Download a QR code for your lot. Trucks scan to book and pay instantly—no phone calls needed." },
     { icon: LayoutGrid, title: "Multi-Slot Management", desc: "Have 5 spots? Create 5 slots. Multiple vendors book simultaneously without conflicts." },
     { icon: Shield, title: "Liability Protection", desc: "We collect COI documents and verify insurance before any booking is confirmed." },
     { icon: Store, title: "Your Own Storefront", desc: "Get a shareable profile page with reviews, photos, and availability to attract more vendors." },
@@ -185,7 +185,7 @@ const QRSignageSection = () => (
           
           <div className="space-y-4">
             {[
-              { icon: QrCode, title: "Physical Signage", desc: "We mail you a weatherproof sign. Trucks scan the code to book and pay instantly." },
+              { icon: QrCode, title: "Downloadable QR Code", desc: "Print or display your QR code anywhere. Trucks scan the code to book and pay instantly." },
               { icon: Share2, title: "Shareable Link", desc: "Get a dedicated URL (vendibook.com/your-lot) to share on social media or local groups." },
               { icon: Star, title: "Reviews & Ratings", desc: "Build credibility with verified reviews. Top-rated lots get more bookings." }
             ].map((item, i) => (
@@ -343,7 +343,7 @@ const VendorLots = () => {
     <>
       <SEO
         title="List Your Vendor Space — Earn Passive Income | Vendibook"
-        description="Turn empty parking into passive income. Food trucks book & pay instantly. Free QR signage, automated insurance, instant payouts."
+        description="Turn empty parking into passive income. Food trucks book & pay instantly. QR booking links, automated insurance, fast payouts."
         canonical="/vendor-spaces"
       />
       
