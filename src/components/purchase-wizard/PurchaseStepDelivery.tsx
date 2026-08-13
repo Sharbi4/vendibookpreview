@@ -544,6 +544,18 @@ const PurchaseStepDelivery = ({
                 <span>{estimateError}</span>
               </div>
             )}
+
+            {hasValidEstimate && (
+              <SchedulingFields
+                mode="vendibook_freight"
+                preferredDate={preferredDate}
+                setPreferredDate={setPreferredDate}
+                preferredWindow={preferredWindow}
+                setPreferredWindow={setPreferredWindow}
+                onSiteContact={onSiteContact}
+                setOnSiteContact={setOnSiteContact}
+              />
+            )}
           </MethodCard>
         )}
       </div>
@@ -551,7 +563,7 @@ const PurchaseStepDelivery = ({
       {/* Always show next-steps for the selected method — never leave an empty step */}
       <NextStepsPanel selection={fulfillmentSelected} />
 
-      <NextStepHint text="Review your order and complete payment next." />
+      <NextStepHint text="Next you'll pick any add-ons, then confirm your details." />
 
       <div className="flex gap-3">
         <Button variant="outline" onClick={onBack} className="flex-1" size="lg">
@@ -563,7 +575,7 @@ const PurchaseStepDelivery = ({
           className="flex-1"
           size="lg"
         >
-          Continue to review
+          Continue
         </Button>
       </div>
     </div>
