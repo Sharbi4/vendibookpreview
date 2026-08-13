@@ -962,9 +962,22 @@ const SaleCheckout = () => {
                           sellerName={sellerName}
                           sellerVerified={Boolean((host as { identity_verified?: boolean } | null | undefined)?.identity_verified)}
                           specSummary={(listing as { specifications?: string | null }).specifications ?? null}
-                          onContinue={() => setCurrentStep('delivery')}
+                          onContinue={() => goNext('confirm')}
                           onBack={priceSale >= SALE_INTRO_MIN_PRICE ? () => setCurrentStep('intro') : undefined}
 
+                        />
+                      )}
+
+                      {currentStep === 'identity' && (
+                        <PurchaseStepIdentity
+                          verified={buyerVerified}
+                          loading={buyerVerificationLoading}
+                          buyerName={buyerInfo.firstName || user?.email || null}
+                          acknowledged={identityAcknowledged}
+                          setAcknowledged={setIdentityAcknowledged}
+                          onVerify={() => navigate('/account/verification?from=checkout')}
+                          onBack={() => goBack('identity')}
+                          onContinue={() => goNext('identity')}
                         />
                       )}
 
@@ -993,11 +1006,15 @@ const SaleCheckout = () => {
                           clearEstimate={clearEstimate}
                           listingCity={listing.city}
                           listingState={listing.state}
-                          onBack={() => setCurrentStep('confirm')}
+                          preferredDate={preferredDate}
+                          setPreferredDate={setPreferredDate}
+                          preferredWindow={preferredWindow}
+                          setPreferredWindow={setPreferredWindow}
+                          onSiteContact={onSiteContact}
+                          setOnSiteContact={setOnSiteContact}
+                          onBack={() => goBack('delivery')}
                           onContinue={() => {
-                            if (validateStep('delivery')) {
-                              setCurrentStep('addons');
-                            }
+                            if (validateStep('delivery')) goNext('delivery');
                           }}
                         />
                       )}
@@ -1007,9 +1024,9 @@ const SaleCheckout = () => {
                           addOns={addOnCatalog}
                           selected={addOnSelections}
                           onToggle={toggleAddOn}
-                          onBack={() => setCurrentStep('delivery')}
-                          onContinue={() => setCurrentStep('details')}
-                          onSkip={() => setCurrentStep('details')}
+                          onBack={() => goBack('addons')}
+                          onContinue={() => { prefillFromDeliveryAddress(); goNext('addons'); }}
+                          onSkip={() => { prefillFromDeliveryAddress(); goNext('addons'); }}
                         />
                       )}
 
@@ -1024,13 +1041,25 @@ const SaleCheckout = () => {
                           touchedFields={touchedFields}
                           setTouchedFields={setTouchedFields}
                           hideAddress={fulfillmentSelected === 'pickup'}
-                          continueLabel="Review your order"
-                          onBack={() => setCurrentStep('addons')}
+                          continueLabel="Continue to payment"
+                          onBack={() => goBack('details')}
                           onContinue={() => {
-                            if (validateStep('details')) {
-                              setCurrentStep('review');
-                            }
+                            if (validateStep('details')) goNext('details');
                           }}
+                        />
+                      )}
+
+                      {currentStep === 'payment' && (
+                        <PurchaseStepPayment
+                          paymentMethod={paymentMethod}
+                          setPaymentMethod={setPaymentMethod}
+                          acceptPayPalCheckout={acceptPayPalCheckout}
+                          acceptCashPayment={acceptCashPayment}
+                          titleStatus={(listing as { title_status?: string | null }).title_status ?? null}
+                          hasLien={(listing as { has_lien?: string | null }).has_lien ?? null}
+                          vin={(listing as { vin?: string | null }).vin ?? null}
+                          onBack={() => goBack('payment')}
+                          onContinue={() => goNext('payment')}
                         />
                       )}
 
