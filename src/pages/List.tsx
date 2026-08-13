@@ -374,7 +374,7 @@ const ToolsGrid = () => {
     { icon: LayoutGrid, label: 'Listing Wizard', desc: 'Use the step-by-step wizard to build a professional listing. Pick a category, add photos, and go live in minutes.' },
     { icon: Search, label: 'Built-In SEO', desc: 'Every listing is optimized for Google. Your storefront gets indexed so buyers and renters find you.' },
     { icon: Share2, label: 'Share Kit', desc: 'Generate social media captions, QR codes, and branded graphics. Track every click.' },
-    { icon: QrCode, label: 'Free Signage & QR', desc: 'We send you professional signage. Walk-ins scan the QR code to book or buy instantly.' },
+    { icon: QrCode, label: 'QR Code & Share Link', desc: 'Download a QR code and share link for your listing. Anyone who scans can book or buy instantly.' },
     { icon: Lock, label: 'Safe Payment Protection', desc: 'Online payments are held securely until the deal is done. Deposits refunded automatically.' },
     { icon: Megaphone, label: 'Product Listings', desc: 'Showcase your full catalog — kitchens, trucks, equipment, parking — all in one storefront.' }];
 

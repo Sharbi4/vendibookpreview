@@ -139,8 +139,8 @@ const ValueGrid = () => {
     },
     {
       icon: QrCode,
-      title: "Free QR Signage",
-      desc: "We send you professional signage with a QR code linking to your listing. Capture walk-in leads effortlessly."
+      title: "QR Code & Share Link",
+      desc: "Download a QR code that links to your listing. Capture walk-in leads effortlessly."
     }
   ];
 
@@ -283,7 +283,7 @@ const QRSignageSection = () => {
           >
             <Badge variant="outline" className="mb-4 px-3 py-1.5 text-xs font-medium border-foreground/20 bg-foreground/5 text-foreground">
               <QrCode className="h-3.5 w-3.5 mr-1.5 inline" />
-              Free Signage
+              QR Booking Code
             </Badge>
 
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4 leading-tight">
@@ -293,13 +293,13 @@ const QRSignageSection = () => {
             </h2>
 
             <p className="text-lg text-muted-foreground mb-8 leading-relaxed">
-              We mail you professional signage with a QR code that links directly to your listing. 
-              Hang it in your window or by the door—renters scan, browse your availability, and book instantly.
+              Download a QR code that links directly to your listing. 
+              Print it, post it, or share it—renters scan, browse your availability, and book instantly.
             </p>
 
             <ul className="space-y-4">
               {[
-                "Free printed signage shipped to you",
+                "Download and print your QR code anytime",
                 "QR links to your live booking calendar",
                 "Capture leads even when you're closed",
                 "Track scans in your dashboard"
