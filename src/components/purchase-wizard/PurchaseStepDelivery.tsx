@@ -1,4 +1,4 @@
-import { MapPin, Truck, Package, Check, Loader2, AlertCircle, CheckCircle2, AlertTriangle, Clock, MessageSquare, Info } from 'lucide-react';
+import { MapPin, Truck, Package, Check, Loader2, AlertCircle, CheckCircle2, AlertTriangle, Clock, MessageSquare, Info, CalendarClock } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -37,9 +37,115 @@ interface PurchaseStepDeliveryProps {
   // Optional listing context for richer pickup/next-step copy
   listingCity?: string | null;
   listingState?: string | null;
+  // Structured scheduling — replaces "tell the seller in Messages later"
+  preferredDate: string;
+  setPreferredDate: (value: string) => void;
+  preferredWindow: DeliveryWindow | '';
+  setPreferredWindow: (value: DeliveryWindow | '') => void;
+  onSiteContact: string;
+  setOnSiteContact: (value: string) => void;
 }
 
+export type DeliveryWindow = 'morning' | 'afternoon' | 'evening' | 'flexible';
+
+export const DELIVERY_WINDOW_LABELS: Record<DeliveryWindow, string> = {
+  morning: 'Morning (8am – 12pm)',
+  afternoon: 'Afternoon (12pm – 4pm)',
+  evening: 'Evening (4pm – 8pm)',
+  flexible: 'Flexible — any time that day',
+};
+
 export type { PurchaseStepDeliveryProps };
+
+/** Earliest date a buyer can request: tomorrow, in the buyer's local time. */
+const minPreferredDate = (): string => {
+  const d = new Date();
+  d.setDate(d.getDate() + 1);
+  return d.toISOString().slice(0, 10);
+};
+
+interface SchedulingFieldsProps {
+  mode: 'delivery' | 'vendibook_freight';
+  preferredDate: string;
+  setPreferredDate: (value: string) => void;
+  preferredWindow: DeliveryWindow | '';
+  setPreferredWindow: (value: DeliveryWindow | '') => void;
+  onSiteContact: string;
+  setOnSiteContact: (value: string) => void;
+}
+
+const SchedulingFields = ({
+  mode,
+  preferredDate,
+  setPreferredDate,
+  preferredWindow,
+  setPreferredWindow,
+  onSiteContact,
+  setOnSiteContact,
+}: SchedulingFieldsProps) => (
+  <div className="rounded-lg border border-border bg-background/40 p-4 space-y-4">
+    <div className="flex items-center gap-2">
+      <CalendarClock className="h-4 w-4 text-primary" />
+      <h4 className="text-sm font-semibold text-foreground">
+        {mode === 'delivery' ? 'Preferred delivery window' : 'Preferred receiving window'}
+      </h4>
+    </div>
+    <p className="text-xs text-muted-foreground -mt-2">
+      {mode === 'delivery'
+        ? 'The seller confirms the exact time after checkout — this gives them your target.'
+        : 'Freight scheduling uses this as your target receiving day. Carriers confirm a final window.'}
+    </p>
+
+    <div className="grid sm:grid-cols-2 gap-3">
+      <div>
+        <Label htmlFor="preferredDate" className="text-sm font-medium mb-1.5 block">
+          Preferred date {mode === 'delivery' ? '*' : ''}
+        </Label>
+        <input
+          id="preferredDate"
+          type="date"
+          min={minPreferredDate()}
+          value={preferredDate}
+          onChange={(e) => setPreferredDate(e.target.value)}
+          className="flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        />
+      </div>
+      <div>
+        <Label htmlFor="preferredWindow" className="text-sm font-medium mb-1.5 block">
+          Time of day
+        </Label>
+        <select
+          id="preferredWindow"
+          value={preferredWindow}
+          onChange={(e) => setPreferredWindow(e.target.value as DeliveryWindow | '')}
+          className="flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          <option value="">Select a window</option>
+          {(Object.keys(DELIVERY_WINDOW_LABELS) as DeliveryWindow[]).map((w) => (
+            <option key={w} value={w}>{DELIVERY_WINDOW_LABELS[w]}</option>
+          ))}
+        </select>
+      </div>
+    </div>
+
+    <div>
+      <Label htmlFor="onSiteContact" className="text-sm font-medium mb-1.5 block">
+        On-site contact at drop-off
+      </Label>
+      <input
+        id="onSiteContact"
+        type="text"
+        value={onSiteContact}
+        onChange={(e) => setOnSiteContact(e.target.value)}
+        placeholder="Name and phone of whoever will receive it"
+        className="flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      />
+      <p className="text-xs text-muted-foreground mt-1.5">
+        Leave blank if that's you — we'll use your checkout phone number.
+      </p>
+    </div>
+  </div>
+);
 
 const NEXT_STEPS: Record<FulfillmentSelection, { title: string; body: string }[]> = {
   pickup: [
@@ -230,10 +336,23 @@ const PurchaseStepDelivery = ({
   onContinue,
   listingCity,
   listingState,
+  preferredDate,
+  setPreferredDate,
+  preferredWindow,
+  setPreferredWindow,
+  onSiteContact,
+  setOnSiteContact,
 }: PurchaseStepDeliveryProps) => {
+  // A delivery the seller can't legally perform must never reach payment.
+  const outsideRadius =
+    fulfillmentSelected === 'delivery' && deliveryDistanceInfo.isOutsideRadius;
+
   const canContinue =
     fulfillmentSelected === 'pickup' ||
-    (fulfillmentSelected === 'delivery' && deliveryAddress.trim()) ||
+    (fulfillmentSelected === 'delivery' &&
+      Boolean(deliveryAddress.trim()) &&
+      Boolean(preferredDate) &&
+      !outsideRadius) ||
     (fulfillmentSelected === 'vendibook_freight' && hasValidEstimate);
 
   const isSingleMethod = fulfillmentOptions.length === 1;
@@ -335,7 +454,7 @@ const PurchaseStepDelivery = ({
                     <div>
                       <p className="font-medium text-foreground">Outside the seller's delivery zone</p>
                       <p className="text-muted-foreground text-xs mt-1">
-                        Your address is {deliveryDistanceInfo.distance} mi away — the seller delivers within {deliveryRadiusMiles} mi. Consider pickup or freight, or message the seller.
+                        Your address is {deliveryDistanceInfo.distance} mi away — the seller delivers within {deliveryRadiusMiles} mi. Choose pickup or freight if offered, or message the seller to arrange it. You can't book delivery to this address.
                       </p>
                     </div>
                   </>
@@ -352,6 +471,18 @@ const PurchaseStepDelivery = ({
                   </>
                 )}
               </div>
+            )}
+
+            {!outsideRadius && (
+              <SchedulingFields
+                mode="delivery"
+                preferredDate={preferredDate}
+                setPreferredDate={setPreferredDate}
+                preferredWindow={preferredWindow}
+                setPreferredWindow={setPreferredWindow}
+                onSiteContact={onSiteContact}
+                setOnSiteContact={setOnSiteContact}
+              />
             )}
           </MethodCard>
         )}
@@ -413,6 +544,18 @@ const PurchaseStepDelivery = ({
                 <span>{estimateError}</span>
               </div>
             )}
+
+            {hasValidEstimate && (
+              <SchedulingFields
+                mode="vendibook_freight"
+                preferredDate={preferredDate}
+                setPreferredDate={setPreferredDate}
+                preferredWindow={preferredWindow}
+                setPreferredWindow={setPreferredWindow}
+                onSiteContact={onSiteContact}
+                setOnSiteContact={setOnSiteContact}
+              />
+            )}
           </MethodCard>
         )}
       </div>
@@ -420,7 +563,7 @@ const PurchaseStepDelivery = ({
       {/* Always show next-steps for the selected method — never leave an empty step */}
       <NextStepsPanel selection={fulfillmentSelected} />
 
-      <NextStepHint text="Review your order and complete payment next." />
+      <NextStepHint text="Next you'll pick any add-ons, then confirm your details." />
 
       <div className="flex gap-3">
         <Button variant="outline" onClick={onBack} className="flex-1" size="lg">
@@ -432,7 +575,7 @@ const PurchaseStepDelivery = ({
           className="flex-1"
           size="lg"
         >
-          Continue to review
+          Continue
         </Button>
       </div>
     </div>

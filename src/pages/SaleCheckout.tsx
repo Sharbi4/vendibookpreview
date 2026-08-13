@@ -25,7 +25,16 @@ import SEO from '@/components/SEO';
 import StickySummary from '@/components/shared/StickySummary';
 
 // Step components
-import { PurchaseStepDelivery, PurchaseStepInfo, PurchaseStepReview, type BuyerInfo } from '@/components/purchase-wizard';
+import {
+  PurchaseStepDelivery,
+  PurchaseStepInfo,
+  PurchaseStepReview,
+  PurchaseStepIdentity,
+  PurchaseStepPayment,
+  DELIVERY_WINDOW_LABELS,
+  type BuyerInfo,
+  type DeliveryWindow,
+} from '@/components/purchase-wizard';
 import StepConfirmPurchase from '@/components/checkout/StepConfirmPurchase';
 import CheckoutIntro from '@/components/checkout/CheckoutIntro';
 
@@ -36,6 +45,8 @@ import { useTermsGate } from '@/hooks/useTermsGate';
 import { buildTerms } from '@/lib/transactionTerms';
 import { ProtectionOptInCard } from '@/components/protected-sale/ProtectionOptInCard';
 import { useCheckoutState } from '@/hooks/useCheckoutState';
+import { useSellerVerifiedBadge } from '@/hooks/useSellerVerifiedBadge';
+import { parseFormattedAddress } from '@/lib/fulfillment/parseAddress';
 import { getPublicDisplayName } from '@/lib/displayName';
 import {
   JourneyProgress,
@@ -47,25 +58,36 @@ import {
 } from '@/components/journey';
 
 type FulfillmentSelection = 'pickup' | 'delivery' | 'vendibook_freight';
-type CheckoutStep = 'intro' | 'confirm' | 'delivery' | 'addons' | 'details' | 'review';
+type CheckoutStep =
+  | 'intro'
+  | 'confirm'
+  | 'identity'
+  | 'delivery'
+  | 'addons'
+  | 'details'
+  | 'payment'
+  | 'review';
 
 // High-value sale threshold. Below this we skip the intro screen and drop
 // buyers straight into the wizard (small tool/add-on purchases).
 const SALE_INTRO_MIN_PRICE = 1000;
 
 const CHECKOUT_STEPS = [
-  { step: 1, label: 'Confirm',   short: 'Confirm' },
-  { step: 2, label: 'Delivery',  short: 'Delivery' },
-  { step: 3, label: 'Add-ons',   short: 'Add-ons' },
-  { step: 4, label: 'Your details', short: 'Details' },
-  { step: 5, label: 'Review & pay', short: 'Pay' },
+  { step: 1, label: 'Confirm',       short: 'Confirm' },
+  { step: 2, label: 'Verify you',    short: 'Verify' },
+  { step: 3, label: 'Delivery',      short: 'Delivery' },
+  { step: 4, label: 'Add-ons',       short: 'Add-ons' },
+  { step: 5, label: 'Your details',  short: 'Details' },
+  { step: 6, label: 'Payment',       short: 'Payment' },
+  { step: 7, label: 'Review & pay',  short: 'Review' },
 ];
 
 const STEP_NUM: Record<CheckoutStep, number> = {
-  intro: 0, confirm: 1, delivery: 2, addons: 3, details: 4, review: 5,
+  intro: 0, confirm: 1, identity: 2, delivery: 3, addons: 4, details: 5, payment: 6, review: 7,
 };
 
 const getStepNumber = (step: CheckoutStep): number => STEP_NUM[step];
+
 
 
 const SaleCheckout = () => {
@@ -96,6 +118,10 @@ const SaleCheckout = () => {
     deliveryAddress: string;
     deliveryInstructions: string;
     addOnSelections: Record<string, boolean>;
+    preferredDate: string;
+    preferredWindow: DeliveryWindow | '';
+    onSiteContact: string;
+    identityAcknowledged: boolean;
   }
   const persist = useCheckoutState<PersistedState>(sessionKey, {
     step: 'intro',
@@ -107,6 +133,10 @@ const SaleCheckout = () => {
     deliveryAddress: '',
     deliveryInstructions: '',
     addOnSelections: {},
+    preferredDate: '',
+    preferredWindow: '',
+    onSiteContact: '',
+    identityAcknowledged: false,
   });
 
   const currentStep = persist.state.step;
@@ -143,6 +173,18 @@ const SaleCheckout = () => {
   const deliveryInstructions = persist.state.deliveryInstructions;
   const setDeliveryInstructions = (v: string) =>
     persist.setState((prev) => ({ ...prev, deliveryInstructions: v }));
+  const preferredDate = persist.state.preferredDate;
+  const setPreferredDate = (v: string) =>
+    persist.setState((prev) => ({ ...prev, preferredDate: v }));
+  const preferredWindow = persist.state.preferredWindow;
+  const setPreferredWindow = (v: DeliveryWindow | '') =>
+    persist.setState((prev) => ({ ...prev, preferredWindow: v }));
+  const onSiteContact = persist.state.onSiteContact;
+  const setOnSiteContact = (v: string) =>
+    persist.setState((prev) => ({ ...prev, onSiteContact: v }));
+  const identityAcknowledged = persist.state.identityAcknowledged;
+  const setIdentityAcknowledged = (v: boolean) =>
+    persist.setState((prev) => ({ ...prev, identityAcknowledged: v }));
   const addOnSelections = persist.state.addOnSelections;
   const toggleAddOn = (id: string, next: boolean) =>
     persist.setState((prev) => ({
@@ -330,6 +372,33 @@ const SaleCheckout = () => {
 
   const fulfillmentOptions = getAvailableFulfillmentOptions();
 
+  // Pickup-only listings need no fulfillment input — skip the step entirely.
+  const skipDeliveryStep = fulfillmentOptions.length === 1 && fulfillmentOptions[0] === 'pickup';
+
+  // ── Buyer identity ────────────────────────────────────────────────
+  // Server-derived (never a client flag). Verified buyers skip the step.
+  const { verified: buyerVerified, loading: buyerVerificationLoading } =
+    useSellerVerifiedBadge(user?.id ?? null);
+  const skipIdentityStep = Boolean(user?.id) && buyerVerified;
+
+  /**
+   * Scheduling is captured as structured fields, then folded into the
+   * instructions text the seller already receives. No money logic, no schema
+   * change — the seller simply gets a target date instead of guessing.
+   */
+  const composedDeliveryInstructions = useMemo(() => {
+    if (fulfillmentSelected === 'pickup') return '';
+    const lines: string[] = [];
+    if (preferredDate) {
+      const windowText = preferredWindow ? ` — ${DELIVERY_WINDOW_LABELS[preferredWindow]}` : '';
+      lines.push(`Preferred date: ${preferredDate}${windowText}`);
+    }
+    if (onSiteContact.trim()) lines.push(`On-site contact: ${onSiteContact.trim()}`);
+    if (deliveryInstructions.trim()) lines.push(deliveryInstructions.trim());
+    return lines.join('\n');
+  }, [fulfillmentSelected, preferredDate, preferredWindow, onSiteContact, deliveryInstructions]);
+
+
   // Freight estimation
   const fetchFreightEstimate = useCallback(async (destinationAddress: string) => {
     const originText =
@@ -383,6 +452,19 @@ const SaleCheckout = () => {
       }
       if ((fulfillmentSelected === 'delivery' || fulfillmentSelected === 'vendibook_freight') && !deliveryAddress.trim()) {
         toast({ title: 'Missing address', description: 'Please enter a delivery address.', variant: 'destructive' });
+        return false;
+      }
+      // Never let a buyer pay for a delivery the seller doesn't cover.
+      if (fulfillmentSelected === 'delivery' && deliveryDistanceInfo.isOutsideRadius) {
+        toast({
+          title: 'Outside the delivery zone',
+          description: `This seller delivers within ${deliveryRadiusMiles} mi. Choose pickup or freight, or message the seller.`,
+          variant: 'destructive',
+        });
+        return false;
+      }
+      if (fulfillmentSelected === 'delivery' && !preferredDate) {
+        toast({ title: 'Pick a preferred date', description: 'Give the seller a target delivery date so they can confirm a window.', variant: 'destructive' });
         return false;
       }
       return true;
@@ -511,7 +593,7 @@ const SaleCheckout = () => {
                   : null,
               delivery_instructions:
                 fulfillmentSelected === 'delivery' || isVendibookFreight
-                  ? deliveryInstructions.trim()
+                  ? (composedDeliveryInstructions.trim() || null)
                   : null,
               buyer_name: `${buyerInfo.firstName} ${buyerInfo.lastName}`.trim(),
               buyer_email: buyerInfo.email.trim(),
@@ -573,7 +655,7 @@ const SaleCheckout = () => {
           delivery_fee: fulfillmentSelected === 'delivery' ? currentDeliveryFee : 0,
           fulfillment_type: isVendibookFreight ? 'vendibook_freight' : fulfillmentSelected,
           delivery_address: (fulfillmentSelected === 'delivery' || isVendibookFreight) ? deliveryAddress.trim() : null,
-          delivery_instructions: (fulfillmentSelected === 'delivery' || isVendibookFreight) ? deliveryInstructions.trim() : null,
+          delivery_instructions: (fulfillmentSelected === 'delivery' || isVendibookFreight) ? (composedDeliveryInstructions.trim() || null) : null,
           buyer_name: `${buyerInfo.firstName} ${buyerInfo.lastName}`.trim(),
           buyer_email: buyerInfo.email.trim(),
           buyer_phone: buyerInfo.phone.trim() || null,
@@ -689,36 +771,70 @@ const SaleCheckout = () => {
   // Uses the existing CHECKOUT_STEPS + listing identifier so the roadmap
   // and CTA stay in lock-step with the wizard's real state.
   type WizardStep = Exclude<CheckoutStep, 'intro'>;
-  const WIZARD_STEP_ORDER: WizardStep[] = ['confirm', 'delivery', 'addons', 'details', 'review'];
-  const journeySteps: JourneyStep[] = CHECKOUT_STEPS.map((s, i) => ({
-    id: WIZARD_STEP_ORDER[i],
-    label: s.label,
-    optional: WIZARD_STEP_ORDER[i] === 'addons',
+  const FULL_STEP_ORDER: WizardStep[] = [
+    'confirm', 'identity', 'delivery', 'addons', 'details', 'payment', 'review',
+  ];
+  // Steps that carry no decision for this listing/buyer are removed from the
+  // roadmap AND from navigation, so the progress bar never lies.
+  const WIZARD_STEP_ORDER: WizardStep[] = FULL_STEP_ORDER.filter((s) => {
+    if (s === 'identity') return !skipIdentityStep;
+    if (s === 'delivery') return !skipDeliveryStep;
+    return true;
+  });
+  const stepLabel = (s: WizardStep) =>
+    CHECKOUT_STEPS[FULL_STEP_ORDER.indexOf(s)]?.label ?? 'Next';
+  const journeySteps: JourneyStep[] = WIZARD_STEP_ORDER.map((s) => ({
+    id: s,
+    label: stepLabel(s),
+    optional: s === 'addons',
   }));
   const journeyIndex = Math.max(0, WIZARD_STEP_ORDER.indexOf(currentStep as WizardStep));
   const nextWizardStep: WizardStep | null =
     WIZARD_STEP_ORDER[Math.min(journeyIndex + 1, WIZARD_STEP_ORDER.length - 1)] ?? null;
 
+  /** Skip-aware neighbours so Back/Continue never land on a hidden step. */
+  const stepAfter = (s: WizardStep): WizardStep => {
+    const i = WIZARD_STEP_ORDER.indexOf(s);
+    return WIZARD_STEP_ORDER[Math.min(i + 1, WIZARD_STEP_ORDER.length - 1)];
+  };
+  const stepBefore = (s: WizardStep): WizardStep => {
+    const i = WIZARD_STEP_ORDER.indexOf(s);
+    return WIZARD_STEP_ORDER[Math.max(i - 1, 0)];
+  };
+  const goNext = (from: WizardStep) => setCurrentStep(stepAfter(from));
+  const goBack = (from: WizardStep) => setCurrentStep(stepBefore(from));
+
   const advanceFromCurrent = () => {
-    if (currentStep === 'confirm') return setCurrentStep('delivery');
-    if (currentStep === 'delivery') {
-      if (validateStep('delivery')) setCurrentStep('addons');
+    if (currentStep === 'intro' || currentStep === 'review') return;
+    const step = currentStep as WizardStep;
+    if (step === 'delivery' && !validateStep('delivery')) return;
+    if (step === 'details' && !validateStep('details')) return;
+    if (step === 'identity' && !skipIdentityStep && !identityAcknowledged) {
+      toast({
+        title: 'One more thing',
+        description: 'Verify your identity, or tick the box to continue without it.',
+        variant: 'destructive',
+      });
       return;
     }
-    if (currentStep === 'addons') return setCurrentStep('details');
-    if (currentStep === 'details') {
-      if (validateStep('details')) setCurrentStep('review');
-      return;
-    }
+    goNext(step);
   };
 
   const primaryLabel =
     currentStep === 'review'
       ? 'Complete purchase below'
       : nextWizardStep && nextWizardStep !== (currentStep as WizardStep)
-        ? `Continue to ${CHECKOUT_STEPS[WIZARD_STEP_ORDER.indexOf(nextWizardStep)]?.label ?? 'next step'}`
+        ? `Continue to ${stepLabel(nextWizardStep)}`
         : 'Continue';
   const primaryDisabled = currentStep === 'review';
+
+  /** Prefill the details step from the delivery address the buyer already typed. */
+  const prefillFromDeliveryAddress = () => {
+    if (fulfillmentSelected === 'pickup' || buyerInfo.address1.trim()) return;
+    const parsed = parseFormattedAddress(deliveryAddress);
+    if (!parsed) return;
+    setBuyerInfo((prev) => ({ ...prev, ...parsed }));
+  };
 
 
   // Price lines for sticky summary — real listing title, never "Item price"
@@ -846,9 +962,22 @@ const SaleCheckout = () => {
                           sellerName={sellerName}
                           sellerVerified={Boolean((host as { identity_verified?: boolean } | null | undefined)?.identity_verified)}
                           specSummary={(listing as { specifications?: string | null }).specifications ?? null}
-                          onContinue={() => setCurrentStep('delivery')}
+                          onContinue={() => goNext('confirm')}
                           onBack={priceSale >= SALE_INTRO_MIN_PRICE ? () => setCurrentStep('intro') : undefined}
 
+                        />
+                      )}
+
+                      {currentStep === 'identity' && (
+                        <PurchaseStepIdentity
+                          verified={buyerVerified}
+                          loading={buyerVerificationLoading}
+                          buyerName={buyerInfo.firstName || user?.email || null}
+                          acknowledged={identityAcknowledged}
+                          setAcknowledged={setIdentityAcknowledged}
+                          onVerify={() => navigate('/account/verification?from=checkout')}
+                          onBack={() => goBack('identity')}
+                          onContinue={() => goNext('identity')}
                         />
                       )}
 
@@ -877,11 +1006,15 @@ const SaleCheckout = () => {
                           clearEstimate={clearEstimate}
                           listingCity={listing.city}
                           listingState={listing.state}
-                          onBack={() => setCurrentStep('confirm')}
+                          preferredDate={preferredDate}
+                          setPreferredDate={setPreferredDate}
+                          preferredWindow={preferredWindow}
+                          setPreferredWindow={setPreferredWindow}
+                          onSiteContact={onSiteContact}
+                          setOnSiteContact={setOnSiteContact}
+                          onBack={() => goBack('delivery')}
                           onContinue={() => {
-                            if (validateStep('delivery')) {
-                              setCurrentStep('addons');
-                            }
+                            if (validateStep('delivery')) goNext('delivery');
                           }}
                         />
                       )}
@@ -891,9 +1024,9 @@ const SaleCheckout = () => {
                           addOns={addOnCatalog}
                           selected={addOnSelections}
                           onToggle={toggleAddOn}
-                          onBack={() => setCurrentStep('delivery')}
-                          onContinue={() => setCurrentStep('details')}
-                          onSkip={() => setCurrentStep('details')}
+                          onBack={() => goBack('addons')}
+                          onContinue={() => { prefillFromDeliveryAddress(); goNext('addons'); }}
+                          onSkip={() => { prefillFromDeliveryAddress(); goNext('addons'); }}
                         />
                       )}
 
@@ -908,13 +1041,25 @@ const SaleCheckout = () => {
                           touchedFields={touchedFields}
                           setTouchedFields={setTouchedFields}
                           hideAddress={fulfillmentSelected === 'pickup'}
-                          continueLabel="Review your order"
-                          onBack={() => setCurrentStep('addons')}
+                          continueLabel="Continue to payment"
+                          onBack={() => goBack('details')}
                           onContinue={() => {
-                            if (validateStep('details')) {
-                              setCurrentStep('review');
-                            }
+                            if (validateStep('details')) goNext('details');
                           }}
+                        />
+                      )}
+
+                      {currentStep === 'payment' && (
+                        <PurchaseStepPayment
+                          paymentMethod={paymentMethod}
+                          setPaymentMethod={setPaymentMethod}
+                          acceptPayPalCheckout={acceptPayPalCheckout}
+                          acceptCashPayment={acceptCashPayment}
+                          titleStatus={(listing as { title_status?: string | null }).title_status ?? null}
+                          hasLien={(listing as { has_lien?: string | null }).has_lien ?? null}
+                          vin={(listing as { vin?: string | null }).vin ?? null}
+                          onBack={() => goBack('payment')}
+                          onContinue={() => goNext('payment')}
                         />
                       )}
 
@@ -942,12 +1087,13 @@ const SaleCheckout = () => {
                             freightCost={freightCost}
                             paymentMethod={paymentMethod}
                             setPaymentMethod={setPaymentMethod}
-                            hasMultiplePaymentOptions={hasMultiplePaymentOptions}
+                            /* Payment method is chosen in its own step now. */
+                            hasMultiplePaymentOptions={false}
                             agreedToTerms={agreedToTerms}
                             setAgreedToTerms={setAgreedToTerms}
                             isPurchasing={isPurchasing}
                             hideAddress={fulfillmentSelected === 'pickup'}
-                            onBack={() => setCurrentStep('details')}
+                            onBack={() => goBack('review')}
                             onEditDelivery={() => setCurrentStep('delivery')}
                             onEditInfo={() => setCurrentStep('details')}
                             onSubmit={handlePurchase}
