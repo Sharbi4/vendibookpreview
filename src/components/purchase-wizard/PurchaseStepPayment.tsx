@@ -1,4 +1,4 @@
-import { CreditCard, Banknote, FileText, ShieldCheck, AlertTriangle, Check } from 'lucide-react';
+import { CreditCard, Banknote, FileText, ShieldCheck, AlertTriangle, Check, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import NextStepHint from '@/components/shared/NextStepHint';
@@ -14,9 +14,16 @@ interface PurchaseStepPaymentProps {
   titleStatus?: string | null;
   hasLien?: string | null;
   vin?: string | null;
+  /** Grand total shown back to the buyer so the choice is unambiguous. */
+  totalPrice?: number;
+  /** True while a purchase is already in flight — locks the whole step. */
+  submitting?: boolean;
   onBack: () => void;
   onContinue: () => void;
 }
+
+const formatUsd = (value: number) =>
+  value.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
 
 const humanize = (value: string) =>
   value.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
@@ -88,6 +95,8 @@ const PurchaseStepPayment = ({
   titleStatus,
   hasLien,
   vin,
+  totalPrice,
+  submitting = false,
   onBack,
   onContinue,
 }: PurchaseStepPaymentProps) => {
@@ -142,13 +151,15 @@ const PurchaseStepPayment = ({
             <button
               key={o.id}
               type="button"
-              onClick={() => selectable && setPaymentMethod(o.id)}
+              disabled={submitting}
+              onClick={() => selectable && !submitting && setPaymentMethod(o.id)}
               className={cn(
                 'w-full text-left rounded-lg border-2 p-5 transition-all',
                 selected
                   ? 'border-primary bg-primary/[0.05] shadow-[0_0_0_1px_rgba(255,81,36,0.35)]'
                   : 'border-border bg-card/40 hover:border-white/25',
                 !selectable && 'cursor-default',
+                submitting && 'opacity-60 pointer-events-none',
               )}
             >
               <div className="flex items-start gap-4">
@@ -187,13 +198,43 @@ const PurchaseStepPayment = ({
         })}
       </div>
 
+      {/* Confirmation strip — restates the exact choice before review. */}
+      {options.length > 0 && (
+        <div className="rounded-lg border border-primary/25 bg-primary/[0.04] p-4 flex items-start gap-3">
+          <Check className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+          <p className="text-sm text-foreground">
+            {typeof totalPrice === 'number' ? (
+              <>
+                You'll pay <span className="font-semibold">{formatUsd(totalPrice)}</span>{' '}
+              </>
+            ) : (
+              <>You'll pay </>
+            )}
+            {paymentMethod === 'cash'
+              ? 'directly to the seller in person. No Vendibook fees, and no payment protection.'
+              : 'online through PayPal. Funds are held until you confirm you received the item.'}
+          </p>
+        </div>
+      )}
+
       <TitlePanel titleStatus={titleStatus} hasLien={hasLien} vin={vin} />
 
       <NextStepHint text="Last step: review everything, then complete your purchase." />
 
       <div className="flex gap-3">
-        <Button variant="outline" onClick={onBack} className="flex-1" size="lg">Back</Button>
-        <Button onClick={onContinue} className="flex-1" size="lg">Review your order</Button>
+        <Button variant="outline" onClick={onBack} disabled={submitting} className="flex-1" size="lg">
+          Back
+        </Button>
+        <Button onClick={onContinue} disabled={submitting} className="flex-1" size="lg">
+          {submitting ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin mr-2" />
+              Finishing your payment…
+            </>
+          ) : (
+            'Review your order'
+          )}
+        </Button>
       </div>
     </div>
   );
