@@ -454,6 +454,19 @@ const SaleCheckout = () => {
         toast({ title: 'Missing address', description: 'Please enter a delivery address.', variant: 'destructive' });
         return false;
       }
+      // Never let a buyer pay for a delivery the seller doesn't cover.
+      if (fulfillmentSelected === 'delivery' && deliveryDistanceInfo.isOutsideRadius) {
+        toast({
+          title: 'Outside the delivery zone',
+          description: `This seller delivers within ${deliveryRadiusMiles} mi. Choose pickup or freight, or message the seller.`,
+          variant: 'destructive',
+        });
+        return false;
+      }
+      if (fulfillmentSelected === 'delivery' && !preferredDate) {
+        toast({ title: 'Pick a preferred date', description: 'Give the seller a target delivery date so they can confirm a window.', variant: 'destructive' });
+        return false;
+      }
       return true;
     }
     
