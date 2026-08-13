@@ -6,7 +6,8 @@ import {
   addDays, 
   isBefore, 
   startOfDay, 
-  parseISO, 
+  parseISO,
+  addHours,
   isSameDay,
   addYears,
   isAfter,
@@ -45,6 +46,7 @@ import { cn } from '@/lib/utils';
 import { calculateRentalFees, formatCurrency } from '@/lib/commissions';
 import { useBlockedDates } from '@/hooks/useBlockedDates';
 import { useHourlyAvailability } from '@/hooks/useHourlyAvailability';
+import { todayInTimeZone, currentHourInTimeZone } from '@/lib/listingTimezone';
 import { trackCTAClick } from '@/lib/analytics';
 import { trackLeadEvent } from '@/lib/leadTracking';
 import type { ListingCategory, FulfillmentType } from '@/types/listing';
@@ -139,7 +141,7 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
   fulfillmentType = 'pickup',
   deliveryFee}) => {
   const navigate = useNavigate();
-  const { blockedDates, isDateUnavailable } = useBlockedDates({ listingId });
+  const { blockedDates, isDateUnavailable, timeZone } = useBlockedDates({ listingId });
   const { 
     settings: hourlySettings, 
     getDayAvailabilityInfo,
@@ -221,7 +223,9 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
   // ─────────────────────────────────────────────────────────────────────────────
   // CALENDAR HELPERS
   // ─────────────────────────────────────────────────────────────────────────────
-  const today = startOfDay(new Date());
+  // "Today" follows the listing's local calendar, so the first selectable day
+  // matches the host's timezone rather than the shopper's browser clock.
+  const today = startOfDay(parseISO(todayInTimeZone(timeZone)));
   const maxDate = addYears(today, 1);
   const minMonth = startOfMonth(today);
   const maxMonth = startOfMonth(maxDate);
@@ -464,14 +468,16 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
 
   const noticeViolation = useMemo(() => {
     if (noticeHours <= 0) return false;
-    const earliest = new Date(Date.now() + noticeHours * 60 * 60 * 1000);
+    // Minimum notice measured from the listing's local clock.
+    const localNow = addHours(parseISO(todayInTimeZone(timeZone)), currentHourInTimeZone(timeZone));
+    const earliest = addHours(localNow, noticeHours);
     const firstDate = mode === 'hourly'
       ? (sortedSelectedDates[0] ? parseISO(sortedSelectedDates[0]) : undefined)
       : startDate;
     if (!firstDate) return false;
     // Compare against end of the selected day so same-day notice windows still work
     return isBefore(addDays(startOfDay(firstDate), 1), earliest);
-  }, [noticeHours, mode, sortedSelectedDates, startDate]);
+  }, [noticeHours, mode, sortedSelectedDates, startDate, timeZone]);
 
   const minimumMessage = useMemo(() => {
     if (mode === 'hourly') {
