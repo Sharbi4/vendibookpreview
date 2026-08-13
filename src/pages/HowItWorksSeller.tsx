@@ -26,6 +26,7 @@ import AnimatedHeroScene from '@/components/howitworks/AnimatedHeroScene';
 import ScrollWalkthrough, { WalkthroughStep } from '@/components/howitworks/ScrollWalkthrough';
 import { PaymentRailsSection, KeepExploring } from '@/components/howitworks/PaymentRailsSection';
 import ValuePillars, { Pillar } from '@/components/howitworks/ValuePillars';
+import EquinoxFinancingCallout from '@/components/howitworks/EquinoxFinancingCallout';
 import PricingFaqSection from '@/components/shared/PricingFaqSection';
 import { getPricingFaq } from '@/data/pricingFaq';
 

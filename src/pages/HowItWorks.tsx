@@ -348,6 +348,11 @@ const HowItWorks = () => {
           tone={role === 'host' ? 'host' : role === 'sell' ? 'seller' : 'neutral'}
         />
 
+        {/* EQUINOX FINANCING — sellers and buyers */}
+        {(role === 'sell' || role === 'buy') && (
+          <EquinoxFinancingCallout audience={role === 'sell' ? 'seller' : 'buyer'} />
+        )}
+
         {/* SOCIAL PROOF STRIP */}
         <section className="py-10 border-y border-border bg-card/40">
           <div className="container max-w-5xl mx-auto px-4">
