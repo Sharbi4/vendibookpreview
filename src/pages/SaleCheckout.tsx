@@ -25,7 +25,16 @@ import SEO from '@/components/SEO';
 import StickySummary from '@/components/shared/StickySummary';
 
 // Step components
-import { PurchaseStepDelivery, PurchaseStepInfo, PurchaseStepReview, type BuyerInfo } from '@/components/purchase-wizard';
+import {
+  PurchaseStepDelivery,
+  PurchaseStepInfo,
+  PurchaseStepReview,
+  PurchaseStepIdentity,
+  PurchaseStepPayment,
+  DELIVERY_WINDOW_LABELS,
+  type BuyerInfo,
+  type DeliveryWindow,
+} from '@/components/purchase-wizard';
 import StepConfirmPurchase from '@/components/checkout/StepConfirmPurchase';
 import CheckoutIntro from '@/components/checkout/CheckoutIntro';
 
@@ -36,6 +45,8 @@ import { useTermsGate } from '@/hooks/useTermsGate';
 import { buildTerms } from '@/lib/transactionTerms';
 import { ProtectionOptInCard } from '@/components/protected-sale/ProtectionOptInCard';
 import { useCheckoutState } from '@/hooks/useCheckoutState';
+import { useSellerVerifiedBadge } from '@/hooks/useSellerVerifiedBadge';
+import { parseFormattedAddress } from '@/lib/fulfillment/parseAddress';
 import { getPublicDisplayName } from '@/lib/displayName';
 import {
   JourneyProgress,
@@ -47,25 +58,36 @@ import {
 } from '@/components/journey';
 
 type FulfillmentSelection = 'pickup' | 'delivery' | 'vendibook_freight';
-type CheckoutStep = 'intro' | 'confirm' | 'delivery' | 'addons' | 'details' | 'review';
+type CheckoutStep =
+  | 'intro'
+  | 'confirm'
+  | 'identity'
+  | 'delivery'
+  | 'addons'
+  | 'details'
+  | 'payment'
+  | 'review';
 
 // High-value sale threshold. Below this we skip the intro screen and drop
 // buyers straight into the wizard (small tool/add-on purchases).
 const SALE_INTRO_MIN_PRICE = 1000;
 
 const CHECKOUT_STEPS = [
-  { step: 1, label: 'Confirm',   short: 'Confirm' },
-  { step: 2, label: 'Delivery',  short: 'Delivery' },
-  { step: 3, label: 'Add-ons',   short: 'Add-ons' },
-  { step: 4, label: 'Your details', short: 'Details' },
-  { step: 5, label: 'Review & pay', short: 'Pay' },
+  { step: 1, label: 'Confirm',       short: 'Confirm' },
+  { step: 2, label: 'Verify you',    short: 'Verify' },
+  { step: 3, label: 'Delivery',      short: 'Delivery' },
+  { step: 4, label: 'Add-ons',       short: 'Add-ons' },
+  { step: 5, label: 'Your details',  short: 'Details' },
+  { step: 6, label: 'Payment',       short: 'Payment' },
+  { step: 7, label: 'Review & pay',  short: 'Review' },
 ];
 
 const STEP_NUM: Record<CheckoutStep, number> = {
-  intro: 0, confirm: 1, delivery: 2, addons: 3, details: 4, review: 5,
+  intro: 0, confirm: 1, identity: 2, delivery: 3, addons: 4, details: 5, payment: 6, review: 7,
 };
 
 const getStepNumber = (step: CheckoutStep): number => STEP_NUM[step];
+
 
 
 const SaleCheckout = () => {
