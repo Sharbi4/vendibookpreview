@@ -101,7 +101,7 @@ const PurchaseStepPayment = ({
     detail: string;
   }[] = [
     {
-      id: 'card',
+      id: 'card' as PurchasePaymentMethod,
       available: acceptPayPalCheckout,
       icon: CreditCard,
       name: 'Pay online — protected',
@@ -111,7 +111,7 @@ const PurchaseStepPayment = ({
         'Your money is held until you confirm you received the item. If it never arrives or is not as described, you are covered.',
     },
     {
-      id: 'cash',
+      id: 'cash' as PurchasePaymentMethod,
       available: acceptCashPayment,
       icon: Banknote,
       name: 'Pay in person',
