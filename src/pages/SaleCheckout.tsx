@@ -173,6 +173,18 @@ const SaleCheckout = () => {
   const deliveryInstructions = persist.state.deliveryInstructions;
   const setDeliveryInstructions = (v: string) =>
     persist.setState((prev) => ({ ...prev, deliveryInstructions: v }));
+  const preferredDate = persist.state.preferredDate;
+  const setPreferredDate = (v: string) =>
+    persist.setState((prev) => ({ ...prev, preferredDate: v }));
+  const preferredWindow = persist.state.preferredWindow;
+  const setPreferredWindow = (v: DeliveryWindow | '') =>
+    persist.setState((prev) => ({ ...prev, preferredWindow: v }));
+  const onSiteContact = persist.state.onSiteContact;
+  const setOnSiteContact = (v: string) =>
+    persist.setState((prev) => ({ ...prev, onSiteContact: v }));
+  const identityAcknowledged = persist.state.identityAcknowledged;
+  const setIdentityAcknowledged = (v: boolean) =>
+    persist.setState((prev) => ({ ...prev, identityAcknowledged: v }));
   const addOnSelections = persist.state.addOnSelections;
   const toggleAddOn = (id: string, next: boolean) =>
     persist.setState((prev) => ({
