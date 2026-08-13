@@ -31,6 +31,7 @@ import {
 import AnimatedHeroScene from '@/components/howitworks/AnimatedHeroScene';
 import ScrollWalkthrough, { WalkthroughStep } from '@/components/howitworks/ScrollWalkthrough';
 import ValuePillars, { Pillar } from '@/components/howitworks/ValuePillars';
+import EquinoxFinancingCallout from '@/components/howitworks/EquinoxFinancingCallout';
 import PricingFaqSection from '@/components/shared/PricingFaqSection';
 import { TellVendibookButton } from '@/components/lead/TellVendibookButton';
 import { PaymentRailsSection, ProviderTrustStrip, KeepExploring } from '@/components/howitworks/PaymentRailsSection';
