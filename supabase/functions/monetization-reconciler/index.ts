@@ -222,7 +222,25 @@ serve(async (req) => {
         await admin.from("host_subscriptions").update(patch).eq("id", rowAny.id);
         if (patch.status !== rowAny.status) subsRepaired++;
       } catch (e) {
-        log("sub sweep row error", { id: (row as { id?: string }).id, msg: String(e) });
+        const msg = String(e);
+        const rowId = (row as { id?: string }).id;
+        // PayPal no longer knows this subscription (404). Leaving the row
+        // active would grant access forever and re-fail every run, so mark it
+        // canceled and detach the dead provider id so it self-heals.
+        if (/resource does not exist|RESOURCE_NOT_FOUND/i.test(msg)) {
+          await admin
+            .from("host_subscriptions")
+            .update({
+              status: "canceled",
+              paypal_subscription_id: null,
+              updated_at: new Date().toISOString(),
+            })
+            .eq("id", rowId);
+          subsRepaired++;
+          log("sub sweep orphan canceled", { id: rowId });
+        } else {
+          log("sub sweep row error", { id: rowId, msg });
+        }
       }
     }
   } catch (e) {
