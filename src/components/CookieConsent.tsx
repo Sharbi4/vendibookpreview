@@ -1,3 +1,4 @@
+import { claimPopupSlot, releasePopupSlot } from '@/hooks/useAutoPopup';
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -34,6 +35,8 @@ const CONSENT_REQUIRED_ROUTES = [
   '/browse',
 ];
 
+const POPUP_ID = 'cookie-consent';
+
 const CookieConsent = () => {
   const [showBanner, setShowBanner] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
@@ -49,7 +52,7 @@ const CookieConsent = () => {
       );
       
       if (shouldShowOnRoute) {
-        const timer = setTimeout(() => setShowBanner(true), 1000);
+        const timer = setTimeout(() => { if (claimPopupSlot(POPUP_ID)) setShowBanner(true); }, 1000);
         return () => clearTimeout(timer);
       }
     } else {
@@ -65,6 +68,7 @@ const CookieConsent = () => {
     localStorage.setItem('cookie-consent-date', new Date().toISOString());
     setPreferences(prefs);
     setShowBanner(false);
+    releasePopupSlot(POPUP_ID);
     setShowSettings(false);
 
     // Apply tracking preferences immediately
@@ -131,6 +135,7 @@ const CookieConsent = () => {
                   size="sm"
                   onClick={() => {
                     setShowBanner(false);
+    releasePopupSlot(POPUP_ID);
                     setShowSettings(true);
                   }}
                   className="flex-1 md:flex-none"

@@ -1,3 +1,5 @@
+import { claimPopupSlot, releasePopupSlot } from '@/hooks/useAutoPopup';
+const POPUP_ID = 'pwa-install-banner';
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { X, Download, Share, PlusSquare } from 'lucide-react';
@@ -40,7 +42,7 @@ const InstallPromptBanner = () => {
 
     // For iOS, show banner after a delay (since beforeinstallprompt doesn't fire)
     if (isiOS) {
-      const timer = setTimeout(() => setShowBanner(true), 3000);
+      const timer = setTimeout(() => claimPopupSlot(POPUP_ID) && setShowBanner(true), 3000);
       return () => clearTimeout(timer);
     }
 
@@ -48,7 +50,7 @@ const InstallPromptBanner = () => {
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e as BeforeInstallPromptEvent);
-      setShowBanner(true);
+      claimPopupSlot(POPUP_ID) && setShowBanner(true);
     };
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
@@ -56,7 +58,7 @@ const InstallPromptBanner = () => {
     // Show banner for desktop Chrome users after engagement
     const isDesktopChrome = /chrome/i.test(ua) && !/mobile/i.test(ua);
     if (isDesktopChrome) {
-      const timer = setTimeout(() => setShowBanner(true), 5000);
+      const timer = setTimeout(() => claimPopupSlot(POPUP_ID) && setShowBanner(true), 5000);
       return () => {
         clearTimeout(timer);
         window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
@@ -64,7 +66,7 @@ const InstallPromptBanner = () => {
     }
 
     // For Android Chrome, also show after delay if prompt hasn't fired
-    const timer = setTimeout(() => setShowBanner(true), 5000);
+    const timer = setTimeout(() => claimPopupSlot(POPUP_ID) && setShowBanner(true), 5000);
 
     return () => {
       clearTimeout(timer);
@@ -77,7 +79,7 @@ const InstallPromptBanner = () => {
       await deferredPrompt.prompt();
       const { outcome } = await deferredPrompt.userChoice;
       if (outcome === 'accepted') {
-        setShowBanner(false);
+        (releasePopupSlot(POPUP_ID), setShowBanner(false));
       }
       setDeferredPrompt(null);
     }
@@ -85,7 +87,7 @@ const InstallPromptBanner = () => {
 
   const handleDismiss = () => {
     localStorage.setItem(DISMISSED_KEY, Date.now().toString());
-    setShowBanner(false);
+    (releasePopupSlot(POPUP_ID), setShowBanner(false));
   };
 
   if (isStandalone || !showBanner) return null;
