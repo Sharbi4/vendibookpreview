@@ -31,6 +31,8 @@ interface BoostListingPromptProps {
 const SUPPRESS_KEY_PREFIX = 'vendi_boost_prompt_dismissed_';
 // Don't re-prompt the same user for 7 days after they dismiss
 const SUPPRESS_DAYS = 7;
+/** Show one minute after dashboard entry, never on top of another popup. */
+const BOOST_PROMPT_DELAY_MS = 60_000;
 
 const perks = [
   {
@@ -133,7 +135,7 @@ export const BoostListingPrompt = ({ listings, userId }: BoostListingPromptProps
   if (!candidate) return null;
 
   return (
-    <Dialog open={open} onOpenChange={(o) => (o ? setOpen(true) : handleDismiss())}>
+    <Dialog open={open} onOpenChange={(o) => { if (!o) handleDismiss(); }}>
       <DialogContent className="sm:max-w-lg overflow-hidden border border-white/12 bg-[#08080a]/95 backdrop-blur-2xl p-0 shadow-[0_40px_120px_-30px_rgba(0,0,0,0.9)]">
         <div
           aria-hidden
