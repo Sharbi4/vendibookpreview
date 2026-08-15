@@ -772,9 +772,9 @@ const Search = () => {
         <div className="container py-6">
           <div className="flex gap-8">
             {/* Desktop Sidebar Filters - Enhanced card styling */}
-            <aside className="hidden md:block w-64 shrink-0">
+            <aside className="hidden md:block w-64 shrink-0 self-start sticky top-24">
               <div
-                className="sticky top-24 space-y-6 p-5 rounded-2xl border border-border/50 bg-card/50 backdrop-blur-sm"
+                className="space-y-6 p-5 rounded-2xl border border-border/50 bg-card/50 backdrop-blur-sm max-h-[calc(100vh-7.5rem)] overflow-y-auto overscroll-contain scrollbar-thin"
               >
                 <div className="flex items-center justify-between">
                   <h2 className="font-semibold text-foreground">Filters</h2>
