@@ -65,3 +65,38 @@ export function sortFeaturedFirstFair<T extends FeaturedFields & { id: string }>
   const rest = items.filter((i) => !isListingFeatured(i));
   return [...featured, ...rest];
 }
+
+/** Window during which a freshly-boosted listing is pinned to the front. */
+export const FRESH_BOOST_WINDOW_MS = 72 * 60 * 60 * 1000;
+
+export interface FeaturedWithBoostedAt extends FeaturedFields {
+  featured_at?: string | null;
+}
+
+/**
+ * Featured-first ordering that guarantees a *just-boosted* listing is visible
+ * immediately: boosts placed within the last 72h are pinned to the front
+ * (newest first), and the remaining featured cohort keeps the fair daily
+ * rotation. Non-featured items retain their original order at the end.
+ */
+export function sortFeaturedFreshFirstThenFair<
+  T extends FeaturedWithBoostedAt & { id: string },
+>(items: T[]): T[] {
+  const now = Date.now();
+  const featured = items.filter((i) => isListingFeatured(i));
+  const isFresh = (i: T) => {
+    if (!i.featured_at) return false;
+    const t = new Date(i.featured_at).getTime();
+    return !Number.isNaN(t) && now - t < FRESH_BOOST_WINDOW_MS;
+  };
+  const fresh = featured
+    .filter(isFresh)
+    .sort(
+      (a, b) =>
+        new Date(b.featured_at!).getTime() - new Date(a.featured_at!).getTime(),
+    );
+  const rotated = sortFeaturedFirstFair(featured.filter((i) => !isFresh(i)));
+  const rest = items.filter((i) => !isListingFeatured(i));
+  return [...fresh, ...rotated, ...rest];
+}
+

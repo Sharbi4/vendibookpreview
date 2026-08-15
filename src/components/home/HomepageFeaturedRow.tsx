@@ -6,7 +6,7 @@ import { ChevronLeft, ChevronRight, ArrowRight, Crown } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import ListingCard from '@/components/listing/ListingCard';
 import { Skeleton } from '@/components/ui/skeleton';
-import { isListingFeatured, sortFeaturedFirstFair } from '@/lib/featured';
+import { isListingFeatured, sortFeaturedFreshFirstThenFair } from '@/lib/featured';
 import { filterPubliclyVisible } from '@/lib/listings/publicVisibility';
 import { trackLeadEvent } from '@/lib/leadTracking';
 
@@ -39,12 +39,15 @@ const HomepageFeaturedRow = () => {
         .order('featured_at', { ascending: false })
         .limit(FEATURED_LIMIT);
       if (error) throw error;
-      // Defensive: re-check with helper, then rotate fairly among the featured cohort.
-      return sortFeaturedFirstFair(
+      // Defensive: re-check with helper. Freshly boosted listings (last 72h)
+      // are pinned to the front so a new boost shows up immediately; the rest
+      // of the featured cohort keeps the fair daily rotation.
+      return sortFeaturedFreshFirstThenFair(
         filterPubliclyVisible(data ?? []).filter((l) => isListingFeatured(l as any)) as any,
       );
     },
-    staleTime: 15000,
+    staleTime: 0,
+    refetchOnMount: 'always',
     refetchOnWindowFocus: true,
   });
 
