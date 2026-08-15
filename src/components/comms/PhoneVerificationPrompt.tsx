@@ -19,8 +19,10 @@ import { SmsConsentField } from "@/components/sms/SmsConsentField";
 import { SMS_CONSENT_DISCLOSURE } from "@/lib/sms/consent";
 import { normalizeNanpToE164 } from "@/lib/sms/phone";
 import { toast } from "sonner";
+import { claimPopupSlot, releasePopupSlot } from "@/hooks/useAutoPopup";
 
 const DISMISS_KEY = "vb_phone_verify_dismissed_until_v1";
+const POPUP_ID = "phone-verification-prompt";
 const DISMISS_DURATION_MS = 1000 * 60 * 60 * 24; // 24h
 // Verification is only requested during the signup window (fresh accounts).
 const SIGNUP_WINDOW_MS = 1000 * 60 * 60 * 24; // 24h after account creation
@@ -107,6 +109,7 @@ export const PhoneVerificationPrompt = () => {
   useEffect(() => {
     if (!needsVerification) {
       setOpen(false);
+      releasePopupSlot(POPUP_ID);
       return;
     }
     const dismissedUntil = Number(localStorage.getItem(DISMISS_KEY) || 0);
@@ -114,8 +117,14 @@ export const PhoneVerificationPrompt = () => {
 
     const pendingCode =
       subscription?.phone_number && subscription?.opted_in && !subscription?.verified;
-    const t = setTimeout(() => setOpen(true), pendingCode ? 1200 : 6000);
-    return () => clearTimeout(t);
+    // Only open if no other auto-popup currently owns the screen.
+    const t = setTimeout(() => {
+      if (claimPopupSlot(POPUP_ID)) setOpen(true);
+    }, pendingCode ? 1200 : 6000);
+    return () => {
+      clearTimeout(t);
+      releasePopupSlot(POPUP_ID);
+    };
   }, [needsVerification, subscription?.phone_number, subscription?.opted_in, subscription?.verified]);
 
   // Cooldown ticker
