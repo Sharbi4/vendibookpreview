@@ -137,6 +137,7 @@ export const PhoneVerificationPrompt = () => {
   const dismiss = () => {
     localStorage.setItem(DISMISS_KEY, String(Date.now() + DISMISS_DURATION_MS));
     setOpen(false);
+    releasePopupSlot(POPUP_ID);
   };
 
   const sendCode = async () => {
@@ -211,6 +212,7 @@ export const PhoneVerificationPrompt = () => {
       toast.success("Phone verified.");
       localStorage.removeItem(DISMISS_KEY);
       setOpen(false);
+      releasePopupSlot(POPUP_ID);
     } catch (e: any) {
       const msg = e?.message === "incorrect_code" ? "Wrong code — try again" : e?.message;
       toast.error(msg || "Verification failed");
