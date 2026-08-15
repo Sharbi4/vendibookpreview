@@ -995,7 +995,7 @@ const SaleCheckout = () => {
                           buyerName={buyerInfo.firstName || user?.email || null}
                           acknowledged={identityAcknowledged}
                           setAcknowledged={setIdentityAcknowledged}
-                          onVerify={() => navigate('/account/verification?from=checkout')}
+                          onVerify={() => navigate('/verify-identity?from=checkout')}
                           onBack={() => goBack('identity')}
                           onContinue={() => goNext('identity')}
                         />
