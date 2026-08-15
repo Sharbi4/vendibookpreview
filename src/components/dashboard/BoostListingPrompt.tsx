@@ -1,5 +1,6 @@
 import { productCheckoutUrl } from '@/lib/payments/hostedCheckout';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
+import { useAutoPopup } from '@/hooks/useAutoPopup';
 import { Flame, TrendingUp, Eye, Award, Loader2, X, ShieldCheck } from 'lucide-react';
 import {
   Dialog,
@@ -55,7 +56,6 @@ const perks = [
  * listing as the boost target. Dismissal is persisted per-user for 7 days.
  */
 export const BoostListingPrompt = ({ listings, userId }: BoostListingPromptProps) => {
-  const [open, setOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
@@ -68,22 +68,24 @@ export const BoostListingPrompt = ({ listings, userId }: BoostListingPromptProps
     return eligible[0];
   }, [listings]);
 
-  useEffect(() => {
-    if (!userId || !candidate) return;
-    const key = `${SUPPRESS_KEY_PREFIX}${userId}`;
+  // Recently dismissed hosts are skipped entirely.
+  const suppressed = useMemo(() => {
+    if (!userId) return true;
     try {
-      const dismissedAt = localStorage.getItem(key);
-      if (dismissedAt) {
-        const ageMs = Date.now() - Number(dismissedAt);
-        if (ageMs < SUPPRESS_DAYS * 24 * 60 * 60 * 1000) return;
-      }
+      const dismissedAt = localStorage.getItem(`${SUPPRESS_KEY_PREFIX}${userId}`);
+      if (!dismissedAt) return false;
+      return Date.now() - Number(dismissedAt) < SUPPRESS_DAYS * 24 * 60 * 60 * 1000;
     } catch {
-      // localStorage unavailable — show anyway
+      return false;
     }
-    // Slight delay so it doesn't fight with first paint / other modals
-    const t = setTimeout(() => setOpen(true), 1200);
-    return () => clearTimeout(t);
-  }, [userId, candidate?.id]);
+  }, [userId]);
+
+  // Opens one minute after the dashboard loads, and only once every other
+  // auto-popup (welcome, PayPal partner, verification, consent) has closed.
+  const { open, close } = useAutoPopup('boost-listing-prompt', {
+    delayMs: BOOST_PROMPT_DELAY_MS,
+    ready: !!userId && !!candidate && !suppressed,
+  });
 
   const handleDismiss = () => {
     if (userId) {
@@ -91,7 +93,7 @@ export const BoostListingPrompt = ({ listings, userId }: BoostListingPromptProps
         localStorage.setItem(`${SUPPRESS_KEY_PREFIX}${userId}`, String(Date.now()));
       } catch {}
     }
-    setOpen(false);
+    close();
   };
 
   const handleBoost = async () => {
