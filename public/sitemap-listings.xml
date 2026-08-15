@@ -221,17 +221,6 @@
     </image:image>
   </url>
   <url>
-    <loc>https://vendibook.com/listing/db4c8d64-a1ec-4db4-9715-4ca6ae8fd3b7</loc>
-    <lastmod>2026-08-14</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/f6fb5b0a-6f90-44cb-97f3-addda2c2b10a/db4c8d64-a1ec-4db4-9715-4ca6ae8fd3b7/1786668909921-r3xdro.jpg</image:loc>
-      <image:title>Fully equipped custom build food trailer</image:title>
-      <image:caption>Fully equipped custom build food trailer in Charlottesville, VA on Vendibook</image:caption>
-    </image:image>
-  </url>
-  <url>
     <loc>https://vendibook.com/listing/6f438a50-85bb-43bd-b0ad-c6253251b12d</loc>
     <lastmod>2026-08-07</lastmod>
     <changefreq>weekly</changefreq>
@@ -240,6 +229,17 @@
       <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/2d6d68c7-7efe-40cb-8061-42ac57b351a4/6f438a50-85bb-43bd-b0ad-c6253251b12d/1783710987986-af3kb.jpg</image:loc>
       <image:title>Fully Equipped Mobile Juice Truck-Van - Ready to Roll</image:title>
       <image:caption>Fully Equipped Mobile Juice Truck-Van - Ready to Roll in Aurora, CO on Vendibook</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://vendibook.com/listing/db4c8d64-a1ec-4db4-9715-4ca6ae8fd3b7</loc>
+    <lastmod>2026-08-15</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/f6fb5b0a-6f90-44cb-97f3-addda2c2b10a/db4c8d64-a1ec-4db4-9715-4ca6ae8fd3b7/1786668909921-r3xdro.jpg</image:loc>
+      <image:title>Fully equipped custom build food trailer</image:title>
+      <image:caption>Fully equipped custom build food trailer in Charlottesville, VA on Vendibook</image:caption>
     </image:image>
   </url>
   <url>
@@ -343,7 +343,7 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/349ca02e-d0c1-4298-94f0-c7109c1cc691</loc>
-    <lastmod>2026-08-08</lastmod>
+    <lastmod>2026-08-15</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
@@ -563,7 +563,7 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/3c209101-f0d0-4714-b2a1-8a52e31e98b8</loc>
-    <lastmod>2026-08-13</lastmod>
+    <lastmod>2026-08-15</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
@@ -662,7 +662,7 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/b7392745-3c33-48be-b4e9-2c5afc0d5890</loc>
-    <lastmod>2026-08-13</lastmod>
+    <lastmod>2026-08-15</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
