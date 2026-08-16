@@ -407,37 +407,33 @@ export const AuthFormPanel = ({ mode, setMode }: AuthFormPanelProps) => {
         trackLoginAttempt('email');
         const { error } = await signIn(trimmedEmail, password);
         if (error) {
-          let errorType = 'invalid_credentials';
-          let errorDesc = 'Invalid email or password. Please try again.';
-          
-          if (error.message.includes('rate limit') || error.message.includes('too many')) {
-            errorType = 'rate_limit';
-            errorDesc = 'Too many attempts. Please wait a few minutes before trying again.';
-          } else if (error.message.includes('not confirmed') || error.message.includes('verify')) {
-            errorType = 'email_not_verified';
-            errorDesc = 'Please verify your email before signing in.';
+          const mapped = describeSignInError(error.message, trimmedEmail);
+
+          if (mapped.type === 'email_not_verified') {
             // Auto-switch to verify mode so user can resend
             setMode('verify');
             toast({
               title: 'Email not verified',
               description: 'We switched you to the verification screen so you can resend your code.',
             });
-            trackLoginError('email', errorType);
+            trackLoginError('email', mapped.type);
             return;
           }
-          
-          trackLoginError('email', errorType);
-          
+
+          trackLoginError('email', mapped.type);
+
           toast({
-            title: 'Sign in failed',
-            description: errorDesc,
-            variant: 'destructive',
+            title: mapped.title,
+            description: mapped.description,
+            variant: mapped.type === 'google_account' ? 'default' : 'destructive',
           });
         } else {
+          rememberAuthMethod('email', trimmedEmail);
           trackLoginSuccess('email');
           trackGA4Login('email');
           navigate(redirectUrl || '/dashboard');
         }
+
       }
     } finally {
       setIsSubmitting(false);
