@@ -14,6 +14,14 @@ import { trackSignupCompleted, trackLoginAttempt, trackLoginSuccess, trackLoginE
 import { trackSignupConversion } from '@/lib/gtagConversions';
 import { trackGA4SignUp, trackGA4Login } from '@/lib/ga4Conversions';
 import { Separator } from '@/components/ui/separator';
+import {
+  type AuthMethod,
+  getLastAuthMethod,
+  rememberAuthMethod,
+  describeSignInError,
+  startGoogleSignIn,
+} from '@/lib/auth/oauthIntent';
+
 import { Checkbox } from '@/components/ui/checkbox';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
@@ -72,6 +80,8 @@ export const AuthFormPanel = ({ mode, setMode }: AuthFormPanelProps) => {
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [lastMethod] = useState<AuthMethod | null>(() => getLastAuthMethod());
+
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [resendingEmail, setResendingEmail] = useState(false);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
@@ -158,50 +168,27 @@ export const AuthFormPanel = ({ mode, setMode }: AuthFormPanelProps) => {
   };
 
   const handleGoogleSignIn = async () => {
+    // Synchronous guard — prevents a second popup on rapid double-tap.
+    if (isGoogleLoading) return;
     setIsGoogleLoading(true);
-    try {
-      // Persist intended destination separately — redirect_uri must be a
-      // public same-origin URL so the OAuth broker can complete the handshake.
-      // AuthContext consumes 'pending_post_auth_redirect' after SIGNED_IN.
-      const safeReturnPath =
-        redirectUrl && redirectUrl.startsWith('/') && !redirectUrl.startsWith('//')
-          ? redirectUrl
-          : '/dashboard';
-      try {
-        window.sessionStorage.setItem('pending_post_auth_redirect', safeReturnPath);
-      } catch {
-        /* sessionStorage unavailable — best-effort only */
-      }
 
-      const { lovable } = await import('@/integrations/lovable/index');
-      const result = await lovable.auth.signInWithOAuth('google', {
-        redirect_uri: window.location.origin,
-      });
+    // Intent is stashed by the helper (AuthContext drains it after SIGNED_IN);
+    // redirect_uri itself must stay a public same-origin URL.
+    if (email.trim()) rememberAuthMethod('google', email);
+    const result = await startGoogleSignIn(redirectUrl || null);
 
-      if (result.error) {
-        setIsGoogleLoading(false);
-        toast({
-          title: 'Google sign-in failed',
-          description:
-            (result.error as any)?.message ||
-            'Could not start Google sign-in. Please try again.',
-          variant: 'destructive',
-        });
-        return;
-      }
-
-      // If redirected, the browser is navigating to Google now; leave the
-      // spinner up so the user sees progress until navigation completes.
-      // Otherwise (popup flow) tokens are already set on the Supabase client.
-    } catch (error: any) {
+    if (!result.ok) {
       setIsGoogleLoading(false);
       toast({
         title: 'Google sign-in failed',
-        description: error?.message || 'An unexpected error occurred',
+        description: result.error,
         variant: 'destructive',
       });
     }
+    // On success the browser is navigating (or the popup completed) — keep the
+    // spinner up so the button stays disabled.
   };
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -420,37 +407,33 @@ export const AuthFormPanel = ({ mode, setMode }: AuthFormPanelProps) => {
         trackLoginAttempt('email');
         const { error } = await signIn(trimmedEmail, password);
         if (error) {
-          let errorType = 'invalid_credentials';
-          let errorDesc = 'Invalid email or password. Please try again.';
-          
-          if (error.message.includes('rate limit') || error.message.includes('too many')) {
-            errorType = 'rate_limit';
-            errorDesc = 'Too many attempts. Please wait a few minutes before trying again.';
-          } else if (error.message.includes('not confirmed') || error.message.includes('verify')) {
-            errorType = 'email_not_verified';
-            errorDesc = 'Please verify your email before signing in.';
+          const mapped = describeSignInError(error.message, trimmedEmail);
+
+          if (mapped.type === 'email_not_verified') {
             // Auto-switch to verify mode so user can resend
             setMode('verify');
             toast({
               title: 'Email not verified',
               description: 'We switched you to the verification screen so you can resend your code.',
             });
-            trackLoginError('email', errorType);
+            trackLoginError('email', mapped.type);
             return;
           }
-          
-          trackLoginError('email', errorType);
-          
+
+          trackLoginError('email', mapped.type);
+
           toast({
-            title: 'Sign in failed',
-            description: errorDesc,
-            variant: 'destructive',
+            title: mapped.title,
+            description: mapped.description,
+            variant: mapped.type === 'google_account' ? 'default' : 'destructive',
           });
         } else {
+          rememberAuthMethod('email', trimmedEmail);
           trackLoginSuccess('email');
           trackGA4Login('email');
           navigate(redirectUrl || '/dashboard');
         }
+
       }
     } finally {
       setIsSubmitting(false);
@@ -762,9 +745,9 @@ export const AuthFormPanel = ({ mode, setMode }: AuthFormPanelProps) => {
                   <Button
                     type="button"
                     variant="outline"
-                    className="w-full rounded-xl h-12"
+                    className="relative w-full rounded-xl h-12"
                     onClick={handleGoogleSignIn}
-                    disabled={isGoogleLoading}
+                    disabled={isGoogleLoading || isSubmitting}
                   >
                     {isGoogleLoading ? (
                       <Loader2 className="h-4 w-4 animate-spin mr-2" />
@@ -776,8 +759,14 @@ export const AuthFormPanel = ({ mode, setMode }: AuthFormPanelProps) => {
                         <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
                       </svg>
                     )}
-                    Continue with Google
+                    {isGoogleLoading ? 'Opening Google…' : 'Continue with Google'}
+                    {lastMethod === 'google' && !isGoogleLoading && (
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">
+                        Last used
+                      </span>
+                    )}
                   </Button>
+
 
                   {mode === 'signup' && (
                     <p className="text-[11px] leading-snug text-muted-foreground text-center">

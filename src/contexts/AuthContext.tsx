@@ -1,3 +1,4 @@
+import { rememberAuthMethod } from '@/lib/auth/oauthIntent';
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -174,9 +175,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             }
 
 
+            // Remember which method actually worked so the sign-in screen can
+            // badge it as "Last used" and disambiguate credential errors.
+            if (event === 'SIGNED_IN') {
+              try {
+                const provider = (session.user.app_metadata as any)?.provider;
+                if (provider === 'google') {
+                  rememberAuthMethod('google', session.user.email || undefined);
+                } else if (provider === 'email') {
+                  rememberAuthMethod('email', session.user.email || undefined);
+                }
+              } catch {
+                /* non-critical */
+              }
+            }
+
             // Stitch the anonymous analytics session to the now-known user so
             // pre-auth events can be back-attributed in admin queries.
             if (event === 'SIGNED_IN') {
+
               try {
                 const sid = typeof window !== 'undefined'
                   ? window.sessionStorage?.getItem('analytics_session_id')

@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
+import { startGoogleSignIn } from '@/lib/auth/oauthIntent';
 import { toast } from 'sonner';
 import {
   downloadPermitChecklistPdf,
@@ -945,19 +946,12 @@ function SignInToSavePrompt() {
   const redirectPath = '/tools/permitpath';
 
   const handleGoogle = async () => {
-    try {
-      setLoading('google');
-      sessionStorage.setItem('postAuthRedirect', redirectPath);
-      const { lovable } = await import('@/integrations/lovable/index');
-      const result = await lovable.auth.signInWithOAuth('google', {
-        redirect_uri: window.location.origin,
-      });
-      if (result.error) {
-        toast.error('Could not start Google sign-in. Try the email option.');
-        setLoading(null);
-      }
-    } catch {
-      toast.error('Sign-in unavailable right now.');
+    if (loading === 'google') return;
+    setLoading('google');
+    sessionStorage.setItem('postAuthRedirect', redirectPath);
+    const result = await startGoogleSignIn(redirectPath);
+    if (!result.ok) {
+      toast.error(result.error || 'Could not start Google sign-in. Try the email option.');
       setLoading(null);
     }
   };
