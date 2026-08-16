@@ -1,3 +1,4 @@
+import { rememberAuthMethod } from '@/lib/auth/oauthIntent';
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
