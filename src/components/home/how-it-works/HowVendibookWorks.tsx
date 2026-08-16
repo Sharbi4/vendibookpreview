@@ -4,7 +4,7 @@ import { VideoTile } from './VideoTile';
 import { ExplainerVideoModal } from './ExplainerVideoModal';
 import { explainers, getExplainer, type ExplainerType } from './data/explainers';
 import { trackLeadEvent } from '@/lib/leadTracking';
-import { PayPalMonogram, PlaidLogo } from '@/components/brand/ProviderLogos';
+import { TrustStrip } from '@/components/brand/TrustStrip';
 import { usePublicFeatureFlag } from '@/hooks/usePublicFeatureFlag';
 
 /**
