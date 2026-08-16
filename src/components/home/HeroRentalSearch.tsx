@@ -132,10 +132,12 @@ const HeroRentalSearch = () => {
                 size="lg"
                 className="w-full h-11 lg:h-14 text-sm lg:text-lg rounded-xl bg-background hover:bg-muted/60 border-border"
                 onClick={handleGoogleLogin}
+                disabled={googleLoading}
               >
                 <GoogleIcon className="mr-2 h-5 w-5" />
-                Continue with Google
+                {googleLoading ? 'Opening Google…' : 'Continue with Google'}
               </Button>
+
             )}
           </motion.div>
 
