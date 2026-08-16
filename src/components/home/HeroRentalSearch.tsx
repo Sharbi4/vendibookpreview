@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AuthWalkthrough } from '@/components/auth/AuthWalkthrough';
 import { useAuth } from '@/contexts/AuthContext';
-import { lovable } from '@/integrations/lovable/index';
+import { startGoogleSignIn } from '@/lib/auth/oauthIntent';
 import vendibookLogo from '@/assets/vendibook-logo.png';
 
 const GoogleIcon = ({ className }: { className?: string }) => (
@@ -22,10 +22,18 @@ const HeroRentalSearch = () => {
   const { user } = useAuth();
   const [showWalkthrough, setShowWalkthrough] = useState(false);
 
+  const [googleLoading, setGoogleLoading] = useState(false);
+
   const handleGoogleLogin = async () => {
-    const { error } = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: window.location.origin});
-    if (error) console.error('Google login error:', error);
+    if (googleLoading) return;
+    setGoogleLoading(true);
+    const result = await startGoogleSignIn(
+      window.location.pathname + window.location.search,
+    );
+    if (!result.ok) {
+      console.error('Google login error:', result.error);
+      setGoogleLoading(false);
+    }
   };
 
   return (
