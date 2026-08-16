@@ -14,6 +14,14 @@ import { trackSignupCompleted, trackLoginAttempt, trackLoginSuccess, trackLoginE
 import { trackSignupConversion } from '@/lib/gtagConversions';
 import { trackGA4SignUp, trackGA4Login } from '@/lib/ga4Conversions';
 import { Separator } from '@/components/ui/separator';
+import {
+  type AuthMethod,
+  getLastAuthMethod,
+  rememberAuthMethod,
+  describeSignInError,
+  startGoogleSignIn,
+} from '@/lib/auth/oauthIntent';
+
 import { Checkbox } from '@/components/ui/checkbox';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
