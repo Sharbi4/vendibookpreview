@@ -72,6 +72,8 @@ export const AuthFormPanel = ({ mode, setMode }: AuthFormPanelProps) => {
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [lastMethod] = useState<AuthMethod | null>(() => getLastAuthMethod());
+
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [resendingEmail, setResendingEmail] = useState(false);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
