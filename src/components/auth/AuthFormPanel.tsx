@@ -762,9 +762,9 @@ export const AuthFormPanel = ({ mode, setMode }: AuthFormPanelProps) => {
                   <Button
                     type="button"
                     variant="outline"
-                    className="w-full rounded-xl h-12"
+                    className="relative w-full rounded-xl h-12"
                     onClick={handleGoogleSignIn}
-                    disabled={isGoogleLoading}
+                    disabled={isGoogleLoading || isSubmitting}
                   >
                     {isGoogleLoading ? (
                       <Loader2 className="h-4 w-4 animate-spin mr-2" />
@@ -776,8 +776,14 @@ export const AuthFormPanel = ({ mode, setMode }: AuthFormPanelProps) => {
                         <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
                       </svg>
                     )}
-                    Continue with Google
+                    {isGoogleLoading ? 'Opening Google…' : 'Continue with Google'}
+                    {lastMethod === 'google' && !isGoogleLoading && (
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">
+                        Last used
+                      </span>
+                    )}
                   </Button>
+
 
                   {mode === 'signup' && (
                     <p className="text-[11px] leading-snug text-muted-foreground text-center">
