@@ -20,6 +20,7 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import vendibookLogo from '@/assets/vendibook-logo.png';
 import { trackHeroCTAClick } from '@/lib/analytics';
+import { startGoogleSignIn } from '@/lib/auth/oauthIntent';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
