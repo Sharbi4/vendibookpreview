@@ -92,43 +92,21 @@ const HeroWalkthrough = () => {
   }, []);
 
   const handleGoogleSignIn = async () => {
+    if (isGoogleLoading) return;
     setIsGoogleLoading(true);
-    try {
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: window.location.origin,
-          skipBrowserRedirect: true,
-        },
-      });
-
-      if (error) {
-        setIsGoogleLoading(false);
-        toast({
-          title: 'Google sign-in failed',
-          description: error.message,
-          variant: 'destructive',
-        });
-        return;
-      }
-
-      const url = data?.url;
-      if (url) {
-        try {
-          (window.top ?? window).location.assign(url);
-        } catch {
-          window.location.assign(url);
-        }
-      }
-    } catch (error: any) {
+    const result = await startGoogleSignIn(
+      window.location.pathname + window.location.search,
+    );
+    if (!result.ok) {
       setIsGoogleLoading(false);
       toast({
         title: 'Google sign-in failed',
-        description: error.message || 'An unexpected error occurred',
+        description: result.error,
         variant: 'destructive',
       });
     }
   };
+
 
   const steps: WalkthroughStep[] = [
     {
