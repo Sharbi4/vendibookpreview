@@ -168,50 +168,27 @@ export const AuthFormPanel = ({ mode, setMode }: AuthFormPanelProps) => {
   };
 
   const handleGoogleSignIn = async () => {
+    // Synchronous guard — prevents a second popup on rapid double-tap.
+    if (isGoogleLoading) return;
     setIsGoogleLoading(true);
-    try {
-      // Persist intended destination separately — redirect_uri must be a
-      // public same-origin URL so the OAuth broker can complete the handshake.
-      // AuthContext consumes 'pending_post_auth_redirect' after SIGNED_IN.
-      const safeReturnPath =
-        redirectUrl && redirectUrl.startsWith('/') && !redirectUrl.startsWith('//')
-          ? redirectUrl
-          : '/dashboard';
-      try {
-        window.sessionStorage.setItem('pending_post_auth_redirect', safeReturnPath);
-      } catch {
-        /* sessionStorage unavailable — best-effort only */
-      }
 
-      const { lovable } = await import('@/integrations/lovable/index');
-      const result = await lovable.auth.signInWithOAuth('google', {
-        redirect_uri: window.location.origin,
-      });
+    // Intent is stashed by the helper (AuthContext drains it after SIGNED_IN);
+    // redirect_uri itself must stay a public same-origin URL.
+    if (email.trim()) rememberAuthMethod('google', email);
+    const result = await startGoogleSignIn(redirectUrl || null);
 
-      if (result.error) {
-        setIsGoogleLoading(false);
-        toast({
-          title: 'Google sign-in failed',
-          description:
-            (result.error as any)?.message ||
-            'Could not start Google sign-in. Please try again.',
-          variant: 'destructive',
-        });
-        return;
-      }
-
-      // If redirected, the browser is navigating to Google now; leave the
-      // spinner up so the user sees progress until navigation completes.
-      // Otherwise (popup flow) tokens are already set on the Supabase client.
-    } catch (error: any) {
+    if (!result.ok) {
       setIsGoogleLoading(false);
       toast({
         title: 'Google sign-in failed',
-        description: error?.message || 'An unexpected error occurred',
+        description: result.error,
         variant: 'destructive',
       });
     }
+    // On success the browser is navigating (or the popup completed) — keep the
+    // spinner up so the button stays disabled.
   };
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
