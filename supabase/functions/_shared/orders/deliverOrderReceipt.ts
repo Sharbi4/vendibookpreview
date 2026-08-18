@@ -66,6 +66,113 @@ export async function deliverOrderReceipt(supabase: any, paymentRecordId: string
 }
 
 const FEATURED_TEMPLATE = 'featured-payment-receipt';
+const BOOKING_TEMPLATE = 'booking-confirmation';
+
+/**
+ * Rental bookings get the branded booking confirmation (dates, times, host,
+ * fulfillment, agreed terms) instead of the generic order receipt — sent
+ * exactly once, only after PayPal capture is verified.
+ */
+async function buildBookingOverride(
+  supabase: any,
+  record: any,
+  detail: any,
+  buyerName: string | null,
+  currency: string,
+) {
+  if (!record.booking_request_id) return undefined;
+
+  const { data: booking } = await supabase
+    .from('booking_requests')
+    .select(
+      'id, listing_id, host_id, start_date, end_date, start_time, end_time, is_hourly_booking, hourly_slots, slot_name, duration_hours, total_price, deposit_amount, fulfillment_selected, delivery_address, delivery_instructions, address_snapshot',
+    )
+    .eq('id', record.booking_request_id)
+    .maybeSingle();
+  if (!booking) return undefined;
+
+  let hostName: string | null = null;
+  if (booking.host_id) {
+    const { data: host } = await supabase
+      .from('profiles')
+      .select('full_name')
+      .eq('id', booking.host_id)
+      .maybeSingle();
+    hostName = host?.full_name ?? null;
+  }
+
+  let listingTitle = detail.listing?.title ?? null;
+  let coverImageUrl = detail.listing?.image_url ?? null;
+  let cityState: string | null = null;
+  if (booking.listing_id) {
+    const { data: listing } = await supabase
+      .from('listings')
+      .select('title, cover_image_url, city, state')
+      .eq('id', booking.listing_id)
+      .maybeSingle();
+    listingTitle = listingTitle ?? listing?.title ?? null;
+    coverImageUrl = coverImageUrl ?? listing?.cover_image_url ?? null;
+    cityState = [listing?.city, listing?.state].filter(Boolean).join(', ') || null;
+  }
+
+  // The exact numbers/policies the guest agreed to at checkout.
+  let termsSnapshot: unknown = null;
+  let termsVersion = 'v1';
+  try {
+    const { data: termsRow } = await supabase
+      .from('transaction_terms')
+      .select('snapshot, terms_version')
+      .eq('booking_id', booking.id)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (termsRow) {
+      termsSnapshot = termsRow.snapshot ?? null;
+      termsVersion = termsRow.terms_version || 'v1';
+    }
+  } catch (_) {
+    // Terms are a nice-to-have; never block the confirmation email.
+  }
+
+  const timeRange = booking.start_time && booking.end_time
+    ? `${booking.start_time.slice(0, 5)} – ${booking.end_time.slice(0, 5)}`
+    : null;
+
+  return {
+    templateName: BOOKING_TEMPLATE,
+    templateData: {
+      guestName: buyerName,
+      listingTitle,
+      coverImageUrl,
+      cityState,
+      hostName,
+      bookingId: booking.id,
+      orderNumber: detail.order_number,
+      startDate: longDate(booking.start_date),
+      endDate: longDate(booking.end_date),
+      timeRange,
+      slotName: booking.slot_name ?? null,
+      durationHours: booking.duration_hours ?? null,
+      fulfillmentType: booking.fulfillment_selected ?? null,
+      address: booking.address_snapshot ?? null,
+      deliveryAddress: booking.delivery_address ?? null,
+      deliveryInstructions: booking.delivery_instructions ?? null,
+      depositAmount: booking.deposit_amount
+        ? new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(Number(booking.deposit_amount))
+        : undefined,
+      totalPrice: money(detail.amounts.total_paid_cents, currency)
+        ?? (booking.total_price != null
+          ? new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(Number(booking.total_price))
+          : '—'),
+      paypalTransactionId: record.paypal_order_id ?? null,
+      paypalCaptureId: record.paypal_capture_id ?? null,
+      orderUrl: `${SITE_URL}/orders/${record.id}`,
+      termsSnapshot,
+      termsVersion,
+    },
+  };
+}
+
 
 function longDate(value?: string | null) {
   if (!value) return null;
