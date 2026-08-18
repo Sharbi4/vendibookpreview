@@ -41,6 +41,7 @@ import { ConciergeInbox } from '@/components/concierge/ConciergeInbox';
 import vendibookFavicon from '@/assets/vendibook-favicon.png';
 import AppDropdownMenu from './AppDropdownMenu';
 import IdentityChip from '@/components/dashboard/shared/IdentityChip';
+import EmailVerifiedBadge from '@/components/dashboard/shared/EmailVerifiedBadge';
 import DashboardMobileTabs from '@/components/dashboard/overview/DashboardMobileTabs';
 import GoProButton from '@/components/dashboard/GoProButton';
 import SidebarUpgradeCard from '@/components/dashboard/SidebarUpgradeCard';
