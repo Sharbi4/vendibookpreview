@@ -2,6 +2,7 @@
 // the premium `generic-notice` template through the Lovable Emails queue.
 // No direct Resend usage.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { isInternalCaller, internalOnlyResponse } from "../_shared/internalAuth.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -50,6 +51,10 @@ const toneForType = (type: string): "neutral" | "success" | "warning" | "danger"
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
+  }
+
+  if (!isInternalCaller(req)) {
+    return internalOnlyResponse(corsHeaders);
   }
 
   try {

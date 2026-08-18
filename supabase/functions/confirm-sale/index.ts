@@ -161,7 +161,7 @@ serve(async (req) => {
 
       // Let the seller know their proceeds are queued.
       const supabaseUrlForPayout = Deno.env.get("SUPABASE_URL") ?? "";
-      const supabaseAnonKeyForPayout = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
+      const supabaseAnonKeyForPayout = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 
       EdgeRuntime.waitUntil(
         fetch(`${supabaseUrlForPayout}/functions/v1/send-sale-notification`, {
@@ -182,7 +182,7 @@ serve(async (req) => {
 
     // Send notification email (background task)
     const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
-    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
+    const supabaseAnonKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
     
     const notificationType = newStatus === 'completed' 
       ? 'completed' 
