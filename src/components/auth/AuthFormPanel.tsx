@@ -437,6 +437,7 @@ export const AuthFormPanel = ({ mode, setMode }: AuthFormPanelProps) => {
               title: 'Check your email!',
               description: 'We sent you a verification link. Please check your inbox to complete signup.',
             });
+            setPendingVerifyEmail(trimmedEmail);
             setMode('verify');
           }
         }
@@ -448,6 +449,7 @@ export const AuthFormPanel = ({ mode, setMode }: AuthFormPanelProps) => {
 
           if (mapped.type === 'email_not_verified') {
             // Auto-switch to verify mode so user can resend
+            setPendingVerifyEmail(trimmedEmail);
             setMode('verify');
             toast({
               title: 'Email not verified',
