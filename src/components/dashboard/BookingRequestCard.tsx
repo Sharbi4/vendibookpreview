@@ -160,8 +160,11 @@ const BookingRequestCard = ({ booking, onApprove, onDecline, onCancel, onDeposit
   const isApproved = booking.status === 'approved';
   const isCompleted = booking.status === 'completed';
   const isPaid = booking.payment_status === 'paid';
+  const isRefunded = booking.payment_status === 'refunded';
   const canCancel = isApproved && isPaid && onCancel;
+  const canRefundPayPal = isPaid && !isRefunded;
   const canMessage = booking.status !== 'cancelled' && booking.status !== 'declined';
+
   const isInstantBook = booking.is_instant_book === true;
   const bookingCancelled = booking.status === 'cancelled';
   const bookingConfirmed = isApproved && (!hasDocumentRequirements || compliance.allApproved);
