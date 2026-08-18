@@ -771,7 +771,75 @@ const BookingRequestCard = ({ booking, onApprove, onDecline, onCancel, onDeposit
         </DialogContent>
       </Dialog>
 
+      {/* PayPal Refund Dialog */}
+      <Dialog open={showRefundDialog} onOpenChange={setShowRefundDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Refund via PayPal</DialogTitle>
+            <DialogDescription>
+              This cancels the payment through PayPal and marks the booking as refunded.
+              Paid amount: ${booking.total_price}.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="paypalRefundReason">Reason (optional)</Label>
+              <Textarea
+                id="paypalRefundReason"
+                placeholder="Why is this payment being refunded?"
+                value={refundReason}
+                onChange={(e) => setRefundReason(e.target.value)}
+                rows={2}
+                className="mt-1.5"
+              />
+            </div>
+
+            <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+              <div className="space-y-0.5">
+                <Label htmlFor="paypalPartial" className="text-sm font-medium">Partial refund</Label>
+                <p className="text-xs text-muted-foreground">Refund a custom amount instead of the full total</p>
+              </div>
+              <Switch id="paypalPartial" checked={usePartialRefund} onCheckedChange={setUsePartialRefund} />
+            </div>
+
+            {usePartialRefund && (
+              <div className="relative">
+                <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  type="number"
+                  min="0.01"
+                  max={booking.total_price}
+                  step="0.01"
+                  placeholder={`Max: ${booking.total_price}`}
+                  value={partialRefundAmount}
+                  onChange={(e) => setPartialRefundAmount(e.target.value)}
+                  className="pl-9"
+                />
+              </div>
+            )}
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowRefundDialog(false)} disabled={isRefunding}>
+              Keep payment
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handlePayPalRefund}
+              disabled={isRefunding || (usePartialRefund && (!partialRefundAmount || parseFloat(partialRefundAmount) <= 0 || parseFloat(partialRefundAmount) > booking.total_price))}
+            >
+              {isRefunding && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              {usePartialRefund && partialRefundAmount
+                ? `Refund $${parseFloat(partialRefundAmount).toFixed(2)}`
+                : `Refund $${booking.total_price}`}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Message Dialog */}
+
       <MessageDialog
         open={showMessageDialog}
         onOpenChange={setShowMessageDialog}
