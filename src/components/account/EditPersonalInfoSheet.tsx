@@ -100,13 +100,33 @@ export default function EditPersonalInfoSheet({ open, onOpenChange, userId, init
 
         <div className="mt-6 space-y-5">
           <div className="space-y-1.5">
-            <div className="flex items-center justify-between">
-              <Label className="text-sm">Legal name</Label>
-              <Badge variant="outline" className="text-[10px] h-4 px-1.5"><Lock className="h-2.5 w-2.5 mr-0.5" />Locked</Badge>
+            <Label className="text-sm">Legal name</Label>
+            <div className="grid grid-cols-2 gap-2">
+              <Input
+                id="acc-first-name"
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+                placeholder="First name"
+                aria-label="First name"
+                autoComplete="given-name"
+                maxLength={50}
+                className="h-10"
+              />
+              <Input
+                id="acc-last-name"
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+                placeholder="Last name"
+                aria-label="Last name"
+                autoComplete="family-name"
+                maxLength={50}
+                className="h-10"
+              />
             </div>
-            <Input value={initial.full_name} disabled className="h-10 bg-muted/50" />
+            {nameErr && <p className="text-xs text-destructive">{nameErr}</p>}
             <p className="text-xs text-muted-foreground">
-              Locked for security. <Link to="/contact" className="underline">Contact support</Link> to change.
+              Use your real legal name — it's used for verification and payouts. Need help?{' '}
+              <Link to="/contact" className="underline">Contact support</Link>.
             </p>
           </div>
 
