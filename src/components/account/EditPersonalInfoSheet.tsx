@@ -18,9 +18,29 @@ interface Props {
   onSaved: () => Promise<void> | void;
 }
 
+const NAME_RE = /^[A-Za-zÀ-ÖØ-öø-ÿ][A-Za-zÀ-ÖØ-öø-ÿ'’.-]*(?: [A-Za-zÀ-ÖØ-öø-ÿ'’.-]+)*$/;
+
 const schema = z.object({
   email: z.string().trim().email('Enter a valid email').max(255),
+  firstName: z
+    .string()
+    .trim()
+    .min(2, 'Enter your legal first name')
+    .max(50, 'First name is too long')
+    .regex(NAME_RE, 'Use letters only for your first name'),
+  lastName: z
+    .string()
+    .trim()
+    .min(2, 'Enter your legal last name')
+    .max(50, 'Last name is too long')
+    .regex(NAME_RE, 'Use letters only for your last name'),
 });
+
+function splitName(full: string) {
+  const parts = (full || '').trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return { first: '', last: '' };
+  return { first: parts[0], last: parts.slice(1).join(' ') };
+}
 
 function maskPhone(p: string) {
   const digits = p.replace(/\D/g, '');
