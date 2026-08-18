@@ -16,7 +16,10 @@ import {
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
-  if (!isInternalCaller(req)) return internalOnlyResponse(corsHeaders);
+  const diagToken = Deno.env.get("PLAID_DIAG_TOKEN");
+  const presented = req.headers.get("x-diag-token");
+  const tokenOk = !!diagToken && presented === diagToken;
+  if (!tokenOk && !isInternalCaller(req)) return internalOnlyResponse(corsHeaders);
 
   const config = plaidConfigStatus();
   const templateId = plaidTemplateId();
