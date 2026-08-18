@@ -49,21 +49,34 @@ function maskPhone(p: string) {
 }
 
 export default function EditPersonalInfoSheet({ open, onOpenChange, userId, initial, onSaved }: Props) {
+  const initialName = splitName(initial.full_name);
   const [email, setEmail] = useState(initial.email);
+  const [firstName, setFirstName] = useState(initialName.first);
+  const [lastName, setLastName] = useState(initialName.last);
   const [saving, setSaving] = useState(false);
   const [showPhone, setShowPhone] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const [nameErr, setNameErr] = useState<string | null>(null);
+
+  const nextFullName = `${firstName.trim()} ${lastName.trim()}`.trim();
+  const dirty = email.trim() !== initial.email.trim() || nextFullName !== initial.full_name.trim();
 
   const save = async () => {
     setErr(null);
-    const parsed = schema.safeParse({ email });
+    setNameErr(null);
+    const parsed = schema.safeParse({ email, firstName, lastName });
     if (!parsed.success) {
-      setErr(parsed.error.errors[0]?.message ?? 'Invalid input');
+      const issue = parsed.error.errors[0];
+      if (issue?.path[0] === 'email') setErr(issue.message);
+      else setNameErr(issue?.message ?? 'Invalid input');
       return;
     }
     setSaving(true);
     try {
-      const { error } = await supabase.from('profiles').update({ email: email.trim() }).eq('id', userId);
+      const { error } = await supabase
+        .from('profiles')
+        .update({ email: email.trim(), full_name: nextFullName })
+        .eq('id', userId);
       if (error) throw error;
       await onSaved();
       toast.success('Personal info updated');
