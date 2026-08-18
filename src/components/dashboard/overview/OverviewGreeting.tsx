@@ -28,7 +28,10 @@ const OverviewGreeting = ({ firstName, isVerified }: Props) => {
         <p className="text-[14px] font-medium text-[rgb(var(--dash-text-1))] truncate">
           {firstName ? `Hi ${firstName}` : 'Hi there'}
         </p>
-        <IdentityChip verified={isVerified} />
+        <div className="flex items-center gap-1.5 shrink-0">
+          <EmailVerifiedBadge compact />
+          <IdentityChip verified={isVerified} />
+        </div>
       </div>
 
       {/* Desktop/tablet — tiny eyebrow only */}
