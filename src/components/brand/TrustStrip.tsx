@@ -22,6 +22,42 @@ export const TrustStrip = ({
   href = '#trust-and-security',
   className,
 }: TrustStripProps) => {
+  const [paypal, setPaypal] = useState<PayPalRuntimeConfig | null>(null);
+  const [paypalError, setPaypalError] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    getPayPalConfig()
+      .then((cfg) => {
+        if (!active) return;
+        setPaypal(cfg);
+        // Warm the real SDK so the first checkout mounts instantly.
+        if (cfg.enabled) void loadPayPalSdk().catch(() => undefined);
+      })
+      .catch(() => {
+        if (active) setPaypalError(true);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const paypalDetail = paypalError
+    ? 'PayPal checkout temporarily unavailable'
+    : !paypal
+      ? 'Connecting to PayPal…'
+      : !paypal.enabled
+        ? 'PayPal checkout not configured'
+        : paypal.environment === 'live'
+          ? 'Live payments processed by PayPal'
+          : 'Test mode — processed by PayPal sandbox';
+
+  const paypalTone: RailTone = paypalError || (paypal && !paypal.enabled)
+    ? 'warn'
+    : paypal?.enabled
+      ? 'live'
+      : 'idle';
+
   return (
     <motion.a
       href={href}
