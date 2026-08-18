@@ -111,10 +111,15 @@ const StatusPill = ({ status }: { status: string }) => {
 };
 
 
-const BookingRequestCard = ({ booking, onApprove, onDecline, onCancel, onDepositAction }: BookingRequestCardProps) => {
+const BookingRequestCard = ({ booking, onApprove, onDecline, onCancel, onDepositAction, onRefunded }: BookingRequestCardProps) => {
+  const { toast } = useToast();
   const [showResponseDialog, setShowResponseDialog] = useState(false);
   const [showMessageDialog, setShowMessageDialog] = useState(false);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
+  const [showRefundDialog, setShowRefundDialog] = useState(false);
+  const [refundReason, setRefundReason] = useState('');
+  const [isRefunding, setIsRefunding] = useState(false);
+
   const [showDepositDialog, setShowDepositDialog] = useState(false);
   const [showBusinessInfo, setShowBusinessInfo] = useState(false);
   const [responseAction, setResponseAction] = useState<'approve' | 'decline'>('approve');
