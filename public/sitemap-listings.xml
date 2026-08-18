@@ -178,7 +178,7 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/1791e770-182f-4723-a207-59f727e8310e</loc>
-    <lastmod>2026-08-16</lastmod>
+    <lastmod>2026-08-18</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
@@ -815,17 +815,6 @@
     </image:image>
   </url>
   <url>
-    <loc>https://vendibook.com/listing/f4d5e5ae-31eb-4ba0-9d2b-13df7279d020</loc>
-    <lastmod>2026-08-17</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/f2865e60-125e-4921-b7c5-898ba1675045/f4d5e5ae-31eb-4ba0-9d2b-13df7279d020/1769084137377-0pz8o6.jpg</image:loc>
-      <image:title>🔥 TURNKEY SHIPPING CONTAINER KITCHEN🔥</image:title>
-      <image:caption>🔥 TURNKEY SHIPPING CONTAINER KITCHEN🔥 in Atlanta, GA on Vendibook</image:caption>
-    </image:image>
-  </url>
-  <url>
     <loc>https://vendibook.com/listing/e0ad7bc7-5a18-4534-a849-94501f5bc008</loc>
     <lastmod>2026-08-16</lastmod>
     <changefreq>weekly</changefreq>
@@ -845,6 +834,17 @@
       <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/55ded958-2c29-4d79-8440-9f77fdca0c5c/045054bb-2356-42ee-bc5e-a7850101d77e/1777748544380-ddfcy6.jpeg</image:loc>
       <image:title>Tap Trailer For Ice Cold Beverages</image:title>
       <image:caption>Tap Trailer For Ice Cold Beverages on Vendibook</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://vendibook.com/listing/f4d5e5ae-31eb-4ba0-9d2b-13df7279d020</loc>
+    <lastmod>2026-08-18</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/f2865e60-125e-4921-b7c5-898ba1675045/f4d5e5ae-31eb-4ba0-9d2b-13df7279d020/1769084137377-0pz8o6.jpg</image:loc>
+      <image:title>🔥 TURNKEY SHIPPING CONTAINER KITCHEN🔥</image:title>
+      <image:caption>🔥 TURNKEY SHIPPING CONTAINER KITCHEN🔥 in Atlanta, GA on Vendibook</image:caption>
     </image:image>
   </url>
 </urlset>
