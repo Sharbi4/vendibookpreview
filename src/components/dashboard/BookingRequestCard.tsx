@@ -30,6 +30,9 @@ import BookingConfirmationSection from './BookingConfirmationSection';
 import NextActionBanner from '@/components/shared/NextActionBanner';
 import { AddToCalendarButton } from '@/components/booking/AddToCalendarButton';
 import { getCounterpartyName, getDisplayInitials } from '@/lib/displayName';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
+
 
 // Type for business info stored in JSONB
 interface BusinessInfoData {
