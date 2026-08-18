@@ -17,6 +17,16 @@ serve(async (req) => {
       throw new Error("ELEVENLABS_API_KEY is not configured");
     }
 
+    // Voice search is available to anonymous visitors, so cap how many paid
+    // single-use tokens any one visitor can mint.
+    const allowed = await checkRateLimit("elevenlabs_scribe_ip", clientIp(req), 20, 60);
+    if (!allowed) {
+      return new Response(
+        JSON.stringify({ error: "Too many voice search requests. Please try again shortly." }),
+        { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+
     const response = await fetch(
       "https://api.elevenlabs.io/v1/single-use-token/realtime_scribe",
       {
