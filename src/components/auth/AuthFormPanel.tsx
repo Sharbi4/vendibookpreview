@@ -145,11 +145,41 @@ export const AuthFormPanel = ({ mode, setMode }: AuthFormPanelProps) => {
       return;
     }
 
+    const target = email.trim().toLowerCase();
+    const corrected = !!pendingVerifyEmail && target !== pendingVerifyEmail;
+
     setResendingEmail(true);
     try {
+      // Typo correction: the address we sent to is unreachable, so create the
+      // account on the corrected address (we still have the password in state).
+      if (corrected && password) {
+        const fullName = `${firstName.trim()} ${lastName.trim()}`.trim();
+        const { error } = await signUp(
+          target, password, fullName, selectedRole,
+          firstName.trim(), lastName.trim(), phoneNumber.trim(),
+        );
+        if (error) {
+          toast({
+            title: 'Could not update your email',
+            description: error.message.includes('already registered')
+              ? 'That email is already registered — try signing in instead.'
+              : error.message,
+            variant: 'destructive',
+          });
+          return;
+        }
+        setPendingVerifyEmail(target);
+        setEmail(target);
+        toast({
+          title: 'Email updated',
+          description: `We sent a new verification link to ${target}.`,
+        });
+        return;
+      }
+
       const { error } = await supabase.auth.resend({
         type: 'signup',
-        email,
+        email: target,
         options: {
           emailRedirectTo: `${window.location.origin}/dashboard`,
         },
@@ -162,6 +192,7 @@ export const AuthFormPanel = ({ mode, setMode }: AuthFormPanelProps) => {
           variant: 'destructive',
         });
       } else {
+        setPendingVerifyEmail(target);
         toast({
           title: 'Verification email sent!',
           description: 'Please check your inbox and spam folder.',
@@ -170,6 +201,7 @@ export const AuthFormPanel = ({ mode, setMode }: AuthFormPanelProps) => {
     } finally {
       setResendingEmail(false);
     }
+
   };
 
   const handleGoogleSignIn = async () => {
