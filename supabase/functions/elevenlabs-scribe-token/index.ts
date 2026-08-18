@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { checkRateLimit, clientIp } from "../_shared/rateLimit.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -14,6 +15,16 @@ serve(async (req) => {
     const ELEVENLABS_API_KEY = Deno.env.get("ELEVENLABS_API_KEY");
     if (!ELEVENLABS_API_KEY) {
       throw new Error("ELEVENLABS_API_KEY is not configured");
+    }
+
+    // Voice search is available to anonymous visitors, so cap how many paid
+    // single-use tokens any one visitor can mint.
+    const allowed = await checkRateLimit("elevenlabs_scribe_ip", clientIp(req), 20, 60);
+    if (!allowed) {
+      return new Response(
+        JSON.stringify({ error: "Too many voice search requests. Please try again shortly." }),
+        { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
     }
 
     const response = await fetch(
