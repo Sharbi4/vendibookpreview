@@ -8,6 +8,7 @@ import HostDashboard from '@/components/dashboard/HostDashboard';
 import ShopperDashboard from '@/components/dashboard/ShopperDashboard';
 
 import EmailVerificationBanner from '@/components/auth/EmailVerificationBanner';
+import VerifyEmailGate from '@/components/auth/VerifyEmailGate';
 import PurchaseReturnBanner from '@/components/monetization/PurchaseReturnBanner';
 import { Loader2 } from 'lucide-react';
 
@@ -90,6 +91,10 @@ const Dashboard = () => {
   }
 
   if (!user) return null;
+
+  // Email verification is required before any dashboard content is shown.
+  // Users who signed in through an OAuth provider are already verified.
+  if (!user.email_confirmed_at) return <VerifyEmailGate />;
 
   const renderTab = () => {
     // Buying-side tabs

@@ -84,6 +84,11 @@ export const AuthFormPanel = ({ mode, setMode }: AuthFormPanelProps) => {
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [resendingEmail, setResendingEmail] = useState(false);
+  // Email the verification link was actually sent to. When the user edits the
+  // field on the verify screen (typo fix) we re-create the account on the
+  // corrected address instead of resending to the wrong one.
+  const [pendingVerifyEmail, setPendingVerifyEmail] = useState('');
+
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [marketingOptIn, setMarketingOptIn] = useState(false);
   // SMS consent state — must always start unchecked and remain separate
@@ -140,11 +145,41 @@ export const AuthFormPanel = ({ mode, setMode }: AuthFormPanelProps) => {
       return;
     }
 
+    const target = email.trim().toLowerCase();
+    const corrected = !!pendingVerifyEmail && target !== pendingVerifyEmail;
+
     setResendingEmail(true);
     try {
+      // Typo correction: the address we sent to is unreachable, so create the
+      // account on the corrected address (we still have the password in state).
+      if (corrected && password) {
+        const fullName = `${firstName.trim()} ${lastName.trim()}`.trim();
+        const { error } = await signUp(
+          target, password, fullName, selectedRole,
+          firstName.trim(), lastName.trim(), phoneNumber.trim(),
+        );
+        if (error) {
+          toast({
+            title: 'Could not update your email',
+            description: error.message.includes('already registered')
+              ? 'That email is already registered — try signing in instead.'
+              : error.message,
+            variant: 'destructive',
+          });
+          return;
+        }
+        setPendingVerifyEmail(target);
+        setEmail(target);
+        toast({
+          title: 'Email updated',
+          description: `We sent a new verification link to ${target}.`,
+        });
+        return;
+      }
+
       const { error } = await supabase.auth.resend({
         type: 'signup',
-        email,
+        email: target,
         options: {
           emailRedirectTo: `${window.location.origin}/dashboard`,
         },
@@ -157,6 +192,7 @@ export const AuthFormPanel = ({ mode, setMode }: AuthFormPanelProps) => {
           variant: 'destructive',
         });
       } else {
+        setPendingVerifyEmail(target);
         toast({
           title: 'Verification email sent!',
           description: 'Please check your inbox and spam folder.',
@@ -165,6 +201,7 @@ export const AuthFormPanel = ({ mode, setMode }: AuthFormPanelProps) => {
     } finally {
       setResendingEmail(false);
     }
+
   };
 
   const handleGoogleSignIn = async () => {
@@ -400,6 +437,7 @@ export const AuthFormPanel = ({ mode, setMode }: AuthFormPanelProps) => {
               title: 'Check your email!',
               description: 'We sent you a verification link. Please check your inbox to complete signup.',
             });
+            setPendingVerifyEmail(trimmedEmail);
             setMode('verify');
           }
         }
@@ -411,6 +449,7 @@ export const AuthFormPanel = ({ mode, setMode }: AuthFormPanelProps) => {
 
           if (mapped.type === 'email_not_verified') {
             // Auto-switch to verify mode so user can resend
+            setPendingVerifyEmail(trimmedEmail);
             setMode('verify');
             toast({
               title: 'Email not verified',
@@ -488,7 +527,7 @@ export const AuthFormPanel = ({ mode, setMode }: AuthFormPanelProps) => {
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email">Email we sent the link to</Label>
                 <Input
                   id="email"
                   type="email"
@@ -498,8 +537,11 @@ export const AuthFormPanel = ({ mode, setMode }: AuthFormPanelProps) => {
                   className={errors.email ? 'border-destructive' : ''}
                 />
                 {errors.email && <p className="text-sm text-destructive">{errors.email}</p>}
+                <p className="text-xs text-muted-foreground">
+                  Typo in your address? Correct it here and we'll send the verification link to the new email instead.
+                </p>
               </div>
-              
+
               <Button 
                 type="button"
                 variant="dark-shine"
@@ -508,8 +550,19 @@ export const AuthFormPanel = ({ mode, setMode }: AuthFormPanelProps) => {
                 onClick={handleResendVerification}
               >
                 {resendingEmail ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Mail className="h-4 w-4 mr-2" />}
-                Resend Verification Email
+                {pendingVerifyEmail && email.trim().toLowerCase() !== pendingVerifyEmail
+                  ? 'Send link to this email instead'
+                  : 'Resend verification email'}
               </Button>
+
+              <button
+                type="button"
+                onClick={() => { setMode('signin'); setErrors({}); }}
+                className="w-full text-sm text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Already verified? Sign in
+              </button>
+
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4">
