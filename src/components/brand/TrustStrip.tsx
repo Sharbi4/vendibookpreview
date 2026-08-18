@@ -95,7 +95,8 @@ export const TrustStrip = ({
         <Rail
           logo={<PayPalMonogram className="h-[18px] w-auto" />}
           title="Online checkout"
-          detail="Processed by PayPal"
+          detail={paypalDetail}
+          tone={paypalTone}
         />
         {showPlaid && (
           <Rail
