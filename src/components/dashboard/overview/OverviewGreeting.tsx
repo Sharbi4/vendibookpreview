@@ -1,4 +1,5 @@
 import IdentityChip from '@/components/dashboard/shared/IdentityChip';
+import EmailVerifiedBadge from '@/components/dashboard/shared/EmailVerifiedBadge';
 
 interface Props {
   firstName?: string;
