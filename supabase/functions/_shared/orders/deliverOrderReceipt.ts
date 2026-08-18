@@ -37,7 +37,9 @@ export async function deliverOrderReceipt(supabase: any, paymentRecordId: string
 
   const detail = await buildOrderDetail(supabase, record, 'buyer');
   const currency = detail.amounts.currency;
-  const override = await buildFeaturedBoostOverride(supabase, record, detail, buyerName, currency);
+  const override = (await buildBookingOverride(supabase, record, detail, buyerName, currency))
+    ?? (await buildFeaturedBoostOverride(supabase, record, detail, buyerName, currency));
+
 
   return await ensureReceiptSent(supabase, record.id, email, {
     orderNumber: detail.order_number,
