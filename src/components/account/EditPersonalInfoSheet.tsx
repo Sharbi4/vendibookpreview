@@ -170,7 +170,7 @@ export default function EditPersonalInfoSheet({ open, onOpenChange, userId, init
 
           <div className="pt-2 flex justify-end gap-2">
             <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>Cancel</Button>
-            <Button onClick={save} disabled={saving || email.trim() === initial.email.trim()}>
+            <Button onClick={save} disabled={saving || !dirty}>
               {saving ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Saving</> : 'Save changes'}
             </Button>
           </div>
