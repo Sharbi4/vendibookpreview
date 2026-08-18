@@ -18,9 +18,29 @@ interface Props {
   onSaved: () => Promise<void> | void;
 }
 
+const NAME_RE = /^[A-Za-zÀ-ÖØ-öø-ÿ][A-Za-zÀ-ÖØ-öø-ÿ'’.-]*(?: [A-Za-zÀ-ÖØ-öø-ÿ'’.-]+)*$/;
+
 const schema = z.object({
   email: z.string().trim().email('Enter a valid email').max(255),
+  firstName: z
+    .string()
+    .trim()
+    .min(2, 'Enter your legal first name')
+    .max(50, 'First name is too long')
+    .regex(NAME_RE, 'Use letters only for your first name'),
+  lastName: z
+    .string()
+    .trim()
+    .min(2, 'Enter your legal last name')
+    .max(50, 'Last name is too long')
+    .regex(NAME_RE, 'Use letters only for your last name'),
 });
+
+function splitName(full: string) {
+  const parts = (full || '').trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return { first: '', last: '' };
+  return { first: parts[0], last: parts.slice(1).join(' ') };
+}
 
 function maskPhone(p: string) {
   const digits = p.replace(/\D/g, '');
@@ -29,21 +49,34 @@ function maskPhone(p: string) {
 }
 
 export default function EditPersonalInfoSheet({ open, onOpenChange, userId, initial, onSaved }: Props) {
+  const initialName = splitName(initial.full_name);
   const [email, setEmail] = useState(initial.email);
+  const [firstName, setFirstName] = useState(initialName.first);
+  const [lastName, setLastName] = useState(initialName.last);
   const [saving, setSaving] = useState(false);
   const [showPhone, setShowPhone] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const [nameErr, setNameErr] = useState<string | null>(null);
+
+  const nextFullName = `${firstName.trim()} ${lastName.trim()}`.trim();
+  const dirty = email.trim() !== initial.email.trim() || nextFullName !== initial.full_name.trim();
 
   const save = async () => {
     setErr(null);
-    const parsed = schema.safeParse({ email });
+    setNameErr(null);
+    const parsed = schema.safeParse({ email, firstName, lastName });
     if (!parsed.success) {
-      setErr(parsed.error.errors[0]?.message ?? 'Invalid input');
+      const issue = parsed.error.errors[0];
+      if (issue?.path[0] === 'email') setErr(issue.message);
+      else setNameErr(issue?.message ?? 'Invalid input');
       return;
     }
     setSaving(true);
     try {
-      const { error } = await supabase.from('profiles').update({ email: email.trim() }).eq('id', userId);
+      const { error } = await supabase
+        .from('profiles')
+        .update({ email: email.trim(), full_name: nextFullName })
+        .eq('id', userId);
       if (error) throw error;
       await onSaved();
       toast.success('Personal info updated');
@@ -67,13 +100,33 @@ export default function EditPersonalInfoSheet({ open, onOpenChange, userId, init
 
         <div className="mt-6 space-y-5">
           <div className="space-y-1.5">
-            <div className="flex items-center justify-between">
-              <Label className="text-sm">Legal name</Label>
-              <Badge variant="outline" className="text-[10px] h-4 px-1.5"><Lock className="h-2.5 w-2.5 mr-0.5" />Locked</Badge>
+            <Label className="text-sm">Legal name</Label>
+            <div className="grid grid-cols-2 gap-2">
+              <Input
+                id="acc-first-name"
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+                placeholder="First name"
+                aria-label="First name"
+                autoComplete="given-name"
+                maxLength={50}
+                className="h-10"
+              />
+              <Input
+                id="acc-last-name"
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+                placeholder="Last name"
+                aria-label="Last name"
+                autoComplete="family-name"
+                maxLength={50}
+                className="h-10"
+              />
             </div>
-            <Input value={initial.full_name} disabled className="h-10 bg-muted/50" />
+            {nameErr && <p className="text-xs text-destructive">{nameErr}</p>}
             <p className="text-xs text-muted-foreground">
-              Locked for security. <Link to="/contact" className="underline">Contact support</Link> to change.
+              Use your real legal name — it's used for verification and payouts. Need help?{' '}
+              <Link to="/contact" className="underline">Contact support</Link>.
             </p>
           </div>
 
@@ -117,7 +170,7 @@ export default function EditPersonalInfoSheet({ open, onOpenChange, userId, init
 
           <div className="pt-2 flex justify-end gap-2">
             <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>Cancel</Button>
-            <Button onClick={save} disabled={saving || email.trim() === initial.email.trim()}>
+            <Button onClick={save} disabled={saving || !dirty}>
               {saving ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Saving</> : 'Save changes'}
             </Button>
           </div>
