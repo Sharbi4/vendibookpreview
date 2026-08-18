@@ -1,4 +1,4 @@
-import { ShieldCheck, BadgeCheck, Lock, Loader2, ExternalLink, UserCheck } from 'lucide-react';
+import { ShieldCheck, BadgeCheck, Lock, Loader2, UserCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import NextStepHint from '@/components/shared/NextStepHint';
 
@@ -89,7 +89,7 @@ const PurchaseStepIdentity = ({
       <div>
         <h2 className="text-2xl font-bold text-foreground tracking-tight">Verify your identity</h2>
         <p className="text-sm text-muted-foreground mt-1">
-          Recommended before a high-value purchase. It takes about two minutes and carries over to every future order.
+          Recommended before a high-value purchase. It runs right here in checkout — you won't lose this order — and carries over to every future one.
         </p>
       </div>
 
@@ -109,8 +109,7 @@ const PurchaseStepIdentity = ({
 
       <Button onClick={onVerify} size="lg" className="w-full">
         <ShieldCheck className="h-4 w-4 mr-2" />
-        Verify my identity
-        <ExternalLink className="h-3.5 w-3.5 ml-2 opacity-70" />
+        Verify my identity · $19.99
       </Button>
 
       <label className="flex items-start gap-3 rounded-lg border border-border bg-muted/20 p-4 cursor-pointer">
