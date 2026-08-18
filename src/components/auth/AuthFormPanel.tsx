@@ -527,7 +527,7 @@ export const AuthFormPanel = ({ mode, setMode }: AuthFormPanelProps) => {
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email">Email we sent the link to</Label>
                 <Input
                   id="email"
                   type="email"
@@ -537,8 +537,11 @@ export const AuthFormPanel = ({ mode, setMode }: AuthFormPanelProps) => {
                   className={errors.email ? 'border-destructive' : ''}
                 />
                 {errors.email && <p className="text-sm text-destructive">{errors.email}</p>}
+                <p className="text-xs text-muted-foreground">
+                  Typo in your address? Correct it here and we'll send the verification link to the new email instead.
+                </p>
               </div>
-              
+
               <Button 
                 type="button"
                 variant="dark-shine"
@@ -547,8 +550,19 @@ export const AuthFormPanel = ({ mode, setMode }: AuthFormPanelProps) => {
                 onClick={handleResendVerification}
               >
                 {resendingEmail ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Mail className="h-4 w-4 mr-2" />}
-                Resend Verification Email
+                {pendingVerifyEmail && email.trim().toLowerCase() !== pendingVerifyEmail
+                  ? 'Send link to this email instead'
+                  : 'Resend verification email'}
               </Button>
+
+              <button
+                type="button"
+                onClick={() => { setMode('signin'); setErrors({}); }}
+                className="w-full text-sm text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Already verified? Sign in
+              </button>
+
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4">
