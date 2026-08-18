@@ -121,18 +121,31 @@ export const TrustStrip = ({
   );
 };
 
+type RailTone = 'idle' | 'live' | 'warn';
+
 const Rail = ({
   logo,
   title,
   detail,
+  tone = 'idle',
 }: {
   logo: React.ReactNode;
   title: string;
   detail: string;
+  tone?: RailTone;
 }) => (
   <div className="flex flex-1 items-center gap-3 px-6 py-4">
-    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] transition-colors duration-500 group-hover:border-white/20">
+    <span className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] transition-colors duration-500 group-hover:border-white/20">
       {logo}
+      {tone !== 'idle' && (
+        <span
+          aria-hidden
+          className={cn(
+            'absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full ring-2 ring-background',
+            tone === 'live' ? 'bg-emerald-400' : 'bg-amber-400',
+          )}
+        />
+      )}
     </span>
     <div className="min-w-0">
       <p className="text-[13px] font-medium tracking-tight text-foreground">{title}</p>
