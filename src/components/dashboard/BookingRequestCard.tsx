@@ -600,6 +600,27 @@ const BookingRequestCard = ({ booking, onApprove, onDecline, onCancel, onDeposit
                   Cancel & Refund
                 </Button>
               )}
+              {/* PayPal refund — cancels the payment and marks the booking refunded */}
+              {canRefundPayPal && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="text-destructive border-destructive/30 hover:bg-destructive/10"
+                  onClick={openRefundDialog}
+                  disabled={isRefunding}
+                >
+                  {isRefunding
+                    ? <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                    : <Undo2 className="h-4 w-4 mr-1" />}
+                  Refund via PayPal
+                </Button>
+              )}
+              {isRefunded && (
+                <span className="text-xs font-medium text-emerald-600 inline-flex items-center gap-1">
+                  <Undo2 className="h-3.5 w-3.5" /> Refunded
+                </span>
+              )}
+
               {canMessage && (
                 <Button
                   size="sm"
