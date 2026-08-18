@@ -6106,6 +6106,27 @@ export type Database = {
         }
         Relationships: []
       }
+      rate_limit_events: {
+        Row: {
+          created_at: string
+          id: string
+          key: string
+          scope: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          key: string
+          scope: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          key?: string
+          scope?: string
+        }
+        Relationships: []
+      }
       referral_clicks: {
         Row: {
           code: string
