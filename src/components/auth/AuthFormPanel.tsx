@@ -84,6 +84,11 @@ export const AuthFormPanel = ({ mode, setMode }: AuthFormPanelProps) => {
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [resendingEmail, setResendingEmail] = useState(false);
+  // Email the verification link was actually sent to. When the user edits the
+  // field on the verify screen (typo fix) we re-create the account on the
+  // corrected address instead of resending to the wrong one.
+  const [pendingVerifyEmail, setPendingVerifyEmail] = useState('');
+
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [marketingOptIn, setMarketingOptIn] = useState(false);
   // SMS consent state — must always start unchecked and remain separate
