@@ -3,6 +3,7 @@ import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { Loader2, ArrowLeft } from 'lucide-react';
+import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
 import { useListing } from '@/hooks/useListing';
 import { computeDeliveryFee, deliveryRateLabel, normalizeDeliveryFeeType } from '@/lib/fulfillment/delivery';
@@ -45,7 +46,8 @@ import { useTermsGate } from '@/hooks/useTermsGate';
 import { buildTerms } from '@/lib/transactionTerms';
 import { ProtectionOptInCard } from '@/components/protected-sale/ProtectionOptInCard';
 import { useCheckoutState } from '@/hooks/useCheckoutState';
-import { useSellerVerifiedBadge } from '@/hooks/useSellerVerifiedBadge';
+import { useSellerVerifiedBadge, refreshSellerBadgeSurfaces } from '@/hooks/useSellerVerifiedBadge';
+import VerifiedSellerDialog from '@/components/verification/VerifiedSellerDialog';
 import { parseFormattedAddress } from '@/lib/fulfillment/parseAddress';
 import { getPublicDisplayName } from '@/lib/displayName';
 import {
@@ -380,6 +382,10 @@ const SaleCheckout = () => {
   const { verified: buyerVerified, loading: buyerVerificationLoading } =
     useSellerVerifiedBadge(user?.id ?? null);
   const skipIdentityStep = Boolean(user?.id) && buyerVerified;
+  // Identity runs inline (real Plaid check) instead of navigating away and
+  // losing the in-progress order.
+  const [identityDialogOpen, setIdentityDialogOpen] = useState(false);
+  const queryClient = useQueryClient();
 
   /**
    * Scheduling is captured as structured fields, then folded into the
@@ -995,11 +1001,23 @@ const SaleCheckout = () => {
                           buyerName={buyerInfo.firstName || user?.email || null}
                           acknowledged={identityAcknowledged}
                           setAcknowledged={setIdentityAcknowledged}
-                          onVerify={() => navigate('/verify-identity?from=checkout')}
+                          onVerify={() => {
+                            if (!user?.id) {
+                              navigate('/auth?redirect=/verify-identity');
+                              return;
+                            }
+                            setIdentityDialogOpen(true);
+                          }}
                           onBack={() => goBack('identity')}
                           onContinue={() => goNext('identity')}
                         />
                       )}
+
+                      <VerifiedSellerDialog
+                        open={identityDialogOpen}
+                        onOpenChange={setIdentityDialogOpen}
+                        onVerified={() => refreshSellerBadgeSurfaces(queryClient)}
+                      />
 
                       {currentStep === 'delivery' && (
                         <PurchaseStepDelivery
