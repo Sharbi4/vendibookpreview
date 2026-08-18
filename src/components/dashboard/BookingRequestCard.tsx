@@ -216,6 +216,54 @@ const BookingRequestCard = ({ booking, onApprove, onDecline, onCancel, onDeposit
     }
   };
 
+  const handlePayPalRefund = async () => {
+    setIsRefunding(true);
+    try {
+      const amount = usePartialRefund && partialRefundAmount
+        ? parseFloat(partialRefundAmount)
+        : undefined;
+
+      const { data, error } = await supabase.functions.invoke('process-refund', {
+        body: {
+          booking_id: booking.id,
+          initiated_by: 'host',
+          reason: 'requested_by_customer',
+          cancellation_reason: refundReason || 'Refunded by host',
+          ...(amount !== undefined ? { refund_amount: amount } : {}),
+        },
+      });
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
+
+      toast({
+        title: 'Refund sent to PayPal',
+        description: amount
+          ? `$${amount.toFixed(2)} refunded. The booking is now marked as refunded.`
+          : `$${booking.total_price} refunded. The booking is now marked as refunded.`,
+      });
+      setShowRefundDialog(false);
+      setRefundReason('');
+      setUsePartialRefund(false);
+      setPartialRefundAmount('');
+      onRefunded?.();
+    } catch (err) {
+      toast({
+        title: 'Refund failed',
+        description: err instanceof Error ? err.message : 'Could not process the PayPal refund.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsRefunding(false);
+    }
+  };
+
+  const openRefundDialog = () => {
+    setRefundReason('');
+    setUsePartialRefund(false);
+    setPartialRefundAmount('');
+    setShowRefundDialog(true);
+  };
+
   const openCancelDialog = () => {
     setCancelReason('');
     setUsePartialRefund(false);
