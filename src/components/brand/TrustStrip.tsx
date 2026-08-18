@@ -1,7 +1,9 @@
+import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { ShieldCheck } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { PayPalMonogram, PlaidLogo } from '@/components/brand/ProviderLogos';
+import { getPayPalConfig, loadPayPalSdk, type PayPalRuntimeConfig } from '@/lib/paypalClient';
 
 interface TrustStripProps {
   /** Show the Plaid identity row (gated by the verified-seller flag upstream). */
