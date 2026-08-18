@@ -146,7 +146,7 @@ export const AuthFormPanel = ({ mode, setMode }: AuthFormPanelProps) => {
         type: 'signup',
         email,
         options: {
-          emailRedirectTo: `${window.location.origin}/`,
+          emailRedirectTo: `${window.location.origin}/dashboard`,
         },
       });
 
