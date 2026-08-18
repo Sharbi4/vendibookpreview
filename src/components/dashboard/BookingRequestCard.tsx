@@ -82,6 +82,8 @@ interface BookingRequestCardProps {
   onDecline: (id: string, response?: string) => void;
   onCancel?: (id: string, reason?: string, refundAmount?: number) => Promise<unknown>;
   onDepositAction?: (bookingId: string, action: 'refund' | 'partial' | 'forfeit', deductionAmount?: number, notes?: string) => Promise<unknown>;
+  onRefunded?: () => void;
+
 }
 
 const StatusPill = ({ status }: { status: string }) => {
