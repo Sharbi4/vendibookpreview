@@ -1,7 +1,9 @@
+import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { ShieldCheck } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { PayPalMonogram, PlaidLogo } from '@/components/brand/ProviderLogos';
+import { getPayPalConfig, loadPayPalSdk, type PayPalRuntimeConfig } from '@/lib/paypalClient';
 
 interface TrustStripProps {
   /** Show the Plaid identity row (gated by the verified-seller flag upstream). */
@@ -20,6 +22,42 @@ export const TrustStrip = ({
   href = '#trust-and-security',
   className,
 }: TrustStripProps) => {
+  const [paypal, setPaypal] = useState<PayPalRuntimeConfig | null>(null);
+  const [paypalError, setPaypalError] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    getPayPalConfig()
+      .then((cfg) => {
+        if (!active) return;
+        setPaypal(cfg);
+        // Warm the real SDK so the first checkout mounts instantly.
+        if (cfg.enabled) void loadPayPalSdk().catch(() => undefined);
+      })
+      .catch(() => {
+        if (active) setPaypalError(true);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const paypalDetail = paypalError
+    ? 'PayPal checkout temporarily unavailable'
+    : !paypal
+      ? 'Connecting to PayPal…'
+      : !paypal.enabled
+        ? 'PayPal checkout not configured'
+        : paypal.environment === 'live'
+          ? 'Live payments processed by PayPal'
+          : 'Test mode — processed by PayPal sandbox';
+
+  const paypalTone: RailTone = paypalError || (paypal && !paypal.enabled)
+    ? 'warn'
+    : paypal?.enabled
+      ? 'live'
+      : 'idle';
+
   return (
     <motion.a
       href={href}
@@ -57,7 +95,8 @@ export const TrustStrip = ({
         <Rail
           logo={<PayPalMonogram className="h-[18px] w-auto" />}
           title="Online checkout"
-          detail="Processed by PayPal"
+          detail={paypalDetail}
+          tone={paypalTone}
         />
         {showPlaid && (
           <Rail
@@ -82,18 +121,31 @@ export const TrustStrip = ({
   );
 };
 
+type RailTone = 'idle' | 'live' | 'warn';
+
 const Rail = ({
   logo,
   title,
   detail,
+  tone = 'idle',
 }: {
   logo: React.ReactNode;
   title: string;
   detail: string;
+  tone?: RailTone;
 }) => (
   <div className="flex flex-1 items-center gap-3 px-6 py-4">
-    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] transition-colors duration-500 group-hover:border-white/20">
+    <span className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] transition-colors duration-500 group-hover:border-white/20">
       {logo}
+      {tone !== 'idle' && (
+        <span
+          aria-hidden
+          className={cn(
+            'absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full ring-2 ring-background',
+            tone === 'live' ? 'bg-emerald-400' : 'bg-amber-400',
+          )}
+        />
+      )}
     </span>
     <div className="min-w-0">
       <p className="text-[13px] font-medium tracking-tight text-foreground">{title}</p>
