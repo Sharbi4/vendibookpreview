@@ -41,6 +41,17 @@ Deno.serve(async (req) => {
         ? `+1${digits}`
         : `+${digits}`;
 
+    // Abuse protection: this endpoint is intentionally public (visitors can
+    // request a call back), so cap attempts per phone number and per visitor.
+    const withinPhoneLimit = await checkRateLimit('vapi_outbound_phone', e164, 3, 60);
+    const withinIpLimit = await checkRateLimit('vapi_outbound_ip', clientIp(req), 5, 60);
+    if (!withinPhoneLimit || !withinIpLimit) {
+      return new Response(
+        JSON.stringify({ error: 'Too many call requests. Please try again in a little while.' }),
+        { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      );
+    }
+
     const res = await fetch('https://api.vapi.ai/call', {
       method: 'POST',
       headers: {
