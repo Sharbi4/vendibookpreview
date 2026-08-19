@@ -92,11 +92,14 @@ serve(async (req) => {
         await admin
           .from("booking_requests")
           .update({
-            host_platform_fee: (quote.platformFeeCents - Math.max(0, quote.platformFeeCents)) === 0
-              ? undefined
-              : undefined,
+            host_platform_fee: quote.platformFeeCents / 100,
+            host_fee_rate_pct: quote.feeRatePct ?? null,
+            host_pro_discount: (quote.proDiscountCents ?? 0) / 100,
+            pro_fee_applied: !!quote.proFeeApplied,
+            fee_locked_at: new Date().toISOString(),
           })
-          .eq("id", "00000000-0000-0000-0000-000000000000"); // no-op guard, replaced below
+          .eq("id", booking.id)
+          .is("host_platform_fee", null);
       }
       bookingRequestId = booking.id;
     } else if (kind === "product") {
