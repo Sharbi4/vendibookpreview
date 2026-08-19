@@ -83,16 +83,21 @@ serve(async (req) => {
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const admin = createClient(supabaseUrl, serviceKey);
 
+    const opsToken = Deno.env.get("DIMENSION_CAMPAIGN_TOKEN");
+    const providedOps = req.headers.get("x-ops-token")?.trim();
     const token = (req.headers.get("Authorization") ?? "").replace("Bearer ", "").trim();
-    if (!token) return json({ error: "Unauthorized" }, 401);
 
-    let authorized = token === serviceKey;
+    let authorized = !!opsToken && !!providedOps && providedOps === opsToken;
     if (!authorized) {
-      const { data: userRes } = await admin.auth.getUser(token);
-      const callerId = userRes?.user?.id ?? null;
-      if (!callerId) return json({ error: "Unauthorized" }, 401);
-      const { data: isAdmin } = await admin.rpc("has_role", { _user_id: callerId, _role: "admin" });
-      authorized = !!isAdmin;
+      if (!token) return json({ error: "Unauthorized" }, 401);
+      authorized = token === serviceKey;
+      if (!authorized) {
+        const { data: userRes } = await admin.auth.getUser(token);
+        const callerId = userRes?.user?.id ?? null;
+        if (!callerId) return json({ error: "Unauthorized" }, 401);
+        const { data: isAdmin } = await admin.rpc("has_role", { _user_id: callerId, _role: "admin" });
+        authorized = !!isAdmin;
+      }
     }
     if (!authorized) return json({ error: "Forbidden" }, 403);
 
