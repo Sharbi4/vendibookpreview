@@ -276,18 +276,21 @@
     @apply border-border;
   }
 
-  /* Unified border widths — 1.5px default, 2px emphasis (never below 1.5 on interactive surfaces) */
-  .border,
-  .border-t,
-  .border-r,
-  .border-b,
-  .border-l,
-  .border-x,
-  .border-y {
+  /* Unified border widths — 1.5px default, 2px emphasis.
+     IMPORTANT: directional utilities must only set their own side, otherwise
+     simple divider rows render as full square boxes inside rounded cards. */
+  .border {
     border-width: 1.5px;
   }
+  .border-t { border-top-width: 1.5px; }
+  .border-r { border-right-width: 1.5px; }
+  .border-b { border-bottom-width: 1.5px; }
+  .border-l { border-left-width: 1.5px; }
+  .border-x { border-left-width: 1.5px; border-right-width: 1.5px; }
+  .border-y { border-top-width: 1.5px; border-bottom-width: 1.5px; }
   .border-2 { border-width: 2px; }
   .border-\[1\.5px\] { border-width: 1.5px; }
+
 
   /* Hover / selected border tokens for option-style cards (Turo/Airbnb feel) */
   .border-hover:hover { border-color: rgba(255,255,255,0.22); }
