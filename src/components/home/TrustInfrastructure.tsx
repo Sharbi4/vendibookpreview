@@ -147,29 +147,24 @@ const TrustInfrastructure = () => {
             transition={{ duration: 0.6, delay: 0.2 }}
             whileHover={{ y: -2 }}
           >
-            {/* Warm radial accent inside the card */}
+            {/* Warm accent wash inside the light card */}
             <div
               className="absolute -top-1/3 -right-1/4 w-[420px] h-[420px] rounded-full pointer-events-none"
               style={{
                 background:
-                  'radial-gradient(circle, rgba(255,81,36,0.12) 0%, rgba(255,186,8,0.05) 40%, transparent 70%)',
+                  'radial-gradient(circle, rgba(255,81,36,0.10) 0%, rgba(255,186,8,0.05) 40%, transparent 70%)',
                 filter: 'blur(50px)'}}
             />
-            {/* Subtle shimmer sweep on hover */}
-            <div className="absolute inset-0 overflow-hidden pointer-events-none rounded-2xl">
-              <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-out bg-gradient-to-r from-transparent via-white/[0.04] to-transparent" />
-            </div>
 
             <div className="relative flex flex-col sm:flex-row sm:items-center gap-5 sm:gap-7">
               <div className="flex-1 min-w-0">
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] bg-primary/15 text-primary rounded-full mb-3 border border-primary/25">
-                  
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] bg-primary/10 text-primary rounded-full mb-3">
                   Free to join
                 </span>
-                <h3 className="text-xl sm:text-2xl font-bold text-foreground tracking-tight leading-[1.2] mb-2">
-                  Move your next food business asset.{' '}
-                  <span className="gradient-text-warm">Start in minutes.</span>
+                <h3 className="text-xl sm:text-2xl font-semibold text-foreground tracking-tight leading-[1.2] mb-2">
+                  Move your next food business asset. Start in minutes.
                 </h3>
+
                 <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
                   Create an account, list an asset, or book a rental in minutes. Free to list — the 12.9% platform fee applies only when a transaction is paid through Vendibook.
                 </p>
