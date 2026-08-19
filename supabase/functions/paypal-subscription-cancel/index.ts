@@ -3,7 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import { corsHeaders, jsonError, jsonResponse, unknownErrorResponse } from "../_shared/jsonError.ts";
 import { cancelPayPalSubscription, PayPalError, safeLog } from "../_shared/paypal.ts";
 import { resolveSubscriptionPeriod } from "../_shared/subscriptionPeriod.ts";
-import { sendProMembershipEmail } from "../_shared/proMembershipEmail.ts";
+import { sendSubscriptionLifecycleEmail } from "../_shared/subscriptionLifecycleEmail.ts";
 import { notifyUser } from "../_shared/notify.ts";
 
 
@@ -101,7 +101,7 @@ serve(async (req) => {
 
     // Same idempotency key convention the webhook uses, so a later PayPal
     // CANCELLED event cannot send a second confirmation.
-    await sendProMembershipEmail(admin, sub, "cancelled", { accessThrough });
+    await sendSubscriptionLifecycleEmail(admin, sub, "cancelled", { accessThrough });
 
     await notifyUser(admin, {
       userId: user.id,

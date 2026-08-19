@@ -10,7 +10,7 @@ import { PermitPlusPanel } from '@/components/tools/permit-path/PermitPlusUpsell
  *   - Founding members with pre-cutoff permit data
  *
  * PermitPath Basic stays free for everyone at /tools/permitpath — this gate
- * only covers "save + track + documents + reminders".
+ * only covers "save + track + documents + renewal dashboard".
  */
 export function PermitsGate({ children }: { children: ReactNode }) {
   const { isPlus, isLoading } = usePermitPathAccess();
@@ -31,7 +31,7 @@ export function PermitsGate({ children }: { children: ReactNode }) {
         </div>
         <h2 className="text-2xl font-bold text-white leading-tight">Your permit tracker</h2>
         <p className="text-sm text-white/60 mt-1">
-          Save your roadmaps, track progress, and get renewal reminders.
+          Save your roadmaps, track progress, and keep expirations in one place.
         </p>
       </div>
 

@@ -27,6 +27,7 @@ import {
 import SaveRoadmapDialog from '@/components/tools/permit-path/SaveRoadmapDialog';
 import { usePermitPathAccess } from '@/hooks/usePermitPathAccess';
 import { PermitPlusUpsellDialog } from '@/components/tools/permit-path/PermitPlusUpsell';
+import PermitPlusStatusCard from '@/components/tools/permit-path/PermitPlusStatusCard';
 
 import { toast as sonnerToast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -527,7 +528,7 @@ const PermitPath = () => {
                 {[
                   { n: 1, icon: MapPin,     accent: 'sky'     as const, hover: 'bounce' as const, title: 'Enter your location',     body: 'Tell us your state, city, and business type.' },
                   { n: 2, icon: ListChecks, accent: 'emerald' as const, hover: 'draw'   as const, title: 'We map your roadmap',     body: 'A sequenced checklist branched to your specific setup.' },
-                  { n: 3, icon: Download,   accent: 'sky'     as const, hover: 'nudge'  as const, title: 'Track & apply',           body: 'Check items off, set reminders, and apply on official sites.' },
+                  { n: 3, icon: Download,   accent: 'sky'     as const, hover: 'nudge'  as const, title: 'Track & apply',           body: 'Check items off, track expirations, and apply on official sites.' },
                 ].map((s, i) => (
                   <motion.div
                     key={s.n}
@@ -554,6 +555,7 @@ const PermitPath = () => {
           {/* Tool */}
           <section id="tool-section" className="py-12 md:py-16">
             <div className="container max-w-3xl">
+              <PermitPlusStatusCard className="mb-6" />
               <div className="rounded-2xl border border-white/10 bg-[#0d0d10] p-6 md:p-8 shadow-2xl">
                 <div className="flex items-center gap-3 mb-6">
                   <PremiumIcon icon={Route} accent="sky" size="md" hover="lift" />

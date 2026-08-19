@@ -68,6 +68,10 @@ import { template as proMembershipActivated } from './pro-membership-activated.t
 import { template as proMembershipRenewed } from './pro-membership-renewed.tsx'
 import { template as proMembershipCancelled } from './pro-membership-cancelled.tsx'
 import { template as proMembershipPaymentFailed } from './pro-membership-payment-failed.tsx'
+import { template as permitPlusActivated } from './permitpath-plus-activated.tsx'
+import { template as permitPlusRenewed } from './permitpath-plus-renewed.tsx'
+import { template as permitPlusCancelled } from './permitpath-plus-cancelled.tsx'
+import { template as permitPlusPaymentFailed } from './permitpath-plus-payment-failed.tsx'
 
 
 
@@ -131,6 +135,10 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'pro-membership-renewed': proMembershipRenewed,
   'pro-membership-cancelled': proMembershipCancelled,
   'pro-membership-payment-failed': proMembershipPaymentFailed,
+  'permitpath-plus-activated': permitPlusActivated,
+  'permitpath-plus-renewed': permitPlusRenewed,
+  'permitpath-plus-cancelled': permitPlusCancelled,
+  'permitpath-plus-payment-failed': permitPlusPaymentFailed,
 
   // Alias: monetization webhook dispatches 'refund-issued' for add-on refunds;
   // route to the shared refund-processed template so the send does not silently fail.
