@@ -12,6 +12,8 @@ import { useHostEntitlements } from '@/hooks/useHostEntitlements';
  */
 const PremiumSpotlight = () => {
   const { tier, planLabel, currentPeriodEnd, cancelAtPeriodEnd, isLoading } = useHostEntitlements();
+  // Hook must run before any early return.
+  const proPrice = useCatalogPrice(ACTIVE_PRODUCT_SLUGS.vendibookPro);
   if (isLoading) return null;
 
   if (tier === 'free') {
