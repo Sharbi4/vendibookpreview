@@ -37,13 +37,19 @@ const TOOL_TIER: Record<ToolSlug, Tier> = {
 };
 
 const TOOL_UNLOCK_SLUG: Partial<Record<ToolSlug, string>> = {
-  'permitpath': 'permit_path_plus',
+  'permitpath': 'permit_path_plus_monthly',
   'pricepilot': 'tool_pricepilot',
   'listing-studio': 'tool_listing_studio',
   'marketing-studio': 'tool_marketing_studio',
   'concept-lab': 'tool_concept_lab',
   'market-radar': 'tool_market_radar',
   'buildkit': 'tool_buildkit',
+};
+
+// All product slugs that unlock a tool, including retired SKUs kept for
+// grandfathering. TOOL_UNLOCK_SLUG above is the slug we sell today.
+const TOOL_UNLOCK_SLUGS: Partial<Record<ToolSlug, string[]>> = {
+  'permitpath': ['permit_path_plus_monthly', 'permit_path_plus'],
 };
 
 export type ToolAccessReason =
@@ -56,7 +62,7 @@ export function resolveTierFromSub(raw: string | null | undefined): Tier {
   const k = raw.toLowerCase().replace(/_annual$/, '').replace(/_monthly$/, '');
   if (k === 'starter' || k === 'seller_plus' || k === 'seller-plus' || k === 'host_starter' || k === 'host-starter') return 'starter';
   // `host_pro` is a legacy alias from before the catalog was renamed to host_growth.
-  if (k === 'pro' || k === 'host_pro' || k === 'host-pro' || k === 'host_growth' || k === 'host-growth') return 'pro';
+  if (k === 'pro' || k === 'vendibook_pro' || k === 'vendibook-pro' || k === 'host_pro' || k === 'host-pro' || k === 'host_growth' || k === 'host-growth') return 'pro';
   if (k === 'premium' || k === 'host_operator' || k === 'host-operator') return 'premium';
   return 'free';
 }
@@ -97,13 +103,14 @@ export async function resolveToolAccess(userId: string, tool: ToolSlug): Promise
   }
 
   // 2) One-time unlock purchase
-  const unlockSlug = TOOL_UNLOCK_SLUG[tool];
-  if (unlockSlug) {
+  const unlockSlugs = TOOL_UNLOCK_SLUGS[tool] ??
+    (TOOL_UNLOCK_SLUG[tool] ? [TOOL_UNLOCK_SLUG[tool]!] : []);
+  if (unlockSlugs.length) {
     const { data: purchase } = await admin
       .from('monetization_purchases')
       .select('id,status,monetization_products!inner(slug)')
       .eq('user_id', userId)
-      .eq('monetization_products.slug', unlockSlug)
+      .in('monetization_products.slug', unlockSlugs)
       .in('status', ['paid', 'fulfilled'])
       .limit(1)
       .maybeSingle();
