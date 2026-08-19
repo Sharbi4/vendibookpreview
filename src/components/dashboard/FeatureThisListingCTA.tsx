@@ -4,6 +4,8 @@ import { Loader2, TrendingUp, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useCatalogPrice } from '@/hooks/useCatalogPrices';
+import { ACTIVE_PRODUCT_SLUGS } from '@/lib/monetization/catalogPricing';
 
 interface Props {
   listingId: string;
@@ -42,7 +44,7 @@ export const FeatureThisListingCTA: React.FC<Props> = ({ listingId, priceLabel }
   const handleFeature = async () => {
     setBusy(true);
     try {
-      const url = productCheckoutUrl('boost-featured-30', listingId);
+      const url = productCheckoutUrl(ACTIVE_PRODUCT_SLUGS.featuredBoost, listingId);
       window.location.href = url;
     } catch (e) {
       toast({

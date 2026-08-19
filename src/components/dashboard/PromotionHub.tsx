@@ -170,7 +170,7 @@ export const PromotionHub = () => {
               </div>
               <h3 className="text-lg font-bold text-foreground">Top of search for 30 days</h3>
               <p className="text-sm text-muted-foreground mt-1">
-                $49 one-time. Pin to top of category, glow in cards, weekly performance email.
+                {boostPrice.label} one-time. Pin to top of category, glow in cards, weekly performance email.
               </p>
               <p className="text-xs text-muted-foreground/80 mt-1.5">
                 Extending stacks — you never lose remaining days. Rotates fairly with other Featured
@@ -186,7 +186,7 @@ export const PromotionHub = () => {
                 }}
               >
                 <Zap className="h-4 w-4 mr-1.5" />
-                {selected?.featured_enabled ? 'Active — extend (adds 30 days)' : 'Activate $49 boost'}
+                {selected?.featured_enabled ? 'Active — extend (adds 30 days)' : `Activate ${boostPrice.label} boost`}
               </Button>
             </div>
           </Card>
