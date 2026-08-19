@@ -157,8 +157,17 @@ const popularAmenityIcons: Record<string, { icon: React.ElementType; label: stri
   three_compartment_sink: { icon: Droplet, label: '3 Compartment Sink' },
 };
 
-const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickBook, canDeliverToUser, distanceMiles, compact = false }: ListingCardProps) => {
+const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickBook, canDeliverToUser, distanceMiles, compact = false, variant = 'default', horizontal = false }: ListingCardProps) => {
   const [showOverlay, setShowOverlay] = useState(false);
+
+  // Search-only warm/light marketplace surface. Presentation only — every
+  // badge, link, favorite and overlay behaviour below is shared.
+  const isSearch = variant === 'search';
+  const isRow = isSearch && horizontal;
+  const textStrong = isSearch ? 'text-[#1b1714]' : 'text-white';
+  const textMuted = isSearch ? 'text-[#1b1714]/60' : 'text-white/60';
+  const textFaint = isSearch ? 'text-[#1b1714]/50' : 'text-white/50';
+
 
   // Authoritative fallback so a freshly verified seller's badge shows on every
   // card even when the caller didn't pre-resolve `hostVerified`.
