@@ -91,7 +91,7 @@ const VendiAISuite = () => {
                   Don't get shut down. Find the exact permits, licenses, and insurance you need for your city and vehicle type instantly.
                 </p>
                 <ul className="space-y-3 mb-8">
-                  {['City-specific permit database', 'Health department requirements', 'Insurance compliance check', 'Renewal reminders'].map(item => (
+                  {['City-specific permit database', 'Health department requirements', 'Insurance compliance check', 'Expiration tracking'].map(item => (
                     <li key={item} className="flex items-center gap-3">
                       <CheckCircle className="w-5 h-5 text-foreground/50" />
                       <span className="font-medium">{item}</span>
