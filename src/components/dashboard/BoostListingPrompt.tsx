@@ -189,7 +189,7 @@ export const BoostListingPrompt = ({ listings, userId }: BoostListingPromptProps
               <span className="text-xs uppercase tracking-[0.16em] text-muted-foreground">
                 One-time · 30 days
               </span>
-              <span className="text-3xl font-semibold tracking-tight text-foreground">$30</span>
+              <span className="text-3xl font-semibold tracking-tight text-foreground">$49</span>
             </div>
 
             <Button

@@ -201,7 +201,7 @@ export const FeaturedListingModal = ({
                       {boostCredit ? 'Or pay once · 30 days' : 'One-time · 30 days'}
                     </span>
                     <span className="text-3xl font-semibold tracking-tight text-foreground">
-                      $30
+                      $49
                     </span>
                   </div>
 
@@ -231,7 +231,7 @@ export const FeaturedListingModal = ({
       {open && step === 'pay' ? (
         <PayPalPaymentPanel
           target={{ kind: 'product', slug: 'boost-featured-30', listing_id: listingId }}
-          totalUsd={30}
+          totalUsd={49}
           onClose={() => setStep('overview')}
           onSuccess={(result) => {
             setStage(result.pending ? 'review' : 'authorized');
@@ -248,7 +248,7 @@ export const FeaturedListingModal = ({
               </button>
               <p className="text-sm font-medium">Featured Boost — 30 days</p>
               <p className="text-xs text-muted-foreground">{listingTitle}</p>
-              <p className="text-lg font-semibold">$30.00</p>
+              <p className="text-lg font-semibold">$49.00</p>
             </div>
           }
         />

@@ -2223,7 +2223,7 @@ export const PublishWizard: React.FC = () => {
       }
 
 
-      // If Featured Listing is enabled and not already active/comped, redirect to checkout for the $30 fee.
+      // If Featured Listing is enabled and not already active/comped, redirect to checkout for the $49 fee.
       // Pending complimentary boosts are applied by the database trigger when status changes to published.
       const listingHasPendingFeatured = !!listing.pending_featured_payment;
       const listingAlreadyFeatured = isListingFeatured(listing);
@@ -5062,7 +5062,7 @@ export const PublishWizard: React.FC = () => {
                   <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 p-3 text-sm text-amber-700 dark:text-amber-300 flex items-start gap-2">
                     <TrendingUp className="w-4 h-4 mt-0.5 shrink-0" />
                     <div>
-                      You'll be redirected to PayPal to pay <strong>$30</strong> for the Featured add-on.
+                      You'll be redirected to PayPal to pay <strong>$49</strong> for the Featured add-on.
                       Your listing publishes automatically the moment payment clears.
                     </div>
                   </div>
