@@ -39,6 +39,79 @@ import {
 } from '@/lib/monetization/returnRoutes';
 import { trackLeadEvent } from '@/lib/leadTracking';
 import PlansFAQ from '@/components/monetization/PlansFAQ';
+import PlanDetailsDialog from '@/components/monetization/PlanDetailsDialog';
+
+/** Learn-more copy per add-on. Prices/cadence stay dynamic from the catalog. */
+const ADDON_DETAILS: Record<
+  string,
+  { summary: string; included: string[]; bestFor: string; billing: string; finePrint: string[] }
+> = {
+  [ACTIVE_PRODUCT_SLUGS.featuredBoost]: {
+    summary: 'Put one listing at the top of search results and give it a highlighted card for 30 days.',
+    included: [
+      'Priority placement at the top of matching search results',
+      'Highlighted, featured-styled listing card',
+      'Eligible for the featured row on the homepage',
+      'Runs for 30 days from activation',
+    ],
+    bestFor: 'A listing that is ready to sell or rent and needs more eyes this month.',
+    billing: 'One-time charge. Does not renew.',
+    finePrint: [
+      '30-day duration · non-recurring — buy again to extend.',
+      'Applies to one listing you select.',
+      'Vendibook Pro members receive 1 boost credit per billing period.',
+    ],
+  },
+  [ACTIVE_PRODUCT_SLUGS.proListing]: {
+    summary: 'Premium presentation and priority placement for a single listing for 30 days.',
+    included: [
+      'Premium listing presentation',
+      'Priority placement in relevant search results',
+      'Runs for 30 days from activation',
+    ],
+    bestFor: 'Higher-value equipment where presentation drives the inquiry.',
+    billing: 'One-time charge. Does not renew.',
+    finePrint: ['30-day duration · non-recurring.', 'Applies to one listing you select.'],
+  },
+  [ACTIVE_PRODUCT_SLUGS.conciergeListing]: {
+    summary: 'Our team writes and structures a complete listing for you from the details you provide.',
+    included: [
+      'Written title, description and specification sheet',
+      'Structured listing set up for search',
+      'Photo and detail guidance before publishing',
+    ],
+    bestFor: 'Sellers who would rather hand the listing off than write it.',
+    billing: 'One-time charge per listing.',
+    finePrint: ['One-time service · non-recurring.', 'You review and approve before publishing.'],
+  },
+  [ACTIVE_PRODUCT_SLUGS.listingRewrite]: {
+    summary: 'A rewrite of an existing listing so the title, description and specs read cleanly.',
+    included: [
+      'Rewritten title and description',
+      'Cleaned-up specification sheet',
+      'Applied to one listing you choose',
+    ],
+    bestFor: 'A live listing that is getting views but not inquiries.',
+    billing: 'One-time charge per listing.',
+    finePrint: ['One-time service · non-recurring.'],
+  },
+  [ACTIVE_PRODUCT_SLUGS.permitPathPlus]: {
+    summary: 'The saving and tracking layer on top of PermitPath. Roadmap generation stays free.',
+    included: [
+      'Save permit roadmaps to your account',
+      'Track permit status as you progress',
+      'Store permit documents',
+      'Export roadmaps to PDF',
+    ],
+    bestFor: 'Operators working through a real permit list across multiple agencies.',
+    billing: 'Recurring monthly · cancel anytime.',
+    finePrint: [
+      'Included with Vendibook Pro at no extra cost.',
+      'Cancel anytime — access continues through the current paid period.',
+      'PermitPath Basic search and roadmap generation remain free.',
+    ],
+  },
+};
 
 /** Short benefit copy per active add-on. Falls back to the DB description. */
 const ONE_LINERS: Record<string, string> = {
@@ -50,7 +123,7 @@ const ONE_LINERS: Record<string, string> = {
 };
 
 const FREE_FEATURES = [
-  'List for sale or for rent — unlimited browsing',
+  'Unlimited listings for sale or for rent',
   '12.9% seller/host fee on completed transactions',
   'Payment protection and PayPal-secured checkout',
   'Free e-signatures on every agreement',
@@ -58,10 +131,11 @@ const FREE_FEATURES = [
 ];
 
 const PRO_FEATURES = [
-  { icon: Percent, text: '10.9% seller/host fee instead of 12.9% — up to $500 saved per transaction' },
-  { icon: Zap, text: '1 Featured Boost credit every billing period' },
-  { icon: Crown, text: 'Premium tools and analytics, including PermitPath Plus' },
+  { icon: Percent, text: '10.9% seller/host fee instead of 12.9% — up to $500 saved per completed transaction' },
+  { icon: Zap, text: '1 Featured Boost credit per billing period' },
+  { icon: Crown, text: 'Premium tools and analytics, plus PermitPath Plus included' },
   { icon: ShieldCheck, text: 'Priority placement in search and priority support' },
+  { icon: XCircle, text: 'Cancel anytime — no contract' },
 ];
 
 const Card = ({
@@ -121,49 +195,74 @@ function AddOnCard({
     }
   };
 
+  const cadenceLabel = recurring
+    ? '/mo'
+    : product.duration_days
+      ? ` · ${product.duration_days} days`
+      : ' one-time';
+
+  const details = ADDON_DETAILS[product.slug];
+
+  const cta = (full?: boolean) =>
+    includedLabel ? (
+      <span className="inline-flex w-fit items-center gap-1.5 rounded-full border border-[rgba(24,20,16,0.1)] bg-[rgba(24,20,16,0.03)] px-3 py-1.5 text-[12px] font-medium text-foreground">
+        <Check className="h-3.5 w-3.5 text-[hsl(var(--brand-ember))]" />
+        {includedLabel}
+      </span>
+    ) : requiresListing ? (
+      <Button asChild variant="cta-outline" size="sm" className={`gap-1 ${full ? 'w-full' : 'w-fit'}`}>
+        <Link to="/host/listings">
+          Boost a listing <ArrowRight className="h-3.5 w-3.5" />
+        </Link>
+      </Button>
+    ) : (
+      <Button
+        variant={full ? 'cta' : 'cta-outline'}
+        size="sm"
+        className={`gap-1 ${full ? 'w-full' : 'w-fit'}`}
+        disabled={activeBusy}
+        onClick={handleClick}
+      >
+        {activeBusy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
+        {recurring ? 'Review terms and continue' : 'Purchase'}
+        {!activeBusy && <ArrowRight className="h-3.5 w-3.5" />}
+      </Button>
+    );
+
   return (
     <div className="flex flex-col rounded-2xl border border-[rgba(24,20,16,0.09)] bg-white p-5">
       <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
         <h3 className="text-[15px] font-semibold text-foreground">{product.name}</h3>
         <span className="text-[13px] font-medium text-foreground">
           {formatUsd(price)}
-          <span className="text-muted-foreground">
-            {recurring ? '/mo' : product.duration_days ? ` · ${product.duration_days} days` : ' one-time'}
-          </span>
+          <span className="text-muted-foreground">{cadenceLabel}</span>
         </span>
       </div>
       <p className="mt-1.5 text-[13px] leading-relaxed text-muted-foreground">
         {ONE_LINERS[product.slug] ?? product.description}
       </p>
       <div className="mt-4 flex-1" />
-      {includedLabel ? (
-        <span className="inline-flex w-fit items-center gap-1.5 rounded-full border border-[rgba(24,20,16,0.1)] bg-[rgba(24,20,16,0.03)] px-3 py-1.5 text-[12px] font-medium text-foreground">
-          <Check className="h-3.5 w-3.5 text-[hsl(var(--brand-ember))]" />
-          {includedLabel}
-        </span>
-      ) : requiresListing ? (
-        <Button asChild variant="cta-outline" size="sm" className="w-fit gap-1">
-          <Link to="/host/listings">
-            Boost a listing <ArrowRight className="h-3.5 w-3.5" />
-          </Link>
-        </Button>
-      ) : (
-        <Button
-          variant="cta-outline"
-          size="sm"
-          className="w-fit gap-1"
-          disabled={activeBusy}
-          onClick={handleClick}
-        >
-          {activeBusy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
-          {recurring ? 'Review terms and continue' : 'Purchase'}
-          {!activeBusy && <ArrowRight className="h-3.5 w-3.5" />}
-        </Button>
-      )}
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+        {cta()}
+        {details ? (
+          <PlanDetailsDialog
+            title={product.name}
+            priceLabel={`${formatUsd(price)}${cadenceLabel}`}
+            summary={details.summary}
+            included={details.included}
+            bestFor={details.bestFor}
+            billing={details.billing}
+            finePrint={details.finePrint}
+            statusLabel={includedLabel}
+            footer={cta(true)}
+          />
+        ) : null}
+      </div>
       {dialog}
     </div>
   );
 }
+
 
 /* ------------------------------------------------------------------ */
 
@@ -257,11 +356,11 @@ const Pricing = () => {
             Pricing
           </p>
           <h1 className="mt-2 text-[30px] md:text-[38px] font-semibold tracking-tight text-foreground leading-[1.1]">
-            Start free. Go Pro when the math is obvious.
+            Sell more. Get seen first. Keep more when you close.
           </h1>
           <p className="mt-3 text-[15px] leading-relaxed text-muted-foreground">
-            One account covers selling and hosting. No listing fees, no contracts — you only pay a
-            commission when a transaction completes.
+            Start free. Upgrade when you&rsquo;re ready for more visibility, premium tools, and lower
+            seller/host fees.
           </p>
         </header>
 
@@ -293,6 +392,26 @@ const Pricing = () => {
               <Button asChild variant="cta-outline" className="mt-6 w-full">
                 <Link to="/list/start">Create a listing</Link>
               </Button>
+              <div className="mt-3 flex justify-center">
+                <PlanDetailsDialog
+                  title="Free"
+                  priceLabel="$0/month"
+                  summary="Everything you need to list, get paid and close a deal on Vendibook. No listing fees and no contract."
+                  included={FREE_FEATURES}
+                  bestFor="Anyone listing their first truck, trailer, cart or space."
+                  billing="No charge. You only pay a 12.9% seller/host fee when a transaction completes."
+                  finePrint={[
+                    'Pay-in-person sales are free — no commission and no buyer fee.',
+                    'Rentals paid in person still owe the host commission.',
+                  ]}
+                  footer={
+                    <Button asChild variant="cta" className="w-full">
+                      <Link to="/list/start">Create a listing</Link>
+                    </Button>
+                  }
+                />
+              </div>
+
             </Card>
 
             {/* Vendibook Pro */}
@@ -350,7 +469,45 @@ const Pricing = () => {
                   )}
                 </Button>
               )}
+
+              <div className="mt-3 flex justify-center">
+                <PlanDetailsDialog
+                  title="Vendibook Pro"
+                  priceLabel={`${loadingSubs ? '—' : formatUsd(proPrice)}/month`}
+                  summary="A lower seller/host fee, a Featured Boost credit every billing period and the premium tool set — on one monthly membership."
+                  included={PRO_FEATURES.map((f) => f.text)}
+                  bestFor="Sellers and hosts closing regularly, where the fee difference outweighs the membership."
+                  billing="Recurring monthly through PayPal · cancel anytime."
+                  statusLabel={isPro ? 'Your plan' : null}
+                  finePrint={[
+                    'The 10.9% rate applies to the seller/host side of a completed transaction, up to $500 saved per transaction.',
+                    'The Featured Boost credit is 1 per billing period and does not roll over.',
+                    'Cancel anytime — access continues through the end of the current paid period.',
+                  ]}
+                  footer={
+                    isPro ? (
+                      <Button asChild variant="cta" className="w-full">
+                        <Link to="/dashboard?view=host&tab=membership">Manage membership</Link>
+                      </Button>
+                    ) : (
+                      <Button
+                        variant="cta"
+                        className="w-full"
+                        onClick={startPro}
+                        disabled={loadingSubs || !proProduct || proBusy}
+                      >
+                        {proBusy ? (
+                          <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Opening PayPal…</>
+                        ) : (
+                          <>Go Pro <ArrowRight className="ml-1.5 h-4 w-4" /></>
+                        )}
+                      </Button>
+                    )
+                  }
+                />
+              </div>
             </Card>
+
           </div>
 
           <div className="mt-5 flex flex-wrap items-center gap-x-6 gap-y-2 text-[12.5px] text-muted-foreground">
