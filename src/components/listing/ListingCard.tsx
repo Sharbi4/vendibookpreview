@@ -276,9 +276,10 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
         
         
         
-        {/* E-sign trust chip + financing badge — stacked bottom-left, stay inside the card */}
+        {/* E-sign trust chip (+ financing badge outside search, where it moves
+            into the information surface to keep the image quiet) */}
         <div className="absolute bottom-2 left-2 z-10 flex max-w-[calc(100%-1rem)] flex-col items-start gap-1.5">
-          {financingEnabled && <FinancingAvailableBadge compact listingId={listing.id} />}
+          {financingEnabled && !isSearch && <FinancingAvailableBadge compact listingId={listing.id} />}
           <TrustESignChip variant="card" />
         </div>
 
