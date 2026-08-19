@@ -17,13 +17,17 @@ interface AuthGateOfferModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onAuthSuccess: () => void;
+  /** Controls the copy so the prompt matches what the buyer clicked. */
+  intent?: 'offer' | 'buy';
 }
 
 export const AuthGateOfferModal = ({
   open,
   onOpenChange,
   onAuthSuccess,
+  intent = 'offer',
 }: AuthGateOfferModalProps) => {
+
   const { toast } = useToast();
   const [mode, setMode] = useState<'signin' | 'signup'>('signin');
   const [email, setEmail] = useState('');
