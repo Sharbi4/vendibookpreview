@@ -1,3 +1,4 @@
+import { inchesToFeet, feetToInches, formatDimensionSummary } from '@/lib/listings/dimensions';
 import { productCheckoutUrl, hostedCheckoutUrl } from '@/lib/payments/hostedCheckout';
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate, useParams, useSearchParams, Link } from 'react-router-dom';
@@ -4183,59 +4184,64 @@ export const PublishWizard: React.FC = () => {
                       <div className="grid grid-cols-3 gap-4">
                         {/* Length */}
                         <div className="space-y-2">
-                          <Label htmlFor="length_inches" className="flex items-center gap-1.5 text-sm">
+                          <Label htmlFor="length_ft" className="flex items-center gap-1.5 text-sm">
                             <Ruler className="h-3.5 w-3.5" />
-                            Length (in)
+                            Length (ft)
                           </Label>
                           <Input
-                            id="length_inches"
+                            id="length_ft"
                             type="number"
                             min="0"
-                            step="1"
-                            value={lengthInches}
-                            onChange={(e) => setLengthInches(e.target.value)}
-                            placeholder="e.g., 240"
+                            step="0.5"
+                            value={inchesToFeet(parseFloat(lengthInches) || null)}
+                            onChange={(e) => setLengthInches(String(feetToInches(e.target.value) ?? ''))}
+                            placeholder="e.g., 20"
                           />
                         </div>
 
                         {/* Width */}
                         <div className="space-y-2">
-                          <Label htmlFor="width_inches" className="flex items-center gap-1.5 text-sm">
+                          <Label htmlFor="width_ft" className="flex items-center gap-1.5 text-sm">
                             <Ruler className="h-3.5 w-3.5" />
-                            Width (in)
+                            Width (ft)
                           </Label>
                           <Input
-                            id="width_inches"
+                            id="width_ft"
                             type="number"
                             min="0"
-                            step="1"
-                            value={widthInches}
-                            onChange={(e) => setWidthInches(e.target.value)}
-                            placeholder="e.g., 96"
+                            step="0.5"
+                            value={inchesToFeet(parseFloat(widthInches) || null)}
+                            onChange={(e) => setWidthInches(String(feetToInches(e.target.value) ?? ''))}
+                            placeholder="e.g., 8"
                           />
                         </div>
 
                         {/* Height */}
                         <div className="space-y-2">
-                          <Label htmlFor="height_inches" className="flex items-center gap-1.5 text-sm">
+                          <Label htmlFor="height_ft" className="flex items-center gap-1.5 text-sm">
                             <Ruler className="h-3.5 w-3.5" />
-                            Height (in)
+                            Height (ft)
                           </Label>
                           <Input
-                            id="height_inches"
+                            id="height_ft"
                             type="number"
                             min="0"
-                            step="1"
-                            value={heightInches}
-                            onChange={(e) => setHeightInches(e.target.value)}
-                            placeholder="e.g., 120"
+                            step="0.5"
+                            value={inchesToFeet(parseFloat(heightInches) || null)}
+                            onChange={(e) => setHeightInches(String(feetToInches(e.target.value) ?? ''))}
+                            placeholder="e.g., 10"
                           />
                         </div>
                       </div>
 
                       <p className="text-xs text-muted-foreground">
-                        💡 Tip: Typical food truck dimensions are 16-26 ft long (192-312 in), 7-8 ft wide (84-96 in), and 8-10 ft tall (96-120 in).
+                        Shown to buyers as {formatDimensionSummary(
+                          parseFloat(lengthInches) || null,
+                          parseFloat(widthInches) || null,
+                          parseFloat(heightInches) || null,
+                        ) ?? 'Length × Width × Height once you fill these in'}. Typical food trucks are 16–26 ft long, 7–8 ft wide and 8–10 ft tall.
                       </p>
+
                     </div>
                   )}
 

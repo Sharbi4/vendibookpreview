@@ -1,5 +1,6 @@
 import { Ruler, Scale, Zap, Droplets, PlugZap, Gauge, Fuel, Thermometer } from 'lucide-react';
 import type { ListingCategory } from '@/types/listing';
+import { formatDimensionSummary } from '@/lib/listings/dimensions';
 
 interface TechSpecsGridProps {
   category: ListingCategory;
@@ -15,34 +16,6 @@ interface SpecItem {
   value: string;
   icon: React.ComponentType<{ className?: string }>;
 }
-
-const formatDimensions = (
-  lengthInches?: number | null,
-  widthInches?: number | null,
-  heightInches?: number | null
-): string | null => {
-  const parts: string[] = [];
-  
-  if (lengthInches) {
-    const feet = Math.floor(lengthInches / 12);
-    const inches = lengthInches % 12;
-    parts.push(inches > 0 ? `${feet}'${inches}"L` : `${feet}'L`);
-  }
-  
-  if (widthInches) {
-    const feet = Math.floor(widthInches / 12);
-    const inches = widthInches % 12;
-    parts.push(inches > 0 ? `${feet}'${inches}"W` : `${feet}'W`);
-  }
-  
-  if (heightInches) {
-    const feet = Math.floor(heightInches / 12);
-    const inches = heightInches % 12;
-    parts.push(inches > 0 ? `${feet}'${inches}"H` : `${feet}'H`);
-  }
-  
-  return parts.length > 0 ? parts.join(' × ') : null;
-};
 
 const getPowerSpec = (amenities: string[] | null | undefined): string | null => {
   if (!amenities) return null;
@@ -131,7 +104,7 @@ export const TechSpecsGrid = ({
   const specs: SpecItem[] = [];
 
   // Dimensions
-  const dimensions = formatDimensions(lengthInches, widthInches, heightInches);
+  const dimensions = formatDimensionSummary(lengthInches, widthInches, heightInches);
   if (dimensions) {
     specs.push({
       label: 'Dimensions',
