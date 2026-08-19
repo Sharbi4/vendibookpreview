@@ -25,6 +25,8 @@ import RoadmapSuccess from './RoadmapSuccess';
 import ReasoningPanels, { type CriticalPath, type RiskItem, type InsightItem } from './ReasoningPanels';
 import PremiumIcon from './PremiumIcon';
 import { categoryVisual } from './categoryVisuals';
+import { usePermitPathAccess } from '@/hooks/usePermitPathAccess';
+import { PermitPlusUpsellDialog } from './PermitPlusUpsell';
 
 export interface DashboardResult {
   location: { city?: string; state: string; stateAbbreviation?: string; business_type?: string };
