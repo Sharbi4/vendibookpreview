@@ -776,7 +776,7 @@ const BookingCheckout = () => {
 
         {/* Title */}
         <h1 className="text-2xl lg:text-3xl font-bold text-foreground mb-8">
-          {listing.instant_book ? 'Book instantly' : 'Request to book'}
+          {instantConfirm ? 'Book instantly' : 'Request to book'}
         </h1>
 
         <div className="grid lg:grid-cols-5 gap-8 lg:gap-12">
@@ -1190,7 +1190,7 @@ const BookingCheckout = () => {
                             <Loader2 className="h-5 w-5 animate-spin mr-2" />
                             Processing...
                           </>
-                        ) : listing.instant_book ? (
+                        ) : instantConfirm ? (
                           <>
                             <Zap className="h-5 w-5 mr-2" />
                             Confirm and pay ${(fees.customerTotal + (depositAmount || 0)).toLocaleString()}
@@ -1203,7 +1203,7 @@ const BookingCheckout = () => {
                         )}
                       </Button>
 
-                      {!listing.instant_book && (
+                      {!instantConfirm && (
                         <p className="text-xs text-center text-muted-foreground">
                           Your card will be authorized now. Funds are only captured if the host approves your request.
                         </p>
@@ -1225,7 +1225,7 @@ const BookingCheckout = () => {
               primary={{
                 label:
                   activeStep === STEP_REVIEW
-                    ? listing.instant_book
+                    ? instantConfirm
                       ? 'Confirm and pay'
                       : 'Continue to payment'
                     : 'Jump to review',
