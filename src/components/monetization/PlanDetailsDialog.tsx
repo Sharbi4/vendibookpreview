@@ -15,7 +15,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
 
 export interface PlanDetailsDialogProps {
   /** Product / plan name. */
@@ -134,4 +133,3 @@ export function PlanDetailsDialog({
 }
 
 export default PlanDetailsDialog;
-export { Button as PlanDetailsButton };
