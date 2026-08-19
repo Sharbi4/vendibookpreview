@@ -91,21 +91,35 @@ export async function resolveToolAccess(userId: string, tool: ToolSlug): Promise
     return { unlocked: true, reason: 'free', tier: 'free', userId, tool };
   }
 
-  // 1) Subscription
-  const { data: sub } = await admin
+  // 1) Subscription — read every row: a member can hold Vendibook Pro and a
+  // product subscription (e.g. PermitPath Plus) at the same time.
+  const { data: subs } = await admin
     .from('host_subscriptions')
     .select('tier,status')
     .eq('user_id', userId)
-    .order('updated_at', { ascending: false })
-    .limit(1)
-    .maybeSingle();
+    .order('updated_at', { ascending: false });
+
+  const activeSubs = (subs ?? []).filter((s: { status?: string | null }) =>
+    ACTIVE_STATUSES.has(s.status ?? ''),
+  );
+
+  // A standalone PermitPath Plus subscription unlocks PermitPath only.
+  if (
+    tool === 'permitpath' &&
+    activeSubs.some((s: { tier?: string | null }) =>
+      String(s.tier ?? '').toLowerCase().startsWith('permit_path_plus'),
+    )
+  ) {
+    return { unlocked: true, reason: 'subscription', tier: 'free', userId, tool };
+  }
 
   let tier: Tier = 'free';
-  if (sub && ACTIVE_STATUSES.has(sub.status ?? '')) {
-    tier = resolveTierFromSub(sub.tier);
-    if (TIER_RANK[tier] >= TIER_RANK[minTier]) {
-      return { unlocked: true, reason: 'subscription', tier, userId, tool };
-    }
+  for (const s of activeSubs) {
+    const t = resolveTierFromSub((s as { tier?: string | null }).tier);
+    if (TIER_RANK[t] > TIER_RANK[tier]) tier = t;
+  }
+  if (TIER_RANK[tier] >= TIER_RANK[minTier]) {
+    return { unlocked: true, reason: 'subscription', tier, userId, tool };
   }
 
   // 2) One-time unlock purchase
