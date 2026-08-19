@@ -382,7 +382,8 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
         {/* Amenities Icons Overlay */}
         <div className={cn("absolute left-3 right-3 flex items-center justify-between", compact ? "bottom-2" : "bottom-3")}>
           <div className="flex items-center gap-1">
-            {displayAmenities.length > 0 && (
+            {/* Search cards move amenity detail into the information surface */}
+            {!isSearch && displayAmenities.length > 0 && (
               <TooltipProvider delayDuration={200}>
                 {displayAmenities.map((amenityId) => {
                   const amenity = popularAmenityIcons[amenityId];
