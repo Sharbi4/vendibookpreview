@@ -759,18 +759,18 @@ const Search = () => {
                   type="single"
                   value={viewMode}
                   onValueChange={(value) => value && setViewMode(value as 'grid' | 'map' | 'split' | 'list')}
-                  className="bg-card/80 backdrop-blur-sm border border-border/60 rounded-xl p-0.5 shadow-sm"
+                  className="bg-transparent border border-border/40 rounded-xl p-0.5"
                 >
-                  <ToggleGroupItem value="grid" aria-label="Grid view" title="Grid view" className="h-8 px-2.5 rounded-lg data-[state=on]:bg-foreground data-[state=on]:text-background data-[state=on]:shadow-sm transition-all">
+                  <ToggleGroupItem value="grid" aria-label="Grid view" title="Grid view" className="h-7 px-2 rounded-lg text-muted-foreground data-[state=on]:bg-foreground/90 data-[state=on]:text-background transition-all duration-200">
                     <LayoutGrid className="h-3.5 w-3.5" />
                   </ToggleGroupItem>
-                  <ToggleGroupItem value="list" aria-label="List view" title="List view" className="h-8 px-2.5 rounded-lg data-[state=on]:bg-foreground data-[state=on]:text-background data-[state=on]:shadow-sm transition-all">
+                  <ToggleGroupItem value="list" aria-label="List view" title="List view" className="h-7 px-2 rounded-lg text-muted-foreground data-[state=on]:bg-foreground/90 data-[state=on]:text-background transition-all duration-200">
                     <Rows3 className="h-3.5 w-3.5" />
                   </ToggleGroupItem>
-                  <ToggleGroupItem value="split" aria-label="Split view" title="Split view (list + map)" className="hidden md:flex h-8 px-2.5 rounded-lg data-[state=on]:bg-foreground data-[state=on]:text-background data-[state=on]:shadow-sm transition-all">
+                  <ToggleGroupItem value="split" aria-label="Split view" title="Split view (list + map)" className="hidden md:flex h-7 px-2 rounded-lg text-muted-foreground data-[state=on]:bg-foreground/90 data-[state=on]:text-background transition-all duration-200">
                     <Columns className="h-3.5 w-3.5" />
                   </ToggleGroupItem>
-                  <ToggleGroupItem value="map" aria-label="Map view" title="Map view" className="h-8 px-2.5 rounded-lg data-[state=on]:bg-foreground data-[state=on]:text-background data-[state=on]:shadow-sm transition-all">
+                  <ToggleGroupItem value="map" aria-label="Map view" title="Map view" className="h-7 px-2 rounded-lg text-muted-foreground data-[state=on]:bg-foreground/90 data-[state=on]:text-background transition-all duration-200">
                     <Map className="h-3.5 w-3.5" />
                   </ToggleGroupItem>
                 </ToggleGroup>
@@ -780,7 +780,7 @@ const Search = () => {
                   <select
                     value={sortBy}
                     onChange={(e) => handleSortChange(e.target.value)}
-                    className="appearance-none text-xs font-medium border border-border/60 rounded-xl pl-3 pr-7 py-2 h-9 bg-card/80 backdrop-blur-sm shadow-sm hover:bg-muted/50 hover:border-border transition-all cursor-pointer focus:outline-none focus:border-primary/60"
+                    className="appearance-none text-xs font-medium text-muted-foreground hover:text-foreground border border-border/40 rounded-xl pl-3 pr-7 h-8 bg-transparent hover:border-border/70 transition-all cursor-pointer focus:outline-none focus:border-primary/60"
                   >
                     <option value="newest">Newest</option>
                     {searchQuery.trim() && <option value="relevance">Relevance</option>}
