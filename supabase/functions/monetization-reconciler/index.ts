@@ -14,6 +14,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import { getPayPalOrder, getPayPalSubscription } from "../_shared/paypal.ts";
 import { fulfillMonetizationPurchase } from "../_shared/fulfillMonetizationPurchase.ts";
+import { resolveSubscriptionPeriod } from "../_shared/subscriptionPeriod.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -194,7 +195,7 @@ serve(async (req) => {
   try {
     const { data: subs } = await admin
       .from("host_subscriptions")
-      .select("id, paypal_subscription_id, status, current_period_end")
+      .select("id, paypal_subscription_id, status, current_period_start, current_period_end")
       .in("status", ["active", "trialing", "past_due", "unpaid", "incomplete", "paused"])
       .not("paypal_subscription_id", "is", null)
       .limit(200);
@@ -206,17 +207,23 @@ serve(async (req) => {
         const rowAny = row as any;
         const sub = await getPayPalSubscription(rowAny.paypal_subscription_id);
         const paypalStatus = String(sub?.status ?? "").toUpperCase();
-        const mapped = paypalStatus === "ACTIVE"
-          ? "active"
-          : paypalStatus === "SUSPENDED"
-          ? "paused"
-          : paypalStatus === "CANCELLED" || paypalStatus === "EXPIRED"
-          ? "canceled"
-          : "incomplete";
+        // Shared grandfathering rule: a cancelled membership keeps benefits
+        // through the paid-through date we already stored.
+        const period = resolveSubscriptionPeriod({
+          providerStatus: paypalStatus.toLowerCase(),
+          nextBillingTime: sub?.billing_info?.next_billing_time ?? null,
+          lastPaymentAt: sub?.billing_info?.last_payment?.time ?? null,
+          startTime: sub?.start_time ?? null,
+          existingPeriodEnd: rowAny.current_period_end ?? null,
+          existingPeriodStart: rowAny.current_period_start ?? null,
+        });
         const patch = {
-          status: mapped,
+          status: period.status,
           payment_provider: "paypal",
-          current_period_end: sub?.billing_info?.next_billing_time ?? null,
+          cancel_at_period_end: period.cancel_at_period_end,
+          cancel_at: period.cancel_at,
+          current_period_start: period.current_period_start,
+          current_period_end: period.current_period_end,
           updated_at: new Date().toISOString(),
         };
         await admin.from("host_subscriptions").update(patch).eq("id", rowAny.id);
@@ -231,7 +238,12 @@ serve(async (req) => {
           await admin
             .from("host_subscriptions")
             .update({
-              status: "canceled",
+              // Keep paid-through access; only detach the dead provider id.
+              status: (row as { current_period_end?: string | null }).current_period_end &&
+                  new Date((row as { current_period_end: string }).current_period_end) > new Date()
+                ? "active"
+                : "canceled",
+              cancel_at_period_end: true,
               paypal_subscription_id: null,
               updated_at: new Date().toISOString(),
             })

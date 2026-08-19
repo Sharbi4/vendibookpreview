@@ -61,7 +61,7 @@ export const TOOLS: ToolDef[] = [
     screenshot: permitpathShot,
     minTier: 'free',
     unlockProductSlug: 'permit_path_plus_monthly',
-    unlockPrice: '$29 per state',
+    unlockPrice: '$7.99/mo',
     flame: true,
   },
   {

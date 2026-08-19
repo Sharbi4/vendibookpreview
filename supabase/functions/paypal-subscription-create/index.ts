@@ -138,7 +138,13 @@ serve(async (req) => {
       });
     }
 
-    const tier = classifyProduct(product).grantsTier ?? "starter";
+    // Tool subscriptions (e.g. PermitPath Plus) grant no host tier — store the
+    // product slug so tier resolvers map them to `free` instead of promoting.
+    const classified = classifyProduct(product);
+    const tier = classified.grantsTier ??
+      (typeof (product.metadata as Record<string, unknown> | null)?.grants_tier === "string"
+        ? String((product.metadata as Record<string, unknown>).grants_tier)
+        : product.slug);
     const origin = req.headers.get("origin") ?? "https://vendibook.com";
     const returnUrl = `${origin}${body.return_path ?? "/account/subscription?subscribed=1"}`;
     const cancelUrl = `${origin}${body.cancel_path ?? "/pricing?cancelled=1"}`;
