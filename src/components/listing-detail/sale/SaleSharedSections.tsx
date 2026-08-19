@@ -87,7 +87,8 @@ export const SaleProtectionSection = () => (
         body="Our team is here to help if something doesn't go as planned."
       />
     </div>
-    <p className="text-xs text-muted-foreground leading-relaxed border-t border-border/70 pt-3">
+    <div className="h-px bg-border/70" />
+    <p className="text-xs text-muted-foreground leading-relaxed">
       All sales are final — review the details and ask questions before purchasing. Payment
       disputes are handled through PayPal&rsquo;s buyer protection process and Vendibook support.
     </p>

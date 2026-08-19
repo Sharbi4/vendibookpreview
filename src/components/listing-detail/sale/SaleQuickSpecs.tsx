@@ -145,7 +145,7 @@ export const SaleQuickSpecs = ({ listing }: SaleQuickSpecsProps) => {
           return (
             <div
               key={`${row.label}-${row.value}`}
-              className="flex items-center gap-3 py-2.5 border-b border-border/60"
+              className="flex items-center gap-3 py-2.5 [box-shadow:inset_0_-1px_0_hsl(var(--border))]"
             >
               <Icon className="h-4 w-4 shrink-0 text-muted-foreground" />
               <span className="flex-1 text-sm text-muted-foreground">{row.label}</span>
