@@ -206,10 +206,10 @@ export const FeaturedListingModal = ({
                 <div className="mt-5 rounded-2xl border border-white/10 bg-white/[0.03] p-4">
                   <div className="flex items-baseline justify-between">
                     <span className="text-xs uppercase tracking-[0.16em] text-muted-foreground">
-                      {boostCredit ? 'Or pay once · 30 days' : 'One-time · 30 days'}
+                      {boostCredit ? `Or pay once · ${durationLabel}` : `One-time · ${durationLabel}`}
                     </span>
                     <span className="text-3xl font-semibold tracking-tight text-foreground">
-                      $49
+                      {boostPrice.label}
                     </span>
                   </div>
 
@@ -238,8 +238,8 @@ export const FeaturedListingModal = ({
 
       {open && step === 'pay' ? (
         <PayPalPaymentPanel
-          target={{ kind: 'product', slug: 'boost-featured-30', listing_id: listingId }}
-          totalUsd={49}
+          target={{ kind: 'product', slug: ACTIVE_PRODUCT_SLUGS.featuredBoost, listing_id: listingId }}
+          totalUsd={boostPrice.amountUsd}
           onClose={() => setStep('overview')}
           onSuccess={(result) => {
             setStage(result.pending ? 'review' : 'authorized');
@@ -254,9 +254,11 @@ export const FeaturedListingModal = ({
               >
                 <ArrowLeft className="h-3 w-3" /> Back to boost details
               </button>
-              <p className="text-sm font-medium">Featured Boost — 30 days</p>
+              <p className="text-sm font-medium">
+                {boostPrice.name ?? `Featured Boost — ${durationLabel}`}
+              </p>
               <p className="text-xs text-muted-foreground">{listingTitle}</p>
-              <p className="text-lg font-semibold">$49.00</p>
+              <p className="text-lg font-semibold">{formatUsd(boostPrice.cents)}</p>
             </div>
           }
         />
