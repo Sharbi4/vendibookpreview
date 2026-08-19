@@ -25,6 +25,8 @@ import {
   type SavedRoadmap,
 } from '@/lib/permitsApi';
 import SaveRoadmapDialog from '@/components/tools/permit-path/SaveRoadmapDialog';
+import { usePermitPathAccess } from '@/hooks/usePermitPathAccess';
+import { PermitPlusUpsellDialog } from '@/components/tools/permit-path/PermitPlusUpsell';
 
 import { toast as sonnerToast } from 'sonner';
 import { cn } from '@/lib/utils';
