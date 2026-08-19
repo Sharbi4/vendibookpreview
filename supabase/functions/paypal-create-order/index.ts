@@ -5,6 +5,7 @@ import { PayPalError, safeLog } from "../_shared/paypal.ts";
 import { getPaymentProvider, PaymentProviderError } from "../_shared/payments/index.ts";
 import { auditPayment, requestIp } from "../_shared/paymentAudit.ts";
 import { assertListingPurchasable } from "../_shared/listingGuard.ts";
+import { resolveProStatus } from "../_shared/proEligibility.ts";
 import {
   quoteBookingRequest,
   quoteMonetizationProduct,
@@ -375,6 +376,9 @@ serve(async (req) => {
         currency: quote.currency,
         gross_amount_cents: quote.grossCents,
         platform_fee_cents: quote.platformFeeCents,
+        fee_rate_pct: quote.feeRatePct ?? null,
+        pro_discount_cents: quote.proDiscountCents ?? 0,
+        pro_fee_applied: !!quote.proFeeApplied,
         tax_cents: quote.taxCents,
         deposit_cents: quote.depositCents,
         discount_cents: quote.discountCents,
