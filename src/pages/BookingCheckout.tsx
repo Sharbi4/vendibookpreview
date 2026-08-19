@@ -1205,7 +1205,9 @@ const BookingCheckout = () => {
 
                       {!instantConfirm && (
                         <p className="text-xs text-center text-muted-foreground">
-                          Your card will be authorized now. Funds are only captured if the host approves your request.
+                          {listing.instant_book
+                            ? 'Your dates are held as soon as you pay, and the booking is confirmed once the host accepts. If they decline, you are refunded in full.'
+                            : 'Your card will be authorized now. Funds are only captured if the host approves your request.'}
                         </p>
                       )}
                     </div>
