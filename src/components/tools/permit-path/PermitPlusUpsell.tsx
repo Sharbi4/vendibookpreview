@@ -88,7 +88,7 @@ export function PermitPlusPanel({ title, subtitle, className, returnPath }: Pane
         </h3>
         <p className="text-[15px] text-stone-600 mt-2.5 leading-relaxed">
           {subtitle ??
-            'PermitPath Basic stays free — run it as often as you like. Plus adds the saved, tracked layer on top.'}
+            'Save your roadmap, track progress, store permit documents and manage renewal dates. PermitPath Basic stays free — run it as often as you like.'}
         </p>
 
         <div className="mt-7 grid gap-7 sm:grid-cols-2">
@@ -145,7 +145,7 @@ export function PermitPlusPanel({ title, subtitle, className, returnPath }: Pane
             variant="ghost"
             className="h-10 text-xs text-stone-500 hover:text-stone-900 hover:bg-stone-100"
           >
-            <Link to="/pricing">View Vendibook Pro</Link>
+            <Link to="/pricing">See Vendibook Pro</Link>
           </Button>
         </div>
 

@@ -16,16 +16,24 @@ export interface ToolAccess {
   unlocked: boolean;
   reason: ToolAccessReason;
   tier: HostTier;
+  /**
+   * True when the PAID layer is unlocked. For tools with a free layer
+   * (`hasFreeTier`) `unlocked` stays true so the route opens, while this flag
+   * says whether the in-tool paid features are available.
+   */
+  plusUnlocked: boolean;
 }
 
 /**
  * Unified per-tool access resolver.
  *
- * Order of precedence:
- *   1. tool.minTier === 'free'  → always unlocked (free)
- *   2. active subscription rank ≥ tool.minTier → subscription
- *   3. one-time purchase matching tool.unlockProductSlug → purchase
- *   4. PermitPath legacy activity (saved roadmap or permit_items) → grandfathered
+ * Paid unlocks are evaluated FIRST so a tool that also has a free layer
+ * (PermitPath Basic) still reports the correct paid state instead of
+ * short-circuiting to "free". Order:
+ *   1. active subscription rank ≥ tool.minTier → subscription
+ *   2. one-time purchase matching tool.unlockProductSlug → purchase
+ *   3. durable PermitPath grandfather entitlement → grandfathered
+ *   4. tool.minTier === 'free' or tool.hasFreeTier → free (route open, paid layer locked)
  *   5. locked
  */
 export function useToolAccess() {
@@ -38,46 +46,43 @@ export function useToolAccess() {
     let cancel = false;
     if (!user) { setLegacyPermitPath(false); return; }
     (async () => {
-      const [r1, r2] = await Promise.all([
-        (supabase as any)
-          .from('saved_permit_roadmaps')
-          .select('id', { count: 'exact', head: true })
-          .eq('user_id', user.id),
-        (supabase as any)
-          .from('permit_items')
-          .select('id', { count: 'exact', head: true })
-          .eq('user_id', user.id),
-      ]);
+      // Durable entitlement row — never inferred from data timestamps.
+      const { data } = await (supabase as any)
+        .from('permit_path_grandfathered')
+        .select('user_id')
+        .eq('user_id', user.id)
+        .maybeSingle();
       if (cancel) return;
-      const total = (r1.count ?? 0) + (r2.count ?? 0);
-      setLegacyPermitPath(total > 0);
+      setLegacyPermitPath(!!data);
     })();
     return () => { cancel = true; };
   }, [user]);
 
   const resolve = (tool: ToolDef): ToolAccess => {
-    if (tool.minTier === 'free') {
-      return { unlocked: true, reason: 'free', tier: host.tier };
+    if (tool.minTier !== 'free' && host.hasAtLeast(tool.minTier)) {
+      return { unlocked: true, reason: 'subscription', tier: host.tier, plusUnlocked: true };
     }
-    if (host.hasAtLeast(tool.minTier)) {
-      return { unlocked: true, reason: 'subscription', tier: host.tier };
-    }
+    // A standalone product subscription (e.g. PermitPath Plus) also unlocks.
     if (tool.unlockProductSlug && ent.bySlug[tool.unlockProductSlug]) {
       const st = ent.bySlug[tool.unlockProductSlug].status;
       if (st === 'paid' || st === 'fulfilled' || st === 'active') {
-        return { unlocked: true, reason: 'purchase', tier: host.tier };
+        return { unlocked: true, reason: 'purchase', tier: host.tier, plusUnlocked: true };
       }
     }
-    // Grandfather clause: users who used PermitPath before paid tiers
-    // keep PermitPath Plus access forever.
+    // Grandfather clause: users who already had PermitPath data when gating
+    // shipped keep PermitPath Plus access forever (durable DB entitlement).
     if (tool.slug === 'permitpath' && legacyPermitPath) {
-      return { unlocked: true, reason: 'grandfathered', tier: host.tier };
+      return { unlocked: true, reason: 'grandfathered', tier: host.tier, plusUnlocked: true };
     }
-    return { unlocked: false, reason: 'locked', tier: host.tier };
+    if (tool.minTier === 'free' || tool.hasFreeTier) {
+      return { unlocked: true, reason: 'free', tier: host.tier, plusUnlocked: false };
+    }
+    return { unlocked: false, reason: 'locked', tier: host.tier, plusUnlocked: false };
   };
 
   const bySlug: Record<string, ToolAccess> = {};
   for (const t of TOOLS) bySlug[t.slug] = resolve(t);
+
 
   return {
     resolve,

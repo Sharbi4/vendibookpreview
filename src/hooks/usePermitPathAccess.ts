@@ -10,7 +10,6 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import {
-  PERMIT_PLUS_GRANDFATHER_CUTOFF,
   PERMIT_PLUS_SLUGS,
   resolvePermitPlus,
   type PermitPlusAccess,
@@ -30,7 +29,7 @@ export function usePermitPathAccess(): PermitPathAccess {
     enabled: !!user?.id,
     staleTime: 60_000,
     queryFn: async (): Promise<PermitPlusAccess> => {
-      const [subsRes, purchaseRes, legacyRoadmaps, legacyItems] = await Promise.all([
+      const [subsRes, purchaseRes, grandfatherRes] = await Promise.all([
         (supabase as any)
           .from('host_subscriptions')
           .select('tier, status')
@@ -41,16 +40,12 @@ export function usePermitPathAccess(): PermitPathAccess {
           .eq('user_id', user!.id)
           .in('status', ['paid', 'fulfilled'])
           .in('monetization_products.slug', PERMIT_PLUS_SLUGS as unknown as string[]),
+        // Durable grandfather entitlement — one row per protected member.
         (supabase as any)
-          .from('saved_permit_roadmaps')
-          .select('id', { count: 'exact', head: true })
+          .from('permit_path_grandfathered')
+          .select('user_id')
           .eq('user_id', user!.id)
-          .lt('created_at', PERMIT_PLUS_GRANDFATHER_CUTOFF),
-        (supabase as any)
-          .from('permit_items')
-          .select('id', { count: 'exact', head: true })
-          .eq('user_id', user!.id)
-          .lt('created_at', PERMIT_PLUS_GRANDFATHER_CUTOFF),
+          .maybeSingle(),
       ]);
 
       return resolvePermitPlus({
@@ -58,8 +53,9 @@ export function usePermitPathAccess(): PermitPathAccess {
         purchasedSlugs: (purchaseRes.data ?? []).map(
           (row: any) => row?.monetization_products?.slug,
         ).filter(Boolean),
-        legacyUser: (legacyRoadmaps.count ?? 0) + (legacyItems.count ?? 0) > 0,
+        legacyUser: !!grandfatherRes?.data,
       });
+
     },
   });
 

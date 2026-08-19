@@ -24,9 +24,6 @@ type Tier = 'free' | 'starter' | 'pro' | 'premium';
 const TIER_RANK: Record<Tier, number> = { free: 0, starter: 1, pro: 2, premium: 3 };
 const ACTIVE_STATUSES = new Set(['active', 'trialing', 'past_due']);
 
-/** Founding-member cutoff — mirrors src/lib/permits/permitPathAccess.ts. */
-const PERMIT_PLUS_GRANDFATHER_CUTOFF = '2026-08-19T00:00:00.000Z';
-
 /**
  * PermitPath note: the Basic checklist is free and never calls this resolver.
  * `permitpath` here means the PLUS layer (save, track, documents, reminders,
@@ -140,18 +137,15 @@ export async function resolveToolAccess(userId: string, tool: ToolSlug): Promise
     if (purchase) return { unlocked: true, reason: 'purchase', tier, userId, tool };
   }
 
-  // 3) PermitPath grandfathering — only data created BEFORE Plus gating.
-  // Rows created after the cutoff already required an entitlement, so they
-  // must not grant one back.
+  // 3) PermitPath grandfathering — durable entitlement row written when
+  // Basic/Plus gating shipped. Never inferred from data timestamps.
   if (tool === 'permitpath') {
-    const cutoff = PERMIT_PLUS_GRANDFATHER_CUTOFF;
-    const [{ count: c1 }, { count: c2 }] = await Promise.all([
-      admin.from('saved_permit_roadmaps').select('id', { count: 'exact', head: true }).eq('user_id', userId).lt('created_at', cutoff),
-      admin.from('permit_items').select('id', { count: 'exact', head: true }).eq('user_id', userId).lt('created_at', cutoff),
-    ]);
-    if ((c1 ?? 0) + (c2 ?? 0) > 0) {
-      return { unlocked: true, reason: 'grandfathered', tier, userId, tool };
-    }
+    const { data: gf } = await admin
+      .from('permit_path_grandfathered')
+      .select('user_id')
+      .eq('user_id', userId)
+      .maybeSingle();
+    if (gf) return { unlocked: true, reason: 'grandfathered', tier, userId, tool };
   }
 
   return { unlocked: false, reason: 'locked', tier, userId, tool };

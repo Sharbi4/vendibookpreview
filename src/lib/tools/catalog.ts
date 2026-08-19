@@ -37,6 +37,11 @@ export interface ToolDef {
   screenshot: string;
   /** Minimum subscription tier that unlocks this tool. */
   minTier: ToolTier;
+  /**
+   * Tool has a free layer: the route stays open to everyone and only the
+   * paid features inside are gated (PermitPath Basic vs Plus).
+   */
+  hasFreeTier?: boolean;
   /** One-time unlock product slug (undefined for always-free tools). */
   unlockProductSlug?: string;
   /** Marketing price for the one-time unlock (display only). */
@@ -52,16 +57,16 @@ export const TOOLS: ToolDef[] = [
     tagline: 'Every license, permit, and inspection required to operate legally — in one roadmap.',
     bullets: [
       'City, county, and state requirements matched to your address',
-      'Deadline reminders so you never miss a renewal',
-      'Save progress, upload documents, export a PDF checklist',
+      'Free roadmap: costs, timelines, agencies and official links',
+      'Plus: save roadmaps, track progress, store documents, export a PDF',
       'Health-department and fire-marshal contacts included',
     ],
     icon: FileCheck,
     href: '/tools/permitpath',
     screenshot: permitpathShot,
-    minTier: 'free',
+    minTier: 'pro',
+    hasFreeTier: true,
     unlockProductSlug: 'permit_path_plus_monthly',
-    unlockPrice: '$7.99/mo',
     flame: true,
   },
   {
