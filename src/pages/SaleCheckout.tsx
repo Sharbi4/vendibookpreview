@@ -23,23 +23,18 @@ import { calculateDistance } from '@/lib/geolocation';
 import SEO from '@/components/SEO';
 
 // Premium shared components
-import StickySummary from '@/components/shared/StickySummary';
 
 // Step components
 import {
   PurchaseStepDelivery,
   PurchaseStepInfo,
-  PurchaseStepReview,
-  PurchaseStepIdentity,
   PurchaseStepPayment,
   DELIVERY_WINDOW_LABELS,
   type BuyerInfo,
   type DeliveryWindow,
 } from '@/components/purchase-wizard';
-import StepConfirmPurchase from '@/components/checkout/StepConfirmPurchase';
 import CheckoutIntro from '@/components/checkout/CheckoutIntro';
 
-import StepAddOns, { type CheckoutAddOn } from '@/components/checkout/StepAddOns';
 import { ReferralCodeField } from '@/components/referrals/ReferralCodeField';
 import { FinalReviewSheet } from '@/components/transaction/FinalReviewSheet';
 import { useTermsGate } from '@/hooks/useTermsGate';
@@ -50,47 +45,49 @@ import { useSellerVerifiedBadge, refreshSellerBadgeSurfaces } from '@/hooks/useS
 import VerifiedSellerDialog from '@/components/verification/VerifiedSellerDialog';
 import { parseFormattedAddress } from '@/lib/fulfillment/parseAddress';
 import { getPublicDisplayName } from '@/lib/displayName';
-import {
-  JourneyProgress,
-  PrimaryActionBar,
-  TrustModule,
-  PAYMENT_TRUST_POINTS,
-  PAYMENT_DISCLAIMER,
-  type JourneyStep,
-} from '@/components/journey';
+import { Checkbox } from '@/components/ui/checkbox';
+import SaleCheckoutShell from '@/components/checkout/sale/SaleCheckoutShell';
+import SaleCheckoutCard from '@/components/checkout/sale/SaleCheckoutCard';
+import SaleListingSummary from '@/components/checkout/sale/SaleListingSummary';
+import SaleOrderSummary, { type SaleSummaryLine } from '@/components/checkout/sale/SaleOrderSummary';
+import SaleCheckoutFooter from '@/components/checkout/sale/SaleCheckoutFooter';
 
 type FulfillmentSelection = 'pickup' | 'delivery' | 'vendibook_freight';
-type CheckoutStep =
-  | 'intro'
-  | 'confirm'
-  | 'identity'
-  | 'delivery'
-  | 'addons'
-  | 'details'
-  | 'payment'
-  | 'review';
+
+/**
+ * Three-step for-sale checkout:
+ *   1. Review & fulfillment  2. Confirm details  3. Payment
+ * The step machine is the only thing that changed — every money, eligibility
+ * and edge-function rule below is untouched.
+ */
+type CheckoutStep = 'intro' | 'fulfillment' | 'details' | 'payment';
 
 // High-value sale threshold. Below this we skip the intro screen and drop
 // buyers straight into the wizard (small tool/add-on purchases).
 const SALE_INTRO_MIN_PRICE = 1000;
 
 const CHECKOUT_STEPS = [
-  { step: 1, label: 'Confirm',       short: 'Confirm' },
-  { step: 2, label: 'Verify you',    short: 'Verify' },
-  { step: 3, label: 'Delivery',      short: 'Delivery' },
-  { step: 4, label: 'Add-ons',       short: 'Add-ons' },
-  { step: 5, label: 'Your details',  short: 'Details' },
-  { step: 6, label: 'Payment',       short: 'Payment' },
-  { step: 7, label: 'Review & pay',  short: 'Review' },
+  { id: 'fulfillment', label: 'Review & fulfillment' },
+  { id: 'details', label: 'Confirm details' },
+  { id: 'payment', label: 'Payment' },
 ];
 
-const STEP_NUM: Record<CheckoutStep, number> = {
-  intro: 0, confirm: 1, identity: 2, delivery: 3, addons: 4, details: 5, payment: 6, review: 7,
+const STEP_ORDER: Exclude<CheckoutStep, 'intro'>[] = ['fulfillment', 'details', 'payment'];
+
+/** Older sessions persisted a 7-step machine; fold them onto the new three. */
+const LEGACY_STEP_MAP: Record<string, CheckoutStep> = {
+  intro: 'intro',
+  confirm: 'fulfillment',
+  identity: 'fulfillment',
+  delivery: 'fulfillment',
+  fulfillment: 'fulfillment',
+  addons: 'details',
+  details: 'details',
+  payment: 'payment',
+  review: 'payment',
 };
-
-const getStepNumber = (step: CheckoutStep): number => STEP_NUM[step];
-
-
+const normalizeStep = (step: string | undefined): CheckoutStep =>
+  LEGACY_STEP_MAP[step ?? 'intro'] ?? 'intro';
 
 const SaleCheckout = () => {
   const { listingId } = useParams();
@@ -141,10 +138,10 @@ const SaleCheckout = () => {
     identityAcknowledged: false,
   });
 
-  const currentStep = persist.state.step;
+  const currentStep = normalizeStep(persist.state.step);
   const setCurrentStep = (s: CheckoutStep) => {
     persist.setState((prev) => ({ ...prev, step: s }));
-    persist.bumpFurthestStep(STEP_NUM[s]);
+    persist.bumpFurthestStep(Math.max(0, STEP_ORDER.indexOf(s as Exclude<CheckoutStep, 'intro'>) + 1));
   };
 
 
@@ -322,7 +319,7 @@ const SaleCheckout = () => {
       priceSale > 0 &&
       priceSale < SALE_INTRO_MIN_PRICE
     ) {
-      setCurrentStep('confirm');
+      setCurrentStep('fulfillment');
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentStep, isListingLoading, priceSale]);
@@ -385,6 +382,7 @@ const SaleCheckout = () => {
   // Identity runs inline (real Plaid check) instead of navigating away and
   // losing the in-progress order.
   const [identityDialogOpen, setIdentityDialogOpen] = useState(false);
+  const [fulfillmentReady, setFulfillmentReady] = useState(false);
   const queryClient = useQueryClient();
 
   /**
@@ -451,7 +449,7 @@ const SaleCheckout = () => {
 
   // Validation
   const validateStep = (step: CheckoutStep): boolean => {
-    if (step === 'delivery') {
+    if (step === 'fulfillment') {
       if (fulfillmentSelected === 'vendibook_freight' && !hasValidEstimate) {
         toast({ title: 'Enter delivery address', description: 'Please enter a complete address to get a freight quote.', variant: 'destructive' });
         return false;
@@ -791,68 +789,10 @@ const SaleCheckout = () => {
   }
 
   const hasMultiplePaymentOptions = acceptPayPalCheckout && acceptCashPayment;
-  const currentStepNumber = getStepNumber(currentStep);
+  const stepIndex = Math.max(0, STEP_ORDER.indexOf(currentStep as Exclude<CheckoutStep, 'intro'>));
 
-  // ─── Journey progress + primary-action wiring ───
-  // Uses the existing CHECKOUT_STEPS + listing identifier so the roadmap
-  // and CTA stay in lock-step with the wizard's real state.
-  type WizardStep = Exclude<CheckoutStep, 'intro'>;
-  const FULL_STEP_ORDER: WizardStep[] = [
-    'confirm', 'identity', 'delivery', 'addons', 'details', 'payment', 'review',
-  ];
-  // Steps that carry no decision for this listing/buyer are removed from the
-  // roadmap AND from navigation, so the progress bar never lies.
-  const WIZARD_STEP_ORDER: WizardStep[] = FULL_STEP_ORDER.filter((s) => {
-    if (s === 'identity') return !skipIdentityStep;
-    if (s === 'delivery') return !skipDeliveryStep;
-    return true;
-  });
-  const stepLabel = (s: WizardStep) =>
-    CHECKOUT_STEPS[FULL_STEP_ORDER.indexOf(s)]?.label ?? 'Next';
-  const journeySteps: JourneyStep[] = WIZARD_STEP_ORDER.map((s) => ({
-    id: s,
-    label: stepLabel(s),
-    optional: s === 'addons',
-  }));
-  const journeyIndex = Math.max(0, WIZARD_STEP_ORDER.indexOf(currentStep as WizardStep));
-  const nextWizardStep: WizardStep | null =
-    WIZARD_STEP_ORDER[Math.min(journeyIndex + 1, WIZARD_STEP_ORDER.length - 1)] ?? null;
-
-  /** Skip-aware neighbours so Back/Continue never land on a hidden step. */
-  const stepAfter = (s: WizardStep): WizardStep => {
-    const i = WIZARD_STEP_ORDER.indexOf(s);
-    return WIZARD_STEP_ORDER[Math.min(i + 1, WIZARD_STEP_ORDER.length - 1)];
-  };
-  const stepBefore = (s: WizardStep): WizardStep => {
-    const i = WIZARD_STEP_ORDER.indexOf(s);
-    return WIZARD_STEP_ORDER[Math.max(i - 1, 0)];
-  };
-  const goNext = (from: WizardStep) => setCurrentStep(stepAfter(from));
-  const goBack = (from: WizardStep) => setCurrentStep(stepBefore(from));
-
-  const advanceFromCurrent = () => {
-    if (currentStep === 'intro' || currentStep === 'review') return;
-    const step = currentStep as WizardStep;
-    if (step === 'delivery' && !validateStep('delivery')) return;
-    if (step === 'details' && !validateStep('details')) return;
-    if (step === 'identity' && !skipIdentityStep && !identityAcknowledged) {
-      toast({
-        title: 'One more thing',
-        description: 'Verify your identity, or tick the box to continue without it.',
-        variant: 'destructive',
-      });
-      return;
-    }
-    goNext(step);
-  };
-
-  const primaryLabel =
-    currentStep === 'review'
-      ? 'Complete purchase below'
-      : nextWizardStep && nextWizardStep !== (currentStep as WizardStep)
-        ? `Continue to ${stepLabel(nextWizardStep)}`
-        : 'Continue';
-  const primaryDisabled = currentStep === 'review';
+  const goNext = () => setCurrentStep(STEP_ORDER[Math.min(stepIndex + 1, STEP_ORDER.length - 1)]);
+  const goBack = () => setCurrentStep(STEP_ORDER[Math.max(stepIndex - 1, 0)]);
 
   /** Prefill the details step from the delivery address the buyer already typed. */
   const prefillFromDeliveryAddress = () => {
@@ -862,40 +802,72 @@ const SaleCheckout = () => {
     setBuyerInfo((prev) => ({ ...prev, ...parsed }));
   };
 
-
-  // Price lines for sticky summary — real listing title, never "Item price"
-  const priceLines = [
-    { label: listing.title, amount: priceSale },
-    ...(currentDeliveryFee > 0 ? [{
-      label: fulfillmentSelected === 'vendibook_freight' ? 'Freight' : 'Delivery',
-      amount: currentDeliveryFee,
-      isDelivery: true,
-    }] : []),
-  ];
-
   // Privacy-safe: business name, else "First L." — never a full legal name.
   const sellerName = host ? getPublicDisplayName(host, 'Seller') : undefined;
   const locationLabel = [listing.city, listing.state].filter(Boolean).join(', ') || undefined;
+  const coverImage = listing.cover_image_url || listing.image_urls?.[0] || null;
 
-  // Contextual add-ons — only surface what actually applies to this listing.
-  const addOnCatalog: CheckoutAddOn[] = [
-    {
-      id: 'inspection',
-      title: 'Pre-purchase inspection referral',
-      description: 'We connect you with a local third-party inspector before you finalize.',
-      priceLabel: 'From $149',
-      icon: 'inspection',
-      eligible: priceSale >= 3000,
-    },
-    {
-      id: 'notarization',
-      title: 'Notarized bill of sale',
-      description: 'A licensed notary co-signs your documents for higher-value transfers.',
-      priceLabel: '$29',
-      icon: 'notarization',
-      eligible: priceSale >= 10000,
-    },
+  const summaryLines: SaleSummaryLine[] = [
+    { label: listing.title, amount: priceSale },
+    ...(currentDeliveryFee > 0
+      ? [{
+          label: fulfillmentSelected === 'vendibook_freight' ? 'Vendibook freight' : 'Seller delivery',
+          amount: currentDeliveryFee,
+        }]
+      : []),
   ];
+
+  const fulfillmentDetail =
+    fulfillmentSelected === 'pickup'
+      ? locationLabel ? `Pick up near ${locationLabel}` : 'Arranged with the seller'
+      : deliveryAddress || 'Address confirmed at the next step';
+
+  const orderSummary = (
+    <SaleOrderSummary
+      imageUrl={coverImage}
+      title={listing.title}
+      lines={summaryLines}
+      total={totalPrice}
+      fulfillment={fulfillmentSelected}
+      fulfillmentDetail={fulfillmentDetail}
+    />
+  );
+
+  const advance = () => {
+    if (currentStep === 'fulfillment') {
+      if (!validateStep('fulfillment')) return;
+      prefillFromDeliveryAddress();
+      goNext();
+      return;
+    }
+    if (currentStep === 'details') {
+      if (!validateStep('details')) return;
+      if (!agreedToTerms) {
+        toast({
+          title: 'One more thing',
+          description: 'Please acknowledge that all sales are final to continue.',
+          variant: 'destructive',
+        });
+        return;
+      }
+      goNext();
+      return;
+    }
+    handlePurchase();
+  };
+
+  const primaryLabel =
+    currentStep === 'fulfillment'
+      ? 'Continue to your details'
+      : currentStep === 'details'
+        ? 'Continue to payment'
+        : paymentMethod === 'cash'
+          ? 'Confirm — arrange in person'
+          : `Pay $${totalPrice.toLocaleString()}`;
+
+  const primaryDisabled =
+    (currentStep === 'fulfillment' && !fulfillmentReady) ||
+    (currentStep === 'payment' && !user);
 
   // "Step 0" — enterprise-grade intro. Shown once per checkout session for
   // high-value sales; small purchases fall through to the wizard.
@@ -907,7 +879,7 @@ const SaleCheckout = () => {
           <CheckoutIntro
             listingId={listing.id}
             listingTitle={listing.title}
-            coverImageUrl={listing.cover_image_url ?? (listing.image_urls?.[0] ?? null)}
+            coverImageUrl={coverImage}
             city={listing.city}
             state={listing.state}
             price={priceSale}
@@ -916,7 +888,7 @@ const SaleCheckout = () => {
             flow="sale"
             financingEligible={priceSale >= 150 && acceptPayPalCheckout}
             onBack={() => navigate(`/listing/${listingId}`)}
-            onContinue={() => setCurrentStep('confirm')}
+            onContinue={() => setCurrentStep('fulfillment')}
           />
         </div>
       </>
@@ -927,277 +899,188 @@ const SaleCheckout = () => {
     <>
       <SEO title={`Checkout - ${listing.title}`} description={`Complete your purchase of ${listing.title}`} />
 
-      <CheckoutChrome
+      <SaleCheckoutShell
         steps={CHECKOUT_STEPS}
-        currentStep={currentStepNumber}
+        currentIndex={stepIndex}
         exitHref={`/listing/${listingId}`}
-        exitLabel="Back to listing"
+        aside={orderSummary}
       >
-        <div className="container max-w-6xl mx-auto px-4">
-          {/* Guest sign-in prompt — surfaced BEFORE the wizard so buyers don't lose typed info at the Pay step */}
-          {!user && (
-            <div className="mb-4 rounded-xl border border-primary/40 bg-primary/[0.06] p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-              <div>
-                <div className="text-sm font-semibold text-foreground">Sign in to complete checkout</div>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  An account is required to pay securely. Sign in now so we can keep your details when you return.
-                </p>
-              </div>
-              <button
-                onClick={() => navigate(`/auth?redirect=/checkout/${listingId}`)}
-                className="shrink-0 h-10 px-4 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition-opacity"
-              >
-                Sign in / Create account
-              </button>
+        {/* Guest sign-in prompt — surfaced BEFORE the wizard so buyers don't lose typed info at the Pay step */}
+        {!user && (
+          <div className="rounded-2xl border border-primary/30 bg-primary/[0.06] p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div>
+              <div className="text-sm font-semibold text-foreground">Sign in to complete checkout</div>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                An account is required to pay securely. Sign in now so we can keep your details when you return.
+              </p>
             </div>
-          )}
-
-          <div className="grid lg:grid-cols-5 gap-8">
-            {/* Main Wizard - Left Side */}
-            <div className="lg:col-span-3 space-y-4">
-              {/* Persistent step roadmap driven by the real wizard state */}
-              <JourneyProgress
-                steps={journeySteps}
-                currentIndex={journeyIndex}
-                estimate="About 2 minutes"
-              />
-              <div className="glass-panel overflow-hidden">
-                {/* Step Content */}
-                <div className="p-6">
-                  <AnimatePresence mode="wait">
-                    <motion.div
-                      key={currentStep}
-                      initial={{ opacity: 0, x: 20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: -20 }}
-                      transition={{ duration: 0.2 }}
-                    >
-                      {currentStep === 'confirm' && (
-                        <StepConfirmPurchase
-                          listing={{
-                            title: listing.title,
-                            cover_image_url: listing.cover_image_url,
-                            image_urls: listing.image_urls,
-                            city: listing.city,
-                            state: listing.state,
-                            category: listing.category ?? null,
-                            condition: (listing as { condition?: string | null }).condition ?? null,
-                            year: (listing as { year?: number | null }).year ?? null,
-                          }}
-                          priceSale={priceSale}
-                          sellerName={sellerName}
-                          sellerVerified={Boolean((host as { identity_verified?: boolean } | null | undefined)?.identity_verified)}
-                          specSummary={(listing as { specifications?: string | null }).specifications ?? null}
-                          onContinue={() => goNext('confirm')}
-                          onBack={priceSale >= SALE_INTRO_MIN_PRICE ? () => setCurrentStep('intro') : undefined}
-
-                        />
-                      )}
-
-                      {currentStep === 'identity' && (
-                        <PurchaseStepIdentity
-                          verified={buyerVerified}
-                          loading={buyerVerificationLoading}
-                          buyerName={buyerInfo.firstName || user?.email || null}
-                          acknowledged={identityAcknowledged}
-                          setAcknowledged={setIdentityAcknowledged}
-                          onVerify={() => {
-                            if (!user?.id) {
-                              navigate('/auth?redirect=/verify-identity');
-                              return;
-                            }
-                            setIdentityDialogOpen(true);
-                          }}
-                          onBack={() => goBack('identity')}
-                          onContinue={() => goNext('identity')}
-                        />
-                      )}
-
-                      <VerifiedSellerDialog
-                        open={identityDialogOpen}
-                        onOpenChange={setIdentityDialogOpen}
-                        onVerified={() => refreshSellerBadgeSurfaces(queryClient)}
-                      />
-
-                      {currentStep === 'delivery' && (
-                        <PurchaseStepDelivery
-                          fulfillmentOptions={fulfillmentOptions}
-                          fulfillmentSelected={fulfillmentSelected}
-                          setFulfillmentSelected={setFulfillmentSelected}
-                          deliveryAddress={deliveryAddress}
-                          setDeliveryAddress={setDeliveryAddress}
-                          setDeliveryCoords={setDeliveryCoords}
-                          deliveryFee={currentDeliveryFee}
-                          deliveryRateText={deliveryRateLabel(deliveryRate, deliveryFeeType)}
-                          deliveryFeeType={deliveryFeeType}
-                          deliveryRadiusMiles={deliveryRadiusMiles}
-                          deliveryDistanceInfo={deliveryDistanceInfo}
-                          isFreightSellerPaid={isFreightSellerPaid}
-                          freightCost={freightCost}
-                          hasValidEstimate={hasValidEstimate}
-                          isEstimating={isEstimating}
-                          estimateError={estimateError}
-                          estimate={estimate}
-                          isAddressComplete={isAddressComplete}
-                          setIsAddressComplete={setIsAddressComplete}
-                          fetchFreightEstimate={fetchFreightEstimate}
-                          clearEstimate={clearEstimate}
-                          listingCity={listing.city}
-                          listingState={listing.state}
-                          preferredDate={preferredDate}
-                          setPreferredDate={setPreferredDate}
-                          preferredWindow={preferredWindow}
-                          setPreferredWindow={setPreferredWindow}
-                          onSiteContact={onSiteContact}
-                          setOnSiteContact={setOnSiteContact}
-                          onBack={() => goBack('delivery')}
-                          onContinue={() => {
-                            if (validateStep('delivery')) goNext('delivery');
-                          }}
-                        />
-                      )}
-
-                      {currentStep === 'addons' && (
-                        <StepAddOns
-                          addOns={addOnCatalog}
-                          selected={addOnSelections}
-                          onToggle={toggleAddOn}
-                          onBack={() => goBack('addons')}
-                          onContinue={() => { prefillFromDeliveryAddress(); goNext('addons'); }}
-                          onSkip={() => { prefillFromDeliveryAddress(); goNext('addons'); }}
-                        />
-                      )}
-
-                      {currentStep === 'details' && (
-                        <PurchaseStepInfo
-                          buyerInfo={buyerInfo}
-                          updateBuyerInfo={updateBuyerInfo}
-                          deliveryInstructions={deliveryInstructions}
-                          setDeliveryInstructions={setDeliveryInstructions}
-                          fulfillmentSelected={fulfillmentSelected}
-                          fieldErrors={fieldErrors}
-                          touchedFields={touchedFields}
-                          setTouchedFields={setTouchedFields}
-                          hideAddress={fulfillmentSelected === 'pickup'}
-                          continueLabel="Continue to payment"
-                          onBack={() => goBack('details')}
-                          onContinue={() => {
-                            if (validateStep('details')) goNext('details');
-                          }}
-                        />
-                      )}
-
-                      {currentStep === 'payment' && (
-                        <PurchaseStepPayment
-                          paymentMethod={paymentMethod}
-                          setPaymentMethod={setPaymentMethod}
-                          acceptPayPalCheckout={acceptPayPalCheckout}
-                          acceptCashPayment={acceptCashPayment}
-                          titleStatus={(listing as { title_status?: string | null }).title_status ?? null}
-                          hasLien={(listing as { has_lien?: string | null }).has_lien ?? null}
-                          vin={(listing as { vin?: string | null }).vin ?? null}
-                          totalPrice={totalPrice}
-                          submitting={isPurchasing || termsGate.preparing}
-                          onBack={() => goBack('payment')}
-                          onContinue={() => goNext('payment')}
-                        />
-                      )}
-
-                      {currentStep === 'review' && (
-                        <>
-                          <div className="p-4 mb-4 border border-border rounded-lg bg-card">
-                            <ReferralCodeField
-                              programType="purchase"
-                              value={referralCode}
-                              onChange={(code, valid) => { setReferralCode(code); setReferralValid(valid); }}
-                              autoFillFromCookie
-                            />
-                          </div>
-                          <PurchaseStepReview
-                            listing={listing}
-                            priceSale={priceSale}
-                            currentDeliveryFee={currentDeliveryFee}
-                            totalPrice={totalPrice}
-                            fulfillmentSelected={fulfillmentSelected}
-                            deliveryAddress={deliveryAddress}
-                            buyerInfo={buyerInfo}
-                            hasValidEstimate={hasValidEstimate}
-                            estimate={estimate}
-                            isFreightSellerPaid={isFreightSellerPaid}
-                            freightCost={freightCost}
-                            paymentMethod={paymentMethod}
-                            setPaymentMethod={setPaymentMethod}
-                            /* Payment method is chosen in its own step now. */
-                            hasMultiplePaymentOptions={false}
-                            agreedToTerms={agreedToTerms}
-                            setAgreedToTerms={setAgreedToTerms}
-                            isPurchasing={isPurchasing}
-                            hideAddress={fulfillmentSelected === 'pickup'}
-                            onBack={() => goBack('review')}
-                            onEditDelivery={() => setCurrentStep('delivery')}
-                            onEditInfo={() => setCurrentStep('details')}
-                            onSubmit={handlePurchase}
-                          />
-                          {paymentMethod !== 'cash' ? (
-                            <ProtectionOptInCard salePriceCents={Math.round(totalPrice * 100)} />
-                          ) : null}
-                        </>
-                      )}
-                    </motion.div>
-                  </AnimatePresence>
-                </div>
-              </div>
-
-              {/* Sticky mobile-first primary path — mirrors the current step's next action */}
-              <PrimaryActionBar
-                sticky
-                helper={
-                  currentStep === 'review'
-                    ? 'Confirm terms & pay using the panel above.'
-                    : 'You can go back to any prior step at any time.'
-                }
-                primary={{
-                  label: primaryLabel,
-                  onClick: advanceFromCurrent,
-                  disabled: primaryDisabled,
-                }}
-                secondary={{
-                  label: 'Back to listing',
-                  onClick: () => navigate(`/listing/${listingId}`),
-                }}
-              />
-            </div>
-
-            {/* Sticky Summary - Right Side (Desktop Only) */}
-            <div className="lg:col-span-2 hidden lg:block">
-              <div className="sticky top-24 space-y-4">
-                <StickySummary
-                  imageUrl={listing.cover_image_url || listing.image_urls?.[0]}
-                  title={listing.title}
-                  category={listing.category}
-                  itemId={listing.id}
-                  sellerName={sellerName}
-                  sellerLabel="Sold by"
-                  locationLabel={locationLabel}
-                  priceLines={priceLines}
-                  totalToday={totalPrice}
-                  fulfillmentType={fulfillmentSelected}
-                  deliveryAddress={deliveryAddress}
-                  mode="checkout"
-                  showWhatsIncluded={currentStep !== 'review'}
-                  financingEligiblePrice={totalPrice}
-                />
-                {/* Trust reinforcement anchored to the summary */}
-                <TrustModule
-                  points={PAYMENT_TRUST_POINTS}
-                  disclaimer={PAYMENT_DISCLAIMER}
-                  variant="compact"
-                />
-              </div>
-            </div>
+            <button
+              onClick={() => navigate(`/auth?redirect=/checkout/${listingId}`)}
+              className="shrink-0 h-10 px-4 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition-opacity"
+            >
+              Sign in / Create account
+            </button>
           </div>
-        </div>
-      </CheckoutChrome>
+        )}
+
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={currentStep}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.18 }}
+            className="space-y-5"
+          >
+            {currentStep === 'fulfillment' && (
+              <>
+                <SaleCheckoutCard>
+                  <SaleListingSummary
+                    listingId={listing.id}
+                    title={listing.title}
+                    imageUrl={coverImage}
+                    price={priceSale}
+                    locationLabel={locationLabel}
+                    conditionLabel={(listing as { condition?: string | null }).condition ?? null}
+                    sellerName={sellerName}
+                    sellerVerified={Boolean((host as { identity_verified?: boolean } | null | undefined)?.identity_verified)}
+                  />
+                </SaleCheckoutCard>
+
+                <SaleCheckoutCard>
+                  <PurchaseStepDelivery
+                    embedded
+                    onCanContinueChange={setFulfillmentReady}
+                    fulfillmentOptions={fulfillmentOptions}
+                    fulfillmentSelected={fulfillmentSelected}
+                    setFulfillmentSelected={setFulfillmentSelected}
+                    deliveryAddress={deliveryAddress}
+                    setDeliveryAddress={setDeliveryAddress}
+                    setDeliveryCoords={setDeliveryCoords}
+                    deliveryFee={currentDeliveryFee}
+                    deliveryRateText={deliveryRateLabel(deliveryRate, deliveryFeeType)}
+                    deliveryFeeType={deliveryFeeType}
+                    deliveryRadiusMiles={deliveryRadiusMiles}
+                    deliveryDistanceInfo={deliveryDistanceInfo}
+                    isFreightSellerPaid={isFreightSellerPaid}
+                    freightCost={freightCost}
+                    hasValidEstimate={hasValidEstimate}
+                    isEstimating={isEstimating}
+                    estimateError={estimateError}
+                    estimate={estimate}
+                    isAddressComplete={isAddressComplete}
+                    setIsAddressComplete={setIsAddressComplete}
+                    fetchFreightEstimate={fetchFreightEstimate}
+                    clearEstimate={clearEstimate}
+                    listingCity={listing.city}
+                    listingState={listing.state}
+                    preferredDate={preferredDate}
+                    setPreferredDate={setPreferredDate}
+                    preferredWindow={preferredWindow}
+                    setPreferredWindow={setPreferredWindow}
+                    onSiteContact={onSiteContact}
+                    setOnSiteContact={setOnSiteContact}
+                    onBack={goBack}
+                    onContinue={advance}
+                  />
+                </SaleCheckoutCard>
+              </>
+            )}
+
+            {currentStep === 'details' && (
+              <>
+                <SaleCheckoutCard>
+                  <PurchaseStepInfo
+                    embedded
+                    buyerInfo={buyerInfo}
+                    updateBuyerInfo={updateBuyerInfo}
+                    deliveryInstructions={deliveryInstructions}
+                    setDeliveryInstructions={setDeliveryInstructions}
+                    fulfillmentSelected={fulfillmentSelected}
+                    fieldErrors={fieldErrors}
+                    touchedFields={touchedFields}
+                    setTouchedFields={setTouchedFields}
+                    hideAddress={fulfillmentSelected === 'pickup'}
+                    onBack={goBack}
+                    onContinue={advance}
+                  />
+                </SaleCheckoutCard>
+
+                <SaleCheckoutCard title="Before you pay" padding="md">
+                  <div className="space-y-4">
+                    <ReferralCodeField
+                      programType="purchase"
+                      value={referralCode}
+                      onChange={(code, valid) => { setReferralCode(code); setReferralValid(valid); }}
+                      autoFillFromCookie
+                    />
+                    <label className="flex items-start gap-3 rounded-xl bg-muted/60 p-3 cursor-pointer">
+                      <Checkbox
+                        checked={agreedToTerms}
+                        onCheckedChange={(v) => setAgreedToTerms(Boolean(v))}
+                        className="mt-0.5"
+                      />
+                      <span className="text-sm text-foreground/90 leading-relaxed">
+                        I understand this purchase is <strong>final</strong> and I've reviewed the
+                        item, fulfillment details and total shown here.
+                      </span>
+                    </label>
+                  </div>
+                </SaleCheckoutCard>
+
+                <div className="lg:hidden">{orderSummary}</div>
+              </>
+            )}
+
+            {currentStep === 'payment' && (
+              <>
+                <SaleCheckoutCard>
+                  <PurchaseStepPayment
+                    embedded
+                    paymentMethod={paymentMethod}
+                    setPaymentMethod={setPaymentMethod}
+                    acceptPayPalCheckout={acceptPayPalCheckout}
+                    acceptCashPayment={acceptCashPayment}
+                    titleStatus={(listing as { title_status?: string | null }).title_status ?? null}
+                    hasLien={(listing as { has_lien?: string | null }).has_lien ?? null}
+                    vin={(listing as { vin?: string | null }).vin ?? null}
+                    totalPrice={totalPrice}
+                    submitting={isPurchasing || termsGate.preparing}
+                    onBack={goBack}
+                    onContinue={advance}
+                  />
+                </SaleCheckoutCard>
+
+                {paymentMethod !== 'cash' ? (
+                  <ProtectionOptInCard salePriceCents={Math.round(totalPrice * 100)} />
+                ) : null}
+
+                <div className="lg:hidden">{orderSummary}</div>
+              </>
+            )}
+          </motion.div>
+        </AnimatePresence>
+
+        <SaleCheckoutFooter
+          onBack={stepIndex > 0 ? goBack : () => navigate(`/listing/${listingId}`)}
+          backLabel={stepIndex > 0 ? 'Back' : 'Back to listing'}
+          primaryLabel={primaryLabel}
+          onPrimary={advance}
+          primaryDisabled={primaryDisabled}
+          busy={isPurchasing || termsGate.preparing}
+          helper={
+            currentStep === 'payment'
+              ? "You'll confirm the final total before any money moves."
+              : 'Your progress is saved — you can step back any time.'
+          }
+        />
+
+        <VerifiedSellerDialog
+          open={identityDialogOpen}
+          onOpenChange={setIdentityDialogOpen}
+          onVerified={() => refreshSellerBadgeSurfaces(queryClient)}
+        />
+      </SaleCheckoutShell>
 
       <CheckoutOverlay isVisible={showCheckoutOverlay} />
       {paypalCheckout ? (

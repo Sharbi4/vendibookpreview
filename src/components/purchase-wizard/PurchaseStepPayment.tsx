@@ -20,6 +20,8 @@ interface PurchaseStepPaymentProps {
   submitting?: boolean;
   onBack: () => void;
   onContinue: () => void;
+  /** Host page owns the stepper footer (light sale checkout). */
+  embedded?: boolean;
 }
 
 const formatUsd = (value: number) =>
@@ -99,6 +101,7 @@ const PurchaseStepPayment = ({
   submitting = false,
   onBack,
   onContinue,
+  embedded = false,
 }: PurchaseStepPaymentProps) => {
   const options: {
     id: PurchasePaymentMethod;
@@ -219,23 +222,27 @@ const PurchaseStepPayment = ({
 
       <TitlePanel titleStatus={titleStatus} hasLien={hasLien} vin={vin} />
 
-      <NextStepHint text="Last step: review everything, then complete your purchase." />
+      {!embedded && (
+        <>
+          <NextStepHint text="Last step: review everything, then complete your purchase." />
 
-      <div className="flex gap-3">
-        <Button variant="outline" onClick={onBack} disabled={submitting} className="flex-1" size="lg">
-          Back
-        </Button>
-        <Button onClick={onContinue} disabled={submitting} className="flex-1" size="lg">
-          {submitting ? (
-            <>
-              <Loader2 className="h-4 w-4 animate-spin mr-2" />
-              Finishing your payment…
-            </>
-          ) : (
-            'Review your order'
-          )}
-        </Button>
-      </div>
+          <div className="flex gap-3">
+            <Button variant="outline" onClick={onBack} disabled={submitting} className="flex-1" size="lg">
+              Back
+            </Button>
+            <Button onClick={onContinue} disabled={submitting} className="flex-1" size="lg">
+              {submitting ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  Finishing your payment…
+                </>
+              ) : (
+                'Review your order'
+              )}
+            </Button>
+          </div>
+        </>
+      )}
     </div>
   );
 };
