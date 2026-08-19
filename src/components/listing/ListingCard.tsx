@@ -469,7 +469,7 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
         </div>
 
       {/* Content - Apple/OpenAI Cleanliness */}
-      <div className={cn("p-4 space-y-2 flex-1 flex flex-col", compact && "p-3 space-y-1", isRow && "sm:p-5")}>
+      <div className={cn("p-4 space-y-2 flex-1 flex flex-col", compact && "p-3 space-y-1", isRow && "sm:p-4 sm:space-y-1.5")}>
         {/* Location & Category */}
         <div className="flex items-center justify-between gap-2">
           <span className={cn(textMuted, "font-medium flex items-center gap-1", compact ? "text-xs" : "text-sm")}>
