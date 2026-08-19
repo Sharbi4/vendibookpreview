@@ -6,6 +6,7 @@ import { centsFromPayPalAmount, safeLog, verifyPayPalWebhook } from "../_shared/
 import { extractCaptureFacts, finalizeCapture } from "../_shared/paypalFinalize.ts";
 import { appendLedgerEntry, recalculatePayableAfterRefund } from "../_shared/paypalAccounting.ts";
 import { notifyOrderParties, notifyUser } from "../_shared/notify.ts";
+import { resolveSubscriptionPeriod } from "../_shared/subscriptionPeriod.ts";
 
 /**
  * Verified, idempotent PayPal webhook receiver for both one-time payments
