@@ -200,6 +200,11 @@ export default function ResultsDashboard({ result, readOnly = false, renderItemE
 
   // ---------- Actions ----------
   const handleDownload = () => {
+    // PDF export is part of the Plus layer — Basic keeps the on-screen roadmap.
+    if (!permitAccess.isPlus && !readOnly) {
+      setPlusUpsellOpen(true);
+      return;
+    }
     const data: PermitChecklistData = {
       location: result.location,
       businessType: result.businessType,
