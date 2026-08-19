@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
-import { Loader2, ArrowLeft } from 'lucide-react';
+import { Loader2, ArrowLeft, ShieldCheck } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
 import { useListing } from '@/hooks/useListing';
@@ -947,7 +947,7 @@ const SaleCheckout = () => {
       <SEO title={`Checkout - ${listing.title}`} description={`Complete your purchase of ${listing.title}`} />
 
       <SaleCheckoutShell
-        steps={CHECKOUT_STEPS}
+        steps={visibleSteps.map((id) => ({ id, label: STEP_LABELS[id] }))}
         currentIndex={stepIndex}
         exitHref={`/listing/${listingId}`}
         aside={orderSummary}
@@ -972,14 +972,14 @@ const SaleCheckout = () => {
 
         <AnimatePresence mode="wait">
           <motion.div
-            key={currentStep}
+            key={effectiveStep}
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
             transition={{ duration: 0.18 }}
             className="space-y-5"
           >
-            {currentStep === 'fulfillment' && (
+            {effectiveStep === 'fulfillment' && (
               <>
                 <SaleCheckoutCard>
                   <SaleListingSummary
@@ -1034,8 +1034,50 @@ const SaleCheckout = () => {
               </>
             )}
 
-            {currentStep === 'details' && (
+            {effectiveStep === 'verify' && (
               <>
+                {!buyerVerificationLoading && !buyerVerified && (
+                  <SaleCheckoutCard title="Verify your identity" padding="md">
+                    <div className="space-y-3">
+                      <p className="text-sm text-muted-foreground leading-relaxed">
+                        Verification is handled by Plaid — sellers only ever see a pass/fail result,
+                        never your documents. Verified buyers get pickup addresses and scheduling
+                        confirmed faster.
+                      </p>
+                      <div className="flex flex-wrap items-center gap-3">
+                        <button
+                          type="button"
+                          onClick={() => setIdentityDialogOpen(true)}
+                          className="h-10 px-4 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition-opacity"
+                        >
+                          Verify my identity
+                        </button>
+                        <label className="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer">
+                          <Checkbox
+                            checked={identityAcknowledged}
+                            onCheckedChange={(v) => setIdentityAcknowledged(Boolean(v))}
+                          />
+                          Continue without verifying for now
+                        </label>
+                      </div>
+                    </div>
+                  </SaleCheckoutCard>
+                )}
+
+                {buyerVerified && (
+                  <SaleCheckoutCard padding="md">
+                    <div className="flex items-center gap-3">
+                      <ShieldCheck className="h-5 w-5 text-primary shrink-0" />
+                      <div>
+                        <div className="text-sm font-semibold text-foreground">Identity verified</div>
+                        <p className="text-xs text-muted-foreground">
+                          Your Plaid identity check is active — nothing else to do here.
+                        </p>
+                      </div>
+                    </div>
+                  </SaleCheckoutCard>
+                )}
+
                 <SaleCheckoutCard>
                   <PurchaseStepInfo
                     embedded
@@ -1052,6 +1094,69 @@ const SaleCheckout = () => {
                     onContinue={advance}
                   />
                 </SaleCheckoutCard>
+
+                <div className="lg:hidden">{orderSummary}</div>
+              </>
+            )}
+
+            {effectiveStep === 'options' && (
+              <>
+                <SaleCheckoutCard title="Optional services" padding="md">
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Nothing is pre-selected and nothing is charged now — we'll follow up with a quote
+                    for anything you choose.
+                  </p>
+                  <div className="space-y-3">
+                    {addOnCatalog.map((addon) => (
+                      <label
+                        key={addon.id}
+                        className="flex items-start gap-3 rounded-2xl border border-border/70 bg-card p-4 cursor-pointer hover:border-primary/40 transition-colors"
+                      >
+                        <Checkbox
+                          checked={Boolean(addOnSelections[addon.id])}
+                          onCheckedChange={(v) => toggleAddOn(addon.id, Boolean(v))}
+                          className="mt-0.5"
+                        />
+                        <span className="min-w-0 flex-1">
+                          <span className="flex items-center justify-between gap-3">
+                            <span className="text-sm font-semibold text-foreground">{addon.title}</span>
+                            <span className="text-xs text-muted-foreground shrink-0">{addon.priceLabel}</span>
+                          </span>
+                          <span className="block text-xs text-muted-foreground mt-1 leading-relaxed">
+                            {addon.description}
+                          </span>
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                </SaleCheckoutCard>
+
+                <div className="lg:hidden">{orderSummary}</div>
+              </>
+            )}
+
+            {effectiveStep === 'payment' && (
+              <>
+                <SaleCheckoutCard>
+                  <PurchaseStepPayment
+                    embedded
+                    paymentMethod={paymentMethod}
+                    setPaymentMethod={setPaymentMethod}
+                    acceptPayPalCheckout={acceptPayPalCheckout}
+                    acceptCashPayment={acceptCashPayment}
+                    titleStatus={(listing as { title_status?: string | null }).title_status ?? null}
+                    hasLien={(listing as { has_lien?: string | null }).has_lien ?? null}
+                    vin={(listing as { vin?: string | null }).vin ?? null}
+                    totalPrice={totalPrice}
+                    submitting={isPurchasing || termsGate.preparing}
+                    onBack={goBack}
+                    onContinue={advance}
+                  />
+                </SaleCheckoutCard>
+
+                {paymentMethod !== 'cash' ? (
+                  <ProtectionOptInCard salePriceCents={Math.round(totalPrice * 100)} />
+                ) : null}
 
                 <SaleCheckoutCard title="Before you pay" padding="md">
                   <div className="space-y-4">
@@ -1074,33 +1179,6 @@ const SaleCheckout = () => {
                     </label>
                   </div>
                 </SaleCheckoutCard>
-
-                <div className="lg:hidden">{orderSummary}</div>
-              </>
-            )}
-
-            {currentStep === 'payment' && (
-              <>
-                <SaleCheckoutCard>
-                  <PurchaseStepPayment
-                    embedded
-                    paymentMethod={paymentMethod}
-                    setPaymentMethod={setPaymentMethod}
-                    acceptPayPalCheckout={acceptPayPalCheckout}
-                    acceptCashPayment={acceptCashPayment}
-                    titleStatus={(listing as { title_status?: string | null }).title_status ?? null}
-                    hasLien={(listing as { has_lien?: string | null }).has_lien ?? null}
-                    vin={(listing as { vin?: string | null }).vin ?? null}
-                    totalPrice={totalPrice}
-                    submitting={isPurchasing || termsGate.preparing}
-                    onBack={goBack}
-                    onContinue={advance}
-                  />
-                </SaleCheckoutCard>
-
-                {paymentMethod !== 'cash' ? (
-                  <ProtectionOptInCard salePriceCents={Math.round(totalPrice * 100)} />
-                ) : null}
 
                 <div className="lg:hidden">{orderSummary}</div>
               </>
