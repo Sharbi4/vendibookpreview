@@ -947,7 +947,7 @@ const SaleCheckout = () => {
                   />
                 </SaleCheckoutCard>
 
-                <SaleCheckoutCard title="How you'll get it" subtitle="Choose pickup, seller delivery or nationwide freight.">
+                <SaleCheckoutCard>
                   <PurchaseStepDelivery
                     embedded
                     onCanContinueChange={setFulfillmentReady}
