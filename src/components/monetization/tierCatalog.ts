@@ -68,7 +68,7 @@ export const TIER_CATALOG: Record<TierRole, TierFeatureGroups> = {
   },
   pro: {
     role: 'pro',
-    name: 'Growth',
+    name: 'Vendibook Pro',
     tagline: 'Sell and book faster.',
     audience: 'For active hosts running the show.',
     ctaLabel: 'Go Pro',
@@ -83,8 +83,8 @@ export const TIER_CATALOG: Record<TierRole, TierFeatureGroups> = {
     ],
     shared: [
       'Concept Lab, Market Radar, PermitPath Plus — no per-tool paywalls',
-      '$10 off notarization ($39 instead of $49)',
-      'Everything in Starter',
+      'Lower Vendibook fee — 10.9% instead of 12.9% on your side',
+      'Everything in Free',
     ],
   },
   premium: {
