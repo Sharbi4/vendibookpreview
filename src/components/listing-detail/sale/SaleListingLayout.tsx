@@ -76,13 +76,13 @@ export const SaleListingLayout = ({
   const freightEnabled = Boolean(listing.vendibook_freight_enabled);
 
   return (
-    <main className="flex-1">
-      {/* Gallery first */}
-      <div className="md:container md:pt-4">
+    <main className="sale-light flex-1">
+      {/* Gallery first — the dominant visual on the page */}
+      <div className="md:container md:pt-5">
         <EnhancedPhotoGallery images={images} videos={videos} title={listing.title} />
       </div>
 
-      <div className="container pt-4 pb-28 lg:pb-16">
+      <div className="container pt-5 pb-28 lg:pb-20">
         {/* Breadcrumb + utilities */}
         <div className="flex items-center justify-between gap-3 mb-3">
           <nav className="flex items-center gap-1 text-xs text-muted-foreground min-w-0">
@@ -115,10 +115,10 @@ export const SaleListingLayout = ({
         )}
 
         {/* Title block */}
-        <header className="mb-6">
+        <header className="mb-7">
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0">
-              <h1 className="text-2xl md:text-3xl font-semibold leading-tight">{listing.title}</h1>
+              <h1 className="text-[26px] md:text-[34px] font-semibold leading-[1.15] tracking-tight">{listing.title}</h1>
               <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground">
                 {/* Price shows once per breakpoint: here on desktop, in the purchase card on mobile. */}
                 <span className="hidden lg:inline text-xl md:text-2xl font-bold text-foreground">
@@ -151,21 +151,21 @@ export const SaleListingLayout = ({
                   </>
                 ) : null}
               </div>
-              <div className="mt-3 flex flex-wrap items-center gap-2">
-                {featured && <FeaturedBadge />}
-                {listing.status === 'published' && (
-                  <Badge variant="secondary" className="text-[11px]">Available</Badge>
-                )}
-                {listing.instant_book && (
-                  <Badge variant="secondary" className="text-[11px]">Buy now</Badge>
-                )}
-                {listing.price_negotiable && (
-                  <Badge variant="secondary" className="text-[11px]">Offers accepted</Badge>
-                )}
-                {freightEnabled && (
-                  <Badge variant="secondary" className="text-[11px]">Nationwide freight</Badge>
-                )}
-              </div>
+              {(featured || listing.price_negotiable || freightEnabled) && (
+                <div className="mt-3 flex flex-wrap items-center gap-2">
+                  {featured && <FeaturedBadge />}
+                  {listing.price_negotiable && (
+                    <Badge variant="secondary" className="text-[11px] font-normal">
+                      Offers accepted
+                    </Badge>
+                  )}
+                  {freightEnabled && (
+                    <Badge variant="secondary" className="text-[11px] font-normal">
+                      Nationwide freight
+                    </Badge>
+                  )}
+                </div>
+              )}
             </div>
             {isOwner && (
               <Button asChild size="sm" variant="outline" className="shrink-0">
@@ -189,9 +189,9 @@ export const SaleListingLayout = ({
           />
         </div>
 
-        <div className="grid lg:grid-cols-3 gap-6 lg:gap-10">
+        <div className="grid lg:grid-cols-3 gap-6 lg:gap-12">
           {/* Left: content only */}
-          <div className="lg:col-span-2 space-y-5">
+          <div className="lg:col-span-2 space-y-6">
             <SaleQuickSpecs listing={listing} />
 
             {/* About */}
@@ -223,7 +223,7 @@ export const SaleListingLayout = ({
               <ul className="space-y-2 text-sm text-muted-foreground">
                 {offersPickup && (
                   <li className="flex items-start gap-2">
-                    <MapPin className="h-4 w-4 mt-0.5 shrink-0 text-foreground/70" />
+                    <MapPin className="h-4 w-4 mt-0.5 shrink-0 text-muted-foreground" />
                     <span>
                       Buyer pickup from {locationShort || 'the seller’s area'}. You and the seller
                       coordinate the pickup time after checkout.
@@ -232,7 +232,7 @@ export const SaleListingLayout = ({
                 )}
                 {sellerDelivers && (
                   <li className="flex items-start gap-2">
-                    <Truck className="h-4 w-4 mt-0.5 shrink-0 text-foreground/70" />
+                    <Truck className="h-4 w-4 mt-0.5 shrink-0 text-muted-foreground" />
                     <span>
                       The seller delivers locally. Use the delivery check in the purchase card to
                       confirm your area before you buy.
@@ -241,7 +241,7 @@ export const SaleListingLayout = ({
                 )}
                 {freightEnabled && (
                   <li className="flex items-start gap-2">
-                    <Package className="h-4 w-4 mt-0.5 shrink-0 text-foreground/70" />
+                    <Package className="h-4 w-4 mt-0.5 shrink-0 text-muted-foreground" />
                     <span>
                       Nationwide freight is available to the 48 contiguous states, quoted by
                       distance at checkout.
@@ -249,7 +249,7 @@ export const SaleListingLayout = ({
                   </li>
                 )}
                 <li className="flex items-start gap-2">
-                  <EyeOff className="h-4 w-4 mt-0.5 shrink-0 text-foreground/70" />
+                  <EyeOff className="h-4 w-4 mt-0.5 shrink-0 text-muted-foreground" />
                   <span>
                     The exact street address and handoff instructions are shared once your purchase
                     is confirmed.

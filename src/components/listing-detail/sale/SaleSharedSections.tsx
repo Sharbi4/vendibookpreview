@@ -47,56 +47,52 @@ export const SaleTrustStrip = ({ className }: { className?: string }) => (
 
 /* --------------------------- Purchase protection -------------------------- */
 
-const ProtectionCard = ({
+const ProtectionItem = ({
   icon: Icon,
   title,
   body,
-  tone,
-}: { icon: any; title: string; body: string; tone: 'primary' | 'emerald' | 'blue' | 'amber' }) => {
-  const toneCls: Record<string, string> = {
-    primary: 'bg-primary/10 ring-primary/30 text-primary',
-    emerald: 'bg-emerald-500/10 ring-emerald-500/30 text-emerald-400',
-    blue: 'bg-blue-500/10 ring-blue-500/30 text-blue-400',
-    amber: 'bg-amber-500/10 ring-amber-500/30 text-amber-400',
-  };
-  return (
-    <SaleCard padding="md">
-      <div className={`w-9 h-9 rounded-full ring-1 flex items-center justify-center mb-3 ${toneCls[tone]}`}>
-        <Icon className="h-4 w-4" />
-      </div>
-      <div className="text-sm font-semibold mb-1">{title}</div>
-      <div className="text-xs text-muted-foreground leading-relaxed">{body}</div>
-    </SaleCard>
-  );
-};
-
-/** "Your purchase is protected" grid + all-sales-final safety notice. */
-export const SaleProtectionSection = () => (
-  <div className="space-y-4">
+}: { icon: any; title: string; body: string }) => (
+  <div className="flex items-start gap-3">
+    <Icon className="h-[18px] w-[18px] mt-0.5 shrink-0 text-muted-foreground" />
     <div>
-      <h2 className="text-lg font-semibold mb-3">How Vendibook supports your purchase</h2>
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5">
-        <ProtectionCard icon={ShieldCheck} title="Identity Verification*" body="Sellers can complete identity verification with Plaid and display a badge. Optional paid add-on." tone="emerald" />
-        <ProtectionCard icon={Lock} title="PayPal Checkout" body="Supported payments are processed by PayPal, not handled on Vendibook." tone="primary" />
-        <ProtectionCard icon={FileText} title="Document Workflow" body="We help collect and organize documents and important information." tone="blue" />
-        <ProtectionCard icon={HeadphonesIcon} title="Dispute Support" body="Our team is here to help if something doesn't go as planned." tone="amber" />
-      </div>
+      <div className="text-sm font-medium leading-tight">{title}</div>
+      <div className="text-xs text-muted-foreground leading-relaxed mt-0.5">{body}</div>
     </div>
-    <SaleCard padding="md">
-      <div className="flex items-start gap-3">
-        <ShieldCheck className="h-5 w-5 text-emerald-400 shrink-0 mt-0.5" />
-        <div>
-          <div className="text-sm font-medium">
-            All sales are final. Please review all details and ask questions before purchasing.
-          </div>
-          <div className="text-xs text-muted-foreground mt-1">
-            Payment disputes are handled through PayPal&rsquo;s buyer protection process and
-            Vendibook support.
-          </div>
-        </div>
-      </div>
-    </SaleCard>
   </div>
+);
+
+/** Calm, compact "how we support your purchase" block — icon/text rows only. */
+export const SaleProtectionSection = () => (
+  <SaleCard padding="lg" className="space-y-4">
+    <h2 className="text-lg font-semibold">Buying on Vendibook</h2>
+    <div className="grid sm:grid-cols-2 gap-x-8 gap-y-4">
+      <ProtectionItem
+        icon={ShieldCheck}
+        title="Identity verification"
+        body="Sellers can verify their identity with Plaid and display a badge. Optional paid add-on."
+      />
+      <ProtectionItem
+        icon={Lock}
+        title="PayPal checkout"
+        body="Supported payments are processed by PayPal, not handled on Vendibook."
+      />
+      <ProtectionItem
+        icon={FileText}
+        title="Document workflow"
+        body="We help collect and organize the paperwork tied to your purchase."
+      />
+      <ProtectionItem
+        icon={HeadphonesIcon}
+        title="Dispute support"
+        body="Our team is here to help if something doesn't go as planned."
+      />
+    </div>
+    <div className="h-px bg-border/70" />
+    <p className="text-xs text-muted-foreground leading-relaxed">
+      All sales are final — review the details and ask questions before purchasing. Payment
+      disputes are handled through PayPal&rsquo;s buyer protection process and Vendibook support.
+    </p>
+  </SaleCard>
 );
 
 /* ------------------------------ Location card ----------------------------- */
@@ -117,22 +113,14 @@ export const SaleLocationCard = ({ city, state, zipCode, latitude, longitude, ma
   return (
     <SaleCard padding="lg" className="space-y-3">
       <div className="flex items-center justify-between gap-3">
-        <h2 className="text-lg font-semibold inline-flex items-center gap-2">
-          <MapPin className="h-4 w-4 text-emerald-400" />
-          Location
-        </h2>
-        <span className="text-[11px] px-2 py-0.5 rounded-full bg-background/60 ring-hairline text-muted-foreground">
-          Approximate area
-        </span>
+        <h2 className="text-lg font-semibold">Location</h2>
+        <span className="text-xs text-muted-foreground">Approximate area</span>
       </div>
-      <div className="text-sm">{locationShort}{zipCode ? ` ${zipCode}` : ''}</div>
-      <div className="flex items-start gap-2 text-xs text-muted-foreground">
-        <EyeOff className="h-3.5 w-3.5 shrink-0 mt-0.5" />
-        <span>
-          Only city, state, and ZIP are shown publicly. The exact street address and pickup details stay private until your purchase is confirmed.
-        </span>
+      <div className="text-sm inline-flex items-center gap-1.5">
+        <MapPin className="h-4 w-4 text-muted-foreground" />
+        {locationShort}{zipCode ? ` ${zipCode}` : ''}
       </div>
-      <div className="rounded-xl overflow-hidden ring-hairline" style={{ height: mapHeight }}>
+      <div className="rounded-2xl overflow-hidden border border-border/70" style={{ height: mapHeight }}>
         <ListingLocationMap
           address={null}
           city={city ?? null}
@@ -142,6 +130,13 @@ export const SaleLocationCard = ({ city, state, zipCode, latitude, longitude, ma
           longitude={longitude ?? null}
           className="h-full"
         />
+      </div>
+      <div className="flex items-start gap-2 text-xs text-muted-foreground">
+        <EyeOff className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+        <span>
+          Only city, state, and ZIP are shown publicly. The exact street address and pickup details
+          stay private until your purchase is confirmed.
+        </span>
       </div>
     </SaleCard>
   );

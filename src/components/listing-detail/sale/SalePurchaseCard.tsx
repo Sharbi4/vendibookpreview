@@ -26,7 +26,6 @@ import { invokeEdge } from '@/lib/edge/invokeFunction';
 import { MakeOfferModal } from '@/components/offers/MakeOfferModal';
 import { AuthGateOfferModal } from '@/components/offers/AuthGateOfferModal';
 import MessageHostForm from '@/components/messaging/MessageHostForm';
-import { FinancingAvailableBadge } from '@/components/financing/FinancingAvailableBadge';
 import { useEquinoxFinancingEnabled } from '@/hooks/useListingFinancing';
 import { PayPalMonogram, PayPalWordmark } from '@/components/brand/ProviderLogos';
 import { getPublicDisplayName } from '@/lib/displayName';
@@ -65,15 +64,13 @@ const FulfillmentRow = ({
   note,
   free,
 }: { icon: any; label: string; note?: string | null; free?: boolean }) => (
-  <div className="flex items-center gap-3 rounded-xl bg-white/[0.04] ring-hairline px-3 py-2.5">
-    <div className="w-8 h-8 rounded-lg bg-white/[0.06] flex items-center justify-center shrink-0">
-      <Icon className="h-4 w-4" />
-    </div>
+  <div className="flex items-start gap-3">
+    <Icon className="h-[18px] w-[18px] mt-0.5 shrink-0 text-muted-foreground" />
     <div className="flex-1 min-w-0">
       <div className="text-sm font-medium leading-tight">{label}</div>
-      {note && <div className="text-xs text-muted-foreground mt-0.5 truncate">{note}</div>}
+      {note && <div className="text-xs text-muted-foreground mt-0.5">{note}</div>}
     </div>
-    {free && <span className="text-xs text-emerald-400 shrink-0">Free</span>}
+    {free && <span className="text-xs font-medium text-emerald-600 shrink-0">Free</span>}
   </div>
 );
 
@@ -237,7 +234,7 @@ export const SalePurchaseCard = ({
     <>
       <SaleCard padding="none" className="overflow-hidden">
         {/* Price */}
-        <div className="px-5 sm:px-6 py-5 border-b border-white/[0.06]">
+        <div className="px-5 sm:px-6 pt-5 pb-4">
           <div className="flex items-baseline gap-2 flex-wrap">
             <span className="text-3xl font-bold">
               {priceSale ? `$${priceSale.toLocaleString()}` : 'Price on request'}
@@ -254,7 +251,7 @@ export const SalePurchaseCard = ({
           </div>
         </div>
 
-        <div className="p-5 sm:p-6 space-y-5">
+        <div className="px-5 sm:px-6 pb-5 sm:pb-6 space-y-5">
           {/* Fulfillment */}
           <div className="space-y-2">
             {offersPickup && <FulfillmentRow icon={MapPin} label="Local pickup" free />}
@@ -322,8 +319,8 @@ export const SalePurchaseCard = ({
                 <div
                   className={`rounded-xl p-3 text-xs ring-1 ${
                     result.inRadius
-                      ? 'ring-emerald-500/30 bg-emerald-500/5'
-                      : 'ring-amber-500/30 bg-amber-500/5'
+                      ? 'ring-emerald-500/30 bg-emerald-500/[0.07]'
+                      : 'ring-amber-500/30 bg-amber-500/[0.07]'
                   }`}
                 >
                   <p className="font-medium flex items-center gap-1.5 text-sm">
@@ -352,10 +349,10 @@ export const SalePurchaseCard = ({
 
           {/* Financing availability */}
           {financingEnabled && (
-            <div className="rounded-xl bg-white/[0.03] ring-hairline p-3 space-y-2">
+            <div className="space-y-2">
               <div className="flex items-center gap-2">
-                <Banknote className="h-4 w-4 text-primary" />
-                <FinancingAvailableBadge />
+                <Banknote className="h-[18px] w-[18px] text-primary" />
+                <span className="text-sm font-medium">Financing available</span>
               </div>
               <p className="text-xs text-muted-foreground leading-relaxed">
                 Equipment financing is available on this listing through Equinox Funding. Vendibook
@@ -416,15 +413,15 @@ export const SalePurchaseCard = ({
           </div>
 
           {/* Compact seller info */}
-          <div className="pt-4 border-t border-white/[0.06] flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-white/[0.06] ring-hairline flex items-center justify-center text-sm font-semibold shrink-0">
+          <div className="pt-4 [box-shadow:inset_0_1px_0_hsl(var(--border))] flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center text-sm font-semibold shrink-0">
               {sellerName.charAt(0).toUpperCase()}
             </div>
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-1.5">
                 <span className="text-sm font-medium truncate">{sellerName}</span>
                 {sellerVerified && (
-                  <ShieldCheck className="h-3.5 w-3.5 text-emerald-400 shrink-0" aria-label="Identity verified" />
+                  <ShieldCheck className="h-3.5 w-3.5 text-emerald-600 shrink-0" aria-label="Identity verified" />
                 )}
               </div>
               <div className="text-xs text-muted-foreground truncate">
