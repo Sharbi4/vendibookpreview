@@ -83,11 +83,14 @@ serve(async (req) => {
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const admin = createClient(supabaseUrl, serviceKey);
 
-    const opsToken = Deno.env.get("DIMENSION_CAMPAIGN_TOKEN");
+    const opsTokens = [
+      Deno.env.get("DIMENSION_CAMPAIGN_TOKEN"),
+      Deno.env.get("DIMENSION_CAMPAIGN_TOKEN_V2"),
+    ].filter(Boolean) as string[];
     const providedOps = req.headers.get("x-ops-token")?.trim();
     const token = (req.headers.get("Authorization") ?? "").replace("Bearer ", "").trim();
 
-    let authorized = !!opsToken && !!providedOps && providedOps === opsToken;
+    let authorized = !!providedOps && opsTokens.includes(providedOps);
     if (!authorized) {
       if (!token) return json({ error: "Unauthorized" }, 401);
       authorized = token === serviceKey;
