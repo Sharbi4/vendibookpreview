@@ -120,10 +120,11 @@ export const SaleListingLayout = ({
             <div className="min-w-0">
               <h1 className="text-2xl md:text-3xl font-semibold leading-tight">{listing.title}</h1>
               <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground">
-                <span className="text-xl md:text-2xl font-bold text-foreground">
+                {/* Price shows once per breakpoint: here on desktop, in the purchase card on mobile. */}
+                <span className="hidden lg:inline text-xl md:text-2xl font-bold text-foreground">
                   {listing.price_sale ? `$${listing.price_sale.toLocaleString()}` : 'Price on request'}
                 </span>
-                <span>·</span>
+                <span className="hidden lg:inline">·</span>
                 <span>{categoryLabel}</span>
                 {condition && (
                   <>
