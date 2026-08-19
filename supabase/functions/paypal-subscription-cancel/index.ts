@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import { corsHeaders, jsonError, jsonResponse, unknownErrorResponse } from "../_shared/jsonError.ts";
 import { cancelPayPalSubscription, PayPalError, safeLog } from "../_shared/paypal.ts";
+import { resolveSubscriptionPeriod } from "../_shared/subscriptionPeriod.ts";
 
 /**
  * Cancels the member's PayPal subscription at PayPal FIRST, then records it
