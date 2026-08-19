@@ -105,9 +105,10 @@ export const PERMIT_BASIC_FEATURES = [
 ];
 
 export const PERMIT_PLUS_FEATURES = [
-  'Save roadmaps to your dashboard and keep them',
+  'Save multiple roadmaps to your dashboard and keep them',
   'Track each permit: not started · in progress · submitted · approved',
-  'Store permit numbers, expiration dates and uploaded documents',
-  'Renewal reminders 60 / 30 / 7 days out',
+  'Store permit numbers, notes, expiration dates and documents',
+  'Renewal dashboard that surfaces permits expiring soon',
+  'Refresh a saved roadmap against the latest requirements',
   'PDF export for lenders, landlords and health inspectors',
 ];
