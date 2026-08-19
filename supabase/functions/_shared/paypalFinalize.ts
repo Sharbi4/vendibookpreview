@@ -361,7 +361,7 @@ async function propagateToDomainRecord(
     if (record.booking_request_id) {
       const { data: bookingRow } = await supabase
         .from("booking_requests")
-        .select("id, status, is_instant_book, payment_status")
+        .select("id, status, is_instant_book, payment_status, host_id")
         .eq("id", record.booking_request_id)
         .maybeSingle();
 
@@ -373,9 +373,36 @@ async function propagateToDomainRecord(
         checkout_session_id: record.paypal_order_id,
         paid_at: nowIso,
       };
-      // Instant book: payment confirms the dates immediately.
+
+      /**
+       * Payment capture alone NEVER confirms dates.
+       *
+       * Instant Book skips host approval only when the host's identity is
+       * verified (server-derived: Plaid success + captured payment + no
+       * revocation). Every other booking — including Instant Book on an
+       * unverified host — stays `pending` until the host explicitly accepts.
+       */
       if (bookingRow?.is_instant_book && bookingRow?.status === "pending") {
-        update.status = "approved";
+        let hostVerified = false;
+        try {
+          const { data: verified } = await supabase.rpc("is_seller_identity_verified", {
+            _user_id: bookingRow.host_id,
+          });
+          hostVerified = verified === true;
+        } catch (err) {
+          safeLog("host_verification_check_failed", {
+            bookingId: record.booking_request_id,
+            message: (err as Error).message,
+          });
+        }
+        if (hostVerified) {
+          update.status = "approved";
+        } else {
+          safeLog("instant_book_awaiting_host_approval", {
+            bookingId: record.booking_request_id,
+            reason: "host_not_identity_verified",
+          });
+        }
       }
 
       await supabase.from("booking_requests")
