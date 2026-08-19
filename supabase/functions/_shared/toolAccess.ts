@@ -24,8 +24,14 @@ type Tier = 'free' | 'starter' | 'pro' | 'premium';
 const TIER_RANK: Record<Tier, number> = { free: 0, starter: 1, pro: 2, premium: 3 };
 const ACTIVE_STATUSES = new Set(['active', 'trialing', 'past_due']);
 
+/**
+ * PermitPath note: the Basic checklist is free and never calls this resolver.
+ * `permitpath` here means the PLUS layer (save, track, documents, reminders,
+ * PDF export), which needs an active PermitPath Plus subscription or
+ * Vendibook Pro. Keep in lockstep with src/lib/permits/permitPathAccess.ts.
+ */
 const TOOL_TIER: Record<ToolSlug, Tier> = {
-  'permitpath': 'free',
+  'permitpath': 'pro',
   'startup-guide': 'free',
   'regulations-hub': 'free',
   'pricepilot': 'pro',
