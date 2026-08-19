@@ -102,24 +102,18 @@ export async function checkFinancingEligibility(
     }
   }
 
+  // Buyer financing is a marketplace-level benefit on every for-sale listing.
+  // No seller opt-in is required; the launch flag remains the only kill switch.
   const [{ data: flagRow }, { data: pref }] = await Promise.all([
     supabase.from('app_feature_flags').select('enabled').eq('key', EQUINOX_FLAG_KEY).maybeSingle(),
     supabase
       .from('listing_financing_preferences')
-      .select('equinox_opt_in, include_vin, disclosure_version, disclosure_accepted_at')
+      .select('include_vin')
       .eq('listing_id', listingId)
       .maybeSingle(),
   ]);
 
-  const flagOn = flagRow?.enabled === true;
-  const optedIn =
-    pref?.equinox_opt_in === true &&
-    pref?.disclosure_version === EQUINOX_DISCLOSURE_VERSION &&
-    !!pref?.disclosure_accepted_at;
-
-  // Fail closed for EVERYONE — owners included. A listing without financing
-  // enabled must never produce an apply link or a purchase sheet.
-  if (!flagOn || !optedIn) {
+  if (flagRow?.enabled !== true) {
     return {
       ok: false,
       response: jsonError(
