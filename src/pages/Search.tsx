@@ -608,19 +608,19 @@ const Search = () => {
               <div className="relative flex-1 group">
                 {/* Glow halo on focus */}
                 <div className="absolute -inset-px rounded-2xl bg-gradient-to-r from-primary/20 via-primary/10 to-primary/20 opacity-0 group-focus-within:opacity-100 blur-sm transition-opacity pointer-events-none" />
-                <div className="relative flex items-center bg-[#faf8f5] border border-[#1b1714]/10 rounded-full shadow-[0_1px_2px_rgba(0,0,0,0.10),0_14px_34px_-22px_rgba(0,0,0,0.55)] group-focus-within:border-primary/50 group-focus-within:shadow-[0_2px_6px_rgba(0,0,0,0.12),0_18px_40px_-22px_rgba(0,0,0,0.6)] transition-all duration-200">
-                  <SearchIcon className="absolute left-4 h-4 w-4 text-[#1b1714]/45 group-focus-within:text-primary transition-colors" />
+                <div className="relative flex items-center bg-[#faf8f5] border border-[#1b1714]/10 rounded-2xl shadow-[0_1px_2px_rgba(0,0,0,0.10),0_12px_28px_-22px_rgba(0,0,0,0.5)] group-focus-within:border-primary/50 group-focus-within:shadow-[0_2px_6px_rgba(0,0,0,0.12),0_16px_34px_-22px_rgba(0,0,0,0.55)] transition-all duration-200">
+                  <SearchIcon className="absolute left-3.5 h-4 w-4 text-[#1b1714]/45 group-focus-within:text-primary transition-colors" />
                   <Input
                     type="text"
                     placeholder="Search trucks, trailers, kitchens, locations…"
                     value={searchQuery}
                     onChange={(e) => handleSearch(e.target.value)}
-                    className="pl-11 pr-10 h-12 text-base sm:text-sm rounded-full border-0 bg-transparent text-[#1b1714] placeholder:text-[#1b1714]/45 focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none"
+                    className="pl-10 pr-10 h-11 text-base sm:text-sm rounded-2xl border-0 bg-transparent text-[#1b1714] placeholder:text-[#1b1714]/45 focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none"
                   />
                   {searchQuery && (
                     <button
                       onClick={() => handleSearch('')}
-                      className="absolute right-3.5 h-6 w-6 rounded-full hover:bg-[#1b1714]/[0.07] flex items-center justify-center text-[#1b1714]/50 hover:text-[#1b1714] transition-colors"
+                      className="absolute right-3 h-6 w-6 rounded-full hover:bg-[#1b1714]/[0.07] flex items-center justify-center text-[#1b1714]/50 hover:text-[#1b1714] transition-colors"
                       aria-label="Clear search"
                     >
                       <X className="h-3.5 w-3.5" />
@@ -632,7 +632,7 @@ const Search = () => {
               {/* Filter Button */}
               <Sheet open={isFiltersOpen} onOpenChange={setIsFiltersOpen}>
                 <SheetTrigger asChild>
-                  <Button variant="outline" size="default" className="rounded-full relative shrink-0 h-12 px-4 sm:px-5 border-primary/35 bg-primary/[0.10] text-foreground hover:bg-primary/[0.16] hover:border-primary/50 transition-all duration-200">
+                  <Button variant="outline" size="default" className="rounded-2xl relative shrink-0 h-11 px-4 sm:px-5 border-primary/35 bg-primary/[0.10] text-foreground hover:bg-primary/[0.16] hover:border-primary/50 transition-all duration-200">
                     <SlidersHorizontal className="h-4 w-4 sm:mr-2" />
                     <span className="hidden sm:inline">Filters</span>
                     {activeFiltersCount > 0 && (
@@ -759,18 +759,18 @@ const Search = () => {
                   type="single"
                   value={viewMode}
                   onValueChange={(value) => value && setViewMode(value as 'grid' | 'map' | 'split' | 'list')}
-                  className="bg-card/80 backdrop-blur-sm border border-border/60 rounded-xl p-0.5 shadow-sm"
+                  className="bg-transparent border border-border/40 rounded-xl p-0.5"
                 >
-                  <ToggleGroupItem value="grid" aria-label="Grid view" title="Grid view" className="h-8 px-2.5 rounded-lg data-[state=on]:bg-foreground data-[state=on]:text-background data-[state=on]:shadow-sm transition-all">
+                  <ToggleGroupItem value="grid" aria-label="Grid view" title="Grid view" className="h-7 px-2 rounded-lg text-muted-foreground data-[state=on]:bg-foreground/90 data-[state=on]:text-background transition-all duration-200">
                     <LayoutGrid className="h-3.5 w-3.5" />
                   </ToggleGroupItem>
-                  <ToggleGroupItem value="list" aria-label="List view" title="List view" className="h-8 px-2.5 rounded-lg data-[state=on]:bg-foreground data-[state=on]:text-background data-[state=on]:shadow-sm transition-all">
+                  <ToggleGroupItem value="list" aria-label="List view" title="List view" className="h-7 px-2 rounded-lg text-muted-foreground data-[state=on]:bg-foreground/90 data-[state=on]:text-background transition-all duration-200">
                     <Rows3 className="h-3.5 w-3.5" />
                   </ToggleGroupItem>
-                  <ToggleGroupItem value="split" aria-label="Split view" title="Split view (list + map)" className="hidden md:flex h-8 px-2.5 rounded-lg data-[state=on]:bg-foreground data-[state=on]:text-background data-[state=on]:shadow-sm transition-all">
+                  <ToggleGroupItem value="split" aria-label="Split view" title="Split view (list + map)" className="hidden md:flex h-7 px-2 rounded-lg text-muted-foreground data-[state=on]:bg-foreground/90 data-[state=on]:text-background transition-all duration-200">
                     <Columns className="h-3.5 w-3.5" />
                   </ToggleGroupItem>
-                  <ToggleGroupItem value="map" aria-label="Map view" title="Map view" className="h-8 px-2.5 rounded-lg data-[state=on]:bg-foreground data-[state=on]:text-background data-[state=on]:shadow-sm transition-all">
+                  <ToggleGroupItem value="map" aria-label="Map view" title="Map view" className="h-7 px-2 rounded-lg text-muted-foreground data-[state=on]:bg-foreground/90 data-[state=on]:text-background transition-all duration-200">
                     <Map className="h-3.5 w-3.5" />
                   </ToggleGroupItem>
                 </ToggleGroup>
@@ -780,7 +780,7 @@ const Search = () => {
                   <select
                     value={sortBy}
                     onChange={(e) => handleSortChange(e.target.value)}
-                    className="appearance-none text-xs font-medium border border-border/60 rounded-xl pl-3 pr-7 py-2 h-9 bg-card/80 backdrop-blur-sm shadow-sm hover:bg-muted/50 hover:border-border transition-all cursor-pointer focus:outline-none focus:border-primary/60"
+                    className="appearance-none text-xs font-medium text-muted-foreground hover:text-foreground border border-border/40 rounded-xl pl-3 pr-7 h-8 bg-transparent hover:border-border/70 transition-all cursor-pointer focus:outline-none focus:border-primary/60"
                   >
                     <option value="newest">Newest</option>
                     {searchQuery.trim() && <option value="relevance">Relevance</option>}
@@ -798,12 +798,12 @@ const Search = () => {
         <div className="container py-6">
           <div className="flex gap-8">
             {/* Desktop Sidebar Filters - Enhanced card styling */}
-            <aside className="hidden md:block w-64 shrink-0 self-start sticky top-24">
+            <aside className="hidden md:block w-[15rem] lg:w-[16rem] shrink-0 self-start sticky top-24">
               <div
-                className="sale-light space-y-6 p-5 rounded-3xl border border-[#1b1714]/[0.08] shadow-[0_1px_2px_rgba(24,20,16,0.05),0_18px_44px_-26px_rgba(0,0,0,0.55)] max-h-[calc(100vh-7.5rem)] overflow-y-auto overscroll-contain scroll-smooth scrollbar-thin"
+                className="sale-light space-y-5 p-4 rounded-2xl border border-[#1b1714]/[0.07] shadow-[0_1px_2px_rgba(24,20,16,0.04),0_14px_34px_-26px_rgba(0,0,0,0.45)] max-h-[calc(100vh-7.5rem)] overflow-y-auto overscroll-contain scroll-smooth scrollbar-quiet"
               >
                 <div className="flex items-center justify-between">
-                  <h2 className="font-semibold tracking-tight text-foreground">Filters</h2>
+                  <h2 className="text-sm font-semibold tracking-tight text-foreground">Filters</h2>
                   {activeFiltersCount > 0 && (
                     <Button variant="ghost" size="sm" onClick={clearFilters} className="text-xs text-primary hover:text-primary">
                       Clear all
@@ -1328,7 +1328,7 @@ const FilterContent = ({
 
   const availableAmenities = getAvailableAmenities();
   return (
-    <div className="space-y-5">
+    <div className="space-y-5 [&>div+div]:pt-5 [&>div+div]:border-t [&>div+div]:border-foreground/[0.06]">
       {/* Type Filter - First */}
       <div className="space-y-2">
         <Label className="text-sm font-medium flex items-center gap-2">
@@ -1344,10 +1344,10 @@ const FilterContent = ({
             <label 
               key={option.value} 
               className={cn(
-                "flex items-center gap-1.5 cursor-pointer px-3 py-1.5 rounded-full border text-sm transition-colors",
+                "flex items-center gap-1.5 cursor-pointer px-3 py-1.5 rounded-full border text-sm transition-colors duration-200",
                 mode === option.value 
                   ? "bg-primary text-primary-foreground border-primary" 
-                  : "border-border hover:bg-muted"
+                  : "border-transparent bg-foreground/[0.04] text-foreground/80 hover:bg-foreground/[0.08]"
               )}
             >
               <input
@@ -1372,10 +1372,10 @@ const FilterContent = ({
         <div className="flex flex-wrap gap-2 md:justify-center">
           <label 
             className={cn(
-              "flex items-center cursor-pointer px-3 py-1.5 rounded-full border text-sm transition-colors",
+              "flex items-center cursor-pointer px-3 py-1.5 rounded-full border text-sm transition-colors duration-200",
               category === 'all' 
                 ? "bg-primary text-primary-foreground border-primary" 
-                : "border-border hover:bg-muted"
+                : "border-transparent bg-foreground/[0.04] text-foreground/80 hover:bg-foreground/[0.08]"
             )}
           >
             <input
@@ -1393,10 +1393,10 @@ const FilterContent = ({
             <label 
               key={key} 
               className={cn(
-                "flex items-center cursor-pointer px-3 py-1.5 rounded-full border text-sm transition-colors",
+                "flex items-center cursor-pointer px-3 py-1.5 rounded-full border text-sm transition-colors duration-200",
                 category === key 
                   ? "bg-primary text-primary-foreground border-primary" 
-                  : "border-border hover:bg-muted"
+                  : "border-transparent bg-foreground/[0.04] text-foreground/80 hover:bg-foreground/[0.08]"
               )}
             >
               <input
@@ -1474,10 +1474,10 @@ const FilterContent = ({
                 aria-pressed={active}
                 data-fulfillment-option={key}
                 className={cn(
-                  'px-3 py-1.5 rounded-full text-xs font-medium border transition-colors',
+                  'px-3 py-1.5 rounded-full text-xs font-medium border transition-colors duration-200',
                   active
                     ? 'bg-primary text-primary-foreground border-primary'
-                    : 'bg-card border-border text-foreground hover:bg-muted/60',
+                    : 'border-transparent bg-foreground/[0.04] text-foreground/80 hover:bg-foreground/[0.08]',
                 )}
               >
                 {label}
@@ -1495,7 +1495,7 @@ const FilterContent = ({
           <Truck className="h-4 w-4" />
           Delivery Options
         </Label>
-        <label className="flex items-start gap-3 cursor-pointer p-2.5 rounded-lg border border-border hover:bg-muted/50 transition-colors max-w-xs">
+        <label className="flex items-start gap-3 cursor-pointer py-2 pr-1 rounded-xl hover:bg-foreground/[0.03] transition-colors duration-200 max-w-xs">
           <Checkbox
             checked={deliveryFilterEnabled}
             onCheckedChange={(checked) => onDeliveryFilterChange(checked === true)}
@@ -1520,7 +1520,7 @@ const FilterContent = ({
           Booking Options
         </Label>
         <div className="space-y-2">
-          <label className="flex items-start gap-3 cursor-pointer p-2.5 rounded-lg border border-border hover:bg-muted/50 transition-colors max-w-xs">
+          <label className="flex items-start gap-3 cursor-pointer py-2 pr-1 rounded-xl hover:bg-foreground/[0.03] transition-colors duration-200 max-w-xs">
             <Checkbox
               checked={instantBookOnly}
               onCheckedChange={(checked) => onInstantBookChange(checked === true)}
@@ -1535,7 +1535,7 @@ const FilterContent = ({
               </p>
             </div>
           </label>
-          <label className="flex items-start gap-3 cursor-pointer p-2.5 rounded-lg border border-border hover:bg-muted/50 transition-colors max-w-xs">
+          <label className="flex items-start gap-3 cursor-pointer py-2 pr-1 rounded-xl hover:bg-foreground/[0.03] transition-colors duration-200 max-w-xs">
             <Checkbox
               checked={verifiedHostsOnly}
               onCheckedChange={(checked) => onVerifiedHostsChange(checked === true)}
@@ -1572,10 +1572,10 @@ const FilterContent = ({
                       <label
                         key={amenity.id}
                         className={cn(
-                          "flex items-center gap-1.5 cursor-pointer px-2.5 py-1 rounded-full border text-xs transition-colors",
+                          "flex items-center gap-1.5 cursor-pointer px-2.5 py-1 rounded-full border text-xs transition-colors duration-200",
                           selectedAmenities.includes(amenity.id)
                             ? "bg-primary text-primary-foreground border-primary"
-                            : "border-border hover:bg-muted"
+                            : "border-transparent bg-foreground/[0.04] text-foreground/80 hover:bg-foreground/[0.08]"
                         )}
                       >
                         <input

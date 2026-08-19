@@ -1,7 +1,7 @@
 import { deliveryRateLabel } from '@/lib/fulfillment/delivery';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { MapPin, Plug, Zap, Droplet, Refrigerator, Flame, Wind, Wifi, Car, Shield, Sun, Truck, Calendar, Clock, ArrowRight } from 'lucide-react';
+import { MapPin, Plug, Zap, Droplet, Refrigerator, Flame, Wind, Wifi, Car, Shield, Sun, Truck, Calendar, Clock, ArrowRight, Banknote } from 'lucide-react';
 import FeaturedBadge from '@/components/listing/FeaturedBadge';
 import { FinancingAvailableBadge } from '@/components/financing/FinancingAvailableBadge';
 import { useEquinoxFinancingEnabled } from '@/hooks/useListingFinancing';
@@ -263,7 +263,7 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
         }}
       >
         {/* Image Container - Turo Look */}
-        <div className={cn('relative w-full', isRow && 'sm:w-[280px] sm:shrink-0 sm:overflow-hidden')}>
+        <div className={cn('relative w-full', isRow && 'sm:w-[238px] sm:shrink-0 sm:overflow-hidden')}>
 
           <SmartImage
             src={listing.cover_image_url || listing.image_urls[0]}
@@ -276,9 +276,10 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
         
         
         
-        {/* E-sign trust chip + financing badge — stacked bottom-left, stay inside the card */}
+        {/* E-sign trust chip (+ financing badge outside search, where it moves
+            into the information surface to keep the image quiet) */}
         <div className="absolute bottom-2 left-2 z-10 flex max-w-[calc(100%-1rem)] flex-col items-start gap-1.5">
-          {financingEnabled && <FinancingAvailableBadge compact listingId={listing.id} />}
+          {financingEnabled && !isSearch && <FinancingAvailableBadge compact listingId={listing.id} />}
           <TrustESignChip variant="card" />
         </div>
 
@@ -381,7 +382,8 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
         {/* Amenities Icons Overlay */}
         <div className={cn("absolute left-3 right-3 flex items-center justify-between", compact ? "bottom-2" : "bottom-3")}>
           <div className="flex items-center gap-1">
-            {displayAmenities.length > 0 && (
+            {/* Search cards move amenity detail into the information surface */}
+            {!isSearch && displayAmenities.length > 0 && (
               <TooltipProvider delayDuration={200}>
                 {displayAmenities.map((amenityId) => {
                   const amenity = popularAmenityIcons[amenityId];
@@ -467,7 +469,7 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
         </div>
 
       {/* Content - Apple/OpenAI Cleanliness */}
-      <div className={cn("p-4 space-y-2 flex-1 flex flex-col", compact && "p-3 space-y-1", isRow && "sm:p-5")}>
+      <div className={cn("p-4 space-y-2 flex-1 flex flex-col", compact && "p-3 space-y-1", isRow && "sm:p-4 sm:space-y-1.5")}>
         {/* Location & Category */}
         <div className="flex items-center justify-between gap-2">
           <span className={cn(textMuted, "font-medium flex items-center gap-1", compact ? "text-xs" : "text-sm")}>
@@ -508,12 +510,54 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
             "text-lg font-semibold tracking-tight line-clamp-1 group-hover:text-primary transition-colors",
             textStrong,
             compact && "text-sm",
-            isRow && "sm:text-xl sm:line-clamp-2",
+            isRow && "sm:text-lg sm:line-clamp-2",
           )}>
             {listing.title}
           </h3>
           {!compact && <RatingBadge listingId={listing.id} />}
         </div>
+
+        {/* Search-only quiet detail row: financing + amenity summary live here
+            instead of competing with the primary badges over the image. */}
+        {isSearch && (financingEnabled || popularAmenities.length > 0 || remainingAmenitiesCount > 0) && (
+          <div className="flex flex-wrap items-center gap-1.5">
+            {financingEnabled && (
+              <Link
+                to={`/financing?listing_id=${listing.id}`}
+                onClick={(e) => e.stopPropagation()}
+                className="relative z-10 inline-flex items-center gap-1 rounded-full bg-[#1b1714]/[0.05] px-2.5 py-1 text-[11px] font-medium text-[#1b1714]/70 hover:bg-[#1b1714]/[0.09] transition-colors"
+              >
+                <Banknote className="h-3 w-3" />
+                Financing available
+              </Link>
+            )}
+            {displayAmenities.length > 0 && (
+              <TooltipProvider delayDuration={200}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span className="inline-flex items-center gap-1 rounded-full bg-[#1b1714]/[0.05] px-2.5 py-1 text-[11px] font-medium text-[#1b1714]/65">
+                      {displayAmenities.slice(0, 2).map((amenityId) => {
+                        const amenity = popularAmenityIcons[amenityId];
+                        if (!amenity) return null;
+                        const IconComponent = amenity.icon;
+                        return <IconComponent key={amenityId} className="h-3 w-3" />;
+                      })}
+                      {popularAmenities.length + Math.max(remainingAmenitiesCount, 0) > 2
+                        ? `+${(listing.amenities?.length || 0) - 2} more`
+                        : 'Features'}
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent side="top" className="max-w-[220px] text-xs">
+                    {(listing.amenities || [])
+                      .map((a) => popularAmenityIcons[a]?.label)
+                      .filter(Boolean)
+                      .join(' · ') || 'Features & amenities'}
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
+          </div>
+        )}
 
         {/* Price + Micro-action — the only conversion surface on the card */}
         <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 mt-auto pt-1">
