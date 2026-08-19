@@ -2223,7 +2223,7 @@ export const PublishWizard: React.FC = () => {
       }
 
 
-      // If Featured Listing is enabled and not already active/comped, redirect to checkout for the $30 fee.
+      // If Featured Listing is enabled and not already active/comped, redirect to checkout for the $49 fee.
       // Pending complimentary boosts are applied by the database trigger when status changes to published.
       const listingHasPendingFeatured = !!listing.pending_featured_payment;
       const listingAlreadyFeatured = isListingFeatured(listing);
