@@ -359,7 +359,15 @@ export default function ResultsDashboard({ result, readOnly = false, renderItemE
         <div className="flex gap-2 flex-wrap">
           {!readOnly && onSaveToDashboard && !savedRoadmapId && (
             <Button
-              onClick={() => { void onSaveToDashboard(); }}
+              onClick={() => {
+                // Signed-out users keep the sign-in-to-save flow; signed-in
+                // Basic members get the Plus upsell instead of a failed insert.
+                if (permitAccess.isSignedIn && !permitAccess.isPlus) {
+                  setPlusUpsellOpen(true);
+                  return;
+                }
+                void onSaveToDashboard();
+              }}
               size="sm"
               className="bg-[#FF5124] hover:bg-[#FF5124]/90 text-white h-9 font-semibold"
             >
