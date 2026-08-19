@@ -1,5 +1,5 @@
 import { SlidersHorizontal, ArrowUpDown, Check } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+
 import {
   Drawer,
   DrawerContent,
@@ -46,37 +46,38 @@ export const MobileStickyBar = ({
   return (
     <div
       data-hidden={hidden}
-      className="sticky-autohide gpu-layer fixed bottom-0 left-0 right-0 z-40 md:hidden bg-background/95 border-t border-border shadow-[0_-2px_10px_rgba(0,0,0,0.12)] safe-area-bottom"
+      className="sticky-autohide gpu-layer fixed bottom-0 left-0 right-0 z-40 md:hidden px-4 pb-[calc(env(safe-area-inset-bottom,0px)+12px)] pt-2 pointer-events-none"
     >
-      <div className="flex items-center gap-2 p-3 pb-safe">
+      <div className="pointer-events-auto mx-auto flex max-w-md items-center gap-1.5 rounded-full border border-white/12 bg-background/80 p-1.5 shadow-[0_10px_34px_-12px_rgba(0,0,0,0.65)] backdrop-blur-xl">
         {/* Filters Button */}
-        <Button
-          variant="outline"
-          size="sm"
-          className="flex-1 h-11 rounded-lg gap-2 relative no-tap-highlight"
+        <button
+          type="button"
+          className="relative flex-1 h-11 rounded-full inline-flex items-center justify-center gap-2 text-sm font-medium text-foreground transition-colors duration-200 hover:bg-white/[0.07] no-tap-highlight"
           onClick={onFiltersClick}
         >
           <SlidersHorizontal className="h-4 w-4" />
           <span>Filters</span>
           {activeFiltersCount > 0 && (
-            <span className="absolute -top-1 -right-1 h-5 w-5 bg-primary text-primary-foreground text-xs rounded-full flex items-center justify-center font-medium">
+            <span className="ml-0.5 h-5 min-w-5 px-1 bg-primary text-primary-foreground text-[11px] rounded-full inline-flex items-center justify-center font-semibold">
               {activeFiltersCount}
             </span>
           )}
-        </Button>
+        </button>
+
+        <span className="h-6 w-px bg-white/12 shrink-0" aria-hidden />
 
         {/* Sort Button with Drawer */}
         <Drawer>
           <DrawerTrigger asChild>
-            <Button
-              variant="outline"
-              size="sm"
-              className="flex-1 h-11 rounded-lg gap-2 no-tap-highlight"
+            <button
+              type="button"
+              className="flex-1 h-11 rounded-full inline-flex items-center justify-center gap-2 text-sm font-medium text-foreground transition-colors duration-200 hover:bg-white/[0.07] no-tap-highlight"
             >
               <ArrowUpDown className="h-4 w-4" />
               <span className="truncate">{currentSortLabel}</span>
-            </Button>
+            </button>
           </DrawerTrigger>
+
           <DrawerContent>
             <DrawerHeader>
               <DrawerTitle>Sort by</DrawerTitle>
