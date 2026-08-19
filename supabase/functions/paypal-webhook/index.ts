@@ -525,7 +525,15 @@ async function sendMembershipEmail(
         : d.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric", timeZone: "UTC" });
     };
 
-    const amount = sub.recurring_amount_cents ? formatUsd(sub.recurring_amount_cents) : undefined;
+    // Price source of truth: the subscription record, falling back to the live
+    // monetization catalog so emails never show a stale hard-coded amount.
+    let amountCents: number | null = sub.recurring_amount_cents ?? null;
+    if (!amountCents && sub.tier) {
+      const { data: product } = await admin.from("monetization_products")
+        .select("price_cents").eq("slug", sub.tier).eq("is_active", true).maybeSingle();
+      amountCents = product?.price_cents ?? null;
+    }
+    const amount = amountCents ? formatUsd(amountCents) : undefined;
     const interval = sub.billing_interval === "year" ? "year" : "month";
     const nextBillingDate = fmt(sub.next_billing_time);
     const accessThrough = fmt(period.current_period_end ?? sub.next_billing_time);
