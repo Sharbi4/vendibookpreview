@@ -468,10 +468,11 @@
     box-shadow: inset 0 1px 0 rgba(255, 245, 200, 0.10);
   }
 
-  /* Dashboard border weight: 1.5px minimum, high-contrast on dark. */
-  .dashboard-shell [class*="border-border"],
-  .dashboard-shell [class*="border-white/5"],
-  .dashboard-shell [class*="border-white/10"] {
+  /* Dashboard border weight: 1.5px minimum, high-contrast on dark.
+     Scoped to full-border elements so directional dividers stay hairlines. */
+  .dashboard-shell .border[class*="border-border"],
+  .dashboard-shell .border[class*="border-white/5"],
+  .dashboard-shell .border[class*="border-white/10"] {
     border-width: 1.5px;
   }
 
