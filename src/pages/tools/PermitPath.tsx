@@ -243,17 +243,25 @@ const PermitPath = () => {
       // If match lookup fails, fall through to a plain save.
     }
     await persistSaveNew(result);
-  }, [result, user, navigate, persistSaveNew, persistRefresh, searchParams, setSearchParams]);
+  }, [result, user, permitAccess.isPlus, permitAccess.isLoading, navigate, persistSaveNew, persistRefresh, searchParams, setSearchParams]);
 
   // Resume save after sign-in
   useEffect(() => {
     if (resumeRanRef.current) return;
     if (searchParams.get('resumeSave') !== '1') return;
-    if (!user) return;
+    if (!user || permitAccess.isLoading) return;
     const pending = takePendingSave();
     if (!pending) return;
     resumeRanRef.current = true;
     setResult(pending);
+    if (!permitAccess.isPlus) {
+      // Signed in but Basic — show the roadmap and offer Plus instead of saving.
+      const next = new URLSearchParams(searchParams);
+      next.delete('resumeSave');
+      setSearchParams(next, { replace: true });
+      setPlusUpsellOpen(true);
+      return;
+    }
     (async () => {
       // Same dialog flow now runs post-auth — defer one tick so result is in state.
       const next = new URLSearchParams(searchParams);
