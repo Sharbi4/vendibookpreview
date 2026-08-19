@@ -421,11 +421,20 @@ async function mirrorHostSubscription(admin: any, paypalSubId: string, status: s
       console.error("[paypal-webhook] boost credit grant failed", err);
     }
 
+    const renewal = Boolean(sub.last_payment_at);
     await alertSubscriptionPayment(
       admin,
       sub,
-      sub.last_payment_at ? "subscription_renewed" : "subscription_started",
+      renewal ? "subscription_renewed" : "subscription_started",
     );
+    await sendMembershipEmail(admin, sub, renewal ? "renewed" : "activated", period);
+  }
+
+  if (status === "payment_failed") {
+    await sendMembershipEmail(admin, sub, "payment_failed", period);
+  }
+  if (status === "cancelled" || status === "expired") {
+    await sendMembershipEmail(admin, sub, "cancelled", period);
   }
 
   await notifySubscriptionState(admin, sub, status);
@@ -478,6 +487,75 @@ async function notifySubscriptionState(admin: any, sub: any, status: string) {
     link,
     dedupeKey: key,
   });
+}
+
+/**
+ * Branded membership lifecycle emails (Vendibook Pro).
+ *
+ * Idempotent by construction: the idempotency key is derived from the PayPal
+ * subscription id + lifecycle kind + the period/payment timestamp, so webhook
+ * retries and the reconciler can never send the same email twice.
+ */
+async function sendMembershipEmail(
+  // deno-lint-ignore no-explicit-any
+  admin: any,
+  // deno-lint-ignore no-explicit-any
+  sub: any,
+  kind: "activated" | "renewed" | "cancelled" | "payment_failed",
+  // deno-lint-ignore no-explicit-any
+  period: { current_period_end: string | null },
+) {
+  try {
+    if (!sub?.user_id) return;
+    const { data: profile } = await admin.from("profiles")
+      .select("email, first_name").eq("id", sub.user_id).maybeSingle();
+    if (!profile?.email) return;
+
+    const planName = (sub.tier === "vendibook_pro" || sub.tier === "pro" || !sub.tier)
+      ? "Vendibook Pro"
+      : sub.tier === "permit_path_plus"
+      ? "PermitPath Plus"
+      : `Vendibook ${sub.tier}`;
+
+    const fmt = (iso?: string | null) => {
+      if (!iso) return undefined;
+      const d = new Date(iso);
+      return Number.isNaN(d.getTime())
+        ? undefined
+        : d.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric", timeZone: "UTC" });
+    };
+
+    const amount = sub.recurring_amount_cents ? formatUsd(sub.recurring_amount_cents) : undefined;
+    const interval = sub.billing_interval === "year" ? "year" : "month";
+    const nextBillingDate = fmt(sub.next_billing_time);
+    const accessThrough = fmt(period.current_period_end ?? sub.next_billing_time);
+
+    const templateName = `pro-membership-${kind.replace("_", "-")}`;
+    const stamp = kind === "renewed"
+      ? (sub.last_payment_at ?? "")
+      : kind === "payment_failed"
+      ? (sub.next_billing_time ?? "")
+      : "";
+    const idempotencyKey = `${sub.paypal_subscription_id}:${kind}${stamp ? `:${stamp}` : ""}`;
+
+    await admin.functions.invoke("send-transactional-email", {
+      body: {
+        templateName,
+        recipientEmail: profile.email,
+        idempotencyKey,
+        templateData: {
+          firstName: profile.first_name ?? undefined,
+          planName,
+          amount,
+          interval,
+          nextBillingDate,
+          accessThrough,
+        },
+      },
+    });
+  } catch (err) {
+    console.error("[paypal-webhook] membership email failed", kind, err);
+  }
 }
 
 async function alertAdmins(admin: any, title: string, message: string) {
