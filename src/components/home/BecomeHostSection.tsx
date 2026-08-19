@@ -14,10 +14,11 @@ const carouselImages = [
 ];
 
 const benefits = [
-  { icon: DollarSign, text: 'Built-in booking & calendar management' },
-  { icon: Shield, text: 'Verified renters with ID checks' },
+  { icon: DollarSign, text: 'Booking & calendar management' },
+  { icon: Shield, text: 'Documents collected before pickup' },
   { icon: Clock, text: 'List in under 10 minutes' },
 ];
+
 
 const BecomeHostSection = () => {
   const [current, setCurrent] = useState(0);
