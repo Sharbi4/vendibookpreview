@@ -695,6 +695,12 @@ export default function ResultsDashboard({ result, readOnly = false, renderItemE
           </ul>
         </div>
       )}
+
+      <PermitPlusUpsellDialog
+        open={plusUpsellOpen}
+        onOpenChange={setPlusUpsellOpen}
+        returnPath="/dashboard?view=host&tab=permits"
+      />
     </div>
   );
 }
