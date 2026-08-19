@@ -60,7 +60,7 @@ export const TOOLS: ToolDef[] = [
     href: '/tools/permitpath',
     screenshot: permitpathShot,
     minTier: 'free',
-    unlockProductSlug: 'permit_path_plus',
+    unlockProductSlug: 'permit_path_plus_monthly',
     unlockPrice: '$29 per state',
     flame: true,
   },

@@ -37,7 +37,7 @@ const TOOL_TIER: Record<ToolSlug, Tier> = {
 };
 
 const TOOL_UNLOCK_SLUG: Partial<Record<ToolSlug, string>> = {
-  'permitpath': 'permit_path_plus',
+  'permitpath': 'permit_path_plus_monthly',
   'pricepilot': 'tool_pricepilot',
   'listing-studio': 'tool_listing_studio',
   'marketing-studio': 'tool_marketing_studio',
