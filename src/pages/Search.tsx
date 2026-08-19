@@ -608,19 +608,19 @@ const Search = () => {
               <div className="relative flex-1 group">
                 {/* Glow halo on focus */}
                 <div className="absolute -inset-px rounded-2xl bg-gradient-to-r from-primary/20 via-primary/10 to-primary/20 opacity-0 group-focus-within:opacity-100 blur-sm transition-opacity pointer-events-none" />
-                <div className="relative flex items-center bg-[#faf8f5] border border-[#1b1714]/10 rounded-full shadow-[0_1px_2px_rgba(0,0,0,0.10),0_14px_34px_-22px_rgba(0,0,0,0.55)] group-focus-within:border-primary/50 group-focus-within:shadow-[0_2px_6px_rgba(0,0,0,0.12),0_18px_40px_-22px_rgba(0,0,0,0.6)] transition-all duration-200">
-                  <SearchIcon className="absolute left-4 h-4 w-4 text-[#1b1714]/45 group-focus-within:text-primary transition-colors" />
+                <div className="relative flex items-center bg-[#faf8f5] border border-[#1b1714]/10 rounded-2xl shadow-[0_1px_2px_rgba(0,0,0,0.10),0_12px_28px_-22px_rgba(0,0,0,0.5)] group-focus-within:border-primary/50 group-focus-within:shadow-[0_2px_6px_rgba(0,0,0,0.12),0_16px_34px_-22px_rgba(0,0,0,0.55)] transition-all duration-200">
+                  <SearchIcon className="absolute left-3.5 h-4 w-4 text-[#1b1714]/45 group-focus-within:text-primary transition-colors" />
                   <Input
                     type="text"
                     placeholder="Search trucks, trailers, kitchens, locations…"
                     value={searchQuery}
                     onChange={(e) => handleSearch(e.target.value)}
-                    className="pl-11 pr-10 h-12 text-base sm:text-sm rounded-full border-0 bg-transparent text-[#1b1714] placeholder:text-[#1b1714]/45 focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none"
+                    className="pl-10 pr-10 h-11 text-base sm:text-sm rounded-2xl border-0 bg-transparent text-[#1b1714] placeholder:text-[#1b1714]/45 focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none"
                   />
                   {searchQuery && (
                     <button
                       onClick={() => handleSearch('')}
-                      className="absolute right-3.5 h-6 w-6 rounded-full hover:bg-[#1b1714]/[0.07] flex items-center justify-center text-[#1b1714]/50 hover:text-[#1b1714] transition-colors"
+                      className="absolute right-3 h-6 w-6 rounded-full hover:bg-[#1b1714]/[0.07] flex items-center justify-center text-[#1b1714]/50 hover:text-[#1b1714] transition-colors"
                       aria-label="Clear search"
                     >
                       <X className="h-3.5 w-3.5" />
