@@ -42,7 +42,7 @@ export const CategoryPillStrip = ({
     <div className="relative group">
       <button
         onClick={() => scroll('l')}
-        className="hidden md:flex absolute left-0 top-1/2 -translate-y-1/2 z-10 h-9 w-9 items-center justify-center rounded-full bg-background border border-border shadow-md opacity-0 group-hover:opacity-100 transition-opacity hover:scale-105"
+        className="hidden md:flex absolute left-0 top-1/2 -translate-y-1/2 z-10 h-9 w-9 items-center justify-center rounded-full bg-white/[0.06] backdrop-blur-md border border-white/10 text-white/80 shadow-lg opacity-0 group-hover:opacity-100 transition-all duration-200 hover:bg-white/[0.12]"
         aria-label="Scroll left"
       >
         <ChevronLeft className="h-4 w-4" />
@@ -50,7 +50,7 @@ export const CategoryPillStrip = ({
 
       <div
         ref={scrollRef}
-        className="snap-rail snap-rail-center scrollbar-hide flex gap-2 overflow-x-auto py-1 px-1 md:px-10 gpu-layer"
+        className="snap-rail snap-rail-center scrollbar-hide flex items-end gap-1 overflow-x-auto scroll-smooth py-1 px-1 md:px-10 gpu-layer"
       >
         {CATEGORY_PILLS.map(({ key, label, icon: Icon }) => {
           const active = activeCategory === key;
@@ -59,50 +59,56 @@ export const CategoryPillStrip = ({
               key={key}
               onClick={() => onCategoryChange(key)}
               className={cn(
-                'flex flex-col items-center justify-center gap-1 min-w-[78px] px-3 py-2 rounded-xl transition-all shrink-0 border',
+                'group/pill relative flex flex-col items-center justify-center gap-1.5 min-w-[82px] px-3 pt-2 pb-2.5 rounded-2xl border-0 shrink-0 transition-all duration-200 ease-out',
                 active
-                  ? 'border-primary/60 bg-primary/10 text-foreground'
-                  : 'border-transparent text-muted-foreground hover:text-foreground hover:bg-muted/40'
+                  ? 'text-foreground'
+                  : 'text-muted-foreground hover:text-foreground'
               )}
             >
-              <Icon className={cn('h-5 w-5', active && 'text-primary')} />
+              <Icon className={cn('h-5 w-5 transition-colors duration-200', active ? 'text-primary' : 'opacity-70 group-hover/pill:opacity-100')} />
               <span className="text-[11px] font-medium whitespace-nowrap">{label}</span>
+              <span
+                className={cn(
+                  'absolute inset-x-2.5 bottom-0 h-[2px] rounded-full transition-all duration-200',
+                  active ? 'bg-primary opacity-100' : 'bg-foreground/30 opacity-0 group-hover/pill:opacity-100',
+                )}
+              />
             </button>
           );
         })}
 
-        <div className="w-px bg-border/60 mx-1 my-2 shrink-0" />
+        <div className="w-px bg-white/10 mx-2 my-2 shrink-0" />
 
         <button
           onClick={() => onInstantBookToggle(!instantBookOnly)}
           className={cn(
-            'flex flex-col items-center justify-center gap-1 min-w-[78px] px-3 py-2 rounded-xl transition-all shrink-0 border',
+            'flex items-center gap-1.5 h-9 px-3.5 rounded-full border text-[12px] font-medium whitespace-nowrap shrink-0 transition-all duration-200 ease-out self-center',
             instantBookOnly
-              ? 'border-amber-500/60 bg-amber-500/10 text-foreground'
-              : 'border-transparent text-muted-foreground hover:text-foreground hover:bg-muted/40'
+              ? 'border-primary/50 bg-primary/12 text-foreground'
+              : 'border-white/12 bg-white/[0.03] text-muted-foreground hover:text-foreground hover:bg-white/[0.07]'
           )}
         >
-          <Zap className={cn('h-5 w-5', instantBookOnly && 'text-amber-500')} />
-          <span className="text-[11px] font-medium whitespace-nowrap">Instant Book</span>
+          <Zap className={cn('h-4 w-4', instantBookOnly && 'text-primary')} />
+          <span>Instant Book</span>
         </button>
 
         <button
           onClick={() => onVerifiedToggle(!verifiedHostsOnly)}
           className={cn(
-            'flex flex-col items-center justify-center gap-1 min-w-[78px] px-3 py-2 rounded-xl transition-all shrink-0 border',
+            'flex items-center gap-1.5 h-9 px-3.5 rounded-full border text-[12px] font-medium whitespace-nowrap shrink-0 transition-all duration-200 ease-out self-center',
             verifiedHostsOnly
-              ? 'border-emerald-500/60 bg-emerald-500/10 text-foreground'
-              : 'border-transparent text-muted-foreground hover:text-foreground hover:bg-muted/40'
+              ? 'border-emerald-500/50 bg-emerald-500/12 text-foreground'
+              : 'border-white/12 bg-white/[0.03] text-muted-foreground hover:text-foreground hover:bg-white/[0.07]'
           )}
         >
-          <ShieldCheck className={cn('h-5 w-5', verifiedHostsOnly && 'text-emerald-500')} />
-          <span className="text-[11px] font-medium whitespace-nowrap">Verified</span>
+          <ShieldCheck className={cn('h-4 w-4', verifiedHostsOnly && 'text-emerald-500')} />
+          <span>Identity Verified</span>
         </button>
       </div>
 
       <button
         onClick={() => scroll('r')}
-        className="hidden md:flex absolute right-0 top-1/2 -translate-y-1/2 z-10 h-9 w-9 items-center justify-center rounded-full bg-background border border-border shadow-md opacity-0 group-hover:opacity-100 transition-opacity hover:scale-105"
+        className="hidden md:flex absolute right-0 top-1/2 -translate-y-1/2 z-10 h-9 w-9 items-center justify-center rounded-full bg-white/[0.06] backdrop-blur-md border border-white/10 text-white/80 shadow-lg opacity-0 group-hover:opacity-100 transition-all duration-200 hover:bg-white/[0.12]"
         aria-label="Scroll right"
       >
         <ChevronRight className="h-4 w-4" />
