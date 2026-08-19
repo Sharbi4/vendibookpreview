@@ -97,6 +97,9 @@ export default function ResultsDashboard({ result, readOnly = false, renderItemE
   const [filter, setFilter] = useState<Filter>('all');
   const [loadedRemote, setLoadedRemote] = useState(false);
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
+  // PermitPath Plus gates the save/track/export layer; Basic keeps the roadmap.
+  const permitAccess = usePermitPathAccess();
+  const [plusUpsellOpen, setPlusUpsellOpen] = useState(false);
 
   // 1) localStorage load
   useEffect(() => {
