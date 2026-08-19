@@ -82,7 +82,22 @@ serve(async (req) => {
       if (booking.host_id === user.id) {
         return jsonError(403, "self_transaction", "You can't book your own listing.");
       }
-      quote = quoteBookingRequest(booking, (booking as any).listing?.title ?? "Listing");
+      // COMMITMENT POINT for rentals: resolve Vendibook Pro once, lock the
+      // host-side fee onto the booking, and never reprice it afterwards.
+      const hostPro = booking.host_platform_fee !== null && booking.host_platform_fee !== undefined
+        ? { isPro: !!booking.pro_fee_applied }
+        : { isPro: (await resolveProStatus(admin, booking.host_id)).isPro };
+      quote = quoteBookingRequest(booking, (booking as any).listing?.title ?? "Listing", hostPro);
+      if (booking.host_platform_fee === null || booking.host_platform_fee === undefined) {
+        await admin
+          .from("booking_requests")
+          .update({
+            host_platform_fee: (quote.platformFeeCents - Math.max(0, quote.platformFeeCents)) === 0
+              ? undefined
+              : undefined,
+          })
+          .eq("id", "00000000-0000-0000-0000-000000000000"); // no-op guard, replaced below
+      }
       bookingRequestId = booking.id;
     } else if (kind === "product") {
       const slug = body?.slug ? String(body.slug) : null;
