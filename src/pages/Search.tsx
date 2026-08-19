@@ -355,6 +355,7 @@ const Search = () => {
 
     setInstantBookOnly(false);
     setVerifiedHostsOnly(false);
+    setFeaturedOnly(false);
     setSortBy('newest');
     setPage(1);
     setSearchParams({});
@@ -518,7 +519,7 @@ const Search = () => {
       ? (mode === 'rent' ? 'rent' : 'buy') 
       : 'rent or buy';
     const locationLabel = locationText ? ` in ${locationText}` : '';
-    return `Browse ${totalCount}+ ${categoryLabel} available to ${modeLabel}${locationLabel}. Verified listings with secure payments on Vendibook.`;
+    return `Browse ${totalCount}+ ${categoryLabel} available to ${modeLabel}${locationLabel}. Compare listings and book with payment protection on Vendibook.`;
   }, [category, mode, locationText, totalCount]);
 
   // Generate page numbers for pagination
@@ -607,19 +608,19 @@ const Search = () => {
               <div className="relative flex-1 group">
                 {/* Glow halo on focus */}
                 <div className="absolute -inset-px rounded-2xl bg-gradient-to-r from-primary/20 via-primary/10 to-primary/20 opacity-0 group-focus-within:opacity-100 blur-sm transition-opacity pointer-events-none" />
-                <div className="relative flex items-center bg-card/90 backdrop-blur-md border border-border/60 rounded-2xl shadow-sm group-focus-within:border-primary/60 group-focus-within:shadow-md transition-all">
-                  <SearchIcon className="absolute left-4 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                <div className="relative flex items-center bg-[#faf8f5] border border-[#1b1714]/10 rounded-full shadow-[0_1px_2px_rgba(0,0,0,0.10),0_14px_34px_-22px_rgba(0,0,0,0.55)] group-focus-within:border-primary/50 group-focus-within:shadow-[0_2px_6px_rgba(0,0,0,0.12),0_18px_40px_-22px_rgba(0,0,0,0.6)] transition-all duration-200">
+                  <SearchIcon className="absolute left-4 h-4 w-4 text-[#1b1714]/45 group-focus-within:text-primary transition-colors" />
                   <Input
                     type="text"
                     placeholder="Search trucks, trailers, kitchens, locations…"
                     value={searchQuery}
                     onChange={(e) => handleSearch(e.target.value)}
-                    className="pl-11 pr-10 h-12 text-sm rounded-2xl border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none"
+                    className="pl-11 pr-10 h-12 text-base sm:text-sm rounded-full border-0 bg-transparent text-[#1b1714] placeholder:text-[#1b1714]/45 focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none"
                   />
                   {searchQuery && (
                     <button
                       onClick={() => handleSearch('')}
-                      className="absolute right-3.5 h-6 w-6 rounded-full hover:bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
+                      className="absolute right-3.5 h-6 w-6 rounded-full hover:bg-[#1b1714]/[0.07] flex items-center justify-center text-[#1b1714]/50 hover:text-[#1b1714] transition-colors"
                       aria-label="Clear search"
                     >
                       <X className="h-3.5 w-3.5" />
@@ -631,7 +632,7 @@ const Search = () => {
               {/* Filter Button */}
               <Sheet open={isFiltersOpen} onOpenChange={setIsFiltersOpen}>
                 <SheetTrigger asChild>
-                  <Button variant="dark-shine" size="default" className="rounded-2xl relative shrink-0 h-12 px-4 sm:px-5 shadow-sm">
+                  <Button variant="outline" size="default" className="rounded-full relative shrink-0 h-12 px-4 sm:px-5 border-primary/35 bg-primary/[0.10] text-foreground hover:bg-primary/[0.16] hover:border-primary/50 transition-all duration-200">
                     <SlidersHorizontal className="h-4 w-4 sm:mr-2" />
                     <span className="hidden sm:inline">Filters</span>
                     {activeFiltersCount > 0 && (
@@ -641,11 +642,27 @@ const Search = () => {
                     )}
                   </Button>
                 </SheetTrigger>
-                <SheetContent side="bottom" className="h-[85vh] flex flex-col">
-                  <SheetHeader className="shrink-0">
-                    <SheetTitle>Filters</SheetTitle>
-                  </SheetHeader>
-                  <ScrollArea className="flex-1 mt-4 -mx-6 px-6">
+                <SheetContent
+                  side="bottom"
+                  className="sale-light h-[85vh] flex flex-col rounded-t-3xl border-t-0 p-0 shadow-[0_-18px_60px_-24px_rgba(0,0,0,0.6)] data-[state=open]:duration-300 data-[state=closed]:duration-200"
+                >
+                  <div className="shrink-0 px-6 pt-3 pb-3 border-b border-[#1b1714]/[0.08]">
+                    <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-[#1b1714]/15" aria-hidden />
+                    <SheetHeader className="flex-row items-center justify-between space-y-0 text-left">
+                      <SheetTitle className="text-base tracking-tight">Filters</SheetTitle>
+                      {activeFiltersCount > 0 && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={clearFilters}
+                          className="h-8 px-2 text-xs text-primary hover:text-primary"
+                        >
+                          Clear all
+                        </Button>
+                      )}
+                    </SheetHeader>
+                  </div>
+                  <ScrollArea className="flex-1 px-6 pt-4 scroll-smooth">
                     <div className="pb-6">
                       <FilterContent
                         mode={mode}
@@ -678,6 +695,15 @@ const Search = () => {
                       />
                     </div>
                   </ScrollArea>
+                  <div className="shrink-0 border-t border-[#1b1714]/[0.08] px-6 py-3 pb-[calc(env(safe-area-inset-bottom,0px)+12px)]">
+                    <Button
+                      variant="cta"
+                      className="w-full h-12 rounded-2xl"
+                      onClick={() => setIsFiltersOpen(false)}
+                    >
+                      Show {totalCount.toLocaleString()} listing{totalCount !== 1 ? 's' : ''}
+                    </Button>
+                  </div>
                 </SheetContent>
               </Sheet>
             </div>
@@ -758,8 +784,8 @@ const Search = () => {
                   >
                     <option value="newest">Newest</option>
                     {searchQuery.trim() && <option value="relevance">Relevance</option>}
-                    <option value="price_low">Price: Low → High</option>
-                    <option value="price_high">Price: High → Low</option>
+                    <option value="price-low">Price: Low → High</option>
+                    <option value="price-high">Price: High → Low</option>
                     {locationCoords && <option value="distance">Distance</option>}
                   </select>
                   <svg className="absolute right-2 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
@@ -774,10 +800,10 @@ const Search = () => {
             {/* Desktop Sidebar Filters - Enhanced card styling */}
             <aside className="hidden md:block w-64 shrink-0 self-start sticky top-24">
               <div
-                className="space-y-6 p-5 rounded-2xl border border-border/50 bg-card/50 backdrop-blur-sm max-h-[calc(100vh-7.5rem)] overflow-y-auto overscroll-contain scrollbar-thin"
+                className="sale-light space-y-6 p-5 rounded-3xl border border-[#1b1714]/[0.08] shadow-[0_1px_2px_rgba(24,20,16,0.05),0_18px_44px_-26px_rgba(0,0,0,0.55)] max-h-[calc(100vh-7.5rem)] overflow-y-auto overscroll-contain scroll-smooth scrollbar-thin"
               >
                 <div className="flex items-center justify-between">
-                  <h2 className="font-semibold text-foreground">Filters</h2>
+                  <h2 className="font-semibold tracking-tight text-foreground">Filters</h2>
                   {activeFiltersCount > 0 && (
                     <Button variant="ghost" size="sm" onClick={clearFilters} className="text-xs text-primary hover:text-primary">
                       Clear all
@@ -850,7 +876,7 @@ const Search = () => {
                   {verifiedHostsOnly && (
                     <Badge variant="secondary" className="gap-1 bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400">
                       <Shield className="h-3 w-3" />
-                      Verified Hosts
+                      Identity Verified
                       <button onClick={() => handleVerifiedHostsChange(false)}>
                         <X className="h-3 w-3 ml-1" />
                       </button>
@@ -931,6 +957,7 @@ const Search = () => {
                               showQuickBook
                               onQuickBook={handleQuickBook}
                               canDeliverToUser={listing.can_deliver ?? false}
+                              variant="search"
                               compact
                             />
                             {listing.distance_miles !== null && listing.distance_miles !== undefined && (
@@ -992,7 +1019,8 @@ const Search = () => {
                             showQuickBook
                             onQuickBook={handleQuickBook}
                             canDeliverToUser={listing.can_deliver ?? false}
-                            compact
+                            variant="search"
+                            horizontal
                           />
                           {listing.distance_miles !== null && listing.distance_miles !== undefined && (
                             <div className="absolute top-3 left-3 bg-background/95 backdrop-blur-sm px-2 py-1 rounded-full text-[11px] font-semibold flex items-center gap-1 z-10 shadow-sm border border-border/40">
@@ -1101,6 +1129,7 @@ const Search = () => {
                               showQuickBook
                               onQuickBook={handleQuickBook}
                               canDeliverToUser={listing.can_deliver ?? false}
+                              variant="search"
                             />
                             {listing.distance_miles !== null && listing.distance_miles !== undefined && (
                               <div className="absolute top-3 left-3 bg-background/90 backdrop-blur-sm px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1 z-10">
@@ -1513,11 +1542,11 @@ const FilterContent = ({
             />
             <div className="space-y-0.5">
               <span className="text-sm font-medium flex items-center gap-1.5">
-                <Shield className="h-3.5 w-3.5 text-amber-500" />
-                Verified Hosts only
+                <Shield className="h-3.5 w-3.5 text-emerald-500" />
+                Identity Verified only
               </span>
               <p className="text-xs text-muted-foreground">
-                ID verified by Vendibook
+                Optional Plaid identity check completed. Does not verify ownership, title, condition, value, or listing accuracy.
               </p>
             </div>
           </label>
