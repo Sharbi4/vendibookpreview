@@ -14,6 +14,7 @@ import HeroBelowFold from '@/components/home/HeroBelowFold';
 import ReferralPromoCard from '@/components/home/ReferralPromoCard';
 import ConciergeSection from '@/components/home/ConciergeSection';
 import SellerHomeBlock from '@/components/home/SellerHomeBlock';
+import PremiumDiscoveryBlock from '@/components/home/PremiumDiscoveryBlock';
 import HowVendibookWorks from '@/components/home/how-it-works/HowVendibookWorks';
 
 import { usePageTracking } from '@/hooks/usePageTracking';
