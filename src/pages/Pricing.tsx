@@ -349,7 +349,10 @@ const Pricing = () => {
         description="Start free on Vendibook or go Pro for a lower 10.9% seller fee, a monthly Featured Boost credit and premium tools. Cancel anytime."
       />
 
+      <Header />
+
       <div className="mx-auto max-w-5xl px-4 py-12 md:py-16">
+
         {/* Intro */}
         <header className="max-w-2xl">
           <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
