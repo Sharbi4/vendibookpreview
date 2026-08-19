@@ -454,11 +454,19 @@ async function mirrorHostSubscription(admin: any, paypalSubId: string, status: s
   }
 
 
-  await notifySubscriptionState(admin, sub, status);
+  await notifySubscriptionState(admin, sub, status, period.entitled ? period.current_period_end : null);
 }
 
 /** In-app notification for every subscription lifecycle transition. */
-async function notifySubscriptionState(admin: any, sub: any, status: string) {
+async function notifySubscriptionState(
+  admin: any,
+  sub: any,
+  status: string,
+  accessThrough: string | null = null,
+) {
+  const accessThroughLabel = accessThrough
+    ? new Date(accessThrough).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric", timeZone: "UTC" })
+    : null;
   const link = "/account/subscription";
   const key = `${sub.paypal_subscription_id}:${status}`;
   const plan = sub.tier ? `${sub.tier} plan` : "your plan";
@@ -485,7 +493,9 @@ async function notifySubscriptionState(admin: any, sub: any, status: string) {
     cancelled: {
       type: "subscription_cancelled",
       title: "Membership cancelled",
-      message: `Your ${plan} has been cancelled. You can resubscribe at any time.`,
+      message: accessThroughLabel
+        ? `Your ${plan} is cancelled — no future renewal. Your benefits remain active through ${accessThroughLabel}.`
+        : `Your ${plan} has been cancelled. You can resubscribe at any time.`,
     },
     expired: {
       type: "subscription_cancelled",
