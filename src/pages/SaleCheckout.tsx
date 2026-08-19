@@ -60,37 +60,41 @@ import {
 } from '@/components/journey';
 
 type FulfillmentSelection = 'pickup' | 'delivery' | 'vendibook_freight';
-type CheckoutStep =
-  | 'intro'
-  | 'confirm'
-  | 'identity'
-  | 'delivery'
-  | 'addons'
-  | 'details'
-  | 'payment'
-  | 'review';
+
+/**
+ * Three-step for-sale checkout:
+ *   1. Review & fulfillment  2. Confirm details  3. Payment
+ * The step machine is the only thing that changed — every money, eligibility
+ * and edge-function rule below is untouched.
+ */
+type CheckoutStep = 'intro' | 'fulfillment' | 'details' | 'payment';
 
 // High-value sale threshold. Below this we skip the intro screen and drop
 // buyers straight into the wizard (small tool/add-on purchases).
 const SALE_INTRO_MIN_PRICE = 1000;
 
 const CHECKOUT_STEPS = [
-  { step: 1, label: 'Confirm',       short: 'Confirm' },
-  { step: 2, label: 'Verify you',    short: 'Verify' },
-  { step: 3, label: 'Delivery',      short: 'Delivery' },
-  { step: 4, label: 'Add-ons',       short: 'Add-ons' },
-  { step: 5, label: 'Your details',  short: 'Details' },
-  { step: 6, label: 'Payment',       short: 'Payment' },
-  { step: 7, label: 'Review & pay',  short: 'Review' },
+  { id: 'fulfillment', label: 'Review & fulfillment' },
+  { id: 'details', label: 'Confirm details' },
+  { id: 'payment', label: 'Payment' },
 ];
 
-const STEP_NUM: Record<CheckoutStep, number> = {
-  intro: 0, confirm: 1, identity: 2, delivery: 3, addons: 4, details: 5, payment: 6, review: 7,
+const STEP_ORDER: Exclude<CheckoutStep, 'intro'>[] = ['fulfillment', 'details', 'payment'];
+
+/** Older sessions persisted a 7-step machine; fold them onto the new three. */
+const LEGACY_STEP_MAP: Record<string, CheckoutStep> = {
+  intro: 'intro',
+  confirm: 'fulfillment',
+  identity: 'fulfillment',
+  delivery: 'fulfillment',
+  fulfillment: 'fulfillment',
+  addons: 'details',
+  details: 'details',
+  payment: 'payment',
+  review: 'payment',
 };
-
-const getStepNumber = (step: CheckoutStep): number => STEP_NUM[step];
-
-
+const normalizeStep = (step: string | undefined): CheckoutStep =>
+  LEGACY_STEP_MAP[step ?? 'intro'] ?? 'intro';
 
 const SaleCheckout = () => {
   const { listingId } = useParams();
@@ -141,10 +145,10 @@ const SaleCheckout = () => {
     identityAcknowledged: false,
   });
 
-  const currentStep = persist.state.step;
+  const currentStep = normalizeStep(persist.state.step);
   const setCurrentStep = (s: CheckoutStep) => {
     persist.setState((prev) => ({ ...prev, step: s }));
-    persist.bumpFurthestStep(STEP_NUM[s]);
+    persist.bumpFurthestStep(Math.max(0, STEP_ORDER.indexOf(s as Exclude<CheckoutStep, 'intro'>) + 1));
   };
 
 
@@ -322,7 +326,7 @@ const SaleCheckout = () => {
       priceSale > 0 &&
       priceSale < SALE_INTRO_MIN_PRICE
     ) {
-      setCurrentStep('confirm');
+      setCurrentStep('fulfillment');
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentStep, isListingLoading, priceSale]);
@@ -451,7 +455,7 @@ const SaleCheckout = () => {
 
   // Validation
   const validateStep = (step: CheckoutStep): boolean => {
-    if (step === 'delivery') {
+    if (step === 'fulfillment') {
       if (fulfillmentSelected === 'vendibook_freight' && !hasValidEstimate) {
         toast({ title: 'Enter delivery address', description: 'Please enter a complete address to get a freight quote.', variant: 'destructive' });
         return false;
