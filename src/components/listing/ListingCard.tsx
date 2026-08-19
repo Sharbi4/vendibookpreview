@@ -466,10 +466,10 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
         </div>
 
       {/* Content - Apple/OpenAI Cleanliness */}
-      <div className={cn("p-4 space-y-2 flex-1 flex flex-col", compact && "p-3 space-y-1")}>
+      <div className={cn("p-4 space-y-2 flex-1 flex flex-col", compact && "p-3 space-y-1", isRow && "sm:p-5")}>
         {/* Location & Category */}
         <div className="flex items-center justify-between gap-2">
-          <span className={cn("text-white/60 font-medium flex items-center gap-1", compact ? "text-xs" : "text-sm")}>
+          <span className={cn(textMuted, "font-medium flex items-center gap-1", compact ? "text-xs" : "text-sm")}>
             <MapPin className={cn(compact ? "h-2.5 w-2.5" : "h-3 w-3")} />
             <span className="line-clamp-1">{location}</span>
             {distanceMiles !== undefined && (
@@ -480,7 +480,10 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
           </span>
           {!compact && (
             <CategoryTooltip category={listing.category} side="top">
-              <span className="bg-white/10 text-white/80 text-xs font-bold px-3 py-1 rounded-full cursor-help">
+              <span className={cn(
+                "text-xs font-bold px-3 py-1 rounded-full cursor-help",
+                isSearch ? "bg-[#1b1714]/[0.05] text-[#1b1714]/70" : "bg-white/10 text-white/80",
+              )}>
                 {CATEGORY_LABELS[listing.category]}
               </span>
             </CategoryTooltip>
@@ -489,11 +492,11 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
 
         {/* Delivery Radius Badge */}
         {!compact && (listing.fulfillment_type === 'delivery' || listing.fulfillment_type === 'both') && listing.delivery_radius_miles && (
-          <div className="flex items-center gap-1 text-xs text-white/50">
+          <div className={cn("flex items-center gap-1 text-xs", textFaint)}>
             <Truck className="h-3 w-3" />
             <span>Delivers within {listing.delivery_radius_miles} mi</span>
             {listing.delivery_fee && (
-              <span className="text-white/80 font-medium">· {deliveryRateLabel(listing.delivery_fee, (listing as any).delivery_fee_type)}</span>
+              <span className={cn("font-medium", isSearch ? "text-[#1b1714]/80" : "text-white/80")}>· {deliveryRateLabel(listing.delivery_fee, (listing as any).delivery_fee_type)}</span>
             )}
           </div>
         )}
@@ -501,8 +504,10 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
         {/* Title & Rating - Tracking Tight Typography */}
         <div className="flex items-center justify-between gap-2">
           <h3 className={cn(
-            "text-lg font-semibold tracking-tight text-white line-clamp-1 group-hover:text-primary transition-colors",
-            compact && "text-sm"
+            "text-lg font-semibold tracking-tight line-clamp-1 group-hover:text-primary transition-colors",
+            textStrong,
+            compact && "text-sm",
+            isRow && "sm:text-xl sm:line-clamp-2",
           )}>
             {listing.title}
           </h3>
@@ -512,44 +517,72 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
         {/* Price + Micro-action — the only conversion surface on the card */}
         <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 mt-auto pt-1">
           <div className="flex items-baseline gap-2 flex-wrap min-w-0">
-            <span className={cn("text-white font-bold tracking-tight tabular-nums", compact ? "text-base" : "text-xl")}>
+            <span className={cn("font-bold tracking-tight tabular-nums", textStrong, compact ? "text-base" : "text-xl")}>
               {price}
             </span>
             {showHourlyRate && (
-              <span className={cn("text-white/50 font-medium", compact ? "text-xs" : "text-xs")}>
+              <span className={cn("font-medium text-xs", textFaint)}>
                 ${listing.price_hourly}/hr
               </span>
             )}
             {!compact && listing.mode === 'rent' && listing.price_weekly && (
-              <span className="text-xs text-white/50 font-medium">
+              <span className={cn("text-xs font-medium", textFaint)}>
                 ${listing.price_weekly}/week
               </span>
             )}
           </div>
-          <button
-            type="button"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              trackLeadEvent(
-                listing.mode === 'sale'
-                  ? 'listing_start_purchase_click'
-                  : 'listing_view_availability_click',
-                {
-                  listing_id: listing.id,
-                  category: listing.category,
-                  price: listing.mode === 'sale' ? listing.price_sale : listing.price_daily,
-                  source: 'listing_card',
-                },
-              );
-              setShowOverlay(true);
-            }}
-            className="group/cta relative z-10 inline-flex items-center gap-1 text-[13px] font-medium text-[#f97316] hover:text-[#fb923c] whitespace-nowrap shrink-0 transition-colors"
-          >
-            <span>{listing.mode === 'sale' ? 'Start purchase' : 'View availability'}</span>
-            <ArrowRight className="h-3.5 w-3.5 transition-transform duration-150 ease-out group-hover/cta:translate-x-1 group-hover/cta:text-[#fb923c]" />
-          </button>
+          {isSearch ? (
+            <Button
+              type="button"
+              variant="cta"
+              size="sm"
+              className="relative z-10 h-9 px-4 text-[13px] rounded-2xl shrink-0"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                trackLeadEvent(
+                  listing.mode === 'sale'
+                    ? 'listing_start_purchase_click'
+                    : 'listing_view_availability_click',
+                  {
+                    listing_id: listing.id,
+                    category: listing.category,
+                    price: listing.mode === 'sale' ? listing.price_sale : listing.price_daily,
+                    source: 'listing_card',
+                  },
+                );
+                setShowOverlay(true);
+              }}
+            >
+              {listing.mode === 'sale' ? 'Start purchase' : 'View availability'}
+            </Button>
+          ) : (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                trackLeadEvent(
+                  listing.mode === 'sale'
+                    ? 'listing_start_purchase_click'
+                    : 'listing_view_availability_click',
+                  {
+                    listing_id: listing.id,
+                    category: listing.category,
+                    price: listing.mode === 'sale' ? listing.price_sale : listing.price_daily,
+                    source: 'listing_card',
+                  },
+                );
+                setShowOverlay(true);
+              }}
+              className="group/cta relative z-10 inline-flex items-center gap-1 text-[13px] font-medium text-[#f97316] hover:text-[#fb923c] whitespace-nowrap shrink-0 transition-colors"
+            >
+              <span>{listing.mode === 'sale' ? 'Start purchase' : 'View availability'}</span>
+              <ArrowRight className="h-3.5 w-3.5 transition-transform duration-150 ease-out group-hover/cta:translate-x-1 group-hover/cta:text-[#fb923c]" />
+            </button>
+          )}
         </div>
+
 
         
         {/* Hourly Schedule Summary - shows available days/hours for hourly rentals */}
