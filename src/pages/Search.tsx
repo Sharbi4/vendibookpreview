@@ -632,7 +632,7 @@ const Search = () => {
               {/* Filter Button */}
               <Sheet open={isFiltersOpen} onOpenChange={setIsFiltersOpen}>
                 <SheetTrigger asChild>
-                  <Button variant="outline" size="default" className="rounded-full relative shrink-0 h-12 px-4 sm:px-5 border-primary/35 bg-primary/[0.10] text-foreground hover:bg-primary/[0.16] hover:border-primary/50 transition-all duration-200">
+                  <Button variant="outline" size="default" className="rounded-2xl relative shrink-0 h-11 px-4 sm:px-5 border-primary/35 bg-primary/[0.10] text-foreground hover:bg-primary/[0.16] hover:border-primary/50 transition-all duration-200">
                     <SlidersHorizontal className="h-4 w-4 sm:mr-2" />
                     <span className="hidden sm:inline">Filters</span>
                     {activeFiltersCount > 0 && (
