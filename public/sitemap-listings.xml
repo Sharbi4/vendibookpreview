@@ -111,17 +111,6 @@
     </image:image>
   </url>
   <url>
-    <loc>https://vendibook.com/listing/8dd4955f-d5fe-47ac-b260-ce86d15fd1f4</loc>
-    <lastmod>2026-08-09</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/48a5611b-549e-4159-92bc-7c5c0e3ba909/8dd4955f-d5fe-47ac-b260-ce86d15fd1f4/1781398451293-81n9w.jpeg</image:loc>
-      <image:title>Empty Concession Trailer</image:title>
-      <image:caption>Empty Concession Trailer on Vendibook</image:caption>
-    </image:image>
-  </url>
-  <url>
     <loc>https://vendibook.com/listing/c649440f-d3df-4f3a-a622-e118767efb4d</loc>
     <lastmod>2026-08-13</lastmod>
     <changefreq>weekly</changefreq>
@@ -130,6 +119,17 @@
       <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/20434a7d-a365-4d4a-ab9b-5cff26815f33/c649440f-d3df-4f3a-a622-e118767efb4d/1773684471904-n7qn7c.jpeg</image:loc>
       <image:title>My Food Trailer</image:title>
       <image:caption>My Food Trailer on Vendibook</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://vendibook.com/listing/8dd4955f-d5fe-47ac-b260-ce86d15fd1f4</loc>
+    <lastmod>2026-08-19</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/48a5611b-549e-4159-92bc-7c5c0e3ba909/8dd4955f-d5fe-47ac-b260-ce86d15fd1f4/1781398451293-81n9w.jpeg</image:loc>
+      <image:title>Empty Concession Trailer</image:title>
+      <image:caption>Empty Concession Trailer on Vendibook</image:caption>
     </image:image>
   </url>
   <url>

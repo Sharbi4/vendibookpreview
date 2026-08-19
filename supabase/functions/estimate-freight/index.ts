@@ -53,29 +53,57 @@ const FREIGHT_RATES = {
   defaultTaxRate: 0.0825, // 8.25% default tax rate (can be adjusted per state)
 };
 
-async function geocodeAddress(address: string, apiKey: string): Promise<{ lat: number; lng: number } | null> {
+async function geocodeViaMapbox(address: string): Promise<{ lat: number; lng: number } | null> {
+  const token = Deno.env.get("MAPBOX_PUBLIC_TOKEN");
+  if (!token) return null;
   try {
-    const encodedAddress = encodeURIComponent(address);
-    const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodedAddress}&key=${apiKey}&components=country:US`;
-    
+    const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(address)}.json?country=us&limit=1&access_token=${token}`;
     const response = await fetch(url);
-    if (!response.ok) {
-      logStep("Geocoding failed", { status: response.status, address });
-      return null;
-    }
-    
+    if (!response.ok) return null;
     const data = await response.json();
-    if (data.status === "OK" && data.results && data.results.length > 0) {
-      const location = data.results[0].geometry.location;
-      return { lat: location.lat, lng: location.lng };
+    const center = data?.features?.[0]?.center;
+    if (Array.isArray(center) && center.length === 2) {
+      return { lat: Number(center[1]), lng: Number(center[0]) };
     }
-    
     return null;
   } catch (error) {
-    logStep("Geocoding error", { error: String(error), address });
+    logStep("Mapbox geocoding error", { error: String(error), address });
     return null;
   }
 }
+
+async function geocodeAddress(address: string, apiKey: string | undefined): Promise<{ lat: number; lng: number } | null> {
+  if (apiKey) {
+    try {
+      const encodedAddress = encodeURIComponent(address);
+      const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodedAddress}&key=${apiKey}&components=country:US`;
+
+      const response = await fetch(url);
+      if (response.ok) {
+        const data = await response.json();
+        if (data.status === "OK" && data.results && data.results.length > 0) {
+          const location = data.results[0].geometry.location;
+          return { lat: location.lat, lng: location.lng };
+        }
+        logStep("Google geocoding returned no result", { status: data.status, address });
+      } else {
+        logStep("Geocoding failed", { status: response.status, address });
+      }
+    } catch (error) {
+      logStep("Geocoding error", { error: String(error), address });
+    }
+  }
+  // Mapbox is the fallback so estimates keep working if Google is unavailable.
+  return await geocodeViaMapbox(address);
+}
+
+function coerceCoords(value: any): { lat: number; lng: number } | null {
+  const lat = Number(value?.lat);
+  const lng = Number(value?.lng);
+  if (Number.isFinite(lat) && Number.isFinite(lng)) return { lat, lng };
+  return null;
+}
+
 
 function calculateDistance(lat1: number, lng1: number, lat2: number, lng2: number): number {
   const R = 3959; // Earth's radius in miles
@@ -155,16 +183,11 @@ const handler = async (req: Request): Promise<Response> => {
 
   try {
     const GOOGLE_MAPS_API_KEY = Deno.env.get("GOOGLE_MAPS_API_KEY");
-    
-    if (!GOOGLE_MAPS_API_KEY) {
-      logStep("Google Maps API key not configured");
-      return new Response(
-        JSON.stringify({ success: false, error: "Geocoding service not configured" }),
-        { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
-      );
-    }
 
-    const body: FreightEstimateRequest = await req.json();
+    const body: FreightEstimateRequest & {
+      origin_coords?: { lat: number; lng: number };
+      destination_coords?: { lat: number; lng: number };
+    } = await req.json();
     logStep("Request body", body);
 
     // Support both camelCase and snake_case parameter names
@@ -174,18 +197,21 @@ const handler = async (req: Request): Promise<Response> => {
     const widthInches = body.widthInches || body.width_inches;
     const heightInches = body.heightInches || body.height_inches;
     const weightLbs = body.weightLbs || body.weight_lbs;
+    const providedOrigin = coerceCoords(body.origin_coords);
+    const providedDest = coerceCoords(body.destination_coords);
 
-    if (!originAddress || !destinationAddress) {
+    if ((!originAddress && !providedOrigin) || (!destinationAddress && !providedDest)) {
       return new Response(
         JSON.stringify({ success: false, error: "Origin and destination addresses are required" }),
         { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
 
-    // Geocode both addresses
-    logStep("Geocoding origin address", { originAddress });
-    const originCoords = await geocodeAddress(originAddress, GOOGLE_MAPS_API_KEY);
-    
+    // Geocode both endpoints (coordinates win when the caller already has them)
+    logStep("Resolving origin", { originAddress, providedOrigin });
+    const originCoords =
+      providedOrigin ?? (await geocodeAddress(originAddress as string, GOOGLE_MAPS_API_KEY));
+
     if (!originCoords) {
       return new Response(
         JSON.stringify({ success: false, error: "Could not geocode origin address" }),
@@ -194,9 +220,10 @@ const handler = async (req: Request): Promise<Response> => {
     }
     logStep("Origin coordinates", originCoords);
 
-    logStep("Geocoding destination address", { destinationAddress });
-    const destCoords = await geocodeAddress(destinationAddress, GOOGLE_MAPS_API_KEY);
-    
+    logStep("Resolving destination", { destinationAddress, providedDest });
+    const destCoords =
+      providedDest ?? (await geocodeAddress(destinationAddress as string, GOOGLE_MAPS_API_KEY));
+
     if (!destCoords) {
       return new Response(
         JSON.stringify({ success: false, error: "Could not geocode destination address" }),
@@ -204,6 +231,7 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
     logStep("Destination coordinates", destCoords);
+
 
     // Calculate distance
     const distanceMiles = calculateDistance(
