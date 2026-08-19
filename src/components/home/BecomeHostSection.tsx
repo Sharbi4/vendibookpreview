@@ -148,18 +148,14 @@ const BecomeHostSection = () => {
 
 
           <div>
-            <Button 
-              asChild 
-              size="lg" 
-              variant="glass-cta"
-              className="rounded-full px-10"
-            >
+            <Button asChild size="lg" variant="cta" className="rounded-2xl px-10">
               <Link to="/list" className="flex items-center gap-2">
-                List Your Asset
+                List your asset
                 <ArrowRight className="h-4 w-4" />
               </Link>
             </Button>
           </div>
+
         </motion.div>
       </div>
     </section>
