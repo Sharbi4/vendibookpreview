@@ -34,8 +34,8 @@ const PILLARS = [
     body: 'Calendar sync, instant book, and approval flow built in.'},
   {
     icon: Wallet,
-    title: 'Deposits & payouts',
-    body: 'Set security deposit terms. Seller and host payouts are reviewed and sent manually.'},
+    title: 'Payouts & fulfillment',
+    body: 'Set deposit terms. Payout and fulfillment steps follow the transaction flow and are released by Vendibook.'},
   {
     icon: MessageSquare,
     title: 'Messaging',
@@ -75,7 +75,7 @@ const TrustInfrastructure = () => {
             Keep every detail organized.
           </h2>
           <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-            Documents, owner profiles, messaging, booking requests, delivery details, and reviews stay together—giving buyers, renters, owners, and sellers a clearer path forward.
+            Documents, seller and owner profiles, booking requests, messaging, delivery, payout coordination, and reviews stay in one place.
           </p>
         </motion.div>
 
@@ -113,7 +113,7 @@ const TrustInfrastructure = () => {
             return (
               <motion.div
                 key={pillar.title}
-                className="glass-premium group relative rounded-2xl p-5 sm:p-6 hover:-translate-y-0.5 transition-all duration-300"
+                className="group relative rounded-2xl border border-foreground/[0.08] bg-foreground/[0.03] p-6 transition-all duration-300 hover:border-foreground/[0.16]"
                 initial={{ opacity: 0, y: 16 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: '-40px' }}
@@ -121,7 +121,7 @@ const TrustInfrastructure = () => {
                 whileHover={{ y: -2 }}
               >
                 {/* Icon */}
-                <div className="w-10 h-10 rounded-xl bg-foreground/[0.06] border border-foreground/[0.10] flex items-center justify-center mb-4 group-hover:bg-primary/[0.08] group-hover:border-primary/30 transition-colors duration-300">
+                <div className="w-10 h-10 rounded-2xl bg-foreground/[0.05] flex items-center justify-center mb-4 group-hover:bg-primary/[0.10] transition-colors duration-300">
                   <Icon className="w-4.5 h-4.5 text-foreground/70 group-hover:text-primary transition-colors duration-300" strokeWidth={1.75} />
                 </div>
 
@@ -140,7 +140,7 @@ const TrustInfrastructure = () => {
 
           {/* Featured Sign-up CTA — spans 2 cols on lg, sits beside Reviews & trust */}
           <motion.div
-            className="glass-premium relative overflow-hidden rounded-3xl p-6 sm:p-8 sm:col-span-2 lg:col-span-2 group transition-all duration-300"
+            className="sale-light relative overflow-hidden rounded-3xl bg-background p-6 sm:p-9 sm:col-span-2 lg:col-span-2 group shadow-[0_24px_60px_-30px_rgba(0,0,0,0.65)] transition-all duration-300"
             initial={{ opacity: 0, y: 16 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: '-40px' }}
@@ -171,19 +171,19 @@ const TrustInfrastructure = () => {
                   <span className="gradient-text-warm">Start in minutes.</span>
                 </h3>
                 <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
-                  Create your account, list an asset, or book a rental in under five minutes. Free to list. The 12.9% platform fee applies only when a transaction is paid through Vendibook or funded through the financing flow; cash/pay-in-person sales are not charged this platform fee.
+                  Create an account, list an asset, or book a rental in minutes. Free to list — the 12.9% platform fee applies only when a transaction is paid through Vendibook.
                 </p>
               </div>
               <div className="flex flex-col sm:flex-row gap-2.5 shrink-0">
-                <Button asChild variant="dark-shine" size="lg" className="rounded-full px-6 gap-2 whitespace-nowrap">
+                <Button asChild variant="cta" size="lg" className="rounded-2xl px-6 gap-2 whitespace-nowrap">
                   <Link to="/auth?mode=signup">
-                    Sign Up Free
+                    Sign up free
                     <ArrowRight className="w-4 h-4" />
                   </Link>
                 </Button>
-                <Button asChild variant="glass-cta" size="lg" className="rounded-full px-6 gap-2 whitespace-nowrap">
+                <Button asChild variant="outline" size="lg" className="rounded-2xl border-border bg-transparent px-6 gap-2 whitespace-nowrap text-foreground hover:bg-foreground/[0.04] hover:text-foreground">
                   <Link to="/search">
-                    Browse Listings
+                    Browse listings
                   </Link>
                 </Button>
               </div>
