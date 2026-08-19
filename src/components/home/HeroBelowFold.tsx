@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { trackLeadEvent } from '@/lib/leadTracking';
+import { Info, Crown } from 'lucide-react';
 
 const TRUST_BITS = [
   'Secure payments',
