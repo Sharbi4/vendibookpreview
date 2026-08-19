@@ -64,29 +64,29 @@ function useCountUp(target: number, active: boolean, duration = 700) {
   return value;
 }
 
-const roleStyles: Record<TierRole, { badge: string; ring: string; cta: string; accent: string }> = {
+const roleStyles: Record<TierRole, { badge: string; ring: string; cta: 'cta' | 'cta-outline'; accent: string }> = {
   free: {
     badge: '',
     ring: 'border-white/10 bg-white/[0.02] hover:bg-white/[0.04]',
-    cta: 'bg-white/[0.06] hover:bg-white/[0.10] text-foreground border border-white/12',
+    cta: 'cta-outline',
     accent: 'text-foreground/70',
   },
   starter: {
     badge: '',
     ring: 'border-white/12 bg-white/[0.03] hover:bg-white/[0.05]',
-    cta: 'bg-white/[0.06] hover:bg-white/[0.1] text-foreground border border-white/12',
+    cta: 'cta-outline',
     accent: 'text-foreground/80',
   },
   pro: {
     badge: 'bg-gradient-to-r from-orange-500 to-orange-400 text-white',
     ring: 'border-orange-400/60 bg-gradient-to-b from-orange-500/[0.06] to-transparent shadow-[0_0_0_1.5px_rgba(251,146,60,0.25),0_20px_60px_-20px_rgba(251,146,60,0.45)]',
-    cta: 'bg-orange-500 hover:bg-orange-500/90 text-white',
+    cta: 'cta',
     accent: 'text-orange-300',
   },
   premium: {
     badge: '',
     ring: 'border-white/15 bg-white/[0.04] hover:bg-white/[0.06]',
-    cta: 'bg-white text-black hover:bg-white/90',
+    cta: 'cta-outline',
     accent: 'text-foreground/90',
   },
 };
@@ -300,7 +300,7 @@ export function PremiumTierCard({
       <div className="mt-6 flex-1" />
 
       {isFree ? (
-        <Button asChild className={cn('w-full h-11 rounded-md text-sm font-semibold', styles.cta)}>
+        <Button asChild variant={styles.cta} className="w-full h-12 whitespace-normal px-4 text-center text-sm">
           <Link to={freeHref}>
             {groups.ctaLabel} <ArrowRight className="ml-1.5 h-4 w-4" />
           </Link>
@@ -309,7 +309,8 @@ export function PremiumTierCard({
         <Button
           onClick={handleClick}
           disabled={activeBusy || !product || cadenceUnavailable}
-          className={cn('w-full h-11 rounded-md text-sm font-semibold', styles.cta)}
+          variant={styles.cta}
+          className="w-full h-12 whitespace-normal px-4 text-center text-sm"
         >
           {activeBusy ? (
             <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Opening PayPal…</>
