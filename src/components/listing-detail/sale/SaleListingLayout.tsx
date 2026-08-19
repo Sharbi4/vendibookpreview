@@ -66,7 +66,6 @@ export const SaleListingLayout = ({
   const locationShort = [listing.city, listing.state].filter(Boolean).join(', ');
   const featured = isListingFeatured(listing);
   const condition = conditionLabel(listing.condition);
-  const fulfillmentType = listing.fulfillment_type || 'pickup';
   const freightEnabled = Boolean(listing.vendibook_freight_enabled);
 
   return (
