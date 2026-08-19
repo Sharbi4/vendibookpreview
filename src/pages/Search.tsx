@@ -1328,7 +1328,7 @@ const FilterContent = ({
 
   const availableAmenities = getAvailableAmenities();
   return (
-    <div className="space-y-5">
+    <div className="space-y-5 [&>div+div]:pt-5 [&>div+div]:border-t [&>div+div]:border-foreground/[0.06]">
       {/* Type Filter - First */}
       <div className="space-y-2">
         <Label className="text-sm font-medium flex items-center gap-2">
@@ -1344,10 +1344,10 @@ const FilterContent = ({
             <label 
               key={option.value} 
               className={cn(
-                "flex items-center gap-1.5 cursor-pointer px-3 py-1.5 rounded-full border text-sm transition-colors",
+                "flex items-center gap-1.5 cursor-pointer px-3 py-1.5 rounded-full border text-sm transition-colors duration-200",
                 mode === option.value 
                   ? "bg-primary text-primary-foreground border-primary" 
-                  : "border-border hover:bg-muted"
+                  : "border-transparent bg-foreground/[0.04] text-foreground/80 hover:bg-foreground/[0.08]"
               )}
             >
               <input
@@ -1372,10 +1372,10 @@ const FilterContent = ({
         <div className="flex flex-wrap gap-2 md:justify-center">
           <label 
             className={cn(
-              "flex items-center cursor-pointer px-3 py-1.5 rounded-full border text-sm transition-colors",
+              "flex items-center cursor-pointer px-3 py-1.5 rounded-full border text-sm transition-colors duration-200",
               category === 'all' 
                 ? "bg-primary text-primary-foreground border-primary" 
-                : "border-border hover:bg-muted"
+                : "border-transparent bg-foreground/[0.04] text-foreground/80 hover:bg-foreground/[0.08]"
             )}
           >
             <input
@@ -1393,10 +1393,10 @@ const FilterContent = ({
             <label 
               key={key} 
               className={cn(
-                "flex items-center cursor-pointer px-3 py-1.5 rounded-full border text-sm transition-colors",
+                "flex items-center cursor-pointer px-3 py-1.5 rounded-full border text-sm transition-colors duration-200",
                 category === key 
                   ? "bg-primary text-primary-foreground border-primary" 
-                  : "border-border hover:bg-muted"
+                  : "border-transparent bg-foreground/[0.04] text-foreground/80 hover:bg-foreground/[0.08]"
               )}
             >
               <input
@@ -1474,10 +1474,10 @@ const FilterContent = ({
                 aria-pressed={active}
                 data-fulfillment-option={key}
                 className={cn(
-                  'px-3 py-1.5 rounded-full text-xs font-medium border transition-colors',
+                  'px-3 py-1.5 rounded-full text-xs font-medium border transition-colors duration-200',
                   active
                     ? 'bg-primary text-primary-foreground border-primary'
-                    : 'bg-card border-border text-foreground hover:bg-muted/60',
+                    : 'border-transparent bg-foreground/[0.04] text-foreground/80 hover:bg-foreground/[0.08]',
                 )}
               >
                 {label}
@@ -1495,7 +1495,7 @@ const FilterContent = ({
           <Truck className="h-4 w-4" />
           Delivery Options
         </Label>
-        <label className="flex items-start gap-3 cursor-pointer p-2.5 rounded-lg border border-border hover:bg-muted/50 transition-colors max-w-xs">
+        <label className="flex items-start gap-3 cursor-pointer py-2 pr-1 rounded-xl hover:bg-foreground/[0.03] transition-colors duration-200 max-w-xs">
           <Checkbox
             checked={deliveryFilterEnabled}
             onCheckedChange={(checked) => onDeliveryFilterChange(checked === true)}
@@ -1520,7 +1520,7 @@ const FilterContent = ({
           Booking Options
         </Label>
         <div className="space-y-2">
-          <label className="flex items-start gap-3 cursor-pointer p-2.5 rounded-lg border border-border hover:bg-muted/50 transition-colors max-w-xs">
+          <label className="flex items-start gap-3 cursor-pointer py-2 pr-1 rounded-xl hover:bg-foreground/[0.03] transition-colors duration-200 max-w-xs">
             <Checkbox
               checked={instantBookOnly}
               onCheckedChange={(checked) => onInstantBookChange(checked === true)}
@@ -1535,7 +1535,7 @@ const FilterContent = ({
               </p>
             </div>
           </label>
-          <label className="flex items-start gap-3 cursor-pointer p-2.5 rounded-lg border border-border hover:bg-muted/50 transition-colors max-w-xs">
+          <label className="flex items-start gap-3 cursor-pointer py-2 pr-1 rounded-xl hover:bg-foreground/[0.03] transition-colors duration-200 max-w-xs">
             <Checkbox
               checked={verifiedHostsOnly}
               onCheckedChange={(checked) => onVerifiedHostsChange(checked === true)}
@@ -1572,10 +1572,10 @@ const FilterContent = ({
                       <label
                         key={amenity.id}
                         className={cn(
-                          "flex items-center gap-1.5 cursor-pointer px-2.5 py-1 rounded-full border text-xs transition-colors",
+                          "flex items-center gap-1.5 cursor-pointer px-2.5 py-1 rounded-full border text-xs transition-colors duration-200",
                           selectedAmenities.includes(amenity.id)
                             ? "bg-primary text-primary-foreground border-primary"
-                            : "border-border hover:bg-muted"
+                            : "border-transparent bg-foreground/[0.04] text-foreground/80 hover:bg-foreground/[0.08]"
                         )}
                       >
                         <input
