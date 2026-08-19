@@ -3,6 +3,9 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import { corsHeaders, jsonError, jsonResponse, unknownErrorResponse } from "../_shared/jsonError.ts";
 import { cancelPayPalSubscription, PayPalError, safeLog } from "../_shared/paypal.ts";
 import { resolveSubscriptionPeriod } from "../_shared/subscriptionPeriod.ts";
+import { sendProMembershipEmail } from "../_shared/proMembershipEmail.ts";
+import { notifyUser } from "../_shared/notify.ts";
+
 
 /**
  * Cancels the member's PayPal subscription at PayPal FIRST, then records it
