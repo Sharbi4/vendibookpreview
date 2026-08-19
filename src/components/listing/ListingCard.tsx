@@ -588,15 +588,17 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
         {/* Hourly Schedule Summary - shows available days/hours for hourly rentals */}
         {scheduleSummary && (
           <div className={cn(
-            "flex items-center gap-1.5 text-white/50",
+            "flex items-center gap-1.5",
+            textFaint,
             compact ? "text-[10px]" : "text-xs"
           )}>
             <Clock className={cn("shrink-0", compact ? "h-3 w-3" : "h-3.5 w-3.5")} />
             <span>{scheduleSummary.daysText}</span>
             {scheduleSummary.hoursText && (
               <>
-                <span className="text-white/30">•</span>
+                <span className={isSearch ? "text-[#1b1714]/30" : "text-white/30"}>•</span>
                 <span>{scheduleSummary.hoursText}</span>
+
               </>
             )}
           </div>
