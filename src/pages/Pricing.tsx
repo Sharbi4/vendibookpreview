@@ -469,7 +469,45 @@ const Pricing = () => {
                   )}
                 </Button>
               )}
+
+              <div className="mt-3 flex justify-center">
+                <PlanDetailsDialog
+                  title="Vendibook Pro"
+                  priceLabel={`${loadingSubs ? '—' : formatUsd(proPrice)}/month`}
+                  summary="A lower seller/host fee, a Featured Boost credit every billing period and the premium tool set — on one monthly membership."
+                  included={PRO_FEATURES.map((f) => f.text)}
+                  bestFor="Sellers and hosts closing regularly, where the fee difference outweighs the membership."
+                  billing="Recurring monthly through PayPal · cancel anytime."
+                  statusLabel={isPro ? 'Your plan' : null}
+                  finePrint={[
+                    'The 10.9% rate applies to the seller/host side of a completed transaction, up to $500 saved per transaction.',
+                    'The Featured Boost credit is 1 per billing period and does not roll over.',
+                    'Cancel anytime — access continues through the end of the current paid period.',
+                  ]}
+                  footer={
+                    isPro ? (
+                      <Button asChild variant="cta" className="w-full">
+                        <Link to="/dashboard?view=host&tab=membership">Manage membership</Link>
+                      </Button>
+                    ) : (
+                      <Button
+                        variant="cta"
+                        className="w-full"
+                        onClick={startPro}
+                        disabled={loadingSubs || !proProduct || proBusy}
+                      >
+                        {proBusy ? (
+                          <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Opening PayPal…</>
+                        ) : (
+                          <>Go Pro <ArrowRight className="ml-1.5 h-4 w-4" /></>
+                        )}
+                      </Button>
+                    )
+                  }
+                />
+              </div>
             </Card>
+
           </div>
 
           <div className="mt-5 flex flex-wrap items-center gap-x-6 gap-y-2 text-[12.5px] text-muted-foreground">
