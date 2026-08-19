@@ -26,7 +26,6 @@ import { invokeEdge } from '@/lib/edge/invokeFunction';
 import { MakeOfferModal } from '@/components/offers/MakeOfferModal';
 import { AuthGateOfferModal } from '@/components/offers/AuthGateOfferModal';
 import MessageHostForm from '@/components/messaging/MessageHostForm';
-import { FinancingAvailableBadge } from '@/components/financing/FinancingAvailableBadge';
 import { useEquinoxFinancingEnabled } from '@/hooks/useListingFinancing';
 import { PayPalMonogram, PayPalWordmark } from '@/components/brand/ProviderLogos';
 import { getPublicDisplayName } from '@/lib/displayName';
@@ -353,7 +352,7 @@ export const SalePurchaseCard = ({
             <div className="space-y-2">
               <div className="flex items-center gap-2">
                 <Banknote className="h-[18px] w-[18px] text-primary" />
-                <FinancingAvailableBadge />
+                <span className="text-sm font-medium">Financing available</span>
               </div>
               <p className="text-xs text-muted-foreground leading-relaxed">
                 Equipment financing is available on this listing through Equinox Funding. Vendibook
