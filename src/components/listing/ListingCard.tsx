@@ -510,7 +510,7 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
             "text-lg font-semibold tracking-tight line-clamp-1 group-hover:text-primary transition-colors",
             textStrong,
             compact && "text-sm",
-            isRow && "sm:text-xl sm:line-clamp-2",
+            isRow && "sm:text-lg sm:line-clamp-2",
           )}>
             {listing.title}
           </h3>
