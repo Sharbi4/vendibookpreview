@@ -45,7 +45,7 @@ import { TechSpecsGrid } from '@/components/listing-detail/TechSpecsGrid';
 import CommercialProductBar from '@/components/listing-detail/CommercialProductBar';
 import SellerTrustPanel from '@/components/listing-detail/SellerTrustPanel';
 import KeySpecsStrip from '@/components/listing-detail/KeySpecsStrip';
-import SaleListingMobile from '@/components/listing-detail/sale/SaleListingMobile';
+import SaleListingLayout from '@/components/listing-detail/sale/SaleListingLayout';
 import { FinancingActionPanel } from '@/components/listing-detail/sale/FinancingActionPanel';
 import { ListingPaymentMethods } from '@/components/listing-detail/ListingPaymentMethods';
 import { SaleTrustStrip, SaleProtectionSection, SaleLocationCard, SaleBrowseMore } from '@/components/listing-detail/sale/SaleSharedSections';
@@ -387,10 +387,9 @@ const ListingDetail = () => {
       )}
       <Header />
 
-      {/* Commercial product bar — Amazon/Best Buy style.
-          Hidden on sale mobile because SaleListingMobile mounts its own breadcrumb + share/favorite row
-          (prevents duplicate breadcrumb, duplicate Save button, and clipped content under the sticky header). */}
-      <div className={!isRental ? 'hidden lg:block' : ''}>
+      {/* Commercial product bar — rentals only.
+          The sale layout mounts its own breadcrumb + share/save row. */}
+      {isRental && (
         <CommercialProductBar
           listingId={listing.id}
           category={listing.category}
@@ -400,21 +399,25 @@ const ListingDetail = () => {
           reviewCount={ratingData?.count}
           onShare={handleShare}
         />
-      </div>
+      )}
 
+      {/* For-sale listings use one simplified layout at every breakpoint. */}
       {!isRental && (
-        <SaleListingMobile
+        <SaleListingLayout
           listing={listing}
           host={host}
           images={images}
           videos={videos}
           isOwner={!!isOwner}
+          sellerVerified={sellerIdentityVerified}
           ratingData={ratingData}
           onShare={handleShare}
         />
       )}
 
-      <main className={`flex-1 ${!isRental ? 'hidden lg:block' : ''}`}>
+      {isRental && (
+      <main className="flex-1">
+
         {/* Photo Gallery - Full bleed on mobile, contained on desktop */}
         <div className="md:container md:pt-4">
           <div className="md:px-0">
@@ -971,9 +974,9 @@ const ListingDetail = () => {
           </div>
         </div>
       </main>
+      )}
 
-      {/* Sticky Mobile CTA Bar */}
-      {/* Sticky Mobile CTA Bar (rental only — sale uses SaleStickyActionBar inside SaleListingMobile) */}
+      {/* Sticky Mobile CTA Bar (rental only — sale uses SaleStickyActionBar) */}
       {isRental && (
       <StickyMobileCTA
         listingId={listing.id}
@@ -1005,7 +1008,7 @@ const ListingDetail = () => {
       )}
 
       {/* SEO: Crawlable internal links for deep crawl paths */}
-      <nav className={`container py-8 border-t border-border ${!isRental ? 'hidden lg:block' : ''}`} aria-label="Browse more listings">
+      <nav className={`container py-8 border-t border-border ${!isRental ? 'hidden' : ''}`} aria-label="Browse more listings">
         <h2 className="text-lg font-semibold text-foreground mb-4">Browse More on Vendibook</h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
           <Link to="/search?category=food_truck&mode=sale" className="text-muted-foreground hover:text-primary underline underline-offset-2">Food Trucks for Sale</Link>
