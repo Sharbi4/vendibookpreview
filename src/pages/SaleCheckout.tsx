@@ -11,7 +11,6 @@ import { useToast } from '@/hooks/use-toast';
 import { useFreightEstimate } from '@/hooks/useFreightEstimate';
 import { supabase } from '@/integrations/supabase/client';
 import { CheckoutOverlay, PayPalPaymentPanel } from '@/components/checkout';
-import CheckoutChrome from '@/components/checkout/CheckoutChrome';
 import CheckoutOrderSummary from '@/components/checkout/CheckoutOrderSummary';
 import { isEmbeddedCheckoutEnabled } from '@/lib/featureFlags';
 import { parseEdgeError } from '@/lib/edgeErrors';
