@@ -78,17 +78,6 @@
     </image:image>
   </url>
   <url>
-    <loc>https://vendibook.com/listing/3678b74e-769c-4a6a-9306-090074d81abb</loc>
-    <lastmod>2026-08-19</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/25cf6eb9-d454-428b-8314-38e2832a0c64/3678b74e-769c-4a6a-9306-090074d81abb/1786716498152-81e5a.jpg</image:loc>
-      <image:title>2004 18 ft Workhorse P42 All Purpose Food Truck</image:title>
-      <image:caption>2004 18 ft Workhorse P42 All Purpose Food Truck in Ocean Springs, MS on Vendibook</image:caption>
-    </image:image>
-  </url>
-  <url>
     <loc>https://vendibook.com/listing/ac5cf2e2-0b92-4665-b562-2d818f4313d6</loc>
     <lastmod>2026-08-12</lastmod>
     <changefreq>weekly</changefreq>
@@ -515,6 +504,17 @@
       <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/863d4cc1-7581-4d3c-8d73-6b33740931cf/f5582bd0-afac-44f1-9f85-3acf24c279f5/1781472783823-3n5lzg.jpeg</image:loc>
       <image:title>Vintage (1955) one-of-a-kind fully restored Chevy all-purpose food truck</image:title>
       <image:caption>Vintage (1955) one-of-a-kind fully restored Chevy all-purpose food truck on Vendibook</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://vendibook.com/listing/3678b74e-769c-4a6a-9306-090074d81abb</loc>
+    <lastmod>2026-08-19</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/25cf6eb9-d454-428b-8314-38e2832a0c64/3678b74e-769c-4a6a-9306-090074d81abb/1786716498152-81e5a.jpg</image:loc>
+      <image:title>2004 18 ft Workhorse P42 All Purpose Food Truck</image:title>
+      <image:caption>2004 18 ft Workhorse P42 All Purpose Food Truck in Ocean Springs, MS on Vendibook</image:caption>
     </image:image>
   </url>
   <url>

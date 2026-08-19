@@ -39,6 +39,7 @@ import {
 import { trackCTAClick } from '@/lib/analytics';
 import { trackFinancingApplyClick, trackFinancingLearnMoreClick } from '@/lib/analytics';
 import { SaleCard } from './SaleCard';
+import { BuyingInfoDialog } from './BuyingInfoDialog';
 
 interface SalePurchaseCardProps {
   listing: any;
@@ -46,6 +47,8 @@ interface SalePurchaseCardProps {
   isOwner: boolean;
   sellerVerified: boolean;
   ratingData?: { average: number; count: number } | null;
+  /** Distinguishes the mobile and desktop instances so DOM ids stay unique. */
+  instanceId?: string;
 }
 
 function distanceMiles(lat1: number, lon1: number, lat2: number, lon2: number): number {
@@ -87,6 +90,7 @@ export const SalePurchaseCard = ({
   isOwner,
   sellerVerified,
   ratingData,
+  instanceId = 'desktop',
 }: SalePurchaseCardProps) => {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -229,6 +233,10 @@ export const SalePurchaseCard = ({
   }
 
   const sellerName = getPublicDisplayName(host, 'Seller');
+  const zipInputId = `sale-delivery-zip-${instanceId}`;
+  const deliveryNote = radius
+    ? `${rateLabel ? `${rateLabel} · ` : ''}within ${radius} mi of ${originLabel}`
+    : rateLabel || null;
 
   return (
     <>
@@ -283,12 +291,12 @@ export const SalePurchaseCard = ({
           {/* Delivery / address check */}
           {canCheck && (
             <div className="space-y-2">
-              <label htmlFor="sale-delivery-zip" className="text-xs text-muted-foreground">
+              <label htmlFor={zipInputId} className="text-xs text-muted-foreground">
                 Check delivery to your ZIP
               </label>
               <div className="flex gap-2">
                 <Input
-                  id="sale-delivery-zip"
+                  id={zipInputId}
                   inputMode="numeric"
                   placeholder="ZIP code"
                   maxLength={5}
@@ -355,8 +363,8 @@ export const SalePurchaseCard = ({
                 <span className="text-sm font-medium">Financing available</span>
               </div>
               <p className="text-xs text-muted-foreground leading-relaxed">
-                Equipment financing is available on this listing through Equinox Funding. Vendibook
-                is not a lender; approval and terms are set by the provider.
+                Through Equinox Funding. Vendibook is not a lender; approval and terms are set by
+                the provider.
               </p>
               <div className="flex flex-wrap gap-2">
                 <Button size="sm" variant="outline" onClick={() => void handleApplyFinancing()} disabled={applying}>
@@ -385,7 +393,7 @@ export const SalePurchaseCard = ({
               onClick={handleBuy}
               disabled={!isAvailable || !priceSale}
               size="lg"
-              data-testid="sale-purchase-card-buy-now"
+              data-testid={`sale-purchase-card-buy-now-${instanceId}`}
               className="w-full h-14 text-base font-bold rounded-2xl bg-cta-primary hover:opacity-95 shadow-cta-primary text-white border-0"
             >
               Buy Now
@@ -411,6 +419,19 @@ export const SalePurchaseCard = ({
               </Button>
             </div>
           </div>
+
+          {/* Small print — details live in one overlay, never as extra modules */}
+          <p className="text-[11px] leading-relaxed text-muted-foreground">
+            You won&rsquo;t be charged until you review the total at checkout. All sales are final.{' '}
+            <BuyingInfoDialog
+              offersPickup={offersPickup}
+              sellerDelivers={sellerDelivers}
+              freightEnabled={freightEnabled}
+              financingEnabled={financingEnabled}
+              locationLabel={originLabel}
+              deliveryNote={deliveryNote}
+            />
+          </p>
 
           {/* Compact seller info */}
           <div className="pt-4 [box-shadow:inset_0_1px_0_hsl(var(--border))] flex items-center gap-3">
