@@ -424,8 +424,10 @@ export const SalePurchaseCard = ({
       <AuthGateOfferModal
         open={showAuthGate}
         onOpenChange={setShowAuthGate}
+        intent={pending === 'buy' ? 'buy' : 'offer'}
         onAuthSuccess={handleAuthSuccess}
       />
+
 
       {priceSale && (
         <MakeOfferModal
