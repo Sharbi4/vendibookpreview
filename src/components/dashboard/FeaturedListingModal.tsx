@@ -83,7 +83,7 @@ export const FeaturedListingModal = ({
   return (
     <>
       <Dialog open={open && step !== 'pay'} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-lg overflow-hidden border border-white/12 bg-[#08080a]/95 backdrop-blur-2xl p-0 shadow-[0_40px_120px_-30px_rgba(0,0,0,0.9)]">
+        <DialogContent className="sm:max-w-lg overflow-hidden rounded-2xl border border-white/12 bg-[#08080a]/95 backdrop-blur-2xl p-0 shadow-[0_40px_120px_-30px_rgba(0,0,0,0.9)]">
           {/* Ember glow wash */}
           <div
             aria-hidden

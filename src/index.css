@@ -1685,3 +1685,10 @@
 .sale-light .bg-white\/\[0\.06\].h-px {
   background-color: rgba(24, 20, 16, 0.08);
 }
+
+/* Google Maps renders its tiles in an untransformed child that ignores the
+   parent's overflow clipping, leaving square corners inside rounded cards. */
+.gm-style,
+.gm-style > div:first-child {
+  border-radius: inherit;
+}

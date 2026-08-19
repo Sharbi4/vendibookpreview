@@ -526,7 +526,7 @@ const HostListingCard = ({
                   {hasNotary && isSale && (
                     <Badge
                       variant="secondary"
-                      className="bg-sky-500/15 text-sky-300 border border-sky-500/30 text-[10px] px-1.5 py-0 h-5"
+                      className="bg-sky-500/15 text-sky-300 border border-sky-500/30 rounded-full text-[10px] px-1.5 py-0 h-5"
                     >
                       <Shield className="w-3 h-3 mr-1" />
                       Notary

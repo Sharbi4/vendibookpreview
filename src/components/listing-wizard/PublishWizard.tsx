@@ -2534,6 +2534,8 @@ export const PublishWizard: React.FC = () => {
         knownProblems: disclosures.knownProblems,
         includedItems: disclosures.includedItems || null,
         photosExclusionsAnswered: disclosures.photosExclusionsAnswered,
+        lengthInches: parseFloat(lengthInches) || null,
+        heightInches: parseFloat(heightInches) || null,
       })
     : [];
 
@@ -4138,7 +4140,8 @@ export const PublishWizard: React.FC = () => {
                         <InfoTooltip content="Provide accurate dimensions for freight cost estimates. This helps buyers understand shipping costs." />
                       </div>
                       <p className="text-sm text-muted-foreground">
-                        These dimensions are used to calculate accurate freight estimates for buyers.
+                        Length and height are required for trucks, trailers and carts — buyers use
+                        them to check clearance and we use them for freight estimates. Width is optional.
                       </p>
                       
                       <div className="grid grid-cols-2 gap-4">
@@ -4186,7 +4189,7 @@ export const PublishWizard: React.FC = () => {
                         <div className="space-y-2">
                           <Label htmlFor="length_ft" className="flex items-center gap-1.5 text-sm">
                             <Ruler className="h-3.5 w-3.5" />
-                            Length (ft)
+                            Length (ft) <span className="text-destructive">*</span>
                           </Label>
                           <Input
                             id="length_ft"
@@ -4203,7 +4206,7 @@ export const PublishWizard: React.FC = () => {
                         <div className="space-y-2">
                           <Label htmlFor="width_ft" className="flex items-center gap-1.5 text-sm">
                             <Ruler className="h-3.5 w-3.5" />
-                            Width (ft)
+                            Width (ft) <span className="text-muted-foreground font-normal">(optional)</span>
                           </Label>
                           <Input
                             id="width_ft"
@@ -4220,7 +4223,7 @@ export const PublishWizard: React.FC = () => {
                         <div className="space-y-2">
                           <Label htmlFor="height_ft" className="flex items-center gap-1.5 text-sm">
                             <Ruler className="h-3.5 w-3.5" />
-                            Height (ft)
+                            Height (ft) <span className="text-destructive">*</span>
                           </Label>
                           <Input
                             id="height_ft"
@@ -4233,6 +4236,15 @@ export const PublishWizard: React.FC = () => {
                           />
                         </div>
                       </div>
+
+                      {(!(parseFloat(lengthInches) > 0) || !(parseFloat(heightInches) > 0)) && (
+                        <p className="text-xs text-destructive">
+                          Add the {[
+                            !(parseFloat(lengthInches) > 0) ? 'length' : null,
+                            !(parseFloat(heightInches) > 0) ? 'height' : null,
+                          ].filter(Boolean).join(' and ')} in feet before publishing.
+                        </p>
+                      )}
 
                       <p className="text-xs text-muted-foreground">
                         Shown to buyers as {formatDimensionSummary(

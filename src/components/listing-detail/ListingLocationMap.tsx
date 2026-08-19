@@ -116,7 +116,7 @@ const ListingLocationMapInner = memo(({
   if (loadError || (!providedCoordinates && geocodeError) || (!providedCoordinates && !locationString) || !mapCoordinates) {
     return (
       <div
-        className={cn('rounded-xl overflow-hidden relative', className)}
+        className={cn('rounded-xl overflow-hidden relative [&_.gm-style]:rounded-xl [&_.gm-style>div]:rounded-xl', className)}
         style={{
           background:
             'radial-gradient(circle at 78% 35%, rgba(255,94,31,0.18), transparent 55%), linear-gradient(145deg, rgba(21,24,26,0.96), rgba(8,9,10,0.98))',
@@ -140,7 +140,7 @@ const ListingLocationMapInner = memo(({
 
 
   return (
-    <div className={cn('rounded-xl overflow-hidden border border-border', className)}>
+    <div className={cn('rounded-xl overflow-hidden border border-border [&_.gm-style]:rounded-xl [&_.gm-style>div]:rounded-xl', className)}>
       <GoogleMap
         mapContainerStyle={mapContainerStyle}
         center={mapCoordinates}
@@ -194,7 +194,7 @@ export const ListingLocationMap: React.FC<ListingLocationMapProps> = (props) => 
   if (error || !apiKey) {
     return (
       <div
-        className={cn('rounded-xl overflow-hidden relative', props.className)}
+        className={cn('rounded-xl overflow-hidden relative [&_.gm-style]:rounded-xl [&_.gm-style>div]:rounded-xl', props.className)}
         style={{
           background:
             'radial-gradient(circle at 78% 35%, rgba(255,94,31,0.18), transparent 55%), linear-gradient(145deg, rgba(21,24,26,0.96), rgba(8,9,10,0.98))',
