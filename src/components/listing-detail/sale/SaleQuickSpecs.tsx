@@ -137,21 +137,19 @@ export const SaleQuickSpecs = ({ listing }: SaleQuickSpecsProps) => {
   if (loading || rows.length === 0) return null;
 
   return (
-    <SaleCard padding="lg" className="space-y-4">
+    <SaleCard padding="lg" className="space-y-3">
       <h2 className="text-lg font-semibold">Quick specs</h2>
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+      <div className="grid sm:grid-cols-2 gap-x-10">
         {rows.map((row) => {
           const Icon = row.icon;
           return (
             <div
               key={`${row.label}-${row.value}`}
-              className="rounded-xl bg-white/[0.03] ring-hairline px-3 py-2.5"
+              className="flex items-center gap-3 py-2.5 border-b border-border/60"
             >
-              <div className="flex items-center gap-1.5 text-[11px] uppercase tracking-wide text-muted-foreground">
-                <Icon className="h-3.5 w-3.5" />
-                {row.label}
-              </div>
-              <div className="text-sm font-medium mt-1 leading-snug">{row.value}</div>
+              <Icon className="h-4 w-4 shrink-0 text-muted-foreground" />
+              <span className="flex-1 text-sm text-muted-foreground">{row.label}</span>
+              <span className="text-sm font-medium text-right">{row.value}</span>
             </div>
           );
         })}
