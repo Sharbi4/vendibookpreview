@@ -203,6 +203,11 @@ const PermitPath = () => {
 
   const handleSaveToDashboard = useCallback(async () => {
     if (!result) return;
+    // Saving is the PermitPath Plus layer — Basic keeps the on-screen roadmap.
+    if (user && !permitAccess.isLoading && !permitAccess.isPlus) {
+      setPlusUpsellOpen(true);
+      return;
+    }
     if (!user) {
       stashPendingSave(result);
       navigate(`/auth?redirect=${encodeURIComponent('/tools/permitpath?resumeSave=1')}`);
