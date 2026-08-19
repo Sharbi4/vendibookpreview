@@ -93,7 +93,6 @@ const AdminBilling = lazy(() => import("./pages/AdminBilling"));
 const ServicesHub = lazy(() => import("./pages/ServicesHub"));
 const BuyerServicesHub = lazy(() => import("./pages/BuyerServicesHub"));
 const BuyerDashboard = lazy(() => import("./pages/BuyerDashboard"));
-const HostProPlans = lazy(() => import("./pages/HostProPlans"));
 const AccountSubscription = lazy(() => import("./pages/AccountSubscription"));
 const ProductCheckout = lazy(() => import("./pages/ProductCheckout"));
 const HostedPayment = lazy(() => import("./pages/HostedPayment"));
@@ -337,7 +336,7 @@ const AnimatedRoutes = () => {
           <Route path="/buyer" element={<PageTransition><BuyerDashboard /></PageTransition>} />
           <Route path="/buyer/services" element={<PageTransition><BuyerServicesHub /></PageTransition>} />
           <Route path="/buyer/services/review/:listingId" element={<PageTransition><ListingPurchaseReviewIntake /></PageTransition>} />
-          <Route path="/host/plans" element={<PageTransition><HostProPlans /></PageTransition>} />
+          <Route path="/host/plans" element={<Navigate to="/pricing" replace />} />
           <Route path="/checkout/product/:slug" element={<PageTransition><ProductCheckout /></PageTransition>} />
           <Route path="/checkout/pay" element={<PageTransition><HostedPayment /></PageTransition>} />
           <Route path="/account/subscription" element={<PageTransition><AccountSubscription /></PageTransition>} />

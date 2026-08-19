@@ -136,7 +136,7 @@ export function HostPerksCard({ className = '' }: { className?: string }) {
                 </Button>
               ) : (
                 <Button asChild size="sm" variant="outline" className="shrink-0">
-                  <Link to="/host/plans">Upgrade</Link>
+                  <Link to="/pricing">Upgrade</Link>
                 </Button>
               )}
             </div>

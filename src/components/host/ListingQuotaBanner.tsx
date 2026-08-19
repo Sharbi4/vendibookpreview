@@ -69,7 +69,7 @@ export function ListingQuotaBanner({ className = '' }: Props) {
               : 'You’re close to your plan’s limit. Upgrade for more headroom and priority placement.'}
           </p>
           <Button asChild size="sm" variant="dark-shine" className="rounded-xl">
-            <Link to="/host/plans">
+            <Link to="/pricing">
               <Zap className="h-3.5 w-3.5 mr-1.5" />
               Upgrade plan
             </Link>
