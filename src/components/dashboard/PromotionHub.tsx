@@ -77,7 +77,6 @@ function calcSeoScore(listing: any): SeoScore {
 
 export const PromotionHub = () => {
   const boostPrice = useCatalogPrice(ACTIVE_PRODUCT_SLUGS.featuredBoost);
-  const durationLabel = boostPrice.durationDays ? `${boostPrice.durationDays} days` : 'one-time';
   const { listings } = useHostListings();
   const published = listings.filter((l) => l.status === 'published');
   const [selectedId, setSelectedId] = useState<string>('');
