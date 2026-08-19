@@ -46,6 +46,8 @@ interface PurchaseStepInfoProps {
   hideAddress?: boolean;
   /** Override for the primary CTA label. */
   continueLabel?: string;
+  /** Host page owns the stepper footer (light sale checkout). */
+  embedded?: boolean;
 }
 
 const PurchaseStepInfo = ({
@@ -61,6 +63,7 @@ const PurchaseStepInfo = ({
   onContinue,
   hideAddress = false,
   continueLabel,
+  embedded = false,
 }: PurchaseStepInfoProps) => {
   const handleFieldTouch = (field: string) => {
     setTouchedFields(new Set([...touchedFields, field]));
@@ -294,23 +297,27 @@ const PurchaseStepInfo = ({
         )}
       </div>
 
-      {/* Next Step Hint */}
-      <NextStepHint text="Review your order and pay next." />
+      {!embedded && (
+        <>
+          {/* Next Step Hint */}
+          <NextStepHint text="Review your order and pay next." />
 
-      {/* Navigation Buttons */}
-      <div className="flex gap-3">
-        <Button
-          variant="outline"
-          onClick={onBack}
-          className="flex-1"
-          size="lg"
-        >
-          Back
-        </Button>
-        <Button onClick={onContinue} className="flex-1" size="lg">
-          {continueLabel ?? 'Review your order'}
-        </Button>
-      </div>
+          {/* Navigation Buttons */}
+          <div className="flex gap-3">
+            <Button
+              variant="outline"
+              onClick={onBack}
+              className="flex-1"
+              size="lg"
+            >
+              Back
+            </Button>
+            <Button onClick={onContinue} className="flex-1" size="lg">
+              {continueLabel ?? 'Review your order'}
+            </Button>
+          </div>
+        </>
+      )}
     </div>
   );
 };

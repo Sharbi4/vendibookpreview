@@ -34,6 +34,10 @@ interface PurchaseStepDeliveryProps {
   clearEstimate: () => void;
   onBack: () => void;
   onContinue: () => void;
+  /** Host page owns the stepper footer (light sale checkout). */
+  embedded?: boolean;
+  /** Reported upward so the host footer can disable Continue. */
+  onCanContinueChange?: (ok: boolean) => void;
   // Optional listing context for richer pickup/next-step copy
   listingCity?: string | null;
   listingState?: string | null;
@@ -334,6 +338,8 @@ const PurchaseStepDelivery = ({
   clearEstimate,
   onBack,
   onContinue,
+  embedded = false,
+  onCanContinueChange,
   listingCity,
   listingState,
   preferredDate,
@@ -563,21 +569,25 @@ const PurchaseStepDelivery = ({
       {/* Always show next-steps for the selected method — never leave an empty step */}
       <NextStepsPanel selection={fulfillmentSelected} />
 
-      <NextStepHint text="Next you'll pick any add-ons, then confirm your details." />
+      {!embedded && (
+        <>
+          <NextStepHint text="Next, confirm your details." />
 
-      <div className="flex gap-3">
-        <Button variant="outline" onClick={onBack} className="flex-1" size="lg">
-          Back
-        </Button>
-        <Button
-          onClick={onContinue}
-          disabled={!canContinue}
-          className="flex-1"
-          size="lg"
-        >
-          Continue
-        </Button>
-      </div>
+          <div className="flex gap-3">
+            <Button variant="outline" onClick={onBack} className="flex-1" size="lg">
+              Back
+            </Button>
+            <Button
+              onClick={onContinue}
+              disabled={!canContinue}
+              className="flex-1"
+              size="lg"
+            >
+              Continue
+            </Button>
+          </div>
+        </>
+      )}
     </div>
   );
 };
