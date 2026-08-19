@@ -628,17 +628,6 @@
     </image:image>
   </url>
   <url>
-    <loc>https://vendibook.com/listing/d02ec787-17cb-4e37-b1a7-e70dec639b23</loc>
-    <lastmod>2026-08-19</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/421aa58f-ac7e-4eaf-92e3-2b6be284fb0a/d02ec787-17cb-4e37-b1a7-e70dec639b23/1784602053546-46lyaf.jpg</image:loc>
-      <image:title>16 Foot Ready-to-Operate - Food Trailer in Miami</image:title>
-      <image:caption>16 Foot Ready-to-Operate - Food Trailer in Miami in Miami, FL on Vendibook</image:caption>
-    </image:image>
-  </url>
-  <url>
     <loc>https://vendibook.com/listing/0127af0e-0787-42eb-8fa8-256cdc6ae88d</loc>
     <lastmod>2026-08-16</lastmod>
     <changefreq>weekly</changefreq>
@@ -779,6 +768,17 @@
       <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/97dc8bb1-d9d3-4bf9-960a-8674082ded44/205c63e8-ba53-41e8-b447-290bbd1006a7/1772649639099-b5nptn.jpg</image:loc>
       <image:title>Private Commercial Kitchens In Las Vegas</image:title>
       <image:caption>Private Commercial Kitchens In Las Vegas on Vendibook</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://vendibook.com/listing/d02ec787-17cb-4e37-b1a7-e70dec639b23</loc>
+    <lastmod>2026-08-19</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/421aa58f-ac7e-4eaf-92e3-2b6be284fb0a/d02ec787-17cb-4e37-b1a7-e70dec639b23/1784602053546-46lyaf.jpg</image:loc>
+      <image:title>16 Foot Ready-to-Operate - Food Trailer in Miami</image:title>
+      <image:caption>16 Foot Ready-to-Operate - Food Trailer in Miami in Miami, FL on Vendibook</image:caption>
     </image:image>
   </url>
   <url>

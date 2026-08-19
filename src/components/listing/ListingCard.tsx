@@ -276,13 +276,14 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
         
         
         
-        {/* E-sign trust chip — every sale/rental agreement is signed online, free */}
-        <div className="absolute bottom-2 left-2 z-10">
+        {/* E-sign trust chip + financing badge — stacked bottom-left, stay inside the card */}
+        <div className="absolute bottom-2 left-2 z-10 flex max-w-[calc(100%-1rem)] flex-col items-start gap-1.5">
+          {financingEnabled && <FinancingAvailableBadge compact listingId={listing.id} />}
           <TrustESignChip variant="card" />
         </div>
 
         {/* Mode Badge */}
-        <div className="absolute top-2 left-2 flex items-center gap-1.5">
+        <div className="absolute top-2 left-2 right-12 flex flex-wrap items-center gap-1.5">
           <Badge 
             className={cn(
               "font-semibold text-white border-0 uppercase tracking-[0.08em] backdrop-blur-md shadow-lg",
@@ -333,8 +334,8 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
           )}
 
 
-          {/* Financing badge — gated by launch flag + this listing's opt-in */}
-          {financingEnabled && <FinancingAvailableBadge compact listingId={listing.id} />}
+
+
           
           {/* Instant Book Badge */}
           {!compact && listing.mode === 'rent' && listing.instant_book && (
