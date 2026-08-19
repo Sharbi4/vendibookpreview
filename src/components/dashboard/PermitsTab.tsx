@@ -38,8 +38,7 @@ function requiredCount(r: SavedRoadmap) {
 
 export default function PermitsTab() {
   const { user } = useAuth();
-  const access = useToolAccess();
-  const permitAccess = access.bySlug['permitpath'];
+  const permitAccess = usePermitPathAccess();
   const [searchParams, setSearchParams] = useSearchParams();
   const roadmapId = searchParams.get('roadmap');
 
