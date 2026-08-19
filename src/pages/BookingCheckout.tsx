@@ -80,6 +80,13 @@ const BookingCheckout = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const { listing, host, isLoading, error } = useListing(listingId);
+  /**
+   * Instant Book skips host approval ONLY for identity-verified hosts.
+   * Everyone else: payment is taken and the booking waits for the host to
+   * accept. Mirrors the server rule in `paypalFinalize`.
+   */
+  const { verified: hostIdentityVerified } = useSellerVerifiedBadge(listing?.host_id);
+  const instantConfirm = !!listing?.instant_book && hostIdentityVerified;
   const { data: ratingData } = useListingAverageRating(listingId);
   const { data: requiredDocs } = useListingRequiredDocuments(listingId || '');
   const requiredDocTypes = requiredDocs?.map(d => d.document_type as string);
