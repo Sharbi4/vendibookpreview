@@ -24,8 +24,17 @@ type Tier = 'free' | 'starter' | 'pro' | 'premium';
 const TIER_RANK: Record<Tier, number> = { free: 0, starter: 1, pro: 2, premium: 3 };
 const ACTIVE_STATUSES = new Set(['active', 'trialing', 'past_due']);
 
+/** Founding-member cutoff — mirrors src/lib/permits/permitPathAccess.ts. */
+const PERMIT_PLUS_GRANDFATHER_CUTOFF = '2026-08-19T00:00:00.000Z';
+
+/**
+ * PermitPath note: the Basic checklist is free and never calls this resolver.
+ * `permitpath` here means the PLUS layer (save, track, documents, reminders,
+ * PDF export), which needs an active PermitPath Plus subscription or
+ * Vendibook Pro. Keep in lockstep with src/lib/permits/permitPathAccess.ts.
+ */
 const TOOL_TIER: Record<ToolSlug, Tier> = {
-  'permitpath': 'free',
+  'permitpath': 'pro',
   'startup-guide': 'free',
   'regulations-hub': 'free',
   'pricepilot': 'pro',
@@ -85,21 +94,35 @@ export async function resolveToolAccess(userId: string, tool: ToolSlug): Promise
     return { unlocked: true, reason: 'free', tier: 'free', userId, tool };
   }
 
-  // 1) Subscription
-  const { data: sub } = await admin
+  // 1) Subscription — read every row: a member can hold Vendibook Pro and a
+  // product subscription (e.g. PermitPath Plus) at the same time.
+  const { data: subs } = await admin
     .from('host_subscriptions')
     .select('tier,status')
     .eq('user_id', userId)
-    .order('updated_at', { ascending: false })
-    .limit(1)
-    .maybeSingle();
+    .order('updated_at', { ascending: false });
+
+  const activeSubs = (subs ?? []).filter((s: { status?: string | null }) =>
+    ACTIVE_STATUSES.has(s.status ?? ''),
+  );
+
+  // A standalone PermitPath Plus subscription unlocks PermitPath only.
+  if (
+    tool === 'permitpath' &&
+    activeSubs.some((s: { tier?: string | null }) =>
+      String(s.tier ?? '').toLowerCase().startsWith('permit_path_plus'),
+    )
+  ) {
+    return { unlocked: true, reason: 'subscription', tier: 'free', userId, tool };
+  }
 
   let tier: Tier = 'free';
-  if (sub && ACTIVE_STATUSES.has(sub.status ?? '')) {
-    tier = resolveTierFromSub(sub.tier);
-    if (TIER_RANK[tier] >= TIER_RANK[minTier]) {
-      return { unlocked: true, reason: 'subscription', tier, userId, tool };
-    }
+  for (const s of activeSubs) {
+    const t = resolveTierFromSub((s as { tier?: string | null }).tier);
+    if (TIER_RANK[t] > TIER_RANK[tier]) tier = t;
+  }
+  if (TIER_RANK[tier] >= TIER_RANK[minTier]) {
+    return { unlocked: true, reason: 'subscription', tier, userId, tool };
   }
 
   // 2) One-time unlock purchase
@@ -117,11 +140,14 @@ export async function resolveToolAccess(userId: string, tool: ToolSlug): Promise
     if (purchase) return { unlocked: true, reason: 'purchase', tier, userId, tool };
   }
 
-  // 3) PermitPath grandfathering
+  // 3) PermitPath grandfathering — only data created BEFORE Plus gating.
+  // Rows created after the cutoff already required an entitlement, so they
+  // must not grant one back.
   if (tool === 'permitpath') {
+    const cutoff = PERMIT_PLUS_GRANDFATHER_CUTOFF;
     const [{ count: c1 }, { count: c2 }] = await Promise.all([
-      admin.from('saved_permit_roadmaps').select('id', { count: 'exact', head: true }).eq('user_id', userId),
-      admin.from('permit_items').select('id', { count: 'exact', head: true }).eq('user_id', userId),
+      admin.from('saved_permit_roadmaps').select('id', { count: 'exact', head: true }).eq('user_id', userId).lt('created_at', cutoff),
+      admin.from('permit_items').select('id', { count: 'exact', head: true }).eq('user_id', userId).lt('created_at', cutoff),
     ]);
     if ((c1 ?? 0) + (c2 ?? 0) > 0) {
       return { unlocked: true, reason: 'grandfathered', tier, userId, tool };

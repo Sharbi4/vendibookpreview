@@ -25,6 +25,8 @@ import {
   type SavedRoadmap,
 } from '@/lib/permitsApi';
 import SaveRoadmapDialog from '@/components/tools/permit-path/SaveRoadmapDialog';
+import { usePermitPathAccess } from '@/hooks/usePermitPathAccess';
+import { PermitPlusUpsellDialog } from '@/components/tools/permit-path/PermitPlusUpsell';
 
 import { toast as sonnerToast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -144,6 +146,8 @@ const PermitPath = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const permitAccess = usePermitPathAccess();
+  const [plusUpsellOpen, setPlusUpsellOpen] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
   const [isLoading, setIsLoading] = useState(false);
   const [form, setForm] = useState({ city: '', state: '', businessType: 'food_truck' });
@@ -203,6 +207,11 @@ const PermitPath = () => {
 
   const handleSaveToDashboard = useCallback(async () => {
     if (!result) return;
+    // Saving is the PermitPath Plus layer — Basic keeps the on-screen roadmap.
+    if (user && !permitAccess.isLoading && !permitAccess.isPlus) {
+      setPlusUpsellOpen(true);
+      return;
+    }
     if (!user) {
       stashPendingSave(result);
       navigate(`/auth?redirect=${encodeURIComponent('/tools/permitpath?resumeSave=1')}`);
@@ -234,17 +243,25 @@ const PermitPath = () => {
       // If match lookup fails, fall through to a plain save.
     }
     await persistSaveNew(result);
-  }, [result, user, navigate, persistSaveNew, persistRefresh, searchParams, setSearchParams]);
+  }, [result, user, permitAccess.isPlus, permitAccess.isLoading, navigate, persistSaveNew, persistRefresh, searchParams, setSearchParams]);
 
   // Resume save after sign-in
   useEffect(() => {
     if (resumeRanRef.current) return;
     if (searchParams.get('resumeSave') !== '1') return;
-    if (!user) return;
+    if (!user || permitAccess.isLoading) return;
     const pending = takePendingSave();
     if (!pending) return;
     resumeRanRef.current = true;
     setResult(pending);
+    if (!permitAccess.isPlus) {
+      // Signed in but Basic — show the roadmap and offer Plus instead of saving.
+      const next = new URLSearchParams(searchParams);
+      next.delete('resumeSave');
+      setSearchParams(next, { replace: true });
+      setPlusUpsellOpen(true);
+      return;
+    }
     (async () => {
       // Same dialog flow now runs post-auth — defer one tick so result is in state.
       const next = new URLSearchParams(searchParams);
@@ -263,7 +280,7 @@ const PermitPath = () => {
         navigate(`/dashboard?view=host&tab=permits&roadmap=${saved.id}`);
       }
     })();
-  }, [user, searchParams, persistSaveNew, navigate, setSearchParams]);
+  }, [user, permitAccess.isPlus, permitAccess.isLoading, searchParams, persistSaveNew, navigate, setSearchParams]);
 
 
   const updateField = <K extends keyof typeof form>(key: K, value: string) => {
@@ -675,6 +692,11 @@ const PermitPath = () => {
         }}
       />
 
+      <PermitPlusUpsellDialog
+        open={plusUpsellOpen}
+        onOpenChange={setPlusUpsellOpen}
+        returnPath="/tools/permitpath"
+      />
     </>
   );
 };
