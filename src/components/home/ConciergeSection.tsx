@@ -54,16 +54,21 @@ const PROVIDERS = [
 const FAQS = [
   {
     q: 'How are online payments handled?',
-    a: 'Vendibook checkout payments are processed through PayPal. Vendibook does not store full card details. Purchase Protection eligibility is determined by PayPal.',
+    a: 'Payments made through Vendibook checkout are processed by PayPal. Vendibook does not store full card details. Purchase Protection eligibility is determined by PayPal.',
+  },
+  {
+    q: 'When do sellers and hosts get paid?',
+    a: 'Payout and fulfillment steps depend on the transaction flow — rentals, online sales, and pay-in-person deals each follow their own timeline. Payouts are reviewed and released by Vendibook.',
   },
   {
     q: 'What does Identity Verified mean?',
-    a: 'Plaid helped confirm the seller’s identity. It does not verify the listing or equipment.',
+    a: 'Plaid helped confirm the seller’s identity. It does not verify ownership, title, condition, or listing accuracy. Identity verification is optional.',
   },
   {
     q: 'How does equipment financing work?',
-    a: 'Buyers apply separately through Equinox Funding. Decisions, terms, and funding depend on underwriting and may involve third-party providers.',
+    a: 'Buyers apply separately through Vendibook financing partners. Decisions, terms, and funding depend on underwriting. Vendibook is not a lender.',
   },
+
 ];
 
 const ConciergeSection = () => {
