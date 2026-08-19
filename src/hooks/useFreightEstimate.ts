@@ -18,12 +18,16 @@ export interface FreightEstimate {
 export interface FreightEstimateParams {
   origin_address: string;
   destination_address: string;
+  /** Optional precise coordinates — used when available so estimates don't depend on geocoding. */
+  origin_coords?: { lat: number; lng: number };
+  destination_coords?: { lat: number; lng: number };
   weight_lbs?: number;
   length_inches?: number;
   width_inches?: number;
   height_inches?: number;
   item_category?: 'standard' | 'fragile' | 'heavy_equipment' | 'oversized';
 }
+
 
 interface UseFreightEstimateReturn {
   estimate: FreightEstimate | null;

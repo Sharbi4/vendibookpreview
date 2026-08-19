@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { Loader2, ArrowLeft, ShieldCheck } from 'lucide-react';
@@ -95,6 +95,8 @@ const STEP_ORDER: Exclude<CheckoutStep, 'intro'>[] = ['fulfillment', 'verify', '
 const SaleCheckout = () => {
   const { listingId } = useParams();
   const navigate = useNavigate();
+  const routerLocation = useLocation();
+
   const [searchParams] = useSearchParams();
   const { user, profile } = useAuth();
   const { toast } = useToast();
@@ -210,7 +212,32 @@ const SaleCheckout = () => {
   type PaymentMethod = 'card' | 'cash';
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('card');
 
+  /**
+   * Fulfillment selected from the listing page's delivery checker.
+   * Applied once so the buyer lands on the wizard with their method,
+   * destination ZIP and the estimate they just saw. Pricing itself is still
+   * recomputed by the existing checkout logic — nothing is trusted from here.
+   */
+  const deliveryChoiceApplied = useRef(false);
+  useEffect(() => {
+    const choice = (routerLocation.state as any)?.deliveryChoice;
+    if (!choice || deliveryChoiceApplied.current) return;
+    deliveryChoiceApplied.current = true;
+    persist.setState((prev) => ({
+      ...prev,
+      step: prev.step === 'intro' ? 'fulfillment' : prev.step,
+      fulfillmentSelected:
+        choice.method === 'vendibook_freight' ? 'vendibook_freight' : 'delivery',
+      buyerInfo: {
+        ...prev.buyerInfo,
+        zipCode: prev.buyerInfo.zipCode || (choice.zip ?? ''),
+      },
+    }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [routerLocation.state]);
+
   // Initialize user data from profile
+
   useEffect(() => {
     if (profile?.full_name && !buyerInfo.firstName) {
       const nameParts = profile.full_name.split(' ');

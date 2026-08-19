@@ -8,8 +8,6 @@ import {
   Truck,
   Package,
   Loader2,
-  CheckCircle2,
-  AlertCircle,
   ShieldCheck,
   Banknote,
   ExternalLink,
@@ -22,7 +20,6 @@ import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { invokeEdge } from '@/lib/edge/invokeFunction';
 import { MakeOfferModal } from '@/components/offers/MakeOfferModal';
 import { AuthGateOfferModal } from '@/components/offers/AuthGateOfferModal';
 import MessageHostForm from '@/components/messaging/MessageHostForm';
@@ -30,16 +27,13 @@ import { useEquinoxFinancingEnabled } from '@/hooks/useListingFinancing';
 import { PayPalMonogram } from '@/components/brand/ProviderLogos';
 import { getPublicDisplayName } from '@/lib/displayName';
 import { formatLastActive } from '@/hooks/useActivityTracker';
-import {
-  deliveryRateLabel,
-  estimateDelivery,
-  formatUsd,
-  normalizeDeliveryFeeType,
-} from '@/lib/fulfillment/delivery';
+import { deliveryRateLabel } from '@/lib/fulfillment/delivery';
 import { trackCTAClick } from '@/lib/analytics';
 import { trackFinancingApplyClick, trackFinancingLearnMoreClick } from '@/lib/analytics';
 import { SaleCard } from './SaleCard';
 import { BuyingInfoDialog } from './BuyingInfoDialog';
+import { DeliveryCheckSheet, type DeliveryChoice } from './DeliveryCheckSheet';
+
 
 interface SalePurchaseCardProps {
   listing: any;
@@ -102,16 +96,9 @@ export const SalePurchaseCard = ({
   const [showContact, setShowContact] = useState(false);
   const [applying, setApplying] = useState(false);
 
-  // Delivery / address check
+  // Delivery / address check — answered on this page, never a checkout jump.
   const [zip, setZip] = useState('');
-  const [checking, setChecking] = useState(false);
-  const [checkError, setCheckError] = useState<string | null>(null);
-  const [result, setResult] = useState<{
-    place: string;
-    miles: number;
-    inRadius: boolean;
-    fee: string | null;
-  } | null>(null);
+  const [showDeliveryResult, setShowDeliveryResult] = useState(false);
 
   const priceSale: number | null = listing?.price_sale ?? null;
   const fulfillmentType: string = listing?.fulfillment_type || 'pickup';
@@ -122,52 +109,19 @@ export const SalePurchaseCard = ({
   const freightPayer = listing?.freight_payer === 'seller' ? 'seller' : 'buyer';
   const radius = Number(listing?.delivery_radius_miles) || 0;
   const rateLabel = deliveryRateLabel(listing?.delivery_fee, listing?.delivery_fee_type);
-  const perMile = normalizeDeliveryFeeType(listing?.delivery_fee_type) === 'per_mile';
   const isAvailable = listing?.status === 'published';
   const canCheck =
-    sellerDelivers &&
+    (sellerDelivers || freightEnabled) &&
     typeof listing?.latitude === 'number' &&
-    typeof listing?.longitude === 'number' &&
-    radius > 0;
+    typeof listing?.longitude === 'number';
   const originLabel = [listing?.city, listing?.state].filter(Boolean).join(', ') || 'the seller’s area';
 
-  const handleCheck = useCallback(async () => {
+  const handleCheck = useCallback(() => {
     if (zip.length !== 5 || !canCheck) return;
-    setChecking(true);
-    setCheckError(null);
-    setResult(null);
-    try {
-      const { data, error } = await invokeEdge<{ results?: any[] }>(
-        'geocode-location',
-        { body: { query: zip, limit: 1 } },
-        { retries: 2 },
-      );
-      if (error) throw new Error(error);
-      const hit = data?.results?.[0];
-      const [lng, lat] = Array.isArray(hit?.center) ? hit.center : [];
-      if (typeof lat !== 'number' || typeof lng !== 'number') {
-        setCheckError("We couldn't find that ZIP code.");
-        return;
-      }
-      const miles = Math.round(distanceMiles(listing.latitude, listing.longitude, lat, lng));
-      const est = estimateDelivery(listing?.delivery_fee, listing?.delivery_fee_type, miles);
-      setResult({
-        place: [hit?.city || hit?.text, hit?.state].filter(Boolean).join(', ') || zip,
-        miles,
-        inRadius: miles <= radius,
-        fee:
-          est.maxFee > 0
-            ? est.isRange
-              ? `${formatUsd(est.minFee)}–${formatUsd(est.maxFee)}`
-              : formatUsd(est.fee)
-            : null,
-      });
-    } catch {
-      setCheckError('We had trouble checking that ZIP. Please try again.');
-    } finally {
-      setChecking(false);
-    }
-  }, [zip, canCheck, listing, radius]);
+    trackCTAClick('check_delivery', 'sale_purchase_card');
+    setShowDeliveryResult(true);
+  }, [zip, canCheck]);
+
 
   const gate = (action: 'buy' | 'offer') => {
     if (!user) {
@@ -190,12 +144,19 @@ export const SalePurchaseCard = ({
     setShowOffer(true);
   };
 
+  const [pendingDelivery, setPendingDelivery] = useState<DeliveryChoice | null>(null);
+
   const handleAuthSuccess = () => {
     setShowAuthGate(false);
-    if (pending === 'buy') navigate(`/checkout/${listing.id}`);
+    if (pending === 'buy')
+      navigate(`/checkout/${listing.id}`, {
+        state: pendingDelivery ? { deliveryChoice: pendingDelivery } : undefined,
+      });
     else if (pending === 'offer') setShowOffer(true);
     setPending(null);
+    setPendingDelivery(null);
   };
+
 
   const handleApplyFinancing = async () => {
     trackFinancingApplyClick('listing_panel', listing.id);
@@ -290,7 +251,7 @@ export const SalePurchaseCard = ({
             )}
           </div>
 
-          {/* Delivery / address check */}
+          {/* Delivery / address check — results open in a sheet on this page */}
           {canCheck && (
             <div className="space-y-2">
               <label htmlFor={zipInputId} className="text-xs text-muted-foreground">
@@ -303,11 +264,7 @@ export const SalePurchaseCard = ({
                   placeholder="ZIP code"
                   maxLength={5}
                   value={zip}
-                  onChange={(e) => {
-                    setZip(e.target.value.replace(/\D/g, '').slice(0, 5));
-                    setResult(null);
-                    setCheckError(null);
-                  }}
+                  onChange={(e) => setZip(e.target.value.replace(/\D/g, '').slice(0, 5))}
                   onKeyDown={(e) => e.key === 'Enter' && handleCheck()}
                   className="text-base"
                 />
@@ -315,47 +272,14 @@ export const SalePurchaseCard = ({
                   type="button"
                   variant="outline"
                   onClick={handleCheck}
-                  disabled={zip.length !== 5 || checking}
+                  disabled={zip.length !== 5}
                 >
-                  {checking ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Check'}
+                  Check delivery
                 </Button>
               </div>
-              {checkError && (
-                <p className="text-xs text-destructive flex items-center gap-1.5">
-                  <AlertCircle className="h-3.5 w-3.5" /> {checkError}
-                </p>
-              )}
-              {result && (
-                <div
-                  className={`rounded-xl p-3 text-xs ring-1 ${
-                    result.inRadius
-                      ? 'ring-emerald-500/30 bg-emerald-500/[0.07]'
-                      : 'ring-amber-500/30 bg-amber-500/[0.07]'
-                  }`}
-                >
-                  <p className="font-medium flex items-center gap-1.5 text-sm">
-                    {result.inRadius ? (
-                      <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-                    ) : (
-                      <AlertCircle className="h-4 w-4 text-amber-500" />
-                    )}
-                    {result.inRadius
-                      ? `Delivery available to ${result.place}`
-                      : `Outside the ${radius}-mile delivery area`}
-                  </p>
-                  <p className="text-muted-foreground mt-1">
-                    About {result.miles} mi from {originLabel}.
-                    {result.inRadius && result.fee
-                      ? ` Estimated delivery ${result.fee}${perMile ? ' by distance' : ''} — confirmed at checkout.`
-                      : ''}
-                    {!result.inRadius && freightEnabled
-                      ? ' Nationwide freight can still ship this to you.'
-                      : ''}
-                  </p>
-                </div>
-              )}
             </div>
           )}
+
 
           {/* Financing availability */}
           {financingEnabled && (
@@ -480,6 +404,22 @@ export const SalePurchaseCard = ({
           />
         </DialogContent>
       </Dialog>
+
+      <DeliveryCheckSheet
+        open={showDeliveryResult}
+        onOpenChange={setShowDeliveryResult}
+        listing={listing}
+        zip={zip}
+        onContinue={(choice) => {
+          setShowDeliveryResult(false);
+          trackCTAClick('continue_with_delivery_option', 'sale_purchase_card');
+          setPendingDelivery(choice);
+          if (!gate('buy')) return;
+          navigate(`/checkout/${listing.id}`, { state: { deliveryChoice: choice } });
+        }}
+
+      />
+
 
       <AuthGateOfferModal
         open={showAuthGate}
