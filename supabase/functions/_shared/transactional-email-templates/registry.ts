@@ -68,6 +68,10 @@ import { template as proMembershipActivated } from './pro-membership-activated.t
 import { template as proMembershipRenewed } from './pro-membership-renewed.tsx'
 import { template as proMembershipCancelled } from './pro-membership-cancelled.tsx'
 import { template as proMembershipPaymentFailed } from './pro-membership-payment-failed.tsx'
+import { template as permitPlusActivated } from './permitpath-plus-activated.tsx'
+import { template as permitPlusRenewed } from './permitpath-plus-renewed.tsx'
+import { template as permitPlusCancelled } from './permitpath-plus-cancelled.tsx'
+import { template as permitPlusPaymentFailed } from './permitpath-plus-payment-failed.tsx'
 
 
 
