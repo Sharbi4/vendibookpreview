@@ -40,8 +40,8 @@ const PremiumToolsTab = () => {
           </div>
           {showUpsell && (
             <Button asChild variant="glass-cta" className="gap-1">
-              <Link to="/pricing">
-                <Crown className="h-4 w-4" /> Unlock every tool with Pro
+              <Link to="/dashboard?view=host&tab=promote">
+                <Crown className="h-4 w-4" /> See upgrades
                 <ArrowRight className="h-4 w-4" />
               </Link>
             </Button>
