@@ -60,23 +60,22 @@ interface PanelProps {
   returnPath?: string;
 }
 
-/** Basic vs Plus comparison + subscribe CTA. */
+/** Basic vs Plus comparison + subscribe CTA — light, premium Vendibook style. */
 export function PermitPlusPanel({ title, subtitle, className, returnPath }: PanelProps) {
   const priceLabel = usePermitPlusPriceLabel();
   const { product, startCheckout, busy, consentDialog } = usePermitPlusCheckout(returnPath);
 
   return (
     <div
-      className={`relative overflow-hidden rounded-2xl border border-white/15 bg-gradient-to-b from-white/[0.05] via-[#141418] to-[#101013] p-6 md:p-8 shadow-[0_8px_28px_-14px_rgba(0,0,0,0.7)] ${className ?? ''}`}
+      className={`relative overflow-hidden rounded-3xl border border-stone-200 bg-white p-6 md:p-8 shadow-[0_10px_40px_-24px_rgba(28,25,23,0.35)] ${className ?? ''}`}
     >
-      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/30 to-transparent pointer-events-none" />
-      <div className="absolute right-4 top-4 inline-flex items-center gap-1 rounded-md border border-white/15 bg-white/[0.05] px-2 py-0.5 text-[10px] font-medium text-white/70">
+      <div className="absolute right-5 top-5 inline-flex items-center gap-1 rounded-full border border-stone-200 bg-stone-50 px-2.5 py-1 text-[11px] font-medium text-stone-600">
         <Lock className="h-3 w-3" /> Plus
       </div>
 
       <div className="max-w-2xl">
-        <div className="flex items-center gap-2 mb-3">
-          <div className="h-10 w-10 rounded-xl bg-[hsl(var(--brand-ember)/0.12)] border border-[hsl(var(--brand-ember)/0.35)] flex items-center justify-center">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="h-11 w-11 rounded-2xl bg-[hsl(var(--brand-ember)/0.08)] border border-[hsl(var(--brand-ember)/0.25)] flex items-center justify-center">
             <FileCheck className="h-5 w-5 text-[hsl(var(--brand-ember))]" />
           </div>
           <div className="text-[11px] uppercase tracking-[0.18em] text-[hsl(var(--brand-ember))] font-semibold">
@@ -84,36 +83,36 @@ export function PermitPlusPanel({ title, subtitle, className, returnPath }: Pane
           </div>
         </div>
 
-        <h3 className="text-xl md:text-2xl font-semibold text-white leading-tight">
-          {title ?? 'Save your permits, track every step, never miss a renewal.'}
+        <h3 className="text-xl md:text-2xl font-semibold text-stone-900 leading-tight tracking-tight">
+          {title ?? 'Save your permits and track every step in one place.'}
         </h3>
-        <p className="text-sm text-white/65 mt-2 leading-relaxed">
+        <p className="text-[15px] text-stone-600 mt-2.5 leading-relaxed">
           {subtitle ??
             'PermitPath Basic stays free — run it as often as you like. Plus adds the saved, tracked layer on top.'}
         </p>
 
-        <div className="mt-5 grid gap-5 sm:grid-cols-2">
+        <div className="mt-7 grid gap-7 sm:grid-cols-2">
           <div>
-            <div className="text-[10px] uppercase tracking-[0.18em] text-white/45 font-semibold mb-2">
+            <div className="text-[10px] uppercase tracking-[0.18em] text-stone-400 font-semibold mb-3">
               Basic · Free
             </div>
-            <ul className="space-y-2 text-sm text-white/65">
+            <ul className="space-y-2.5 text-sm text-stone-600">
               {PERMIT_BASIC_FEATURES.map((line) => (
-                <li key={line} className="flex items-start gap-2">
-                  <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-white/40" />
+                <li key={line} className="flex items-start gap-2.5">
+                  <Check className="mt-0.5 h-4 w-4 shrink-0 text-stone-400" />
                   <span>{line}</span>
                 </li>
               ))}
             </ul>
           </div>
-          <div>
-            <div className="text-[10px] uppercase tracking-[0.18em] text-[hsl(var(--brand-ember))] font-semibold mb-2">
+          <div className="sm:pl-7 sm:border-l sm:border-stone-200">
+            <div className="text-[10px] uppercase tracking-[0.18em] text-[hsl(var(--brand-ember))] font-semibold mb-3">
               Plus · {priceLabel}
             </div>
-            <ul className="space-y-2 text-sm text-white/80">
+            <ul className="space-y-2.5 text-sm text-stone-800">
               {PERMIT_PLUS_FEATURES.map((line) => (
-                <li key={line} className="flex items-start gap-2">
-                  <span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-[hsl(var(--brand-ember))] shrink-0" />
+                <li key={line} className="flex items-start gap-2.5">
+                  <Check className="mt-0.5 h-4 w-4 shrink-0 text-[hsl(var(--brand-ember))]" />
                   <span>{line}</span>
                 </li>
               ))}
@@ -121,11 +120,11 @@ export function PermitPlusPanel({ title, subtitle, className, returnPath }: Pane
           </div>
         </div>
 
-        <div className="mt-6 flex flex-wrap items-center gap-2">
+        <div className="mt-8 flex flex-wrap items-center gap-2.5">
           <Button
             size="sm"
             variant="cta"
-            className="h-9"
+            className="h-10"
             onClick={() => { void startCheckout(); }}
             disabled={!product || busy}
           >
@@ -136,7 +135,7 @@ export function PermitPlusPanel({ title, subtitle, className, returnPath }: Pane
             asChild
             size="sm"
             variant="outline"
-            className="h-9 text-xs border-white/15 bg-white/[0.04] hover:bg-white/[0.08] text-white/85"
+            className="h-10 text-xs border-stone-200 bg-white hover:bg-stone-50 text-stone-700"
           >
             <Link to="/tools/permitpath">Use the free checklist</Link>
           </Button>
@@ -144,22 +143,16 @@ export function PermitPlusPanel({ title, subtitle, className, returnPath }: Pane
             asChild
             size="sm"
             variant="ghost"
-            className="h-9 text-xs text-white/60 hover:text-white hover:bg-white/[0.06]"
+            className="h-10 text-xs text-stone-500 hover:text-stone-900 hover:bg-stone-100"
           >
             <Link to="/pricing">Compare plans</Link>
           </Button>
         </div>
 
-        <p className="mt-3 text-[11px] text-white/40">
+        <p className="mt-4 text-[12px] text-stone-500">
           Included with Vendibook Pro. Cancel anytime — access continues through the paid period.
         </p>
       </div>
-
-      <div
-        aria-hidden
-        className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full blur-3xl"
-        style={{ background: 'radial-gradient(circle, hsl(var(--brand-ember) / 0.14), transparent 65%)' }}
-      />
       {consentDialog}
     </div>
   );
@@ -177,7 +170,7 @@ export function PermitPlusUpsellDialog({
 }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl border-white/12 bg-[#0d0d10] p-0">
+      <DialogContent className="max-w-2xl border-stone-200 bg-white p-0">
         <DialogHeader className="sr-only">
           <DialogTitle>PermitPath Plus</DialogTitle>
           <DialogDescription>
@@ -187,7 +180,7 @@ export function PermitPlusUpsellDialog({
         <PermitPlusPanel
           className="border-0 shadow-none"
           title="Saving a roadmap is a Plus feature"
-          subtitle="Your results stay on screen for free. Plus keeps them in your dashboard with status, documents and renewal reminders."
+          subtitle="Your results stay on screen for free. Plus keeps them in your dashboard with status, documents and expiration tracking."
           returnPath={returnPath}
         />
       </DialogContent>
