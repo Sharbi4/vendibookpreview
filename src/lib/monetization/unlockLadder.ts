@@ -4,7 +4,7 @@
  * Consumed by <UnlockLadder /> and <ToolUnlockDialog />. Never returns a
  * tier that doesn't actually include the feature. Never leads with the
  * most expensive tier. If the caller passes a `currentTier`, upgrade is
- * framed as the honest price difference ("Upgrade to Growth — $50/mo more").
+ * framed as the honest price difference ("Upgrade to Vendibook Pro").
  */
 import { getToolBySlug, type ToolTier } from '@/lib/tools/catalog';
 import type { MonetizationProduct } from './products';
@@ -27,10 +27,12 @@ export interface LadderOption {
   product: MonetizationProduct;
 }
 
+// Every paid tool tier now resolves to the single active subscription,
+// Vendibook Pro. Retired Starter/Growth/Operator slugs must never be offered.
 const TIER_TO_SLUG: Record<Exclude<ToolTier, 'free'>, string> = {
-  starter: 'host_starter',
-  pro: 'host_growth',
-  premium: 'host_operator',
+  starter: 'vendibook_pro',
+  pro: 'vendibook_pro',
+  premium: 'vendibook_pro',
 };
 
 const TIER_RANK: Record<ToolTier, number> = {
@@ -105,20 +107,6 @@ export function resolveUnlockLadder(
       };
     }
   }
-  if (!cheapest && tool.minTier === 'pro') {
-    const wk = bySlug.get('pro_weekly_pass');
-    if (wk) {
-      cheapest = {
-        kind: 'weekly_pass',
-        productSlug: wk.slug,
-        productName: `${tool.name} — 7-day pass`,
-        priceLabel: usd(wk.price_cents),
-        cadenceLabel: 'for 7 days',
-        reason: `Full access to ${tool.name} for a week. No subscription.`,
-        product: wk,
-      };
-    }
-  }
   const minSub = bySlug.get(TIER_TO_SLUG[tool.minTier]);
   if (!cheapest && minSub) {
     cheapest = {
@@ -132,8 +120,8 @@ export function resolveUnlockLadder(
     };
   }
 
-  // Best-value = Growth if it covers the tool, otherwise the min sub.
-  const growth = bySlug.get('host_growth');
+  // Best-value = Vendibook Pro if it covers the tool, otherwise the min sub.
+  const growth = bySlug.get('vendibook_pro');
   if (growth && TIER_RANK.pro >= TIER_RANK[tool.minTier]) {
     bestValue = {
       kind: 'subscription',
@@ -146,7 +134,7 @@ export function resolveUnlockLadder(
       product: growth,
     };
   } else if (minSub) {
-    // Tool needs premium (BuildKit) — Operator IS the best (and only) value.
+    // Fallback when Vendibook Pro isn't in the catalog payload.
     bestValue = {
       kind: 'subscription',
       productSlug: minSub.slug,

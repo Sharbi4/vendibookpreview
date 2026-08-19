@@ -84,11 +84,11 @@ describe("faq search", () => {
     expect(buying?.answer).toBeDefined();
   });
 
-  it("tier prices reflect live config: Starter $39, Growth $89, Operator $149", () => {
+  it("plan prices reflect the live catalog: Vendibook Pro $79, PermitPath Plus $7.99", () => {
     const tiers = findFaqEntry("tiers-overview");
-    expect(tiers?.answer).toMatch(/\$39/);
-    expect(tiers?.answer).toMatch(/\$89/);
-    expect(tiers?.answer).toMatch(/\$149/);
+    expect(tiers?.answer).toMatch(/\$79/);
+    expect(tiers?.answer).toMatch(/\$7\.99/);
+    expect(tiers?.answer).not.toMatch(/\$39|\$89|\$149/);
   });
 
   it("uses 'payment protection' language, not 'escrow'", () => {
