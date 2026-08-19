@@ -105,7 +105,7 @@ const ToolPreview = () => {
                       Open {tool.name} <ArrowRight className="ml-1.5 h-4 w-4" />
                     </Button>
                   </div>
-                ) : tool.minTier === 'free' ? (
+                ) : tool.minTier === 'free' || tool.hasFreeTier ? (
                   <div className="space-y-3">
                     <p className="text-sm text-foreground/80">This tool is free — sign in to start using it.</p>
                     <Button asChild size="lg" variant="glass-cta" className="w-full">
