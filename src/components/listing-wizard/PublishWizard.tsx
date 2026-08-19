@@ -73,6 +73,8 @@ import {
   RENTAL_HOST_FEE_PERCENT,
   SALE_SELLER_FEE_PERCENT} from '@/lib/commissions';
 import { isListingFeatured } from '@/lib/featured';
+import { useCatalogPrice } from '@/hooks/useCatalogPrices';
+import { ACTIVE_PRODUCT_SLUGS } from '@/lib/monetization/catalogPricing';
 import { trackLeadEvent } from '@/lib/leadTracking';
 import { JourneyProgress, PrimaryActionBar, type JourneyStep } from '@/components/journey';
 import {
@@ -391,6 +393,7 @@ export const PublishWizard: React.FC = () => {
   const [acceptCashPayment, setAcceptCashPayment] = useState(false);
   const [proofNotaryEnabled, setProofNotaryEnabled] = useState(false);
   const [featuredEnabled, setFeaturedEnabled] = useState(false);
+  const featuredBoostPrice = useCatalogPrice(ACTIVE_PRODUCT_SLUGS.featuredBoost);
 
   // ─── Buyer financing is automatic on every published for-sale listing ───
   // (no seller opt-in, no disclosure checkbox)
@@ -2223,7 +2226,7 @@ export const PublishWizard: React.FC = () => {
       }
 
 
-      // If Featured Listing is enabled and not already active/comped, redirect to checkout for the $49 fee.
+      // If Featured Listing is enabled and not already active/comped, redirect to the catalog-priced Featured Boost checkout.
       // Pending complimentary boosts are applied by the database trigger when status changes to published.
       const listingHasPendingFeatured = !!listing.pending_featured_payment;
       const listingAlreadyFeatured = isListingFeatured(listing);
@@ -2304,7 +2307,7 @@ export const PublishWizard: React.FC = () => {
         // outcomes back to the published-listing page so they always land on
         // a clear "your listing is live / boost is activating" confirmation.
         const publishedUrl = `/listing-published?listing_id=${listing.id}`;
-        const checkoutUrl = productCheckoutUrl('boost-featured-30', listing.id, {
+        const checkoutUrl = productCheckoutUrl(ACTIVE_PRODUCT_SLUGS.featuredBoost, listing.id, {
           success: `${publishedUrl}&featured_paid=true`,
           cancel: `${publishedUrl}&featured_cancelled=true`,
         });
@@ -5062,7 +5065,9 @@ export const PublishWizard: React.FC = () => {
                   <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 p-3 text-sm text-amber-700 dark:text-amber-300 flex items-start gap-2">
                     <TrendingUp className="w-4 h-4 mt-0.5 shrink-0" />
                     <div>
-                      You'll be redirected to PayPal to pay <strong>$49</strong> for the Featured add-on.
+                      You'll be redirected to PayPal to pay{' '}
+                      <strong>{featuredBoostPrice.label}</strong> for the Featured add-on
+                      ({featuredBoostPrice.durationDays ?? 30} days).
                       Your listing publishes automatically the moment payment clears.
                     </div>
                   </div>
