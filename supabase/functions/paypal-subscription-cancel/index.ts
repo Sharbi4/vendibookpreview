@@ -57,9 +57,17 @@ serve(async (req) => {
       cancelled_at: sub.cancelled_at ?? new Date().toISOString(),
     }).eq("id", sub.id);
 
-    const { data: hostSub } = await admin.from("host_subscriptions")
+    // Scope the entitlement row to this exact subscription when possible so a
+    // second recurring product's row is never rewritten.
+    const hostSubQuery = admin.from("host_subscriptions")
       .select("id, current_period_start, current_period_end")
-      .eq("user_id", user.id).maybeSingle();
+      .eq("user_id", user.id);
+    const { data: hostRows } = await (
+      sub.paypal_subscription_id
+        ? hostSubQuery.eq("paypal_subscription_id", sub.paypal_subscription_id)
+        : hostSubQuery
+    ).limit(1);
+    const hostSub = hostRows?.[0] ?? null;
 
     // Cancel anytime → no future renewal, benefits stay live through the end of
     // the period the member already paid for.
@@ -72,16 +80,46 @@ serve(async (req) => {
       existingPeriodStart: hostSub?.current_period_start ?? null,
     });
 
-    await admin.from("host_subscriptions").update({
+    const patch = {
       status: period.status,
       cancel_at_period_end: true,
       cancel_at: period.cancel_at ?? new Date().toISOString(),
       current_period_start: period.current_period_start,
       current_period_end: period.current_period_end,
       updated_at: new Date().toISOString(),
-    }).eq("user_id", user.id);
+    };
+    if (hostSub) {
+      await admin.from("host_subscriptions").update(patch).eq("id", hostSub.id);
+    } else {
+      await admin.from("host_subscriptions").update(patch).eq("user_id", user.id);
+    }
+
+    const accessThrough = period.entitled ? period.current_period_end : null;
+
+    // Same idempotency key convention the webhook uses, so a later PayPal
+    // CANCELLED event cannot send a second confirmation.
+    await sendProMembershipEmail(admin, sub, "cancelled", { accessThrough });
+
+    await notifyUser(admin, {
+      userId: user.id,
+      type: "subscription_cancelled",
+      title: "Membership cancelled",
+      message: accessThrough
+        ? `Your membership is cancelled — no future renewal. Your benefits remain active through ${
+          new Date(accessThrough).toLocaleDateString("en-US", {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+            timeZone: "UTC",
+          })
+        }.`
+        : "Your membership is cancelled. You can resubscribe at any time.",
+      link: "/account/subscription",
+      dedupeKey: `${sub.paypal_subscription_id}:cancelled`,
+    });
 
     safeLog("subscription_cancelled", { userId: user.id, entitled_until: period.current_period_end });
+
 
     return jsonResponse(200, {
       success: true,
