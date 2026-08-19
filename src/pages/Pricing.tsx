@@ -392,6 +392,26 @@ const Pricing = () => {
               <Button asChild variant="cta-outline" className="mt-6 w-full">
                 <Link to="/list/start">Create a listing</Link>
               </Button>
+              <div className="mt-3 flex justify-center">
+                <PlanDetailsDialog
+                  title="Free"
+                  priceLabel="$0/month"
+                  summary="Everything you need to list, get paid and close a deal on Vendibook. No listing fees and no contract."
+                  included={FREE_FEATURES}
+                  bestFor="Anyone listing their first truck, trailer, cart or space."
+                  billing="No charge. You only pay a 12.9% seller/host fee when a transaction completes."
+                  finePrint={[
+                    'Pay-in-person sales are free — no commission and no buyer fee.',
+                    'Rentals paid in person still owe the host commission.',
+                  ]}
+                  footer={
+                    <Button asChild variant="cta" className="w-full">
+                      <Link to="/list/start">Create a listing</Link>
+                    </Button>
+                  }
+                />
+              </div>
+
             </Card>
 
             {/* Vendibook Pro */}
