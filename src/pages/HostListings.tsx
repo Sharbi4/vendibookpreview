@@ -99,7 +99,7 @@ const HostListings = () => {
                     </Button>
                   ) : (
                     <RouterLink
-                      to="/host/plans"
+                      to="/pricing"
                       className="h-8 px-2 rounded-md inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground hover:bg-background transition-colors"
                       title="Bulk operations table — Host Pro"
                     >
@@ -112,7 +112,7 @@ const HostListings = () => {
               
               {quota.isAtLimit ? (
                 <Button asChild variant="dark-shine" className="rounded-xl" title="Upgrade to add more listings">
-                  <Link to="/host/plans">
+                  <Link to="/pricing">
                     <Lock className="h-4 w-4 mr-2" />
                     Upgrade to add more
                   </Link>

@@ -68,7 +68,7 @@ const CATEGORIES: Category[] = [
     icon: Store,
     title: 'Grow as a professional host',
     copy: 'Host Pro plans for kitchens, commissaries, and multi-listing operators.',
-    to: '/host/plans',
+    to: '/pricing',
     cta: 'Compare Host Pro plans',
   },
   {

@@ -50,7 +50,7 @@ const PILLARS: Array<{
     eyebrow: 'For people who list often',
     title: 'Host Plans',
     body: 'Featured placement, deeper analytics, lower selling fees, and priority support. Starter, Pro, and Premium. Cancel anytime.',
-    href: '/host/plans',
+    href: '/pricing',
     cta: 'See host plans',
   },
   {

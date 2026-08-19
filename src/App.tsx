@@ -337,7 +337,7 @@ const AnimatedRoutes = () => {
           <Route path="/buyer" element={<PageTransition><BuyerDashboard /></PageTransition>} />
           <Route path="/buyer/services" element={<PageTransition><BuyerServicesHub /></PageTransition>} />
           <Route path="/buyer/services/review/:listingId" element={<PageTransition><ListingPurchaseReviewIntake /></PageTransition>} />
-          <Route path="/host/plans" element={<PageTransition><HostProPlans /></PageTransition>} />
+          <Route path="/host/plans" element={<Navigate to="/pricing" replace />} />
           <Route path="/checkout/product/:slug" element={<PageTransition><ProductCheckout /></PageTransition>} />
           <Route path="/checkout/pay" element={<PageTransition><HostedPayment /></PageTransition>} />
           <Route path="/account/subscription" element={<PageTransition><AccountSubscription /></PageTransition>} />
