@@ -768,13 +768,12 @@ const SaleCheckout = () => {
   // Block owners from purchasing their own listings
   if (isOwner) {
     return (
-      <CheckoutChrome
+      <SaleCheckoutShell
         steps={CHECKOUT_STEPS}
-        currentStep={1}
+        currentIndex={0}
         exitHref={`/listing/${listingId}`}
-        exitLabel="Back to listing"
       >
-        <div className="container max-w-md mx-auto px-4 py-16 text-center">
+        <div className="mx-auto max-w-md py-12 text-center">
           <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
             <ArrowLeft className="w-8 h-8 text-muted-foreground" />
           </div>
@@ -784,9 +783,10 @@ const SaleCheckout = () => {
             Back to listing
           </button>
         </div>
-      </CheckoutChrome>
+      </SaleCheckoutShell>
     );
   }
+
 
   const hasMultiplePaymentOptions = acceptPayPalCheckout && acceptCashPayment;
   const stepIndex = Math.max(0, STEP_ORDER.indexOf(currentStep as Exclude<CheckoutStep, 'intro'>));
