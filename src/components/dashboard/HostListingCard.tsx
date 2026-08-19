@@ -71,6 +71,7 @@ import { canBoostListing, canRepublishListing } from '@/lib/listings/publicVisib
 import { useNavigate } from 'react-router-dom';
 import { GetVerifiedButton } from '@/components/verification/GetVerifiedButton';
 import { ListingFinancingToggle } from '@/components/financing/ListingFinancingToggle';
+import { ListingDimensionsPrompt } from '@/components/dashboard/ListingDimensionsPrompt';
 
 
 type Listing = Tables<'listings'>;
