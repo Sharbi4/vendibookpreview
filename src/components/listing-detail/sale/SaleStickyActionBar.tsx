@@ -86,7 +86,8 @@ export const SaleStickyActionBar = ({
             onClick={handleBuy}
             disabled={!isAvailable}
             data-testid="sale-sticky-buy-now"
-            className="h-14 text-base font-bold gap-2 rounded-2xl bg-cta-primary hover:opacity-95 shadow-cta-primary text-white border-0"
+            variant="cta"
+            className="h-14 text-base gap-2"
           >
             <ShoppingCart className="h-5 w-5" />
             Buy Now

@@ -835,7 +835,8 @@ export const BookingWidget = ({
               <motion.div className="flex-1" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                 <Button
                   onClick={handleBuyNow}
-                  className="w-full h-14 text-base font-bold rounded-2xl bg-cta-primary hover:opacity-95 shadow-cta-primary text-white border-0"
+                  variant="cta"
+                  className="w-full h-14 text-base"
                   size="lg"
                   disabled={!priceSale}
                   data-testid="booking-widget-buy-now"

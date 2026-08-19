@@ -154,7 +154,7 @@ const StepConfirmPurchase = ({
             Back
           </Button>
         ) : <span />}
-        <Button onClick={onContinue} size="lg" className="sm:min-w-[280px]">
+        <Button onClick={onContinue} variant="cta" size="lg" className="sm:min-w-[280px]">
           Looks right — choose delivery
         </Button>
       </div>

@@ -361,7 +361,8 @@ export const DeliveryCheckSheet = ({
                   onClick={handleContinue}
                   disabled={!choice}
                   size="lg"
-                  className="w-full h-12 rounded-2xl font-semibold bg-cta-primary hover:opacity-95 shadow-cta-primary text-white border-0"
+                  variant="cta"
+                  className="w-full h-12"
                 >
                   {choice === 'delivery'
                     ? 'Continue with seller delivery'

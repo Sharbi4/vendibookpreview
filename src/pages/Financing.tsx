@@ -138,7 +138,7 @@ const ApplyCta = ({
     target="_blank"
     rel="noopener noreferrer"
     onClick={() => trackFinancingApplyClick(source, listingId)}
-    className={`group/cta relative inline-flex items-center justify-center gap-2 overflow-hidden rounded-xl bg-gradient-to-b from-emerald-400 to-emerald-600 px-6 py-3.5 text-sm font-semibold text-emerald-950 shadow-[0_10px_30px_-12px_rgba(16,185,129,0.9)] ring-1 ring-inset ring-white/25 transition-shadow duration-300 hover:shadow-[0_14px_36px_-10px_rgba(16,185,129,1)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-200 ${wide ? 'w-full sm:w-auto' : ''} ${className}`}
+    className={`group/cta relative inline-flex items-center justify-center gap-2 overflow-hidden rounded-2xl bg-cta-primary px-6 py-3.5 text-sm font-bold text-white shadow-cta-primary transition-all duration-200 hover:opacity-95 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background ${wide ? 'w-full sm:w-auto' : ''} ${className}`}
   >
     <span
       aria-hidden

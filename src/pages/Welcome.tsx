@@ -238,7 +238,8 @@ const Welcome: React.FC = () => {
                 size="lg"
                 onClick={handlePrimary}
                 disabled={saving}
-                className="sm:min-w-[200px] gap-2 shadow-cta-primary bg-cta-primary text-white"
+                variant="cta"
+                className="sm:min-w-[200px] gap-2"
               >
                 {saving ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
