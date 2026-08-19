@@ -792,10 +792,47 @@ const SaleCheckout = () => {
 
 
   const hasMultiplePaymentOptions = acceptPayPalCheckout && acceptCashPayment;
-  const stepIndex = Math.max(0, STEP_ORDER.indexOf(currentStep as Exclude<CheckoutStep, 'intro'>));
 
-  const goNext = () => setCurrentStep(STEP_ORDER[Math.min(stepIndex + 1, STEP_ORDER.length - 1)]);
-  const goBack = () => setCurrentStep(STEP_ORDER[Math.max(stepIndex - 1, 0)]);
+  /**
+   * Optional add-ons. Purely presentational selections (nothing is charged
+   * here) — the "Options" stage disappears entirely when none apply.
+   */
+  const addOnCatalog: { id: string; title: string; description: string; priceLabel: string }[] = [
+    ...((listing as { vin?: string | null }).vin || (listing as { title_status?: string | null }).title_status
+      ? [{
+          id: 'inspection',
+          title: 'Pre-purchase inspection',
+          description: 'We connect you with a local inspector before pickup or delivery.',
+          priceLabel: 'Quoted separately',
+        }]
+      : []),
+    ...((listing as { title_status?: string | null }).title_status
+      ? [{
+          id: 'notarization',
+          title: 'Notarized title transfer',
+          description: 'Remote notary coordination for the title hand-off.',
+          priceLabel: 'Quoted separately',
+        }]
+      : []),
+  ];
+  const hasAddOns = addOnCatalog.length > 0;
+
+  const visibleSteps: Exclude<CheckoutStep, 'intro'>[] = hasAddOns
+    ? ['fulfillment', 'verify', 'options', 'payment']
+    : ['fulfillment', 'verify', 'payment'];
+
+  const effectiveStep: Exclude<CheckoutStep, 'intro'> =
+    currentStep === 'intro'
+      ? 'fulfillment'
+      : currentStep === 'options' && !hasAddOns
+        ? 'payment'
+        : currentStep;
+
+  const stepIndex = Math.max(0, visibleSteps.indexOf(effectiveStep));
+
+  const goNext = () => setCurrentStep(visibleSteps[Math.min(stepIndex + 1, visibleSteps.length - 1)]);
+  const goBack = () => setCurrentStep(visibleSteps[Math.max(stepIndex - 1, 0)]);
+
 
   /** Prefill the details step from the delivery address the buyer already typed. */
   const prefillFromDeliveryAddress = () => {
