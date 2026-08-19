@@ -333,8 +333,8 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
           )}
 
 
-          {/* Financing badge — gated by launch flag + this listing's opt-in */}
-          {financingEnabled && <FinancingAvailableBadge compact listingId={listing.id} />}
+
+
           
           {/* Instant Book Badge */}
           {!compact && listing.mode === 'rent' && listing.instant_book && (
