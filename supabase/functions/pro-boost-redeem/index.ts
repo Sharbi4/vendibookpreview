@@ -109,6 +109,6 @@ serve(async (req) => {
       credit_period_end: credit.period_end,
     });
   } catch (err) {
-    return unknownErrorResponse(err, "pro-boost-redeem");
+    return unknownErrorResponse(err);
   }
 });
