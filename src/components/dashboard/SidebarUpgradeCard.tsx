@@ -51,10 +51,10 @@ export const SidebarUpgradeCard = () => {
         Featured placement · Lower fees
       </p>
       <Link
-        to="/pricing"
+        to="/dashboard?view=host&tab=promote"
         className="mt-2.5 inline-flex items-center gap-1 text-[12px] font-semibold text-[#1A1400] hover:underline underline-offset-2"
       >
-        See plans →
+        See upgrades →
       </Link>
     </div>
   );

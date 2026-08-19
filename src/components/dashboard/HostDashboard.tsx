@@ -140,7 +140,7 @@ const HostDashboard = () => {
           />
           {isFreeTier && pendingOffers.length === 0 ? (
             <Link
-              to="/pricing"
+              to="/dashboard?view=host&tab=promote"
               aria-label="Unlock Pro"
               className="block relative rounded-[18px] gold-card p-5 sm:p-6 h-full hover:-translate-y-0.5 transition-transform"
             >
@@ -154,7 +154,7 @@ const HostDashboard = () => {
                 Featured &amp; lower fees
               </div>
               <div className="mt-2 text-[12px] font-semibold text-[#2b2100]">
-                See plans →
+                See upgrades →
               </div>
             </Link>
           ) : (
