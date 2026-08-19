@@ -51,7 +51,7 @@ const ListingPurchaseReviewIntake = () => {
             <Link to="/partners?category=inspection">Find an inspector</Link>
           </Button>
           <Button asChild variant="ghost">
-            <Link to="/buyer/dashboard">Go to buyer dashboard</Link>
+            <Link to="/buyer">Go to buyer dashboard</Link>
           </Button>
         </div>
       </section>
