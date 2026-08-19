@@ -145,7 +145,7 @@ export function PermitPlusPanel({ title, subtitle, className, returnPath }: Pane
             variant="ghost"
             className="h-10 text-xs text-stone-500 hover:text-stone-900 hover:bg-stone-100"
           >
-            <Link to="/pricing">Compare plans</Link>
+            <Link to="/pricing">View Vendibook Pro</Link>
           </Button>
         </div>
 
