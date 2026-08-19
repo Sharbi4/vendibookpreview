@@ -16,6 +16,7 @@ import {
   ArrowRight, Check, Crown, Loader2, Lock, Percent, ShieldCheck, XCircle, Zap,
 } from 'lucide-react';
 import SEO from '@/components/SEO';
+import Header from '@/components/layout/Header';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
