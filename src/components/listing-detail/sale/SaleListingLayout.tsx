@@ -75,7 +75,7 @@ export const SaleListingLayout = ({
         <EnhancedPhotoGallery images={images} videos={videos} title={listing.title} />
       </div>
 
-      <div className="container pt-5 pb-28 lg:pb-20">
+      <div className="container pt-5 pb-40 md:pb-32 lg:pb-20">
         {/* Breadcrumb + utilities */}
         <div className="flex items-center justify-between gap-3 mb-3">
           <nav className="flex items-center gap-1 text-xs text-muted-foreground min-w-0">

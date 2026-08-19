@@ -60,7 +60,8 @@ export const SaleStickyActionBar = ({
   return (
     <>
       <div
-        className="fixed bottom-0 left-0 right-0 z-40 lg:hidden safe-pb"
+        /* Sits above the global mobile bottom nav (md:hidden) so neither is clipped. */
+        className="fixed bottom-[68px] md:bottom-0 left-0 right-0 z-40 lg:hidden safe-pb"
         style={{
           background: 'linear-gradient(180deg, rgba(18,22,28,0.78) 0%, rgba(12,15,19,0.92) 100%)',
           backdropFilter: 'blur(22px) saturate(140%)',
