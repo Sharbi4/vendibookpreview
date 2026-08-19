@@ -363,7 +363,11 @@ export const DeliveryCheckSheet = ({
                   size="lg"
                   className="w-full h-12 rounded-2xl font-semibold bg-cta-primary hover:opacity-95 shadow-cta-primary text-white border-0"
                 >
-                  {choice ? 'Buy with this delivery option' : 'Select a delivery option'}
+                  {choice === 'delivery'
+                    ? 'Continue with seller delivery'
+                    : choice === 'vendibook_freight'
+                      ? 'Continue with Vendibook Freight'
+                      : 'Select a delivery option'}
                   {choice && <ArrowRight className="h-4 w-4 ml-2" />}
                 </Button>
                 <Button variant="ghost" className="w-full" onClick={() => onOpenChange(false)}>
