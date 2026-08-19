@@ -23,7 +23,7 @@ import {
 /** Live "$7.99/mo" label from the catalog. */
 export function usePermitPlusPriceLabel(): string {
   const price = useCatalogPrice(PERMIT_PLUS_SLUG);
-  return price.withCadence;
+  return price.labelWithCadence;
 }
 
 /** Checkout starter for PermitPath Plus, with the recurring-consent dialog. */
