@@ -26,7 +26,7 @@ const buttonVariants = cva(
         /** Legacy aliases — folded into the single Vendibook CTA system. */
         gradient: CTA_PRIMARY,
         "gradient-premium": CTA_PRIMARY,
-        "dark-shine": "relative overflow-hidden bg-gradient-to-r from-foreground via-foreground/90 to-foreground text-background font-semibold shadow-lg border-2 border-foreground/15 hover:border-foreground/25 before:absolute before:inset-0 before:w-[200%] before:bg-gradient-to-r before:from-transparent before:via-background/25 before:to-transparent before:-left-full hover:before:animate-premium-shimmer hover:shadow-xl transition-all duration-200",
+        "dark-shine": CTA_PRIMARY,
         "glass-cta": "relative overflow-hidden bg-white/[0.04] backdrop-blur-xl border-2 border-white/[0.12] hover:border-foreground/35 text-foreground font-medium shadow-[0_0_0_1px_rgba(255,255,255,0.02),0_4px_24px_-4px_rgba(0,0,0,0.4)] hover:shadow-[0_0_0_1px_rgba(255,255,255,0.1),0_8px_32px_-4px_rgba(255,255,255,0.08)] hover:bg-white/[0.06] before:absolute before:inset-0 before:w-full before:bg-gradient-to-r before:from-transparent before:via-white/[0.06] before:to-transparent before:-translate-x-full hover:before:translate-x-full before:transition-transform before:duration-700 before:ease-out transition-all duration-300",
       },
       size: {
