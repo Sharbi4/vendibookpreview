@@ -167,7 +167,7 @@ export function useSubscriptionManagement(product: SubscriptionProduct = 'pro') 
     } finally {
       setBusy(null);
     }
-  }, [provider, refetchUntilSynced, toast]);
+  }, [provider, sub?.paypal_subscription_id, refetchUntilSynced, toast]);
 
   /** Legacy memberships can no longer be resumed self-serve. */
   const reactivate = useCallback(async () => {
