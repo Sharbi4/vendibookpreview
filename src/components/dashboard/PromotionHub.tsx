@@ -1,4 +1,6 @@
 import { useState, useMemo } from 'react';
+import { useCatalogPrice } from '@/hooks/useCatalogPrices';
+import { ACTIVE_PRODUCT_SLUGS } from '@/lib/monetization/catalogPricing';
 import { Megaphone, Share2, TrendingUp, CheckCircle2, Loader2, Copy, Star, Facebook, Search as GoogleIcon, Instagram, Mail, Zap } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -74,6 +76,8 @@ function calcSeoScore(listing: any): SeoScore {
 }
 
 export const PromotionHub = () => {
+  const boostPrice = useCatalogPrice(ACTIVE_PRODUCT_SLUGS.featuredBoost);
+  const durationLabel = boostPrice.durationDays ? `${boostPrice.durationDays} days` : 'one-time';
   const { listings } = useHostListings();
   const published = listings.filter((l) => l.status === 'published');
   const [selectedId, setSelectedId] = useState<string>('');

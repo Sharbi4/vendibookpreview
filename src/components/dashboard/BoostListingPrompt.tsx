@@ -60,6 +60,8 @@ const perks = [
  * listing as the boost target. Dismissal is persisted per-user for 7 days.
  */
 export const BoostListingPrompt = ({ listings, userId }: BoostListingPromptProps) => {
+  const boostPrice = useCatalogPrice(ACTIVE_PRODUCT_SLUGS.featuredBoost);
+  const durationLabel = boostPrice.durationDays ? `${boostPrice.durationDays} days` : 'one-time';
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 

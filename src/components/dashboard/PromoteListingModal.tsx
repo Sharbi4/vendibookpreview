@@ -88,6 +88,8 @@ export const PromoteListingModal = ({
   listingTitle,
 }: PromoteListingModalProps) => {
   const { toast } = useToast();
+  const boostPrice = useCatalogPrice(ACTIVE_PRODUCT_SLUGS.featuredBoost);
+  const durationLabel = boostPrice.durationDays ? `${boostPrice.durationDays} days` : 'one-time';
   const { data, isLoading: historyLoading } = useListingBoostHistory(
     open ? listingId : null,
   );
