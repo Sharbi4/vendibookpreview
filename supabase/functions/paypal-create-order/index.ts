@@ -5,6 +5,7 @@ import { PayPalError, safeLog } from "../_shared/paypal.ts";
 import { getPaymentProvider, PaymentProviderError } from "../_shared/payments/index.ts";
 import { auditPayment, requestIp } from "../_shared/paymentAudit.ts";
 import { assertListingPurchasable } from "../_shared/listingGuard.ts";
+import { resolveProStatus } from "../_shared/proEligibility.ts";
 import {
   quoteBookingRequest,
   quoteMonetizationProduct,
@@ -82,7 +83,25 @@ serve(async (req) => {
       if (booking.host_id === user.id) {
         return jsonError(403, "self_transaction", "You can't book your own listing.");
       }
-      quote = quoteBookingRequest(booking, (booking as any).listing?.title ?? "Listing");
+      // COMMITMENT POINT for rentals: resolve Vendibook Pro once, lock the
+      // host-side fee onto the booking, and never reprice it afterwards.
+      const hostPro = booking.host_platform_fee !== null && booking.host_platform_fee !== undefined
+        ? { isPro: !!booking.pro_fee_applied }
+        : { isPro: (await resolveProStatus(admin, booking.host_id)).isPro };
+      quote = quoteBookingRequest(booking, (booking as any).listing?.title ?? "Listing", hostPro);
+      if (booking.host_platform_fee === null || booking.host_platform_fee === undefined) {
+        await admin
+          .from("booking_requests")
+          .update({
+            host_platform_fee: quote.platformFeeCents / 100,
+            host_fee_rate_pct: quote.feeRatePct ?? null,
+            host_pro_discount: (quote.proDiscountCents ?? 0) / 100,
+            pro_fee_applied: !!quote.proFeeApplied,
+            fee_locked_at: new Date().toISOString(),
+          })
+          .eq("id", booking.id)
+          .is("host_platform_fee", null);
+      }
       bookingRequestId = booking.id;
     } else if (kind === "product") {
       const slug = body?.slug ? String(body.slug) : null;
@@ -357,6 +376,9 @@ serve(async (req) => {
         currency: quote.currency,
         gross_amount_cents: quote.grossCents,
         platform_fee_cents: quote.platformFeeCents,
+        fee_rate_pct: quote.feeRatePct ?? null,
+        pro_discount_cents: quote.proDiscountCents ?? 0,
+        pro_fee_applied: !!quote.proFeeApplied,
         tax_cents: quote.taxCents,
         deposit_cents: quote.depositCents,
         discount_cents: quote.discountCents,

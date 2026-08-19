@@ -590,13 +590,17 @@ export type Database = {
           duration_hours: number | null
           end_date: string
           end_time: string | null
+          fee_locked_at: string | null
           first_response_at: string | null
           fulfillment_selected: string | null
           hold_expires_at: string | null
           hold_status: string | null
           host_confirmed_at: string | null
+          host_fee_rate_pct: number | null
           host_id: string
           host_nudge_sent_at: string | null
+          host_platform_fee: number | null
+          host_pro_discount: number
           host_response: string | null
           hourly_slots: Json | null
           id: string
@@ -614,6 +618,7 @@ export type Database = {
           payout_processed: boolean | null
           payout_processed_at: string | null
           payout_transfer_id: string | null
+          pro_fee_applied: boolean
           referral_code: string | null
           responded_at: string | null
           shopper_confirmed_at: string | null
@@ -652,13 +657,17 @@ export type Database = {
           duration_hours?: number | null
           end_date: string
           end_time?: string | null
+          fee_locked_at?: string | null
           first_response_at?: string | null
           fulfillment_selected?: string | null
           hold_expires_at?: string | null
           hold_status?: string | null
           host_confirmed_at?: string | null
+          host_fee_rate_pct?: number | null
           host_id: string
           host_nudge_sent_at?: string | null
+          host_platform_fee?: number | null
+          host_pro_discount?: number
           host_response?: string | null
           hourly_slots?: Json | null
           id?: string
@@ -676,6 +685,7 @@ export type Database = {
           payout_processed?: boolean | null
           payout_processed_at?: string | null
           payout_transfer_id?: string | null
+          pro_fee_applied?: boolean
           referral_code?: string | null
           responded_at?: string | null
           shopper_confirmed_at?: string | null
@@ -714,13 +724,17 @@ export type Database = {
           duration_hours?: number | null
           end_date?: string
           end_time?: string | null
+          fee_locked_at?: string | null
           first_response_at?: string | null
           fulfillment_selected?: string | null
           hold_expires_at?: string | null
           hold_status?: string | null
           host_confirmed_at?: string | null
+          host_fee_rate_pct?: number | null
           host_id?: string
           host_nudge_sent_at?: string | null
+          host_platform_fee?: number | null
+          host_pro_discount?: number
           host_response?: string | null
           hourly_slots?: Json | null
           id?: string
@@ -738,6 +752,7 @@ export type Database = {
           payout_processed?: boolean | null
           payout_processed_at?: string | null
           payout_transfer_id?: string | null
+          pro_fee_applied?: boolean
           referral_code?: string | null
           responded_at?: string | null
           shopper_confirmed_at?: string | null
@@ -4824,6 +4839,7 @@ export type Database = {
           discount_cents: number
           dispute_status: string
           fee_breakdown: Json
+          fee_rate_pct: number | null
           gross_amount_cents: number
           id: string
           idempotency_key: string | null
@@ -4839,6 +4855,8 @@ export type Database = {
           paypal_order_id: string | null
           paypal_payer_id: string | null
           platform_fee_cents: number
+          pro_discount_cents: number
+          pro_fee_applied: boolean
           provider: Database["public"]["Enums"]["payment_provider"]
           reference: string
           refunded_at: string | null
@@ -4861,6 +4879,7 @@ export type Database = {
           discount_cents?: number
           dispute_status?: string
           fee_breakdown?: Json
+          fee_rate_pct?: number | null
           gross_amount_cents?: number
           id?: string
           idempotency_key?: string | null
@@ -4876,6 +4895,8 @@ export type Database = {
           paypal_order_id?: string | null
           paypal_payer_id?: string | null
           platform_fee_cents?: number
+          pro_discount_cents?: number
+          pro_fee_applied?: boolean
           provider?: Database["public"]["Enums"]["payment_provider"]
           reference: string
           refunded_at?: string | null
@@ -4898,6 +4919,7 @@ export type Database = {
           discount_cents?: number
           dispute_status?: string
           fee_breakdown?: Json
+          fee_rate_pct?: number | null
           gross_amount_cents?: number
           id?: string
           idempotency_key?: string | null
@@ -4913,6 +4935,8 @@ export type Database = {
           paypal_order_id?: string | null
           paypal_payer_id?: string | null
           platform_fee_cents?: number
+          pro_discount_cents?: number
+          pro_fee_applied?: boolean
           provider?: Database["public"]["Enums"]["payment_provider"]
           reference?: string
           refunded_at?: string | null
@@ -5541,6 +5565,86 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      pro_boost_credits: {
+        Row: {
+          created_at: string
+          id: string
+          listing_id: string | null
+          metadata: Json
+          paypal_subscription_id: string | null
+          period_end: string
+          period_start: string
+          purchase_id: string | null
+          source: string
+          status: string
+          subscription_id: string | null
+          updated_at: string
+          used_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          listing_id?: string | null
+          metadata?: Json
+          paypal_subscription_id?: string | null
+          period_end: string
+          period_start: string
+          purchase_id?: string | null
+          source?: string
+          status?: string
+          subscription_id?: string | null
+          updated_at?: string
+          used_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          listing_id?: string | null
+          metadata?: Json
+          paypal_subscription_id?: string | null
+          period_end?: string
+          period_start?: string
+          purchase_id?: string | null
+          source?: string
+          status?: string
+          subscription_id?: string | null
+          updated_at?: string
+          used_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pro_boost_credits_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pro_boost_credits_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "public_listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pro_boost_credits_purchase_id_fkey"
+            columns: ["purchase_id"]
+            isOneToOne: false
+            referencedRelation: "monetization_pending_reconciliation"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pro_boost_credits_purchase_id_fkey"
+            columns: ["purchase_id"]
+            isOneToOne: false
+            referencedRelation: "monetization_purchases"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
@@ -6754,6 +6858,8 @@ export type Database = {
           delivery_fee: number | null
           delivery_instructions: string | null
           estimated_delivery_date: string | null
+          fee_locked_at: string | null
+          fee_rate_pct: number | null
           freight_checkout_session_id: string | null
           freight_cost: number | null
           freight_paid_at: string | null
@@ -6769,6 +6875,8 @@ export type Database = {
           payment_provider: Database["public"]["Enums"]["payment_provider"]
           payout_completed_at: string | null
           platform_fee: number
+          pro_discount: number
+          pro_fee_applied: boolean
           promo_code_id: string | null
           promo_discount: number | null
           referral_code: string | null
@@ -6801,6 +6909,8 @@ export type Database = {
           delivery_fee?: number | null
           delivery_instructions?: string | null
           estimated_delivery_date?: string | null
+          fee_locked_at?: string | null
+          fee_rate_pct?: number | null
           freight_checkout_session_id?: string | null
           freight_cost?: number | null
           freight_paid_at?: string | null
@@ -6816,6 +6926,8 @@ export type Database = {
           payment_provider?: Database["public"]["Enums"]["payment_provider"]
           payout_completed_at?: string | null
           platform_fee: number
+          pro_discount?: number
+          pro_fee_applied?: boolean
           promo_code_id?: string | null
           promo_discount?: number | null
           referral_code?: string | null
@@ -6848,6 +6960,8 @@ export type Database = {
           delivery_fee?: number | null
           delivery_instructions?: string | null
           estimated_delivery_date?: string | null
+          fee_locked_at?: string | null
+          fee_rate_pct?: number | null
           freight_checkout_session_id?: string | null
           freight_cost?: number | null
           freight_paid_at?: string | null
@@ -6863,6 +6977,8 @@ export type Database = {
           payment_provider?: Database["public"]["Enums"]["payment_provider"]
           payout_completed_at?: string | null
           platform_fee?: number
+          pro_discount?: number
+          pro_fee_applied?: boolean
           promo_code_id?: string | null
           promo_discount?: number | null
           referral_code?: string | null
@@ -7077,6 +7193,7 @@ export type Database = {
           dwolla_transfer_id: string | null
           external_payout_reference: string | null
           failure_reason: string | null
+          fee_rate_pct: number | null
           gross_collected_cents: number
           hold_reason: string | null
           id: string
@@ -7092,6 +7209,8 @@ export type Database = {
           payout_method: string
           payout_provider: Database["public"]["Enums"]["payment_provider"]
           platform_fee_cents: number
+          pro_discount_cents: number
+          pro_fee_applied: boolean
           refunded_cents: number
           release_due_at: string | null
           seller_id: string
@@ -7110,6 +7229,7 @@ export type Database = {
           dwolla_transfer_id?: string | null
           external_payout_reference?: string | null
           failure_reason?: string | null
+          fee_rate_pct?: number | null
           gross_collected_cents?: number
           hold_reason?: string | null
           id?: string
@@ -7125,6 +7245,8 @@ export type Database = {
           payout_method?: string
           payout_provider?: Database["public"]["Enums"]["payment_provider"]
           platform_fee_cents?: number
+          pro_discount_cents?: number
+          pro_fee_applied?: boolean
           refunded_cents?: number
           release_due_at?: string | null
           seller_id: string
@@ -7143,6 +7265,7 @@ export type Database = {
           dwolla_transfer_id?: string | null
           external_payout_reference?: string | null
           failure_reason?: string | null
+          fee_rate_pct?: number | null
           gross_collected_cents?: number
           hold_reason?: string | null
           id?: string
@@ -7158,6 +7281,8 @@ export type Database = {
           payout_method?: string
           payout_provider?: Database["public"]["Enums"]["payment_provider"]
           platform_fee_cents?: number
+          pro_discount_cents?: number
+          pro_fee_applied?: boolean
           refunded_cents?: number
           release_due_at?: string | null
           seller_id?: string
@@ -9887,6 +10012,8 @@ export type Database = {
           delivery_fee: number | null
           delivery_instructions: string | null
           estimated_delivery_date: string | null
+          fee_locked_at: string | null
+          fee_rate_pct: number | null
           freight_checkout_session_id: string | null
           freight_cost: number | null
           freight_paid_at: string | null
@@ -9902,6 +10029,8 @@ export type Database = {
           payment_provider: Database["public"]["Enums"]["payment_provider"]
           payout_completed_at: string | null
           platform_fee: number
+          pro_discount: number
+          pro_fee_applied: boolean
           promo_code_id: string | null
           promo_discount: number | null
           referral_code: string | null

@@ -165,7 +165,11 @@ Deno.serve(async (req) => {
         buyer_email: body.buyer_email,
         buyer_phone: body.buyer_phone ?? null,
         status: 'pending_cash',
-        platform_fee: 0,
+        platform_fee: 0, // Pay in person is 100% free — no Pro discount applies
+        fee_rate_pct: 0,
+        pro_discount: 0,
+        pro_fee_applied: false,
+        fee_locked_at: new Date().toISOString(),
         seller_payout: body.amount,
         // terms_id set at insert time so the enforcement trigger sees it
         // atomically — no window where the sale exists without a terms link.

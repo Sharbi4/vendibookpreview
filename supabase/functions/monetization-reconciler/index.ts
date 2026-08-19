@@ -15,6 +15,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import { getPayPalOrder, getPayPalSubscription } from "../_shared/paypal.ts";
 import { fulfillMonetizationPurchase } from "../_shared/fulfillMonetizationPurchase.ts";
 import { resolveSubscriptionPeriod } from "../_shared/subscriptionPeriod.ts";
+import { grantMonthlyBoostCredit } from "../_shared/proBoostCredit.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -195,7 +196,7 @@ serve(async (req) => {
   try {
     const { data: subs } = await admin
       .from("host_subscriptions")
-      .select("id, paypal_subscription_id, status, current_period_start, current_period_end")
+      .select("id, user_id, tier, paypal_subscription_id, status, current_period_start, current_period_end")
       .in("status", ["active", "trialing", "past_due", "unpaid", "incomplete", "paused"])
       .not("paypal_subscription_id", "is", null)
       .limit(200);
@@ -228,6 +229,23 @@ serve(async (req) => {
         };
         await admin.from("host_subscriptions").update(patch).eq("id", rowAny.id);
         if (patch.status !== rowAny.status) subsRepaired++;
+
+        // Safety net for a missed webhook: the grant is unique per billing
+        // period, so re-running this never issues a second credit.
+        if (patch.status === "active") {
+          try {
+            await grantMonthlyBoostCredit(admin, {
+              userId: rowAny.user_id,
+              tier: rowAny.tier,
+              periodStart: patch.current_period_start,
+              periodEnd: patch.current_period_end,
+              subscriptionId: rowAny.id,
+              paypalSubscriptionId: rowAny.paypal_subscription_id,
+            });
+          } catch (creditErr) {
+            console.error("[reconciler] boost credit grant failed", creditErr);
+          }
+        }
       } catch (e) {
         const msg = String(e);
         const rowId = (row as { id?: string }).id;

@@ -7,6 +7,7 @@
  */
 
 import { newPaymentReference } from "./paypal.ts";
+import { computeProSellerFee } from "./proFee.ts";
 
 export const RENTAL_HOST_FEE_PERCENT = 12.9;
 export const RENTAL_RENTER_FEE_PERCENT = 12.9;
@@ -42,6 +43,10 @@ export interface QuoteResult {
   buyerId: string | null;
   listingId: string | null;
   releaseAt: string | null;
+  /** Agreed seller/host fee snapshot (Vendibook Pro benefit), if any. */
+  feeRatePct?: number | null;
+  proDiscountCents?: number;
+  proFeeApplied?: boolean;
 }
 
 const cents = (n: unknown) => Math.round(Number(n ?? 0) * 100);
@@ -81,6 +86,9 @@ export function quoteSaleTransaction(tx: Record<string, any>, listingTitle: stri
         ? [{ label: "Discount", amountCents: -discountCents, kind: "credit" as const }]
         : []),
     ],
+    feeRatePct: tx.fee_rate_pct ?? null,
+    proDiscountCents: cents(tx.pro_discount),
+    proFeeApplied: !!tx.pro_fee_applied,
     sellerId: tx.seller_id ?? null,
     buyerId: tx.buyer_id ?? null,
     listingId: tx.listing_id ?? null,
@@ -92,6 +100,9 @@ export function quoteSaleTransaction(tx: Record<string, any>, listingTitle: stri
 export function quoteBookingRequest(
   booking: Record<string, any>,
   listingTitle: string,
+  /** Resolved once at the commitment point; ignored if the booking already
+   * carries a locked host-fee snapshot. */
+  proOpts: { isPro?: boolean } = {},
 ): QuoteResult {
   const buyerTotalCents = cents(booking.total_price);
   const depositCents = cents(booking.deposit_amount);
@@ -100,8 +111,21 @@ export function quoteBookingRequest(
   const subtotalCents = Math.round(
     buyerTotalCents / (1 + RENTAL_RENTER_FEE_PERCENT / 100),
   );
+  // Renter fee is NEVER discounted — Vendibook Pro is a seller/host benefit.
   const renterFeeCents = Math.max(0, buyerTotalCents - subtotalCents);
-  const hostFeeCents = Math.round(subtotalCents * (RENTAL_HOST_FEE_PERCENT / 100));
+
+  // Host side: use the locked snapshot when the booking already agreed a fee,
+  // otherwise compute it now from live Pro eligibility.
+  const locked = booking.host_platform_fee !== null && booking.host_platform_fee !== undefined;
+  const hostQuote = computeProSellerFee({
+    baseCents: subtotalCents,
+    isPro: locked ? !!booking.pro_fee_applied : !!proOpts.isPro,
+  });
+  const hostFeeCents = locked ? cents(booking.host_platform_fee) : hostQuote.feeCents;
+  const hostDiscountCents = locked ? cents(booking.host_pro_discount) : hostQuote.discountCents;
+  const hostRatePct = locked
+    ? (booking.host_fee_rate_pct ?? RENTAL_HOST_FEE_PERCENT)
+    : hostQuote.effectiveRatePct;
   const sellerProceedsCents = Math.max(0, subtotalCents - hostFeeCents);
 
   const releaseAt = new Date(Date.now() + RENTAL_RELEASE_HOURS * 3_600_000).toISOString();
@@ -124,6 +148,9 @@ export function quoteBookingRequest(
       { label: "Service fee", amountCents: renterFeeCents, kind: "fee" },
       ...(depositCents ? [{ label: "Refundable deposit", amountCents: depositCents }] : []),
     ],
+    feeRatePct: hostRatePct,
+    proDiscountCents: hostDiscountCents,
+    proFeeApplied: hostDiscountCents > 0,
     sellerId: booking.host_id ?? null,
     buyerId: booking.shopper_id ?? null,
     listingId: booking.listing_id ?? null,
@@ -219,6 +246,9 @@ export async function ensureSellerPayable(
       currency: record.currency,
       gross_collected_cents: record.gross_amount_cents,
       platform_fee_cents: record.platform_fee_cents,
+      fee_rate_pct: record.fee_rate_pct ?? null,
+      pro_discount_cents: record.pro_discount_cents ?? 0,
+      pro_fee_applied: !!record.pro_fee_applied,
       refunded_cents: record.refunded_cents ?? 0,
       net_payout_cents: record.seller_proceeds_cents,
       status: "pending_release",

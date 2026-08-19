@@ -7,6 +7,7 @@ import { extractCaptureFacts, finalizeCapture } from "../_shared/paypalFinalize.
 import { appendLedgerEntry, recalculatePayableAfterRefund } from "../_shared/paypalAccounting.ts";
 import { notifyOrderParties, notifyUser } from "../_shared/notify.ts";
 import { resolveSubscriptionPeriod } from "../_shared/subscriptionPeriod.ts";
+import { grantMonthlyBoostCredit } from "../_shared/proBoostCredit.ts";
 
 /**
  * Verified, idempotent PayPal webhook receiver for both one-time payments
@@ -406,6 +407,20 @@ async function mirrorHostSubscription(admin: any, paypalSubId: string, status: s
   }
 
   if (entitlementActive) {
+    // One non-rolling Featured Boost credit per paid Vendibook Pro period.
+    try {
+      await grantMonthlyBoostCredit(admin, {
+        userId: sub.user_id,
+        tier: sub.tier,
+        periodStart: period.current_period_start,
+        periodEnd: period.current_period_end,
+        subscriptionId: existing?.id ?? null,
+        paypalSubscriptionId: paypalSubId,
+      });
+    } catch (err) {
+      console.error("[paypal-webhook] boost credit grant failed", err);
+    }
+
     await alertSubscriptionPayment(
       admin,
       sub,
