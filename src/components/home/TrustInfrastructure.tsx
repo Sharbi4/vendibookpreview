@@ -68,7 +68,7 @@ const TrustInfrastructure = () => {
           viewport={{ once: true, margin: '-80px' }}
           transition={{ duration: 0.6 }}
         >
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] bg-foreground/[0.06] text-foreground/70 rounded-full mb-5 border-2 border-foreground/[0.10]">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] bg-foreground/[0.06] text-foreground/70 rounded-full mb-5 border border-foreground/[0.10]">
             MARKETPLACE TOOLS
           </span>
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-foreground leading-[1.1] tracking-tight mb-4 max-w-2xl mx-auto">
@@ -84,7 +84,7 @@ const TrustInfrastructure = () => {
           {TRUST_PHOTOS.map((photo, i) => (
             <motion.div
               key={photo.label}
-              className="group relative overflow-hidden rounded-2xl border-2 border-border/50 aspect-[4/3] sm:aspect-[5/4]"
+              className="group relative overflow-hidden rounded-2xl border border-border/50 aspect-[4/3] sm:aspect-[5/4]"
               initial={{ opacity: 0, y: 16 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: '-60px' }}
@@ -121,7 +121,7 @@ const TrustInfrastructure = () => {
                 whileHover={{ y: -2 }}
               >
                 {/* Icon */}
-                <div className="w-10 h-10 rounded-xl bg-foreground/[0.06] border-2 border-foreground/[0.10] flex items-center justify-center mb-4 group-hover:bg-primary/[0.08] group-hover:border-primary/30 transition-colors duration-300">
+                <div className="w-10 h-10 rounded-xl bg-foreground/[0.06] border border-foreground/[0.10] flex items-center justify-center mb-4 group-hover:bg-primary/[0.08] group-hover:border-primary/30 transition-colors duration-300">
                   <Icon className="w-4.5 h-4.5 text-foreground/70 group-hover:text-primary transition-colors duration-300" strokeWidth={1.75} />
                 </div>
 

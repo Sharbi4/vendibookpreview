@@ -86,7 +86,7 @@ const ConciergeSection = () => {
           className="mx-auto max-w-5xl"
         >
           <div className="mx-auto mb-10 max-w-2xl text-center sm:mb-14">
-            <span className="mb-5 inline-flex items-center rounded-full border-2 border-foreground/[0.10] bg-foreground/[0.06] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-foreground/70">
+            <span className="mb-5 inline-flex items-center rounded-full border border-foreground/[0.10] bg-foreground/[0.06] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-foreground/70">
               Trusted Infrastructure
             </span>
             <h2 className="mb-4 text-3xl font-bold tracking-tight text-foreground sm:text-4xl md:text-5xl">
@@ -112,7 +112,7 @@ const ConciergeSection = () => {
                 <Link
                   to={p.to}
                   aria-label={`${p.name} — ${p.title}`}
-                  className="group relative flex h-full flex-col overflow-hidden rounded-2xl border-2 border-foreground/[0.10] bg-foreground/[0.035] p-6 backdrop-blur-xl transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:ring-offset-2 focus-visible:ring-offset-background sm:p-7"
+                  className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-foreground/[0.10] bg-foreground/[0.035] p-6 backdrop-blur-xl transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:ring-offset-2 focus-visible:ring-offset-background sm:p-7"
                 >
                   {/* sheen sweep */}
                   <span
@@ -134,7 +134,7 @@ const ConciergeSection = () => {
           </div>
 
           {/* FAQ */}
-          <div className="mx-auto max-w-3xl rounded-2xl border-2 border-foreground/[0.10] bg-foreground/[0.03] p-5 backdrop-blur-xl sm:p-8">
+          <div className="mx-auto max-w-3xl rounded-2xl border border-foreground/[0.10] bg-foreground/[0.03] p-5 backdrop-blur-xl sm:p-8">
             <Accordion type="single" collapsible className="w-full">
               {FAQS.map((f, i) => (
                 <AccordionItem key={f.q} value={`q${i}`} className="border-foreground/10">
