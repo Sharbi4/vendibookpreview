@@ -128,7 +128,7 @@ export const FeaturedListingModal = ({
                       <Flame className="h-5 w-5 text-[hsl(14,100%,62%)]" />
                     </div>
                     <span className="text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-                      Featured boost · 30 days
+                      Featured boost · {durationLabel}
                     </span>
                   </div>
                   <DialogTitle className="text-2xl font-semibold tracking-tight">
@@ -165,7 +165,9 @@ export const FeaturedListingModal = ({
                       <span className="text-xs uppercase tracking-[0.16em] text-[hsl(14,100%,72%)]">
                         Vendibook Pro · included this month
                       </span>
-                      <span className="text-2xl font-semibold tracking-tight text-foreground">$0</span>
+                      <span className="text-2xl font-semibold tracking-tight text-foreground">
+                        $0 <span className="text-xs font-normal text-muted-foreground">Included</span>
+                      </span>
                     </div>
                     <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
                       Your membership includes one Featured Boost each billing period. This credit
