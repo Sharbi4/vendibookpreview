@@ -93,7 +93,6 @@ const AdminBilling = lazy(() => import("./pages/AdminBilling"));
 const ServicesHub = lazy(() => import("./pages/ServicesHub"));
 const BuyerServicesHub = lazy(() => import("./pages/BuyerServicesHub"));
 const BuyerDashboard = lazy(() => import("./pages/BuyerDashboard"));
-const HostProPlans = lazy(() => import("./pages/HostProPlans"));
 const AccountSubscription = lazy(() => import("./pages/AccountSubscription"));
 const ProductCheckout = lazy(() => import("./pages/ProductCheckout"));
 const HostedPayment = lazy(() => import("./pages/HostedPayment"));
