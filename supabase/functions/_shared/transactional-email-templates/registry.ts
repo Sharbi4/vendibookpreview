@@ -135,6 +135,10 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'pro-membership-renewed': proMembershipRenewed,
   'pro-membership-cancelled': proMembershipCancelled,
   'pro-membership-payment-failed': proMembershipPaymentFailed,
+  'permitpath-plus-activated': permitPlusActivated,
+  'permitpath-plus-renewed': permitPlusRenewed,
+  'permitpath-plus-cancelled': permitPlusCancelled,
+  'permitpath-plus-payment-failed': permitPlusPaymentFailed,
 
   // Alias: monetization webhook dispatches 'refund-issued' for add-on refunds;
   // route to the shared refund-processed template so the send does not silently fail.
