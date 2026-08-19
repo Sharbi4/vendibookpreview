@@ -11,6 +11,8 @@ import {
 import { Button } from '@/components/ui/button';
 import { PayPalMonogram } from '@/components/brand/ProviderLogos';
 import PayPalPaymentPanel from '@/components/checkout/PayPalPaymentPanel';
+import { useProBoostCredit, useRedeemProBoostCredit } from '@/hooks/useProBoostCredit';
+import { toast } from 'sonner';
 import BoostPaymentStatus, {
   useBoostActivation,
   type BoostPaymentStage,
@@ -57,6 +59,8 @@ export const FeaturedListingModal = ({
   const [step, setStep] = useState<Step>('overview');
   const [stage, setStage] = useState<BoostPaymentStage>('authorized');
   const queryClient = useQueryClient();
+  const { data: boostCredit } = useProBoostCredit();
+  const redeemCredit = useRedeemProBoostCredit();
 
   // Reset the flow whenever the modal is dismissed.
   useEffect(() => {
@@ -149,10 +153,52 @@ export const FeaturedListingModal = ({
                   ))}
                 </div>
 
+                {boostCredit ? (
+                  <div className="mt-5 rounded-2xl border border-[hsl(14,100%,57%)]/35 bg-[hsl(14,100%,57%)]/[0.07] p-4">
+                    <div className="flex items-baseline justify-between gap-3">
+                      <span className="text-xs uppercase tracking-[0.16em] text-[hsl(14,100%,72%)]">
+                        Vendibook Pro · included this month
+                      </span>
+                      <span className="text-2xl font-semibold tracking-tight text-foreground">$0</span>
+                    </div>
+                    <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
+                      Your membership includes one Featured Boost each billing period. This credit
+                      expires{' '}
+                      {new Date(boostCredit.period_end).toLocaleDateString(undefined, {
+                        month: 'short',
+                        day: 'numeric',
+                      })}{' '}
+                      and doesn’t roll over.
+                    </p>
+                    <Button
+                      variant="cta"
+                      className="mt-4 h-12 w-full rounded-xl text-base"
+                      disabled={redeemCredit.isPending}
+                      onClick={() => {
+                        redeemCredit.mutate(listingId, {
+                          onSuccess: () => {
+                            setStage('authorized');
+                            setStep('status');
+                          },
+                          onError: (err) =>
+                            toast.error(
+                              err instanceof Error
+                                ? err.message
+                                : 'We couldn’t apply your boost credit.',
+                            ),
+                        });
+                      }}
+                    >
+                      <Flame className="mr-2 h-4 w-4" />
+                      {redeemCredit.isPending ? 'Applying your credit…' : 'Use my included boost'}
+                    </Button>
+                  </div>
+                ) : null}
+
                 <div className="mt-5 rounded-2xl border border-white/10 bg-white/[0.03] p-4">
                   <div className="flex items-baseline justify-between">
                     <span className="text-xs uppercase tracking-[0.16em] text-muted-foreground">
-                      One-time · 30 days
+                      {boostCredit ? 'Or pay once · 30 days' : 'One-time · 30 days'}
                     </span>
                     <span className="text-3xl font-semibold tracking-tight text-foreground">
                       $30
