@@ -517,6 +517,48 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
           {!compact && <RatingBadge listingId={listing.id} />}
         </div>
 
+        {/* Search-only quiet detail row: financing + amenity summary live here
+            instead of competing with the primary badges over the image. */}
+        {isSearch && (financingEnabled || popularAmenities.length > 0 || remainingAmenitiesCount > 0) && (
+          <div className="flex flex-wrap items-center gap-1.5">
+            {financingEnabled && (
+              <Link
+                to={`/financing?listing_id=${listing.id}`}
+                onClick={(e) => e.stopPropagation()}
+                className="relative z-10 inline-flex items-center gap-1 rounded-full bg-[#1b1714]/[0.05] px-2.5 py-1 text-[11px] font-medium text-[#1b1714]/70 hover:bg-[#1b1714]/[0.09] transition-colors"
+              >
+                <Banknote className="h-3 w-3" />
+                Financing available
+              </Link>
+            )}
+            {displayAmenities.length > 0 && (
+              <TooltipProvider delayDuration={200}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span className="inline-flex items-center gap-1 rounded-full bg-[#1b1714]/[0.05] px-2.5 py-1 text-[11px] font-medium text-[#1b1714]/65">
+                      {displayAmenities.slice(0, 2).map((amenityId) => {
+                        const amenity = popularAmenityIcons[amenityId];
+                        if (!amenity) return null;
+                        const IconComponent = amenity.icon;
+                        return <IconComponent key={amenityId} className="h-3 w-3" />;
+                      })}
+                      {popularAmenities.length + Math.max(remainingAmenitiesCount, 0) > 2
+                        ? `+${(listing.amenities?.length || 0) - 2} more`
+                        : 'Features'}
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent side="top" className="max-w-[220px] text-xs">
+                    {(listing.amenities || [])
+                      .map((a) => popularAmenityIcons[a]?.label)
+                      .filter(Boolean)
+                      .join(' · ') || 'Features & amenities'}
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
+          </div>
+        )}
+
         {/* Price + Micro-action — the only conversion surface on the card */}
         <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 mt-auto pt-1">
           <div className="flex items-baseline gap-2 flex-wrap min-w-0">
