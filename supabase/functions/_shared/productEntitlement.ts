@@ -21,6 +21,7 @@ export interface ClassifiedProduct {
 // Mirrors TOOL_UNLOCK_SLUG in _shared/toolAccess.ts (reverse map).
 const UNLOCK_SLUG_TO_TOOL: Record<string, ToolSlug> = {
   permit_path_plus: 'permitpath',
+  permit_path_plus_monthly: 'permitpath',
   tool_pricepilot: 'pricepilot',
   tool_listing_studio: 'listing-studio',
   tool_marketing_studio: 'marketing-studio',

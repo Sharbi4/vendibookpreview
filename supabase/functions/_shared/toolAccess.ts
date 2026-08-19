@@ -46,6 +46,12 @@ const TOOL_UNLOCK_SLUG: Partial<Record<ToolSlug, string>> = {
   'buildkit': 'tool_buildkit',
 };
 
+// All product slugs that unlock a tool, including retired SKUs kept for
+// grandfathering. TOOL_UNLOCK_SLUG above is the slug we sell today.
+const TOOL_UNLOCK_SLUGS: Partial<Record<ToolSlug, string[]>> = {
+  'permitpath': ['permit_path_plus_monthly', 'permit_path_plus'],
+};
+
 export type ToolAccessReason =
   | 'free' | 'subscription' | 'purchase' | 'grandfathered' | 'locked';
 
@@ -97,13 +103,14 @@ export async function resolveToolAccess(userId: string, tool: ToolSlug): Promise
   }
 
   // 2) One-time unlock purchase
-  const unlockSlug = TOOL_UNLOCK_SLUG[tool];
-  if (unlockSlug) {
+  const unlockSlugs = TOOL_UNLOCK_SLUGS[tool] ??
+    (TOOL_UNLOCK_SLUG[tool] ? [TOOL_UNLOCK_SLUG[tool]!] : []);
+  if (unlockSlugs.length) {
     const { data: purchase } = await admin
       .from('monetization_purchases')
       .select('id,status,monetization_products!inner(slug)')
       .eq('user_id', userId)
-      .eq('monetization_products.slug', unlockSlug)
+      .in('monetization_products.slug', unlockSlugs)
       .in('status', ['paid', 'fulfilled'])
       .limit(1)
       .maybeSingle();
