@@ -15,7 +15,6 @@ import { useHostEntitlements } from '@/hooks/useHostEntitlements';
 import { useListingQuota } from '@/hooks/useListingQuota';
 import { Link as RouterLink } from 'react-router-dom';
 import { Lock } from 'lucide-react';
-import { useHostFinancingPreferences } from '@/hooks/useListingFinancing';
 
 const HostListings = () => {
   const { user, isLoading: authLoading, hasRole } = useAuth();
@@ -40,9 +39,6 @@ const HostListings = () => {
   const draftListings = listings.filter(l => l.status === 'draft');
   const publishedListings = listings.filter(l => l.status !== 'draft');
 
-  // Batch-load Equinox opt-in state for all for-sale listings (avoids N+1).
-  const saleListingIds = listings.filter(l => l.mode === 'sale').map(l => l.id);
-  const { data: financingMap } = useHostFinancingPreferences(saleListingIds);
 
 
   const handlePublish = async (id: string) => {

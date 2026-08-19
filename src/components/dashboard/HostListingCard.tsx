@@ -70,7 +70,6 @@ import { PAYOUT_METHOD_LABEL } from '@/lib/payouts/methods';
 import { canBoostListing, canRepublishListing } from '@/lib/listings/publicVisibility';
 import { useNavigate } from 'react-router-dom';
 import { GetVerifiedButton } from '@/components/verification/GetVerifiedButton';
-import { ListingFinancingToggle } from '@/components/financing/ListingFinancingToggle';
 import { ListingDimensionsPrompt } from '@/components/dashboard/ListingDimensionsPrompt';
 
 
@@ -587,11 +586,6 @@ const HostListingCard = ({
 
             {/* Missing length/height on older published sale listings */}
             <ListingDimensionsPrompt listing={listing} />
-
-            {/* Buyer financing (Equinox) — for-sale listings only */}
-            {isSale && (
-              <ListingFinancingToggle listingId={listing.id} optedIn={!!financingOptedIn} />
-            )}
 
             {/* Primary actions — even spacing, no crowding */}
             <div className="flex flex-wrap items-center gap-2 pt-4 border-t-2 border-white/10">

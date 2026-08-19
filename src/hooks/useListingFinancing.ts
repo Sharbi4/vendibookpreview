@@ -6,6 +6,7 @@ import {
   EQUINOX_DISCLOSURE_VERSION,
   isFinanceableSaleListing,
 } from '@/lib/financing/disclosure';
+
 import { trackSellerFinancingToggled } from '@/lib/analytics';
 
 export interface ListingFinancingPreference {
@@ -39,23 +40,12 @@ export function useListingFinancingPreference(listingId?: string | null) {
 
 /**
  * Public gate for every Equinox surface (badge, apply link, purchase sheet).
- * Requires the global launch flag, a for-sale listing (any category), the
- * seller's per-listing opt-in, and a current, accepted disclosure.
- *
- * Financing is arranged directly with Equinox Funding, so this deliberately
- * does NOT require PayPal checkout — cash / pay-in-person sellers may opt in.
+ * Buyer financing is a marketplace-level benefit: it requires only the global
+ * launch flag and a published for-sale listing. There is no seller opt-in.
  */
 export function useEquinoxFinancingEnabled(listing: any): boolean {
   const flagOn = usePublicFeatureFlag(EQUINOX_FLAG_KEY);
-  const eligible = isFinanceableSaleListing(listing);
-  const { data } = useListingFinancingPreference(flagOn && eligible ? listing?.id : null);
-  return (
-    flagOn &&
-    eligible &&
-    data?.equinox_opt_in === true &&
-    data?.disclosure_version === EQUINOX_DISCLOSURE_VERSION &&
-    !!data?.disclosure_accepted_at
-  );
+  return flagOn && isFinanceableSaleListing(listing);
 }
 
 /**

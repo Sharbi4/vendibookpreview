@@ -14,8 +14,11 @@ export const EQUINOX_APPLY_URL = 'https://equinox-funding.com/efapplication/';
 export const EQUINOX_FLAG_KEY = 'equinox_financing_enabled';
 
 /**
- * Financing is offered on every for-sale listing category — not only trucks
- * and trailers. Category is no longer part of eligibility.
+ * Buyer financing is a marketplace-level benefit: every published for-sale
+ * listing qualifies, in any category, with no seller opt-in. Category and
+ * seller preference are no longer part of eligibility.
  */
 export const isFinanceableSaleListing = (listing: any) =>
-  !!listing && listing.mode === 'sale';
+  !!listing &&
+  listing.mode === 'sale' &&
+  (listing.status === undefined || listing.status === null || listing.status === 'published');
