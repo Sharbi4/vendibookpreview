@@ -42,25 +42,44 @@ serve(async (req) => {
       if (!(err instanceof PayPalError && err.status === 422)) throw err;
     }
 
+    // Idempotent: re-running on an already-cancelled row produces the same state.
     await admin.from("paypal_subscriptions").update({
       status: "cancelled",
-      cancelled_at: new Date().toISOString(),
+      cancelled_at: sub.cancelled_at ?? new Date().toISOString(),
     }).eq("id", sub.id);
 
+    const { data: hostSub } = await admin.from("host_subscriptions")
+      .select("id, current_period_start, current_period_end")
+      .eq("user_id", user.id).maybeSingle();
+
+    // Cancel anytime → no future renewal, benefits stay live through the end of
+    // the period the member already paid for.
+    const period = resolveSubscriptionPeriod({
+      providerStatus: "cancelled",
+      nextBillingTime: sub.next_billing_time,
+      lastPaymentAt: sub.last_payment_at,
+      startTime: sub.start_time,
+      existingPeriodEnd: hostSub?.current_period_end ?? null,
+      existingPeriodStart: hostSub?.current_period_start ?? null,
+    });
+
     await admin.from("host_subscriptions").update({
-      status: "canceled",
+      status: period.status,
       cancel_at_period_end: true,
-      cancel_at: sub.next_billing_time ?? new Date().toISOString(),
+      cancel_at: period.cancel_at ?? new Date().toISOString(),
+      current_period_start: period.current_period_start,
+      current_period_end: period.current_period_end,
       updated_at: new Date().toISOString(),
     }).eq("user_id", user.id);
 
-    safeLog("subscription_cancelled", { userId: user.id });
+    safeLog("subscription_cancelled", { userId: user.id, entitled_until: period.current_period_end });
 
     return jsonResponse(200, {
       success: true,
       status: "cancelled",
-      access_until: sub.next_billing_time,
-      message: sub.next_billing_time
+      access_until: period.current_period_end,
+      still_entitled: period.entitled,
+      message: period.entitled
         ? "Your membership is cancelled. Access continues until the end of the paid period."
         : "Your membership is cancelled.",
     });
