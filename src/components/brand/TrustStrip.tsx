@@ -109,20 +109,33 @@ export const TrustStrip = ({
       />
 
       <div className="relative flex flex-col divide-y divide-white/[0.06] sm:flex-row sm:items-stretch sm:divide-x sm:divide-y-0">
-        <Rail
-          logo={<PayPalMonogram className="h-[18px] w-auto" />}
-          title="Online checkout"
-          detail={paypalDetail}
-          tone={paypalTone}
-        />
-        {showPlaid && (
+        <a href={href} className="flex flex-1" aria-label="How Vendibook processes payments">
           <Rail
-            logo={<PlaidLogo surface="dark" className="h-[14px] w-auto" />}
-            title="Identity checks"
-            detail="Powered by Plaid*"
+            logo={<PayPalMonogram className="h-[18px] w-auto" />}
+            title="Online checkout"
+            detail={paypalDetail}
+            tone={paypalTone}
           />
+        </a>
+        {showPlaid && (
+          <Link
+            to={plaidHref}
+            className="flex flex-1"
+            aria-label={
+              verified
+                ? 'Your identity is verified with Plaid'
+                : 'Start an identity check powered by Plaid'
+            }
+          >
+            <Rail
+              logo={<PlaidLogo surface="dark" className="h-[14px] w-auto" />}
+              title="Identity checks"
+              detail={plaidDetail}
+              tone={plaidTone}
+            />
+          </Link>
         )}
-        <div className="flex flex-1 items-center gap-3 px-6 py-4">
+        <a href={href} className="flex flex-1 items-center gap-3 px-6 py-4">
           <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/[0.04]">
             <ShieldCheck className="h-[18px] w-[18px] text-primary" />
           </span>
@@ -132,9 +145,9 @@ export const TrustStrip = ({
               Funds held until the deal is confirmed
             </p>
           </div>
-        </div>
+        </a>
       </div>
-    </motion.a>
+    </motion.div>
   );
 };
 
