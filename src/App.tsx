@@ -165,7 +165,6 @@ const Payments = lazy(() => import("./pages/Payments"));
 const Rentals = lazy(() => import("./pages/Rentals"));
 const EnterpriseOnboarding = lazy(() => import("./pages/EnterpriseOnboarding"));
 const HostBookings = lazy(() => import("./pages/HostBookings"));
-import DimQA from "./pages/__DimQA";
 const HostListings = lazy(() => import("./pages/HostListings"));
 const HostReporting = lazy(() => import("./pages/HostReporting"));
 const HostAnalytics = lazy(() => import("./pages/HostAnalytics"));
@@ -260,7 +259,6 @@ const AnimatedRoutes = () => {
           <Route path="/sale/:transactionId/protection" element={<PageTransition><ProtectedSalePage /></PageTransition>} />
           <Route path="/transaction/:transactionId" element={<PageTransition><TransactionDetail /></PageTransition>} />
           <Route path="/host/bookings" element={<PageTransition><HostBookings /></PageTransition>} />
-          <Route path="/__dimqa" element={<DimQA />} />
           <Route path="/host/listings" element={<PageTransition><HostListings /></PageTransition>} />
           <Route path="/host/reporting" element={<PageTransition><HostReporting /></PageTransition>} />
           <Route path="/host/analytics" element={<PageTransition><HostAnalytics /></PageTransition>} />
