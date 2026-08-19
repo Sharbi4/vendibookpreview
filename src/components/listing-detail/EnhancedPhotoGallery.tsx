@@ -160,11 +160,27 @@ const EnhancedPhotoGallery = ({ images, videos = [], title }: EnhancedPhotoGalle
   };
 
   const totalMedia = displayItems.length;
+  // Fill the desktop mosaic even when a listing has fewer than five media items.
+  const heroSpanClass =
+    totalMedia === 1
+      ? 'col-span-4 row-span-2'
+      : totalMedia === 2
+        ? 'col-span-3 row-span-2'
+        : 'col-span-2 row-span-2';
+  const secondarySpanClasses: string[] =
+    totalMedia === 2
+      ? ['col-span-1 row-span-2']
+      : totalMedia === 3
+        ? ['col-span-2 row-span-1', 'col-span-2 row-span-1']
+        : totalMedia === 4
+          ? ['col-span-1 row-span-1', 'col-span-1 row-span-1', 'col-span-2 row-span-1']
+          : ['', '', '', ''];
   const hasMultipleMedia = totalMedia > 1;
 
   return (
     <>
       <div className="relative rounded-[18px] p-[2px] bg-gradient-to-br from-[hsl(14,100%,55%)] via-[hsl(25,95%,53%)]/40 to-[hsl(40,100%,49%)]/60">
+      {/* Mosaic spans adapt so short galleries never leave empty tiles */}
       <motion.div 
         className="relative rounded-2xl overflow-hidden bg-background"
         initial={{ opacity: 0, y: 20 }}
@@ -174,7 +190,7 @@ const EnhancedPhotoGallery = ({ images, videos = [], title }: EnhancedPhotoGalle
         {/* Desktop: Mosaic Grid */}
         <div className="hidden md:grid md:grid-cols-4 md:grid-rows-2 gap-2 h-[450px]">
           <motion.div 
-            className="col-span-2 row-span-2 relative cursor-pointer overflow-hidden"
+            className={`${heroSpanClass} relative cursor-pointer overflow-hidden`}
             onClick={() => openLightbox(0)}
             onHoverStart={() => setHoveredIndex(0)}
             onHoverEnd={() => setHoveredIndex(null)}
@@ -186,7 +202,7 @@ const EnhancedPhotoGallery = ({ images, videos = [], title }: EnhancedPhotoGalle
           {displayItems.slice(1, 5).map((item, idx) => (
             <motion.div 
               key={idx}
-              className="relative cursor-pointer overflow-hidden"
+              className={`${secondarySpanClasses[idx] || ''} relative cursor-pointer overflow-hidden`}
               onClick={() => openLightbox(idx + 1)}
               onHoverStart={() => setHoveredIndex(idx + 1)}
               onHoverEnd={() => setHoveredIndex(null)}

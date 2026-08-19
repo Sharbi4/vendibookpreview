@@ -6,9 +6,6 @@ import {
   Share2,
   Star,
   Edit,
-  Truck,
-  Package,
-  EyeOff,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -28,7 +25,7 @@ import { SaleQuickSpecs } from './SaleQuickSpecs';
 import { SaleFeaturesGrid } from './SaleFeaturesGrid';
 import { SalePurchaseCard } from './SalePurchaseCard';
 import { SaleStickyActionBar } from './SaleStickyActionBar';
-import { SaleLocationCard, SaleProtectionSection } from './SaleSharedSections';
+import { SaleLocationCard } from './SaleSharedSections';
 
 interface SaleListingLayoutProps {
   listing: any;
@@ -69,10 +66,6 @@ export const SaleListingLayout = ({
   const locationShort = [listing.city, listing.state].filter(Boolean).join(', ');
   const featured = isListingFeatured(listing);
   const condition = conditionLabel(listing.condition);
-  const fulfillmentType = listing.fulfillment_type || 'pickup';
-  const offersPickup =
-    fulfillmentType === 'pickup' || fulfillmentType === 'on_site' || fulfillmentType === 'both';
-  const sellerDelivers = fulfillmentType === 'delivery' || fulfillmentType === 'both';
   const freightEnabled = Boolean(listing.vendibook_freight_enabled);
 
   return (
@@ -82,7 +75,7 @@ export const SaleListingLayout = ({
         <EnhancedPhotoGallery images={images} videos={videos} title={listing.title} />
       </div>
 
-      <div className="container pt-5 pb-28 lg:pb-20">
+      <div className="container pt-5 pb-40 md:pb-32 lg:pb-20">
         {/* Breadcrumb + utilities */}
         <div className="flex items-center justify-between gap-3 mb-3">
           <nav className="flex items-center gap-1 text-xs text-muted-foreground min-w-0">
@@ -186,6 +179,7 @@ export const SaleListingLayout = ({
             isOwner={isOwner}
             sellerVerified={sellerVerified}
             ratingData={ratingData}
+            instanceId="mobile"
           />
         </div>
 
@@ -198,7 +192,7 @@ export const SaleListingLayout = ({
             <SaleCard padding="lg" className="space-y-3">
               <div className="flex items-center justify-between gap-2 flex-wrap">
                 <h2 className="text-lg font-semibold">About this listing</h2>
-                <PromoVideoPlayer listingId={listing.id} />
+                {isOwner && <PromoVideoPlayer listingId={listing.id} />}
               </div>
               <AudioListingPlayer listingId={listing.id} />
               <CollapsibleDescription description={listing.description} />
@@ -216,50 +210,6 @@ export const SaleListingLayout = ({
               latitude={listing.latitude}
               longitude={listing.longitude}
             />
-
-            {/* Pickup & delivery summary — explanation only, no pricing/CTAs */}
-            <SaleCard padding="lg" className="space-y-3">
-              <h2 className="text-lg font-semibold">Pickup &amp; delivery</h2>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                {offersPickup && (
-                  <li className="flex items-start gap-2">
-                    <MapPin className="h-4 w-4 mt-0.5 shrink-0 text-muted-foreground" />
-                    <span>
-                      Buyer pickup from {locationShort || 'the seller’s area'}. You and the seller
-                      coordinate the pickup time after checkout.
-                    </span>
-                  </li>
-                )}
-                {sellerDelivers && (
-                  <li className="flex items-start gap-2">
-                    <Truck className="h-4 w-4 mt-0.5 shrink-0 text-muted-foreground" />
-                    <span>
-                      The seller delivers locally. Use the delivery check in the purchase card to
-                      confirm your area before you buy.
-                    </span>
-                  </li>
-                )}
-                {freightEnabled && (
-                  <li className="flex items-start gap-2">
-                    <Package className="h-4 w-4 mt-0.5 shrink-0 text-muted-foreground" />
-                    <span>
-                      Nationwide freight is available to the 48 contiguous states, quoted by
-                      distance at checkout.
-                    </span>
-                  </li>
-                )}
-                <li className="flex items-start gap-2">
-                  <EyeOff className="h-4 w-4 mt-0.5 shrink-0 text-muted-foreground" />
-                  <span>
-                    The exact street address and handoff instructions are shared once your purchase
-                    is confirmed.
-                  </span>
-                </li>
-              </ul>
-            </SaleCard>
-
-            {/* Purchase confidence */}
-            <SaleProtectionSection />
 
             {/* Reviews */}
             <SaleCard padding="lg" className="space-y-2">
@@ -280,7 +230,7 @@ export const SaleListingLayout = ({
 
           {/* Right: single sticky purchase card */}
           <div id="booking-widget" className="hidden lg:block">
-            <div className="sticky top-24">
+            <div className="sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto pb-2 no-scrollbar">
               <SalePurchaseCard
                 listing={listing}
                 host={host}
