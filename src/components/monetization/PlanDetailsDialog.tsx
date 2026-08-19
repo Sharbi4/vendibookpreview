@@ -7,9 +7,10 @@
  */
 import * as React from 'react';
 import { Check } from 'lucide-react';
+import * as DialogPrimitive from '@radix-ui/react-dialog';
+import { X } from 'lucide-react';
 import {
   Dialog,
-  DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
@@ -64,8 +65,10 @@ export function PlanDetailsDialog({
         </button>
       </DialogTrigger>
 
-      <DialogContent
-        className="sale-light max-h-[88vh] max-w-lg overflow-y-auto rounded-3xl border-[rgba(24,20,16,0.09)] bg-[rgba(255,255,255,0.92)] p-6 shadow-[0_1px_2px_rgba(24,20,16,0.05),0_40px_80px_-40px_rgba(24,20,16,0.45)] backdrop-blur-2xl sm:p-8"
+      <DialogPrimitive.Portal>
+      <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-[rgba(24,20,16,0.35)] backdrop-blur-md data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
+      <DialogPrimitive.Content
+        className="fixed left-[50%] top-[50%] z-50 grid w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 border duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 sale-light max-h-[88vh] max-w-lg overflow-y-auto rounded-3xl border-[rgba(24,20,16,0.09)] bg-[rgba(255,255,255,0.92)] p-6 shadow-[0_1px_2px_rgba(24,20,16,0.05),0_40px_80px_-40px_rgba(24,20,16,0.45)] backdrop-blur-2xl sm:p-8"
       >
         <DialogHeader className="text-left">
           <DialogTitle className="text-[20px] font-semibold tracking-tight text-foreground">
@@ -127,7 +130,13 @@ export function PlanDetailsDialog({
         ) : null}
 
         {footer ? <div className="pt-1">{footer}</div> : null}
-      </DialogContent>
+
+        <DialogPrimitive.Close className="absolute right-5 top-5 rounded-full p-1 text-muted-foreground transition-colors hover:text-foreground focus:outline-none">
+          <X className="h-4 w-4" />
+          <span className="sr-only">Close</span>
+        </DialogPrimitive.Close>
+      </DialogPrimitive.Content>
+      </DialogPrimitive.Portal>
     </Dialog>
   );
 }
