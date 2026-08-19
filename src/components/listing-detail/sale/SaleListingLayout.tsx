@@ -70,7 +70,8 @@ export const SaleListingLayout = ({
   const featured = isListingFeatured(listing);
   const condition = conditionLabel(listing.condition);
   const fulfillmentType = listing.fulfillment_type || 'pickup';
-  const offersPickup = fulfillmentType === 'pickup' || fulfillmentType === 'both';
+  const offersPickup =
+    fulfillmentType === 'pickup' || fulfillmentType === 'on_site' || fulfillmentType === 'both';
   const sellerDelivers = fulfillmentType === 'delivery' || fulfillmentType === 'both';
   const freightEnabled = Boolean(listing.vendibook_freight_enabled);
 

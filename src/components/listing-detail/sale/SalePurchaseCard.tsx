@@ -115,7 +115,8 @@ export const SalePurchaseCard = ({
   const priceSale: number | null = listing?.price_sale ?? null;
   const fulfillmentType: string = listing?.fulfillment_type || 'pickup';
   const sellerDelivers = fulfillmentType === 'delivery' || fulfillmentType === 'both';
-  const offersPickup = fulfillmentType === 'pickup' || fulfillmentType === 'both';
+  const offersPickup =
+    fulfillmentType === 'pickup' || fulfillmentType === 'on_site' || fulfillmentType === 'both';
   const freightEnabled = Boolean(listing?.vendibook_freight_enabled);
   const freightPayer = listing?.freight_payer === 'seller' ? 'seller' : 'buyer';
   const radius = Number(listing?.delivery_radius_miles) || 0;
