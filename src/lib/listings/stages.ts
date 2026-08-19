@@ -263,7 +263,22 @@ export interface StageRequirementInput {
   knownProblems: KnownProblem[];
   includedItems: string | null;
   photosExclusionsAnswered: boolean;
+  /** Stored in inches (the wizard collects feet and converts). */
+  lengthInches?: number | null;
+  heightInches?: number | null;
 }
+
+/**
+ * Mobile assets sold on Vendibook must ship with real measurements: buyers
+ * size doors, garages and freight quotes off them. Width stays optional.
+ */
+const DIMENSION_REQUIRED_CATEGORIES: ListingCategory[] = ['food_truck', 'food_trailer'];
+
+export const requiresSaleDimensions = (
+  mode: 'rent' | 'sale',
+  category: ListingCategory,
+): boolean => mode === 'sale' && DIMENSION_REQUIRED_CATEGORIES.includes(category);
+
 
 export interface StageRequirement {
   /** Stable id used to focus/scroll to the exact field. */
@@ -354,6 +369,25 @@ export function getStageRequirements(input: StageRequirementInput): StageRequire
       stage: 'details',
       step: 'details',
     });
+  }
+
+  if (requiresSaleDimensions(input.mode, input.category)) {
+    if (!input.lengthInches || input.lengthInches <= 0) {
+      missing.push({
+        fieldId: 'length_ft',
+        label: 'Enter the overall length in feet',
+        stage: 'details',
+        step: 'details',
+      });
+    }
+    if (!input.heightInches || input.heightInches <= 0) {
+      missing.push({
+        fieldId: 'height_ft',
+        label: 'Enter the overall height in feet',
+        stage: 'details',
+        step: 'details',
+      });
+    }
   }
 
   if (!input.photosExclusionsAnswered) {
