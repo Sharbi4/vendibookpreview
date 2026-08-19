@@ -392,9 +392,8 @@ export const PublishWizard: React.FC = () => {
   const [proofNotaryEnabled, setProofNotaryEnabled] = useState(false);
   const [featuredEnabled, setFeaturedEnabled] = useState(false);
 
-  // ─── Optional Equinox Funding opt-in (any for-sale listing) ───
-  const [equinoxOptIn, setEquinoxOptIn] = useState(false);
-  const [equinoxDisclosureAccepted, setEquinoxDisclosureAccepted] = useState(false);
+  // ─── Buyer financing is automatic on every published for-sale listing ───
+  // (no seller opt-in, no disclosure checkbox)
   // Separate, always-unchecked-by-default consent to put the full VIN/serial on
   // the private, server-generated purchase sheet.
   // VIN / serial lives only in the private listing_ownership_details row.
@@ -403,27 +402,6 @@ export const PublishWizard: React.FC = () => {
   // Seller phone lives on the private profile — never in public listing text.
   const [sellerPhone, setSellerPhone] = useState('');
 
-  const persistFinancingPreference = useCallback(async () => {
-    if (!user || !listing || !isFinanceableSaleListing(listing)) return;
-    try {
-      await supabase
-        .from('listing_financing_preferences')
-        .upsert(
-          {
-            listing_id: listing.id,
-            host_id: user.id,
-            equinox_opt_in: equinoxOptIn,
-            include_vin: equinoxOptIn,
-            disclosure_version: equinoxOptIn ? EQUINOX_DISCLOSURE_VERSION : null,
-            disclosure_accepted_at:
-              equinoxOptIn && equinoxDisclosureAccepted ? new Date().toISOString() : null,
-          },
-          { onConflict: 'listing_id' },
-        );
-    } catch (err) {
-      console.error('Failed to save financing preference', err);
-    }
-  }, [user, listing, equinoxOptIn, equinoxDisclosureAccepted]);
 
   /**
    * VIN / serial is private data: it is stored only on
@@ -503,26 +481,6 @@ export const PublishWizard: React.FC = () => {
     };
   }, [user?.id]);
 
-  useEffect(() => {
-    if (!listing?.id || !isFinanceableSaleListing(listing)) return;
-    let cancelled = false;
-    (async () => {
-      const { data } = await supabase
-        .from('listing_financing_preferences')
-        .select('equinox_opt_in, include_vin, disclosure_version, disclosure_accepted_at')
-        .eq('listing_id', listing.id)
-        .maybeSingle();
-      if (cancelled || !data) return;
-      setEquinoxOptIn(!!data.equinox_opt_in);
-      setEquinoxDisclosureAccepted(
-        !!data.disclosure_accepted_at && data.disclosure_version === EQUINOX_DISCLOSURE_VERSION,
-      );
-    })();
-    return () => {
-      cancelled = true;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [listing?.id]);
 
   // Hydrate the private VIN / serial from the owner-only ownership row.
   useEffect(() => {
@@ -647,8 +605,6 @@ export const PublishWizard: React.FC = () => {
       freightPayer,
       acceptPayPalCheckout,
       acceptCashPayment,
-      equinoxOptIn,
-      equinoxDisclosureAccepted,
       vinSerial,
       vinUnavailable,
       sellerPhone,
@@ -688,8 +644,8 @@ export const PublishWizard: React.FC = () => {
       stageValues, disclosures, attestations, title, description, priceDaily, priceWeekly,
       priceMonthly, priceSale, priceHourly, depositAmount, instantBook, highlights, amenities,
       weightLbs, lengthInches, widthInches, heightInches, totalSlots, slotNames, freightCategory,
-      vendibookFreightEnabled, freightPayer, acceptPayPalCheckout, acceptCashPayment, equinoxOptIn,
-      equinoxDisclosureAccepted, vinSerial, vinUnavailable, sellerPhone, fulfillmentType,
+      vendibookFreightEnabled, freightPayer, acceptPayPalCheckout, acceptCashPayment,
+      vinSerial, vinUnavailable, sellerPhone, fulfillmentType,
       pickupLocationText, address, streetAddress, aptSuite, locCity, locState, locZipCode,
       deliveryFee, deliveryRadiusMiles, deliveryFeeType, pickupInstructions, deliveryInstructions,
       accessInstructions, hoursOfAccess, locationNotes, isStaticLocation, availableFrom, availableTo,
@@ -734,8 +690,6 @@ export const PublishWizard: React.FC = () => {
     apply(cached.freightCategory, setFreightCategory);
     apply(cached.vendibookFreightEnabled, setVendibookFreightEnabled);
     apply(cached.freightPayer, setFreightPayer);
-    apply(cached.equinoxOptIn, setEquinoxOptIn);
-    apply(cached.equinoxDisclosureAccepted, setEquinoxDisclosureAccepted);
     apply(cached.vinSerial, setVinSerial);
     apply(cached.vinUnavailable, setVinUnavailable);
     apply(cached.sellerPhone, setSellerPhone);
@@ -1883,8 +1837,6 @@ export const PublishWizard: React.FC = () => {
             accept_paypal_checkout: acceptPayPalCheckout,
             accept_cash_payment: acceptCashPayment};
 
-          // Optional Equinox opt-in is stored separately so Review can't lose it.
-          await persistFinancingPreference();
           await persistVinSerial();
         } else {
           updateData = {
@@ -2118,8 +2070,6 @@ export const PublishWizard: React.FC = () => {
 
       // Seller phone belongs on the private profile, never on the listing.
       await saveSellerPhone();
-      // Equinox opt-in is stored separately — re-upsert so Review can't discard it.
-      await persistFinancingPreference();
       await persistVinSerial();
 
       const baseUpdateData: any = {
@@ -3461,69 +3411,22 @@ export const PublishWizard: React.FC = () => {
                         </div>
                       </div>
 
-                      {/* Optional buyer financing — Equinox Funding */}
-                      {isFinanceableSaleListing(listing) && (
+                      {/* Buyer financing — included on every published for-sale listing */}
+                      {isFinanceableSaleListing({ ...listing, status: 'published' }) && (
                         <div className="pt-6 border-t">
-                          <div className="flex items-center gap-2 mb-4">
+                          <div className="flex items-center gap-2 mb-3">
                             <EquinoxFundingLogo className="h-6 w-auto" />
-                            <h3 className="text-lg font-semibold">Buyer financing (optional)</h3>
+                            <h3 className="text-lg font-semibold">Buyer financing included</h3>
                           </div>
-                          <div className="rounded-lg border border-border bg-card p-4 space-y-3">
-                            <div className="flex items-start space-x-3">
-                              <Checkbox
-                                id="equinox_opt_in"
-                                checked={equinoxOptIn}
-                                onCheckedChange={(checked) => {
-                                  const next = !!checked;
-                                  setEquinoxOptIn(next);
-                                  if (!next) setEquinoxDisclosureAccepted(false);
-                                }}
-                                className="mt-0.5"
-                              />
-                              <div className="flex-1">
-                                <Label
-                                  htmlFor="equinox_opt_in"
-                                  className="flex items-center gap-2 text-base font-medium cursor-pointer"
-                                >
-                                  Let buyers apply for financing with
-                                  <EquinoxFundingLogo className="h-4 w-auto" />
-                                </Label>
-                                <p className="text-sm text-muted-foreground mt-1">
-                                  Buyers can request an equipment loan through Equinox Funding instead of
-                                  paying the full amount upfront. This is optional and never required to
-                                  publish your listing.
-                                </p>
-                              </div>
-                            </div>
-
-                            {equinoxOptIn && (
-                              <div className="rounded-md border border-border bg-muted/40 p-3 space-y-3">
-                                <p className="text-xs leading-relaxed text-muted-foreground">
-                                  {EQUINOX_DISCLOSURE_TEXT}
-                                </p>
-                                <div className="flex items-start space-x-3">
-                                  <Checkbox
-                                    id="equinox_disclosure"
-                                    checked={equinoxDisclosureAccepted}
-                                    onCheckedChange={(checked) => setEquinoxDisclosureAccepted(!!checked)}
-                                    className="mt-0.5"
-                                  />
-                                  <Label
-                                    htmlFor="equinox_disclosure"
-                                    className="text-sm font-medium cursor-pointer"
-                                  >
-                                    I have read and accept this financing disclosure.
-                                  </Label>
-                                </div>
-                                {isTitledSaleCategory(listing) && (
-                                  <p className="text-xs text-muted-foreground">
-                                    If you provided a VIN / serial number, it stays off your public
-                                    listing but is printed on the financing purchase sheet the buyer
-                                    and lender receive.
-                                  </p>
-                                )}
-                              </div>
-                            )}
+                          <div className="rounded-xl border border-border bg-card p-4 space-y-2">
+                            <p className="text-sm text-muted-foreground">
+                              Buyers can apply for equipment financing through Equinox Funding on
+                              every published for-sale listing. Nothing to turn on, and it never
+                              changes how you get paid.
+                            </p>
+                            <p className="text-xs leading-relaxed text-muted-foreground">
+                              {EQUINOX_DISCLOSURE_TEXT}
+                            </p>
                           </div>
                         </div>
                       )}
@@ -3807,7 +3710,6 @@ export const PublishWizard: React.FC = () => {
                             ? ([
                                 !isValidPrice(priceSale) && 'An asking price',
                                 !acceptPayPalCheckout && !acceptCashPayment && 'At least one way to get paid',
-                                equinoxOptIn && !equinoxDisclosureAccepted && 'Accept the financing disclosure',
                               ].filter(Boolean) as string[])
                             : ([!isValidPrice(priceDaily) && 'A daily rate'].filter(Boolean) as string[]),
                           null,
@@ -3820,7 +3722,6 @@ export const PublishWizard: React.FC = () => {
                           ? ([
                               !isValidPrice(priceSale) && 'An asking price',
                               !acceptPayPalCheckout && !acceptCashPayment && 'At least one way to get paid',
-                              equinoxOptIn && !equinoxDisclosureAccepted && 'Accept the financing disclosure',
                             ].filter(Boolean) as string[])
                           : ([!isValidPrice(priceDaily) && 'A daily rate'].filter(Boolean) as string[])
                       }
