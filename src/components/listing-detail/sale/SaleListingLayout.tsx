@@ -6,9 +6,6 @@ import {
   Share2,
   Star,
   Edit,
-  Truck,
-  Package,
-  EyeOff,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -28,7 +25,7 @@ import { SaleQuickSpecs } from './SaleQuickSpecs';
 import { SaleFeaturesGrid } from './SaleFeaturesGrid';
 import { SalePurchaseCard } from './SalePurchaseCard';
 import { SaleStickyActionBar } from './SaleStickyActionBar';
-import { SaleLocationCard, SaleProtectionSection } from './SaleSharedSections';
+import { SaleLocationCard } from './SaleSharedSections';
 
 interface SaleListingLayoutProps {
   listing: any;
@@ -70,9 +67,6 @@ export const SaleListingLayout = ({
   const featured = isListingFeatured(listing);
   const condition = conditionLabel(listing.condition);
   const fulfillmentType = listing.fulfillment_type || 'pickup';
-  const offersPickup =
-    fulfillmentType === 'pickup' || fulfillmentType === 'on_site' || fulfillmentType === 'both';
-  const sellerDelivers = fulfillmentType === 'delivery' || fulfillmentType === 'both';
   const freightEnabled = Boolean(listing.vendibook_freight_enabled);
 
   return (
