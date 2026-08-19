@@ -1,4 +1,6 @@
 import { useState, useMemo } from 'react';
+import { useCatalogPrice } from '@/hooks/useCatalogPrices';
+import { ACTIVE_PRODUCT_SLUGS } from '@/lib/monetization/catalogPricing';
 import { Megaphone, Share2, TrendingUp, CheckCircle2, Loader2, Copy, Star, Facebook, Search as GoogleIcon, Instagram, Mail, Zap } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -74,6 +76,7 @@ function calcSeoScore(listing: any): SeoScore {
 }
 
 export const PromotionHub = () => {
+  const boostPrice = useCatalogPrice(ACTIVE_PRODUCT_SLUGS.featuredBoost);
   const { listings } = useHostListings();
   const published = listings.filter((l) => l.status === 'published');
   const [selectedId, setSelectedId] = useState<string>('');
@@ -170,7 +173,7 @@ export const PromotionHub = () => {
               </div>
               <h3 className="text-lg font-bold text-foreground">Top of search for 30 days</h3>
               <p className="text-sm text-muted-foreground mt-1">
-                $49 one-time. Pin to top of category, glow in cards, weekly performance email.
+                {boostPrice.label} one-time. Pin to top of category, glow in cards, weekly performance email.
               </p>
               <p className="text-xs text-muted-foreground/80 mt-1.5">
                 Extending stacks — you never lose remaining days. Rotates fairly with other Featured
@@ -186,7 +189,7 @@ export const PromotionHub = () => {
                 }}
               >
                 <Zap className="h-4 w-4 mr-1.5" />
-                {selected?.featured_enabled ? 'Active — extend (adds 30 days)' : 'Activate $49 boost'}
+                {selected?.featured_enabled ? 'Active — extend (adds 30 days)' : `Activate ${boostPrice.label} boost`}
               </Button>
             </div>
           </Card>

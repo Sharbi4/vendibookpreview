@@ -12,6 +12,9 @@ import { Button } from '@/components/ui/button';
 import { PayPalMonogram } from '@/components/brand/ProviderLogos';
 import PayPalPaymentPanel from '@/components/checkout/PayPalPaymentPanel';
 import { useProBoostCredit, useRedeemProBoostCredit } from '@/hooks/useProBoostCredit';
+import { useCatalogPrice } from '@/hooks/useCatalogPrices';
+import { ACTIVE_PRODUCT_SLUGS } from '@/lib/monetization/catalogPricing';
+import { formatUsd } from '@/lib/monetization/products';
 import { toast } from 'sonner';
 import BoostPaymentStatus, {
   useBoostActivation,
@@ -61,6 +64,9 @@ export const FeaturedListingModal = ({
   const queryClient = useQueryClient();
   const { data: boostCredit } = useProBoostCredit();
   const redeemCredit = useRedeemProBoostCredit();
+  // Price, cadence and PayPal amount all come from the catalog row we charge.
+  const boostPrice = useCatalogPrice(ACTIVE_PRODUCT_SLUGS.featuredBoost);
+  const durationLabel = boostPrice.durationDays ? `${boostPrice.durationDays} days` : 'one-time';
 
   // Reset the flow whenever the modal is dismissed.
   useEffect(() => {
@@ -122,7 +128,7 @@ export const FeaturedListingModal = ({
                       <Flame className="h-5 w-5 text-[hsl(14,100%,62%)]" />
                     </div>
                     <span className="text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-                      Featured boost · 30 days
+                      Featured boost · {durationLabel}
                     </span>
                   </div>
                   <DialogTitle className="text-2xl font-semibold tracking-tight">
@@ -159,7 +165,9 @@ export const FeaturedListingModal = ({
                       <span className="text-xs uppercase tracking-[0.16em] text-[hsl(14,100%,72%)]">
                         Vendibook Pro · included this month
                       </span>
-                      <span className="text-2xl font-semibold tracking-tight text-foreground">$0</span>
+                      <span className="text-2xl font-semibold tracking-tight text-foreground">
+                        $0 <span className="text-xs font-normal text-muted-foreground">Included</span>
+                      </span>
                     </div>
                     <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
                       Your membership includes one Featured Boost each billing period. This credit
@@ -198,10 +206,10 @@ export const FeaturedListingModal = ({
                 <div className="mt-5 rounded-2xl border border-white/10 bg-white/[0.03] p-4">
                   <div className="flex items-baseline justify-between">
                     <span className="text-xs uppercase tracking-[0.16em] text-muted-foreground">
-                      {boostCredit ? 'Or pay once · 30 days' : 'One-time · 30 days'}
+                      {boostCredit ? `Or pay once · ${durationLabel}` : `One-time · ${durationLabel}`}
                     </span>
                     <span className="text-3xl font-semibold tracking-tight text-foreground">
-                      $49
+                      {boostPrice.label}
                     </span>
                   </div>
 
@@ -230,8 +238,8 @@ export const FeaturedListingModal = ({
 
       {open && step === 'pay' ? (
         <PayPalPaymentPanel
-          target={{ kind: 'product', slug: 'boost-featured-30', listing_id: listingId }}
-          totalUsd={49}
+          target={{ kind: 'product', slug: ACTIVE_PRODUCT_SLUGS.featuredBoost, listing_id: listingId }}
+          totalUsd={boostPrice.amountUsd}
           onClose={() => setStep('overview')}
           onSuccess={(result) => {
             setStage(result.pending ? 'review' : 'authorized');
@@ -246,9 +254,11 @@ export const FeaturedListingModal = ({
               >
                 <ArrowLeft className="h-3 w-3" /> Back to boost details
               </button>
-              <p className="text-sm font-medium">Featured Boost — 30 days</p>
+              <p className="text-sm font-medium">
+                {boostPrice.name ?? `Featured Boost — ${durationLabel}`}
+              </p>
               <p className="text-xs text-muted-foreground">{listingTitle}</p>
-              <p className="text-lg font-semibold">$49.00</p>
+              <p className="text-lg font-semibold">{formatUsd(boostPrice.cents)}</p>
             </div>
           }
         />

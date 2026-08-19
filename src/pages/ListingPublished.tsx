@@ -374,7 +374,7 @@ const ListingPublished: React.FC = () => {
             Optional extras — publishing is always free.
           </p>
           {isPublished && !featuredActive && !featuredPaid && (
-            <FeatureThisListingCTA listingId={listingId} priceLabel="$49 for 30 days" />
+            <FeatureThisListingCTA listingId={listingId} />
           )}
           <PromoteListingPanel listingId={listingId} />
         </section>

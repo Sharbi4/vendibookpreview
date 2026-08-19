@@ -34,6 +34,8 @@ import {
   useListingBoostHistory,
   type BoostHistoryEntry,
 } from '@/hooks/useListingBoostHistory';
+import { useCatalogPrice } from '@/hooks/useCatalogPrices';
+import { ACTIVE_PRODUCT_SLUGS } from '@/lib/monetization/catalogPricing';
 
 interface PromoteListingModalProps {
   open: boolean;
@@ -43,7 +45,6 @@ interface PromoteListingModalProps {
 }
 
 const BOOST_DURATION_DAYS = 30;
-const BOOST_PRICE_USD = 49;
 const MAX_SCHEDULE_DAYS = 60;
 
 const benefits = [
@@ -87,6 +88,7 @@ export const PromoteListingModal = ({
   listingTitle,
 }: PromoteListingModalProps) => {
   const { toast } = useToast();
+  const boostPrice = useCatalogPrice(ACTIVE_PRODUCT_SLUGS.featuredBoost);
   const { data, isLoading: historyLoading } = useListingBoostHistory(
     open ? listingId : null,
   );
@@ -125,7 +127,7 @@ export const PromoteListingModal = ({
   const handleCheckout = async () => {
     setIsSubmitting(true);
     try {
-      const resp = { url: productCheckoutUrl('boost-featured-30', listingId) };
+      const resp = { url: productCheckoutUrl(ACTIVE_PRODUCT_SLUGS.featuredBoost, listingId) };
       const popup = window.open(resp.url as string, '_blank');
       if (!popup || popup.closed) {
         toast({
@@ -283,7 +285,7 @@ export const PromoteListingModal = ({
                   </p>
                 </div>
                 <span className="text-2xl font-bold text-foreground">
-                  ${BOOST_PRICE_USD}
+                  {boostPrice.label}
                 </span>
               </div>
               <Button

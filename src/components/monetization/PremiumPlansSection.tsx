@@ -8,7 +8,6 @@ import { cn } from '@/lib/utils';
 import PremiumTierCard from './PremiumTierCard';
 import PlansComparisonTable from './PlansComparisonTable';
 import PlansFAQ from './PlansFAQ';
-import ProWeeklyPassCard from './ProWeeklyPassCard';
 import { TrustESignChip } from '@/components/trust/TrustESignChip';
 import { TIER_CATALOG, type TierRole } from './tierCatalog';
 import { useAuth } from '@/contexts/AuthContext';
@@ -26,11 +25,11 @@ interface TierRow {
   base?: string;
 }
 
+// Only the ACTIVE catalog may appear in new-purchase UI. Retired
+// Starter / Growth / Operator / Weekly Pass tiers are intentionally gone.
 const TIER_MAP: TierRow[] = [
   { role: 'free' },
-  { role: 'starter', base: 'host_starter' },
-  { role: 'pro', base: 'host_growth' },
-  { role: 'premium', base: 'host_operator' },
+  { role: 'pro', base: 'vendibook_pro' },
 ];
 
 function pair(products: MonetizationProduct[], base: string) {
@@ -244,7 +243,6 @@ export function PremiumPlansSection({ compact = false, successPathOverride, canc
           </section>
 
           {/* WEEKLY PASS — non-renewing 7-day Pro trial */}
-          <ProWeeklyPassCard />
 
           {/* COMPARISON */}
           <section className="mt-10">

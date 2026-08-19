@@ -7,6 +7,7 @@ import { useListingQuota } from '@/hooks/useListingQuota';
 import { useMonetizationProducts } from '@/hooks/useMonetizationProducts';
 import { useSubscriptionConsent } from '@/hooks/useSubscriptionConsent';
 import { supabase } from '@/integrations/supabase/client';
+import { ACTIVE_PRODUCT_SLUGS } from '@/lib/monetization/catalogPricing';
 import { Button } from '@/components/ui/button';
 import { MiniPlansComparison } from '@/components/monetization/MiniPlansComparison';
 
@@ -59,9 +60,9 @@ export const MembershipInlinePanel: React.FC<MembershipInlinePanelProps> = ({ re
     };
   }, [dismissed, user]);
 
-  // Recommended plan matches the "Recommended" column in MiniPlansComparison ($89/mo Growth).
+  // Recommended plan is the active membership in the catalog (Vendibook Pro).
   const growthProduct = useMemo(
-    () => products.find((p) => p.slug === 'host_growth') ?? null,
+    () => products.find((p) => p.slug === ACTIVE_PRODUCT_SLUGS.vendibookPro) ?? null,
     [products],
   );
 

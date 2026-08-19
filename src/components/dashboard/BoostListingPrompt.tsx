@@ -14,6 +14,8 @@ import { PayPalMonogram } from '@/components/brand/ProviderLogos';
 import { useToast } from '@/hooks/use-toast';
 import { isListingFeatured } from '@/lib/featured';
 import { reportError } from '@/lib/errorReporter';
+import { useCatalogPrice } from '@/hooks/useCatalogPrices';
+import { ACTIVE_PRODUCT_SLUGS } from '@/lib/monetization/catalogPricing';
 
 interface BoostCandidate {
   id: string;
@@ -58,6 +60,8 @@ const perks = [
  * listing as the boost target. Dismissal is persisted per-user for 7 days.
  */
 export const BoostListingPrompt = ({ listings, userId }: BoostListingPromptProps) => {
+  const boostPrice = useCatalogPrice(ACTIVE_PRODUCT_SLUGS.featuredBoost);
+  const durationLabel = boostPrice.durationDays ? `${boostPrice.durationDays} days` : 'one-time';
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
@@ -102,7 +106,7 @@ export const BoostListingPrompt = ({ listings, userId }: BoostListingPromptProps
     if (!candidate) return;
     setIsLoading(true);
     try {
-      const data = { url: productCheckoutUrl('boost-featured-30', candidate.id) };
+      const data = { url: productCheckoutUrl(ACTIVE_PRODUCT_SLUGS.featuredBoost, candidate.id) };
       const popup = window.open(data.url, '_blank');
       if (!popup || popup.closed) {
         toast({
@@ -153,7 +157,7 @@ export const BoostListingPrompt = ({ listings, userId }: BoostListingPromptProps
                 <Flame className="h-5 w-5 text-[hsl(14,100%,62%)]" />
               </div>
               <span className="text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-                Featured boost · 30 days
+                Featured boost · {durationLabel}
               </span>
             </div>
             <DialogTitle className="text-2xl font-semibold tracking-tight">
@@ -187,9 +191,9 @@ export const BoostListingPrompt = ({ listings, userId }: BoostListingPromptProps
           <div className="mt-5 rounded-2xl border border-white/10 bg-white/[0.03] p-4">
             <div className="flex items-baseline justify-between">
               <span className="text-xs uppercase tracking-[0.16em] text-muted-foreground">
-                One-time · 30 days
+                One-time · {durationLabel}
               </span>
-              <span className="text-3xl font-semibold tracking-tight text-foreground">$49</span>
+              <span className="text-3xl font-semibold tracking-tight text-foreground">{boostPrice.label}</span>
             </div>
 
             <Button

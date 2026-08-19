@@ -1,4 +1,6 @@
 import { Link } from 'react-router-dom';
+import { useCatalogPrice } from '@/hooks/useCatalogPrices';
+import { ACTIVE_PRODUCT_SLUGS } from '@/lib/monetization/catalogPricing';
 import { Crown, Percent, TrendingUp, Wrench, ArrowRight } from 'lucide-react';
 import { useHostEntitlements } from '@/hooks/useHostEntitlements';
 
@@ -47,7 +49,7 @@ const PremiumSpotlight = () => {
             </ul>
 
             <p className="mt-4 text-[13px] text-[rgb(var(--dash-text-2))]">
-              from <span className="font-semibold text-[rgb(var(--dash-text-1))]">$39/mo</span>
+              from <span className="font-semibold text-[rgb(var(--dash-text-1))]">{proPrice.labelWithCadence}</span>
             </p>
           </div>
 

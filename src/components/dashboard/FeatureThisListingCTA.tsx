@@ -4,10 +4,12 @@ import { Loader2, TrendingUp, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useCatalogPrice } from '@/hooks/useCatalogPrices';
+import { ACTIVE_PRODUCT_SLUGS } from '@/lib/monetization/catalogPricing';
 
 interface Props {
   listingId: string;
-  /** Optional display price, e.g. "$29". Falls back to generic copy when omitted. */
+  /** Optional display price override. Defaults to the live catalog price. */
   priceLabel?: string;
 }
 
@@ -25,6 +27,9 @@ interface Props {
  */
 export const FeatureThisListingCTA: React.FC<Props> = ({ listingId, priceLabel }) => {
   const { toast } = useToast();
+  const boostPrice = useCatalogPrice(ACTIVE_PRODUCT_SLUGS.featuredBoost);
+  const durationDays = boostPrice.durationDays ?? 30;
+  const displayPrice = priceLabel ?? `${boostPrice.label} for ${durationDays} days`;
   const dismissKey = `vb:feature-cta-dismissed:${listingId}`;
   const [dismissed, setDismissed] = useState<boolean>(() => {
     if (typeof window === 'undefined') return false;
@@ -42,7 +47,7 @@ export const FeatureThisListingCTA: React.FC<Props> = ({ listingId, priceLabel }
   const handleFeature = async () => {
     setBusy(true);
     try {
-      const url = productCheckoutUrl('boost-featured-30', listingId);
+      const url = productCheckoutUrl(ACTIVE_PRODUCT_SLUGS.featuredBoost, listingId);
       window.location.href = url;
     } catch (e) {
       toast({
@@ -62,8 +67,7 @@ export const FeatureThisListingCTA: React.FC<Props> = ({ listingId, priceLabel }
           Want more eyes on it? Feature this listing.
         </p>
         <p className="text-xs text-muted-foreground">
-          Pinned to the top of search and category pages for 30 days
-          {priceLabel ? ` — ${priceLabel}` : ''}.
+          Pinned to the top of search and category pages for {durationDays} days — {displayPrice}.
         </p>
       </div>
       <div className="flex items-center gap-2">
@@ -71,7 +75,7 @@ export const FeatureThisListingCTA: React.FC<Props> = ({ listingId, priceLabel }
           Not now
         </Button>
         <Button size="sm" onClick={handleFeature} disabled={busy}>
-          {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Feature for 30 days'}
+          {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : `Feature for ${durationDays} days`}
         </Button>
         <button
           type="button"
