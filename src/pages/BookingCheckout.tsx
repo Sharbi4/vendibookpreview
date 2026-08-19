@@ -70,6 +70,7 @@ import { trackLeadEvent } from '@/lib/leadTracking';
 import { detectAvailabilityConflict } from '@/lib/availabilityConflict';
 import { ReferralCodeField } from '@/components/referrals/ReferralCodeField';
 import { getPublicDisplayName } from '@/lib/displayName';
+import { useSellerVerifiedBadge } from '@/hooks/useSellerVerifiedBadge';
 
 type FulfillmentSelection = 'pickup' | 'delivery' | 'on_site';
 
