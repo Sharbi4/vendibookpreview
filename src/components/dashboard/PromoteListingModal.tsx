@@ -43,7 +43,7 @@ interface PromoteListingModalProps {
 }
 
 const BOOST_DURATION_DAYS = 30;
-const BOOST_PRICE_USD = 30;
+const BOOST_PRICE_USD = 49;
 const MAX_SCHEDULE_DAYS = 60;
 
 const benefits = [
