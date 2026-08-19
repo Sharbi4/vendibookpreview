@@ -56,7 +56,7 @@ export function resolveTierFromSub(raw: string | null | undefined): Tier {
   const k = raw.toLowerCase().replace(/_annual$/, '').replace(/_monthly$/, '');
   if (k === 'starter' || k === 'seller_plus' || k === 'seller-plus' || k === 'host_starter' || k === 'host-starter') return 'starter';
   // `host_pro` is a legacy alias from before the catalog was renamed to host_growth.
-  if (k === 'pro' || k === 'host_pro' || k === 'host-pro' || k === 'host_growth' || k === 'host-growth') return 'pro';
+  if (k === 'pro' || k === 'vendibook_pro' || k === 'vendibook-pro' || k === 'host_pro' || k === 'host-pro' || k === 'host_growth' || k === 'host-growth') return 'pro';
   if (k === 'premium' || k === 'host_operator' || k === 'host-operator') return 'premium';
   return 'free';
 }

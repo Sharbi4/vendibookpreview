@@ -40,6 +40,10 @@ export function resolveTier(raw: string | null | undefined): { tier: HostTier; l
     case 'host_pro':
     case 'host-pro':
       return { tier: 'pro', label: 'Pro' };
+    // 2026 catalog
+    case 'vendibook_pro':
+    case 'vendibook-pro':
+      return { tier: 'pro', label: 'Vendibook Pro' };
     // New catalog
     case 'seller_plus':
     case 'seller-plus':

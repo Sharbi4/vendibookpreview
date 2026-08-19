@@ -31,8 +31,13 @@ const UNLOCK_SLUG_TO_TOOL: Record<string, ToolSlug> = {
 
 function tierFromSlug(slug: string): HostTier | undefined {
   const s = slug.toLowerCase();
+  // Listing-scoped upgrades (e.g. pro_listing_30) never grant an account tier.
+  if (s.includes('listing')) return undefined;
   if (s.includes('operator') || s.includes('premium')) return 'premium';
-  if (s.includes('growth') || s === 'pro' || s.startsWith('pro_') || s.startsWith('pro-')) return 'pro';
+  if (
+    s.includes('growth') || s === 'pro' || s.startsWith('pro_') || s.startsWith('pro-') ||
+    s === 'vendibook_pro' || s.endsWith('_pro')
+  ) return 'pro';
   if (s.includes('starter')) return 'starter';
   return undefined;
 }
