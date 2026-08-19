@@ -1,3 +1,4 @@
+import { inchesToFeet, feetToInches, formatDimensionSummary } from '@/lib/listings/dimensions';
 import { productCheckoutUrl, hostedCheckoutUrl } from '@/lib/payments/hostedCheckout';
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate, useParams, useSearchParams, Link } from 'react-router-dom';
