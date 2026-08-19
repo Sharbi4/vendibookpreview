@@ -144,6 +144,8 @@ const PermitPath = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const permitAccess = usePermitPathAccess();
+  const [plusUpsellOpen, setPlusUpsellOpen] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
   const [isLoading, setIsLoading] = useState(false);
   const [form, setForm] = useState({ city: '', state: '', businessType: 'food_truck' });
