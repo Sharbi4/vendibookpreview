@@ -148,7 +148,7 @@ serve(async (req) => {
     const unsubFor = (email: string) =>
       `${supabaseUrl}/functions/v1/marketing-unsubscribe?e=${encodeURIComponent(email)}`;
     const ctaFor = (t: Target) =>
-      t.titles.length > 1 ? `${SITE}/dashboard/listings` : `${SITE}/dashboard/listings`;
+      `${SITE}/host/listings`;
 
     if (mode === "preview_count") {
       return json({
