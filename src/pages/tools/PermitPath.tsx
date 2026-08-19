@@ -280,7 +280,7 @@ const PermitPath = () => {
         navigate(`/dashboard?view=host&tab=permits&roadmap=${saved.id}`);
       }
     })();
-  }, [user, searchParams, persistSaveNew, navigate, setSearchParams]);
+  }, [user, permitAccess.isPlus, permitAccess.isLoading, searchParams, persistSaveNew, navigate, setSearchParams]);
 
 
   const updateField = <K extends keyof typeof form>(key: K, value: string) => {
@@ -692,6 +692,11 @@ const PermitPath = () => {
         }}
       />
 
+      <PermitPlusUpsellDialog
+        open={plusUpsellOpen}
+        onOpenChange={setPlusUpsellOpen}
+        returnPath="/tools/permitpath"
+      />
     </>
   );
 };
