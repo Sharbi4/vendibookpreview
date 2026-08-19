@@ -61,9 +61,23 @@ export const TrustStrip = ({
       ? 'live'
       : 'idle';
 
+  // Live, server-derived identity state for the signed-in seller.
+  const { user } = useAuth();
+  const { verified, loading: badgeLoading } = useSellerVerifiedBadge(user?.id);
+
+  const plaidDetail = !user
+    ? 'Powered by Plaid*'
+    : badgeLoading
+      ? 'Checking your verification…'
+      : verified
+        ? 'Your identity is verified'
+        : 'Verify your identity with Plaid';
+
+  const plaidTone: RailTone = verified ? 'live' : 'idle';
+  const plaidHref = verified ? '/account' : user ? '/verify-identity' : '/identity-verification';
+
   return (
-    <motion.a
-      href={href}
+    <motion.div
       initial={{ opacity: 0, y: 12 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: '-60px' }}
