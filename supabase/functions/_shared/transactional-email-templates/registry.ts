@@ -64,6 +64,10 @@ import { template as subscriptionTrialStarted } from './subscription-trial-start
 import { template as weeklyPassActivated } from './weekly-pass-activated.tsx'
 import { template as subscriptionGettingStarted } from './subscription-getting-started.tsx'
 import { template as verifiedSellerReceipt } from './verified-seller-receipt.tsx'
+import { template as proMembershipActivated } from './pro-membership-activated.tsx'
+import { template as proMembershipRenewed } from './pro-membership-renewed.tsx'
+import { template as proMembershipCancelled } from './pro-membership-cancelled.tsx'
+import { template as proMembershipPaymentFailed } from './pro-membership-payment-failed.tsx'
 
 
 
@@ -123,6 +127,10 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'weekly-pass-activated': weeklyPassActivated,
   'subscription-getting-started': subscriptionGettingStarted,
   'verified-seller-receipt': verifiedSellerReceipt,
+  'pro-membership-activated': proMembershipActivated,
+  'pro-membership-renewed': proMembershipRenewed,
+  'pro-membership-cancelled': proMembershipCancelled,
+  'pro-membership-payment-failed': proMembershipPaymentFailed,
 
   // Alias: monetization webhook dispatches 'refund-issued' for add-on refunds;
   // route to the shared refund-processed template so the send does not silently fail.
