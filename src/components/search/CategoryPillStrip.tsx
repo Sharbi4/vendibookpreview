@@ -62,11 +62,11 @@ export const CategoryPillStrip = ({
                 'group/pill relative flex flex-col items-center justify-center gap-1.5 min-w-[82px] px-3 pt-2 pb-2.5 rounded-2xl border-0 shrink-0 transition-all duration-200 ease-out',
                 active
                   ? 'text-foreground'
-                  : 'text-muted-foreground hover:text-foreground'
+                  : 'text-foreground/75 hover:text-foreground'
               )}
             >
-              <Icon className={cn('h-5 w-5 transition-colors duration-200', active ? 'text-primary' : 'opacity-70 group-hover/pill:opacity-100')} />
-              <span className="text-[11px] font-medium whitespace-nowrap">{label}</span>
+              <Icon className={cn('h-5 w-5 transition-colors duration-200', active ? 'text-primary' : 'opacity-90 group-hover/pill:opacity-100')} />
+              <span className="text-[11.5px] font-semibold tracking-tight whitespace-nowrap">{label}</span>
               <span
                 className={cn(
                   'absolute inset-x-2.5 bottom-0 h-[2px] rounded-full transition-all duration-200',
