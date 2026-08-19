@@ -32,7 +32,7 @@ const CATEGORIES: Category[] = [
   {
     icon: ShieldCheck,
     title: 'Buy with confidence',
-    copy: 'Buyer Readiness Pass and Listing Purchase Reviews.',
+    copy: 'Payment protection, financing options, and inspection partners.',
     to: '/buyer/services',
     cta: 'Browse buyer tools',
   },
