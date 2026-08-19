@@ -798,12 +798,12 @@ const Search = () => {
         <div className="container py-6">
           <div className="flex gap-8">
             {/* Desktop Sidebar Filters - Enhanced card styling */}
-            <aside className="hidden md:block w-64 shrink-0 self-start sticky top-24">
+            <aside className="hidden md:block w-[15rem] lg:w-[16rem] shrink-0 self-start sticky top-24">
               <div
-                className="sale-light space-y-6 p-5 rounded-3xl border border-[#1b1714]/[0.08] shadow-[0_1px_2px_rgba(24,20,16,0.05),0_18px_44px_-26px_rgba(0,0,0,0.55)] max-h-[calc(100vh-7.5rem)] overflow-y-auto overscroll-contain scroll-smooth scrollbar-thin"
+                className="sale-light space-y-5 p-4 rounded-2xl border border-[#1b1714]/[0.07] shadow-[0_1px_2px_rgba(24,20,16,0.04),0_14px_34px_-26px_rgba(0,0,0,0.45)] max-h-[calc(100vh-7.5rem)] overflow-y-auto overscroll-contain scroll-smooth scrollbar-quiet"
               >
                 <div className="flex items-center justify-between">
-                  <h2 className="font-semibold tracking-tight text-foreground">Filters</h2>
+                  <h2 className="text-sm font-semibold tracking-tight text-foreground">Filters</h2>
                   {activeFiltersCount > 0 && (
                     <Button variant="ghost" size="sm" onClick={clearFilters} className="text-xs text-primary hover:text-primary">
                       Clear all
