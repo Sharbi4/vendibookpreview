@@ -278,7 +278,8 @@ const CheckoutIntro = ({
         </Button>
         <Button
           size="lg"
-          className="h-12 rounded-lg px-6 font-semibold gap-2 shadow-cta-primary"
+          variant="cta"
+          className="h-12 px-6 gap-2"
           onClick={handleContinue}
         >
           {ctaLabel}

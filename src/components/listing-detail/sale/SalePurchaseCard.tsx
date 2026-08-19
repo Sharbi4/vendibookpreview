@@ -320,7 +320,8 @@ export const SalePurchaseCard = ({
               disabled={!isAvailable || !priceSale}
               size="lg"
               data-testid={`sale-purchase-card-buy-now-${instanceId}`}
-              className="w-full h-14 text-base font-bold rounded-2xl bg-cta-primary hover:opacity-95 shadow-cta-primary text-white border-0"
+              variant="cta"
+              className="w-full h-14 text-base"
             >
               Buy Now
               <ArrowRight className="w-5 h-5 ml-2" />

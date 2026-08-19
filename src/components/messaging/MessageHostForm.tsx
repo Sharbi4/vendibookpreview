@@ -115,7 +115,8 @@ const MessageHostForm = ({
       <Button
         onClick={handleSend}
         disabled={isLoading || !message.trim()}
-        className="w-full h-12 font-semibold rounded-lg bg-cta-primary hover:opacity-95 shadow-cta-primary text-white border-0"
+        variant="cta"
+        className="w-full h-12"
       >
         {isLoading ? (
           <Loader2 className="h-5 w-5 mr-2 animate-spin" />
