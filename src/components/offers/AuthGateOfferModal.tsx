@@ -112,13 +112,24 @@ export const AuthGateOfferModal = ({
             ) : (
               <UserPlus className="h-5 w-5 text-primary" />
             )}
-            {mode === 'signin' ? 'Sign in to make an offer' : 'Create account to make an offer'}
+            {intent === 'buy'
+              ? mode === 'signin'
+                ? 'Sign in to continue to checkout'
+                : 'Create account to continue to checkout'
+              : mode === 'signin'
+                ? 'Sign in to make an offer'
+                : 'Create account to make an offer'}
           </DialogTitle>
           <DialogDescription>
-            {mode === 'signin'
-              ? 'Sign in to your account to submit your offer'
-              : 'Create a free account to submit your offer'}
+            {intent === 'buy'
+              ? mode === 'signin'
+                ? 'Sign in to your account to continue your purchase'
+                : 'Create a free account to continue your purchase'
+              : mode === 'signin'
+                ? 'Sign in to your account to submit your offer'
+                : 'Create a free account to submit your offer'}
           </DialogDescription>
+
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
