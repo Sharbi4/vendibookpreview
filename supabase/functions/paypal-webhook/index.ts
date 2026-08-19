@@ -421,21 +421,37 @@ async function mirrorHostSubscription(admin: any, paypalSubId: string, status: s
       console.error("[paypal-webhook] boost credit grant failed", err);
     }
 
-    const renewal = Boolean(sub.last_payment_at);
-    await alertSubscriptionPayment(
+    // First paid period vs renewal, resolved durably (see resolvePaidPeriodKind).
+    const paidKind = await resolvePaidPeriodKind(
       admin,
-      sub,
-      renewal ? "subscription_renewed" : "subscription_started",
+      paypalSubId,
+      sub.user_id,
+      period.current_period_end,
     );
-    await sendMembershipEmail(admin, sub, renewal ? "renewed" : "activated", period);
+    if (paidKind !== "duplicate") {
+      await alertSubscriptionPayment(
+        admin,
+        sub,
+        paidKind === "renewed" ? "subscription_renewed" : "subscription_started",
+      );
+      await sendProMembershipEmail(admin, sub, paidKind, {
+        accessThrough: period.current_period_end,
+        stamp: paidKind === "renewed" ? (period.current_period_end ?? sub.last_payment_at ?? "") : "",
+      });
+    }
   }
 
   if (status === "payment_failed") {
-    await sendMembershipEmail(admin, sub, "payment_failed", period);
+    await sendProMembershipEmail(admin, sub, "payment_failed", {
+      accessThrough: period.current_period_end,
+    });
   }
   if (status === "cancelled" || status === "expired") {
-    await sendMembershipEmail(admin, sub, "cancelled", period);
+    await sendProMembershipEmail(admin, sub, "cancelled", {
+      accessThrough: period.entitled ? period.current_period_end : null,
+    });
   }
+
 
   await notifySubscriptionState(admin, sub, status);
 }
