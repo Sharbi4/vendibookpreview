@@ -113,7 +113,7 @@ export const SalePurchaseCard = ({
   } | null>(null);
 
   const priceSale: number | null = listing?.price_sale ?? null;
-  const fulfillmentType: string = listing?.fulfillment_type ?? 'pickup';
+  const fulfillmentType: string = listing?.fulfillment_type || 'pickup';
   const sellerDelivers = fulfillmentType === 'delivery' || fulfillmentType === 'both';
   const offersPickup = fulfillmentType === 'pickup' || fulfillmentType === 'both';
   const freightEnabled = Boolean(listing?.vendibook_freight_enabled);
