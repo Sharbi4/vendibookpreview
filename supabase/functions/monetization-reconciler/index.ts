@@ -196,7 +196,7 @@ serve(async (req) => {
   try {
     const { data: subs } = await admin
       .from("host_subscriptions")
-      .select("id, paypal_subscription_id, status, current_period_start, current_period_end")
+      .select("id, user_id, tier, paypal_subscription_id, status, current_period_start, current_period_end")
       .in("status", ["active", "trialing", "past_due", "unpaid", "incomplete", "paused"])
       .not("paypal_subscription_id", "is", null)
       .limit(200);
