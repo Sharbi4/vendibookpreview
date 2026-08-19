@@ -24,14 +24,22 @@ serve(async (req) => {
     const user = userData?.user;
     if (!user) return jsonError(401, "unauthenticated", "Your session expired.");
 
-    const { reason } = await req.json().catch(() => ({}));
+    const { reason, paypal_subscription_id } = await req.json().catch(() => ({}));
 
-    const { data: sub } = await admin.from("paypal_subscriptions").select("*")
+    // Multiple recurring products can be live at once — when the client pins a
+    // subscription id, cancel exactly that one (ownership-scoped).
+    let query = admin.from("paypal_subscriptions").select("*")
       .eq("user_id", user.id)
       .in("status", ["active", "approval_pending", "pending", "suspended", "past_due"])
-      .maybeSingle();
+      .order("created_at", { ascending: false });
+    if (paypal_subscription_id) {
+      query = query.eq("paypal_subscription_id", paypal_subscription_id);
+    }
+    const { data: rows } = await query.limit(1);
+    const sub = rows?.[0] ?? null;
 
     if (!sub) return jsonError(404, "no_subscription", "You don't have an active membership to cancel.");
+
 
     try {
       await cancelPayPalSubscription(
