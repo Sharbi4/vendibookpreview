@@ -14,6 +14,7 @@ interface BuyingInfoDialogProps {
   sellerDelivers: boolean;
   freightEnabled: boolean;
   financingEnabled: boolean;
+  listingId?: string;
   locationLabel?: string | null;
   deliveryNote?: string | null;
   trigger?: ReactNode;
@@ -41,6 +42,7 @@ export const BuyingInfoDialog = ({
   sellerDelivers,
   freightEnabled,
   financingEnabled,
+  listingId,
   locationLabel,
   deliveryNote,
   trigger,
@@ -88,7 +90,10 @@ export const BuyingInfoDialog = ({
           {financingEnabled && (
             <Row icon={Banknote} title="Equipment financing">
               Financing is offered through Equinox Funding.{' '}
-              <Link to="/financing" className="underline underline-offset-2">
+              <Link
+                to={listingId ? `/financing?listing_id=${listingId}` : '/financing'}
+                className="underline underline-offset-2"
+              >
                 Learn about financing
               </Link>
               . Vendibook is not a lender; approval and terms are set by the provider.

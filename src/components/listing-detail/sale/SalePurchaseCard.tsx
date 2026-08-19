@@ -354,6 +354,7 @@ export const SalePurchaseCard = ({
               sellerDelivers={sellerDelivers}
               freightEnabled={freightEnabled}
               financingEnabled={financingEnabled}
+              listingId={listing.id}
               locationLabel={originLabel}
               deliveryNote={deliveryNote}
             />

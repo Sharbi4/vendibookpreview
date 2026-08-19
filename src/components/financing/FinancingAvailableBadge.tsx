@@ -11,10 +11,13 @@ export function FinancingAvailableBadge({
   className,
   compact = false,
   asLink = true,
+  listingId,
 }: {
   className?: string;
   compact?: boolean;
   asLink?: boolean;
+  /** When provided, the badge deep-links to /financing?listing_id=... */
+  listingId?: string;
 }) {
   const content = (
     <span
@@ -40,7 +43,7 @@ export function FinancingAvailableBadge({
 
   return (
     <Link
-      to="/financing"
+      to={listingId ? `/financing?listing_id=${listingId}` : '/financing'}
       onClick={(e) => e.stopPropagation()}
       aria-label="Financing options available — learn more"
       className="inline-flex"
