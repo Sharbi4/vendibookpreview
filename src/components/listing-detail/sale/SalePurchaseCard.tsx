@@ -251,12 +251,14 @@ export const SalePurchaseCard = ({
               <span className="text-xs text-muted-foreground">or best offer</span>
             )}
           </div>
-          <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
+          <div className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
             <Lock className="h-3.5 w-3.5" />
             <span>Checkout by</span>
+            {/* Light card surface: the white wordmark would be invisible here. */}
             <PayPalMonogram className="h-3.5" />
-            <PayPalWordmark className="h-3" />
+            <span className="font-medium text-foreground">PayPal</span>
           </div>
+
         </div>
 
         <div className="px-5 sm:px-6 pb-5 sm:pb-6 space-y-5">
