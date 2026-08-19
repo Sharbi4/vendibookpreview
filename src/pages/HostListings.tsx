@@ -175,7 +175,6 @@ const HostListings = () => {
                 <HostListingCard
                   key={listing.id}
                   listing={listing}
-                  financingOptedIn={!!financingMap?.[listing.id]}
                   onPause={pauseListing}
                   onPublish={handlePublish}
                   onDelete={deleteListing}
