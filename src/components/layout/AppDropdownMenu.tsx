@@ -4,7 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Menu, X, Plus, UserPlus, Info, Search,
-  LayoutDashboard, MessageSquare, HelpCircle, LogOut, Mail, Landmark,
+  LayoutDashboard, MessageSquare, HelpCircle, LogOut, Mail, Landmark, Crown,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
