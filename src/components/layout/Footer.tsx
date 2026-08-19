@@ -50,7 +50,7 @@ const footerSections: FooterSection[] = [
       { label: 'Sell a Food Trailer', href: '/sell-food-trailer' },
       { label: 'Sell a Concession Trailer', href: '/sell-concession-trailer' },
       { label: 'Rent My Kitchen', href: '/rent-my-commercial-kitchen' },
-      { label: 'Pricing & Plans', href: '/pricing' },
+      { label: 'Pricing', href: '/pricing' },
       { label: 'Payment Options', href: '/payments' },
       { label: 'Insurance Info', href: '/insurance' },
       { label: 'Refer & Earn', href: '/referral' },
