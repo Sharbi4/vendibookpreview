@@ -89,6 +89,8 @@ const LEGACY_STEP_MAP: Record<string, CheckoutStep> = {
 const normalizeStep = (step: string | undefined): CheckoutStep =>
   LEGACY_STEP_MAP[step ?? 'intro'] ?? 'intro';
 
+const STEP_ORDER: Exclude<CheckoutStep, 'intro'>[] = ['fulfillment', 'verify', 'options', 'payment'];
+
 
 const SaleCheckout = () => {
   const { listingId } = useParams();
@@ -475,7 +477,7 @@ const SaleCheckout = () => {
       return true;
     }
     
-    if (step === 'details') {
+    if (step === 'verify') {
       const needsAddress = fulfillmentSelected !== 'pickup';
 
       const firstNameError = fieldValidators.firstName(buyerInfo.firstName);
@@ -770,7 +772,7 @@ const SaleCheckout = () => {
   if (isOwner) {
     return (
       <SaleCheckoutShell
-        steps={CHECKOUT_STEPS}
+        steps={STEP_ORDER.filter((s) => s !== 'options').map((s) => ({ id: s, label: STEP_LABELS[s] }))}
         currentIndex={0}
         exitHref={`/listing/${listingId}`}
       >
