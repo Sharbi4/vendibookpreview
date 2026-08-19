@@ -9,8 +9,6 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
-import { Switch } from '@/components/ui/switch';
-import { Checkbox } from '@/components/ui/checkbox';
 import Header from '@/components/layout/Header';
 import SEO from '@/components/SEO';
 import { toast } from 'sonner';
@@ -20,7 +18,6 @@ import { FinancingAvailableBadge } from '@/components/financing/FinancingAvailab
 import {
   EQUINOX_APPLY_URL,
   EQUINOX_DISCLOSURE_TEXT,
-  EQUINOX_DISCLOSURE_VERSION,
   EQUINOX_FLAG_KEY,
   isFinanceableSaleListing,
 } from '@/lib/financing/disclosure';
@@ -41,11 +38,6 @@ export default function ListingPaymentsFinancing() {
 
   const [listing, setListing] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-
-  const [optIn, setOptIn] = useState(false);
-  const [accepted, setAccepted] = useState(false);
-  const [savedVersion, setSavedVersion] = useState<string | null>(null);
 
   useEffect(() => {
     if (authLoading) return;
@@ -69,17 +61,6 @@ export default function ListingPaymentsFinancing() {
         }
         setListing(data);
 
-        const { data: pref } = await (supabase as any)
-          .from('listing_financing_preferences')
-          .select('equinox_opt_in, include_vin, disclosure_version')
-          .eq('listing_id', listingId)
-          .maybeSingle();
-        if (!active) return;
-        if (pref) {
-          setOptIn(!!pref.equinox_opt_in);
-          setSavedVersion(pref.disclosure_version ?? null);
-          setAccepted(pref.disclosure_version === EQUINOX_DISCLOSURE_VERSION);
-        }
       } finally {
         if (active) setLoading(false);
       }
@@ -90,39 +71,6 @@ export default function ListingPaymentsFinancing() {
   }, [authLoading, user, listingId, navigate]);
 
   const eligible = useMemo(() => isFinanceableSaleListing(listing), [listing]);
-  const needsAcceptance = optIn && !accepted;
-
-  const handleSave = async () => {
-    if (!listing || !user) return;
-    if (needsAcceptance) {
-      toast.error('Please accept the financing disclosure to offer financing options.');
-      return;
-    }
-    setSaving(true);
-    try {
-      const { error } = await (supabase as any)
-        .from('listing_financing_preferences')
-        .upsert(
-          {
-            listing_id: listing.id,
-            host_id: user.id,
-            equinox_opt_in: optIn,
-            include_vin: optIn,
-            disclosure_version: optIn ? EQUINOX_DISCLOSURE_VERSION : savedVersion,
-            disclosure_accepted_at: optIn ? new Date().toISOString() : null,
-          },
-          { onConflict: 'listing_id' },
-        );
-      if (error) throw error;
-      setSavedVersion(optIn ? EQUINOX_DISCLOSURE_VERSION : savedVersion);
-      toast.success('Payment & financing preferences saved. Your listing stays live.');
-    } catch {
-      toast.error('Could not save your preferences. Please try again.');
-    } finally {
-      setSaving(false);
-    }
-  };
-
   if (loading || authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
