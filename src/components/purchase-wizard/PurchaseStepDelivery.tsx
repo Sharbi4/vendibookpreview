@@ -361,6 +361,12 @@ const PurchaseStepDelivery = ({
       !outsideRadius) ||
     (fulfillmentSelected === 'vendibook_freight' && hasValidEstimate);
 
+  // Let an embedding page (light sale checkout) drive its own footer state.
+  useEffect(() => {
+    onCanContinueChange?.(canContinue);
+  }, [canContinue, onCanContinueChange]);
+
+
   const isSingleMethod = fulfillmentOptions.length === 1;
   const showRadios = !isSingleMethod;
 
