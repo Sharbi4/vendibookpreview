@@ -107,6 +107,9 @@ const Index = () => {
           {/* 3. Recently Added Trucks & Trailers */}
           <ListingsSections />
 
+          {/* Premium discovery — compact prompt to /pricing */}
+          <PremiumDiscoveryBlock />
+
           {/* Seller funnel block — crawlable internal links into /sell-food-truck */}
           <SellerHomeBlock />
 
