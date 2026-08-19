@@ -42,6 +42,7 @@ export const BuyingInfoDialog = ({
   sellerDelivers,
   freightEnabled,
   financingEnabled,
+  listingId,
   locationLabel,
   deliveryNote,
   trigger,
