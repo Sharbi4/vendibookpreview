@@ -1,9 +1,11 @@
 import { Link } from 'react-router-dom';
 import { PromotionHub } from '../PromotionHub';
+import UpgradesPanel from '../UpgradesPanel';
 import { useEntitlements } from '@/hooks/useEntitlements';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Rocket, ArrowRight, ChevronRight, TrendingUp } from 'lucide-react';
+
 
 const fmt = (iso?: string | null) => {
   if (!iso) return '—';
