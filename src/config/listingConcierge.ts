@@ -17,7 +17,7 @@ export interface ConciergeConfig {
   name: string;
   /** Price in cents, per listing. */
   priceCents: number;
-  /** Short price label, e.g. "$149 per listing". */
+  /** Short price label, e.g. "$79 per listing". */
   priceLabel: string;
   /** Business-day turnaround shown to sellers. */
   turnaroundBusinessDays: number;
@@ -31,13 +31,14 @@ export interface ConciergeConfig {
   noGuaranteeCopy: string;
 }
 
-const PRICE_CENTS = 14_900;
+/** Mirrors monetization_products.listing_concierge (the amount PayPal charges). */
+const PRICE_CENTS = 7_900;
 
 export const LISTING_CONCIERGE: ConciergeConfig = {
   slug: 'listing_concierge',
   name: 'VendiBook Listing Concierge',
   priceCents: PRICE_CENTS,
-  priceLabel: '$149 per listing',
+  priceLabel: '$79 per listing',
   turnaroundBusinessDays: 2,
   includedRevisions: 1,
   introPath: '/list/concierge',

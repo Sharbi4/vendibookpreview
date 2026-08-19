@@ -22,16 +22,16 @@ interface ListingLimitReachedModalProps {
 const TIER_COPY: Record<HostTier, { name: string; nextTier: string; nextLine: string }> = {
   free: {
     name: 'Free plan',
-    nextTier: 'Starter',
-    nextLine: 'Starter unlocks up to 5 active listings and AI listing tools for $39/month.',
+    nextTier: 'Vendibook Pro',
+    nextLine: 'Vendibook Pro unlocks unlimited active listings, the full tools bundle, and a monthly Featured Boost credit.',
   },
   starter: {
-    name: 'Starter plan',
-    nextTier: 'Growth',
-    nextLine: 'Growth unlocks unlimited active listings, the full tools bundle, and priority placement.',
+    name: 'Current plan',
+    nextTier: 'Vendibook Pro',
+    nextLine: 'Vendibook Pro unlocks unlimited active listings and the full tools bundle.',
   },
-  pro: { name: 'Growth plan', nextTier: 'Operator', nextLine: 'Growth already includes unlimited listings.' },
-  premium: { name: 'Operator plan', nextTier: 'Operator', nextLine: 'Operator includes unlimited listings.' },
+  pro: { name: 'Vendibook Pro', nextTier: 'Vendibook Pro', nextLine: 'Vendibook Pro already includes unlimited listings.' },
+  premium: { name: 'Vendibook Pro', nextTier: 'Vendibook Pro', nextLine: 'Your plan includes unlimited listings.' },
 };
 
 /**
