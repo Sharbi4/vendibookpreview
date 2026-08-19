@@ -70,6 +70,7 @@ import { trackLeadEvent } from '@/lib/leadTracking';
 import { detectAvailabilityConflict } from '@/lib/availabilityConflict';
 import { ReferralCodeField } from '@/components/referrals/ReferralCodeField';
 import { getPublicDisplayName } from '@/lib/displayName';
+import { useSellerVerifiedBadge } from '@/hooks/useSellerVerifiedBadge';
 
 type FulfillmentSelection = 'pickup' | 'delivery' | 'on_site';
 
@@ -80,6 +81,13 @@ const BookingCheckout = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const { listing, host, isLoading, error } = useListing(listingId);
+  /**
+   * Instant Book skips host approval ONLY for identity-verified hosts.
+   * Everyone else: payment is taken and the booking waits for the host to
+   * accept. Mirrors the server rule in `paypalFinalize`.
+   */
+  const { verified: hostIdentityVerified } = useSellerVerifiedBadge(listing?.host_id);
+  const instantConfirm = !!listing?.instant_book && hostIdentityVerified;
   const { data: ratingData } = useListingAverageRating(listingId);
   const { data: requiredDocs } = useListingRequiredDocuments(listingId || '');
   const requiredDocTypes = requiredDocs?.map(d => d.document_type as string);
@@ -768,7 +776,7 @@ const BookingCheckout = () => {
 
         {/* Title */}
         <h1 className="text-2xl lg:text-3xl font-bold text-foreground mb-8">
-          {listing.instant_book ? 'Book instantly' : 'Request to book'}
+          {instantConfirm ? 'Book instantly' : 'Request to book'}
         </h1>
 
         <div className="grid lg:grid-cols-5 gap-8 lg:gap-12">
@@ -1182,7 +1190,7 @@ const BookingCheckout = () => {
                             <Loader2 className="h-5 w-5 animate-spin mr-2" />
                             Processing...
                           </>
-                        ) : listing.instant_book ? (
+                        ) : instantConfirm ? (
                           <>
                             <Zap className="h-5 w-5 mr-2" />
                             Confirm and pay ${(fees.customerTotal + (depositAmount || 0)).toLocaleString()}
@@ -1195,9 +1203,11 @@ const BookingCheckout = () => {
                         )}
                       </Button>
 
-                      {!listing.instant_book && (
+                      {!instantConfirm && (
                         <p className="text-xs text-center text-muted-foreground">
-                          Your card will be authorized now. Funds are only captured if the host approves your request.
+                          {listing.instant_book
+                            ? 'Your dates are held as soon as you pay, and the booking is confirmed once the host accepts. If they decline, you are refunded in full.'
+                            : 'Your card will be authorized now. Funds are only captured if the host approves your request.'}
                         </p>
                       )}
                     </div>
@@ -1217,7 +1227,7 @@ const BookingCheckout = () => {
               primary={{
                 label:
                   activeStep === STEP_REVIEW
-                    ? listing.instant_book
+                    ? instantConfirm
                       ? 'Confirm and pay'
                       : 'Continue to payment'
                     : 'Jump to review',
