@@ -1194,7 +1194,7 @@ const SaleCheckout = () => {
           primaryDisabled={primaryDisabled}
           busy={isPurchasing || termsGate.preparing}
           helper={
-            currentStep === 'payment'
+            effectiveStep === 'payment'
               ? "You'll confirm the final total before any money moves."
               : 'Your progress is saved — you can step back any time.'
           }
