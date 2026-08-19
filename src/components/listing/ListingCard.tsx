@@ -126,7 +126,15 @@ interface ListingCardProps {
   canDeliverToUser?: boolean;
   distanceMiles?: number;
   compact?: boolean;
+  /**
+   * Presentation variant. `search` renders the warm/light marketplace surface
+   * used on /search only — homepage and other rails keep the dark default.
+   */
+  variant?: 'default' | 'search';
+  /** Search-only: horizontal marketplace row on desktop, stacked on mobile. */
+  horizontal?: boolean;
 }
+
 
 // Map of popular amenities to icons (subset for compact display)
 const popularAmenityIcons: Record<string, { icon: React.ElementType; label: string }> = {
