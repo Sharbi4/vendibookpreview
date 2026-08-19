@@ -4,9 +4,9 @@
  * Rules enforced here:
  *  - Every fee, tier price, and window matches the live config.
  *    Commission: 12.9% (src/lib/commissions.ts).
- *    Tiers: Free / Starter $39 / Growth $89 / Operator $149
- *      (src/components/monetization/tierCatalog.ts).
- *    Weekly Pass: $29 for 7 days.
+ *    Plans: Free / Vendibook Pro $79/mo (monetization_products.vendibook_pro).
+ *      Retired Starter / Growth / Operator / Weekly Pass tiers must not appear
+ *      in new-purchase copy — only in clearly labeled legacy answers.
  *    Payout: rentals 24h after start, sales 25d after buyer confirms.
  *    Support: (725) 755-9598 · support@vendibook.com · Mon–Fri 9a–5p AZ.
  *  - Never say "payment protection" — say "payment protection" or "funds are held".
@@ -301,7 +301,7 @@ export const faqCategories: FaqCategory[] = [
         id: "listing-limits",
         question: "How many listings can I have?",
         answer:
-          "Free: 2 active listings. Starter ($39/mo): up to 5. Growth ($89/mo) and Operator ($149/mo): unlimited. Founding-member accounts keep unlimited listings on the Free plan as thanks for early support.",
+          "Free: 2 active listings. Vendibook Pro ($79/mo): unlimited. Founding-member accounts keep unlimited listings on the Free plan as thanks for early support.",
         actions: [A.pricing],
         keywords: ["limit", "cap", "how many", "founding"],
       },
@@ -309,7 +309,7 @@ export const faqCategories: FaqCategory[] = [
         id: "good-listing",
         question: "What makes a great listing?",
         answer:
-          "Ten or more sharp daylight photos including the interior, equipment, and exterior from all angles. A clear title that includes year/make/model. A description that covers equipment, condition, service history, and what's included. Accurate specs (year, mileage, dimensions, generator hours, permits). Firm pricing. Fast replies to messages. Growth+ members can auto-generate a polished description via Listing Studio.",
+          "Ten or more sharp daylight photos including the interior, equipment, and exterior from all angles. A clear title that includes year/make/model. A description that covers equipment, condition, service history, and what's included. Accurate specs (year, mileage, dimensions, generator hours, permits). Firm pricing. Fast replies to messages. Vendibook Pro members can auto-generate a polished description via Listing Studio.",
         actions: [{ label: "Try Listing Studio", href: "/tools/listing-studio" }],
       },
       {
@@ -383,7 +383,7 @@ export const faqCategories: FaqCategory[] = [
         id: "host-fees",
         question: "What does hosting cost?",
         answer:
-          "Publishing is free. When a booking pays, Vendibook takes 12.9% commission from your payout and adds a separate 12.9% service fee to the renter's total. Growth members save more via reduced service fees — see the pricing page for tier benefits.",
+          "Publishing is free. When a booking pays, Vendibook takes 12.9% commission from your payout and adds a separate 12.9% service fee to the renter's total. Vendibook Pro members pay a reduced 10.9% commission on their side (up to $500 saved per transaction) — see the pricing page.",
         actions: [A.pricing],
       },
       {
@@ -400,41 +400,20 @@ export const faqCategories: FaqCategory[] = [
   {
     id: "memberships-billing",
     title: "Memberships & billing",
-    blurb: "Free, Starter, Growth, Operator, the 7-day Pro trial, and the Weekly Pass.",
+    blurb: "Free, Vendibook Pro, billing, renewals, and cancellations.",
     entries: [
       {
         id: "tiers-overview",
         question: "What plans are available?",
         answer:
-          "Free (2 listings, core buying/selling/renting), Starter $39/mo (5 listings, enhanced tools, AI descriptions, priority email support), Growth $89/mo (unlimited listings, full Premium Tools bundle including PricePilot / Listing Studio / Marketing Studio, PermitPath Plus, advanced analytics, high-priority support), and Operator $149/mo (everything in Growth + portfolio dashboards, BuildKit, dedicated support). See the full comparison on the pricing page.",
-        actions: [A.pricing],
-      },
-      {
-        id: "trial",
-        question: "How does the 7-day Pro trial work?",
-        answer:
-          "New members can start a 7-day trial of Growth (Pro). You get full Growth access immediately and aren't charged until day 8. Cancel anytime during the trial from Account → Membership and you won't be billed. Trials are one per account and can only be started once.",
-        actions: [A.pricing, A.subscription],
-      },
-      {
-        id: "cancel-trial",
-        question: "How do I cancel before the trial converts?",
-        answer:
-          "Open Account → Membership (or /account/subscription), tap Cancel, and confirm. Cancellation is immediate for trials — no charge, no waiting. You keep trial access until day 7 ends.",
-        actions: [A.subscription],
-      },
-      {
-        id: "weekly-pass",
-        question: "What is the Weekly Pass?",
-        answer:
-          "A $29 one-time purchase that unlocks 7 days of Growth-tier features — no subscription, no auto-renew. Perfect if you're prepping a listing, running a short campaign, or want to try Premium Tools before committing to monthly. Buy from the pricing page; access starts the moment payment clears and expires automatically after 7 days.",
+          "Two: Free (2 active listings, core buying, selling and renting) and Vendibook Pro at $79/mo (unlimited listings, the full Premium Tools bundle including PricePilot / Listing Studio / Marketing Studio, PermitPath Plus, advanced analytics, a monthly Featured Boost credit, and a reduced 10.9% commission on your side). PermitPath Plus is also available on its own for $7.99/mo. See the full comparison on the pricing page.",
         actions: [A.pricing],
       },
       {
         id: "upgrade-downgrade",
         question: "How do I upgrade or downgrade my plan?",
         answer:
-          "Open Account → Membership. Pick a new tier — upgrades take effect immediately with a prorated charge; downgrades take effect at the end of your current billing period so you don't lose anything you've paid for.",
+          "Open Account → Membership. Starting Vendibook Pro takes effect immediately; cancelling takes effect at the end of your current billing period so you don't lose anything you've paid for.",
         actions: [A.subscription],
       },
       {
@@ -455,7 +434,7 @@ export const faqCategories: FaqCategory[] = [
         id: "refund-policy",
         question: "What's the refund policy on subscriptions?",
         answer:
-          "Trial cancellations aren't charged, so there's nothing to refund. After the trial, monthly subscription fees are non-refundable but you can cancel anytime to stop future charges. Weekly Pass is non-refundable once activated. We refund upgrade purchases (Featured Boost, tools) if the feature never delivered — email support with your receipt.",
+          "Monthly subscription fees are non-refundable, but you can cancel anytime to stop future charges and you keep access through the period you already paid for. We refund one-time upgrade purchases (Featured Boost, Pro Listing, tools) if the feature never delivered — email support with your receipt.",
         actions: [A.refundPolicy, A.contactSupport],
       },
       {
@@ -498,49 +477,49 @@ export const faqCategories: FaqCategory[] = [
         id: "permit-path-plus",
         question: "What does PermitPath Plus add?",
         answer:
-          "Plus adds multi-city roadmaps (compare requirements across markets), saved permit progress with reminders, downloadable checklists, and the concierge document assist. Included with Growth and Operator subscriptions. Standalone Plus is available for founding-member accounts free.",
+          "Plus adds multi-city roadmaps (compare requirements across markets), saved permit progress with reminders, downloadable checklists, and the concierge document assist. Included with Vendibook Pro. Standalone PermitPath Plus is $7.99/mo, and founding-member accounts keep it free.",
         actions: [A.permitPath, A.pricing],
       },
       {
         id: "pricepilot",
         question: "What is PricePilot?",
         answer:
-          "PricePilot analyzes comparable listings in your market and recommends a competitive sale or rental price. Included with Growth and above.",
+          "PricePilot analyzes comparable listings in your market and recommends a competitive sale or rental price. Included with Vendibook Pro.",
         actions: [{ label: "See PricePilot", href: "/plans/tools/pricepilot" }],
       },
       {
         id: "listing-studio",
         question: "What is Listing Studio?",
         answer:
-          "Listing Studio uses AI to rewrite your listing — title, description, and highlights — for higher conversion. Generates in seconds, editable to your voice. Included with Growth and above.",
+          "Listing Studio uses AI to rewrite your listing — title, description, and highlights — for higher conversion. Generates in seconds, editable to your voice. Included with Vendibook Pro.",
         actions: [{ label: "See Listing Studio", href: "/plans/tools/listing-studio" }],
       },
       {
         id: "marketing-studio",
         question: "What is Marketing Studio?",
         answer:
-          "Marketing Studio generates ad copy, social captions, and email blurbs for your listing — sized for Instagram, Facebook, and Google. Included with Growth and above.",
+          "Marketing Studio generates ad copy, social captions, and email blurbs for your listing — sized for Instagram, Facebook, and Google. Included with Vendibook Pro.",
         actions: [{ label: "See Marketing Studio", href: "/plans/tools/marketing-studio" }],
       },
       {
         id: "market-radar",
         question: "What is Market Radar?",
         answer:
-          "Market Radar tracks demand, supply, and average pricing by city and category so you know where to buy, sell, or expand. Included with Growth and above.",
+          "Market Radar tracks demand, supply, and average pricing by city and category so you know where to buy, sell, or expand. Included with Vendibook Pro.",
         actions: [{ label: "See Market Radar", href: "/plans/tools/market-radar" }],
       },
       {
         id: "concept-lab",
         question: "What is Concept Lab?",
         answer:
-          "Concept Lab helps you validate a food concept — menu ideas, pricing, target market, break-even math — before you buy a truck. Included with Growth and above.",
+          "Concept Lab helps you validate a food concept — menu ideas, pricing, target market, break-even math — before you buy a truck. Included with Vendibook Pro.",
         actions: [{ label: "See Concept Lab", href: "/plans/tools/concept-lab" }],
       },
       {
         id: "buildkit",
         question: "What is BuildKit?",
         answer:
-          "BuildKit is the Operator-tier planner for building or converting your own truck: layout templates, equipment lists, generator sizing, budget calculator, and vendor referrals.",
+          "BuildKit is the Vendibook Pro planner for building or converting your own truck: layout templates, equipment lists, generator sizing, budget calculator, and vendor referrals.",
         actions: [{ label: "See BuildKit", href: "/plans/tools/buildkit" }],
       },
       {

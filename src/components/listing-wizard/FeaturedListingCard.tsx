@@ -3,17 +3,20 @@ import { Star, TrendingUp, CheckCircle2, Eye, Zap, Crown, MapPin, BarChart3 } fr
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
+import { useCatalogPrice } from '@/hooks/useCatalogPrices';
+import { ACTIVE_PRODUCT_SLUGS } from '@/lib/monetization/catalogPricing';
 
 interface FeaturedListingCardProps {
   enabled: boolean;
   onEnabledChange: (enabled: boolean) => void;
 }
 
-export const FEATURED_LISTING_FEE = 30;
-
 export const FeaturedListingCard: React.FC<FeaturedListingCardProps> = ({
   enabled,
   onEnabledChange}) => {
+  // Price and duration come from the monetization catalog (the amount PayPal charges).
+  const boostPrice = useCatalogPrice(ACTIVE_PRODUCT_SLUGS.featuredBoost);
+  const durationDays = boostPrice.durationDays ?? 30;
   return (
     <div
       className={`relative overflow-hidden rounded-2xl border transition-all ${
@@ -59,7 +62,7 @@ export const FeaturedListingCard: React.FC<FeaturedListingCardProps> = ({
                 </Badge>
               </div>
               <p className="text-sm text-muted-foreground mt-0.5">
-                Premium placement for 30 days · up to 3× more views
+                Premium placement for {durationDays} days · up to 3× more views
               </p>
             </div>
           </div>
@@ -73,8 +76,10 @@ export const FeaturedListingCard: React.FC<FeaturedListingCardProps> = ({
 
         {/* Price */}
         <div className="mt-5 flex items-baseline gap-2">
-          <span className="text-3xl font-bold text-foreground">${FEATURED_LISTING_FEE}</span>
-          <span className="text-sm text-muted-foreground">one-time · 30 days · no auto-renew</span>
+          <span className="text-3xl font-bold text-foreground">{boostPrice.label}</span>
+          <span className="text-sm text-muted-foreground">
+            one-time · {durationDays} days · no auto-renew
+          </span>
         </div>
 
         {/* Benefits grid */}
