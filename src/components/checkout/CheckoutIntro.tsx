@@ -205,7 +205,7 @@ const CheckoutIntro = ({
           <span className="text-primary">{heroTitleNoun}</span>
         </h2>
         <p className="mt-2 text-sm sm:text-base text-muted-foreground">
-          {flow === 'sale' ? 'Five' : 'Four'} quick steps. We&rsquo;ll explain everything before you pay.
+          {flow === 'sale' ? 'Three' : 'Four'} quick steps. We&rsquo;ll explain everything before you pay.
         </p>
       </motion.div>
 
