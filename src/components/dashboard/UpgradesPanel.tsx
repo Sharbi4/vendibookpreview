@@ -121,7 +121,7 @@ export const UpgradesPanel = () => {
       key: 'pro-listing',
       icon: FileText,
       name: 'Pro Listing',
-      benefit: 'Premium listing presentation and priority placement for 30 days.',
+      benefit: 'Premium presentation, priority placement, and a featured spot on Vendibook\'s Facebook for 30 days.',
       price: proListing.detailLabel,
       state: hasPurchase(ACTIVE_PRODUCT_SLUGS.proListing) ? 'Purchased' : null,
       ctaLabel: 'Add Pro Listing',
