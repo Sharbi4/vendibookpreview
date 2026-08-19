@@ -48,23 +48,51 @@ export function fmtSubDate(iso?: string | null): string {
   } catch { return '—'; }
 }
 
-export function useSubscriptionManagement() {
+/** Recurring products that can own a `host_subscriptions` row. */
+export type SubscriptionProduct = 'pro' | 'permit_path_plus' | 'any';
+
+const PRO_SLUGS = new Set(['vendibook_pro', 'vendibook-pro', 'pro', 'host_pro', 'host-pro', 'host_growth']);
+const PERMIT_SLUGS = new Set(['permit_path_plus', 'permit-path-plus', 'permitpath_plus']);
+
+const normalizeSlug = (raw?: string | null) =>
+  String(raw ?? '').toLowerCase().replace(/_(monthly|annual)$/, '').replace(/-(monthly|annual)$/, '');
+
+export function matchesProduct(row: SubscriptionRow | null, product: SubscriptionProduct): boolean {
+  if (!row) return false;
+  if (product === 'any') return true;
+  const key = normalizeSlug(row.tier);
+  if (product === 'permit_path_plus') return PERMIT_SLUGS.has(key);
+  // Pro: explicit slugs, `*_pro` variants, and legacy rows with no tier
+  // recorded (those predate multi-product billing and were always Pro).
+  if (!key) return !PERMIT_SLUGS.has(key);
+  return PRO_SLUGS.has(key) || key.endsWith('_pro');
+}
+
+/**
+ * @param product Which recurring product this surface manages. Defaults to
+ * Vendibook Pro so a future PermitPath Plus row can never replace the Pro row
+ * or cause the wrong PayPal subscription to be cancelled.
+ */
+export function useSubscriptionManagement(product: SubscriptionProduct = 'pro') {
   const { user } = useAuth();
   const { toast } = useToast();
   const [busy, setBusy] = useState<'cancel' | 'reactivate' | 'portal' | null>(null);
 
   const query = useQuery({
-    queryKey: ['subscription-management', user?.id],
+    queryKey: ['subscription-management', user?.id, product],
     enabled: !!user?.id,
     queryFn: async (): Promise<SubscriptionRow | null> => {
       const { data } = await supabase
         .from('host_subscriptions')
         .select('*')
         .eq('user_id', user!.id)
-        .order('updated_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      return (data as SubscriptionRow) ?? null;
+        .order('updated_at', { ascending: false });
+      const rows = (data as SubscriptionRow[] | null) ?? [];
+      const scoped = rows.filter((row) => matchesProduct(row, product));
+      // Prefer a live row over a lapsed one of the same product.
+      return (
+        scoped.find((r) => (r.status ?? 'canceled') !== 'canceled') ?? scoped[0] ?? null
+      );
     },
   });
 
@@ -84,6 +112,7 @@ export function useSubscriptionManagement() {
   const isPastDue = sub?.status === 'past_due' || sub?.status === 'unpaid';
   const accessEndsAt = sub?.cancel_at ?? sub?.current_period_end ?? null;
 
+
   /** Poll until the webhook mirror lands (both providers sync async). */
   const refetchUntilSynced = useCallback(
     async (matches: (row: SubscriptionRow | null) => boolean) => {
@@ -101,8 +130,14 @@ export function useSubscriptionManagement() {
     try {
       if (provider === 'paypal') {
         const { data, error } = await supabase.functions.invoke('paypal-subscription-cancel', {
-          body: { reason: 'Member requested cancellation' },
+          body: {
+            reason: 'Member requested cancellation',
+            // Pin the exact subscription so a second recurring product can
+            // never be cancelled by mistake.
+            paypal_subscription_id: sub?.paypal_subscription_id ?? undefined,
+          },
         });
+
         if (error) throw error;
         toast({
           title: 'Membership cancelled',
@@ -132,7 +167,7 @@ export function useSubscriptionManagement() {
     } finally {
       setBusy(null);
     }
-  }, [provider, refetchUntilSynced, toast]);
+  }, [provider, sub?.paypal_subscription_id, refetchUntilSynced, toast]);
 
   /** Legacy memberships can no longer be resumed self-serve. */
   const reactivate = useCallback(async () => {
