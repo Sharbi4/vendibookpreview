@@ -12,7 +12,7 @@ import OverviewGreeting from './overview/OverviewGreeting';
 import VerifiedSellerCTA from '@/components/verification/VerifiedSellerCTA';
 import { KpiCard } from './overview/KpiCard';
 import RecentActivityStrip, { ActivityItem } from './overview/RecentActivityStrip';
-import PremiumSpotlight from './overview/PremiumSpotlight';
+import MembershipCard from './MembershipCard';
 import { useHostListings } from '@/hooks/useHostListings';
 import { useHostBookings } from '@/hooks/useHostBookings';
 import { useManualPayout } from '@/hooks/useManualPayout';
@@ -206,7 +206,7 @@ const HostDashboard = () => {
 
       <hr className="section-divider" />
 
-      <PremiumSpotlight />
+      <MembershipCard />
     </div>
   );
 };
