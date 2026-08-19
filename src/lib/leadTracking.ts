@@ -33,6 +33,7 @@ export type LeadEventName =
   | 'homepage_listing_row_view_more_click'
   | 'homepage_featured_view_all_click'
   | 'homepage_featured_card_click'
+  | 'homepage_premium_discovery_click'
   | 'hero_panel_viewed'
   | 'hero_panel_swiped'
   | 'hero_search_clicked'
