@@ -8,7 +8,8 @@ import { appendLedgerEntry, recalculatePayableAfterRefund } from "../_shared/pay
 import { notifyOrderParties, notifyUser } from "../_shared/notify.ts";
 import { resolveSubscriptionPeriod } from "../_shared/subscriptionPeriod.ts";
 import { grantMonthlyBoostCredit } from "../_shared/proBoostCredit.ts";
-import { resolvePaidPeriodKind, sendProMembershipEmail } from "../_shared/proMembershipEmail.ts";
+import { resolvePaidPeriodKind } from "../_shared/proMembershipEmail.ts";
+import { sendSubscriptionLifecycleEmail } from "../_shared/subscriptionLifecycleEmail.ts";
 
 /**
  * Verified, idempotent PayPal webhook receiver for both one-time payments
@@ -435,7 +436,7 @@ async function mirrorHostSubscription(admin: any, paypalSubId: string, status: s
         sub,
         paidKind === "renewed" ? "subscription_renewed" : "subscription_started",
       );
-      await sendProMembershipEmail(admin, sub, paidKind, {
+      await sendSubscriptionLifecycleEmail(admin, sub, paidKind, {
         accessThrough: period.current_period_end,
         stamp: paidKind === "renewed" ? (period.current_period_end ?? sub.last_payment_at ?? "") : "",
       });
@@ -443,12 +444,12 @@ async function mirrorHostSubscription(admin: any, paypalSubId: string, status: s
   }
 
   if (status === "payment_failed") {
-    await sendProMembershipEmail(admin, sub, "payment_failed", {
+    await sendSubscriptionLifecycleEmail(admin, sub, "payment_failed", {
       accessThrough: period.current_period_end,
     });
   }
   if (status === "cancelled" || status === "expired") {
-    await sendProMembershipEmail(admin, sub, "cancelled", {
+    await sendSubscriptionLifecycleEmail(admin, sub, "cancelled", {
       accessThrough: period.entitled ? period.current_period_end : null,
     });
   }
