@@ -23,23 +23,18 @@ import { calculateDistance } from '@/lib/geolocation';
 import SEO from '@/components/SEO';
 
 // Premium shared components
-import StickySummary from '@/components/shared/StickySummary';
 
 // Step components
 import {
   PurchaseStepDelivery,
   PurchaseStepInfo,
-  PurchaseStepReview,
-  PurchaseStepIdentity,
   PurchaseStepPayment,
   DELIVERY_WINDOW_LABELS,
   type BuyerInfo,
   type DeliveryWindow,
 } from '@/components/purchase-wizard';
-import StepConfirmPurchase from '@/components/checkout/StepConfirmPurchase';
 import CheckoutIntro from '@/components/checkout/CheckoutIntro';
 
-import StepAddOns, { type CheckoutAddOn } from '@/components/checkout/StepAddOns';
 import { ReferralCodeField } from '@/components/referrals/ReferralCodeField';
 import { FinalReviewSheet } from '@/components/transaction/FinalReviewSheet';
 import { useTermsGate } from '@/hooks/useTermsGate';
@@ -50,14 +45,12 @@ import { useSellerVerifiedBadge, refreshSellerBadgeSurfaces } from '@/hooks/useS
 import VerifiedSellerDialog from '@/components/verification/VerifiedSellerDialog';
 import { parseFormattedAddress } from '@/lib/fulfillment/parseAddress';
 import { getPublicDisplayName } from '@/lib/displayName';
-import {
-  JourneyProgress,
-  PrimaryActionBar,
-  TrustModule,
-  PAYMENT_TRUST_POINTS,
-  PAYMENT_DISCLAIMER,
-  type JourneyStep,
-} from '@/components/journey';
+import { Checkbox } from '@/components/ui/checkbox';
+import SaleCheckoutShell from '@/components/checkout/sale/SaleCheckoutShell';
+import SaleCheckoutCard from '@/components/checkout/sale/SaleCheckoutCard';
+import SaleListingSummary from '@/components/checkout/sale/SaleListingSummary';
+import SaleOrderSummary, { type SaleSummaryLine } from '@/components/checkout/sale/SaleOrderSummary';
+import SaleCheckoutFooter from '@/components/checkout/sale/SaleCheckoutFooter';
 
 type FulfillmentSelection = 'pickup' | 'delivery' | 'vendibook_freight';
 
