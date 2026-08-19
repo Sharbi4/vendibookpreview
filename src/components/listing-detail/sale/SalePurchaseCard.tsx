@@ -27,7 +27,7 @@ import { MakeOfferModal } from '@/components/offers/MakeOfferModal';
 import { AuthGateOfferModal } from '@/components/offers/AuthGateOfferModal';
 import MessageHostForm from '@/components/messaging/MessageHostForm';
 import { useEquinoxFinancingEnabled } from '@/hooks/useListingFinancing';
-import { PayPalMonogram, PayPalWordmark } from '@/components/brand/ProviderLogos';
+import { PayPalMonogram } from '@/components/brand/ProviderLogos';
 import { getPublicDisplayName } from '@/lib/displayName';
 import { formatLastActive } from '@/hooks/useActivityTracker';
 import {
