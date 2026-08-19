@@ -59,34 +59,36 @@ type FulfillmentSelection = 'pickup' | 'delivery' | 'vendibook_freight';
  * The step machine is the only thing that changed — every money, eligibility
  * and edge-function rule below is untouched.
  */
-type CheckoutStep = 'intro' | 'fulfillment' | 'details' | 'payment';
+type CheckoutStep = 'intro' | 'fulfillment' | 'verify' | 'options' | 'payment';
 
 // High-value sale threshold. Below this we skip the intro screen and drop
 // buyers straight into the wizard (small tool/add-on purchases).
 const SALE_INTRO_MIN_PRICE = 1000;
 
-const CHECKOUT_STEPS = [
-  { id: 'fulfillment', label: 'Review & fulfillment' },
-  { id: 'details', label: 'Confirm details' },
-  { id: 'payment', label: 'Payment' },
-];
+const STEP_LABELS: Record<Exclude<CheckoutStep, 'intro'>, string> = {
+  fulfillment: 'Review & fulfillment',
+  verify: 'Verify & details',
+  options: 'Options',
+  payment: 'Payment & review',
+};
 
-const STEP_ORDER: Exclude<CheckoutStep, 'intro'>[] = ['fulfillment', 'details', 'payment'];
-
-/** Older sessions persisted a 7-step machine; fold them onto the new three. */
+/** Older sessions persisted a 7-step machine; fold them onto the new four. */
 const LEGACY_STEP_MAP: Record<string, CheckoutStep> = {
   intro: 'intro',
   confirm: 'fulfillment',
-  identity: 'fulfillment',
   delivery: 'fulfillment',
   fulfillment: 'fulfillment',
-  addons: 'details',
-  details: 'details',
+  identity: 'verify',
+  details: 'verify',
+  verify: 'verify',
+  addons: 'options',
+  options: 'options',
   payment: 'payment',
   review: 'payment',
 };
 const normalizeStep = (step: string | undefined): CheckoutStep =>
   LEGACY_STEP_MAP[step ?? 'intro'] ?? 'intro';
+
 
 const SaleCheckout = () => {
   const { listingId } = useParams();
