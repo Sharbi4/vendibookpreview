@@ -12,6 +12,9 @@ import { Button } from '@/components/ui/button';
 import { PayPalMonogram } from '@/components/brand/ProviderLogos';
 import PayPalPaymentPanel from '@/components/checkout/PayPalPaymentPanel';
 import { useProBoostCredit, useRedeemProBoostCredit } from '@/hooks/useProBoostCredit';
+import { useCatalogPrice } from '@/hooks/useCatalogPrices';
+import { ACTIVE_PRODUCT_SLUGS } from '@/lib/monetization/catalogPricing';
+import { formatUsd } from '@/lib/monetization/products';
 import { toast } from 'sonner';
 import BoostPaymentStatus, {
   useBoostActivation,
@@ -61,6 +64,9 @@ export const FeaturedListingModal = ({
   const queryClient = useQueryClient();
   const { data: boostCredit } = useProBoostCredit();
   const redeemCredit = useRedeemProBoostCredit();
+  // Price, cadence and PayPal amount all come from the catalog row we charge.
+  const boostPrice = useCatalogPrice(ACTIVE_PRODUCT_SLUGS.featuredBoost);
+  const durationLabel = boostPrice.durationDays ? `${boostPrice.durationDays} days` : 'one-time';
 
   // Reset the flow whenever the modal is dismissed.
   useEffect(() => {
