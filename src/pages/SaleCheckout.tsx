@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
-import { Loader2, ArrowLeft } from 'lucide-react';
+import { Loader2, ArrowLeft, ShieldCheck } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
 import { useListing } from '@/hooks/useListing';
@@ -59,34 +59,38 @@ type FulfillmentSelection = 'pickup' | 'delivery' | 'vendibook_freight';
  * The step machine is the only thing that changed — every money, eligibility
  * and edge-function rule below is untouched.
  */
-type CheckoutStep = 'intro' | 'fulfillment' | 'details' | 'payment';
+type CheckoutStep = 'intro' | 'fulfillment' | 'verify' | 'options' | 'payment';
 
 // High-value sale threshold. Below this we skip the intro screen and drop
 // buyers straight into the wizard (small tool/add-on purchases).
 const SALE_INTRO_MIN_PRICE = 1000;
 
-const CHECKOUT_STEPS = [
-  { id: 'fulfillment', label: 'Review & fulfillment' },
-  { id: 'details', label: 'Confirm details' },
-  { id: 'payment', label: 'Payment' },
-];
+const STEP_LABELS: Record<Exclude<CheckoutStep, 'intro'>, string> = {
+  fulfillment: 'Review & fulfillment',
+  verify: 'Verify & details',
+  options: 'Options',
+  payment: 'Payment & review',
+};
 
-const STEP_ORDER: Exclude<CheckoutStep, 'intro'>[] = ['fulfillment', 'details', 'payment'];
-
-/** Older sessions persisted a 7-step machine; fold them onto the new three. */
+/** Older sessions persisted a 7-step machine; fold them onto the new four. */
 const LEGACY_STEP_MAP: Record<string, CheckoutStep> = {
   intro: 'intro',
   confirm: 'fulfillment',
-  identity: 'fulfillment',
   delivery: 'fulfillment',
   fulfillment: 'fulfillment',
-  addons: 'details',
-  details: 'details',
+  identity: 'verify',
+  details: 'verify',
+  verify: 'verify',
+  addons: 'options',
+  options: 'options',
   payment: 'payment',
   review: 'payment',
 };
 const normalizeStep = (step: string | undefined): CheckoutStep =>
   LEGACY_STEP_MAP[step ?? 'intro'] ?? 'intro';
+
+const STEP_ORDER: Exclude<CheckoutStep, 'intro'>[] = ['fulfillment', 'verify', 'options', 'payment'];
+
 
 const SaleCheckout = () => {
   const { listingId } = useParams();
@@ -473,7 +477,7 @@ const SaleCheckout = () => {
       return true;
     }
     
-    if (step === 'details') {
+    if (step === 'verify') {
       const needsAddress = fulfillmentSelected !== 'pickup';
 
       const firstNameError = fieldValidators.firstName(buyerInfo.firstName);
@@ -768,7 +772,7 @@ const SaleCheckout = () => {
   if (isOwner) {
     return (
       <SaleCheckoutShell
-        steps={CHECKOUT_STEPS}
+        steps={STEP_ORDER.filter((s) => s !== 'options').map((s) => ({ id: s, label: STEP_LABELS[s] }))}
         currentIndex={0}
         exitHref={`/listing/${listingId}`}
       >
@@ -788,10 +792,47 @@ const SaleCheckout = () => {
 
 
   const hasMultiplePaymentOptions = acceptPayPalCheckout && acceptCashPayment;
-  const stepIndex = Math.max(0, STEP_ORDER.indexOf(currentStep as Exclude<CheckoutStep, 'intro'>));
 
-  const goNext = () => setCurrentStep(STEP_ORDER[Math.min(stepIndex + 1, STEP_ORDER.length - 1)]);
-  const goBack = () => setCurrentStep(STEP_ORDER[Math.max(stepIndex - 1, 0)]);
+  /**
+   * Optional add-ons. Purely presentational selections (nothing is charged
+   * here) — the "Options" stage disappears entirely when none apply.
+   */
+  const addOnCatalog: { id: string; title: string; description: string; priceLabel: string }[] = [
+    ...((listing as { vin?: string | null }).vin || (listing as { title_status?: string | null }).title_status
+      ? [{
+          id: 'inspection',
+          title: 'Pre-purchase inspection',
+          description: 'We connect you with a local inspector before pickup or delivery.',
+          priceLabel: 'Quoted separately',
+        }]
+      : []),
+    ...((listing as { title_status?: string | null }).title_status
+      ? [{
+          id: 'notarization',
+          title: 'Notarized title transfer',
+          description: 'Remote notary coordination for the title hand-off.',
+          priceLabel: 'Quoted separately',
+        }]
+      : []),
+  ];
+  const hasAddOns = addOnCatalog.length > 0;
+
+  const visibleSteps: Exclude<CheckoutStep, 'intro'>[] = hasAddOns
+    ? ['fulfillment', 'verify', 'options', 'payment']
+    : ['fulfillment', 'verify', 'payment'];
+
+  const effectiveStep: Exclude<CheckoutStep, 'intro'> =
+    currentStep === 'intro'
+      ? 'fulfillment'
+      : currentStep === 'options' && !hasAddOns
+        ? 'payment'
+        : currentStep;
+
+  const stepIndex = Math.max(0, visibleSteps.indexOf(effectiveStep));
+
+  const goNext = () => setCurrentStep(visibleSteps[Math.min(stepIndex + 1, visibleSteps.length - 1)]);
+  const goBack = () => setCurrentStep(visibleSteps[Math.max(stepIndex - 1, 0)]);
+
 
   /** Prefill the details step from the delivery address the buyer already typed. */
   const prefillFromDeliveryAddress = () => {
@@ -833,40 +874,47 @@ const SaleCheckout = () => {
   );
 
   const advance = () => {
-    if (currentStep === 'fulfillment') {
+    if (effectiveStep === 'fulfillment') {
       if (!validateStep('fulfillment')) return;
       prefillFromDeliveryAddress();
       goNext();
       return;
     }
-    if (currentStep === 'details') {
-      if (!validateStep('details')) return;
-      if (!agreedToTerms) {
-        toast({
-          title: 'One more thing',
-          description: 'Please acknowledge that all sales are final to continue.',
-          variant: 'destructive',
-        });
-        return;
-      }
+    if (effectiveStep === 'verify') {
+      if (!validateStep('verify')) return;
       goNext();
+      return;
+    }
+    if (effectiveStep === 'options') {
+      goNext();
+      return;
+    }
+    if (!agreedToTerms) {
+      toast({
+        title: 'One more thing',
+        description: 'Please acknowledge that all sales are final to continue.',
+        variant: 'destructive',
+      });
       return;
     }
     handlePurchase();
   };
 
   const primaryLabel =
-    currentStep === 'fulfillment'
-      ? 'Continue to your details'
-      : currentStep === 'details'
-        ? 'Continue to payment'
-        : paymentMethod === 'cash'
-          ? 'Confirm — arrange in person'
-          : `Pay $${totalPrice.toLocaleString()}`;
+    effectiveStep === 'fulfillment'
+      ? 'Continue to verification'
+      : effectiveStep === 'verify'
+        ? hasAddOns ? 'Continue to options' : 'Continue to payment'
+        : effectiveStep === 'options'
+          ? 'Continue to payment'
+          : paymentMethod === 'cash'
+            ? 'Confirm — arrange in person'
+            : `Pay $${totalPrice.toLocaleString()}`;
 
   const primaryDisabled =
-    (currentStep === 'fulfillment' && !fulfillmentReady) ||
-    (currentStep === 'payment' && !user);
+    (effectiveStep === 'fulfillment' && !fulfillmentReady) ||
+    (effectiveStep === 'payment' && !user);
+
 
   // "Step 0" — enterprise-grade intro. Shown once per checkout session for
   // high-value sales; small purchases fall through to the wizard.
@@ -899,7 +947,7 @@ const SaleCheckout = () => {
       <SEO title={`Checkout - ${listing.title}`} description={`Complete your purchase of ${listing.title}`} />
 
       <SaleCheckoutShell
-        steps={CHECKOUT_STEPS}
+        steps={visibleSteps.map((id) => ({ id, label: STEP_LABELS[id] }))}
         currentIndex={stepIndex}
         exitHref={`/listing/${listingId}`}
         aside={orderSummary}
@@ -924,14 +972,14 @@ const SaleCheckout = () => {
 
         <AnimatePresence mode="wait">
           <motion.div
-            key={currentStep}
+            key={effectiveStep}
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
             transition={{ duration: 0.18 }}
             className="space-y-5"
           >
-            {currentStep === 'fulfillment' && (
+            {effectiveStep === 'fulfillment' && (
               <>
                 <SaleCheckoutCard>
                   <SaleListingSummary
@@ -986,8 +1034,50 @@ const SaleCheckout = () => {
               </>
             )}
 
-            {currentStep === 'details' && (
+            {effectiveStep === 'verify' && (
               <>
+                {!buyerVerificationLoading && !buyerVerified && (
+                  <SaleCheckoutCard title="Verify your identity" padding="md">
+                    <div className="space-y-3">
+                      <p className="text-sm text-muted-foreground leading-relaxed">
+                        Verification is handled by Plaid — sellers only ever see a pass/fail result,
+                        never your documents. Verified buyers get pickup addresses and scheduling
+                        confirmed faster.
+                      </p>
+                      <div className="flex flex-wrap items-center gap-3">
+                        <button
+                          type="button"
+                          onClick={() => setIdentityDialogOpen(true)}
+                          className="h-10 px-4 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition-opacity"
+                        >
+                          Verify my identity
+                        </button>
+                        <label className="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer">
+                          <Checkbox
+                            checked={identityAcknowledged}
+                            onCheckedChange={(v) => setIdentityAcknowledged(Boolean(v))}
+                          />
+                          Continue without verifying for now
+                        </label>
+                      </div>
+                    </div>
+                  </SaleCheckoutCard>
+                )}
+
+                {buyerVerified && (
+                  <SaleCheckoutCard padding="md">
+                    <div className="flex items-center gap-3">
+                      <ShieldCheck className="h-5 w-5 text-primary shrink-0" />
+                      <div>
+                        <div className="text-sm font-semibold text-foreground">Identity verified</div>
+                        <p className="text-xs text-muted-foreground">
+                          Your Plaid identity check is active — nothing else to do here.
+                        </p>
+                      </div>
+                    </div>
+                  </SaleCheckoutCard>
+                )}
+
                 <SaleCheckoutCard>
                   <PurchaseStepInfo
                     embedded
@@ -1004,6 +1094,69 @@ const SaleCheckout = () => {
                     onContinue={advance}
                   />
                 </SaleCheckoutCard>
+
+                <div className="lg:hidden">{orderSummary}</div>
+              </>
+            )}
+
+            {effectiveStep === 'options' && (
+              <>
+                <SaleCheckoutCard title="Optional services" padding="md">
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Nothing is pre-selected and nothing is charged now — we'll follow up with a quote
+                    for anything you choose.
+                  </p>
+                  <div className="space-y-3">
+                    {addOnCatalog.map((addon) => (
+                      <label
+                        key={addon.id}
+                        className="flex items-start gap-3 rounded-2xl border border-border/70 bg-card p-4 cursor-pointer hover:border-primary/40 transition-colors"
+                      >
+                        <Checkbox
+                          checked={Boolean(addOnSelections[addon.id])}
+                          onCheckedChange={(v) => toggleAddOn(addon.id, Boolean(v))}
+                          className="mt-0.5"
+                        />
+                        <span className="min-w-0 flex-1">
+                          <span className="flex items-center justify-between gap-3">
+                            <span className="text-sm font-semibold text-foreground">{addon.title}</span>
+                            <span className="text-xs text-muted-foreground shrink-0">{addon.priceLabel}</span>
+                          </span>
+                          <span className="block text-xs text-muted-foreground mt-1 leading-relaxed">
+                            {addon.description}
+                          </span>
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                </SaleCheckoutCard>
+
+                <div className="lg:hidden">{orderSummary}</div>
+              </>
+            )}
+
+            {effectiveStep === 'payment' && (
+              <>
+                <SaleCheckoutCard>
+                  <PurchaseStepPayment
+                    embedded
+                    paymentMethod={paymentMethod}
+                    setPaymentMethod={setPaymentMethod}
+                    acceptPayPalCheckout={acceptPayPalCheckout}
+                    acceptCashPayment={acceptCashPayment}
+                    titleStatus={(listing as { title_status?: string | null }).title_status ?? null}
+                    hasLien={(listing as { has_lien?: string | null }).has_lien ?? null}
+                    vin={(listing as { vin?: string | null }).vin ?? null}
+                    totalPrice={totalPrice}
+                    submitting={isPurchasing || termsGate.preparing}
+                    onBack={goBack}
+                    onContinue={advance}
+                  />
+                </SaleCheckoutCard>
+
+                {paymentMethod !== 'cash' ? (
+                  <ProtectionOptInCard salePriceCents={Math.round(totalPrice * 100)} />
+                ) : null}
 
                 <SaleCheckoutCard title="Before you pay" padding="md">
                   <div className="space-y-4">
@@ -1030,33 +1183,6 @@ const SaleCheckout = () => {
                 <div className="lg:hidden">{orderSummary}</div>
               </>
             )}
-
-            {currentStep === 'payment' && (
-              <>
-                <SaleCheckoutCard>
-                  <PurchaseStepPayment
-                    embedded
-                    paymentMethod={paymentMethod}
-                    setPaymentMethod={setPaymentMethod}
-                    acceptPayPalCheckout={acceptPayPalCheckout}
-                    acceptCashPayment={acceptCashPayment}
-                    titleStatus={(listing as { title_status?: string | null }).title_status ?? null}
-                    hasLien={(listing as { has_lien?: string | null }).has_lien ?? null}
-                    vin={(listing as { vin?: string | null }).vin ?? null}
-                    totalPrice={totalPrice}
-                    submitting={isPurchasing || termsGate.preparing}
-                    onBack={goBack}
-                    onContinue={advance}
-                  />
-                </SaleCheckoutCard>
-
-                {paymentMethod !== 'cash' ? (
-                  <ProtectionOptInCard salePriceCents={Math.round(totalPrice * 100)} />
-                ) : null}
-
-                <div className="lg:hidden">{orderSummary}</div>
-              </>
-            )}
           </motion.div>
         </AnimatePresence>
 
@@ -1068,7 +1194,7 @@ const SaleCheckout = () => {
           primaryDisabled={primaryDisabled}
           busy={isPurchasing || termsGate.preparing}
           helper={
-            currentStep === 'payment'
+            effectiveStep === 'payment'
               ? "You'll confirm the final total before any money moves."
               : 'Your progress is saved — you can step back any time.'
           }

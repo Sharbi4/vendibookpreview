@@ -76,8 +76,8 @@ const CheckoutIntro = ({
             },
             {
               icon: UserCheck,
-              title: 'Confirm your details',
-              body: 'Only what we need for the bill of sale and to coordinate handoff.',
+              title: 'Verify and confirm details',
+              body: 'Optional identity verification, plus only what we need for the bill of sale.',
             },
             {
               icon: ClipboardCheck,
@@ -205,7 +205,7 @@ const CheckoutIntro = ({
           <span className="text-primary">{heroTitleNoun}</span>
         </h2>
         <p className="mt-2 text-sm sm:text-base text-muted-foreground">
-          {flow === 'sale' ? 'Three' : 'Four'} quick steps. We&rsquo;ll explain everything before you pay.
+          A few quick steps. We&rsquo;ll explain everything before you pay.
         </p>
       </motion.div>
 
