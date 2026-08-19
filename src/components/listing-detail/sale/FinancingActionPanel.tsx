@@ -99,7 +99,7 @@ export const FinancingActionPanel = ({ listing, className }: FinancingActionPane
         </div>
         <div className="min-w-0">
           <div className="mb-2 flex items-center gap-3 flex-wrap">
-            <FinancingAvailableBadge />
+            <FinancingAvailableBadge listingId={listing.id} />
             <EquinoxFundingLogo className="h-5" />
           </div>
           <h3 className="text-base font-semibold">Financing options for this equipment</h3>
