@@ -874,40 +874,47 @@ const SaleCheckout = () => {
   );
 
   const advance = () => {
-    if (currentStep === 'fulfillment') {
+    if (effectiveStep === 'fulfillment') {
       if (!validateStep('fulfillment')) return;
       prefillFromDeliveryAddress();
       goNext();
       return;
     }
-    if (currentStep === 'details') {
-      if (!validateStep('details')) return;
-      if (!agreedToTerms) {
-        toast({
-          title: 'One more thing',
-          description: 'Please acknowledge that all sales are final to continue.',
-          variant: 'destructive',
-        });
-        return;
-      }
+    if (effectiveStep === 'verify') {
+      if (!validateStep('verify')) return;
       goNext();
+      return;
+    }
+    if (effectiveStep === 'options') {
+      goNext();
+      return;
+    }
+    if (!agreedToTerms) {
+      toast({
+        title: 'One more thing',
+        description: 'Please acknowledge that all sales are final to continue.',
+        variant: 'destructive',
+      });
       return;
     }
     handlePurchase();
   };
 
   const primaryLabel =
-    currentStep === 'fulfillment'
-      ? 'Continue to your details'
-      : currentStep === 'details'
-        ? 'Continue to payment'
-        : paymentMethod === 'cash'
-          ? 'Confirm — arrange in person'
-          : `Pay $${totalPrice.toLocaleString()}`;
+    effectiveStep === 'fulfillment'
+      ? 'Continue to verification'
+      : effectiveStep === 'verify'
+        ? hasAddOns ? 'Continue to options' : 'Continue to payment'
+        : effectiveStep === 'options'
+          ? 'Continue to payment'
+          : paymentMethod === 'cash'
+            ? 'Confirm — arrange in person'
+            : `Pay $${totalPrice.toLocaleString()}`;
 
   const primaryDisabled =
-    (currentStep === 'fulfillment' && !fulfillmentReady) ||
-    (currentStep === 'payment' && !user);
+    (effectiveStep === 'fulfillment' && !fulfillmentReady) ||
+    (effectiveStep === 'payment' && !user);
+
 
   // "Step 0" — enterprise-grade intro. Shown once per checkout session for
   // high-value sales; small purchases fall through to the wizard.
