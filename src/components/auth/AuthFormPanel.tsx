@@ -778,8 +778,8 @@ export const AuthFormPanel = ({ mode, setMode }: AuthFormPanelProps) => {
 
               <Button 
                 type="submit" 
-                variant="dark-shine"
-                className="w-full rounded-xl h-12"
+                variant="cta"
+                className="w-full h-12"
                 disabled={isSubmitting}
               >
                 {isSubmitting && <Loader2 className="h-4 w-4 animate-spin mr-2" />}

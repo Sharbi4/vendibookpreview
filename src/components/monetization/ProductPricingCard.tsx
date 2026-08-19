@@ -160,11 +160,8 @@ export function ProductPricingCard({
       <Button
         onClick={handleClick}
         disabled={activeBusy}
-        className={cn(
-          'w-full',
-          recommended ? 'bg-orange-500 hover:bg-orange-500/90 text-white' : '',
-        )}
-        variant={recommended ? 'default' : 'outline'}
+        className="w-full h-12"
+        variant={recommended ? 'cta' : 'cta-outline'}
       >
         {activeBusy ? (
           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
