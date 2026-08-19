@@ -3418,12 +3418,16 @@ export const PublishWizard: React.FC = () => {
                             <EquinoxFundingLogo className="h-6 w-auto" />
                             <h3 className="text-lg font-semibold">Buyer financing included</h3>
                           </div>
-                          <div className="rounded-xl border border-border bg-card p-4 space-y-2">
+                          <div className="rounded-xl border border-border bg-card p-4 space-y-3">
                             <p className="text-sm text-muted-foreground">
                               Buyers can apply for equipment financing through Equinox Funding on
                               every published for-sale listing. Nothing to turn on, and it never
                               changes how you get paid.
                             </p>
+                            <div className="flex items-start gap-2 text-sm text-foreground">
+                              <Clock className="w-4 h-4 text-primary mt-0.5 shrink-0" />
+                              <span>Get paid within 24 hours once the financed sale is confirmed.</span>
+                            </div>
                             <p className="text-xs leading-relaxed text-muted-foreground">
                               {EQUINOX_DISCLOSURE_TEXT}
                             </p>
