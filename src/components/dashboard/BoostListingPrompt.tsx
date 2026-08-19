@@ -136,7 +136,7 @@ export const BoostListingPrompt = ({ listings, userId }: BoostListingPromptProps
 
   return (
     <Dialog open={open} onOpenChange={(o) => { if (!o) handleDismiss(); }}>
-      <DialogContent className="sm:max-w-lg overflow-hidden border border-white/12 bg-[#08080a]/95 backdrop-blur-2xl p-0 shadow-[0_40px_120px_-30px_rgba(0,0,0,0.9)]">
+      <DialogContent className="sm:max-w-lg overflow-hidden rounded-2xl border border-white/12 bg-[#08080a]/95 backdrop-blur-2xl p-0 shadow-[0_40px_120px_-30px_rgba(0,0,0,0.9)]">
         <div
           aria-hidden
           className="pointer-events-none absolute inset-x-0 -top-24 h-48 bg-[radial-gradient(60%_100%_at_50%_0%,hsl(14,100%,57%,0.2),transparent_70%)]"
