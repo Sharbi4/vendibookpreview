@@ -39,6 +39,79 @@ import {
 } from '@/lib/monetization/returnRoutes';
 import { trackLeadEvent } from '@/lib/leadTracking';
 import PlansFAQ from '@/components/monetization/PlansFAQ';
+import PlanDetailsDialog from '@/components/monetization/PlanDetailsDialog';
+
+/** Learn-more copy per add-on. Prices/cadence stay dynamic from the catalog. */
+const ADDON_DETAILS: Record<
+  string,
+  { summary: string; included: string[]; bestFor: string; billing: string; finePrint: string[] }
+> = {
+  [ACTIVE_PRODUCT_SLUGS.featuredBoost]: {
+    summary: 'Put one listing at the top of search results and give it a highlighted card for 30 days.',
+    included: [
+      'Priority placement at the top of matching search results',
+      'Highlighted, featured-styled listing card',
+      'Eligible for the featured row on the homepage',
+      'Runs for 30 days from activation',
+    ],
+    bestFor: 'A listing that is ready to sell or rent and needs more eyes this month.',
+    billing: 'One-time charge. Does not renew.',
+    finePrint: [
+      '30-day duration · non-recurring — buy again to extend.',
+      'Applies to one listing you select.',
+      'Vendibook Pro members receive 1 boost credit per billing period.',
+    ],
+  },
+  [ACTIVE_PRODUCT_SLUGS.proListing]: {
+    summary: 'Premium presentation and priority placement for a single listing for 30 days.',
+    included: [
+      'Premium listing presentation',
+      'Priority placement in relevant search results',
+      'Runs for 30 days from activation',
+    ],
+    bestFor: 'Higher-value equipment where presentation drives the inquiry.',
+    billing: 'One-time charge. Does not renew.',
+    finePrint: ['30-day duration · non-recurring.', 'Applies to one listing you select.'],
+  },
+  [ACTIVE_PRODUCT_SLUGS.conciergeListing]: {
+    summary: 'Our team writes and structures a complete listing for you from the details you provide.',
+    included: [
+      'Written title, description and specification sheet',
+      'Structured listing set up for search',
+      'Photo and detail guidance before publishing',
+    ],
+    bestFor: 'Sellers who would rather hand the listing off than write it.',
+    billing: 'One-time charge per listing.',
+    finePrint: ['One-time service · non-recurring.', 'You review and approve before publishing.'],
+  },
+  [ACTIVE_PRODUCT_SLUGS.listingRewrite]: {
+    summary: 'A rewrite of an existing listing so the title, description and specs read cleanly.',
+    included: [
+      'Rewritten title and description',
+      'Cleaned-up specification sheet',
+      'Applied to one listing you choose',
+    ],
+    bestFor: 'A live listing that is getting views but not inquiries.',
+    billing: 'One-time charge per listing.',
+    finePrint: ['One-time service · non-recurring.'],
+  },
+  [ACTIVE_PRODUCT_SLUGS.permitPathPlus]: {
+    summary: 'The saving and tracking layer on top of PermitPath. Roadmap generation stays free.',
+    included: [
+      'Save permit roadmaps to your account',
+      'Track permit status as you progress',
+      'Store permit documents',
+      'Export roadmaps to PDF',
+    ],
+    bestFor: 'Operators working through a real permit list across multiple agencies.',
+    billing: 'Recurring monthly · cancel anytime.',
+    finePrint: [
+      'Included with Vendibook Pro at no extra cost.',
+      'Cancel anytime — access continues through the current paid period.',
+      'PermitPath Basic search and roadmap generation remain free.',
+    ],
+  },
+};
 
 /** Short benefit copy per active add-on. Falls back to the DB description. */
 const ONE_LINERS: Record<string, string> = {
@@ -50,7 +123,7 @@ const ONE_LINERS: Record<string, string> = {
 };
 
 const FREE_FEATURES = [
-  'List for sale or for rent — unlimited browsing',
+  'Unlimited listings for sale or for rent',
   '12.9% seller/host fee on completed transactions',
   'Payment protection and PayPal-secured checkout',
   'Free e-signatures on every agreement',
@@ -58,10 +131,11 @@ const FREE_FEATURES = [
 ];
 
 const PRO_FEATURES = [
-  { icon: Percent, text: '10.9% seller/host fee instead of 12.9% — up to $500 saved per transaction' },
-  { icon: Zap, text: '1 Featured Boost credit every billing period' },
-  { icon: Crown, text: 'Premium tools and analytics, including PermitPath Plus' },
+  { icon: Percent, text: '10.9% seller/host fee instead of 12.9% — up to $500 saved per completed transaction' },
+  { icon: Zap, text: '1 Featured Boost credit per billing period' },
+  { icon: Crown, text: 'Premium tools and analytics, plus PermitPath Plus included' },
   { icon: ShieldCheck, text: 'Priority placement in search and priority support' },
+  { icon: XCircle, text: 'Cancel anytime — no contract' },
 ];
 
 const Card = ({
@@ -257,11 +331,11 @@ const Pricing = () => {
             Pricing
           </p>
           <h1 className="mt-2 text-[30px] md:text-[38px] font-semibold tracking-tight text-foreground leading-[1.1]">
-            Start free. Go Pro when the math is obvious.
+            Sell more. Get seen first. Keep more when you close.
           </h1>
           <p className="mt-3 text-[15px] leading-relaxed text-muted-foreground">
-            One account covers selling and hosting. No listing fees, no contracts — you only pay a
-            commission when a transaction completes.
+            Start free. Upgrade when you&rsquo;re ready for more visibility, premium tools, and lower
+            seller/host fees.
           </p>
         </header>
 
