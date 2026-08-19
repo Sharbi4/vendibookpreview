@@ -2,8 +2,8 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import { corsHeaders, jsonError, jsonResponse, unknownErrorResponse } from "../_shared/jsonError.ts";
 import { assertListingPurchasable } from "../_shared/listingGuard.ts";
-
-const SELLER_COMMISSION = 0.129;
+import { resolveProStatus } from "../_shared/proEligibility.ts";
+import { computeProSellerFee } from "../_shared/proFee.ts";
 
 /**
  * Creates (or reuses) the PENDING sale_transactions row a PayPal order is
@@ -76,7 +76,16 @@ serve(async (req) => {
     }
 
     const amount = Number(listing.price_sale);
-    const platformFee = Math.round(amount * SELLER_COMMISSION * 100) / 100;
+
+    // COMMITMENT POINT: snapshot the seller fee that both sides agreed to.
+    // Vendibook Pro eligibility is resolved here once; a later cancellation,
+    // downgrade or upgrade never reprices this transaction.
+    const proStatus = await resolveProStatus(admin, listing.host_id);
+    const feeQuote = computeProSellerFee({
+      baseCents: Math.round(amount * 100),
+      isPro: proStatus.isPro,
+    });
+    const platformFee = feeQuote.feeCents / 100;
 
     const fulfillmentType = body?.fulfillment_type ?? "pickup";
     const needsAddress = fulfillmentType === "delivery" || fulfillmentType === "vendibook_freight";
@@ -90,6 +99,10 @@ serve(async (req) => {
         amount,
         platform_fee: platformFee,
         seller_payout: Math.round((amount - platformFee) * 100) / 100,
+        fee_rate_pct: feeQuote.effectiveRatePct,
+        pro_discount: feeQuote.discountCents / 100,
+        pro_fee_applied: feeQuote.proApplied,
+        fee_locked_at: new Date().toISOString(),
         status: "pending",
         payment_provider: "paypal",
         fulfillment_type: fulfillmentType,
