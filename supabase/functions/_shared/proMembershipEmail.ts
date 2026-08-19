@@ -51,29 +51,46 @@ export function membershipEmailKey(
   return `${paypalSubscriptionId}:${kind}${stamp ? `:${stamp}` : ""}`;
 }
 
+export type PaidPeriodKind = "activated" | "renewed" | "duplicate";
+
 /**
- * Claims the first paid period for a subscription.
- * Returns true exactly once per PayPal subscription id, so activation vs
- * renewal is unambiguous even when `last_payment_at` was already written by an
- * earlier PAYMENT.SALE.COMPLETED for the same first period.
+ * Classifies a paid-period signal as the FIRST period (activation), a later
+ * period (renewal), or a repeat of a period already handled (duplicate).
+ *
+ * `last_payment_at` cannot be used for this: PAYMENT.SALE.COMPLETED writes it
+ * before the mirror runs, so the very first payment would look like a renewal.
+ * Instead the first period is claimed once in `edge_action_idempotency` and its
+ * period end is remembered — any later signal carrying that same period end is
+ * still the first period and must not produce a renewal receipt.
  */
-export async function claimFirstPaidPeriod(
+export async function resolvePaidPeriodKind(
   admin: Admin,
   paypalSubscriptionId: string,
   userId: string,
-): Promise<boolean> {
+  periodEnd: string | null,
+): Promise<PaidPeriodKind> {
+  const idempotency_key = `subscription-first-period:${paypalSubscriptionId}`;
   try {
     const { error } = await admin.from("edge_action_idempotency").insert({
-      idempotency_key: `subscription-first-period:${paypalSubscriptionId}`,
+      idempotency_key,
       action: "subscription_first_period",
       user_id: userId,
-      response: { paypal_subscription_id: paypalSubscriptionId },
+      response: { paypal_subscription_id: paypalSubscriptionId, period_end: periodEnd },
     });
-    return !error; // 23505 → a paid period was already recorded → renewal
+    if (!error) return "activated";
+
+    const { data: claim } = await admin.from("edge_action_idempotency")
+      .select("response").eq("idempotency_key", idempotency_key).maybeSingle();
+    const firstPeriodEnd = claim?.response?.period_end ?? null;
+
+    // Same (or still-unknown) period end → the activation already covered it.
+    if (!periodEnd || !firstPeriodEnd || periodEnd === firstPeriodEnd) return "duplicate";
+    return "renewed";
   } catch (_err) {
-    return false;
+    return "duplicate"; // never risk a wrong or duplicate lifecycle email
   }
 }
+
 
 /** Sends a branded Pro lifecycle email. No-ops for non-Pro tiers. */
 export async function sendProMembershipEmail(
