@@ -368,26 +368,33 @@ async function mirrorHostSubscription(admin: any, paypalSubId: string, status: s
   if (!sub) return;
 
   const entitlementActive = status === "active";
-  const mapped = entitlementActive
-    ? "active"
-    : status === "payment_failed"
-    ? "past_due"
-    : status === "suspended"
-    ? "paused"
-    : status === "cancelled" || status === "expired"
-    ? "canceled"
-    : "incomplete";
 
-  const { data: existing } = await admin.from("host_subscriptions").select("id")
+  const { data: existing } = await admin.from("host_subscriptions")
+    .select("id, current_period_start, current_period_end")
     .eq("user_id", sub.user_id).maybeSingle();
+
+  // Grandfathering: a cancelled/expired membership keeps its benefits until the
+  // paid-through date already on file. Pure + idempotent, so webhook retries
+  // and the reconciler converge on the same row.
+  const period = resolveSubscriptionPeriod({
+    providerStatus: status,
+    nextBillingTime: sub.next_billing_time,
+    lastPaymentAt: sub.last_payment_at,
+    startTime: sub.start_time,
+    existingPeriodEnd: existing?.current_period_end ?? null,
+    existingPeriodStart: existing?.current_period_start ?? null,
+  });
 
   const payload = {
     user_id: sub.user_id,
     tier: sub.tier,
-    status: mapped,
+    status: period.status,
     payment_provider: "paypal",
     paypal_subscription_id: paypalSubId,
-    current_period_end: sub.next_billing_time,
+    cancel_at_period_end: period.cancel_at_period_end,
+    cancel_at: period.cancel_at,
+    current_period_start: period.current_period_start,
+    current_period_end: period.current_period_end,
     updated_at: new Date().toISOString(),
   };
 
