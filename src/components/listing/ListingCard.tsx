@@ -263,7 +263,7 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
         }}
       >
         {/* Image Container - Turo Look */}
-        <div className={cn('relative w-full', isRow && 'sm:w-[280px] sm:shrink-0 sm:overflow-hidden')}>
+        <div className={cn('relative w-full', isRow && 'sm:w-[238px] sm:shrink-0 sm:overflow-hidden')}>
 
           <SmartImage
             src={listing.cover_image_url || listing.image_urls[0]}
