@@ -10,7 +10,7 @@ import ActionRequiredStack, { type ActionItem } from './shared/ActionRequiredSta
 import OverviewGreeting from './overview/OverviewGreeting';
 import { KpiCard } from './overview/KpiCard';
 import RecentActivityStrip, { ActivityItem } from './overview/RecentActivityStrip';
-import PremiumSpotlight from './overview/PremiumSpotlight';
+import MembershipCard from './MembershipCard';
 import { useShopperBookings } from '@/hooks/useShopperBookings';
 import { useUnreadMessageCount } from '@/hooks/useUnreadMessageCount';
 import { useFavorites } from '@/hooks/useFavorites';
@@ -160,7 +160,7 @@ const ShopperDashboard = () => {
 
       <hr className="section-divider" />
 
-      <PremiumSpotlight />
+      <MembershipCard />
     </div>
   );
 };

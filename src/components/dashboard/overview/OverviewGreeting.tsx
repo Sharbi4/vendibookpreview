@@ -1,5 +1,6 @@
 import IdentityChip from '@/components/dashboard/shared/IdentityChip';
 import EmailVerifiedBadge from '@/components/dashboard/shared/EmailVerifiedBadge';
+import ProMemberBadge from '@/components/dashboard/shared/ProMemberBadge';
 
 interface Props {
   firstName?: string;
@@ -29,15 +30,19 @@ const OverviewGreeting = ({ firstName, isVerified }: Props) => {
           {firstName ? `Hi ${firstName}` : 'Hi there'}
         </p>
         <div className="flex items-center gap-1.5 shrink-0">
+          <ProMemberBadge />
           <EmailVerifiedBadge compact />
           <IdentityChip verified={isVerified} />
         </div>
       </div>
 
       {/* Desktop/tablet — tiny eyebrow only */}
-      <p className="hidden sm:block text-[12px] font-medium uppercase tracking-[0.14em] text-[rgb(var(--dash-text-2))]">
-        Overview · {today}
-      </p>
+      <div className="hidden sm:flex items-center gap-2">
+        <p className="text-[12px] font-medium uppercase tracking-[0.14em] text-[rgb(var(--dash-text-2))]">
+          Overview · {today}
+        </p>
+        <ProMemberBadge />
+      </div>
     </>
   );
 };
