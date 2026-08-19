@@ -64,15 +64,20 @@ const ADDON_DETAILS: Record<
     ],
   },
   [ACTIVE_PRODUCT_SLUGS.proListing]: {
-    summary: 'Premium presentation and priority placement for a single listing for 30 days.',
+    summary: 'Premium presentation, priority placement, and a featured spot on Vendibook\'s Facebook for 30 days.',
     included: [
       'Premium listing presentation',
       'Priority placement in relevant search results',
+      'Featured on Vendibook\'s Facebook',
       'Runs for 30 days from activation',
     ],
-    bestFor: 'Higher-value equipment where presentation drives the inquiry.',
+    bestFor: 'Higher-value equipment where presentation and extra visibility drive the inquiry.',
     billing: 'One-time charge. Does not renew.',
-    finePrint: ['30-day duration · non-recurring.', 'Applies to one listing you select.'],
+    finePrint: [
+      '30-day duration · non-recurring.',
+      'Applies to one listing you select.',
+      'Facebook feature is an organic Vendibook placement, not paid ad spend. Reach and impressions are not guaranteed.',
+    ],
   },
   [ACTIVE_PRODUCT_SLUGS.conciergeListing]: {
     summary: 'Our team writes and structures a complete listing for you from the details you provide.',
@@ -117,7 +122,7 @@ const ADDON_DETAILS: Record<
 /** Short benefit copy per active add-on. Falls back to the DB description. */
 const ONE_LINERS: Record<string, string> = {
   [ACTIVE_PRODUCT_SLUGS.featuredBoost]: 'Top of search and a highlighted card for 30 days.',
-  [ACTIVE_PRODUCT_SLUGS.proListing]: 'Premium listing presentation and priority placement for 30 days.',
+  [ACTIVE_PRODUCT_SLUGS.proListing]: 'Premium presentation, priority placement, and a featured spot on Vendibook\'s Facebook for 30 days.',
   [ACTIVE_PRODUCT_SLUGS.conciergeListing]: 'Our team writes and structures your listing for you.',
   [ACTIVE_PRODUCT_SLUGS.permitPathPlus]: 'Save roadmaps, track permits, store documents, export PDFs.',
   [ACTIVE_PRODUCT_SLUGS.listingRewrite]: 'A rewritten title, description and spec sheet for your listing.',
