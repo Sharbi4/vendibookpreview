@@ -243,18 +243,28 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
   return (
     <div
       data-listing-id={listing.id}
-      className="relative rounded-2xl border-2 border-white/[0.10] hover:border-white/[0.22] hover:-translate-y-1.5 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] flex flex-col overflow-hidden h-full group shadow-xl shadow-black/40 hover:shadow-2xl hover:shadow-black/60 bg-card/60 backdrop-blur-sm"
+      className={cn(
+        'relative flex flex-col overflow-hidden h-full group',
+        isSearch
+          ? 'rounded-3xl border border-[#1b1714]/[0.08] bg-white shadow-[0_1px_2px_rgba(24,20,16,0.04),0_12px_30px_-20px_rgba(24,20,16,0.30)] hover:border-[#1b1714]/[0.14] hover:shadow-[0_2px_6px_rgba(24,20,16,0.06),0_18px_38px_-22px_rgba(24,20,16,0.34)] hover:-translate-y-[2px] transition-all duration-300 ease-out'
+          : 'rounded-2xl border-2 border-white/[0.10] hover:border-white/[0.22] hover:-translate-y-1.5 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] shadow-xl shadow-black/40 hover:shadow-2xl hover:shadow-black/60 bg-card/60 backdrop-blur-sm',
+      )}
     >
       <Link 
         to={`/listing/${listing.id}`} 
-        className={cn("cursor-pointer block flex-1 flex flex-col", className)}
+        className={cn(
+          'cursor-pointer block flex-1 flex flex-col',
+          isRow && 'sm:flex-row',
+          className,
+        )}
         onClick={() => {
           trackListingCardClick(listing.id, listing.category, 'listing_card');
           trackLeadEvent('listing_card_click', { listing_id: listing.id, category: listing.category });
         }}
       >
         {/* Image Container - Turo Look */}
-        <div className={cn("relative w-full", compact ? "" : "")}>
+        <div className={cn('relative w-full', isRow && 'sm:w-[280px] sm:shrink-0')}>
+
           <SmartImage
             src={listing.cover_image_url || listing.image_urls[0]}
             alt={`${listing.title} - ${listing.category === 'food_truck' ? 'Food Truck' : listing.category === 'food_trailer' ? 'Food Trailer' : listing.category === 'ghost_kitchen' ? 'Shared Kitchen' : 'Vendor Space'} ${listing.mode === 'rent' ? 'for Rent' : 'for Sale'}`}
