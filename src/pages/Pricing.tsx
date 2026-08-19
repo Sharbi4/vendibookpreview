@@ -195,49 +195,74 @@ function AddOnCard({
     }
   };
 
+  const cadenceLabel = recurring
+    ? '/mo'
+    : product.duration_days
+      ? ` · ${product.duration_days} days`
+      : ' one-time';
+
+  const details = ADDON_DETAILS[product.slug];
+
+  const cta = (full?: boolean) =>
+    includedLabel ? (
+      <span className="inline-flex w-fit items-center gap-1.5 rounded-full border border-[rgba(24,20,16,0.1)] bg-[rgba(24,20,16,0.03)] px-3 py-1.5 text-[12px] font-medium text-foreground">
+        <Check className="h-3.5 w-3.5 text-[hsl(var(--brand-ember))]" />
+        {includedLabel}
+      </span>
+    ) : requiresListing ? (
+      <Button asChild variant="cta-outline" size="sm" className={`gap-1 ${full ? 'w-full' : 'w-fit'}`}>
+        <Link to="/host/listings">
+          Boost a listing <ArrowRight className="h-3.5 w-3.5" />
+        </Link>
+      </Button>
+    ) : (
+      <Button
+        variant={full ? 'cta' : 'cta-outline'}
+        size="sm"
+        className={`gap-1 ${full ? 'w-full' : 'w-fit'}`}
+        disabled={activeBusy}
+        onClick={handleClick}
+      >
+        {activeBusy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
+        {recurring ? 'Review terms and continue' : 'Purchase'}
+        {!activeBusy && <ArrowRight className="h-3.5 w-3.5" />}
+      </Button>
+    );
+
   return (
     <div className="flex flex-col rounded-2xl border border-[rgba(24,20,16,0.09)] bg-white p-5">
       <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
         <h3 className="text-[15px] font-semibold text-foreground">{product.name}</h3>
         <span className="text-[13px] font-medium text-foreground">
           {formatUsd(price)}
-          <span className="text-muted-foreground">
-            {recurring ? '/mo' : product.duration_days ? ` · ${product.duration_days} days` : ' one-time'}
-          </span>
+          <span className="text-muted-foreground">{cadenceLabel}</span>
         </span>
       </div>
       <p className="mt-1.5 text-[13px] leading-relaxed text-muted-foreground">
         {ONE_LINERS[product.slug] ?? product.description}
       </p>
       <div className="mt-4 flex-1" />
-      {includedLabel ? (
-        <span className="inline-flex w-fit items-center gap-1.5 rounded-full border border-[rgba(24,20,16,0.1)] bg-[rgba(24,20,16,0.03)] px-3 py-1.5 text-[12px] font-medium text-foreground">
-          <Check className="h-3.5 w-3.5 text-[hsl(var(--brand-ember))]" />
-          {includedLabel}
-        </span>
-      ) : requiresListing ? (
-        <Button asChild variant="cta-outline" size="sm" className="w-fit gap-1">
-          <Link to="/host/listings">
-            Boost a listing <ArrowRight className="h-3.5 w-3.5" />
-          </Link>
-        </Button>
-      ) : (
-        <Button
-          variant="cta-outline"
-          size="sm"
-          className="w-fit gap-1"
-          disabled={activeBusy}
-          onClick={handleClick}
-        >
-          {activeBusy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
-          {recurring ? 'Review terms and continue' : 'Purchase'}
-          {!activeBusy && <ArrowRight className="h-3.5 w-3.5" />}
-        </Button>
-      )}
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+        {cta()}
+        {details ? (
+          <PlanDetailsDialog
+            title={product.name}
+            priceLabel={`${formatUsd(price)}${cadenceLabel}`}
+            summary={details.summary}
+            included={details.included}
+            bestFor={details.bestFor}
+            billing={details.billing}
+            finePrint={details.finePrint}
+            statusLabel={includedLabel}
+            footer={cta(true)}
+          />
+        ) : null}
+      </div>
       {dialog}
     </div>
   );
 }
+
 
 /* ------------------------------------------------------------------ */
 
