@@ -584,6 +584,9 @@ const HostListingCard = ({
               </span>
             </div>
 
+            {/* Missing length/height on older published sale listings */}
+            <ListingDimensionsPrompt listing={listing} />
+
             {/* Buyer financing (Equinox) — for-sale listings only */}
             {isSale && (
               <ListingFinancingToggle listingId={listing.id} optedIn={!!financingOptedIn} />
