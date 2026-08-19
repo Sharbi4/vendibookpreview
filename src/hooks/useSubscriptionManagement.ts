@@ -130,8 +130,14 @@ export function useSubscriptionManagement(product: SubscriptionProduct = 'pro') 
     try {
       if (provider === 'paypal') {
         const { data, error } = await supabase.functions.invoke('paypal-subscription-cancel', {
-          body: { reason: 'Member requested cancellation' },
+          body: {
+            reason: 'Member requested cancellation',
+            // Pin the exact subscription so a second recurring product can
+            // never be cancelled by mistake.
+            paypal_subscription_id: sub?.paypal_subscription_id ?? undefined,
+          },
         });
+
         if (error) throw error;
         toast({
           title: 'Membership cancelled',
