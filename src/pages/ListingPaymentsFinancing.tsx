@@ -83,7 +83,7 @@ export default function ListingPaymentsFinancing() {
     <div className="min-h-screen bg-background">
       <SEO
         title="Payments & financing | Vendibook"
-        description="Manage how buyers pay for this listing and whether you offer financing options through Equinox Funding."
+        description="Manage how buyers pay for this listing. Buyer financing through Equinox Funding is included on every published for-sale listing."
         noindex
       />
       <Header />
