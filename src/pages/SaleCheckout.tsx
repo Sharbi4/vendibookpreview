@@ -989,7 +989,7 @@ const SaleCheckout = () => {
 
             {currentStep === 'details' && (
               <>
-                <SaleCheckoutCard title="Your details" subtitle="We share these with the seller to coordinate handover.">
+                <SaleCheckoutCard>
                   <PurchaseStepInfo
                     embedded
                     buyerInfo={buyerInfo}
@@ -1034,7 +1034,7 @@ const SaleCheckout = () => {
 
             {currentStep === 'payment' && (
               <>
-                <SaleCheckoutCard title="Payment" subtitle="Processed securely by PayPal — card or PayPal balance.">
+                <SaleCheckoutCard>
                   <PurchaseStepPayment
                     embedded
                     paymentMethod={paymentMethod}
