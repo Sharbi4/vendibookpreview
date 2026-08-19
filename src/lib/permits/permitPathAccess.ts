@@ -9,8 +9,12 @@
  * PLUS ($7.99/mo, catalog `permit_path_plus_monthly`):
  *   - Save roadmaps to the dashboard and keep them
  *   - Per-permit status, permit numbers, expirations
- *   - Document uploads and renewal reminders
+ *   - Document uploads and an expiring-soon renewals dashboard
  *   - PDF export of a saved roadmap
+ *
+ * There is no automated reminder email/SMS or regulation-change monitoring
+ * today — never claim one in customer-facing copy.
+
  *
  * Plus is also included with Vendibook Pro. Nothing here charges or grants —
  * it only resolves entitlement that PayPal/the catalog already recorded.
