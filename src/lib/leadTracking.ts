@@ -186,6 +186,7 @@ const EVENT_CATEGORY: Record<LeadEventName, string> = {
   homepage_listing_row_view_more_click: 'homepage',
   homepage_featured_view_all_click: 'homepage',
   homepage_featured_card_click: 'homepage',
+  homepage_premium_discovery_click: 'homepage',
   hero_panel_viewed: 'homepage',
   hero_panel_swiped: 'homepage',
   hero_search_clicked: 'homepage',
