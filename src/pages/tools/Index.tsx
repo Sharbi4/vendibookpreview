@@ -59,7 +59,7 @@ const ToolsIndex = () => {
                 </h1>
                 <p className="mt-4 text-lg text-muted-foreground">
                   Price competitively, get permitted, and market smarter — all from one dashboard.
-                  PermitPath and the Startup Guide are free forever. Growth unlocks the rest.
+                  PermitPath Basic and the Startup Guide are free forever. Growth unlocks the rest.
                 </p>
                 <div className="mt-6 flex flex-wrap gap-3">
                   <Button size="lg" variant="glass-cta" asChild>
