@@ -413,7 +413,7 @@ export const SalePurchaseCard = ({
           </div>
 
           {/* Compact seller info */}
-          <div className="pt-4 border-t border-border/70 flex items-center gap-3">
+          <div className="pt-4 [box-shadow:inset_0_1px_0_hsl(var(--border))] flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center text-sm font-semibold shrink-0">
               {sellerName.charAt(0).toUpperCase()}
             </div>
