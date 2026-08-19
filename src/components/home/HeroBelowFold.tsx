@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { trackLeadEvent } from '@/lib/leadTracking';
+import { Info, Crown } from 'lucide-react';
 
 const TRUST_BITS = [
   'Secure payments',
@@ -44,6 +45,24 @@ const HeroBelowFold = () => {
           >
             <Link to="/sell">Learn About Selling</Link>
           </Button>
+        </div>
+
+        {/* Compact quick links */}
+        <div className="mt-5 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-sm">
+          <Link
+            to="/how-it-works"
+            className="inline-flex items-center gap-1.5 text-foreground/70 hover:text-primary transition-colors"
+          >
+            <Info className="h-3.5 w-3.5" />
+            How Vendibook Works
+          </Link>
+          <Link
+            to="/pricing"
+            className="inline-flex items-center gap-1.5 text-foreground/70 hover:text-primary transition-colors"
+          >
+            <Crown className="h-3.5 w-3.5" />
+            Pricing & Pro
+          </Link>
         </div>
 
         {/* Trust strip */}
