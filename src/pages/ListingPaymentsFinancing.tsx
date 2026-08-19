@@ -180,89 +180,57 @@ export default function ListingPaymentsFinancing() {
           </div>
         </section>
 
-        {/* Equinox opt-in */}
+        {/* Buyer financing — automatic on every published for-sale listing */}
         {eligible ? (
           <section className={PANEL}>
-            <div className="flex items-start justify-between gap-4">
-              <div className="min-w-0">
-                <div className="flex items-center gap-2 mb-2 flex-wrap">
-                  <EquinoxFundingLogo className="h-5" />
-                  <h2 className="text-base font-semibold">Offer financing options through Equinox Funding</h2>
-                </div>
-                <p className="text-xs text-muted-foreground leading-relaxed">
-                  Optional. When enabled, buyers see a financing badge, an{' '}
-                  <a
-                    href={EQUINOX_APPLY_URL}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="underline underline-offset-2"
-                  >
-                    Apply with Equinox
-                    <ExternalLink className="inline h-3 w-3 ml-0.5" />
-                  </a>{' '}
-                  link, and a downloadable pro forma purchase summary on this listing. Turning this
-                  on or off never unpublishes or recreates your listing.
-                </p>
-              </div>
-              <Switch checked={optIn} onCheckedChange={setOptIn} aria-label="Offer financing options through Equinox Funding" />
+            <div className="flex items-center gap-2 mb-2 flex-wrap">
+              <EquinoxFundingLogo className="h-5" />
+              <h2 className="text-base font-semibold">Buyer financing is included</h2>
             </div>
-
-            {optIn && (
-              <div className="mt-5 space-y-4">
-                <p className="text-xs text-muted-foreground leading-relaxed">
-                  If you provided a VIN / serial number, it is never shown on your public listing,
-                  but it is printed on the financing purchase summary the buyer and lender receive.
-                </p>
-
-                <div className="rounded-xl border-2 border-white/10 bg-black/40 p-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <ShieldCheck className="h-4 w-4 text-primary" />
-                    <span className="text-xs font-semibold uppercase tracking-wide">
-                      Seller disclosure
-                    </span>
-                  </div>
-                  <p className="text-xs text-muted-foreground leading-relaxed">
-                    {EQUINOX_DISCLOSURE_TEXT}
-                  </p>
-                  <label className="flex items-start gap-3 mt-4 cursor-pointer">
-                    <Checkbox
-                      checked={accepted}
-                      onCheckedChange={(v) => setAccepted(v === true)}
-                      className="mt-0.5"
-                    />
-                    <span className="text-xs leading-relaxed">
-                      I have read and accept this disclosure ({EQUINOX_DISCLOSURE_VERSION}).
-                    </span>
-                  </label>
-                </div>
-
-                {!flagOn && (
-                  <p className="text-[11px] text-muted-foreground/80 leading-relaxed">
-                    Financing options are not live to buyers yet. Your preference is saved now and
-                    applies automatically when Vendibook launches financing.
-                  </p>
-                )}
-                {flagOn && accepted && (
-                  <div>
-                    <p className="text-[11px] text-muted-foreground/80 mb-2">Buyers will see:</p>
-                    <FinancingAvailableBadge asLink={false} />
-                  </div>
-                )}
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              Every published for-sale listing on Vendibook shows financing options through Equinox
+              Funding — there is nothing to switch on. Buyers see a financing badge, an{' '}
+              <a
+                href={EQUINOX_APPLY_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline underline-offset-2"
+              >
+                Apply with Equinox
+                <ExternalLink className="inline h-3 w-3 ml-0.5" />
+              </a>{' '}
+              link, and a downloadable pro forma purchase summary. Financing never changes how or
+              when you get paid.
+            </p>
+            <p className="text-xs text-muted-foreground leading-relaxed mt-3">
+              If you provided a VIN / serial number, it is never shown on your public listing, but
+              it is printed on the financing purchase summary the buyer and lender receive.
+            </p>
+            <div className="mt-4 rounded-xl border-2 border-white/10 bg-black/40 p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <ShieldCheck className="h-4 w-4 text-primary" />
+                <span className="text-xs font-semibold uppercase tracking-wide">Good to know</span>
               </div>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                {EQUINOX_DISCLOSURE_TEXT}
+              </p>
+            </div>
+            {flagOn ? (
+              <div className="mt-4">
+                <p className="text-[11px] text-muted-foreground/80 mb-2">Buyers will see:</p>
+                <FinancingAvailableBadge asLink={false} />
+              </div>
+            ) : (
+              <p className="text-[11px] text-muted-foreground/80 leading-relaxed mt-4">
+                Financing options are not live to buyers yet. They appear automatically on this
+                listing when Vendibook launches financing.
+              </p>
             )}
-
-            <div className="mt-6 flex justify-end">
-              <Button onClick={() => void handleSave()} disabled={saving || needsAcceptance}>
-                {saving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                Save preferences
-              </Button>
-            </div>
           </section>
         ) : (
           <section className={PANEL}>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              Financing options are currently available for food truck and food trailer listings
-              offered for sale.
+              Buyer financing appears on published for-sale listings.
             </p>
           </section>
         )}
