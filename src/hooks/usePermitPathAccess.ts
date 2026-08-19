@@ -10,7 +10,6 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import {
-  PERMIT_PLUS_GRANDFATHER_CUTOFF,
   PERMIT_PLUS_SLUGS,
   resolvePermitPlus,
   type PermitPlusAccess,
