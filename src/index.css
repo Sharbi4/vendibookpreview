@@ -1606,3 +1606,82 @@
     }
   }
 }
+
+/* =====================================================================
+   For-sale listing detail — light "gallery" theme
+   Scoped to `.sale-light` so the rest of the app stays on the dark
+   satin-lux theme. Warm off-white canvas, white surfaces, charcoal text,
+   soft gray hairlines, restrained shadows. Orange stays for actions only.
+   ===================================================================== */
+.sale-light {
+  --background: 36 30% 97%;
+  --foreground: 24 12% 12%;
+
+  --card: 0 0% 100%;
+  --card-foreground: 24 12% 12%;
+
+  --popover: 0 0% 100%;
+  --popover-foreground: 24 12% 12%;
+
+  --secondary: 33 22% 95%;
+  --secondary-foreground: 24 12% 20%;
+
+  --muted: 33 22% 95%;
+  --muted-foreground: 25 6% 42%;
+
+  --accent: 33 22% 95%;
+  --accent-foreground: 24 12% 20%;
+
+  --border: 30 10% 87%;
+  --input: 30 10% 87%;
+
+  color: hsl(var(--foreground));
+  background-color: hsl(var(--background));
+  background-image:
+    radial-gradient(1200px 700px at 50% -10%, rgba(255, 214, 184, 0.28), transparent 62%),
+    linear-gradient(180deg, #faf8f5 0%, #f6f3ef 100%);
+}
+
+/* Surfaces: white cards, one soft shadow, no glass, no inner glow. */
+.sale-light .bg-sale-card,
+.sale-light .bg-sale-card-warm {
+  background: #ffffff;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  border: 1px solid rgba(24, 20, 16, 0.08);
+  box-shadow: 0 1px 2px rgba(24, 20, 16, 0.04), 0 10px 28px -18px rgba(24, 20, 16, 0.28);
+}
+
+.sale-light .ring-hairline,
+.sale-light .ring-glass,
+.sale-light .ring-cream,
+.sale-light .ring-bronze {
+  box-shadow: inset 0 0 0 1px rgba(24, 20, 16, 0.10);
+}
+
+.sale-light .chip-accent {
+  background: hsl(14 100% 96%);
+  box-shadow: inset 0 0 0 1px hsl(14 90% 88%);
+  color: hsl(14 80% 40%);
+}
+
+/* Any leftover dark-theme white washes read as soft warm gray here. */
+.sale-light .bg-white\/\[0\.02\],
+.sale-light .bg-white\/\[0\.03\],
+.sale-light .bg-white\/\[0\.04\],
+.sale-light .bg-white\/\[0\.05\],
+.sale-light .bg-white\/\[0\.06\],
+.sale-light .bg-white\/5,
+.sale-light .bg-white\/10 {
+  background-color: rgba(24, 20, 16, 0.035);
+}
+.sale-light .border-white\/\[0\.05\],
+.sale-light .border-white\/\[0\.06\],
+.sale-light .border-white\/10,
+.sale-light .border-white\/20 {
+  border-color: rgba(24, 20, 16, 0.10);
+}
+.sale-light .bg-white\/\[0\.05\].h-px,
+.sale-light .bg-white\/\[0\.06\].h-px {
+  background-color: rgba(24, 20, 16, 0.08);
+}
