@@ -338,6 +338,50 @@ const PayPalPaymentPanel = ({
                     className={state === 'loading' || state === 'processing' ? 'hidden' : ''}
                   />
 
+                  {cardEligible && state !== 'loading' && state !== 'processing' ? (
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-3">
+                        <span className="h-px flex-1 bg-border/60" />
+                        <span className="text-[11px] uppercase tracking-wide text-muted-foreground">
+                          or
+                        </span>
+                        <span className="h-px flex-1 bg-border/60" />
+                      </div>
+
+                      {!cardOpen ? (
+                        <button
+                          type="button"
+                          onClick={() => setCardOpen(true)}
+                          className="w-full rounded-xl border border-border/70 bg-background px-4 py-3 text-sm font-medium text-foreground hover:bg-muted/40 transition-colors"
+                        >
+                          Pay with debit or credit card
+                        </button>
+                      ) : (
+                        <div className="space-y-3">
+                          <p className="text-xs text-muted-foreground">
+                            No PayPal account needed. Your card is entered directly with PayPal.
+                          </p>
+                          <div ref={cardNameRef} className="paypal-card-field" />
+                          <div ref={cardNumberRef} className="paypal-card-field" />
+                          <div className="grid grid-cols-2 gap-3">
+                            <div ref={cardExpiryRef} className="paypal-card-field" />
+                            <div ref={cardCvvRef} className="paypal-card-field" />
+                          </div>
+                          <button
+                            type="button"
+                            onClick={submitCard}
+                            disabled={cardSubmitting}
+                            className="w-full rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground disabled:opacity-60 transition-opacity"
+                          >
+                            {cardSubmitting ? 'Processing…' : 'Pay with card'}
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  ) : null}
+
+
+
                   {state === 'processing' ? (
                     <div className="py-8 flex flex-col items-center gap-3 text-center">
                       <Loader2 className="h-6 w-6 animate-spin text-primary" />
