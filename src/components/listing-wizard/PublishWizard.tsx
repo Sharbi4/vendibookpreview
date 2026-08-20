@@ -303,7 +303,7 @@ export const PublishWizard: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [step]);
 
-  // Handle returns from PayPal Checkout (featured / notary / membership).
+  // Handle returns from PayPal Checkout (featured / membership).
   // - Restore the step the user was on via ?step= (validated above).
   // - Show cancel/success toasts.
   // - Invalidate entitlement caches so any newly-unlocked features go live in
@@ -312,10 +312,9 @@ export const PublishWizard: React.FC = () => {
   useEffect(() => {
     const unlocked = searchParams.get('unlocked');
     const featuredCancelled = searchParams.get('featured_cancelled') === 'true';
-    const notaryCancelled = searchParams.get('notary_cancelled') === 'true';
     const membershipCancelled = searchParams.get('membership_cancelled') === 'true';
 
-    if (!unlocked && !featuredCancelled && !notaryCancelled && !membershipCancelled) return;
+    if (!unlocked && !featuredCancelled && !membershipCancelled) return;
 
     const refreshEntitlements = () => {
       queryClient.invalidateQueries({ queryKey: ['host-entitlements'] });
@@ -344,11 +343,6 @@ export const PublishWizard: React.FC = () => {
         description: 'Your listing is still saved. You can add the Featured boost later.',
       });
     }
-    if (notaryCancelled) {
-      toast({
-        title: 'Notary cancelled',
-        description: 'Your listing is still saved. You can add Proof Notary later.',
-      });
     }
     if (membershipCancelled) {
       toast({
@@ -359,7 +353,8 @@ export const PublishWizard: React.FC = () => {
 
     // Strip handled params but preserve ?step= so a refresh keeps position.
     const next = new URLSearchParams(searchParams);
-    ['unlocked', 'featured_cancelled', 'notary_cancelled', 'membership_cancelled'].forEach((k) => next.delete(k));
+    ['unlocked', 'featured_cancelled', 'notary_cancelled', 'membership_cancelled'] // notary_cancelled cleaned for legacy links
+      .forEach((k) => next.delete(k));
     setSearchParams(next, { replace: true });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
@@ -399,7 +394,6 @@ export const PublishWizard: React.FC = () => {
   const [freightPayer, setFreightPayer] = useState<FreightPayer>('buyer');
   const [acceptPayPalCheckout, setAcceptPayPalCheckout] = useState(true);
   const [acceptCashPayment, setAcceptCashPayment] = useState(false);
-  const [proofNotaryEnabled, setProofNotaryEnabled] = useState(false);
   const [featuredEnabled, setFeaturedEnabled] = useState(false);
   const featuredBoostPrice = useCatalogPrice(ACTIVE_PRODUCT_SLUGS.featuredBoost);
 
@@ -797,7 +791,7 @@ export const PublishWizard: React.FC = () => {
         updateData.freight_payer = freightPayer;
         updateData.accept_paypal_checkout = acceptPayPalCheckout;
         updateData.accept_cash_payment = acceptCashPayment;
-        // Paid entitlements (Proof Notary / Featured) are NEVER written from the
+        // Paid entitlements (Featured boost) are NEVER written from the
         // browser. They are granted only by a verified PayPal capture or an
         // admin/complimentary path. The seller's selection lives in wizard state
         // and only decides whether checkout is offered after publishing.
@@ -968,7 +962,6 @@ export const PublishWizard: React.FC = () => {
       setFreightPayer((data.freight_payer as FreightPayer) || 'buyer');
       setAcceptPayPalCheckout(data.accept_paypal_checkout ?? true);
       setAcceptCashPayment(data.accept_cash_payment ?? false);
-      setProofNotaryEnabled(data.proof_notary_enabled ?? false);
       setFeaturedEnabled((data as any).featured_enabled ?? false);
       // Set details step fields
       setHighlights(data.highlights || []);
@@ -1210,7 +1203,7 @@ export const PublishWizard: React.FC = () => {
         updateData.freight_payer = freightPayer;
         updateData.accept_paypal_checkout = acceptPayPalCheckout;
         updateData.accept_cash_payment = acceptCashPayment;
-        // Paid entitlements (Proof Notary / Featured) are NEVER written from the
+        // Paid entitlements (Featured boost) are NEVER written from the
         // browser. They are granted only by a verified PayPal capture or an
         // admin/complimentary path. The seller's selection lives in wizard state
         // and only decides whether checkout is offered after publishing.
