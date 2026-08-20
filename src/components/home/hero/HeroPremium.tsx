@@ -7,22 +7,15 @@ import HeroSearchInput from './HeroSearchInput';
 import { useHeroSearch } from './useHeroSearch';
 import HeroListingRotator from './HeroListingRotator';
 import { trackLeadEvent } from '@/lib/leadTracking';
-import { useAuth } from '@/contexts/AuthContext';
-import GoogleContinueButton from '@/components/auth/GoogleContinueButton';
 
 /**
- * Premium marketplace hero.
- *
- * Editorial dark surface with a single dominant interaction (search), one
- * primary action, one quiet secondary action, and a signed-out-only account
- * acquisition row using Google's official button. Geometry matches the
- * for-sale listing detail system: rounded-2xl, hairline borders, soft shadow.
+ * Premium marketplace hero — one cohesive unit: eyebrow, short headline,
+ * one supporting line, search, real-listing rotator, then two actions.
+ * No auth module here; Google One Tap handles signed-out acquisition quietly.
  */
 const HeroPremium = () => {
   const search = useHeroSearch();
   const reduced = useReducedMotion();
-  const { user, isLoading } = useAuth();
-  const signedOut = !isLoading && !user;
 
   const rise = (delay: number) =>
     reduced
@@ -37,11 +30,11 @@ const HeroPremium = () => {
     <section className="relative overflow-hidden bg-background" aria-labelledby="home-hero-heading">
       <HeroBackground />
 
-      <div className="container relative z-10 mx-auto max-w-3xl px-5 pb-10 pt-9 sm:pb-14 sm:pt-12 md:pb-16 md:pt-16">
+      <div className="container relative z-10 mx-auto max-w-3xl px-5 pb-8 pt-8 sm:pb-12 sm:pt-12 md:pb-14">
         <div className="text-center">
           <motion.p
             {...rise(0)}
-            className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-foreground/60 backdrop-blur-sm"
+            className="mb-3 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-foreground/60 backdrop-blur-sm"
           >
             The mobile food marketplace
           </motion.p>
@@ -49,35 +42,28 @@ const HeroPremium = () => {
           <motion.h1
             id="home-hero-heading"
             {...rise(0.05)}
-            className="text-balance text-[1.9rem] font-semibold leading-[1.12] tracking-tight text-foreground sm:text-[2.6rem] md:text-[3rem]"
+            className="text-balance text-[1.75rem] font-semibold leading-[1.14] tracking-tight text-foreground sm:text-[2.4rem] md:text-[2.75rem]"
           >
-            Buy, rent, and sell food trucks and trailers
-            <span className="block text-foreground/60">in one marketplace.</span>
+            Buy, rent, and sell food trucks and trailers.
           </motion.h1>
 
           <motion.p
             {...rise(0.12)}
-            className="mx-auto mt-4 max-w-xl text-[15px] leading-relaxed text-muted-foreground sm:text-base"
+            className="mx-auto mt-3 max-w-lg text-[14px] leading-relaxed text-muted-foreground sm:text-[15px]"
           >
-            Structured listings, financing options for eligible buyers, and flexible ways to
-            complete the deal — online or in person.
+            Real listings, real owners — online or in person.
           </motion.p>
 
-          <motion.div {...rise(0.2)} className="mx-auto mt-7 max-w-xl">
+          <motion.div {...rise(0.18)} className="mx-auto mt-5 max-w-xl">
             <HeroSearchInput
               {...search}
               placeholders={['Search food trucks, trailers, or a city', ...search.placeholders]}
             />
           </motion.div>
 
-          <motion.div {...rise(0.24)} className="mt-7">
-            <HeroListingRotator />
-          </motion.div>
-
-
           <motion.div
-            {...rise(0.28)}
-            className="mx-auto mt-5 flex max-w-xl flex-col items-center gap-2.5 sm:flex-row sm:justify-center"
+            {...rise(0.22)}
+            className="mx-auto mt-4 flex max-w-xl flex-col items-center gap-2.5 sm:flex-row sm:justify-center"
           >
             <Button
               asChild
@@ -116,26 +102,9 @@ const HeroPremium = () => {
             </Button>
           </motion.div>
 
-          {signedOut && (
-            <motion.div
-              {...rise(0.34)}
-              className="mx-auto mt-8 max-w-sm rounded-2xl border border-white/[0.07] bg-white/[0.03] p-4"
-            >
-              <p className="mb-3 text-[12px] font-medium uppercase tracking-[0.16em] text-foreground/45">
-                Save searches &amp; message owners
-              </p>
-              <GoogleContinueButton className="w-full" returnPath="/" />
-              <p className="mt-3 text-[13px] text-muted-foreground">
-                Prefer email?{' '}
-                <Link
-                  to="/auth?mode=signup"
-                  className="text-foreground/80 underline underline-offset-4 transition-colors hover:text-foreground"
-                >
-                  Create a free account
-                </Link>
-              </p>
-            </motion.div>
-          )}
+          <motion.div {...rise(0.26)} className="mt-6">
+            <HeroListingRotator />
+          </motion.div>
         </div>
       </div>
     </section>
@@ -143,3 +112,4 @@ const HeroPremium = () => {
 };
 
 export default HeroPremium;
+
