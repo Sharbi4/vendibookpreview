@@ -66,6 +66,7 @@ import { template as subscriptionGettingStarted } from './subscription-getting-s
 import { template as verifiedSellerReceipt } from './verified-seller-receipt.tsx'
 import { template as proMembershipActivated } from './pro-membership-activated.tsx'
 import { template as proMembershipRenewed } from './pro-membership-renewed.tsx'
+import { template as proMembershipRenewalReminder } from './pro-membership-renewal-reminder.tsx'
 import { template as proMembershipCancelled } from './pro-membership-cancelled.tsx'
 import { template as proMembershipPaymentFailed } from './pro-membership-payment-failed.tsx'
 import { template as permitPlusActivated } from './permitpath-plus-activated.tsx'
@@ -133,6 +134,7 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'verified-seller-receipt': verifiedSellerReceipt,
   'pro-membership-activated': proMembershipActivated,
   'pro-membership-renewed': proMembershipRenewed,
+  'pro-membership-renewal-reminder': proMembershipRenewalReminder,
   'pro-membership-cancelled': proMembershipCancelled,
   'pro-membership-payment-failed': proMembershipPaymentFailed,
   'permitpath-plus-activated': permitPlusActivated,
