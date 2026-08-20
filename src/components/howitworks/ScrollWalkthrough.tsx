@@ -38,8 +38,9 @@ const ScrollWalkthrough = ({ steps, tone = 'neutral' }: ScrollWalkthroughProps) 
   const activeIndex = useTransform(scrollYProgress, [0, 1], [0, steps.length - 0.001]);
 
   return (
-    <div ref={containerRef} className="relative" style={{ minHeight: `${steps.length * 90}vh` }}>
+    <div ref={containerRef} className="relative" style={{ minHeight: `${steps.length * 62}vh` }}>
       <div className="sticky top-0 h-screen flex items-center">
+
         <div className="container max-w-6xl mx-auto px-4 grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
           {/* LEFT — sticky visual stage */}
           <div className="hidden lg:flex items-center justify-center order-1">
@@ -79,9 +80,10 @@ const ScrollWalkthrough = ({ steps, tone = 'neutral' }: ScrollWalkthroughProps) 
       {/* Scroll spacers — one per step, drives progress */}
       <div className="absolute inset-0 pointer-events-none">
         {steps.map((_, i) => (
-          <div key={i} style={{ height: '90vh' }} />
+          <div key={i} style={{ height: '62vh' }} />
         ))}
       </div>
+
     </div>
   );
 };
@@ -199,11 +201,12 @@ const MockVisual = ({ variant, tone }: { variant: WalkthroughStep['mock']; tone:
               </div>
               <div className="flex-1 min-w-0">
                 <div className="text-xs font-medium text-foreground truncate">2019 Ford Step Van</div>
-                <div className="text-xs text-muted-foreground">Austin, TX • Verified</div>
+                <div className="text-xs text-muted-foreground">Austin, TX • Food truck</div>
                 <div className={cn('text-sm font-semibold mt-0.5', accentClass)}>${(i * 75 + 175).toLocaleString()}/day</div>
               </div>
             </motion.div>
           ))}
+
         </div>
       );
     case 'listing':
@@ -216,15 +219,16 @@ const MockVisual = ({ variant, tone }: { variant: WalkthroughStep['mock']; tone:
             <div className="p-4">
               <div className="flex items-center gap-1.5 mb-1">
                 <ShieldCheck className={cn('w-4 h-4', accentClass)} />
-                <span className="text-xs font-medium text-muted-foreground">Verified Host</span>
+                <span className="text-xs font-medium text-muted-foreground">Identity Verified host (optional badge)</span>
               </div>
               <div className="text-base font-semibold text-foreground">2021 Mercedes Sprinter</div>
-              <div className="text-xs text-muted-foreground mb-2">Fully equipped • Health certified</div>
+              <div className="text-xs text-muted-foreground mb-2">Fully equipped • Specs listed by host</div>
               <div className="flex items-center justify-between">
                 <div className={cn('text-lg font-bold', accentClass)}>$285/day</div>
-                <div className="text-xs text-muted-foreground">★ 4.9 (47)</div>
+                <div className="text-xs text-muted-foreground">Instant Book</div>
               </div>
             </div>
+
           </div>
         </div>
       );
@@ -253,43 +257,49 @@ const MockVisual = ({ variant, tone }: { variant: WalkthroughStep['mock']; tone:
       return (
         <div className="w-full space-y-3">
           <div className="bg-background border border-border rounded-2xl p-4 shadow-sm">
-            <div className="text-xs text-muted-foreground mb-2">Booking total</div>
-            <div className="space-y-1.5 text-sm">
-              <div className="flex justify-between"><span className="text-muted-foreground">3 days × $285</span><span className="text-foreground">$855</span></div>
-              <div className="flex justify-between"><span className="text-muted-foreground">Service fee</span><span className="text-foreground">$110</span></div>
-              <div className="border-t border-border pt-1.5 flex justify-between font-semibold"><span className="text-foreground">Total</span><span className={accentClass}>$965</span></div>
+            <div className="text-xs text-muted-foreground mb-2">How you can pay</div>
+            <div className="space-y-2">
+              {[
+                { label: 'Online checkout', sub: 'PayPal, Venmo, or debit/credit card' },
+                { label: 'Pay in person', sub: 'Settle directly at handoff' },
+                { label: 'Financing', sub: 'Third-party partners, eligible buyers' },
+              ].map((row) => (
+                <div key={row.label} className="flex items-start gap-2.5">
+                  <span className={cn('mt-1.5 w-1.5 h-1.5 rounded-full shrink-0', accentClass.replace('text-', 'bg-'))} />
+                  <div className="min-w-0">
+                    <div className="text-sm font-medium text-foreground">{row.label}</div>
+                    <div className="text-xs text-muted-foreground">{row.sub}</div>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
-          <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="bg-foreground text-background rounded-2xl p-4 shadow-lg">
-            <div className="flex items-center gap-2 mb-2">
+          <motion.div initial={{ scale: 0.96, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="bg-foreground text-background rounded-2xl p-4 shadow-lg">
+            <div className="flex items-center gap-2 mb-1.5">
               <CreditCard className="w-4 h-4 opacity-60" />
-              <span className="text-xs opacity-60">Held in payment protection</span>
+              <span className="text-xs opacity-60">Online payments processed by PayPal</span>
             </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-medium">•••• 4242</span>
-              <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.4 }} className="w-6 h-6 rounded-full bg-background/20 flex items-center justify-center">
-                <span className="text-xs">✓</span>
-              </motion.div>
-            </div>
+            <div className="text-sm font-medium">Vendibook never sees your card number.</div>
           </motion.div>
         </div>
       );
     case 'verified':
       return (
         <div className="w-full flex flex-col items-center justify-center text-center space-y-3">
-          <motion.div initial={{ scale: 0, rotate: -180 }} animate={{ scale: 1, rotate: 0 }} transition={{ type: 'spring', stiffness: 200 }} className="w-24 h-24 rounded-full bg-foreground flex items-center justify-center shadow-xl">
+          <motion.div initial={{ scale: 0.6, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: 'spring', stiffness: 180, damping: 22 }} className="w-24 h-24 rounded-full bg-foreground flex items-center justify-center shadow-xl">
             <ShieldCheck className="w-12 h-12 text-background" strokeWidth={2.2} />
           </motion.div>
           <div>
-            <div className="text-base font-semibold text-foreground">Identity Verified</div>
-            <div className="text-xs text-muted-foreground">through Vendibook identity verification</div>
+            <div className="text-base font-semibold text-foreground">Identity Verified badge</div>
+            <div className="text-xs text-muted-foreground">Optional check powered by Plaid — shown only when a member completes it</div>
           </div>
           <div className="grid grid-cols-2 gap-2 w-full">
-            {['Government ID', 'Selfie match', 'Address verified', 'Phone verified'].map((label) => (
+            {['Optional add-on', 'Powered by Plaid', 'Not required to publish', 'Badge on listings'].map((label) => (
               <div key={label} className="bg-background border border-border rounded-lg p-2 text-xs flex items-center gap-1.5">
                 <span className={cn('w-1.5 h-1.5 rounded-full', accentClass.replace('text-', 'bg-'))} />
                 <span className="text-foreground truncate">{label}</span>
               </div>
+
             ))}
           </div>
         </div>
@@ -366,37 +376,39 @@ const MockVisual = ({ variant, tone }: { variant: WalkthroughStep['mock']; tone:
     case 'payout':
       return (
         <div className="w-full space-y-3">
-          <div className="text-xs font-medium text-muted-foreground">Earnings</div>
+          <div className="text-xs font-medium text-muted-foreground">Transaction record</div>
           <motion.div
-            initial={{ scale: 0.9, opacity: 0 }}
+            initial={{ scale: 0.96, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="bg-background border border-border rounded-2xl p-5 shadow-sm"
+            className="bg-background border border-border rounded-2xl p-5 shadow-sm space-y-2.5"
           >
-            <div className="text-xs text-muted-foreground mb-1">Available balance</div>
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className={cn('text-3xl font-bold', accentClass)}
-            >
-              $4,280.00
-            </motion.div>
-            <div className="text-xs text-muted-foreground mt-1">Auto-payout to •••• 8821</div>
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-muted-foreground">Online sale</span>
+              <span className="font-semibold text-foreground">Completed</span>
+            </div>
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-muted-foreground">Seller fee</span>
+              <span className="text-foreground">12.9%</span>
+            </div>
+            <div className="flex items-center justify-between text-sm border-t border-border pt-2.5">
+              <span className="text-muted-foreground">Payout</span>
+              <span className={cn('font-semibold', accentClass)}>Under review</span>
+            </div>
           </motion.div>
-          <div className="grid grid-cols-2 gap-2">
-            <div className="bg-background border border-border rounded-xl p-3"><div className="text-xs text-muted-foreground">This month</div><div className="text-sm font-semibold text-foreground">$1,940</div></div>
-            <div className="bg-background border border-border rounded-xl p-3"><div className="text-xs text-muted-foreground">Lifetime</div><div className="text-sm font-semibold text-foreground">$28,650</div></div>
+          <div className="bg-background border border-border rounded-xl p-3 text-xs text-muted-foreground">
+            Payouts are reviewed and issued by Vendibook after the transaction is confirmed. Pay-in-person
+            equipment sales are settled directly between buyer and seller with no Vendibook commission.
           </div>
         </div>
       );
     case 'docs':
       return (
         <div className="w-full space-y-2">
-          <div className="text-xs font-medium text-muted-foreground mb-1">Required documents</div>
+          <div className="text-xs font-medium text-muted-foreground mb-1">Documents requested by the host</div>
           {[
-            { label: 'Business license', status: 'approved' },
-            { label: 'Liability insurance', status: 'approved' },
-            { label: 'Health permit', status: 'pending' },
+            { label: 'Business license', status: 'shared' },
+            { label: 'Liability insurance', status: 'shared' },
+            { label: 'Health permit', status: 'requested' },
           ].map((doc, i) => (
             <motion.div
               key={doc.label}
@@ -405,14 +417,15 @@ const MockVisual = ({ variant, tone }: { variant: WalkthroughStep['mock']; tone:
               transition={{ delay: i * 0.1 }}
               className="bg-background border border-border rounded-xl p-3 flex items-center gap-3 shadow-sm"
             >
-              <FileCheck className={cn('w-5 h-5', doc.status === 'approved' ? accentClass : 'text-muted-foreground')} />
+              <FileCheck className={cn('w-5 h-5', doc.status === 'shared' ? accentClass : 'text-muted-foreground')} />
               <div className="flex-1 min-w-0">
                 <div className="text-sm font-medium text-foreground">{doc.label}</div>
-                <div className={cn('text-xs', doc.status === 'approved' ? accentClass : 'text-muted-foreground')}>
-                  {doc.status === 'approved' ? '✓ Approved' : 'Pending review'}
+                <div className={cn('text-xs', doc.status === 'shared' ? accentClass : 'text-muted-foreground')}>
+                  {doc.status === 'shared' ? 'Uploaded' : 'Requested'}
                 </div>
               </div>
             </motion.div>
+
           ))}
         </div>
       );
