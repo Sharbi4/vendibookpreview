@@ -100,8 +100,8 @@ export const template = {
   displayName: 'Subscription payment failed',
   previewData: {
     firstName: 'Alex',
-    planName: 'Host Pro',
-    amount: '$39.00',
+    planName: 'Vendibook Pro',
+    amount: '$79.00',
     nextRetryDate: 'in 3 days',
     attemptNumber: 2,
   },
