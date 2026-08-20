@@ -10,13 +10,10 @@ import Footer from '@/components/layout/Footer';
 
 import { ReportIssueButton } from '@/components/support/ReportIssueButton';
 
-import { StickyMobileCTA } from '@/components/listing-detail/StickyMobileCTA';
 import SaleListingLayout from '@/components/listing-detail/sale/SaleListingLayout';
 import RentalListingLayout from '@/components/listing-detail/rental/RentalListingLayout';
 
-import { VendorSlotAvailability } from '@/components/listing-detail/VendorSlotAvailability';
 
-import { ListingHighlightsCard } from '@/components/transaction';
 import OwnerBanner from '@/components/listing-detail/OwnerBanner';
 import { useQuery } from '@tanstack/react-query';
 
