@@ -8142,6 +8142,170 @@ export type Database = {
         }
         Relationships: []
       }
+      spotlight_submission_media: {
+        Row: {
+          content_type: string | null
+          created_at: string
+          file_name: string | null
+          id: string
+          kind: string
+          size_bytes: number | null
+          sort_order: number
+          storage_path: string
+          submission_id: string
+        }
+        Insert: {
+          content_type?: string | null
+          created_at?: string
+          file_name?: string | null
+          id?: string
+          kind?: string
+          size_bytes?: number | null
+          sort_order?: number
+          storage_path: string
+          submission_id: string
+        }
+        Update: {
+          content_type?: string | null
+          created_at?: string
+          file_name?: string | null
+          id?: string
+          kind?: string
+          size_bytes?: number | null
+          sort_order?: number
+          storage_path?: string
+          submission_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "spotlight_submission_media_submission_id_fkey"
+            columns: ["submission_id"]
+            isOneToOne: false
+            referencedRelation: "spotlight_submissions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      spotlight_submissions: {
+        Row: {
+          admin_notes: string | null
+          business_name: string
+          business_type: string
+          city: string
+          consent_version: string
+          contact_name: string
+          created_at: string
+          differentiator: string | null
+          email: string
+          facebook: string | null
+          id: string
+          instagram: string | null
+          linkedin: string | null
+          listing_id: string | null
+          listing_url: string | null
+          marketing_opt_in: boolean
+          offerings: string
+          other_social: string | null
+          owns_content_consent: boolean
+          owns_content_consent_at: string | null
+          phone: string | null
+          product_feedback_experience: string | null
+          product_feedback_wishlist: string | null
+          proud_of: string | null
+          publication_consent: boolean
+          publication_consent_at: string | null
+          source: string | null
+          state: string
+          status: string
+          story: string
+          tiktok: string | null
+          updated_at: string
+          user_id: string | null
+          website: string | null
+          whats_new: string | null
+          years_operating: string | null
+          youtube: string | null
+        }
+        Insert: {
+          admin_notes?: string | null
+          business_name: string
+          business_type: string
+          city: string
+          consent_version?: string
+          contact_name: string
+          created_at?: string
+          differentiator?: string | null
+          email: string
+          facebook?: string | null
+          id?: string
+          instagram?: string | null
+          linkedin?: string | null
+          listing_id?: string | null
+          listing_url?: string | null
+          marketing_opt_in?: boolean
+          offerings: string
+          other_social?: string | null
+          owns_content_consent?: boolean
+          owns_content_consent_at?: string | null
+          phone?: string | null
+          product_feedback_experience?: string | null
+          product_feedback_wishlist?: string | null
+          proud_of?: string | null
+          publication_consent?: boolean
+          publication_consent_at?: string | null
+          source?: string | null
+          state: string
+          status?: string
+          story: string
+          tiktok?: string | null
+          updated_at?: string
+          user_id?: string | null
+          website?: string | null
+          whats_new?: string | null
+          years_operating?: string | null
+          youtube?: string | null
+        }
+        Update: {
+          admin_notes?: string | null
+          business_name?: string
+          business_type?: string
+          city?: string
+          consent_version?: string
+          contact_name?: string
+          created_at?: string
+          differentiator?: string | null
+          email?: string
+          facebook?: string | null
+          id?: string
+          instagram?: string | null
+          linkedin?: string | null
+          listing_id?: string | null
+          listing_url?: string | null
+          marketing_opt_in?: boolean
+          offerings?: string
+          other_social?: string | null
+          owns_content_consent?: boolean
+          owns_content_consent_at?: string | null
+          phone?: string | null
+          product_feedback_experience?: string | null
+          product_feedback_wishlist?: string | null
+          proud_of?: string | null
+          publication_consent?: boolean
+          publication_consent_at?: string | null
+          source?: string | null
+          state?: string
+          status?: string
+          story?: string
+          tiktok?: string | null
+          updated_at?: string
+          user_id?: string | null
+          website?: string | null
+          whats_new?: string | null
+          years_operating?: string | null
+          youtube?: string | null
+        }
+        Relationships: []
+      }
       stripe_webhook_events: {
         Row: {
           endpoint: string
@@ -9969,6 +10133,19 @@ export type Database = {
           _nps: number
           _rating: number
           _token: string
+        }
+        Returns: string
+      }
+      submit_general_feedback: {
+        Args: {
+          _can_contact?: boolean
+          _can_share?: boolean
+          _category?: string
+          _email?: string
+          _message: string
+          _name?: string
+          _page?: string
+          _rating: number
         }
         Returns: string
       }
