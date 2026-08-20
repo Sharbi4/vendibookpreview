@@ -137,9 +137,10 @@ const HomepageFeaturedRow = () => {
           <button
             type="button"
             aria-label="Scroll featured listings left"
+            aria-controls="homepage-featured-scroller"
             onClick={() => scrollBy('left')}
             disabled={!scrollState.canLeft}
-            className={`hidden md:inline-flex items-center justify-center w-8 h-8 rounded-xl border border-border/70 bg-card/60 transition-colors hover:bg-card disabled:pointer-events-none ${
+            className={`hidden md:inline-flex items-center justify-center w-9 h-9 rounded-xl border border-border/70 bg-card/60 transition-colors hover:bg-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none ${
               scrollState.canLeft ? 'opacity-100 cursor-pointer' : 'opacity-40 cursor-default'
             }`}
           >
