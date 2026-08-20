@@ -151,7 +151,7 @@ export const TOOLS: ToolDef[] = [
     icon: Wrench,
     href: '/tools/buildkit',
     screenshot: buildkitShot,
-    minTier: 'premium',
+    minTier: 'pro',
   },
 
   {
