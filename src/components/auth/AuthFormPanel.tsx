@@ -912,6 +912,3 @@ export const AuthFormPanel = ({ mode, setMode }: AuthFormPanelProps) => {
     </div>
   );
 };
-
-  );
-};
