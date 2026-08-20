@@ -128,9 +128,9 @@ const roleConfig: Record<Role, {
 const HowItWorks = () => {
   const reduce = useReducedMotion();
   const [searchParams, setSearchParams] = useSearchParams();
-  const initialRole = (searchParams.get('role') as Role) || 'rent';
+  const initialRole = (searchParams.get('role') as Role) || 'buy';
   const [role, setRole] = useState<Role>(
-    ['rent', 'buy', 'host', 'sell'].includes(initialRole) ? initialRole : 'rent'
+    ['buy', 'rent', 'sell', 'host'].includes(initialRole) ? initialRole : 'buy'
   );
 
   useEffect(() => {
@@ -145,8 +145,8 @@ const HowItWorks = () => {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <SEO
-        title="How Vendibook Works: Rent, Buy, Host & Sell"
-        description="See how Vendibook works in 60 seconds: verified users, secure payment protection payments, nationwide delivery, and 24/7 support for food trucks & kitchens."
+        title="How Vendibook Works: Buy, Rent, Sell & Host"
+        description="How Vendibook works for buyers, renters, sellers, and hosts: free listings, messaging and offers, PayPal checkout or pay in person, financing options, and delivery coordination."
         canonical="/how-it-works"
       />
 
@@ -164,14 +164,14 @@ const HowItWorks = () => {
                 transition={{ duration: 0.5 }}
               >
                 <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-foreground/5 border border-border text-xs font-medium text-foreground mb-4">
-                  
                   The marketplace for mobile food
                 </div>
                 <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-foreground mb-5 leading-[1.05]">
-                  Rent, buy, host, or sell —<br className="hidden md:block" /> all in one place.
+                  Everything you need to move a mobile food business forward.
                 </h1>
                 <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-xl leading-relaxed">
-                  Vendibook connects buyers, renters, hosts, and sellers of food trucks, trailers, commercial kitchens, and vendor spaces. PayPal checkout, optional Equinox financing, automated documents, nationwide delivery.
+                  Buy, rent, sell, or host food trucks, trailers, kitchens, and vendor spaces — with listings,
+                  communication, payments, financing options, documents, and fulfillment organized in one marketplace.
                 </p>
                 <div className="mb-7">
                   <ProviderTrustStrip />
@@ -184,9 +184,10 @@ const HowItWorks = () => {
                     </Link>
                   </Button>
                   <Button size="lg" variant="outline" className="rounded-full" asChild>
-                    <Link to="/list">List your asset</Link>
+                    <Link to="/list/start">List free</Link>
                   </Button>
                 </div>
+
               </motion.div>
 
               <motion.div
