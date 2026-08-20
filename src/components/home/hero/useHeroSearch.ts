@@ -24,21 +24,61 @@ export const useHeroSearch = () => {
   const [isRecording, setIsRecording] = useState(false);
   const [isConnectingMic, setIsConnectingMic] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const nativeRecognitionRef = useRef<any>(null);
   const { toast } = useToast();
+
+  const appendTranscript = useCallback((text: string) => {
+    const trimmed = text.trim();
+    if (!trimmed) return;
+    setLocation((prev) => (prev ? prev + ' ' : '') + trimmed);
+  }, []);
 
   const scribe = useScribe({
     modelId: 'scribe_v2_realtime',
     commitStrategy: 'vad' as any,
-    onCommittedTranscript: (data: any) => {
-      if (data.text?.trim()) {
-        setLocation((prev) => (prev ? prev + ' ' : '') + data.text.trim());
-      }
-    },
+    onCommittedTranscript: (data: any) => appendTranscript(data?.text ?? ''),
   });
+
+  // Fallback: browser-native speech recognition (Chrome/Edge/Safari) so voice
+  // search keeps working when the hosted transcription token is unavailable.
+  const startNativeRecognition = useCallback(() => {
+    const SpeechRecognition =
+      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) return false;
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = navigator.language || 'en-US';
+    recognition.interimResults = false;
+    recognition.continuous = false;
+    recognition.onresult = (event: any) => {
+      const transcript = Array.from(event.results as any[])
+        .map((r: any) => r[0]?.transcript ?? '')
+        .join(' ');
+      appendTranscript(transcript);
+    };
+    recognition.onerror = () => {
+      setIsRecording(false);
+      nativeRecognitionRef.current = null;
+    };
+    recognition.onend = () => {
+      setIsRecording(false);
+      nativeRecognitionRef.current = null;
+    };
+
+    recognition.start();
+    nativeRecognitionRef.current = recognition;
+    setIsRecording(true);
+    return true;
+  }, [appendTranscript]);
 
   const toggleVoiceSearch = useCallback(async () => {
     if (isRecording) {
-      scribe.disconnect();
+      if (nativeRecognitionRef.current) {
+        nativeRecognitionRef.current.stop();
+        nativeRecognitionRef.current = null;
+      } else {
+        scribe.disconnect();
+      }
       setIsRecording(false);
       return;
     }
@@ -46,6 +86,17 @@ export const useHeroSearch = () => {
     setIsConnectingMic(true);
     try {
       await navigator.mediaDevices.getUserMedia({ audio: true });
+    } catch {
+      setIsConnectingMic(false);
+      toast({
+        title: 'Microphone blocked',
+        description: 'Allow microphone access in your browser to use voice search.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    try {
       const { data, error } = await supabase.functions.invoke('elevenlabs-scribe-token');
       if (error || !data?.token) throw new Error('Failed to get voice token');
 
@@ -56,11 +107,25 @@ export const useHeroSearch = () => {
       setIsRecording(true);
     } catch (err) {
       console.error('Voice search error:', err);
-      toast({ title: 'Could not start voice search', description: 'Please check microphone permissions', variant: 'destructive' });
+      if (!startNativeRecognition()) {
+        toast({
+          title: 'Voice search unavailable',
+          description: 'Try Chrome or Safari, or type your search instead.',
+          variant: 'destructive',
+        });
+      }
     } finally {
       setIsConnectingMic(false);
     }
-  }, [isRecording, scribe, toast]);
+  }, [isRecording, scribe, toast, startNativeRecognition]);
+
+  useEffect(() => {
+    return () => {
+      if (nativeRecognitionRef.current) {
+        try { nativeRecognitionRef.current.stop(); } catch { /* noop */ }
+      }
+    };
+  }, []);
 
   useEffect(() => {
     const interval = setInterval(() => {
