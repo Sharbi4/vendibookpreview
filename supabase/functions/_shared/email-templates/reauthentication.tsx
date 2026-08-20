@@ -1,63 +1,58 @@
 /// <reference types="npm:@types/react@18.3.1" />
 
 import * as React from 'npm:react@18.3.1'
-
+import { Section, Text } from 'npm:@react-email/components@0.0.22'
 import {
-  Body,
-  Container,
-  Head,
-  Heading,
-  Html,
-  Preview,
-  Text,
-} from 'npm:@react-email/components@0.0.22'
-import { AuthBrandFooter, AuthBrandHeader } from './_brand.tsx'
+  Eyebrow,
+  H1,
+  Lede,
+  SupportRow,
+  VendibookEmailLayout,
+  color,
+  t,
+} from '../email-brand/components.tsx'
 
 interface ReauthenticationEmailProps {
   token: string
 }
 
 export const ReauthenticationEmail = ({ token }: ReauthenticationEmailProps) => (
-  <Html lang="en" dir="ltr">
-    <Head />
-    <Preview>Your verification code</Preview>
-    <Body style={main}>
-      <Container style={container}>
-        <AuthBrandHeader />
-        <Heading style={h1}>Confirm reauthentication</Heading>
-        <Text style={text}>Use the code below to confirm your identity:</Text>
-        <Text style={codeStyle}>{token}</Text>
-        <Text style={footer}>
-          This code will expire shortly. If you didn't request this, you can
-          safely ignore this email.
-        </Text>
-      <AuthBrandFooter />
-      </Container>
-    </Body>
-  </Html>
+  <VendibookEmailLayout preview="Your Vendibook verification code">
+    <Eyebrow>Verification code</Eyebrow>
+    <H1>Confirm it's you</H1>
+    <Lede>Use the code below to confirm your identity and continue.</Lede>
+
+    <Section
+      style={{
+        backgroundColor: color.surfaceMuted,
+        border: `1px solid ${color.border}`,
+        borderRadius: '12px',
+        padding: '20px',
+        margin: '0 0 20px',
+        textAlign: 'center' as const,
+      }}
+    >
+      <Text
+        style={{
+          fontFamily: 'Menlo, Consolas, monospace',
+          fontSize: '30px',
+          fontWeight: 700,
+          letterSpacing: '0.18em',
+          color: color.text,
+          margin: 0,
+        }}
+      >
+        {token}
+      </Text>
+    </Section>
+
+    <Text style={t.small}>
+      This code expires shortly. If you didn't request it, you can safely ignore
+      this email.
+    </Text>
+
+    <SupportRow />
+  </VendibookEmailLayout>
 )
 
 export default ReauthenticationEmail
-
-const main = { backgroundColor: '#ffffff', fontFamily: 'Arial, sans-serif' }
-const container = { padding: '20px 25px' }
-const h1 = {
-  fontSize: '22px',
-  fontWeight: 'bold' as const,
-  color: '#000000',
-  margin: '0 0 20px',
-}
-const text = {
-  fontSize: '14px',
-  color: '#55575d',
-  lineHeight: '1.5',
-  margin: '0 0 25px',
-}
-const codeStyle = {
-  fontFamily: 'Courier, monospace',
-  fontSize: '22px',
-  fontWeight: 'bold' as const,
-  color: '#000000',
-  margin: '0 0 30px',
-}
-const footer = { fontSize: '12px', color: '#999999', margin: '30px 0 0' }
