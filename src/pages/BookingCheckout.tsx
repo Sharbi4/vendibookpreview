@@ -1162,25 +1162,25 @@ const BookingCheckout = () => {
                         />
                       </div>
 
-                      {/* Trust badges */}
-                      <div className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg">
-                        <Shield className="h-4 w-4 text-primary" />
-                        <span className="text-xs text-muted-foreground">
-                          Your payment is protected by Vendibook
-                        </span>
+                      {/* How this payment works — factual, no protection promises */}
+                      <div className="rounded-xl border border-border bg-muted/30 p-4 space-y-1.5">
+                        <div className="flex items-center gap-2">
+                          <Shield className="h-4 w-4 text-primary" />
+                          <span className="text-sm font-medium text-foreground">How this payment works</span>
+                        </div>
+                        <p className="text-xs text-muted-foreground leading-relaxed">
+                          {instantConfirm
+                            ? 'PayPal processes your payment now. Your booking is confirmed as soon as the payment completes, and the full record is saved to your account.'
+                            : 'PayPal processes your payment now and your dates are held. The host still has to accept the request — if they decline or do not respond, Vendibook refunds the payment to your original payment method.'}
+                        </p>
+                        <p className="text-xs text-muted-foreground leading-relaxed">
+                          Vendibook records the transaction and releases host payouts after the rental begins. Vendibook does not hold funds in escrow.
+                        </p>
                       </div>
-
-                      {/* Trust reinforcement right before the payment CTA */}
-                      <TrustModule
-                        variant="compact"
-                        title="What we do to protect your payment"
-                        points={PAYMENT_TRUST_POINTS}
-                        disclaimer={PAYMENT_DISCLAIMER}
-                      />
 
                       {/* Submit button */}
                       <Button
-                        variant="dark-shine"
+                        variant="cta"
                         className="w-full h-14 text-base"
                         onClick={handleSubmit}
                         disabled={isSubmitting}
@@ -1193,23 +1193,16 @@ const BookingCheckout = () => {
                         ) : instantConfirm ? (
                           <>
                             <Zap className="h-5 w-5 mr-2" />
-                            Confirm and pay ${(fees.customerTotal + (depositAmount || 0)).toLocaleString()}
+                            Confirm and pay ${fees.customerTotal.toLocaleString()}
                           </>
                         ) : (
                           <>
                             <CreditCard className="h-5 w-5 mr-2" />
-                            Continue to payment · ${(fees.customerTotal + (depositAmount || 0)).toLocaleString()}
+                            Continue to payment · ${fees.customerTotal.toLocaleString()}
                           </>
                         )}
                       </Button>
 
-                      {!instantConfirm && (
-                        <p className="text-xs text-center text-muted-foreground">
-                          {listing.instant_book
-                            ? 'Your dates are held as soon as you pay, and the booking is confirmed once the host accepts. If they decline, you are refunded in full.'
-                            : 'Your card will be authorized now. Funds are only captured if the host approves your request.'}
-                        </p>
-                      )}
                     </div>
                   </motion.div>
                 )}
