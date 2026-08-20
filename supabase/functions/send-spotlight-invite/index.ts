@@ -42,24 +42,32 @@ serve(async (req) => {
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
 
-    const token = (req.headers.get("Authorization") ?? "").replace("Bearer ", "");
-    if (!token) return json({ error: "Unauthorized" }, 401);
-
     const admin = createClient(supabaseUrl, serviceKey);
-    let callerId: string | null = null;
-    const { data: userRes } = await admin.auth.getUser(token);
-    callerId = userRes?.user?.id ?? null;
-    if (!callerId) {
-      const fallback = createClient(supabaseUrl, anonKey, {
-        global: { headers: { Authorization: `Bearer ${token}` } },
-      });
-      const { data: alt } = await fallback.auth.getUser();
-      callerId = alt?.user?.id ?? null;
-    }
-    if (!callerId) return json({ error: "Unauthorized" }, 401);
 
-    const { data: isAdmin } = await admin.rpc("has_role", { _user_id: callerId, _role: "admin" });
-    if (!isAdmin) return json({ error: "Forbidden" }, 403);
+    // Trusted backend callers (service-role key) may drive the campaign
+    // directly; everyone else must present an admin end-user JWT.
+    const internal = isInternalCaller(req);
+    let callerId: string | null = null;
+
+    if (!internal) {
+      const token = (req.headers.get("Authorization") ?? "").replace("Bearer ", "");
+      if (!token) return json({ error: "Unauthorized" }, 401);
+
+      const { data: userRes } = await admin.auth.getUser(token);
+      callerId = userRes?.user?.id ?? null;
+      if (!callerId) {
+        const fallback = createClient(supabaseUrl, anonKey, {
+          global: { headers: { Authorization: `Bearer ${token}` } },
+        });
+        const { data: alt } = await fallback.auth.getUser();
+        callerId = alt?.user?.id ?? null;
+      }
+      if (!callerId) return json({ error: "Unauthorized" }, 401);
+
+      const { data: isAdmin } = await admin.rpc("has_role", { _user_id: callerId, _role: "admin" });
+      if (!isAdmin) return json({ error: "Forbidden" }, 403);
+    }
+
 
     const body = await req.json().catch(() => ({}));
     const mode: "preview_count" | "preview_html" | "test" | "broadcast" = body.mode ?? "preview_count";
