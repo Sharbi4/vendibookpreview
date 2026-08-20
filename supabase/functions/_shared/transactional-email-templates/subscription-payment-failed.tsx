@@ -28,7 +28,7 @@ interface Props {
 
 const Email = ({
   firstName,
-  planName = 'Vendibook Growth',
+  planName = 'Vendibook',
   amount,
   nextRetryDate,
   updatePaymentUrl,
