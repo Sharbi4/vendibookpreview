@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import HeroBackground from './HeroBackground';
 import HeroSearchInput from './HeroSearchInput';
 import { useHeroSearch } from './useHeroSearch';
+import HeroListingRotator from './HeroListingRotator';
 import { trackLeadEvent } from '@/lib/leadTracking';
 import { useAuth } from '@/contexts/AuthContext';
 import GoogleContinueButton from '@/components/auth/GoogleContinueButton';
