@@ -4,7 +4,7 @@ import {
 } from 'npm:@react-email/components@0.0.22'
 import type { TemplateEntry } from './registry.ts'
 import { s, SITE_URL } from './_styles.ts'
-import { BrandFooter } from './_blocks.tsx'
+import { BrandFooter, BrandHeader } from './_blocks.tsx'
 
 interface FeaturedAdminAlertProps {
   hostName?: string

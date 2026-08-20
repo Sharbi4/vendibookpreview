@@ -276,17 +276,6 @@
     </image:image>
   </url>
   <url>
-    <loc>https://vendibook.com/listing/e0ad7bc7-5a18-4534-a849-94501f5bc008</loc>
-    <lastmod>2026-08-20</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/bc349661-164b-47f4-9f25-808fddad9e16/e0ad7bc7-5a18-4534-a849-94501f5bc008/1776873368621-u00hg.jpeg</image:loc>
-      <image:title>Turn Key - Ready to go 16ft Food Trailer!</image:title>
-      <image:caption>Turn Key - Ready to go 16ft Food Trailer! on Vendibook</image:caption>
-    </image:image>
-  </url>
-  <url>
     <loc>https://vendibook.com/listing/c8d152a4-dbc2-4239-8e0a-56cecac50266</loc>
     <lastmod>2026-08-20</lastmod>
     <changefreq>weekly</changefreq>
@@ -295,6 +284,17 @@
       <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/b420d8c8-f0f5-4f20-8250-64d70c9993df/c8d152a4-dbc2-4239-8e0a-56cecac50266/1786451155485-v4zvfc.jpeg</image:loc>
       <image:title>2026 Fully loaded Food trailer READY </image:title>
       <image:caption>2026 Fully loaded Food trailer READY  in Lilburn, GA on Vendibook</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://vendibook.com/listing/e0ad7bc7-5a18-4534-a849-94501f5bc008</loc>
+    <lastmod>2026-08-20</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/bc349661-164b-47f4-9f25-808fddad9e16/e0ad7bc7-5a18-4534-a849-94501f5bc008/1776873368621-u00hg.jpeg</image:loc>
+      <image:title>Turn Key - Ready to go 16ft Food Trailer!</image:title>
+      <image:caption>Turn Key - Ready to go 16ft Food Trailer! on Vendibook</image:caption>
     </image:image>
   </url>
   <url>

@@ -2,7 +2,7 @@ import * as React from 'npm:react@18.3.1'
 import { Body, Container, Head, Heading, Html, Preview, Section, Text } from 'npm:@react-email/components@0.0.22'
 import type { TemplateEntry } from './registry.ts'
 import { s } from './_styles.ts'
-import { BrandFooter } from './_blocks.tsx'
+import { BrandFooter, BrandHeader } from './_blocks.tsx'
 
 interface Props {
   fromEmail?: string
