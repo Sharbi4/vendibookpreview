@@ -1108,41 +1108,8 @@ const SaleCheckout = () => {
               </>
             )}
 
-            {effectiveStep === 'options' && (
-              <>
-                <SaleCheckoutCard title="Optional services" padding="md">
-                  <p className="text-sm text-muted-foreground mb-4">
-                    Nothing is pre-selected and nothing is charged now — we'll follow up with a quote
-                    for anything you choose.
-                  </p>
-                  <div className="space-y-3">
-                    {addOnCatalog.map((addon) => (
-                      <label
-                        key={addon.id}
-                        className="flex items-start gap-3 rounded-2xl border border-border/70 bg-card p-4 cursor-pointer hover:border-primary/40 transition-colors"
-                      >
-                        <Checkbox
-                          checked={Boolean(addOnSelections[addon.id])}
-                          onCheckedChange={(v) => toggleAddOn(addon.id, Boolean(v))}
-                          className="mt-0.5"
-                        />
-                        <span className="min-w-0 flex-1">
-                          <span className="flex items-center justify-between gap-3">
-                            <span className="text-sm font-semibold text-foreground">{addon.title}</span>
-                            <span className="text-xs text-muted-foreground shrink-0">{addon.priceLabel}</span>
-                          </span>
-                          <span className="block text-xs text-muted-foreground mt-1 leading-relaxed">
-                            {addon.description}
-                          </span>
-                        </span>
-                      </label>
-                    ))}
-                  </div>
-                </SaleCheckoutCard>
 
-                <div className="lg:hidden">{orderSummary}</div>
-              </>
-            )}
+
 
             {effectiveStep === 'payment' && (
               <>
