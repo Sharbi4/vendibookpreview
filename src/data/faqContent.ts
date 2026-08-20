@@ -158,7 +158,7 @@ export const faqCategories: FaqCategory[] = [
         id: "how-buying-works",
         question: "How does buying work start to finish?",
         answer:
-          "Browse listings, message the seller with any questions, and either buy at the asking price or make an offer. When the seller accepts, you check out with card, ACH, or financing. Funds sit in payment protection until you confirm you got the truck and everything you were promised. Once you confirm — or 7 days after delivery if you don't — the seller's payout is typically released within 24 hours of delivery confirmation (24 to 48 hours at the outside). You get a bill of sale, e-signed by both sides, in your dashboard.",
+          "Browse listings, message the seller with any questions, and either buy at the asking price or make an offer. When the seller accepts, you either pay in person (if the seller offers it) or check out online through PayPal — card, bank, or PayPal balance. Funds are held rather than sent straight to the seller until you confirm you received exactly what was listed. If you never confirm, we auto-complete 7 days after delivery. Vendibook then reviews and issues the seller's payout. You get a bill of sale, e-signed by both sides, in your dashboard.",
         actions: [A.browseSales],
       },
       {
@@ -178,13 +178,13 @@ export const faqCategories: FaqCategory[] = [
         id: "payment-methods",
         question: "What payment methods do you accept?",
         answer:
-          "Vendibook checkout runs on PayPal Business: pay with your PayPal balance, a linked bank account, or any major debit/credit card through PayPal — no PayPal account required to use a card. Equipment financing through Equinox Funding is available on eligible for-sale listings, and Pay in Person (cash) is available when the seller has enabled it. Vendibook never sees or stores your card number.",
+          "Vendibook checkout runs on PayPal Business: pay with your PayPal balance, a linked bank account, or any major debit/credit card through PayPal — no PayPal account required to use a card. Buyer financing through our financing partner is available on eligible for-sale listings, and Pay in Person is available when the seller has enabled it. Vendibook never sees or stores your card number.",
       },
       {
         id: "financing",
         question: "Can I finance a food truck or trailer instead of paying cash?",
         answer:
-          "Yes — Vendibook partners with Equinox Funding for equipment financing on eligible for-sale listings. Apply in minutes from the listing, get a decision from Equinox, and the seller is paid in full at closing while you repay Equinox on monthly terms. You can also download a Pro Forma Invoice (with the VIN/serial) directly from the listing to submit with your application. Rates, terms, and approval come from Equinox — not Vendibook.",
+          "Yes. Buyer financing is available on eligible published for-sale listings through the third-party financing partner Vendibook surfaces — currently Equinox Funding. You apply directly from the listing and can download a Pro Forma Invoice (with the VIN/serial) to submit with the application. The seller does not manage your application or make the lending decision. Vendibook is not a lender: we do not approve applicants, set rates or terms, or guarantee funding or timing. See /financing for the current provider details.",
         keywords: ["financing", "monthly", "loan", "equinox", "equipment financing"],
         actions: [{ label: "Explore financing", href: "/financing" }],
       },
@@ -192,20 +192,20 @@ export const faqCategories: FaqCategory[] = [
         id: "payment-protection",
         question: "How does payment protection work?",
         answer:
-          "When you pay through Vendibook, your money is held by our payment processor, PayPal — not sent to the seller yet. The seller only gets paid after you confirm you received exactly what was listed. If you never confirm, we auto-complete 7 days after delivery. Once delivery is confirmed, the seller's payout is typically released within 24 hours (24 to 48 hours at the outside), so raise any issue before you confirm. This replaces the old-school payment protection model with something faster and integrated with your card's chargeback rights.",
+          "When you pay through Vendibook, your money is held by our payment processor, PayPal — not sent to the seller yet. The seller only gets paid after you confirm you received exactly what was listed. If you never confirm, we auto-complete 7 days after delivery. Vendibook reviews the transaction and then issues the seller's payout, so raise any issue before you confirm receipt.",
         keywords: ["payment protection", "protection", "hold", "safe"],
       },
       {
         id: "delivery-options",
         question: "How does delivery, pickup, or freight work?",
         answer:
-          "Every for-sale listing supports three options: (1) pickup by you, (2) freight you arrange yourself, or (3) Vendibook-facilitated freight (roughly $4.50/mile, quoted with a carrier before scheduling). You pick your option at checkout. Freight is scheduled after payment clears and tracked on the transaction page.",
+          "It depends on what the seller offers. Common options are local pickup by you, seller-arranged delivery when the seller offers it, freight you arrange yourself, or Vendibook-coordinated freight where it is available. Where the delivery checker is enabled on a listing, it returns an estimate for your address before you commit — not every listing has nationwide delivery or a guaranteed quote. The buyer is generally responsible for delivery cost.",
       },
       {
         id: "confirm-delivery",
         question: "When and how do I confirm delivery?",
         answer:
-          "After the truck arrives and you've done a full walkaround with the title and keys in hand, open the transaction and tap Confirm receipt. This starts the seller's payout, which is typically released within 24 hours (24 to 48 hours at the outside). Don't confirm until documents and any promised extras are physically with you — confirmation cannot be reversed once the payout releases.",
+          "After the truck arrives and you've done a full walkaround with the title and keys in hand, open the transaction and tap Confirm receipt. This completes the sale and starts Vendibook's payout review. Don't confirm until documents and any promised extras are physically with you — confirmation cannot be reversed once the payout is released.",
         actions: [A.viewTransactions],
       },
       {
@@ -219,7 +219,7 @@ export const faqCategories: FaqCategory[] = [
         id: "refund-window",
         question: "How long do I have to request a refund?",
         answer:
-          "Up to 7 days after delivery to auto-complete. Once delivery is confirmed, seller payouts are typically released within 24 hours (24 to 48 hours at the outside), so open any dispute before confirming. The listing's cancellation policy governs pre-delivery cancellations — you'll see the exact refund amount before you confirm any cancellation.",
+          "Up to 7 days after delivery, at which point the sale auto-completes. Once you confirm receipt, the payout moves into release, so open any dispute before confirming. The listing's cancellation policy governs pre-delivery cancellations — you'll see the exact refund amount before you confirm any cancellation.",
         actions: [A.refundPolicy],
       },
       {
@@ -300,7 +300,7 @@ export const faqCategories: FaqCategory[] = [
         id: "list-for-free",
         question: "Is it free to list on Vendibook?",
         answer:
-          "Yes. Creating an account and publishing a standard listing are always free. You only pay when a transaction happens on-platform (12.9% seller commission) or when you buy an optional upgrade like Featured Boost.",
+          "Yes. Creating an account and publishing a standard listing are free, subject to the active-listing limit on your plan. Identity verification is not required to publish. You only pay when a sale or booking completes on-platform (12.9% seller/host commission, 10.9% with active Vendibook Pro) or when you buy an optional upgrade like Featured Boost.",
         actions: [A.createListing],
       },
       {
@@ -328,14 +328,14 @@ export const faqCategories: FaqCategory[] = [
         id: "seller-fees",
         question: "What are the seller fees?",
         answer:
-          "12.9% platform commission on sales paid through Vendibook. Buyers pay $0 in platform fees — a very buyer-friendly structure. Pay-in-Person cash sales are 100% free (no commission, no fee) since we're not processing payment. Rentals: 12.9% host commission + 12.9% renter service fee.",
+          "12.9% platform commission on sales paid through Vendibook checkout. Buyers pay $0 in platform fees. Pay-in-Person equipment sales are 100% free (no commission, no fee) since we're not processing payment. Rentals: 12.9% host commission + 12.9% renter service fee. Active Vendibook Pro members pay 10.9% on the seller/host side, with savings capped at $500 per completed transaction.",
         actions: [A.pricing],
       },
       {
         id: "payout-timing",
         question: "When do I get paid?",
         answer:
-          "Sale payouts are typically released within 24 hours of delivery confirmation, and we always strive to release within 24 to 48 hours. If the buyer doesn't confirm within 7 days of delivery, we auto-complete and the payout is released on the same schedule. Rental payouts release 24 hours after the booking's scheduled start. Payouts are sent via PayPal, ACH bank transfer, or Venmo, depending on the payout account you have on file.",
+          "Vendibook reviews and issues your payout after the transaction completes — for a sale that means after delivery or handoff is confirmed (or 7 days after delivery if the buyer never confirms), and for a rental after the booking has started and completed as agreed. Payouts are not automatic or instant. Payouts are sent to the destination you have on file: PayPal, Venmo, Cash App, or bank transfer. One exception: on a successfully completed financed purchase, seller payment is released within 24 hours after successful delivery and confirmation.",
       },
       {
         id: "payout-setup",
@@ -433,7 +433,7 @@ export const faqCategories: FaqCategory[] = [
         id: "auto-renew",
         question: "Do subscriptions auto-renew?",
         answer:
-          "Yes. Monthly plans renew monthly, annual plans renew annually, at the price you signed up at. We email a receipt with every renewal. Cancel anytime online — see above.",
+          "Yes. Vendibook Pro and PermitPath Plus are billed monthly in advance and renew each month at the price you signed up at. We email a receipt with every renewal. Cancel anytime online — cancellation stops the next renewal and your benefits stay active through the period you already paid for. There is no prorated refund simply for cancelling early.",
         actions: [A.subTerms],
       },
       {
@@ -476,14 +476,14 @@ export const faqCategories: FaqCategory[] = [
         id: "permit-path",
         question: "What is PermitPath?",
         answer:
-          "PermitPath is our guided compliance tool. Enter your city, business type, and equipment; it maps out the health, business, and vending permits you need — with links, price estimates, and expiration tracking. Basic PermitPath is free for every account. Founding members keep full Plus access free as thanks for early support.",
+          "PermitPath is our guided compliance tool. Enter your location and business type and it generates a roadmap of the health, business, and vending permits you need — requirements, the agencies involved, official links, estimated costs and timelines, and a basic checklist. Generating and viewing a roadmap is free for every account. Founding members keep full Plus access free as thanks for early support.",
         actions: [A.permitPath],
       },
       {
         id: "permit-path-plus",
         question: "What does PermitPath Plus add?",
         answer:
-          "Plus adds multi-city roadmaps (compare requirements across markets), saved permit progress with reminders, downloadable checklists, and the concierge document assist. Included with Vendibook Pro. Standalone PermitPath Plus is $7.99/mo, and founding-member accounts keep it free.",
+          "Plus is the save-and-track layer: save and manage multiple roadmaps, track progress and completion, store permit numbers, details and notes, record expiration dates, watch what's expiring on the renewal dashboard, refresh saved requirements, and export. It does not send automated regulation alerts or renewal reminders. Included with Vendibook Pro. Standalone PermitPath Plus is $7.99/mo, and founding-member accounts keep it free.",
         actions: [A.permitPath, A.pricing],
       },
       {
@@ -532,7 +532,7 @@ export const faqCategories: FaqCategory[] = [
         id: "featured-boost",
         question: "What is Featured Boost?",
         answer:
-          "Featured Boost pins your listing to the top of relevant search and category pages for 30 days, adds a Featured badge, and shows on the home page's featured strip. Fair rotation: featured slots rotate so no one listing dominates every page load. One-time purchase (does not auto-renew).",
+          "Featured Boost pins your listing to the top of relevant search and category pages for 30 days, adds a Featured badge, and shows on the home page's featured strip. Featured slots rotate so no one listing dominates every page load. It's a one-time purchase and does not auto-renew. Vendibook Pro includes one Featured Boost credit each paid billing period; unused credits don't roll over, and a boost you've already activated finishes its 30-day run even if Pro later ends.",
         actions: [{ label: "Buy Featured Boost", href: "/pricing?product=featured-boost", requiresAuth: true }],
       },
       {
@@ -562,13 +562,13 @@ export const faqCategories: FaqCategory[] = [
         id: "how-protection-works",
         question: "How does payment protection actually work?",
         answer:
-          "When you pay on Vendibook, your money is held by our payment processor (PayPal) — not sent to the seller. The seller only gets paid after you confirm you got exactly what was listed. For sales, the seller's payout is typically released within 24 hours of delivery confirmation (24 to 48 hours at the outside), so raise any issue before you confirm receipt. This gives you strong buyer protection without the friction of traditional payment protection companies.",
+          "When you pay on Vendibook, your money is held by our payment processor (PayPal) — not sent to the seller. The seller only gets paid after you confirm you got exactly what was listed, and Vendibook reviews the transaction before issuing the payout. Raise any issue before you confirm receipt. Pay-in-person deals happen directly between the two parties and are not covered by this hold.",
       },
       {
         id: "verified-badges",
         question: "What does the verified badge mean?",
         answer:
-          "It means that person paid for the optional Plaid identity check and it passed, so their legal identity is confirmed. It's a strong trust signal — not a guarantee of behavior, and its absence doesn't mean someone is unsafe, since the badge is a voluntary add-on. Either way, keep messages and payment on-platform.",
+          "It means that person paid for the optional Plaid identity check and it passed, so their legal identity is confirmed. Most Vendibook members are not verified — it's a voluntary paid add-on, so its absence doesn't mean someone is unsafe, and its presence isn't a guarantee of behavior. Either way, keep messages and payment on-platform.",
       },
       {
         id: "avoid-scams",
@@ -594,7 +594,7 @@ export const faqCategories: FaqCategory[] = [
         id: "fee-transparency",
         question: "What are Vendibook's fees, exactly?",
         answer:
-          "Sales through Vendibook: 12.9% commission from the seller, $0 from the buyer. Rentals: 12.9% commission from the host + 12.9% service fee on the renter. Pay-in-Person cash sales: 100% free (no commission, no fee). Subscriptions and one-time upgrades are separate — see the pricing page. We publish these numbers openly because a healthy marketplace depends on trust.",
+          "Sales through Vendibook checkout: 12.9% commission from the seller, $0 from the buyer. Rentals: 12.9% commission from the host + 12.9% service fee on the renter. Pay-in-Person equipment sales: 100% free (no commission, no fee). Active Vendibook Pro members pay 10.9% on the seller/host side, capped at $500 saved per completed transaction. Subscriptions and one-time upgrades are separate — see the pricing page.",
         actions: [A.pricing],
       },
       {
