@@ -116,6 +116,40 @@ const getPageTitle = (pathname: string): string => {
   return 'Vendibook';
 };
 
+const DEFAULT_TITLE = 'Vendibook | Buy, Sell & Rent Food Trucks & Trailers';
+
+/**
+ * Waits for a route's own <SEO> component to set a real document title before
+ * reporting to GA. Dynamic routes (listing detail, city pages) resolve their
+ * title only after data loads, so a fixed short timeout used to report generic
+ * fallbacks like "Listing Detail | Vendibook".
+ */
+const waitForSettledTitle = (timeoutMs: number): Promise<void> =>
+  new Promise((resolve) => {
+    const titleEl = document.querySelector('title');
+    if (!titleEl) {
+      resolve();
+      return;
+    }
+    if (document.title && document.title !== DEFAULT_TITLE) {
+      resolve();
+      return;
+    }
+    let done = false;
+    const finish = () => {
+      if (done) return;
+      done = true;
+      observer.disconnect();
+      clearTimeout(timer);
+      resolve();
+    };
+    const observer = new MutationObserver(() => {
+      if (document.title && document.title !== DEFAULT_TITLE) finish();
+    });
+    observer.observe(titleEl, { childList: true, characterData: true, subtree: true });
+    const timer = setTimeout(finish, timeoutMs);
+  });
+
 /**
  * Hook to track page views with Google Analytics on route changes.
  * Sets document.title for pages that don't have their own <SEO> component,
