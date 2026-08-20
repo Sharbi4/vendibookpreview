@@ -34,9 +34,13 @@ interface BookingProps {
   bookingId?: string
   cityState?: string
   coverImageUrl?: string
+  /** booking_requests.status at send time — 'approved' | 'confirmed' vs 'pending'. */
+  bookingStatus?: string
+  isInstantBook?: boolean
   termsSnapshot?: TermsSnapshot
   termsVersion?: string
 }
+
 
 const money = (c: number) => `$${(Number(c || 0) / 100).toFixed(2)}`
 
@@ -82,6 +86,8 @@ const TermsBlock = ({ snap, version }: { snap?: TermsSnapshot; version?: string 
   )
 }
 
+const APPROVED_STATUSES = new Set(['approved', 'confirmed', 'active', 'completed'])
+
 const BookingConfirmationEmail = ({
   guestName,
   listingTitle,
@@ -91,52 +97,85 @@ const BookingConfirmationEmail = ({
   orderNumber,
   bookingId,
   cityState,
+  bookingStatus,
   termsSnapshot,
   termsVersion,
-}: BookingProps) => (
-  <VendibookEmailLayout preview={`Booking confirmed — ${listingTitle ?? 'your reservation'}`}>
-    <Eyebrow>Booking confirmed</Eyebrow>
-    <H1>{guestName ? `You're all set, ${guestName}.` : "You're all set."}</H1>
-    <Lede>
-      Your authorization hold has been placed and the host has been notified. You'll receive a
-      final receipt once your booking is captured.
-    </Lede>
+}: BookingProps) => {
+  // Payment is CAPTURED before this email is sent (deliverOrderReceipt only
+  // runs on payment_status === 'completed'). The only variable is whether the
+  // host has approved the dates yet.
+  const approved = APPROVED_STATUSES.has(String(bookingStatus ?? '').toLowerCase())
 
-    <DetailTable
-      rows={[
-        { label: 'Listing', value: listingTitle ?? 'Your reservation' },
-        { label: 'Location', value: cityState },
-        { label: 'Dates', value: startDate || endDate ? `${startDate ?? '—'} → ${endDate ?? '—'}` : undefined },
-        { label: 'Order', value: orderNumber, mono: true },
-        { label: 'Total', value: totalPrice, emphasis: true },
-      ]}
-    />
+  return (
+    <VendibookEmailLayout
+      preview={
+        approved
+          ? `Booking confirmed — ${listingTitle ?? 'your reservation'}`
+          : `Payment received — awaiting host approval for ${listingTitle ?? 'your reservation'}`
+      }
+    >
+      <Eyebrow>{approved ? 'Booking confirmed' : 'Payment received'}</Eyebrow>
+      <H1>
+        {approved
+          ? guestName ? `You're all set, ${guestName}.` : "You're all set."
+          : guestName ? `Thanks, ${guestName} — your payment is in.` : 'Your payment is in.'}
+      </H1>
+      <Lede>
+        {approved
+          ? 'Your payment has been processed and your dates are confirmed with the host. This email is your record of the booking.'
+          : 'Your payment has been processed and your request was sent to the host for approval. If the host declines or does not respond in time, your payment is refunded in full.'}
+      </Lede>
 
-    <CtaButton href={`${SITE_URL}/dashboard${bookingId ? `?booking=${bookingId}` : ''}`}>
-      View booking details
-    </CtaButton>
+      <DetailTable
+        rows={[
+          { label: 'Listing', value: listingTitle ?? 'Your reservation' },
+          { label: 'Location', value: cityState },
+          { label: 'Dates', value: startDate || endDate ? `${startDate ?? '—'} → ${endDate ?? '—'}` : undefined },
+          { label: 'Order', value: orderNumber, mono: true },
+          { label: 'Status', value: approved ? 'Confirmed' : 'Awaiting host approval' },
+          { label: 'Total paid', value: totalPrice, emphasis: true },
+        ]}
+      />
 
-    <Divider />
+      <CtaButton href={`${SITE_URL}/dashboard${bookingId ? `?booking=${bookingId}` : ''}`}>
+        View booking details
+      </CtaButton>
 
-    <SectionLabel>What happens next</SectionLabel>
-    <Bullets
-      items={[
-        'Message the host directly from your dashboard.',
-        'Upload any required documents before your start date.',
-        'The precise address unlocks once your booking is fully confirmed.',
-      ]}
-    />
+      <Divider />
 
-    <TermsBlock snap={termsSnapshot} version={termsVersion} />
+      <SectionLabel>What happens next</SectionLabel>
+      <Bullets
+        items={
+          approved
+            ? [
+                'Message the host directly from your dashboard.',
+                'Upload any required documents before your start date.',
+                'The precise address unlocks now that your booking is confirmed.',
+              ]
+            : [
+                'The host reviews your request and approves or declines it.',
+                'You get an email the moment the host responds.',
+                'If the request is declined or expires, your payment is refunded in full.',
+                'The precise address unlocks once the host approves.',
+              ]
+        }
+      />
 
-    <SupportRow />
-  </VendibookEmailLayout>
-)
+      <TermsBlock snap={termsSnapshot} version={termsVersion} />
+
+      <SupportRow />
+    </VendibookEmailLayout>
+  )
+}
 
 export const template = {
   component: BookingConfirmationEmail,
-  subject: (data: Record<string, any>) =>
-    data?.listingTitle ? `Booking confirmed: ${data.listingTitle}` : 'Your booking is confirmed',
+  subject: (data: Record<string, any>) => {
+    const approved = APPROVED_STATUSES.has(String(data?.bookingStatus ?? '').toLowerCase())
+    const title = data?.listingTitle
+    if (approved) return title ? `Booking confirmed: ${title}` : 'Your booking is confirmed'
+    return title ? `Payment received — awaiting host approval: ${title}` : 'Payment received — awaiting host approval'
+  },
   displayName: 'Booking confirmation',
   previewData: {
     guestName: 'Jordan',
@@ -146,5 +185,7 @@ export const template = {
     totalPrice: '$842.00',
     orderNumber: 'VB-9F2A1C4D',
     cityState: 'Los Angeles, CA',
+    bookingStatus: 'approved',
   },
 } satisfies TemplateEntry
+

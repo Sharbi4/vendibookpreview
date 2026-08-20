@@ -85,7 +85,7 @@ async function buildBookingOverride(
   const { data: booking } = await supabase
     .from('booking_requests')
     .select(
-      'id, listing_id, host_id, start_date, end_date, start_time, end_time, is_hourly_booking, hourly_slots, slot_name, duration_hours, total_price, deposit_amount, fulfillment_selected, delivery_address, delivery_instructions, address_snapshot',
+      'id, status, is_instant_book, listing_id, host_id, start_date, end_date, start_time, end_time, is_hourly_booking, hourly_slots, slot_name, duration_hours, total_price, deposit_amount, fulfillment_selected, delivery_address, delivery_instructions, address_snapshot',
     )
     .eq('id', record.booking_request_id)
     .maybeSingle();
@@ -147,6 +147,8 @@ async function buildBookingOverride(
       cityState,
       hostName,
       bookingId: booking.id,
+      bookingStatus: booking.status ?? null,
+      isInstantBook: booking.is_instant_book ?? false,
       orderNumber: detail.order_number,
       startDate: longDate(booking.start_date),
       endDate: longDate(booking.end_date),
