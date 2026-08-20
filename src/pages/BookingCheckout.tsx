@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useParams, useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { format, parseISO, differenceInDays } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -147,6 +147,10 @@ const BookingCheckout = () => {
   /** Guards against creating a second booking_request row if the buyer
    *  closes the PayPal panel and hits the submit button again. */
   const createdBookingIdRef = useRef<string | null>(null);
+  /** Where /auth should send the buyer back to — the rental flow, never /checkout. */
+  const bookingReturnPath = `/book/${listingId ?? ''}${
+    searchParams.toString() ? `?${searchParams.toString()}` : ''
+  }`;
   const confirmationUrl = (id: string) =>
     `${window.location.origin}/booking-confirmation?booking_id=${id}`;
   const [stagedDocuments, setStagedDocuments] = useState<StagedDocument[]>([]);
