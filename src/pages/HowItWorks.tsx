@@ -355,15 +355,15 @@ const HowItWorks = () => {
           <EquinoxFinancingCallout audience={role === 'sell' ? 'seller' : 'buyer'} />
         )}
 
-        {/* SOCIAL PROOF STRIP */}
+        {/* FACT STRIP */}
         <section className="py-10 border-y border-border bg-card/40">
           <div className="container max-w-5xl mx-auto px-4">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
               {[
-                { v: '12k+', l: 'Members' },
-                { v: '$4.2M', l: 'Transacted' },
-                { v: '47 states', l: 'Active inventory' },
-                { v: '4.9★', l: 'Average rating' }].map((s) => (
+                { v: 'Free', l: 'To publish a standard listing' },
+                { v: '$0', l: 'Commission on pay-in-person equipment sales' },
+                { v: '12.9%', l: 'Seller/host fee on Vendibook online checkout' },
+                { v: 'Optional', l: 'Identity verification, powered by Plaid' }].map((s) => (
                 <div key={s.l}>
                   <div className="text-2xl md:text-3xl font-bold text-foreground">{s.v}</div>
                   <div className="text-xs md:text-sm text-muted-foreground mt-1">{s.l}</div>
@@ -372,6 +372,7 @@ const HowItWorks = () => {
             </div>
           </div>
         </section>
+
 
         {/* FAQ */}
         <section className="py-16 md:py-20">
