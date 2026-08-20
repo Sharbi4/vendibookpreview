@@ -37,6 +37,7 @@ const HeroSearchInput = ({
   placeholders,
   className,
 }: HeroSearchInputProps) => {
+  const reduced = useReducedMotion();
   const onSubmit = () => {
     trackLeadEvent('homepage_search_submit', {
       route: '/',
