@@ -230,6 +230,27 @@ serve(async (req) => {
         link: `/list/concierge/${order.id}`,
         dedupeKey: `concierge-intake:${order.id}:${order.intake_version}`,
       });
+
+      // Put the order in front of the Vendibook team so it can be fulfilled.
+      const intake = (order.intake ?? {}) as Record<string, unknown>;
+      await alertAdminsOfPaymentOnce(
+        admin,
+        `concierge-intake:${order.id}:${order.intake_version}`,
+        user.id,
+        "addon_purchase",
+        {
+          product: "Listing Concierge — intake submitted",
+          amount: formatUsd(order.price_cents),
+          order_id: order.id,
+          user_email: user.email ?? null,
+          listing_type: intake.category ?? null,
+          mode: intake.mode ?? null,
+          location: intake.location ?? null,
+          photos_provided: Array.isArray(order.uploads) ? order.uploads.length : 0,
+          admin_link: `/admin/concierge?order=${order.id}`,
+        },
+      );
+
       return jsonResponse(200, { order: updated });
     }
 
