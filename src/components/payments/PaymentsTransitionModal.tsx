@@ -188,11 +188,11 @@ export function PaymentsTransitionModal() {
           </div>
         </div>
 
-        <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 pt-1">
-          <Button variant="ghost" onClick={() => void close()}>
+        <div className="sticky bottom-0 -mx-4 -mb-4 flex flex-col-reverse gap-2 border-t border-white/10 bg-[#08080a]/95 px-4 py-3 backdrop-blur-xl sm:static sm:mx-0 sm:mb-0 sm:flex-row sm:justify-end sm:border-0 sm:bg-transparent sm:px-0 sm:py-0 sm:pt-1 sm:backdrop-blur-none">
+          <Button variant="ghost" className="w-full sm:w-auto" onClick={() => void close()}>
             Not now
           </Button>
-          <Button asChild onClick={() => void close()}>
+          <Button asChild className="w-full sm:w-auto" onClick={() => void close()}>
             <Link to="/dashboard?view=host&tab=payouts">Review payment &amp; financing options</Link>
           </Button>
         </div>
