@@ -6,18 +6,22 @@ import HeroBackground from './HeroBackground';
 import HeroSearchInput from './HeroSearchInput';
 import { useHeroSearch } from './useHeroSearch';
 import { trackLeadEvent } from '@/lib/leadTracking';
+import { useAuth } from '@/contexts/AuthContext';
+import GoogleContinueButton from '@/components/auth/GoogleContinueButton';
 
 /**
  * Premium marketplace hero.
  *
- * Calm dark surface with a warm gradient wash, compact vertical rhythm and a
- * single dominant interaction (search). Brand is carried by the header mark,
- * so no oversized wordmark here. Geometry matches the for-sale listing detail
- * system: rounded-2xl surfaces, hairline borders, restrained shadows.
+ * Editorial dark surface with a single dominant interaction (search), one
+ * primary action, one quiet secondary action, and a signed-out-only account
+ * acquisition row using Google's official button. Geometry matches the
+ * for-sale listing detail system: rounded-2xl, hairline borders, soft shadow.
  */
 const HeroPremium = () => {
   const search = useHeroSearch();
   const reduced = useReducedMotion();
+  const { user, loading } = useAuth();
+  const signedOut = !loading && !user;
 
   const rise = (delay: number) =>
     reduced
@@ -32,7 +36,7 @@ const HeroPremium = () => {
     <section className="relative overflow-hidden bg-background" aria-labelledby="home-hero-heading">
       <HeroBackground />
 
-      <div className="container relative z-10 mx-auto max-w-3xl px-5 pb-10 pt-10 sm:pb-14 sm:pt-14 md:pb-16 md:pt-20">
+      <div className="container relative z-10 mx-auto max-w-3xl px-5 pb-10 pt-9 sm:pb-14 sm:pt-12 md:pb-16 md:pt-16">
         <div className="text-center">
           <motion.p
             {...rise(0)}
@@ -44,17 +48,18 @@ const HeroPremium = () => {
           <motion.h1
             id="home-hero-heading"
             {...rise(0.05)}
-            className="text-balance text-3xl font-bold leading-[1.1] tracking-tight text-foreground sm:text-5xl md:text-[3.4rem]"
+            className="text-balance text-[1.9rem] font-semibold leading-[1.12] tracking-tight text-foreground sm:text-[2.6rem] md:text-[3rem]"
           >
-            Buy, rent, and sell food trucks in one marketplace.
+            Buy, rent, and sell food trucks and trailers
+            <span className="block text-foreground/60">in one marketplace.</span>
           </motion.h1>
 
           <motion.p
             {...rise(0.12)}
             className="mx-auto mt-4 max-w-xl text-[15px] leading-relaxed text-muted-foreground sm:text-base"
           >
-            Explore food trucks, trailers, and mobile food equipment — with structured listings,
-            financing options for eligible buyers, and flexible ways to complete the deal.
+            Structured listings, financing options for eligible buyers, and flexible ways to
+            complete the deal — online or in person.
           </motion.p>
 
           <motion.div {...rise(0.2)} className="mx-auto mt-7 max-w-xl">
@@ -87,8 +92,8 @@ const HeroPremium = () => {
             <Button
               asChild
               size="lg"
-              variant="outline"
-              className="h-12 w-full rounded-2xl border-border/60 bg-transparent text-base font-semibold text-foreground hover:bg-foreground/5 hover:text-foreground sm:w-auto sm:px-7"
+              variant="ghost"
+              className="h-12 w-full rounded-2xl text-base font-medium text-foreground/80 hover:bg-foreground/5 hover:text-foreground sm:w-auto sm:px-6"
             >
               <Link
                 to="/list/start?mode=sale"
@@ -105,15 +110,26 @@ const HeroPremium = () => {
             </Button>
           </motion.div>
 
-          <motion.p {...rise(0.34)} className="mt-4 text-[13px] text-muted-foreground">
-            New here?{' '}
-            <Link
-              to="/auth?mode=signup"
-              className="text-foreground/80 underline underline-offset-4 transition-colors hover:text-foreground"
+          {signedOut && (
+            <motion.div
+              {...rise(0.34)}
+              className="mx-auto mt-8 max-w-sm rounded-2xl border border-white/[0.07] bg-white/[0.03] p-4"
             >
-              Create a free account
-            </Link>
-          </motion.p>
+              <p className="mb-3 text-[12px] font-medium uppercase tracking-[0.16em] text-foreground/45">
+                Save searches &amp; message owners
+              </p>
+              <GoogleContinueButton className="w-full" returnPath="/" />
+              <p className="mt-3 text-[13px] text-muted-foreground">
+                Prefer email?{' '}
+                <Link
+                  to="/auth?mode=signup"
+                  className="text-foreground/80 underline underline-offset-4 transition-colors hover:text-foreground"
+                >
+                  Create a free account
+                </Link>
+              </p>
+            </motion.div>
+          )}
         </div>
       </div>
     </section>
