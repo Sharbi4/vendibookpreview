@@ -57,7 +57,7 @@ serve(async (req) => {
     const admin = createClient(supabaseUrl, serviceKey);
 
     // ---- auth: admin user, trusted backend caller, or ops token ----
-    const opsToken = (Deno.env.get("SPOTLIGHT_CAMPAIGN_TOKEN") ?? "").trim();
+    const opsToken = (Deno.env.get("CORRECTION_CAMPAIGN_TOKEN") ?? "").trim();
     const providedOps = (req.headers.get("x-ops-token") ?? "").trim();
     let authorized = isInternalCaller(req) || (!!opsToken && providedOps === opsToken);
     let callerId: string | null = null;
