@@ -22,7 +22,7 @@ import { useUnreadMessageCount } from '@/hooks/useUnreadMessageCount';
 import { useAuth } from '@/contexts/AuthContext';
 import { useHostEntitlements } from '@/hooks/useHostEntitlements';
 import { Link } from 'react-router-dom';
-import { Crown } from 'lucide-react';
+import { ArrowRight, Wrench } from 'lucide-react';
 import { getCounterpartyName } from '@/lib/displayName';
 import PaymentsTransitionModal from '@/components/payments/PaymentsTransitionModal';
 import PaymentsTransitionReminder from '@/components/payments/PaymentsTransitionReminder';
