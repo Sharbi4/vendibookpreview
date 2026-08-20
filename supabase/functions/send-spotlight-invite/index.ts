@@ -7,6 +7,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 import { Resend } from "https://esm.sh/resend@2.0.0";
 import { isMailableAddress } from "../_shared/marketingAudience.ts";
+import { isInternalCaller } from "../_shared/internalAuth.ts";
 import {
   SPOTLIGHT_CAMPAIGN_ID,
   SPOTLIGHT_SUBJECTS,
@@ -205,7 +206,7 @@ serve(async (req) => {
     if (isTest) {
       const testEmail = String(body.testEmail ?? "").trim().toLowerCase();
       if (!isMailableAddress(testEmail)) return json({ error: "Valid testEmail required" }, 400);
-      queue = [{ email: testEmail, user_id: callerId, first_name: body.previewFirstName ?? null }];
+      queue = [{ email: testEmail, user_id: callerId ?? "00000000-0000-0000-0000-000000000000", first_name: body.previewFirstName ?? null }];
     } else {
       if (body.confirm !== CAMPAIGN_ID) {
         return json({ error: "Broadcast requires explicit approval confirmation." }, 400);
