@@ -219,15 +219,16 @@ const MockVisual = ({ variant, tone }: { variant: WalkthroughStep['mock']; tone:
             <div className="p-4">
               <div className="flex items-center gap-1.5 mb-1">
                 <ShieldCheck className={cn('w-4 h-4', accentClass)} />
-                <span className="text-xs font-medium text-muted-foreground">Verified Host</span>
+                <span className="text-xs font-medium text-muted-foreground">Identity Verified host (optional badge)</span>
               </div>
               <div className="text-base font-semibold text-foreground">2021 Mercedes Sprinter</div>
-              <div className="text-xs text-muted-foreground mb-2">Fully equipped • Health certified</div>
+              <div className="text-xs text-muted-foreground mb-2">Fully equipped • Specs listed by host</div>
               <div className="flex items-center justify-between">
                 <div className={cn('text-lg font-bold', accentClass)}>$285/day</div>
-                <div className="text-xs text-muted-foreground">★ 4.9 (47)</div>
+                <div className="text-xs text-muted-foreground">Instant Book</div>
               </div>
             </div>
+
           </div>
         </div>
       );
