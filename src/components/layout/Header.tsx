@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import vendibookFavicon from '@/assets/vendibook-favicon.png';
-import vendibookWordmark from '@/assets/vendibook-wordmark.png';
+import vendibookWordmark from '@/assets/vendibook-wordmark-light.png';
 import NotificationCenter from '@/components/notifications/NotificationCenter';
 import { ConciergeInbox } from '@/components/concierge/ConciergeInbox';
 import { Input } from '@/components/ui/input';
