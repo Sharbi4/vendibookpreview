@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
-import { LEGACY_LISTING_REDIRECTS, LISTING_ROUTES, authReturnTo } from './routes';
+import { LEGACY_LISTING_REDIRECTS, LISTING_ROUTES, authReturnTo, quickStartWith } from './routes';
 
 const appSource = readFileSync(path.resolve(__dirname, '../../App.tsx'), 'utf8');
 
@@ -31,8 +31,16 @@ describe('canonical listing route map', () => {
   });
 
   it('points the gateway and quick start at the canonical self-service flow', () => {
-    expect(LISTING_ROUTES.gateway).toBe('/list/start');
-    expect(LISTING_ROUTES.quickStart).toBe('/list?start=true');
+    expect(LISTING_ROUTES.gateway).toBe('/list');
+    expect(LISTING_ROUTES.quickStart).toBe('/list/start');
+  });
+
+  it('pre-seeds the wizard entry from a seller landing page choice', () => {
+    expect(quickStartWith({ mode: 'sale' })).toBe('/list/start?mode=sale');
+    expect(quickStartWith({ mode: 'rent', category: 'food_truck' })).toBe(
+      '/list/start?mode=rent&category=food_truck',
+    );
+    expect(quickStartWith()).toBe('/list/start');
   });
 
   it('redirects every legacy creation entry into the gateway', () => {
@@ -46,10 +54,9 @@ describe('canonical listing route map', () => {
   });
 
   it('round-trips the user back to their chosen path after auth', () => {
-    expect(authReturnTo(LISTING_ROUTES.quickStart)).toBe(
-      '/auth?redirect=%2Flist%3Fstart%3Dtrue',
-    );
+    expect(authReturnTo(LISTING_ROUTES.quickStart)).toBe('/auth?redirect=%2Flist%2Fstart');
   });
+
 
   it('does not introduce a review or pending-review listing state', () => {
     expect(appSource).not.toMatch(/pending[-_]review/i);
