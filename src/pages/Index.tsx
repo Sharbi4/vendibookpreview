@@ -83,53 +83,51 @@ const Index = () => {
       <Header />
 
       <main className="flex-1">
-        {/* Financing banner — Vendibook × Equinox Funding */}
-        <FinancingTopBanner />
-
-        {/* 1. Hero */}
+        {/* 1. Cohesive marketplace hero: search + real-listing rotator + CTAs */}
         <Hero />
 
-        {/* Mobile-only secondary actions + trust strip (moved out of hero) */}
-        <HeroBelowFold />
+        {/* 2. Slim financing partnership strip — Vendibook × Equinox Funding */}
+        <FinancingTopBanner />
 
-        {/* Referral promo — below hero, not in rotation */}
-        <ReferralPromoCard />
-
-        {/* Announcement moved below the hero */}
-        <AnnouncementBanner />
-
-        {/* Consolidated payments & verification rail */}
+        {/* 3. Compact payments & verification strip */}
         <HomeTrustRail />
 
-        {/* See How Vendibook Works — 4 in-browser animated explainers */}
+        <AnnouncementBanner />
+
+        <Suspense fallback={<SectionSkeleton />}>
+          {/* 4. Featured / Pro inventory */}
+          <HomepageFeaturedRow />
+
+          {/* 5. Recently Added Trucks & Trailers */}
+          <ListingsSections />
+        </Suspense>
+
+        {/* 6. Light How It Works editorial band */}
         <HowVendibookWorks />
 
         <Suspense fallback={<SectionSkeleton />}>
-          {/* 2. Featured Listings — premium row (hidden if none active) */}
-          <HomepageFeaturedRow />
-
-          {/* 3. Recently Added Trucks & Trailers */}
-          <ListingsSections />
-
-          {/* Premium discovery — compact prompt to /pricing */}
+          {/* 7. Seller education + Pricing & Pro */}
+          <HeroBelowFold />
+          <SellerHomeBlock />
           <PremiumDiscoveryBlock />
 
-          {/* Seller funnel block — crawlable internal links into /sell-food-truck */}
-          <SellerHomeBlock />
-
-          {/* 4. Concierge — primary soft conversion */}
+          {/* 8. Concierge — primary soft conversion */}
           <ConciergeSection />
 
-          {/* 5. Trust Infrastructure */}
+          {/* 9. Trust Infrastructure */}
           <TrustInfrastructure />
 
-          {/* 6. Become a Host / Seller */}
+          {/* 10. Become a Host / Seller */}
           <BecomeHostSection />
 
-          {/* 7. Final CTA */}
+          {/* 11. Referral program — lower down */}
+          <ReferralPromoCard />
+
+          {/* 12. Final CTA */}
           <FinalCTA />
         </Suspense>
       </main>
+
 
       <Footer />
       <NewsletterPopup />
