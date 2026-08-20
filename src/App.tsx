@@ -51,6 +51,7 @@ const Dashboard = lazy(() => import("./pages/Dashboard"));
 const EditListing = lazy(() => import("./pages/EditListing"));
 const ListingPaymentsFinancing = lazy(() => import("./pages/ListingPaymentsFinancing"));
 const ListingStart = lazy(() => import("./pages/ListingStart"));
+const ListStart = lazy(() => import("./pages/ListStart"));
 const ConciergeIntro = lazy(() => import("./pages/ConciergeIntro"));
 const ConciergeOrderPage = lazy(() => import("./pages/ConciergeOrder"));
 
@@ -262,9 +263,9 @@ const AnimatedRoutes = () => {
           <Route path="/host/reporting" element={<PageTransition><HostReporting /></PageTransition>} />
           <Route path="/host/analytics" element={<PageTransition><HostAnalytics /></PageTransition>} />
           {/* Legacy listing-creation entries → canonical opening gateway */}
-          <Route path="/create-listing" element={<Navigate to="/list/start" replace />} />
-          <Route path="/new-listing" element={<Navigate to="/list/start" replace />} />
-          <Route path="/listing-wizard" element={<Navigate to="/list/start" replace />} />
+          <Route path="/create-listing" element={<Navigate to="/list" replace />} />
+          <Route path="/new-listing" element={<Navigate to="/list" replace />} />
+          <Route path="/listing-wizard" element={<Navigate to="/list" replace />} />
 
           <Route path="/host" element={<Navigate to="/list" replace />} />
           <Route path="/listing/:id" element={<PageTransition><ListingDetail /></PageTransition>} />
@@ -377,8 +378,8 @@ const AnimatedRoutes = () => {
           <Route path="/ai-tools" element={<Navigate to="/tools" replace />} />
           
           {/* Supply flow: /list is quick start, then /create-listing/:id for publish wizard */}
-          <Route path="/list" element={<PageTransition><ListPage /></PageTransition>} />
-          <Route path="/list/start" element={<PageTransition><ListingStart /></PageTransition>} />
+          <Route path="/list" element={<PageTransition><ListingStart /></PageTransition>} />
+          <Route path="/list/start" element={<PageTransition><ListStart /></PageTransition>} />
           <Route path="/list/concierge" element={<PageTransition><ConciergeIntro /></PageTransition>} />
           <Route path="/list/concierge/:orderId" element={<PageTransition><ConciergeOrderPage /></PageTransition>} />
 

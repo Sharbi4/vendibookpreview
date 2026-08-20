@@ -2,7 +2,6 @@ import React, { useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
-  ArrowLeft,
   ArrowRight,
   Check,
   ConciergeBell,
@@ -15,22 +14,22 @@ import {
 import Header from '@/components/layout/Header';
 import SEO from '@/components/SEO';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import FieldHelp from '@/components/common/FieldHelp';
 import { useAuth } from '@/contexts/AuthContext';
 import { trackEvent } from '@/lib/analytics';
 import { LISTING_ROUTES, authReturnTo } from '@/lib/listings/routes';
+import { useCatalogPrice } from '@/hooks/useCatalogPrices';
 import {
   CONCIERGE_BENEFITS,
   LISTING_CONCIERGE,
   SELF_SERVE_BENEFITS,
 } from '@/config/listingConcierge';
 
-const REASSURANCE = [
-  { icon: Rocket, text: 'Publish with the essentials' },
+const BENEFITS = [
+  { icon: Rocket, text: 'Free to publish' },
   { icon: Clock, text: 'Save and return anytime' },
-  { icon: Layers, text: 'Add more details after publishing' },
-  { icon: Lock, text: 'Keep sensitive information private' },
+  { icon: Layers, text: 'Add details later' },
+  { icon: Lock, text: 'Private info stays private' },
 ];
 
 interface PathCardProps {
@@ -59,26 +58,28 @@ const PathCard: React.FC<PathCardProps> = ({
   children,
 }) => (
   <motion.div
-    initial={{ opacity: 0, y: 16 }}
+    initial={{ opacity: 0, y: 14 }}
     animate={{ opacity: 1, y: 0 }}
     transition={{ duration: 0.35 }}
-    className={`relative flex flex-col rounded-2xl border p-6 backdrop-blur-xl sm:p-8 ${
-      emphasis ? 'border-primary/40 bg-card/80 shadow-xl' : 'border-border bg-card/60'
+    className={`relative flex flex-col rounded-3xl border bg-card p-6 sm:p-8 ${
+      emphasis
+        ? 'border-primary/30 shadow-[0_1px_2px_rgba(24,20,16,0.04),0_18px_40px_-28px_rgba(24,20,16,0.35)]'
+        : 'border-border shadow-[0_1px_2px_rgba(24,20,16,0.04)]'
     }`}
   >
-    <div className="mb-4 flex items-center gap-3">
-      <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-muted text-foreground">
+    <div className="mb-5 flex items-center gap-3">
+      <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-muted text-foreground">
         {icon}
       </span>
       {badge && (
-        <Badge variant="secondary" className="text-xs">
+        <span className="rounded-full border border-border px-2.5 py-1 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
           {badge}
-        </Badge>
+        </span>
       )}
     </div>
 
     <h2 className="text-xl font-semibold text-foreground sm:text-2xl">{title}</h2>
-    <p className="mt-1 text-lg font-bold text-foreground">{price}</p>
+    <p className="mt-1 text-base font-semibold text-foreground">{price}</p>
     <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{blurb}</p>
 
     <ul className="mt-5 flex-1 space-y-2.5">
@@ -91,10 +92,10 @@ const PathCard: React.FC<PathCardProps> = ({
     </ul>
 
     <Button
-      size="lg"
-      variant={emphasis ? 'default' : 'outline'}
+      size={emphasis ? 'cta' : 'lg'}
+      variant={emphasis ? 'cta' : 'outline'}
       onClick={onClick}
-      className="mt-7 h-12 w-full rounded-xl text-base"
+      className={emphasis ? 'mt-7 w-full' : 'mt-7 h-12 w-full rounded-2xl text-base'}
     >
       {cta}
       <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
@@ -105,13 +106,13 @@ const PathCard: React.FC<PathCardProps> = ({
 );
 
 /**
- * Opening choice page for the canonical listing flow. Creates no draft and
- * charges nothing — it only routes into the self-service wizard or the
- * concierge introduction.
+ * `/list` — the front door for new listings. Creates no draft and charges
+ * nothing; it only routes into the self-service wizard or the concierge.
  */
 const ListingStart: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const concierge = useCatalogPrice(LISTING_CONCIERGE.slug);
 
   useEffect(() => {
     trackEvent({ category: 'Supply', action: 'listing_gateway_viewed' });
@@ -128,7 +129,7 @@ const ListingStart: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="sale-light min-h-screen">
       <SEO
         title="Create a VendiBook listing — build it yourself or let us do it"
         description="Publish with the essentials and add more later, or have the VendiBook Listing Concierge build a buyer-ready listing for your approval."
@@ -136,35 +137,28 @@ const ListingStart: React.FC = () => {
       />
       <Header />
       <main className="mx-auto max-w-5xl px-4 pb-20 pt-24 sm:pt-28">
-        <Button
-          variant="ghost"
-          onClick={() => navigate(LISTING_ROUTES.hub)}
-          className="mb-6 pl-0 transition-all hover:pl-2"
-        >
-          <ArrowLeft className="mr-2 h-4 w-4" aria-hidden="true" />
-          Back
-        </Button>
-
-        <div className="mx-auto mb-10 max-w-2xl text-center sm:mb-14">
-          <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl md:text-5xl">
-            Create a listing that helps serious buyers take the next step
+        <div className="mx-auto max-w-2xl text-center">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-primary">
+            List on Vendibook
+          </p>
+          <h1 className="mt-3 text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
+            Create a listing that helps the right people take the next step.
           </h1>
-          <p className="mt-4 text-base leading-relaxed text-muted-foreground sm:text-lg">
-            Help buyers find what they’re looking for by providing clear photos, accurate equipment
-            details, pricing, condition information, and what is included. You can publish with the
-            essential information first and add more specifications anytime.
+          <p className="mt-4 text-base leading-relaxed text-muted-foreground">
+            Publish the essentials first — photos, price, and the basics. You can add more
+            specifications and details anytime after your listing is live.
           </p>
         </div>
 
-        <ul className="mx-auto mb-10 grid max-w-3xl grid-cols-1 gap-3 sm:grid-cols-2 sm:mb-14">
-          {REASSURANCE.map(({ icon: Icon, text }) => (
+        <ul className="mx-auto mt-8 grid max-w-3xl grid-cols-2 gap-2.5 sm:mt-10 sm:grid-cols-4">
+          {BENEFITS.map(({ icon: Icon, text }) => (
             <li
               key={text}
-              className="flex items-center gap-2.5 rounded-xl border border-border/60 bg-card/40 px-4 py-3 text-sm text-foreground"
+              className="flex items-center gap-2 rounded-2xl border border-border bg-card px-3 py-2.5 text-xs text-foreground sm:text-sm"
             >
               <Icon className="h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
-              <span>{text}</span>
-              {text === 'Keep sensitive information private' && (
+              <span className="leading-tight">{text}</span>
+              {text === 'Private info stays private' && (
                 <FieldHelp label="private information" side="top" align="end" className="ml-auto">
                   Your exact address, contact details and documents stay private. Buyers see an
                   approximate map area until a booking or purchase is confirmed.
@@ -174,14 +168,14 @@ const ListingStart: React.FC = () => {
           ))}
         </ul>
 
-        <div className="grid gap-6 md:grid-cols-2">
+        <div className="mt-8 grid gap-5 sm:mt-10 md:grid-cols-2">
           <PathCard
             icon={<PencilLine className="h-5 w-5" aria-hidden="true" />}
             title="Create it myself"
             price="Free"
-            blurb="Our guided listing builder walks you through the details buyers care about most."
+            blurb="A guided builder walks you through the details buyers and renters care about most."
             benefits={SELF_SERVE_BENEFITS}
-            cta="Create my free listing"
+            cta="Start my listing"
             onClick={startSelf}
             emphasis
           >
@@ -193,11 +187,11 @@ const ListingStart: React.FC = () => {
           <PathCard
             icon={<ConciergeBell className="h-5 w-5" aria-hidden="true" />}
             title={LISTING_CONCIERGE.name}
-            price={LISTING_CONCIERGE.priceLabel}
+            price={concierge.loading ? '—' : `${concierge.label} per listing`}
             badge="Done for you"
-            blurb="Send us your equipment information and photos. We’ll transform everything into a polished, buyer-ready listing for your approval."
+            blurb="Optional. Send us your equipment information and photos and we’ll build a buyer-ready listing for your approval."
             benefits={CONCIERGE_BENEFITS}
-            cta="Have VendiBook create my listing"
+            cta="Use Listing Concierge"
             onClick={startConcierge}
           >
             <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
@@ -211,7 +205,7 @@ const ListingStart: React.FC = () => {
           </PathCard>
         </div>
 
-        <p className="mt-10 text-center text-sm text-muted-foreground">
+        <p className="mt-8 text-center text-sm text-muted-foreground">
           Not sure yet? Start free — you can request the concierge service later from your
           dashboard.
         </p>
