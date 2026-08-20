@@ -10,8 +10,8 @@ interface Props {
   className?: string;
 }
 
-const tierChip = (t: string) =>
-  t === 'starter' ? 'Starter' : t === 'pro' ? 'Growth' : t === 'premium' ? 'Operator' : 'Free';
+// Current catalog only sells Vendibook Pro; retired tier names are not shown.
+const tierChip = (t: string) => (t === 'free' ? 'Free' : 'Vendibook Pro');
 
 
 /**
