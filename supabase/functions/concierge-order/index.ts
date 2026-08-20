@@ -60,19 +60,37 @@ serve(async (req) => {
         return jsonError(400, "agreement_required", "Please accept the Concierge Service Terms to continue.");
       }
 
-      // One in-flight unpaid order per seller per terms version, so a refresh
-      // or a double click can never create two orders or two charges.
-      const idempotencyKey = String(body?.idempotency_key ?? "").slice(0, 120) ||
-        `concierge:${config.terms_version}`;
-
-      const { data: existing } = await admin
+      // Duplicate-charge protection: a seller may only ever have ONE unpaid
+      // order open. A refresh, a double click or a second visit to the intro
+      // page always resumes that order instead of creating another one. Paid
+      // orders are never reused, so a seller can buy Concierge again later.
+      const { data: openOrder } = await admin
         .from("listing_concierge_orders")
         .select("*")
         .eq("user_id", user.id)
-        .eq("idempotency_key", idempotencyKey)
+        .neq("payment_status", "paid")
+        .in("status", ["payment_required"])
+        .order("created_at", { ascending: false })
+        .limit(1)
         .maybeSingle();
 
-      if (existing) return jsonResponse(200, { order: existing, reused: true });
+      if (openOrder) {
+        // Keep the resumed order on the current catalog price.
+        if (openOrder.price_cents !== config.price_cents) {
+          const { data: repriced } = await admin
+            .from("listing_concierge_orders")
+            .update({ price_cents: config.price_cents, config_snapshot: config })
+            .eq("id", openOrder.id)
+            .select("*")
+            .maybeSingle();
+          return jsonResponse(200, { order: repriced ?? openOrder, reused: true });
+        }
+        return jsonResponse(200, { order: openOrder, reused: true });
+      }
+
+      // Unique per attempt so a completed order never blocks a new purchase.
+      const idempotencyKey =
+        `${String(body?.idempotency_key ?? `concierge:${config.terms_version}`).slice(0, 80)}:${crypto.randomUUID()}`;
 
       const { data: order, error } = await admin
         .from("listing_concierge_orders")
@@ -89,16 +107,9 @@ serve(async (req) => {
         .maybeSingle();
 
       if (error || !order) {
-        // Unique-violation race: return the winner instead of failing.
-        const { data: raced } = await admin
-          .from("listing_concierge_orders")
-          .select("*")
-          .eq("user_id", user.id)
-          .eq("idempotency_key", idempotencyKey)
-          .maybeSingle();
-        if (raced) return jsonResponse(200, { order: raced, reused: true });
         return jsonError(500, "create_failed", "We couldn't start that order. Please try again.");
       }
+
 
       await admin.from("listing_concierge_agreements").insert({
         order_id: order.id,
