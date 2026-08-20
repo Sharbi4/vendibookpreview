@@ -20,8 +20,8 @@ import GoogleContinueButton from '@/components/auth/GoogleContinueButton';
 const HeroPremium = () => {
   const search = useHeroSearch();
   const reduced = useReducedMotion();
-  const { user, loading } = useAuth();
-  const signedOut = !loading && !user;
+  const { user, isLoading } = useAuth();
+  const signedOut = !isLoading && !user;
 
   const rise = (delay: number) =>
     reduced
