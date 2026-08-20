@@ -14,7 +14,6 @@ import {
   User,
   Search,
   Shield,
-  Megaphone,
   ChefHat,
   Gift,
   FileCheck,
@@ -44,7 +43,6 @@ import IdentityChip from '@/components/dashboard/shared/IdentityChip';
 import EmailVerifiedBadge from '@/components/dashboard/shared/EmailVerifiedBadge';
 import DashboardMobileTabs from '@/components/dashboard/overview/DashboardMobileTabs';
 import GoProButton from '@/components/dashboard/GoProButton';
-import SidebarUpgradeCard from '@/components/dashboard/SidebarUpgradeCard';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 
@@ -104,9 +102,9 @@ export const DashboardLayout = ({ children, mode, onModeChange, isHost }: Dashbo
             { title: 'Booking Manager', icon: CalendarDays, href: '/host/bookings', tab: null },
             { title: 'Payments & Disputes', icon: Receipt, href: '/dashboard?view=host&tab=transactions', tab: 'transactions' },
             { title: 'Insights & Reporting', icon: BarChart3, href: '/dashboard?view=host&tab=insights', tab: 'insights' },
-            { title: 'Promote & Upgrades', icon: Megaphone, href: '/dashboard?view=host&tab=promote', tab: 'promote' },
+            { title: 'Upgrades & Premium Tools', icon: Wrench, href: '/dashboard?view=host&tab=promote', tab: 'promote' },
             { title: 'Membership', icon: CreditCard, href: '/dashboard?view=host&tab=membership', tab: 'membership' },
-            { title: 'Premium Tools', icon: Wrench, href: '/dashboard?view=host&tab=tools', tab: 'tools' },
+
             { title: 'Permits', icon: FileCheck, href: '/dashboard?view=host&tab=permits', tab: 'permits' },
             ...(hasGhostKitchen ? [{ title: 'Kitchen', icon: ChefHat, href: '/dashboard?view=host&tab=kitchen', tab: 'kitchen' }] : []),
             { title: 'Messages', icon: MessageSquare, href: '/messages', tab: null, badge: messagesBadge },
@@ -138,7 +136,7 @@ export const DashboardLayout = ({ children, mode, onModeChange, isHost }: Dashbo
             { title: 'Messages', icon: MessageSquare, href: '/messages', tab: null, badge: messagesBadge },
             { title: 'Notifications', icon: Bell, href: '/dashboard?view=shopper&tab=notifications', tab: 'notifications' },
             { title: 'Refer & Earn', icon: Gift, href: '/dashboard?view=shopper&tab=referral', tab: 'referral', badge: referralBadge },
-            { title: 'Premium Tools', icon: Wrench, href: '/dashboard?view=shopper&tab=tools', tab: 'tools' },
+            { title: 'Upgrades & Premium Tools', icon: Wrench, href: '/dashboard?view=shopper&tab=tools', tab: 'tools' },
             { title: 'Permits', icon: FileCheck, href: '/dashboard?view=shopper&tab=permits', tab: 'permits' },
           ],
         },
@@ -235,7 +233,6 @@ export const DashboardLayout = ({ children, mode, onModeChange, isHost }: Dashbo
       <ScrollArea className="flex-1">
         {sections.map((section, sIdx) => (
           <div key={section.id}>
-            {section.id === 'account' && <SidebarUpgradeCard />}
             <div className={cn('py-3', sIdx > 0 && 'border-t border-border')}>
             {section.label && (
               <p className="px-6 pb-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground/70">

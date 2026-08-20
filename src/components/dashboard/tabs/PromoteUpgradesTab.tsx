@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { PromotionHub } from '../PromotionHub';
-import UpgradesPanel from '../UpgradesPanel';
+import UpgradesHub from '@/components/dashboard/upgrades/UpgradesHub';
 import { useEntitlements } from '@/hooks/useEntitlements';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -24,12 +24,8 @@ const PromoteUpgradesTab = () => {
 
   return (
     <div className="max-w-[1200px] mx-auto space-y-8">
-      <header>
-        <h1 className="text-2xl font-semibold text-foreground">Promote & Upgrades</h1>
-        <p className="text-sm text-muted-foreground mt-1">Boost visibility, unlock premium placement, and view active promotions.</p>
-      </header>
+      <UpgradesHub />
 
-      <UpgradesPanel />
 
       <section className="rounded-md border border-border bg-card p-5">
 

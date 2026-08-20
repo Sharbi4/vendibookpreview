@@ -22,7 +22,7 @@ import { useUnreadMessageCount } from '@/hooks/useUnreadMessageCount';
 import { useAuth } from '@/contexts/AuthContext';
 import { useHostEntitlements } from '@/hooks/useHostEntitlements';
 import { Link } from 'react-router-dom';
-import { Crown } from 'lucide-react';
+import { ArrowRight, Wrench } from 'lucide-react';
 import { getCounterpartyName } from '@/lib/displayName';
 import PaymentsTransitionModal from '@/components/payments/PaymentsTransitionModal';
 import PaymentsTransitionReminder from '@/components/payments/PaymentsTransitionReminder';
@@ -39,7 +39,8 @@ import PaymentsTransitionReminder from '@/components/payments/PaymentsTransition
 const HostDashboard = () => {
   const { user, profile, isVerified } = useAuth();
   const { tier } = useHostEntitlements();
-  const isFreeTier = tier === 'free';
+  const isPro = tier === 'pro' || tier === 'premium';
+
   const { listings, stats } = useHostListings();
   const { bookings, stats: bookingStats } = useHostBookings();
   const { hasPayoutInstructions, isLoading: payoutLoading } = useManualPayout();
@@ -138,35 +139,38 @@ const HostDashboard = () => {
             hint={bookingStats.pending > 0 ? 'Awaiting reply' : 'All clear'}
             href="/host/bookings"
           />
-          {isFreeTier && pendingOffers.length === 0 ? (
-            <Link
-              to="/dashboard?view=host&tab=promote"
-              aria-label="Unlock Pro"
-              className="block relative rounded-[18px] gold-card p-5 sm:p-6 h-full hover:-translate-y-0.5 transition-transform"
-            >
-              <div className="flex items-center justify-between gap-2">
-                <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#1A1400]">
-                  Unlock Pro
-                </span>
-                <Crown className="h-4 w-4 text-[#1A1400]" strokeWidth={2.4} />
-              </div>
-              <div className="mt-3 sm:mt-4 text-[24px] sm:text-[26px] font-extrabold tracking-tight text-[#1A1400] leading-tight">
-                Featured &amp; lower fees
-              </div>
-              <div className="mt-2 text-[12px] font-semibold text-[#2b2100]">
-                See upgrades →
-              </div>
-            </Link>
-          ) : (
-            <KpiCard
-              label="Open offers"
-              value={pendingOffers.length}
-              hint={pendingOffers.length > 0 ? 'Awaiting reply' : 'Nothing pending'}
-              href="/dashboard?view=host&tab=sales"
-            />
-          )}
+          <KpiCard
+            label="Open offers"
+            value={pendingOffers.length}
+            hint={pendingOffers.length > 0 ? 'Awaiting reply' : 'Nothing pending'}
+            href="/dashboard?view=host&tab=sales"
+          />
+
         </div>
+
+        <Link
+          to="/dashboard?view=host&tab=promote"
+          className="mt-4 flex items-center justify-between gap-3 rounded-2xl border border-border bg-card px-4 py-3.5 transition-colors hover:border-foreground/25"
+        >
+          <span className="flex min-w-0 items-center gap-3">
+            <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-muted">
+              <Wrench className="h-4 w-4 text-foreground" />
+            </span>
+            <span className="min-w-0">
+              <span className="block text-sm font-medium text-foreground">
+                Upgrades &amp; premium tools
+              </span>
+              <span className="block text-xs text-muted-foreground">
+                {isPro
+                  ? 'Your Pro tools, boost credit, and optional add-ons.'
+                  : 'See what’s included with Vendibook Pro and optional per-listing upgrades.'}
+              </span>
+            </span>
+          </span>
+          <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+        </Link>
       </section>
+
 
       {actionItems.length > 0 && (
         <>
