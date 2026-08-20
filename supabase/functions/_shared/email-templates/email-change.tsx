@@ -1,19 +1,18 @@
 /// <reference types="npm:@types/react@18.3.1" />
 
 import * as React from 'npm:react@18.3.1'
-
+import { Link, Text } from 'npm:@react-email/components@0.0.22'
 import {
-  Body,
-  Button,
-  Container,
-  Head,
-  Heading,
-  Html,
-  Link,
-  Preview,
-  Text,
-} from 'npm:@react-email/components@0.0.22'
-import { AuthBrandFooter, AuthBrandHeader } from './_brand.tsx'
+  CtaButton,
+  CtaFallback,
+  DetailTable,
+  Eyebrow,
+  H1,
+  Lede,
+  SupportRow,
+  VendibookEmailLayout,
+  t,
+} from '../email-brand/components.tsx'
 
 interface EmailChangeEmailProps {
   siteName: string
@@ -33,63 +32,42 @@ export const EmailChangeEmail = ({
   newEmail,
   confirmationUrl,
 }: EmailChangeEmailProps) => (
-  <Html lang="en" dir="ltr">
-    <Head />
-    <Preview>Confirm your email change for {siteName}</Preview>
-    <Body style={main}>
-      <Container style={container}>
-        <AuthBrandHeader />
-        <Heading style={h1}>Confirm your email change</Heading>
-        <Text style={text}>
-          You requested to change your email address for {siteName} from{' '}
-          <Link href={`mailto:${oldEmail}`} style={link}>
-            {oldEmail}
-          </Link>{' '}
-          to{' '}
-          <Link href={`mailto:${newEmail}`} style={link}>
-            {newEmail}
-          </Link>
-          .
-        </Text>
-        <Text style={text}>
-          Click the button below to confirm this change:
-        </Text>
-        <Button style={button} href={confirmationUrl}>
-          Confirm Email Change
-        </Button>
-        <Text style={footer}>
-          If you didn't request this change, please secure your account
-          immediately.
-        </Text>
-      <AuthBrandFooter />
-      </Container>
-    </Body>
-  </Html>
+  <VendibookEmailLayout preview={`Confirm your email change for ${siteName}`}>
+    <Eyebrow>Account security</Eyebrow>
+    <H1>Confirm your email change</H1>
+    <Lede>
+      You requested to change the email address on your {siteName} account.
+      Confirm the change to finish.
+    </Lede>
+
+    <DetailTable
+      rows={[
+        {
+          label: 'Current email',
+          value: (
+            <Link href={`mailto:${oldEmail}`} style={t.linkMuted}>{oldEmail}</Link>
+          ),
+        },
+        {
+          label: 'New email',
+          value: (
+            <Link href={`mailto:${newEmail}`} style={t.link}>{newEmail}</Link>
+          ),
+          emphasis: true,
+        },
+      ]}
+    />
+
+    <CtaButton href={confirmationUrl}>Confirm email change</CtaButton>
+    <CtaFallback href={confirmationUrl} label="Button not working? Use this link:" />
+
+    <Text style={t.small}>
+      If you didn't request this change, please secure your account immediately
+      by resetting your password.
+    </Text>
+
+    <SupportRow />
+  </VendibookEmailLayout>
 )
 
 export default EmailChangeEmail
-
-const main = { backgroundColor: '#ffffff', fontFamily: 'Arial, sans-serif' }
-const container = { padding: '20px 25px' }
-const h1 = {
-  fontSize: '22px',
-  fontWeight: 'bold' as const,
-  color: '#000000',
-  margin: '0 0 20px',
-}
-const text = {
-  fontSize: '14px',
-  color: '#55575d',
-  lineHeight: '1.5',
-  margin: '0 0 25px',
-}
-const link = { color: 'inherit', textDecoration: 'underline' }
-const button = {
-  backgroundColor: '#000000',
-  color: '#ffffff',
-  fontSize: '14px',
-  borderRadius: '8px',
-  padding: '12px 20px',
-  textDecoration: 'none',
-}
-const footer = { fontSize: '12px', color: '#999999', margin: '30px 0 0' }
