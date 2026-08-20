@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { format, differenceInDays, addDays, isBefore, startOfDay, parseISO, isSameDay } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
