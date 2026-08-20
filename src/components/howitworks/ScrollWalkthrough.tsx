@@ -38,8 +38,9 @@ const ScrollWalkthrough = ({ steps, tone = 'neutral' }: ScrollWalkthroughProps) 
   const activeIndex = useTransform(scrollYProgress, [0, 1], [0, steps.length - 0.001]);
 
   return (
-    <div ref={containerRef} className="relative" style={{ minHeight: `${steps.length * 90}vh` }}>
+    <div ref={containerRef} className="relative" style={{ minHeight: `${steps.length * 62}vh` }}>
       <div className="sticky top-0 h-screen flex items-center">
+
         <div className="container max-w-6xl mx-auto px-4 grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
           {/* LEFT — sticky visual stage */}
           <div className="hidden lg:flex items-center justify-center order-1">
