@@ -30,7 +30,7 @@ const ROW_META: Record<RowKey, {
 }> = {
   rent: {
     title: 'Recently Added for Rent',
-    subtitle: 'Food trucks, trailers, and shared commercial kitchens from verified owners.',
+    subtitle: 'Food trucks, trailers, and shared commercial kitchens listed by owners and sellers.',
     viewMorePath: '/search?mode=rent&utm_source=homepage&utm_medium=listing_row&utm_campaign=homepage_browse&utm_content=recent_for_rent_view_more',
   },
   sale: {
