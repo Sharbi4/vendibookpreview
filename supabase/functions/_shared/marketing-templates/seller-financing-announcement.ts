@@ -53,7 +53,7 @@ const BULLETS: Array<{ title: string; body: string }> = [
 ];
 
 const PAYOUT_NOTE =
-  "Payout timing: financed sales completed through Vendibook checkout follow the standard sale payout schedule — funds are released 25 days after the sale is confirmed, which covers the card dispute window. Pay-in-person sales are settled directly between you and the buyer.";
+  "Payout timing: for financed sales completed through Vendibook checkout, payouts are typically released within 24 hours of delivery confirmation, and we always strive to release within 24 to 48 hours. Payouts are sent via PayPal, ACH bank transfer, or Venmo, depending on the payout account you have on file. Pay-in-person sales are settled directly between you and the buyer.";
 
 const DISCLOSURE =
   "Financing is provided by Equinox Funding and its funding providers, not by Vendibook. Vendibook is not a lender and does not make credit decisions. Approval, amounts, rates, and terms are subject to lender review and are not guaranteed. Vendibook may receive compensation from Equinox Funding for referrals.";
@@ -75,9 +75,10 @@ export function buildFinancingAnnouncementHtml(unsubUrl: string): string {
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f6f4f1;padding:28px 12px;">
   <tr><td align="center">
     <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:22px;overflow:hidden;border:1px solid #e8e4df;">
-      <tr><td align="center" style="padding:26px 28px 4px 28px;">
-        <img src="${VENDIBOOK_LOGO_IMG}" alt="Vendibook" height="96" style="height:96px;width:auto;display:inline-block;border:0;">
+      <tr><td align="center" style="background:#0f0f11;padding:32px 28px 28px 28px;">
+        <img src="${VENDIBOOK_LOGO_IMG}" alt="Vendibook" height="132" style="height:132px;width:auto;display:inline-block;border:0;">
       </td></tr>
+      <tr><td style="height:3px;line-height:3px;font-size:0;background:#ff5124;">&nbsp;</td></tr>
       <tr><td style="padding:14px 28px 0 28px;">
         <p style="margin:0 0 10px 0;font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:#b45309;font-weight:700;">Product update for sellers</p>
         <h1 style="margin:0 0 16px 0;font-size:28px;line-height:1.22;font-weight:700;color:#141416;letter-spacing:-0.02em;">${esc(HEADING)}</h1>

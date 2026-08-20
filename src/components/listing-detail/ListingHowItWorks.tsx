@@ -313,7 +313,7 @@ function buildSaleCard(fulfillment: FulfillmentContext): WalkthroughConfig {
       icon: CheckCircle2,
       title: 'Confirm the item, seller gets paid',
       description:
-        'You have a confirmation window to inspect the item. Funds release to the seller 25 days after your confirmation. Something wrong? Open a dispute from your order page.',
+        'You have a confirmation window to inspect the item. Funds are typically released to the seller within 24 hours of delivery confirmation (24 to 48 hours at the outside). Something wrong? Open a dispute from your order page.',
     },
   ];
   return {

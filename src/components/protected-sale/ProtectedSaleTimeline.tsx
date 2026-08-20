@@ -152,7 +152,7 @@ export function buildTimeline(ps: ProtectedSale, role: Role): TimelineStage[] {
     timestamp: fmt(ps.funds_released_at),
     detail: released
       ? role === 'seller'
-        ? 'Payout follows the standard 25-day sale window.'
+        ? 'Payout is typically released within 24 hours of delivery confirmation.'
         : 'Your protection window closes. Thanks for using Protected Sale.'
       : 'Auto-releases once both parties confirm handoff.',
     nextAction: released ? null : confirmed ? 'Processing release…' : null,

@@ -152,7 +152,7 @@ export const faqCategories: FaqCategory[] = [
         id: "how-buying-works",
         question: "How does buying work start to finish?",
         answer:
-          "Browse listings, message the seller with any questions, and either buy at the asking price or make an offer. When the seller accepts, you check out with card, ACH, or financing. Funds sit in payment protection until you confirm you got the truck and everything you were promised. Once you confirm — or 7 days after delivery if you don't — the seller is paid out 25 days later (the card dispute window). You get a bill of sale, e-signed by both sides, in your dashboard.",
+          "Browse listings, message the seller with any questions, and either buy at the asking price or make an offer. When the seller accepts, you check out with card, ACH, or financing. Funds sit in payment protection until you confirm you got the truck and everything you were promised. Once you confirm — or 7 days after delivery if you don't — the seller's payout is typically released within 24 hours of delivery confirmation (24 to 48 hours at the outside). You get a bill of sale, e-signed by both sides, in your dashboard.",
         actions: [A.browseSales],
       },
       {
@@ -186,7 +186,7 @@ export const faqCategories: FaqCategory[] = [
         id: "payment-protection",
         question: "How does payment protection work?",
         answer:
-          "When you pay through Vendibook, your money is held by our payment processor, PayPal — not sent to the seller yet. The seller only gets paid after you confirm you received exactly what was listed. If you never confirm, we auto-complete 7 days after delivery; the seller's payout still doesn't release for a full 25 days after that (the card dispute window), so you have time to raise an issue. This replaces the old-school payment protection model with something faster and integrated with your card's chargeback rights.",
+          "When you pay through Vendibook, your money is held by our payment processor, PayPal — not sent to the seller yet. The seller only gets paid after you confirm you received exactly what was listed. If you never confirm, we auto-complete 7 days after delivery. Once delivery is confirmed, the seller's payout is typically released within 24 hours (24 to 48 hours at the outside), so raise any issue before you confirm. This replaces the old-school payment protection model with something faster and integrated with your card's chargeback rights.",
         keywords: ["payment protection", "protection", "hold", "safe"],
       },
       {
@@ -199,7 +199,7 @@ export const faqCategories: FaqCategory[] = [
         id: "confirm-delivery",
         question: "When and how do I confirm delivery?",
         answer:
-          "After the truck arrives and you've done a full walkaround with the title and keys in hand, open the transaction and tap Confirm receipt. This starts the 25-day payout clock for the seller. Don't confirm until documents and any promised extras are physically with you — confirmation cannot be reversed once the payout releases.",
+          "After the truck arrives and you've done a full walkaround with the title and keys in hand, open the transaction and tap Confirm receipt. This starts the seller's payout, which is typically released within 24 hours (24 to 48 hours at the outside). Don't confirm until documents and any promised extras are physically with you — confirmation cannot be reversed once the payout releases.",
         actions: [A.viewTransactions],
       },
       {
@@ -213,7 +213,7 @@ export const faqCategories: FaqCategory[] = [
         id: "refund-window",
         question: "How long do I have to request a refund?",
         answer:
-          "Up to 7 days after delivery to auto-complete, and up to 25 days after that if a dispute is opened (the card chargeback window). The listing's cancellation policy governs pre-delivery cancellations — you'll see the exact refund amount before you confirm any cancellation.",
+          "Up to 7 days after delivery to auto-complete. Once delivery is confirmed, seller payouts are typically released within 24 hours (24 to 48 hours at the outside), so open any dispute before confirming. The listing's cancellation policy governs pre-delivery cancellations — you'll see the exact refund amount before you confirm any cancellation.",
         actions: [A.refundPolicy],
       },
       {
@@ -329,7 +329,7 @@ export const faqCategories: FaqCategory[] = [
         id: "payout-timing",
         question: "When do I get paid?",
         answer:
-          "Sale payouts release 25 days after the buyer confirms receipt (matches the card dispute window). If the buyer doesn't confirm within 7 days of delivery, we auto-complete and the 25-day clock starts. Rental payouts release 24 hours after the booking's scheduled start. Once released, Vendibook sends your payout to the destination you saved (PayPal, Venmo, Cash App, or bank transfer).",
+          "Sale payouts are typically released within 24 hours of delivery confirmation, and we always strive to release within 24 to 48 hours. If the buyer doesn't confirm within 7 days of delivery, we auto-complete and the payout is released on the same schedule. Rental payouts release 24 hours after the booking's scheduled start. Payouts are sent via PayPal, ACH bank transfer, or Venmo, depending on the payout account you have on file.",
       },
       {
         id: "payout-setup",
@@ -556,7 +556,7 @@ export const faqCategories: FaqCategory[] = [
         id: "how-protection-works",
         question: "How does payment protection actually work?",
         answer:
-          "When you pay on Vendibook, your money is held by our payment processor (PayPal) — not sent to the seller. The seller only gets paid after you confirm you got exactly what was listed. For sales, the seller's payout is held a further 25 days (the card chargeback window) so we can reverse the payment if there's a dispute. This gives you strong buyer protection without the friction of traditional payment protection companies.",
+          "When you pay on Vendibook, your money is held by our payment processor (PayPal) — not sent to the seller. The seller only gets paid after you confirm you got exactly what was listed. For sales, the seller's payout is typically released within 24 hours of delivery confirmation (24 to 48 hours at the outside), so raise any issue before you confirm receipt. This gives you strong buyer protection without the friction of traditional payment protection companies.",
       },
       {
         id: "verified-badges",

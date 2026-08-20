@@ -45,7 +45,7 @@ export function computeNextAction(
     return {
       title: role === 'seller' ? 'Payout on the way' : 'Sale complete',
       description: role === 'seller'
-        ? 'Funds release on the standard 25-day sale schedule.'
+        ? 'Funds are typically released within 24 hours of delivery confirmation.'
         : 'Thanks — leave a review to help the next buyer.',
       ctaLabel: role === 'buyer' ? 'Leave a review' : undefined,
       ctaHref: role === 'buyer' && tx.listing_id ? `/listing/${tx.listing_id}?review=1` : undefined,

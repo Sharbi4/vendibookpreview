@@ -65,7 +65,7 @@ export const PRICING_FAQ: PricingFaqEntry[] = [
     id: 'host-earnings',
     question: 'What will I actually take home as a host?',
     answer:
-      "Your booking subtotal minus 12.9%. A $1,000 kitchen booking nets you $871, and the renter is charged $1,129 — both sides are shown the math before the booking is accepted. Rental payouts release 24 hours after the booking start; sale payouts release 25 days after the buyer confirms receipt (that is the card dispute window).",
+      "Your booking subtotal minus 12.9%. A $1,000 kitchen booking nets you $871, and the renter is charged $1,129 — both sides are shown the math before the booking is accepted. Rental payouts release 24 hours after the booking start; sale payouts are typically released within 24 hours of delivery confirmation, and we always strive to release within 24 to 48 hours.",
     audiences: ['host', 'all'],
   },
   {
