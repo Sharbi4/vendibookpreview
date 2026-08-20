@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import vendibookFavicon from '@/assets/vendibook-favicon.png';
-import vendibookWordmark from '@/assets/vendibook-logo.png';
+import vendibookWordmark from '@/assets/vendibook-wordmark.png';
 import NotificationCenter from '@/components/notifications/NotificationCenter';
 import { ConciergeInbox } from '@/components/concierge/ConciergeInbox';
 import { Input } from '@/components/ui/input';
@@ -303,8 +303,8 @@ const Header = ({ hideSearch = false }: HeaderProps) => {
           <img
             src={vendibookWordmark}
             alt="Vendibook"
-            width={520}
-            height={152}
+            width={1000}
+            height={293}
             className="hidden h-9 w-auto object-contain transition-transform duration-300 group-hover:scale-[1.02] md:block lg:h-10"
           />
         </Link>
