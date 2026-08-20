@@ -476,7 +476,7 @@ Deno.serve(async (req) => {
       ? template.subject(templateData)
       : template.subject
   const resolvedSubject = redirectedForTest
-    ? `[TEST → ${intendedRecipient}] ${baseSubject}`
+    ? `[TEST] ${baseSubject}`
     : baseSubject
 
 
