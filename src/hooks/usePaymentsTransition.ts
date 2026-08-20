@@ -17,6 +17,16 @@ export interface PaymentsTransitionState {
   acknowledge: () => Promise<void>;
 }
 
+/** Per-user local latch so the one-time notice never reappears. */
+const ackKey = (userId: string) => `vb.paymentsTransitionAck.${userId}`;
+const readLocalAck = (userId: string) => {
+  try {
+    return !!window.localStorage.getItem(ackKey(userId));
+  } catch {
+    return false;
+  }
+};
+
 const PAYPAL_ACTIVE = ['active', 'approved', 'trialing'];
 const STRIPE_ACTIVE = ['active', 'trialing', 'past_due'];
 
