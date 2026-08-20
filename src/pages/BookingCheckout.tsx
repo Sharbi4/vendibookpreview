@@ -1368,29 +1368,30 @@ const BookingCheckout = () => {
                   <span>${fees.renterFee.toLocaleString()}</span>
                 </div>
 
-                {depositAmount && (
-                  <div className="flex items-center justify-between text-sm">
+                <div className="flex items-center justify-between pt-3 border-t border-border">
+                  <span className="font-semibold">Total charged today</span>
+                  <span className="font-semibold">${fees.customerTotal.toLocaleString()}</span>
+                </div>
+
+                {depositAmount ? (
+                  <div className="flex items-start justify-between text-sm pt-2">
                     <span className="text-muted-foreground flex items-center gap-1">
                       Security deposit
-                      <InfoTooltip 
-                        content="Your security deposit will be returned within 24 hours after your booking ends, minus any charges for damages or late returns."
+                      <InfoTooltip
+                        content="This host requires a security deposit. It is arranged directly with the host and is not part of today's Vendibook charge. Refund terms are set by the host."
                         side="top"
                       />
                     </span>
-                    <span>${depositAmount.toLocaleString()}</span>
+                    <span className="text-muted-foreground">${depositAmount.toLocaleString()}</span>
                   </div>
-                )}
-
-                <div className="flex items-center justify-between pt-3 border-t border-border">
-                  <span className="font-semibold">Total</span>
-                  <span className="font-semibold">${(fees.customerTotal + (depositAmount || 0)).toLocaleString()}</span>
-                </div>
+                ) : null}
 
               </div>
             </div>
           </div>
         </div>
       </main>
+
 
       <Footer />
 
