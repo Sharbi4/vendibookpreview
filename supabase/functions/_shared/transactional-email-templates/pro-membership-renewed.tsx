@@ -1,8 +1,18 @@
 import * as React from 'npm:react@18.3.1'
-import { Body, Button, Container, Head, Heading, Hr, Html, Link, Preview, Section, Text } from 'npm:@react-email/components@0.0.22'
+import { Text } from 'npm:@react-email/components@0.0.22'
 import type { TemplateEntry } from './registry.ts'
-import { SITE_URL, SUPPORT_PHONE } from './_styles.ts'
-import { l } from './_stylesLight.ts'
+import {
+  CtaButton,
+  DetailTable,
+  Divider,
+  Eyebrow,
+  H1,
+  Lede,
+  SITE_URL,
+  SupportRow,
+  VendibookEmailLayout,
+  t,
+} from '../email-brand/components.tsx'
 
 interface Props {
   firstName?: string
@@ -17,74 +27,43 @@ interface Props {
 const Email = ({
   firstName,
   planName = 'Vendibook Pro',
-  amount = '$79.00',
+  amount,
   interval = 'month',
   paidOn,
   nextBillingDate,
   manageUrl = `${SITE_URL}/account/subscription`,
 }: Props) => (
-  <Html lang="en" dir="ltr">
-    <Head />
-    <Preview>{`${planName} payment received — ${amount}`}</Preview>
-    <Body style={l.main}>
-      <Container style={l.container}>
-        <Section style={l.headerWrap}>
-          <Text style={l.wordmark}>
-            <Link href={SITE_URL} style={l.wordmarkLink}>Vendibook</Link>
-          </Text>
-        </Section>
+  <VendibookEmailLayout preview={`${planName} payment received${amount ? ` — ${amount}` : ''}`}>
+    <Eyebrow>Payment received</Eyebrow>
+    <H1>{firstName ? `Thanks, ${firstName} — ${planName} renewed` : `${planName} renewed`}</H1>
+    <Lede>
+      Your membership payment went through. Nothing changes and nothing is required from you.
+    </Lede>
 
-        <Section style={l.card}>
-          <Text style={l.kicker}>Payment received</Text>
-          <Heading style={l.h1}>
-            {firstName ? `Thanks, ${firstName} — ${planName} renewed.` : `${planName} renewed.`}
-          </Heading>
-          <Text style={l.lede}>
-            Your membership payment went through. Nothing changes and nothing is required from you.
-          </Text>
+    <DetailTable
+      rows={[
+        { label: 'Plan', value: planName },
+        { label: 'Amount charged', value: amount ? `${amount} / ${interval}` : undefined, emphasis: true },
+        { label: 'Paid on', value: paidOn },
+        { label: 'Next billing date', value: nextBillingDate },
+        { label: 'Paid with', value: 'PayPal' },
+      ]}
+    />
 
-          <Section style={l.panel}>
-            <Section style={l.row}>
-              <Text style={l.label}>Plan</Text>
-              <Text style={l.value}>{planName}</Text>
-            </Section>
-            <Section style={l.row}>
-              <Text style={l.label}>Amount charged</Text>
-              <Text style={l.valueAccent}>{amount} / {interval}</Text>
-            </Section>
-            {paidOn ? (
-              <Section style={l.row}>
-                <Text style={l.label}>Paid on</Text>
-                <Text style={l.value}>{paidOn}</Text>
-              </Section>
-            ) : null}
-            {nextBillingDate ? (
-              <Section style={l.row}>
-                <Text style={l.label}>Next billing date</Text>
-                <Text style={l.value}>{nextBillingDate}</Text>
-              </Section>
-            ) : null}
-            <Section style={l.row}>
-              <Text style={l.label}>Paid with</Text>
-              <Text style={l.value}>PayPal</Text>
-            </Section>
-          </Section>
+    <CtaButton href={manageUrl}>View membership</CtaButton>
 
-          <Section style={l.ctaWrap}>
-            <Button href={manageUrl} style={l.button}>View membership</Button>
-          </Section>
+    <Divider />
 
-          <Hr style={l.hr} />
-          <Text style={l.small}>
-            <strong style={{ color: '#1c1917' }}>Cancel anytime.</strong> Cancelling stops future
-            renewals only — your Pro benefits stay active through the period you&apos;ve paid for.
-          </Text>
-        </Section>
+    <Text style={t.small}>
+      Your Pro benefits continue for this billing period: the 10.9% seller/host fee instead of
+      the 12.9% standard rate (up to $500 saved per eligible completed transaction) and one
+      Featured Boost credit per paid billing period, which doesn't roll over. Cancel anytime —
+      cancelling stops future renewals only, and benefits stay active through the period you've
+      paid for.
+    </Text>
 
-        <Text style={l.footnote}>Questions? Reply to this email or call {SUPPORT_PHONE}.</Text>
-      </Container>
-    </Body>
-  </Html>
+    <SupportRow />
+  </VendibookEmailLayout>
 )
 
 export const template = {
