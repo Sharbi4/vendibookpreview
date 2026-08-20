@@ -899,10 +899,6 @@ const SaleCheckout = () => {
       goNext();
       return;
     }
-    if (effectiveStep === 'options') {
-      goNext();
-      return;
-    }
     if (!agreedToTerms) {
       toast({
         title: 'One more thing',
@@ -916,14 +912,13 @@ const SaleCheckout = () => {
 
   const primaryLabel =
     effectiveStep === 'fulfillment'
-      ? 'Continue to verification'
+      ? 'Continue'
       : effectiveStep === 'verify'
-        ? hasAddOns ? 'Continue to options' : 'Continue to payment'
-        : effectiveStep === 'options'
-          ? 'Continue to payment'
-          : paymentMethod === 'cash'
-            ? 'Confirm — arrange in person'
-            : `Pay $${totalPrice.toLocaleString()}`;
+        ? 'Continue to payment'
+        : paymentMethod === 'cash'
+          ? 'Confirm — arrange in person'
+          : `Review and pay $${totalPrice.toLocaleString()}`;
+
 
   const primaryDisabled =
     (effectiveStep === 'fulfillment' && !fulfillmentReady) ||
