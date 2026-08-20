@@ -343,7 +343,7 @@ export const PublishWizard: React.FC = () => {
         description: 'Your listing is still saved. You can add the Featured boost later.',
       });
     }
-    }
+
     if (membershipCancelled) {
       toast({
         title: 'Membership cancelled',
