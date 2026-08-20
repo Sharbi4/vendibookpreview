@@ -38,13 +38,21 @@ const EMAIL_ASSETS =
 
 /** Light backgrounds (default for every email surface). */
 export const LOGO_LIGHT_URL = `${EMAIL_ASSETS}/vendibook-hero-logo.png?v=2026-08`
-/** Dark backgrounds — reserved; the master system is light-only. */
+/**
+ * Dark backgrounds — verified 2026-08-20 to resolve (HTTP 200, 1000×293).
+ * The master system is light-only; kept only for the marketing dark header.
+ */
 export const LOGO_DARK_URL = `${EMAIL_ASSETS}/vendibook-hero-logo-dark.png?v=2026-08`
 
-/** Rendered logo box. Source art is 3:2; keep the ratio to avoid squish. */
+/**
+ * Rendered logo box. Source art verified 2026-08-20 as 1000×293 (≈3.41:1
+ * wordmark). Width/height attributes must keep that ratio or Outlook squishes
+ * the mark: 200 × 59 (200 / 3.413 = 58.6 → 59).
+ */
 export const LOGO_WIDTH = 200
-export const LOGO_HEIGHT = 133
+export const LOGO_HEIGHT = 59
 export const LOGO_ALT = 'Vendibook'
+
 
 export const currentYear = () => new Date().getUTCFullYear()
 
