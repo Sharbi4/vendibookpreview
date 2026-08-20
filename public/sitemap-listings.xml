@@ -430,17 +430,6 @@
     </image:image>
   </url>
   <url>
-    <loc>https://vendibook.com/listing/a02adafe-ad00-40cb-90c7-2a8ccc55f469</loc>
-    <lastmod>2026-08-19</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/0b669ac2-7bf0-4013-b671-0576eea77e00/a02adafe-ad00-40cb-90c7-2a8ccc55f469/1768963055920-fywcc.jpg</image:loc>
-      <image:title>Coffee Tailer</image:title>
-      <image:caption>Coffee Tailer in San Francisco, CA on Vendibook</image:caption>
-    </image:image>
-  </url>
-  <url>
     <loc>https://vendibook.com/listing/779d5773-de60-4075-b92d-32387da86dd3</loc>
     <lastmod>2026-08-19</lastmod>
     <changefreq>weekly</changefreq>
@@ -449,6 +438,17 @@
       <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/3b59adbf-20d5-4154-a54e-bf20a1bddbed/779d5773-de60-4075-b92d-32387da86dd3/1770139433353-pqedyd.png</image:loc>
       <image:title>Pre-Owned Concession Trailer with Deep Freezer – Priced to Sell</image:title>
       <image:caption>Pre-Owned Concession Trailer with Deep Freezer – Priced to Sell in Baton Rouge, LA on Vendibook</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://vendibook.com/listing/a02adafe-ad00-40cb-90c7-2a8ccc55f469</loc>
+    <lastmod>2026-08-20</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/0b669ac2-7bf0-4013-b671-0576eea77e00/a02adafe-ad00-40cb-90c7-2a8ccc55f469/1768963055920-fywcc.jpg</image:loc>
+      <image:title>Coffee Tailer</image:title>
+      <image:caption>Coffee Tailer in San Francisco, CA on Vendibook</image:caption>
     </image:image>
   </url>
   <url>
