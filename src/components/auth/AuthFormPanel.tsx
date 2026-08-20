@@ -479,41 +479,56 @@ export const AuthFormPanel = ({ mode, setMode }: AuthFormPanelProps) => {
     }
   };
 
-  return (
-    <div className="flex flex-col justify-center min-h-[50vh] lg:min-h-screen p-6 sm:p-8 lg:p-12 bg-background">
-      <div className="w-full max-w-md mx-auto">
+  const headline =
+    mode === 'signin'
+      ? 'Welcome back.'
+      : mode === 'signup'
+        ? 'Create your Vendibook account.'
+        : mode === 'verify'
+          ? 'Verify your email.'
+          : 'Reset your password.';
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
-          className="space-y-6"
-        >
-          {/* Back to home */}
+  const supportingCopy =
+    mode === 'signin'
+      ? 'Sign in to manage your listings, messages, bookings, purchases, and Vendibook account.'
+      : mode === 'signup'
+        ? 'Buy, sell, rent, host, and manage your mobile food business in one place.'
+        : mode === 'verify'
+          ? 'We sent you a verification link. Confirm your email to finish setting up your account.'
+          : "Enter your email and we'll send you a link to set a new password.";
+
+  return (
+    <div className="w-full">
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.35 }}
+        className="space-y-6"
+      >
+        {/* Brand + back link */}
+        <div className="flex items-center justify-between">
+          <button type="button" onClick={() => navigate('/')} aria-label="Vendibook home">
+            <img src={vendibookLogo} alt="Vendibook" className="h-9 w-auto" />
+          </button>
           <button
             type="button"
             onClick={() => navigate('/')}
-            className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+            className="inline-flex items-center gap-1.5 rounded-xl px-2 py-1 text-sm text-muted-foreground transition-colors hover:text-foreground"
           >
             <ArrowLeft className="h-4 w-4" />
             Back to home
           </button>
+        </div>
 
-          {/* Header */}
-          <div className="text-center lg:text-left">
-            <h2 className="text-2xl font-bold text-foreground">
-              {mode === 'signin' ? t('auth.signInTitle') : 
-               mode === 'signup' ? t('auth.signUpTitle') : 
-               mode === 'verify' ? t('auth.verifyTitle') : 
-               t('auth.resetTitle')}
-            </h2>
-            <p className="text-muted-foreground mt-2">
-              {mode === 'signin' ? t('auth.signInSubtitle') :
-               mode === 'signup' ? t('auth.signUpSubtitle') :
-               mode === 'verify' ? t('auth.verifySubtitle') :
-               t('auth.resetSubtitle')}
-            </p>
+        <div className="rounded-3xl border border-border bg-card p-6 shadow-sm sm:p-8">
+          {/* Header — one H1 per state */}
+          <div className="mb-6">
+            <h1 className="text-[1.75rem] font-semibold leading-tight tracking-tight text-foreground sm:text-3xl">
+              {headline}
+            </h1>
+            <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{supportingCopy}</p>
           </div>
+
 
           {mode === 'verify' ? (
             <div className="space-y-6">
