@@ -1130,9 +1130,22 @@ const SaleCheckout = () => {
                   />
                 </SaleCheckoutCard>
 
-                {paymentMethod !== 'cash' ? (
-                  <ProtectionOptInCard salePriceCents={Math.round(totalPrice * 100)} />
+                {freightDueLater > 0 && paymentMethod !== 'cash' ? (
+                  <SaleCheckoutCard padding="sm">
+                    <div className="flex items-start gap-3">
+                      <Truck className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
+                      <p className="text-sm text-muted-foreground leading-relaxed">
+                        Your quoted freight of{' '}
+                        <span className="font-medium text-foreground">
+                          ${freightDueLater.toLocaleString()}
+                        </span>{' '}
+                        is billed separately once the seller confirms this sale — it is not
+                        included in today's payment.
+                      </p>
+                    </div>
+                  </SaleCheckoutCard>
                 ) : null}
+
 
                 <SaleCheckoutCard title="Before you pay" padding="md">
                   <div className="space-y-4">
