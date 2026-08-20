@@ -105,7 +105,7 @@ export function usePaymentsTransition(): PaymentsTransitionState {
           hasLegacyStripe;
 
         setMembership(membershipState);
-        setAcknowledged(!!profile?.payments_transition_ack_at);
+        setAcknowledged(!!profile?.payments_transition_ack_at || readLocalAck(user.id));
         setHasPayoutPreference(!!payoutRes?.data?.id);
         setIsEligible(legacyCardMarker && (listingRes?.data ?? []).length > 0);
       } catch {
