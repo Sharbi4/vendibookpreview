@@ -144,6 +144,11 @@ const BookingCheckout = () => {
   const [showInfoModal, setShowInfoModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [paypalCheckout, setPaypalCheckout] = useState<{ bookingId: string; returnUrl: string } | null>(null);
+  /** Guards against creating a second booking_request row if the buyer
+   *  closes the PayPal panel and hits the submit button again. */
+  const createdBookingIdRef = useRef<string | null>(null);
+  const confirmationUrl = (id: string) =>
+    `${window.location.origin}/booking-confirmation?booking_id=${id}`;
   const [stagedDocuments, setStagedDocuments] = useState<StagedDocument[]>([]);
   const [showAuthModal, setShowAuthModal] = useState(false);
   
@@ -427,6 +432,17 @@ const BookingCheckout = () => {
         }),
       };
 
+      // Reuse the already-created request instead of double-booking the dates.
+      if (createdBookingIdRef.current) {
+        if (checkoutWindow) checkoutWindow.close();
+        setPaypalCheckout({
+          bookingId: createdBookingIdRef.current,
+          returnUrl: confirmationUrl(createdBookingIdRef.current),
+        });
+        setIsSubmitting(false);
+        return;
+      }
+
       const { data: bookingResult, error: bookingError } = await supabase
         .from('booking_requests')
         .insert(bookingData as any)
@@ -434,6 +450,7 @@ const BookingCheckout = () => {
         .single();
 
       if (bookingError) throw bookingError;
+      createdBookingIdRef.current = bookingResult.id;
 
       // Upload staged documents if any
       if (stagedDocuments.length > 0) {
@@ -495,7 +512,7 @@ const BookingCheckout = () => {
 
       setPaypalCheckout({
         bookingId: bookingResult.id,
-        returnUrl: `${window.location.origin}/payment-success?booking_id=${bookingResult.id}`,
+        returnUrl: confirmationUrl(bookingResult.id),
       });
 
       // Fire tracking calls asynchronously so they never block the payment panel.
