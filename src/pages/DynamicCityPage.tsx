@@ -12,7 +12,7 @@ import ListingCard from '@/components/listing/ListingCard';
 import { supabase } from '@/integrations/supabase/client';
 import { excludeTestListings } from '@/lib/excludeTestListings';
 import { filterPubliclyVisible } from '@/lib/listings/publicVisibility';
-import { CITY_DATA, getCityFromSlug, ASSET_TYPES } from '@/data/cityData';
+import { getCityFromSlug, ASSET_TYPES } from '@/data/cityData';
 import type { Listing } from '@/types/listing';
 
 interface DynamicCityPageProps {
