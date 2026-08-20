@@ -268,6 +268,9 @@ export default function AccountSubscription() {
           </CardContent>
         </Card>
 
+        {/* Billing timeline — last 3 months */}
+        <BillingTimeline />
+
         {/* Upgrade / downgrade grid */}
         <section className="space-y-4">
           <div className="flex items-end justify-between gap-4 flex-wrap">
