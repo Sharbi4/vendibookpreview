@@ -188,7 +188,7 @@ export const StickyMobileCTA = ({
               disabled={!isAvailable}
               data-testid="sticky-mobile-rent-cta"
               data-instant-book={instantBook ? 'true' : 'false'}
-              className="gap-2 min-w-[150px] h-13 text-base"
+              className="gap-2 min-w-[150px] h-12 text-base"
             >
               {instantBook ? <Zap className="h-5 w-5" /> : <Calendar className="h-5 w-5" />}
               {instantBook ? 'Book Now' : 'Request to Book'}
