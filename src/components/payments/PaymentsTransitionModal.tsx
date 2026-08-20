@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Banknote, CheckCircle2, CreditCard, ShieldCheck, BadgeCheck, TrendingUp } from 'lucide-react';
+import { Banknote, CheckCircle2, CreditCard, ShieldCheck, BadgeCheck, TrendingUp, X } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
