@@ -247,3 +247,6 @@ verify_jwt = false
 
 [functions.send-renewal-reminders]
 verify_jwt = false
+
+[functions.admin-send-test-email]
+verify_jwt = false

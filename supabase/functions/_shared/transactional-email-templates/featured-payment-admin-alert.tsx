@@ -47,7 +47,7 @@ const FeaturedPaymentAdminAlert = ({ hostName,
             {receiptId && (
               <>
                 <Hr style={s.hrThin} />
-                <Text style={s.detailLabel}>STRIPE PAYMENT</Text>
+                <Text style={s.detailLabel}>PAYMENT REFERENCE</Text>
                 <Text style={s.detailMono}>{receiptId}</Text>
               </>
             )}

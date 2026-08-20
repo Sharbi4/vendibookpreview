@@ -166,7 +166,7 @@ serve(async (req) => {
     const raiserParagraphs = [
       `Your dispute for ${listingTitle} has been submitted and is under review.`,
       `Your reason: ${reason}`,
-      `Payment will remain in escrow until the dispute is resolved. We've notified ${otherParty} and our team will review within 3–5 business days.`,
+      `Any seller payout for this transaction is placed on hold until the dispute is resolved. We've notified ${otherParty} and our team will review within 3–5 business days.`,
       ...(termsBlock ? [termsBlock] : []),
     ];
 

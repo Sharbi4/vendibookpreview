@@ -350,7 +350,7 @@ export function renderVendibookReport(p: ReportPayload): string {
 
 export const DEFAULT_TOOLS: ToolHighlight[] = [
   { label: "Verified Listings", description: "Every listing reviewed before it goes live.", icon: "M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" },
-  { label: "Secure Payments", description: "All transactions processed through Stripe.", icon: "M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" },
+  { label: "Secure Payments", description: "Card and PayPal payments processed securely through PayPal.", icon: "M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" },
   { label: "24/7 Support", description: "Real people, real answers, any time.", icon: "M18 8h1a4 4 0 010 8h-1M2 8h16v9a4 4 0 01-4 4H6a4 4 0 01-4-4V8z M6 1v3 M10 1v3 M14 1v3" },
   { label: "Instant Booking", description: "Reserve a kitchen or space in minutes.", icon: "M13 10V3L4 14h7v7l9-11h-7z" },
   { label: "Seller Dashboard", description: "Track inquiries, views, and offers in one place.", icon: "M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" },
