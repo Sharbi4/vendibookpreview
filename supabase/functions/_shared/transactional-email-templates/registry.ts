@@ -134,6 +134,7 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'verified-seller-receipt': verifiedSellerReceipt,
   'pro-membership-activated': proMembershipActivated,
   'pro-membership-renewed': proMembershipRenewed,
+  'pro-membership-renewal-reminder': proMembershipRenewalReminder,
   'pro-membership-cancelled': proMembershipCancelled,
   'pro-membership-payment-failed': proMembershipPaymentFailed,
   'permitpath-plus-activated': permitPlusActivated,
