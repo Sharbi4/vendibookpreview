@@ -65,8 +65,13 @@ const HomepageFeaturedRow = () => {
     const el = scrollRef.current;
     if (!el) return;
     const amount = el.clientWidth * 0.75;
-    el.scrollBy({ left: dir === 'left' ? -amount : amount, behavior: 'smooth' });
-    setTimeout(updateScrollState, 350);
+    // Honor prefers-reduced-motion: jump instead of animating the scroll.
+    const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
+    el.scrollBy({
+      left: dir === 'left' ? -amount : amount,
+      behavior: reduced ? 'auto' : 'smooth',
+    });
+    setTimeout(updateScrollState, reduced ? 0 : 350);
   }, [updateScrollState]);
 
   useEffect(() => {
