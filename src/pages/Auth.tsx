@@ -4,8 +4,9 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePageTracking } from '@/hooks/usePageTracking';
 import { Loader2 } from 'lucide-react';
-import { AuthMarketingPanel } from '@/components/auth/AuthMarketingPanel';
+import SEO from '@/components/SEO';
 import { AuthFormPanel } from '@/components/auth/AuthFormPanel';
+
 import { supabase } from '@/integrations/supabase/client';
 
 type AuthMode = 'signin' | 'signup' | 'forgot' | 'verify';
@@ -85,25 +86,33 @@ const Auth = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="sale-light min-h-screen flex items-center justify-center bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
 
+  const isSignup = mode === 'signup';
+
   return (
-    <div className="min-h-screen flex flex-col lg:flex-row bg-background">
-      {/* Marketing Panel - Compact on mobile/tablet, full on desktop */}
-      <div className="lg:w-1/2 xl:w-[55%]">
-        <AuthMarketingPanel mode={mode} />
-      </div>
-      
-      {/* Right Panel - Auth Form */}
-      <div className="w-full lg:w-1/2 xl:w-[45%]">
+    <div className="sale-light min-h-screen bg-background">
+      <SEO
+        title={isSignup ? 'Create Account' : 'Sign In'}
+        description={
+          isSignup
+            ? 'Create your Vendibook account to buy, sell, rent, host, and manage your mobile food business in one place.'
+            : 'Sign in to Vendibook to manage your listings, messages, bookings, purchases, and account.'
+        }
+        canonical="/auth"
+        noindex
+      />
+      {/* Calm centered auth shell — modest brand presence, no marketing hero. */}
+      <div className="mx-auto flex w-full max-w-[27rem] flex-col px-5 py-10 sm:px-6 sm:py-14">
         <AuthFormPanel mode={mode} setMode={setMode} />
       </div>
     </div>
   );
 };
+
 
 export default Auth;
