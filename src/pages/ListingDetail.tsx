@@ -46,6 +46,7 @@ import CommercialProductBar from '@/components/listing-detail/CommercialProductB
 import SellerTrustPanel from '@/components/listing-detail/SellerTrustPanel';
 import KeySpecsStrip from '@/components/listing-detail/KeySpecsStrip';
 import SaleListingLayout from '@/components/listing-detail/sale/SaleListingLayout';
+import RentalListingLayout from '@/components/listing-detail/rental/RentalListingLayout';
 import { FinancingActionPanel } from '@/components/listing-detail/sale/FinancingActionPanel';
 import { ListingPaymentMethods } from '@/components/listing-detail/ListingPaymentMethods';
 import { SaleTrustStrip, SaleProtectionSection, SaleLocationCard, SaleBrowseMore } from '@/components/listing-detail/sale/SaleSharedSections';
@@ -357,7 +358,7 @@ const ListingDetail = () => {
   if (faqSchema) schemas.push(faqSchema);
 
   return (
-    <div className={`min-h-screen flex flex-col ${!isRental ? 'bg-sale-page text-foreground' : 'bg-background'}`}>
+    <div className="min-h-screen flex flex-col bg-sale-page text-foreground">
 
       <SEO
         title={seoTitle}
