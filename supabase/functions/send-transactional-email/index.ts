@@ -25,9 +25,19 @@ function generateToken(): string {
     .join('')
 }
 
-// Auth note: this function uses verify_jwt = true in config.toml, so Supabase's
-// gateway validates the caller's JWT (anon or service_role) before the request
-// reaches this code. No in-function auth check is needed.
+// Auth note: this function runs with verify_jwt = false because unauthenticated
+// visitors (lead capture, contact forms) legitimately trigger a small set of
+// templates. Authorization is therefore enforced IN CODE below:
+//   - service_role bearer  -> may send any registered template (internal callers)
+//   - valid user JWT       -> may send any registered template
+//   - anon key / no token  -> may only send PUBLIC_TEMPLATES
+// Without this, anyone holding the publishable anon key could send any of the
+// registered templates to any address with attacker-controlled templateData.
+const PUBLIC_TEMPLATES = new Set([
+  'support-reply',
+  'feedback-received-admin',
+])
+
 
 Deno.serve(async (req) => {
   // Handle CORS preflight
@@ -87,6 +97,36 @@ Deno.serve(async (req) => {
     )
   }
 
+  // ---- Authorization (see PUBLIC_TEMPLATES note above) ----
+  {
+    const bearer = (req.headers.get('Authorization') || '').replace(/^Bearer\s+/i, '').trim()
+    let privileged = false
+
+    if (bearer && bearer === supabaseServiceKey) {
+      privileged = true
+    } else if (bearer) {
+      // Anon key and user JWTs are both bearer tokens; only a real user session
+      // resolves to a user via the auth API.
+      try {
+        const authClient = createClient(supabaseUrl, supabaseServiceKey)
+        const { data: userData } = await authClient.auth.getUser(bearer)
+        privileged = Boolean(userData?.user?.id)
+      } catch (_e) {
+        privileged = false
+      }
+    }
+
+    if (!privileged && !PUBLIC_TEMPLATES.has(templateName)) {
+      console.warn('[email-auth] rejected unprivileged send', { templateName })
+      return new Response(
+        JSON.stringify({ error: 'Not authorized to send this template' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+  }
+
+
+
   // CRITICAL TEMPLATE GUARD
   // For high-risk workflows (payments, purchases, bookings, refunds, disputes,
   // Stripe/payouts, support escalation, identity verification), an auto-generated
@@ -139,7 +179,22 @@ Deno.serve(async (req) => {
   // Resolve effective recipient: template-level `to` takes precedence over
   // the caller-provided recipientEmail. This allows notification templates
   // to always send to a fixed address (e.g., site owner from env var).
-  const effectiveRecipient = template.to || recipientEmail
+  const intendedRecipient = template.to || recipientEmail
+
+  // ---- EMAIL_TEST_MODE ----
+  // When the EMAIL_TEST_MODE secret is 'on', every outbound email is redirected
+  // to EMAIL_TEST_RECIPIENT. The address it *would* have gone to is preserved in
+  // the subject prefix and in email_send_log.metadata. This makes an accidental
+  // production send structurally impossible while templates are being reworked.
+  const testModeOn = (Deno.env.get('EMAIL_TEST_MODE') || '').toLowerCase() === 'on'
+  const testRecipient = (Deno.env.get('EMAIL_TEST_RECIPIENT') || '').trim()
+  const redirectedForTest = testModeOn && Boolean(testRecipient)
+  const effectiveRecipient = redirectedForTest ? testRecipient : intendedRecipient
+
+  if (redirectedForTest) {
+    console.log('[email-test-mode] redirecting send', { templateName, intendedRecipient, testRecipient })
+  }
+
 
   if (!effectiveRecipient) {
     return new Response(
@@ -170,7 +225,10 @@ Deno.serve(async (req) => {
         template_name: templateName,
         recipient_email: effectiveRecipient,
         status: 'pending',
-        metadata: providedIdempotencyKey ? { idempotency_source: 'caller' } : { idempotency_source: 'auto' },
+        metadata: {
+          idempotency_source: providedIdempotencyKey ? 'caller' : 'auto',
+          ...(redirectedForTest ? { test_mode: true, intended_recipient: intendedRecipient } : {}),
+        },
       })
 
     if (claimError) {
@@ -266,11 +324,15 @@ Deno.serve(async (req) => {
   }
 
   // 2. Check suppression list (fail-closed: if we can't verify, don't send)
+  // Scope matters: a *marketing* opt-out (newsletter/broadcast) must NOT block
+  // essential email such as receipts, booking confirmations, or disputes.
   const { data: suppressed, error: suppressionError } = await supabase
     .from('suppressed_emails')
     .select('id')
     .eq('email', effectiveRecipient.toLowerCase())
+    .in('scope', ['all', 'transactional'])
     .maybeSingle()
+
 
   if (suppressionError) {
     console.error('Suppression check failed — refusing to send', {
@@ -409,10 +471,14 @@ Deno.serve(async (req) => {
   )
 
   // Resolve subject — supports static string or dynamic function
-  const resolvedSubject =
+  const baseSubject =
     typeof template.subject === 'function'
       ? template.subject(templateData)
       : template.subject
+  const resolvedSubject = redirectedForTest
+    ? `[TEST → ${intendedRecipient}] ${baseSubject}`
+    : baseSubject
+
 
   // 5. Enqueue the pre-rendered email for async processing by the dispatcher.
   // The dispatcher (process-email-queue) handles sending, retries, and rate-limit backoff.

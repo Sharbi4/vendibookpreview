@@ -103,11 +103,12 @@ Deno.serve(async (req) => {
     return jsonResponse({ success: false, reason: 'already_unsubscribed' })
   }
 
-  // Add email to suppressed list (upsert to handle duplicates)
+  // Add email to suppressed list (upsert to handle duplicates).
+  // Footer unsubscribe = marketing scope; essential account email still sends.
   const { error: suppressError } = await supabase
     .from('suppressed_emails')
     .upsert(
-      { email: tokenRecord.email.toLowerCase(), reason: 'unsubscribe' },
+      { email: tokenRecord.email.toLowerCase(), reason: 'unsubscribe', scope: 'marketing' },
       { onConflict: 'email' },
     )
 

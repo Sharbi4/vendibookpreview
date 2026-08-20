@@ -29,10 +29,10 @@ const INSIGHT_THEMES = [
 const TOOL_CATALOG = [
   { id: "verified", label: "Verified Listings", description: "Every listing reviewed before it goes live." },
   { id: "secure", label: "Secure Payments", description: "All transactions processed through PayPal." },
-  { id: "support", label: "24/7 Support", description: "Real people, real answers, any time." },
+  { id: "support", label: "Real Human Support", description: "Mon–Fri, 9am–5pm AZ. Call or email a real person." },
   { id: "instant", label: "Instant Booking", description: "Reserve a kitchen or space in minutes." },
   { id: "seller", label: "Seller Dashboard", description: "Track inquiries, views, and offers in one place." },
-  { id: "checked", label: "Background-Checked Hosts", description: "Rent with confidence." }];
+  { id: "verifiedseller", label: "Verified Sellers", description: "Identity-verified sellers, powered by Plaid." }];
 
 const ROTATION_LABELS: Record<string, string> = {
   purchase: "Purchase Rewards ($500)",

@@ -240,7 +240,7 @@ Deno.test("raise-dispute paragraphs embed the agreed-terms block from terms_id",
   const raiserParagraphs = [
     `Your dispute for Test Truck has been submitted and is under review.`,
     `Your reason: Item damaged.`,
-    `Payment will remain in escrow until the dispute is resolved.`,
+    `Any seller payout for this transaction is placed on hold until the dispute is resolved.`,
     ...(termsBlock ? [termsBlock] : []),
   ];
   const adminParagraphs = [

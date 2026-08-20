@@ -81,8 +81,15 @@ serve(async (req) => {
     });
 
     if (recipient && (eventType === "bounced" || eventType === "complained")) {
+      const lower = recipient.toLowerCase();
       await supabase.from("email_unsubscribes").upsert(
-        { email: recipient.toLowerCase(), reason: eventType, unsubscribed_at: new Date().toISOString() },
+        { email: lower, reason: eventType, unsubscribed_at: new Date().toISOString() },
+        { onConflict: "email" }
+      );
+      // A hard bounce / spam complaint must also block essential email,
+      // otherwise the address keeps receiving receipts it can never deliver.
+      await supabase.from("suppressed_emails").upsert(
+        { email: lower, reason: eventType === "bounced" ? "bounce" : "complaint", scope: "all" },
         { onConflict: "email" }
       );
     }

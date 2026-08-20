@@ -74,8 +74,10 @@ const PRICING_CATEGORY: FaqCategory = {
   title: "Pricing, fees & financing",
   blurb:
     "Free to list. 12.9% only when a transaction runs through Vendibook — and $0 when a sale is paid in person.",
+  // Namespaced: several pricing FAQ ids (e.g. "payout-timing") also exist as
+  // full entries in the selling category. Prefixing keeps entry ids unique.
   entries: PRICING_FAQ.map((e) => ({
-    id: e.id,
+    id: `pricing-${e.id}`,
     question: e.question,
     answer: e.answer,
     keywords: ["fees", "pricing", "commission", "cost", "paypal", "financing"],

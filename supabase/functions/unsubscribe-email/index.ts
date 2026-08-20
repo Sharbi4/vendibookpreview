@@ -86,7 +86,8 @@ const handler = async (req: Request): Promise<Response> => {
     await Promise.all([
       supabase
         .from("suppressed_emails")
-        .upsert({ email: lower, reason: "unsubscribe" }, { onConflict: "email" }),
+        // scope 'marketing' — essential account email is unaffected.
+        .upsert({ email: lower, reason: "unsubscribe", scope: "marketing" }, { onConflict: "email" }),
       supabase
         .from("email_unsubscribes")
         .upsert({ email: lower, unsubscribed_at: now }, { onConflict: "email" }),

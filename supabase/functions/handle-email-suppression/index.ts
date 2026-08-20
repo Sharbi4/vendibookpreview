@@ -83,12 +83,16 @@ Deno.serve(async (req) => {
   const normalizedEmail = payload.email.toLowerCase()
 
   // 1. Upsert to suppressed_emails (idempotent — safe for retries)
+  // Bounces/complaints block everything; a plain unsubscribe is marketing-only.
+  const suppressionScope =
+    /unsubscrib/i.test(payload.reason) ? 'marketing' : 'all'
   const { error: suppressError } = await supabase
     .from('suppressed_emails')
     .upsert(
       {
         email: normalizedEmail,
         reason: payload.reason,
+        scope: suppressionScope,
         metadata: payload.metadata ?? null,
       },
       { onConflict: 'email' },

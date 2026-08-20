@@ -132,7 +132,7 @@ export const template = {
     chargedOn: 'August 24, 2026',
     nextBillingDate: 'September 24, 2026',
     last4: '4242',
-    invoiceUrl: 'https://invoice.stripe.com/i/example',
+    invoiceUrl: 'https://vendibook.com/account/subscription',
     isRenewal: false,
     benefits: [
       { label: 'Feature your first listing', href: '/dashboard/promote' },

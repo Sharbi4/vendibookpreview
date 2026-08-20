@@ -19,7 +19,8 @@ async function unsubscribe(email: string) {
       .upsert({ email: lower, unsubscribed_at: now }, { onConflict: "email" }),
     supabase
       .from("suppressed_emails")
-      .upsert({ email: lower, reason: "unsubscribe" }, { onConflict: "email" }),
+      // scope 'marketing' — must NOT block receipts/booking mail.
+      .upsert({ email: lower, reason: "unsubscribe", scope: "marketing" }, { onConflict: "email" }),
     supabase
       .from("newsletter_subscribers")
       .upsert(

@@ -10,12 +10,11 @@ interface Props {
   amount?: string
   nextRetryDate?: string
   updatePaymentUrl?: string
-  portalUrl?: string
   accessPausesOn?: string
   attemptNumber?: number
 }
 
-const Email = ({ firstName, planName = 'Vendibook Growth', amount, nextRetryDate, updatePaymentUrl, portalUrl, accessPausesOn, attemptNumber }: Props) => (
+const Email = ({ firstName, planName = 'Vendibook Growth', amount, nextRetryDate, updatePaymentUrl, accessPausesOn, attemptNumber }: Props) => (
   <Html lang="en" dir="ltr">
     <Head />
     <Preview>Payment failed for your {planName} plan — action needed</Preview>
@@ -44,13 +43,11 @@ const Email = ({ firstName, planName = 'Vendibook Growth', amount, nextRetryDate
             </Section>
           )}
           <Section style={s.ctaWrap}>
-            <Button href={updatePaymentUrl || portalUrl || `${SITE_URL}/account/subscription`} style={s.button}>Update payment method</Button>
+            <Button href={updatePaymentUrl || `${SITE_URL}/account/subscription`} style={s.button}>Update payment method</Button>
           </Section>
-          {portalUrl && updatePaymentUrl && (
-            <Text style={{ ...s.small, margin: '10px 0 0' }}>
-              Or manage everything in the <Link href={portalUrl} style={{ color: '#FF5124' }}>Stripe billing portal →</Link>
-            </Text>
-          )}
+          <Text style={{ ...s.small, margin: '10px 0 0' }}>
+            You can review or change your plan any time from your <Link href={`${SITE_URL}/account/subscription`} style={{ color: '#FF5124' }}>Vendibook subscription settings →</Link>
+          </Text>
           <Hr style={s.hr} />
           <Text style={s.smallHeader}>WHAT HAPPENS NEXT</Text>
           <Text style={s.listItem}>• We retry your card automatically over the next few days</Text>
