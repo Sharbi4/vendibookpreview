@@ -147,7 +147,30 @@ const HostDashboard = () => {
           />
 
         </div>
+
+        <Link
+          to="/dashboard?view=host&tab=promote"
+          className="mt-4 flex items-center justify-between gap-3 rounded-2xl border border-border bg-card px-4 py-3.5 transition-colors hover:border-foreground/25"
+        >
+          <span className="flex min-w-0 items-center gap-3">
+            <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-muted">
+              <Wrench className="h-4 w-4 text-foreground" />
+            </span>
+            <span className="min-w-0">
+              <span className="block text-sm font-medium text-foreground">
+                Upgrades &amp; premium tools
+              </span>
+              <span className="block text-xs text-muted-foreground">
+                {isPro
+                  ? 'Your Pro tools, boost credit, and optional add-ons.'
+                  : 'See what’s included with Vendibook Pro and optional per-listing upgrades.'}
+              </span>
+            </span>
+          </span>
+          <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+        </Link>
       </section>
+
 
       {actionItems.length > 0 && (
         <>
