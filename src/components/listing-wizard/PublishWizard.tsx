@@ -29,6 +29,8 @@ import { reportError } from '@/lib/errorReporter';
 import { parseEdgeError } from '@/lib/edgeErrors';
 import { usePremiumUpsell, isPremiumError, featureFromParsed } from '@/hooks/usePremiumUpsell';
 import { PremiumChip } from '@/components/monetization/PremiumChip';
+import { useHostEntitlements } from '@/hooks/useHostEntitlements';
+import { useProBoostCredit, useRedeemProBoostCredit } from '@/hooks/useProBoostCredit';
 
 import { CATEGORY_LABELS, ListingCategory, FreightPayer, AMENITIES_BY_CATEGORY, FREIGHT_CATEGORY_LABELS, FreightCategory, FulfillmentType, isMobileAsset, isStaticLocation as isStaticLocationFn, MODE_LABELS } from '@/types/listing';
 import {
@@ -189,6 +191,12 @@ export const PublishWizard: React.FC = () => {
   const { toast } = useToast();
   const { user } = useAuth();
   const premiumUpsell = usePremiumUpsell();
+  // Canonical Vendibook Pro entitlement — AI writing/pricing assistance is a
+  // Pro benefit. Publishing itself NEVER depends on this.
+  const hostEntitlements = useHostEntitlements();
+  const aiAssistUnlocked = hostEntitlements.hasAtLeast('pro');
+  const { data: proBoostCredit } = useProBoostCredit();
+  const redeemBoostCredit = useRedeemProBoostCredit();
   const [searchParams, setSearchParams] = useSearchParams();
   const queryClient = useQueryClient();
 
@@ -1343,6 +1351,10 @@ export const PublishWizard: React.FC = () => {
   };
 
   const handleGetSuggestions = async () => {
+    if (!aiAssistUnlocked) {
+      premiumUpsell.show('pricepilot', 'wizard_pricing');
+      return;
+    }
     if (!title || !listing?.category) {
       toast({
         title: 'Missing information',
@@ -1436,6 +1448,10 @@ export const PublishWizard: React.FC = () => {
 
   // AI Description Optimization
   const optimizeDescription = async () => {
+    if (!aiAssistUnlocked) {
+      premiumUpsell.show('ai-description', 'wizard_description');
+      return;
+    }
     if (!description || description.trim().length < 10) {
       toast({
         title: 'Description too short',
@@ -1479,10 +1495,15 @@ export const PublishWizard: React.FC = () => {
       }
     } catch (error) {
       console.error('Error optimizing description:', error);
-      toast({
-        title: 'Optimization failed',
-        description: error instanceof Error ? error.message : 'Please try again later.',
-        variant: 'destructive'});
+      const parsed = await parseEdgeError(error);
+      if (isPremiumError(parsed)) {
+        premiumUpsell.show(featureFromParsed(parsed) ?? 'ai-description', 'wizard_description');
+      } else {
+        toast({
+          title: 'Optimization failed',
+          description: parsed.message || 'Please try again later.',
+          variant: 'destructive'});
+      }
     } finally {
       setIsOptimizing(false);
     }
