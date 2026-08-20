@@ -105,25 +105,39 @@ const HeroSearchInput = ({
             type="button"
             onClick={toggleVoiceSearch}
             disabled={isConnectingMic}
-            className={`p-2 rounded-lg transition-colors ${
+            aria-pressed={isRecording}
+            className={`inline-flex h-11 w-11 items-center justify-center rounded-lg transition-colors ${
               isRecording
-                ? 'text-destructive bg-destructive/10 hover:bg-destructive/20 animate-pulse'
+                ? `text-destructive bg-destructive/10 hover:bg-destructive/20 ${reduced ? '' : 'animate-pulse'}`
                 : 'text-muted-foreground/70 hover:text-foreground hover:bg-accent'
             } disabled:opacity-50`}
             aria-label={isRecording ? 'Stop voice search' : 'Voice search'}
           >
-            {isRecording ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+            {isRecording ? <MicOff className="w-4 h-4" aria-hidden="true" /> : <Mic className="w-4 h-4" aria-hidden="true" />}
           </button>
           <button
             type="button"
             onClick={handleGeolocation}
             disabled={isLocating}
-            className="p-2 text-muted-foreground/70 hover:text-foreground transition-colors rounded-lg hover:bg-accent disabled:opacity-50"
+            className="inline-flex h-11 w-11 items-center justify-center text-muted-foreground/70 hover:text-foreground transition-colors rounded-lg hover:bg-accent disabled:opacity-50"
             aria-label="Use current location"
           >
-            <Navigation className={`w-4 h-4 ${isLocating ? 'animate-pulse' : ''}`} />
+            <Navigation aria-hidden="true" className={`w-4 h-4 ${isLocating && !reduced ? 'animate-pulse' : ''}`} />
           </button>
         </div>
+
+        {/* Status announcements for assistive tech (voice + location + parsing) */}
+        <span className="sr-only" role="status" aria-live="polite">
+          {isRecording
+            ? 'Listening for voice search'
+            : isConnectingMic
+              ? 'Starting microphone'
+              : isLocating
+                ? 'Detecting your location'
+                : isAIParsing
+                  ? 'Interpreting your search'
+                  : ''}
+        </span>
 
         {/* Primary submit */}
         <button
