@@ -12,6 +12,8 @@ import { ListingCategory, ListingMode, CATEGORY_LABELS } from '@/types/listing';
 import { cn } from '@/lib/utils';
 import { trackDraftCreated, trackEvent } from '@/lib/analytics';
 
+const LIST_GATEWAY = '/list';
+
 type QuickStartStep = 'category' | 'mode' | 'location' | 'created';
 
 interface QuickStartData {
@@ -34,6 +36,20 @@ const categoryOptions = [
 const modeOptions = [
   { value: 'rent' as ListingMode, label: 'For Rent', icon: Tag, description: 'Rent by day or week' },
   { value: 'sale' as ListingMode, label: 'For Sale', icon: ShoppingBag, description: 'Sell to a new owner' }];
+
+const VALID_MODES: ListingMode[] = ['rent', 'sale'];
+const VALID_CATEGORIES = categoryOptions.map((o) => o.value);
+
+/** Reads `?mode=` / `?category=` deep-link intent. Unknown values are ignored. */
+const readDeepLinkIntent = (params: URLSearchParams) => {
+  const rawMode = (params.get('mode') || '').toLowerCase();
+  const rawCategory = (params.get('category') || '').toLowerCase();
+  const mode = (VALID_MODES as string[]).includes(rawMode) ? (rawMode as ListingMode) : null;
+  const category = (VALID_CATEGORIES as string[]).includes(rawCategory)
+    ? (rawCategory as ListingCategory)
+    : null;
+  return { mode, category };
+};
 
 const QUICKSTART_STORAGE_KEY = 'vendibook_quickstart_draft';
 const QUICKSTART_RESUME_KEY = 'vendibook_quickstart_resume';
@@ -62,11 +78,26 @@ export const QuickStartWizard: React.FC = () => {
 
   const persisted = typeof window !== 'undefined' ? loadPersistedQuickStart() : null;
 
+  // Deep-link intent from landing pages (`?mode=sale&category=food_truck`).
+  // Invalid values fall back to asking the question normally.
+  const intentRef = useRef(readDeepLinkIntent(searchParams));
+  const intent = intentRef.current;
+
+  const seededCategory = intent.category ?? persisted?.data?.category ?? null;
+  const seededMode = intent.mode ?? persisted?.data?.mode ?? null;
+
+  /** First screen that still needs an answer. */
+  const firstUnansweredStep = (): QuickStartStep => {
+    if (!seededCategory) return 'category';
+    if (!seededMode) return 'mode';
+    return 'location';
+  };
+
   // The step lives in the URL (?qs=) so browser back/forward moves between
   // wizard screens instead of leaving the flow entirely.
   const urlStep = searchParams.get('qs');
   const [step, setStepState] = useState<QuickStartStep>(
-    isQuickStartStep(urlStep) ? urlStep : (persisted?.step ?? 'category'),
+    isQuickStartStep(urlStep) ? urlStep : (persisted?.step ?? firstUnansweredStep()),
   );
 
   const goToStep = useCallback(
@@ -98,15 +129,19 @@ export const QuickStartWizard: React.FC = () => {
 
   const setStep = goToStep;
 
-  const [data, setData] = useState<QuickStartData>(persisted?.data ?? {
-    category: null,
-    mode: null,
+  const [data, setData] = useState<QuickStartData>({
+    ...(persisted?.data ?? {
     location: '',
     zipCode: '',
     city: '',
     state: '',
-    latitude: null,
-    longitude: null});
+      latitude: null,
+      longitude: null,
+    }),
+    // Deep-link intent wins over stale session values.
+    category: seededCategory,
+    mode: seededMode,
+  });
   const [isCreating, setIsCreating] = useState(false);
   const [isLookingUpZip, setIsLookingUpZip] = useState(false);
   const [zipError, setZipError] = useState<string | null>(null);
@@ -193,6 +228,18 @@ export const QuickStartWizard: React.FC = () => {
 
   const handleCategorySelect = (category: ListingCategory) => {
     setData(prev => ({ ...prev, category }));
+    // Mode already answered by the deep link — don't ask again.
+    setStep(intent.mode ? 'location' : 'mode');
+  };
+
+  /** Back target that respects skipped (pre-answered) screens. */
+  const backFromMode = () => (intent.category ? navigate(LIST_GATEWAY) : setStep('category'));
+  const backFromLocation = () => {
+    if (intent.mode) {
+      if (intent.category) navigate(LIST_GATEWAY);
+      else setStep('category');
+      return;
+    }
     setStep('mode');
   };
 
@@ -254,7 +301,7 @@ export const QuickStartWizard: React.FC = () => {
       toast({
         title: 'Almost there — sign in to save your listing',
         description: "We saved your progress. Sign in and we'll finish creating your draft."});
-      navigate('/auth?redirect=/list');
+      navigate(`/auth?redirect=${encodeURIComponent(`/list/start${window.location.search}`)}`);
       return;
     }
 
@@ -407,7 +454,7 @@ export const QuickStartWizard: React.FC = () => {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => navigate('/list/start')}
+            onClick={() => navigate(LIST_GATEWAY)}
             className="pl-0 text-xs sm:text-sm text-muted-foreground"
           >
             ← Back
@@ -501,7 +548,7 @@ export const QuickStartWizard: React.FC = () => {
               </div>
             </div>
           </div>
-          <Button type="button" variant="outline" onClick={() => setStep('category')} className="mt-2 min-w-[96px]">
+          <Button type="button" variant="outline" onClick={backFromMode} className="mt-2 min-w-[96px]">
             ← Back
           </Button>
 
@@ -608,7 +655,7 @@ export const QuickStartWizard: React.FC = () => {
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => setStep('mode')}
+                onClick={backFromLocation}
                 className="min-w-[96px]"
               >
                 ← Back
