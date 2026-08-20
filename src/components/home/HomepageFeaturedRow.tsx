@@ -171,9 +171,13 @@ const HomepageFeaturedRow = () => {
 
       <div className="relative">
         <div
+          id="homepage-featured-scroller"
           ref={scrollRef}
           onScroll={updateScrollState}
-          className="flex gap-3 sm:gap-4 overflow-x-auto snap-x snap-mandatory scroll-px-4 sm:scroll-px-6 px-4 sm:px-6 pb-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+          role="group"
+          aria-label="Featured listings carousel"
+          tabIndex={0}
+          className="flex gap-3 sm:gap-4 overflow-x-auto snap-x snap-mandatory scroll-px-4 sm:scroll-px-6 px-4 sm:px-6 pb-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
         >
           {listings.map((listing) => (
             <div
