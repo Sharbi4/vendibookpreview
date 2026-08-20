@@ -254,7 +254,7 @@ const HowItWorks = () => {
               <motion.button
                 type="button"
                 onClick={() => {
-                  setRole('host');
+                  setRole('sell');
                   document.getElementById('role-walkthrough')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 }}
                 whileHover={{ y: -4 }}
@@ -265,21 +265,22 @@ const HowItWorks = () => {
                 }`}
               >
                 <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-primary/10 text-[10px] font-semibold uppercase tracking-[0.14em] text-primary mb-3">
-                  <DollarSign className="w-3 h-3" /> List or sell
+                  <DollarSign className="w-3 h-3" /> Sell or host
                 </div>
-                <h3 className="text-xl md:text-2xl font-bold text-foreground mb-2">I want to list or sell something</h3>
+                <h3 className="text-xl md:text-2xl font-bold text-foreground mb-2">I want to sell or host something</h3>
                 <p className="text-sm md:text-base text-muted-foreground mb-5 leading-relaxed">
-                  Turn your truck, trailer, kitchen, or vendor space into income. Real buyers and renters, automated documents, and PayPal or in-person payment.
+                  Turn your truck, trailer, kitchen, or vendor space into income. Publishing a standard listing is free, and you choose how you get paid.
                 </p>
                 <ol className="space-y-2 mb-5 text-sm text-foreground/80">
-                  <li className="flex gap-2"><span className="text-foreground/40 font-mono text-xs mt-0.5">01</span> List in minutes — free, no subscription</li>
+                  <li className="flex gap-2"><span className="text-foreground/40 font-mono text-xs mt-0.5">01</span> List free — no subscription required</li>
                   <li className="flex gap-2"><span className="text-foreground/40 font-mono text-xs mt-0.5">02</span> Add photos, pricing, and any documents — identity verification is an optional paid add-on</li>
-                  <li className="flex gap-2"><span className="text-foreground/40 font-mono text-xs mt-0.5">03</span> Get paid — PayPal checkout, in person, or optional Equinox financing</li>
+                  <li className="flex gap-2"><span className="text-foreground/40 font-mono text-xs mt-0.5">03</span> Choose pay in person or Vendibook online checkout</li>
                 </ol>
                 <div className="flex flex-wrap gap-2">
                   <Button size="sm" variant="dark-shine" asChild className="rounded-full">
-                    <Link to="/list" onClick={(e) => e.stopPropagation()}>Start a listing <ArrowRight className="w-3.5 h-3.5 ml-1" /></Link>
+                    <Link to="/list/start" onClick={(e) => e.stopPropagation()}>List free <ArrowRight className="w-3.5 h-3.5 ml-1" /></Link>
                   </Button>
+
                   <span onClick={(e) => e.stopPropagation()}>
                     <TellVendibookButton variant="outline" size="sm" defaultIntent="list" sourcePage="how_it_works_host_path" showIcon={false}>
                       Talk to concierge
