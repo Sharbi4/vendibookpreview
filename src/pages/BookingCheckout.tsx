@@ -67,6 +67,7 @@ import { trackLeadEvent } from '@/lib/leadTracking';
 import { detectAvailabilityConflict } from '@/lib/availabilityConflict';
 import { ReferralCodeField } from '@/components/referrals/ReferralCodeField';
 import { useSellerVerifiedBadge } from '@/hooks/useSellerVerifiedBadge';
+import { authPath } from '@/lib/auth/returnTo';
 
 type FulfillmentSelection = 'pickup' | 'delivery' | 'on_site';
 
@@ -76,7 +77,7 @@ const BookingCheckout = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
-  const { listing, host, isLoading, error } = useListing(listingId);
+  const { listing, isLoading, error } = useListing(listingId);
   /**
    * Instant Book skips host approval ONLY for identity-verified hosts.
    * Everyone else: payment is taken and the booking waits for the host to
@@ -649,7 +650,7 @@ const BookingCheckout = () => {
           
           {selectedSlot && (
             <div className="mt-6 text-center">
-              <Button onClick={() => setShowDateModal(true)} variant="dark-shine" size="lg">
+              <Button onClick={() => setShowDateModal(true)} variant="cta" size="lg">
                 <Calendar className="h-4 w-4 mr-2" />
                 Continue to Select Dates
               </Button>
@@ -776,7 +777,7 @@ const BookingCheckout = () => {
                     </p>
                   </div>
                   <Link
-                    to={`/auth?redirect=/checkout/${listingId}`}
+                    to={authPath(bookingReturnPath)}
                     className="shrink-0 inline-flex items-center justify-center h-10 px-4 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition-opacity"
                   >
                     Sign in / Create account
