@@ -7,12 +7,13 @@ const corsHeaders = {
 };
 
 const ACTIVE_SUB_STATUSES = new Set(["active", "trialing", "past_due"]);
-const STARTER_TIERS = new Set([
-  "starter", "pro", "premium",
-  "host_starter", "host_growth", "host_operator",
-  "seller_plus",
+// Vendibook Pro (and legitimately grandfathered stronger tiers) only.
+// Retired Starter/Seller Plus tiers must NOT unlock the AI writing assistant.
+const PRO_TIERS = new Set([
+  "pro", "premium",
+  "vendibook_pro", "host_pro", "host_growth", "host_operator",
 ]);
-const UNLOCK_SLUGS = new Set(["tool_listing_studio", "host_starter", "host_growth", "host_operator"]);
+const UNLOCK_SLUGS = new Set(["tool_listing_studio", "host_growth", "host_operator"]);
 
 function json(status: number, body: Record<string, unknown>) {
   return new Response(JSON.stringify(body), {
@@ -35,7 +36,7 @@ async function resolveEntitlement(admin: any, userId: string): Promise<boolean> 
     .order("updated_at", { ascending: false })
     .limit(1)
     .maybeSingle();
-  if (sub && ACTIVE_SUB_STATUSES.has(sub.status ?? "") && STARTER_TIERS.has(normalizeTier(sub.tier))) {
+  if (sub && ACTIVE_SUB_STATUSES.has(sub.status ?? "") && PRO_TIERS.has(normalizeTier(sub.tier))) {
     return true;
   }
   // 2) Time-boxed pass granting a tier
@@ -50,7 +51,7 @@ async function resolveEntitlement(admin: any, userId: string): Promise<boolean> 
     .limit(1)
     .maybeSingle();
   const grantsTier = (pass as any)?.monetization_products?.metadata?.grants_tier;
-  if (grantsTier && STARTER_TIERS.has(String(grantsTier).toLowerCase())) return true;
+  if (grantsTier && PRO_TIERS.has(String(grantsTier).toLowerCase())) return true;
 
   // 3) Listing Studio / tier one-time unlock purchase
   const { data: purchase } = await admin
@@ -115,10 +116,10 @@ serve(async (req) => {
         .maybeSingle();
       if (prof?.ai_writing_sample_used_at) {
         return json(403, {
-          error: "The AI Writing Assistant is included with Starter and above — upgrade to unlock unlimited generations.",
+          error: "The AI Writing Assistant is included with Vendibook Pro — upgrade to unlock unlimited rewrites.",
           code: "entitlement_required",
           feature: "ai-description",
-          requires: "starter",
+          requires: "pro",
           upgrade_url: "/pricing",
         });
       }
