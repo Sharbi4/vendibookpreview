@@ -162,14 +162,11 @@ export const GoogleOneTap = ({ onSuccess, onError }: GoogleOneTapProps) => {
           itp_support: true, // Better Safari support
         });
 
-        window.google.accounts.id.prompt((notification) => {
-          if (notification.isNotDisplayed()) {
-            snooze();
-          } else if (notification.isSkippedMoment()) {
-            snooze();
-          } else if (notification.isDismissedMoment()) {
-            snooze();
-          }
+        // FedCM is mandatory in current Chrome, and the legacy status methods
+        // (isNotDisplayed / isSkippedMoment) are deprecated under it. Any
+        // terminal moment simply snoozes the prompt for this visitor.
+        window.google.accounts.id.prompt(() => {
+          snooze();
         });
 
         initialized.current = true;
