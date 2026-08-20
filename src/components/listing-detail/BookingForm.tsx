@@ -24,6 +24,7 @@ import type { TablesInsert } from '@/integrations/supabase/types';
 import { calculateRentalFees, RENTAL_RENTER_FEE_PERCENT } from '@/lib/commissions';
 import { trackFormSubmitConversion } from '@/lib/gtagConversions';
 import { trackBookingFormOpen, trackBookingDateSelected, trackRequestStarted, trackRequestSubmitted, trackFormSubmit } from '@/lib/analytics';
+import { authPath } from '@/lib/auth/returnTo';
 
 interface BookingFormProps {
   listingId: string;
@@ -252,7 +253,7 @@ const BookingForm = ({
 
   const handleSubmit = async () => {
     if (!user) {
-      navigate('/auth');
+      navigate(authPath());
       return;
     }
 
@@ -808,7 +809,7 @@ const BookingForm = ({
             className="w-full gap-2"
             onClick={() => {
               if (!user) {
-                navigate('/auth');
+                navigate(authPath());
                 return;
               }
               setShowInfoModal(true);
