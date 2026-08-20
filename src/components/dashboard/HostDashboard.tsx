@@ -39,7 +39,8 @@ import PaymentsTransitionReminder from '@/components/payments/PaymentsTransition
 const HostDashboard = () => {
   const { user, profile, isVerified } = useAuth();
   const { tier } = useHostEntitlements();
-  const isFreeTier = tier === 'free';
+  const isPro = tier === 'pro' || tier === 'premium';
+
   const { listings, stats } = useHostListings();
   const { bookings, stats: bookingStats } = useHostBookings();
   const { hasPayoutInstructions, isLoading: payoutLoading } = useManualPayout();
