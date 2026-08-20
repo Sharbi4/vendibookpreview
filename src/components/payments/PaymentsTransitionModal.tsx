@@ -46,9 +46,11 @@ export function PaymentsTransitionModal() {
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) void close(); }}>
-      <DialogContent className="max-w-xl border-2 border-white/12 bg-[#08080a]/95 backdrop-blur-xl">
+      <DialogContent
+        className="w-[calc(100vw-1.5rem)] max-w-xl max-h-[85dvh] overflow-y-auto overscroll-contain rounded-2xl border-2 border-white/12 bg-[#08080a]/95 p-4 backdrop-blur-xl sm:p-6"
+      >
         <DialogHeader>
-          <div className="flex flex-col items-center gap-4 mb-2">
+          <div className="flex flex-col items-center gap-4 mb-2 pt-2">
             <div className="w-16 h-16 rounded-full bg-primary/10 ring-1 ring-primary/25 flex items-center justify-center">
               <Banknote className="h-7 w-7 text-primary" />
             </div>
