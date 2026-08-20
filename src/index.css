@@ -1717,3 +1717,12 @@
 .gm-style > div:first-child {
   border-radius: inherit;
 }
+
+/* PayPal hosted card inputs (debit/credit without a PayPal account). */
+.paypal-card-field {
+  min-height: 48px;
+  border: 1px solid hsl(var(--border));
+  border-radius: 0.75rem;
+  padding: 0 0.5rem;
+  background: hsl(var(--background));
+}
