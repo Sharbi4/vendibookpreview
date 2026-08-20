@@ -151,34 +151,50 @@ export const StickyMobileCTA = ({
 
   return (
     <>
-      <div id="mobile-sticky-cta" className="fixed bottom-0 left-0 right-0 z-50 lg:hidden bg-background/98 border-t-2 border-primary/20 shadow-2xl safe-area-pb gpu-layer">
-        <div className="container py-4 flex items-center justify-between gap-4">
+      <div
+        id="mobile-sticky-cta"
+        className="fixed bottom-0 left-0 right-0 z-50 lg:hidden safe-area-pb gpu-layer"
+        style={{
+          background: 'linear-gradient(180deg, rgba(18,22,28,0.78) 0%, rgba(12,15,19,0.92) 100%)',
+          backdropFilter: 'blur(22px) saturate(140%)',
+          WebkitBackdropFilter: 'blur(22px) saturate(140%)',
+          borderTop: '1px solid rgba(255,255,255,0.10)',
+          boxShadow: '0 -18px 50px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.06)',
+        }}
+      >
+        <div className="container py-3 flex items-center justify-between gap-4">
           {/* Price Display - Enhanced */}
           <div className="flex-shrink-0">
             <div className="flex flex-col">
-              <span className="text-xl sm:text-2xl font-bold text-foreground">
+              <span className="text-xl sm:text-2xl font-bold text-white">
                 ${price?.toLocaleString() || '—'}
               </span>
-              {isRental && <span className="text-xs text-muted-foreground">per day</span>}
-              {!isRental && <span className="text-xs text-green-600 font-medium">Ready to buy</span>}
+              {isRental && (
+                <span className="text-xs text-white/60">
+                  {hourlyEnabled && priceHourly ? 'per hour' : 'per day'}
+                </span>
+              )}
+              {!isRental && <span className="text-xs text-emerald-400 font-medium">Ready to buy</span>}
             </div>
           </div>
 
           {/* Rental CTA */}
           {isRental ? (
             <Button
-              variant={instantBook ? 'dark-shine' : 'outline'}
+              id="sticky-mobile-cta-primary"
+              variant="cta"
               size="lg"
               onClick={handleRentalCTA}
               disabled={!isAvailable}
               data-testid="sticky-mobile-rent-cta"
               data-instant-book={instantBook ? 'true' : 'false'}
-              className={`gap-2 min-w-[140px] h-12 text-base font-semibold ${instantBook ? 'shadow-lg' : 'border-primary/40'}`}
+              className="gap-2 min-w-[150px] h-12 text-base"
             >
               {instantBook ? <Zap className="h-5 w-5" /> : <Calendar className="h-5 w-5" />}
               {instantBook ? 'Book Now' : 'Request to Book'}
             </Button>
           ) : (
+
             /* Sale CTAs - Buy Now (prominent) & Make Offer */
             <div className="flex items-center gap-2 sm:gap-3">
               <Button

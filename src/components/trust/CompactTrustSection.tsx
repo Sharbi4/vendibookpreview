@@ -38,7 +38,7 @@ const trustItems: TrustItem[] = [
     description: 'Your payments are protected with industry-standard security powered by PayPal.',
     bullets: [
       'PCI-compliant payment processing',
-      'Funds held securely until delivery',
+      'Payouts released after delivery confirmation, typically within 24–48 hours',
       'Encrypted payment information',
     ],
   },
