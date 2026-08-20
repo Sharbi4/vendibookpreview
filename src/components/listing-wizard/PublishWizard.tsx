@@ -3099,6 +3099,79 @@ export const PublishWizard: React.FC = () => {
                     )}
                   </div>
 
+                  {/* Required size for mobile assets sold on Vendibook.
+                      These requirements are enforced on this step, so the
+                      fields have to live here or Continue blocks with no
+                      visible field to fix. */}
+                  {requiresSaleDimensions(listing.mode, listing.category) && (
+                    <div className="space-y-4 pt-6 border-t">
+                      <div>
+                        <Label className="text-lg font-semibold">Size</Label>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          Buyers use these to plan towing, parking and freight quotes.
+                        </p>
+                      </div>
+
+                      <div className="grid grid-cols-3 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="length_ft" className="flex items-center gap-1.5 text-sm">
+                            <Ruler className="h-3.5 w-3.5" />
+                            Length (ft) <span className="text-destructive">*</span>
+                          </Label>
+                          <Input
+                            id="length_ft"
+                            type="number"
+                            min="0"
+                            step="0.5"
+                            value={inchesToFeet(parseFloat(lengthInches) || null)}
+                            onChange={(e) => setLengthInches(String(feetToInches(e.target.value) ?? ''))}
+                            placeholder="e.g., 20"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="width_ft" className="flex items-center gap-1.5 text-sm">
+                            <Ruler className="h-3.5 w-3.5" />
+                            Width (ft) <span className="text-muted-foreground font-normal">(optional)</span>
+                          </Label>
+                          <Input
+                            id="width_ft"
+                            type="number"
+                            min="0"
+                            step="0.5"
+                            value={inchesToFeet(parseFloat(widthInches) || null)}
+                            onChange={(e) => setWidthInches(String(feetToInches(e.target.value) ?? ''))}
+                            placeholder="e.g., 8"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="height_ft" className="flex items-center gap-1.5 text-sm">
+                            <Ruler className="h-3.5 w-3.5" />
+                            Height (ft) <span className="text-destructive">*</span>
+                          </Label>
+                          <Input
+                            id="height_ft"
+                            type="number"
+                            min="0"
+                            step="0.5"
+                            value={inchesToFeet(parseFloat(heightInches) || null)}
+                            onChange={(e) => setHeightInches(String(feetToInches(e.target.value) ?? ''))}
+                            placeholder="e.g., 10"
+                          />
+                        </div>
+                      </div>
+
+                      <p className="text-xs text-muted-foreground">
+                        Shown to buyers as {formatDimensionSummary(
+                          parseFloat(lengthInches) || null,
+                          parseFloat(widthInches) || null,
+                          parseFloat(heightInches) || null,
+                        ) ?? 'Length × Width × Height once you fill these in'}.
+                      </p>
+                    </div>
+                  )}
+
+
+
                   <ListingDisclosures
                     category={listing.category}
                     mode={listing.mode}
