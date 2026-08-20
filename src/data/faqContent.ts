@@ -3,13 +3,19 @@
  *
  * Rules enforced here:
  *  - Every fee, tier price, and window matches the live config.
- *    Commission: 12.9% (src/lib/commissions.ts).
+ *    Commission: 12.9% (src/lib/commissions.ts); Vendibook Pro seller/host
+ *      side 10.9%, savings capped at $500 per completed transaction
+ *      (src/lib/fees/proFee.ts).
  *    Plans: Free / Vendibook Pro $79/mo (monetization_products.vendibook_pro).
- *      Retired Starter / Growth / Operator / Weekly Pass tiers must not appear
- *      in new-purchase copy — only in clearly labeled legacy answers.
- *    Payout: rentals 24h after start, sales 25d after buyer confirms.
+ *      Retired Starter / Growth / Operator / Weekly Pass tiers must never appear.
+ *    Payout: Vendibook reviews and issues payouts after the transaction
+ *      completes. Never describe general payouts as automatic, instant, or
+ *      24-hour. The only 24-hour claim allowed is for a successfully completed
+ *      FINANCED purchase (released within 24h after delivery + confirmation).
  *    Support: (725) 755-9598 · support@vendibook.com · Mon–Fri 9a–5p AZ.
- *  - Never say "payment protection" — say "payment protection" or "funds are held".
+ *  - Never say "escrow" — say "payment protection" or "funds are held".
+ *  - Payments run on PayPal. No Stripe / Affirm / Klarna / Afterpay language.
+ *  - Identity verification is optional; never imply everyone is verified.
  *  - Anything not shipped is marked "coming soon".
  *  - Answers link to real routes; long legalese defers to policy pages.
  */

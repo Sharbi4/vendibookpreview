@@ -94,7 +94,7 @@ export const PRICING_FAQ: PricingFaqEntry[] = [
     id: 'equinox-financing',
     question: 'Can buyers finance a truck instead of paying cash?',
     answer:
-      'Yes. Buyer financing is available on eligible published for-sale listings through third-party financing partners surfaced by Vendibook, including Equinox Funding. The buyer applies directly with the partner; the seller does not manage the application. Vendibook is not a lender, does not approve applicants, and does not set rates, terms, or guarantee funding. Buyers can download a Pro Forma Invoice from the listing to submit with an application.',
+      'Yes. Buyer financing is available on eligible published for-sale listings through the third-party financing partner surfaced by Vendibook — currently Equinox Funding. The buyer applies directly with the partner; the seller does not manage the application or make the lending decision. Vendibook is not a lender, does not approve applicants, and does not set rates, terms, or guarantee funding. Buyers can download a Pro Forma Invoice from the listing to submit with an application.',
     audiences: ['seller', 'buyer', 'all'],
     cta: { label: 'See current financing options', href: '/financing' },
   },
