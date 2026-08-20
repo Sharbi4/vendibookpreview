@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ChevronLeft, ChevronRight, ArrowLeft, List } from 'lucide-react';
 import { getArticleBySlug, getAdjacentArticles, getRelatedArticles } from '@/data/helpArticles';
+import ContentFeedback from '@/components/support/ContentFeedback';
 
 const HelpArticle = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -192,6 +193,16 @@ const HelpArticle = () => {
                   </section>
                 ))}
               </div>
+
+              {/* Article feedback — tracks outdated help content */}
+              <ContentFeedback
+                variant="card"
+                className="mt-10"
+                contentId={article.slug}
+                contentTitle={article.title}
+                contentType="help_article"
+                categoryId={article.categorySlug}
+              />
 
               {/* Related Articles */}
               {relatedArticles.length > 0 && (

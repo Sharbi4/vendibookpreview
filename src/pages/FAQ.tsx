@@ -29,7 +29,7 @@ import {
 } from "@/data/faqContent";
 import { searchFaq, relatedEntries } from "@/lib/faq/search";
 import { ReportIssueButton } from "@/components/support/ReportIssueButton";
-import { FaqHelpfulThumbs } from "@/components/support/FaqHelpfulThumbs";
+import ContentFeedback from "@/components/support/ContentFeedback";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCatalogPrices } from "@/hooks/useCatalogPrices";
 import { priceWithCadence } from "@/lib/monetization/catalogPricing";
