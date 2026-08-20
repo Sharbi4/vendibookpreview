@@ -39,7 +39,6 @@ import { calculateRentalFees } from '@/lib/commissions';
 import { trackFormSubmitConversion } from '@/lib/gtagConversions';
 import { trackRequestStarted, trackRequestSubmitted } from '@/lib/analytics';
 import { PayPalPaymentPanel } from '@/components/checkout';
-import CheckoutIntro from '@/components/checkout/CheckoutIntro';
 
 import CheckoutOrderSummary from '@/components/checkout/CheckoutOrderSummary';
 import { isEmbeddedCheckoutEnabled } from '@/lib/featureFlags';
@@ -67,7 +66,6 @@ import {
 import { trackLeadEvent } from '@/lib/leadTracking';
 import { detectAvailabilityConflict } from '@/lib/availabilityConflict';
 import { ReferralCodeField } from '@/components/referrals/ReferralCodeField';
-import { getPublicDisplayName } from '@/lib/displayName';
 import { useSellerVerifiedBadge } from '@/hooks/useSellerVerifiedBadge';
 
 type FulfillmentSelection = 'pickup' | 'delivery' | 'on_site';
@@ -155,12 +153,6 @@ const BookingCheckout = () => {
   const [selectedSlot, setSelectedSlot] = useState<number | null>(null);
   const [selectedSlotName, setSelectedSlotName] = useState<string | null>(null);
 
-  // "Step 0" intro dismissal — must stay above any early return (hook order).
-  const introSessionKey = `booking_intro_seen:${listingId ?? 'unknown'}`;
-  const [introDismissed, setIntroDismissed] = useState<boolean>(() => {
-    if (typeof window === 'undefined') return true;
-    return sessionStorage.getItem(introSessionKey) === '1';
-  });
 
 
   const isMobileAsset = listing?.category === 'food_truck' || listing?.category === 'food_trailer';
