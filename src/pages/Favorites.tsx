@@ -10,6 +10,7 @@ import Footer from '@/components/layout/Footer';
 import ListingCard from '@/components/listing/ListingCard';
 import { Button } from '@/components/ui/button';
 import { Loader2, Heart, Search, ArrowLeft } from 'lucide-react';
+import { authPath } from '@/lib/auth/returnTo';
 
 const Favorites = () => {
   const { user, isLoading: authLoading } = useAuth();
@@ -19,7 +20,7 @@ const Favorites = () => {
   // Redirect to auth if not logged in
   useEffect(() => {
     if (!authLoading && !user) {
-      navigate('/auth');
+      navigate(authPath('/favorites'));
     }
   }, [user, authLoading, navigate]);
 

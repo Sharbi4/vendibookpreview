@@ -24,7 +24,7 @@ interface AuthContextType {
   roles: AppRole[];
   isLoading: boolean;
   isVerified: boolean;
-  signUp: (email: string, password: string, fullName: string, role: AppRole, firstName?: string, lastName?: string, phoneNumber?: string) => Promise<{ error: Error | null }>;
+  signUp: (email: string, password: string, fullName: string, role: AppRole, firstName?: string, lastName?: string, phoneNumber?: string, returnTo?: string) => Promise<{ error: Error | null }>;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<{ error: Error | null }>;
@@ -288,9 +288,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return () => subscription.unsubscribe();
   }, []);
 
-  const signUp = async (email: string, password: string, fullName: string, role: AppRole, firstName?: string, lastName?: string, phoneNumber?: string) => {
+  const signUp = async (email: string, password: string, fullName: string, role: AppRole, firstName?: string, lastName?: string, phoneNumber?: string, returnTo?: string) => {
     try {
-      const redirectUrl = `${window.location.origin}/dashboard`;
+      // Preserve the flow the visitor came from (listing, checkout, /list/start)
+      // so the email confirmation link lands them back there.
+      const dest = returnTo && returnTo.startsWith('/') && !returnTo.startsWith('//') ? returnTo : '/dashboard';
+      const redirectUrl = `${window.location.origin}${dest}`;
 
       const { data, error } = await supabase.auth.signUp({
         email,

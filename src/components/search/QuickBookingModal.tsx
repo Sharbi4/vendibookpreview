@@ -32,6 +32,7 @@ import { SlotSelector } from '@/components/booking';
 import { FinalReviewSheet } from '@/components/transaction/FinalReviewSheet';
 import { useTermsGate } from '@/hooks/useTermsGate';
 import { buildTerms } from '@/lib/transactionTerms';
+import { authPath } from '@/lib/auth/returnTo';
 
 interface QuickBookingModalProps {
   listing: Listing | null;
@@ -205,7 +206,7 @@ const QuickBookingModal = ({
 
   const handleSubmit = async () => {
     if (!user) {
-      navigate('/auth');
+      navigate(authPath());
       return;
     }
     const validationError = validateForm();

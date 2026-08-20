@@ -31,6 +31,7 @@ import BookingStepReview from './steps/BookingStepReview';
 import BookingStepConfirmation from './steps/BookingStepConfirmation';
 
 import type { BookingUserInfo } from '@/components/booking';
+import { authPath } from '@/lib/auth/returnTo';
 
 // Type for files staged for upload
 interface StagedFile {
@@ -252,7 +253,7 @@ const BookingWizard = ({
 
   const handleSubmit = async () => {
     if (!user) {
-      navigate('/auth');
+      navigate(authPath());
       return;
     }
 

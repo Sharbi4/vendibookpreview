@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { User } from '@supabase/supabase-js';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePageTracking } from '@/hooks/usePageTracking';
 import { Loader2 } from 'lucide-react';
@@ -20,8 +20,10 @@ const Auth = () => {
   // Track page views with Google Analytics
   usePageTracking();
   
+  const location = useLocation();
+  const stateFrom = (location.state as { from?: string } | null)?.from;
   const rawRedirect =
-    searchParams.get('redirect') || searchParams.get('returnTo') || '';
+    searchParams.get('redirect') || searchParams.get('returnTo') || stateFrom || '';
   const redirectUrl =
     rawRedirect.startsWith('/') && !rawRedirect.startsWith('//')
       ? rawRedirect

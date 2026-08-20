@@ -156,7 +156,7 @@ export const AuthFormPanel = ({ mode, setMode }: AuthFormPanelProps) => {
         const fullName = `${firstName.trim()} ${lastName.trim()}`.trim();
         const { error } = await signUp(
           target, password, fullName, selectedRole,
-          firstName.trim(), lastName.trim(), phoneNumber.trim(),
+          firstName.trim(), lastName.trim(), phoneNumber.trim(), redirectUrl || undefined,
         );
         if (error) {
           toast({
@@ -181,7 +181,7 @@ export const AuthFormPanel = ({ mode, setMode }: AuthFormPanelProps) => {
         type: 'signup',
         email: target,
         options: {
-          emailRedirectTo: `${window.location.origin}/dashboard`,
+          emailRedirectTo: `${window.location.origin}${redirectUrl || '/dashboard'}`,
         },
       });
 
@@ -292,7 +292,7 @@ export const AuthFormPanel = ({ mode, setMode }: AuthFormPanelProps) => {
       } else if (mode === 'signup') {
         trackSignupAttempt(selectedRole);
         const fullName = `${trimmedFirstName} ${trimmedLastName}`.trim();
-        const { error } = await signUp(trimmedEmail, password, fullName, selectedRole, trimmedFirstName, trimmedLastName, trimmedPhone);
+        const { error } = await signUp(trimmedEmail, password, fullName, selectedRole, trimmedFirstName, trimmedLastName, trimmedPhone, redirectUrl || undefined);
         if (error) {
           let errorType = 'unknown';
           let errorTitle = 'Sign up failed';

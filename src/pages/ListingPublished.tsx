@@ -23,6 +23,7 @@ import { reportError } from '@/lib/errorReporter';
 import ListingReadinessCard from '@/components/listing/ListingReadinessCard';
 import ReadinessDisclaimer from '@/components/listing/ReadinessDisclaimer';
 import { publishListingIdempotent } from '@/lib/listings/publishListing';
+import { authPath } from '@/lib/auth/returnTo';
 
 const ListingPublished: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -66,7 +67,7 @@ const ListingPublished: React.FC = () => {
 
   useEffect(() => {
     if (!authLoading && !user) {
-      navigate('/auth');
+      navigate(authPath());
       return;
     }
     if (!listingId) {

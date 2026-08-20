@@ -44,6 +44,7 @@ import { useConversations } from '@/hooks/useConversations';
 import { useState, useRef, useEffect } from 'react';
 import { trackEventToDb } from '@/hooks/useAnalyticsEvents';
 import { getPublicDisplayName } from '@/lib/displayName';
+import { authPath } from '@/lib/auth/returnTo';
 // Type for public profile data
 interface PublicProfileData {
   id: string;
@@ -243,7 +244,7 @@ const PublicProfile = () => {
         title: 'Sign in required',
         description: 'Please sign in to message this host.',
       });
-      navigate('/auth', { state: { from: `/u/${userId}` } });
+      navigate(authPath(`/u/${userId}`));
       return;
     }
 
