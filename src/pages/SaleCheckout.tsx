@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useParams, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
-import { Loader2, ArrowLeft, ShieldCheck } from 'lucide-react';
+import { Loader2, ArrowLeft, ShieldCheck, Truck } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
 import { useListing } from '@/hooks/useListing';
@@ -38,7 +38,6 @@ import { ReferralCodeField } from '@/components/referrals/ReferralCodeField';
 import { FinalReviewSheet } from '@/components/transaction/FinalReviewSheet';
 import { useTermsGate } from '@/hooks/useTermsGate';
 import { buildTerms } from '@/lib/transactionTerms';
-import { ProtectionOptInCard } from '@/components/protected-sale/ProtectionOptInCard';
 import { useCheckoutState } from '@/hooks/useCheckoutState';
 import { useSellerVerifiedBadge, refreshSellerBadgeSurfaces } from '@/hooks/useSellerVerifiedBadge';
 import VerifiedSellerDialog from '@/components/verification/VerifiedSellerDialog';
@@ -464,18 +463,26 @@ const SaleCheckout = () => {
   }, [fulfillmentSelected, clearEstimate]);
 
   // Calculate prices
+  //
+  // IMPORTANT — "due now" vs "due later":
+  // Vendibook freight is NOT part of the sale PayPal order. The backend
+  // (`quoteSaleTransaction`) charges item price + seller delivery only; freight
+  // is collected in a separate PayPal order *after* the seller confirms the
+  // sale (`kind: "freight"`). So freight must never be folded into the amount
+  // the buyer is told they are paying now, or PayPal would show a lower total.
   const getDeliveryFeeForSelection = (): number => {
-    if (fulfillmentSelected === 'vendibook_freight') {
-      return isFreightSellerPaid ? 0 : freightCost;
-    }
     if (fulfillmentSelected === 'delivery' && deliveryRate) {
       return computeDeliveryFee(deliveryRate, deliveryFeeType, deliveryDistanceInfo.distance);
     }
     return 0;
   };
-  
+
   const currentDeliveryFee = getDeliveryFeeForSelection();
+  /** Buyer-paid freight, invoiced separately once the seller confirms. */
+  const freightDueLater =
+    fulfillmentSelected === 'vendibook_freight' && !isFreightSellerPaid ? freightCost : 0;
   const totalPrice = priceSale + currentDeliveryFee;
+
 
   // Validation
   const validateStep = (step: CheckoutStep): boolean => {
@@ -567,8 +574,11 @@ const SaleCheckout = () => {
         mode: 'sale',
         paymentMethod: paymentMethod === 'cash' ? 'pay_in_person' : 'paypal_checkout',
         basePriceDollars: priceSale,
-        deliveryFeeDollars: fulfillmentSelected === 'delivery' ? currentDeliveryFee : (fulfillmentSelected === 'vendibook_freight' ? freightCost : 0),
+        // Only the amount actually charged today — freight is a separate,
+        // later PayPal order and must not inflate "total due today".
+        deliveryFeeDollars: currentDeliveryFee,
         isSellerPaidFreight: isFreightSellerPaid,
+
         isCashSale: paymentMethod === 'cash',
         fulfillmentType: fulfillmentSelected,
       },
@@ -732,6 +742,15 @@ const SaleCheckout = () => {
         return;
       }
 
+      // The server is the price authority: it re-resolves the agreed amount
+      // from an accepted offer (or the listing) and ignores anything the URL
+      // claimed. If that differs from what we displayed, correct the UI before
+      // PayPal opens so the buyer never sees a total change mid-approval.
+      const serverAmount = Number(data.amount);
+      if (Number.isFinite(serverAmount) && serverAmount > 0 && Math.abs(serverAmount - priceSale) >= 0.01) {
+        setAcceptedOfferPrice(serverAmount);
+      }
+
       trackFormSubmitConversion({ form_type: 'purchase', listing_id: listingId });
       trackInitiateCheckout({
         value: totalPrice,
@@ -820,40 +839,16 @@ const SaleCheckout = () => {
 
   const hasMultiplePaymentOptions = acceptPayPalCheckout && acceptCashPayment;
 
-  /**
-   * Optional add-ons. Purely presentational selections (nothing is charged
-   * here) — the "Options" stage disappears entirely when none apply.
-   */
-  const addOnCatalog: { id: string; title: string; description: string; priceLabel: string }[] = [
-    ...((listing as { vin?: string | null }).vin || (listing as { title_status?: string | null }).title_status
-      ? [{
-          id: 'inspection',
-          title: 'Pre-purchase inspection',
-          description: 'We connect you with a local inspector before pickup or delivery.',
-          priceLabel: 'Quoted separately',
-        }]
-      : []),
-    ...((listing as { title_status?: string | null }).title_status
-      ? [{
-          id: 'notarization',
-          title: 'Notarized title transfer',
-          description: 'Remote notary coordination for the title hand-off.',
-          priceLabel: 'Quoted separately',
-        }]
-      : []),
-  ];
-  const hasAddOns = addOnCatalog.length > 0;
-
-  const visibleSteps: Exclude<CheckoutStep, 'intro'>[] = hasAddOns
-    ? ['fulfillment', 'verify', 'options', 'payment']
-    : ['fulfillment', 'verify', 'payment'];
+  // Checkout is exactly three real steps. (An "Options" step used to offer
+  // pre-purchase inspection / notarized title transfer — neither is an active
+  // Vendibook service, so nothing optional is sold to buyers here any more.)
+  const visibleSteps: Exclude<CheckoutStep, 'intro'>[] = ['fulfillment', 'verify', 'payment'];
 
   const effectiveStep: Exclude<CheckoutStep, 'intro'> =
-    currentStep === 'intro'
-      ? 'fulfillment'
-      : currentStep === 'options' && !hasAddOns
-        ? 'payment'
-        : currentStep;
+    currentStep === 'intro' || currentStep === 'options'
+      ? currentStep === 'options' ? 'payment' : 'fulfillment'
+      : currentStep;
+
 
   const stepIndex = Math.max(0, visibleSteps.indexOf(effectiveStep));
 
@@ -912,10 +907,6 @@ const SaleCheckout = () => {
       goNext();
       return;
     }
-    if (effectiveStep === 'options') {
-      goNext();
-      return;
-    }
     if (!agreedToTerms) {
       toast({
         title: 'One more thing',
@@ -929,14 +920,13 @@ const SaleCheckout = () => {
 
   const primaryLabel =
     effectiveStep === 'fulfillment'
-      ? 'Continue to verification'
+      ? 'Continue'
       : effectiveStep === 'verify'
-        ? hasAddOns ? 'Continue to options' : 'Continue to payment'
-        : effectiveStep === 'options'
-          ? 'Continue to payment'
-          : paymentMethod === 'cash'
-            ? 'Confirm — arrange in person'
-            : `Pay $${totalPrice.toLocaleString()}`;
+        ? 'Continue to payment'
+        : paymentMethod === 'cash'
+          ? 'Confirm — arrange in person'
+          : `Review and pay $${totalPrice.toLocaleString()}`;
+
 
   const primaryDisabled =
     (effectiveStep === 'fulfillment' && !fulfillmentReady) ||
@@ -1126,41 +1116,8 @@ const SaleCheckout = () => {
               </>
             )}
 
-            {effectiveStep === 'options' && (
-              <>
-                <SaleCheckoutCard title="Optional services" padding="md">
-                  <p className="text-sm text-muted-foreground mb-4">
-                    Nothing is pre-selected and nothing is charged now — we'll follow up with a quote
-                    for anything you choose.
-                  </p>
-                  <div className="space-y-3">
-                    {addOnCatalog.map((addon) => (
-                      <label
-                        key={addon.id}
-                        className="flex items-start gap-3 rounded-2xl border border-border/70 bg-card p-4 cursor-pointer hover:border-primary/40 transition-colors"
-                      >
-                        <Checkbox
-                          checked={Boolean(addOnSelections[addon.id])}
-                          onCheckedChange={(v) => toggleAddOn(addon.id, Boolean(v))}
-                          className="mt-0.5"
-                        />
-                        <span className="min-w-0 flex-1">
-                          <span className="flex items-center justify-between gap-3">
-                            <span className="text-sm font-semibold text-foreground">{addon.title}</span>
-                            <span className="text-xs text-muted-foreground shrink-0">{addon.priceLabel}</span>
-                          </span>
-                          <span className="block text-xs text-muted-foreground mt-1 leading-relaxed">
-                            {addon.description}
-                          </span>
-                        </span>
-                      </label>
-                    ))}
-                  </div>
-                </SaleCheckoutCard>
 
-                <div className="lg:hidden">{orderSummary}</div>
-              </>
-            )}
+
 
             {effectiveStep === 'payment' && (
               <>
@@ -1181,9 +1138,22 @@ const SaleCheckout = () => {
                   />
                 </SaleCheckoutCard>
 
-                {paymentMethod !== 'cash' ? (
-                  <ProtectionOptInCard salePriceCents={Math.round(totalPrice * 100)} />
+                {freightDueLater > 0 && paymentMethod !== 'cash' ? (
+                  <SaleCheckoutCard padding="sm">
+                    <div className="flex items-start gap-3">
+                      <Truck className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
+                      <p className="text-sm text-muted-foreground leading-relaxed">
+                        Your quoted freight of{' '}
+                        <span className="font-medium text-foreground">
+                          ${freightDueLater.toLocaleString()}
+                        </span>{' '}
+                        is billed separately once the seller confirms this sale — it is not
+                        included in today's payment.
+                      </p>
+                    </div>
+                  </SaleCheckoutCard>
                 ) : null}
+
 
                 <SaleCheckoutCard title="Before you pay" padding="md">
                   <div className="space-y-4">

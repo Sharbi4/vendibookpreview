@@ -116,11 +116,14 @@ const PurchaseStepPayment = ({
       id: 'card' as PurchasePaymentMethod,
       available: acceptPayPalCheckout,
       icon: CreditCard,
-      name: 'Pay online — protected',
+      name: 'Pay online',
       tagline: 'Card, bank or PayPal balance through PayPal.',
-      badge: 'Payment protection included',
+      badge: 'Secure checkout by PayPal',
+      // Truthful: Vendibook records the payment and both sides confirm the
+      // handoff. Disputes run through PayPal's own process — we don't promise
+      // an outcome or a guaranteed refund here.
       detail:
-        'Your money is held until you confirm you received the item. If it never arrives or is not as described, you are covered.',
+        'Your payment is recorded in Vendibook and released to the seller after the handoff is confirmed. Card disputes are handled through PayPal.',
     },
     {
       id: 'cash' as PurchasePaymentMethod,
@@ -130,7 +133,7 @@ const PurchaseStepPayment = ({
       tagline: 'Settle directly with the seller at handoff.',
       badge: 'No Vendibook fees',
       detail:
-        'Pay-in-person sales are completely free — no commission, no buyer fee. In exchange, there is no payment protection: you are transacting directly with the seller.',
+        'Pay-in-person sales are completely free — no commission, no buyer fee. The payment happens outside Vendibook, so PayPal dispute handling does not apply.',
     },
   ].filter((o) => o.available);
 
@@ -140,10 +143,11 @@ const PurchaseStepPayment = ({
         <h2 className="text-2xl font-bold text-foreground tracking-tight">How you'll pay</h2>
         <p className="text-sm text-muted-foreground mt-1">
           {options.length > 1
-            ? 'This seller accepts both. Protection differs — pick with that in mind.'
+            ? 'This seller accepts both. Review your total before you pay.'
             : 'Here\'s the payment method this seller accepts.'}
         </p>
       </div>
+
 
       <div className="space-y-3">
         {options.map((o) => {
