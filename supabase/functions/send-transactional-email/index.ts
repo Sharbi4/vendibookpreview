@@ -476,7 +476,7 @@ Deno.serve(async (req) => {
       ? template.subject(templateData)
       : template.subject
   const resolvedSubject = redirectedForTest
-    ? `[TEST → ${intendedRecipient}] ${baseSubject}`
+    ? `[TEST] ${baseSubject}`
     : baseSubject
 
 
@@ -499,6 +499,11 @@ Deno.serve(async (req) => {
       idempotency_key: idempotencyKey,
       unsubscribe_token: unsubscribeToken,
       queued_at: new Date().toISOString(),
+      // Test-mode provenance, carried through the queue so the dispatcher can
+      // log both intended and delivered-to addresses.
+      ...(redirectedForTest
+        ? { test_mode: true, intended_recipient: intendedRecipient }
+        : {}),
     },
   })
 
