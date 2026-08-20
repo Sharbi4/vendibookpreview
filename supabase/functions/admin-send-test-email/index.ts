@@ -63,7 +63,13 @@ Deno.serve(async (req) => {
       hasPreviewData: Boolean((entry as any).previewData),
       fixedRecipient: (entry as any).to || null,
     }))
-    return json({ count: templates.length, defaultRecipient: DEFAULT_TEST_RECIPIENT, templates })
+    return json({
+      count: templates.length,
+      defaultRecipient: DEFAULT_TEST_RECIPIENT,
+      emailTestMode: (Deno.env.get('EMAIL_TEST_MODE') || 'off').toLowerCase() === 'on' ? 'on' : 'off',
+      emailTestRecipient: Deno.env.get('EMAIL_TEST_RECIPIENT') || null,
+      templates,
+    })
   }
 
   // ---- send mode ----
