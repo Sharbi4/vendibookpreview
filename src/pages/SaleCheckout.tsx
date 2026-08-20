@@ -575,8 +575,11 @@ const SaleCheckout = () => {
         mode: 'sale',
         paymentMethod: paymentMethod === 'cash' ? 'pay_in_person' : 'paypal_checkout',
         basePriceDollars: priceSale,
-        deliveryFeeDollars: fulfillmentSelected === 'delivery' ? currentDeliveryFee : (fulfillmentSelected === 'vendibook_freight' ? freightCost : 0),
+        // Only the amount actually charged today — freight is a separate,
+        // later PayPal order and must not inflate "total due today".
+        deliveryFeeDollars: currentDeliveryFee,
         isSellerPaidFreight: isFreightSellerPaid,
+
         isCashSale: paymentMethod === 'cash',
         fulfillmentType: fulfillmentSelected,
       },
