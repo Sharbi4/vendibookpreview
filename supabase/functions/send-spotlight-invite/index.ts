@@ -7,6 +7,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 import { Resend } from "https://esm.sh/resend@2.0.0";
 import { isMailableAddress } from "../_shared/marketingAudience.ts";
+import { isInternalCaller } from "../_shared/internalAuth.ts";
 import {
   SPOTLIGHT_CAMPAIGN_ID,
   SPOTLIGHT_SUBJECTS,
@@ -42,24 +43,32 @@ serve(async (req) => {
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
 
-    const token = (req.headers.get("Authorization") ?? "").replace("Bearer ", "");
-    if (!token) return json({ error: "Unauthorized" }, 401);
-
     const admin = createClient(supabaseUrl, serviceKey);
-    let callerId: string | null = null;
-    const { data: userRes } = await admin.auth.getUser(token);
-    callerId = userRes?.user?.id ?? null;
-    if (!callerId) {
-      const fallback = createClient(supabaseUrl, anonKey, {
-        global: { headers: { Authorization: `Bearer ${token}` } },
-      });
-      const { data: alt } = await fallback.auth.getUser();
-      callerId = alt?.user?.id ?? null;
-    }
-    if (!callerId) return json({ error: "Unauthorized" }, 401);
 
-    const { data: isAdmin } = await admin.rpc("has_role", { _user_id: callerId, _role: "admin" });
-    if (!isAdmin) return json({ error: "Forbidden" }, 403);
+    // Trusted backend callers (service-role key) may drive the campaign
+    // directly; everyone else must present an admin end-user JWT.
+    const internal = isInternalCaller(req);
+    let callerId: string | null = null;
+
+    if (!internal) {
+      const token = (req.headers.get("Authorization") ?? "").replace("Bearer ", "");
+      if (!token) return json({ error: "Unauthorized" }, 401);
+
+      const { data: userRes } = await admin.auth.getUser(token);
+      callerId = userRes?.user?.id ?? null;
+      if (!callerId) {
+        const fallback = createClient(supabaseUrl, anonKey, {
+          global: { headers: { Authorization: `Bearer ${token}` } },
+        });
+        const { data: alt } = await fallback.auth.getUser();
+        callerId = alt?.user?.id ?? null;
+      }
+      if (!callerId) return json({ error: "Unauthorized" }, 401);
+
+      const { data: isAdmin } = await admin.rpc("has_role", { _user_id: callerId, _role: "admin" });
+      if (!isAdmin) return json({ error: "Forbidden" }, 403);
+    }
+
 
     const body = await req.json().catch(() => ({}));
     const mode: "preview_count" | "preview_html" | "test" | "broadcast" = body.mode ?? "preview_count";
@@ -197,7 +206,7 @@ serve(async (req) => {
     if (isTest) {
       const testEmail = String(body.testEmail ?? "").trim().toLowerCase();
       if (!isMailableAddress(testEmail)) return json({ error: "Valid testEmail required" }, 400);
-      queue = [{ email: testEmail, user_id: callerId, first_name: body.previewFirstName ?? null }];
+      queue = [{ email: testEmail, user_id: callerId ?? "00000000-0000-0000-0000-000000000000", first_name: body.previewFirstName ?? null }];
     } else {
       if (body.confirm !== CAMPAIGN_ID) {
         return json({ error: "Broadcast requires explicit approval confirmation." }, 400);
