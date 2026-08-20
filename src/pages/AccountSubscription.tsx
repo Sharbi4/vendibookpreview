@@ -36,6 +36,7 @@ import { useHostEntitlements, type HostTier } from '@/hooks/useHostEntitlements'
 import { effectivePriceCents, formatUsd } from '@/lib/monetization/products';
 import { buildCheckoutReturnPaths } from '@/lib/monetization/returnRoutes';
 import { useSubscriptionManagement } from '@/hooks/useSubscriptionManagement';
+import { BillingTimeline } from '@/components/account/BillingTimeline';
 
 
 const STATUS_STYLES: Record<string, string> = {
@@ -267,6 +268,9 @@ export default function AccountSubscription() {
             )}
           </CardContent>
         </Card>
+
+        {/* Billing timeline — last 3 months */}
+        <BillingTimeline />
 
         {/* Upgrade / downgrade grid */}
         <section className="space-y-4">
