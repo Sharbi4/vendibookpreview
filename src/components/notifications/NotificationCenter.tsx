@@ -16,6 +16,7 @@ import {
   Settings,
   Search,
   X,
+  Landmark,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -42,6 +43,7 @@ const NOTIFICATION_ICONS: Record<string, typeof Bell> = {
   document: FileText,
   review: Star,
   verification: ShieldCheck,
+  product_update: Landmark,
   default: Bell,
 };
 
