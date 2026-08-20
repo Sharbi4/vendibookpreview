@@ -34,9 +34,13 @@ interface BookingProps {
   bookingId?: string
   cityState?: string
   coverImageUrl?: string
+  /** booking_requests.status at send time — 'approved' | 'confirmed' vs 'pending'. */
+  bookingStatus?: string
+  isInstantBook?: boolean
   termsSnapshot?: TermsSnapshot
   termsVersion?: string
 }
+
 
 const money = (c: number) => `$${(Number(c || 0) / 100).toFixed(2)}`
 
