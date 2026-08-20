@@ -5,7 +5,7 @@ export const SITE_URL = 'https://vendibook.com'
 export const SUPPORT_PHONE = '(725) 755-9598'
 // Brand logo (matches the homepage hero wordmark). Hosted on the email-assets bucket
 // so it loads in every mail client without referencing the app bundle.
-export const LOGO_URL = 'https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/email-assets/vendibook-hero-logo.png'
+export const LOGO_URL = 'https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/email-assets/vendibook-hero-logo.png?v=2026-08'
 
 export const s = {
   main: { backgroundColor: '#ffffff', fontFamily: "'Helvetica Neue', Arial, sans-serif", margin: 0, padding: '32px 0' } as const,

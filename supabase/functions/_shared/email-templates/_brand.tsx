@@ -8,7 +8,7 @@ import { Img, Section, Text } from 'npm:@react-email/components@0.0.22'
 export const SITE_URL = 'https://vendibook.com'
 export const SUPPORT_PHONE = '(725) 755-9598'
 export const LOGO_URL =
-  'https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/email-assets/vendibook-hero-logo.png'
+  'https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/email-assets/vendibook-hero-logo.png?v=2026-08'
 
 export const AuthBrandHeader = () => (
   <Section style={{ padding: '0 0 18px', textAlign: 'center' as const }}>

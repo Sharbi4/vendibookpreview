@@ -7,7 +7,7 @@
 export const SPOTLIGHT_CAMPAIGN_ID = "2026-08-business-spotlight-invite";
 
 export const LOGO_IMG =
-  "https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/email-assets/vendibook-email-logo.png";
+  "https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/email-assets/vendibook-email-logo.png?v=2026-08";
 
 const BASE = "https://vendibook.com";
 export const SPOTLIGHT_FORM_PATH = "/community/spotlight";

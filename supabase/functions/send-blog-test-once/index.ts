@@ -18,7 +18,7 @@ const ARTICLE_URL = "https://vendibook.com/blog/new-exit-plan-food-truck-after-l
 const HOME_URL = "https://vendibook.com";
 const SUBSCRIBE_URL = "https://vendibook.com/subscribe";
 const HERO_IMG = "https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/email-assets/blog/new-exit-plan-food-truck.png";
-const LOGO_IMG = "https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/email-assets/vendibook-email-logo.png";
+const LOGO_IMG = "https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/email-assets/vendibook-email-logo.png?v=2026-08";
 const FROM = "Vendibook <hello@updates.vendibook.com>";
 const REPLY_TO = "support@vendibook.com";
 

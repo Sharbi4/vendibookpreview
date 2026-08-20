@@ -21,7 +21,7 @@ const BLOG_URL = "https://vendibook.com/blog";
 const LIST_URL = "https://vendibook.com/list";
 const TX_SALE_URL = "https://vendibook.com/search?mode=sale&q=food+truck&lat=31&lng=-100&radius=500&location=Texas";
 const TX_RENT_URL = "https://vendibook.com/search?mode=rent&q=food+trailer&lat=31&lng=-100&radius=500&location=Texas";
-const LOGO_IMG = "https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/email-assets/vendibook-email-logo.png";
+const LOGO_IMG = "https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/email-assets/vendibook-email-logo.png?v=2026-08";
 const FROM = "Vendibook <hello@updates.vendibook.com>";
 const REPLY_TO = "support@vendibook.com";
 
@@ -52,7 +52,7 @@ const badge = (l: Listing) =>
 function listingCard(l: Listing) {
   const url = utm(`https://vendibook.com/listing/${l.id}`, "featured");
   const loc = [l.city, l.state].filter(Boolean).join(", ") || "Texas";
-  const img = l.cover_image_url || "https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/email-assets/vendibook-email-logo.png";
+  const img = l.cover_image_url || "https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/email-assets/vendibook-email-logo.png?v=2026-08";
   return `
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 14px 0;background:#ffffff;border:1px solid #e7e5e4;border-radius:12px;overflow:hidden;">
   <tr><td><a href="${url}" style="text-decoration:none;color:inherit;display:block;"><img src="${img}" alt="${l.title.replace(/"/g, "&quot;")}" width="540" style="width:100%;height:auto;max-height:220px;object-fit:cover;display:block;border:0;"></a></td></tr>
