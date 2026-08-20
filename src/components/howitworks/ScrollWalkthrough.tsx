@@ -201,11 +201,12 @@ const MockVisual = ({ variant, tone }: { variant: WalkthroughStep['mock']; tone:
               </div>
               <div className="flex-1 min-w-0">
                 <div className="text-xs font-medium text-foreground truncate">2019 Ford Step Van</div>
-                <div className="text-xs text-muted-foreground">Austin, TX • Verified</div>
+                <div className="text-xs text-muted-foreground">Austin, TX • Food truck</div>
                 <div className={cn('text-sm font-semibold mt-0.5', accentClass)}>${(i * 75 + 175).toLocaleString()}/day</div>
               </div>
             </motion.div>
           ))}
+
         </div>
       );
     case 'listing':
