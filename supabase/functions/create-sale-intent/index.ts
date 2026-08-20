@@ -46,11 +46,49 @@ serve(async (req) => {
       return jsonError(403, "self_transaction", "You can't purchase your own listing.");
     }
 
+    // AGREED PRICE: an accepted offer (or accepted counter) is the price both
+    // sides agreed to. Resolved server-side — the browser never sets price.
+    const { data: acceptedOffer } = await admin
+      .from("offers")
+      .select("offer_amount, counter_amount, updated_at")
+      .eq("listing_id", listingId)
+      .eq("buyer_id", user.id)
+      .eq("status", "accepted")
+      .order("updated_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    const agreedAmount = acceptedOffer
+      ? Number(acceptedOffer.counter_amount ?? acceptedOffer.offer_amount)
+      : Number(listing.price_sale);
+    const amount = Number.isFinite(agreedAmount) && agreedAmount > 0
+      ? agreedAmount
+      : Number(listing.price_sale);
+
+    const fulfillmentTypeIn = body?.fulfillment_type ?? "pickup";
+    const needsAddressIn = fulfillmentTypeIn === "delivery" ||
+      fulfillmentTypeIn === "vendibook_freight";
+    /** Fulfillment/contact fields are re-synced on reuse; money never is. */
+    const mutableFields = {
+      fulfillment_type: fulfillmentTypeIn,
+      delivery_fee: Number(body?.delivery_fee ?? 0) || 0,
+      freight_cost: Number(body?.freight_cost ?? 0) || 0,
+      delivery_address: needsAddressIn ? (body?.delivery_address ?? null) : null,
+      delivery_instructions: needsAddressIn ? (body?.delivery_instructions ?? null) : null,
+      buyer_name: body?.buyer_name ?? null,
+      buyer_email: body?.buyer_email ?? user.email ?? null,
+      buyer_phone: body?.buyer_phone ?? null,
+      referral_code: body?.referral_code ?? null,
+      terms_id: body?.terms_id ?? null,
+    };
+
     // Reuse any pending intent for this buyer + listing so a double click or a
-    // refresh can never create two transactions.
+    // refresh can never create two transactions. The fulfillment selection can
+    // legitimately have changed since that row was created, so re-sync it —
+    // otherwise the buyer would pay against a stale delivery amount.
     const { data: existing } = await admin
       .from("sale_transactions")
-      .select("id, status")
+      .select("id, status, amount")
       .eq("listing_id", listingId)
       .eq("buyer_id", user.id)
       .in("status", ["pending"])
@@ -60,7 +98,12 @@ serve(async (req) => {
       .maybeSingle();
 
     if (existing) {
-      return jsonResponse(200, { transaction_id: existing.id, reused: true });
+      await admin
+        .from("sale_transactions")
+        .update(mutableFields)
+        .eq("id", existing.id)
+        .eq("status", "pending");
+      return jsonResponse(200, { transaction_id: existing.id, reused: true, amount: Number(existing.amount) });
     }
 
     const { data: alreadyPaid } = await admin
@@ -75,8 +118,6 @@ serve(async (req) => {
       return jsonError(409, "already_paid", "You've already completed a purchase for this listing.");
     }
 
-    const amount = Number(listing.price_sale);
-
     // COMMITMENT POINT: snapshot the seller fee that both sides agreed to.
     // Vendibook Pro eligibility is resolved here once; a later cancellation,
     // downgrade or upgrade never reprices this transaction.
@@ -86,6 +127,7 @@ serve(async (req) => {
       isPro: proStatus.isPro,
     });
     const platformFee = feeQuote.feeCents / 100;
+
 
     const fulfillmentType = body?.fulfillment_type ?? "pickup";
     const needsAddress = fulfillmentType === "delivery" || fulfillmentType === "vendibook_freight";
