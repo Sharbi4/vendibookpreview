@@ -52,10 +52,20 @@ const PayPalPaymentPanel = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const buttonsRef = useRef<HTMLDivElement>(null);
   const messagesRef = useRef<HTMLDivElement>(null);
+  const cardNameRef = useRef<HTMLDivElement>(null);
+  const cardNumberRef = useRef<HTMLDivElement>(null);
+  const cardExpiryRef = useRef<HTMLDivElement>(null);
+  const cardCvvRef = useRef<HTMLDivElement>(null);
+  const cardFieldsRef = useRef<any>(null);
   const [state, setState] = useState<PanelState>('loading');
   const [error, setError] = useState<{ title: string; detail: string } | null>(null);
+  /** Card entry (no PayPal account needed) — mounted lazily when opened. */
+  const [cardEligible, setCardEligible] = useState(false);
+  const [cardOpen, setCardOpen] = useState(false);
+  const [cardSubmitting, setCardSubmitting] = useState(false);
   const stateRef = useRef<PanelState>('loading');
   stateRef.current = state;
+
 
   // ESC to close + lock body scroll while open.
   useEffect(() => {
