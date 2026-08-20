@@ -140,6 +140,17 @@ serve(async (req) => {
 
     // ---------------------------------------------------------------- get
     if (action === "get") {
+      // An unpaid order always shows (and charges) the current catalog price.
+      if (order.payment_status !== "paid" && order.price_cents !== config.price_cents) {
+        const { data: repriced } = await admin
+          .from("listing_concierge_orders")
+          .update({ price_cents: config.price_cents })
+          .eq("id", order.id)
+          .select("*")
+          .maybeSingle();
+        if (repriced) Object.assign(order, repriced);
+      }
+
       const [{ data: messages }, { data: events }] = await Promise.all([
         admin
           .from("listing_concierge_messages")
