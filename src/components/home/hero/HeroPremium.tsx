@@ -70,6 +70,11 @@ const HeroPremium = () => {
             />
           </motion.div>
 
+          <motion.div {...rise(0.24)} className="mt-7">
+            <HeroListingRotator />
+          </motion.div>
+
+
           <motion.div
             {...rise(0.28)}
             className="mx-auto mt-5 flex max-w-xl flex-col items-center gap-2.5 sm:flex-row sm:justify-center"
