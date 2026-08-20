@@ -6,7 +6,7 @@ export const EQUINOX_CAMPAIGN_ID = "2026-08-equinox-partnership";
 export const HERO_IMG =
   "https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/email-assets/campaigns/vendibook-equinox-partnership.jpg";
 export const LOGO_IMG =
-  "https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/email-assets/vendibook-email-logo.png?v=2026-08";
+  "https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/email-assets/vendibook-email-logo-dark.png?v=2026-08";
 
 const BASE = "https://vendibook.com";
 const utm = (path: string, content: string) =>
