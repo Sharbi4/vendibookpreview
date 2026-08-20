@@ -1,5 +1,5 @@
 import { Navigation, Wand2, Mic, MicOff, Search } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { trackLeadEvent } from '@/lib/leadTracking';
 
 interface HeroSearchInputProps {
