@@ -18,6 +18,7 @@ declare global {
             cancel_on_tap_outside?: boolean;
             context?: 'signin' | 'signup' | 'use';
             itp_support?: boolean;
+            use_fedcm_for_prompt?: boolean;
           }) => void;
           prompt: (callback?: (notification: {
             isDisplayed: () => boolean;
@@ -34,6 +35,17 @@ declare global {
     };
   }
 }
+
+const DISMISS_KEY = 'vb_one_tap_snooze_until';
+const SNOOZE_MS = 7 * 24 * 60 * 60 * 1000;
+
+const snooze = () => {
+  try {
+    window.localStorage.setItem(DISMISS_KEY, String(Date.now() + SNOOZE_MS));
+  } catch {
+    /* best effort */
+  }
+};
 
 interface GoogleOneTapProps {
   onSuccess?: () => void;
@@ -112,6 +124,14 @@ export const GoogleOneTap = ({ onSuccess, onError }: GoogleOneTapProps) => {
       return;
     }
 
+    // Respect a recent dismissal — never re-prompt the same visitor for 7 days.
+    try {
+      const until = Number(window.localStorage.getItem(DISMISS_KEY) || 0);
+      if (until && Date.now() < until) return;
+    } catch {
+      /* storage unavailable — fall through and let Google decide */
+    }
+
     // Load the Google Identity Services script
     const loadGoogleScript = () => {
       if (document.getElementById('google-identity-script')) {
@@ -135,19 +155,20 @@ export const GoogleOneTap = ({ onSuccess, onError }: GoogleOneTapProps) => {
         window.google.accounts.id.initialize({
           client_id: GOOGLE_CLIENT_ID,
           callback: handleCredentialResponse,
-          auto_select: true, // Auto-select for returning users
+          auto_select: false, // never sign a visitor in without an explicit tap
           cancel_on_tap_outside: true,
+          use_fedcm_for_prompt: true,
           context: 'signin',
           itp_support: true, // Better Safari support
         });
 
         window.google.accounts.id.prompt((notification) => {
           if (notification.isNotDisplayed()) {
-            console.log('One Tap not displayed:', notification.getNotDisplayedReason());
+            snooze();
           } else if (notification.isSkippedMoment()) {
-            console.log('One Tap skipped:', notification.getSkippedReason());
+            snooze();
           } else if (notification.isDismissedMoment()) {
-            console.log('One Tap dismissed:', notification.getDismissedReason());
+            snooze();
           }
         });
 

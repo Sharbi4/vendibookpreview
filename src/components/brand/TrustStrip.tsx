@@ -111,7 +111,7 @@ export const TrustStrip = ({
       <div className="relative flex flex-col divide-y divide-white/[0.06] sm:flex-row sm:items-stretch sm:divide-x sm:divide-y-0">
         <a href={href} className="flex flex-1" aria-label="How Vendibook processes payments">
           <Rail
-            logo={<PayPalMonogram className="h-[18px] w-auto" />}
+            logo={<PayPalMonogram className="h-6 w-auto sm:h-7" />}
             title="Online checkout"
             detail={paypalDetail}
             tone={paypalTone}
@@ -128,7 +128,7 @@ export const TrustStrip = ({
             }
           >
             <Rail
-              logo={<PlaidLogo surface="dark" className="h-[14px] w-auto" />}
+              logo={<PlaidLogo surface="dark" className="h-4 w-auto sm:h-[18px]" />}
               title="Identity checks"
               detail={plaidDetail}
               tone={plaidTone}
@@ -136,13 +136,15 @@ export const TrustStrip = ({
           </Link>
         )}
         <a href={href} className="flex flex-1 items-center gap-3 px-6 py-4">
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/[0.04]">
+          <span className="flex h-11 w-14 shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.05]">
             <ShieldCheck className="h-[18px] w-[18px] text-primary" />
           </span>
           <div className="min-w-0">
-            <p className="text-[13px] font-medium tracking-tight text-foreground">Payment protection</p>
+            <p className="text-[13px] font-medium tracking-tight text-foreground">
+              Vendibook transaction handling
+            </p>
             <p className="truncate text-xs text-muted-foreground">
-              Funds held until the deal is confirmed
+              Order records, receipts, and payout tracking
             </p>
           </div>
         </a>
@@ -165,7 +167,7 @@ const Rail = ({
   tone?: RailTone;
 }) => (
   <div className="flex flex-1 items-center gap-3 px-6 py-4">
-    <span className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] transition-colors duration-500 group-hover:border-white/20">
+    <span className="relative flex h-11 w-14 shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.05] px-2 transition-colors duration-500 group-hover:border-white/20">
       {logo}
       {tone !== 'idle' && (
         <span

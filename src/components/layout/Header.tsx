@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import vendibookFavicon from '@/assets/vendibook-favicon.png';
+import vendibookWordmark from '@/assets/vendibook-wordmark-light.png';
 import NotificationCenter from '@/components/notifications/NotificationCenter';
 import { ConciergeInbox } from '@/components/concierge/ConciergeInbox';
 import { Input } from '@/components/ui/input';
@@ -286,19 +287,28 @@ const Header = ({ hideSearch = false }: HeaderProps) => {
       }}
     >
       <div className="container max-w-7xl mx-auto pl-3 pr-2 sm:px-4 flex h-[72px] items-center justify-between gap-2 sm:gap-3">
-        {/* Logo - hide when mobile search is open */}
+        {/* Brand — compact bird mark on mobile, full wordmark lockup from md up */}
         <Link 
           to="/" 
-          className={`flex items-center shrink-0 transition-opacity duration-200 ${isMobileSearchOpen ? 'opacity-0 pointer-events-none absolute' : 'opacity-100'} md:opacity-100 md:pointer-events-auto md:relative`}
+          aria-label="Vendibook home"
+          className={`group flex items-center shrink-0 transition-opacity duration-200 ${isMobileSearchOpen ? 'opacity-0 pointer-events-none absolute' : 'opacity-100'} md:opacity-100 md:pointer-events-auto md:relative`}
         >
-          <div className="flex items-center justify-center h-11 w-11 shrink-0 sm:h-12 sm:w-12">
+          <div className="flex items-center justify-center h-11 w-11 shrink-0 sm:h-12 sm:w-12 md:hidden">
             <img 
               src={vendibookFavicon} 
               alt="Vendibook" 
-              className="h-9 w-auto object-contain brightness-125 transition-transform duration-300 hover:scale-105 sm:h-10"
+              className="h-9 w-auto object-contain brightness-125 transition-transform duration-300 group-hover:scale-105 sm:h-10"
             />
           </div>
+          <img
+            src={vendibookWordmark}
+            alt="Vendibook"
+            width={1000}
+            height={293}
+            className="hidden h-9 w-auto object-contain transition-transform duration-300 group-hover:scale-[1.02] md:block lg:h-10"
+          />
         </Link>
+
 
         {/* Mobile Expandable Search */}
         {!hideSearch && <div 
