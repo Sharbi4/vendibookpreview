@@ -80,9 +80,10 @@ const ScrollWalkthrough = ({ steps, tone = 'neutral' }: ScrollWalkthroughProps) 
       {/* Scroll spacers — one per step, drives progress */}
       <div className="absolute inset-0 pointer-events-none">
         {steps.map((_, i) => (
-          <div key={i} style={{ height: '90vh' }} />
+          <div key={i} style={{ height: '62vh' }} />
         ))}
       </div>
+
     </div>
   );
 };
