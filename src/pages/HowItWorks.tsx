@@ -215,7 +215,7 @@ const HowItWorks = () => {
               <motion.button
                 type="button"
                 onClick={() => {
-                  setRole('rent');
+                  setRole('buy');
                   document.getElementById('role-walkthrough')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 }}
                 whileHover={{ y: -4 }}
@@ -226,17 +226,18 @@ const HowItWorks = () => {
                 }`}
               >
                 <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-foreground/5 text-[10px] font-semibold uppercase tracking-[0.14em] text-foreground/70 mb-3">
-                  <Search className="w-3 h-3" /> Find or book
+                  <Search className="w-3 h-3" /> Buy or rent
                 </div>
-                <h3 className="text-xl md:text-2xl font-bold text-foreground mb-2">I want to find or book something</h3>
+                <h3 className="text-xl md:text-2xl font-bold text-foreground mb-2">I want to buy or rent something</h3>
                 <p className="text-sm md:text-base text-muted-foreground mb-5 leading-relaxed">
-                  Search trucks, trailers, kitchens, and vendor spaces. Check availability, message hosts, or let our concierge confirm everything before you commit.
+                  Search trucks, trailers, carts, kitchens, and vendor spaces. Check availability, message the owner, and agree on terms before you commit.
                 </p>
                 <ol className="space-y-2 mb-5 text-sm text-foreground/80">
                   <li className="flex gap-2"><span className="text-foreground/40 font-mono text-xs mt-0.5">01</span> Search by city, date, and category</li>
-                  <li className="flex gap-2"><span className="text-foreground/40 font-mono text-xs mt-0.5">02</span> Check availability or ask Vendibook for help</li>
-                  <li className="flex gap-2"><span className="text-foreground/40 font-mono text-xs mt-0.5">03</span> Pay with PayPal Checkout or in person</li>
+                  <li className="flex gap-2"><span className="text-foreground/40 font-mono text-xs mt-0.5">02</span> Message the seller or host, or send a request</li>
+                  <li className="flex gap-2"><span className="text-foreground/40 font-mono text-xs mt-0.5">03</span> Pay in person or through Vendibook online checkout</li>
                 </ol>
+
                 <div className="flex flex-wrap gap-2">
                   <Button size="sm" variant="dark-shine" asChild className="rounded-full">
                     <Link to="/search" onClick={(e) => e.stopPropagation()}>Browse listings <ArrowRight className="w-3.5 h-3.5 ml-1" /></Link>
