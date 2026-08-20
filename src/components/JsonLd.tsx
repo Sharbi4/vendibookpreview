@@ -261,7 +261,7 @@ export const generateCityCategoryFAQSchema = (
         },
         {
           q: `What financing options are available for buying a ${lowerSingular}?`,
-          a: `Many ${city} buyers finance through SBA loans, equipment financing, or seller financing. Vendibook also supports Affirm and Klarna for qualifying purchases up to $30,000. Contact the seller directly to discuss financing.`,
+          a: `Many ${city} buyers finance through SBA loans, equipment financing, or seller financing. Vendibook also offers equipment financing through a third-party lending partner for qualifying buyers, subject to approval. Contact the seller directly to discuss financing.`,
         },
         {
           q: `Can I inspect a ${lowerSingular} before buying in ${city}?`,

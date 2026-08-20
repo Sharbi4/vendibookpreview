@@ -14,7 +14,7 @@ import {
 /**
  * Selling on Vendibook — 8 scenes. Shows scattered social posts vs a
  * Vendibook listing, the listing wizard, publishing for free, the seller
- * dashboard, payment options for eligible buyers (PayPal / Affirm / pay in
+ * dashboard, payment options for eligible buyers (PayPal / financing / pay in
  * person), sale tracking with payment status and payout timing, and the
  * handoff confirmations for both sides.
  */
@@ -101,7 +101,7 @@ export const sellingScenes = [
         <PaymentOptionsPanel price="$34,000" fees="Buyer's fee shown at checkout" />
         <div className="max-w-[200px] rounded-xl border border-dashed border-muted-foreground/40 bg-background/70 p-3 text-[10px] leading-relaxed text-muted-foreground">
           <div className="font-bold text-foreground">Disclosure</div>
-          Affirm is subject to eligibility and approval. Vendibook and PayPal are not lenders. Sellers can also enable pay-in-person.
+          Equipment financing is offered by a third-party lender and is subject to approval. Vendibook and PayPal are not lenders. Sellers can also enable pay-in-person.
         </div>
       </div>
     </SceneShell>

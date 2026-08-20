@@ -1,43 +1,83 @@
 import { useParams, Navigate, Link } from 'react-router-dom';
-import { MapPin, Truck, Building2, Warehouse, Search, ArrowRight } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { MapPin, Truck, Building2, Warehouse, Search, ArrowRight, ArrowUpRight } from 'lucide-react';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import SEO from '@/components/SEO';
 import JsonLd, { generateLocalBusinessSchema, generateCityServiceSchema } from '@/components/JsonLd';
 import { generateBreadcrumbSchema } from '@/components/SEO';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { CITY_DATA, getCityFromSlug, ASSET_TYPES } from '@/data/cityData';
+import { Skeleton } from '@/components/ui/skeleton';
+import ListingCard from '@/components/listing/ListingCard';
+import { supabase } from '@/integrations/supabase/client';
+import { excludeTestListings } from '@/lib/excludeTestListings';
+import { filterPubliclyVisible } from '@/lib/listings/publicVisibility';
+import { getCityFromSlug, ASSET_TYPES } from '@/data/cityData';
+import type { Listing } from '@/types/listing';
 
 interface DynamicCityPageProps {
   mode?: 'rent' | 'sale';
   category?: 'food_truck' | 'food_trailer' | 'ghost_kitchen' | 'vendor_lot';
 }
 
+const CATEGORY_TILES = [
+  { key: 'food_truck', label: 'Food Trucks', icon: Truck, description: 'Fully-equipped mobile kitchens' },
+  { key: 'food_trailer', label: 'Food Trailers', icon: Warehouse, description: 'Towable commercial kitchens' },
+  { key: 'ghost_kitchen', label: 'Shared Kitchens', icon: Building2, description: 'Commercial kitchen space' },
+  { key: 'vendor_lot', label: 'Vendor Spaces', icon: MapPin, description: 'Prime vending locations' },
+] as const;
+
 const DynamicCityPage = ({ mode, category }: DynamicCityPageProps) => {
   const { citySlug } = useParams<{ citySlug: string }>();
   const city = citySlug ? getCityFromSlug(citySlug) : null;
-  
+
+  // Live inventory for this city — never fabricated counts.
+  const { data: cityListings, isLoading: listingsLoading } = useQuery({
+    queryKey: ['city-listings', city?.slug, category ?? 'all', mode ?? 'all'],
+    enabled: Boolean(city),
+    staleTime: 60_000,
+    queryFn: async () => {
+      if (!city) return [] as Listing[];
+      let query = excludeTestListings(
+        supabase
+          .from('listings')
+          .select('*')
+          .eq('status', 'published')
+          .not('published_at', 'is', null)
+          .is('deleted_at', null)
+          .eq('moderation_status', 'clear')
+          .eq('state', city.state)
+          .ilike('city', city.name)
+      );
+      if (category) query = query.eq('category', category);
+      if (mode) query = query.eq('mode', mode);
+
+      const { data, error } = await query.order('published_at', { ascending: false }).limit(12);
+      if (error) throw error;
+      return filterPubliclyVisible(data ?? []) as unknown as Listing[];
+    },
+  });
+
   if (!city) {
     // Invalid city slug - redirect to homepage
     return <Navigate to="/" replace />;
   }
 
-  const categoryLabel = category 
-    ? ASSET_TYPES[category.replace('_', '-') as keyof typeof ASSET_TYPES]?.label 
+  const categoryLabel = category
+    ? ASSET_TYPES[category.replace('_', '-') as keyof typeof ASSET_TYPES]?.label
     : null;
-  
+
   const modeLabel = mode === 'sale' ? 'for Sale' : mode === 'rent' ? 'for Rent' : '';
-  
-  const pageTitle = categoryLabel 
+
+  const pageTitle = categoryLabel
     ? `${categoryLabel}s ${modeLabel} in ${city.name}, ${city.state}`
     : `Food Trucks & Mobile Kitchens ${modeLabel} in ${city.name}, ${city.state}`;
-  
-  const pageDescription = categoryLabel
-    ? `Browse ${categoryLabel.toLowerCase()}s ${modeLabel.toLowerCase()} in ${city.name}, ${city.state}. Find the perfect ${categoryLabel.toLowerCase()} for your business.`
-    : `Shop food trucks, food trailers, carts and mobile food equipment nationwide. Buy, sell or rent with financing options, verified sellers and delivery. Find listings in ${city.name}, ${city.state}. ${city.tagline}.`;
 
-  const canonicalPath = category 
+  const pageDescription = categoryLabel
+    ? `Browse ${categoryLabel.toLowerCase()}s ${modeLabel.toLowerCase()} in ${city.name}, ${city.state}. Compare listings, message owners, and buy or rent on Vendibook.`
+    : `Browse food trucks, food trailers, shared kitchens, and vendor spaces in ${city.name}, ${city.state}. Compare listings, message owners, and buy or rent on Vendibook.`;
+
+  const canonicalPath = category
     ? `/${city.slug}/${category.replace('_', '-')}${mode ? `/${mode}` : ''}`
     : `/${city.slug}${mode ? `/${mode}` : ''}`;
 
@@ -53,36 +93,14 @@ const DynamicCityPage = ({ mode, category }: DynamicCityPageProps) => {
   if (category) searchParams.set('category', category);
   if (mode) searchParams.set('mode', mode);
 
-  const assetTypes = [
-    { 
-      key: 'food_truck', 
-      label: 'Food Trucks', 
-      icon: Truck, 
-      description: 'Fully-equipped mobile kitchens',
-      count: Math.floor(city.stats.activeListings * 0.4),
-    },
-    { 
-      key: 'food_trailer', 
-      label: 'Food Trailers', 
-      icon: Warehouse, 
-      description: 'Towable commercial kitchens',
-      count: Math.floor(city.stats.activeListings * 0.3),
-    },
-    { 
-      key: 'ghost_kitchen', 
-      label: 'Shared Kitchens', 
-      icon: Building2, 
-      description: 'Commercial kitchen space',
-      count: Math.floor(city.stats.activeListings * 0.15),
-    },
-    { 
-      key: 'vendor_lot', 
-      label: 'Vendor Spaces', 
-      icon: MapPin, 
-      description: 'Prime vending locations',
-      count: Math.floor(city.stats.activeListings * 0.15),
-    },
-  ];
+  const listings = cityListings ?? [];
+  const hasListings = listings.length > 0;
+
+  const heading = [
+    categoryLabel ? `${categoryLabel}s` : 'Food trucks & mobile kitchens',
+    modeLabel,
+    `in ${city.name}`,
+  ].filter(Boolean).join(' ');
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -93,7 +111,7 @@ const DynamicCityPage = ({ mode, category }: DynamicCityPageProps) => {
       />
       <JsonLd schema={[
         generateLocalBusinessSchema(city.name, city.state),
-        ...(category && mode 
+        ...(category && mode
           ? [generateCityServiceSchema(city.name, city.state, category, mode)]
           : []
         ),
@@ -101,102 +119,146 @@ const DynamicCityPage = ({ mode, category }: DynamicCityPageProps) => {
       ]} />
       <Header />
 
-      <main className="flex-1">
+      <main className="flex-1 sale-light">
         {/* Hero */}
-        <section className="py-16 md:py-24 bg-gradient-to-br from-primary/10 via-background to-background">
-          <div className="container">
-            <div className="max-w-3xl mx-auto text-center">
-              <div className="flex items-center justify-center gap-2 text-primary mb-4">
-                <MapPin className="h-5 w-5" />
-                <span className="font-medium">{city.name}, {city.state}</span>
-              </div>
-              <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
-                {categoryLabel 
-                  ? `${categoryLabel}s ${modeLabel}`
-                  : `Mobile Food Assets ${modeLabel}`
-                }
-              </h1>
-              <p className="text-lg text-muted-foreground mb-8">
-                {city.tagline}. {pageDescription}
-              </p>
-              
-              <Button size="lg" asChild className="gap-2">
+        <section className="pt-12 pb-10 md:pt-16 md:pb-14">
+          <div className="container max-w-5xl">
+            <nav aria-label="Breadcrumb" className="mb-5 text-xs text-muted-foreground">
+              <Link to="/" className="hover:text-foreground transition-colors">Home</Link>
+              <span className="mx-1.5">/</span>
+              <Link to="/cities" className="hover:text-foreground transition-colors">Cities</Link>
+              <span className="mx-1.5">/</span>
+              <span className="text-foreground">{city.name}</span>
+            </nav>
+
+            <span className="inline-flex items-center gap-1.5 rounded-full chip-accent px-3 py-1 text-xs font-medium">
+              <MapPin className="h-3.5 w-3.5" />
+              {city.name}, {city.state}
+            </span>
+
+            <h1 className="mt-4 text-3xl md:text-5xl font-semibold tracking-tight text-foreground leading-[1.08]">
+              {heading}
+            </h1>
+            <p className="mt-4 text-base md:text-lg text-muted-foreground leading-relaxed max-w-2xl">
+              {city.tagline}. Compare available equipment and spaces near {city.name}, message the owner
+              directly, and complete the deal online or in person.
+            </p>
+
+            <div className="mt-7 flex flex-col sm:flex-row gap-3">
+              <Button size="lg" variant="cta" asChild>
                 <Link to={`/search?${searchParams.toString()}`}>
-                  <Search className="h-4 w-4" />
-                  Browse {city.name} Listings
+                  <Search className="mr-2 h-4 w-4" />
+                  Browse {city.name} listings
                 </Link>
               </Button>
+              <Button size="lg" variant="outline" className="rounded-2xl" asChild>
+                <Link to="/list">List your equipment free</Link>
+              </Button>
             </div>
+
+            {!listingsLoading && (
+              <p className="mt-4 text-sm text-muted-foreground">
+                {hasListings
+                  ? `${listings.length}${listings.length === 12 ? '+' : ''} live ${listings.length === 1 ? 'listing' : 'listings'} in ${city.name} right now.`
+                  : `No live listings in ${city.name} right now — browse nearby inventory or be the first to list.`}
+              </p>
+            )}
           </div>
         </section>
 
-        {/* Stats */}
-        <section className="py-8 border-b">
-          <div className="container">
-            <div className="grid grid-cols-3 gap-6 max-w-2xl mx-auto text-center">
+        {/* Live inventory */}
+        <section className="pb-14">
+          <div className="container max-w-6xl">
+            <div className="flex items-end justify-between gap-4 mb-5">
               <div>
-                <div className="text-3xl font-bold text-primary">{city.stats.activeListings}+</div>
-                <div className="text-sm text-muted-foreground">Active Listings</div>
+                <h2 className="text-xl md:text-2xl font-semibold text-foreground">
+                  Available in {city.name}
+                </h2>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Live listings from owners and sellers, updated as they publish.
+                </p>
               </div>
-              <div>
-                <div className="text-3xl font-bold text-primary">${city.stats.avgDailyRate}</div>
-                <div className="text-sm text-muted-foreground">Avg. Daily Rate</div>
-              </div>
-              <div>
-                <div className="text-3xl font-bold text-primary">{city.stats.hostsEarning}+</div>
-                <div className="text-sm text-muted-foreground">Active Hosts</div>
-              </div>
+              <Link
+                to={`/search?${searchParams.toString()}`}
+                className="hidden sm:inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
+              >
+                View all <ArrowUpRight className="h-4 w-4" />
+              </Link>
             </div>
+
+            {listingsLoading ? (
+              <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                {[0, 1, 2].map((i) => <Skeleton key={i} className="h-72 rounded-3xl" />)}
+              </div>
+            ) : hasListings ? (
+              <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                {listings.slice(0, 6).map((listing) => (
+                  <ListingCard key={listing.id} listing={listing} variant="search" />
+                ))}
+              </div>
+            ) : (
+              <div className="rounded-3xl border border-border bg-card p-8 text-center">
+                <p className="text-sm text-muted-foreground max-w-md mx-auto">
+                  Nothing is published in {city.name} at the moment. New equipment is added regularly —
+                  search nationwide, or list your own truck, trailer, or kitchen for free.
+                </p>
+                <div className="mt-5 flex flex-col sm:flex-row gap-3 justify-center">
+                  <Button variant="cta" asChild><Link to="/search">Search nationwide</Link></Button>
+                  <Button variant="outline" className="rounded-2xl" asChild><Link to="/list">List free</Link></Button>
+                </div>
+              </div>
+            )}
           </div>
         </section>
 
-        {/* Asset Types */}
+        {/* Categories */}
         {!category && (
-          <section className="py-12 container">
-            <h2 className="text-2xl font-bold text-foreground mb-6 text-center">
-              Browse by Category
-            </h2>
-            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              {assetTypes.map((asset) => {
-                const Icon = asset.icon;
-                const assetSearchParams = new URLSearchParams(searchParams);
-                assetSearchParams.set('category', asset.key);
-                
-                return (
-                  <Link key={asset.key} to={`/search?${assetSearchParams.toString()}`}>
-                    <Card className="h-full hover:shadow-lg transition-all hover:border-primary/50 group">
-                      <CardContent className="p-6 text-center">
-                        <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-4 group-hover:bg-primary/20 transition-colors">
-                          <Icon className="h-6 w-6 text-primary" />
-                        </div>
-                        <h3 className="font-semibold text-foreground mb-1">{asset.label}</h3>
-                        <p className="text-sm text-muted-foreground mb-2">{asset.description}</p>
-                        <span className="text-xs text-primary font-medium">{asset.count}+ available</span>
-                      </CardContent>
-                    </Card>
-                  </Link>
-                );
-              })}
+          <section className="pb-14">
+            <div className="container max-w-6xl">
+              <h2 className="text-xl md:text-2xl font-semibold text-foreground mb-5">
+                Browse by category in {city.name}
+              </h2>
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                {CATEGORY_TILES.map((tile) => {
+                  const Icon = tile.icon;
+                  const tileParams = new URLSearchParams(searchParams);
+                  tileParams.set('category', tile.key);
+                  return (
+                    <Link
+                      key={tile.key}
+                      to={`/search?${tileParams.toString()}`}
+                      className="group rounded-3xl border border-border bg-card p-5 transition-shadow hover:shadow-md"
+                    >
+                      <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/10">
+                        <Icon className="h-5 w-5 text-primary" />
+                      </span>
+                      <h3 className="mt-4 font-semibold text-foreground group-hover:text-primary transition-colors">
+                        {tile.label}
+                      </h3>
+                      <p className="mt-1 text-sm text-muted-foreground">{tile.description}</p>
+                    </Link>
+                  );
+                })}
+              </div>
             </div>
           </section>
         )}
 
         {/* Neighborhoods */}
-        <section className="py-12 bg-muted/30">
-          <div className="container">
-            <h2 className="text-2xl font-bold text-foreground mb-6 text-center">
-              Popular {city.name} Neighborhoods
+        <section className="pb-14">
+          <div className="container max-w-5xl">
+            <h2 className="text-xl md:text-2xl font-semibold text-foreground mb-5">
+              Popular {city.name} areas
             </h2>
-            <div className="flex flex-wrap justify-center gap-3">
+            <div className="flex flex-wrap gap-2.5">
               {city.neighborhoods.map((neighborhood) => {
                 const neighborhoodParams = new URLSearchParams(searchParams);
                 neighborhoodParams.set('location', `${neighborhood}, ${city.name}, ${city.state}`);
-                
                 return (
-                  <Link 
-                    key={neighborhood} 
+                  <Link
+                    key={neighborhood}
                     to={`/search?${neighborhoodParams.toString()}`}
-                    className="px-4 py-2 rounded-full bg-background border hover:border-primary hover:text-primary transition-colors"
+                    className="rounded-2xl border border-border bg-card px-4 py-2 text-sm text-foreground transition-colors hover:border-primary hover:text-primary"
                   >
                     {neighborhood}
                   </Link>
@@ -206,78 +268,83 @@ const DynamicCityPage = ({ mode, category }: DynamicCityPageProps) => {
           </div>
         </section>
 
-        {/* Related Links */}
-        <section className="py-12 container">
-          <h2 className="text-2xl font-bold text-foreground mb-6 text-center">
-            Explore {city.name}
-          </h2>
-          <div className="grid sm:grid-cols-2 gap-4 max-w-2xl mx-auto">
-            <Link to={`/${city.slug}/browse`}>
-              <Card className="hover:shadow-md transition-shadow group">
-                <CardContent className="p-5 flex items-center justify-between">
-                  <div>
-                    <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">
-                      Browse Rentals
-                    </h3>
-                    <p className="text-sm text-muted-foreground">Find assets to rent</p>
-                  </div>
-                  <ArrowRight className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
-                </CardContent>
-              </Card>
-            </Link>
-            <Link to={`/${city.slug}/list`}>
-              <Card className="hover:shadow-md transition-shadow group">
-                <CardContent className="p-5 flex items-center justify-between">
-                  <div>
-                    <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">
-                      List Your Asset
-                    </h3>
-                    <p className="text-sm text-muted-foreground">Start earning in {city.name}</p>
-                  </div>
-                  <ArrowRight className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
-                </CardContent>
-              </Card>
-            </Link>
-          </div>
-        </section>
-
-        {/* SEO Content */}
-        <section className="py-12 bg-muted/30">
-          <div className="container max-w-3xl">
-            <h2 className="text-xl font-bold text-foreground mb-4">
-              About {categoryLabel ? `${categoryLabel}s` : 'Mobile Food Assets'} in {city.name}
-            </h2>
-            <div className="prose prose-sm text-muted-foreground">
-              <p>
-                {city.name}, {city.state} has become a thriving hub for mobile food entrepreneurs. 
-                With its vibrant food scene and business-friendly environment, {city.name} offers 
-                excellent opportunities for food truck operators, trailer owners, and shared kitchen concepts.
-              </p>
-              <p>
-                Vendibook connects you with verified {categoryLabel?.toLowerCase() || 'mobile food asset'} owners 
-                across {city.name}'s most popular areas, including {city.neighborhoods.slice(0, 3).join(', ')}, and more.
-                Whether you're launching a new concept or expanding your existing operation, find the perfect 
-                {categoryLabel ? ` ${categoryLabel.toLowerCase()}` : ' asset'} for your business.
-              </p>
+        {/* Internal links */}
+        <section className="pb-14">
+          <div className="container max-w-5xl">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Link
+                to={`/${city.slug}/browse`}
+                className="group flex items-center justify-between rounded-3xl border border-border bg-card p-5 transition-shadow hover:shadow-md"
+              >
+                <span>
+                  <span className="block font-semibold text-foreground group-hover:text-primary transition-colors">
+                    Rentals in {city.name}
+                  </span>
+                  <span className="block text-sm text-muted-foreground">Trucks, trailers, and kitchens to rent</span>
+                </span>
+                <ArrowRight className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
+              </Link>
+              <Link
+                to={`/${city.slug}/list`}
+                className="group flex items-center justify-between rounded-3xl border border-border bg-card p-5 transition-shadow hover:shadow-md"
+              >
+                <span>
+                  <span className="block font-semibold text-foreground group-hover:text-primary transition-colors">
+                    List in {city.name}
+                  </span>
+                  <span className="block text-sm text-muted-foreground">Publish free in a few minutes</span>
+                </span>
+                <ArrowRight className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
+              </Link>
             </div>
           </div>
         </section>
 
-        {/* CTA */}
-        <section className="py-16 container text-center">
-          <h2 className="text-2xl font-bold text-foreground mb-4">
-            Ready to Get Started in {city.name}?
-          </h2>
-          <p className="text-muted-foreground mb-6 max-w-xl mx-auto">
-            Join {city.stats.hostsEarning}+ hosts already earning on Vendibook in {city.name}.
-          </p>
-          <div className="flex gap-3 justify-center flex-wrap">
-            <Button size="lg" asChild>
-              <Link to={`/search?${searchParams.toString()}`}>Browse Listings</Link>
-            </Button>
-            <Button size="lg" variant="outline" asChild>
-              <Link to="/list">List Your Asset</Link>
-            </Button>
+        {/* Editorial / SEO content */}
+        <section className="pb-16">
+          <div className="container max-w-3xl">
+            <div className="rounded-3xl border border-border bg-card p-6 md:p-8">
+              <h2 className="text-lg md:text-xl font-semibold text-foreground mb-3">
+                About {categoryLabel ? `${categoryLabel.toLowerCase()}s` : 'mobile food equipment'} in {city.name}
+              </h2>
+              <div className="space-y-3 text-sm md:text-base text-muted-foreground leading-relaxed">
+                <p>
+                  {city.name}, {city.state} is an active market for mobile food operators. Vendibook lists
+                  trucks, trailers, shared kitchens, and vendor spaces from owners across the metro — including{' '}
+                  {city.neighborhoods.slice(0, 3).join(', ')} — so you can compare real inventory instead of
+                  chasing classified ads.
+                </p>
+                <p>
+                  Every listing shows the owner's details, specs, and photos. Message the owner directly,
+                  pay through Vendibook checkout, or settle in person when the seller offers it. Equipment
+                  financing is available for eligible buyers through a third-party provider; Vendibook is
+                  not the lender.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Closing CTA */}
+        <section className="pb-20">
+          <div className="container max-w-4xl">
+            <div className="rounded-3xl border border-border bg-card p-8 md:p-10 text-center">
+              <h2 className="text-2xl md:text-3xl font-semibold text-foreground">
+                Ready to move in {city.name}?
+              </h2>
+              <p className="mt-3 text-muted-foreground max-w-xl mx-auto">
+                Search live inventory or publish your own listing free — the 12.9% platform fee applies only
+                when a transaction is paid through Vendibook.
+              </p>
+              <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-center">
+                <Button size="lg" variant="cta" asChild>
+                  <Link to={`/search?${searchParams.toString()}`}>Browse listings</Link>
+                </Button>
+                <Button size="lg" variant="outline" className="rounded-2xl" asChild>
+                  <Link to="/list">List your equipment free</Link>
+                </Button>
+              </div>
+            </div>
           </div>
         </section>
       </main>

@@ -47,7 +47,7 @@ const PILLARS = [
   {
     icon: BadgeCheck,
     title: 'Reviews & trust',
-    body: 'Verified post-transaction reviews build long-term reputation.'}];
+    body: 'Reviews from completed transactions build long-term reputation.'}];
 
 const TrustInfrastructure = () => {
   return (

@@ -158,10 +158,9 @@ const SEO = ({
       }
     }
 
-    // Cleanup on unmount - reset to defaults
-    return () => {
-      document.title = 'Vendibook | Buy, Sell & Rent Food Trucks & Trailers';
-    };
+    // No unmount reset. Resetting the title to the sitewide default on route
+    // change made GA record the generic default title for real pages; the next
+    // route's <SEO> (or the page-tracking fallback) owns the title instead.
   }, [fullTitle, description, canonicalUrl, type, imageUrl, imageAltFinal, ogTitleFinal, ogDescriptionFinal, twitterTitleFinal, twitterDescriptionFinal, article, product, noindex]);
 
   return null;

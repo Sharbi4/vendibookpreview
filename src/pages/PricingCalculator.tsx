@@ -7,8 +7,6 @@ import { Link } from 'react-router-dom';
 import { ArrowRight, ShieldCheck, Eye, BadgeCheck, CreditCard, Percent, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import affirmLogo from '@/assets/affirm-logo.png';
-import afterpayLogo from '@/assets/afterpay-logo.jpg';
 
 const PricingCalculator = () => {
   // FAQ schema for transparent pricing
@@ -128,26 +126,18 @@ const PricingCalculator = () => {
               <div className="max-w-4xl mx-auto">
                 <PricingCalculatorComponent />
                 
-                {/* BNPL Section */}
-                <Card className="mt-8 border-blue-500/20 bg-blue-500/5">
+                {/* Buyer financing */}
+                <Card className="mt-8 rounded-2xl border-primary/20 bg-primary/5">
                   <CardContent className="p-6">
-                    <div className="flex flex-col sm:flex-row items-center gap-4">
-                      <div className="flex items-center gap-4">
-                        <Link to="/payments" className="hover:opacity-80 transition-opacity">
-                          <img src={affirmLogo} alt="Affirm" className="h-6 md:h-8 object-contain dark:invert" />
-                        </Link>
-                        <Link to="/payments" className="hover:opacity-80 transition-opacity">
-                          <img src={afterpayLogo} alt="Afterpay" className="h-5 md:h-6 object-contain dark:invert" />
-                        </Link>
-                      </div>
+                    <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
                       <div className="flex-1 text-center sm:text-left">
-                        <h3 className="font-semibold text-sm mb-0.5">Flexible payment options for buyers</h3>
+                        <h3 className="mb-0.5 text-sm font-semibold">Buyer financing on every for-sale listing</h3>
                         <p className="text-xs text-muted-foreground">
-                          Let buyers pay over time with Affirm or Afterpay — you get paid upfront.
+                          Qualified buyers can apply for equipment financing through our third-party lending partner. Subject to approval — Vendibook is not a lender.
                         </p>
                       </div>
-                      <Button variant="outline" size="sm" asChild className="gap-1 shrink-0">
-                        <Link to="/payments">
+                      <Button variant="outline" size="sm" asChild className="shrink-0 gap-1">
+                        <Link to="/financing">
                           Learn more
                           <ArrowRight className="h-3 w-3" />
                         </Link>
@@ -155,7 +145,7 @@ const PricingCalculator = () => {
                     </div>
                   </CardContent>
                 </Card>
-                
+
                 {/* PricePilot Upsell */}
                 <Card className="mt-4 border-amber-500/30 bg-amber-500/5">
                   <CardContent className="p-6">

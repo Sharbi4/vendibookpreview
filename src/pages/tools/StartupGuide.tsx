@@ -1312,7 +1312,7 @@ const StartupGuide = () => {
                 </div>
               </div>
               <p className="text-xs text-muted-foreground mt-4">
-                Some marketplace purchases may support flexible payment options such as Affirm, Afterpay, or Klarna, depending on eligibility and checkout availability.
+                Qualified buyers may be able to finance a marketplace purchase through Vendibook's third-party lending partner, subject to approval.
               </p>
             </div>
           </div>
@@ -2120,7 +2120,7 @@ const StartupGuide = () => {
                 <Link to="/host" className="hover:text-[#ff5124] underline-offset-2 hover:underline">List a food truck or kitchen</Link>
               </div>
               <p className="text-xs text-muted-foreground mt-4 max-w-xl mx-auto">
-                Some marketplace purchases may support flexible payment options such as Affirm, Afterpay, Klarna, or other available methods, depending on eligibility and checkout availability.
+                Qualified buyers may be able to finance a marketplace purchase through Vendibook's third-party lending partner, subject to approval.
               </p>
             </div>
           </div>

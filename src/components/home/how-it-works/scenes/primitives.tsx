@@ -719,18 +719,18 @@ export const DashboardMock = ({
 
 /**
  * PaymentOptionsPanel: shows the actual purchase summary and the payment
- * methods available on Vendibook — PayPal, Affirm (when eligible), and
+ * methods available on Vendibook — PayPal, equipment financing (when eligible), and
  * pay-in-person (when offered by the seller/host).
  */
 export const PaymentOptionsPanel = ({
   price,
   fees,
-  showAffirm = true,
+  showFinancing = true,
   showPayInPerson = true,
 }: {
   price: string;
   fees: string;
-  showAffirm?: boolean;
+  showFinancing?: boolean;
   showPayInPerson?: boolean;
 }) => (
   <motion.div
@@ -758,7 +758,7 @@ export const PaymentOptionsPanel = ({
           <div className="flex-1 font-semibold text-foreground">Pay online (PayPal)</div>
           <span className="text-[10px] font-bold text-primary">Selected</span>
         </motion.div>
-        {showAffirm && (
+        {showFinancing && (
           <motion.div
             initial={{ opacity: 0, x: -8 }}
             animate={{ opacity: 1, x: 0 }}
@@ -767,8 +767,8 @@ export const PaymentOptionsPanel = ({
           >
             <ShieldCheck className="h-4 w-4 text-foreground/70" />
             <div className="flex-1">
-              <div className="font-semibold text-foreground">Affirm — monthly payments</div>
-              <div className="text-[10px] text-muted-foreground">Subject to eligibility &amp; approval</div>
+              <div className="font-semibold text-foreground">Equipment financing</div>
+              <div className="text-[10px] text-muted-foreground">Third-party lender. Subject to approval.</div>
             </div>
           </motion.div>
         )}
