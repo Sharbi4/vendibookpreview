@@ -2961,15 +2961,20 @@ export const PublishWizard: React.FC = () => {
                           
                         </div>
                         <div className="flex-1 min-w-0">
-                          <h4 className="font-semibold text-foreground mb-1">AI Writing Assistant</h4>
+                          <h4 className="font-semibold text-foreground mb-1 flex items-center gap-2">
+                            AI Writing Assistant
+                            <PremiumChip />
+                          </h4>
                           <p className="text-sm text-muted-foreground mb-3">
-                            Let AI polish your description into professional, engaging copy.
+                            {aiAssistUnlocked
+                              ? 'Polish your description into professional, engaging copy you can still edit.'
+                              : 'Included with Vendibook Pro. You can always write your description yourself — it is never required.'}
                           </p>
                           <Button
                             type="button"
                             size="sm"
                             onClick={optimizeDescription}
-                            disabled={isOptimizing || !description || description.length < 10}
+                            disabled={isOptimizing || (aiAssistUnlocked && (!description || description.length < 10))}
                             variant="dark-shine"
                           >
                             {isOptimizing ? (
@@ -2985,7 +2990,7 @@ export const PublishWizard: React.FC = () => {
                             ) : (
                               <>
                                 
-                                Write it for me
+                                {aiAssistUnlocked ? 'Write it for me' : 'Unlock with Pro'}
                               </>
                             )}
                           </Button>
@@ -3198,7 +3203,9 @@ export const PublishWizard: React.FC = () => {
                           <PremiumChip />
                         </h4>
                         <p className="text-sm text-muted-foreground mb-3">
-                          Pro sellers auto-generate optimized pricing from category, title, and location. See the example.
+                          {aiAssistUnlocked
+                            ? 'Generate suggested pricing from category, title, and location. Suggestions are editable.'
+                            : 'Included with Vendibook Pro. You can enter your price manually at any time.'}
                         </p>
 
                         <Button
@@ -3216,7 +3223,7 @@ export const PublishWizard: React.FC = () => {
                           ) : (
                             <>
                               
-                              Get Suggestions
+                              {aiAssistUnlocked ? 'Get Suggestions' : 'Unlock with Pro'}
                             </>
                           )}
                         </Button>
@@ -3951,7 +3958,7 @@ export const PublishWizard: React.FC = () => {
                           variant="dark-shine"
                           size="sm"
                           onClick={optimizeDescription}
-                          disabled={isOptimizing || !description || description.length < 10}
+                          disabled={isOptimizing || (aiAssistUnlocked && (!description || description.length < 10))}
                         >
                           {isOptimizing ? (
                             <>
@@ -3966,7 +3973,7 @@ export const PublishWizard: React.FC = () => {
                           ) : (
                             <>
                               
-                              Write it for me
+                              {aiAssistUnlocked ? 'Write it for me' : 'Write it for me · Pro'}
                             </>
                           )}
                         </Button>
@@ -4010,7 +4017,9 @@ export const PublishWizard: React.FC = () => {
                     
                     {!showOptimized && description.length >= 10 && description.trim().length >= MIN_DESCRIPTION_LENGTH && (
                       <p className="text-xs text-muted-foreground/70">
-                        Tip: tap “Write it for me” for a polished rewrite you can edit
+                        {aiAssistUnlocked
+                          ? 'Tip: tap “Write it for me” for a polished rewrite you can edit'
+                          : 'Optional: “Write it for me” is a Vendibook Pro feature. Your own description publishes just fine.'}
                       </p>
                     )}
                   </div>
