@@ -144,18 +144,19 @@ const HomepageFeaturedRow = () => {
               scrollState.canLeft ? 'opacity-100 cursor-pointer' : 'opacity-40 cursor-default'
             }`}
           >
-            <ChevronLeft className="w-4 h-4 text-foreground" />
+            <ChevronLeft className="w-4 h-4 text-foreground" aria-hidden="true" />
           </button>
           <button
             type="button"
             aria-label="Scroll featured listings right"
+            aria-controls="homepage-featured-scroller"
             onClick={() => scrollBy('right')}
             disabled={!scrollState.canRight}
-            className={`hidden md:inline-flex items-center justify-center w-8 h-8 rounded-xl border border-border/70 bg-card/60 transition-colors hover:bg-card disabled:pointer-events-none ${
+            className={`hidden md:inline-flex items-center justify-center w-9 h-9 rounded-xl border border-border/70 bg-card/60 transition-colors hover:bg-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none ${
               scrollState.canRight ? 'opacity-100 cursor-pointer' : 'opacity-40 cursor-default'
             }`}
           >
-            <ChevronRight className="w-4 h-4 text-foreground" />
+            <ChevronRight className="w-4 h-4 text-foreground" aria-hidden="true" />
           </button>
           <button
             type="button"
