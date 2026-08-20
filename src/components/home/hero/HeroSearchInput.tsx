@@ -82,16 +82,17 @@ const HeroSearchInput = ({
           />
           {!location && !isInputFocused && (
             <div className={`absolute inset-0 flex items-center ${isAIParsing ? 'pl-12' : 'pl-5'} pr-2 pointer-events-none overflow-hidden`}>
-              <AnimatePresence mode="wait">
+              <AnimatePresence mode="wait" initial={false}>
                 <motion.span
-                  key={placeholderIndex}
+                  key={reduced ? 'static' : placeholderIndex}
+                  aria-hidden="true"
                   className="text-muted-foreground text-[16px] sm:text-sm truncate"
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -8 }}
-                  transition={{ duration: 0.3, ease: 'easeInOut' }}
+                  initial={reduced ? false : { opacity: 0, y: 8 }}
+                  animate={reduced ? { opacity: 1 } : { opacity: 1, y: 0 }}
+                  exit={reduced ? { opacity: 1 } : { opacity: 0, y: -8 }}
+                  transition={{ duration: reduced ? 0 : 0.3, ease: 'easeInOut' }}
                 >
-                  {placeholders[placeholderIndex]}
+                  {placeholders[reduced ? 0 : placeholderIndex]}
                 </motion.span>
               </AnimatePresence>
             </div>
