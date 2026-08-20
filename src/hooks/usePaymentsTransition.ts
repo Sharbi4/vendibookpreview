@@ -17,6 +17,16 @@ export interface PaymentsTransitionState {
   acknowledge: () => Promise<void>;
 }
 
+/** Per-user local latch so the one-time notice never reappears. */
+const ackKey = (userId: string) => `vb.paymentsTransitionAck.${userId}`;
+const readLocalAck = (userId: string) => {
+  try {
+    return !!window.localStorage.getItem(ackKey(userId));
+  } catch {
+    return false;
+  }
+};
+
 const PAYPAL_ACTIVE = ['active', 'approved', 'trialing'];
 const STRIPE_ACTIVE = ['active', 'trialing', 'past_due'];
 
@@ -95,7 +105,7 @@ export function usePaymentsTransition(): PaymentsTransitionState {
           hasLegacyStripe;
 
         setMembership(membershipState);
-        setAcknowledged(!!profile?.payments_transition_ack_at);
+        setAcknowledged(!!profile?.payments_transition_ack_at || readLocalAck(user.id));
         setHasPayoutPreference(!!payoutRes?.data?.id);
         setIsEligible(legacyCardMarker && (listingRes?.data ?? []).length > 0);
       } catch {
@@ -114,6 +124,13 @@ export function usePaymentsTransition(): PaymentsTransitionState {
   const acknowledge = useCallback(async () => {
     setAcknowledged(true);
     if (!user?.id) return;
+    // Local latch first: even if the profile write fails (offline, RLS, race),
+    // the one-time notice must never come back on the next dashboard visit.
+    try {
+      window.localStorage.setItem(ackKey(user.id), new Date().toISOString());
+    } catch {
+      /* storage unavailable */
+    }
     try {
       await (supabase as any)
         .from('profiles')

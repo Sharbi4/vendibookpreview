@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Banknote, CheckCircle2, CreditCard, ShieldCheck, BadgeCheck, TrendingUp } from 'lucide-react';
+import { Banknote, CheckCircle2, CreditCard, ShieldCheck, BadgeCheck, TrendingUp, X } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -33,9 +33,16 @@ export function PaymentsTransitionModal() {
     sellerVerification.state?.badge_active === true ||
     sellerVerification.offer.enabled === false;
 
+  const shownRef = useRef(false);
+
   useEffect(() => {
-    if (!isLoading && isEligible && !acknowledged) setOpen(true);
-  }, [isLoading, isEligible, acknowledged]);
+    if (isLoading || !isEligible || acknowledged || shownRef.current) return;
+    shownRef.current = true;
+    setOpen(true);
+    // Mark it seen the moment it is shown — navigating away (or back) must
+    // never bring the one-time notice back.
+    void acknowledge();
+  }, [isLoading, isEligible, acknowledged, acknowledge]);
 
   const close = async () => {
     setOpen(false);
@@ -46,7 +53,22 @@ export function PaymentsTransitionModal() {
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) void close(); }}>
-      <DialogContent className="max-w-xl border-2 border-white/12 bg-[#08080a]/95 backdrop-blur-xl">
+      <DialogContent
+        className="w-[calc(100vw-1.5rem)] max-w-xl max-h-[85dvh] overflow-y-auto overscroll-contain rounded-2xl border-2 border-white/12 bg-[#08080a]/95 p-4 backdrop-blur-xl sm:p-6"
+      >
+        {/* Always-reachable dismiss: sticks to the top of the scroll area on
+            mobile so the notice can never trap someone on a small screen. */}
+        <div className="sticky top-0 z-20 -mx-4 -mt-4 flex justify-end bg-[#08080a]/95 px-3 py-2 backdrop-blur-xl sm:-mx-6 sm:-mt-6 sm:px-4">
+          <button
+            type="button"
+            onClick={() => void close()}
+            aria-label="Close"
+            className="flex h-11 w-11 items-center justify-center rounded-full border border-white/12 bg-white/[0.04] text-foreground/80 transition hover:bg-white/[0.09] focus:outline-none focus:ring-2 focus:ring-ring"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+
         <DialogHeader>
           <div className="flex flex-col items-center gap-4 mb-2">
             <div className="w-16 h-16 rounded-full bg-primary/10 ring-1 ring-primary/25 flex items-center justify-center">
@@ -166,11 +188,11 @@ export function PaymentsTransitionModal() {
           </div>
         </div>
 
-        <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 pt-1">
-          <Button variant="ghost" onClick={() => void close()}>
+        <div className="sticky bottom-0 -mx-4 -mb-4 flex flex-col-reverse gap-2 border-t border-white/10 bg-[#08080a]/95 px-4 py-3 backdrop-blur-xl sm:static sm:mx-0 sm:mb-0 sm:flex-row sm:justify-end sm:border-0 sm:bg-transparent sm:px-0 sm:py-0 sm:pt-1 sm:backdrop-blur-none">
+          <Button variant="ghost" className="w-full sm:w-auto" onClick={() => void close()}>
             Not now
           </Button>
-          <Button asChild onClick={() => void close()}>
+          <Button asChild className="w-full sm:w-auto" onClick={() => void close()}>
             <Link to="/dashboard?view=host&tab=payouts">Review payment &amp; financing options</Link>
           </Button>
         </div>
