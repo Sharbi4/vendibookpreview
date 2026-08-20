@@ -183,6 +183,9 @@ const RHandler = lazy(() => import("./pages/RHandler"));
 const AdminEmailDashboard = lazy(() => import("./pages/AdminEmailDashboard"));
 const AdminCampaignNewExitPlan = lazy(() => import("./pages/AdminCampaignNewExitPlan"));
 const AdminCampaignEquinoxPartnership = lazy(() => import("./pages/AdminCampaignEquinoxPartnership"));
+const AdminCampaignSpotlightInvite = lazy(() => import("./pages/AdminCampaignSpotlightInvite"));
+const AdminSpotlights = lazy(() => import("./pages/AdminSpotlights"));
+const CommunitySpotlight = lazy(() => import("./pages/CommunitySpotlight"));
 const FinancingEnable = lazy(() => import("./pages/FinancingEnable"));
 const Subscribe = lazy(() => import("./pages/Subscribe"));
 const EmailFeedbackThanks = lazy(() => import("./pages/EmailFeedbackThanks"));
@@ -414,6 +417,10 @@ const AnimatedRoutes = () => {
           <Route path="/unsubscribe" element={<PageTransition><Unsubscribe /></PageTransition>} />
           <Route path="/email-unsubscribe" element={<PageTransition><EmailUnsubscribe /></PageTransition>} />
           <Route path="/feedback" element={<PageTransition><Feedback /></PageTransition>} />
+          <Route path="/community/spotlight" element={<PageTransition><CommunitySpotlight /></PageTransition>} />
+          <Route path="/spotlight" element={<PageTransition><CommunitySpotlight /></PageTransition>} />
+          <Route path="/admin/spotlights" element={<PageTransition><AdminSpotlights /></PageTransition>} />
+          <Route path="/admin/campaigns/business-spotlight" element={<PageTransition><AdminCampaignSpotlightInvite /></PageTransition>} />
           
           {/* SEO article page - separate purpose from tools hub */}
           <Route path="/vendi-ai-suite" element={<PageTransition><VendiAISuite /></PageTransition>} />
