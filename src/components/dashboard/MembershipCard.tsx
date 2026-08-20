@@ -15,6 +15,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Crown, CalendarClock, Percent, Rocket, Loader2, ExternalLink, ArrowRight, AlertTriangle,
+  CheckCircle2, ClipboardCheck, Gauge, LineChart, Headphones,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -48,8 +49,10 @@ const Shell = ({ children }: { children: React.ReactNode }) => (
 );
 
 const MembershipCard = () => {
-  const { tier, planLabel, currentPeriodEnd, cancelAtPeriodEnd, isPastDue, isLoading } =
-    useHostEntitlements();
+  const {
+    tier, planLabel, status, currentPeriodEnd, currentPeriodStart,
+    cancelAtPeriodEnd, isPastDue, isLoading,
+  } = useHostEntitlements();
   const { sub, provider, accessEndsAt, busy, cancel, openBilling } = useSubscriptionManagement();
   const { data: boostCredit, isLoading: creditLoading } = useProBoostCredit();
   const proPrice = useCatalogPrice(ACTIVE_PRODUCT_SLUGS.vendibookPro);
@@ -118,11 +121,43 @@ const MembershipCard = () => {
         </div>
 
         <div className="text-left sm:text-right">
-          <p className="inline-flex items-center gap-1.5 text-[13px] text-muted-foreground">
-            <CalendarClock className="h-3.5 w-3.5" />
+          <span
+            className={
+              isPastDue
+                ? 'inline-flex items-center gap-1.5 rounded-full bg-amber-500/12 px-3 py-1 text-[12px] font-semibold text-amber-700 ring-1 ring-amber-500/25'
+                : cancelAtPeriodEnd
+                ? 'inline-flex items-center gap-1.5 rounded-full bg-secondary px-3 py-1 text-[12px] font-semibold text-muted-foreground ring-1 ring-[rgba(24,20,16,0.09)]'
+                : 'inline-flex items-center gap-1.5 rounded-full bg-emerald-500/12 px-3 py-1 text-[12px] font-semibold text-emerald-700 ring-1 ring-emerald-500/25'
+            }
+          >
+            <CheckCircle2 className="h-3.5 w-3.5" />
+            {isPastDue ? 'Payment issue' : cancelAtPeriodEnd ? 'Cancels at period end' : 'Active'}
+          </span>
+          {status && !isPastDue && (
+            <p className="mt-1.5 text-[12px] text-muted-foreground">
+              Billed monthly via PayPal
+            </p>
+          )}
+        </div>
+      </div>
+
+      {/* Billing dates */}
+      <div className="mt-5 grid gap-3 sm:grid-cols-2">
+        <div className="rounded-2xl border border-[rgba(24,20,16,0.09)] bg-card px-4 py-3.5">
+          <p className="inline-flex items-center gap-2 text-[12px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+            <CalendarClock className="h-3.5 w-3.5 text-primary" />
+            Current period started
+          </p>
+          <p className="mt-1.5 text-[15px] font-semibold text-foreground">
+            {fmtDate(currentPeriodStart)}
+          </p>
+        </div>
+        <div className="rounded-2xl border border-[rgba(24,20,16,0.09)] bg-card px-4 py-3.5">
+          <p className="inline-flex items-center gap-2 text-[12px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+            <CalendarClock className="h-3.5 w-3.5 text-primary" />
             {cancelAtPeriodEnd ? 'Access through' : 'Next billing date'}
           </p>
-          <p className="mt-1 text-[15px] font-semibold text-foreground">{fmtDate(endsOn)}</p>
+          <p className="mt-1.5 text-[15px] font-semibold text-foreground">{fmtDate(endsOn)}</p>
         </div>
       </div>
 
@@ -173,6 +208,29 @@ const MembershipCard = () => {
             One credit per billing period. Credits don&apos;t roll over.
           </p>
         </div>
+      </div>
+
+      {/* Included entitlements */}
+      <div className="mt-6 rounded-2xl border border-[rgba(24,20,16,0.09)] bg-card px-4 py-4">
+        <p className="text-[12px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+          Included with your membership
+        </p>
+        <ul className="mt-3 grid gap-2.5 sm:grid-cols-2">
+          {[
+            { icon: ClipboardCheck, label: 'PermitPath Plus', detail: 'Save, track & export permit roadmaps' },
+            { icon: LineChart, label: 'Advanced analytics', detail: 'Listing performance & demand insights' },
+            { icon: Gauge, label: 'Priority placement', detail: 'Higher visibility in search results' },
+            { icon: Headphones, label: 'Priority support', detail: 'Faster response from the Vendibook team' },
+          ].map(({ icon: Icon, label, detail }) => (
+            <li key={label} className="flex gap-2.5">
+              <Icon className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+              <span className="min-w-0">
+                <span className="block text-[14px] font-medium text-foreground">{label}</span>
+                <span className="block text-[12.5px] text-muted-foreground">{detail}</span>
+              </span>
+            </li>
+          ))}
+        </ul>
       </div>
 
       <div className="mt-6 flex flex-wrap items-center gap-2.5">
