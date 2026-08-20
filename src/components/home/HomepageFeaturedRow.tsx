@@ -2,7 +2,7 @@ import { excludeTestListings } from '@/lib/excludeTestListings';
 import { useQuery } from '@tanstack/react-query';
 import { useRef, useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronLeft, ChevronRight, ArrowRight, Crown } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ArrowRight } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import ListingCard from '@/components/listing/ListingCard';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -78,10 +78,11 @@ const HomepageFeaturedRow = () => {
     return (
       <section className="py-10 sm:py-12 bg-background">
         <div className="container px-4 sm:px-6">
-          <Skeleton className="h-6 w-56 mb-4" />
-          <div className="flex gap-3 overflow-hidden">
+          <Skeleton className="mb-2 h-3 w-24" />
+          <Skeleton className="mb-4 h-7 w-56" />
+          <div className="flex gap-3 overflow-hidden sm:gap-4">
             {[...Array(4)].map((_, i) => (
-              <Skeleton key={i} className="h-64 w-[72%] sm:w-[42%] md:w-[28%] flex-shrink-0 rounded-xl" />
+              <Skeleton key={i} className="h-72 w-[72%] flex-shrink-0 rounded-2xl sm:w-[42%] md:w-[32%] lg:w-[24%]" />
             ))}
           </div>
         </div>
@@ -117,15 +118,14 @@ const HomepageFeaturedRow = () => {
 
       <div className="container px-4 sm:px-6 flex items-end justify-between gap-3 mb-4 sm:mb-6 relative">
         <div className="min-w-0">
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-amber-400/90 mb-1 flex items-center gap-1.5">
-            <Crown className="h-3.5 w-3.5" />
-            Premium
+          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-foreground/45 mb-1.5">
+            Featured
           </p>
           <h2 id="homepage-featured-heading" className="text-2xl sm:text-3xl font-bold text-foreground">
             Featured Listings
           </h2>
           <p className="text-xs sm:text-sm text-muted-foreground mt-1">
-            Hand-picked food trucks & trailers getting top placement this week.
+            Featured food trucks and trailers from the marketplace.
           </p>
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
@@ -134,7 +134,7 @@ const HomepageFeaturedRow = () => {
             aria-label="Scroll featured listings left"
             onClick={() => scrollBy('left')}
             disabled={!scrollState.canLeft}
-            className={`hidden md:inline-flex items-center justify-center w-8 h-8 rounded-full border border-border/70 bg-card/60 hover:bg-card transition-colors ${
+            className={`hidden md:inline-flex items-center justify-center w-8 h-8 rounded-xl border border-border/70 bg-card/60 transition-colors hover:bg-card disabled:pointer-events-none ${
               scrollState.canLeft ? 'opacity-100 cursor-pointer' : 'opacity-40 cursor-default'
             }`}
           >
@@ -145,7 +145,7 @@ const HomepageFeaturedRow = () => {
             aria-label="Scroll featured listings right"
             onClick={() => scrollBy('right')}
             disabled={!scrollState.canRight}
-            className={`hidden md:inline-flex items-center justify-center w-8 h-8 rounded-full border border-border/70 bg-card/60 hover:bg-card transition-colors ${
+            className={`hidden md:inline-flex items-center justify-center w-8 h-8 rounded-xl border border-border/70 bg-card/60 transition-colors hover:bg-card disabled:pointer-events-none ${
               scrollState.canRight ? 'opacity-100 cursor-pointer' : 'opacity-40 cursor-default'
             }`}
           >

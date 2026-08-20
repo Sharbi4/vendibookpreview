@@ -1,5 +1,5 @@
-import HeroLegacy from './hero/HeroLegacy';
+import HeroPremium from './hero/HeroPremium';
 
-const Hero = () => <HeroLegacy />;
+const Hero = () => <HeroPremium />;
 
 export default Hero;
