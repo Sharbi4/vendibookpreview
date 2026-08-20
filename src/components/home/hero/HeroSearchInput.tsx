@@ -54,7 +54,10 @@ const HeroSearchInput = ({
         isInputFocused ? 'border-foreground/30 shadow-lg shadow-foreground/5' : 'border-border/80 group-hover:border-foreground/25'
       }`}>
         {isAIParsing && (
-          <Wand2 className="absolute left-4 w-5 h-5 text-foreground/60 animate-pulse z-10" />
+          <Wand2
+            aria-hidden="true"
+            className={`absolute left-4 w-5 h-5 text-foreground/60 z-10 ${reduced ? '' : 'animate-pulse'}`}
+          />
         )}
         <div className="relative flex-1 min-w-0">
           <input
