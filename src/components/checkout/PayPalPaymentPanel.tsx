@@ -237,6 +237,41 @@ const PayPalPaymentPanel = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Render the hosted card inputs only once the payer opens the card option.
+  useEffect(() => {
+    if (!cardOpen || !cardFieldsRef.current) return;
+    const cf = cardFieldsRef.current;
+    if (cf.__mounted) return;
+    cf.__mounted = true;
+    try {
+      cf.NameField().render(cardNameRef.current);
+      cf.NumberField().render(cardNumberRef.current);
+      cf.ExpiryField().render(cardExpiryRef.current);
+      cf.CVVField().render(cardCvvRef.current);
+    } catch {
+      cf.__mounted = false;
+      setCardEligible(false);
+    }
+  }, [cardOpen]);
+
+  const submitCard = async () => {
+    if (!cardFieldsRef.current) return;
+    setCardSubmitting(true);
+    setError(null);
+    try {
+      await cardFieldsRef.current.submit();
+    } catch {
+      fail(
+        'Card details could not be submitted',
+        'Please double-check the card number, expiry and security code, then try again.',
+      );
+    } finally {
+      setCardSubmitting(false);
+    }
+  };
+
+
+
   return (
     <div
       role="dialog"
