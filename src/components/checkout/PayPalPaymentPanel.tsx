@@ -52,10 +52,20 @@ const PayPalPaymentPanel = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const buttonsRef = useRef<HTMLDivElement>(null);
   const messagesRef = useRef<HTMLDivElement>(null);
+  const cardNameRef = useRef<HTMLDivElement>(null);
+  const cardNumberRef = useRef<HTMLDivElement>(null);
+  const cardExpiryRef = useRef<HTMLDivElement>(null);
+  const cardCvvRef = useRef<HTMLDivElement>(null);
+  const cardFieldsRef = useRef<any>(null);
   const [state, setState] = useState<PanelState>('loading');
   const [error, setError] = useState<{ title: string; detail: string } | null>(null);
+  /** Card entry (no PayPal account needed) — mounted lazily when opened. */
+  const [cardEligible, setCardEligible] = useState(false);
+  const [cardOpen, setCardOpen] = useState(false);
+  const [cardSubmitting, setCardSubmitting] = useState(false);
   const stateRef = useRef<PanelState>('loading');
   stateRef.current = state;
+
 
   // ESC to close + lock body scroll while open.
   useEffect(() => {
@@ -71,6 +81,61 @@ const PayPalPaymentPanel = ({
     };
   }, [onClose]);
 
+  // ── Shared payment handlers (used by both the PayPal buttons and the
+  //    "pay with a card" fields, so a card payer follows the exact same
+  //    server-verified create → capture path). ─────────────────────────────
+  const fail = (title: string, detail: string) => {
+    setError({ title, detail });
+    setState('error');
+  };
+
+  const startOrder = async (): Promise<string> => {
+    setError(null);
+    const { data, error: fnError } = await supabase.functions.invoke('paypal-create-order', {
+      body: target,
+    });
+    if (fnError || !data?.order_id) {
+      const message = data?.message || fnError?.message ||
+        'We could not start this payment. Please try again.';
+      fail('Payment could not be started', message);
+      throw new Error(message);
+    }
+    return data.order_id as string;
+  };
+
+  const finishOrder = async (orderID: string) => {
+    setState('processing');
+    const { data: result, error: fnError } = await supabase.functions.invoke(
+      'paypal-capture-order',
+      { body: { order_id: orderID } },
+    );
+
+    if (fnError || !result || (result.status !== 'completed' && !result.pending)) {
+      setState('error');
+      setError({
+        title: 'Payment not completed',
+        detail: result?.message || fnError?.message ||
+          'Your payment was not completed and nothing has been confirmed. You have not been charged twice — try again or use another method.',
+      });
+      return;
+    }
+
+    if (result.pending) {
+      setState('pending');
+      onSuccess?.(result);
+      return;
+    }
+
+    setState('success');
+    onSuccess?.(result);
+    setTimeout(() => {
+      if (returnUrl) window.location.href = returnUrl;
+    }, 900);
+  };
+
+  const handlersRef = useRef({ startOrder, finishOrder, fail });
+  handlersRef.current = { startOrder, finishOrder, fail };
+
   // Mount the PayPal Buttons once.
   useEffect(() => {
     let cancelled = false;
@@ -81,6 +146,7 @@ const PayPalPaymentPanel = ({
       setError({ title, detail });
       setState('error');
     };
+
 
     loadPayPalSdk()
       .then((paypal) => {
@@ -96,52 +162,36 @@ const PayPalPaymentPanel = ({
           }
         }
 
+        if (paypal.CardFields) {
+          try {
+            const cf = paypal.CardFields({
+              style: {
+                input: { 'font-size': '16px', color: '#111111' },
+                '.invalid': { color: '#b3261e' },
+              },
+              createOrder: () => handlersRef.current.startOrder(),
+              onApprove: (d: { orderID: string }) => handlersRef.current.finishOrder(d.orderID),
+              onError: () =>
+                handlersRef.current.fail(
+                  'Card payment failed',
+                  'That card could not be charged. No money was taken — check the details or try another card.',
+                ),
+            });
+            if (cf.isEligible?.()) {
+              cardFieldsRef.current = cf;
+              if (!cancelled) setCardEligible(true);
+            }
+          } catch {
+            /* Card fields are an enhancement; PayPal buttons still work. */
+          }
+        }
+
         instance = paypal.Buttons({
           style: { layout: 'vertical', shape: 'rect', height: 48, label: 'pay' },
 
-          createOrder: async () => {
-            setError(null);
-            const { data, error: fnError } = await supabase.functions.invoke('paypal-create-order', {
-              body: target,
-            });
-            if (fnError || !data?.order_id) {
-              const message = data?.message || fnError?.message ||
-                'We could not start this payment. Please try again.';
-              fail('Payment could not be started', message);
-              throw new Error(message);
-            }
-            return data.order_id as string;
-          },
+          createOrder: () => handlersRef.current.startOrder(),
 
-          onApprove: async (data: { orderID: string }) => {
-            setState('processing');
-            const { data: result, error: fnError } = await supabase.functions.invoke(
-              'paypal-capture-order',
-              { body: { order_id: data.orderID } },
-            );
-
-            if (fnError || !result || (result.status !== 'completed' && !result.pending)) {
-              setState('error');
-              setError({
-                title: 'Payment not completed',
-                detail: result?.message || fnError?.message ||
-                  'Your payment was not completed and nothing has been confirmed. You have not been charged twice — try again or use another method.',
-              });
-              return;
-            }
-
-            if (result.pending) {
-              setState('pending');
-              onSuccess?.(result);
-              return;
-            }
-
-            setState('success');
-            onSuccess?.(result);
-            setTimeout(() => {
-              if (returnUrl) window.location.href = returnUrl;
-            }, 900);
-          },
+          onApprove: (data: { orderID: string }) => handlersRef.current.finishOrder(data.orderID),
 
           onCancel: () => {
             setState('ready');
@@ -167,6 +217,7 @@ const PayPalPaymentPanel = ({
         return instance.render(buttonsRef.current).then(() => {
           if (!cancelled) setState('ready');
         });
+
       })
       .catch((err: unknown) => {
         fail(
@@ -185,6 +236,41 @@ const PayPalPaymentPanel = ({
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Render the hosted card inputs only once the payer opens the card option.
+  useEffect(() => {
+    if (!cardOpen || !cardFieldsRef.current) return;
+    const cf = cardFieldsRef.current;
+    if (cf.__mounted) return;
+    cf.__mounted = true;
+    try {
+      cf.NameField().render(cardNameRef.current);
+      cf.NumberField().render(cardNumberRef.current);
+      cf.ExpiryField().render(cardExpiryRef.current);
+      cf.CVVField().render(cardCvvRef.current);
+    } catch {
+      cf.__mounted = false;
+      setCardEligible(false);
+    }
+  }, [cardOpen]);
+
+  const submitCard = async () => {
+    if (!cardFieldsRef.current) return;
+    setCardSubmitting(true);
+    setError(null);
+    try {
+      await cardFieldsRef.current.submit();
+    } catch {
+      fail(
+        'Card details could not be submitted',
+        'Please double-check the card number, expiry and security code, then try again.',
+      );
+    } finally {
+      setCardSubmitting(false);
+    }
+  };
+
+
 
   return (
     <div
@@ -251,6 +337,50 @@ const PayPalPaymentPanel = ({
                     ref={buttonsRef}
                     className={state === 'loading' || state === 'processing' ? 'hidden' : ''}
                   />
+
+                  {cardEligible && state !== 'loading' && state !== 'processing' ? (
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-3">
+                        <span className="h-px flex-1 bg-border/60" />
+                        <span className="text-[11px] uppercase tracking-wide text-muted-foreground">
+                          or
+                        </span>
+                        <span className="h-px flex-1 bg-border/60" />
+                      </div>
+
+                      {!cardOpen ? (
+                        <button
+                          type="button"
+                          onClick={() => setCardOpen(true)}
+                          className="w-full rounded-xl border border-border/70 bg-background px-4 py-3 text-sm font-medium text-foreground hover:bg-muted/40 transition-colors"
+                        >
+                          Pay with debit or credit card
+                        </button>
+                      ) : (
+                        <div className="space-y-3">
+                          <p className="text-xs text-muted-foreground">
+                            No PayPal account needed. Your card is entered directly with PayPal.
+                          </p>
+                          <div ref={cardNameRef} className="paypal-card-field" />
+                          <div ref={cardNumberRef} className="paypal-card-field" />
+                          <div className="grid grid-cols-2 gap-3">
+                            <div ref={cardExpiryRef} className="paypal-card-field" />
+                            <div ref={cardCvvRef} className="paypal-card-field" />
+                          </div>
+                          <button
+                            type="button"
+                            onClick={submitCard}
+                            disabled={cardSubmitting}
+                            className="w-full rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground disabled:opacity-60 transition-opacity"
+                          >
+                            {cardSubmitting ? 'Processing…' : 'Pay with card'}
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  ) : null}
+
+
 
                   {state === 'processing' ? (
                     <div className="py-8 flex flex-col items-center gap-3 text-center">
