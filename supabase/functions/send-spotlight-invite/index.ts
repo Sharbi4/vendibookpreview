@@ -81,26 +81,52 @@ serve(async (req) => {
       });
     }
 
-    // ---- segment: account holders who host or sell on Vendibook ----
-    let listingQuery = admin
-      .from("listings")
-      .select("host_id")
-      .is("deleted_at", null)
-      .eq("status", "published");
-    for (const p of TEST_TITLE_PREFIXES) listingQuery = listingQuery.not("title", "ilike", p);
+    // ---- segment ----
+    // Default: every Vendibook account holder with an email, minus opt-outs.
+    // audience: "hosts" narrows to people with a published listing.
+    const audience: "all" | "hosts" = body.audience === "hosts" ? "hosts" : "all";
 
-    const { data: listings, error: listingError } = await listingQuery;
-    if (listingError) return json({ error: `Segment query failed: ${listingError.message}` }, 500);
+    let hostIds: string[] = [];
+    let publishedListings = 0;
 
-    const hostIds = Array.from(
-      new Set((listings ?? []).map((l: any) => l.host_id).filter(Boolean)),
-    ) as string[];
+    if (audience === "hosts") {
+      let listingQuery = admin
+        .from("listings")
+        .select("host_id")
+        .is("deleted_at", null)
+        .eq("status", "published");
+      for (const p of TEST_TITLE_PREFIXES) listingQuery = listingQuery.not("title", "ilike", p);
+
+      const { data: listings, error: listingError } = await listingQuery;
+      if (listingError) return json({ error: `Segment query failed: ${listingError.message}` }, 500);
+      publishedListings = (listings ?? []).length;
+      hostIds = Array.from(
+        new Set((listings ?? []).map((l: any) => l.host_id).filter(Boolean)),
+      ) as string[];
+    }
+
+    // Paginated profile fetch so large audiences are not truncated at 1000 rows.
+    const allProfiles: any[] = [];
+    const PAGE = 1000;
+    for (let from = 0; from < 100000; from += PAGE) {
+      let q = admin
+        .from("profiles")
+        .select("id, email, first_name")
+        .order("id", { ascending: true })
+        .range(from, from + PAGE - 1);
+      if (audience === "hosts") {
+        if (!hostIds.length) break;
+        q = q.in("id", hostIds);
+      }
+      const { data: page, error: pageError } = await q;
+      if (pageError) return json({ error: `Profile query failed: ${pageError.message}` }, 500);
+      allProfiles.push(...(page ?? []));
+      if (!page || page.length < PAGE) break;
+    }
 
     const [{ data: profiles }, { data: unsubs }, { data: suppressed }, { data: alreadySent }] =
       await Promise.all([
-        hostIds.length
-          ? admin.from("profiles").select("id, email, first_name").in("id", hostIds)
-          : Promise.resolve({ data: [] as any[] }),
+        Promise.resolve({ data: allProfiles }),
         admin.from("email_unsubscribes").select("email"),
         admin.from("suppressed_emails").select("email"),
         admin
@@ -139,8 +165,9 @@ serve(async (req) => {
 
     const recipients = Array.from(byUser.values());
     const counts = {
-      publishedListings: (listings ?? []).length,
-      eligibleHosts: hostIds.length,
+      audience,
+      publishedListings,
+      totalAccounts: allProfiles.length,
       mailable: recipients.length,
       missingEmail,
       invalidEmail,
