@@ -581,7 +581,7 @@ function buildBlogHTML(post: BlogPostMeta): string {
     ? post.image
     : post.image
     ? `${SITE_URL}${post.image}`
-    : `${SITE_URL}/images/vendibook-og-image.jpg`;
+    : `${SITE_URL}/images/social/vendibook-og-default.jpg`;
 
   const schema = {
     "@context": "https://schema.org",
