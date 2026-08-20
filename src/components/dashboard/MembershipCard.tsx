@@ -25,6 +25,7 @@ import {
 import { useHostEntitlements } from '@/hooks/useHostEntitlements';
 import { useSubscriptionManagement } from '@/hooks/useSubscriptionManagement';
 import { useProBoostCredit } from '@/hooks/useProBoostCredit';
+import UseBoostCreditDialog from '@/components/dashboard/UseBoostCreditDialog';
 import { useCatalogPrice } from '@/hooks/useCatalogPrices';
 import { ACTIVE_PRODUCT_SLUGS } from '@/lib/monetization/catalogPricing';
 
@@ -57,6 +58,7 @@ const MembershipCard = () => {
   const { data: boostCredit, isLoading: creditLoading } = useProBoostCredit();
   const proPrice = useCatalogPrice(ACTIVE_PRODUCT_SLUGS.vendibookPro);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [boostOpen, setBoostOpen] = useState(false);
   const [cancelledOn, setCancelledOn] = useState<string | null>(null);
 
   if (isLoading) return null;
@@ -207,6 +209,16 @@ const MembershipCard = () => {
           <p className="mt-1 text-[13px] text-muted-foreground">
             One credit per billing period. Credits don&apos;t roll over.
           </p>
+          {boostCredit && (
+            <Button
+              variant="cta"
+              size="sm"
+              className="mt-3"
+              onClick={() => setBoostOpen(true)}
+            >
+              Use my Featured Boost
+            </Button>
+          )}
         </div>
       </div>
 
@@ -220,7 +232,7 @@ const MembershipCard = () => {
             { icon: ClipboardCheck, label: 'PermitPath Plus', detail: 'Save, track & export permit roadmaps' },
             { icon: LineChart, label: 'Advanced analytics', detail: 'Listing performance & demand insights' },
             { icon: Gauge, label: 'Priority placement', detail: 'Higher visibility in search results' },
-            { icon: Headphones, label: 'Priority support', detail: 'Faster response from the Vendibook team' },
+            { icon: Headphones, label: 'Priority support', detail: 'Pro tickets are queued at higher priority' },
           ].map(({ icon: Icon, label, detail }) => (
             <li key={label} className="flex gap-2.5">
               <Icon className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
@@ -236,6 +248,15 @@ const MembershipCard = () => {
       <div className="mt-6 flex flex-wrap items-center gap-2.5">
         <Button asChild variant="cta">
           <Link to="/account/subscription">Manage membership</Link>
+        </Button>
+        <Button asChild variant="cta-outline">
+          <Link to="/dashboard?view=host&tab=permits">Open PermitPath Plus</Link>
+        </Button>
+        <Button asChild variant="cta-outline">
+          <Link to="/dashboard?view=host&tab=tools">Premium tools</Link>
+        </Button>
+        <Button asChild variant="ghost" className="text-muted-foreground">
+          <Link to="/account/support">Priority support</Link>
         </Button>
         {provider === 'paypal' && (
           <Button variant="cta-outline" onClick={openBilling} disabled={busy === 'portal'}>
@@ -266,6 +287,8 @@ const MembershipCard = () => {
         Cancel anytime. Cancelling stops future renewals only — your benefits stay active through
         the end of the period you&apos;ve already paid for.
       </p>
+
+      <UseBoostCreditDialog open={boostOpen} onOpenChange={setBoostOpen} />
 
       <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
         <AlertDialogContent>
