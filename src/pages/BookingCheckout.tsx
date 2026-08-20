@@ -59,13 +59,11 @@ import type { ListingCategory, FulfillmentType } from '@/types/listing';
 import type { DocumentType } from '@/types/documents';
 import { AuthGateOfferModal } from '@/components/offers/AuthGateOfferModal';
 import {
-  TrustModule,
-  PAYMENT_TRUST_POINTS,
-  PAYMENT_DISCLAIMER,
   JourneyProgress,
   PrimaryActionBar,
   type JourneyStep,
 } from '@/components/journey';
+
 import { trackLeadEvent } from '@/lib/leadTracking';
 import { detectAvailabilityConflict } from '@/lib/availabilityConflict';
 import { ReferralCodeField } from '@/components/referrals/ReferralCodeField';
