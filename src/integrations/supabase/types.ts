@@ -9717,6 +9717,19 @@ export type Database = {
           rating: number
         }[]
       }
+      get_hero_listings: {
+        Args: { p_limit?: number }
+        Returns: {
+          category: string
+          city: string
+          cover_image_url: string
+          id: string
+          mode: string
+          priority: number
+          state: string
+          title: string
+        }[]
+      }
       get_host_avg_response_time: {
         Args: { host_user_id: string }
         Returns: string

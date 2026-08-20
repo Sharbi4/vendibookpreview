@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import HeroBackground from './HeroBackground';
 import HeroSearchInput from './HeroSearchInput';
 import { useHeroSearch } from './useHeroSearch';
+import HeroListingRotator from './HeroListingRotator';
 import { trackLeadEvent } from '@/lib/leadTracking';
 import { useAuth } from '@/contexts/AuthContext';
 import GoogleContinueButton from '@/components/auth/GoogleContinueButton';
@@ -68,6 +69,11 @@ const HeroPremium = () => {
               placeholders={['Search food trucks, trailers, or a city', ...search.placeholders]}
             />
           </motion.div>
+
+          <motion.div {...rise(0.24)} className="mt-7">
+            <HeroListingRotator />
+          </motion.div>
+
 
           <motion.div
             {...rise(0.28)}
