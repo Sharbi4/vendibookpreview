@@ -476,6 +476,7 @@ function generateFAQSchema(listing: any) {
 
 function buildListingHTML(listing: any, reviews: any[] = []): string {
   const isPhysical = PHYSICAL_CATEGORIES.includes(listing.category);
+  const isRental = listing.mode === "rent";
 
   const schemas: object[] = [];
   if (isPhysical) schemas.push(generateLocalBusinessSchema(listing));
