@@ -96,9 +96,11 @@ const DynamicCityPage = ({ mode, category }: DynamicCityPageProps) => {
   const listings = cityListings ?? [];
   const hasListings = listings.length > 0;
 
-  const heading = categoryLabel
-    ? `${categoryLabel}s ${modeLabel || 'in'} ${modeLabel ? `in ${city.name}` : city.name}`
-    : `Food trucks & mobile kitchens in ${city.name}`;
+  const heading = [
+    categoryLabel ? `${categoryLabel}s` : 'Food trucks & mobile kitchens',
+    modeLabel,
+    `in ${city.name}`,
+  ].filter(Boolean).join(' ');
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
