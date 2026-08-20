@@ -53,6 +53,24 @@ Deno.serve(async (req) => {
       console.warn('[send-booking-confirmation] terms lookup failed', e);
     }
 
+    // The email is state-aware: payment is captured, but the booking may still
+    // be awaiting host approval. Read the live status rather than assuming.
+    let bookingStatus: string | null = b.bookingStatus ?? null;
+    let isInstantBook = false;
+    try {
+      const { data: bookingRow } = await supabase
+        .from('booking_requests')
+        .select('status, is_instant_book')
+        .eq('id', b.bookingId)
+        .maybeSingle();
+      if (bookingRow) {
+        bookingStatus = bookingStatus ?? (bookingRow as any).status ?? null;
+        isInstantBook = Boolean((bookingRow as any).is_instant_book);
+      }
+    } catch (e) {
+      console.warn('[send-booking-confirmation] status lookup failed', e);
+    }
+
     const templateData = {
       guestName: b.fullName?.split(' ')[0] || b.fullName,
       listingTitle: b.listingTitle,
@@ -61,6 +79,9 @@ Deno.serve(async (req) => {
       totalPrice: fmtMoney(b.totalPrice),
       orderNumber: `VB-${String(b.bookingId).slice(0, 8).toUpperCase()}`,
       hostName: b.hostName,
+      bookingId: b.bookingId,
+      bookingStatus,
+      isInstantBook,
       fulfillmentType: b.fulfillmentType,
       address: b.address,
       deliveryAddress: b.deliveryAddress,
