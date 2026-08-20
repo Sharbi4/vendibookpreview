@@ -321,7 +321,7 @@ export default function ProtectedSalePage() {
                   icon={<PartyPopper className="h-5 w-5" />}
                   title="Funds released"
                   done
-                  description={`Released ${new Date(ps.funds_released_at).toLocaleString()}. Seller payout follows the standard 25-day sale window.`}
+                  description={`Released ${new Date(ps.funds_released_at).toLocaleString()}. Seller payout is typically released within 24 hours of delivery confirmation (24 to 48 hours at the outside).`}
                 />
               ) : null}
             </div>

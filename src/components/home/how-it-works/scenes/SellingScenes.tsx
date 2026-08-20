@@ -117,7 +117,7 @@ export const sellingScenes = [
           subtitle="Buyer: Maya R. · Paid via PayPal"
           statuses={[
             { label: 'Payment Completed', intent: 'success' },
-            { label: 'Payout Scheduled · releases 25 days after buyer confirms', intent: 'info' },
+            { label: 'Payout Scheduled · typically within 24 hours of delivery confirmation', intent: 'info' },
           ]}
           timeline={[
             { label: 'Purchase created', state: 'done' },
@@ -129,7 +129,7 @@ export const sellingScenes = [
           nextAction={{ label: 'Confirm the handoff at pickup', cta: 'Confirm' }}
           footer={
             <div className="text-[11px]">
-              <span className="font-semibold">Payout timing:</span> released 25 days after the buyer confirms receipt (standard payment protection hold).
+              <span className="font-semibold">Payout timing:</span> typically released within 24 hours of delivery confirmation, and always within our 24 to 48 hour target.
             </div>
           }
         />

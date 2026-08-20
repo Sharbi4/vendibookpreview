@@ -85,7 +85,7 @@ export function buildTransactionTimeline(tx: Record<string, any>): TxTimelineEve
   events.push({
     id: 'payout',
     label: paidOut ? 'Seller paid out' : 'Payout scheduled',
-    detail: !paidOut && completed ? 'Standard 25-day sale payout window' : undefined,
+    detail: !paidOut && completed ? 'Typically released within 24 hours of delivery confirmation' : undefined,
     timestamp: fmt(tx.payout_completed_at),
     state: paidOut ? 'complete' : completed ? 'active' : 'pending',
     icon: Banknote,
