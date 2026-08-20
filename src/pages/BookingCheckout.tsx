@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useParams, useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { format, parseISO, differenceInDays } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -39,7 +39,6 @@ import { calculateRentalFees } from '@/lib/commissions';
 import { trackFormSubmitConversion } from '@/lib/gtagConversions';
 import { trackRequestStarted, trackRequestSubmitted } from '@/lib/analytics';
 import { PayPalPaymentPanel } from '@/components/checkout';
-import CheckoutIntro from '@/components/checkout/CheckoutIntro';
 
 import CheckoutOrderSummary from '@/components/checkout/CheckoutOrderSummary';
 import { isEmbeddedCheckoutEnabled } from '@/lib/featureFlags';
@@ -59,18 +58,16 @@ import type { ListingCategory, FulfillmentType } from '@/types/listing';
 import type { DocumentType } from '@/types/documents';
 import { AuthGateOfferModal } from '@/components/offers/AuthGateOfferModal';
 import {
-  TrustModule,
-  PAYMENT_TRUST_POINTS,
-  PAYMENT_DISCLAIMER,
   JourneyProgress,
   PrimaryActionBar,
   type JourneyStep,
 } from '@/components/journey';
+
 import { trackLeadEvent } from '@/lib/leadTracking';
 import { detectAvailabilityConflict } from '@/lib/availabilityConflict';
 import { ReferralCodeField } from '@/components/referrals/ReferralCodeField';
-import { getPublicDisplayName } from '@/lib/displayName';
 import { useSellerVerifiedBadge } from '@/hooks/useSellerVerifiedBadge';
+import { authPath } from '@/lib/auth/returnTo';
 
 type FulfillmentSelection = 'pickup' | 'delivery' | 'on_site';
 
@@ -80,7 +77,7 @@ const BookingCheckout = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
-  const { listing, host, isLoading, error } = useListing(listingId);
+  const { listing, isLoading, error } = useListing(listingId);
   /**
    * Instant Book skips host approval ONLY for identity-verified hosts.
    * Everyone else: payment is taken and the booking waits for the host to
@@ -147,6 +144,15 @@ const BookingCheckout = () => {
   const [showInfoModal, setShowInfoModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [paypalCheckout, setPaypalCheckout] = useState<{ bookingId: string; returnUrl: string } | null>(null);
+  /** Guards against creating a second booking_request row if the buyer
+   *  closes the PayPal panel and hits the submit button again. */
+  const createdBookingIdRef = useRef<string | null>(null);
+  /** Where /auth should send the buyer back to — the rental flow, never /checkout. */
+  const bookingReturnPath = `/book/${listingId ?? ''}${
+    searchParams.toString() ? `?${searchParams.toString()}` : ''
+  }`;
+  const confirmationUrl = (id: string) =>
+    `${window.location.origin}/booking-confirmation?booking_id=${id}`;
   const [stagedDocuments, setStagedDocuments] = useState<StagedDocument[]>([]);
   const [showAuthModal, setShowAuthModal] = useState(false);
   
@@ -157,12 +163,6 @@ const BookingCheckout = () => {
   const [selectedSlot, setSelectedSlot] = useState<number | null>(null);
   const [selectedSlotName, setSelectedSlotName] = useState<string | null>(null);
 
-  // "Step 0" intro dismissal — must stay above any early return (hook order).
-  const introSessionKey = `booking_intro_seen:${listingId ?? 'unknown'}`;
-  const [introDismissed, setIntroDismissed] = useState<boolean>(() => {
-    if (typeof window === 'undefined') return true;
-    return sessionStorage.getItem(introSessionKey) === '1';
-  });
 
 
   const isMobileAsset = listing?.category === 'food_truck' || listing?.category === 'food_trailer';
@@ -436,6 +436,17 @@ const BookingCheckout = () => {
         }),
       };
 
+      // Reuse the already-created request instead of double-booking the dates.
+      if (createdBookingIdRef.current) {
+        if (checkoutWindow) checkoutWindow.close();
+        setPaypalCheckout({
+          bookingId: createdBookingIdRef.current,
+          returnUrl: confirmationUrl(createdBookingIdRef.current),
+        });
+        setIsSubmitting(false);
+        return;
+      }
+
       const { data: bookingResult, error: bookingError } = await supabase
         .from('booking_requests')
         .insert(bookingData as any)
@@ -443,6 +454,7 @@ const BookingCheckout = () => {
         .single();
 
       if (bookingError) throw bookingError;
+      createdBookingIdRef.current = bookingResult.id;
 
       // Upload staged documents if any
       if (stagedDocuments.length > 0) {
@@ -504,7 +516,7 @@ const BookingCheckout = () => {
 
       setPaypalCheckout({
         bookingId: bookingResult.id,
-        returnUrl: `${window.location.origin}/payment-success?booking_id=${bookingResult.id}`,
+        returnUrl: confirmationUrl(bookingResult.id),
       });
 
       // Fire tracking calls asynchronously so they never block the payment panel.
@@ -659,7 +671,7 @@ const BookingCheckout = () => {
           
           {selectedSlot && (
             <div className="mt-6 text-center">
-              <Button onClick={() => setShowDateModal(true)} variant="dark-shine" size="lg">
+              <Button onClick={() => setShowDateModal(true)} variant="cta" size="lg">
                 <Calendar className="h-4 w-4 mr-2" />
                 Continue to Select Dates
               </Button>
@@ -719,41 +731,13 @@ const BookingCheckout = () => {
 
   const coverImage = listing.cover_image_url || listing.image_urls?.[0] || '/placeholder.svg';
 
-  // "Step 0" intro for high-value rentals. Shown once per checkout session
-  // per listing; small bookings skip straight to the wizard.
-  const RENTAL_INTRO_MIN_TOTAL = 500;
-  const shouldOfferIntro = fees.subtotal >= RENTAL_INTRO_MIN_TOTAL;
+  // The old "$500 intro screen" was pure friction — the review step already
+  // shows everything it did, so high-value rentals go straight to the wizard.
+
+  const cancellationPolicyText =
+    ((listing as { cancellation_policy?: string | null }).cancellation_policy || '').trim() || null;
 
 
-  if (shouldOfferIntro && !introDismissed) {
-    return (
-      <div className="min-h-screen flex flex-col bg-background">
-        <Header />
-        <main className="flex-1 py-8 sm:py-12 px-4">
-          <CheckoutIntro
-            listingId={listing.id}
-            listingTitle={listing.title}
-            coverImageUrl={coverImage}
-            city={listing.city}
-            state={listing.state}
-            price={fees.subtotal}
-            sellerName={
-              // Privacy-safe: business name, else "First L." — never a full legal name.
-              host ? getPublicDisplayName(host, 'Host') : undefined
-            }
-            sellerVerified={Boolean((host as { identity_verified?: boolean } | null | undefined)?.identity_verified)}
-            flow="rental"
-            onBack={() => navigate(`/listing/${listingId}`)}
-            onContinue={() => {
-              try { sessionStorage.setItem(introSessionKey, '1'); } catch { /* noop */ }
-              setIntroDismissed(true);
-            }}
-          />
-        </main>
-        <Footer />
-      </div>
-    );
-  }
 
   return (
 
@@ -814,7 +798,7 @@ const BookingCheckout = () => {
                     </p>
                   </div>
                   <Link
-                    to={`/auth?redirect=/checkout/${listingId}`}
+                    to={authPath(bookingReturnPath)}
                     className="shrink-0 inline-flex items-center justify-center h-10 px-4 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition-opacity"
                   >
                     Sign in / Create account
@@ -1162,25 +1146,25 @@ const BookingCheckout = () => {
                         />
                       </div>
 
-                      {/* Trust badges */}
-                      <div className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg">
-                        <Shield className="h-4 w-4 text-primary" />
-                        <span className="text-xs text-muted-foreground">
-                          Your payment is protected by Vendibook
-                        </span>
+                      {/* How this payment works — factual, no protection promises */}
+                      <div className="rounded-xl border border-border bg-muted/30 p-4 space-y-1.5">
+                        <div className="flex items-center gap-2">
+                          <Shield className="h-4 w-4 text-primary" />
+                          <span className="text-sm font-medium text-foreground">How this payment works</span>
+                        </div>
+                        <p className="text-xs text-muted-foreground leading-relaxed">
+                          {instantConfirm
+                            ? 'PayPal processes your payment now. Your booking is confirmed as soon as the payment completes, and the full record is saved to your account.'
+                            : 'PayPal processes your payment now and your dates are held. The host still has to accept the request — if they decline or do not respond, Vendibook refunds the payment to your original payment method.'}
+                        </p>
+                        <p className="text-xs text-muted-foreground leading-relaxed">
+                          Vendibook records the transaction and releases host payouts after the rental begins. Vendibook does not hold funds in escrow.
+                        </p>
                       </div>
-
-                      {/* Trust reinforcement right before the payment CTA */}
-                      <TrustModule
-                        variant="compact"
-                        title="What we do to protect your payment"
-                        points={PAYMENT_TRUST_POINTS}
-                        disclaimer={PAYMENT_DISCLAIMER}
-                      />
 
                       {/* Submit button */}
                       <Button
-                        variant="dark-shine"
+                        variant="cta"
                         className="w-full h-14 text-base"
                         onClick={handleSubmit}
                         disabled={isSubmitting}
@@ -1193,23 +1177,16 @@ const BookingCheckout = () => {
                         ) : instantConfirm ? (
                           <>
                             <Zap className="h-5 w-5 mr-2" />
-                            Confirm and pay ${(fees.customerTotal + (depositAmount || 0)).toLocaleString()}
+                            Confirm and pay ${fees.customerTotal.toLocaleString()}
                           </>
                         ) : (
                           <>
                             <CreditCard className="h-5 w-5 mr-2" />
-                            Continue to payment · ${(fees.customerTotal + (depositAmount || 0)).toLocaleString()}
+                            Continue to payment · ${fees.customerTotal.toLocaleString()}
                           </>
                         )}
                       </Button>
 
-                      {!instantConfirm && (
-                        <p className="text-xs text-center text-muted-foreground">
-                          {listing.instant_book
-                            ? 'Your dates are held as soon as you pay, and the booking is confirmed once the host accepts. If they decline, you are refunded in full.'
-                            : 'Your card will be authorized now. Funds are only captured if the host approves your request.'}
-                        </p>
-                      )}
                     </div>
                   </motion.div>
                 )}
@@ -1289,16 +1266,21 @@ const BookingCheckout = () => {
                   </div>
                 )}
 
-                {/* Free cancellation */}
+                {/* Cancellation policy — listing-specific, never a blanket promise */}
                 <div className="flex items-start gap-2 mb-4">
                   <Clock className="h-4 w-4 text-muted-foreground mt-0.5" />
                   <div>
-                    <span className="text-sm font-medium">Free cancellation</span>
+                    <span className="text-sm font-medium">Cancellation policy</span>
                     <p className="text-xs text-muted-foreground">
-                      Cancel within 24 hours for a full refund.
+                      {cancellationPolicyText ?? (
+                        <Link to={`/listing/${listingId}#terms`} className="underline underline-offset-2">
+                          Review cancellation policy
+                        </Link>
+                      )}
                     </p>
                   </div>
                 </div>
+
 
                 {/* Dates / Hours summary */}
                 <div className="mb-4">
@@ -1363,29 +1345,30 @@ const BookingCheckout = () => {
                   <span>${fees.renterFee.toLocaleString()}</span>
                 </div>
 
-                {depositAmount && (
-                  <div className="flex items-center justify-between text-sm">
+                <div className="flex items-center justify-between pt-3 border-t border-border">
+                  <span className="font-semibold">Total charged today</span>
+                  <span className="font-semibold">${fees.customerTotal.toLocaleString()}</span>
+                </div>
+
+                {depositAmount ? (
+                  <div className="flex items-start justify-between text-sm pt-2">
                     <span className="text-muted-foreground flex items-center gap-1">
                       Security deposit
-                      <InfoTooltip 
-                        content="Your security deposit will be returned within 24 hours after your booking ends, minus any charges for damages or late returns."
+                      <InfoTooltip
+                        content="This host requires a security deposit. It is arranged directly with the host and is not part of today's Vendibook charge. Refund terms are set by the host."
                         side="top"
                       />
                     </span>
-                    <span>${depositAmount.toLocaleString()}</span>
+                    <span className="text-muted-foreground">${depositAmount.toLocaleString()}</span>
                   </div>
-                )}
-
-                <div className="flex items-center justify-between pt-3 border-t border-border">
-                  <span className="font-semibold">Total</span>
-                  <span className="font-semibold">${(fees.customerTotal + (depositAmount || 0)).toLocaleString()}</span>
-                </div>
+                ) : null}
 
               </div>
             </div>
           </div>
         </div>
       </main>
+
 
       <Footer />
 
@@ -1447,7 +1430,7 @@ const BookingCheckout = () => {
           target={{ kind: 'booking', id: paypalCheckout.bookingId }}
           returnUrl={paypalCheckout.returnUrl}
           onClose={() => setPaypalCheckout(null)}
-          totalUsd={fees.customerTotal + (depositAmount || 0)}
+          totalUsd={fees.customerTotal}
 
           summary={
             <CheckoutOrderSummary
@@ -1461,15 +1444,13 @@ const BookingCheckout = () => {
                   ? [{ label: 'Delivery', amount: currentDeliveryFee }]
                   : []),
                 { label: 'Service fee', amount: fees.renterFee },
-                ...(depositAmount
-                  ? [{ label: 'Refundable deposit', amount: depositAmount, muted: true }]
-                  : []),
               ]}
-              total={fees.customerTotal + (depositAmount || 0)}
+              total={fees.customerTotal}
             />
           }
         />
       ) : null}
+
     </div>
   );
 };

@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
-import { useSearchParams, Link } from 'react-router-dom';
+import { useSearchParams, Link, Navigate } from 'react-router-dom';
 import { CheckCircle2, Calendar, ArrowRight, Loader2, Home, ShieldCheck, Clock, PartyPopper, Mail, ChevronDown, ChevronUp, Receipt, Download, FileText, Printer, Wallet, BanknoteIcon, MapPin, AlertCircle, RefreshCw } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { Button } from '@/components/ui/button';
@@ -82,6 +82,8 @@ const PaymentSuccess = () => {
   const isEscrow = searchParams.get('escrow') === 'true';
   const isHold = searchParams.get('hold') === 'true';
   const isMonetization = searchParams.get('monetization') === 'true';
+  // Rentals now have a dedicated confirmation surface; keep old links working.
+  const legacyBookingId = searchParams.get('booking_id');
   const { user } = useAuth();
   
   const [booking, setBooking] = useState<BookingDetails | null>(null);
@@ -311,6 +313,10 @@ const PaymentSuccess = () => {
 
     processPayment();
   }, [sessionId, isEscrow, isMonetization, user]);
+
+  if (legacyBookingId && !sessionId) {
+    return <Navigate to={`/booking-confirmation?booking_id=${legacyBookingId}`} replace />;
+  }
 
   return (
     <div className="min-h-screen flex flex-col relative overflow-hidden bg-gradient-to-br from-emerald-200/30 via-teal-100/25 to-cyan-200/20">
