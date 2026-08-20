@@ -9,7 +9,7 @@ interface CheckoutOverlayProps {
 
 /**
  * Calm, Satin Lux redirect overlay shown while the user is being
- * handed off to Stripe Checkout. No rainbow colors, no busy
+ * handed off to PayPal. No rainbow colors, no busy
  * orbiting icons — single shield mark and one reassurance line.
  * The isVisible / message API is preserved for backwards compatibility.
  */

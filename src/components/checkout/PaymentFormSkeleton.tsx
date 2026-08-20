@@ -1,7 +1,7 @@
 /**
  * Shimmer skeleton that mimics the Express Checkout row + tabs +
- * input rows Stripe will render, so the modal never shows an empty
- * spinner while Stripe.js boots.
+ * input rows PayPal will render, so the modal never shows an empty
+ * spinner while the PayPal SDK boots.
  */
 const shimmer = 'bg-muted/30 animate-pulse';
 
