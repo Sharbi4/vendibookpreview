@@ -194,6 +194,12 @@ export const PublishSuccessModal: React.FC<PublishSuccessModalProps> = ({
           </div>
         </div>
 
+        {listing.mode === 'sale' && (
+          <PostPublishFinancingCallout listingId={listing.id} />
+        )}
+
+
+
         {/* Social Share Buttons */}
         {showShareOptions ? (
           <div className="space-y-3">
