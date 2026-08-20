@@ -165,7 +165,7 @@ const browseTopics: { title: string; icon: typeof BookOpen; articles: TopicLink[
     articles: [
       { label: 'Freight & shipping', to: '/help/shipping-freight' },
       { label: 'Pickup & delivery options', to: '/help/pickup-delivery-checklist' },
-      { label: 'Return process', to: '/help/return-process' },
+      { label: 'Return checklist', to: '/help/pickup-delivery-checklist' },
     ],
   },
   {
