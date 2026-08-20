@@ -314,6 +314,10 @@ const PaymentSuccess = () => {
     processPayment();
   }, [sessionId, isEscrow, isMonetization, user]);
 
+  if (legacyBookingId && !sessionId) {
+    return <Navigate to={`/booking-confirmation?booking_id=${legacyBookingId}`} replace />;
+  }
+
   return (
     <div className="min-h-screen flex flex-col relative overflow-hidden bg-gradient-to-br from-emerald-200/30 via-teal-100/25 to-cyan-200/20">
       {/* Decorative orbs */}
