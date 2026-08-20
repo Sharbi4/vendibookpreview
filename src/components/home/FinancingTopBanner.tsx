@@ -24,61 +24,51 @@ const FinancingTopBanner = () => {
   }, []);
 
   return (
-    <section aria-label="Equipment financing" className="w-full px-3 pt-3 sm:px-4">
-      <div className="container mx-auto max-w-7xl">
+    <section aria-label="Equipment financing" className="w-full px-3 pt-6 sm:px-4">
+      <div className="container mx-auto max-w-6xl">
         <motion.div
           initial={reduced ? { opacity: 0 } : { opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: '-60px' }}
+          transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
         >
           <Link
             to="/financing"
             onClick={() => trackFinancingApplyClick('home_banner')}
-            className="group relative block overflow-hidden rounded-[24px] border border-white/[0.08] bg-gradient-to-b from-white/[0.05] via-white/[0.02] to-transparent shadow-[0_1px_0_0_hsl(0_0%_100%/0.05)_inset,0_28px_70px_-40px_hsl(0_0%_0%/0.9)] transition-colors duration-500 hover:border-emerald-300/25"
+            className="group relative flex flex-col gap-3 overflow-hidden rounded-2xl border border-white/[0.08] bg-white/[0.03] px-4 py-4 transition-colors duration-300 hover:border-emerald-300/25 sm:flex-row sm:items-center sm:justify-between sm:gap-6 sm:px-6"
           >
-            {/* emerald status wash, kept subtle */}
-            <span
-              aria-hidden
-              className="pointer-events-none absolute -left-24 -top-28 h-64 w-64 rounded-full bg-emerald-400/10 blur-3xl"
-            />
-
-            <div className="relative flex flex-col gap-5 px-5 py-6 sm:px-8 sm:py-7 md:flex-row md:items-center md:justify-between md:gap-10">
-              <div className="min-w-0">
-                <div className="mb-4 flex flex-wrap items-center gap-x-5 gap-y-3">
-                  <img
-                    src={vendibookWordmark}
-                    alt="Vendibook"
-                    width={1000}
-                    height={293}
-                    className="h-8 w-auto sm:h-10"
-                  />
-                  <span aria-hidden className="text-xl font-light text-white/20">
-                    ×
-                  </span>
-                  <EquinoxFundingLogo className="h-8 w-auto sm:h-10" />
-                </div>
-
-                <h2 className="text-balance text-base font-semibold leading-snug tracking-tight text-foreground sm:text-xl">
-                  Financing for food trucks, trailers, and equipment.
-                </h2>
-                <p className="mt-2 max-w-2xl text-[13px] leading-relaxed text-muted-foreground sm:text-sm">
-                  Buyer financing is offered through third-party partners. Vendibook is not the
-                  lender — approval, rates, and terms are determined by the provider.
-                </p>
-              </div>
-
-              <div className="flex shrink-0 items-center">
-                <span className="inline-flex items-center gap-2 rounded-2xl border border-emerald-300/25 bg-emerald-400/10 px-5 py-3 text-sm font-semibold text-emerald-200 transition-colors duration-300 group-hover:bg-emerald-400/15">
-                  Explore financing
-                  <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-0.5" />
+            <div className="min-w-0">
+              <div className="mb-2 flex flex-wrap items-center gap-x-3 gap-y-2">
+                <img
+                  src={vendibookWordmark}
+                  alt="Vendibook"
+                  width={1000}
+                  height={293}
+                  className="h-6 w-auto sm:h-7"
+                />
+                <span aria-hidden className="text-lg font-light text-white/20">
+                  ×
                 </span>
+                <EquinoxFundingLogo className="h-6 w-auto sm:h-7" />
               </div>
+              <p className="text-[13px] font-medium leading-snug text-foreground sm:text-sm">
+                Financing for food trucks, trailers, and equipment.
+              </p>
+              <p className="mt-1 text-[12px] leading-relaxed text-muted-foreground">
+                Offered through third-party partners — Vendibook is not the lender.
+              </p>
             </div>
+
+            <span className="inline-flex shrink-0 items-center gap-2 self-start rounded-xl border border-emerald-300/25 bg-emerald-400/10 px-4 py-2 text-[13px] font-semibold text-emerald-200 transition-colors duration-300 group-hover:bg-emerald-400/15 sm:self-auto">
+              Explore financing
+              <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-0.5" />
+            </span>
           </Link>
         </motion.div>
       </div>
     </section>
   );
 };
+
 
 export default FinancingTopBanner;
