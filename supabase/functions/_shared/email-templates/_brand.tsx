@@ -16,7 +16,7 @@ export const AuthBrandHeader = () => (
       <Img
         src={LOGO_URL}
         alt="Vendibook"
-                height="240"
+                height="94"
         style={{ display: 'block', margin: '0 auto', border: 0, outline: 'none', width: '100%', maxWidth: '320px', height: 'auto' }}
       />
     </a>
@@ -42,7 +42,7 @@ export const AuthBrandFooter = () => (
       <Img
         src={LOGO_URL}
         alt="Vendibook"
-                height="240"
+                height="94"
         style={{ display: 'block', margin: '0 auto 14px', border: 0, outline: 'none', width: '100%', maxWidth: '320px', height: 'auto' }}
       />
     </a>
