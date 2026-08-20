@@ -376,37 +376,39 @@ const MockVisual = ({ variant, tone }: { variant: WalkthroughStep['mock']; tone:
     case 'payout':
       return (
         <div className="w-full space-y-3">
-          <div className="text-xs font-medium text-muted-foreground">Earnings</div>
+          <div className="text-xs font-medium text-muted-foreground">Transaction record</div>
           <motion.div
-            initial={{ scale: 0.9, opacity: 0 }}
+            initial={{ scale: 0.96, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="bg-background border border-border rounded-2xl p-5 shadow-sm"
+            className="bg-background border border-border rounded-2xl p-5 shadow-sm space-y-2.5"
           >
-            <div className="text-xs text-muted-foreground mb-1">Available balance</div>
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className={cn('text-3xl font-bold', accentClass)}
-            >
-              $4,280.00
-            </motion.div>
-            <div className="text-xs text-muted-foreground mt-1">Auto-payout to •••• 8821</div>
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-muted-foreground">Online sale</span>
+              <span className="font-semibold text-foreground">Completed</span>
+            </div>
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-muted-foreground">Seller fee</span>
+              <span className="text-foreground">12.9%</span>
+            </div>
+            <div className="flex items-center justify-between text-sm border-t border-border pt-2.5">
+              <span className="text-muted-foreground">Payout</span>
+              <span className={cn('font-semibold', accentClass)}>Under review</span>
+            </div>
           </motion.div>
-          <div className="grid grid-cols-2 gap-2">
-            <div className="bg-background border border-border rounded-xl p-3"><div className="text-xs text-muted-foreground">This month</div><div className="text-sm font-semibold text-foreground">$1,940</div></div>
-            <div className="bg-background border border-border rounded-xl p-3"><div className="text-xs text-muted-foreground">Lifetime</div><div className="text-sm font-semibold text-foreground">$28,650</div></div>
+          <div className="bg-background border border-border rounded-xl p-3 text-xs text-muted-foreground">
+            Payouts are reviewed and issued by Vendibook after the transaction is confirmed. Pay-in-person
+            equipment sales are settled directly between buyer and seller with no Vendibook commission.
           </div>
         </div>
       );
     case 'docs':
       return (
         <div className="w-full space-y-2">
-          <div className="text-xs font-medium text-muted-foreground mb-1">Required documents</div>
+          <div className="text-xs font-medium text-muted-foreground mb-1">Documents requested by the host</div>
           {[
-            { label: 'Business license', status: 'approved' },
-            { label: 'Liability insurance', status: 'approved' },
-            { label: 'Health permit', status: 'pending' },
+            { label: 'Business license', status: 'shared' },
+            { label: 'Liability insurance', status: 'shared' },
+            { label: 'Health permit', status: 'requested' },
           ].map((doc, i) => (
             <motion.div
               key={doc.label}
@@ -415,14 +417,15 @@ const MockVisual = ({ variant, tone }: { variant: WalkthroughStep['mock']; tone:
               transition={{ delay: i * 0.1 }}
               className="bg-background border border-border rounded-xl p-3 flex items-center gap-3 shadow-sm"
             >
-              <FileCheck className={cn('w-5 h-5', doc.status === 'approved' ? accentClass : 'text-muted-foreground')} />
+              <FileCheck className={cn('w-5 h-5', doc.status === 'shared' ? accentClass : 'text-muted-foreground')} />
               <div className="flex-1 min-w-0">
                 <div className="text-sm font-medium text-foreground">{doc.label}</div>
-                <div className={cn('text-xs', doc.status === 'approved' ? accentClass : 'text-muted-foreground')}>
-                  {doc.status === 'approved' ? '✓ Approved' : 'Pending review'}
+                <div className={cn('text-xs', doc.status === 'shared' ? accentClass : 'text-muted-foreground')}>
+                  {doc.status === 'shared' ? 'Uploaded' : 'Requested'}
                 </div>
               </div>
             </motion.div>
+
           ))}
         </div>
       );
