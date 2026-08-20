@@ -114,6 +114,13 @@ export function usePaymentsTransition(): PaymentsTransitionState {
   const acknowledge = useCallback(async () => {
     setAcknowledged(true);
     if (!user?.id) return;
+    // Local latch first: even if the profile write fails (offline, RLS, race),
+    // the one-time notice must never come back on the next dashboard visit.
+    try {
+      window.localStorage.setItem(ackKey(user.id), new Date().toISOString());
+    } catch {
+      /* storage unavailable */
+    }
     try {
       await (supabase as any)
         .from('profiles')
