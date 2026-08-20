@@ -34,9 +34,14 @@ export interface ConciergeConfigRow {
   copy: Record<string, unknown>;
 }
 
+/** Product slug in `monetization_products` — the pricing source of truth. */
+export const CONCIERGE_PRODUCT_SLUG = "listing_concierge";
+
 export const CONCIERGE_DEFAULTS: ConciergeConfigRow = {
   is_available: true,
-  price_cents: 14_900,
+  // Mirrors monetization_products.listing_concierge. Only used before the
+  // catalog row resolves; the catalog always wins below.
+  price_cents: 7_900,
   currency: "USD",
   turnaround_business_days: 2,
   included_revisions: 1,
@@ -45,13 +50,46 @@ export const CONCIERGE_DEFAULTS: ConciergeConfigRow = {
   copy: {},
 };
 
+/**
+ * Service configuration for the Listing Concierge.
+ *
+ * Operational settings (availability, turnaround, revisions, terms version)
+ * live in `listing_concierge_config`, but the PRICE is always taken from the
+ * active `monetization_products` catalog row so the displayed price and the
+ * PayPal amount can never drift apart.
+ */
 export async function loadConciergeConfig(db: Db): Promise<ConciergeConfigRow> {
-  const { data } = await db
-    .from("listing_concierge_config")
-    .select("*")
-    .eq("id", true)
-    .maybeSingle();
-  return { ...CONCIERGE_DEFAULTS, ...(data ?? {}) } as ConciergeConfigRow;
+  const [{ data }, { data: product }] = await Promise.all([
+    db.from("listing_concierge_config").select("*").eq("id", true).maybeSingle(),
+    db
+      .from("monetization_products")
+      .select("price_cents, promo_price_cents, promo_starts_at, promo_ends_at, is_active")
+      .eq("slug", CONCIERGE_PRODUCT_SLUG)
+      .eq("is_active", true)
+      .maybeSingle(),
+  ]);
+
+  const merged = { ...CONCIERGE_DEFAULTS, ...(data ?? {}) } as ConciergeConfigRow;
+  const catalogCents = catalogPriceCents(product);
+  if (catalogCents) merged.price_cents = catalogCents;
+  return merged;
+}
+
+/** Honours an active promo window exactly like the rest of checkout does. */
+function catalogPriceCents(row: Record<string, unknown> | null): number | null {
+  if (!row) return null;
+  const base = Number(row.price_cents);
+  if (!Number.isFinite(base) || base <= 0) return null;
+  const promo = Number(row.promo_price_cents);
+  if (Number.isFinite(promo) && promo > 0) {
+    const now = Date.now();
+    const startsAt = row.promo_starts_at ? Date.parse(String(row.promo_starts_at)) : null;
+    const endsAt = row.promo_ends_at ? Date.parse(String(row.promo_ends_at)) : null;
+    const started = startsAt === null || Number.isNaN(startsAt) || startsAt <= now;
+    const running = endsAt === null || Number.isNaN(endsAt) || endsAt > now;
+    if (started && running) return promo;
+  }
+  return base;
 }
 
 /** Client IP for agreement records. */
