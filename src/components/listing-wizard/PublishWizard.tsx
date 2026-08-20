@@ -84,6 +84,7 @@ import {
   parseKnownProblems,
   stageForStep,
   isTitledAsset,
+  requiresSaleDimensions,
   MIN_GUIDED_PHOTOS,
 } from '@/lib/listings/stages';
 import { StageProgress } from './stages/StageProgress';
@@ -1835,7 +1836,13 @@ export const PublishWizard: React.FC = () => {
           price_negotiable: disclosures.priceNegotiable,
           accepts_offers: disclosures.acceptsOffers,
           min_offer_amount: disclosures.minOfferAmount ? parseFloat(disclosures.minOfferAmount) : null,
+          // Required sale dimensions are collected on this step for mobile
+          // assets, so they must persist here too.
+          length_inches: parseFloat(lengthInches) || null,
+          width_inches: parseFloat(widthInches) || null,
+          height_inches: parseFloat(heightInches) || null,
         };
+
 
       } else if (step === 'pricing') {
         // Helper function to safely parse price values
