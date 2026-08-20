@@ -1,8 +1,18 @@
 import * as React from 'npm:react@18.3.1'
-import { Body, Button, Container, Head, Heading, Hr, Html, Link, Preview, Section, Text } from 'npm:@react-email/components@0.0.22'
+import { Text } from 'npm:@react-email/components@0.0.22'
 import type { TemplateEntry } from './registry.ts'
-import { SITE_URL, SUPPORT_PHONE } from './_styles.ts'
-import { l } from './_stylesLight.ts'
+import {
+  CtaButton,
+  DetailTable,
+  Divider,
+  Eyebrow,
+  H1,
+  Lede,
+  SITE_URL,
+  SupportRow,
+  VendibookEmailLayout,
+  t,
+} from '../email-brand/components.tsx'
 
 interface Props {
   firstName?: string
@@ -18,60 +28,37 @@ const Email = ({
   accessThrough,
   manageUrl = `${SITE_URL}/account/subscription`,
 }: Props) => (
-  <Html lang="en" dir="ltr">
-    <Head />
-    <Preview>{`${planName} cancellation confirmed`}</Preview>
-    <Body style={l.main}>
-      <Container style={l.container}>
-        <Section style={l.headerWrap}>
-          <Text style={l.wordmark}>
-            <Link href={SITE_URL} style={l.wordmarkLink}>Vendibook</Link>
-          </Text>
-        </Section>
+  <VendibookEmailLayout preview={`${planName} cancellation confirmed`}>
+    <Eyebrow>Cancellation confirmed</Eyebrow>
+    <H1>
+      {firstName ? `${firstName}, your ${planName} won't renew` : `Your ${planName} won't renew`}
+    </H1>
+    <Lede>
+      We've stopped all future renewals — you won't be charged again. Your benefits stay
+      switched on until the end of the period you already paid for.
+    </Lede>
 
-        <Section style={l.card}>
-          <Text style={l.kicker}>Cancellation confirmed</Text>
-          <Heading style={l.h1}>
-            {firstName ? `${firstName}, your ${planName} won't renew.` : `Your ${planName} won't renew.`}
-          </Heading>
-          <Text style={l.lede}>
-            We&apos;ve stopped all future renewals — you won&apos;t be charged again. Your benefits
-            stay switched on until the end of the period you already paid for.
-          </Text>
+    <DetailTable
+      rows={[
+        { label: 'Plan', value: planName },
+        { label: 'Future renewals', value: 'Stopped' },
+        { label: 'Benefits active through', value: accessThrough, emphasis: true },
+      ]}
+    />
 
-          <Section style={l.panel}>
-            <Section style={l.row}>
-              <Text style={l.label}>Plan</Text>
-              <Text style={l.value}>{planName}</Text>
-            </Section>
-            <Section style={l.row}>
-              <Text style={l.label}>Future renewals</Text>
-              <Text style={l.value}>Stopped</Text>
-            </Section>
-            {accessThrough ? (
-              <Section style={l.row}>
-                <Text style={l.label}>Benefits active through</Text>
-                <Text style={l.valueAccent}>{accessThrough}</Text>
-              </Section>
-            ) : null}
-          </Section>
+    <CtaButton href={manageUrl}>Manage membership</CtaButton>
 
-          <Section style={l.ctaWrap}>
-            <Button href={manageUrl} style={l.button}>Manage membership</Button>
-          </Section>
+    <Divider />
 
-          <Hr style={l.hr} />
-          <Text style={l.small}>
-            Until that date you keep the 10.9% seller/host fee, your Featured Boost credit and the
-            premium tools. After that your account simply returns to Free — your listings, messages
-            and history stay exactly where they are, and you can rejoin anytime.
-          </Text>
-        </Section>
+    <Text style={t.small}>
+      Until that date you keep the 10.9% seller/host fee (versus the 12.9% standard rate) and
+      your Featured Boost credit for the paid billing period. After that your account simply
+      returns to Free — your listings, messages and history stay exactly where they are, and you
+      can rejoin anytime.
+    </Text>
 
-        <Text style={l.footnote}>Changed your mind? Reply to this email or call {SUPPORT_PHONE}.</Text>
-      </Container>
-    </Body>
-  </Html>
+    <SupportRow note="Changed your mind?" />
+  </VendibookEmailLayout>
 )
 
 export const template = {
