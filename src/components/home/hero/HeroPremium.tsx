@@ -77,7 +77,7 @@ const HeroPremium = () => {
               <Link
                 to="/search"
                 onClick={() =>
-                  trackLeadEvent('homepage_hero_cta_click', { cta: 'browse', destination: '/search' })
+                  trackLeadEvent('homepage_browse_click', { source: 'home_hero', destination: '/search' })
                 }
               >
                 <SearchIcon className="mr-2 h-4 w-4" />
@@ -93,8 +93,8 @@ const HeroPremium = () => {
               <Link
                 to="/list/start?mode=sale"
                 onClick={() =>
-                  trackLeadEvent('homepage_hero_cta_click', {
-                    cta: 'list_free',
+                  trackLeadEvent('homepage_host_list_click', {
+                    source: 'home_hero',
                     destination: '/list/start?mode=sale',
                   })
                 }
