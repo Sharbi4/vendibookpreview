@@ -1289,16 +1289,21 @@ const BookingCheckout = () => {
                   </div>
                 )}
 
-                {/* Free cancellation */}
+                {/* Cancellation policy — listing-specific, never a blanket promise */}
                 <div className="flex items-start gap-2 mb-4">
                   <Clock className="h-4 w-4 text-muted-foreground mt-0.5" />
                   <div>
-                    <span className="text-sm font-medium">Free cancellation</span>
+                    <span className="text-sm font-medium">Cancellation policy</span>
                     <p className="text-xs text-muted-foreground">
-                      Cancel within 24 hours for a full refund.
+                      {cancellationPolicyText ?? (
+                        <Link to={`/listing/${listingId}#terms`} className="underline underline-offset-2">
+                          Review cancellation policy
+                        </Link>
+                      )}
                     </p>
                   </div>
                 </div>
+
 
                 {/* Dates / Hours summary */}
                 <div className="mb-4">
