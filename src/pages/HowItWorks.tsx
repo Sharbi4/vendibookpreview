@@ -36,7 +36,7 @@ import PricingFaqSection from '@/components/shared/PricingFaqSection';
 import { TellVendibookButton } from '@/components/lead/TellVendibookButton';
 import { PaymentRailsSection, ProviderTrustStrip, KeepExploring } from '@/components/howitworks/PaymentRailsSection';
 
-type Role = 'rent' | 'buy' | 'host' | 'sell';
+type Role = 'buy' | 'rent' | 'sell' | 'host';
 
 const roleConfig: Record<Role, {
   label: string;
@@ -46,86 +46,83 @@ const roleConfig: Record<Role, {
   pillars: Pillar[];
   faqs: { q: string; a: string }[];
 }> = {
-  rent: {
-    label: 'Rent equipment',
-    blurb: 'Browse food trucks, trailers, commercial kitchens, and vendor spaces by city. Book by the hour, day, or month.',
-    cta: { label: 'Browse rentals', href: '/search?mode=rent' },
-    steps: [
-      { number: 1, title: 'Search by city & date', description: 'Filter by location, dates, asset type, and price. Every listing shows real photos, live availability, and the payment methods it accepts.', icon: Search, mock: 'search' },
-      { number: 2, title: 'Compare listings', description: 'Inspect specs, amenities, and reviews. Hosts who complete the optional Plaid identity check show a verified badge.', icon: ShieldCheck, mock: 'listing' },
-      { number: 3, title: 'Message the host', description: 'Ask about availability, equipment, or access instructions. Most hosts reply within an hour.', icon: MessageSquare, mock: 'message' },
-      { number: 4, title: 'Request & pay', description: 'Send a request, and once the host approves, pay online with PayPal Checkout where the listing offers it — or settle in person if the host accepts that.', icon: CreditCard, mock: 'payment' },
-      { number: 5, title: 'Pick up or get it delivered', description: 'Coordinate pickup, on-site setup, or nationwide freight shipping. Hosts share access details once the booking is confirmed.', icon: Truck, mock: 'truck' }],
-    pillars: [
-      { icon: ShieldCheck, title: 'Know who you book', description: 'Host profiles, reviews, and an optional Plaid-verified identity badge.' },
-      { icon: CreditCard, title: 'PayPal checkout', description: 'Pay online through PayPal on listings that enable it.' },
-      { icon: Clock, title: 'Fast host replies', description: 'Most renters get a response within an hour during business hours.' },
-      { icon: MapPin, title: 'Coast-to-coast inventory', description: 'Trucks, trailers, kitchens, and vendor spaces in every major US city.' }],
-    faqs: [
-      { q: 'How do I know the listing is real?', a: 'Listings are reviewed for completeness, and hosts can optionally purchase Plaid identity verification to display a verified badge on their profile and listings.' },
-      { q: 'What payment methods can I use?', a: 'It depends on the listing. Hosts can enable PayPal Checkout for online payment, accept payment in person, or both — the listing page always shows which apply.' },
-      { q: 'Can I inspect before paying?', a: 'Yes. Message the host directly to schedule an in-person inspection before booking.' },
-      { q: 'What if the equipment isn\'t as described?', a: 'Contact support within 24 hours of handoff. For PayPal-paid orders you also have PayPal\'s own buyer dispute process.' }]},
   buy: {
-    label: 'Buy a truck or trailer',
-    blurb: 'Shop food trucks, trailers, and commercial kitchen equipment. Pay online with PayPal, settle in person, or apply for equipment financing through Equinox Funding.',
+    label: 'Buy',
+    blurb: 'Shop food trucks, trailers, carts, and equipment. Pay in person or through Vendibook online checkout, with financing options available for eligible buyers.',
     cta: { label: 'Browse for sale', href: '/search?mode=sale' },
     steps: [
-      { number: 1, title: 'Find your asset', description: 'Search by city, build, condition, and price. See full specs, multiple photos, and seller history.', icon: Search, mock: 'search' },
-      { number: 2, title: 'Review the seller', description: 'Check their profile, response rate, and past sales. Sellers who complete Plaid identity verification show a verified badge.', icon: ShieldCheck, mock: 'verified' },
-      { number: 3, title: 'Negotiate or make an offer', description: 'Send the asking price, submit a counter-offer, or message the seller to negotiate terms directly.', icon: MessageSquare, mock: 'message' },
-      { number: 4, title: 'Choose how you pay', description: 'PayPal Checkout when the seller enables it, payment in person at handoff, or apply for financing with Equinox Funding on eligible listings.', icon: CreditCard, mock: 'payment' },
-      { number: 5, title: 'Pickup or nationwide freight', description: 'Pick up locally or use Vendibook freight ($4.50/mile) for door-to-door delivery anywhere in the US.', icon: Truck, mock: 'truck' }],
+      { number: 1, title: 'Find the right equipment', description: 'Search by city, category, condition, and price. Listings show photos, specs, and how the seller wants to be paid.', icon: Search, mock: 'search' },
+      { number: 2, title: 'Connect with the seller', description: 'Message with questions, arrange an inspection, or send an offer. Some sellers display an Identity Verified badge — an optional Plaid check, not a requirement.', icon: MessageSquare, mock: 'message' },
+      { number: 3, title: 'Choose how to pay', description: 'Pay in person at handoff, or use Vendibook online checkout where the seller enables it. Financing through third-party partners is available for qualified buyers.', icon: CreditCard, mock: 'payment' },
+      { number: 4, title: 'Arrange pickup or delivery', description: 'Coordinate local pickup, seller delivery, or freight where the seller offers it, then confirm the handoff in your transaction record.', icon: Truck, mock: 'truck' }],
     pillars: [
-      { icon: ShieldCheck, title: 'Transparent sellers', description: 'Profiles, sales history, and an optional Plaid-verified identity badge.' },
-      { icon: CreditCard, title: 'Equipment financing', description: 'Apply with Equinox Funding on eligible for-sale listings — credit approval required.' },
-      { icon: Truck, title: 'Nationwide freight', description: 'Optional door-to-door delivery — calculated automatically at checkout.' },
-      { icon: CheckCircle2, title: 'Clear terms up front', description: 'Every listing states its accepted payment methods and fees before you commit.' }],
+      { icon: Search, title: 'Real inventory', description: 'Trucks, trailers, carts, kitchens, and vendor spaces listed by their owners.' },
+      { icon: CreditCard, title: 'Your choice of payment', description: 'Pay in person or online through Vendibook’s PayPal checkout where offered.' },
+      { icon: ShieldCheck, title: 'Optional verification', description: 'Sellers can add a Plaid Identity Verified badge. Look for it on the profile.' },
+      { icon: FileCheck, title: 'Financing options', description: 'Apply with third-party financing partners if you qualify — Vendibook does not lend.' }],
     faqs: [
-      { q: 'How does equipment financing work?', a: 'On eligible for-sale listings you can download a pro forma purchase sheet and apply with Equinox Funding LLC. Financing is offered by Equinox, not Vendibook, and is subject to credit approval.' },
-      { q: 'Can I get freight shipping?', a: 'Yes — sellers can opt into Vendibook Freight. We calculate $4.50/mile automatically and add it to checkout.' },
-      { q: 'What if the truck isn\'t as advertised?', a: 'Inspect before handoff whenever possible. For PayPal-paid orders you can also raise a dispute through PayPal, and our support team can help mediate.' },
-      { q: 'Are inspections allowed before purchase?', a: 'Absolutely. Most serious buyers schedule an in-person inspection — message the seller to coordinate.' }]},
-  host: {
-    label: 'Host / rent out',
-    blurb: 'Turn your truck, trailer, kitchen, or parking lot into recurring income. Set your rates, control your calendar, and choose how renters pay.',
-    cta: { label: 'List for rent', href: '/list?mode=rent' },
+      { q: 'How do I pay for equipment?', a: 'It depends on the listing. Sellers can accept payment in person at handoff, enable Vendibook online checkout (processed through PayPal), or both. The listing page shows which options apply before you commit.' },
+      { q: 'How does financing work?', a: 'On eligible for-sale listings you can generate a pro forma purchase sheet and apply with a third-party financing partner. Vendibook does not lend, approve applicants, set rates or terms, or guarantee funding.' },
+      { q: 'What does the Identity Verified badge mean?', a: 'It means that member chose to complete an optional identity check powered by Plaid. It is not required to buy, sell, rent, or publish, so treat it as extra context rather than a guarantee.' },
+      { q: 'Can I inspect before buying?', a: 'Yes. Message the seller to schedule an in-person inspection before you agree to anything. For payments made online through PayPal, PayPal’s own dispute process also applies.' }]},
+  rent: {
+    label: 'Rent',
+    blurb: 'Book food trucks, trailers, commissary and commercial kitchens, and vendor spaces by the hour, day, or month.',
+    cta: { label: 'Browse rentals', href: '/search?mode=rent' },
     steps: [
-      { number: 1, title: 'Create your listing', description: 'Add photos, write a description, set hourly/daily/weekly/monthly rates. Our wizard takes about 8 minutes.', icon: Camera, mock: 'photo' },
-      { number: 2, title: 'Set your availability', description: 'Block dates, define operating hours, set buffer time between rentals. Smart calendar prevents double-bookings.', icon: Calendar, mock: 'calendar' },
-      { number: 3, title: 'Pick your payment methods', description: 'Enable PayPal Checkout for online payment, accept payment in person, or both. Save a payout destination whenever you\'re ready — it never blocks publishing.', icon: CreditCard, mock: 'payment' },
-      { number: 4, title: 'Approve booking requests', description: 'Review renter profiles and accept with one tap — or enable Instant Book for faster turnover.', icon: MessageSquare, mock: 'message' },
-      { number: 5, title: 'Get paid', description: 'PayPal-paid bookings are recorded automatically, your 12.9% platform fee is deducted, and Vendibook issues your payout to the destination you saved.', icon: DollarSign, mock: 'payout' }],
+      { number: 1, title: 'Find a listing and pick your dates', description: 'Filter by city, category, and price, then choose the dates or time slot you need from the host’s live availability.', icon: Search, mock: 'search' },
+      { number: 2, title: 'Request to book or Instant Book', description: 'Some listings accept Instant Book. Others review your request first. Message the host any time with questions.', icon: MessageSquare, mock: 'listing' },
+      { number: 3, title: 'Confirm payment and any documents', description: 'Pay through Vendibook online checkout where offered, or in person if the host accepts it. Some hosts ask for documents such as insurance or a permit before use.', icon: CreditCard, mock: 'docs' },
+      { number: 4, title: 'Pick up, use, and return', description: 'The host shares access details once your booking is confirmed. Return the equipment or space as agreed and complete the booking.', icon: Truck, mock: 'truck' }],
     pillars: [
-      { icon: ShieldCheck, title: 'Documents on file', description: 'Require insurance, licenses, or permits before you approve a booking.' },
-      { icon: DollarSign, title: 'Clear 12.9% fee', description: 'Free to list. One platform fee applies when a booking completes.' },
-      { icon: FileCheck, title: 'Automated docs', description: 'We collect, verify, and store insurance + permit documents for you.' },
-      { icon: TrendingUp, title: 'AI price optimization', description: 'Vendi suggests rates based on local demand to maximize earnings.' }],
+      { icon: Calendar, title: 'Real availability', description: 'Hosts manage their own calendar, so what you see is what’s open.' },
+      { icon: MessageSquare, title: 'Talk before you book', description: 'Message hosts about access, equipment, and timing inside Vendibook.' },
+      { icon: CreditCard, title: 'Clear payment terms', description: 'Every listing states how it accepts payment before you commit.' },
+      { icon: FileCheck, title: 'Documents where required', description: 'Hosts can request insurance, licenses, or permits for their listing.' }],
     faqs: [
-      { q: 'How much does it cost to list?', a: 'Listing is free. We take a 12.9% platform fee only when you complete a booking. No subscriptions, no upfront cost.' },
-      { q: 'How do payouts work?', a: 'Save a payout destination in your dashboard. Once a booking completes, Vendibook records your proceeds and issues the payout. Payout setup is never required to publish or receive bookings.' },
-      { q: 'Do I need identity verification to host?', a: 'No. Plaid identity verification is an optional paid add-on that adds a verified badge — it is not required to list, book, or get paid.' },
-      { q: 'Can I list multiple assets?', a: 'Yes — many top hosts manage 4+ listings from a single dashboard. No limit.' }]},
+      { q: 'Do all listings work the same way?', a: 'No. Approval rules, documents, and payment options are set per listing by the host. Some accept Instant Book, others review each request, so check the listing page.' },
+      { q: 'How do I pay for a booking?', a: 'Hosts can enable Vendibook online checkout (processed through PayPal), accept payment in person, or both. The listing shows which options apply.' },
+      { q: 'Do I need identity verification to rent?', a: 'No. Identity verification is an optional paid add-on powered by Plaid that adds a badge to a profile. It is not required to book.' },
+      { q: 'What if something goes wrong?', a: 'Message the host first, then contact Vendibook support. For payments made online through PayPal, you can also use PayPal’s dispute process.' }]},
   sell: {
-    label: 'Sell a truck/trailer',
-    blurb: 'List your food truck, trailer, or equipment for sale. Free to list, PayPal or in-person payment, and optional Equinox Funding financing for your buyers.',
-    cta: { label: 'List for sale', href: '/list?mode=sale' },
+    label: 'Sell',
+    blurb: 'List your food truck, trailer, cart, or equipment for sale. Publishing a standard listing is free, and you choose how you get paid.',
+    cta: { label: 'List free', href: '/list/start?mode=sale' },
     steps: [
-      { number: 1, title: 'List with great photos', description: 'Upload high-res photos, write specs, set asking price. Listings with 8+ photos sell 3x faster.', icon: Camera, mock: 'photo' },
-      { number: 2, title: 'Receive offers', description: 'Buyers send full-price purchases or counter-offers. Review, negotiate, or accept with one click.', icon: MessageSquare, mock: 'message' },
-      { number: 3, title: 'Choose your payment methods', description: 'Enable PayPal Checkout, accept payment in person, or both — and optionally add Equinox Funding so buyers can finance.', icon: CreditCard, mock: 'payment' },
-      { number: 4, title: 'Coordinate handoff', description: 'Local pickup or use Vendibook Freight for nationwide delivery. We handle logistics quotes automatically.', icon: Truck, mock: 'truck' },
-      { number: 5, title: 'Get paid', description: 'PayPal sales are recorded with the 12.9% platform fee deducted and paid out to your saved destination. Pay-in-person sales are settled directly — and are free of Vendibook fees.', icon: DollarSign, mock: 'payout' }],
+      { number: 1, title: 'List free', description: 'Start at /list/start, add photos, specs, and your asking price. Publishing a standard listing is free, subject to current account limits.', icon: Camera, mock: 'photo' },
+      { number: 2, title: 'Connect with buyers', description: 'Answer questions, review offers, and negotiate inside Vendibook. You can add an optional Plaid Identity Verified badge if you want it.', icon: MessageSquare, mock: 'message' },
+      { number: 3, title: 'Choose your transaction path', description: 'Pay in person carries no Vendibook commission. Online checkout through Vendibook carries a 12.9% seller fee, and financing gives eligible buyers another way to purchase.', icon: DollarSign, mock: 'payment' },
+      { number: 4, title: 'Complete the handoff', description: 'Coordinate pickup, delivery, or freight, confirm the sale, and Vendibook reviews and issues payout on completed online sales.', icon: Truck, mock: 'payout' }],
     pillars: [
-      { icon: Users, title: 'Real buyers', description: 'Message, negotiate, and accept offers inside Vendibook.' },
-      { icon: CreditCard, title: 'Buyer financing option', description: 'Add Equinox Funding to eligible sale listings to widen your buyer pool.' },
-      { icon: ShieldCheck, title: 'Optional verified badge', description: 'Plaid identity verification adds trust — always optional.' },
-      { icon: DollarSign, title: 'No upfront fees', description: 'Free to list. 12.9% on completed online sales; pay-in-person sales are free.' }],
+      { icon: Users, title: 'Free to publish', description: 'Standard listings are free to create and publish, subject to account limits.' },
+      { icon: DollarSign, title: 'Pay in person is free', description: 'No Vendibook commission on equipment sales settled in person.' },
+      { icon: CreditCard, title: '12.9% on online sales', description: 'One clear seller fee on completed Vendibook online checkout sales.' },
+      { icon: ShieldCheck, title: 'Optional verified badge', description: 'Plaid identity verification is available as an add-on — never required.' }],
     faqs: [
-      { q: 'How much does selling cost?', a: 'Free to list. Completed online sales carry a 12.9% platform fee. Pay-in-person sales carry no commission and no buyer fee.' },
-      { q: 'Can buyers finance?', a: 'Yes — turn on the Equinox Funding add-on for your for-sale listing and eligible buyers can apply. Financing is provided by Equinox Funding LLC, subject to credit approval.' },
-      { q: 'Do you handle shipping?', a: 'Vendibook Freight covers door-to-door US delivery at $4.50/mile, calculated and quoted automatically at checkout.' },
-      { q: 'How do I get paid?', a: 'Save a payout destination in your dashboard. After an online sale completes, Vendibook records your proceeds and issues the payout. Setting it up is never required to publish.' }]}};
+      { q: 'What does it cost to sell?', a: 'Publishing a standard listing is free. Equipment sales settled in person carry no Vendibook commission. Completed sales through Vendibook online checkout carry a 12.9% seller fee.' },
+      { q: 'Does Vendibook Pro change my fee?', a: 'Active Vendibook Pro sellers save 2 percentage points on eligible seller transaction fees — 10.9% instead of 12.9% — capped at $500 of savings per completed transaction. See the pricing page for details.' },
+      { q: 'How do I get paid?', a: 'Pay-in-person sales are settled directly between you and the buyer. For online sales, Vendibook records your proceeds and payouts are reviewed and issued by our team. We do not offer automatic split settlement or instant bank payout.' },
+      { q: 'Can buyers finance a purchase?', a: 'Eligible buyers can apply with third-party financing partners. Vendibook does not lend, approve applicants, or guarantee funding.' }]},
+  host: {
+    label: 'Host',
+    blurb: 'Rent out your truck, trailer, kitchen, or vendor space. Set your rates and availability, and decide how renters pay.',
+    cta: { label: 'List free', href: '/list/start?mode=rent' },
+    steps: [
+      { number: 1, title: 'Create and publish your listing', description: 'Start at /list/start, add photos and details, and set hourly, daily, weekly, or monthly rates. Publishing a standard listing is free.', icon: Camera, mock: 'photo' },
+      { number: 2, title: 'Set your availability', description: 'Block dates, define operating hours, and keep your calendar current so renters only request time you can actually offer.', icon: Calendar, mock: 'calendar' },
+      { number: 3, title: 'Review requests or use Instant Book', description: 'Approve booking requests yourself, or turn on Instant Book where it’s supported. You can request documents such as insurance or permits.', icon: MessageSquare, mock: 'docs' },
+      { number: 4, title: 'Manage the handoff and payout review', description: 'Share access details, complete the booking, and Vendibook records your proceeds. Payouts on online bookings are reviewed and issued by our team.', icon: DollarSign, mock: 'payout' }],
+    pillars: [
+      { icon: Calendar, title: 'You control the calendar', description: 'Set rates, availability, and buffer time between bookings.' },
+      { icon: FileCheck, title: 'Request documents', description: 'Ask for insurance, licenses, or permits before you approve a booking.' },
+      { icon: DollarSign, title: 'Free to list', description: 'Publishing a standard listing is free. A host fee applies to completed online bookings.' },
+      { icon: ShieldCheck, title: 'Optional verification', description: 'Plaid identity verification is an add-on that adds a badge — never required to host.' }],
+    faqs: [
+      { q: 'What does it cost to host?', a: 'Publishing a standard listing is free. A 12.9% host fee applies to completed bookings paid through Vendibook online checkout. Active Vendibook Pro hosts pay 10.9% on eligible transactions, capped at $500 of savings per transaction.' },
+      { q: 'How do payouts work?', a: 'Vendibook records your proceeds after a booking completes, and payouts are reviewed and issued by our team. We do not offer automatic payout routing, instant bank transfer, or guaranteed release timing.' },
+      { q: 'Do I need identity verification to host?', a: 'No. Plaid identity verification is an optional paid add-on that adds a badge to your profile. It is not required to publish, take bookings, or get paid.' },
+      { q: 'Can I list more than one space?', a: 'Yes — you can manage multiple listings from a single dashboard, subject to current account and listing limits.' }]}};
+
 
 
 const HowItWorks = () => {
