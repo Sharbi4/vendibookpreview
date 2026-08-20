@@ -162,52 +162,36 @@ const PayPalPaymentPanel = ({
           }
         }
 
+        if (paypal.CardFields) {
+          try {
+            const cf = paypal.CardFields({
+              style: {
+                input: { 'font-size': '16px', color: '#111111' },
+                '.invalid': { color: '#b3261e' },
+              },
+              createOrder: () => handlersRef.current.startOrder(),
+              onApprove: (d: { orderID: string }) => handlersRef.current.finishOrder(d.orderID),
+              onError: () =>
+                handlersRef.current.fail(
+                  'Card payment failed',
+                  'That card could not be charged. No money was taken — check the details or try another card.',
+                ),
+            });
+            if (cf.isEligible?.()) {
+              cardFieldsRef.current = cf;
+              if (!cancelled) setCardEligible(true);
+            }
+          } catch {
+            /* Card fields are an enhancement; PayPal buttons still work. */
+          }
+        }
+
         instance = paypal.Buttons({
           style: { layout: 'vertical', shape: 'rect', height: 48, label: 'pay' },
 
-          createOrder: async () => {
-            setError(null);
-            const { data, error: fnError } = await supabase.functions.invoke('paypal-create-order', {
-              body: target,
-            });
-            if (fnError || !data?.order_id) {
-              const message = data?.message || fnError?.message ||
-                'We could not start this payment. Please try again.';
-              fail('Payment could not be started', message);
-              throw new Error(message);
-            }
-            return data.order_id as string;
-          },
+          createOrder: () => handlersRef.current.startOrder(),
 
-          onApprove: async (data: { orderID: string }) => {
-            setState('processing');
-            const { data: result, error: fnError } = await supabase.functions.invoke(
-              'paypal-capture-order',
-              { body: { order_id: data.orderID } },
-            );
-
-            if (fnError || !result || (result.status !== 'completed' && !result.pending)) {
-              setState('error');
-              setError({
-                title: 'Payment not completed',
-                detail: result?.message || fnError?.message ||
-                  'Your payment was not completed and nothing has been confirmed. You have not been charged twice — try again or use another method.',
-              });
-              return;
-            }
-
-            if (result.pending) {
-              setState('pending');
-              onSuccess?.(result);
-              return;
-            }
-
-            setState('success');
-            onSuccess?.(result);
-            setTimeout(() => {
-              if (returnUrl) window.location.href = returnUrl;
-            }, 900);
-          },
+          onApprove: (data: { orderID: string }) => handlersRef.current.finishOrder(data.orderID),
 
           onCancel: () => {
             setState('ready');
@@ -233,6 +217,7 @@ const PayPalPaymentPanel = ({
         return instance.render(buttonsRef.current).then(() => {
           if (!cancelled) setState('ready');
         });
+
       })
       .catch((err: unknown) => {
         fail(
