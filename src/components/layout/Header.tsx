@@ -291,11 +291,11 @@ const Header = ({ hideSearch = false }: HeaderProps) => {
           to="/" 
           className={`flex items-center shrink-0 transition-opacity duration-200 ${isMobileSearchOpen ? 'opacity-0 pointer-events-none absolute' : 'opacity-100'} md:opacity-100 md:pointer-events-auto md:relative`}
         >
-          <div className="flex items-center justify-center w-9 h-9 sm:w-11 sm:h-11 shrink-0">
+          <div className="flex items-center justify-center h-11 w-11 shrink-0 sm:h-12 sm:w-12">
             <img 
               src={vendibookFavicon} 
               alt="Vendibook" 
-              className="h-8 w-auto brightness-125 object-contain"
+              className="h-9 w-auto object-contain brightness-125 transition-transform duration-300 hover:scale-105 sm:h-10"
             />
           </div>
         </Link>
@@ -402,15 +402,17 @@ const Header = ({ hideSearch = false }: HeaderProps) => {
           <div className="hidden md:flex flex-1 justify-center max-w-2xl mx-6">
             <button
               onClick={() => navigate('/search')}
-              className="w-full flex items-center gap-4 px-6 h-[52px] rounded-full text-[15px] font-medium text-white/70 transition-all group"
+              className="group flex h-[52px] w-full items-center gap-3.5 rounded-full px-6 text-[15px] font-medium text-white/70 transition-all duration-300 hover:-translate-y-px"
               style={{
-                background: 'rgba(18,18,18,0.92)',
-                border: '1px solid rgba(255,255,255,0.08)',
-                boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.04), 0 4px 18px rgba(0,0,0,0.35)',
+                background: 'rgba(255,255,255,0.045)',
+                border: '1px solid rgba(255,255,255,0.10)',
+                boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.05), 0 6px 22px rgba(0,0,0,0.30)',
+                backdropFilter: 'blur(14px)',
               }}
             >
-              <Search className="h-5 w-5 text-primary transition-transform duration-200 group-hover:scale-105" />
-              <span className="text-white/55 group-hover:text-white/85 transition-colors">Search food trucks, trailers, tools...</span>
+              <Search className="h-[18px] w-[18px] text-primary transition-transform duration-200 group-hover:scale-105" />
+              <span className="text-white/55 transition-colors group-hover:text-white/85">Search food trucks, trailers, or a city</span>
+              <span className="ml-auto rounded-full border border-white/10 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-white/40 transition-colors group-hover:text-white/60">Search</span>
             </button>
           </div>
         )}

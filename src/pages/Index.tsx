@@ -16,6 +16,7 @@ import ConciergeSection from '@/components/home/ConciergeSection';
 import SellerHomeBlock from '@/components/home/SellerHomeBlock';
 import PremiumDiscoveryBlock from '@/components/home/PremiumDiscoveryBlock';
 import HowVendibookWorks from '@/components/home/how-it-works/HowVendibookWorks';
+import HomeTrustRail from '@/components/home/HomeTrustRail';
 
 import { usePageTracking } from '@/hooks/usePageTracking';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -96,6 +97,9 @@ const Index = () => {
 
         {/* Announcement moved below the hero */}
         <AnnouncementBanner />
+
+        {/* Consolidated payments & verification rail */}
+        <HomeTrustRail />
 
         {/* See How Vendibook Works — 4 in-browser animated explainers */}
         <HowVendibookWorks />
