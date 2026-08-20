@@ -717,41 +717,13 @@ const BookingCheckout = () => {
 
   const coverImage = listing.cover_image_url || listing.image_urls?.[0] || '/placeholder.svg';
 
-  // "Step 0" intro for high-value rentals. Shown once per checkout session
-  // per listing; small bookings skip straight to the wizard.
-  const RENTAL_INTRO_MIN_TOTAL = 500;
-  const shouldOfferIntro = fees.subtotal >= RENTAL_INTRO_MIN_TOTAL;
+  // The old "$500 intro screen" was pure friction — the review step already
+  // shows everything it did, so high-value rentals go straight to the wizard.
+
+  const cancellationPolicyText =
+    ((listing as { cancellation_policy?: string | null }).cancellation_policy || '').trim() || null;
 
 
-  if (shouldOfferIntro && !introDismissed) {
-    return (
-      <div className="min-h-screen flex flex-col bg-background">
-        <Header />
-        <main className="flex-1 py-8 sm:py-12 px-4">
-          <CheckoutIntro
-            listingId={listing.id}
-            listingTitle={listing.title}
-            coverImageUrl={coverImage}
-            city={listing.city}
-            state={listing.state}
-            price={fees.subtotal}
-            sellerName={
-              // Privacy-safe: business name, else "First L." — never a full legal name.
-              host ? getPublicDisplayName(host, 'Host') : undefined
-            }
-            sellerVerified={Boolean((host as { identity_verified?: boolean } | null | undefined)?.identity_verified)}
-            flow="rental"
-            onBack={() => navigate(`/listing/${listingId}`)}
-            onContinue={() => {
-              try { sessionStorage.setItem(introSessionKey, '1'); } catch { /* noop */ }
-              setIntroDismissed(true);
-            }}
-          />
-        </main>
-        <Footer />
-      </div>
-    );
-  }
 
   return (
 
