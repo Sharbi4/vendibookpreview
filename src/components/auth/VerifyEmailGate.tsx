@@ -24,7 +24,10 @@ const VerifyEmailGate = () => {
   const [saving, setSaving] = useState(false);
   const [checking, setChecking] = useState(false);
 
-  const redirectTo = `${window.location.origin}/dashboard`;
+  // Land the visitor back on the page they were gated out of.
+  const redirectTo = `${window.location.origin}${
+    window.location.pathname.startsWith('/') ? window.location.pathname + window.location.search : '/dashboard'
+  }`;
 
   const resend = async () => {
     if (!currentEmail) return;
