@@ -263,9 +263,9 @@ const AnimatedRoutes = () => {
           <Route path="/host/reporting" element={<PageTransition><HostReporting /></PageTransition>} />
           <Route path="/host/analytics" element={<PageTransition><HostAnalytics /></PageTransition>} />
           {/* Legacy listing-creation entries → canonical opening gateway */}
-          <Route path="/create-listing" element={<Navigate to="/list/start" replace />} />
-          <Route path="/new-listing" element={<Navigate to="/list/start" replace />} />
-          <Route path="/listing-wizard" element={<Navigate to="/list/start" replace />} />
+          <Route path="/create-listing" element={<Navigate to="/list" replace />} />
+          <Route path="/new-listing" element={<Navigate to="/list" replace />} />
+          <Route path="/listing-wizard" element={<Navigate to="/list" replace />} />
 
           <Route path="/host" element={<Navigate to="/list" replace />} />
           <Route path="/listing/:id" element={<PageTransition><ListingDetail /></PageTransition>} />
