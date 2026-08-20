@@ -128,10 +128,6 @@ serve(async (req) => {
     });
     const platformFee = feeQuote.feeCents / 100;
 
-
-    const fulfillmentType = body?.fulfillment_type ?? "pickup";
-    const needsAddress = fulfillmentType === "delivery" || fulfillmentType === "vendibook_freight";
-
     const { data: created, error: insertErr } = await admin
       .from("sale_transactions")
       .insert({
@@ -147,16 +143,7 @@ serve(async (req) => {
         fee_locked_at: new Date().toISOString(),
         status: "pending",
         payment_provider: "paypal",
-        fulfillment_type: fulfillmentType,
-        delivery_fee: Number(body?.delivery_fee ?? 0) || 0,
-        freight_cost: Number(body?.freight_cost ?? 0) || 0,
-        delivery_address: needsAddress ? (body?.delivery_address ?? null) : null,
-        delivery_instructions: needsAddress ? (body?.delivery_instructions ?? null) : null,
-        buyer_name: body?.buyer_name ?? null,
-        buyer_email: body?.buyer_email ?? user.email ?? null,
-        buyer_phone: body?.buyer_phone ?? null,
-        referral_code: body?.referral_code ?? null,
-        terms_id: body?.terms_id ?? null,
+        ...mutableFields,
       })
       .select("id")
       .single();
@@ -165,7 +152,8 @@ serve(async (req) => {
       return jsonError(500, "intent_failed", "We couldn't start this purchase. Please try again.");
     }
 
-    return jsonResponse(200, { transaction_id: created.id });
+    return jsonResponse(200, { transaction_id: created.id, amount });
+
   } catch (err) {
     return unknownErrorResponse(err);
   }
