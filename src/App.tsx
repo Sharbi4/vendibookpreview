@@ -417,6 +417,10 @@ const AnimatedRoutes = () => {
           <Route path="/unsubscribe" element={<PageTransition><Unsubscribe /></PageTransition>} />
           <Route path="/email-unsubscribe" element={<PageTransition><EmailUnsubscribe /></PageTransition>} />
           <Route path="/feedback" element={<PageTransition><Feedback /></PageTransition>} />
+          <Route path="/community/spotlight" element={<PageTransition><CommunitySpotlight /></PageTransition>} />
+          <Route path="/spotlight" element={<PageTransition><CommunitySpotlight /></PageTransition>} />
+          <Route path="/admin/spotlights" element={<PageTransition><AdminSpotlights /></PageTransition>} />
+          <Route path="/admin/campaigns/business-spotlight" element={<PageTransition><AdminCampaignSpotlightInvite /></PageTransition>} />
           
           {/* SEO article page - separate purpose from tools hub */}
           <Route path="/vendi-ai-suite" element={<PageTransition><VendiAISuite /></PageTransition>} />
