@@ -20,19 +20,19 @@ export const HowVendibookWorks = () => {
   };
 
   return (
-    <div className="relative px-3 pb-6 pt-8 sm:px-4 sm:pb-10 sm:pt-12">
+    <div className="relative px-3 pb-6 pt-6 sm:px-4 sm:pb-8 sm:pt-8">
       {/* soft dark-to-light easing so the ivory band feels layered, not pasted */}
       <div
         aria-hidden
         className="pointer-events-none absolute inset-x-0 -top-16 h-32 bg-gradient-to-b from-transparent via-white/[0.02] to-white/[0.05]"
       />
       <section
-        className="sale-light relative overflow-hidden rounded-[32px] py-12 shadow-[0_40px_120px_-60px_hsl(0_0%_0%/0.9)] sm:py-16 md:py-20"
+        className="sale-light relative overflow-hidden rounded-[32px] py-8 shadow-[0_40px_120px_-60px_hsl(0_0%_0%/0.9)] sm:py-10 md:py-12"
         aria-labelledby="how-vendibook-works-heading"
       >
       <div className="container mx-auto max-w-6xl px-5 sm:px-6">
         <motion.div
-          className="mb-8 max-w-2xl sm:mb-10"
+          className="mb-6 max-w-2xl sm:mb-8"
           initial={reduced ? { opacity: 0 } : { opacity: 0, y: 16 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: '-60px' }}
@@ -43,15 +43,15 @@ export const HowVendibookWorks = () => {
           </p>
           <h2
             id="how-vendibook-works-heading"
-            className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl md:text-4xl"
+            className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl"
           >
             Everything you need to move a mobile food business forward.
           </h2>
-          <p className="mt-3 text-sm leading-relaxed text-muted-foreground sm:text-base">
-            Buying, renting, selling, or hosting — each path has structured listings, clear steps,
-            and the same marketplace tools behind it.
+          <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+            Buy, rent, sell, or host — same tools behind every path.
           </p>
         </motion.div>
+
 
         {/* Mobile: horizontal snap carousel. Desktop: grid. */}
         <div className="-mx-5 flex snap-x snap-mandatory gap-4 overflow-x-auto px-5 pb-2 sm:mx-0 sm:grid sm:grid-cols-2 sm:overflow-visible sm:px-0 lg:grid-cols-4">
