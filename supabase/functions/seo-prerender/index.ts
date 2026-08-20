@@ -508,7 +508,8 @@ function buildListingHTML(listing: any, reviews: any[] = []): string {
   ].filter(Boolean).join(" ").slice(0, 160);
 
   const canonicalUrl = `${SITE_URL}/listing/${listing.id}`;
-  const imageUrl = listing.cover_image_url || `${SITE_URL}/placeholder.svg`;
+  const imageUrl = listing.cover_image_url || `${SITE_URL}/images/social/vendibook-og-default.jpg`;
+  const imageAlt = `${listing.title} — ${categoryLabel} ${modeLabel} on Vendibook`;
 
   // IMPORTANT: JSON-LD is in its own <script> tag with pure JSON only.
   // Redirect is in a SEPARATE <script> tag.
@@ -528,8 +529,11 @@ function buildListingHTML(listing: any, reviews: any[] = []): string {
   <meta property="og:title" content="${escapeHtml(title)}" />
   <meta property="og:description" content="${escapeHtml(description)}" />
   <meta property="og:url" content="${canonicalUrl}" />
-  <meta property="og:image" content="${imageUrl}" />
+  <meta property="og:image" content="${escapeHtml(imageUrl)}" />
+  <meta property="og:image:secure_url" content="${escapeHtml(imageUrl)}" />
+  <meta property="og:image:alt" content="${escapeHtml(imageAlt)}" />
   <meta property="og:site_name" content="Vendibook" />
+  <meta property="og:locale" content="en_US" />
   ${!isPhysical && priceText ? `
   <meta property="product:price:amount" content="${String(listing.price_sale || listing.price_daily || listing.price_weekly || 0)}" />
   <meta property="product:price:currency" content="USD" />
@@ -542,7 +546,9 @@ function buildListingHTML(listing: any, reviews: any[] = []): string {
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="${escapeHtml(title)}" />
   <meta name="twitter:description" content="${escapeHtml(description)}" />
-  <meta name="twitter:image" content="${imageUrl}" />
+  <meta name="twitter:image" content="${escapeHtml(imageUrl)}" />
+  <meta name="twitter:image:alt" content="${escapeHtml(imageAlt)}" />
+  <meta name="twitter:site" content="@vendibook" />
 
   <!-- JSON-LD (pure JSON, no other content) -->
   <script type="application/ld+json">${JSON.stringify(schemas)}</script>
@@ -621,8 +627,11 @@ function buildBlogHTML(post: BlogPostMeta): string {
   <meta property="og:title" content="${escapeHtml(post.title)}" />
   <meta property="og:description" content="${escapeHtml(post.description)}" />
   <meta property="og:url" content="${canonicalUrl}" />
-  <meta property="og:image" content="${imageUrl}" />
+  <meta property="og:image" content="${escapeHtml(imageUrl)}" />
+  <meta property="og:image:secure_url" content="${escapeHtml(imageUrl)}" />
+  <meta property="og:image:alt" content="${escapeHtml(imageAlt)}" />
   <meta property="og:site_name" content="Vendibook" />
+  <meta property="og:locale" content="en_US" />
   <meta property="og:locale" content="en_US" />
   <meta property="article:published_time" content="${post.datePublished}" />
   <meta property="article:author" content="${escapeHtml(post.author)}" />
@@ -632,7 +641,9 @@ function buildBlogHTML(post: BlogPostMeta): string {
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="${escapeHtml(post.title)}" />
   <meta name="twitter:description" content="${escapeHtml(post.description)}" />
-  <meta name="twitter:image" content="${imageUrl}" />
+  <meta name="twitter:image" content="${escapeHtml(imageUrl)}" />
+  <meta name="twitter:image:alt" content="${escapeHtml(imageAlt)}" />
+  <meta name="twitter:site" content="@vendibook" />
 
   <!-- JSON-LD -->
   <script type="application/ld+json">${JSON.stringify(schema)}</script>

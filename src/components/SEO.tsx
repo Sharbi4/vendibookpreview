@@ -6,6 +6,7 @@ interface SEOProps {
   canonical?: string;
   type?: 'website' | 'article' | 'product';
   image?: string;
+  imageAlt?: string;
   ogTitle?: string;
   ogDescription?: string;
   twitterTitle?: string;
@@ -29,7 +30,8 @@ interface SEOProps {
 }
 
 const BASE_URL = 'https://vendibook.com';
-const DEFAULT_IMAGE = `${BASE_URL}/images/vendibook-og-image.jpg`;
+const DEFAULT_IMAGE = `${BASE_URL}/images/social/vendibook-og-default.jpg`;
+const DEFAULT_IMAGE_ALT = 'Vendibook — the marketplace for the mobile food economy';
 const SITE_NAME = 'Vendibook';
 
 /**
@@ -42,6 +44,7 @@ const SEO = ({
   canonical,
   type = 'website',
   image = DEFAULT_IMAGE,
+  imageAlt,
   ogTitle,
   ogDescription,
   twitterTitle,
@@ -57,6 +60,7 @@ const SEO = ({
   const ogDescriptionFinal = ogDescription || description;
   const twitterTitleFinal = twitterTitle || ogTitleFinal;
   const twitterDescriptionFinal = twitterDescription || ogDescriptionFinal;
+  const imageAltFinal = imageAlt || (image === DEFAULT_IMAGE ? DEFAULT_IMAGE_ALT : ogTitleFinal);
 
   useEffect(() => {
     // Update document title
@@ -98,6 +102,8 @@ const SEO = ({
     setMeta('og:title', ogTitleFinal, true);
     setMeta('og:description', ogDescriptionFinal, true);
     setMeta('og:image', imageUrl, true);
+    setMeta('og:image:secure_url', imageUrl, true);
+    setMeta('og:image:alt', imageAltFinal, true);
     setMeta('og:site_name', SITE_NAME, true);
     setMeta('og:locale', 'en_US', true);
 
@@ -107,6 +113,8 @@ const SEO = ({
     setMeta('twitter:title', twitterTitleFinal);
     setMeta('twitter:description', twitterDescriptionFinal);
     setMeta('twitter:image', imageUrl);
+    setMeta('twitter:image:alt', imageAltFinal);
+    setMeta('twitter:site', '@vendibook');
 
     // Article-specific meta (for blog posts, help articles, etc.)
     if (type === 'article' && article) {
@@ -154,7 +162,7 @@ const SEO = ({
     return () => {
       document.title = 'Vendibook | Buy, Sell & Rent Food Trucks & Trailers';
     };
-  }, [fullTitle, description, canonicalUrl, type, imageUrl, ogTitleFinal, ogDescriptionFinal, twitterTitleFinal, twitterDescriptionFinal, article, product, noindex]);
+  }, [fullTitle, description, canonicalUrl, type, imageUrl, imageAltFinal, ogTitleFinal, ogDescriptionFinal, twitterTitleFinal, twitterDescriptionFinal, article, product, noindex]);
 
   return null;
 };
