@@ -106,6 +106,10 @@ describe('getStageRequirements is content-only', () => {
     knownProblems: [],
     includedItems: 'Full kitchen build-out',
     photosExclusionsAnswered: true,
+    // Sale listings must carry exterior dimensions (added with the freight/
+    // delivery estimator) — content-only, still no account gates.
+    lengthInches: 288,
+    heightInches: 120,
   };
 
   it('returns no requirements when all content answers exist', () => {
