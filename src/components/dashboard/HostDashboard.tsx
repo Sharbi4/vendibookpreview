@@ -138,33 +138,13 @@ const HostDashboard = () => {
             hint={bookingStats.pending > 0 ? 'Awaiting reply' : 'All clear'}
             href="/host/bookings"
           />
-          {isFreeTier && pendingOffers.length === 0 ? (
-            <Link
-              to="/dashboard?view=host&tab=promote"
-              aria-label="Unlock Pro"
-              className="block relative rounded-[18px] gold-card p-5 sm:p-6 h-full hover:-translate-y-0.5 transition-transform"
-            >
-              <div className="flex items-center justify-between gap-2">
-                <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#1A1400]">
-                  Unlock Pro
-                </span>
-                <Crown className="h-4 w-4 text-[#1A1400]" strokeWidth={2.4} />
-              </div>
-              <div className="mt-3 sm:mt-4 text-[24px] sm:text-[26px] font-extrabold tracking-tight text-[#1A1400] leading-tight">
-                Featured &amp; lower fees
-              </div>
-              <div className="mt-2 text-[12px] font-semibold text-[#2b2100]">
-                See upgrades →
-              </div>
-            </Link>
-          ) : (
-            <KpiCard
-              label="Open offers"
-              value={pendingOffers.length}
-              hint={pendingOffers.length > 0 ? 'Awaiting reply' : 'Nothing pending'}
-              href="/dashboard?view=host&tab=sales"
-            />
-          )}
+          <KpiCard
+            label="Open offers"
+            value={pendingOffers.length}
+            hint={pendingOffers.length > 0 ? 'Awaiting reply' : 'Nothing pending'}
+            href="/dashboard?view=host&tab=sales"
+          />
+
         </div>
       </section>
 
