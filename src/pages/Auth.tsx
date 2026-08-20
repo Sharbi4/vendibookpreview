@@ -4,8 +4,9 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePageTracking } from '@/hooks/usePageTracking';
 import { Loader2 } from 'lucide-react';
-import { AuthMarketingPanel } from '@/components/auth/AuthMarketingPanel';
+import SEO from '@/components/SEO';
 import { AuthFormPanel } from '@/components/auth/AuthFormPanel';
+
 import { supabase } from '@/integrations/supabase/client';
 
 type AuthMode = 'signin' | 'signup' | 'forgot' | 'verify';
