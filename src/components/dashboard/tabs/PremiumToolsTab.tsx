@@ -35,7 +35,7 @@ const PremiumToolsTab = () => {
               Premium Tools
             </h1>
             <p className="mt-1 text-sm text-muted-foreground max-w-lg">
-              The operator toolkit — pricing, marketing, permits, and market research, all built in.
+              Included with Vendibook Pro — pricing, listings, marketing, permits, and market research.
             </p>
           </div>
           {showUpsell && (

@@ -39,7 +39,7 @@ const TOOL_TIER: Record<ToolSlug, Tier> = {
   'marketing-studio': 'pro',
   'concept-lab': 'pro',
   'market-radar': 'pro',
-  'buildkit': 'premium',
+  'buildkit': 'pro',
 };
 
 const TOOL_UNLOCK_SLUG: Partial<Record<ToolSlug, string>> = {
