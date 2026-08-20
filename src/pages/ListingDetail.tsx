@@ -1,66 +1,23 @@
-import { deliveryRateLabel } from '@/lib/fulfillment/delivery';
-import { DeliveryAvailabilityPanel } from '@/components/listing-detail/DeliveryAvailabilityPanel';
-import { FulfillmentTypeBadge } from '@/components/listing-detail/FulfillmentTypeBadge';
 import { useParams, Link } from 'react-router-dom';
-import { 
-  ArrowLeft, 
-  MapPin, 
-  Loader2,
-  Star,
-  Edit,
-  Share2,
-} from 'lucide-react';
+import { ArrowLeft, Loader2 } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from '@/hooks/use-toast';
 import { trackEventToDb } from '@/hooks/useAnalyticsEvents';
 import { usePageTracking } from '@/hooks/usePageTracking';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
-import EnhancedPhotoGallery from '@/components/listing-detail/EnhancedPhotoGallery';
-import EnhancedHostCard from '@/components/listing-detail/EnhancedHostCard';
-import MessageHostForm from '@/components/messaging/MessageHostForm';
-import ReviewsSection from '@/components/reviews/ReviewsSection';
-import RequirementsModal from '@/components/listing-detail/RequirementsModal';
-import CollapsibleDescription from '@/components/listing-detail/CollapsibleDescription';
-import AudioListingPlayer from '@/components/listing/AudioListingPlayer';
-import PromoVideoPlayer from '@/components/listing/PromoVideoPlayer';
-import EnhancedQuickHighlights from '@/components/listing-detail/EnhancedQuickHighlights';
-import PricingSection from '@/components/listing-detail/PricingSection';
-import { AmenitiesSection } from '@/components/listing-detail/AmenitiesSection';
-import EquipmentReadinessSummary from '@/components/listing-detail/EquipmentReadinessSummary';
 
 import { ReportIssueButton } from '@/components/support/ReportIssueButton';
 
 import { StickyMobileCTA } from '@/components/listing-detail/StickyMobileCTA';
-import ListingConciergeBox from '@/components/listing-detail/ListingConciergeBox';
-import { FavoriteButton } from '@/components/listing/FavoriteButton';
-import CompactTrustSection from '@/components/trust/CompactTrustSection';
-import CancellationPolicyCard from '@/components/trust/CancellationPolicyCard';
-import { ListingEventsSection } from '@/components/storefront';
-import ListingLocationMap from '@/components/listing-detail/ListingLocationMap';
-import RelatedListings from '@/components/listing-detail/RelatedListings';
-import { TechSpecsGrid } from '@/components/listing-detail/TechSpecsGrid';
-import CommercialProductBar from '@/components/listing-detail/CommercialProductBar';
-import SellerTrustPanel from '@/components/listing-detail/SellerTrustPanel';
-import KeySpecsStrip from '@/components/listing-detail/KeySpecsStrip';
 import SaleListingLayout from '@/components/listing-detail/sale/SaleListingLayout';
 import RentalListingLayout from '@/components/listing-detail/rental/RentalListingLayout';
-import { FinancingActionPanel } from '@/components/listing-detail/sale/FinancingActionPanel';
-import { ListingPaymentMethods } from '@/components/listing-detail/ListingPaymentMethods';
-import { SaleTrustStrip, SaleProtectionSection, SaleLocationCard, SaleBrowseMore } from '@/components/listing-detail/sale/SaleSharedSections';
 
 import { VendorSlotAvailability } from '@/components/listing-detail/VendorSlotAvailability';
-import { WeeklyHoursDisplay } from '@/components/listing-detail/WeeklyHoursDisplay';
-import { RentalBookingWidget } from '@/components/listing-detail/RentalBookingWidget';
-import { BookingWidget } from '@/components/listing-detail/BookingWidget';
-import ListingHowItWorks from '@/components/listing-detail/ListingHowItWorks';
-import ListingExplainerVideo from '@/components/listing-detail/ListingExplainerVideo';
 
 import { ListingHighlightsCard } from '@/components/transaction';
 import OwnerBanner from '@/components/listing-detail/OwnerBanner';
-import { GetVerifiedButton } from '@/components/verification/GetVerifiedButton';
 import { useQuery } from '@tanstack/react-query';
 
 import { supabase } from '@/integrations/supabase/client';
@@ -74,15 +31,12 @@ import { useAuth } from '@/contexts/AuthContext';
 import { CATEGORY_LABELS } from '@/types/listing';
 import { useEffect, useMemo } from 'react';
 import { trackListingViewed } from '@/lib/analytics';
-import { CategoryTooltip } from '@/components/categories/CategoryGuide';
 import SEO from '@/components/SEO';
 import { listingShareUrl, listingShareText, shareOrCopy } from '@/lib/share';
 import JsonLd, { generateProductSchema, generateListingBreadcrumbSchema, generateListingLocalBusinessSchema, generateListingFAQSchema } from '@/components/JsonLd';
 import { getPublicDisplayName } from '@/lib/displayName';
-import { formatLastActive } from '@/hooks/useActivityTracker';
-import { resolveListingBrand, getBrandFieldLabel } from '@/lib/resolveListingBrand';
+import { resolveListingBrand } from '@/lib/resolveListingBrand';
 import { isListingFeatured } from '@/lib/featured';
-import { FeaturedBadge } from '@/components/listing/FeaturedBadge';
 
 const ListingDetail = () => {
   const { id } = useParams<{ id: string }>();
