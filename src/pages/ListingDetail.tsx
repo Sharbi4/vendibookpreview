@@ -379,19 +379,20 @@ const ListingDetail = () => {
       )}
       <Header />
 
-      {/* Commercial product bar — rentals only.
-          The sale layout mounts its own breadcrumb + share/save row. */}
+      {/* Rentals now use the same simplified premium layout as for-sale. */}
       {isRental && (
-        <CommercialProductBar
-          listingId={listing.id}
-          category={listing.category}
-          mode={listing.mode as 'rent' | 'sale'}
-          title={listing.title}
-          rating={ratingData?.average}
-          reviewCount={ratingData?.count}
+        <RentalListingLayout
+          listing={listing}
+          host={host}
+          images={images}
+          videos={videos}
+          isOwner={!!isOwner}
+          hostVerified={sellerIdentityVerified}
+          ratingData={ratingData}
           onShare={handleShare}
         />
       )}
+
 
       {/* For-sale listings use one simplified layout at every breakpoint. */}
       {!isRental && (
