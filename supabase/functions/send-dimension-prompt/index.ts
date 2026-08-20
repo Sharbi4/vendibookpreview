@@ -47,7 +47,7 @@ function buildHtml(t: Target, unsubUrl: string, ctaUrl: string) {
     : `Your listing <strong>${esc(t.titles[0] ?? "")}</strong> is missing required Length and/or Height. Adding it takes about a minute and will update your listing automatically.`;
   return `<!doctype html><html><body style="margin:0;background:#08080a;font-family:-apple-system,Segoe UI,Helvetica,Arial,sans-serif;">
   <div style="max-width:560px;margin:0 auto;padding:32px 24px;color:#f5f5f4;">
-    <img src="${SITE}/images/vendibook-logo.png" alt="Vendibook" width="150" style="display:block;margin-bottom:28px;" />
+    <img src="https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/email-assets/vendibook-hero-logo.png?v=2026-08" alt="Vendibook" width="150" style="display:block;margin-bottom:28px;" />
     <h1 style="font-size:22px;line-height:1.3;margin:0 0 16px;color:#ffffff;">Add your listing dimensions to help buyers</h1>
     <p style="font-size:15px;line-height:1.6;color:#d6d3d1;margin:0 0 14px;">Hi ${esc(t.firstName || "there")},</p>
     <p style="font-size:15px;line-height:1.6;color:#d6d3d1;margin:0 0 14px;">We’ve added clearer trailer/truck dimensions to Vendibook listings so buyers can quickly evaluate fit, transport and delivery.</p>
