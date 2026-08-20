@@ -29,6 +29,8 @@ import { reportError } from '@/lib/errorReporter';
 import { parseEdgeError } from '@/lib/edgeErrors';
 import { usePremiumUpsell, isPremiumError, featureFromParsed } from '@/hooks/usePremiumUpsell';
 import { PremiumChip } from '@/components/monetization/PremiumChip';
+import { useHostEntitlements } from '@/hooks/useHostEntitlements';
+import { useProBoostCredit, useRedeemProBoostCredit } from '@/hooks/useProBoostCredit';
 
 import { CATEGORY_LABELS, ListingCategory, FreightPayer, AMENITIES_BY_CATEGORY, FREIGHT_CATEGORY_LABELS, FreightCategory, FulfillmentType, isMobileAsset, isStaticLocation as isStaticLocationFn, MODE_LABELS } from '@/types/listing';
 import {
@@ -189,6 +191,12 @@ export const PublishWizard: React.FC = () => {
   const { toast } = useToast();
   const { user } = useAuth();
   const premiumUpsell = usePremiumUpsell();
+  // Canonical Vendibook Pro entitlement — AI writing/pricing assistance is a
+  // Pro benefit. Publishing itself NEVER depends on this.
+  const hostEntitlements = useHostEntitlements();
+  const aiAssistUnlocked = hostEntitlements.hasAtLeast('pro');
+  const { data: proBoostCredit } = useProBoostCredit();
+  const redeemBoostCredit = useRedeemProBoostCredit();
   const [searchParams, setSearchParams] = useSearchParams();
   const queryClient = useQueryClient();
 
@@ -295,7 +303,7 @@ export const PublishWizard: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [step]);
 
-  // Handle returns from PayPal Checkout (featured / notary / membership).
+  // Handle returns from PayPal Checkout (featured / membership).
   // - Restore the step the user was on via ?step= (validated above).
   // - Show cancel/success toasts.
   // - Invalidate entitlement caches so any newly-unlocked features go live in
@@ -304,10 +312,9 @@ export const PublishWizard: React.FC = () => {
   useEffect(() => {
     const unlocked = searchParams.get('unlocked');
     const featuredCancelled = searchParams.get('featured_cancelled') === 'true';
-    const notaryCancelled = searchParams.get('notary_cancelled') === 'true';
     const membershipCancelled = searchParams.get('membership_cancelled') === 'true';
 
-    if (!unlocked && !featuredCancelled && !notaryCancelled && !membershipCancelled) return;
+    if (!unlocked && !featuredCancelled && !membershipCancelled) return;
 
     const refreshEntitlements = () => {
       queryClient.invalidateQueries({ queryKey: ['host-entitlements'] });
@@ -336,12 +343,7 @@ export const PublishWizard: React.FC = () => {
         description: 'Your listing is still saved. You can add the Featured boost later.',
       });
     }
-    if (notaryCancelled) {
-      toast({
-        title: 'Notary cancelled',
-        description: 'Your listing is still saved. You can add Proof Notary later.',
-      });
-    }
+
     if (membershipCancelled) {
       toast({
         title: 'Membership cancelled',
@@ -351,7 +353,8 @@ export const PublishWizard: React.FC = () => {
 
     // Strip handled params but preserve ?step= so a refresh keeps position.
     const next = new URLSearchParams(searchParams);
-    ['unlocked', 'featured_cancelled', 'notary_cancelled', 'membership_cancelled'].forEach((k) => next.delete(k));
+    ['unlocked', 'featured_cancelled', 'notary_cancelled', 'membership_cancelled'] // notary_cancelled cleaned for legacy links
+      .forEach((k) => next.delete(k));
     setSearchParams(next, { replace: true });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
@@ -391,7 +394,6 @@ export const PublishWizard: React.FC = () => {
   const [freightPayer, setFreightPayer] = useState<FreightPayer>('buyer');
   const [acceptPayPalCheckout, setAcceptPayPalCheckout] = useState(true);
   const [acceptCashPayment, setAcceptCashPayment] = useState(false);
-  const [proofNotaryEnabled, setProofNotaryEnabled] = useState(false);
   const [featuredEnabled, setFeaturedEnabled] = useState(false);
   const featuredBoostPrice = useCatalogPrice(ACTIVE_PRODUCT_SLUGS.featuredBoost);
 
@@ -789,7 +791,7 @@ export const PublishWizard: React.FC = () => {
         updateData.freight_payer = freightPayer;
         updateData.accept_paypal_checkout = acceptPayPalCheckout;
         updateData.accept_cash_payment = acceptCashPayment;
-        // Paid entitlements (Proof Notary / Featured) are NEVER written from the
+        // Paid entitlements (Featured boost) are NEVER written from the
         // browser. They are granted only by a verified PayPal capture or an
         // admin/complimentary path. The seller's selection lives in wizard state
         // and only decides whether checkout is offered after publishing.
@@ -960,7 +962,6 @@ export const PublishWizard: React.FC = () => {
       setFreightPayer((data.freight_payer as FreightPayer) || 'buyer');
       setAcceptPayPalCheckout(data.accept_paypal_checkout ?? true);
       setAcceptCashPayment(data.accept_cash_payment ?? false);
-      setProofNotaryEnabled(data.proof_notary_enabled ?? false);
       setFeaturedEnabled((data as any).featured_enabled ?? false);
       // Set details step fields
       setHighlights(data.highlights || []);
@@ -1202,7 +1203,7 @@ export const PublishWizard: React.FC = () => {
         updateData.freight_payer = freightPayer;
         updateData.accept_paypal_checkout = acceptPayPalCheckout;
         updateData.accept_cash_payment = acceptCashPayment;
-        // Paid entitlements (Proof Notary / Featured) are NEVER written from the
+        // Paid entitlements (Featured boost) are NEVER written from the
         // browser. They are granted only by a verified PayPal capture or an
         // admin/complimentary path. The seller's selection lives in wizard state
         // and only decides whether checkout is offered after publishing.
@@ -1343,6 +1344,10 @@ export const PublishWizard: React.FC = () => {
   };
 
   const handleGetSuggestions = async () => {
+    if (!aiAssistUnlocked) {
+      premiumUpsell.show('pricepilot', 'wizard_pricing');
+      return;
+    }
     if (!title || !listing?.category) {
       toast({
         title: 'Missing information',
@@ -1436,6 +1441,10 @@ export const PublishWizard: React.FC = () => {
 
   // AI Description Optimization
   const optimizeDescription = async () => {
+    if (!aiAssistUnlocked) {
+      premiumUpsell.show('ai-description', 'wizard_description');
+      return;
+    }
     if (!description || description.trim().length < 10) {
       toast({
         title: 'Description too short',
@@ -1479,10 +1488,15 @@ export const PublishWizard: React.FC = () => {
       }
     } catch (error) {
       console.error('Error optimizing description:', error);
-      toast({
-        title: 'Optimization failed',
-        description: error instanceof Error ? error.message : 'Please try again later.',
-        variant: 'destructive'});
+      const parsed = await parseEdgeError(error);
+      if (isPremiumError(parsed)) {
+        premiumUpsell.show(featureFromParsed(parsed) ?? 'ai-description', 'wizard_description');
+      } else {
+        toast({
+          title: 'Optimization failed',
+          description: parsed.message || 'Please try again later.',
+          variant: 'destructive'});
+      }
     } finally {
       setIsOptimizing(false);
     }
@@ -2160,71 +2174,8 @@ export const PublishWizard: React.FC = () => {
             instant_book: instantBook,
             deposit_amount: safeParsePrice(depositAmount)};
 
-      // If Proof Notary is enabled for a sale listing, redirect to checkout for the $45 fee.
-      // MIRRORS THE FEATURED BOOST PATTERN: publish FIRST so cancelling the notary
-      // checkout does NOT strand the listing in draft. Notary is a protection
-      // add-on — the listing itself should go live regardless. Webhook flips
-      // the notary flag once payment clears.
-      if (listing.mode === 'sale' && proofNotaryEnabled) {
-        let isFirstTimePublishForNotary = false;
-        try {
-          const publishResult = await publishListingIdempotent(listing.id, {
-            ...baseUpdateData,
-            ...pricingUpdateData,
-          });
-          isFirstTimePublishForNotary = publishResult.firstPublish;
-        } catch (persistError: any) {
-          if (typeof persistError?.message === 'string' && persistError.message.includes('listing_publish_limit_reached')) {
-            setShowLimitModal(true);
-            setIsSaving(false);
-            return;
-          }
-          throw persistError;
-        }
-
-        // Get session for auth
-        const { data: sessionData } = await supabase.auth.getSession();
-        if (!sessionData.session) {
-          toast({ title: 'Please sign in to continue', variant: 'destructive' });
-          return;
-        }
-
-        const data = { url: hostedCheckoutUrl('notary', listing.id, { success: `/listing-published?listing_id=${listing.id}`, cancel: `/listing-published?listing_id=${listing.id}`, label: 'Proof Notary' }) };
-        if (!data?.url) {
-          // Listing already published — surface a clear success even if notary failed.
-          toast({
-            title: 'Listing published',
-            description: "We couldn't start the Proof Notary checkout. You can add it later from your listing.",
-          });
-          window.location.href = `/listing-published?listing_id=${listing.id}`;
-          return;
-        }
-
-        // Set up listener for cross-tab communication before opening checkout
-        const handleCheckoutComplete = (event: MessageEvent) => {
-          if (event.data?.type === 'notary-checkout-complete' && event.data?.listingId === listing.id) {
-            // Navigate to the success page
-            window.location.href = event.data.url || `/listing-published?listing_id=${listing.id}&notary_paid=true`;
-          }
-        };
-
-        try {
-          const channel = new BroadcastChannel('notary-checkout');
-          channel.onmessage = handleCheckoutComplete;
-          // Store channel reference to clean up later if needed
-          (window as any).__notaryCheckoutChannel = channel;
-        } catch (e) {
-          console.log('BroadcastChannel not supported');
-        }
-
-        const newWindow = window.open(data.url, '_blank');
-        if (!newWindow) window.location.href = data.url;
-
-        // Listing is live; the user is on the published listing while notary settles.
-        window.location.href = `/listing-published?listing_id=${listing.id}&notary_pending=true`;
-        return;
-      }
-
+      // Proof Notary is a retired product — it is no longer sold from the
+      // publish wizard. Legacy listings keep their historical flag read-only.
 
       // If Featured Listing is enabled and not already active/comped, redirect to the catalog-priced Featured Boost checkout.
       // Pending complimentary boosts are applied by the database trigger when status changes to published.
@@ -2307,6 +2258,24 @@ export const PublishWizard: React.FC = () => {
         // outcomes back to the published-listing page so they always land on
         // a clear "your listing is live / boost is activating" confirmation.
         const publishedUrl = `/listing-published?listing_id=${listing.id}`;
+
+        // Vendibook Pro members with an unused Featured Boost credit for the
+        // current billing period redeem it instead of paying again.
+        if (proBoostCredit) {
+          try {
+            await redeemBoostCredit.mutateAsync(listing.id);
+            toast({
+              title: 'Your listing is live 🎉',
+              description: 'We applied your included Vendibook Pro Featured Boost.',
+            });
+            window.location.href = `${publishedUrl}&featured_paid=true`;
+            return;
+          } catch (creditError) {
+            console.error('Boost credit redemption failed', creditError);
+            // Fall through to the paid checkout — the listing is already live.
+          }
+        }
+
         const checkoutUrl = productCheckoutUrl(ACTIVE_PRODUCT_SLUGS.featuredBoost, listing.id, {
           success: `${publishedUrl}&featured_paid=true`,
           cancel: `${publishedUrl}&featured_cancelled=true`,
@@ -2940,15 +2909,20 @@ export const PublishWizard: React.FC = () => {
                           
                         </div>
                         <div className="flex-1 min-w-0">
-                          <h4 className="font-semibold text-foreground mb-1">AI Writing Assistant</h4>
+                          <h4 className="font-semibold text-foreground mb-1 flex items-center gap-2">
+                            AI Writing Assistant
+                            <PremiumChip />
+                          </h4>
                           <p className="text-sm text-muted-foreground mb-3">
-                            Let AI polish your description into professional, engaging copy.
+                            {aiAssistUnlocked
+                              ? 'Polish your description into professional, engaging copy you can still edit.'
+                              : 'Included with Vendibook Pro. You can always write your description yourself — it is never required.'}
                           </p>
                           <Button
                             type="button"
                             size="sm"
                             onClick={optimizeDescription}
-                            disabled={isOptimizing || !description || description.length < 10}
+                            disabled={isOptimizing || (aiAssistUnlocked && (!description || description.length < 10))}
                             variant="dark-shine"
                           >
                             {isOptimizing ? (
@@ -2964,7 +2938,7 @@ export const PublishWizard: React.FC = () => {
                             ) : (
                               <>
                                 
-                                Write it for me
+                                {aiAssistUnlocked ? 'Write it for me' : 'Unlock with Pro'}
                               </>
                             )}
                           </Button>
@@ -3177,7 +3151,9 @@ export const PublishWizard: React.FC = () => {
                           <PremiumChip />
                         </h4>
                         <p className="text-sm text-muted-foreground mb-3">
-                          Pro sellers auto-generate optimized pricing from category, title, and location. See the example.
+                          {aiAssistUnlocked
+                            ? 'Generate suggested pricing from category, title, and location. Suggestions are editable.'
+                            : 'Included with Vendibook Pro. You can enter your price manually at any time.'}
                         </p>
 
                         <Button
@@ -3195,7 +3171,7 @@ export const PublishWizard: React.FC = () => {
                           ) : (
                             <>
                               
-                              Get Suggestions
+                              {aiAssistUnlocked ? 'Get Suggestions' : 'Unlock with Pro'}
                             </>
                           )}
                         </Button>
@@ -3930,7 +3906,7 @@ export const PublishWizard: React.FC = () => {
                           variant="dark-shine"
                           size="sm"
                           onClick={optimizeDescription}
-                          disabled={isOptimizing || !description || description.length < 10}
+                          disabled={isOptimizing || (aiAssistUnlocked && (!description || description.length < 10))}
                         >
                           {isOptimizing ? (
                             <>
@@ -3945,7 +3921,7 @@ export const PublishWizard: React.FC = () => {
                           ) : (
                             <>
                               
-                              Write it for me
+                              {aiAssistUnlocked ? 'Write it for me' : 'Write it for me · Pro'}
                             </>
                           )}
                         </Button>
@@ -3989,7 +3965,9 @@ export const PublishWizard: React.FC = () => {
                     
                     {!showOptimized && description.length >= 10 && description.trim().length >= MIN_DESCRIPTION_LENGTH && (
                       <p className="text-xs text-muted-foreground/70">
-                        Tip: tap “Write it for me” for a polished rewrite you can edit
+                        {aiAssistUnlocked
+                          ? 'Tip: tap “Write it for me” for a polished rewrite you can edit'
+                          : 'Optional: “Write it for me” is a Vendibook Pro feature. Your own description publishes just fine.'}
                       </p>
                     )}
                   </div>
