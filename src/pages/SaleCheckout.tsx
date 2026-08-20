@@ -742,6 +742,15 @@ const SaleCheckout = () => {
         return;
       }
 
+      // The server is the price authority: it re-resolves the agreed amount
+      // from an accepted offer (or the listing) and ignores anything the URL
+      // claimed. If that differs from what we displayed, correct the UI before
+      // PayPal opens so the buyer never sees a total change mid-approval.
+      const serverAmount = Number(data.amount);
+      if (Number.isFinite(serverAmount) && serverAmount > 0 && Math.abs(serverAmount - priceSale) >= 0.01) {
+        setAcceptedOfferPrice(serverAmount);
+      }
+
       trackFormSubmitConversion({ form_type: 'purchase', listing_id: listingId });
       trackInitiateCheckout({
         value: totalPrice,
