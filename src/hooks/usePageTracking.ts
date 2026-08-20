@@ -159,34 +159,30 @@ export const usePageTracking = () => {
   const location = useLocation();
 
   useEffect(() => {
-    // Set a fallback page title if the current page hasn't set one via <SEO>
-    // We use a small delay to let <SEO> components set the title first
-    const titleTimeout = setTimeout(() => {
-      const defaultTitle = 'Vendibook | Buy, Sell & Rent Food Trucks & Trailers';
-      if (document.title === defaultTitle || !document.title) {
-        const pageTitle = getPageTitle(location.pathname);
-        document.title = `${pageTitle} | Vendibook`;
+    let cancelled = false;
+
+    (async () => {
+      // Give the route's own <SEO> component (including async/dynamic titles)
+      // a chance to land before we read or replace document.title.
+      await waitForSettledTitle(2500);
+      if (cancelled) return;
+
+      // Only fall back for routes that never set their own title.
+      if (!document.title || document.title === DEFAULT_TITLE) {
+        document.title = `${getPageTitle(location.pathname)} | Vendibook`;
       }
-    }, 50);
 
-    // Only track if user has consented to analytics
-    if (!hasAnalyticsConsent()) {
-      return () => clearTimeout(titleTimeout);
-    }
-
-    // Fire GA pageview after title is set
-    const gaTimeout = setTimeout(() => {
+      if (!hasAnalyticsConsent()) return;
       if (typeof window !== 'undefined' && window.gtag) {
         window.gtag('config', GA_MEASUREMENT_ID, {
           page_path: location.pathname + location.search,
           page_title: document.title,
         });
       }
-    }, 100);
+    })();
 
     return () => {
-      clearTimeout(titleTimeout);
-      clearTimeout(gaTimeout);
+      cancelled = true;
     };
   }, [location.pathname, location.search]);
 };
