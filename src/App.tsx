@@ -72,6 +72,7 @@ const IdentityVerification = lazy(() => import("./pages/IdentityVerification"));
 const IdentityVerificationInfo = lazy(() => import("./pages/IdentityVerificationInfo"));
 const VerificationComplete = lazy(() => import("./pages/VerificationComplete"));
 const PaymentSuccess = lazy(() => import("./pages/PaymentSuccess"));
+const BookingConfirmation = lazy(() => import("./pages/BookingConfirmation"));
 const PaymentCancelled = lazy(() => import("./pages/PaymentCancelled"));
 const Messages = lazy(() => import("./pages/Messages"));
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
@@ -313,6 +314,7 @@ const AnimatedRoutes = () => {
           <Route path="/contact" element={<PageTransition><Contact /></PageTransition>} />
           <Route path="/verify-identity" element={<PageTransition><IdentityVerification /></PageTransition>} />
           <Route path="/verification-complete" element={<PageTransition><VerificationComplete /></PageTransition>} />
+          <Route path="/booking-confirmation" element={<PageTransition><BookingConfirmation /></PageTransition>} />
           <Route path="/payment-success" element={<PageTransition><PaymentSuccess /></PageTransition>} />
           <Route path="/payment-cancelled" element={<PageTransition><PaymentCancelled /></PageTransition>} />
           <Route path="/messages" element={<PageTransition><Messages /></PageTransition>} />
