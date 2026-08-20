@@ -1726,3 +1726,30 @@
   padding: 0 0.5rem;
   background: hsl(var(--background));
 }
+
+/* ---------------------------------------------------------------
+   Global reduced-motion safety net.
+   Users who ask for reduced motion get near-instant transitions,
+   no looping/decorative animation, and no smooth scroll jumps.
+   --------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  html:focus-within {
+    scroll-behavior: auto !important;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .animate-pulse,
+  .animate-bounce,
+  .animate-spin-slow,
+  .animate-shimmer {
+    animation: none !important;
+  }
+}
