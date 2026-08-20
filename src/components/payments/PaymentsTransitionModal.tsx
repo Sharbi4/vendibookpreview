@@ -33,9 +33,16 @@ export function PaymentsTransitionModal() {
     sellerVerification.state?.badge_active === true ||
     sellerVerification.offer.enabled === false;
 
+  const shownRef = useRef(false);
+
   useEffect(() => {
-    if (!isLoading && isEligible && !acknowledged) setOpen(true);
-  }, [isLoading, isEligible, acknowledged]);
+    if (isLoading || !isEligible || acknowledged || shownRef.current) return;
+    shownRef.current = true;
+    setOpen(true);
+    // Mark it seen the moment it is shown — navigating away (or back) must
+    // never bring the one-time notice back.
+    void acknowledge();
+  }, [isLoading, isEligible, acknowledged, acknowledge]);
 
   const close = async () => {
     setOpen(false);
