@@ -42,7 +42,7 @@ const TRUST_BULLETS = [
   'Free to publish — nothing to set up first',
   'Buyer offers and in-platform messaging',
   'PayPal Checkout, pay in person, or both',
-  'Optional Equinox Funding on eligible sale listings',
+  'Financing options for eligible buyers',
   'Photos, video, and full equipment details',
   'Rent while you wait to sell',
 ];
@@ -82,7 +82,7 @@ const FAQ_DATA = (asset: string): { q: string; a: string }[] => [
   },
   {
     q: 'Can buyers finance the purchase?',
-    a: 'On eligible for-sale trucks, trailers, and carts you can turn on the optional Equinox Funding add-on. Buyers can then apply and download the financing purchase sheet. A 12.9% platform fee applies to an Equinox-financed Vendibook sale. Vendibook is not a lender \u2014 approval and terms are determined by Equinox and/or its funding providers.',
+    a: 'Eligible buyers can apply with third-party financing partners directly from a for-sale listing \u2014 you do not manage the application. A completed Vendibook online-checkout sale carries the standard 12.9% seller fee. Vendibook is not a lender: it does not approve applicants, set rates or terms, or guarantee funding.',
   },
   {
     q: 'What should I include in my listing?',
@@ -295,7 +295,7 @@ const SellerLandingPage = ({
                 Listing quality checklist
               </h2>
               <p className="text-muted-foreground">
-                Listings with this information sell faster — and rank better in Vendibook search.
+                Listings with this information tend to get better inquiries — and rank better in Vendibook search.
               </p>
             </div>
             <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-2 text-sm text-muted-foreground">
