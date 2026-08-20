@@ -81,6 +81,61 @@ const PayPalPaymentPanel = ({
     };
   }, [onClose]);
 
+  // ── Shared payment handlers (used by both the PayPal buttons and the
+  //    "pay with a card" fields, so a card payer follows the exact same
+  //    server-verified create → capture path). ─────────────────────────────
+  const fail = (title: string, detail: string) => {
+    setError({ title, detail });
+    setState('error');
+  };
+
+  const startOrder = async (): Promise<string> => {
+    setError(null);
+    const { data, error: fnError } = await supabase.functions.invoke('paypal-create-order', {
+      body: target,
+    });
+    if (fnError || !data?.order_id) {
+      const message = data?.message || fnError?.message ||
+        'We could not start this payment. Please try again.';
+      fail('Payment could not be started', message);
+      throw new Error(message);
+    }
+    return data.order_id as string;
+  };
+
+  const finishOrder = async (orderID: string) => {
+    setState('processing');
+    const { data: result, error: fnError } = await supabase.functions.invoke(
+      'paypal-capture-order',
+      { body: { order_id: orderID } },
+    );
+
+    if (fnError || !result || (result.status !== 'completed' && !result.pending)) {
+      setState('error');
+      setError({
+        title: 'Payment not completed',
+        detail: result?.message || fnError?.message ||
+          'Your payment was not completed and nothing has been confirmed. You have not been charged twice — try again or use another method.',
+      });
+      return;
+    }
+
+    if (result.pending) {
+      setState('pending');
+      onSuccess?.(result);
+      return;
+    }
+
+    setState('success');
+    onSuccess?.(result);
+    setTimeout(() => {
+      if (returnUrl) window.location.href = returnUrl;
+    }, 900);
+  };
+
+  const handlersRef = useRef({ startOrder, finishOrder, fail });
+  handlersRef.current = { startOrder, finishOrder, fail };
+
   // Mount the PayPal Buttons once.
   useEffect(() => {
     let cancelled = false;
@@ -91,6 +146,7 @@ const PayPalPaymentPanel = ({
       setError({ title, detail });
       setState('error');
     };
+
 
     loadPayPalSdk()
       .then((paypal) => {
