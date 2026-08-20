@@ -410,8 +410,9 @@ const HowItWorks = () => {
               </div>
               <h2 className="relative text-3xl md:text-4xl font-bold mb-3">Ready to {role === 'host' ? 'host' : role === 'sell' ? 'sell' : role === 'buy' ? 'buy' : 'rent'}?</h2>
               <p className="relative text-base md:text-lg opacity-80 mb-7 max-w-xl mx-auto">
-                Join thousands of operators using Vendibook to grow their food business.
+                Browse live listings or publish your own for free — it only takes a few minutes.
               </p>
+
               <div className="relative flex flex-wrap gap-3 justify-center">
                 <Button size="lg" variant="secondary" className="rounded-full" asChild>
                   <Link to={config.cta.href}>{config.cta.label} <ArrowRight className="ml-1.5 w-4 h-4" /></Link>
