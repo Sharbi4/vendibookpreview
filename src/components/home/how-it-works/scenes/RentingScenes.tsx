@@ -154,7 +154,7 @@ export const rentingScenes = [
   () => (
     <SceneShell caption="Payment and booking status together.">
       <div className="flex h-full w-full items-center justify-center gap-4 px-6">
-        <PaymentOptionsPanel price="$720" fees="+ platform fee" showAffirm={false} showPayInPerson={false} />
+        <PaymentOptionsPanel price="$720" fees="+ platform fee" showFinancing={false} showPayInPerson={false} />
         <DashboardMock
           role="Shopper"
           title="Sprinter kitchen · Sep 12–15"
