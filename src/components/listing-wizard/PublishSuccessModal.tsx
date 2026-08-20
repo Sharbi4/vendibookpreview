@@ -6,6 +6,8 @@ import { Check, ExternalLink, Share2, MapPin, Facebook, Linkedin, Link2, Message
 import { CATEGORY_LABELS, MODE_LABELS } from '@/types/listing';
 import { useToast } from '@/hooks/use-toast';
 import confetti from 'canvas-confetti';
+import { PostPublishFinancingCallout } from '@/components/listings/PostPublishFinancingCallout';
+
 
 interface PublishSuccessModalProps {
   open: boolean;
@@ -193,6 +195,12 @@ export const PublishSuccessModal: React.FC<PublishSuccessModalProps> = ({
             </div>
           </div>
         </div>
+
+        {listing.mode === 'sale' && (
+          <PostPublishFinancingCallout listingId={listing.id} />
+        )}
+
+
 
         {/* Social Share Buttons */}
         {showShareOptions ? (
