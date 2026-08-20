@@ -307,7 +307,7 @@ export const faqCategories: FaqCategory[] = [
         id: "listing-limits",
         question: "How many listings can I have?",
         answer:
-          "Free: 2 active listings. Vendibook Pro ($79/mo): unlimited. Founding-member accounts keep unlimited listings on the Free plan as thanks for early support.",
+          "Free: 2 active listings. Vendibook Pro ({{price:vendibook_pro}}): unlimited. Founding-member accounts keep unlimited listings on the Free plan as thanks for early support.",
         actions: [A.pricing],
         keywords: ["limit", "cap", "how many", "founding"],
       },
@@ -412,8 +412,16 @@ export const faqCategories: FaqCategory[] = [
         id: "tiers-overview",
         question: "What plans are available?",
         answer:
-          "Two: Free (2 active listings, core buying, selling and renting) and Vendibook Pro at $79/mo (unlimited listings, the full Premium Tools bundle including PricePilot / Listing Studio / Marketing Studio, PermitPath Plus, advanced analytics, a monthly Featured Boost credit, and a reduced 10.9% commission on your side). PermitPath Plus is also available on its own for $7.99/mo. See the full comparison on the pricing page.",
+          "Two: Free (2 active listings, core buying, selling and renting) and Vendibook Pro at {{price:vendibook_pro}} (unlimited listings, the Premium Tools bundle including PricePilot / Listing Studio / Marketing Studio, PermitPath Plus, advanced seller analytics, one Featured Boost credit each paid billing period, and a reduced 10.9% seller/host fee capped at $500 saved per completed transaction). PermitPath Plus is also available on its own for {{price:permit_path_plus_monthly}}. See the full comparison on the pricing page.",
         actions: [A.pricing],
+      },
+      {
+        id: "pro-benefits",
+        question: "What exactly do I get with Vendibook Pro?",
+        answer:
+          "Vendibook Pro is {{price:vendibook_pro}}, billed monthly in advance, cancel anytime. It includes: a reduced 10.9% seller/host transaction fee instead of 12.9% (savings capped at $500 per completed transaction); one Featured Boost credit each paid billing period (unused credits do not roll over, and an activated boost finishes its 30-day run even if Pro later ends); unlimited active listings; the Premium Tools bundle and advanced seller analytics; and PermitPath Plus included. Cancelling stops the next renewal and your benefits stay active through the period you already paid for — there is no prorated refund simply for cancelling early.",
+        keywords: ["pro", "membership", "benefits", "10.9", "boost credit"],
+        actions: [A.pricing, A.subscription],
       },
       {
         id: "upgrade-downgrade",
@@ -483,7 +491,7 @@ export const faqCategories: FaqCategory[] = [
         id: "permit-path-plus",
         question: "What does PermitPath Plus add?",
         answer:
-          "Plus is the save-and-track layer: save and manage multiple roadmaps, track progress and completion, store permit numbers, details and notes, record expiration dates, watch what's expiring on the renewal dashboard, refresh saved requirements, and export. It does not send automated regulation alerts or renewal reminders. Included with Vendibook Pro. Standalone PermitPath Plus is $7.99/mo, and founding-member accounts keep it free.",
+          "Plus is the save-and-track layer: save and manage multiple roadmaps, track progress and completion, store permit numbers, details and notes, record expiration dates, watch what's expiring on the renewal dashboard, refresh saved requirements, and export. It does not send automated regulation alerts or renewal reminders. Included with Vendibook Pro. Standalone PermitPath Plus is {{price:permit_path_plus_monthly}}, and founding-member accounts keep it free.",
         actions: [A.permitPath, A.pricing],
       },
       {
@@ -534,6 +542,34 @@ export const faqCategories: FaqCategory[] = [
         answer:
           "Featured Boost pins your listing to the top of relevant search and category pages for 30 days, adds a Featured badge, and shows on the home page's featured strip. Featured slots rotate so no one listing dominates every page load. It's a one-time purchase and does not auto-renew. Vendibook Pro includes one Featured Boost credit each paid billing period; unused credits don't roll over, and a boost you've already activated finishes its 30-day run even if Pro later ends.",
         actions: [{ label: "Buy Featured Boost", href: "/pricing?product=featured-boost", requiresAuth: true }],
+      },
+      {
+        id: "pro-listing-upgrade",
+        question: "What is the Pro Listing upgrade?",
+        answer:
+          "Pro Listing is a one-time listing-level upgrade ({{price:pro_listing_30}}, 30 days) that gives a single listing premium presentation and priority placement treatment on Vendibook for the duration of the run. It is bought per listing and does not auto-renew. It is separate from a Vendibook Pro membership.",
+        actions: [A.pricing],
+      },
+      {
+        id: "concierge-listing",
+        question: "What is Concierge Listing?",
+        answer:
+          "Concierge Listing ({{price:listing_concierge}}, one time) is an optional service where the Vendibook team builds and polishes the listing for you from the details and photos you provide. Self-service listing stays free — Concierge just hands the work to us. We do not publish a guaranteed turnaround time.",
+        actions: [{ label: "See Concierge", href: "/list/concierge" }],
+      },
+      {
+        id: "listing-rewrite",
+        question: "What is the Listing Rewrite service?",
+        answer:
+          "Listing Rewrite ({{price:listing_rewrite}}, one time) improves the title, description, and spec copy on a listing you have already published. It is a copy improvement only — pricing, photos, and availability stay yours to manage.",
+        actions: [A.tools],
+      },
+      {
+        id: "addon-differences",
+        question: "What's the difference between Featured Boost, Pro Listing, and Vendibook Pro?",
+        answer:
+          "Featured Boost buys visibility for one listing for 30 days. Pro Listing is a premium upgrade applied to one listing for 30 days. Vendibook Pro is an account-level monthly membership: unlimited listings, the reduced 10.9% seller/host fee, premium tools, PermitPath Plus, and a Featured Boost credit each paid billing period.",
+        actions: [A.pricing],
       },
       {
         id: "notarization",
@@ -692,6 +728,20 @@ export const faqCategories: FaqCategory[] = [
     ],
   },
 ];
+
+/**
+ * Product slugs referenced with a `{{price:slug}}` token inside answers.
+ * The renderer swaps them for the live catalog price so Help/FAQ copy can
+ * never drift from what checkout actually charges.
+ */
+export const PRICE_TOKEN_PATTERN = /\{\{price:([a-z0-9_\-]+)\}\}/g;
+
+/** Replace every `{{price:slug}}` token using a slug → label lookup. */
+export const resolvePriceTokens = (
+  text: string,
+  priceFor: (slug: string) => string | undefined,
+): string =>
+  text.replace(PRICE_TOKEN_PATTERN, (match, slug) => priceFor(slug) ?? match);
 
 /** Flat list of every entry (useful for search + related). */
 export const allFaqEntries = faqCategories.flatMap((c) => c.entries);
