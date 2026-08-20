@@ -87,7 +87,7 @@ serve(async (req) => {
           .select("price_cents").eq("slug", sub.tier).eq("is_active", true).maybeSingle();
         amountCents = product?.price_cents ?? null;
       }
-      const amount = amountCents ? formatUsd(amountCents) : "your plan amount";
+      const amount = (amountCents ? formatUsd(amountCents) : null) ?? "your plan amount";
       const interval = sub.billing_interval === "year" ? "year" : "month";
       const renewalDate = fmtDate(sub.next_billing_time);
       const daysUntil = Math.max(
