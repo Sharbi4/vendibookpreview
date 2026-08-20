@@ -207,8 +207,9 @@ const HowItWorks = () => {
           <div className="container max-w-5xl mx-auto px-4">
             <div className="text-center mb-8">
               <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground mb-2">Where do you want to start?</p>
-              <h2 className="text-2xl md:text-3xl font-bold text-foreground">Pick a path. We'll handle the rest.</h2>
+              <h2 className="text-2xl md:text-3xl font-bold text-foreground">Pick a path.</h2>
             </div>
+
             <div className="grid md:grid-cols-2 gap-4 md:gap-6">
               {/* Find or book */}
               <motion.button
