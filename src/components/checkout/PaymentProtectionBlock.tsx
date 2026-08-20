@@ -6,14 +6,14 @@ interface PaymentProtectionBlockProps {
 
 /**
  * Compact assurance block shown inside the checkout modal.
- * Uses "payment protection" wording — never "payment protection".
- * Includes the standard free e-signature promise (delivered on every tier).
+ * Rental copy states what actually happens — PayPal processes the payment,
+ * Vendibook records it and refunds if the host declines. No escrow claims.
  */
 const PaymentProtectionBlock = ({ variant = 'sale' }: PaymentProtectionBlockProps) => {
   const body =
     variant === 'rental'
-      ? 'Your payment is protected. Funds are held securely and released to the host after your booking is confirmed and complete.'
-      : 'Your payment is protected. Funds are held securely and released to the seller only after you confirm the item is as described.';
+      ? 'PayPal processes your payment and Vendibook records the booking. If the host declines or cannot host your dates, your payment is refunded to your original payment method.'
+      : 'Your payment is processed by PayPal and recorded by Vendibook, with a full transaction record saved to your account.';
 
   const esign =
     variant === 'rental'
@@ -25,10 +25,13 @@ const PaymentProtectionBlock = ({ variant = 'sale' }: PaymentProtectionBlockProp
       <div className="rounded-xl border border-primary/25 bg-primary/[0.06] px-4 py-3 flex items-start gap-3">
         <ShieldCheck className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
         <div className="text-xs leading-relaxed text-foreground/90">
-          <span className="font-semibold text-foreground">Payment protection</span>
+          <span className="font-semibold text-foreground">
+            {variant === 'rental' ? 'How your payment works' : 'Secure payment'}
+          </span>
           <p className="mt-0.5 text-muted-foreground">{body}</p>
         </div>
       </div>
+
       <div className="rounded-xl border border-emerald-500/25 bg-emerald-500/[0.06] px-4 py-3 flex items-start gap-3">
         <FileSignature className="h-5 w-5 text-emerald-400 flex-shrink-0 mt-0.5" />
         <div className="text-xs leading-relaxed text-foreground/90">
