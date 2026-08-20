@@ -122,6 +122,7 @@ const Dashboard = () => {
       case 'insights': return <InsightsReportingTab />;
       case 'promote': return <PromoteUpgradesTab />;
       case 'permits': return <PermitsTab />;
+      case 'tools': return <PremiumToolsTab />;
       case 'kitchen': return <KitchenProSuite />;
       default: return <HostDashboard />;
     }
