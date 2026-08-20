@@ -206,29 +206,6 @@ const browseTopics: { title: string; icon: typeof BookOpen; articles: TopicLink[
   },
 ];
 
-/**
- * Help Center FAQ schema. These answers are duplicated nowhere else — the
- * deeper pricing/fee schema lives on /faq — so the two pages never emit
- * contradictory structured data.
- */
-const helpCenterFAQs = [
-  {
-    question: 'How do I get help from Vendibook support?',
-    answer:
-      'Request a callback from the Help Center, email support@vendibook.com, or use the contact form. Support hours are Monday to Friday, 9am to 5pm Arizona time. Off-hours messages are answered the next business day.',
-  },
-  {
-    question: 'How do Vendibook rentals work?',
-    answer:
-      'Pick your dates on the listing calendar, submit a booking request, and pay through PayPal when the host approves — Instant Book listings skip approval. You e-sign the rental agreement, upload any required documents, and confirm pickup and return in the app.',
-  },
-  {
-    question: 'What does Vendibook charge?',
-    answer:
-      'Listing is free. A completed sale or booking through Vendibook checkout carries a 12.9% seller or host commission, reduced to 10.9% for active Vendibook Pro members with savings capped at $500 per completed transaction. Renters pay a 12.9% service fee. Equipment sales settled in person carry no commission.',
-  },
-];
-
 const SectionKicker = ({ children }: { children: React.ReactNode }) => (
   <div className="text-[11px] uppercase tracking-[0.22em] text-muted-foreground/80 mb-2">{children}</div>
 );
@@ -248,16 +225,6 @@ const HelpCenter = () => {
     window.dispatchEvent(new CustomEvent('open-vendi-chat', { detail: { prefill: '' } }));
   };
 
-  const faqSchema = {
-    '@context': 'https://schema.org',
-    '@type': 'FAQPage',
-    mainEntity: helpCenterFAQs.map((faq) => ({
-      '@type': 'Question',
-      name: faq.question,
-      acceptedAnswer: { '@type': 'Answer', text: faq.answer },
-    })),
-  };
-
   return (
     <div className="sale-light min-h-screen flex flex-col">
       <SEO
@@ -266,8 +233,6 @@ const HelpCenter = () => {
         canonical="/help"
         type="website"
       />
-
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
 
       <Header />
 
@@ -526,7 +491,7 @@ const HelpCenter = () => {
           </div>
         </section>
 
-        {/* Pricing FAQ (schema lives on /faq to avoid duplicate FAQPage markup) */}
+        {/* Pricing FAQ — schema intentionally omitted; /faq is the single canonical FAQPage URL. */}
         <PricingFaqSection audience="all" className="border-t border-border" />
 
         {/* ===== Bottom CTAs ===== */}
