@@ -136,6 +136,10 @@ const CATEGORIES_BY_AREA: Record<ReportFeatureArea, Array<{ value: string; label
     { value: "other", label: "Something else" },
   ],
   other: [
+    { value: "content_outdated", label: "This information is outdated" },
+    { value: "content_incorrect", label: "This information is incorrect" },
+    { value: "content_missing", label: "Something important is missing" },
+    { value: "broken_link", label: "A link or button doesn't work" },
     { value: "technical_error", label: "Technical error" },
     { value: "other", label: "Something else" },
   ],

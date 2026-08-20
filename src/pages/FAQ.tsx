@@ -29,7 +29,7 @@ import {
 } from "@/data/faqContent";
 import { searchFaq, relatedEntries } from "@/lib/faq/search";
 import { ReportIssueButton } from "@/components/support/ReportIssueButton";
-import { FaqHelpfulThumbs } from "@/components/support/FaqHelpfulThumbs";
+import ContentFeedback from "@/components/support/ContentFeedback";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCatalogPrices } from "@/hooks/useCatalogPrices";
 import { priceWithCadence } from "@/lib/monetization/catalogPricing";
@@ -116,7 +116,12 @@ const EntryCard = ({
             ))}
           </div>
         )}
-        <FaqHelpfulThumbs entryId={entry.id} categoryId={category.id} />
+        <ContentFeedback
+          contentId={entry.id}
+          contentTitle={entry.question}
+          contentType="faq_entry"
+          categoryId={category.id}
+        />
         {related.length > 0 && (
           <div className="mt-5 pt-4 border-t border-border">
             <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground/70 mb-2">
