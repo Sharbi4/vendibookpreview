@@ -831,40 +831,16 @@ const SaleCheckout = () => {
 
   const hasMultiplePaymentOptions = acceptPayPalCheckout && acceptCashPayment;
 
-  /**
-   * Optional add-ons. Purely presentational selections (nothing is charged
-   * here) — the "Options" stage disappears entirely when none apply.
-   */
-  const addOnCatalog: { id: string; title: string; description: string; priceLabel: string }[] = [
-    ...((listing as { vin?: string | null }).vin || (listing as { title_status?: string | null }).title_status
-      ? [{
-          id: 'inspection',
-          title: 'Pre-purchase inspection',
-          description: 'We connect you with a local inspector before pickup or delivery.',
-          priceLabel: 'Quoted separately',
-        }]
-      : []),
-    ...((listing as { title_status?: string | null }).title_status
-      ? [{
-          id: 'notarization',
-          title: 'Notarized title transfer',
-          description: 'Remote notary coordination for the title hand-off.',
-          priceLabel: 'Quoted separately',
-        }]
-      : []),
-  ];
-  const hasAddOns = addOnCatalog.length > 0;
-
-  const visibleSteps: Exclude<CheckoutStep, 'intro'>[] = hasAddOns
-    ? ['fulfillment', 'verify', 'options', 'payment']
-    : ['fulfillment', 'verify', 'payment'];
+  // Checkout is exactly three real steps. (An "Options" step used to offer
+  // pre-purchase inspection / notarized title transfer — neither is an active
+  // Vendibook service, so nothing optional is sold to buyers here any more.)
+  const visibleSteps: Exclude<CheckoutStep, 'intro'>[] = ['fulfillment', 'verify', 'payment'];
 
   const effectiveStep: Exclude<CheckoutStep, 'intro'> =
-    currentStep === 'intro'
-      ? 'fulfillment'
-      : currentStep === 'options' && !hasAddOns
-        ? 'payment'
-        : currentStep;
+    currentStep === 'intro' || currentStep === 'options'
+      ? currentStep === 'options' ? 'payment' : 'fulfillment'
+      : currentStep;
+
 
   const stepIndex = Math.max(0, visibleSteps.indexOf(effectiveStep));
 
