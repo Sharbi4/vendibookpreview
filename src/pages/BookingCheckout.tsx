@@ -1447,7 +1447,7 @@ const BookingCheckout = () => {
           target={{ kind: 'booking', id: paypalCheckout.bookingId }}
           returnUrl={paypalCheckout.returnUrl}
           onClose={() => setPaypalCheckout(null)}
-          totalUsd={fees.customerTotal + (depositAmount || 0)}
+          totalUsd={fees.customerTotal}
 
           summary={
             <CheckoutOrderSummary
@@ -1461,15 +1461,13 @@ const BookingCheckout = () => {
                   ? [{ label: 'Delivery', amount: currentDeliveryFee }]
                   : []),
                 { label: 'Service fee', amount: fees.renterFee },
-                ...(depositAmount
-                  ? [{ label: 'Refundable deposit', amount: depositAmount, muted: true }]
-                  : []),
               ]}
-              total={fees.customerTotal + (depositAmount || 0)}
+              total={fees.customerTotal}
             />
           }
         />
       ) : null}
+
     </div>
   );
 };
