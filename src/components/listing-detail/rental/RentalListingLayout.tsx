@@ -216,8 +216,26 @@ export const RentalListingLayout = ({
           </div>
         </header>
 
-        {/* Mobile: the single booking surface sits directly under the header */}
-        <div className="lg:hidden mb-6">{bookingWidget('mobile')}</div>
+        {/* Mobile: a compact rate summary; the bottom bar opens the booking sheet
+            so the calendar surface is never duplicated on the page. */}
+        {!isOwner && (
+          <SaleCard padding="md" className="lg:hidden mb-6 flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <p className="text-lg font-bold leading-tight">{headlineRate}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                {instantBook ? 'Instant Book · pay at checkout' : 'Request to book · authorized, not charged'}
+              </p>
+            </div>
+            <Button
+              variant="cta"
+              size="sm"
+              onClick={() => document.getElementById('sticky-mobile-cta-primary')?.click()}
+            >
+              Check dates
+            </Button>
+          </SaleCard>
+        )}
+
 
         <div className="grid lg:grid-cols-3 gap-6 lg:gap-12">
           {/* Left: content only */}
