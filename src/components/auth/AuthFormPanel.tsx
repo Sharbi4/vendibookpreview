@@ -849,41 +849,41 @@ export const AuthFormPanel = ({ mode, setMode }: AuthFormPanelProps) => {
           )}
 
           {/* Mode switching */}
-          <div className="text-center space-y-2">
+          <div className="mt-6 space-y-2 border-t border-border pt-5 text-center">
             {mode === 'forgot' && (
               <button
                 type="button"
                 onClick={() => { setMode('signin'); setErrors({}); }}
-                className="inline-flex items-center gap-1 text-sm text-primary hover:underline"
+                className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
               >
                 <ArrowLeft className="h-4 w-4" />
                 Back to sign in
               </button>
             )}
-            
+
             {mode === 'verify' && (
               <p className="text-sm text-muted-foreground">
                 Already verified?
                 <button
                   type="button"
                   onClick={() => { setMode('signin'); setErrors({}); }}
-                  className="ml-1 text-primary font-medium hover:underline"
+                  className="ml-1 font-medium text-primary hover:underline"
                 >
                   Sign in
                 </button>
               </p>
             )}
-            
+
             {(mode === 'signin' || mode === 'signup') && (
               <>
                 <p className="text-sm text-muted-foreground">
-                  {mode === 'signin' ? "Don't have an account?" : 'Already have an account?'}
+                  {mode === 'signin' ? 'New to Vendibook?' : 'Already have an account?'}
                   <button
                     type="button"
                     onClick={() => { setMode(mode === 'signin' ? 'signup' : 'signin'); setErrors({}); }}
-                    className="ml-1 text-primary font-medium hover:underline"
+                    className="ml-1 font-medium text-primary hover:underline"
                   >
-                    {mode === 'signin' ? 'Sign up for free' : 'Sign in'}
+                    {mode === 'signin' ? 'Create an account' : 'Sign in'}
                   </button>
                 </p>
                 {mode === 'signin' && (
@@ -891,7 +891,7 @@ export const AuthFormPanel = ({ mode, setMode }: AuthFormPanelProps) => {
                     <button
                       type="button"
                       onClick={() => { setMode('verify'); setErrors({}); }}
-                      className="text-primary font-medium hover:underline"
+                      className="font-medium text-primary hover:underline"
                     >
                       Resend verification email
                     </button>
@@ -900,50 +900,18 @@ export const AuthFormPanel = ({ mode, setMode }: AuthFormPanelProps) => {
               </>
             )}
           </div>
+        </div>
 
-          {/* Learn More Section */}
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.3 }}
-            className="mt-8 pt-6 border-t border-border/50"
-          >
-            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-4">
-              Learn more about Vendibook
-            </p>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-5">
-              <div className="flex items-start gap-2.5">
-                <BadgeCheck className="h-4 w-4 text-primary shrink-0 mt-0.5" />
-                <div>
-                  <p className="text-sm font-medium text-foreground">Verified users</p>
-                  <p className="text-xs text-muted-foreground">Every user is ID-verified</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-2.5">
-                <CheckCircle2 className="h-4 w-4 text-primary shrink-0 mt-0.5" />
-                <div>
-                  <p className="text-sm font-medium text-foreground">Free to list</p>
-                  <p className="text-xs text-muted-foreground">No upfront costs ever</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-2.5">
-                <Shield className="h-4 w-4 text-primary shrink-0 mt-0.5" />
-                <div>
-                  <p className="text-sm font-medium text-foreground">Secure payments</p>
-                  <p className="text-xs text-muted-foreground">Payment Protection-protected transactions</p>
-                </div>
-              </div>
-            </div>
-            <button
-              type="button"
-              onClick={() => navigate('/how-it-works')}
-              className="text-sm text-primary font-medium hover:underline"
-            >
-              See how Vendibook works →
-            </button>
-          </motion.div>
-        </motion.div>
-      </div>
+        {/* Single, factual reassurance line — no stats, logos, or upsells. */}
+        {(mode === 'signin' || mode === 'signup') && (
+          <p className="px-2 text-center text-sm leading-relaxed text-muted-foreground">
+            One account for buying, selling, renting, hosting, and managing your Vendibook activity.
+          </p>
+        )}
+      </motion.div>
     </div>
+  );
+};
+
   );
 };
