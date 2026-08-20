@@ -14,7 +14,12 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const ADMIN_EMAIL = "support@vendibook.com";
+const ADMIN_EMAILS = (
+  Deno.env.get("ADMIN_ALERT_EMAILS") ?? "support@vendibook.com,shawnnaharbin@vendibook.com"
+)
+  .split(",")
+  .map((e) => e.trim().toLowerCase())
+  .filter(Boolean);
 const CONSENT_VERSION = "2026-08-spotlight-v1";
 const ALLOWED_TYPES = new Set(["image/jpeg", "image/jpg", "image/png", "image/webp"]);
 const MAX_PHOTOS = 8;
@@ -157,36 +162,40 @@ serve(async (req) => {
     const location = `${submission.city}, ${submission.state}`;
     const adminLink = `https://vendibook.com/admin/spotlights?id=${submission.id}`;
 
-    // Admin notification — idempotency key keeps this to one send per submission.
-    try {
-      await svc.functions.invoke("send-transactional-email", {
-        body: {
-          templateName: "generic-notice",
-          recipientEmail: ADMIN_EMAIL,
-          idempotencyKey: `spotlight-admin-${submission.id}`,
-          templateData: {
-            subject: `New Business Spotlight submission — ${submission.business_name}`,
-            kicker: "Business Spotlight",
-            heading: "New spotlight submission",
-            paragraphs: [
-              `${submission.business_name} (${submission.business_type}) submitted a Vendibook Business Spotlight story.`,
-              `${rows.length} media file${rows.length === 1 ? "" : "s"} attached. Private product feedback, if provided, is visible only in the admin review screen.`,
-            ],
-            details: [
-              { label: "Submission", value: submission.id, mono: true },
-              { label: "Business", value: submission.business_name },
-              { label: "Category", value: submission.business_type },
-              { label: "Location", value: location },
-              { label: "Contact", value: `${submission.contact_name} · ${submission.email}${submission.phone ? ` · ${submission.phone}` : ""}` },
-            ],
-            ctaLabel: "Review submission",
-            ctaUrl: adminLink,
-            footnote: "Nothing is published automatically. Review, then mark the submission selected or not selected.",
+    // Admin notification — one send per admin per submission (idempotent).
+    const adminTemplateData = {
+      subject: `New Business Spotlight submission — ${submission.business_name}`,
+      kicker: "Business Spotlight",
+      heading: "New spotlight submission",
+      paragraphs: [
+        `${submission.business_name} (${submission.business_type}) submitted a Vendibook Business Spotlight story.`,
+        `${rows.length} media file${rows.length === 1 ? "" : "s"} attached. Private product feedback, if provided, is visible only in the admin review screen.`,
+      ],
+      details: [
+        { label: "Submission", value: submission.id, mono: true },
+        { label: "Business", value: submission.business_name },
+        { label: "Category", value: submission.business_type },
+        { label: "Location", value: location },
+        { label: "Contact", value: `${submission.contact_name} · ${submission.email}${submission.phone ? ` · ${submission.phone}` : ""}` },
+      ],
+      ctaLabel: "Review submission",
+      ctaUrl: adminLink,
+      footnote: "Nothing is published automatically. Review, then mark the submission selected or not selected.",
+    };
+
+    for (const adminEmail of ADMIN_EMAILS) {
+      try {
+        await svc.functions.invoke("send-transactional-email", {
+          body: {
+            templateName: "generic-notice",
+            recipientEmail: adminEmail,
+            idempotencyKey: `spotlight-admin-${submission.id}-${adminEmail}`,
+            templateData: adminTemplateData,
           },
-        },
-      });
-    } catch (e) {
-      console.error("[spotlight-submit] admin email failed", e);
+        });
+      } catch (e) {
+        console.error("[spotlight-submit] admin email failed", adminEmail, e);
+      }
     }
 
     // Submitter acknowledgement — never promises a feature.
