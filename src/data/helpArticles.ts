@@ -3092,7 +3092,7 @@ Most buyers expect to negotiate. Price 5-10% higher than your minimum acceptable
 - Transparency builds trust
 
 **Forgetting Fees**
-- Factor in Vendibook 10% service fee
+- Factor in the Vendibook seller commission (12.9%, or 10.9% with active Vendibook Pro)
 - Consider any shipping costs you will cover`
       }
     ],
@@ -3161,7 +3161,7 @@ Once buyer confirms through Vendibook, funds are released.`
 - Auto-release if no issues reported after 7 days
 
 **Your Payout**
-- Sale price minus 10% Vendibook fee
+- Sale price minus the Vendibook seller commission (12.9%, or 10.9% with active Vendibook Pro; $0 if the sale is settled in person)
 - Funds sent to your connected bank account
 - Typically arrives in 2-5 business days
 
@@ -3245,7 +3245,7 @@ We may make exceptions for:
 - Death of immediate family member
 
 **How to Request**
-1. Contact support via Zendesk
+1. Contact support from the Help Center or at support@vendibook.com
 2. Provide documentation
 3. We will review on a case-by-case basis
 
