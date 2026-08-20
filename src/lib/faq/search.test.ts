@@ -84,12 +84,15 @@ describe("faq search", () => {
     expect(buying?.answer).toBeDefined();
   });
 
-  it("plan prices reflect the live catalog: Vendibook Pro $79, PermitPath Plus $7.99", () => {
+  it("plan prices are rendered from live catalog tokens, never hardcoded", () => {
     const tiers = findFaqEntry("tiers-overview");
-    expect(tiers?.answer).toMatch(/\$79/);
-    expect(tiers?.answer).toMatch(/\$7\.99/);
+    // Prices come from the monetization catalog at render time via
+    // {{price:slug}} tokens, so the copy must not bake in stale dollar amounts.
+    expect(tiers?.answer).toMatch(/\{\{price:vendibook_pro\}\}/);
+    expect(tiers?.answer).toMatch(/\{\{price:permit_path_plus_monthly\}\}/);
     expect(tiers?.answer).not.toMatch(/\$39|\$89|\$149/);
   });
+
 
   it("uses 'payment protection' language, not 'escrow'", () => {
     // Buyer-facing explainer must exist and avoid the word 'escrow'.
