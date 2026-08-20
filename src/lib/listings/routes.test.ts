@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
-import { LEGACY_LISTING_REDIRECTS, LISTING_ROUTES, authReturnTo } from './routes';
+import { LEGACY_LISTING_REDIRECTS, LISTING_ROUTES, authReturnTo, quickStartWith } from './routes';
 
 const appSource = readFileSync(path.resolve(__dirname, '../../App.tsx'), 'utf8');
 
