@@ -170,6 +170,8 @@ const SellFoodTruck = () => (
       title="How to Sell a Food Truck Online | Vendibook"
       description="A step-by-step guide to selling a food truck or trailer online: prep, photos, specs, title and documents, pricing, buyer offers, payment options, financing, and delivery."
       canonical={PATH}
+      image="/images/social/vendibook-og-sell.jpg"
+      imageAlt="Sell your food truck or trailer on Vendibook"
     />
     <JsonLd schema={[breadcrumbSchema, faqSchema]} />
     <Header />
