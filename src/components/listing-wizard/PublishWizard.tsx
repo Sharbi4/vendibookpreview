@@ -2181,71 +2181,8 @@ export const PublishWizard: React.FC = () => {
             instant_book: instantBook,
             deposit_amount: safeParsePrice(depositAmount)};
 
-      // If Proof Notary is enabled for a sale listing, redirect to checkout for the $45 fee.
-      // MIRRORS THE FEATURED BOOST PATTERN: publish FIRST so cancelling the notary
-      // checkout does NOT strand the listing in draft. Notary is a protection
-      // add-on — the listing itself should go live regardless. Webhook flips
-      // the notary flag once payment clears.
-      if (listing.mode === 'sale' && proofNotaryEnabled) {
-        let isFirstTimePublishForNotary = false;
-        try {
-          const publishResult = await publishListingIdempotent(listing.id, {
-            ...baseUpdateData,
-            ...pricingUpdateData,
-          });
-          isFirstTimePublishForNotary = publishResult.firstPublish;
-        } catch (persistError: any) {
-          if (typeof persistError?.message === 'string' && persistError.message.includes('listing_publish_limit_reached')) {
-            setShowLimitModal(true);
-            setIsSaving(false);
-            return;
-          }
-          throw persistError;
-        }
-
-        // Get session for auth
-        const { data: sessionData } = await supabase.auth.getSession();
-        if (!sessionData.session) {
-          toast({ title: 'Please sign in to continue', variant: 'destructive' });
-          return;
-        }
-
-        const data = { url: hostedCheckoutUrl('notary', listing.id, { success: `/listing-published?listing_id=${listing.id}`, cancel: `/listing-published?listing_id=${listing.id}`, label: 'Proof Notary' }) };
-        if (!data?.url) {
-          // Listing already published — surface a clear success even if notary failed.
-          toast({
-            title: 'Listing published',
-            description: "We couldn't start the Proof Notary checkout. You can add it later from your listing.",
-          });
-          window.location.href = `/listing-published?listing_id=${listing.id}`;
-          return;
-        }
-
-        // Set up listener for cross-tab communication before opening checkout
-        const handleCheckoutComplete = (event: MessageEvent) => {
-          if (event.data?.type === 'notary-checkout-complete' && event.data?.listingId === listing.id) {
-            // Navigate to the success page
-            window.location.href = event.data.url || `/listing-published?listing_id=${listing.id}&notary_paid=true`;
-          }
-        };
-
-        try {
-          const channel = new BroadcastChannel('notary-checkout');
-          channel.onmessage = handleCheckoutComplete;
-          // Store channel reference to clean up later if needed
-          (window as any).__notaryCheckoutChannel = channel;
-        } catch (e) {
-          console.log('BroadcastChannel not supported');
-        }
-
-        const newWindow = window.open(data.url, '_blank');
-        if (!newWindow) window.location.href = data.url;
-
-        // Listing is live; the user is on the published listing while notary settles.
-        window.location.href = `/listing-published?listing_id=${listing.id}&notary_pending=true`;
-        return;
-      }
-
+      // Proof Notary is a retired product — it is no longer sold from the
+      // publish wizard. Legacy listings keep their historical flag read-only.
 
       // If Featured Listing is enabled and not already active/comped, redirect to the catalog-priced Featured Boost checkout.
       // Pending complimentary boosts are applied by the database trigger when status changes to published.
@@ -2328,6 +2265,24 @@ export const PublishWizard: React.FC = () => {
         // outcomes back to the published-listing page so they always land on
         // a clear "your listing is live / boost is activating" confirmation.
         const publishedUrl = `/listing-published?listing_id=${listing.id}`;
+
+        // Vendibook Pro members with an unused Featured Boost credit for the
+        // current billing period redeem it instead of paying again.
+        if (proBoostCredit) {
+          try {
+            await redeemBoostCredit.mutateAsync(listing.id);
+            toast({
+              title: 'Your listing is live 🎉',
+              description: 'We applied your included Vendibook Pro Featured Boost.',
+            });
+            window.location.href = `${publishedUrl}&featured_paid=true`;
+            return;
+          } catch (creditError) {
+            console.error('Boost credit redemption failed', creditError);
+            // Fall through to the paid checkout — the listing is already live.
+          }
+        }
+
         const checkoutUrl = productCheckoutUrl(ACTIVE_PRODUCT_SLUGS.featuredBoost, listing.id, {
           success: `${publishedUrl}&featured_paid=true`,
           cancel: `${publishedUrl}&featured_cancelled=true`,
