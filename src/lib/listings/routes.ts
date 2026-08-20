@@ -2,22 +2,25 @@
  * Canonical listing route map.
  *
  * The self-service flow is:
- *   /list            marketing + QuickStart entry
- *   /list/start      opening choice page (self-serve vs concierge)
- *   /list?start=true QuickStart questions, creates the draft
+ *   /list            opening choice page (self-serve vs concierge)
+ *   /list/start      QuickStart wizard entry — creates the draft
  *   /create-listing/:listingId   PublishWizard (draft continuation)
  *   /edit-listing/:listingId     PublishWizard (published listing edit)
  *   /listing-published/:listingId  post-publish surface
+ *
+ * `/list/start` accepts `mode` (sale|rent) and `category` query params so
+ * seller landing pages can drop a host straight into the right path without
+ * asking a question the visitor already answered.
  *
  * Legacy entries are redirects, never parallel wizards.
  */
 export const LISTING_ROUTES = {
   /** Opening choice page — the front door for new listings. */
-  gateway: '/list/start',
-  /** Marketing + QuickStart page. */
+  gateway: '/list',
+  /** Same page as the gateway; kept for older call sites. */
   hub: '/list',
-  /** QuickStart with the questions already open. */
-  quickStart: '/list?start=true',
+  /** QuickStart wizard entry. */
+  quickStart: '/list/start',
   /** Concierge introduction / intake placeholder. */
   conciergeIntro: '/list/concierge',
   /** Draft continuation (PublishWizard). */
@@ -27,6 +30,17 @@ export const LISTING_ROUTES = {
   /** Post-publish surface. */
   published: (listingId: string) => `/listing-published/${listingId}`,
 } as const;
+
+/** QuickStart entry pre-seeded with what the visitor already told us. */
+export const quickStartWith = (
+  params: { mode?: 'sale' | 'rent'; category?: string } = {},
+): string => {
+  const search = new URLSearchParams();
+  if (params.mode) search.set('mode', params.mode);
+  if (params.category) search.set('category', params.category);
+  const qs = search.toString();
+  return qs ? `${LISTING_ROUTES.quickStart}?${qs}` : LISTING_ROUTES.quickStart;
+};
 
 /** Legacy paths that must redirect into the canonical flow. */
 export const LEGACY_LISTING_REDIRECTS: Record<string, string> = {
