@@ -7,9 +7,14 @@
 //  - Uses the template's own previewData as the default payload, so a template
 //    can be exercised without hand-crafting templateData.
 //
+//  - `mode: 'preview'` renders the template to HTML and returns it WITHOUT
+//    sending anything, so the whole catalog can be reviewed with zero delivery.
+//
 // GET  /admin-send-test-email            -> list all registered templates
-// POST /admin-send-test-email  { templateName, to?, templateData?, confirm? }
+// POST /admin-send-test-email  { templateName, mode?: 'preview'|'send', to?, templateData?, confirm? }
 
+import * as React from 'npm:react@18.3.1'
+import { renderAsync } from 'npm:@react-email/components@0.0.22'
 import { createClient } from 'npm:@supabase/supabase-js@2'
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors'
 import { TEMPLATES } from '../_shared/transactional-email-templates/registry.ts'
@@ -80,6 +85,27 @@ Deno.serve(async (req) => {
     )
   }
 
+  const templateDataPreview =
+    body.templateData && typeof body.templateData === 'object'
+      ? { ...((entry.previewData as Record<string, unknown>) ?? {}), ...body.templateData }
+      : ((entry.previewData as Record<string, unknown>) ?? {})
+
+  // ---- PREVIEW-ONLY MODE: render, never send ----
+  if ((body.mode || 'send') === 'preview') {
+    try {
+      const html = await renderAsync(React.createElement(entry.component, templateDataPreview))
+      const subject =
+        typeof entry.subject === 'function' ? entry.subject(templateDataPreview) : entry.subject
+      return json({ preview: true, sent: false, templateName, subject, html })
+    } catch (err) {
+      console.error('[admin-send-test-email] preview render failed', { templateName, err })
+      return json(
+        { error: 'render_failed', templateName, details: err instanceof Error ? err.message : String(err) },
+        422,
+      )
+    }
+  }
+
   const to: string = (body.to || DEFAULT_TEST_RECIPIENT).trim().toLowerCase()
   if (to !== DEFAULT_TEST_RECIPIENT && body.confirm !== true) {
     return json(
@@ -109,19 +135,13 @@ Deno.serve(async (req) => {
     )
   }
 
-  const templateData =
-    body.templateData && typeof body.templateData === 'object'
-      ? { ...(entry.previewData ?? {}), ...body.templateData }
-      : (entry.previewData ?? {})
+  const templateData = templateDataPreview
+
+  // Unique per test run so repeated tests are never deduped away.
+  const idempotencyKey = `admin-test-${templateName}-${to}-${Date.now()}`
 
   const { data, error } = await admin.functions.invoke('send-transactional-email', {
-    body: {
-      templateName,
-      recipientEmail: to,
-      // Unique per test run so repeated tests are never deduped away.
-      idempotencyKey: `admin-test-${templateName}-${to}-${Date.now()}`,
-      templateData,
-    },
+    body: { templateName, recipientEmail: to, idempotencyKey, templateData },
   })
 
   if (error) {
@@ -129,5 +149,12 @@ Deno.serve(async (req) => {
     return json({ error: (error as any)?.message || String(error) }, 500)
   }
 
-  return json({ success: true, templateName, sentTo: to, result: data })
+  // Tag the send as an admin test in the structured log so test traffic is
+  // never mistaken for production delivery.
+  await admin
+    .from('email_send_log')
+    .update({ metadata: { admin_test_send: true, requested_by: userId, requested_to: to } })
+    .eq('idempotency_key', idempotencyKey)
+
+  return json({ success: true, templateName, sentTo: to, testSend: true, result: data })
 })
