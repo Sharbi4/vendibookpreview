@@ -20,10 +20,16 @@ export const HowVendibookWorks = () => {
   };
 
   return (
-    <section
-      className="sale-light py-12 sm:py-16 md:py-20"
-      aria-labelledby="how-vendibook-works-heading"
-    >
+    <div className="relative px-3 pb-6 pt-8 sm:px-4 sm:pb-10 sm:pt-12">
+      {/* soft dark-to-light easing so the ivory band feels layered, not pasted */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 -top-16 h-32 bg-gradient-to-b from-transparent via-white/[0.02] to-white/[0.05]"
+      />
+      <section
+        className="sale-light relative overflow-hidden rounded-[32px] py-12 shadow-[0_40px_120px_-60px_hsl(0_0%_0%/0.9)] sm:py-16 md:py-20"
+        aria-labelledby="how-vendibook-works-heading"
+      >
       <div className="container mx-auto max-w-6xl px-5 sm:px-6">
         <motion.div
           className="mb-8 max-w-2xl sm:mb-10"
@@ -71,7 +77,8 @@ export const HowVendibookWorks = () => {
           if (!open) setActiveId(null);
         }}
       />
-    </section>
+      </section>
+    </div>
   );
 };
 
