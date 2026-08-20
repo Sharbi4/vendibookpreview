@@ -175,6 +175,8 @@ const Financing = () => {
         description={description}
         canonical={canonical}
         type="website"
+        image="/images/social/vendibook-og-financing.jpg"
+        imageAlt="Equipment financing for mobile food businesses on Vendibook"
       />
       <JsonLd
         schema={[

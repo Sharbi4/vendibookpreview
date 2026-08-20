@@ -75,6 +75,7 @@ import { useEffect, useMemo } from 'react';
 import { trackListingViewed } from '@/lib/analytics';
 import { CategoryTooltip } from '@/components/categories/CategoryGuide';
 import SEO from '@/components/SEO';
+import { listingShareUrl, listingShareText, shareOrCopy } from '@/lib/share';
 import JsonLd, { generateProductSchema, generateListingBreadcrumbSchema, generateListingLocalBusinessSchema, generateListingFAQSchema } from '@/components/JsonLd';
 import { getPublicDisplayName } from '@/lib/displayName';
 import { formatLastActive } from '@/hooks/useActivityTracker';
@@ -113,34 +114,25 @@ const ListingDetail = () => {
     },
   });
 
-  // Share URL uses a pretty route on vendibook.com
-  // The /share/listing/:id route redirects humans to the SPA
-  // Social bots get routed to the edge function for rich OG tags + JSON-LD
-  const shareUrl = `https://vendibook.com/share/listing/${id}`;
+  // Share URL uses a pretty, query-free public route on vendibook.com.
+  // Social bots hitting /share/listing/:id get prerendered listing OG tags;
+  // humans are redirected to the canonical /listing/:id SPA route.
+  const shareUrl = listingShareUrl(id || '');
 
   // Handle share listing
   const handleShare = async () => {
     trackEventToDb('share_listing', 'listing_detail', { listing_id: id });
-    
-    // Try native share on mobile
-    if (navigator.share && /Mobi|Android/i.test(navigator.userAgent)) {
-      try {
-        await navigator.share({
-          title: listing?.title || 'Check out this listing on Vendibook',
-          url: shareUrl,
-        });
-        return;
-      } catch {
-        // User cancelled or share failed, fallback to copy
-      }
-    }
-    
-    // Fallback to clipboard copy
-    try {
-      await navigator.clipboard.writeText(shareUrl);
-      toast({ title: 'Link copied!' });
-    } catch {
-      toast({ title: 'Failed to copy link', variant: 'destructive' });
+
+    const outcome = await shareOrCopy({
+      url: shareUrl,
+      title: listing?.title || 'Vendibook listing',
+      text: listingShareText(listing?.title),
+    });
+
+    if (outcome === 'copied') {
+      toast({ title: 'Link copied', description: 'Public listing link copied to your clipboard.' });
+    } else if (outcome === 'failed') {
+      toast({ title: 'Could not copy link', description: shareUrl, variant: 'destructive' });
     }
   };
 

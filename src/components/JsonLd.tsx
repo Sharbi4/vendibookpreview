@@ -133,7 +133,7 @@ export const generateBlogPostSchema = (post: {
   headline: post.title,
   description: post.description,
   url: `https://vendibook.com/blog/${post.slug}`,
-  image: post.image || 'https://vendibook.com/images/vendibook-og-image.jpg',
+  image: post.image || 'https://vendibook.com/images/social/vendibook-og-default.jpg',
   author: {
     '@type': 'Person',
     name: post.author,
