@@ -248,14 +248,40 @@ Deno.serve(async (req) => {
         }
       }
 
+      // ---- EMAIL_TEST_MODE (dispatcher-level enforcement) ----
+      // send-transactional-email already redirects at enqueue time. This second
+      // gate catches anything enqueued before test mode was switched on, and
+      // covers the auth_emails queue (GoTrue hook) which never passes through
+      // send-transactional-email. Redirection is always server-side.
+      const testModeOn = (Deno.env.get('EMAIL_TEST_MODE') || '').toLowerCase() === 'on'
+      const testRecipient = (Deno.env.get('EMAIL_TEST_RECIPIENT') || '').trim()
+      const intendedTo = (payload.intended_recipient as string | undefined) ?? (payload.to as string)
+      const redirected = testModeOn && Boolean(testRecipient) && intendedTo !== testRecipient
+      const deliverTo = redirected ? testRecipient : (payload.to as string)
+      const subject = redirected && !String(payload.subject ?? '').startsWith('[TEST]')
+        ? `[TEST] ${payload.subject}`
+        : payload.subject
+      const testMetadata = (redirected || payload.test_mode)
+        ? { test_mode: true, intended_recipient: intendedTo, delivered_to: deliverTo }
+        : null
+
+      if (redirected) {
+        console.log('[email-test-mode] dispatcher redirecting send', {
+          queue,
+          label: payload.label,
+          intended_recipient: intendedTo,
+          delivered_to: deliverTo,
+        })
+      }
+
       try {
         await sendLovableEmail(
           {
             run_id: payload.run_id,
-            to: payload.to,
+            to: deliverTo,
             from: payload.from,
             sender_domain: payload.sender_domain,
-            subject: payload.subject,
+            subject,
             html: payload.html,
             text: payload.text,
             purpose: payload.purpose,
@@ -274,8 +300,9 @@ Deno.serve(async (req) => {
         await supabase.from('email_send_log').insert({
           message_id: payload.message_id,
           template_name: payload.label || queue,
-          recipient_email: payload.to,
+          recipient_email: deliverTo,
           status: 'sent',
+          ...(testMetadata ? { metadata: testMetadata } : {}),
         })
 
         // Delete from queue
