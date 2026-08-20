@@ -6,7 +6,7 @@ export const FINANCING_ANNOUNCEMENT_CAMPAIGN_ID =
   "published-sale-financing-equinox-2026-08";
 
 export const VENDIBOOK_LOGO_IMG =
-  "https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/email-assets/vendibook-email-logo.png";
+  "https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/email-assets/vendibook-email-logo-dark.png?v=2026-08";
 export const EQUINOX_LOGO_IMG =
   "https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/email-assets/partners%2Fequinox-funding-light.png";
 

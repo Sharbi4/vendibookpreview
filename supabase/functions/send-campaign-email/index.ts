@@ -25,7 +25,7 @@ const campaigns: Record<string, { subject: string; html: string }> = {
 <body style="font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.7; color: #1a1a1a; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #ffffff;">
   
   <div style="text-align: center; margin-bottom: 32px;">
-    <img src="https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/email-assets/vendibook-email-logo.png" alt="VendiBook" style="height: 56px;" />
+    <img src="https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/email-assets/vendibook-email-logo.png?v=2026-08" alt="VendiBook" style="height: 56px;" />
   </div>
 
   <p style="font-size: 16px; margin-bottom: 20px;">Hi there,</p>
@@ -126,7 +126,7 @@ const campaigns: Record<string, { subject: string; html: string }> = {
   
   <div style="text-align: center; margin-bottom: 32px;">
     <a href="https://vendibook.com" style="text-decoration: none;">
-      <img src="https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/email-assets/vendibook-email-logo.png" alt="VendiBook" style="height: 56px;" />
+      <img src="https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/email-assets/vendibook-email-logo.png?v=2026-08" alt="VendiBook" style="height: 56px;" />
     </a>
   </div>
 
@@ -233,7 +233,7 @@ const campaigns: Record<string, { subject: string; html: string }> = {
   
   <div style="text-align: center; margin-bottom: 32px;">
     <a href="https://vendibook.com" style="text-decoration: none;">
-      <img src="https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/email-assets/vendibook-email-logo.png" alt="VendiBook" style="height: 56px;" />
+      <img src="https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/email-assets/vendibook-email-logo.png?v=2026-08" alt="VendiBook" style="height: 56px;" />
     </a>
   </div>
 
@@ -340,7 +340,7 @@ const campaigns: Record<string, { subject: string; html: string }> = {
   
   <div style="text-align: center; margin-bottom: 32px;">
     <a href="https://vendibook.com" style="text-decoration: none;">
-      <img src="https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/email-assets/vendibook-email-logo.png" alt="VendiBook" style="height: 56px;" />
+      <img src="https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/email-assets/vendibook-email-logo.png?v=2026-08" alt="VendiBook" style="height: 56px;" />
     </a>
   </div>
 
@@ -454,7 +454,7 @@ const campaigns: Record<string, { subject: string; html: string }> = {
   
   <div style="text-align: center; margin-bottom: 32px;">
     <a href="https://vendibook.com" style="text-decoration: none;">
-      <img src="https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/email-assets/vendibook-email-logo.png" alt="VendiBook" style="height: 56px;" />
+      <img src="https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/email-assets/vendibook-email-logo.png?v=2026-08" alt="VendiBook" style="height: 56px;" />
     </a>
   </div>
 
@@ -570,7 +570,7 @@ const campaigns: Record<string, { subject: string; html: string }> = {
   
   <div style="text-align: center; margin-bottom: 32px;">
     <a href="https://vendibook.com" style="text-decoration: none;">
-      <img src="https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/email-assets/vendibook-email-logo.png" alt="VendiBook" style="height: 56px;" />
+      <img src="https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/email-assets/vendibook-email-logo.png?v=2026-08" alt="VendiBook" style="height: 56px;" />
     </a>
   </div>
 

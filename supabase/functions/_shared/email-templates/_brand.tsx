@@ -8,7 +8,7 @@ import { Img, Section, Text } from 'npm:@react-email/components@0.0.22'
 export const SITE_URL = 'https://vendibook.com'
 export const SUPPORT_PHONE = '(725) 755-9598'
 export const LOGO_URL =
-  'https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/email-assets/vendibook-hero-logo.png'
+  'https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/email-assets/vendibook-hero-logo.png?v=2026-08'
 
 export const AuthBrandHeader = () => (
   <Section style={{ padding: '0 0 18px', textAlign: 'center' as const }}>
@@ -16,9 +16,8 @@ export const AuthBrandHeader = () => (
       <Img
         src={LOGO_URL}
         alt="Vendibook"
-        width="360"
-        height="240"
-        style={{ display: 'block', margin: '0 auto', border: 0, outline: 'none', width: '100%', maxWidth: '360px', height: 'auto' }}
+                height="94"
+        style={{ display: 'block', margin: '0 auto', border: 0, outline: 'none', width: '100%', maxWidth: '320px', height: 'auto' }}
       />
     </a>
   </Section>
@@ -43,9 +42,8 @@ export const AuthBrandFooter = () => (
       <Img
         src={LOGO_URL}
         alt="Vendibook"
-        width="360"
-        height="240"
-        style={{ display: 'block', margin: '0 auto 14px', border: 0, outline: 'none', width: '100%', maxWidth: '360px', height: 'auto' }}
+                height="94"
+        style={{ display: 'block', margin: '0 auto 14px', border: 0, outline: 'none', width: '100%', maxWidth: '320px', height: 'auto' }}
       />
     </a>
     <Text style={{ fontSize: '10px', letterSpacing: '0.2em', color: '#737373', fontWeight: 700, margin: '0 0 10px' }}>

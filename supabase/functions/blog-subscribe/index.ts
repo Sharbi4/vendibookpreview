@@ -15,7 +15,7 @@ const REPLY_TO = "support@vendibook.com";
 const ADMIN_ALERT_TO = ["support@vendibook.com"];
 const HOME_URL = "https://vendibook.com";
 const BLOG_URL = "https://vendibook.com/blog";
-const LOGO_IMG = "https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/email-assets/vendibook-email-logo.png";
+const LOGO_IMG = "https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/email-assets/vendibook-email-logo.png?v=2026-08";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 

@@ -274,7 +274,7 @@ const handler = async (req: Request): Promise<Response> => {
     });
 
     const totalItems = enrichedBookings.length + enrichedDocs.length + enrichedDisputes.length;
-    const logoUrl = 'https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/email-assets/vendibook-email-logo.png';
+    const logoUrl = 'https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/email-assets/vendibook-email-logo.png?v=2026-08';
 
     const emailHtml = `
       <!DOCTYPE html>

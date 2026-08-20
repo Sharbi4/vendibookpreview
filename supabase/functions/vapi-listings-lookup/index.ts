@@ -806,7 +806,7 @@ async function sendBookingLink(supabase: any, args: any) {
         const emailHtml = `
           <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff;">
             <div style="background: linear-gradient(135deg, #FF5124, #FF7A52); padding: 32px 24px; text-align: center; border-radius: 12px 12px 0 0;">
-              <img src="https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/email-assets/logo.png" alt="Vendibook" style="height: 48px; margin-bottom: 16px;" />
+              <img src="https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/email-assets/logo.png?v=2026-08" alt="Vendibook" style="height: 48px; margin-bottom: 16px;" />
               <h1 style="color: white; margin: 0; font-size: 24px; font-weight: 700;">Your Booking Link is Ready! 🎉</h1>
             </div>
             

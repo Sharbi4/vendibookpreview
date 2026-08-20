@@ -233,7 +233,7 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/e746bd18-cad4-4cbf-9972-176bb8affc56</loc>
-    <lastmod>2026-08-19</lastmod>
+    <lastmod>2026-08-20</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
@@ -386,17 +386,6 @@
     </image:image>
   </url>
   <url>
-    <loc>https://vendibook.com/listing/3c5c4943-dca5-40cd-bfef-547446077f46</loc>
-    <lastmod>2026-08-19</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/d7077653-fd60-40ec-b980-2e52862f7b0a/3c5c4943-dca5-40cd-bfef-547446077f46/1786672754920-pb52rn.jpg</image:loc>
-      <image:title>2021 8.5 X 24 ENCLOSED, REFRIGERATED, 16K CAPACITY CARGO TRAILER</image:title>
-      <image:caption>2021 8.5 X 24 ENCLOSED, REFRIGERATED, 16K CAPACITY CARGO TRAILER in Sparta, TN on Vendibook</image:caption>
-    </image:image>
-  </url>
-  <url>
     <loc>https://vendibook.com/listing/e51c5a39-b100-475f-bd18-00070354218f</loc>
     <lastmod>2026-08-19</lastmod>
     <changefreq>weekly</changefreq>
@@ -405,6 +394,17 @@
       <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/418aa111-b784-42c9-90cb-e566182bd6b1/e51c5a39-b100-475f-bd18-00070354218f/1771227083993-bpj85r.jpeg</image:loc>
       <image:title>Food Truck - clean, organized, money maker </image:title>
       <image:caption>Food Truck - clean, organized, money maker  on Vendibook</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://vendibook.com/listing/3c5c4943-dca5-40cd-bfef-547446077f46</loc>
+    <lastmod>2026-08-20</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/d7077653-fd60-40ec-b980-2e52862f7b0a/3c5c4943-dca5-40cd-bfef-547446077f46/1786672754920-pb52rn.jpg</image:loc>
+      <image:title>2021 8.5 X 24 ENCLOSED, REFRIGERATED, 16K CAPACITY CARGO TRAILER</image:title>
+      <image:caption>2021 8.5 X 24 ENCLOSED, REFRIGERATED, 16K CAPACITY CARGO TRAILER in Sparta, TN on Vendibook</image:caption>
     </image:image>
   </url>
   <url>
