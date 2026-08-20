@@ -127,7 +127,11 @@ export const useHeroSearch = () => {
     };
   }, []);
 
+  // Rotating placeholders are decorative motion. Users who ask for reduced
+  // motion get a single, stable placeholder instead of a moving one.
   useEffect(() => {
+    const mq = window.matchMedia?.('(prefers-reduced-motion: reduce)');
+    if (mq?.matches) return;
     const interval = setInterval(() => {
       setPlaceholderIndex(prev => (prev + 1) % AI_PLACEHOLDERS.length);
     }, 3500);

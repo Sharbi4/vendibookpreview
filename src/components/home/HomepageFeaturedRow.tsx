@@ -65,8 +65,13 @@ const HomepageFeaturedRow = () => {
     const el = scrollRef.current;
     if (!el) return;
     const amount = el.clientWidth * 0.75;
-    el.scrollBy({ left: dir === 'left' ? -amount : amount, behavior: 'smooth' });
-    setTimeout(updateScrollState, 350);
+    // Honor prefers-reduced-motion: jump instead of animating the scroll.
+    const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
+    el.scrollBy({
+      left: dir === 'left' ? -amount : amount,
+      behavior: reduced ? 'auto' : 'smooth',
+    });
+    setTimeout(updateScrollState, reduced ? 0 : 350);
   }, [updateScrollState]);
 
   useEffect(() => {
@@ -132,24 +137,26 @@ const HomepageFeaturedRow = () => {
           <button
             type="button"
             aria-label="Scroll featured listings left"
+            aria-controls="homepage-featured-scroller"
             onClick={() => scrollBy('left')}
             disabled={!scrollState.canLeft}
-            className={`hidden md:inline-flex items-center justify-center w-8 h-8 rounded-xl border border-border/70 bg-card/60 transition-colors hover:bg-card disabled:pointer-events-none ${
+            className={`hidden md:inline-flex items-center justify-center w-9 h-9 rounded-xl border border-border/70 bg-card/60 transition-colors hover:bg-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none ${
               scrollState.canLeft ? 'opacity-100 cursor-pointer' : 'opacity-40 cursor-default'
             }`}
           >
-            <ChevronLeft className="w-4 h-4 text-foreground" />
+            <ChevronLeft className="w-4 h-4 text-foreground" aria-hidden="true" />
           </button>
           <button
             type="button"
             aria-label="Scroll featured listings right"
+            aria-controls="homepage-featured-scroller"
             onClick={() => scrollBy('right')}
             disabled={!scrollState.canRight}
-            className={`hidden md:inline-flex items-center justify-center w-8 h-8 rounded-xl border border-border/70 bg-card/60 transition-colors hover:bg-card disabled:pointer-events-none ${
+            className={`hidden md:inline-flex items-center justify-center w-9 h-9 rounded-xl border border-border/70 bg-card/60 transition-colors hover:bg-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none ${
               scrollState.canRight ? 'opacity-100 cursor-pointer' : 'opacity-40 cursor-default'
             }`}
           >
-            <ChevronRight className="w-4 h-4 text-foreground" />
+            <ChevronRight className="w-4 h-4 text-foreground" aria-hidden="true" />
           </button>
           <button
             type="button"
@@ -164,9 +171,13 @@ const HomepageFeaturedRow = () => {
 
       <div className="relative">
         <div
+          id="homepage-featured-scroller"
           ref={scrollRef}
           onScroll={updateScrollState}
-          className="flex gap-3 sm:gap-4 overflow-x-auto snap-x snap-mandatory scroll-px-4 sm:scroll-px-6 px-4 sm:px-6 pb-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+          role="group"
+          aria-label="Featured listings carousel"
+          tabIndex={0}
+          className="flex gap-3 sm:gap-4 overflow-x-auto snap-x snap-mandatory scroll-px-4 sm:scroll-px-6 px-4 sm:px-6 pb-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
         >
           {listings.map((listing) => (
             <div
