@@ -464,18 +464,26 @@ const SaleCheckout = () => {
   }, [fulfillmentSelected, clearEstimate]);
 
   // Calculate prices
+  //
+  // IMPORTANT — "due now" vs "due later":
+  // Vendibook freight is NOT part of the sale PayPal order. The backend
+  // (`quoteSaleTransaction`) charges item price + seller delivery only; freight
+  // is collected in a separate PayPal order *after* the seller confirms the
+  // sale (`kind: "freight"`). So freight must never be folded into the amount
+  // the buyer is told they are paying now, or PayPal would show a lower total.
   const getDeliveryFeeForSelection = (): number => {
-    if (fulfillmentSelected === 'vendibook_freight') {
-      return isFreightSellerPaid ? 0 : freightCost;
-    }
     if (fulfillmentSelected === 'delivery' && deliveryRate) {
       return computeDeliveryFee(deliveryRate, deliveryFeeType, deliveryDistanceInfo.distance);
     }
     return 0;
   };
-  
+
   const currentDeliveryFee = getDeliveryFeeForSelection();
+  /** Buyer-paid freight, invoiced separately once the seller confirms. */
+  const freightDueLater =
+    fulfillmentSelected === 'vendibook_freight' && !isFreightSellerPaid ? freightCost : 0;
   const totalPrice = priceSale + currentDeliveryFee;
+
 
   // Validation
   const validateStep = (step: CheckoutStep): boolean => {
