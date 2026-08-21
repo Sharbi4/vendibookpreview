@@ -5,12 +5,12 @@
 export const ORANGE = '#FF5124'
 
 export const l = {
-  main: { backgroundColor: '#ffffff', fontFamily: "'Helvetica Neue', Arial, sans-serif", margin: 0, padding: '28px 0' } as const,
-  container: { maxWidth: '560px', margin: '0 auto', padding: '0 18px' } as const,
+  main: { backgroundColor: '#faf7f2', fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, Helvetica, sans-serif", margin: 0, padding: '24px 0' } as const,
+  container: { width: '100%', maxWidth: '600px', margin: '0 auto', padding: '0 16px' } as const,
   wordmark: { fontSize: '20px', letterSpacing: '-0.01em', color: '#1c1917', fontWeight: 700, margin: 0, textAlign: 'center' as const },
   wordmarkLink: { color: '#1c1917', textDecoration: 'none' } as const,
   headerWrap: { padding: '0 0 20px' } as const,
-  card: { backgroundColor: '#ffffff', border: '1px solid #e7e2dc', borderRadius: '18px', padding: '32px 28px' } as const,
+  card: { backgroundColor: '#ffffff', border: '1px solid #e7e2dc', borderRadius: '12px', padding: '32px 28px' } as const,
   kicker: { fontSize: '10px', letterSpacing: '0.22em', color: ORANGE, fontWeight: 700, margin: '0 0 12px', textTransform: 'uppercase' as const },
   h1: { fontSize: '25px', lineHeight: 1.2, fontWeight: 700, color: '#1c1917', margin: '0 0 12px', letterSpacing: '-0.015em' } as const,
   lede: { fontSize: '15.5px', lineHeight: 1.6, color: '#57534e', margin: '0 0 22px' } as const,
