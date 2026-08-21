@@ -3,6 +3,7 @@ import { Body, Button, Container, Head, Heading, Hr, Html, Link, Preview, Sectio
 import type { TemplateEntry } from './registry.ts'
 import { SITE_URL, SUPPORT_PHONE } from './_styles.ts'
 import { l } from './_stylesLight.ts'
+import { EmailHeader, SupportRow, TransactionalFooter } from '../email-brand/components.tsx'
 
 interface Props {
   firstName?: string
@@ -28,11 +29,7 @@ const Email = ({
     <Preview>{`${planName} payment received — ${amount}`}</Preview>
     <Body style={l.main}>
       <Container style={l.container}>
-        <Section style={l.headerWrap}>
-          <Text style={l.wordmark}>
-            <Link href={SITE_URL} style={l.wordmarkLink}>Vendibook</Link>
-          </Text>
-        </Section>
+        <EmailHeader />
 
         <Section style={l.card}>
           <Text style={l.kicker}>Payment received</Text>
@@ -80,9 +77,10 @@ const Email = ({
             <strong style={{ color: '#1c1917' }}>Cancel anytime.</strong> Cancelling stops future
             renewals only — access continues through the period you&apos;ve paid for.
           </Text>
+          <SupportRow />
         </Section>
 
-        <Text style={l.footnote}>Questions? Reply to this email or call {SUPPORT_PHONE}.</Text>
+        <TransactionalFooter />
       </Container>
     </Body>
   </Html>
