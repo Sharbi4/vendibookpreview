@@ -314,7 +314,7 @@ const OneTimeUpgrades = () => {
       icon: FileText,
       name: 'Pro Listing',
       benefit:
-        'Premium presentation, priority placement, and an organic featured spot on Vendibook’s Facebook for 30 days.',
+        'Premium presentation and priority placement for 30 days.',
       price: proListing.detailLabel,
       state: owns(ACTIVE_PRODUCT_SLUGS.proListing) ? 'Active on your account' : null,
       ctaLabel: 'Choose a listing',

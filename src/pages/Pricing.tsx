@@ -64,11 +64,10 @@ const ADDON_DETAILS: Record<
     ],
   },
   [ACTIVE_PRODUCT_SLUGS.proListing]: {
-    summary: 'Premium presentation, priority placement, and a featured spot on Vendibook\'s Facebook for 30 days.',
+    summary: 'Premium presentation and priority placement for 30 days.',
     included: [
       'Premium listing presentation',
       'Priority placement in relevant search results',
-      'Featured on Vendibook\'s Facebook',
       'Runs for 30 days from activation',
     ],
     bestFor: 'Higher-value equipment where presentation and extra visibility drive the inquiry.',
@@ -76,7 +75,6 @@ const ADDON_DETAILS: Record<
     finePrint: [
       '30-day duration · non-recurring.',
       'Applies to one listing you select.',
-      'Facebook feature is an organic Vendibook placement, not paid ad spend. Reach and impressions are not guaranteed.',
     ],
   },
   [ACTIVE_PRODUCT_SLUGS.conciergeListing]: {
