@@ -5,6 +5,7 @@
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { buildMarketingAudience } from "../_shared/marketingAudience.ts";
+import { MK, FONT, esc, mkButton, marketingShell } from "../_shared/marketing-templates/brand.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -12,7 +13,7 @@ const corsHeaders = {
 };
 
 const RESEND_API = "https://api.resend.com";
-const FROM = "Vendibook <hello@updates.vendibook.com>";
+const FROM = "Vendibook <hello@updates.vendibook.com>"; // marketing sender convention
 const SITE_URL = "https://vendibook.com";
 
 interface Listing {
@@ -45,7 +46,11 @@ function priceLabel(l: Listing): string {
   return "View pricing";
 }
 
-function buildHtml(listings: Listing[], cityCounts: { city: string; count: number }[]): string {
+function buildHtml(
+  listings: Listing[],
+  cityCounts: { city: string; count: number }[],
+  unsubscribeUrl = "{{{RESEND_UNSUBSCRIBE_URL}}}",
+): string {
   const date = new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
 
   const cards = listings
@@ -55,22 +60,20 @@ function buildHtml(listings: Listing[], cityCounts: { city: string; count: numbe
       const img = l.cover_image_url || `${SITE_URL}/placeholder.svg`;
       const loc = [l.city, l.state].filter(Boolean).join(", ") || "USA";
       return `
-        <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:16px;border:1px solid #e5e7eb;border-radius:12px;overflow:hidden;background:#ffffff;">
-          <tr>
-            <td style="padding:0;">
-              <a href="${url}" style="text-decoration:none;color:inherit;display:block;">
-                <img src="${escapeHtml(img)}" alt="${escapeHtml(l.title)}" width="600" style="display:block;width:100%;max-width:600px;height:220px;object-fit:cover;" />
-                <div style="padding:16px 20px;">
-                  <div style="font-size:11px;color:#10b981;text-transform:uppercase;font-weight:700;letter-spacing:0.5px;margin-bottom:6px;">
-                    ${CATEGORY_LABEL[l.category] || l.category} · ${l.mode === "sale" ? "For Sale" : "For Rent"}
-                  </div>
-                  <div style="font-size:18px;font-weight:600;color:#0f172a;margin-bottom:4px;line-height:1.3;">${escapeHtml(l.title)}</div>
-                  <div style="font-size:14px;color:#64748b;margin-bottom:8px;">${escapeHtml(loc)}</div>
-                  <div style="font-size:16px;font-weight:700;color:#0f172a;">${priceLabel(l)}</div>
+        <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:16px;border:1px solid ${MK.border};border-radius:12px;overflow:hidden;background:${MK.surface};">
+          <tr><td style="padding:0;">
+            <a href="${url}" style="text-decoration:none;color:inherit;display:block;">
+              <img src="${escapeHtml(img)}" alt="${escapeHtml(l.title)}" width="600" style="display:block;width:100%;max-width:600px;height:220px;object-fit:cover;" />
+              <div style="padding:16px 20px;">
+                <div style="font-family:${FONT};font-size:11px;color:${MK.textMuted};text-transform:uppercase;font-weight:700;letter-spacing:1px;margin-bottom:6px;">
+                  ${CATEGORY_LABEL[l.category] || l.category} · ${l.mode === "sale" ? "For Sale" : "For Rent"}
                 </div>
-              </a>
-            </td>
-          </tr>
+                <div style="font-family:${FONT};font-size:18px;font-weight:700;color:${MK.text};margin-bottom:4px;line-height:1.3;">${escapeHtml(l.title)}</div>
+                <div style="font-family:${FONT};font-size:14px;color:${MK.textSecondary};margin-bottom:8px;">${escapeHtml(loc)}</div>
+                <div style="font-family:${FONT};font-size:16px;font-weight:700;color:${MK.orangeOnWhite};">${priceLabel(l)}</div>
+              </div>
+            </a>
+          </td></tr>
         </table>`;
     })
     .join("");
@@ -79,37 +82,36 @@ function buildHtml(listings: Listing[], cityCounts: { city: string; count: numbe
     .slice(0, 5)
     .map(
       (c) =>
-        `<tr><td style="padding:8px 0;border-bottom:1px solid #f1f5f9;font-size:14px;color:#0f172a;">${escapeHtml(c.city)}</td><td style="padding:8px 0;border-bottom:1px solid #f1f5f9;font-size:14px;color:#64748b;text-align:right;">${c.count} new</td></tr>`,
+        `<tr><td style="font-family:${FONT};padding:8px 0;border-bottom:1px solid ${MK.border};font-size:14px;color:${MK.text};">${escapeHtml(c.city)}</td><td style="font-family:${FONT};padding:8px 0;border-bottom:1px solid ${MK.border};font-size:14px;color:${MK.textMuted};text-align:right;">${c.count} new</td></tr>`,
     )
     .join("");
 
-  return `<!DOCTYPE html>
-<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>What's new on Vendibook</title></head>
-<body style="margin:0;padding:0;background:#f8fafc;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f8fafc;padding:32px 16px;">
-    <tr><td align="center">
-      <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;background:#ffffff;border-radius:16px;overflow:hidden;">
-        <tr><td style="padding:32px 32px 16px;text-align:center;border-bottom:1px solid #f1f5f9;">
-          <div style="font-size:12px;color:#64748b;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">Vendibook · ${date}</div>
-          <h1 style="font-size:28px;font-weight:700;color:#0f172a;margin:0 0 8px;">What's new this week 🚚</h1>
-          <p style="font-size:15px;color:#64748b;margin:0;">Fresh food trucks, trailers & vendor spaces near you.</p>
-        </td></tr>
-        <tr><td style="padding:24px 24px 8px;">
-          <h2 style="font-size:18px;font-weight:600;color:#0f172a;margin:0 0 16px;">Just listed</h2>
-          ${cards || '<p style="color:#64748b;font-size:14px;">No new listings this cycle — check back soon.</p>'}
-        </td></tr>
-        ${cityRows ? `<tr><td style="padding:8px 32px 24px;">
-          <h2 style="font-size:18px;font-weight:600;color:#0f172a;margin:0 0 12px;">Trending cities</h2>
-          <table width="100%" cellpadding="0" cellspacing="0">${cityRows}</table>
-        </td></tr>` : ""}
-        <tr><td style="padding:24px 32px 32px;text-align:center;background:#0f172a;">
-          <a href="${SITE_URL}/search?utm_source=resend&utm_medium=email&utm_campaign=digest" style="display:inline-block;background:#10b981;color:#ffffff;padding:14px 32px;border-radius:8px;text-decoration:none;font-weight:600;font-size:15px;">Browse all listings →</a>
-          <p style="color:#94a3b8;font-size:12px;margin:20px 0 0;">Vendibook · The marketplace for mobile food businesses</p>
-        </td></tr>
-      </table>
+  const bodyRows = `
+    <tr><td style="padding:8px 28px 20px;text-align:center;">
+      <div style="font-family:${FONT};font-size:11px;color:${MK.textMuted};text-transform:uppercase;letter-spacing:2px;margin-bottom:8px;">Vendibook · ${esc(date)}</div>
+      <h1 style="font-family:${FONT};font-size:28px;font-weight:700;color:${MK.text};margin:0 0 8px;">What's new this week</h1>
+      <p style="font-family:${FONT};font-size:15px;color:${MK.textSecondary};margin:0;">Fresh food trucks, trailers, kitchens, and vendor spaces near you.</p>
     </td></tr>
-  </table>
-</body></html>`;
+    <tr><td style="padding:8px 24px 0;">
+      <h2 style="font-family:${FONT};font-size:18px;font-weight:700;color:${MK.text};margin:0 0 16px;">Just listed</h2>
+      ${cards || `<p style="font-family:${FONT};color:${MK.textSecondary};font-size:14px;">No new listings this cycle — check back soon.</p>`}
+    </td></tr>
+    ${cityRows ? `<tr><td style="padding:8px 28px 16px;">
+      <h2 style="font-family:${FONT};font-size:18px;font-weight:700;color:${MK.text};margin:0 0 12px;">Trending cities</h2>
+      <table width="100%" cellpadding="0" cellspacing="0">${cityRows}</table>
+    </td></tr>` : ""}
+    <tr><td style="padding:8px 28px 32px;text-align:center;">
+      ${mkButton("Browse all listings", `${SITE_URL}/search?utm_source=resend&utm_medium=email&utm_campaign=digest`)}
+    </td></tr>`;
+
+  return marketingShell({
+    title: "What's new on Vendibook",
+    preheader: "Fresh food trucks, trailers, kitchens, and vendor spaces near you.",
+    bodyRows,
+    unsubscribeUrl,
+    baseUrl: SITE_URL,
+    footerNote: "You're receiving this because you have a Vendibook account or joined our list.",
+  });
 }
 
 async function resend(path: string, init: RequestInit, key: string) {
@@ -188,10 +190,7 @@ Deno.serve(async (req) => {
       let failed = 0;
       for (const r of queue) {
         const unsubUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/marketing-unsubscribe?e=${encodeURIComponent(r.email)}`;
-        const personalizedHtml = html.replace(
-          "</body>",
-          `<table width="100%" cellpadding="0" cellspacing="0" style="background:#f8fafc;padding:0 16px 32px;"><tr><td align="center"><p style="font-size:12px;color:#94a3b8;margin:0;">You're receiving this because you have a Vendibook account or joined our list. <a href="${unsubUrl}" style="color:#64748b;">Unsubscribe</a></p></td></tr></table></body>`,
-        );
+        const personalizedHtml = buildHtml(listings, cityCounts, unsubUrl);
         try {
           const res = await resend(
             "/emails",

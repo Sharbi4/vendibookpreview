@@ -1,19 +1,38 @@
 // Constants shared across marketing email edge functions.
+// Everything visual/identity-related now derives from the master email
+// design system via `./brand.ts` — do not fork values here.
 
-export const VENDIBOOK_BASE_URL = "https://vendibook.com";
-// Canonical email logos — served from Supabase storage (CDN-cached, ~160KB each)
-// rather than /images/vendibook-logo.png, which is a 2.1MB app asset that many
-// mail clients refuse to load.
+import {
+  LOGO_LIGHT_URL as BRAND_LOGO_LIGHT,
+  LOGO_DARK_URL as BRAND_LOGO_DARK,
+  MARKETING_FROM,
+  REPORT_FROM,
+  MARKETING_REPLY_TO,
+  mailingAddress,
+  SITE_URL,
+} from "./brand.ts";
+
+export const VENDIBOOK_BASE_URL = SITE_URL;
+
+// Canonical email logos (master tokens).
 //   LIGHT = dark wordmark, for light backgrounds (headers, body).
-//   DARK  = white wordmark, for charcoal/dark backgrounds (footers).
-const EMAIL_ASSETS = "https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/email-assets";
-export const LOGO_LIGHT_URL = `${EMAIL_ASSETS}/vendibook-hero-logo.png?v=2026-08`;
-export const LOGO_DARK_URL = `${EMAIL_ASSETS}/vendibook-hero-logo-dark.png?v=2026-08`;
+//   DARK  = white wordmark, for charcoal/dark backgrounds.
+export const LOGO_LIGHT_URL = BRAND_LOGO_LIGHT;
+export const LOGO_DARK_URL = BRAND_LOGO_DARK;
 
-export const MAILING_ADDRESS = "Vendibook · 1 S Church St, Tucson, AZ";
+/** CAN-SPAM postal address — single source of truth (env-overridable). */
+export const MAILING_ADDRESS = mailingAddress();
+
+// ---- Sender convention -------------------------------------------------
+// Verified domain: updates.vendibook.com
+//   report@  → The Vendibook Report (recurring editorial)
+//   hello@   → every other marketing campaign/digest/newsletter
+// Reply-To is always support@vendibook.com.
 export const FROM_NAME = "Vendibook";
 export const FROM_EMAIL = "report@updates.vendibook.com";
-export const REPLY_TO_EMAIL = "support@vendibook.com";
+export const MARKETING_FROM_EMAIL = "hello@updates.vendibook.com";
+export const REPLY_TO_EMAIL = MARKETING_REPLY_TO;
+export { MARKETING_FROM, REPORT_FROM };
 
 export const FUNCTIONS_BASE = `${Deno.env.get("SUPABASE_URL") ?? ""}/functions/v1`;
 
