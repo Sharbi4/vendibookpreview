@@ -5,6 +5,7 @@
 // Trigger:  POST /functions/v1/send-feedback-broadcast
 // Optional body: { "wave": "broadcast_v2", "limit": 500, "dryRun": false }
 import { createClient } from 'npm:@supabase/supabase-js@2';
+import { sendTransactionalEmailInternal } from '../_shared/invokeTransactionalEmail.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
