@@ -372,12 +372,34 @@ export const MarketingFooter = ({ unsubscribeUrl }: { unsubscribeUrl?: string })
 )
 
 // ---- Outer shell -----------------------------------------------------
+/**
+ * Dark-mode resilience: Vendibook email is a light-only design. We declare
+ * `color-scheme: light` (honoured by Apple Mail / iOS 13+, Outlook.com and
+ * increasingly Gmail) and re-assert background + text colours for clients
+ * that partially invert (Gmail Android / Samsung Mail use [data-ogsc]).
+ * No separate dark design system, no unsupported CSS.
+ */
+const HEAD_CSS = `
+  :root { color-scheme: light only; supported-color-schemes: light only; }
+  body, table, td, div, p, a, h1, h2 { -webkit-text-size-adjust: 100%; }
+  u + .vb-body .vb-surface { background-color: #ffffff !important; }
+  [data-ogsc] .vb-body { background-color: #faf7f2 !important; }
+  [data-ogsc] .vb-surface { background-color: #ffffff !important; }
+  [data-ogsc] .vb-panel { background-color: #f7f4ef !important; }
+  [data-ogsc] .vb-ink { color: #1c1917 !important; }
+  [data-ogsc] .vb-ink-2 { color: #57534e !important; }
+  @media (max-width: 600px) {
+    .vb-surface { padding: 24px 18px !important; }
+  }
+`
+
 export const VendibookEmailLayout = ({
   preview,
   children,
   footer = 'transactional',
   unsubscribeUrl,
   headerAlign = 'left',
+  logoWidth = 148,
 }: {
   /** Hidden inbox preheader text. */
   preview: string
@@ -385,14 +407,20 @@ export const VendibookEmailLayout = ({
   footer?: 'transactional' | 'marketing' | 'none'
   unsubscribeUrl?: string
   headerAlign?: 'left' | 'center'
+  logoWidth?: number
 }) => (
   <Html lang="en" dir="ltr">
-    <Head />
+    <Head>
+      <meta name="color-scheme" content="light only" />
+      <meta name="supported-color-schemes" content="light only" />
+      <style dangerouslySetInnerHTML={{ __html: HEAD_CSS }} />
+    </Head>
     <Preview>{preview}</Preview>
-    <Body style={t.body}>
+    <Body style={t.body} className="vb-body">
       <Container style={t.container}>
-        <EmailHeader align={headerAlign} />
-        <Section style={t.surface}>{children}</Section>
+        <EmailHeader align={headerAlign} width={logoWidth} />
+        <Section style={t.surface} className="vb-surface">{children}</Section>
+
         {footer === 'marketing' ? (
           <MarketingFooter unsubscribeUrl={unsubscribeUrl} />
         ) : footer === 'transactional' ? (
