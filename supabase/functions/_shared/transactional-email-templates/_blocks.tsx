@@ -52,9 +52,9 @@ export const BrandHeader = ({
       <Img
         src={LOGO_URL}
         alt="Vendibook"
-        width="360"
-        height="240"
-        style={{ display: 'block', margin: '0 auto', border: 0, outline: 'none', width: '100%', maxWidth: '360px', height: 'auto' }}
+        width="200"
+        height="59"
+        style={{ display: 'block', margin: '0 auto', border: 0, outline: 'none', width: '100%', maxWidth: '200px', height: 'auto' }}
 
       />
     </a>
@@ -66,7 +66,7 @@ export const BrandHeader = ({
               src={listingImageUrl}
               alt={listingTitle || 'Listing photo'}
               width="320"
-              style={{ display: 'block', margin: '0 auto', border: '1px solid #232323', borderRadius: '14px', width: '100%', maxWidth: '320px', height: 'auto' }}
+              style={{ display: 'block', margin: '0 auto', border: '1px solid #e7e2dc', borderRadius: '14px', width: '100%', maxWidth: '320px', height: 'auto' }}
             />
           </a>
         ) : (
@@ -74,11 +74,11 @@ export const BrandHeader = ({
             src={listingImageUrl}
             alt={listingTitle || 'Listing photo'}
             width="320"
-            style={{ display: 'block', margin: '0 auto', border: '1px solid #232323', borderRadius: '14px', width: '100%', maxWidth: '320px', height: 'auto' }}
+            style={{ display: 'block', margin: '0 auto', border: '1px solid #e7e2dc', borderRadius: '14px', width: '100%', maxWidth: '320px', height: 'auto' }}
           />
         )}
         {listingTitle ? (
-          <Text style={{ fontSize: '12px', color: '#a3a3a3', textAlign: 'center' as const, margin: '8px 0 0', letterSpacing: '0.02em' }}>
+          <Text style={{ fontSize: '12px', color: '#57534e', textAlign: 'center' as const, margin: '8px 0 0', letterSpacing: '0.02em' }}>
             {listingTitle}
           </Text>
         ) : null}
@@ -104,8 +104,8 @@ export const ListingPreviewCard = ({
 }) => {
   const inner = (
     <Section style={{
-      backgroundColor: '#0f0f10',
-      border: '1px solid #232323',
+      backgroundColor: '#f7f4ef',
+      border: '1px solid #e7e2dc',
       borderRadius: '14px',
       overflow: 'hidden' as const,
       margin: '0 0 12px',
@@ -120,15 +120,15 @@ export const ListingPreviewCard = ({
       ) : null}
       <Section style={{ padding: '14px 16px' }}>
         {meta ? (
-          <Text style={{ fontSize: '10px', letterSpacing: '0.2em', color: '#FF5124', fontWeight: 700, margin: '0 0 4px' }}>
+          <Text style={{ fontSize: '10px', letterSpacing: '0.2em', color: '#d93f16', fontWeight: 700, margin: '0 0 4px' }}>
             {meta.toUpperCase()}
           </Text>
         ) : null}
         {title ? (
-          <Text style={{ fontSize: '15px', color: '#fafafa', fontWeight: 600, margin: '0 0 4px' }}>{title}</Text>
+          <Text style={{ fontSize: '15px', color: '#1c1917', fontWeight: 600, margin: '0 0 4px' }}>{title}</Text>
         ) : null}
         {priceLabel ? (
-          <Text style={{ fontSize: '13px', color: '#a3a3a3', margin: 0 }}>{priceLabel}</Text>
+          <Text style={{ fontSize: '13px', color: '#57534e', margin: 0 }}>{priceLabel}</Text>
         ) : null}
       </Section>
     </Section>
@@ -148,7 +148,7 @@ const ICONS: Record<IconName, string> = {
   bolt:  '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M13 2L3 14h7l-1 8 10-12h-7z"/></svg>',
   gift:  '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="13" rx="1"/><path d="M3 12h18M12 8v13M7 8a3 3 0 010-6c2 0 3 2 5 6-3 0-5 0-5 0zM17 8a3 3 0 000-6c-2 0-3 2-5 6 3 0 5 0 5 0z"/></svg>',
 }
-export const Icon = ({ name, color = '#FF5124' }: { name: IconName; color?: string }) => (
+export const Icon = ({ name, color = '#d93f16' }: { name: IconName; color?: string }) => (
   <span
     style={{ display: 'inline-block', verticalAlign: '-2px', color, lineHeight: 0, marginRight: '6px' }}
     dangerouslySetInnerHTML={{ __html: ICONS[name] }}
@@ -192,23 +192,23 @@ export const BlogHighlights = ({ role, posts }: { role?: Role; posts?: BlogPick[
       <Text style={s.smallHeader}><Icon name="spark" />FROM THE VENDIBOOK BLOG</Text>
       {list.slice(0, 2).map((p) => (
         <Section key={p.slug} style={{ margin: '0 0 14px' }}>
-          <Text style={{ fontSize: '10px', letterSpacing: '0.2em', color: '#FF5124', fontWeight: 700, margin: '0 0 4px' }}>
+          <Text style={{ fontSize: '10px', letterSpacing: '0.2em', color: '#d93f16', fontWeight: 700, margin: '0 0 4px' }}>
             {p.eyebrow.toUpperCase()}
           </Text>
-          <Text style={{ fontSize: '15px', lineHeight: 1.45, color: '#fafafa', fontWeight: 600, margin: '0 0 6px' }}>
-            <a href={`${SITE_URL}/blog/${p.slug}`} style={{ color: '#fafafa', textDecoration: 'none' }}>
+          <Text style={{ fontSize: '15px', lineHeight: 1.45, color: '#1c1917', fontWeight: 600, margin: '0 0 6px' }}>
+            <a href={`${SITE_URL}/blog/${p.slug}`} style={{ color: '#1c1917', textDecoration: 'none' }}>
               {p.title}
             </a>
           </Text>
           <Text style={{ fontSize: '12px', margin: 0 }}>
-            <a href={`${SITE_URL}/blog/${p.slug}`} style={{ color: '#FF5124', textDecoration: 'none', fontWeight: 600 }}>
+            <a href={`${SITE_URL}/blog/${p.slug}`} style={{ color: '#d93f16', textDecoration: 'none', fontWeight: 600 }}>
               Read article →
             </a>
           </Text>
         </Section>
       ))}
       <Text style={{ fontSize: '12px', margin: '6px 0 0' }}>
-        <a href={`${SITE_URL}/blog`} style={{ color: '#a3a3a3', textDecoration: 'none' }}>
+        <a href={`${SITE_URL}/blog`} style={{ color: '#57534e', textDecoration: 'none' }}>
           Browse all articles →
         </a>
       </Text>
@@ -249,8 +249,8 @@ export const ToolsBlock = ({ role, tools }: { role?: Role; tools?: Tool[] }) => 
       <Text style={s.smallHeader}><Icon name="bolt" />TOOLS BUILT FOR YOU</Text>
       {list.slice(0, 3).map((t) => (
         <Text key={t.label} style={s.listItem}>
-          <Icon name="arrow" /><a href={t.href} style={{ color: '#FF5124', textDecoration: 'none', fontWeight: 600 }}>{t.label}</a>
-          <span style={{ color: '#a3a3a3' }}> — {t.desc}</span>
+          <Icon name="arrow" /><a href={t.href} style={{ color: '#d93f16', textDecoration: 'none', fontWeight: 600 }}>{t.label}</a>
+          <span style={{ color: '#57534e' }}> — {t.desc}</span>
         </Text>
       ))}
       <Section style={{ margin: '14px 0 0' }}>
@@ -324,33 +324,33 @@ export const BrandFooter = ({ role }: { role?: Role } = {}) => {
         <Img
           src={LOGO_URL}
           alt="Vendibook"
-          width="360"
-          height="240"
-          style={{ display: 'block', margin: '0 auto 14px', border: 0, outline: 'none', width: '100%', maxWidth: '360px', height: 'auto' }}
+          width="200"
+          height="59"
+          style={{ display: 'block', margin: '0 auto 14px', border: 0, outline: 'none', width: '100%', maxWidth: '200px', height: 'auto' }}
         />
       </a>
 
-      <Text style={{ fontSize: '10px', letterSpacing: '0.2em', color: '#737373', fontWeight: 700, margin: '0 0 10px' }}>
+      <Text style={{ fontSize: '10px', letterSpacing: '0.2em', color: '#78716c', fontWeight: 700, margin: '0 0 10px' }}>
         MORE FROM THE VENDIBOOK BLOG
       </Text>
       {picks.slice(0, 2).map((p) => (
         <Text key={p.slug} style={{ fontSize: '14px', lineHeight: 1.45, margin: '0 0 8px' }}>
-          <a href={`${SITE_URL}/blog/${p.slug}`} style={{ color: '#FF5124', textDecoration: 'none', fontWeight: 600 }}>
+          <a href={`${SITE_URL}/blog/${p.slug}`} style={{ color: '#d93f16', textDecoration: 'none', fontWeight: 600 }}>
             {p.title}
           </a>
         </Text>
       ))}
 
-      <Text style={{ fontSize: '12px', lineHeight: 1.9, color: '#737373', margin: '14px 0 0' }}>
+      <Text style={{ fontSize: '12px', lineHeight: 1.9, color: '#78716c', margin: '14px 0 0' }}>
         {FOOTER_LINKS.map((l, i) => (
           <React.Fragment key={l.href}>
-            {i > 0 ? <span style={{ color: '#3f3f46' }}>{'  ·  '}</span> : null}
-            <a href={l.href} style={{ color: '#a3a3a3', textDecoration: 'none' }}>{l.label}</a>
+            {i > 0 ? <span style={{ color: '#d6cfc6' }}>{'  ·  '}</span> : null}
+            <a href={l.href} style={{ color: '#57534e', textDecoration: 'none' }}>{l.label}</a>
           </React.Fragment>
         ))}
       </Text>
 
-      <Text style={{ fontSize: '11px', color: '#525252', margin: '12px 0 0' }}>
+      <Text style={{ fontSize: '11px', color: '#78716c', margin: '12px 0 0' }}>
         Vendibook · Questions? {SUPPORT_PHONE} or support@vendibook.com
       </Text>
     </Section>

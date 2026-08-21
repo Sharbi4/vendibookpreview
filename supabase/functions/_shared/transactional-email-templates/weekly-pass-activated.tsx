@@ -66,9 +66,9 @@ const Email = ({ firstName, amount = '$29.00', chargedOn, expiresOn, invoiceUrl,
 
           <Hr style={s.hr} />
           <Text style={s.smallHeader}>WHAT'S UNLOCKED FOR 7 DAYS</Text>
-          <Text style={s.listItem}>• <Link href={`${SITE_URL}/dashboard/promote`} style={{ color: '#fafafa' }}>Featured placement on every listing</Link></Text>
-          <Text style={s.listItem}>• <Link href={`${SITE_URL}/dashboard/tools`} style={{ color: '#fafafa' }}>Full Premium Tools bundle</Link></Text>
-          <Text style={s.listItem}>• <Link href={`${SITE_URL}/dashboard/insights`} style={{ color: '#fafafa' }}>Advanced analytics + insights</Link></Text>
+          <Text style={s.listItem}>• <Link href={`${SITE_URL}/dashboard/promote`} style={{ color: '#d93f16' }}>Featured placement on every listing</Link></Text>
+          <Text style={s.listItem}>• <Link href={`${SITE_URL}/dashboard/tools`} style={{ color: '#d93f16' }}>Full Premium Tools bundle</Link></Text>
+          <Text style={s.listItem}>• <Link href={`${SITE_URL}/dashboard/insights`} style={{ color: '#d93f16' }}>Advanced analytics + insights</Link></Text>
 
           <Hr style={s.hr} />
           <Text style={s.small}>

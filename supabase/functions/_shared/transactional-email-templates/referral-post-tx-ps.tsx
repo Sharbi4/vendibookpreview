@@ -25,9 +25,9 @@ const E = ({ name, transactionType = 'purchase' }: Props) => (
           We hope everything's gone smoothly. We'll keep this short — your transaction details are in your dashboard whenever you need them.
         </Text>
 
-        <Text style={{ ...s.text, color: '#a3a3a3', fontSize: '14px', marginTop: '24px' }}>
+        <Text style={{ ...s.text, color: '#78716c', fontSize: '14px', marginTop: '24px' }}>
           By the way — if you know others who'd benefit from Vendibook, our referral program lets you earn up to $500 per referral. No pressure, just worth knowing.{' '}
-          <Link href={`${SITE_URL}/referral?source=email_post_transaction`} style={{ color: '#a3a3a3', textDecoration: 'underline' }}>
+          <Link href={`${SITE_URL}/referral?source=email_post_transaction`} style={{ color: '#78716c', textDecoration: 'underline' }}>
             Learn more
           </Link>
         </Text>
