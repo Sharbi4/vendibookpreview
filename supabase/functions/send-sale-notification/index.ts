@@ -138,11 +138,13 @@ Deno.serve(async (req) => {
         });
       }
     } else {
-      // --- Stripe / non-cash flow (existing behavior) ---
-      // Seller-facing template for any milestone
-      if (sellerOptedIn && sellerEmail) {
+      // --- Online (PayPal) flow ---
+      // Seller-facing template for any milestone. A freshly paid sale gets the
+      // handoff-oriented email; later milestones keep the completion email.
+      if (sellerOptedIn && sellerEmail && audience !== 'buyer') {
+        const sellerTemplate = notification_type === 'payment_received' ? 'sale-paid-seller' : 'sale-completed-seller';
         enqueue(
-          'sale-completed-seller',
+          sellerTemplate,
           sellerEmail,
           `sale-${tx.id}-seller-${notification_type}`,
           {
@@ -151,9 +153,12 @@ Deno.serve(async (req) => {
             salePrice: Number(tx.amount) || 0,
             buyerName,
             orderNumber,
+            transactionId: tx.id,
+            fulfillmentType: tx.fulfillment_type,
           }
         );
       }
+
       // Buyer-facing receipt only on payment_received
       if (buyerOptedIn && buyerEmail && notification_type === 'payment_received') {
         enqueue(
