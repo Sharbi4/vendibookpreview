@@ -375,17 +375,6 @@
     </image:image>
   </url>
   <url>
-    <loc>https://vendibook.com/listing/d02ec787-17cb-4e37-b1a7-e70dec639b23</loc>
-    <lastmod>2026-08-21</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/421aa58f-ac7e-4eaf-92e3-2b6be284fb0a/d02ec787-17cb-4e37-b1a7-e70dec639b23/1784602053546-46lyaf.jpg</image:loc>
-      <image:title>16 Foot Ready-to-Operate - Food Trailer in Miami</image:title>
-      <image:caption>16 Foot Ready-to-Operate - Food Trailer in Miami in Miami, FL on Vendibook</image:caption>
-    </image:image>
-  </url>
-  <url>
     <loc>https://vendibook.com/listing/a3ead971-38c7-4c0c-8f3f-2b02185c7c2f</loc>
     <lastmod>2026-08-21</lastmod>
     <changefreq>weekly</changefreq>
@@ -548,6 +537,17 @@
       <image:loc>https://images.unsplash.com/photo-1565123409695-7b5ef63a2efb?w=800</image:loc>
       <image:title>Classic BBQ Food Truck - Fully Equipped</image:title>
       <image:caption>Classic BBQ Food Truck - Fully Equipped in Austin, TX on Vendibook</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://vendibook.com/listing/d02ec787-17cb-4e37-b1a7-e70dec639b23</loc>
+    <lastmod>2026-08-21</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/421aa58f-ac7e-4eaf-92e3-2b6be284fb0a/d02ec787-17cb-4e37-b1a7-e70dec639b23/1784602053546-46lyaf.jpg</image:loc>
+      <image:title>16 Foot Ready-to-Operate - Food Trailer in Miami</image:title>
+      <image:caption>16 Foot Ready-to-Operate - Food Trailer in Miami in Miami, FL on Vendibook</image:caption>
     </image:image>
   </url>
   <url>
