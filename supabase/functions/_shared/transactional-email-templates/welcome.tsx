@@ -50,8 +50,8 @@ const ARTICLES = {
   },
   permits: {
     href: `${SITE_URL}/blog/mobile-food-permit-guide-by-state`,
-    title: 'Mobile food permit guide by state',
-    blurb: 'What you need before you can legally operate.',
+    title: 'How to find mobile food permit requirements in your state',
+    blurb: 'The layers that matter, plus a step-by-step checklist before you operate.',
   },
 } as const
 
