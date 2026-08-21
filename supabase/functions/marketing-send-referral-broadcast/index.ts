@@ -13,20 +13,22 @@ import {
   VENDIBOOK_BASE_URL,
   UNSUBSCRIBE_URL_BASE,
 } from "../_shared/marketing-templates/constants.ts";
+import { MK, FONT, radius, SUPPORT_EMAIL, SUPPORT_HOURS } from "../_shared/marketing-templates/brand.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// Palette derives from the master email design system — no local colors.
 const COLORS = {
-  bgDark: "#0C0C0C",
-  bgWhite: "#FFFFFF",
-  bgWarm: "#F8F6F4",
-  orange: "#FF5124",
-  textDark: "#1A1A1A",
-  textMuted: "#666666",
-  divider: "#E8E4E0",
+  bgDark: MK.surface,          // header sits on the white surface now
+  bgWhite: MK.surface,
+  bgWarm: MK.canvas,
+  orange: MK.orangeOnWhite,
+  textDark: MK.text,
+  textMuted: MK.textMuted,
+  divider: MK.border,
 };
 
 function sleep(ms: number) { return new Promise((r) => setTimeout(r, ms)); }
@@ -44,13 +46,13 @@ function renderReferralEmail(opts: {
 <meta name="color-scheme" content="light only" />
 <meta name="supported-color-schemes" content="light only" />
 <title>You could earn $500 just for sharing Vendibook</title></head>
-<body style="margin:0;padding:0;background:${COLORS.bgWarm};font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;color:${COLORS.textDark};">
+<body style="margin:0;padding:0;background:${COLORS.bgWarm};font-family:${FONT};color:${COLORS.textDark};">
   <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;">
     Refer a buyer, seller, or renter and get paid when they transact. Up to $500 per qualifying referral.
   </div>
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${COLORS.bgWarm};padding:24px 12px;">
     <tr><td align="center">
-      <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;width:100%;background:${COLORS.bgWhite};border:1px solid ${COLORS.divider};border-radius:6px;overflow:hidden;">
+      <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;width:100%;background:${COLORS.bgWhite};border:1px solid ${COLORS.divider};border-radius:${radius.card};overflow:hidden;">
         <tr><td style="background:${COLORS.bgDark};padding:28px 32px;" align="left">
           <img src="${LOGO_LIGHT_URL}" alt="Vendibook" width="140" style="display:block;width:140px;height:auto;border:0;" />
         </td></tr>
@@ -60,7 +62,7 @@ function renderReferralEmail(opts: {
           <p style="margin:0;font-size:17px;line-height:1.55;color:${COLORS.textMuted};">Refer a buyer, seller, or renter &mdash; get paid when they transact. No cap on how much you can earn.</p>
         </td></tr>
         <tr><td style="padding:32px 40px 8px 40px;" align="left">
-          <table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr><td style="background:${COLORS.orange};border-radius:4px;">
+          <table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr><td style="background:${MK.orange};border-radius:${radius.button};">
             <a href="${dashboardUrl}" style="display:inline-block;padding:16px 28px;font-size:15px;font-weight:700;letter-spacing:0.3px;color:#ffffff;text-decoration:none;">Get My Referral Link &rarr;</a>
           </td></tr></table>
         </td></tr>
@@ -87,7 +89,7 @@ function renderReferralEmail(opts: {
           <p style="margin:0;font-size:16px;line-height:1.65;color:${COLORS.textDark};">Send them your link. When they transact, we pay you. It's that simple.</p>
         </td></tr>
         <tr><td style="padding:36px 40px 48px 40px;" align="left">
-          <table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr><td style="background:${COLORS.orange};border-radius:4px;">
+          <table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr><td style="background:${MK.orange};border-radius:${radius.button};">
             <a href="${dashboardUrl}" style="display:inline-block;padding:16px 28px;font-size:15px;font-weight:700;letter-spacing:0.3px;color:#ffffff;text-decoration:none;">Get My Referral Link &rarr;</a>
           </td></tr></table>
           <p style="margin:18px 0 0 0;font-size:13px;color:${COLORS.textMuted};"><a href="${termsUrl}" style="color:${COLORS.textMuted};text-decoration:underline;">Full program terms</a></p>
@@ -95,6 +97,7 @@ function renderReferralEmail(opts: {
         <tr><td style="background:${COLORS.bgWarm};padding:28px 40px;border-top:1px solid ${COLORS.divider};" align="left">
           <img src="${LOGO_DARK_URL}" alt="Vendibook" width="100" style="display:block;width:100px;height:auto;border:0;margin-bottom:14px;" />
           <p style="margin:0 0 6px 0;font-size:12px;color:${COLORS.textMuted};line-height:1.5;">${MAILING_ADDRESS}</p>
+          <p style="margin:0 0 6px 0;font-size:12px;color:${COLORS.textMuted};line-height:1.5;">Questions? <a href="mailto:${SUPPORT_EMAIL}" style="color:${COLORS.textMuted};text-decoration:underline;">${SUPPORT_EMAIL}</a> · ${SUPPORT_HOURS}</p>
           <p style="margin:0 0 6px 0;font-size:12px;color:${COLORS.textMuted};line-height:1.5;">Sent to ${recipientEmail}. <a href="${unsubscribeUrl}" style="color:${COLORS.textMuted};text-decoration:underline;">Unsubscribe</a></p>
           <p style="margin:0;font-size:12px;color:${COLORS.textMuted};line-height:1.5;"><a href="${VENDIBOOK_BASE_URL}" style="color:${COLORS.textMuted};text-decoration:underline;">vendibook.com</a></p>
         </td></tr>
