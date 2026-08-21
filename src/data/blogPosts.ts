@@ -1481,68 +1481,115 @@ Check our help center for detailed maintenance guides, or browse Vendibook's mar
   },
   {
     slug: 'mobile-food-permit-guide-by-state',
-    title: 'Mobile Food Vendor Permits: A State-by-State Guide',
-    description: 'Navigate the complex world of mobile food vendor permits with our comprehensive state-by-state breakdown.',
-    excerpt: 'Permit requirements vary dramatically by state. Here\'s what you need to know to stay compliant wherever you operate.',
+    title: 'Mobile Food Vendor Permits: How to Find the Requirements in Your State',
+    description: 'A practical, plain-English framework for finding the real permit and license requirements for a mobile food business — state, county, city, health, and fire — plus a step-by-step checklist.',
+    excerpt: 'Mobile food permitting is layered and local. Here is how to find the requirements that actually apply to your truck, trailer, or cart — without guessing.',
     content: `
-# Mobile Food Vendor Permits: A State-by-State Guide
+<p class="text-lg text-muted-foreground mb-6"><em>By the Vendibook Team · Updated August 2026</em></p>
 
-Navigating mobile food vendor permits can be overwhelming. Requirements vary not just by state, but often by city and county. Here's an overview to help you get started.
+<p class="text-lg mb-6">There is no single national mobile food permit. What you need depends on <strong>where you operate</strong> and <strong>how you operate</strong> — and the rules are usually set by several different agencies at once.</p>
 
-## Common Permit Types
+<p class="mb-8">This guide will not hand you a fifty-state legal database, because an accurate one changes constantly and is written by government agencies, not marketplaces. Instead it gives you something more durable: a repeatable way to find the correct requirements for your exact location and setup, and a checklist to work through in order.</p>
 
-### Business License
-Required in virtually all jurisdictions. This establishes your legal right to operate a business.
+<h2 class="text-2xl font-bold mt-10 mb-4">The layers that usually apply</h2>
 
-### Food Handler's Permit
-Also known as a food handler's card. Required for anyone handling food.
+<p class="mb-4">Most mobile food operators end up dealing with some combination of the following. Not every layer applies everywhere.</p>
 
-### Health Department Permit
-Issued after your truck passes a health inspection.
+<ul class="mb-8 space-y-3">
+  <li><strong>State</strong> — business registration, sales tax registration, and in some states a statewide mobile food or retail food license.</li>
+  <li><strong>County</strong> — very often the health authority that inspects and permits your unit.</li>
+  <li><strong>City</strong> — vending permits, zoning and where you may park, event and street-vending rules, business tax certificates.</li>
+  <li><strong>Health department</strong> — plan review of your build, equipment and water/waste requirements, inspection, and food-handler or manager certification.</li>
+  <li><strong>Fire authority</strong> — inspection or permit tied to propane, generators, and cooking suppression systems.</li>
+  <li><strong>Commissary or shared kitchen</strong> — many jurisdictions require a documented base of operations for prep, water, and waste disposal.</li>
+</ul>
 
-### Mobile Vendor Permit
-Specific to operating a mobile food business.
+<div class="rounded-2xl border bg-muted/40 p-6 mb-10">
+  <p class="mb-0"><strong>Why requirements differ so much:</strong> a coffee cart with pre-packaged food, a trailer with a fryer and hood, and a full truck serving raw protein are treated as different risk categories. Add a different county line or a special event and the answer changes again.</p>
+</div>
 
-### Fire Department Permit
-Required in many areas, especially if using propane or open flames.
+<h2 class="text-2xl font-bold mt-10 mb-4">Common permit and license categories</h2>
 
-## State Highlights
+<div class="overflow-x-auto mb-10">
+  <table class="w-full text-left text-sm border-collapse">
+    <thead>
+      <tr class="border-b">
+        <th class="py-3 pr-4 font-semibold">Category</th>
+        <th class="py-3 font-semibold">What it generally covers</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr class="border-b"><td class="py-3 pr-4 font-medium">Business registration</td><td class="py-3">Your legal entity and the right to do business in the state.</td></tr>
+      <tr class="border-b"><td class="py-3 pr-4 font-medium">Sales tax permit</td><td class="py-3">Collecting and remitting tax on what you sell.</td></tr>
+      <tr class="border-b"><td class="py-3 pr-4 font-medium">Mobile food unit permit</td><td class="py-3">The unit itself — build, equipment, and how it is inspected.</td></tr>
+      <tr class="border-b"><td class="py-3 pr-4 font-medium">Health / food service permit</td><td class="py-3">Safe handling, temperatures, water and waste, plan review.</td></tr>
+      <tr class="border-b"><td class="py-3 pr-4 font-medium">Food handler / manager certification</td><td class="py-3">Training for you and your staff.</td></tr>
+      <tr class="border-b"><td class="py-3 pr-4 font-medium">Fire safety approval</td><td class="py-3">Propane, generators, suppression systems, extinguishers.</td></tr>
+      <tr class="border-b"><td class="py-3 pr-4 font-medium">Vending / location permits</td><td class="py-3">Where and when you may park, vend, or join events.</td></tr>
+      <tr><td class="py-3 pr-4 font-medium">Commissary agreement</td><td class="py-3">A documented base of operations, where required.</td></tr>
+    </tbody>
+  </table>
+</div>
 
-### California
-- Strict requirements
-- County-by-county regulations
-- MFF (Mobile Food Facility) permit required
+<h2 class="text-2xl font-bold mt-10 mb-4">Step-by-step: what to do first</h2>
 
-### Texas
-- Generally business-friendly
-- City permits typically required
-- State food handler certification
+<ol class="mb-10 space-y-3 list-decimal pl-5">
+  <li><strong>Pin your primary operating area.</strong> Name the city and county you will work in most. That pair drives nearly everything else.</li>
+  <li><strong>Describe your operation honestly.</strong> Truck, trailer, or cart; cooking on board or reheating; open flame or not; raw protein or pre-packaged.</li>
+  <li><strong>Start at the county health department.</strong> Ask for their mobile food unit packet and whether plan review is required before you build or buy.</li>
+  <li><strong>Check the city next.</strong> Vending permits, zoning, event rules, and business tax registration.</li>
+  <li><strong>Confirm the fire requirements.</strong> Especially propane placement, suppression, and inspection scheduling.</li>
+  <li><strong>Line up a commissary if required.</strong> Get the agreement in writing — it is frequently an application attachment.</li>
+  <li><strong>Register the business and sales tax</strong> at the state level.</li>
+  <li><strong>Complete food safety training</strong> for yourself and anyone who will handle food.</li>
+  <li><strong>Book the inspection</strong> and keep every approval, receipt, and certificate in one folder in the unit.</li>
+  <li><strong>Re-check before you expand.</strong> Crossing into a new county or city usually means a new application, not a transfer.</li>
+</ol>
 
-### Florida
-- Division of Hotels and Restaurants oversight
-- License and inspection required
-- Mobile food dispensing vehicle permit
+<h2 class="text-2xl font-bold mt-10 mb-4">Illustrative examples</h2>
 
-### New York
-- Highly competitive permit system in NYC
-- Limited permit numbers
-- Different rules by borough
+<p class="mb-4">These are directional only — confirm current details with the agency that governs your location.</p>
 
-## Getting Help
+<ul class="mb-10 space-y-3">
+  <li><strong>California</strong> — mobile food facilities are commonly permitted and inspected at the county level, so requirements can differ noticeably between neighboring counties.</li>
+  <li><strong>Texas</strong> — city and county health jurisdictions typically drive mobile permitting, and operators often hold permits in more than one city.</li>
+  <li><strong>Florida</strong> — mobile food operations may fall under a state-level agency or a county health department depending on the menu and setup.</li>
+  <li><strong>New York</strong> — New York City runs its own permitting regime that is distinct from the rest of the state and has historically been supply-constrained.</li>
+</ul>
 
-Our Permit Path tool can help you identify the specific permits needed for your location and business type.
+<div class="rounded-2xl border border-primary/30 bg-primary/5 p-6 mb-10">
+  <h3 class="text-xl font-bold mb-2">Build your checklist with PermitPath</h3>
+  <p class="mb-4">PermitPath turns the layers above into one organized checklist for your city, county, and operation type — so you can see what to chase, in what order, instead of piecing it together from a dozen agency pages.</p>
+  <p class="mb-0"><a href="/tools/permitpath" data-cta="permitpath_article_mid" class="text-primary underline font-semibold">Open PermitPath →</a></p>
+</div>
 
-## Stay Compliant
+<h2 class="text-2xl font-bold mt-10 mb-4">Common mistakes worth avoiding</h2>
 
-Vendibook listings include information about local permit requirements to help you make informed decisions.
+<ul class="mb-10 space-y-3">
+  <li>Buying or building a unit before checking whether plan review is required.</li>
+  <li>Assuming a permit in one city carries over to the next one.</li>
+  <li>Forgetting the fire authority until the week of opening.</li>
+  <li>Treating a commissary letter as optional paperwork.</li>
+  <li>Letting a food handler certification lapse mid-season.</li>
+</ul>
+
+<h2 class="text-2xl font-bold mt-10 mb-4">Need a hand?</h2>
+
+<p class="mb-8">Our <a href="/help" class="text-primary underline font-medium">Help Center</a> covers buying, selling, renting, and operating on Vendibook. For permit-specific planning, start with <a href="/tools/permitpath" data-cta="permitpath_article_end" class="text-primary underline font-medium">PermitPath</a>.</p>
+
+<div class="rounded-2xl border bg-muted/40 p-6 mb-4">
+  <p class="text-sm text-muted-foreground mb-0"><strong>Disclaimer:</strong> Vendibook and PermitPath provide general informational guidance only and do not provide legal advice. Requirements change and vary by jurisdiction. Always verify what applies to you directly with the applicable state, county, city, health, and fire authorities before operating.</p>
+</div>
     `,
     author: 'Vendibook Team',
     authorRole: 'Editorial',
-    datePublished: '2024-12-10',
+    datePublished: '2026-08-21',
+    dateModified: '2026-08-21',
     category: 'permits-regulations',
     tags: ['permits', 'regulations', 'compliance', 'licensing'],
-    readingTime: 8,
+    readingTime: 7,
   },
+
   {
     slug: 'sell-my-food-truck-valuation-guide-2026',
     title: 'How to Sell Your Food Truck in 2026: The Ultimate Valuation & Exit Guide',
