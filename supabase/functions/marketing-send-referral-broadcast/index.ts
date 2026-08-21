@@ -95,7 +95,7 @@ function renderReferralEmail(opts: {
           <p style="margin:18px 0 0 0;font-size:13px;color:${COLORS.textMuted};"><a href="${termsUrl}" style="color:${COLORS.textMuted};text-decoration:underline;">Full program terms</a></p>
         </td></tr>
         <tr><td style="background:${COLORS.bgWarm};padding:28px 40px;border-top:1px solid ${COLORS.divider};" align="left">
-          <img src="${LOGO_DARK_URL}" alt="Vendibook" width="100" style="display:block;width:100px;height:auto;border:0;margin-bottom:14px;" />
+          <img src="${LOGO_LIGHT_URL}" alt="Vendibook" width="100" style="display:block;width:100px;height:auto;border:0;margin-bottom:14px;" />
           <p style="margin:0 0 6px 0;font-size:12px;color:${COLORS.textMuted};line-height:1.5;">${MAILING_ADDRESS}</p>
           <p style="margin:0 0 6px 0;font-size:12px;color:${COLORS.textMuted};line-height:1.5;">Questions? <a href="mailto:${SUPPORT_EMAIL}" style="color:${COLORS.textMuted};text-decoration:underline;">${SUPPORT_EMAIL}</a> · ${SUPPORT_HOURS}</p>
           <p style="margin:0 0 6px 0;font-size:12px;color:${COLORS.textMuted};line-height:1.5;">Sent to ${recipientEmail}. <a href="${unsubscribeUrl}" style="color:${COLORS.textMuted};text-decoration:underline;">Unsubscribe</a></p>
