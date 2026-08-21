@@ -2,15 +2,17 @@
 // Pure HTML string builder (no React Email) to keep edge bundle small.
 
 // Palette derives from the master email design system (Phase 2 tokens).
+import { MK, color } from "./brand.ts";
+
 const COLORS = {
-  bgDark: "#1c1917",      // charcoal (header band only)
-  bgWhite: "#ffffff",     // content surface
-  bgWarm: "#faf7f2",      // warm ivory canvas
-  orange: "#FF5124",      // Vendibook orange CTA
-  textDark: "#1c1917",
-  textMuted: "#78716c",
-  divider: "#e7e2dc",     // soft gray hairline
-  pill: "#f7f4ef",
+  bgDark: color.text,          // charcoal (header band only)
+  bgWhite: MK.surface,         // content surface
+  bgWarm: MK.canvas,           // warm ivory canvas
+  orange: MK.orange,           // Vendibook orange CTA
+  textDark: MK.text,
+  textMuted: MK.textMuted,
+  divider: MK.border,          // soft gray hairline
+  pill: MK.surfaceMuted,
 };
 
 export interface ListingCard {
