@@ -82,26 +82,14 @@ Deno.serve(async (req) => {
 
     const recipientName = (p as any).first_name || ((p as any).full_name || '').split(' ')[0] || undefined;
 
-    // Legacy-JWT anon key (publishable, safe to bake in). send-transactional-email requires a JWT.
-    const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5icmVoYndmc21lZGJlbHpudHFzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgxMDgzMTMsImV4cCI6MjA4MzY4NDMxM30.EkA-lGUmkLQ9rPAO-unLxGGGHVmPDdVR8awlA2ShVpU';
-    const FN_URL = `${Deno.env.get('SUPABASE_URL')}/functions/v1/send-transactional-email`;
-    const resp = await fetch(FN_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'apikey': ANON_KEY,
-        'Authorization': `Bearer ${ANON_KEY}`,
-      },
-      body: JSON.stringify({
-        templateName: 'feedback-request',
-        recipientEmail: email,
-        idempotencyKey: `feedback-${wave}-${p.id}`,
-        templateData: { recipientName, contextType: 'broadcast', feedbackToken: token },
-      }),
+    const resp = await sendTransactionalEmailInternal({
+      templateName: 'feedback-request',
+      recipientEmail: email,
+      idempotencyKey: `feedback-${wave}-${p.id}`,
+      templateData: { recipientName, contextType: 'broadcast', feedbackToken: token },
     });
     if (!resp.ok) {
-      const text = await resp.text().catch(() => '');
-      errors.push({ id: p.id, email, status: resp.status, error: text.slice(0, 300) });
+      errors.push({ id: p.id, email, status: resp.status, error: resp.body.slice(0, 300) });
     } else {
       sent.push({ id: p.id, email });
     }
