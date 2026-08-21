@@ -221,15 +221,17 @@ export const BLOG_POSTS: BlogPost[] = [
   {
     slug: 'texas-mobile-food-vendor-law-2026',
     title: 'Texas Is Changing Food Truck Licensing: What the New Statewide Mobile Food Vendor Law Means for Owners, Renters, Sellers, and Operators',
-    description: 'Starting July 1, 2026, Texas mobile food vendors move to a statewide DSHS license. Here is what it means for food trailer rentals, fleet owners, sellers, operators, and event hosts.',
-    excerpt: 'On July 1, 2026, Texas replaces its patchwork of local health permits with a single statewide Mobile Food Vendor license through DSHS — a major shift for trailer rentals, fleet operators, sellers, and event organizers.',
+    description: 'Since July 1, 2026, Texas mobile food vendors must hold a statewide DSHS license. Here is what it means for food trailer rentals, fleet owners, sellers, operators, and event hosts.',
+    excerpt: 'Since July 1, 2026, Texas has required a statewide DSHS license to operate a Food Vending Vehicle, replacing the patchwork of local health permits — a major shift for rentals, fleet operators, sellers, and event organizers.',
     image: '/images/blog/texas-mobile-food-vendor-law-cover.jpg',
     content: `
-<p class="text-lg text-muted-foreground mb-6"><em>Published by Vendibook · June 10, 2026</em></p>
+<p class="text-lg text-muted-foreground mb-6"><em>Published by Vendibook · June 10, 2026 · Last reviewed August 2026</em></p>
 
-<p class="text-lg mb-6">Texas is making a major change to how food trucks, food trailers, catering trucks, roadside vendors, and other mobile food businesses are licensed.</p>
+<p class="text-lg mb-6">Texas has changed how food trucks, food trailers, catering trucks, roadside vendors, and other mobile food businesses are licensed.</p>
 
-<p class="mb-6">Starting <strong>July 1, 2026</strong>, mobile food vendors in Texas will move under a new statewide licensing system through the <strong>Texas Department of State Health Services (DSHS)</strong>. Instead of needing separate health permits from different cities or counties, qualifying mobile food vendors will be required to obtain a state-issued Mobile Food Vendor license.</p>
+<p class="mb-6">As of <strong>July 1, 2026</strong>, Texas DSHS states that all mobile food vendors must be licensed with the <strong>Texas Department of State Health Services</strong> to operate a Food Vending Vehicle in Texas. The statewide system was created by <a href="https://capitol.texas.gov/tlodocs/89R/billtext/html/HB02844F.HTM" target="_blank" rel="noopener noreferrer" class="text-primary underline">HB 2844</a>. Instead of separate health permits from individual cities or counties, qualifying vendors obtain a state-issued license, with DSHS assigning Type I, II, or III classifications based on food preparation and risk and requiring a pre-licensing inspection where applicable. DSHS publishes the current fees and application steps on its <a href="https://www.dshs.texas.gov/retail-food-establishments/permits-retail-food-establishments/mobile-food-vendors" target="_blank" rel="noopener noreferrer" class="text-primary underline">mobile food vendors page</a>.</p>
+
+<p class="mb-6">Local governments may still regulate matters outside health licensing — zoning, parking, fire and life safety, and property, location, or event rules where allowed.</p>
 
 <p class="mb-6">For the food truck and food trailer industry, this is a big deal. It could make it easier for operators to work across multiple Texas cities, easier for trailer owners to rent their units, easier for fleet owners to expand, and easier for buyers to understand what kind of food vending vehicle they are actually purchasing. If you are already looking, you can <a href="/search?mode=sale&q=food+truck&lat=31&lng=-100&radius=500&location=Texas" class="text-primary underline hover:text-primary/80">see food trucks for sale in Texas</a> or <a href="/search?mode=rent&q=food+trailer&lat=31&lng=-100&radius=500&location=Texas" class="text-primary underline hover:text-primary/80">browse food trailers for rent in Texas</a> right now on Vendibook.</p>
 
@@ -454,6 +456,7 @@ export const BLOG_POSTS: BlogPost[] = [
     author: 'Vendibook Editorial',
     authorRole: 'Marketplace Insights',
     datePublished: '2026-06-10',
+    dateModified: '2026-08-21',
     category: 'permits-regulations',
     tags: ['Texas', 'food truck', 'food trailer', 'DSHS', 'HB 2844', 'mobile food vendor', 'licensing', 'rentals', 'fleet'],
     readingTime: 12,
@@ -627,20 +630,20 @@ export const BLOG_POSTS: BlogPost[] = [
   },
   {
     slug: 'restaurant-proof-of-concept-shared-kitchens',
-    title: 'The $250k Gamble: Why Smart Chefs Test Concepts in Shared Kitchens First',
+    title: 'Test the Concept First: Why Chefs Start in Shared Kitchens',
     description: 'Don\'t sign a lease until you\'ve tested your menu. Learn why the "Lean Startup" method using shared kitchens and food trucks is the smartest financial move for new food entrepreneurs.',
-    excerpt: 'The restaurant industry has one of the highest failure rates in business. If you are opening a food business in 2025 without a "Proof of Concept" phase, you aren\'t an entrepreneur—you\'re a gambler.',
+    excerpt: 'Before signing a long lease or funding a buildout, prove the menu, the throughput, and the market with a low-commitment test.',
     image: '/images/blog/restaurant-proof-of-concept-cover.png',
     content: `
 <p class="text-lg text-muted-foreground mb-6"><em>By Brock De Santis | Commissary Specialist & Industry Consultant</em></p>
 
-<p class="text-lg mb-6">In my years working with food entrepreneurs, I've seen the same tragedy play out over a hundred times. A passionate chef with a killer recipe takes out a second mortgage, signs a personal guarantee on a 5-year lease, and drops $250,000 on a brick-and-mortar buildout.</p>
+<p class="text-lg mb-6">In my years working with food entrepreneurs, I have seen the same story repeatedly. A passionate chef with a great recipe signs a personal guarantee on a multi-year lease and funds a full brick-and-mortar buildout before a single stranger has paid for the food.</p>
 
 <p class="mb-6"><strong>Six months later, the doors are closed.</strong></p>
 
 <p class="mb-6">The tragedy isn't that the food wasn't good. The tragedy is that they bet the house on a hypothesis that had never been tested.</p>
 
-<p class="mb-6">The restaurant industry has one of the highest failure rates in business. This isn't because cooking is impossible—it's because scaling is expensive. If you are opening a food business in 2025 without a "Proof of Concept" phase, you aren't an entrepreneur—<strong>you're a gambler</strong>.</p>
+<p class="mb-6">Opening a food business is capital-intensive and unforgiving of untested assumptions — not because cooking is hard, but because scaling is expensive. A proof-of-concept phase is how you find out what is true before the money is committed.</p>
 
 <p class="mb-8">The "Lean Startup" methodology has taken over the tech world, and it's time it took over the food world. Here is why testing your concept in a low-risk environment—like a shared commercial kitchen or food truck park—isn't just a stepping stone; it is the <strong>smartest financial decision you will ever make</strong>.</p>
 
@@ -713,8 +716,8 @@ export const BLOG_POSTS: BlogPost[] = [
 <tbody>
 <tr>
 <td class="border border-border p-3 font-medium">Upfront Cost</td>
-<td class="border border-border p-3 text-red-600 dark:text-red-400">$250,000+</td>
-<td class="border border-border p-3 text-green-600 dark:text-green-400">$5,000 - $15,000</td>
+<td class="border border-border p-3 text-red-600 dark:text-red-400">Large upfront buildout: hoods, plumbing, grease interceptor, flooring, fit-out</td>
+<td class="border border-border p-3 text-green-600 dark:text-green-400">Recurring rental fee for an already-built, inspected facility</td>
 </tr>
 <tr>
 <td class="border border-border p-3 font-medium">Commitment</td>
@@ -730,7 +733,7 @@ export const BLOG_POSTS: BlogPost[] = [
 </table>
 </div>
 
-<p class="mb-8">This liquidity preserves your runway, giving you more time to find your audience and perfect your product.</p>
+<p class="mb-8">Actual figures vary widely by market, facility, and menu — the point is the shape of the commitment, not a specific number. This liquidity preserves your runway, giving you more time to find your audience and perfect your product.</p>
 
 <h2 class="text-2xl font-bold mt-10 mb-4">How to Start Testing Today</h2>
 
@@ -748,12 +751,12 @@ export const BLOG_POSTS: BlogPost[] = [
 <p class="text-sm text-muted-foreground">Find high-traffic lots to park your trailer and test direct-to-consumer sales.</p>
 </div>
 <div class="bg-primary/5 p-4 rounded-lg border border-primary/20">
-<h3 class="font-bold mb-2">✅ Instant Compliance</h3>
-<p class="text-sm text-muted-foreground">We handle the insurance and license verification so you can focus on the data, not the paperwork.</p>
+<h3 class="font-bold mb-2">Permit research</h3>
+<p class="text-sm text-muted-foreground">Use <a href="/tools/permitpath" class="text-primary underline">PermitPath</a> to map the licenses and inspections your city expects. You remain responsible for your own permits and insurance.</p>
 </div>
 </div>
 
-<p class="mb-6"><strong>Don't spend a quarter-million dollars to find out if people like your sauce.</strong> Spend a few weeks in a rented kitchen, validate your dream, and then build your empire.</p>
+<p class="mb-6"><strong>Do not fund a buildout to find out whether people like your sauce.</strong> Spend a few weeks in a rented kitchen, validate the concept, and then commit.</p>
 
 <div class="bg-primary/10 p-6 rounded-lg text-center">
 <h3 class="font-bold text-xl mb-3">Ready to test your concept?</h3>
@@ -763,6 +766,7 @@ export const BLOG_POSTS: BlogPost[] = [
     author: 'Brock De Santis',
     authorRole: 'Commissary Specialist & Industry Consultant',
     datePublished: '2026-02-07',
+    dateModified: '2026-08-21',
     category: 'getting-started',
     tags: ['restaurant proof of concept', 'shared kitchen rental', 'food startup costs', 'lean startup', 'ghost kitchen', 'food truck', 'commissary kitchen'],
     readingTime: 8,
@@ -831,7 +835,7 @@ export const BLOG_POSTS: BlogPost[] = [
 
 <h2 class="text-2xl font-bold mt-10 mb-4">Option 2: Renting (Recurring Income + Flexibility)</h2>
 
-<p class="mb-4">Renting is the modern wealth play—turning your asset into a <strong>monthly earner</strong>.</p>
+<p class="mb-4">Renting keeps the asset and trades a one-time sale for recurring — but not guaranteed — rental revenue, along with the ongoing work of managing it.</p>
 
 <div class="bg-muted p-6 rounded-lg mb-6">
 <h3 class="font-bold mb-3">Rent your trailer/truck if:</h3>
@@ -960,7 +964,8 @@ export const BLOG_POSTS: BlogPost[] = [
     authorRole: 'Editorial',
     datePublished: '2026-01-27',
     category: 'business-tips',
-    tags: ['sell vs rent', 'food trailer', 'food truck', 'ghost kitchen', 'monetization', 'passive income'],
+    tags: ['sell vs rent', 'food trailer', 'food truck', 'ghost kitchen', 'monetization'],
+    dateModified: '2026-08-21',
     readingTime: 10,
     featured: true,
   },
@@ -1173,7 +1178,7 @@ export const BLOG_POSTS: BlogPost[] = [
 
 <h2 class="text-2xl font-bold mt-10 mb-4">Ready to List Your Vendor Space?</h2>
 
-<p class="mb-6">Vendibook makes it simple to list your lot, set your availability, and connect with verified food vendors in your area.</p>
+<p class="mb-6">Vendibook makes it simple to list your lot, set your availability, and connect with food vendors in your area. Confirm each vendor's permits and insurance yourself, and check local zoning, fire, health, and event rules before hosting — Vendibook does not verify every operator or guarantee compliance.</p>
 
 <p class="mb-6"><a href="/list" class="text-primary underline font-medium">List your Vendor Space today →</a></p>
     `,
@@ -1181,123 +1186,145 @@ export const BLOG_POSTS: BlogPost[] = [
     authorRole: 'Editorial',
     datePublished: '2026-01-27',
     category: 'business-tips',
-    tags: ['Vendor Space', 'commercial property', 'hosting', 'passive income', 'property management', 'food truck park'],
+    tags: ['Vendor Space', 'commercial property', 'hosting', 'property management', 'food truck park'],
+    dateModified: '2026-08-21',
     image: '/images/blog/vendor-lot-hosting.webp',
     readingTime: 9,
     featured: true,
   },
   {
     slug: 'how-to-start-food-truck-business-2025',
-    title: 'How to Start a Food Truck Business in 2025: Complete Guide',
-    description: 'Everything you need to know about starting a food truck business in 2025, from initial planning to your first day of sales.',
-    excerpt: 'Starting a food truck business is one of the most accessible ways to enter the food industry. Learn the step-by-step process to launch your mobile kitchen.',
+    title: 'How to Start a Food Truck Business: A Practical 2026 Guide',
+    description: 'A step-by-step guide to launching a mobile food business in 2026 — concept, budget, permits, commissary, insurance, equipment, financing, and a launch checklist.',
+    excerpt: 'A realistic, current walkthrough of what it actually takes to launch a food truck or trailer — without invented cost promises.',
     content: `
-# How to Start a Food Truck Business in 2025
+<p class="text-lg text-muted-foreground mb-6"><em>By the Vendibook Team · Updated August 2026</em></p>
 
-Starting a food truck business is one of the most exciting and accessible ways to break into the food industry. With lower startup costs than a traditional restaurant and the flexibility to go where the customers are, food trucks have become a cornerstone of American culinary culture.
+<p class="text-lg mb-6">Launching a mobile food business is more achievable than opening a brick-and-mortar restaurant, but it is not simple. The order you do things in matters, because permitting and health requirements can change what you are allowed to build or buy.</p>
 
-## Why 2025 Is the Perfect Time
+<p class="mb-8">This guide walks the sequence most successful operators follow. It deliberately avoids universal cost figures: prices for units, permits, and insurance vary widely by market, build quality, and menu, and anyone quoting one national number is guessing.</p>
 
-The food truck industry continues to grow, with the market expected to reach $2.7 billion by 2027. Post-pandemic dining habits have shifted, and consumers are more open than ever to trying street food and mobile vendors.
+<h2 class="text-2xl font-bold mt-10 mb-4">1. Define the concept</h2>
+<ul class="mb-8 space-y-2">
+  <li><strong>Menu and service model</strong> — what you cook on board versus prep off-site drives your equipment and your health classification.</li>
+  <li><strong>Customer and setting</strong> — office lunch rush, breweries, events, and late-night crowds want different menus and hours.</li>
+  <li><strong>What makes you the obvious choice</strong> in that setting.</li>
+</ul>
 
-## Step 1: Develop Your Concept
+<h2 class="text-2xl font-bold mt-10 mb-4">2. Build a business plan and a real budget</h2>
+<p class="mb-4">Budget for more than the unit itself. Line items operators most often forget:</p>
+<ul class="mb-8 space-y-2">
+  <li>Permits, inspections, and plan review</li>
+  <li>Commissary or shared-kitchen fees, where required</li>
+  <li>Insurance (general liability, auto, equipment)</li>
+  <li>Wrap and branding, POS, and initial inventory</li>
+  <li>Fuel, propane, generator service, and repairs</li>
+  <li>Working capital for the first several months</li>
+</ul>
 
-Your concept is your identity. Consider:
-- **Cuisine type**: What food will you serve?
-- **Target audience**: Who are your ideal customers?
-- **Unique selling proposition**: What makes you different?
+<h2 class="text-2xl font-bold mt-10 mb-4">3. Check permits before you buy or build</h2>
+<p class="mb-4">Requirements are <strong>not uniform nationally</strong>. They are set by a mix of state, county, city, health, and fire authorities, and some jurisdictions require plan review before a unit is built. Confirm what applies to your city and county first.</p>
+<p class="mb-8"><a href="/tools/permitpath" data-cta="permitpath_startup_guide" class="text-primary underline font-medium">PermitPath</a> helps you assemble that checklist for your location and operation type, and our <a href="/blog/mobile-food-permit-guide-by-state" class="text-primary underline font-medium">permit research guide</a> explains the layers involved.</p>
 
-## Step 2: Create a Business Plan
+<h2 class="text-2xl font-bold mt-10 mb-4">4. Sort out commissary and prep space</h2>
+<p class="mb-8">Many jurisdictions require a documented base of operations for prep, potable water, and waste disposal. Get the agreement in writing early — it is frequently required as an application attachment.</p>
 
-A solid business plan helps you:
-- Secure financing
-- Plan for profitability
-- Navigate challenges
+<h2 class="text-2xl font-bold mt-10 mb-4">5. Insurance</h2>
+<p class="mb-8">Talk to a broker who writes mobile food policies. You will typically be looking at general liability, commercial auto, and equipment coverage, and event organizers or property owners often set their own minimums.</p>
 
-## Step 3: Secure Funding
+<h2 class="text-2xl font-bold mt-10 mb-4">6. Choose the unit</h2>
+<div class="overflow-x-auto mb-8">
+  <table class="w-full text-left text-sm border-collapse">
+    <thead><tr class="border-b"><th class="py-3 pr-4 font-semibold">Path</th><th class="py-3 font-semibold">Best when</th></tr></thead>
+    <tbody>
+      <tr class="border-b"><td class="py-3 pr-4 font-medium">Rent first</td><td class="py-3">You want to test the concept before committing capital.</td></tr>
+      <tr class="border-b"><td class="py-3 pr-4 font-medium">Buy used</td><td class="py-3">You want to open sooner and can have the build and chassis inspected.</td></tr>
+      <tr><td class="py-3 pr-4 font-medium">Custom build</td><td class="py-3">Your menu needs specific equipment and you can wait out the build queue.</td></tr>
+    </tbody>
+  </table>
+</div>
+<p class="mb-8"><a href="/browse" class="text-primary underline font-medium">Browse trucks, trailers, and vendor spaces</a> to see what is realistically available in your market right now.</p>
 
-Typical startup costs range from $50,000 to $200,000. Options include:
-- Small business loans
-- Equipment financing
-- Renting instead of buying
+<h2 class="text-2xl font-bold mt-10 mb-4">7. Financing</h2>
+<p class="mb-8">If you are not paying cash, look at equipment financing and small-business lending. Vendibook buyers can explore options on our <a href="/financing" data-cta="financing_startup_guide" class="text-primary underline font-medium">financing page</a>. Approval, rates, and terms are set by the lender based on your application — no one can promise them in advance.</p>
 
-## Step 4: Get Licensed and Permitted
+<h2 class="text-2xl font-bold mt-10 mb-4">8. Lock in where you will operate</h2>
+<p class="mb-8">Private lots, breweries, business parks, and events all have their own rules on top of city permitting. Confirm property permission, zoning, and any fire or event requirements before you commit to a schedule.</p>
 
-Requirements vary by location but typically include:
-- Business license
-- Food handler's permit
-- Health department approval
-- Mobile vendor permit
+<div class="rounded-2xl border border-primary/30 bg-primary/5 p-6 mb-10">
+  <h3 class="text-xl font-bold mb-3">Launch checklist</h3>
+  <ul class="space-y-2 mb-0">
+    <li>Concept and menu costed out</li>
+    <li>Business registered, sales tax set up</li>
+    <li>Permits identified with <a href="/tools/permitpath" class="text-primary underline">PermitPath</a> and applications filed</li>
+    <li>Commissary agreement signed, if required</li>
+    <li>Health and fire inspections passed</li>
+    <li>Insurance bound</li>
+    <li>Unit acquired and equipment tested</li>
+    <li>POS, pricing, and staffing ready</li>
+    <li>First month of locations booked</li>
+  </ul>
+</div>
 
-## Step 5: Find Your Truck
+<p class="mb-8">Ready to move? <a href="/list" class="text-primary underline font-medium">List a unit or space</a>, or start with the <a href="/help" class="text-primary underline font-medium">Help Center</a> if you have questions about how Vendibook works.</p>
 
-You can buy new, buy used, or rent. Renting is a great way to test your concept before committing to a major purchase.
-
-## Ready to Get Started?
-
-Browse available food trucks for rent on Vendibook and start your journey today.
+<p class="text-sm text-muted-foreground"><strong>Note:</strong> This article is general information, not legal, tax, or financial advice. Verify requirements with the authorities that govern your location.</p>
     `,
     author: 'Vendibook Team',
     authorRole: 'Editorial',
     datePublished: '2025-01-15',
+    dateModified: '2026-08-21',
     category: 'getting-started',
     tags: ['food truck', 'startup', 'business plan', 'permits'],
-    image: '/images/taco-truck-hero.png',
+    image: '/images/blog/food-truck-editorial-hero.jpg',
+    imageAlt: 'Modern stainless steel food truck parked on a city street at golden hour',
     readingTime: 8,
     featured: true,
   },
   {
     slug: 'food-truck-vs-food-trailer-which-is-right',
-    title: 'Food Truck vs Food Trailer: Which Is Right for Your Business?',
-    description: 'Compare food trucks and food trailers to determine which mobile kitchen option best fits your business model, budget, and goals.',
-    excerpt: 'Choosing between a food truck and food trailer is a crucial decision. We break down the pros, cons, and costs of each option.',
+    title: 'Food Truck vs Food Trailer: Which Fits Your Operation?',
+    description: 'A practical comparison of food trucks and food trailers across mobility, kitchen space, tow vehicles, maintenance, and local requirements.',
+    excerpt: 'Neither format is universally cheaper or better. The right answer depends on how you plan to operate.',
     content: `
-# Food Truck vs Food Trailer: Which Is Right for Your Business?
+<p class="text-lg text-muted-foreground mb-6"><em>By the Vendibook Team · Updated August 2026</em></p>
 
-When launching a mobile food business, one of the first major decisions you'll face is whether to go with a food truck or a food trailer. Both have distinct advantages and considerations.
+<p class="text-lg mb-8">Trucks and trailers both work. What differs is how they fit your operating model — where you park, how often you move, who drives, and how much kitchen you need behind the window.</p>
 
-## Food Trucks: All-in-One Mobility
+<h2 class="text-2xl font-bold mt-10 mb-4">Start with the operating model</h2>
+<ul class="mb-8 space-y-2">
+  <li><strong>Move daily across a city?</strong> A self-contained truck is usually less friction.</li>
+  <li><strong>Park semi-permanently at a lot, brewery, or event series?</strong> A trailer is often the better fit.</li>
+  <li><strong>Multiple sites per day?</strong> Think about setup and teardown time, not just drive time.</li>
+</ul>
 
-**Pros:**
-- Self-propelled, no need for a tow vehicle
-- Easier to navigate urban areas
-- Often perceived as more professional
-- Simpler setup at events
+<h2 class="text-2xl font-bold mt-10 mb-4">Head to head</h2>
+<div class="overflow-x-auto mb-10">
+  <table class="w-full text-left text-sm border-collapse">
+    <thead><tr class="border-b"><th class="py-3 pr-4 font-semibold">Factor</th><th class="py-3 pr-4 font-semibold">Food truck</th><th class="py-3 font-semibold">Food trailer</th></tr></thead>
+    <tbody>
+      <tr class="border-b"><td class="py-3 pr-4 font-medium">Mobility</td><td class="py-3 pr-4">Drive and go; easier in dense urban areas</td><td class="py-3">Needs a capable tow vehicle and a driver comfortable towing</td></tr>
+      <tr class="border-b"><td class="py-3 pr-4 font-medium">Kitchen space</td><td class="py-3 pr-4">Shared with the cab and drivetrain</td><td class="py-3">Often more usable square footage for the footprint</td></tr>
+      <tr class="border-b"><td class="py-3 pr-4 font-medium">Downtime risk</td><td class="py-3 pr-4">A chassis problem stops service</td><td class="py-3">A tow vehicle can be swapped or rented</td></tr>
+      <tr class="border-b"><td class="py-3 pr-4 font-medium">Maintenance</td><td class="py-3 pr-4">Vehicle plus kitchen systems</td><td class="py-3">Kitchen systems plus axles, brakes, tires, coupler</td></tr>
+      <tr class="border-b"><td class="py-3 pr-4 font-medium">Parking and siting</td><td class="py-3 pr-4">Street vending rules apply</td><td class="py-3">Storage between shifts and lot access matter more</td></tr>
+      <tr><td class="py-3 pr-4 font-medium">Cost</td><td class="py-3 pr-4" colspan="2">Varies widely by build quality, equipment, age, and market. Compare real current listings rather than national averages, and remember a trailer budget must include the tow vehicle.</td></tr>
+    </tbody>
+  </table>
+</div>
 
-**Cons:**
-- Higher upfront cost
-- More complex maintenance
-- If the truck breaks down, you can't operate
+<h2 class="text-2xl font-bold mt-10 mb-4">Check local requirements before you decide</h2>
+<p class="mb-8">Some jurisdictions treat trucks and trailers differently for permitting, parking, or fire requirements, and some events only accept one format. Confirm what applies where you plan to operate — <a href="/tools/permitpath" data-cta="permitpath_truck_vs_trailer" class="text-primary underline font-medium">PermitPath</a> is a good starting point.</p>
 
-## Food Trailers: Flexibility and Cost
+<h2 class="text-2xl font-bold mt-10 mb-4">A low-risk way to decide</h2>
+<p class="mb-8">Rent the format you are leaning toward for a short run before buying. <a href="/browse" class="text-primary underline font-medium">Browse trucks and trailers</a> to compare real units and pricing in your area.</p>
 
-**Pros:**
-- Lower initial investment
-- More kitchen space per dollar
-- Tow vehicle can be used for other purposes
-- If the tow vehicle breaks down, the trailer still works
-
-**Cons:**
-- Requires a tow vehicle (additional expense)
-- Harder to maneuver in tight spaces
-- May require more setup time
-
-## Cost Comparison
-
-| Factor | Food Truck | Food Trailer |
-|--------|-----------|--------------|
-| Avg. Purchase Price | $75,000-$150,000 | $30,000-$80,000 |
-| Tow Vehicle | Not needed | $20,000-$50,000 |
-| Insurance | Higher | Lower |
-| Maintenance | More complex | Simpler |
-
-## Our Recommendation
-
-Start with a rental to test your concept. Whether you choose a truck or trailer, renting allows you to validate your business model before making a major investment.
+<p class="text-sm text-muted-foreground">General information only. Confirm licensing, towing, and vending requirements with the applicable authorities.</p>
     `,
     author: 'Vendibook Team',
     authorRole: 'Editorial',
     datePublished: '2025-01-10',
+    dateModified: '2026-08-21',
     category: 'equipment-guides',
     tags: ['food truck', 'food trailer', 'comparison', 'equipment'],
     readingTime: 6,
@@ -1305,180 +1332,155 @@ Start with a rental to test your concept. Whether you choose a truck or trailer,
   },
   {
     slug: 'ghost-kitchen-startup-guide',
-    title: 'Ghost Kitchen Startup Guide: Launch a Delivery-Only Restaurant',
-    description: 'Learn how to start a ghost kitchen business, from concept development to delivery platform optimization.',
-    excerpt: 'Ghost kitchens have revolutionized the restaurant industry. Learn how to launch your delivery-only concept with minimal overhead.',
+    title: 'Ghost Kitchen Startup Guide: Launching a Delivery-Only Concept',
+    description: 'What to consider before launching a delivery-only kitchen: space options, licensing, menu design for transit, platform economics, and local requirements.',
+    excerpt: 'A delivery-only kitchen removes the dining room, not the compliance. Here is what to work through first.',
     content: `
-# Ghost Kitchen Startup Guide
+<p class="text-lg text-muted-foreground mb-6"><em>By the Vendibook Team · Updated August 2026</em></p>
 
-Ghost kitchens, also known as cloud kitchens or dark kitchens, have transformed how food businesses operate. By eliminating the need for a traditional dining room, ghost kitchens offer a lower-cost entry point into the restaurant industry.
+<p class="text-lg mb-8">A ghost kitchen — also called a cloud or dark kitchen — produces food exclusively for delivery or pickup. Removing the dining room changes your cost structure, but it does not remove commercial kitchen, health, or zoning obligations, and it does not guarantee lower total costs once platform commissions, packaging, and shared-kitchen fees are counted.</p>
 
-## What Is a Ghost Kitchen?
+<h2 class="text-2xl font-bold mt-10 mb-4">Space options</h2>
+<ul class="mb-8 space-y-2">
+  <li><strong>Dedicated ghost kitchen suite</strong> — turnkey, usually the highest recurring cost.</li>
+  <li><strong>Shared or commissary kitchen</strong> — hourly or monthly access, often the easiest way to start.</li>
+  <li><strong>Underused restaurant capacity</strong> — running a second concept out of an existing kitchen.</li>
+</ul>
+<p class="mb-8">Whichever you choose, confirm the space is licensed for your production and that your concept is permitted at that address. <strong>Commercial kitchen, health, and zoning requirements vary by city and county</strong> — verify locally rather than assuming.</p>
 
-A ghost kitchen is a commercial cooking facility designed specifically for preparing food for delivery orders. There's no storefront, no dining room—just a kitchen optimized for efficiency.
+<h2 class="text-2xl font-bold mt-10 mb-4">Design the menu for transit</h2>
+<ul class="mb-8 space-y-2">
+  <li>Dishes that hold temperature and texture for 20–40 minutes</li>
+  <li>Packaging that vents steam and survives handling</li>
+  <li>Item margins that still work after platform commission and packaging</li>
+  <li>A short menu that a small team can execute at peak</li>
+</ul>
 
-## Benefits of Ghost Kitchens
+<h2 class="text-2xl font-bold mt-10 mb-4">Platform economics</h2>
+<p class="mb-8">Third-party marketplaces bring reach, and they take a commission on each order. Model your prices against those fees before launch, and build a direct ordering channel over time so you are not dependent on one source of demand. Platform dashboards show your own order history; treat them as operational feedback, not market research.</p>
 
-1. **Lower overhead**: No need for front-of-house staff or dining room rent
-2. **Flexibility**: Test multiple concepts from one location
-3. **Scalability**: Expand to new markets quickly
-4. **Data-driven**: Delivery platforms provide valuable customer insights
+<h2 class="text-2xl font-bold mt-10 mb-4">Before you open</h2>
+<ul class="mb-8 space-y-2">
+  <li>Business registration and sales tax</li>
+  <li>Health permit for the specific facility and menu</li>
+  <li>Food safety certification for your team</li>
+  <li>Fire and equipment sign-off where applicable</li>
+  <li>Insurance appropriate to a production kitchen</li>
+</ul>
 
-## Getting Started
+<p class="mb-8">Looking for space? <a href="/browse" class="text-primary underline font-medium">Browse commercial kitchens and vendor spaces</a> on Vendibook, and use <a href="/tools/permitpath" data-cta="permitpath_ghost_kitchen" class="text-primary underline font-medium">PermitPath</a> to map the approvals your location requires.</p>
 
-### Find Your Space
-
-You can:
-- Rent a dedicated ghost kitchen space
-- Share a commercial kitchen
-- Convert existing restaurant space
-
-### Choose Your Platforms
-
-Major delivery platforms include:
-- DoorDash
-- Uber Eats
-- Grubhub
-- Direct ordering through your website
-
-### Optimize for Delivery
-
-Your menu should:
-- Travel well
-- Maintain quality during transit
-- Be profitable after platform fees
-
-## Ready to Launch?
-
-Find ghost kitchen spaces for rent on Vendibook and start your delivery-only journey.
+<p class="text-sm text-muted-foreground">General information only, not legal advice. Requirements differ by jurisdiction — verify with your local health and zoning authorities.</p>
     `,
     author: 'Vendibook Team',
     authorRole: 'Editorial',
     datePublished: '2025-01-05',
+    dateModified: '2026-08-21',
     category: 'getting-started',
     tags: ['ghost kitchen', 'delivery', 'startup', 'cloud kitchen'],
     readingTime: 7,
   },
   {
     slug: 'vendor-lot-location-tips',
-    title: '10 Tips for Choosing the Perfect Vendor Space Location',
-    description: 'Location can make or break your food truck business. Learn how to evaluate and select the best Vendor Space for maximum sales.',
-    excerpt: 'The right location is crucial for food truck success. Here are 10 factors to consider when choosing your Vendor Space.',
+    title: '10 Things to Check Before Committing to a Vendor Space',
+    description: 'How to evaluate a vendor space for a mobile food business: traffic, visibility, utilities, zoning, property permission, fire and health rules, and terms.',
+    excerpt: 'Location shapes your day. Here are ten practical checks — including the permission and safety questions operators skip.',
     content: `
-# 10 Tips for Choosing the Perfect Vendor Space Location
+<p class="text-lg text-muted-foreground mb-6"><em>By the Vendibook Team · Updated August 2026</em></p>
 
-In the food truck business, location isn't just important—it's everything. The right Vendor Space can turn a slow day into a profitable one.
+<p class="text-lg mb-8">A good spot makes service easier; a bad one makes everything harder. Work through these before you sign anything or build a schedule around a location.</p>
 
-## 1. Foot Traffic Volume
+<ol class="mb-10 space-y-3 list-decimal pl-5">
+  <li><strong>Foot and vehicle traffic.</strong> Observe the location yourself at the hours you plan to serve, on more than one day.</li>
+  <li><strong>Visibility and approach.</strong> Can people see you in time to stop, and is there a natural place to queue?</li>
+  <li><strong>Customer access and parking.</strong> Easy access beats raw traffic counts.</li>
+  <li><strong>Who else vends there.</strong> Some clustering helps; direct menu overlap at the same hours rarely does.</li>
+  <li><strong>Time-of-day pattern.</strong> Breakfast, lunch, and late-night locations behave very differently.</li>
+  <li><strong>Zoning and vending rules.</strong> Confirm the site is zoned and permitted for mobile food vending, and whether a separate city permit is required.</li>
+  <li><strong>Property permission in writing.</strong> Verbal approval from a tenant is not the same as the property owner's consent.</li>
+  <li><strong>Fire and health requirements.</strong> Spacing from structures, propane placement, suppression, and hand-wash or waste provisions may all apply, and event organizers often add their own.</li>
+  <li><strong>Utilities and waste.</strong> Power, potable water, grease and gray-water disposal — confirm what the site actually provides.</li>
+  <li><strong>Terms and safety.</strong> Daily versus monthly commitments, cancellation, lighting, and security for evening service.</li>
+</ol>
 
-Look for locations with consistent pedestrian traffic. Business districts, event venues, and university areas are prime spots.
+<div class="rounded-2xl border bg-muted/40 p-6 mb-10">
+  <p class="mb-0">Earnings at any location depend on your menu, pricing, hours, weather, and execution. Treat other operators' numbers as anecdotes, not forecasts, and test a location on short terms before committing.</p>
+</div>
 
-## 2. Visibility
+<p class="mb-8"><a href="/browse" class="text-primary underline font-medium">Browse vendor spaces</a> on Vendibook, and check local approvals with <a href="/tools/permitpath" data-cta="permitpath_vendor_lot" class="text-primary underline font-medium">PermitPath</a>.</p>
 
-Can customers see your truck from the street? Corner lots and open spaces typically offer better visibility.
-
-## 3. Parking Accessibility
-
-Consider how customers will reach you. Is there nearby parking? Are you accessible by public transit?
-
-## 4. Competition Analysis
-
-Some competition is healthy, but too much can dilute your sales. Research what other vendors operate nearby.
-
-## 5. Time-of-Day Patterns
-
-Understand when traffic peaks. Breakfast spots differ from lunch locations, which differ from late-night venues.
-
-## 6. Permit Requirements
-
-Verify that the lot is properly zoned and permitted for food vending.
-
-## 7. Utility Access
-
-Do you need power hookups? Water access? Make sure the lot can support your operational needs.
-
-## 8. Lease Terms
-
-Negotiate favorable terms. Consider daily rates vs. monthly commitments.
-
-## 9. Nearby Businesses
-
-Complementary businesses (like bars without kitchens) can drive traffic your way.
-
-## 10. Safety and Lighting
-
-For evening operations, ensure the area is well-lit and safe for customers and staff.
-
-## Find Your Spot
-
-Browse available Vendor Spaces on Vendibook and find your perfect location.
+<p class="text-sm text-muted-foreground">General information only. Zoning, fire, and health rules vary by jurisdiction — verify locally.</p>
     `,
     author: 'Vendibook Team',
     authorRole: 'Editorial',
     datePublished: '2024-12-20',
+    dateModified: '2026-08-21',
     category: 'business-tips',
     tags: ['Vendor Space', 'location', 'business strategy'],
     readingTime: 5,
   },
   {
     slug: 'food-truck-maintenance-checklist',
-    title: 'The Complete Food Truck Maintenance Checklist',
-    description: 'Keep your food truck running smoothly with this comprehensive maintenance checklist covering daily, weekly, and monthly tasks.',
-    excerpt: 'Prevent costly breakdowns and health code violations with proper food truck maintenance. Here\'s your complete checklist.',
+    title: 'Food Truck Maintenance: A Practical Operating Checklist',
+    description: 'A grouped maintenance checklist for mobile food units covering the vehicle, kitchen equipment, propane and fire suppression, refrigeration and food safety, and records.',
+    excerpt: 'Grouped checks for the vehicle, kitchen, gas and fire systems, cold chain, and paperwork — with the parts that belong to licensed professionals clearly marked.',
     content: `
-# The Complete Food Truck Maintenance Checklist
+<p class="text-lg text-muted-foreground mb-6"><em>By the Vendibook Team · Updated August 2026</em></p>
 
-A well-maintained food truck is a profitable food truck. Regular maintenance prevents costly breakdowns, keeps you health-code compliant, and extends the life of your investment.
+<p class="text-lg mb-6">Maintenance is what keeps a unit earning. Use this as an operating routine, and follow your manufacturer's manuals for anything specific to your equipment.</p>
 
-## Daily Maintenance Tasks
+<div class="rounded-2xl border border-primary/30 bg-primary/5 p-6 mb-10">
+  <p class="mb-0"><strong>Safety first:</strong> propane systems, fire suppression, hood systems, and vehicle service must follow the manufacturer's instructions and, where required, be inspected or serviced by licensed professionals on their schedule. Do not attempt gas or suppression work yourself, and do not treat any checklist as a substitute for a required professional inspection.</p>
+</div>
 
-- [ ] Check oil and fluid levels
-- [ ] Inspect tires for wear and proper inflation
-- [ ] Clean all food preparation surfaces
-- [ ] Empty grease traps
-- [ ] Check refrigeration temperatures
-- [ ] Test all equipment functionality
+<h2 class="text-2xl font-bold mt-10 mb-4">Vehicle and chassis</h2>
+<ul class="mb-8 space-y-2">
+  <li>Walk-around before each move: tires, lights, leaks, mirrors</li>
+  <li>Fluids checked per the owner's manual</li>
+  <li>Brakes, suspension, and drivetrain serviced on the manufacturer's schedule by a qualified mechanic</li>
+  <li>Registration and any commercial inspection current</li>
+</ul>
 
-## Weekly Maintenance Tasks
+<h2 class="text-2xl font-bold mt-10 mb-4">Kitchen equipment</h2>
+<ul class="mb-8 space-y-2">
+  <li>Clean cooking surfaces, fryers, and griddles per shift</li>
+  <li>Hood filters cleaned on your posted schedule; hood cleaning by a qualified service at the required interval</li>
+  <li>Grease containment emptied and disposed of properly</li>
+  <li>Generator serviced per its manual; keep it fueled and ventilated as specified</li>
+</ul>
 
-- [ ] Deep clean the entire truck interior
-- [ ] Check propane lines and connections
-- [ ] Inspect fire extinguisher accessibility
-- [ ] Clean exhaust hood and filters
-- [ ] Check generator oil (if applicable)
+<h2 class="text-2xl font-bold mt-10 mb-4">Propane and fire suppression</h2>
+<ul class="mb-8 space-y-2">
+  <li>Visual check of cylinders, hoses, regulators, and mounting before each service day</li>
+  <li>Report any gas odor immediately, shut off supply, and have a licensed technician inspect before use</li>
+  <li>Suppression system and extinguishers inspected and tagged by a certified provider at the required interval</li>
+  <li>Keep documentation of every professional inspection on board</li>
+</ul>
 
-## Monthly Maintenance Tasks
+<h2 class="text-2xl font-bold mt-10 mb-4">Refrigeration and food safety</h2>
+<ul class="mb-8 space-y-2">
+  <li>Log holding and cold-storage temperatures at the frequency your health authority requires</li>
+  <li>Clean condenser coils and door seals on a set schedule</li>
+  <li>Verify hand-wash and three-compartment sink operation, water supply, and waste tank capacity before each shift</li>
+  <li>Sanitizer concentration checked with test strips</li>
+</ul>
 
-- [ ] Full vehicle inspection
-- [ ] HVAC system check
-- [ ] Pest control inspection
-- [ ] Inventory and replace worn equipment
-- [ ] Review and update food safety logs
+<h2 class="text-2xl font-bold mt-10 mb-4">Records</h2>
+<p class="mb-8">Keep temperature logs, service invoices, inspection tags, and repair history together. They support health inspections, insurance claims, and — when you sell — the resale value of the unit.</p>
 
-## Seasonal Maintenance
+<p class="mb-8">Questions about operating on Vendibook? The <a href="/help" class="text-primary underline font-medium">Help Center</a> covers listings, bookings, and payouts.</p>
 
-- [ ] Prepare for weather changes
-- [ ] Update winterization/summer prep
-- [ ] Schedule professional servicing
-
-## Record Keeping
-
-Keep detailed maintenance logs for:
-- Health department inspections
-- Insurance claims
-- Resale value documentation
-
-## Need Help?
-
-Check our help center for detailed maintenance guides, or browse Vendibook's marketplace for equipment and supplies.
+<p class="text-sm text-muted-foreground">General guidance only. Always follow manufacturer instructions, local codes, and the requirements of your health and fire authorities.</p>
     `,
     author: 'Vendibook Team',
     authorRole: 'Editorial',
     datePublished: '2024-12-15',
+    dateModified: '2026-08-21',
     category: 'equipment-guides',
     tags: ['maintenance', 'food truck', 'checklist', 'food safety'],
     readingTime: 6,
   },
+
   {
     slug: 'mobile-food-permit-guide-by-state',
     title: 'Mobile Food Vendor Permits: How to Find the Requirements in Your State',
@@ -1592,408 +1594,256 @@ Check our help center for detailed maintenance guides, or browse Vendibook's mar
 
   {
     slug: 'sell-my-food-truck-valuation-guide-2026',
-    title: 'How to Sell Your Food Truck in 2026: The Ultimate Valuation & Exit Guide',
-    description: 'Stop guessing your truck\'s value. Discover the 2026 resale market trends, calculate your truck\'s true worth, and learn why listing on specialized platforms like Vendibook gets you 20% higher offers.',
-    excerpt: 'The US food truck industry is projected to hit $5.77 billion by 2029. With new custom builds now taking 6-8 months and costing upwards of $150,000, smart entrepreneurs are looking for your used truck.',
+    title: 'How to Price and Sell Your Food Truck: A Seller\'s Guide',
+    description: 'Price your food truck with comparable listings, condition, documentation, and compliance status — plus how to prepare the paperwork buyers and lenders ask for.',
+    excerpt: 'A grounded approach to valuing and preparing a used food truck for sale, built on comparables and documentation rather than formulas.',
     content: `
-<p class="text-lg text-muted-foreground mb-6"><em>By The Vendibook Team | Estimated Read Time: 9 Minutes</em></p>
+<p class="text-lg text-muted-foreground mb-6"><em>By the Vendibook Team · Updated August 2026</em></p>
 
-<p class="text-lg mb-6">The US food truck industry is projected to hit <strong>$5.77 billion by 2029</strong>, growing at a steady 7.4% annually. But here is the statistic that matters most to you right now: <strong>the demand for compliant, turnkey used trucks has arguably never been higher.</strong></p>
+<p class="text-lg mb-8">There is no blue book for food trucks. Every unit is a vehicle and a commercial kitchen bolted together, and the two age differently. The most reliable way to price one is to compare it against what similar units are actually listed and sold for, then adjust for condition and documentation.</p>
 
-<p class="mb-6">With new custom builds now taking 6-8 months and costing upwards of $150,000, smart entrepreneurs are looking for your used truck to start their business immediately.</p>
+<h2 class="text-2xl font-bold mt-10 mb-4">1. Start with comparables</h2>
+<p class="mb-4">Pull five to ten units that resemble yours and note asking prices, how long they have been listed, and what they include.</p>
+<ul class="mb-8 space-y-2">
+  <li>Chassis year, mileage or engine hours, and drivetrain</li>
+  <li>Build quality and who built it</li>
+  <li>Cooking line, refrigeration, hood, and generator</li>
+  <li>Region — demand and pricing differ by market</li>
+</ul>
+<p class="mb-8"><a href="/search?mode=sale" class="text-primary underline font-medium">Search active for-sale listings on Vendibook</a> for your closest matches. Asking prices are a signal, not a settled value; a unit sitting unsold for months is priced above the market.</p>
 
-<p class="mb-8">If you are typing "sell my food truck" into search engines, you are likely ready to move on. But are you leaving money on the table? This guide digs into the deep research of valuation, depreciation, and how to position your rig on <a href="/sell-my-food-truck" class="text-primary underline font-medium">Vendibook</a> to sell for top dollar.</p>
+<h2 class="text-2xl font-bold mt-10 mb-4">2. Adjust for what buyers actually pay for</h2>
+<div class="overflow-x-auto mb-10">
+  <table class="w-full text-left text-sm border-collapse">
+    <thead><tr class="border-b"><th class="py-3 pr-4 font-semibold">Factor</th><th class="py-3 font-semibold">Why it moves the price</th></tr></thead>
+    <tbody>
+      <tr class="border-b"><td class="py-3 pr-4 font-medium">Chassis condition</td><td class="py-3">Rust, mileage, recent service, and a clean inspection lower the buyer's risk.</td></tr>
+      <tr class="border-b"><td class="py-3 pr-4 font-medium">Kitchen equipment</td><td class="py-3">Well-maintained commercial equipment holds value better than the vehicle around it.</td></tr>
+      <tr class="border-b"><td class="py-3 pr-4 font-medium">Fire suppression</td><td class="py-3">A current, tagged suppression inspection saves the buyer a step. Keep the tag and invoice.</td></tr>
+      <tr class="border-b"><td class="py-3 pr-4 font-medium">Compliance status</td><td class="py-3">Where your state or county issues a build approval or insignia, an active one is a real advantage — say which authority issued it and when it expires.</td></tr>
+      <tr class="border-b"><td class="py-3 pr-4 font-medium">Title and VIN</td><td class="py-3">A clean title in your name with a matching VIN is close to non-negotiable for financed buyers.</td></tr>
+      <tr><td class="py-3 pr-4 font-medium">Records</td><td class="py-3">Service history and temperature logs turn claims into evidence.</td></tr>
+    </tbody>
+  </table>
+</div>
+<p class="mb-8">Both the vehicle and the equipment lose value over time, at rates that depend on use and upkeep. If the number matters — for an estate, a partnership split, financing, or insurance — get a professional appraisal rather than relying on any online formula.</p>
 
-<h2 class="text-2xl font-bold mt-10 mb-4">1. The "Compliance Premium": Why Your Truck is Worth More Than You Think</h2>
-
-<p class="mb-4">In 2026, buyers aren't just buying wheels; they are <strong>buying speed to market</strong>.</p>
-
-<p class="mb-4">A generic truck on Craigslist might sit for months. But a truck that is "code-ready" for strict cities like Los Angeles, Austin, or Portland commands a premium.</p>
-
-<ul class="list-disc pl-6 mb-6 space-y-2">
-<li><strong>The Fire Suppression Factor:</strong> Does your truck have an up-to-date Ansul system? Buyers know that installing this new costs $3,000–$5,000. If yours is inspected and tagged, add that value directly to your asking price.</li>
-<li><strong>The "Blue Sticker" Value:</strong> If your truck already has a valid insignia from the Department of Housing and Community Development (in CA) or Labor & Industries (in WA), highlight this immediately. It is the "Golden Ticket" for buyers.</li>
+<h2 class="text-2xl font-bold mt-10 mb-4">3. Assemble the document pack before you list</h2>
+<p class="mb-4">Serious buyers, and any lender behind them, will ask for these. Having them ready shortens the sale.</p>
+<ul class="mb-8 space-y-2">
+  <li>Title, registration, and VIN photo</li>
+  <li>Build sheet and equipment list with makes and models</li>
+  <li>Equipment manuals</li>
+  <li>Maintenance and service records, including generator hours</li>
+  <li>Fire suppression inspection tag and last hood cleaning</li>
+  <li>Most recent health inspection and any state build approval</li>
+  <li>Clear photos: exterior all sides, service window, full kitchen line, undercarriage, tires, electrical panel</li>
 </ul>
 
-<h2 class="text-2xl font-bold mt-10 mb-4">2. The Valuation Math: Depreciation vs. Equipment</h2>
-
-<p class="mb-4">Unlike a car, a food truck is two assets in one: the <strong>vehicle</strong> (which depreciates) and the <strong>kitchen</strong> (which holds value).</p>
-
-<ul class="list-disc pl-6 mb-6 space-y-2">
-<li><strong>Vehicle Depreciation:</strong> Heavy trucks (~13,000 lbs) typically depreciate 15-25% annually.</li>
-<li><strong>Kitchen Value:</strong> High-end equipment (Vulcan, Frymaster) retains value if well-maintained.</li>
-</ul>
-
-<div class="bg-muted p-6 rounded-lg mb-8">
-<h3 class="font-bold mb-3">The "Vendibook Formula" for a Quick Check:</h3>
-<p class="font-mono text-sm mb-2"><strong>Estimated Value = (Original Vehicle Cost × Depreciation Factor) + (Kitchen Equipment Replacement Value × 0.6)</strong></p>
-<p class="text-sm text-muted-foreground mt-4"><em>Note: This is a rough estimate. For a true market comparison, <a href="/search?mode=sale" class="text-primary underline">search active listings on Vendibook</a> to see what similar trucks in your region are actually listing for.</em></p>
+<div class="rounded-2xl border border-primary/30 bg-primary/5 p-6 mb-10">
+  <h3 class="text-xl font-bold mb-2">Write the description a cautious buyer wants</h3>
+  <p class="mb-0">Name the specifics and the flaws: "Chassis inspected January 2026, no wheel-well rust, generator serviced every 200 hours, fryer replaced 2025, minor cosmetic scratches on driver side." Disclosure builds trust and heads off renegotiation at handoff.</p>
 </div>
 
-<h2 class="text-2xl font-bold mt-10 mb-4">3. Watch What Your Buyers Are Watching</h2>
+<h2 class="text-2xl font-bold mt-10 mb-4">4. Where you list matters</h2>
+<p class="mb-8">General classifieds reach a wide but unqualified audience and rarely have fields for hood dimensions or tank sizes. A specialist marketplace reaches fewer people, but the people who look are shopping for exactly this. Whichever you choose, expect to answer detailed questions and to allow an inspection.</p>
 
-<p class="mb-4">Today's buyers are educated. They are watching YouTube channels like Custom Trailer Pros or UpFlip to learn how to spot a lemon. You need to watch these too, so you can address their fears before they even ask.</p>
+<h2 class="text-2xl font-bold mt-10 mb-4">5. Selling on Vendibook</h2>
+<p class="mb-8">Vendibook charges a 12.9% seller commission on completed online sales, with no separate buyer fee; cash and pay-in-person sales carry no commission. Buyers can also explore <a href="/financing" class="text-primary underline font-medium">buyer financing</a>, which widens your pool. <a href="/list?mode=sale" data-cta="list_sale_valuation_guide" class="text-primary underline font-medium">Create a for-sale listing</a> or read <a href="/help/selling-end-to-end" class="text-primary underline font-medium">Selling end to end</a> in the Help Center.</p>
 
-<p class="mb-4"><strong>Watch this video on "Red Flags" so you can fix them before listing:</strong></p>
-
-<div class="aspect-video mb-6">
-<iframe width="100%" height="100%" src="https://www.youtube.com/embed/zyYSknT6wZY" title="How to Buy a Food Truck: Avoid Scammers & Find a Great Deal" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen class="rounded-lg"></iframe>
-</div>
-
-<div class="bg-primary/5 border-l-4 border-primary p-4 mb-8">
-<h4 class="font-bold mb-2">Your Seller's Advantage:</h4>
-<p>When you list on Vendibook, preempt their questions. In your description, write: <em>"Passed chassis inspection Jan 2026. No rust on wheel wells. Generator serviced every 200 hours."</em></p>
-</div>
-
-<h2 class="text-2xl font-bold mt-10 mb-4">4. Where to List: The "Tire Kicker" Problem</h2>
-
-<p class="mb-4">You have three main options to sell your asset. Choose wisely.</p>
-
-<div class="overflow-x-auto mb-8">
-<table class="w-full border-collapse border border-border">
-<thead>
-<tr class="bg-muted">
-<th class="border border-border p-3 text-left">Platform</th>
-<th class="border border-border p-3 text-left">Audience</th>
-<th class="border border-border p-3 text-left">Pros</th>
-<th class="border border-border p-3 text-left">Cons</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td class="border border-border p-3">Facebook Marketplace</td>
-<td class="border border-border p-3">General Public</td>
-<td class="border border-border p-3">Free</td>
-<td class="border border-border p-3">Flooded with "Is this available?" messages from people with no funding.</td>
-</tr>
-<tr>
-<td class="border border-border p-3">eBay</td>
-<td class="border border-border p-3">Global</td>
-<td class="border border-border p-3">Huge reach</td>
-<td class="border border-border p-3">High fees; listing format is not designed for complex kitchen specs.</td>
-</tr>
-<tr class="bg-primary/5">
-<td class="border border-border p-3 font-bold">Vendibook</td>
-<td class="border border-border p-3">Professionals</td>
-<td class="border border-border p-3">100% Targeted. Users are here specifically to buy/sell mobile businesses.</td>
-<td class="border border-border p-3">Buyers are savvy—you need to know your truck's specs.</td>
-</tr>
-</tbody>
-</table>
-</div>
-
-<h2 class="text-2xl font-bold mt-10 mb-4">5. The "Tech Pack": Your Secret Weapon</h2>
-
-<p class="mb-4">Serious buyers need financing. Banks need paperwork.</p>
-
-<p class="mb-4">To sell your truck in under 30 days, create a digital "Tech Pack" (Google Drive folder) that you can send to serious leads from Vendibook. Include:</p>
-
-<ul class="list-disc pl-6 mb-8 space-y-2">
-<li><strong>The Build Sheet:</strong> Who built it? (Cruising Kitchens, Prestige, etc.)</li>
-<li><strong>Equipment Manuals:</strong> PDF copies for the fridge, fryer, and flat top.</li>
-<li><strong>Maintenance Log:</strong> Proof that you changed the generator oil.</li>
-</ul>
-
-<div class="bg-accent p-6 rounded-lg text-center">
-<h3 class="text-xl font-bold mb-3">Ready to Exit?</h3>
-<p class="mb-4">Don't let your truck become a "stale listing."</p>
-<p class="mb-4"><a href="/list?mode=sale" class="inline-flex items-center justify-center px-6 py-3 bg-primary text-primary-foreground font-semibold rounded-lg hover:bg-primary/90">List your truck on Vendibook today →</a></p>
-<p class="text-sm text-muted-foreground">Get in front of serious entrepreneurs who are funded and ready to buy.</p>
-</div>
+<p class="text-sm text-muted-foreground">General information only, not an appraisal or financial advice. Timelines and prices vary by market, unit, and condition.</p>
     `,
     author: 'Vendibook Team',
     authorRole: 'Editorial',
     datePublished: '2026-01-15',
-    dateModified: '2026-01-19',
+    dateModified: '2026-08-21',
     category: 'equipment-guides',
-    tags: ['sell my food truck', 'food truck valuation', 'sell food truck', 'used food truck for sale', 'food truck blue book'],
-    image: '/images/taco-truck-hero.png',
-    readingTime: 9,
+    tags: ['sell my food truck', 'food truck valuation', 'sell food truck', 'used food truck for sale'],
+    image: '/images/blog/food-truck-editorial-hero.jpg',
+    readingTime: 8,
     featured: true,
   },
   {
     slug: 'sell-my-food-trailer-vs-truck-resale-value',
-    title: 'Food Truck vs. Food Trailer: Which Sells Faster? (And How to Price Yours)',
-    description: 'Selling a food trailer? It might sell faster than a truck. Learn the pros/cons of selling trailers vs. trucks, specific resale tips for 2026, and how to list on Vendibook.',
-    excerpt: 'While food trucks have the "cool factor," the data shows a massive surge in demand for food trailers. If you\'re looking to sell, you\'re in a seller\'s market—if you know how to position it.',
+    title: 'Selling a Food Trailer vs. a Food Truck: How to Position Yours',
+    description: 'How buyers evaluate food trailers versus trucks, and how to photograph, describe, and price a trailer so the right buyer takes it seriously.',
+    excerpt: 'Trailers and trucks attract different buyers. Positioning yours for the right one is most of the work.',
     content: `
-<p class="text-lg text-muted-foreground mb-6"><em>By The Vendibook Team</em></p>
+<p class="text-lg text-muted-foreground mb-6"><em>By the Vendibook Team · Updated August 2026</em></p>
 
-<p class="text-lg mb-6">One of the most common questions we get at Vendibook is: <strong>"Is it harder to sell a trailer than a truck?"</strong></p>
+<p class="text-lg mb-8">A common question from sellers: is a trailer harder to sell than a truck? Not inherently — they attract different buyers. Trucks appeal to operators who move daily. Trailers appeal to operators planning to sit at a food park, brewery, or lot, and to buyers who like that a tow vehicle can be replaced without taking the kitchen out of service.</p>
 
-<p class="mb-6">The answer in 2026 might surprise you. While food trucks have the "cool factor," the data shows a <strong>massive surge in demand for food trailers</strong>. Why? Because smart operators are realizing that if a food truck's engine dies, the business stops. If a trailer's towing vehicle dies, you just rent another truck.</p>
-
-<p class="mb-8">If you are looking to <a href="/sell-my-food-truck" class="text-primary underline font-medium">"sell my food trailer,"</a> you are in a seller's market—if you know how to position it.</p>
-
-<h2 class="text-2xl font-bold mt-10 mb-4">1. The "Stationary" Selling Point</h2>
-
-<p class="mb-4">Trailers are often purchased by owners who plan to park in one spot (like a food park or brewery).</p>
-
-<div class="bg-primary/5 border-l-4 border-primary p-4 mb-6">
-<h4 class="font-bold mb-2">The Selling Tip:</h4>
-<p>When listing your trailer on Vendibook, highlight the interior space. Trailers often have <strong>2-3 feet more usable kitchen space</strong> than trucks because there is no driver's cab.</p>
-</div>
-
-<p class="mb-4"><strong>Keywords to use in your listing:</strong></p>
-<ul class="list-disc pl-6 mb-8 space-y-2">
-<li>"Spacious kitchen"</li>
-<li>"Low insurance costs"</li>
-<li>"Zero engine maintenance"</li>
+<h2 class="text-2xl font-bold mt-10 mb-4">1. Lead with the trailer's real advantages</h2>
+<ul class="mb-8 space-y-2">
+  <li><strong>Usable kitchen space</strong> — no driver's cab means more of the footprint is working line. Give exact interior dimensions rather than a general claim.</li>
+  <li><strong>No engine in the asset</strong> — the buyer isn't inheriting a drivetrain, though axles, brakes, tires, and the coupler still matter.</li>
+  <li><strong>Simpler storage and siting</strong> for a stationary operating plan.</li>
 </ul>
 
-<h2 class="text-2xl font-bold mt-10 mb-4">2. Know Your City: The "Tow-Ready" Requirement</h2>
+<h2 class="text-2xl font-bold mt-10 mb-4">2. Local expectations shape demand</h2>
+<p class="mb-8">Buyers shop against the rules of the place they plan to operate. Some markets have well-established trailer scenes with their own norms around skirting, gray-water handling, or tie-downs; coastal markets often care about anchoring and wind. Rather than guessing, ask buyers where they plan to park and point them to the local health, fire, and zoning authorities — <a href="/tools/permitpath" data-cta="permitpath_trailer_resale" class="text-primary underline font-medium">PermitPath</a> helps map that out.</p>
 
-<p class="mb-4">Regulations vary wildly across the US.</p>
-
-<ul class="list-disc pl-6 mb-6 space-y-3">
-<li><strong>Austin, TX:</strong> Known as the food trailer capital. Buyers here look for trailers that are "skirted" (wheels covered) and have specific grey water connections.</li>
-<li><strong>Florida:</strong> Hurricanes matter. Buyers want to know your trailer is heavy enough not to flip in high winds but light enough to tow quickly.</li>
+<h2 class="text-2xl font-bold mt-10 mb-4">3. Price on condition and equipment</h2>
+<p class="mb-4">Without an odometer, condition and the kitchen carry the price. A well-kept older trailer can outsell a newer neglected one, but age still shows up in the shell, roof, wiring, and axles — do not assume it is a wash.</p>
+<ul class="mb-8 space-y-2">
+  <li>Roof and seams: any leak history, and when it was last resealed</li>
+  <li>Siding, floor, and any soft spots</li>
+  <li>Axles, tires with date codes, brakes, and coupler</li>
+  <li>Electrical service, water tanks, and hood</li>
 </ul>
+<p class="mb-8">Then compare against <a href="/search?mode=sale" class="text-primary underline font-medium">active trailer listings</a> in your region.</p>
 
-<h3 class="text-xl font-semibold mb-4">Deep Dive Video:</h3>
-<p class="mb-4">Check out this interview with Goodies Soul Kitchen (via UpFlip). He discusses the logistics of starting small. Your trailer is the perfect entry point for someone like him.</p>
-
-<div class="aspect-video mb-8">
-<iframe width="100%" height="100%" src="https://www.youtube.com/embed/ZCKHrWnbpto" title="How to Start a Food Truck with Less Than $10K Out of Pocket by UpFlip" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen class="rounded-lg"></iframe>
+<div class="rounded-2xl border bg-muted/40 p-6 mb-10">
+  <h3 class="text-xl font-bold mb-3">Photograph roadworthiness</h3>
+  <p class="mb-3">The buyer has to tow it away. Show them it will go.</p>
+  <ul class="space-y-2 mb-0">
+    <li>The tongue and hitch, with the coupler size visible</li>
+    <li>Axles, tires, and wheel wells up close</li>
+    <li>The electrical inlet and panel</li>
+    <li>Roof, seams, and interior line from both ends</li>
+  </ul>
 </div>
 
-<h2 class="text-2xl font-bold mt-10 mb-4">3. Pricing Your Trailer</h2>
+<h2 class="text-2xl font-bold mt-10 mb-4">4. Use the spec fields</h2>
+<p class="mb-8">Vendibook listings let you state fresh water tank size, hood dimensions, generator type, and equipment inventory. Filling those in filters out casual browsers and brings in buyers who already know what they need.</p>
 
-<p class="mb-4">Because trailers lack an engine, their depreciation is purely based on the <strong>shell condition</strong> and <strong>kitchen equipment</strong>.</p>
+<p class="mb-8"><a href="/list?mode=sale" data-cta="list_sale_trailer_resale" class="text-primary underline font-medium">Create your listing</a>, or read the <a href="/blog/sell-my-food-truck-valuation-guide-2026" class="text-primary underline font-medium">pricing and preparation guide</a> for the full document checklist.</p>
 
-<ul class="list-disc pl-6 mb-6 space-y-3">
-<li><strong>Pro:</strong> A 10-year-old trailer can be worth just as much as a 2-year-old one if the siding is clean and the roof doesn't leak.</li>
-<li><strong>Con:</strong> You cannot rely on "low mileage" to boost the price. You must rely on "cleanliness."</li>
-</ul>
-
-<div class="bg-muted p-6 rounded-lg mb-8">
-<h3 class="font-bold mb-3">The "Vendibook" Photo Strategy for Trailers:</h3>
-<p class="mb-4">Since the buyer has to tow it, your photos must prove roadworthiness.</p>
-<ul class="list-disc pl-6 space-y-2">
-<li><strong>The Tongue:</strong> Show the hitch clearly (2 5/16" ball? Pintle hitch?)</li>
-<li><strong>The Axles:</strong> Close-ups of the tires and axles.</li>
-<li><strong>The Electric:</strong> Show the 50-amp plug.</li>
-</ul>
-</div>
-
-<h2 class="text-2xl font-bold mt-10 mb-4">4. Why Vendibook is the Trailer Superstore</h2>
-
-<p class="mb-4">General vehicle sites (like AutoTrader) don't know what a "concession window" is. Facebook Marketplace treats your $50,000 commercial kitchen like a camper.</p>
-
-<p class="mb-4"><strong>Vendibook categorizes your listing correctly.</strong> We let you specify:</p>
-
-<ul class="list-disc pl-6 mb-6 space-y-2">
-<li>Fresh Water Tank Size</li>
-<li>Hood System Dimensions</li>
-<li>Generator Type</li>
-</ul>
-
-<p class="mb-8">This detail filters out the bad leads and brings you buyers who know exactly what they need.</p>
-
-<div class="bg-accent p-6 rounded-lg text-center mb-8">
-<h3 class="text-xl font-bold mb-3">Thinking of Selling?</h3>
-<p class="mb-4">Your trailer could be the start of someone else's American Dream.</p>
-<p><a href="/list?mode=sale" class="inline-flex items-center justify-center px-6 py-3 bg-primary text-primary-foreground font-semibold rounded-lg hover:bg-primary/90">Create your listing on Vendibook now →</a></p>
-</div>
-
-<div class="border border-border rounded-lg p-6">
-<h3 class="font-bold mb-3">Related Reading:</h3>
-<p>For a deeper look at valuation formulas and depreciation math, check out our <a href="/blog/sell-my-food-truck-valuation-guide-2026" class="text-primary underline font-medium">Ultimate Valuation Guide →</a></p>
-</div>
+<p class="text-sm text-muted-foreground">General information only. Towing, licensing, and vending requirements vary by jurisdiction — verify locally.</p>
     `,
     author: 'Vendibook Team',
     authorRole: 'Editorial',
     datePublished: '2026-01-18',
+    dateModified: '2026-08-21',
     category: 'equipment-guides',
     tags: ['sell my food trailer', 'food trailer for sale', 'trailer vs truck', 'food truck resale', 'sell food trailer'],
-    image: '/images/taco-truck-hero.png',
+    image: '/images/blog/food-truck-editorial-hero.jpg',
     readingTime: 7,
     featured: true,
   },
+
   {
     slug: 'stand-out-food-truck-marketplace-tools',
-    title: 'How to Stand Out in a Crowded Food Truck Marketplace (And Keep Your Truck Booked)',
-    description: 'Want to rent or sell your food truck faster? Learn how to optimize your marketplace listing using AI tools like PricePilot and Listing Studio to stand out on Vendibook.',
-    excerpt: 'The food truck industry is booming, but simply "posting and praying" doesn\'t work anymore. Learn how to use advanced data tools to make your listing impossible to ignore.',
+    title: 'How to Make Your Food Truck Listing Stand Out',
+    description: 'Practical ways to improve a food truck or trailer listing — pricing, specs, photos, permit clarity — and which Vendibook tools help with each.',
+    excerpt: 'Posting and hoping does not work. Here is what actually makes a listing get booked or sold, and the tools that help.',
     content: `
-<p class="text-lg text-muted-foreground mb-6"><em>By The Vendibook Team | Estimated Read Time: 6 Minutes</em></p>
+<p class="text-lg text-muted-foreground mb-6"><em>By the Vendibook Team · Updated August 2026</em></p>
 
-<p class="text-lg mb-6">The food truck industry is booming, but for truck owners, the challenge has shifted. It's no longer just about selling tacos—it's about <strong>asset management</strong>. Whether you are selling a vintage Airstream or renting out your ghost kitchen on weekends, simply "posting and praying" doesn't work anymore.</p>
+<p class="text-lg mb-8">Whether you are renting out a trailer between seasons or selling a build outright, the listing does the work. These are the four things that most often separate a listing that converts from one that sits.</p>
 
-<p class="mb-6">In 2026, the winners in the food truck marketplace aren't just the ones with the best equipment; they are the ones with the <strong>smartest data</strong>.</p>
+<h2 class="text-2xl font-bold mt-10 mb-4">1. Price against the market, not a feeling</h2>
+<p class="mb-4">Priced too high, people scroll past; too low and you invite the wrong inquiries. Start by looking at what comparable units in your area are listed at and how long they have been up.</p>
+<p class="mb-8"><a href="/tools/pricepilot" data-cta="tools_pricepilot_article" class="text-primary underline font-medium">PricePilot</a> gives data-backed pricing recommendations for your unit as a starting point. Treat it as a recommendation to sanity-check against live listings, not a market oracle.</p>
 
-<p class="mb-8">If you want to turn your idle asset into a consistent revenue stream, you need to stand out from the noise. Here is how to use advanced data tools to make your listing impossible to ignore.</p>
+<h2 class="text-2xl font-bold mt-10 mb-4">2. Write a description with real specifics</h2>
+<p class="mb-4">"Food truck for rent, good condition" tells a buyer nothing. Name the equipment, the dimensions, the tank sizes, the generator, and what the unit is genuinely well suited to. Then name the flaws — it builds credibility and prevents renegotiation later.</p>
+<p class="mb-8"><a href="/tools/listing-studio" data-cta="tools_listing_studio_article" class="text-primary underline font-medium">Listing Studio</a> turns your specs into a title, description, and highlights, so you are editing a draft instead of staring at a blank field.</p>
 
-<h2 class="text-2xl font-bold mt-10 mb-4">1. Stop Guessing Your Price (Use "PricePilot")</h2>
+<h2 class="text-2xl font-bold mt-10 mb-4">3. Be clear about permits and compliance</h2>
+<p class="mb-4">The scariest unknown for a first-time renter or buyer is whether they can legally operate. Say what the unit has — current inspections, suppression tag, any state build approval — and be equally clear about what they will need to obtain themselves.</p>
+<p class="mb-8"><a href="/tools/permitpath" data-cta="tools_permitpath_article" class="text-primary underline font-medium">PermitPath</a> maps the licenses, permits, and inspections typically required for a given city and setup, so you can point people at a realistic checklist. It is a research aid — it does not certify that any unit is compliant, and it is not a substitute for confirming with the local authority.</p>
 
-<p class="mb-4">The #1 reason food trucks sit empty on marketplaces is <strong>incorrect pricing</strong>. Price too high, and renters scroll past. Price too low, and you leave money on the table (or attract low-quality renters).</p>
+<h2 class="text-2xl font-bold mt-10 mb-4">4. Help people picture the business</h2>
+<p class="mb-4">A specialized build can look limiting. Spelling out what else the equipment supports widens your audience.</p>
+<p class="mb-8"><a href="/tools/concept-lab" data-cta="tools_concept_lab_article" class="text-primary underline font-medium">Concept Lab</a> generates concept ideas that fit a given setup, and <a href="/tools/market-radar" data-cta="tools_market_radar_article" class="text-primary underline font-medium">Market Radar</a> pulls location intel, competitor snapshots, and demand signals you can reference. For maintenance and equipment guidance to include with a rental, see <a href="/tools/buildkit" class="text-primary underline font-medium">BuildKit</a>.</p>
 
-<p class="mb-4">Most owners guess their daily rate based on what they "feel" it's worth.</p>
+<h2 class="text-2xl font-bold mt-10 mb-4">And the basics that still decide it</h2>
+<ul class="mb-8 space-y-2">
+  <li><strong>Photos.</strong> Daylight, clean kitchen, every angle, plus the undercarriage or axles.</li>
+  <li><strong>An accurate calendar.</strong> Nothing kills interest faster than a decline after a request.</li>
+  <li><strong>Fast replies.</strong> Hours, not days.</li>
+</ul>
 
-<p class="mb-4"><strong>The Fix:</strong> Use data, not feelings. <a href="/tools/pricepilot" class="text-primary underline font-medium">Vendibook's PricePilot tool</a> analyzes real-time market demand, seasonal trends, and comparable listings in your city (like that coffee trailer in Tucson or the BBQ truck in Austin). It gives you a "Goldilocks" rate—high enough to be profitable, but competitive enough to get booked this week.</p>
-
-<h2 class="text-2xl font-bold mt-10 mb-4">2. Write Descriptions That Actually Sell (Use "Listing Studio")</h2>
-
-<p class="mb-4">"Food truck for rent. Good condition. Call me."</p>
-
-<p class="mb-4">That description is a deal-killer. Renters and buyers are looking for <strong>potential</strong>, not just specs. They need to envision their business succeeding in your vehicle.</p>
-
-<p class="mb-4"><strong>The Fix:</strong> Tell a story. You don't need to be a copywriter. The <a href="/tools/listing-studio" class="text-primary underline font-medium">Listing Studio</a> on Vendibook uses AI to turn your basic specs (year, make, equipment list) into a compelling sales pitch. It highlights the "Turnkey Ready" nature of your truck and uses keywords that potential renters are actually searching for, boosting your SEO automatically.</p>
-
-<h2 class="text-2xl font-bold mt-10 mb-4">3. Build Trust with Transparency (Use "PermitPath")</h2>
-
-<p class="mb-4">The scariest part of renting a truck for a new entrepreneur is compliance. "Will this truck actually pass health inspection? Do I have the right permits?" If your listing leaves these questions unanswered, they will click away.</p>
-
-<p class="mb-4"><strong>The Fix:</strong> Show your homework. Use <a href="/tools/permitpath" class="text-primary underline font-medium">PermitPath</a> to identify the specific licenses and permits required for your vehicle's location. By listing this info upfront (or showing that your truck is already compliant), you remove the biggest friction point for renters. You aren't just offering a truck; you're offering peace of mind.</p>
-
-<h2 class="text-2xl font-bold mt-10 mb-4">4. Prove the Concept Works (Use "Concept Lab" & "Market Radar")</h2>
-
-<p class="mb-4">Sometimes, a truck doesn't rent because the potential buyer can't "see" what to do with it. Maybe you have a specialized pizza trailer, but they want to sell burgers.</p>
-
-<p class="mb-4"><strong>The Fix:</strong> Sell the vision. Use <a href="/tools/concept-lab" class="text-primary underline font-medium">Concept Lab</a> to generate business concepts that fit your specific equipment. In your listing, you can say: "Perfect setup for a Wood-Fired Pizza business or easily converted for a High-Volume Bakery."</p>
-
-<p class="mb-4">Combine this with <a href="/tools/market-radar" class="text-primary underline font-medium">Market Radar</a> to show them where the demand is. When you sell the business opportunity rather than just the metal and tires, your asset becomes infinitely more valuable.</p>
-
-<h2 class="text-2xl font-bold mt-10 mb-4">Conclusion: Don't Just List It, Launch It</h2>
-
-<p class="mb-4">The difference between a truck that gathers dust and a truck that generates monthly income is <strong>presentation</strong>.</p>
-
-<p class="mb-4">You have the asset. Now, use the right tools to show its value. By leveraging <a href="/" class="text-primary underline font-medium">Vendibook's</a> Host Tools—from PricePilot for smart rates to BuildKit for maintenance confidence—you stop competing on luck and start winning on strategy.</p>
-
-<p class="mb-8"><strong><a href="/list" class="text-primary underline">List your truck on Vendibook today</a> and turn your idle asset into income.</strong></p>
+<p class="mb-8"><a href="/list" data-cta="list_from_tools_article" class="text-primary underline font-medium">Create or improve your listing</a>, or see all <a href="/tools" class="text-primary underline font-medium">Vendibook tools</a>.</p>
     `,
     author: 'Vendibook Team',
     authorRole: 'Editorial',
     datePublished: '2026-01-21',
+    dateModified: '2026-08-21',
     category: 'business-tips',
-    tags: ['food truck marketplace', 'listing optimization', 'PricePilot', 'Listing Studio', 'PermitPath', 'AI tools', 'rental income'],
+    tags: ['food truck marketplace', 'listing optimization', 'PricePilot', 'Listing Studio', 'PermitPath', 'rental income'],
     image: '/images/food-truck-marketplace-analytics.jpg',
     readingTime: 6,
     featured: true,
   },
   {
     slug: 'parked-food-truck-losing-money-rent-it-out',
-    title: 'Your Parked Food Truck is Losing You Money. Here\'s How to Rent It Out Safely.',
-    description: 'Learn how to rent out your food truck or trailer on Vendibook. Discover best practices for daily vs. monthly rentals, meet your target renters, and turn your idle asset into significant monthly income—even while it\'s listed for sale.',
-    excerpt: 'In the mobile food industry, there is one universal truth: An engine turned off is costing you money. Learn how to turn your idle food truck into a consistent revenue stream.',
+    title: 'How to Rent Out a Parked Food Truck or Trailer',
+    description: 'A host guide to renting out an idle food truck or trailer: choosing daily vs monthly terms, setting requirements, protecting the asset, and building a listing that books.',
+    excerpt: 'An idle unit still costs you insurance and storage. Here is how hosting works, and what you as the owner still control.',
     image: '/images/blog/parked-food-truck-rental.png',
     content: `
-<p class="text-lg text-muted-foreground mb-6"><em>By Brock De Santis | Vendor Success & Equipment Specialist</em></p>
+<p class="text-lg text-muted-foreground mb-6"><em>By Brock De Santis · Vendor Success &amp; Equipment Specialist · Updated August 2026</em></p>
 
-<p class="text-lg mb-6">In the mobile food industry, there is one universal truth: <strong>An engine turned off is costing you money.</strong></p>
+<p class="text-lg mb-8">A parked truck still costs you insurance, storage, and depreciation. Renting it out — including while it is listed for sale — is one way to offset that. It is not passive income: hosting is an operating activity with real responsibilities. Here is how to do it deliberately.</p>
 
-<p class="mb-6">Perhaps you've scaled back your operations, you're taking an off-season break, or you've listed your trailer for sale and are waiting for the right buyer. In the meantime, that asset—which cost tens of thousands of dollars—is sitting in a driveway, depreciating.</p>
+<h2 class="text-2xl font-bold mt-10 mb-4">Why owners host</h2>
+<ul class="mb-8 space-y-2">
+  <li><strong>Earn while a sale is pending.</strong> Commercial units can take months to sell. A unit that is demonstrably operating also reassures buyers.</li>
+  <li><strong>Cover carrying costs.</strong> Insurance, storage, and maintenance do not pause.</li>
+  <li><strong>Support local operators.</strong> Caterers, new chefs, and event vendors often need access before they can buy.</li>
+</ul>
+<p class="mb-8">What you earn depends entirely on your market, rate, availability, and how actively you manage the listing. Anyone quoting a typical monthly figure is guessing at your situation.</p>
 
-<p class="mb-6"><strong>It doesn't have to be that way.</strong></p>
-
-<p class="mb-6">At Vendibook, we are standardizing the infrastructure of mobile food commerce. We believe your truck shouldn't just be a vehicle; it should be a consistent revenue stream, whether you are cooking in it today or not.</p>
-
-<p class="mb-8">Renting out your food truck or trailer is the fastest way to turn an idle liability into a cash-flowing asset. Here is the definitive guide on how to do it successfully, safely, and profitably.</p>
-
-<h2 class="text-2xl font-bold mt-10 mb-4">Why Rent? The Financial and Community Case</h2>
-
-<p class="mb-6">Before diving into the "how," let's establish the "why." Why would you let someone else operate in your kitchen?</p>
-
-<h3 class="text-xl font-semibold mt-8 mb-3">1. Monetize While You Wait to Sell</h3>
-
-<p class="mb-6">Selling a commercial vehicle takes time. It can sit on the market for months. Instead of letting it collect dust, list it for rent on Vendibook simultaneously. You turn "waiting time" into earning time, covering insurance and storage costs while showcasing that the unit is operational and revenue-ready to potential buyers.</p>
-
-<h3 class="text-xl font-semibold mt-8 mb-3">2. Significant Revenue Potential</h3>
-
-<p class="mb-6">Our top-tier hosts are generating <strong>$2,500+ per month</strong> by renting out their units. That is revenue that goes straight to your bottom line with minimal effort once the listing is live.</p>
-
-<h3 class="text-xl font-semibold mt-8 mb-3">3. Supporting the Local Culinary Ecosystem</h3>
-
-<p class="mb-8">By renting your truck, you become a crucial launchpad for your community. You are providing infrastructure to a budding chef, a recent culinary school graduate, or a caterer who needs extra capacity for a massive weekend festival. You aren't just making money; you're enabling the next generation of food entrepreneurs.</p>
-
-<h2 class="text-2xl font-bold mt-10 mb-4">Who Will Be Renting My Truck?</h2>
-
-<p class="mb-6">The biggest fear for any owner is: <em>"Will they take care of my equipment?"</em></p>
-
-<p class="mb-6">It's a valid concern. That's why Vendibook was built with a <strong>"verification-first" approach</strong>. We aren't a bulletin board for amateurs; we are a marketplace for professionals.</p>
-
-<p class="mb-4">When you list on Vendibook, you are typically renting to:</p>
-
-<ul class="list-disc pl-6 space-y-3 mb-6">
-  <li><strong>Professional Caterers:</strong> Established businesses that need a satellite kitchen for a specific large event or wedding.</li>
-  <li><strong>Proof-of-Concept Chefs:</strong> Experienced cooks testing a new menu in a real-world environment before committing to buying their own truck.</li>
-  <li><strong>Festival Vendors:</strong> Operators who travel for major events and need a compliant, ready-to-go unit in your city.</li>
+<h2 class="text-2xl font-bold mt-10 mb-4">Who tends to rent</h2>
+<ul class="mb-8 space-y-2">
+  <li><strong>Caterers</strong> needing a satellite kitchen for a specific event.</li>
+  <li><strong>Chefs testing a concept</strong> before committing to buying a unit.</li>
+  <li><strong>Event and festival vendors</strong> who need a ready unit in your city.</li>
 </ul>
 
-<p class="mb-8">Vendibook handles identity verification and ensures renters carry the necessary liability insurance before a booking is confirmed. We handle the risk so you can focus on the revenue.</p>
-
-<h2 class="text-2xl font-bold mt-10 mb-4">The Strategy: Daily vs. Monthly Rentals</h2>
-
-<p class="mb-6">How you structure your availability determines your income and your involvement level.</p>
-
-<h3 class="text-xl font-semibold mt-8 mb-3">The "Pop-Up" Model (Daily/Weekend Rentals)</h3>
-
-<p class="mb-4">This approach commands the highest premium. Caterers and festival vendors will pay top dollar for a turnkey truck for a 3-day weekend.</p>
-
-<ul class="list-disc pl-6 space-y-2 mb-6">
-  <li><strong>Pros:</strong> Highest revenue per day; maximum flexibility for the owner.</li>
-  <li><strong>Cons:</strong> More frequent turnover and coordination.</li>
-  <li><strong>Best For:</strong> Owners who still use their truck occasionally or want maximum income spikes.</li>
-</ul>
-
-<h3 class="text-xl font-semibold mt-8 mb-3">The "Residency" Model (Monthly Rentals)</h3>
-
-<p class="mb-4">This is about stability. A chef rents your truck to run a consistent 30-day pop-up at a local brewery or park.</p>
-
-<ul class="list-disc pl-6 space-y-2 mb-8">
-  <li><strong>Pros:</strong> Consistent, predictable income; set-it-and-forget-it management.</li>
-  <li><strong>Cons:</strong> Lower daily rate than weekend rentals.</li>
-  <li><strong>Best For:</strong> Trucks listed for sale or owners taking a long-term break.</li>
-</ul>
-
-<h2 class="text-2xl font-bold mt-10 mb-4">Best Practices for a High-Performing Listing</h2>
-
-<p class="mb-4">To attract professional renters, your listing needs to look professional.</p>
-
-<ul class="list-disc pl-6 space-y-3 mb-8">
-  <li><strong>📸 Photos Matter:</strong> Do not use blurry cellphone pictures taken in the dark. Upload high-resolution, well-lit photos of the exterior, the prep lines, the equipment, and the cleanliness of the kitchen.</li>
-  <li><strong>🔧 Be Specific About Gear:</strong> Don't just say "fully equipped." List the 36" flat top, the two-basket fryer, the lowboy refrigeration, and the generator specs. Renters search by specific equipment needs.</li>
-  <li><strong>💰 Transparent Pricing:</strong> Clearly state your daily, weekly, and monthly rates. Obscure pricing leads to skepticism.</li>
-</ul>
-
-<h2 class="text-2xl font-bold mt-10 mb-4">The "Joe Burger" Rule: Active Management Wins</h2>
-
-<p class="mb-6">We have a host we'll call "Joe Burger." Joe listed his trailer for sale, but also threw it up for rent on Vendibook.</p>
-
-<p class="mb-4">Joe didn't just create the listing and walk away. He treated it like a business.</p>
-
-<ul class="list-disc pl-6 space-y-3 mb-6">
-  <li><strong>He Shared His Link:</strong> Every time he posted on his personal Facebook or Instagram that his trailer was for sale, he added: "Not ready to buy? Rent it for your next event here: [Vendibook Link]"</li>
-  <li><strong>He Kept His Calendar Updated:</strong> If he decided to take the trailer out for a weekend, he immediately blocked those dates on Vendibook so renters wouldn't get frustrated by a decline.</li>
-  <li><strong>He Was Responsive:</strong> When a renter messaged, Joe replied within hours, not days.</li>
-</ul>
-
-<p class="mb-6">The result? Joe rented his trailer out three weekends in a row to a high-end caterer, <strong>making thousands of dollars while waiting for his final buyer</strong>.</p>
-
-<p class="mb-8">The lesson: Your listing is a tool, but you have to work it. Share it in local foodie groups, keep your availability accurate, and respond quickly to secure the best renters.</p>
-
-<h2 class="text-2xl font-bold mt-10 mb-4">Turn the Ignition Off, Turn the Income On</h2>
-
-<p class="mb-6">Your food truck is a valuable piece of commercial real estate on wheels. <strong>Stop letting it sit idle.</strong></p>
-
-<p class="mb-6">Join the thousands of owners who are professionalizing the industry and earning significant revenue by hosting on Vendibook. We handle the payments, the contracts, and the verification. You handle the keys.</p>
-
-<div class="mt-8 p-6 bg-primary/10 rounded-xl text-center">
-  <a href="/list" class="inline-block bg-primary text-white px-8 py-3 rounded-full font-semibold text-lg hover:bg-primary/90 transition-colors">Become a Host on Vendibook Today →</a>
+<h2 class="text-2xl font-bold mt-10 mb-4">What the platform does, and what you set</h2>
+<div class="rounded-2xl border bg-muted/40 p-6 mb-10">
+  <p class="mb-3"><strong>Vendibook handles</strong> the booking flow, payment through PayPal, security deposit holds, document collection, and messaging between you and the renter.</p>
+  <p class="mb-0"><strong>You set</strong> the rate, the calendar, the rental terms, and the requirements for your unit — including whether renters must show proof of liability insurance. Identity verification is an optional Verified Seller badge, not a universal check on every user, and Vendibook does not provide insurance. Confirm insurance and licensing expectations directly with each renter, and state them in the listing.</p>
 </div>
+
+<h2 class="text-2xl font-bold mt-10 mb-4">Daily versus monthly terms</h2>
+<div class="overflow-x-auto mb-10">
+  <table class="w-full text-left text-sm border-collapse">
+    <thead><tr class="border-b"><th class="py-3 pr-4 font-semibold">Model</th><th class="py-3 pr-4 font-semibold">Upside</th><th class="py-3 font-semibold">Tradeoff</th></tr></thead>
+    <tbody>
+      <tr class="border-b"><td class="py-3 pr-4 font-medium">Daily / weekend</td><td class="py-3 pr-4">Highest rate per day; keeps the unit free for your own use</td><td class="py-3">More turnovers, handoffs, and cleaning checks</td></tr>
+      <tr><td class="py-3 pr-4 font-medium">Monthly residency</td><td class="py-3 pr-4">Predictable income, far less coordination</td><td class="py-3">Lower effective daily rate; unit is committed</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<h2 class="text-2xl font-bold mt-10 mb-4">Protect the asset</h2>
+<ul class="mb-8 space-y-2">
+  <li>Set a security deposit and document the unit's condition with photos before and after every rental.</li>
+  <li>Write cleaning, propane, gray-water, and return expectations into the listing terms.</li>
+  <li>Provide equipment manuals and a short operating guide — most damage comes from unfamiliarity, not carelessness.</li>
+  <li>State clearly which permits and insurance the renter is responsible for obtaining.</li>
+</ul>
+
+<h2 class="text-2xl font-bold mt-10 mb-4">Make the listing work</h2>
+<ul class="mb-8 space-y-2">
+  <li><strong>Photos:</strong> well-lit, exterior and full kitchen line, no clutter.</li>
+  <li><strong>Specifics:</strong> the 36" flat top, the two-basket fryer, the lowboy, the generator spec — renters search by equipment.</li>
+  <li><strong>Transparent rates</strong> for daily, weekly, and monthly.</li>
+  <li><strong>Accurate calendar</strong> and fast replies. Hosts who share their listing link on their own social channels and respond within hours book noticeably more than hosts who list and wait.</li>
+</ul>
+
+<p class="mb-8"><a href="/list" data-cta="host_cta_parked_truck" class="text-primary underline font-medium">List your truck or trailer</a>, or read <a href="/help/host-onboarding" class="text-primary underline font-medium">Host onboarding</a> and <a href="/help/deposits-protection" class="text-primary underline font-medium">Deposits and protection</a> in the Help Center.</p>
+
+<p class="text-sm text-muted-foreground">General information only. Rental income is not guaranteed. Confirm insurance, licensing, and local requirements before hosting.</p>
 `,
     author: 'Brock De Santis',
     authorRole: 'Vendor Success & Equipment Specialist',
     datePublished: '2026-02-14',
+    dateModified: '2026-08-21',
     category: 'business-tips',
-    tags: ['food truck rental', 'passive income', 'hosting', 'food trailer', 'rental strategy', 'vendibook'],
+    tags: ['food truck rental', 'hosting', 'food trailer', 'rental strategy', 'vendibook'],
     readingTime: 8,
     featured: true,
   },
+
   {
     slug: 'modern-food-truck-marketplace-2026',
     title: 'The Modern Food Truck Marketplace: How to Rent, Buy, or Launch a Mobile Food Business in 2026',
-    description: 'Discover how a dedicated food truck marketplace helps entrepreneurs rent, buy, or sell food trucks, lease commercial kitchens, and book vendor spaces — all with secure payments and identity verification.',
+    description: 'How a dedicated food truck marketplace helps entrepreneurs rent, buy, or sell food trucks, lease commercial kitchens, and book vendor spaces with online payments and structured listings.',
     excerpt: 'The food truck industry is no longer a niche side hustle — it\'s a multi-billion dollar segment of the U.S. food economy. But until recently, there hasn\'t been a centralized, secure food truck marketplace built specifically for operators. That\'s changing.',
     image: '/images/blog/food-truck-marketplace-2026.png',
     content: `
@@ -2017,9 +1867,9 @@ Check our help center for detailed maintenance guides, or browse Vendibook's mar
   <li><strong>Book vendor spaces or food truck lots</strong></li>
 </ul>
 
-<p class="mb-6">Instead of relying on scattered Facebook listings or risky Craigslist transactions, operators can now use a verified platform built for the mobile food industry.</p>
+<p class="mb-6">Instead of relying on scattered Facebook listings or risky Craigslist transactions, operators can use a platform built for the mobile food industry.</p>
 
-<p class="mb-8">A modern food truck marketplace goes beyond classified ads — it provides <strong>secure payments, identity verification, digital contracts, and compliance guidance</strong>.</p>
+<p class="mb-8">A modern food truck marketplace goes beyond classified ads — it provides <strong>online payments, structured listing specs, document collection, and permit research tools</strong>.</p>
 
 <h2 class="text-2xl font-bold mt-10 mb-4">Why the Food Truck Industry Needs a Dedicated Marketplace</h2>
 
@@ -2076,42 +1926,35 @@ Check our help center for detailed maintenance guides, or browse Vendibook's mar
   <li>Brand-building strategies</li>
 </ul>
 
-<p class="mb-4">Modern marketplaces now offer:</p>
+<p class="mb-4">Buying through a marketplace rather than a classified ad adds:</p>
 
 <ul class="list-disc pl-6 mb-6 space-y-2">
-  <li>Secure payment protection protection</li>
-  <li>Payment plans (Affirm, Klarna, Afterpay)</li>
-  <li>Buyer verification</li>
-  <li>Structured payout release</li>
+  <li>Online checkout through PayPal, with the transaction recorded on the platform</li>
+  <li>Buyer financing options through Vendibook's partner, <a href="/financing" class="text-primary underline">Equinox Funding</a>, subject to their approval and terms</li>
+  <li>Structured specs, documents, and messaging in one place</li>
+  <li>Payouts to the seller tied to delivery or handoff confirmation rather than a handshake</li>
 </ul>
 
-<p class="mb-8">This reduces the risk traditionally associated with large private sales.</p>
+<p class="mb-8">Pay-in-person remains an option for buyers and sellers who prefer to settle directly.</p>
 
-<h2 class="text-2xl font-bold mt-10 mb-4">How a Verified Food Truck Marketplace Protects Buyers and Sellers</h2>
+<h2 class="text-2xl font-bold mt-10 mb-4">How a Marketplace Reduces Risk for Buyers and Sellers</h2>
 
-<p class="mb-6">Security is one of the biggest concerns in online equipment transactions. A professional marketplace includes:</p>
+<p class="mb-6">Security is one of the biggest concerns in online equipment transactions. On Vendibook that looks like:</p>
 
 <ul class="list-disc pl-6 mb-6 space-y-2">
-  <li>Bank-grade ID verification</li>
-  <li>Payment Protection-based payments</li>
-  <li>Digital agreements</li>
-  <li>Authorization holds for rentals</li>
-  <li>Structured payout timelines</li>
+  <li>Payments processed by PayPal rather than direct transfers between strangers</li>
+  <li>An optional paid <strong>Verified Seller</strong> identity badge — identity verification is available to any user, but it is not required of everyone</li>
+  <li>Security deposit authorization holds on rentals, set by the host</li>
+  <li>Documents and rental terms collected before a booking is approved</li>
+  <li>Seller payouts released after delivery or handoff is confirmed; they are not instant or automatic</li>
 </ul>
 
-<p class="mb-4">For example:</p>
+<p class="mb-8">Vendibook does not hold funds in escrow and does not guarantee any transaction. Both sides are still responsible for inspecting the unit, confirming licensing, and arranging their own insurance.</p>
 
-<ul class="list-disc pl-6 mb-8 space-y-2">
-  <li>Rental bookings authorize a card but do not charge until host approval.</li>
-  <li>Payouts release 24 hours after the booking ends.</li>
-  <li>Sales funds are held until dual confirmation.</li>
-</ul>
-
-<p class="mb-8">This protects both sides of the transaction.</p>
 
 <h2 class="text-2xl font-bold mt-10 mb-4">Commercial Kitchen and Commissary Marketplace Integration</h2>
 
-<p class="mb-6">Food trucks cannot legally operate without access to a commissary or shared commercial kitchen in most states.</p>
+<p class="mb-6">Many jurisdictions require mobile food operators to document a commissary or shared commercial kitchen as a base of operations. Confirm what applies where you operate.</p>
 
 <p class="mb-4">A true mobile food marketplace also includes:</p>
 
@@ -2137,15 +1980,16 @@ Check our help center for detailed maintenance guides, or browse Vendibook's mar
 <p class="mb-4">When choosing a marketplace, consider:</p>
 
 <ol class="list-decimal pl-6 mb-8 space-y-2">
-  <li>Is identity verification built in?</li>
-  <li>Are payments processed securely?</li>
-  <li>Are there flexible financing options?</li>
-  <li>Can you filter by state and category?</li>
-  <li>Are listings verified and moderated?</li>
-  <li>Does the platform support both rent and sale models?</li>
+  <li>Are payments handled by a recognized processor rather than cash apps or wire transfers?</li>
+  <li>Is the fee structure stated plainly before you commit?</li>
+  <li>Is payout timing explained, and does it depend on delivery or handoff confirmation?</li>
+  <li>Can you filter by state, category, and equipment?</li>
+  <li>Are listings moderated, and can sellers show a verified identity badge?</li>
+  <li>Does the platform support both rental and sale models?</li>
 </ol>
 
 <p class="mb-8">A legitimate marketplace should feel like <strong>infrastructure</strong> — not just a listing board.</p>
+
 
 <h2 class="text-2xl font-bold mt-10 mb-4">SEO Guide: How to Find Food Trucks for Sale Online</h2>
 
@@ -2201,7 +2045,7 @@ Check our help center for detailed maintenance guides, or browse Vendibook's mar
   <li>Booking vendor space</li>
 </ul>
 
-<p class="mb-6">A secure, verified food truck marketplace simplifies the process.</p>
+<p class="mb-6">A purpose-built food truck marketplace simplifies the process.</p>
 
 <p class="mb-6">The mobile food industry no longer has to rely on fragmented listings and handshake deals.</p>
 
@@ -2209,105 +2053,93 @@ Check our help center for detailed maintenance guides, or browse Vendibook's mar
 
 <div class="bg-muted/50 rounded-xl p-6 mt-10 border border-border">
   <h3 class="text-lg font-bold mb-2">About Vendibook</h3>
-  <p class="text-muted-foreground">Vendibook is a U.S.-based marketplace built specifically for mobile food entrepreneurs. The platform supports rentals and sales of food trucks, food trailers, commercial kitchens, and vendor spaces with secure payments, identity verification, and compliance support.</p>
+  <p class="text-muted-foreground">Vendibook is a U.S.-based marketplace built specifically for mobile food entrepreneurs. The platform supports rentals and sales of food trucks, food trailers, commercial kitchens, and vendor spaces, with online payments through PayPal, an optional Verified Seller badge, and research tools for permits and pricing.</p>
   <div class="mt-4">
     <a href="/browse" class="text-primary font-medium hover:underline">Browse the Marketplace →</a>
   </div>
 </div>
+
+<p class="text-sm text-muted-foreground mt-6">General information only. Fees, payout timing, and available features are described as of August 2026 — see the <a href="/help" class="text-primary underline">Help Center</a> for current details.</p>
 `,
     author: 'Vendibook Team',
     authorRole: 'Vendibook Editorial',
     datePublished: '2026-02-16',
+    dateModified: '2026-08-21',
     category: 'industry-insights',
     tags: ['food truck marketplace', 'rent a food truck', 'buy a food truck', 'food truck for sale', 'commercial kitchen rental', 'vendor space rental', 'food trailer', 'mobile food business', 'vendibook'],
     readingTime: 12,
     featured: true,
   },
+
   {
     slug: 'food-truck-financing-options',
-    title: 'Food Truck Financing in 2026: Loans, Leases & How to Qualify',
-    description: 'Complete 2026 guide to financing a food truck or trailer — SBA loans, equipment leases, in-house financing, and credit-score requirements. Real rates and lender options.',
-    excerpt: 'Most food trucks cost $50k–$175k. Few first-time operators have that in cash. This is the 2026 playbook for financing a food truck or trailer — what lenders actually look for, what rates to expect, and which programs work for sub-650 credit.',
+    title: 'Food Truck Financing: How Buyers Fund a Truck or Trailer',
+    description: 'How financing a food truck or trailer works on Vendibook, the common funding paths buyers use, and what to prepare before you apply.',
+    excerpt: 'A plain guide to the ways mobile food buyers fund a purchase — and how Vendibook buyer financing through Equinox Funding fits in.',
     image: '/images/blog/food-truck-financing-options.png',
     content: `
-<p class="text-lg text-muted-foreground mb-6"><em>By the Vendibook Team — updated for 2026</em></p>
+<p class="text-lg text-muted-foreground mb-6"><em>By the Vendibook Team · Updated August 2026</em></p>
 
-<p class="text-lg mb-6">A turnkey food truck in 2026 runs <strong>$50,000 to $175,000</strong>. A custom build can clear $250k. Almost nobody pays cash. The question isn't <em>whether</em> to finance — it's <strong>how</strong>.</p>
+<p class="text-lg mb-8">Buying a truck, trailer, or cart is usually the largest single outlay in a mobile food business. Financing spreads that cost so you keep working capital for permits, insurance, inventory, and the first slow months. Here is how the common paths differ and what to have ready.</p>
 
-<p class="mb-8">This is the practical 2026 guide to <strong>financing a food truck or trailer</strong>: every option, what it actually costs, and how to qualify.</p>
+<div class="rounded-2xl border border-primary/30 bg-primary/5 p-6 mb-10">
+  <h3 class="text-xl font-bold mb-2">Financing on Vendibook</h3>
+  <p class="mb-4">Buyer financing is available across the marketplace through our partner <strong>Equinox Funding</strong>. You apply with Equinox; approval, rates, terms, and timelines are theirs to set. <strong>Vendibook is not a lender and cannot promise approval or terms.</strong> Vendibook's standard marketplace fee still applies to a financed purchase.</p>
+  <a href="/financing" data-cta="financing_article_primary" class="text-primary underline font-semibold">See how Vendibook financing works →</a>
+</div>
 
-<h2 class="text-2xl font-bold mt-10 mb-4">The 6 Real Food Truck Financing Options</h2>
+<h2 class="text-2xl font-bold mt-10 mb-4">Common funding paths</h2>
+<div class="overflow-x-auto mb-10">
+  <table class="w-full text-left text-sm border-collapse">
+    <thead><tr class="border-b"><th class="py-3 pr-4 font-semibold">Path</th><th class="py-3 font-semibold">How it typically works</th></tr></thead>
+    <tbody>
+      <tr class="border-b"><td class="py-3 pr-4 font-medium">Equipment financing</td><td class="py-3">The unit itself serves as collateral. The most common route for mobile food buyers, and what Vendibook's partner program covers.</td></tr>
+      <tr class="border-b"><td class="py-3 pr-4 font-medium">Equipment lease</td><td class="py-3">Lower monthly outlay, ownership only at buyout. Read whether the buyout is nominal or fair-market value.</td></tr>
+      <tr class="border-b"><td class="py-3 pr-4 font-medium">SBA-backed loan</td><td class="py-3">Government-guaranteed small business lending. Longer to close and documentation-heavy; see the <a href="https://www.sba.gov/funding-programs/loans" target="_blank" rel="noopener noreferrer" class="text-primary underline">SBA's own loan programs page</a> for current eligibility.</td></tr>
+      <tr class="border-b"><td class="py-3 pr-4 font-medium">Business line of credit</td><td class="py-3">Working capital for fuel, ingredients, and repairs — not usually for the unit itself.</td></tr>
+      <tr><td class="py-3 pr-4 font-medium">Seller terms</td><td class="py-3">Some private sellers will carry part of the price. Put any arrangement in writing and confirm title handling.</td></tr>
+    </tbody>
+  </table>
+</div>
+<p class="mb-8">Rates, credit requirements, and down payments vary by lender, by your profile, and over time. Treat any single quoted range you see online as marketing, not a rate sheet — get real quotes.</p>
 
-<h3 class="text-xl font-semibold mt-8 mb-3">1. SBA 7(a) Loan</h3>
-<p class="mb-4">Up to $5M, 10-year terms, rates ~10.5–13% in 2026. Best for established operators with 680+ credit and 2 years of business history. Slow (45–90 days), paperwork-heavy, but the cheapest money you'll find.</p>
-
-<h3 class="text-xl font-semibold mt-8 mb-3">2. Equipment Financing</h3>
-<p class="mb-4">The truck itself is the collateral, so approval is easier. Expect 8–18% APR over 3–7 years. Most common path for first-time owners. Lenders include Crest Capital, Balboa, and Smarter Finance USA.</p>
-
-<h3 class="text-xl font-semibold mt-8 mb-3">3. Equipment Lease</h3>
-<p class="mb-4">Lower monthly payment, but you don't own the truck until you exercise the buyout. Useful if cash flow is tight in year one. Watch for fair-market-value vs. $1 buyout structures — the latter is essentially a loan.</p>
-
-<h3 class="text-xl font-semibold mt-8 mb-3">4. Business Line of Credit</h3>
-<p class="mb-4">Revolving credit for working capital — not the truck itself. Use it for fuel, ingredients, slow weeks, and unexpected repairs. Bluevine, Fundbox, and your local bank all offer them.</p>
-
-<h3 class="text-xl font-semibold mt-8 mb-3">5. In-House Seller Financing</h3>
-<p class="mb-4">When you buy a used truck directly from the operator, some sellers will carry the note. 20–40% down, 2–4 year payoff, rates 9–14%. Faster than a bank, easier to qualify, and a strong negotiation tool.</p>
-
-<h3 class="text-xl font-semibold mt-8 mb-3">6. Rollover for Business Startups (ROBS)</h3>
-<p class="mb-4">Use your 401(k) to fund the business without early-withdrawal penalties. Works, but adds compliance overhead. Talk to a CPA before going this route.</p>
-
-<h2 class="text-2xl font-bold mt-10 mb-4">What Lenders Actually Look At in 2026</h2>
-<ul class="list-disc pl-6 mb-6 space-y-2">
-  <li><strong>Credit score:</strong> 650+ for most equipment lenders, 680+ for SBA</li>
-  <li><strong>Down payment:</strong> 10–25% on equipment loans, 10% on SBA</li>
-  <li><strong>Time in business:</strong> Startups CAN qualify, but expect higher rates</li>
-  <li><strong>Business plan + projections:</strong> Required for SBA, helpful everywhere</li>
-  <li><strong>Collateral:</strong> The truck usually counts; some lenders want more</li>
-</ul>
-
-<h2 class="text-2xl font-bold mt-10 mb-4">Financing a Food Trailer vs. a Truck</h2>
-<p class="mb-6">Trailers are typically cheaper ($25k–$80k turnkey), which means smaller loans and easier approvals. Most equipment lenders treat trailers the same as trucks for financing purposes — same rate sheets, same terms.</p>
-
-<h2 class="text-2xl font-bold mt-10 mb-4">Food Cart Financing Options</h2>
-<p class="mb-6">Carts and kiosks ($5k–$25k) are too small for most equipment lenders. Best paths: personal loan, business credit card, or seller financing. Some Vendibook sellers offer payment plans directly through the marketplace.</p>
-
-<h2 class="text-2xl font-bold mt-10 mb-4">Realistic Monthly Payment Examples (2026)</h2>
-<ul class="list-disc pl-6 mb-6 space-y-2">
-  <li>$60k truck, 10% down, 5 yr @ 12% → <strong>$1,201/mo</strong></li>
-  <li>$100k truck, 15% down, 7 yr @ 11% → <strong>$1,455/mo</strong></li>
-  <li>$40k trailer, 20% down, 5 yr @ 10% → <strong>$680/mo</strong></li>
-</ul>
-
-<h2 class="text-2xl font-bold mt-10 mb-4">How to Get Approved Faster</h2>
-<ol class="list-decimal pl-6 mb-6 space-y-2">
-  <li>Pull your business and personal credit before applying</li>
-  <li>Have 6 months of bank statements ready</li>
-  <li>Write a 1-page revenue projection (events, daily ops, catering)</li>
-  <li>Get the truck's VIN, year, and condition report from the seller</li>
-  <li>Apply to 2–3 lenders the same week so hard pulls cluster</li>
+<h2 class="text-2xl font-bold mt-10 mb-4">What to prepare before applying</h2>
+<ol class="list-decimal pl-6 mb-8 space-y-2">
+  <li>Pull your personal and business credit so there are no surprises.</li>
+  <li>Gather recent business bank statements and any tax returns.</li>
+  <li>Write a one-page revenue plan: where you will operate, hours, average ticket.</li>
+  <li>Get the unit's year, make, VIN, mileage or hours, equipment list, and condition photos from the seller.</li>
+  <li>Know your total project cost — unit, permits, insurance, wrap, POS, and opening inventory.</li>
 </ol>
 
-<h2 class="text-2xl font-bold mt-10 mb-4">Next Steps</h2>
-<p class="mb-4">Most Vendibook sellers will share full specs and history before you apply for financing — which makes the lender's job (and yours) much easier. <a href="/search?type=for-sale" class="text-primary underline">Browse food trucks for sale</a> or <a href="/tools/food-truck-startup-costs-2026" class="text-primary underline">run your full startup cost projection</a> first.</p>
+<h2 class="text-2xl font-bold mt-10 mb-4">Financing carts and small units</h2>
+<p class="mb-8">Very small purchases often fall below a lender's minimum. Buyers in that range typically use a personal or business credit product, or agree terms directly with the seller.</p>
+
+<h2 class="text-2xl font-bold mt-10 mb-4">Next steps</h2>
+<p class="mb-8"><a href="/search?type=for-sale" class="text-primary underline font-medium">Browse trucks and trailers for sale</a>, run the numbers with the <a href="/tools/food-truck-startup-costs-2026" class="text-primary underline font-medium">startup cost tool</a>, and read <a href="/help/buyer-financing" class="text-primary underline font-medium">Buyer financing</a> in the Help Center.</p>
+
+<p class="text-sm text-muted-foreground">Informational only, not financial advice. Vendibook is not a lender. Financing is subject to Equinox Funding's approval, terms, and conditions.</p>
 `,
     author: 'Vendibook Team',
     authorRole: 'Founders & Finance',
     datePublished: '2026-04-15',
-    dateModified: '2026-05-18',
+    dateModified: '2026-08-21',
     category: 'business-tips',
-    tags: ['food truck financing', 'food truck loans', 'finance a food truck', 'food trailer financing', 'sba loan food truck', 'equipment financing', 'food cart financing'],
-    readingTime: 9,
+    tags: ['food truck financing', 'food truck loans', 'finance a food truck', 'food trailer financing', 'equipment financing', 'food cart financing'],
+    readingTime: 7,
     featured: true,
   },
+
   {
     slug: 'rise-food-truck-fleet-owner',
     title: 'The Rise of the Food Truck Fleet Owner',
-    description: 'Food trucks are becoming rentable mobile business infrastructure. Learn how fleet owners, remote access, tracking, maintenance workflows, and platforms like Vendibook are changing food entrepreneurship.',
+    description: 'Food trucks are becoming rentable mobile business infrastructure. An analysis of the fleet-owner model, what it takes operationally, and why regulatory change matters.',
     excerpt: 'Think Airbnb for mobile food businesses. Food trucks are becoming flexible, rentable infrastructure for the next generation of food entrepreneurs.',
-    image: '/__l5e/assets-v1/361dd7e0-9a47-45ed-b87f-9578bf539ccb/rise-food-truck-fleet-owner.png',
+    image: '/images/blog/food-truck-fleet-owner.jpg',
     author: 'Vendibook',
     authorRole: 'Founder Notes',
     datePublished: '2026-06-11',
+    dateModified: '2026-08-21',
     category: 'industry-insights',
     tags: ['food truck fleet', 'food trailer rentals', 'mobile food infrastructure', 'marketplace strategy', 'Texas DSHS', 'Vendibook hosts'],
     readingTime: 11,
@@ -2351,11 +2183,9 @@ Check our help center for detailed maintenance guides, or browse Vendibook's mar
 <p class="mb-4">A food truck is not just a vehicle. It is a mobile commercial kitchen. It can serve an office park on Tuesday, a brewery on Friday, a farmers market on Saturday, and a private event on Sunday. That mobility is what makes the category so interesting. A restaurant is tied to an address. A food truck can move with demand.</p>
 
 <h2 id="real-estate-to-mobile-food-infrastructure" class="text-2xl md:text-3xl font-bold mt-12 mb-4">From Real Estate to Mobile Food Infrastructure</h2>
-<p class="mb-4">One of the most interesting Vendibook hosts I have spoken with is Marcus, a Houston-area fleet owner who moved from real estate into the food truck space. He owns multiple food trailers and rents them to local food entrepreneurs through Vendibook.</p>
-<p class="mb-4">What stood out to me was how similar his mindset was to real estate investing. He was not just thinking about trucks. He was thinking about assets. Utilization. Risk. Maintenance. Trust. Repeatable operations. Community impact.</p>
-<blockquote class="border-l-4 border-primary pl-5 italic text-foreground my-6">"I came from real estate, so I already understood the value of owning an asset that someone else can use to build income. But with food trucks, it feels more personal. You are helping someone get into business." — Marcus, Vendibook host</blockquote>
+<p class="mb-4">A recognizable profile is emerging on the host side of the marketplace: owners who come from property or equipment investing rather than from a kitchen. They own one or several trailers and rent them to local food entrepreneurs.</p>
+<p class="mb-4">The mindset looks a lot like real estate investing. Not trucks — assets. Utilization. Risk. Maintenance. Trust. Repeatable operations.</p>
 <p class="mb-4">That is the shift. A food truck fleet owner is not always trying to run five restaurants. They may be building an asset-backed rental business that helps other people launch, test, and grow their own food concepts.</p>
-<blockquote class="border-l-4 border-primary pl-5 italic text-foreground my-6">"You are not just renting out equipment. You are supporting local businesses. You are giving people a way to start without taking on the full cost of ownership on day one." — Marcus</blockquote>
 <p class="mb-4">That is the marketplace opportunity. Not just access to food trucks. Access to entrepreneurship.</p>
 
 <div class="not-prose my-10 rounded-2xl border border-border bg-card p-6 md:p-8">
@@ -2370,32 +2200,29 @@ Check our help center for detailed maintenance guides, or browse Vendibook's mar
 <h2 id="airbnb-comparison" class="text-2xl md:text-3xl font-bold mt-12 mb-4">The Airbnb Comparison</h2>
 <p class="mb-4">The easiest way to explain the model is this: Airbnb unlocked underutilized housing inventory. Vendibook is helping unlock underutilized mobile food infrastructure.</p>
 <p class="mb-4">But there is one major difference. A food truck is not passive real estate. It is a regulated operating asset.</p>
-<p class="mb-4">That means the marketplace cannot just be a listing page. It has to support trust, payments, documents, deposits, agreements, insurance requirements, maintenance expectations, cleaning standards, remote access, tracking, and renter accountability. That is what makes the category harder. It is also what makes it valuable. Because once the operational layer exists, the asset becomes easier to rent, easier to manage, and easier to scale.</p>
+<p class="mb-4">That means the marketplace cannot just be a listing page. It has to support trust, payments, documents, deposits, agreements, the insurance requirements a host chooses to set, maintenance expectations, cleaning standards, and renter accountability. That is what makes the category harder. It is also what makes it valuable. Because once the operational layer exists, the asset becomes easier to rent, easier to manage, and easier to scale.</p>
 
 <h2 id="old-way-too-manual" class="text-2xl md:text-3xl font-bold mt-12 mb-4">The Old Way Was Too Manual</h2>
 <p class="mb-4">Before platforms like Vendibook, renting out a food truck was often messy. A few text messages. A cash deposit. A paper agreement. A rushed walkthrough. A lot of trust. That may work once. It does not work if someone wants to manage a fleet.</p>
-<blockquote class="border-l-4 border-primary pl-5 italic text-foreground my-6">"If you are going to rent out one trailer, you can probably manage everything by phone. But if you want to manage multiple units, you need systems. You need to know who has the trailer, when they have it, what condition it is in, and whether they are following the right process." — Marcus</blockquote>
+<p class="mb-4">Renting out a single trailer can be managed by phone. Managing multiple units cannot: an owner needs to know who has each unit, when, in what condition, and whether the agreed process was followed.</p>
 <p class="mb-4">That is where the category starts to look less like a side hustle and more like infrastructure. The fleet owner needs visibility. The renter needs clarity. The platform needs to create trust between both sides.</p>
 
-<h2 id="remote-locks-tracking-handoffs" class="text-2xl md:text-3xl font-bold mt-12 mb-4">Remote Locks, Tracking, and Better Handoffs</h2>
-<p class="mb-4">The modern food truck rental model looks very different from a handshake deal:</p>
+<h2 id="remote-locks-tracking-handoffs" class="text-2xl md:text-3xl font-bold mt-12 mb-4">Structured Handoffs Instead of Handshakes</h2>
+<p class="mb-4">The modern food truck rental looks very different from a handshake deal. On Vendibook today, a host can:</p>
 <ul class="list-disc pl-6 mb-4 space-y-1">
-  <li>A host can use remote locks to manage access.</li>
-  <li>Tracking can help the owner see where the unit is.</li>
-  <li>Documents can be collected before the rental is approved.</li>
-  <li>Rental agreements can be signed digitally.</li>
-  <li>Payments and deposits move through the platform.</li>
-  <li>Cleaning and maintenance expectations are built into the workflow.</li>
-  <li>Condition photos are collected before and after the rental.</li>
+  <li>Collect renter documents before approving a booking.</li>
+  <li>Take payment and a security deposit hold through the platform.</li>
+  <li>Set the insurance and operating requirements for their own listing.</li>
+  <li>Write cleaning and return expectations into the listing terms.</li>
+  <li>Exchange condition photos and messages with the renter in one thread.</li>
 </ul>
-<p class="mb-4">The owner no longer has to manage every step through screenshots, phone calls, and last-minute reminders.</p>
-<blockquote class="border-l-4 border-primary pl-5 italic text-foreground my-6">"The renters I have worked with have been timely and responsible. They understand that this is someone's asset, and they use the tools on Vendibook to make sure the equipment is cleaned, maintained, and ready for the next person." — Marcus</blockquote>
+<p class="mb-4">Hardware such as remote locks or GPS trackers is something an owner may add to their own unit; it is not provided by the platform. The point is the same either way: the owner stops managing every step through screenshots, phone calls, and last-minute reminders.</p>
 <p class="mb-4">Trust does not happen by accident. It happens when both sides have structure.</p>
 
 <h2 id="asset-protection" class="text-2xl md:text-3xl font-bold mt-12 mb-4">The Hidden Product Is Asset Protection</h2>
 <p class="mb-4">Food truck rentals are operationally complex. A renter may know how to cook, but that does not mean they automatically know how to maintain a mobile commercial kitchen. They may not know how to clean a flat top correctly, wipe down hood filters, empty gray water, check propane, sanitize prep surfaces, secure equipment before transit, or document refrigeration temperatures.</p>
 <p class="mb-4">For a fleet owner, those details are everything. The asset has to come back clean, safe, and ready for the next booking.</p>
-<p class="mb-4">This is why Vendibook's host tools matter. The platform is not just helping someone find a truck. It is helping the owner protect the asset after the booking happens — daily cleaning guidance, weekly checklists, monthly maintenance workflows, hood filters, equipment inventory, service documentation, and long-term asset care. That may sound basic. It is not. It is the difference between a rental that creates income and a rental that destroys the asset.</p>
+<p class="mb-4">This is why host tooling and clear documentation matter. Vendibook's Help Center and host guides cover daily cleaning, weekly and monthly maintenance checklists, hood filters, equipment inventory, and service records that owners can hand to renters as part of the listing terms. That may sound basic. It is not. It is the difference between a rental that creates income and a rental that destroys the asset.</p>
 
 <div class="not-prose my-10 rounded-2xl border border-border bg-card p-6 md:p-8">
   <h3 class="text-xl font-bold text-foreground mb-2">Built for the realities of food truck rentals</h3>
@@ -2410,19 +2237,17 @@ Check our help center for detailed maintenance guides, or browse Vendibook's mar
 <p class="mb-4">For renters, the value is obvious. Buying a food truck can require tens of thousands of dollars before the founder even knows if the concept works. A rental model changes the starting line.</p>
 <p class="mb-4">A chef can test a menu before signing a lease. A caterer can take on more events during peak season. A restaurant can test a second neighborhood. A creator with a food brand can activate offline. A first-time founder can learn the business before committing to ownership.</p>
 <p class="mb-4">The first goal does not have to be buying the truck. The first goal can be <em>proof</em>. Proof of demand. Proof of pricing. Proof of operations. Proof that the market wants what they are selling.</p>
-<blockquote class="border-l-4 border-primary pl-5 italic text-foreground my-6">"In real estate, you are giving someone a place to live or operate. With food trucks, you are giving someone a chance to prove they can build something." — Marcus</blockquote>
 <p class="mb-4">That is the emotional side of the marketplace. It is not just asset rental. It is access.</p>
 
 <h2 id="texas-mobile-food-laws" class="text-2xl md:text-3xl font-bold mt-12 mb-4">Why Texas Makes This Even More Interesting</h2>
 <p class="mb-4">Texas is becoming one of the most important markets to watch. For years, one of the hardest parts of mobile food was the patchwork of local permitting. A truck might be approved in one city but face a different health permitting process in another. That creates friction, slows operators down, and limits the ability to move trucks where demand is strongest.</p>
-<p class="mb-4">With <strong>Texas moving toward a statewide mobile food vendor license through DSHS</strong>, the model becomes much more scalable. That does not mean every local requirement disappears. Fire safety, zoning, event rules, private property permission, inspections, and local operating requirements can still matter. But the direction is important — the health licensing layer is becoming more centralized, which makes it easier for serious operators to think beyond one city.</p>
-<blockquote class="border-l-4 border-primary pl-5 italic text-foreground my-6">"It makes the business feel more scalable. If the licensing process is more consistent, then it is easier to think about where the trailer can actually go. You are not locked into one small area the same way." — Marcus</blockquote>
+<p class="mb-4">With <strong>Texas requiring a statewide Food Vending Vehicle license through DSHS as of July 1, 2026</strong>, the model becomes much more scalable. That does not mean every local requirement disappears. Fire safety, zoning, event rules, private property permission, inspections, and local operating requirements can still matter. But the direction is important — the health licensing layer is becoming more centralized, which makes it easier for serious operators to think beyond one city.</p>
 <p class="mb-4">That is exactly the kind of regulatory shift that can unlock marketplace liquidity. When assets can move more easily, they can be used more often. When they can be used more often, they become more valuable.</p>
 
 <h2 id="marketplace-opportunity" class="text-2xl md:text-3xl font-bold mt-12 mb-4">The Marketplace Opportunity</h2>
 <p class="mb-4">The strongest marketplaces do not just connect supply and demand. They create trust in categories where trust was previously too hard. Food truck rentals are exactly that kind of category.</p>
 <p class="mb-4">There has always been supply — unused trucks, seasonal trailers, owners who only operate part-time, builders creating new inventory, commissaries with parked units. There has always been demand — chefs, caterers, creators, restaurant operators, event vendors, and first-time founders who need access but cannot afford ownership yet.</p>
-<p class="mb-4">The missing layer has been trust. Who is verified? Who has the right documents? Who pays the deposit? Who handles damage? Who cleans the equipment? Who confirms pickup and return? Who tracks the asset? Who explains the operating requirements? Who makes sure the truck comes back ready for the next renter?</p>
+<p class="mb-4">The missing layer has been trust. Who has the right documents? Who pays the deposit? Who handles damage? Who cleans the equipment? Who confirms pickup and return? Who tracks the asset? Who explains the operating requirements? Who makes sure the truck comes back ready for the next renter?</p>
 <p class="mb-4">That is where Vendibook fits. It is not just a marketplace for food trucks. It is infrastructure for making mobile food assets rentable.</p>
 
 <h2 id="partnerships" class="text-2xl md:text-3xl font-bold mt-12 mb-4">Why Partnerships Matter</h2>
@@ -2445,8 +2270,8 @@ Check our help center for detailed maintenance guides, or browse Vendibook's mar
 
 <h2 id="future-of-mobile-food" class="text-2xl md:text-3xl font-bold mt-12 mb-4">The Future of Mobile Food Is Access</h2>
 <p class="mb-4">The next generation of food entrepreneurs may not start with a restaurant lease. They may start with a weekend booking. They may rent a trailer for a farmers market. They may test a catering route before buying equipment. They may build revenue first and buy later.</p>
-<p class="mb-4">And the next generation of food truck owners may not only be chefs. They may be fleet owners — people who invest in mobile kitchens, equip them properly, manage them remotely, and rent them to verified operators through platforms like Vendibook.</p>
-<p class="mb-4">That is the shift. Food trucks are not just restaurants on wheels. They are flexible, rentable, revenue-producing infrastructure. <em>Think Airbnb for mobile food businesses</em> — but with remote locks, tracking, cleaning standards, deposits, permits, payments, insurance, and a platform built for the realities of the food industry.</p>
+<p class="mb-4">And the next generation of food truck owners may not only be chefs. They may be fleet owners — people who invest in mobile kitchens, equip them properly, and rent them to vetted operators through platforms like Vendibook.</p>
+<p class="mb-4">That is the shift. Food trucks are not just restaurants on wheels. They are flexible, rentable, revenue-producing infrastructure. <em>Think Airbnb for mobile food businesses</em> — with cleaning standards, deposits, permits, payments, and a platform built for the realities of the food industry.</p>
 <p class="mb-4">The rise of the food truck fleet owner is just beginning. And the market is much bigger than a truck.</p>
 
 <div class="not-prose my-12 rounded-2xl border border-primary/30 bg-gradient-to-br from-primary/10 to-transparent p-8 md:p-10">

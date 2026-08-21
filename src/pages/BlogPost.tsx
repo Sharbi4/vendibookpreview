@@ -12,6 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { getBlogPostBySlug, getRelatedPosts, BLOG_CATEGORIES } from '@/data/blogPosts';
 import { toast } from 'sonner';
+import ArticleBody from '@/components/blog/ArticleBody';
 
 type ShareNetwork = 'x' | 'linkedin' | 'facebook';
 
@@ -225,30 +226,9 @@ const BlogPost = () => {
               </div>
             )}
 
-            {/* Article Content */}
-            <div 
-              className="prose prose-lg max-w-none 
-                prose-headings:text-foreground 
-                prose-p:text-muted-foreground 
-                prose-strong:text-foreground
-                prose-a:text-primary hover:prose-a:text-primary/80
-                prose-ul:text-muted-foreground
-                prose-ol:text-muted-foreground
-                prose-li:text-muted-foreground
-                prose-blockquote:text-muted-foreground
-                prose-blockquote:border-primary
-                prose-code:text-foreground
-                prose-code:bg-muted
-                prose-code:px-1
-                prose-code:py-0.5
-                prose-code:rounded
-                prose-pre:bg-muted
-                prose-table:text-muted-foreground
-                prose-th:text-foreground
-                prose-td:border-border
-                prose-th:border-border"
-              dangerouslySetInnerHTML={{ __html: post.content }}
-            />
+            {/* Article Content (supports both HTML and Markdown posts) */}
+            <ArticleBody content={post.content} />
+
 
             {/* Tags */}
             <div className="flex flex-wrap gap-2 mt-8 pt-8 border-t">
