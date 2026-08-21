@@ -41,19 +41,24 @@ import {
 } from './tokens.ts'
 
 // ---- Brand header ----------------------------------------------------
-export const EmailHeader = ({ align = 'left' as 'left' | 'center' }) => (
-  <Section style={{ padding: '4px 0 18px', textAlign: align }}>
+export const EmailHeader = ({
+  align = 'left' as 'left' | 'center',
+  width = LOGO_WIDTH,
+}: { align?: 'left' | 'center'; width?: number }) => {
+  const h = Math.round(width / (LOGO_WIDTH / LOGO_HEIGHT))
+  return (
+  <Section style={{ padding: '4px 0 16px', textAlign: align }}>
     <Link href={SITE_URL} style={{ textDecoration: 'none', display: 'inline-block' }}>
       <Img
         src={LOGO_LIGHT_URL}
         alt={LOGO_ALT}
-        width={String(LOGO_WIDTH)}
-        height={String(LOGO_HEIGHT)}
+        width={String(width)}
+        height={String(h)}
         style={{
           display: 'block',
           border: 0,
           outline: 'none',
-          width: `${LOGO_WIDTH}px`,
+          width: `${width}px`,
           maxWidth: '100%',
           height: 'auto',
           margin: align === 'center' ? '0 auto' : '0',
@@ -61,7 +66,80 @@ export const EmailHeader = ({ align = 'left' as 'left' | 'center' }) => (
       />
     </Link>
   </Section>
+  )
+}
+
+// ---- Status chip (compact, purpose-specific) -------------------------
+export const StatusChip = ({
+  label,
+  tone = 'neutral',
+}: {
+  label: string
+  tone?: 'neutral' | 'success' | 'brand' | 'warning'
+}) => {
+  const map = {
+    neutral: { bg: color.surfaceMuted, fg: color.textSecondary, br: color.border },
+    success: { bg: color.successBg, fg: color.success, br: color.successBorder },
+    brand: { bg: '#fff1ec', fg: color.primaryDark, br: '#ffd6c9' },
+    warning: { bg: color.warningBg, fg: color.warning, br: color.warningBorder },
+  } as const
+  const c = map[tone]
+  return (
+    <table role="presentation" cellPadding={0} cellSpacing={0} style={{ borderCollapse: 'collapse' as const, margin: '0 0 12px' }}>
+      <tbody>
+        <tr>
+          <td
+            style={{
+              backgroundColor: c.bg,
+              border: `1px solid ${c.br}`,
+              borderRadius: '999px',
+              padding: '5px 12px',
+              fontSize: '11px',
+              fontWeight: 700,
+              letterSpacing: '0.12em',
+              textTransform: 'uppercase' as const,
+              color: c.fg,
+              fontFamily: t.text.fontFamily,
+            }}
+          >
+            {label}
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  )
+}
+
+/** Compact secondary action: bold link + one line of context. */
+export const ActionRow = ({
+  href,
+  title,
+  description,
+}: {
+  href: string
+  title: string
+  description?: string
+}) => (
+  <table role="presentation" width="100%" cellPadding={0} cellSpacing={0} style={{ borderCollapse: 'collapse' as const, width: '100%' }}>
+    <tbody>
+      <tr>
+        <td style={{ padding: '10px 0', borderTop: `1px solid ${color.border}` }}>
+          <Text style={{ margin: 0, fontSize: '15px', lineHeight: 1.4, fontWeight: 700, fontFamily: t.text.fontFamily }}>
+            <Link href={href} style={{ color: color.primaryDark, textDecoration: 'none' }}>
+              {title} &rsaquo;
+            </Link>
+          </Text>
+          {description ? (
+            <Text style={{ margin: '3px 0 0', fontSize: '13px', lineHeight: 1.5, color: color.textMuted, fontFamily: t.text.fontFamily }}>
+              {description}
+            </Text>
+          ) : null}
+        </td>
+      </tr>
+    </tbody>
+  </table>
 )
+
 
 // ---- Typography ------------------------------------------------------
 export const Eyebrow = ({ children }: { children: React.ReactNode }) => (
@@ -294,12 +372,34 @@ export const MarketingFooter = ({ unsubscribeUrl }: { unsubscribeUrl?: string })
 )
 
 // ---- Outer shell -----------------------------------------------------
+/**
+ * Dark-mode resilience: Vendibook email is a light-only design. We declare
+ * `color-scheme: light` (honoured by Apple Mail / iOS 13+, Outlook.com and
+ * increasingly Gmail) and re-assert background + text colours for clients
+ * that partially invert (Gmail Android / Samsung Mail use [data-ogsc]).
+ * No separate dark design system, no unsupported CSS.
+ */
+const HEAD_CSS = `
+  :root { color-scheme: light only; supported-color-schemes: light only; }
+  body, table, td, div, p, a, h1, h2 { -webkit-text-size-adjust: 100%; }
+  u + .vb-body .vb-surface { background-color: #ffffff !important; }
+  [data-ogsc] .vb-body { background-color: #faf7f2 !important; }
+  [data-ogsc] .vb-surface { background-color: #ffffff !important; }
+  [data-ogsc] .vb-panel { background-color: #f7f4ef !important; }
+  [data-ogsc] .vb-ink { color: #1c1917 !important; }
+  [data-ogsc] .vb-ink-2 { color: #57534e !important; }
+  @media (max-width: 600px) {
+    .vb-surface { padding: 24px 18px !important; }
+  }
+`
+
 export const VendibookEmailLayout = ({
   preview,
   children,
   footer = 'transactional',
   unsubscribeUrl,
   headerAlign = 'left',
+  logoWidth = 148,
 }: {
   /** Hidden inbox preheader text. */
   preview: string
@@ -307,14 +407,20 @@ export const VendibookEmailLayout = ({
   footer?: 'transactional' | 'marketing' | 'none'
   unsubscribeUrl?: string
   headerAlign?: 'left' | 'center'
+  logoWidth?: number
 }) => (
   <Html lang="en" dir="ltr">
-    <Head />
+    <Head>
+      <meta name="color-scheme" content="light only" />
+      <meta name="supported-color-schemes" content="light only" />
+      <style dangerouslySetInnerHTML={{ __html: HEAD_CSS }} />
+    </Head>
     <Preview>{preview}</Preview>
-    <Body style={t.body}>
+    <Body style={t.body} className="vb-body">
       <Container style={t.container}>
-        <EmailHeader align={headerAlign} />
-        <Section style={t.surface}>{children}</Section>
+        <EmailHeader align={headerAlign} width={logoWidth} />
+        <Section style={t.surface} className="vb-surface">{children}</Section>
+
         {footer === 'marketing' ? (
           <MarketingFooter unsubscribeUrl={unsubscribeUrl} />
         ) : footer === 'transactional' ? (

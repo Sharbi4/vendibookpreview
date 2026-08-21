@@ -2,16 +2,14 @@ import * as React from 'npm:react@18.3.1'
 import { Img, Link, Section, Text } from 'npm:@react-email/components@0.0.22'
 import type { TemplateEntry } from './registry.ts'
 import {
-  Bullets,
+  ActionRow,
   CtaButton,
-  DetailTable,
   Divider,
-  Eyebrow,
   H1,
+  H2,
   Lede,
   SITE_URL,
-  SecondaryButton,
-  SectionLabel,
+  StatusChip,
   SupportRow,
   VendibookEmailLayout,
   color,
@@ -25,9 +23,8 @@ interface Props {
   category?: string
   city?: string
   coverImageUrl?: string
-  // 'rental' → Instant Book tip. 'sale' → Featured Boost tip. 'both' → show both.
+  // 'rental' → Instant Book tip. 'sale' → financing + boost. 'both' → both.
   listingType?: 'rental' | 'sale' | 'both'
-  // Optional — if absent, the referral section is hidden (no broken placeholders).
   referralCode?: string
   referralUrl?: string
 }
@@ -38,48 +35,32 @@ const E = ({
 }: Props) => {
   const liveUrl = listingId ? `${SITE_URL}/listing/${listingId}` : `${SITE_URL}/host/listings`
   const shareKitUrl = listingId ? `${SITE_URL}/listing-published/${listingId}` : `${SITE_URL}/host/listings`
+  const manageUrl = listingId ? `${SITE_URL}/create-listing/${listingId}` : `${SITE_URL}/host/listings`
   const boostUrl = listingId ? `${SITE_URL}/host/listings?boost=${listingId}` : `${SITE_URL}/host/listings`
-  const instantBookUrl = listingId
-    ? `${SITE_URL}/create-listing/${listingId}?focus=instant-book`
-    : `${SITE_URL}/host/listings`
 
   const kind: 'rental' | 'sale' | 'both' = listingType || 'rental'
-  const showInstantBook = kind === 'rental' || kind === 'both'
-  const showFeaturedBoost = kind === 'sale' || kind === 'both'
+  const forSale = kind === 'sale' || kind === 'both'
 
   const title = listingTitle || 'Your listing'
   const where = city ? ` in ${city}` : ''
-
-  const tweetText = encodeURIComponent(
-    `Just listed${listingTitle ? ` ${listingTitle}` : ''} on Vendibook${where}.`,
-  )
-  const twitterUrl = `https://twitter.com/intent/tweet?url=${encodeURIComponent(liveUrl)}&text=${tweetText}`
-  const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(liveUrl)}`
-  const linkedinUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(liveUrl)}`
-  const smsUrl = `sms:?&body=${encodeURIComponent(`Check out my new Vendibook listing: ${liveUrl}`)}`
+  const meta = [category, city].filter(Boolean).join(' · ')
 
   const hasReferral = Boolean(referralUrl || referralCode)
   const safeReferralUrl = referralUrl || (referralCode ? `${SITE_URL}/r/${referralCode}` : `${SITE_URL}/referral`)
 
-  const shareLink = (href: string, label: string) => (
-    <Text style={t.listItem}>
-      <Link href={href} style={t.link}>{label}</Link>
-    </Text>
-  )
-
   return (
     <VendibookEmailLayout
       preview={`${listingTitle ? `“${listingTitle}”` : 'Your listing'} is live on Vendibook`}
+      logoWidth={132}
     >
-      <Eyebrow>Live on Vendibook</Eyebrow>
-      <H1>{hostName ? `${hostName}, your listing is live` : 'Your listing is live'}</H1>
+      <StatusChip label="Published" tone="success" />
+      <H1>{hostName ? `${hostName}, your listing is live.` : 'Your listing is live.'}</H1>
       <Lede>
-        {`“${title}”`} is published and visible to people searching Vendibook{where}. Here's
-        everything you need to share it.
+        {`“${title}”`} is published and discoverable by people searching Vendibook{where}.
       </Lede>
 
       {coverImageUrl ? (
-        <Section style={{ margin: '0 0 20px' }}>
+        <Section style={{ margin: '0 0 14px' }}>
           <Img
             src={coverImageUrl}
             alt={title}
@@ -88,6 +69,8 @@ const E = ({
               display: 'block',
               width: '100%',
               maxWidth: '544px',
+              maxHeight: '240px',
+              objectFit: 'cover' as const,
               height: 'auto',
               borderRadius: '12px',
               border: `1px solid ${color.border}`,
@@ -96,65 +79,51 @@ const E = ({
         </Section>
       ) : null}
 
-      <DetailTable
-        rows={[
-          { label: 'Category', value: category },
-          { label: 'Location', value: city },
-          { label: 'Listing link', value: liveUrl, mono: true },
-        ]}
-      />
+      <Text className="vb-ink" style={{ ...t.text, margin: '0 0 2px', fontWeight: 700 }}>{title}</Text>
+      {meta ? <Text style={{ ...t.small, margin: '0 0 16px' }}>{meta}</Text> : null}
 
       <CtaButton href={liveUrl}>View your live listing</CtaButton>
-      <SecondaryButton href={shareKitUrl}>Open your Share Kit</SecondaryButton>
 
       <Divider />
 
-      <SectionLabel>Share your listing</SectionLabel>
-      <Text style={t.text}>
-        Your listing gives people one place to see photos, pricing, availability and next steps.
-        Post the link anywhere people already find you.
+      {/* ---- Seller success module ---- */}
+      <H2>Your listing is live. Now get it seen.</H2>
+      <Text style={{ ...t.small, margin: '0 0 6px' }}>
+        Three things that move listings fastest on Vendibook.
       </Text>
-      {shareLink(facebookUrl, 'Share on Facebook')}
-      {shareLink(twitterUrl, 'Post on X / Twitter')}
-      {shareLink(linkedinUrl, 'Share on LinkedIn')}
-      {shareLink(smsUrl, 'Text the link to someone')}
 
-      <Divider />
-
-      <SectionLabel>Optional next steps</SectionLabel>
-      <Bullets
-        items={[
-          ...(showInstantBook
-            ? [
-                <>
-                  Turn on Instant Book so renters can reserve without waiting for approval —{' '}
-                  <Link href={instantBookUrl} style={t.link}>update your settings</Link>.
-                </>,
-              ]
-            : []),
-          ...(showFeaturedBoost
-            ? [
-                <>
-                  Add a Featured Boost to place your listing higher in search —{' '}
-                  <Link href={boostUrl} style={t.link}>see boost options</Link>.
-                </>,
-              ]
-            : []),
-          <>
-            Keep photos, pricing and availability current — you can edit your listing at any time.
-          </>,
-        ]}
+      <ActionRow
+        href={shareKitUrl}
+        title="Share your listing"
+        description="Ready-made links and images for social, text and email."
+      />
+      <ActionRow
+        href={manageUrl}
+        title="Improve your listing"
+        description="Better photos, pricing and details win more enquiries."
+      />
+      <ActionRow
+        href={boostUrl}
+        title="Boost visibility"
+        description="Featured Boost places your listing higher in search results."
       />
 
-      {hasReferral ? (
+      {forSale ? (
         <>
           <Divider />
-          <SectionLabel>Your referral link</SectionLabel>
-          <Text style={t.text}>
-            Invite other owners and operators with your link:{' '}
-            <Link href={safeReferralUrl} style={t.link}>{safeReferralUrl}</Link>
+          <Text style={{ ...t.small, margin: 0 }}>
+            Buyer financing is available on eligible for-sale equipment through our lending partner,
+            subject to approval.{' '}
+            <Link href={`${SITE_URL}/financing`} style={t.link}>How financing works</Link>.
           </Text>
         </>
+      ) : null}
+
+      {hasReferral ? (
+        <Text style={{ ...t.small, margin: '10px 0 0' }}>
+          Invite other owners and operators:{' '}
+          <Link href={safeReferralUrl} style={t.link}>{safeReferralUrl}</Link>
+        </Text>
       ) : null}
 
       <SupportRow />
