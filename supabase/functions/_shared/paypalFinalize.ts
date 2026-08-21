@@ -351,12 +351,28 @@ async function propagateToDomainRecord(
   const nowIso = new Date().toISOString();
   try {
     if (record.sale_transaction_id) {
-      await supabase.from("sale_transactions").update({
+      const { data: flipped } = await supabase.from("sale_transactions").update({
         status: "paid",
         payment_provider: "paypal",
         payment_intent_id: facts.captureId,
         checkout_session_id: record.paypal_order_id,
-      }).eq("id", record.sale_transaction_id).neq("status", "paid");
+      }).eq("id", record.sale_transaction_id).neq("status", "paid").select("id").maybeSingle();
+
+      // Seller-facing "payment received, arrange the handoff" email. The buyer
+      // receipt is delivered separately, so this send is seller-only.
+      if (flipped?.id) {
+        try {
+          await supabase.functions.invoke("send-sale-notification", {
+            body: {
+              transaction_id: record.sale_transaction_id,
+              notification_type: "payment_received",
+              audience: "seller",
+            },
+          });
+        } catch (_err) {
+          // Notification failures must never break payment finalization.
+        }
+      }
     }
     if (record.booking_request_id) {
       const { data: bookingRow } = await supabase

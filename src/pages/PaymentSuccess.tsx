@@ -632,11 +632,12 @@ const PaymentSuccess = () => {
 
                   <div className="space-y-3">
                     <Button asChild className="w-full bg-primary hover:bg-primary/90" size="lg">
-                      <Link to="/transactions?tab=purchases">
-                        View My Purchases
+                      <Link to={saleTransaction ? `/transaction/${saleTransaction.id}` : '/transactions?tab=purchases'}>
+                        View order &amp; next steps
                         <ArrowRight className="ml-2 h-4 w-4" />
                       </Link>
                     </Button>
+
                     
                     <Button variant="outline" asChild className="w-full">
                       <Link to="/dashboard">
