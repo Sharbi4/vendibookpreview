@@ -90,6 +90,7 @@ serve(async (req) => {
       }));
 
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
+    const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
 
     const results = await Promise.all(ADMIN_EMAILS.map(async (recipient) => {
@@ -97,8 +98,10 @@ serve(async (req) => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${ANON_KEY}`,
-          apikey: ANON_KEY,
+          // Internal server-to-server call: must be privileged so the
+          // template allowlist gate in send-transactional-email passes.
+          Authorization: `Bearer ${SERVICE_KEY}`,
+          apikey: SERVICE_KEY,
         },
         body: JSON.stringify({
           templateName: "generic-notice",
