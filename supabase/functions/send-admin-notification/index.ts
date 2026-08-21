@@ -101,7 +101,7 @@ serve(async (req) => {
           // Internal server-to-server call: must be privileged so the
           // template allowlist gate in send-transactional-email passes.
           Authorization: `Bearer ${SERVICE_KEY}`,
-          apikey: ANON_KEY,
+          apikey: SERVICE_KEY,
         },
         body: JSON.stringify({
           templateName: "generic-notice",
