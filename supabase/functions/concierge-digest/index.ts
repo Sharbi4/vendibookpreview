@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { sendTransactionalEmailInternal } from "../_shared/invokeTransactionalEmail.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -46,26 +47,24 @@ Deno.serve(async (req) => {
       if (!profile?.email) continue;
 
       try {
-        await fetch(`${SUPABASE_URL}/functions/v1/send-transactional-email`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${SERVICE_KEY}`,
+        const res = await sendTransactionalEmailInternal({
+          templateName: "shopper-daily-digest",
+          recipientEmail: profile.email,
+          idempotencyKey: `concierge-digest-${userId}-${new Date().toISOString().slice(0, 10)}`,
+          templateData: {
+            first_name: profile.first_name || profile.full_name || "there",
+            items: items.map((i) => ({
+              topic: i.topic,
+              priority: i.priority,
+              unread: i.unread_count,
+            })),
+            cta_url: "https://vendibook.com/dashboard",
           },
-          body: JSON.stringify({
-            template: "shopper-daily-digest",
-            to: profile.email,
-            data: {
-              first_name: profile.first_name || profile.full_name || "there",
-              items: items.map((i) => ({
-                topic: i.topic,
-                priority: i.priority,
-                unread: i.unread_count,
-              })),
-              cta_url: "https://vendibook.com/dashboard",
-            },
-          }),
         });
+        if (!res.ok) {
+          console.error("digest send failed for", userId, res.status, res.body);
+          continue;
+        }
         sent++;
       } catch (e) {
         console.error("digest send failed for", userId, e);

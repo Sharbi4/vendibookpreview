@@ -189,7 +189,7 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/26bd6a6a-f814-4f31-923d-68e7e326ff06</loc>
-    <lastmod>2026-08-20</lastmod>
+    <lastmod>2026-08-21</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
@@ -386,17 +386,6 @@
     </image:image>
   </url>
   <url>
-    <loc>https://vendibook.com/listing/3c5c4943-dca5-40cd-bfef-547446077f46</loc>
-    <lastmod>2026-08-21</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/d7077653-fd60-40ec-b980-2e52862f7b0a/3c5c4943-dca5-40cd-bfef-547446077f46/1786672754920-pb52rn.jpg</image:loc>
-      <image:title>2021 8.5 X 24 ENCLOSED, REFRIGERATED, 16K CAPACITY CARGO TRAILER</image:title>
-      <image:caption>2021 8.5 X 24 ENCLOSED, REFRIGERATED, 16K CAPACITY CARGO TRAILER in Sparta, TN on Vendibook</image:caption>
-    </image:image>
-  </url>
-  <url>
     <loc>https://vendibook.com/listing/a3ead971-38c7-4c0c-8f3f-2b02185c7c2f</loc>
     <lastmod>2026-08-21</lastmod>
     <changefreq>weekly</changefreq>
@@ -496,6 +485,17 @@
     </image:image>
   </url>
   <url>
+    <loc>https://vendibook.com/listing/3c5c4943-dca5-40cd-bfef-547446077f46</loc>
+    <lastmod>2026-08-21</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/d7077653-fd60-40ec-b980-2e52862f7b0a/3c5c4943-dca5-40cd-bfef-547446077f46/1786672754920-pb52rn.jpg</image:loc>
+      <image:title>2021 8.5 X 24 ENCLOSED, REFRIGERATED, 16K CAPACITY CARGO TRAILER</image:title>
+      <image:caption>2021 8.5 X 24 ENCLOSED, REFRIGERATED, 16K CAPACITY CARGO TRAILER in Sparta, TN on Vendibook</image:caption>
+    </image:image>
+  </url>
+  <url>
     <loc>https://vendibook.com/listing/3678b74e-769c-4a6a-9306-090074d81abb</loc>
     <lastmod>2026-08-19</lastmod>
     <changefreq>weekly</changefreq>
@@ -504,6 +504,17 @@
       <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/25cf6eb9-d454-428b-8314-38e2832a0c64/3678b74e-769c-4a6a-9306-090074d81abb/1786716498152-81e5a.jpg</image:loc>
       <image:title>2004 18 ft Workhorse P42 All Purpose Food Truck</image:title>
       <image:caption>2004 18 ft Workhorse P42 All Purpose Food Truck in Ocean Springs, MS on Vendibook</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://vendibook.com/listing/5485ce08-9cd6-4c4c-851e-824e4b7d9451</loc>
+    <lastmod>2026-08-21</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/4fc00959-da4f-4cee-9bac-d8e036254198/5485ce08-9cd6-4c4c-851e-824e4b7d9451/1784943180177-hlai2.jpeg</image:loc>
+      <image:title>2025 Fully Equipped Food Trailer </image:title>
+      <image:caption>2025 Fully Equipped Food Trailer  in Dumfries, VA on Vendibook</image:caption>
     </image:image>
   </url>
   <url>
@@ -702,17 +713,6 @@
       <image:loc>https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800</image:loc>
       <image:title>Downtown Ghost Kitchen - Prime Location</image:title>
       <image:caption>Downtown Ghost Kitchen - Prime Location in Dallas, TX on Vendibook</image:caption>
-    </image:image>
-  </url>
-  <url>
-    <loc>https://vendibook.com/listing/5485ce08-9cd6-4c4c-851e-824e4b7d9451</loc>
-    <lastmod>2026-08-15</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/4fc00959-da4f-4cee-9bac-d8e036254198/5485ce08-9cd6-4c4c-851e-824e4b7d9451/1784943180177-hlai2.jpeg</image:loc>
-      <image:title>2025 Fully Equipped Food Trailer </image:title>
-      <image:caption>2025 Fully Equipped Food Trailer  in Dumfries, VA on Vendibook</image:caption>
     </image:image>
   </url>
   <url>
