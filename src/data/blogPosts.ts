@@ -221,15 +221,17 @@ export const BLOG_POSTS: BlogPost[] = [
   {
     slug: 'texas-mobile-food-vendor-law-2026',
     title: 'Texas Is Changing Food Truck Licensing: What the New Statewide Mobile Food Vendor Law Means for Owners, Renters, Sellers, and Operators',
-    description: 'Starting July 1, 2026, Texas mobile food vendors move to a statewide DSHS license. Here is what it means for food trailer rentals, fleet owners, sellers, operators, and event hosts.',
-    excerpt: 'On July 1, 2026, Texas replaces its patchwork of local health permits with a single statewide Mobile Food Vendor license through DSHS — a major shift for trailer rentals, fleet operators, sellers, and event organizers.',
+    description: 'Since July 1, 2026, Texas mobile food vendors must hold a statewide DSHS license. Here is what it means for food trailer rentals, fleet owners, sellers, operators, and event hosts.',
+    excerpt: 'Since July 1, 2026, Texas has required a statewide DSHS license to operate a Food Vending Vehicle, replacing the patchwork of local health permits — a major shift for rentals, fleet operators, sellers, and event organizers.',
     image: '/images/blog/texas-mobile-food-vendor-law-cover.jpg',
     content: `
-<p class="text-lg text-muted-foreground mb-6"><em>Published by Vendibook · June 10, 2026</em></p>
+<p class="text-lg text-muted-foreground mb-6"><em>Published by Vendibook · June 10, 2026 · Last reviewed August 2026</em></p>
 
-<p class="text-lg mb-6">Texas is making a major change to how food trucks, food trailers, catering trucks, roadside vendors, and other mobile food businesses are licensed.</p>
+<p class="text-lg mb-6">Texas has changed how food trucks, food trailers, catering trucks, roadside vendors, and other mobile food businesses are licensed.</p>
 
-<p class="mb-6">Starting <strong>July 1, 2026</strong>, mobile food vendors in Texas will move under a new statewide licensing system through the <strong>Texas Department of State Health Services (DSHS)</strong>. Instead of needing separate health permits from different cities or counties, qualifying mobile food vendors will be required to obtain a state-issued Mobile Food Vendor license.</p>
+<p class="mb-6">As of <strong>July 1, 2026</strong>, Texas DSHS states that all mobile food vendors must be licensed with the <strong>Texas Department of State Health Services</strong> to operate a Food Vending Vehicle in Texas. The statewide system was created by <a href="https://capitol.texas.gov/tlodocs/89R/billtext/html/HB02844F.HTM" target="_blank" rel="noopener noreferrer" class="text-primary underline">HB 2844</a>. Instead of separate health permits from individual cities or counties, qualifying vendors obtain a state-issued license, with DSHS assigning Type I, II, or III classifications based on food preparation and risk and requiring a pre-licensing inspection where applicable. DSHS publishes the current fees and application steps on its <a href="https://www.dshs.texas.gov/retail-food-establishments/permits-retail-food-establishments/mobile-food-vendors" target="_blank" rel="noopener noreferrer" class="text-primary underline">mobile food vendors page</a>.</p>
+
+<p class="mb-6">Local governments may still regulate matters outside health licensing — zoning, parking, fire and life safety, and property, location, or event rules where allowed.</p>
 
 <p class="mb-6">For the food truck and food trailer industry, this is a big deal. It could make it easier for operators to work across multiple Texas cities, easier for trailer owners to rent their units, easier for fleet owners to expand, and easier for buyers to understand what kind of food vending vehicle they are actually purchasing. If you are already looking, you can <a href="/search?mode=sale&q=food+truck&lat=31&lng=-100&radius=500&location=Texas" class="text-primary underline hover:text-primary/80">see food trucks for sale in Texas</a> or <a href="/search?mode=rent&q=food+trailer&lat=31&lng=-100&radius=500&location=Texas" class="text-primary underline hover:text-primary/80">browse food trailers for rent in Texas</a> right now on Vendibook.</p>
 
