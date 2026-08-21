@@ -1,15 +1,15 @@
 import * as React from 'npm:react@18.3.1'
-import { Link, Text } from 'npm:@react-email/components@0.0.22'
+import { Link, Section, Text } from 'npm:@react-email/components@0.0.22'
 import type { TemplateEntry } from './registry.ts'
 import {
-  Bullets,
+  ActionRow,
   CtaButton,
   DetailTable,
   Divider,
-  Eyebrow,
   H1,
+  H2,
   Lede,
-  SectionLabel,
+  StatusChip,
   SupportRow,
   VendibookEmailLayout,
   SITE_URL,
@@ -28,6 +28,23 @@ interface Props {
   manageUrl?: string
 }
 
+const Benefit = ({ title, detail }: { title: string; detail: string }) => (
+  <table role="presentation" width="100%" cellPadding={0} cellSpacing={0} style={{ borderCollapse: 'collapse' as const, width: '100%' }}>
+    <tbody>
+      <tr>
+        <td style={{ padding: '9px 0', borderTop: `1px solid ${color.border}` }}>
+          <Text className="vb-ink" style={{ margin: 0, fontSize: '15px', lineHeight: 1.4, fontWeight: 700, color: color.text, fontFamily: t.text.fontFamily }}>
+            {title}
+          </Text>
+          <Text className="vb-ink-2" style={{ margin: '2px 0 0', fontSize: '13px', lineHeight: 1.55, color: color.textSecondary, fontFamily: t.text.fontFamily }}>
+            {detail}
+          </Text>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+)
+
 const Email = ({
   firstName,
   planName = 'Vendibook Pro',
@@ -36,12 +53,10 @@ const Email = ({
   nextBillingDate,
   manageUrl = `${SITE_URL}/account/subscription`,
 }: Props) => (
-  <VendibookEmailLayout preview={`${planName} is active — here's what's unlocked`}>
-    <Eyebrow>Membership active</Eyebrow>
-    <H1>{firstName ? `Welcome to ${planName}, ${firstName}.` : `Welcome to ${planName}.`}</H1>
-    <Lede>
-      Your membership is live. Every benefit below is switched on right now — nothing else to set up.
-    </Lede>
+  <VendibookEmailLayout preview={`${planName} is active — here's what's unlocked`} logoWidth={132}>
+    <StatusChip label="Pro active" tone="brand" />
+    <H1>{firstName ? `${planName} is unlocked, ${firstName}.` : `${planName} is unlocked.`}</H1>
+    <Lede>Every benefit below is switched on right now — nothing else to set up.</Lede>
 
     <DetailTable
       rows={[
@@ -55,24 +70,42 @@ const Email = ({
 
     <Divider />
 
-    <SectionLabel>What's included</SectionLabel>
-    <Bullets
-      items={[
-        '10.9% seller/host fee instead of 12.9%',
-        'Up to $500 saved per transaction',
-        'One Featured Boost credit every billing period',
-        'Full premium tools suite and advanced analytics',
-      ]}
+    <H2>Your Pro toolkit</H2>
+    <Benefit
+      title="10.9% seller & host fee"
+      detail="Down from 12.9% on eligible transactions — up to $500 saved per completed transaction."
+    />
+    <Benefit
+      title="One Featured Boost every paid billing period"
+      detail="Use it on any active listing. Credits don't roll over."
+    />
+    <Benefit
+      title="Priority search placement"
+      detail="Your listings surface higher across search and browse."
+    />
+    <Benefit
+      title="Premium seller tools and advanced analytics"
+      detail="AI listing assistance plus deeper performance reporting."
+    />
+    <Benefit
+      title="PermitPath Plus included"
+      detail="Save, track and manage your permit checklists across locations."
     />
 
     <Divider />
 
-    <Text style={t.small}>
-      <strong style={{ color: color.text }}>Cancel anytime.</strong> Your membership renews at{' '}
-      {amount} / {interval} until you cancel, and cancelling stops future renewals only — benefits
-      stay active through the period you&apos;ve paid for.{' '}
-      <Link href={manageUrl} style={t.link}>Manage membership</Link>.
-    </Text>
+    <H2>Start using Pro</H2>
+    <ActionRow href={`${SITE_URL}/host/listings`} title="Apply your Featured Boost" description="Pick the listing you want in front of more buyers." />
+    <ActionRow href={`${SITE_URL}/tools/permitpath`} title="Open PermitPath Plus" description="Build and track your permit checklist." />
+    <ActionRow href={`${SITE_URL}/host/analytics`} title="See your analytics" description="Views, enquiries and conversion by listing." />
+
+    <Section style={{ margin: '18px 0 0' }}>
+      <Text style={t.small}>
+        Cancel anytime — cancelling stops future renewals only, and your benefits stay active
+        through the period you&apos;ve paid for.{' '}
+        <Link href={manageUrl} style={t.link}>Manage membership</Link>.
+      </Text>
+    </Section>
 
     <SupportRow />
   </VendibookEmailLayout>
