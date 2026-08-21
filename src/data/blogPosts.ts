@@ -1795,7 +1795,7 @@ export const BLOG_POSTS: BlogPost[] = [
 
 <h2 class="text-2xl font-bold mt-10 mb-4">What the platform does, and what you set</h2>
 <div class="rounded-2xl border bg-muted/40 p-6 mb-10">
-  <p class="mb-3"><strong>Vendibook handles</strong> the booking flow, payment through PayPal, security deposit holds, document collection, and messaging between you and the renter.</p>
+  <p class="mb-3"><strong>Vendibook handles</strong> the booking flow, payment through PayPal, document collection, and messaging between you and the renter. Security deposits are not part of the PayPal charge — you set the deposit amount in your terms and arrange it directly with the renter.</p>
   <p class="mb-0"><strong>You set</strong> the rate, the calendar, the rental terms, and the requirements for your unit — including whether renters must show proof of liability insurance. Identity verification is an optional Verified Seller badge, not a universal check on every user, and Vendibook does not provide insurance. Confirm insurance and licensing expectations directly with each renter, and state them in the listing.</p>
 </div>
 
@@ -2211,7 +2211,7 @@ export const BLOG_POSTS: BlogPost[] = [
 <p class="mb-4">The modern food truck rental looks very different from a handshake deal. On Vendibook today, a host can:</p>
 <ul class="list-disc pl-6 mb-4 space-y-1">
   <li>Collect renter documents before approving a booking.</li>
-  <li>Take payment and a security deposit hold through the platform.</li>
+  <li>Take booking payment through PayPal checkout, and state your security deposit in the listing terms to arrange directly with the renter.</li>
   <li>Set the insurance and operating requirements for their own listing.</li>
   <li>Write cleaning and return expectations into the listing terms.</li>
   <li>Exchange condition photos and messages with the renter in one thread.</li>
