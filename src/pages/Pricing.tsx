@@ -120,7 +120,7 @@ const ADDON_DETAILS: Record<
 /** Short benefit copy per active add-on. Falls back to the DB description. */
 const ONE_LINERS: Record<string, string> = {
   [ACTIVE_PRODUCT_SLUGS.featuredBoost]: 'Top of search and a highlighted card for 30 days.',
-  [ACTIVE_PRODUCT_SLUGS.proListing]: 'Premium presentation, priority placement, and a featured spot on Vendibook\'s Facebook for 30 days.',
+  [ACTIVE_PRODUCT_SLUGS.proListing]: 'Premium presentation and priority placement for 30 days.',
   [ACTIVE_PRODUCT_SLUGS.conciergeListing]: 'Our team writes and structures your listing for you.',
   [ACTIVE_PRODUCT_SLUGS.permitPathPlus]: 'Save roadmaps, track permits, store documents, export PDFs.',
   [ACTIVE_PRODUCT_SLUGS.listingRewrite]: 'A rewritten title, description and spec sheet for your listing.',
