@@ -2135,7 +2135,7 @@ export const BLOG_POSTS: BlogPost[] = [
     title: 'The Rise of the Food Truck Fleet Owner',
     description: 'Food trucks are becoming rentable mobile business infrastructure. An analysis of the fleet-owner model, what it takes operationally, and why regulatory change matters.',
     excerpt: 'Think Airbnb for mobile food businesses. Food trucks are becoming flexible, rentable infrastructure for the next generation of food entrepreneurs.',
-    image: '/__l5e/assets-v1/361dd7e0-9a47-45ed-b87f-9578bf539ccb/rise-food-truck-fleet-owner.png',
+    image: '/images/blog/food-truck-fleet-owner.jpg',
     author: 'Vendibook',
     authorRole: 'Founder Notes',
     datePublished: '2026-06-11',
