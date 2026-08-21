@@ -65,9 +65,81 @@ export const EmailHeader = ({
         }}
       />
     </Link>
-
   </Section>
+  )
+}
+
+// ---- Status chip (compact, purpose-specific) -------------------------
+export const StatusChip = ({
+  label,
+  tone = 'neutral',
+}: {
+  label: string
+  tone?: 'neutral' | 'success' | 'brand' | 'warning'
+}) => {
+  const map = {
+    neutral: { bg: color.surfaceMuted, fg: color.textSecondary, br: color.border },
+    success: { bg: color.successBg, fg: color.success, br: color.successBorder },
+    brand: { bg: '#fff1ec', fg: color.primaryDark, br: '#ffd6c9' },
+    warning: { bg: color.warningBg, fg: color.warning, br: color.warningBorder },
+  } as const
+  const c = map[tone]
+  return (
+    <table role="presentation" cellPadding={0} cellSpacing={0} style={{ borderCollapse: 'collapse' as const, margin: '0 0 12px' }}>
+      <tbody>
+        <tr>
+          <td
+            style={{
+              backgroundColor: c.bg,
+              border: `1px solid ${c.br}`,
+              borderRadius: '999px',
+              padding: '5px 12px',
+              fontSize: '11px',
+              fontWeight: 700,
+              letterSpacing: '0.12em',
+              textTransform: 'uppercase' as const,
+              color: c.fg,
+              fontFamily: t.text.fontFamily,
+            }}
+          >
+            {label}
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  )
+}
+
+/** Compact secondary action: bold link + one line of context. */
+export const ActionRow = ({
+  href,
+  title,
+  description,
+}: {
+  href: string
+  title: string
+  description?: string
+}) => (
+  <table role="presentation" width="100%" cellPadding={0} cellSpacing={0} style={{ borderCollapse: 'collapse' as const, width: '100%' }}>
+    <tbody>
+      <tr>
+        <td style={{ padding: '10px 0', borderTop: `1px solid ${color.border}` }}>
+          <Text style={{ margin: 0, fontSize: '15px', lineHeight: 1.4, fontWeight: 700, fontFamily: t.text.fontFamily }}>
+            <Link href={href} style={{ color: color.primaryDark, textDecoration: 'none' }}>
+              {title} &rsaquo;
+            </Link>
+          </Text>
+          {description ? (
+            <Text style={{ margin: '3px 0 0', fontSize: '13px', lineHeight: 1.5, color: color.textMuted, fontFamily: t.text.fontFamily }}>
+              {description}
+            </Text>
+          ) : null}
+        </td>
+      </tr>
+    </tbody>
+  </table>
 )
+
 
 // ---- Typography ------------------------------------------------------
 export const Eyebrow = ({ children }: { children: React.ReactNode }) => (
