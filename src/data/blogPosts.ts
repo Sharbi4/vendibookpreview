@@ -456,6 +456,7 @@ export const BLOG_POSTS: BlogPost[] = [
     author: 'Vendibook Editorial',
     authorRole: 'Marketplace Insights',
     datePublished: '2026-06-10',
+    dateModified: '2026-08-21',
     category: 'permits-regulations',
     tags: ['Texas', 'food truck', 'food trailer', 'DSHS', 'HB 2844', 'mobile food vendor', 'licensing', 'rentals', 'fleet'],
     readingTime: 12,
