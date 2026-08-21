@@ -2,6 +2,7 @@
 // emails to a single hardcoded test inbox using the service-role path.
 // Gated by a one-off shared token; delete this function after the QA run.
 import { createClient } from 'npm:@supabase/supabase-js@2'
+import { TEMPLATES as REGISTRY } from '../_shared/transactional-email-templates/registry.ts'
 
 const QA_TOKEN = 'vb-qa-9f3c1a77-2b64-4e0f-8f21-6d9a4c0e5b12'
 const TEST_INBOX = 'atlasmom421@gmail.com'
@@ -35,6 +36,7 @@ Deno.serve(async (req) => {
         templateName,
         recipientEmail: TEST_INBOX,
         idempotencyKey,
+        templateData: ((REGISTRY as Record<string, any>)[templateName]?.previewData ?? {}),
         subjectPrefix: '[TEST] ',
         metadata: { qa_test_send: true, requested_to: TEST_INBOX },
       }),
