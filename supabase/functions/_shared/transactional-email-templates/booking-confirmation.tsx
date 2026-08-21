@@ -1,15 +1,16 @@
 import * as React from 'npm:react@18.3.1'
-import { Section, Text } from 'npm:@react-email/components@0.0.22'
+import { Img, Section, Text } from 'npm:@react-email/components@0.0.22'
 import type { TemplateEntry } from './registry.ts'
 import {
   Bullets,
   CtaButton,
   DetailTable,
   Divider,
-  Eyebrow,
   H1,
+  H2,
   Lede,
   SectionLabel,
+  StatusChip,
   SupportRow,
   VendibookEmailLayout,
   SITE_URL,
@@ -37,10 +38,11 @@ interface BookingProps {
   /** booking_requests.status at send time — 'approved' | 'confirmed' vs 'pending'. */
   bookingStatus?: string
   isInstantBook?: boolean
+  /** Deposit collected separately by the host — never part of the amount charged today. */
+  securityDeposit?: string
   termsSnapshot?: TermsSnapshot
   termsVersion?: string
 }
-
 
 const money = (c: number) => `$${(Number(c || 0) / 100).toFixed(2)}`
 
@@ -51,7 +53,7 @@ const TermsBlock = ({ snap, version }: { snap?: TermsSnapshot; version?: string 
   const v = version || snap?.termsVersion || 'v1'
   if (!lines.length && !cancellation) return null
   return (
-    <Section style={t.panel}>
+    <Section style={t.panel} className="vb-panel">
       <SectionLabel>What you agreed to</SectionLabel>
       {lines.map((l, i) => (
         <Text
@@ -97,7 +99,9 @@ const BookingConfirmationEmail = ({
   orderNumber,
   bookingId,
   cityState,
+  coverImageUrl,
   bookingStatus,
+  securityDeposit,
   termsSnapshot,
   termsVersion,
 }: BookingProps) => {
@@ -105,55 +109,88 @@ const BookingConfirmationEmail = ({
   // runs on payment_status === 'completed'). The only variable is whether the
   // host has approved the dates yet.
   const approved = APPROVED_STATUSES.has(String(bookingStatus ?? '').toLowerCase())
+  const dates = startDate || endDate ? `${startDate ?? '—'} → ${endDate ?? '—'}` : undefined
 
   return (
     <VendibookEmailLayout
+      logoWidth={132}
       preview={
         approved
           ? `Booking confirmed — ${listingTitle ?? 'your reservation'}`
           : `Payment received — awaiting host approval for ${listingTitle ?? 'your reservation'}`
       }
     >
-      <Eyebrow>{approved ? 'Booking confirmed' : 'Payment received'}</Eyebrow>
+      <StatusChip
+        label={approved ? 'Booking confirmed' : 'Awaiting host approval'}
+        tone={approved ? 'success' : 'warning'}
+      />
       <H1>
         {approved
-          ? guestName ? `You're all set, ${guestName}.` : "You're all set."
-          : guestName ? `Thanks, ${guestName} — your payment is in.` : 'Your payment is in.'}
+          ? guestName ? `You're booked, ${guestName}.` : "You're booked."
+          : guestName ? `Thanks, ${guestName} — payment received.` : 'Payment received.'}
       </H1>
       <Lede>
         {approved
-          ? 'Your payment has been processed and your dates are confirmed with the host. This email is your record of the booking.'
-          : 'Your payment has been processed and your request was sent to the host for approval. If the host declines or does not respond in time, your payment is refunded in full.'}
+          ? 'Your payment is processed and your dates are locked in with the host. This email is your booking record.'
+          : 'Your payment is processed and your request is with the host for approval. If the host declines or the request expires, your payment is refunded in full.'}
       </Lede>
 
+      {coverImageUrl ? (
+        <Section style={{ margin: '0 0 16px' }}>
+          <Img
+            src={coverImageUrl}
+            alt={listingTitle ?? 'Your reservation'}
+            width="544"
+            style={{
+              display: 'block',
+              width: '100%',
+              maxWidth: '544px',
+              maxHeight: '220px',
+              objectFit: 'cover' as const,
+              height: 'auto',
+              borderRadius: '12px',
+              border: `1px solid ${color.border}`,
+            }}
+          />
+        </Section>
+      ) : null}
+
       <DetailTable
+        title="Your booking"
         rows={[
           { label: 'Listing', value: listingTitle ?? 'Your reservation' },
+          { label: 'Dates', value: dates },
           { label: 'Location', value: cityState },
-          { label: 'Dates', value: startDate || endDate ? `${startDate ?? '—'} → ${endDate ?? '—'}` : undefined },
           { label: 'Order', value: orderNumber, mono: true },
           { label: 'Status', value: approved ? 'Confirmed' : 'Awaiting host approval' },
-          { label: 'Total paid', value: totalPrice, emphasis: true },
+          { label: 'Paid today', value: totalPrice, emphasis: true },
         ]}
       />
 
+      {securityDeposit ? (
+        <Text style={{ ...t.small, margin: '-8px 0 20px' }}>
+          A security deposit of {securityDeposit} is handled directly with the host and is{' '}
+          <strong>not included</strong> in the amount charged today.
+        </Text>
+      ) : null}
+
       <CtaButton href={`${SITE_URL}/dashboard${bookingId ? `?booking=${bookingId}` : ''}`}>
-        View booking details
+        View your booking
       </CtaButton>
 
       <Divider />
 
-      <SectionLabel>What happens next</SectionLabel>
+      <H2>What happens next</H2>
       <Bullets
         items={
           approved
             ? [
-                'Message the host directly from your dashboard.',
-                'Upload any required documents before your start date.',
-                'The precise address unlocks now that your booking is confirmed.',
+                'Message the host from your dashboard to arrange arrival details.',
+                'Upload any documents the host requires before your start date.',
+                'The precise address is unlocked now that your booking is confirmed.',
               ]
             : [
-                'The host reviews your request and approves or declines it.',
+                'The host reviews your request and either approves or declines it.',
                 'You get an email the moment the host responds.',
                 'If the request is declined or expires, your payment is refunded in full.',
                 'The precise address unlocks once the host approves.',
@@ -186,6 +223,6 @@ export const template = {
     orderNumber: 'VB-9F2A1C4D',
     cityState: 'Los Angeles, CA',
     bookingStatus: 'approved',
+    coverImageUrl: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=800&q=80',
   },
 } satisfies TemplateEntry
-
