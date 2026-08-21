@@ -46,7 +46,7 @@ function priceLabel(l: Listing): string {
   return "View pricing";
 }
 
-function buildHtml(
+export function buildHtml(
   listings: Listing[],
   cityCounts: { city: string; count: number }[],
   unsubscribeUrl = "{{{RESEND_UNSUBSCRIBE_URL}}}",

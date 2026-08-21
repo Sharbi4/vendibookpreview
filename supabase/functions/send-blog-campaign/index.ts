@@ -29,7 +29,7 @@ type Campaign = {
   heroImage?: string | null;
 };
 
-const DEFAULT_CAMPAIGN: Campaign = {
+export const DEFAULT_CAMPAIGN: Campaign = {
   campaignId: "2026-05-31-new-exit-plan-blog-email",
   subject: "A Food Truck, a Recipe, and a Fresh Start",
   preview: "As AI reshapes work, more people are turning recipes, trucks, trailers, and shared kitchens into a path toward ownership.",
@@ -58,7 +58,7 @@ function resolveCampaign(body: Record<string, unknown>): Campaign {
   return c;
 }
 
-function buildHtml(c: Campaign, unsubUrl: string) {
+export function buildHtml(c: Campaign, unsubUrl: string) {
   const utm = `?utm_source=email&utm_medium=campaign&utm_campaign=${encodeURIComponent(c.campaignId)}`;
   const hero = c.heroImage
     ? `<tr><td style="padding:8px 24px 0;">
