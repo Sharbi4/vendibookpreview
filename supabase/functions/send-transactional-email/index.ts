@@ -66,6 +66,8 @@ Deno.serve(async (req) => {
   let messageId: string
   let providedIdempotencyKey: string | null = null
   let templateData: Record<string, any> = {}
+  let subjectPrefix = ''
+  let extraMetadata: Record<string, any> = {}
   try {
     const body = await req.json()
     templateName = body.templateName || body.template_name
@@ -75,6 +77,12 @@ Deno.serve(async (req) => {
     idempotencyKey = providedIdempotencyKey || messageId
     if (body.templateData && typeof body.templateData === 'object') {
       templateData = body.templateData
+    }
+    if (typeof body.subjectPrefix === 'string') {
+      subjectPrefix = body.subjectPrefix.slice(0, 24)
+    }
+    if (body.metadata && typeof body.metadata === 'object') {
+      extraMetadata = body.metadata
     }
   } catch {
     return new Response(
@@ -98,6 +106,7 @@ Deno.serve(async (req) => {
   }
 
   // ---- Authorization (see PUBLIC_TEMPLATES note above) ----
+  let callerPrivileged = false
   {
     const bearer = (req.headers.get('Authorization') || '').replace(/^Bearer\s+/i, '').trim()
     let privileged = false
@@ -116,6 +125,8 @@ Deno.serve(async (req) => {
       }
     }
 
+    callerPrivileged = privileged
+
     if (!privileged && !PUBLIC_TEMPLATES.has(templateName)) {
       console.warn('[email-auth] rejected unprivileged send', { templateName })
       return new Response(
@@ -126,6 +137,13 @@ Deno.serve(async (req) => {
   }
 
 
+
+  // Only internal/privileged callers may override the subject prefix or add
+  // log metadata (used by controlled QA test sends).
+  if (!callerPrivileged) {
+    subjectPrefix = ''
+    extraMetadata = {}
+  }
 
   // CRITICAL TEMPLATE GUARD
   // For high-risk workflows (payments, purchases, bookings, refunds, disputes,
@@ -228,6 +246,7 @@ Deno.serve(async (req) => {
         metadata: {
           idempotency_source: providedIdempotencyKey ? 'caller' : 'auto',
           ...(redirectedForTest ? { test_mode: true, intended_recipient: intendedRecipient } : {}),
+          ...extraMetadata,
         },
       })
 
@@ -477,7 +496,9 @@ Deno.serve(async (req) => {
       : template.subject
   const resolvedSubject = redirectedForTest
     ? `[TEST] ${baseSubject}`
-    : baseSubject
+    : subjectPrefix
+      ? `${subjectPrefix}${baseSubject}`
+      : baseSubject
 
 
   // 5. Enqueue the pre-rendered email for async processing by the dispatcher.
