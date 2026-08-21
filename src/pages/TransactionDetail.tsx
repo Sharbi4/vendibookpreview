@@ -19,7 +19,7 @@ import {
 } from '@/lib/sale/handoff';
 import { isPickupLocationRevealed, PICKUP_LOCKED_MESSAGE } from '@/lib/fulfillment/pickupReveal';
 
-type Tx = Record<string, any> | null;
+type Tx = (Record<string, any> & { id: string }) | null;
 type Listing = {
   id: string; title: string | null; image_urls: string[] | null; cover_image_url?: string | null;
   pickup_location_text?: string | null; pickup_instructions?: string | null; city?: string | null; state?: string | null;
