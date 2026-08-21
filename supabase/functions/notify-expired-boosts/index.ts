@@ -5,6 +5,7 @@
 // Trigger: invoke daily (cron). Safe to call manually.
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
+import { sendTransactionalEmailInternal } from "../_shared/invokeTransactionalEmail.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -92,13 +93,7 @@ serve(async (req) => {
         .single();
 
       if (hostProfile?.email) {
-        await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/send-transactional-email`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${Deno.env.get("SUPABASE_ANON_KEY")}`,
-          },
-          body: JSON.stringify({
+        await sendTransactionalEmailInternal({
             templateName: 'featured-boost-expired',
             recipientEmail: hostProfile.email,
             idempotencyKey: `featured-expired-${listing.id}-${listing.featured_expires_at}`,
@@ -108,7 +103,6 @@ serve(async (req) => {
               listingId: listing.id,
               expiredAt: new Date(listing.featured_expires_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
             },
-          }),
         });
       }
     } catch (e) {
