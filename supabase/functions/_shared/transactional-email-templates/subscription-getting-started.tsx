@@ -36,7 +36,7 @@ const Email = ({ firstName, planName = 'Vendibook Growth', actions = DEFAULT_ACT
             <Section key={i} style={s.accentRow}>
               <Text style={s.accentLabel}>STEP {i + 1}</Text>
               <Text style={{ ...s.accentValuePlain, marginBottom: 6 }}>
-                <Link href={a.href.startsWith('http') ? a.href : `${SITE_URL}${a.href}`} style={{ color: '#fafafa', textDecoration: 'underline' }}>{a.label}</Link>
+                <Link href={a.href.startsWith('http') ? a.href : `${SITE_URL}${a.href}`} style={{ color: '#d93f16', textDecoration: 'underline' }}>{a.label}</Link>
               </Text>
               {a.blurb && <Text style={{ ...s.small, margin: 0 }}>{a.blurb}</Text>}
             </Section>

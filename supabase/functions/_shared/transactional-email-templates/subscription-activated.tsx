@@ -102,7 +102,7 @@ const Email = ({
           <Text style={s.smallHeader}>WHAT'S INCLUDED</Text>
           {benefits.map((b, i) => (
             <Text key={i} style={s.listItem}>
-              • <Link href={b.href.startsWith('http') ? b.href : `${SITE_URL}${b.href}`} style={{ color: '#fafafa', textDecoration: 'underline' }}>{b.label}</Link>
+              • <Link href={b.href.startsWith('http') ? b.href : `${SITE_URL}${b.href}`} style={{ color: '#d93f16', textDecoration: 'underline' }}>{b.label}</Link>
             </Text>
           ))}
 
