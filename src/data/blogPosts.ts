@@ -1946,7 +1946,7 @@ export const BLOG_POSTS: BlogPost[] = [
   <li>An optional paid <strong>Verified Seller</strong> identity badge — identity verification is available to any user, but it is not required of everyone</li>
   <li>Security deposit authorization holds on rentals, set by the host</li>
   <li>Documents and rental terms collected before a booking is approved</li>
-  <li>Seller payouts released after delivery or handoff is confirmed; they are not instant or automatic</li>
+  <li>Vendibook reviews and issues the seller payout after the required delivery or handoff confirmation steps; payouts are not instant or automatic</li>
 </ul>
 
 <p class="mb-8">Vendibook does not hold funds in escrow and does not guarantee any transaction. Both sides are still responsible for inspecting the unit, confirming licensing, and arranging their own insurance.</p>
