@@ -41,25 +41,31 @@ import {
 } from './tokens.ts'
 
 // ---- Brand header ----------------------------------------------------
-export const EmailHeader = ({ align = 'left' as 'left' | 'center' }) => (
-  <Section style={{ padding: '4px 0 18px', textAlign: align }}>
+export const EmailHeader = ({
+  align = 'left' as 'left' | 'center',
+  width = LOGO_WIDTH,
+}: { align?: 'left' | 'center'; width?: number }) => {
+  const h = Math.round(width / (LOGO_WIDTH / LOGO_HEIGHT))
+  return (
+  <Section style={{ padding: '4px 0 16px', textAlign: align }}>
     <Link href={SITE_URL} style={{ textDecoration: 'none', display: 'inline-block' }}>
       <Img
         src={LOGO_LIGHT_URL}
         alt={LOGO_ALT}
-        width={String(LOGO_WIDTH)}
-        height={String(LOGO_HEIGHT)}
+        width={String(width)}
+        height={String(h)}
         style={{
           display: 'block',
           border: 0,
           outline: 'none',
-          width: `${LOGO_WIDTH}px`,
+          width: `${width}px`,
           maxWidth: '100%',
           height: 'auto',
           margin: align === 'center' ? '0 auto' : '0',
         }}
       />
     </Link>
+
   </Section>
 )
 
