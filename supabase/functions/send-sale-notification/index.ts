@@ -23,8 +23,8 @@ type NotificationType =
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
   try {
-    const { transaction_id, notification_type } = await req.json() as {
-      transaction_id: string; notification_type: NotificationType;
+    const { transaction_id, notification_type, audience } = await req.json() as {
+      transaction_id: string; notification_type: NotificationType; audience?: 'buyer' | 'seller' | 'both';
     };
     if (!transaction_id || !notification_type) {
       return new Response(JSON.stringify({ error: 'transaction_id and notification_type required' }), {
@@ -160,7 +160,7 @@ Deno.serve(async (req) => {
       }
 
       // Buyer-facing receipt only on payment_received
-      if (buyerOptedIn && buyerEmail && notification_type === 'payment_received') {
+      if (buyerOptedIn && buyerEmail && notification_type === 'payment_received' && audience !== 'seller') {
         enqueue(
           'payment-receipt',
           buyerEmail,
