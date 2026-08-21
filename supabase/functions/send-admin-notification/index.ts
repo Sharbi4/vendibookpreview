@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { sendTransactionalEmailInternal } from "../_shared/invokeTransactionalEmail.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -89,39 +90,24 @@ serve(async (req) => {
         mono: k.endsWith("_id") || k === "email" || k === "host_email",
       }));
 
-    const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
-    const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
-
     const results = await Promise.all(ADMIN_EMAILS.map(async (recipient) => {
-      const r = await fetch(`${SUPABASE_URL}/functions/v1/send-transactional-email`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          // Internal server-to-server call: must be privileged so the
-          // template allowlist gate in send-transactional-email passes.
-          Authorization: `Bearer ${SERVICE_KEY}`,
-          apikey: SERVICE_KEY,
+      const r = await sendTransactionalEmailInternal({
+        templateName: "generic-notice",
+        recipientEmail: recipient,
+        idempotencyKey: `admin-notify-${type}-${recipient}-${Date.now()}`,
+        templateData: {
+          subject: subjectMap[type] || `Admin notification: ${type}`,
+          preview: subjectMap[type] || type,
+          kicker: "Admin alert",
+          heading: subjectMap[type] || type,
+          paragraphs: ["This is a real-time Vendibook event notification."],
+          details,
+          ctaLabel: "Open admin",
+          ctaUrl: "https://vendibook.com/admin",
         },
-        body: JSON.stringify({
-          templateName: "generic-notice",
-          recipientEmail: recipient,
-          idempotencyKey: `admin-notify-${type}-${recipient}-${Date.now()}`,
-          templateData: {
-            subject: subjectMap[type] || `Admin notification: ${type}`,
-            preview: subjectMap[type] || type,
-            kicker: "Admin alert",
-            heading: subjectMap[type] || type,
-            paragraphs: ["This is a real-time Vendibook event notification."],
-            details,
-            ctaLabel: "Open admin",
-            ctaUrl: "https://vendibook.com/admin",
-          },
-        }),
       });
       if (!r.ok) {
-        const errText = await r.text();
-        throw new Error(`send-transactional-email failed for ${recipient} (${r.status}): ${errText}`);
+        throw new Error(`send-transactional-email failed for ${recipient} (${r.status}): ${r.body}`);
       }
     }));
 

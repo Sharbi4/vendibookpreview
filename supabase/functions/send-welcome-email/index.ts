@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { sendTransactionalEmailInternal } from "../_shared/invokeTransactionalEmail.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -22,27 +23,15 @@ serve(async (req) => {
       });
     }
 
-    const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
-    const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
-
-    const resp = await fetch(`${SUPABASE_URL}/functions/v1/send-transactional-email`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${ANON_KEY}`,
-        apikey: ANON_KEY,
-      },
-      body: JSON.stringify({
-        templateName: "welcome",
-        recipientEmail: email,
-        idempotencyKey: `welcome-${email}-${Date.now()}`,
-        templateData: { name: fullName, role },
-      }),
+    const resp = await sendTransactionalEmailInternal({
+      templateName: "welcome",
+      recipientEmail: email,
+      idempotencyKey: `welcome-${email}-${Date.now()}`,
+      templateData: { name: fullName, role },
     });
 
     if (!resp.ok) {
-      const errText = await resp.text();
-      throw new Error(`send-transactional-email failed (${resp.status}): ${errText}`);
+      throw new Error(`send-transactional-email failed (${resp.status}): ${resp.body}`);
     }
 
     return new Response(JSON.stringify({ success: true }), {
