@@ -220,7 +220,7 @@ const BLOG_POSTS: BlogPostMeta[] = [
     slug: "rise-food-truck-fleet-owner",
     title: "The Rise of the Food Truck Fleet Owner",
     description: "Food trucks are becoming rentable mobile business infrastructure. Learn how fleet owners, remote access, tracking, maintenance workflows, and platforms like Vendibook are changing food entrepreneurship.",
-    image: "/__l5e/assets-v1/361dd7e0-9a47-45ed-b87f-9578bf539ccb/rise-food-truck-fleet-owner.png",
+    image: "/images/blog/food-truck-fleet-owner.jpg",
     author: "Vendibook",
     datePublished: "2026-06-11",
     category: "industry-insights",
