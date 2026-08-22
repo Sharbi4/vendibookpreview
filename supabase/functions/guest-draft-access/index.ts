@@ -91,6 +91,15 @@ const PATCH_ALLOWLIST = new Set([
   "hourly_schedule",
   "hourly_special_pricing",
   "rental_min_days",
+  // Booking-mode toggles + constraints saved by the wizard's availability step.
+  "hourly_enabled",
+  "daily_enabled",
+  "min_hours",
+  "max_hours",
+  "buffer_time_mins",
+  "min_notice_hours",
+  // Location-step delivery pricing mode (flat / per-mile / free).
+  "delivery_fee_type",
 ]);
 
 function json(body: unknown, status = 200) {

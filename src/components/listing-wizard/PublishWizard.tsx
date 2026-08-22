@@ -1343,9 +1343,17 @@ export const PublishWizard: React.FC = () => {
   // resolveListingCoordinates (result must anchor to the seller's ZIP/state).
   const geocodeListingAddress = useCallback(async (query: string): Promise<GeoCandidate | null> => {
     try {
-      const { data } = await supabase.functions.invoke('geocode-location', {
-        body: { query, limit: 1 },
-      });
+      // Hard timeout: this call is awaited inside the location step's save
+      // path, so a stalled geocode must never leave Continue stuck on
+      // "Saving…". A timeout returns null → coords cleared, step still saves.
+      const { data } = await Promise.race([
+        supabase.functions.invoke('geocode-location', {
+          body: { query, limit: 1 },
+        }),
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error('geocode-location timed out')), 15000)
+        ),
+      ]);
       const r = data?.results?.[0];
       if (!r || !Array.isArray(r.center)) return null;
       return {
@@ -2005,11 +2013,14 @@ export const PublishWizard: React.FC = () => {
         // Save required documents to the database
         const enabledDocs = requiredDocuments.filter(d => d.is_required);
         
-        // Delete existing documents first
-        await supabase
+        // Delete existing documents first — a failed delete must surface as
+        // an error instead of silently stacking duplicate requirement rows.
+        const { error: deleteDocsError } = await supabase
           .from('listing_required_documents')
           .delete()
           .eq('listing_id', listing.id);
+
+        if (deleteDocsError) throw deleteDocsError;
 
         // Insert new documents
         if (enabledDocs.length > 0) {
