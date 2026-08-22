@@ -12,6 +12,10 @@
  */
 import "https://deno.land/std@0.224.0/dotenv/load.ts";
 import { assert, assertEquals } from "https://deno.land/std@0.224.0/assert/mod.ts";
+import {
+  getHoustonAreaCities,
+  HOUSTON_AREA_CITIES,
+} from "../_shared/houstonSearchArea.ts";
 
 const SUPABASE_URL = Deno.env.get("VITE_SUPABASE_URL")!;
 const ANON_KEY = Deno.env.get("VITE_SUPABASE_PUBLISHABLE_KEY")!;
@@ -41,6 +45,15 @@ const matches = (ft: FT, wants: Set<string>) => {
   if (wants.has("on_site") && ft === "on_site") return true;
   return false;
 };
+
+Deno.test("Houston TX expands only to its approved stored cities", () => {
+  assertEquals(getHoustonAreaCities("Houston, TX"), HOUSTON_AREA_CITIES);
+  assertEquals(getHoustonAreaCities(" hOuStOn, Texas "), HOUSTON_AREA_CITIES);
+  assertEquals(getHoustonAreaCities("Houston"), HOUSTON_AREA_CITIES);
+  assertEquals(getHoustonAreaCities("Austin, TX"), null);
+  assertEquals(getHoustonAreaCities("Magnolia, TX"), null);
+  assertEquals(getHoustonAreaCities("Houston, GA"), null);
+});
 
 Deno.test("baseline returns listings (sanity)", async () => {
   const { listings } = await search({});
