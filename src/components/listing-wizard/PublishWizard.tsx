@@ -23,6 +23,13 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { publishListingIdempotent } from '@/lib/listings/publishListing';
+import {
+  buildLocationColumns,
+  structuredLocationChanged,
+  resolveListingCoordinates,
+  type GeoCandidate,
+  type StructuredLocationInput,
+} from '@/lib/listings/locationPersistence';
 import { saveWizardDraft, loadWizardDraft, clearWizardDraft, hasContent, mergeCached } from '@/lib/listings/wizardDraftCache';
 
 import { reportError } from '@/lib/errorReporter';
