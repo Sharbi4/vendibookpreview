@@ -1939,19 +1939,11 @@ export const PublishWizard: React.FC = () => {
         const categoryIsStatic = isStaticLocationFn(listing.category);
         const effectiveFulfillmentType = (categoryIsStatic || isStaticLocation) ? 'on_site' : (fulfillmentType || 'pickup');
 
-        // Build structured address string
-        const fullAddress = buildStructuredAddress();
-
-        // Public pickup text is the approximate "City, ST" — never a phone number.
-        const approxLocation = [locCity.trim(), locState.trim()].filter(Boolean).join(', ');
-
         updateData = {
           fulfillment_type: effectiveFulfillmentType,
-          pickup_location_text: approxLocation || pickupLocationText || null,
-          address: fullAddress || address || null,
-          city: locCity.trim() || null,
-          state: locState.trim() || null,
-          postal_code: locZipCode.trim() || null,
+          // Structured city/state/ZIP always persist; coordinates are
+          // re-geocoded (or cleared) only when the location actually changed.
+          ...(await resolveLocationColumns()),
           delivery_fee: parseFloat(deliveryFee) || null,
           delivery_radius_miles: parseFloat(deliveryRadiusMiles) || null,
           delivery_fee_type: deliveryFeeType,
