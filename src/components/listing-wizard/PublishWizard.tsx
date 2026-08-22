@@ -1318,6 +1318,52 @@ export const PublishWizard: React.FC = () => {
       .join(', ');
   }, [streetAddress, aptSuite, locCity, locState, locZipCode]);
 
+  // Canonical geocoder (existing geocode-location edge function). Returns a
+  // normalized candidate or null — confidence gating lives in
+  // resolveListingCoordinates (result must anchor to the seller's ZIP/state).
+  const geocodeListingAddress = useCallback(async (query: string): Promise<GeoCandidate | null> => {
+    try {
+      const { data } = await supabase.functions.invoke('geocode-location', {
+        body: { query, limit: 1 },
+      });
+      const r = data?.results?.[0];
+      if (!r || !Array.isArray(r.center)) return null;
+      return {
+        lat: Number(r.center[1]),
+        lng: Number(r.center[0]),
+        placeName: String(r.placeName || ''),
+        city: r.city,
+        state: r.state,
+      };
+    } catch (err) {
+      console.warn('[PublishWizard] geocode-location failed:', err);
+      return null;
+    }
+  }, []);
+
+  // Location columns for save/publish payloads. Structured fields always
+  // persist; coordinates are only re-resolved and written when the location
+  // actually changed (stale coords get cleared, never silently kept).
+  const resolveLocationColumns = useCallback(async () => {
+    const locInput: StructuredLocationInput = {
+      streetAddress,
+      aptSuite,
+      city: locCity,
+      state: locState,
+      zipCode: locZipCode,
+    };
+    const changed = structuredLocationChanged(locInput, listing ?? {});
+    const coords = changed ? await resolveListingCoordinates(locInput, geocodeListingAddress) : undefined;
+    if (changed && !coords) {
+      console.warn('[PublishWizard] location changed but no confident geocode — clearing stale coordinates');
+    }
+    return buildLocationColumns(locInput, listing ?? {}, {
+      fallbackAddress: address,
+      fallbackPickupText: pickupLocationText,
+      coords: coords ?? null,
+    });
+  }, [streetAddress, aptSuite, locCity, locState, locZipCode, listing, address, pickupLocationText, geocodeListingAddress]);
+
   // For-sale listings that are delivery-only don't need a public pickup street address.
   const needsFullAddressForSale =
     listing?.mode !== 'sale' || fulfillmentType !== 'delivery';
