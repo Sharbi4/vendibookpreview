@@ -20,6 +20,44 @@ interface GeocodeResult {
   state?: string;
 }
 
+// Multiple Google keys exist across environments (legacy, current, browser).
+// Any of them may be the one Google accepts server-side, so try each until a
+// request is not rejected with REQUEST_DENIED. A key Google rejects is skipped
+// so a stale secret never blocks a working one.
+const GOOGLE_KEYS = [
+  Deno.env.get("GOOGLE_MAPS_API_KEY"),
+  Deno.env.get("GOOGLE_API_KEY"),
+  Deno.env.get("GOOGLE_MAPS_BROWSER_KEY"),
+].filter((k): k is string => !!k);
+
+const isRefererRestrictionError = (text: string) =>
+  text.includes("API keys with referer restrictions cannot be used with this API");
+
+// Returns the parsed Google JSON for the first accepted key, or null when
+// every key failed / was rejected. `buildUrl` receives the key to try.
+const googleJson = async (buildUrl: (key: string) => string): Promise<any | null> => {
+  let sawRefererRestriction = false;
+  for (const key of GOOGLE_KEYS) {
+    try {
+      const res = await fetch(buildUrl(key));
+      if (!res.ok) {
+        console.warn("Google API HTTP error:", res.status);
+        continue;
+      }
+      const data = await res.json();
+      if (data.status === "REQUEST_DENIED") {
+        sawRefererRestriction = sawRefererRestriction || isRefererRestrictionError(data.error_message || "");
+        console.warn("Google key rejected, trying next:", data.error_message);
+        continue;
+      }
+      return data;
+    } catch (err) {
+      console.warn("Google request threw:", err);
+    }
+  }
+  return sawRefererRestriction ? { status: "REQUEST_DENIED", error_message: "API keys with referer restrictions cannot be used with this API" } : null;
+};
+
 const parseLatLngQuery = (query: string): { lat: number; lng: number } | null => {
   const match = query.trim().match(/^(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)$/);
   if (!match) return null;
@@ -96,7 +134,6 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     const trimmedQuery = query.trim();
-    const GOOGLE_MAPS_API_KEY = Deno.env.get("GOOGLE_MAPS_API_KEY");
     const zipMatch = trimmedQuery.match(/^(\d{5})$/);
 
     console.log("Geocoding query:", trimmedQuery);
@@ -104,44 +141,36 @@ const handler = async (req: Request): Promise<Response> => {
     if (zipMatch) {
       const zip = zipMatch[1];
 
-      if (GOOGLE_MAPS_API_KEY) {
-        try {
-          const geoUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${zip},+USA&key=${GOOGLE_MAPS_API_KEY}`;
-          const geoRes = await fetch(geoUrl);
+      if (GOOGLE_KEYS.length > 0) {
+        const geoData = await googleJson(
+          (key) => `https://maps.googleapis.com/maps/api/geocode/json?address=${zip},+USA&key=${key}`,
+        );
 
-          if (geoRes.ok) {
-            const geoData = await geoRes.json();
-            if (geoData.status === "OK" && geoData.results?.length) {
-              const r = geoData.results[0];
-              const comps = r.address_components || [];
-              const cityComp = comps.find((c: any) => c.types.includes("locality") || c.types.includes("sublocality") || c.types.includes("postal_town"));
-              const stateComp = comps.find((c: any) => c.types.includes("administrative_area_level_1"));
-              const loc = r.geometry?.location;
+        if (geoData?.status === "OK" && geoData.results?.length) {
+          const r = geoData.results[0];
+          const comps = r.address_components || [];
+          const cityComp = comps.find((c: any) => c.types.includes("locality") || c.types.includes("sublocality") || c.types.includes("postal_town"));
+          const stateComp = comps.find((c: any) => c.types.includes("administrative_area_level_1"));
+          const loc = r.geometry?.location;
 
-              return buildJsonResponse({
-                results: [{
-                  id: `zip:${zip}`,
-                  placeName: r.formatted_address || `${zip}, USA`,
-                  center: [loc?.lng || 0, loc?.lat || 0],
-                  text: cityComp?.long_name || zip,
-                  context: stateComp?.short_name || "",
-                  city: cityComp?.long_name || "",
-                  state: stateComp?.short_name || "",
-                } satisfies GeocodeResult],
-              });
-            }
+          return buildJsonResponse({
+            results: [{
+              id: `zip:${zip}`,
+              placeName: r.formatted_address || `${zip}, USA`,
+              center: [loc?.lng || 0, loc?.lat || 0],
+              text: cityComp?.long_name || zip,
+              context: stateComp?.short_name || "",
+              city: cityComp?.long_name || "",
+              state: stateComp?.short_name || "",
+            } satisfies GeocodeResult],
+          });
+        }
 
-            if (geoData.status !== "ZERO_RESULTS") {
-              console.warn("Google ZIP lookup unavailable, using fallback:", geoData.status, geoData.error_message);
-            }
-          } else {
-            console.warn("Google ZIP lookup HTTP error, using fallback:", geoRes.status);
-          }
-        } catch (error) {
-          console.warn("Google ZIP lookup threw, using fallback:", error);
+        if (geoData && geoData.status !== "ZERO_RESULTS") {
+          console.warn("Google ZIP lookup unavailable, using fallback:", geoData.status, geoData.error_message);
         }
       } else {
-        console.warn("GOOGLE_MAPS_API_KEY missing, using ZIP fallback service");
+        console.warn("No Google key configured, using ZIP fallback service");
       }
 
       try {
@@ -153,26 +182,21 @@ const handler = async (req: Request): Promise<Response> => {
       }
     }
 
-    if (!GOOGLE_MAPS_API_KEY) {
-      console.error("GOOGLE_MAPS_API_KEY not configured for non-ZIP geocoding");
+    if (GOOGLE_KEYS.length === 0) {
+      console.error("No Google key configured for non-ZIP geocoding");
       return buildJsonResponse({ results: [], error: "GEOCODING_UNAVAILABLE", fallback: true });
     }
 
-    const isRefererRestrictionError = (text: string) =>
-      text.includes("API keys with referer restrictions cannot be used with this API");
-
     const latLng = parseLatLngQuery(trimmedQuery);
     if (latLng) {
-      const reverseUrl = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latLng.lat},${latLng.lng}&key=${GOOGLE_MAPS_API_KEY}`;
-      const reverseRes = await fetch(reverseUrl);
+      const reverseData = await googleJson(
+        (key) => `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latLng.lat},${latLng.lng}&key=${key}`,
+      );
 
-      if (!reverseRes.ok) {
-        const errText = await reverseRes.text();
-        console.error("Google Reverse Geocode API error:", reverseRes.status, errText);
+      if (!reverseData) {
+        console.error("Google Reverse Geocode API unavailable with all keys");
         return buildJsonResponse({ results: [], error: "GEOCODING_UNAVAILABLE", fallback: true });
       }
-
-      const reverseData = await reverseRes.json();
       if (reverseData.status !== "OK" && reverseData.status !== "ZERO_RESULTS") {
         console.error("Google Reverse Geocode API status error:", reverseData.status, reverseData.error_message);
         const restricted = isRefererRestrictionError(reverseData.error_message || "");
@@ -197,16 +221,14 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     const encodedQuery = encodeURIComponent(trimmedQuery);
-    const googleUrl = `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodedQuery}&key=${GOOGLE_MAPS_API_KEY}&components=country:us&types=geocode`;
+    const data = await googleJson(
+      (key) => `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodedQuery}&key=${key}&components=country:us&types=geocode`,
+    );
 
-    const response = await fetch(googleUrl);
-    if (!response.ok) {
-      const errText = await response.text();
-      console.error("Google API error:", response.status, errText);
+    if (!data) {
+      console.error("Google Places Autocomplete unavailable with all keys");
       return buildJsonResponse({ results: [], error: "GEOCODING_UNAVAILABLE", fallback: true });
     }
-
-    const data = await response.json();
     if (data.status !== "OK" && data.status !== "ZERO_RESULTS") {
       console.error("Google API status error:", data.status, data.error_message);
       const restricted = isRefererRestrictionError(data.error_message || "");
@@ -218,11 +240,11 @@ const handler = async (req: Request): Promise<Response> => {
 
     for (const prediction of predictions) {
       try {
-        const detailsUrl = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${prediction.place_id}&fields=geometry,formatted_address&key=${GOOGLE_MAPS_API_KEY}`;
-        const detailsResponse = await fetch(detailsUrl);
-        const detailsData = await detailsResponse.json();
+        const detailsData = await googleJson(
+          (key) => `https://maps.googleapis.com/maps/api/place/details/json?place_id=${prediction.place_id}&fields=geometry,formatted_address&key=${key}`,
+        );
 
-        if (detailsData.status === "OK" && detailsData.result) {
+        if (detailsData?.status === "OK" && detailsData.result) {
           const location = detailsData.result.geometry?.location;
           if (location) {
             results.push({

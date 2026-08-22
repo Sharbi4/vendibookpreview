@@ -560,7 +560,6 @@ export const PublishWizard: React.FC = () => {
   const [hoursOfAccess, setHoursOfAccess] = useState('');
   const [locationNotes, setLocationNotes] = useState('');
   const [isStaticLocation, setIsStaticLocation] = useState(false);
-  const [pickupCoordinates, setPickupCoordinates] = useState<[number, number] | null>(null);
 
   // Availability step state
   const [availableFrom, setAvailableFrom] = useState<string | null>(null);
