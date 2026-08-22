@@ -107,7 +107,6 @@ serve(async (req: Request) => {
           const comps = extractComponents(candidate);
           const postal = (comps["postal_code"] ?? "").trim();
           const stateLong = (comps["administrative_area_level_1"] ?? "").trim().toLowerCase();
-          const stateShort = (comps["administrative_area_level_1"] ?? "").trim().toLowerCase();
           const candidateStateShort =
             (candidate.address_components ?? [])
               .find((c: any) => (c.types ?? []).includes("administrative_area_level_1"))
