@@ -436,16 +436,33 @@ const BookingCheckout = () => {
         }),
       };
 
-      // Reuse the already-created request instead of double-booking the dates.
+      // Reuse the already-created request instead of double-booking the dates,
+      // but re-sync it with the buyer's current selection so PayPal (which
+      // prices server-side from the row) can never charge stale dates/amounts.
       if (createdBookingIdRef.current) {
+        const existingId = createdBookingIdRef.current;
+        const { error: syncError } = await supabase
+          .from('booking_requests')
+          .update({
+            ...(bookingData as any),
+            delivery_address: fulfillmentSelected === 'delivery' ? deliveryAddress.trim() : null,
+            delivery_fee_snapshot: fulfillmentSelected === 'delivery' ? (listing.delivery_fee || null) : null,
+          })
+          .eq('id', existingId)
+          .eq('shopper_id', user.id)
+          .neq('payment_status', 'paid');
+
+        if (syncError) throw syncError;
+
         if (checkoutWindow) checkoutWindow.close();
         setPaypalCheckout({
-          bookingId: createdBookingIdRef.current,
-          returnUrl: confirmationUrl(createdBookingIdRef.current),
+          bookingId: existingId,
+          returnUrl: confirmationUrl(existingId),
         });
         setIsSubmitting(false);
         return;
       }
+
 
       const { data: bookingResult, error: bookingError } = await supabase
         .from('booking_requests')
