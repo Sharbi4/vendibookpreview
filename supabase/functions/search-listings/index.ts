@@ -1,4 +1,9 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import {
+  buildHoustonAreaOrFilter,
+  getHoustonAreaCities,
+  HOUSTON_SEARCH_STATE,
+} from '../_shared/houstonSearchArea.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -147,8 +152,15 @@ Deno.serve(async (req) => {
     if (cleanedQuery) {
       // Parse "City, State" format for location searches
       const parts = cleanedQuery.split(',').map(p => p.trim()).filter(Boolean);
-      
-      if (parts.length >= 2) {
+      const houstonAreaCities = getHoustonAreaCities(cleanedQuery);
+
+      if (houstonAreaCities) {
+        // Houston-only inclusion: match the real stored suburb city while keeping
+        // the requested market scoped to Texas.
+        queryBuilder = queryBuilder
+          .eq('state', HOUSTON_SEARCH_STATE)
+          .or(buildHoustonAreaOrFilter());
+      } else if (parts.length >= 2) {
         const city = parts[0];
         queryBuilder = queryBuilder.or(
           `city.ilike.%${city}%,address.ilike.%${city}%,title.ilike.%${city}%`
