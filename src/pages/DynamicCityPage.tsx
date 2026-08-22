@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import ListingCard from '@/components/listing/ListingCard';
 import { supabase } from '@/integrations/supabase/client';
-import { excludeTestListings } from '@/lib/excludeTestListings';
+import { excludeTestListings, isExcludedTestListingTitle } from '@/lib/excludeTestListings';
 import { filterPubliclyVisible } from '@/lib/listings/publicVisibility';
 import { getCityFromSlug, ASSET_TYPES } from '@/data/cityData';
 import type { Listing } from '@/types/listing';
@@ -38,6 +38,26 @@ const DynamicCityPage = ({ mode, category }: DynamicCityPageProps) => {
     staleTime: 60_000,
     queryFn: async () => {
       if (!city) return [] as Listing[];
+
+      // Keep Houston's landing page on the same search-listings query as Browse
+      // so its Texas-area inclusion stays centralized server-side.
+      if (city.slug === 'houston') {
+        const { data, error } = await supabase.functions.invoke('search-listings', {
+          body: {
+            query: `${city.name}, ${city.state}`,
+            category,
+            mode,
+            page: 1,
+            page_size: 12,
+            sort_by: 'newest',
+          },
+        });
+        if (error) throw error;
+        const rows = (((data as { listings?: Listing[] } | null)?.listings ?? []) as Listing[])
+          .filter((listing) => !isExcludedTestListingTitle(listing.title));
+        return filterPubliclyVisible(rows) as unknown as Listing[];
+      }
+
       let query = excludeTestListings(
         supabase
           .from('listings')

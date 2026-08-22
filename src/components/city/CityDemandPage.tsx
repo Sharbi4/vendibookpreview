@@ -42,6 +42,22 @@ export function CityDemandPage({ city }: CityDemandPageProps) {
   useEffect(() => {
     async function fetchListings() {
       try {
+        if (city.slug === 'houston') {
+          // Route Houston through the same centralized search-listings locality
+          // handling used by Browse, without changing stored/displayed cities.
+          const { data, error } = await supabase.functions.invoke('search-listings', {
+            body: {
+              query: `${city.name}, ${city.state}`,
+              page: 1,
+              page_size: 6,
+              sort_by: 'newest',
+            },
+          });
+          if (error) throw error;
+          setFeaturedListings((data as { listings?: any[] } | null)?.listings ?? []);
+          return;
+        }
+
         const { data } = await supabase
           .from('listings')
           .select('id, title, cover_image_url, category, price_daily, address')
@@ -57,7 +73,7 @@ export function CityDemandPage({ city }: CityDemandPageProps) {
       }
     }
     fetchListings();
-  }, [city.name]);
+  }, [city.name, city.slug, city.state]);
 
   const handleSearch = (category?: string) => {
     const params = new URLSearchParams({
