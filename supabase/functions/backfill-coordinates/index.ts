@@ -89,8 +89,15 @@ serve(async (req: Request) => {
         const data = await res.json();
 
         if (data.status !== "OK" || !data.results?.length) {
-          results.push({ id: listing.id, title: listing.title, status: "geocode_failed", address });
-          console.warn(`Could not geocode "${address}" for listing "${listing.title}"`);
+          results.push({
+            id: listing.id,
+            title: listing.title,
+            status: "geocode_failed",
+            address,
+            google_status: data.status,
+            google_error: data.error_message,
+          } as any);
+          console.warn(`Could not geocode "${address}" for listing "${listing.title}": ${data.status} ${data.error_message ?? ""}`);
           await new Promise((r) => setTimeout(r, 50));
           continue;
         }
