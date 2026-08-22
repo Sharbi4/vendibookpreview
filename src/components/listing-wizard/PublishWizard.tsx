@@ -2183,11 +2183,7 @@ export const PublishWizard: React.FC = () => {
 
         // Location
         fulfillment_type: effectiveFulfillmentType,
-        pickup_location_text: pickupText || null,
-        address: fullAddress || null,
-        city: locCity.trim() || null,
-        state: locState.trim() || null,
-        postal_code: locZipCode.trim() || null,
+        ...locationColumns,
         delivery_fee: parseFloat(deliveryFee) || null,
         delivery_radius_miles: parseFloat(deliveryRadiusMiles) || null,
         delivery_fee_type: deliveryFeeType,
