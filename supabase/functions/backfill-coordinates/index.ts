@@ -116,7 +116,6 @@ serve(async (req: Request) => {
           if (
             storedState &&
             storedState !== stateLong &&
-            storedState !== stateShort &&
             storedState !== candidateStateShort
           ) {
             continue;
