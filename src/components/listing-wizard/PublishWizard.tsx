@@ -1196,6 +1196,12 @@ export const PublishWizard: React.FC = () => {
         hours_of_access: hoursOfAccess || listing.hours_of_access || null,
         location_notes: locationNotes || listing.location_notes || null,
 
+        // Structured location columns — persisted whenever the guest provided
+        // them pre-auth so claiming the draft never drops the verified location.
+        ...(locCity.trim() ? { city: locCity.trim() } : {}),
+        ...(locState.trim() ? { state: locState.trim() } : {}),
+        ...(locZipCode.trim() ? { postal_code: locZipCode.trim() } : {}),
+
         // Availability
         available_from: availableFrom || listing.available_from || null,
         available_to: availableTo || listing.available_to || null,
