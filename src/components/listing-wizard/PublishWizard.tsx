@@ -2132,10 +2132,9 @@ export const PublishWizard: React.FC = () => {
       const effectiveFulfillmentType = (categoryIsStatic || isStaticLocation)
         ? 'on_site'
         : (fulfillmentType || 'pickup');
-      const fullAddress = buildStructuredAddress() || address;
-      // Public pickup text is the approximate "City, ST" — never a phone number.
-      const approxLocation = [locCity.trim(), locState.trim()].filter(Boolean).join(', ');
-      const pickupText = approxLocation || pickupLocationText;
+      // Structured location columns (city/state/ZIP always persist;
+      // coordinates re-resolved only when the location changed).
+      const locationColumns = await resolveLocationColumns();
 
       // Seller phone belongs on the private profile, never on the listing.
       await saveSellerPhone();
