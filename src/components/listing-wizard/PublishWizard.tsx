@@ -1285,8 +1285,23 @@ export const PublishWizard: React.FC = () => {
   // Allow guests to navigate steps freely; auth is gated at publish
   const handleDetailsSave = async () => {
     if (isGuestDraft && !user) {
-      // Save guest draft data and proceed to next step
-      await saveGuestDraftFields();
+      // Save guest draft data and proceed to next step. Show progress on the
+      // button and cap the wait so a stalled network call can never leave
+      // Continue unresponsive — the local draft cache keeps every answer and
+      // the 30s auto-save retries in the background.
+      setIsSaving(true);
+      try {
+        await Promise.race([
+          saveGuestDraftFields(),
+          new Promise<never>((_, reject) =>
+            window.setTimeout(() => reject(new Error('guest-save-timeout')), 25000),
+          ),
+        ]);
+      } catch (err) {
+        console.warn('Guest save did not complete before continuing:', err);
+      } finally {
+        setIsSaving(false);
+      }
       // Move to next step manually
       const isRentalListing = listing?.mode === 'rent';
       const steps: PublishStep[] = isRentalListing
@@ -2016,12 +2031,37 @@ export const PublishWizard: React.FC = () => {
       }
 
       if (Object.keys(updateData).length > 0) {
-        const { error } = await supabase
-          .from('listings')
-          .update(updateData)
-          .eq('id', listing.id);
+        // Hard timeout: a stalled request (flaky network, auth token-refresh
+        // lock contention across tabs) must never leave the Continue button
+        // stuck on "Saving…" forever.
+        const controller = new AbortController();
+        const timeoutId = window.setTimeout(() => controller.abort(), 25000);
+        let savedCount = 0;
+        try {
+          const res = await supabase
+            .from('listings')
+            .update(updateData)
+            .eq('id', listing.id)
+            .abortSignal(controller.signal)
+            .select('id');
+          if (res.error) {
+            if (controller.signal.aborted) {
+              throw new Error('Saving timed out. Check your connection and tap Continue again — your answers are still on this page.');
+            }
+            throw res.error;
+          }
+          savedCount = Array.isArray(res.data) ? res.data.length : 0;
+        } finally {
+          window.clearTimeout(timeoutId);
+        }
 
-        if (error) throw error;
+        if (savedCount === 0) {
+          // PostgREST answered with zero rows: RLS silently rejected the write
+          // (e.g. the session expired mid-wizard). With the old return=minimal
+          // call this looked like a success and the wizard advanced without
+          // saving — exactly the "Saving… but nothing saves" report.
+          throw new Error('Your session may have expired. Sign in again, then tap Continue — your answers are still on this page.');
+        }
 
         // Update local state
         setListing(prev => prev ? { ...prev, ...updateData } : null);
