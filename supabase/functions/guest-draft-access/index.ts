@@ -53,6 +53,7 @@ const PATCH_ALLOWLIST = new Set([
   "city",
   "state",
   "zip_code",
+  "postal_code",
   "show_precise_location",
   "delivery_fee",
   "delivery_radius_miles",

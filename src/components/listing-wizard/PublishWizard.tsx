@@ -23,6 +23,13 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { publishListingIdempotent } from '@/lib/listings/publishListing';
+import {
+  buildLocationColumns,
+  structuredLocationChanged,
+  resolveListingCoordinates,
+  type GeoCandidate,
+  type StructuredLocationInput,
+} from '@/lib/listings/locationPersistence';
 import { saveWizardDraft, loadWizardDraft, clearWizardDraft, hasContent, mergeCached } from '@/lib/listings/wizardDraftCache';
 
 import { reportError } from '@/lib/errorReporter';
@@ -553,7 +560,6 @@ export const PublishWizard: React.FC = () => {
   const [hoursOfAccess, setHoursOfAccess] = useState('');
   const [locationNotes, setLocationNotes] = useState('');
   const [isStaticLocation, setIsStaticLocation] = useState(false);
-  const [pickupCoordinates, setPickupCoordinates] = useState<[number, number] | null>(null);
 
   // Availability step state
   const [availableFrom, setAvailableFrom] = useState<string | null>(null);
@@ -1189,6 +1195,12 @@ export const PublishWizard: React.FC = () => {
         hours_of_access: hoursOfAccess || listing.hours_of_access || null,
         location_notes: locationNotes || listing.location_notes || null,
 
+        // Structured location columns — persisted whenever the guest provided
+        // them pre-auth so claiming the draft never drops the verified location.
+        ...(locCity.trim() ? { city: locCity.trim() } : {}),
+        ...(locState.trim() ? { state: locState.trim() } : {}),
+        ...(locZipCode.trim() ? { postal_code: locZipCode.trim() } : {}),
+
         // Availability
         available_from: availableFrom || listing.available_from || null,
         available_to: availableTo || listing.available_to || null,
@@ -1310,6 +1322,52 @@ export const PublishWizard: React.FC = () => {
       .filter(Boolean)
       .join(', ');
   }, [streetAddress, aptSuite, locCity, locState, locZipCode]);
+
+  // Canonical geocoder (existing geocode-location edge function). Returns a
+  // normalized candidate or null — confidence gating lives in
+  // resolveListingCoordinates (result must anchor to the seller's ZIP/state).
+  const geocodeListingAddress = useCallback(async (query: string): Promise<GeoCandidate | null> => {
+    try {
+      const { data } = await supabase.functions.invoke('geocode-location', {
+        body: { query, limit: 1 },
+      });
+      const r = data?.results?.[0];
+      if (!r || !Array.isArray(r.center)) return null;
+      return {
+        lat: Number(r.center[1]),
+        lng: Number(r.center[0]),
+        placeName: String(r.placeName || ''),
+        city: r.city,
+        state: r.state,
+      };
+    } catch (err) {
+      console.warn('[PublishWizard] geocode-location failed:', err);
+      return null;
+    }
+  }, []);
+
+  // Location columns for save/publish payloads. Structured fields always
+  // persist; coordinates are only re-resolved and written when the location
+  // actually changed (stale coords get cleared, never silently kept).
+  const resolveLocationColumns = useCallback(async () => {
+    const locInput: StructuredLocationInput = {
+      streetAddress,
+      aptSuite,
+      city: locCity,
+      state: locState,
+      zipCode: locZipCode,
+    };
+    const changed = structuredLocationChanged(locInput, listing ?? {});
+    const coords = changed ? await resolveListingCoordinates(locInput, geocodeListingAddress) : undefined;
+    if (changed && !coords) {
+      console.warn('[PublishWizard] location changed but no confident geocode — clearing stale coordinates');
+    }
+    return buildLocationColumns(locInput, listing ?? {}, {
+      fallbackAddress: address,
+      fallbackPickupText: pickupLocationText,
+      coords: coords ?? null,
+    });
+  }, [streetAddress, aptSuite, locCity, locState, locZipCode, listing, address, pickupLocationText, geocodeListingAddress]);
 
   // For-sale listings that are delivery-only don't need a public pickup street address.
   const needsFullAddressForSale =
@@ -1886,19 +1944,11 @@ export const PublishWizard: React.FC = () => {
         const categoryIsStatic = isStaticLocationFn(listing.category);
         const effectiveFulfillmentType = (categoryIsStatic || isStaticLocation) ? 'on_site' : (fulfillmentType || 'pickup');
 
-        // Build structured address string
-        const fullAddress = buildStructuredAddress();
-
-        // Public pickup text is the approximate "City, ST" — never a phone number.
-        const approxLocation = [locCity.trim(), locState.trim()].filter(Boolean).join(', ');
-
         updateData = {
           fulfillment_type: effectiveFulfillmentType,
-          pickup_location_text: approxLocation || pickupLocationText || null,
-          address: fullAddress || address || null,
-          city: locCity.trim() || null,
-          state: locState.trim() || null,
-          postal_code: locZipCode.trim() || null,
+          // Structured city/state/ZIP always persist; coordinates are
+          // re-geocoded (or cleared) only when the location actually changed.
+          ...(await resolveLocationColumns()),
           delivery_fee: parseFloat(deliveryFee) || null,
           delivery_radius_miles: parseFloat(deliveryRadiusMiles) || null,
           delivery_fee_type: deliveryFeeType,
@@ -2087,10 +2137,11 @@ export const PublishWizard: React.FC = () => {
       const effectiveFulfillmentType = (categoryIsStatic || isStaticLocation)
         ? 'on_site'
         : (fulfillmentType || 'pickup');
+      // Structured location columns (city/state/ZIP always persist;
+      // coordinates re-resolved only when the location changed).
+      const locationColumns = await resolveLocationColumns();
+      // Display-only address for notification emails (never persisted).
       const fullAddress = buildStructuredAddress() || address;
-      // Public pickup text is the approximate "City, ST" — never a phone number.
-      const approxLocation = [locCity.trim(), locState.trim()].filter(Boolean).join(', ');
-      const pickupText = approxLocation || pickupLocationText;
 
       // Seller phone belongs on the private profile, never on the listing.
       await saveSellerPhone();
@@ -2139,11 +2190,7 @@ export const PublishWizard: React.FC = () => {
 
         // Location
         fulfillment_type: effectiveFulfillmentType,
-        pickup_location_text: pickupText || null,
-        address: fullAddress || null,
-        city: locCity.trim() || null,
-        state: locState.trim() || null,
-        postal_code: locZipCode.trim() || null,
+        ...locationColumns,
         delivery_fee: parseFloat(deliveryFee) || null,
         delivery_radius_miles: parseFloat(deliveryRadiusMiles) || null,
         delivery_fee_type: deliveryFeeType,
