@@ -1,6 +1,6 @@
 import { inchesToFeet, feetToInches, formatDimensionSummary } from '@/lib/listings/dimensions';
 import { productCheckoutUrl, hostedCheckoutUrl } from '@/lib/payments/hostedCheckout';
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useNavigate, useParams, useSearchParams, Link } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { ArrowLeft, Loader2, Send, ExternalLink, Check, Camera, DollarSign, FileText, Calendar, CreditCard, ChevronRight, Save, TrendingUp, TrendingDown, Target, Wallet, Info, Banknote, Zap, RotateCcw, Plus, X, Package, Scale, Ruler, MapPin, Truck, Building2, Eye, AlertCircle, Shield, Clock, ChevronDown, ChevronUp, GripVertical, Type, ListChecks } from 'lucide-react';
@@ -85,16 +85,14 @@ import { isListingFeatured } from '@/lib/featured';
 import { useCatalogPrice } from '@/hooks/useCatalogPrices';
 import { ACTIVE_PRODUCT_SLUGS } from '@/lib/monetization/catalogPricing';
 import { trackLeadEvent } from '@/lib/leadTracking';
-import { JourneyProgress, PrimaryActionBar, type JourneyStep } from '@/components/journey';
+import { PrimaryActionBar } from '@/components/journey';
 import {
   getStageRequirements,
   parseKnownProblems,
-  stageForStep,
   isTitledAsset,
   requiresSaleDimensions,
   MIN_GUIDED_PHOTOS,
 } from '@/lib/listings/stages';
-import { StageProgress } from './stages/StageProgress';
 import { StepWhat, type StepWhatValues } from './stages/StepWhat';
 import { ListingDisclosures, type DisclosureValues } from './stages/ListingDisclosures';
 import { PhotoGuidance } from './stages/PhotoGuidance';
@@ -245,6 +243,11 @@ export const PublishWizard: React.FC = () => {
   const [listing, setListing] = useState<ListingData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  // Re-entrancy guards: double-clicks and the periodic guest auto-save must
+  // never stack concurrent writes — queued requests contend on the client
+  // connection and duplicate network calls, compounding the "Saving…" stall.
+  const saveInFlightRef = useRef(false);
+  const guestSaveBusyRef = useRef(false);
 
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
