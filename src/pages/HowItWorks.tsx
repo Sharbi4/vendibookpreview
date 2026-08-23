@@ -28,6 +28,9 @@ import imgCoffee from '@/assets/food-truck-coffee.jpg';
 import imgPopcorn from '@/assets/food-truck-popcorn.jpg';
 import searchPageArt from '@/assets/education/search-page.svg.asset.json';
 import verificationArt from '@/assets/education/verification.svg.asset.json';
+import movingArt from '@/assets/education/moving.svg.asset.json';
+import documentsOkArt from '@/assets/education/documents-ok.svg.asset.json';
+import signArt from '@/assets/education/sign.svg.asset.json';
 
 /**
  * /how-it-works — brand story + guide, not an operations manual.
@@ -138,10 +141,14 @@ const DIFFERENCES: { title: string; body: string; art?: string; artAlt?: string 
   {
     title: 'Shop beyond local',
     body: 'Financing through third-party partners, pickup, seller delivery, and Vendibook Freight where available — so the right truck in another state is a real option, not just a saved tab.',
+    art: movingArt.url,
+    artAlt: 'Food truck being delivered across state lines',
   },
   {
     title: 'Keep the purchase together',
     body: 'Pay through PayPal online checkout or in person where the listing allows it, confirm the handoff, and find the whole transaction in one record when you need it.',
+    art: documentsOkArt.url,
+    artAlt: 'Transaction documents checked and in order',
   },
 ];
 
@@ -533,12 +540,20 @@ const HowItWorks = () => {
         <section className="py-12 md:py-20">
           <div className="container max-w-4xl mx-auto px-4">
             <motion.div {...(reduce ? {} : fadeUp)} className="text-center mb-10">
-              <img
-                src={verificationArt.url}
-                alt="Verified identity badge on a Vendibook profile"
-                loading="lazy"
-                className="mx-auto mb-6 h-28 w-28 rounded-3xl border border-border bg-card object-contain shadow-sm"
-              />
+              <div className="flex items-center justify-center gap-4 mb-6">
+                <img
+                  src={verificationArt.url}
+                  alt="Verified identity badge on a Vendibook profile"
+                  loading="lazy"
+                  className="h-28 w-28 rounded-3xl border border-border bg-card object-contain shadow-sm"
+                />
+                <img
+                  src={signArt.url}
+                  alt="A clear written agreement being signed"
+                  loading="lazy"
+                  className="h-28 w-28 rounded-3xl border border-border bg-card object-contain shadow-sm"
+                />
+              </div>
               <h2 className="text-2xl md:text-3xl font-bold text-foreground">
                 More confidence, fewer unknowns.
               </h2>
