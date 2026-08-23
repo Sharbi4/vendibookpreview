@@ -591,8 +591,11 @@ const Search = () => {
         <div className="relative border-b border-border/40 overflow-hidden">
           {/* Layered ambient background */}
           <div className="absolute inset-0 bg-gradient-to-b from-primary/[0.04] via-background to-background" />
-          <div className="absolute -top-32 -left-32 w-96 h-96 rounded-full bg-primary/10 blur-3xl pointer-events-none" />
-          <div className="absolute -top-20 right-0 w-80 h-80 rounded-full bg-primary/5 blur-3xl pointer-events-none" />
+          {/* Radial-gradient glows (no blur filter) — large blur-3xl layers
+              re-rasterize on scroll/keyboard on mobile GPUs and cause the
+              flicker/tearing seen during typing. Same fix as HeroBackground. */}
+          <div className="absolute -top-32 -left-32 w-96 h-96 rounded-full pointer-events-none" style={{ background: 'radial-gradient(closest-side, hsl(var(--primary) / 0.10) 0%, transparent 100%)' }} />
+          <div className="absolute -top-20 right-0 w-80 h-80 rounded-full pointer-events-none" style={{ background: 'radial-gradient(closest-side, hsl(var(--primary) / 0.05) 0%, transparent 100%)' }} />
           {/* Grid texture */}
           <div
             className="absolute inset-0 opacity-[0.015] pointer-events-none"
@@ -603,7 +606,7 @@ const Search = () => {
           />
           {/* Bottom glow line */}
           <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-2/3 h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
-          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1/3 h-[2px] bg-gradient-to-r from-transparent via-primary/25 to-transparent blur-sm" />
+          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1/3 h-[3px] bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
 
           <div className="container relative py-5 sm:py-6">
             {/* Title row — micro headline + live result chip */}
@@ -627,7 +630,7 @@ const Search = () => {
             <div className="flex gap-2 sm:gap-3">
               <div className="relative flex-1 group">
                 {/* Glow halo on focus */}
-                <div className="absolute -inset-px rounded-2xl bg-gradient-to-r from-primary/20 via-primary/10 to-primary/20 opacity-0 group-focus-within:opacity-100 blur-sm transition-opacity pointer-events-none" />
+                <div className="absolute -inset-px rounded-2xl opacity-0 group-focus-within:opacity-100 transition-opacity pointer-events-none" style={{ boxShadow: '0 0 0 4px hsl(var(--primary) / 0.10), 0 0 24px hsl(var(--primary) / 0.15)' }} />
                 <div className="relative flex items-center bg-[#faf8f5] border border-[#1b1714]/10 rounded-2xl shadow-[0_1px_2px_rgba(0,0,0,0.10),0_12px_28px_-22px_rgba(0,0,0,0.5)] group-focus-within:border-primary/50 group-focus-within:shadow-[0_2px_6px_rgba(0,0,0,0.12),0_16px_34px_-22px_rgba(0,0,0,0.55)] transition-all duration-200">
                   <SearchIcon className="absolute left-3.5 h-4 w-4 text-[#1b1714]/45 group-focus-within:text-primary transition-colors" />
                   <Input
