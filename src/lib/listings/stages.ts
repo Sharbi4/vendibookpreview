@@ -326,7 +326,7 @@ export function getStageRequirements(input: StageRequirementInput): StageRequire
         fieldId: 'listing-title-status',
         label: 'Select the title status',
         stage: 'details',
-        step: 'details',
+        step: 'includes',
       });
     }
     if (!input.hasLien) {
@@ -334,7 +334,7 @@ export function getStageRequirements(input: StageRequirementInput): StageRequire
         fieldId: 'listing-lien',
         label: 'Disclose whether there is a lien on the asset',
         stage: 'details',
-        step: 'details',
+        step: 'includes',
       });
     }
   }
@@ -344,7 +344,7 @@ export function getStageRequirements(input: StageRequirementInput): StageRequire
       fieldId: 'listing-known-problems',
       label: 'Select any known problems, or confirm there are none',
       stage: 'details',
-      step: 'details',
+      step: 'includes',
     });
   }
 
@@ -358,7 +358,7 @@ export function getStageRequirements(input: StageRequirementInput): StageRequire
       fieldId: `known-problem-${unexplained[0].category}`,
       label: 'Add a short explanation for each problem you selected',
       stage: 'details',
-      step: 'details',
+      step: 'includes',
     });
   }
 
@@ -367,7 +367,7 @@ export function getStageRequirements(input: StageRequirementInput): StageRequire
       fieldId: 'listing-included-items',
       label: 'Describe what is included in the advertised price',
       stage: 'details',
-      step: 'details',
+      step: 'includes',
     });
   }
 
@@ -377,7 +377,7 @@ export function getStageRequirements(input: StageRequirementInput): StageRequire
         fieldId: 'length_ft',
         label: 'Enter the overall length in feet',
         stage: 'details',
-        step: 'details',
+        step: 'includes',
       });
     }
     if (!input.heightInches || input.heightInches <= 0) {
@@ -385,7 +385,7 @@ export function getStageRequirements(input: StageRequirementInput): StageRequire
         fieldId: 'height_ft',
         label: 'Enter the overall height in feet',
         stage: 'details',
-        step: 'details',
+        step: 'includes',
       });
     }
   }
@@ -395,7 +395,7 @@ export function getStageRequirements(input: StageRequirementInput): StageRequire
       fieldId: 'listing-photo-exclusions',
       label: 'Answer whether anything shown in the photos is not included',
       stage: 'details',
-      step: 'details',
+      step: 'includes',
     });
   }
 
