@@ -160,7 +160,28 @@ const JOURNEY: {
   art?: string;
   artAlt?: string;
 }[] = [
-...
+  {
+    icon: Search,
+    title: 'Browse listings built for your business',
+    body: 'Search food trucks, food trailers, and vendor equipment by location, price, and category — and save the ones worth a second look.',
+    tags: ['Search & filters', 'Saved listings'],
+    art: deliveryMapArt.url,
+    artAlt: 'A map of food truck listings across cities and states',
+  },
+  {
+    icon: ReceiptText,
+    title: 'Ask questions. Compare. Make an offer.',
+    body: (
+      <>
+        Message the seller directly, clarify the details that matter, and{' '}
+        <InlineLink to="/help/making-offers">submit an offer</InlineLink> where the listing supports
+        it. You can take your time before deciding to move forward.
+      </>
+    ),
+    tags: ['Message the seller', 'Offers where available'],
+    art: businessNegotiationArt.url,
+    artAlt: 'A buyer and seller negotiating an offer',
+  },
   {
     icon: CreditCard,
     title: 'Choose how you want to pay',
