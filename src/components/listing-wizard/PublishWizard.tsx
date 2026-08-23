@@ -768,15 +768,17 @@ export const PublishWizard: React.FC = () => {
 
   // Auto-save guest draft fields (title, description, pricing) periodically
   // This uses RLS policy "Allow guest draft updates with token"
-  const saveGuestDraftFields = async () => {
-    if (!isGuestDraft || !listing || !listingId) return;
+  // Returns true when the draft row was actually persisted — Save & exit
+  // relies on this to avoid leaving with unsaved changes.
+  const saveGuestDraftFields = async (): Promise<boolean> => {
+    if (!isGuestDraft || !listing || !listingId) return false;
     // Skip overlapping saves: the step-change effect, the 30s interval,
     // beforeunload and the Continue click can otherwise stack concurrent
     // invokes that duplicate writes and contend on the client connection.
-    if (guestSaveBusyRef.current) return;
-    
+    if (guestSaveBusyRef.current) return false;
+
     const guestDraft = getGuestDraft();
-    if (!guestDraft || guestDraft.listingId !== listingId) return;
+    if (!guestDraft || guestDraft.listingId !== listingId) return false;
 
     guestSaveBusyRef.current = true;
     try {
@@ -865,11 +867,13 @@ export const PublishWizard: React.FC = () => {
 
       if (error) {
         console.warn('Guest draft auto-save failed:', (error as any).message);
-      } else {
-        console.log('Guest draft auto-saved successfully');
+        return false;
       }
+      console.log('Guest draft auto-saved successfully');
+      return true;
     } catch (err) {
       console.warn('Guest draft auto-save error:', err);
+      return false;
     } finally {
       guestSaveBusyRef.current = false;
     }
