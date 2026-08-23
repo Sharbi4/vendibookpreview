@@ -175,7 +175,7 @@ const Search = () => {
 
   // Build search request params for edge function
   const searchRequestParams = useMemo(() => ({
-    query: searchQuery.trim() || undefined,
+    query: debouncedQuery.trim() || undefined,
     mode: mode !== 'all' ? mode : undefined,
     category: category !== 'all' ? category : undefined,
     latitude: locationCoords?.[1],
@@ -194,7 +194,7 @@ const Search = () => {
     page,
     page_size: 20,
     sort_by: sortBy === 'price-low' ? 'price_low' : sortBy === 'price-high' ? 'price_high' : sortBy,
-  }), [searchQuery, mode, category, locationCoords, searchRadius, dateRange, selectedAmenities, priceRange, instantBookOnly, verifiedHostsOnly, featuredOnly, deliveryFilterEnabled, fulfillmentTypes, page, sortBy]);
+  }), [debouncedQuery, mode, category, locationCoords, searchRadius, dateRange, selectedAmenities, priceRange, instantBookOnly, verifiedHostsOnly, featuredOnly, deliveryFilterEnabled, fulfillmentTypes, page, sortBy]);
 
 
   // Fetch listings from edge function
@@ -223,7 +223,7 @@ const Search = () => {
     if (isLoadingListings) return;
     const t = setTimeout(() => {
       const payload = {
-        query: searchQuery.trim() || undefined,
+        query: debouncedQuery.trim() || undefined,
         mode: mode !== 'all' ? mode : 'all',
         category: category !== 'all' ? category : 'all',
         locationText: locationText || undefined,
@@ -242,7 +242,7 @@ const Search = () => {
     }, 600);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchQuery, mode, category, locationText, totalCount, page, isLoadingListings]);
+  }, [debouncedQuery, mode, category, locationText, totalCount, page, isLoadingListings]);
 
 
 
@@ -504,10 +504,10 @@ const Search = () => {
     return generateItemListSchema(productItems, {
       mode: mode as 'rent' | 'sale' | 'all',
       category: category !== 'all' ? category : undefined,
-      query: searchQuery || undefined,
+      query: debouncedQuery || undefined,
       location: locationText || undefined,
     });
-  }, [listings, mode, category, searchQuery, locationText]);
+  }, [listings, mode, category, debouncedQuery, locationText]);
 
   const breadcrumbSchema = useMemo(() => generateSearchBreadcrumbSchema({
     mode: mode as 'rent' | 'sale' | 'all',
@@ -754,7 +754,7 @@ const Search = () => {
                       <span className="font-bold text-foreground tabular-nums">{totalCount.toLocaleString()}</span>
                       {' '}listing{totalCount !== 1 ? 's' : ''}
                       {searchQuery && (
-                        <span className="hidden sm:inline"> matching <span className="font-medium text-foreground">"{searchQuery}"</span></span>
+                        <span className="hidden sm:inline"> matching <span className="font-medium text-foreground">"{debouncedQuery}"</span></span>
                       )}
                       {totalPages > 1 && (
                         <span className="hidden md:inline text-muted-foreground/70"> · pg {page}/{totalPages}</span>
