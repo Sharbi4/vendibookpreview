@@ -165,7 +165,7 @@ const NEXT_STEPS: Record<FulfillmentSelection, { title: string; body: string }[]
   ],
   vendibook_freight: [
     { title: 'Freight scheduling', body: 'Vendibook Freight contacts you within 2 business days to schedule pickup and delivery.' },
-    { title: 'Nationwide transit', body: '7–10 business days typical transit. You\'ll get tracking updates throughout.' },
+    { title: 'Transit', body: '7–10 business days is the typical transit estimate; actual pickup and transit times can vary.' },
     { title: 'Inspect on delivery', body: 'Inspect the item before signing. Note any damage on the driver\'s BOL immediately.' },
   ],
 };

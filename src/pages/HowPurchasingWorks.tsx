@@ -316,7 +316,7 @@ const RESOURCES = [
     title: 'Vendibook Freight',
     body: 'See how long-distance transport works and what to expect when Freight is available.',
     cta: 'Explore Vendibook Freight',
-    to: '/help/shipping-freight',
+    to: '/vendibook-freight',
   },
   {
     icon: FileText,
