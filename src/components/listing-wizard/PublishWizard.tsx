@@ -2584,8 +2584,6 @@ export const PublishWizard: React.FC = () => {
       ? (isValidPrice(priceSale) ? `$${parseFloat(priceSale.replace(/[^0-9.]/g, '')).toLocaleString()}` : undefined)
       : (isValidPrice(priceDaily) ? `$${parseFloat(priceDaily.replace(/[^0-9.]/g, ''))}/day` : undefined)};
 
-  const checklistItems = createChecklistItems(checklistState, step);
-
   // Content requirements (single source of truth for the Phase 2 fields).
   // This never contains identity-verification, payout or merchant-onboarding gates.
   const stageMissing = listing
@@ -2618,12 +2616,6 @@ export const PublishWizard: React.FC = () => {
     ...stageMissing.map((r) => r.label),
     ...(allAttested(attestations) ? [] : ['Confirm the statements at the bottom of this page']),
   ];
-
-
-  // Per-step required answers. Steps can't be skipped while these are missing.
-  const basicsMissing = stageMissing.filter((r) => r.step === 'basics');
-  // Disclosure requirements are collected on the "What's included" step.
-  const includesMissing = stageMissing.filter((r) => r.step === 'details');
 
 
   const displayAddress = buildStructuredAddress() || address;
