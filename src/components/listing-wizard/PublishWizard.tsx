@@ -1,6 +1,6 @@
 import { inchesToFeet, feetToInches, formatDimensionSummary } from '@/lib/listings/dimensions';
 import { productCheckoutUrl, hostedCheckoutUrl } from '@/lib/payments/hostedCheckout';
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useNavigate, useParams, useSearchParams, Link } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { ArrowLeft, Loader2, Send, ExternalLink, Check, Camera, DollarSign, FileText, Calendar, CreditCard, ChevronRight, Save, TrendingUp, TrendingDown, Target, Wallet, Info, Banknote, Zap, RotateCcw, Plus, X, Package, Scale, Ruler, MapPin, Truck, Building2, Eye, AlertCircle, Shield, Clock, ChevronDown, ChevronUp, GripVertical, Type, ListChecks } from 'lucide-react';
@@ -85,16 +85,14 @@ import { isListingFeatured } from '@/lib/featured';
 import { useCatalogPrice } from '@/hooks/useCatalogPrices';
 import { ACTIVE_PRODUCT_SLUGS } from '@/lib/monetization/catalogPricing';
 import { trackLeadEvent } from '@/lib/leadTracking';
-import { JourneyProgress, PrimaryActionBar, type JourneyStep } from '@/components/journey';
+import { PrimaryActionBar } from '@/components/journey';
 import {
   getStageRequirements,
   parseKnownProblems,
-  stageForStep,
   isTitledAsset,
   requiresSaleDimensions,
   MIN_GUIDED_PHOTOS,
 } from '@/lib/listings/stages';
-import { StageProgress } from './stages/StageProgress';
 import { StepWhat, type StepWhatValues } from './stages/StepWhat';
 import { ListingDisclosures, type DisclosureValues } from './stages/ListingDisclosures';
 import { PhotoGuidance } from './stages/PhotoGuidance';
@@ -245,6 +243,11 @@ export const PublishWizard: React.FC = () => {
   const [listing, setListing] = useState<ListingData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  // Re-entrancy guards: double-clicks and the periodic guest auto-save must
+  // never stack concurrent writes — queued requests contend on the client
+  // connection and duplicate network calls, compounding the "Saving…" stall.
+  const saveInFlightRef = useRef(false);
+  const guestSaveBusyRef = useRef(false);
 
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
@@ -767,10 +770,15 @@ export const PublishWizard: React.FC = () => {
   // This uses RLS policy "Allow guest draft updates with token"
   const saveGuestDraftFields = async () => {
     if (!isGuestDraft || !listing || !listingId) return;
+    // Skip overlapping saves: the step-change effect, the 30s interval,
+    // beforeunload and the Continue click can otherwise stack concurrent
+    // invokes that duplicate writes and contend on the client connection.
+    if (guestSaveBusyRef.current) return;
     
     const guestDraft = getGuestDraft();
     if (!guestDraft || guestDraft.listingId !== listingId) return;
 
+    guestSaveBusyRef.current = true;
     try {
       const safeParsePrice = (value: string): number | null => {
         if (!value || !value.trim()) return null;
@@ -862,6 +870,8 @@ export const PublishWizard: React.FC = () => {
       }
     } catch (err) {
       console.warn('Guest draft auto-save error:', err);
+    } finally {
+      guestSaveBusyRef.current = false;
     }
   };
 
@@ -1840,10 +1850,31 @@ export const PublishWizard: React.FC = () => {
   };
 
   const saveStep = async () => {
-    if (!listing) return;
+    if (!listing || saveInFlightRef.current) return;
+    saveInFlightRef.current = true;
     setIsSaving(true);
 
     try {
+      // Pre-flight session check with a hard cap. supabase-js serializes
+      // every request through the auth token-refresh lock, and the
+      // AbortSignal on the PATCH below only cancels the fetch itself — not
+      // the lock wait — so a stalled token refresh would pin Continue on
+      // "Saving…" for minutes (the reported ~2 minute stall). Surface it in
+      // 10s as a retryable error; on success the token is freshly cached, so
+      // the PATCH no longer queues behind a refresh.
+      await Promise.race([
+        supabase.auth.getSession(),
+        new Promise<never>((_, reject) =>
+          window.setTimeout(
+            () =>
+              reject(
+                new Error('Your session check timed out. Tap Continue again — your answers are still on this page.'),
+              ),
+            10000,
+          ),
+        ),
+      ]);
+
       let updateData: any = {};
 
       if (step === 'basics') {
@@ -2046,25 +2077,32 @@ export const PublishWizard: React.FC = () => {
         // lock contention across tabs) must never leave the Continue button
         // stuck on "Saving…" forever.
         const controller = new AbortController();
-        const timeoutId = window.setTimeout(() => controller.abort(), 25000);
         let savedCount = 0;
+        const patchPromise = supabase
+          .from('listings')
+          .update(updateData)
+          .eq('id', listing.id)
+          .abortSignal(controller.signal)
+          .select('id');
+        let saveTimeoutId: number | undefined;
+        const saveTimeoutPromise = new Promise<never>((_, reject) => {
+          saveTimeoutId = window.setTimeout(() => {
+            controller.abort();
+            reject(new Error('Saving timed out. Check your connection and tap Continue again — your answers are still on this page.'));
+          }, 25000);
+        });
+        // Promise.race is the guaranteed cap — AbortSignal alone cannot
+        // interrupt supabase-js's internal token-refresh lock wait.
+        let res: Awaited<typeof patchPromise>;
         try {
-          const res = await supabase
-            .from('listings')
-            .update(updateData)
-            .eq('id', listing.id)
-            .abortSignal(controller.signal)
-            .select('id');
-          if (res.error) {
-            if (controller.signal.aborted) {
-              throw new Error('Saving timed out. Check your connection and tap Continue again — your answers are still on this page.');
-            }
-            throw res.error;
-          }
-          savedCount = Array.isArray(res.data) ? res.data.length : 0;
+          res = await Promise.race([patchPromise, saveTimeoutPromise]);
         } finally {
-          window.clearTimeout(timeoutId);
+          if (saveTimeoutId) window.clearTimeout(saveTimeoutId);
         }
+        if (res.error) {
+          throw res.error;
+        }
+        savedCount = Array.isArray(res.data) ? res.data.length : 0;
 
         if (savedCount === 0) {
           // PostgREST answered with zero rows: RLS silently rejected the write
@@ -2100,6 +2138,7 @@ export const PublishWizard: React.FC = () => {
           : 'Your changes were not saved. Check your connection and try again.',
         variant: 'destructive'});
     } finally {
+      saveInFlightRef.current = false;
       setIsSaving(false);
     }
   };
@@ -2545,8 +2584,6 @@ export const PublishWizard: React.FC = () => {
       ? (isValidPrice(priceSale) ? `$${parseFloat(priceSale.replace(/[^0-9.]/g, '')).toLocaleString()}` : undefined)
       : (isValidPrice(priceDaily) ? `$${parseFloat(priceDaily.replace(/[^0-9.]/g, ''))}/day` : undefined)};
 
-  const checklistItems = createChecklistItems(checklistState, step);
-
   // Content requirements (single source of truth for the Phase 2 fields).
   // This never contains identity-verification, payout or merchant-onboarding gates.
   const stageMissing = listing
@@ -2566,6 +2603,18 @@ export const PublishWizard: React.FC = () => {
       })
     : [];
 
+  // Per-step required answers. Steps can't be skipped while these are missing.
+  const basicsMissing = stageMissing.filter((r) => r.step === 'basics');
+  // Disclosure requirements are collected on the "What's included" step.
+  const includesMissing = stageMissing.filter((r) => r.step === 'details');
+
+  // Launch Checklist is the single progress/navigation system; 'basics'
+  // completion feeds its first item so sellers can jump back freely.
+  const checklistItems = createChecklistItems(
+    { ...checklistState, hasBasics: basicsMissing.length === 0 },
+    step,
+  );
+
   const stageRequirementsMet =
     checklistItems.filter(i => i.required).every(i => i.completed) && stageMissing.length === 0;
   const canPublish = stageRequirementsMet && allAttested(attestations);
@@ -2579,12 +2628,6 @@ export const PublishWizard: React.FC = () => {
     ...stageMissing.map((r) => r.label),
     ...(allAttested(attestations) ? [] : ['Confirm the statements at the bottom of this page']),
   ];
-
-
-  // Per-step required answers. Steps can't be skipped while these are missing.
-  const basicsMissing = stageMissing.filter((r) => r.step === 'basics');
-  // Disclosure requirements are collected on the "What's included" step.
-  const includesMissing = stageMissing.filter((r) => r.step === 'details');
 
 
   const displayAddress = buildStructuredAddress() || address;
@@ -2612,41 +2655,6 @@ export const PublishWizard: React.FC = () => {
 
   if (!listing) return null;
 
-  // ─── Journey progress (single source of truth) ───
-  // Mirrors the step order used by saveStep()/handleDetailsSave() so the
-  // indicator, the "Continue" primary action, and the actual navigation
-  // can't drift apart.
-  const isRentalListing = listing.mode === 'rent';
-  const wizardStepOrder: PublishStep[] = isRentalListing
-    ? ['basics', 'photos', 'headline', 'includes', 'pricing', 'availability', 'location', 'documents', 'review']
-    : ['basics', 'photos', 'headline', 'includes', 'pricing', 'location', 'review'];
-
-  const stepMeta: Record<PublishStep, { label: string; hint?: string; optional?: boolean }> = {
-    basics: { label: 'Basics', hint: 'Category, year and condition' },
-    photos: { label: 'Media', hint: 'At least 3 photos — drag to reorder' },
-
-    headline: { label: 'Headline', hint: 'Title & description' },
-    includes: { label: "What's included", hint: 'Highlights & amenities' },
-    pricing: {
-      label: 'Pricing',
-      hint: listing.mode === 'sale' ? 'Set your asking price' : 'Daily & weekly rates',
-    },
-    availability: { label: 'Availability', hint: 'When renters can book' },
-    details: { label: 'Details' },
-    location: { label: 'Location', hint: 'Where & how it changes hands' },
-    documents: { label: 'Documents', hint: 'Required rental paperwork' },
-    review: { label: 'Review & publish', hint: 'Preview and go live' },
-  };
-
-  const journeySteps: JourneyStep[] = wizardStepOrder.map((id) => ({
-    id,
-    label: stepMeta[id].label,
-    hint: stepMeta[id].hint,
-    optional: stepMeta[id].optional,
-  }));
-  // 'details' is an off-path step (not in the linear order); pin the
-  // indicator to the closest linear step (photos) if that's the current view.
-  const currentJourneyIndex = Math.max(0, wizardStepOrder.indexOf(step));
 
   return (
     <div className="min-h-screen bg-background">
@@ -2690,12 +2698,6 @@ export const PublishWizard: React.FC = () => {
 
           {/* Main Content */}
           <div className="lg:col-span-2">
-            {/* Persistent journey progress — visible on every step, every breakpoint */}
-            <JourneyProgress
-              steps={journeySteps}
-              currentIndex={currentJourneyIndex}
-              className="mb-6"
-            />
 
             {/* Mobile Checklist - hide publish button when on review step to avoid duplicate */}
             <div className="lg:hidden mb-6">
@@ -2706,12 +2708,6 @@ export const PublishWizard: React.FC = () => {
                 hidePublishButton={step === 'review'}
               />
             </div>
-            <StageProgress
-              currentStage={stageForStep(step)}
-              signedIn={!!user}
-
-              className="mb-6"
-            />
 
             <div className="bg-card rounded-2xl shadow-sm border p-6 md:p-8">
               <MissingRequirementsAlert blockers={stepBlockers} className="mb-6" />

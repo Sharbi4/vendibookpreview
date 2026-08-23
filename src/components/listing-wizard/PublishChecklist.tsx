@@ -64,7 +64,7 @@ export const PublishChecklist: React.FC<PublishChecklistProps> = ({
   onPublishClick,
   hidePublishButton = false,
   className,
-  defaultExpanded = false}) => {
+  defaultExpanded = true}) => {
   const [expanded, setExpanded] = useState(defaultExpanded);
   const completedCount = items.filter(i => i.completed).length;
   const requiredItems = items.filter(i => i.required);
@@ -138,7 +138,7 @@ export const PublishChecklist: React.FC<PublishChecklistProps> = ({
             {items.map((item) => (
               <button
                 key={item.id}
-                onClick={() => { onItemClick?.(item.id); setExpanded(false); }}
+                onClick={() => onItemClick?.(item.id)}
                 className={cn(
                   "w-full flex items-center gap-3 p-2.5 rounded-xl text-left transition-all",
                   item.current
@@ -192,6 +192,7 @@ export const createChecklistItems = (
     hasAvailability: boolean;
     hasDescription: boolean;
     hasLocation: boolean;
+    hasBasics?: boolean;
     isRental: boolean;
     photoCount?: number;
     priceSet?: string;
@@ -250,6 +251,15 @@ export const createChecklistItems = (
   };
 
   const items: ChecklistItem[] = [
+    {
+      id: 'basics',
+      label: 'The Basics',
+      icon: <Check className="w-4 h-4" />,
+      completed: formState.hasBasics ?? true,
+      required: true,
+      current: currentStep === 'basics',
+      statusHint: (formState.hasBasics ?? true) ? 'Complete' : 'Not started',
+      progress: (formState.hasBasics ?? true) ? 1 : 0},
     {
       id: 'photos',
       label: 'Photos & Media',
