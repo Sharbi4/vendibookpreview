@@ -2651,41 +2651,6 @@ export const PublishWizard: React.FC = () => {
 
   if (!listing) return null;
 
-  // ─── Journey progress (single source of truth) ───
-  // Mirrors the step order used by saveStep()/handleDetailsSave() so the
-  // indicator, the "Continue" primary action, and the actual navigation
-  // can't drift apart.
-  const isRentalListing = listing.mode === 'rent';
-  const wizardStepOrder: PublishStep[] = isRentalListing
-    ? ['basics', 'photos', 'headline', 'includes', 'pricing', 'availability', 'location', 'documents', 'review']
-    : ['basics', 'photos', 'headline', 'includes', 'pricing', 'location', 'review'];
-
-  const stepMeta: Record<PublishStep, { label: string; hint?: string; optional?: boolean }> = {
-    basics: { label: 'Basics', hint: 'Category, year and condition' },
-    photos: { label: 'Media', hint: 'At least 3 photos — drag to reorder' },
-
-    headline: { label: 'Headline', hint: 'Title & description' },
-    includes: { label: "What's included", hint: 'Highlights & amenities' },
-    pricing: {
-      label: 'Pricing',
-      hint: listing.mode === 'sale' ? 'Set your asking price' : 'Daily & weekly rates',
-    },
-    availability: { label: 'Availability', hint: 'When renters can book' },
-    details: { label: 'Details' },
-    location: { label: 'Location', hint: 'Where & how it changes hands' },
-    documents: { label: 'Documents', hint: 'Required rental paperwork' },
-    review: { label: 'Review & publish', hint: 'Preview and go live' },
-  };
-
-  const journeySteps: JourneyStep[] = wizardStepOrder.map((id) => ({
-    id,
-    label: stepMeta[id].label,
-    hint: stepMeta[id].hint,
-    optional: stepMeta[id].optional,
-  }));
-  // 'details' is an off-path step (not in the linear order); pin the
-  // indicator to the closest linear step (photos) if that's the current view.
-  const currentJourneyIndex = Math.max(0, wizardStepOrder.indexOf(step));
 
   return (
     <div className="min-h-screen bg-background">
@@ -2729,12 +2694,6 @@ export const PublishWizard: React.FC = () => {
 
           {/* Main Content */}
           <div className="lg:col-span-2">
-            {/* Persistent journey progress — visible on every step, every breakpoint */}
-            <JourneyProgress
-              steps={journeySteps}
-              currentIndex={currentJourneyIndex}
-              className="mb-6"
-            />
 
             {/* Mobile Checklist - hide publish button when on review step to avoid duplicate */}
             <div className="lg:hidden mb-6">
@@ -2745,12 +2704,6 @@ export const PublishWizard: React.FC = () => {
                 hidePublishButton={step === 'review'}
               />
             </div>
-            <StageProgress
-              currentStage={stageForStep(step)}
-              signedIn={!!user}
-
-              className="mb-6"
-            />
 
             <div className="bg-card rounded-2xl shadow-sm border p-6 md:p-8">
               <MissingRequirementsAlert blockers={stepBlockers} className="mb-6" />
