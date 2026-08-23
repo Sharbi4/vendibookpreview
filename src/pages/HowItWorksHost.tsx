@@ -29,6 +29,7 @@ import SEO from '@/components/SEO';
 import JsonLd from '@/components/JsonLd';
 import imgHosting from '@/assets/how-hosting-hero.jpg';
 import imgKitchen from '@/assets/concierge-kitchen.jpg';
+import documentsOkArt from '@/assets/education/documents-ok.svg.asset.json';
 
 /**
  * /how-it-works-host — the warm, editorial host/rental guide.
@@ -314,17 +315,28 @@ const HowItWorksHost = () => {
         {/* A — YOU STAY IN CONTROL */}
         <section className="py-12 md:py-20 border-y border-border bg-card/40">
           <div className="container max-w-6xl mx-auto px-4">
-            <motion.div {...(reduce ? {} : fadeUp)} className="mb-10 max-w-2xl">
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground mb-2">
-                Hosting, your way
-              </p>
-              <h2 className="text-2xl md:text-3xl font-bold text-foreground">
-                You stay in control.
-              </h2>
-              <p className="text-base text-muted-foreground mt-3 leading-relaxed">
-                It’s your truck, your kitchen, your space. Vendibook handles the
-                discovery and the paperwork of booking — the decisions stay with you.
-              </p>
+            <motion.div
+              {...(reduce ? {} : fadeUp)}
+              className="mb-10 flex items-center justify-between gap-8"
+            >
+              <div className="max-w-2xl">
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground mb-2">
+                  Hosting, your way
+                </p>
+                <h2 className="text-2xl md:text-3xl font-bold text-foreground">
+                  You stay in control.
+                </h2>
+                <p className="text-base text-muted-foreground mt-3 leading-relaxed">
+                  It’s your truck, your kitchen, your space. Vendibook handles the
+                  discovery and the paperwork of booking — the decisions stay with you.
+                </p>
+              </div>
+              <img
+                src={documentsOkArt.url}
+                alt="Renter documents and house rules kept in one place"
+                loading="lazy"
+                className="hidden md:block h-32 w-auto shrink-0 rounded-2xl border border-border bg-card object-contain shadow-sm"
+              />
             </motion.div>
 
             <div className="grid sm:grid-cols-3 gap-8 md:gap-10">

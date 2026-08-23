@@ -19,6 +19,7 @@ import Footer from '@/components/layout/Footer';
 import { Button } from '@/components/ui/button';
 import { EquinoxFundingLogo } from '@/components/brand/ProviderLogos';
 import { FinancingAvailableBadge } from '@/components/financing/FinancingAvailableBadge';
+import loanArt from '@/assets/education/loan.svg.asset.json';
 import {
   trackFinancingApplyClick,
   trackFinancingPageViewed,
@@ -244,6 +245,20 @@ const Financing = () => {
               <p className="mt-4 text-xs text-muted-foreground">
                 You’ll leave Vendibook to apply on Equinox Funding’s site.
               </p>
+            </motion.div>
+
+            <motion.div
+              initial={reduce ? undefined : { opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: reduce ? 0 : 0.15 }}
+              className="mt-10 mx-auto max-w-xl overflow-hidden rounded-3xl border border-border bg-card p-4 shadow-[0_18px_50px_-24px_rgba(0,0,0,0.15)]"
+            >
+              <img
+                src={loanArt.url}
+                alt="Financing a food truck purchase"
+                loading="lazy"
+                className="mx-auto h-auto w-full max-w-sm object-contain"
+              />
             </motion.div>
 
             {/* Listing context — only for a publicly visible for-sale listing */}

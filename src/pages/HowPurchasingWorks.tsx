@@ -21,6 +21,7 @@ import {
   BadgeDollarSign,
   KeyRound,
   Route as RouteIcon,
+  type LucideIcon,
 } from 'lucide-react';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
@@ -28,6 +29,9 @@ import SEO from '@/components/SEO';
 import { Button } from '@/components/ui/button';
 import { PayPalMonogram, EquinoxFundingLogo } from '@/components/brand/ProviderLogos';
 import { cn } from '@/lib/utils';
+import businessNegotiationArt from '@/assets/education/business-negotiation.svg.asset.json';
+import securePaymentArt from '@/assets/education/secure-payment.svg.asset.json';
+import deliveryMapArt from '@/assets/education/delivery-map.svg.asset.json';
 
 /**
  * /how-purchasing-works — buyer education page for for-sale equipment.
@@ -145,7 +149,14 @@ const HeroJourneyVisual = () => {
 /* Six-stage journey                                                   */
 /* ------------------------------------------------------------------ */
 
-const JOURNEY = [
+const JOURNEY: {
+  icon: LucideIcon;
+  title: string;
+  body: string;
+  tags: string[];
+  art?: string;
+  artAlt?: string;
+}[] = [
   {
     icon: Search,
     title: 'Find a truck that fits your business',
@@ -157,12 +168,16 @@ const JOURNEY = [
     title: 'Ask questions. Compare. Make an offer.',
     body: 'Message the seller directly, clarify the details that matter, and submit an offer where the listing supports it. You can take your time before deciding to move forward.',
     tags: ['Message the seller', 'Offers where available'],
+    art: businessNegotiationArt.url,
+    artAlt: 'A buyer and seller negotiating an offer',
   },
   {
     icon: CreditCard,
     title: 'Choose how you want to pay',
     body: 'When online checkout is offered, you can pay through Vendibook’s PayPal checkout. If the seller allows Pay in Person, you can arrange payment directly at pickup or delivery instead.',
     tags: ['PayPal checkout', 'Pay in Person'],
+    art: securePaymentArt.url,
+    artAlt: 'Paying securely online with PayPal checkout',
   },
   {
     icon: MailCheck,
@@ -447,6 +462,14 @@ const HowPurchasingWorks = () => {
                       ))}
                     </div>
                   </div>
+                  {stage.art && (
+                    <img
+                      src={stage.art}
+                      alt={stage.artAlt ?? ''}
+                      loading="lazy"
+                      className="ml-auto hidden sm:block h-20 w-20 shrink-0 self-center rounded-2xl border border-border bg-background object-contain p-1.5 shadow-sm"
+                    />
+                  )}
                 </motion.li>
               ))}
             </ol>
@@ -504,6 +527,12 @@ const HowPurchasingWorks = () => {
                 Buy nearby or shop farther from home — the right delivery option can make more inventory
                 possible.
               </p>
+              <img
+                src={deliveryMapArt.url}
+                alt="Delivery route map from a seller to a buyer"
+                loading="lazy"
+                className="mx-auto mt-8 h-32 w-auto rounded-3xl border border-border bg-card object-contain shadow-sm"
+              />
             </motion.div>
 
             <div className="grid md:grid-cols-3 gap-4 md:gap-5">

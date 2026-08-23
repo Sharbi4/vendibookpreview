@@ -30,6 +30,7 @@ import SEO from '@/components/SEO';
 import JsonLd from '@/components/JsonLd';
 import imgSelling from '@/assets/how-selling-hero.jpg';
 import imgGrilledCheese from '@/assets/food-truck-grilled-cheese.jpg';
+import documentsOkArt from '@/assets/education/documents-ok.svg.asset.json';
 
 /**
  * /how-it-works-seller — the warm, editorial seller guide.
@@ -344,17 +345,28 @@ const HowItWorksSeller = () => {
         {/* B — MAKE THE LISTING WORTH OPENING */}
         <section className="py-12 md:py-20">
           <div className="container max-w-6xl mx-auto px-4">
-            <motion.div {...(reduce ? {} : fadeUp)} className="mb-10 max-w-2xl">
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground mb-2">
-                Your listing
-              </p>
-              <h2 className="text-2xl md:text-3xl font-bold text-foreground">
-                Make the listing worth opening.
-              </h2>
-              <p className="text-base text-muted-foreground mt-3 leading-relaxed">
-                The listings that get real messages are the ones that answer questions
-                before they’re asked. You don’t need a studio — you need completeness.
-              </p>
+            <motion.div
+              {...(reduce ? {} : fadeUp)}
+              className="mb-10 flex items-center justify-between gap-8"
+            >
+              <div className="max-w-2xl">
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground mb-2">
+                  Your listing
+                </p>
+                <h2 className="text-2xl md:text-3xl font-bold text-foreground">
+                  Make the listing worth opening.
+                </h2>
+                <p className="text-base text-muted-foreground mt-3 leading-relaxed">
+                  The listings that get real messages are the ones that answer questions
+                  before they’re asked. You don’t need a studio — you need completeness.
+                </p>
+              </div>
+              <img
+                src={documentsOkArt.url}
+                alt="Listing details and documents checked and in order"
+                loading="lazy"
+                className="hidden md:block h-32 w-auto shrink-0 rounded-2xl border border-border bg-card object-contain shadow-sm"
+              />
             </motion.div>
 
             <div className="grid sm:grid-cols-3 gap-8 md:gap-10">
