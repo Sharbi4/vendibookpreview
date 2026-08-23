@@ -668,6 +668,78 @@ const VendibookFreight = () => {
           </div>
         </section>
 
+        {/* COVERAGE & FLEXIBILITY */}
+        <section className="py-12 md:py-16 border-y border-border bg-card/40">
+          <div className="container max-w-6xl mx-auto px-4">
+            <div className="grid lg:grid-cols-2 gap-10 lg:gap-14 items-center">
+              <motion.div {...(reduce ? {} : fadeUp)}>
+                <img
+                  src={deliveryMapArt.url}
+                  alt="Map of arranged food truck freight routes across the contiguous United States"
+                  loading="lazy"
+                  className="w-full h-auto rounded-3xl border border-border bg-background object-contain shadow-sm"
+                />
+              </motion.div>
+              <motion.div {...(reduce ? {} : fadeUp)}>
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground mb-2">
+                  Coverage & flexibility
+                </p>
+                <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-4">
+                  Freight across the contiguous 48 states
+                </h2>
+                <p className="text-base text-muted-foreground leading-relaxed mb-6">
+                  Transport is coordinated through third-party transportation carriers. Once freight
+                  coordination begins, pickup can often be scheduled as soon as about 48 hours out —
+                  timing always depends on carrier availability and the route.
+                </p>
+                <ul className="space-y-4">
+                  <li className="flex gap-3.5">
+                    <span className="w-10 h-10 rounded-full bg-background border border-border flex items-center justify-center shrink-0 text-foreground/70">
+                      <MapPin className="w-4.5 h-4.5" />
+                    </span>
+                    <div>
+                      <h3 className="text-base font-semibold text-foreground">Freight is optional</h3>
+                      <p className="text-sm text-muted-foreground leading-relaxed">
+                        Pickup and seller delivery remain options wherever they’re offered. Freight is
+                        there when distance would otherwise end the conversation.
+                      </p>
+                    </div>
+                  </li>
+                  <li className="flex gap-3.5">
+                    <span className="w-10 h-10 rounded-full bg-background border border-border flex items-center justify-center shrink-0 text-foreground/70">
+                      <HandCoins className="w-4.5 h-4.5" />
+                    </span>
+                    <div>
+                      <h3 className="text-base font-semibold text-foreground">
+                        Free shipping when the seller covers it
+                      </h3>
+                      <p className="text-sm text-muted-foreground leading-relaxed">
+                        On some listings, the seller chooses to cover the freight cost — you’ll see it
+                        as free shipping at checkout, and the freight amount is accounted for against
+                        the seller’s proceeds. Sellers can read more in the{' '}
+                        <InlineLink to="/how-it-works-seller">seller guide</InlineLink>.
+                      </p>
+                    </div>
+                  </li>
+                  <li className="flex gap-3.5">
+                    <span className="w-10 h-10 rounded-full bg-background border border-border flex items-center justify-center shrink-0 text-foreground/70">
+                      <BadgeDollarSign className="w-4.5 h-4.5" />
+                    </span>
+                    <div>
+                      <h3 className="text-base font-semibold text-foreground">Financing can help</h3>
+                      <p className="text-sm text-muted-foreground leading-relaxed">
+                        Freight may be included in eligible{' '}
+                        <InlineLink to="/financing">financing</InlineLink> arrangements — confirm with
+                        the financing provider.
+                      </p>
+                    </div>
+                  </li>
+                </ul>
+              </motion.div>
+            </div>
+          </div>
+        </section>
+
         {/* WHAT DOES IT COST */}
         <section className="py-12 md:py-16 border-y border-border bg-card/40">
           <div className="container max-w-5xl mx-auto px-4">
