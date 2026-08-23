@@ -94,7 +94,7 @@ const HeroCollage = () => {
 
       {/* Floating secondary card */}
       <motion.div
-        className="absolute -bottom-6 -left-4 w-44 overflow-hidden rounded-2xl border border-border bg-card shadow-lg sm:-left-8 sm:w-52"
+        className="absolute bottom-24 left-3 w-40 overflow-hidden rounded-2xl border border-border bg-card shadow-lg sm:bottom-28 sm:left-6 sm:w-52"
         initial={reduce ? { opacity: 0 } : { opacity: 0, y: 14 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: reduce ? 0 : 0.35 }}
