@@ -1,11 +1,22 @@
 import { useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
+import { motion, useReducedMotion } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { ExternalLink, ShieldCheck, Truck, Caravan, ShoppingCart } from 'lucide-react';
+import {
+  ArrowRight,
+  Caravan,
+  ExternalLink,
+  HandCoins,
+  MapPin,
+  ShoppingCart,
+  Truck,
+} from 'lucide-react';
 import SEO, { generateFAQSchema } from '@/components/SEO';
 import JsonLd from '@/components/JsonLd';
 import Header from '@/components/layout/Header';
+import Footer from '@/components/layout/Footer';
+import { Button } from '@/components/ui/button';
 import { EquinoxFundingLogo } from '@/components/brand/ProviderLogos';
 import { FinancingAvailableBadge } from '@/components/financing/FinancingAvailableBadge';
 import {
@@ -13,6 +24,17 @@ import {
   trackFinancingPageViewed,
   type FinancingSource,
 } from '@/lib/analytics';
+
+/**
+ * /financing — buyer financing through third-party partners, presented in
+ * Vendibook's warm editorial marketplace language (not a partner microsite).
+ *
+ * Copy guardrails (do not regress): Vendibook is not the lender; no
+ * guaranteed approvals, rates, terms, or funding; exact program facts below
+ * are partner-provided and must stay caveated; the user leaves Vendibook to
+ * apply; financing availability on listings is marketplace-wide for eligible
+ * published for-sale equipment — not a seller opt-in.
+ */
 
 /** Loads a publicly visible listing for the optional ?listing_id= context. */
 const useFinancingListingContext = (listingId: string | null) =>
@@ -33,58 +55,66 @@ const useFinancingListingContext = (listingId: string | null) =>
     },
   });
 
-
-const LIME = '#34d399';
 const APPLY_URL = 'https://equinox-funding.com/efapplication/';
+const EMERALD = 'text-emerald-700';
+
+const ease = [0.22, 1, 0.36, 1] as const;
+
+const fadeUp = {
+  initial: { opacity: 0, y: 18 },
+  whileInView: { opacity: 1, y: 0 },
+  viewport: { once: true, margin: '-60px' },
+  transition: { duration: 0.45, ease },
+};
 
 const OPTIONS = [
   {
     icon: Truck,
     title: 'Food trucks',
-    body: 'Finance a turnkey or fully built food truck listed on Vendibook, including the kitchen build already installed.',
+    body: 'Turn-key and fully built trucks listed on Vendibook — including the kitchen build already installed.',
   },
   {
     icon: Caravan,
     title: 'Food trailers',
-    body: 'Concession and kitchen trailers listed for sale on Vendibook, from compact units to full production trailers.',
+    body: 'Concession and kitchen trailers, from compact units to full production trailers.',
   },
   {
     icon: ShoppingCart,
     title: 'Food carts',
-    body: 'Carts and small mobile units listed for sale on Vendibook — a lower-cost way to start serving.',
+    body: 'Carts and small mobile units — a lower-cost way to start serving.',
   },
 ];
 
 const PROCESS = [
   {
-    title: 'Apply online',
-    body: 'Basic business, owner, and equipment information.',
+    title: 'Apply with Equinox',
+    body: 'A straightforward online application — basic business, owner, and equipment information. You apply on Equinox Funding’s site, not here.',
   },
   {
-    title: 'Review & match',
-    body: 'Equinox reviews the application and available financing structures; a financing specialist may contact the applicant for additional information.',
+    title: 'They review your application',
+    body: 'Equinox reviews what you qualify for. A financing specialist may reach out if they need anything more from you.',
   },
   {
-    title: 'Review & sign',
-    body: 'Qualified applicants review available terms and sign electronically. Many decisions are returned within 24–48 hours.',
+    title: 'See your options',
+    body: 'Qualified applicants review their terms and sign electronically. Many decisions come back within 24–48 hours.',
   },
   {
-    title: 'Seller funded',
-    body: 'After approval and required documentation, the lender or financing provider pays the equipment seller directly; the buyer then makes payments under the signed agreement.',
+    title: 'The seller gets paid',
+    body: 'After approval and paperwork, the financing provider pays the seller directly. You make payments under your signed agreement — and the truck is yours to run.',
   },
 ];
 
 const QUALIFY = [
   {
-    title: 'Startups & new businesses',
-    body: 'First-time operators may qualify based on credit, experience, equity/down payment, equipment, and overall profile.',
+    title: 'Just getting started',
+    body: 'First-time operators may qualify based on credit, experience, down payment, the equipment itself, and the overall picture.',
   },
   {
-    title: 'Growing businesses',
+    title: 'Growing',
     body: 'Options may be available for businesses operating 6 months to 2 years, including low- or zero-down programs for qualified applicants.',
   },
   {
-    title: 'Established businesses',
+    title: 'Established',
     body: 'Options may include zero-down, multi-unit, and fleet financing for qualified businesses.',
   },
 ];
@@ -92,8 +122,9 @@ const QUALIFY = [
 const SNAPSHOT = [
   'Financing from $2,500 – $25M',
   'Lease-to-own options',
-  '640 startup and 575 established-business general FICO benchmarks',
+  'General FICO benchmarks: 640 for startups, 575 for established businesses',
   'Low- or zero-down programs may be available',
+  'Fully custom builds and conversions may be financed',
 ];
 
 const FAQ = [
@@ -119,39 +150,30 @@ const FAQ = [
   },
 ];
 
-const panel =
-  'rounded-2xl border border-white/10 bg-white/[0.04] backdrop-blur-md p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.10)] transition-colors hover:border-emerald-300/25';
-
 const ApplyCta = ({
   className = '',
-  wide = false,
   source,
   listingId,
 }: {
   className?: string;
-  wide?: boolean;
   source: FinancingSource;
   listingId?: string;
 }) => (
-  <a
-    href={APPLY_URL}
-    target="_blank"
-    rel="noopener noreferrer"
-    onClick={() => trackFinancingApplyClick(source, listingId)}
-    className={`group/cta relative inline-flex items-center justify-center gap-2 overflow-hidden rounded-2xl bg-cta-primary px-6 py-3.5 text-sm font-bold text-white shadow-cta-primary transition-all duration-200 hover:opacity-95 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background ${wide ? 'w-full sm:w-auto' : ''} ${className}`}
-  >
-    <span
-      aria-hidden
-      className="pointer-events-none absolute inset-y-0 -left-1/3 w-1/3 -skew-x-12 bg-gradient-to-r from-transparent via-white/40 to-transparent opacity-0 transition-all duration-700 group-hover/cta:left-[110%] group-hover/cta:opacity-100"
-    />
-    <span className="relative inline-flex items-center gap-2">
-      Apply now for financing
-      <ExternalLink className="h-4 w-4" aria-hidden />
-    </span>
-  </a>
+  <Button variant="cta" size="lg" className={`rounded-full ${className}`} asChild>
+    <a
+      href={APPLY_URL}
+      target="_blank"
+      rel="noopener noreferrer"
+      onClick={() => trackFinancingApplyClick(source, listingId)}
+    >
+      Apply with Equinox Funding
+      <ExternalLink className="w-4 h-4 ml-1.5" aria-hidden />
+    </a>
+  </Button>
 );
 
 const Financing = () => {
+  const reduce = useReducedMotion();
   const [params] = useSearchParams();
   const listingIdParam = params.get('listing_id');
   const { data: contextListing } = useFinancingListingContext(listingIdParam);
@@ -162,14 +184,13 @@ const Financing = () => {
     trackFinancingPageViewed(listingIdParam ?? undefined);
   }, [listingIdParam]);
 
-
   const title = 'Financing for Food Trucks, Trailers & Carts | Vendibook';
   const description =
     'Financing with Equinox Funding for food trucks, food trailers, and food carts listed on Vendibook. Apply online — subject to prequalification and underwriting.';
   const canonical = '/financing';
 
   return (
-    <>
+    <div className="min-h-screen bg-background flex flex-col">
       <SEO
         title={title}
         description={description}
@@ -179,266 +200,348 @@ const Financing = () => {
         imageAlt="Equipment financing for mobile food businesses on Vendibook"
       />
       <JsonLd
-        schema={[
-          generateFAQSchema(
-            FAQ.map((item) => ({ question: item.q, answer: item.a })),
-          ),
-        ]}
+        schema={[generateFAQSchema(FAQ.map((item) => ({ question: item.q, answer: item.a })))]}
       />
 
       <Header />
 
-      <main className="relative min-h-screen overflow-hidden bg-[hsl(160_30%_4%)] text-white">
-      {/* emerald aurora wash — matches the homepage financing banner */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0"
-        style={{
-          background:
-            'radial-gradient(120% 90% at 0% 0%, rgba(16,185,129,0.30) 0%, rgba(6,78,59,0.20) 38%, rgba(0,0,0,0) 70%), radial-gradient(90% 70% at 100% 8%, rgba(52,211,153,0.16) 0%, rgba(0,0,0,0) 65%), radial-gradient(120% 60% at 50% 110%, rgba(0,0,0,0.9) 0%, transparent 70%)',
-        }}
-      />
-
-      {/* top horizon sheen */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/45 to-transparent"
-      />
-
-      <div className="relative mx-auto max-w-5xl px-5 pt-6 sm:px-8 sm:pt-8">
-
-        {/* Hero — thin horizontal banner */}
-        <section className="relative overflow-hidden rounded-2xl border border-white/10 bg-white/[0.035] p-4 shadow-[0_18px_50px_-20px_rgba(0,0,0,0.9),inset_0_1px_0_rgba(255,255,255,0.10)] backdrop-blur-md sm:p-5">
-          <div
-            aria-hidden
-            className="pointer-events-none absolute inset-0 opacity-80"
-            style={{
-              background:
-                'radial-gradient(120% 160% at 0% 0%, rgba(16,185,129,0.28) 0%, rgba(6,78,59,0.18) 38%, rgba(0,0,0,0) 70%), radial-gradient(90% 140% at 100% 100%, rgba(52,211,153,0.14) 0%, rgba(0,0,0,0) 65%)',
-            }}
-          />
-          <div
-            aria-hidden
-            className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent"
-          />
-
-          <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="min-w-0">
-              <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-                <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-300/25 bg-emerald-400/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-emerald-200 backdrop-blur-sm">
-                  <ShieldCheck className="h-3 w-3" aria-hidden />
-                  Financing
+      <main className="flex-1">
+        {/* HERO — Vendibook first, Equinox as partner accent */}
+        <section className="relative pt-14 pb-14 md:pt-20 md:pb-16 overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-b from-foreground/[0.03] via-background to-background" />
+          <div className="container max-w-4xl mx-auto px-4 relative z-10">
+            <motion.div
+              initial={reduce ? undefined : { opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              className="text-center"
+            >
+              <div className="flex flex-wrap items-center justify-center gap-2.5 mb-5">
+                <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-foreground/5 border border-border text-xs font-medium text-foreground">
+                  Financing for eligible equipment
                 </span>
-                <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.06] px-2.5 py-1 backdrop-blur-sm">
-                  <span className="text-[11px] font-medium tracking-tight text-white/70">Vendibook</span>
-                  <span className="text-white/25">×</span>
+                <span className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 shadow-sm">
+                  <span className="text-[11px] font-medium tracking-tight text-muted-foreground">Vendibook</span>
+                  <span className="text-border">×</span>
                   <EquinoxFundingLogo className="h-4 w-auto" />
                 </span>
               </div>
-              <h1 className="mt-2 text-balance text-lg font-semibold leading-snug tracking-tight text-white sm:text-xl">
-                Vendibook &amp; Equinox Funding make it easy to get started.
+              <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-foreground mb-5 leading-[1.08]">
+                Found the right truck? See what financing could make possible.
               </h1>
-              <p className="mt-1 max-w-xl text-sm text-white/60">
-                Financing options for food trucks, food trailers, and food carts listed on
-                Vendibook — check your options without slowing down your purchase.
+              <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto leading-relaxed">
+                Vendibook connects eligible buyers with third-party financing
+                partners for food trucks, trailers, carts, and qualifying
+                equipment. Apply with the financing provider, review the options
+                you qualify for, and decide what works for your business.
               </p>
-            </div>
-
-            <div className="flex shrink-0 flex-col items-start gap-2 sm:items-end">
-              <ApplyCta source="financing_page_hero" listingId={listingId} />
-              <p className="text-xs text-white/50">You’ll continue to Equinox Funding securely.</p>
-            </div>
-          </div>
-        </section>
-
-        {/* Listing context — only for a publicly visible for-sale listing */}
-        {contextListing && (
-          <section className="mt-4 flex items-center gap-4 rounded-2xl border border-white/10 bg-white/[0.04] p-3 backdrop-blur-md sm:p-4">
-            <img
-              src={contextListing.cover_image_url || '/placeholder.svg'}
-              alt={contextListing.title}
-              loading="lazy"
-              className="h-16 w-24 shrink-0 rounded-xl object-cover ring-1 ring-white/10"
-            />
-            <div className="min-w-0">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-emerald-200">
-                Financing this listing
-              </p>
-              <p className="truncate text-sm font-semibold text-white">{contextListing.title}</p>
-              <p className="mt-0.5 text-xs text-white/60">
-                {contextListing.price_sale
-                  ? `$${Number(contextListing.price_sale).toLocaleString()}`
-                  : 'Price on request'}
-                {contextListing.category ? ` · ${String(contextListing.category).replace(/_/g, ' ')}` : ''}
-                {contextListing.city ? ` · ${contextListing.city}${contextListing.state ? `, ${contextListing.state}` : ''}` : ''}
-              </p>
-            </div>
-          </section>
-        )}
-
-        {/* Options */}
-        <section className="mt-16" aria-labelledby="options-heading">
-          <h2 id="options-heading" className="text-2xl font-semibold tracking-tight">
-            What you can finance
-          </h2>
-          <p className="mt-2 max-w-2xl text-sm text-white/60">
-            Financing applies to food trucks, food trailers, and food carts listed for sale on
-            Vendibook. Terms vary by applicant and are subject to underwriting.
-          </p>
-          <div className="mt-6 grid gap-4 md:grid-cols-3">
-            {OPTIONS.map(({ icon: Icon, title: t, body }) => (
-              <div key={t} className={panel}>
-                <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-emerald-300/25 bg-emerald-400/10 text-emerald-200">
-                  <Icon className="h-4 w-4" aria-hidden />
-                </span>
-                <h3 className="mt-4 text-base font-semibold">{t}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-white/65">{body}</p>
+              <div className="flex flex-wrap gap-3 justify-center">
+                <ApplyCta source="financing_page_hero" listingId={listingId} />
+                <Button variant="cta-outline" size="lg" className="rounded-full" asChild>
+                  <Link to="/browse">Keep browsing</Link>
+                </Button>
               </div>
-            ))}
-          </div>
-          <div className="mt-6 flex flex-col items-start gap-4">
-            <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 backdrop-blur-sm">
-              <FinancingAvailableBadge asLink={false} />
-              <p className="text-sm text-white/60">
-                Look for this badge on a listing — it means the seller has enabled financing for
-                that truck, trailer, or cart.
+              <p className="mt-4 text-xs text-muted-foreground">
+                You’ll leave Vendibook to apply on Equinox Funding’s site.
               </p>
-            </div>
-            <ApplyCta wide source="financing_page_mid" listingId={listingId} />
+            </motion.div>
+
+            {/* Listing context — only for a publicly visible for-sale listing */}
+            {contextListing && (
+              <motion.div
+                initial={reduce ? undefined : { opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: reduce ? 0 : 0.2 }}
+                className="mt-10 mx-auto max-w-xl flex items-center gap-4 rounded-3xl border border-border bg-card p-4 shadow-[0_18px_50px_-24px_rgba(0,0,0,0.15)]"
+              >
+                <img
+                  src={contextListing.cover_image_url || '/placeholder.svg'}
+                  alt={contextListing.title}
+                  loading="lazy"
+                  className="h-16 w-24 shrink-0 rounded-2xl object-cover ring-1 ring-border"
+                />
+                <div className="min-w-0">
+                  <p className={`text-[10px] font-semibold uppercase tracking-[0.14em] ${EMERALD}`}>
+                    Financing this listing
+                  </p>
+                  <p className="truncate text-sm font-semibold text-foreground">{contextListing.title}</p>
+                  <p className="mt-0.5 text-xs text-muted-foreground">
+                    {contextListing.price_sale
+                      ? `$${Number(contextListing.price_sale).toLocaleString()}`
+                      : 'Price on request'}
+                    {contextListing.category ? ` · ${String(contextListing.category).replace(/_/g, ' ')}` : ''}
+                    {contextListing.city ? ` · ${contextListing.city}${contextListing.state ? `, ${contextListing.state}` : ''}` : ''}
+                  </p>
+                </div>
+              </motion.div>
+            )}
           </div>
         </section>
 
-        {/* Process */}
-        <section className="mt-16" aria-labelledby="process-heading">
-          <h2 id="process-heading" className="text-2xl font-semibold tracking-tight">
-            How it works
-          </h2>
-          <ol className="mt-6 grid gap-4 sm:grid-cols-2">
-            {PROCESS.map((step, i) => (
-              <li key={step.title} className={panel}>
-                <span
-                  className="inline-flex h-8 w-8 items-center justify-center rounded-full border text-sm font-semibold"
-                  style={{ borderColor: `${LIME}66`, color: LIME }}
+        {/* A — WHAT CAN BE FINANCED */}
+        <section className="py-12 md:py-16 border-y border-border bg-card/40" aria-labelledby="options-heading">
+          <div className="container max-w-5xl mx-auto px-4">
+            <motion.div {...(reduce ? {} : fadeUp)} className="mb-10 max-w-2xl">
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground mb-2">
+                Eligible equipment
+              </p>
+              <h2 id="options-heading" className="text-2xl md:text-3xl font-bold text-foreground">
+                What can be financed?
+              </h2>
+              <p className="text-base text-muted-foreground mt-3 leading-relaxed">
+                Financing applies to eligible food trucks, food trailers, and food
+                carts listed for sale on Vendibook. Terms vary by applicant and are
+                subject to underwriting.
+              </p>
+            </motion.div>
+
+            <div className="grid sm:grid-cols-3 gap-8 md:gap-10">
+              {OPTIONS.map(({ icon: Icon, title: t, body }, i) => (
+                <motion.div
+                  key={t}
+                  {...(reduce ? {} : fadeUp)}
+                  transition={{ duration: 0.4, delay: reduce ? 0 : i * 0.07, ease }}
                 >
-                  {i + 1}
-                </span>
-                <h3 className="mt-4 text-base font-semibold">{step.title}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-white/65">{step.body}</p>
-              </li>
-            ))}
-          </ol>
-        </section>
-
-        {/* Qualification */}
-        <section className="mt-16" aria-labelledby="qualify-heading">
-          <h2 id="qualify-heading" className="text-2xl font-semibold tracking-tight">
-            Who may qualify
-          </h2>
-          <div className="mt-6 grid gap-4 md:grid-cols-3">
-            {QUALIFY.map((q) => (
-              <div key={q.title} className={panel}>
-                <h3 className="text-base font-semibold">{q.title}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-white/65">{q.body}</p>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* Snapshot */}
-        <section className="mt-16" aria-labelledby="snapshot-heading">
-          <h2 id="snapshot-heading" className="text-2xl font-semibold tracking-tight">
-            Program snapshot
-          </h2>
-          <div className={`mt-6 ${panel}`}>
-            <ul className="grid gap-3 sm:grid-cols-2">
-              {SNAPSHOT.map((item) => (
-                <li key={item} className="flex items-start gap-3 text-sm text-white/80">
-                  <span
-                    className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full"
-                    style={{ background: LIME }}
-                    aria-hidden
-                  />
-                  {item}
-                </li>
+                  <span className="w-11 h-11 rounded-2xl bg-card border border-border flex items-center justify-center shadow-sm mb-5">
+                    <Icon className="w-5 h-5 text-foreground/70" />
+                  </span>
+                  <h3 className="text-lg font-semibold text-foreground mb-2">{t}</h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed">{body}</p>
+                </motion.div>
               ))}
-            </ul>
-            <p className="mt-5 border-t border-white/10 pt-4 text-xs leading-relaxed text-white/45">
-              Partner-provided information. Each point is subject to program availability and
-              underwriting. These are not guarantees or universal minimums, and not all applicants
-              qualify.
-            </p>
+            </div>
+
+            <motion.div
+              {...(reduce ? {} : fadeUp)}
+              className="mt-10 flex flex-wrap items-center gap-3 rounded-3xl border border-border bg-card px-5 py-4"
+            >
+              <FinancingAvailableBadge asLink={false} />
+              <p className="text-sm text-muted-foreground leading-relaxed flex-1 min-w-[240px]">
+                Look for this badge as you browse — financing is available on eligible
+                for-sale listings across Vendibook.
+              </p>
+            </motion.div>
           </div>
         </section>
 
-        {/* FAQ */}
-        <section className="mt-16" aria-labelledby="faq-heading">
-          <h2 id="faq-heading" className="text-2xl font-semibold tracking-tight">
-            Custom food trailers — FAQ
-          </h2>
-          <dl className="mt-6 grid gap-4 sm:grid-cols-2">
-            {FAQ.map((item) => (
-              <div key={item.q} className={panel}>
-                <dt className="text-sm font-semibold">{item.q}</dt>
-                <dd className="mt-2 text-sm leading-relaxed text-white/65">{item.a}</dd>
+        {/* B — WHAT HAPPENS AFTER YOU APPLY */}
+        <section className="py-12 md:py-16" aria-labelledby="process-heading">
+          <div className="container max-w-4xl mx-auto px-4">
+            <motion.div {...(reduce ? {} : fadeUp)} className="mb-10 max-w-2xl">
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground mb-2">
+                The application
+              </p>
+              <h2 id="process-heading" className="text-2xl md:text-3xl font-bold text-foreground">
+                What happens after you apply?
+              </h2>
+            </motion.div>
+
+            <ol className="space-y-0">
+              {PROCESS.map((step, i) => (
+                <motion.li
+                  key={step.title}
+                  {...(reduce ? {} : fadeUp)}
+                  transition={{ duration: 0.4, delay: reduce ? 0 : i * 0.05, ease }}
+                  className="flex gap-5 sm:gap-8 py-6 border-b border-border last:border-b-0"
+                >
+                  <span
+                    aria-hidden
+                    className={`shrink-0 text-sm font-semibold tabular-nums pt-0.5 ${EMERALD}`}
+                  >
+                    {String(i + 1).padStart(2, '0')}
+                  </span>
+                  <div>
+                    <h3 className="text-base font-semibold text-foreground mb-1">{step.title}</h3>
+                    <p className="text-sm text-muted-foreground leading-relaxed max-w-xl">
+                      {step.body}
+                    </p>
+                  </div>
+                </motion.li>
+              ))}
+            </ol>
+
+            <motion.div {...(reduce ? {} : fadeUp)} className="mt-8">
+              <ApplyCta source="financing_page_mid" listingId={listingId} />
+            </motion.div>
+          </div>
+        </section>
+
+        {/* C — WHO FINANCING MAY WORK FOR */}
+        <section className="py-12 md:py-16 border-y border-border bg-card/40" aria-labelledby="qualify-heading">
+          <div className="container max-w-5xl mx-auto px-4">
+            <motion.div {...(reduce ? {} : fadeUp)} className="mb-10 max-w-2xl">
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground mb-2">
+                Fit
+              </p>
+              <h2 id="qualify-heading" className="text-2xl md:text-3xl font-bold text-foreground">
+                Who financing may work for.
+              </h2>
+              <p className="text-base text-muted-foreground mt-3 leading-relaxed">
+                Approval is never guaranteed — but more profiles qualify than most
+                people expect.
+              </p>
+            </motion.div>
+
+            <div className="grid sm:grid-cols-3 gap-8 md:gap-10">
+              {QUALIFY.map((q, i) => (
+                <motion.div
+                  key={q.title}
+                  {...(reduce ? {} : fadeUp)}
+                  transition={{ duration: 0.4, delay: reduce ? 0 : i * 0.07, ease }}
+                >
+                  <span aria-hidden className="block h-px w-10 bg-emerald-600/50 mb-5" />
+                  <h3 className="text-lg font-semibold text-foreground mb-2">{q.title}</h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed">{q.body}</p>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* D — KNOW BEFORE YOU APPLY */}
+        <section className="py-12 md:py-16" aria-labelledby="snapshot-heading">
+          <div className="container max-w-4xl mx-auto px-4">
+            <motion.div {...(reduce ? {} : fadeUp)} className="mb-8 max-w-2xl">
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground mb-2">
+                The fine print, up front
+              </p>
+              <h2 id="snapshot-heading" className="text-2xl md:text-3xl font-bold text-foreground">
+                Know before you apply.
+              </h2>
+            </motion.div>
+
+            <motion.div
+              {...(reduce ? {} : fadeUp)}
+              className="rounded-3xl border border-border bg-card p-6 sm:p-8 shadow-[0_18px_50px_-24px_rgba(0,0,0,0.15)]"
+            >
+              <ul className="grid gap-3 sm:grid-cols-2">
+                {SNAPSHOT.map((item) => (
+                  <li key={item} className="flex items-start gap-3 text-sm text-foreground">
+                    <span
+                      className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-600"
+                      aria-hidden
+                    />
+                    {item}
+                  </li>
+                ))}
+              </ul>
+              <p className="mt-5 border-t border-border pt-4 text-xs leading-relaxed text-muted-foreground">
+                Partner-provided information. Each point is subject to program
+                availability and underwriting. These are not guarantees or universal
+                minimums, and not all applicants qualify.
+              </p>
+            </motion.div>
+
+            {/* Required disclosures — visually separated from persuasive content */}
+            <motion.div
+              {...(reduce ? {} : fadeUp)}
+              className="mt-6 space-y-4 rounded-3xl border border-border bg-card/40 p-6 sm:p-8"
+              aria-label="Disclosures"
+            >
+              <p className="text-xs leading-relaxed text-muted-foreground">
+                Vendibook is not a lender, does not make credit decisions, and does
+                not guarantee approval, rates, terms, or funding. Financing is for
+                business purposes and is subject to application, prequalification
+                and/or underwriting. When you apply, you leave Vendibook and submit
+                information directly to Equinox Funding. Equinox Funding’s terms and
+                privacy policy apply. Credit review may include personal and business
+                credit inquiries as authorized in the application. Any potential
+                Section 179 benefit depends on eligibility; consult a qualified tax
+                professional.
+              </p>
+              <p className="text-xs leading-relaxed text-muted-foreground">
+                Equinox Funding provides business capital, including business loans
+                and Revenue Based Financing, directly and through a network of
+                unaffiliated third-party funding providers. All offers will depend on
+                your business meeting at the time of submission our prequalification
+                and/or underwriting criteria, which includes, but is not limited to,
+                business &amp; personal credit history, time in business, cash flow,
+                revenue consistency, industry-specific underwriting rules. Business
+                loans are offered by Equinox Funding LLC.
+              </p>
+              <p className="text-xs text-muted-foreground">
+                <a
+                  href="https://equinox-funding.com/terms-of-service/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline underline-offset-4 hover:text-foreground"
+                >
+                  Equinox Funding terms
+                </a>
+                <span className="px-2 text-border">·</span>
+                <a
+                  href="https://equinox-funding.com/privacy-policy/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline underline-offset-4 hover:text-foreground"
+                >
+                  privacy policy
+                </a>
+              </p>
+            </motion.div>
+          </div>
+        </section>
+
+        {/* E — FAQ */}
+        <section className="py-12 md:py-16 border-y border-border bg-card/40" aria-labelledby="faq-heading">
+          <div className="container max-w-3xl mx-auto px-4">
+            <motion.div {...(reduce ? {} : fadeUp)} className="mb-8 text-center">
+              <h2 id="faq-heading" className="text-2xl md:text-3xl font-bold text-foreground">
+                Financing questions, answered.
+              </h2>
+            </motion.div>
+            <dl className="space-y-0">
+              {FAQ.map((item, i) => (
+                <motion.div
+                  key={item.q}
+                  {...(reduce ? {} : fadeUp)}
+                  transition={{ duration: 0.4, delay: reduce ? 0 : i * 0.04, ease }}
+                  className="py-5 border-b border-border last:border-b-0"
+                >
+                  <dt className="text-base font-semibold text-foreground">{item.q}</dt>
+                  <dd className="mt-1.5 text-sm leading-relaxed text-muted-foreground">{item.a}</dd>
+                </motion.div>
+              ))}
+            </dl>
+          </div>
+        </section>
+
+        {/* FINAL CTA + related */}
+        <section className="py-16 md:py-20">
+          <div className="container max-w-3xl mx-auto px-4 text-center">
+            <motion.div {...(reduce ? {} : fadeUp)}>
+              <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-3">
+                Ready to see your options?
+              </h2>
+              <p className="text-base text-muted-foreground mb-7">
+                Applying takes a few minutes, and you’ll submit directly to Equinox
+                Funding — not to Vendibook.
+              </p>
+              <div className="flex flex-wrap gap-3 justify-center">
+                <ApplyCta source="financing_page_footer" listingId={listingId} />
+                <Button variant="cta-outline" size="lg" className="rounded-full" asChild>
+                  <Link to="/how-purchasing-works">How purchasing works</Link>
+                </Button>
               </div>
-            ))}
-          </dl>
-        </section>
-
-        {/* CTA repeat */}
-        <section className="mt-16 rounded-3xl border-2 border-white/[0.12] bg-gradient-to-b from-white/[0.06] to-white/[0.02] p-8 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-sm">
-          <h2 className="text-xl font-semibold tracking-tight">Ready to apply?</h2>
-          <p className="mx-auto mt-2 max-w-lg text-sm text-white/60">
-            You’ll continue to Equinox Funding to submit your application securely.
-          </p>
-          <div className="mt-6 flex justify-center">
-            <ApplyCta source="financing_page_footer" listingId={listingId} />
+              <p className="text-xs text-muted-foreground mt-6 inline-flex items-center gap-1.5">
+                <HandCoins className="w-3.5 h-3.5" />
+                Prefer to pay another way? See{' '}
+                <Link to="/how-purchasing-works" className="underline underline-offset-2 hover:text-foreground">
+                  PayPal checkout and Pay in Person
+                </Link>
+                , or{' '}
+                <Link to="/browse" className="underline underline-offset-2 hover:text-foreground">
+                  keep browsing
+                  <ArrowRight className="w-3 h-3 inline ml-0.5 -mt-0.5" />
+                </Link>
+              </p>
+            </motion.div>
           </div>
         </section>
+      </main>
 
-        {/* Compliance */}
-        <section className="mt-16 space-y-4 rounded-3xl border-2 border-white/[0.10] bg-white/[0.02] p-6 sm:p-8" aria-label="Disclosures">
-          <p className="text-xs leading-relaxed text-white/50">
-            Vendibook is not a lender, does not make credit decisions, and does not guarantee
-            approval, rates, terms, or funding. Financing is for business purposes and is subject to
-            application, prequalification and/or underwriting. When you apply, you leave Vendibook
-            and submit information directly to Equinox Funding. Equinox Funding’s terms and privacy
-            policy apply. Credit review may include personal and business credit inquiries as
-            authorized in the application. Any potential Section 179 benefit depends on eligibility;
-            consult a qualified tax professional.
-          </p>
-          <p className="text-xs leading-relaxed text-white/50">
-            Equinox Funding provides business capital, including business loans and Revenue Based
-            Financing, directly and through a network of unaffiliated third-party funding providers.
-            All offers will depend on your business meeting at the time of submission our
-            prequalification and/or underwriting criteria, which includes, but is not limited to,
-            business &amp; personal credit history, time in business, cash flow, revenue
-            consistency, industry-specific underwriting rules. Business loans are offered by Equinox
-            Funding LLC.
-          </p>
-          <p className="text-xs text-white/50">
-            <a
-              href="https://equinox-funding.com/terms-of-service/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="underline underline-offset-4 hover:text-white"
-            >
-              Equinox Funding terms
-            </a>
-            <span className="px-2 text-white/25">·</span>
-            <a
-              href="https://equinox-funding.com/privacy-policy/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="underline underline-offset-4 hover:text-white"
-            >
-              privacy policy
-            </a>
-          </p>
-        </section>
-      </div>
-    </main>
-  </>
+      <Footer />
+    </div>
   );
 };
 
