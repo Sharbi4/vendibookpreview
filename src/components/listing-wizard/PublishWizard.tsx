@@ -105,7 +105,7 @@ import {
   allAttested,
   type AttestationKey,
 } from './stages/PublishAttestations';
-import { PayPalMonogram, PayPalWordmark, EquinoxFundingLogo } from '@/components/brand/ProviderLogos';
+import { PayPalMonogram, EquinoxFundingLogo } from '@/components/brand/ProviderLogos';
 import {
   EQUINOX_DISCLOSURE_TEXT,
   EQUINOX_DISCLOSURE_VERSION,
