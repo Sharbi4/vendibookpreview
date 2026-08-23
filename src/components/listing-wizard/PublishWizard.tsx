@@ -2077,25 +2077,32 @@ export const PublishWizard: React.FC = () => {
         // lock contention across tabs) must never leave the Continue button
         // stuck on "Saving…" forever.
         const controller = new AbortController();
-        const timeoutId = window.setTimeout(() => controller.abort(), 25000);
         let savedCount = 0;
+        const patchPromise = supabase
+          .from('listings')
+          .update(updateData)
+          .eq('id', listing.id)
+          .abortSignal(controller.signal)
+          .select('id');
+        let saveTimeoutId: number | undefined;
+        const saveTimeoutPromise = new Promise<never>((_, reject) => {
+          saveTimeoutId = window.setTimeout(() => {
+            controller.abort();
+            reject(new Error('Saving timed out. Check your connection and tap Continue again — your answers are still on this page.'));
+          }, 25000);
+        });
+        // Promise.race is the guaranteed cap — AbortSignal alone cannot
+        // interrupt supabase-js's internal token-refresh lock wait.
+        let res: Awaited<typeof patchPromise>;
         try {
-          const res = await supabase
-            .from('listings')
-            .update(updateData)
-            .eq('id', listing.id)
-            .abortSignal(controller.signal)
-            .select('id');
-          if (res.error) {
-            if (controller.signal.aborted) {
-              throw new Error('Saving timed out. Check your connection and tap Continue again — your answers are still on this page.');
-            }
-            throw res.error;
-          }
-          savedCount = Array.isArray(res.data) ? res.data.length : 0;
+          res = await Promise.race([patchPromise, saveTimeoutPromise]);
         } finally {
-          window.clearTimeout(timeoutId);
+          if (saveTimeoutId) window.clearTimeout(saveTimeoutId);
         }
+        if (res.error) {
+          throw res.error;
+        }
+        savedCount = Array.isArray(res.data) ? res.data.length : 0;
 
         if (savedCount === 0) {
           // PostgREST answered with zero rows: RLS silently rejected the write
@@ -2131,6 +2138,7 @@ export const PublishWizard: React.FC = () => {
           : 'Your changes were not saved. Check your connection and try again.',
         variant: 'destructive'});
     } finally {
+      saveInFlightRef.current = false;
       setIsSaving(false);
     }
   };
