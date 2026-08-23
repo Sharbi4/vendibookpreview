@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, useReducedMotion } from 'framer-motion';
 import {
@@ -21,29 +22,42 @@ import {
   BadgeDollarSign,
   HelpCircle,
   LifeBuoy,
+  Loader2,
+  HandCoins,
+  type LucideIcon,
 } from 'lucide-react';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
-import SEO from '@/components/SEO';
+import SEO, { generateFAQSchema } from '@/components/SEO';
+import JsonLd from '@/components/JsonLd';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
+import InlineLink from '@/components/education/InlineLink';
+import { useFreightEstimate } from '@/hooks/useFreightEstimate';
 import { cn } from '@/lib/utils';
+import deliveryMapArt from '@/assets/education/delivery-map.svg.asset.json';
+import movingArt from '@/assets/education/moving.svg.asset.json';
 
 /**
  * /vendibook-freight — buyer education page for Vendibook Freight.
  *
  * Copy guardrails (do not regress): estimates come from the internal
  * geocoded-distance calculation ($4.50/mile base, $150 minimum base,
- * 8% fuel surcharge, $75 handling) — they are NOT live broker quotes.
- * Do not publish the hard-coded 8.25% default tax rate; jurisdiction-aware
- * tax work is not finalized. Do not claim insurance/cargo coverage,
- * real-time tracking, or guaranteed transit timing. Freight is a separate
- * payment/coordination step after the seller confirms the sale
+ * 8% fuel surcharge, $199 shipping preparation & coordination fee) —
+ * they are NOT live broker quotes. Do not publish a tax rate; the
+ * estimator adds no tax and jurisdiction-aware tax work is not finalized
+ * ("applicable taxes, if any, are calculated in the transaction").
+ * Service area is the contiguous 48 U.S. states. Pickup can often be
+ * scheduled as soon as ~48 hours — always frame as availability-dependent,
+ * never a guarantee. Do not claim insurance/cargo coverage, real-time
+ * tracking, or guaranteed transit timing. Freight is optional, and is a
+ * separate payment/coordination step after the seller confirms the sale
  * (see create-freight-checkout).
  */
 
@@ -168,7 +182,7 @@ const HeroRouteVisual = () => {
 /* How it works timeline                                               */
 /* ------------------------------------------------------------------ */
 
-const TIMELINE = [
+const TIMELINE: { icon: LucideIcon; title: string; body: React.ReactNode }[] = [
   {
     icon: Truck,
     title: 'Find the right equipment — wherever it is',
@@ -177,12 +191,18 @@ const TIMELINE = [
   {
     icon: Calculator,
     title: 'Review your freight estimate',
-    body: 'Enter your destination address in the delivery step and the estimate is calculated from the route between the pickup location and your address. You see the estimate before you commit.',
+    body: 'Enter your destination address in the delivery step and the estimate is calculated from the route between the pickup location and your address. You see the estimate before you commit — or try the estimator below anytime.',
   },
   {
     icon: CreditCard,
     title: 'Complete your purchase',
-    body: 'Pay for the equipment through the normal checkout flow. Your purchase is recorded and the sale moves forward.',
+    body: (
+      <>
+        Pay for the equipment through the normal{' '}
+        <InlineLink to="/how-purchasing-works">checkout flow</InlineLink>. Your purchase is recorded
+        and the sale moves forward.
+      </>
+    ),
   },
   {
     icon: MailCheck,
@@ -197,7 +217,7 @@ const TIMELINE = [
   {
     icon: CalendarClock,
     title: 'Pickup and delivery are coordinated',
-    body: 'Pickup at the seller and delivery to your address are scheduled. Typical transit is estimated at 7–10 business days; actual pickup and transit times can vary by route.',
+    body: 'Pickup at the seller and delivery to your address are scheduled. Pickup can often be scheduled as soon as about 48 hours after coordination begins — timing depends on carrier availability and route. Typical transit is estimated at 7–10 business days.',
   },
   {
     icon: PackageCheck,
@@ -227,14 +247,14 @@ const PRICING = [
     note: 'Currently 8% of the base freight charge, added to every estimate.',
   },
   {
-    label: 'Handling & coordination',
-    value: '$75',
-    note: 'A flat fee that covers scheduling and coordination of the shipment.',
+    label: 'Shipping preparation & coordination',
+    value: '$199',
+    note: 'A flat fee that covers shipment preparation, scheduling, and coordination with the carrier.',
   },
 ];
 
 /* Hypothetical 500-mile example using the current formula: */
-/* base = 500 × $4.50 = $2,250; fuel = 8% × $2,250 = $180; handling = $75. */
+/* base = 500 × $4.50 = $2,250; fuel = 8% × $2,250 = $180; prep & coordination = $199. */
 
 /* ------------------------------------------------------------------ */
 /* What affects the estimate                                           */
@@ -267,7 +287,7 @@ const FACTORS = [
 /* At delivery                                                         */
 /* ------------------------------------------------------------------ */
 
-const AT_DELIVERY = [
+const AT_DELIVERY: { icon: LucideIcon; title: string; body: React.ReactNode }[] = [
   {
     icon: CalendarClock,
     title: 'Be available for the delivery window',
@@ -286,7 +306,13 @@ const AT_DELIVERY = [
   {
     icon: MessageSquareWarning,
     title: 'Report problems before confirming',
-    body: 'If something isn’t right, contact Vendibook support through your order before confirming receipt so the concern is documented during the handoff.',
+    body: (
+      <>
+        If something isn’t right,{' '}
+        <InlineLink to="/help/dispute-evidence">contact Vendibook support</InlineLink> through your
+        order before confirming receipt so the concern is documented during the handoff.
+      </>
+    ),
   },
 ];
 
@@ -325,7 +351,11 @@ const COMPARISON = [
 const FAQS = [
   {
     q: 'How much does Vendibook Freight cost?',
-    a: 'Estimates use a $4.50-per-mile base rate (with a $150 minimum base charge), plus a fuel surcharge currently set at 8% of the base and a flat $75 handling and coordination fee. The final amount depends on the actual route, distance, and shipment details, so the checkout estimate is an estimate — not a guaranteed final quote. Any applicable taxes are determined in the transaction.',
+    a: 'Estimates use a $4.50-per-mile base rate (with a $150 minimum base charge), plus a fuel surcharge currently set at 8% of the base and a flat $199 shipping preparation and coordination fee. The final amount depends on the actual route, distance, and shipment details, so the estimate is not a guaranteed final quote. Applicable taxes, if any, are calculated in the transaction.',
+  },
+  {
+    q: 'Where is Vendibook Freight available?',
+    a: 'Vendibook Freight serves the contiguous 48 U.S. states. Availability on a specific purchase still depends on the listing and the route — look for the Vendibook Freight option in the delivery step of checkout.',
   },
   {
     q: 'When do I pay for Freight?',
@@ -333,11 +363,15 @@ const FAQS = [
   },
   {
     q: 'Who pays for Freight?',
-    a: 'The buyer pays for freight in most transactions. Some sellers offer seller-paid freight — those listings show free shipping during checkout, and the seller covers the freight cost.',
+    a: 'The buyer pays for freight in most transactions. Some sellers offer seller-paid freight — those listings show free shipping during checkout, and the seller covers the freight cost out of their sale proceeds.',
   },
   {
     q: 'How long can delivery take?',
-    a: 'The current estimate is 7–10 business days of typical transit once the shipment is on the road. That is an estimate, not a guarantee — actual pickup scheduling and transit time can vary by route and carrier availability.',
+    a: 'Pickup can often be scheduled as soon as about 48 hours after freight coordination begins, depending on carrier availability and route. Typical transit is estimated at 7–10 business days once the shipment is on the road. These are estimates, not guarantees — actual pickup scheduling and transit time vary by route and carrier availability.',
+  },
+  {
+    q: 'Can freight be included in financing?',
+    a: 'Freight may be included in eligible financing arrangements — confirm with the financing provider. Approval, rates, and terms are always determined by the financing partner.',
   },
   {
     q: 'Can I use Freight for a food truck or trailer?',
@@ -394,9 +428,12 @@ const VendibookFreight = () => {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <SEO
-        title="Vendibook Freight — Food Truck & Trailer Transport"
-        description="Vendibook Freight helps coordinate long-distance transport for food trucks and trailers purchased on Vendibook. See how estimates work, current pricing, and what to expect at delivery."
+        title="Vendibook Freight — Food Truck Shipping & Trailer Transport"
+        description="Food truck shipping and food trailer transport across the contiguous 48 states, coordinated through third-party carriers. See current rates and get an estimate."
         canonical="/vendibook-freight"
+      />
+      <JsonLd
+        schema={[generateFAQSchema(FAQS.map((f) => ({ question: f.q, answer: f.a })))]}
       />
 
       <Header />
@@ -420,9 +457,11 @@ const VendibookFreight = () => {
                   Vendibook Freight
                 </h1>
                 <p className="text-lg text-muted-foreground mb-8 max-w-xl leading-relaxed">
-                  Found the right food truck or trailer in another city or state? When Freight is
-                  available on a listing, Vendibook can help coordinate transport to your door after
-                  your purchase reaches the right stage — so distance doesn’t decide what you can buy.
+                  Found the right food truck or trailer in another state? Vendibook Freight is food
+                  truck shipping and food trailer transport coordinated through third-party carriers
+                  across the contiguous 48 states — so distance doesn’t decide what you can buy.
+                  Here’s how it fits into{' '}
+                  <InlineLink to="/how-purchasing-works">how purchasing works</InlineLink>.
                 </p>
                 <div className="flex flex-wrap gap-3">
                   <Button variant="cta" size="lg" className="rounded-full" asChild>
@@ -545,19 +584,19 @@ const VendibookFreight = () => {
                   <dd className="font-medium text-foreground whitespace-nowrap">$180.00</dd>
                 </div>
                 <div className="flex justify-between gap-4">
-                  <dt className="text-muted-foreground">Handling & coordination</dt>
-                  <dd className="font-medium text-foreground whitespace-nowrap">$75.00</dd>
+                  <dt className="text-muted-foreground">Shipping preparation & coordination</dt>
+                  <dd className="font-medium text-foreground whitespace-nowrap">$199.00</dd>
                 </div>
                 <div className="flex justify-between gap-4 pt-3 border-t border-border">
                   <dt className="font-semibold text-foreground">Example total</dt>
-                  <dd className="font-bold text-foreground whitespace-nowrap">$2,505.00</dd>
+                  <dd className="font-bold text-foreground whitespace-nowrap">$2,629.00</dd>
                 </div>
               </dl>
               <p className="text-xs text-muted-foreground leading-relaxed mt-5 rounded-xl bg-foreground/[0.04] border border-border px-3.5 py-3">
                 Hypothetical example only, calculated from the formula above — not a quote. Your
-                estimate is generated from the actual route at checkout, and any applicable taxes are
-                determined in the transaction. The freight amount is finalized as a separate step
-                after the seller confirms the sale.
+                estimate is generated from the actual route at checkout, and applicable taxes, if
+                any, are calculated in the transaction. The freight amount is finalized as a separate
+                step after the seller confirms the sale.
               </p>
             </motion.div>
           </div>

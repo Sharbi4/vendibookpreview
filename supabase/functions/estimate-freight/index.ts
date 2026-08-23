@@ -48,9 +48,12 @@ interface FreightEstimateResponse {
 const FREIGHT_RATES = {
   ratePerMile: 4.50,
   minimumCharge: 150,
-  handlingFee: 75,
+  // Shipping preparation & coordination fee (product decision 2026-08-23: $199, replaces $75 handling)
+  handlingFee: 199,
   fuelSurchargePercent: 0.08, // 8% fuel surcharge
-  defaultTaxRate: 0.0825, // 8.25% default tax rate (can be adjusted per state)
+  // No universal tax rate: jurisdiction-aware tax is not implemented, so the
+  // estimate must not add tax. Applicable taxes, if any, are handled in the transaction.
+  defaultTaxRate: 0,
 };
 
 async function geocodeViaMapbox(address: string): Promise<{ lat: number; lng: number } | null> {
@@ -138,8 +141,8 @@ function calculateFreightCost(
 
   // Fuel surcharge: 8% of base cost
   const fuelSurcharge = baseCost * FREIGHT_RATES.fuelSurchargePercent;
-  
-  // Handling fee: flat $75
+
+  // Shipping preparation & coordination fee: flat $199
   const handlingFee = FREIGHT_RATES.handlingFee;
   
   // Subtotal before tax
@@ -257,7 +260,7 @@ const handler = async (req: Request): Promise<Response> => {
         ...costs,
         estimated_transit_days: transitDays,
       },
-      disclaimer: "Freight rate: $4.50/mile. Final pricing confirmed within 2 business days after payment.",
+      disclaimer: "Estimate only: $4.50/mile base ($150 minimum), 8% fuel surcharge, and a $199 shipping preparation & coordination fee. Applicable taxes, if any, are calculated in the transaction. Final pricing and scheduling are confirmed during freight coordination.",
     };
 
     logStep("Returning estimate", response);
