@@ -132,7 +132,7 @@ const DIFFERENCES: { title: string; body: string; art?: string; artAlt?: string 
   {
     title: 'Shop with more context',
     body: 'Photos, video where sellers provide it, full specs, price, and location up front. Message the seller or make an offer where it’s supported — and keep every word attached to the listing.',
-    art: searchPageArt,
+    art: searchPageArt.url,
     artAlt: 'Browsing Vendibook search results with rich listing details',
   },
   {
