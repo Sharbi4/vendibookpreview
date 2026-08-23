@@ -27,6 +27,7 @@ import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import SEO from '@/components/SEO';
 import { Button } from '@/components/ui/button';
+import InlineLink from '@/components/education/InlineLink';
 import { PayPalMonogram, EquinoxFundingLogo } from '@/components/brand/ProviderLogos';
 import { cn } from '@/lib/utils';
 import businessNegotiationArt from '@/assets/education/business-negotiation.svg.asset.json';
@@ -154,29 +155,23 @@ const HeroJourneyVisual = () => {
 const JOURNEY: {
   icon: LucideIcon;
   title: string;
-  body: string;
+  body: React.ReactNode;
   tags: string[];
   art?: string;
   artAlt?: string;
 }[] = [
-  {
-    icon: Search,
-    title: 'Find a truck that fits your business',
-    body: 'Explore detailed listings with photos, specs, pricing, and location information so you can quickly narrow in on the equipment that makes sense for your concept and budget.',
-    tags: ['Photos, specs & pricing', 'Browse nationwide'],
-  },
-  {
-    icon: ReceiptText,
-    title: 'Ask questions. Compare. Make an offer.',
-    body: 'Message the seller directly, clarify the details that matter, and submit an offer where the listing supports it. You can take your time before deciding to move forward.',
-    tags: ['Message the seller', 'Offers where available'],
-    art: businessNegotiationArt.url,
-    artAlt: 'A buyer and seller negotiating an offer',
-  },
+...
   {
     icon: CreditCard,
     title: 'Choose how you want to pay',
-    body: 'When online checkout is offered, you can pay through Vendibook’s PayPal checkout. If the seller allows Pay in Person, you can arrange payment directly at pickup or delivery instead.',
+    body: (
+      <>
+        When online checkout is offered, you can pay through Vendibook’s{' '}
+        <InlineLink to="/help/buying-end-to-end">PayPal checkout</InlineLink>. If the seller allows{' '}
+        <InlineLink to="/help/pay-in-person-guide">Pay in Person</InlineLink>, you can arrange
+        payment directly at pickup or delivery instead.
+      </>
+    ),
     tags: ['PayPal checkout', 'Pay in Person'],
     art: securePaymentArt.url,
     artAlt: 'Paying securely online with PayPal checkout',
@@ -190,7 +185,13 @@ const JOURNEY: {
   {
     icon: Truck,
     title: 'Choose the delivery option that works for you',
-    body: 'Pick up locally, use seller delivery when offered, or explore Vendibook Freight for longer-distance purchases. Freight is quoted and arranged separately when available.',
+    body: (
+      <>
+        Pick up locally, use seller delivery when offered, or explore{' '}
+        <InlineLink to="/vendibook-freight">Vendibook Freight</InlineLink> for longer-distance
+        purchases. Freight is quoted and arranged separately when available.
+      </>
+    ),
     tags: ['Pickup', 'Seller delivery', 'Vendibook Freight'],
   },
   {
