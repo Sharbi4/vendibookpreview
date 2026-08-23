@@ -995,7 +995,7 @@ const Search = () => {
                             onClearFilters={clearFilters}
                             category={category !== 'all' ? category : undefined}
                             mode={mode !== 'all' ? mode : undefined}
-                            locationText={searchQuery || locationText}
+                            locationText={debouncedQuery || locationText}
                             activeFiltersCount={activeFiltersCount}
                           />
                         </div>
@@ -1057,7 +1057,7 @@ const Search = () => {
                       onClearFilters={clearFilters}
                       category={category !== 'all' ? category : undefined}
                       mode={mode !== 'all' ? mode : undefined}
-                      locationText={searchQuery || locationText}
+                      locationText={debouncedQuery || locationText}
                       activeFiltersCount={activeFiltersCount}
                     />
                   )}
@@ -1180,7 +1180,7 @@ const Search = () => {
                       onClearFilters={clearFilters}
                       category={category !== 'all' ? category : undefined}
                       mode={mode !== 'all' ? mode : undefined}
-                      locationText={searchQuery || locationText}
+                      locationText={debouncedQuery || locationText}
                       activeFiltersCount={activeFiltersCount}
                     />
                   )}
