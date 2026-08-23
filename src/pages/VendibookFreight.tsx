@@ -384,6 +384,145 @@ const FAQS = [
 ];
 
 /* ------------------------------------------------------------------ */
+/* Standalone estimator — reuses the shared estimate-freight engine     */
+/* (same hook + edge function as checkout; no transaction is mutated)  */
+/* ------------------------------------------------------------------ */
+
+const formatMoney = (n: number) =>
+  n.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
+
+const FreightEstimator = () => {
+  const reduce = useReducedMotion();
+  const { estimate, isLoading, disclaimer, getEstimate } = useFreightEstimate();
+  const [origin, setOrigin] = useState('');
+  const [destination, setDestination] = useState('');
+
+  const canSubmit = origin.trim().length >= 5 && destination.trim().length >= 5 && !isLoading;
+
+  const submit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!canSubmit) return;
+    void getEstimate({
+      origin_address: origin.trim(),
+      destination_address: destination.trim(),
+    });
+  };
+
+  return (
+    <motion.div
+      {...(reduce ? {} : fadeUp)}
+      className="rounded-3xl border border-border bg-card p-6 sm:p-8 shadow-[0_24px_60px_-24px_rgba(0,0,0,0.12)]"
+    >
+      <form onSubmit={submit} className="grid sm:grid-cols-2 gap-4">
+        <div>
+          <label
+            htmlFor="freight-origin"
+            className="block text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground mb-2"
+          >
+            Pickup location
+          </label>
+          <Input
+            id="freight-origin"
+            value={origin}
+            onChange={(e) => setOrigin(e.target.value)}
+            placeholder="City, state, or ZIP"
+            autoComplete="address-level2"
+            className="rounded-xl text-base"
+          />
+        </div>
+        <div>
+          <label
+            htmlFor="freight-destination"
+            className="block text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground mb-2"
+          >
+            Delivery destination
+          </label>
+          <Input
+            id="freight-destination"
+            value={destination}
+            onChange={(e) => setDestination(e.target.value)}
+            placeholder="City, state, or ZIP"
+            autoComplete="address-level2"
+            className="rounded-xl text-base"
+          />
+        </div>
+        <Button
+          type="submit"
+          variant="cta"
+          size="lg"
+          disabled={!canSubmit}
+          className="rounded-full sm:col-span-2"
+        >
+          {isLoading ? (
+            <>
+              <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> Calculating…
+            </>
+          ) : (
+            <>
+              <Calculator className="w-4 h-4 mr-1.5" /> Estimate freight
+            </>
+          )}
+        </Button>
+      </form>
+
+      {estimate && (
+        <div className="mt-6 rounded-2xl border border-border bg-background p-5 sm:p-6">
+          <div className="flex items-center justify-between gap-3 mb-4">
+            <p className="text-sm font-semibold text-foreground">Your estimate</p>
+            <span className="inline-flex items-center rounded-full bg-foreground/5 border border-border px-2.5 py-1 text-[10px] font-medium text-foreground/70">
+              Estimate — not a final quote
+            </span>
+          </div>
+          <dl className="space-y-2.5 text-sm">
+            <div className="flex justify-between gap-4">
+              <dt className="text-muted-foreground">Route distance</dt>
+              <dd className="font-medium text-foreground whitespace-nowrap">
+                ~{estimate.distance_miles.toLocaleString()} miles
+              </dd>
+            </div>
+            <div className="flex justify-between gap-4">
+              <dt className="text-muted-foreground">Base freight (${estimate.rate_per_mile.toFixed(2)}/mile)</dt>
+              <dd className="font-medium text-foreground whitespace-nowrap">
+                {formatMoney(estimate.base_cost)}
+              </dd>
+            </div>
+            <div className="flex justify-between gap-4">
+              <dt className="text-muted-foreground">Fuel surcharge</dt>
+              <dd className="font-medium text-foreground whitespace-nowrap">
+                {formatMoney(estimate.fuel_surcharge)}
+              </dd>
+            </div>
+            <div className="flex justify-between gap-4">
+              <dt className="text-muted-foreground">Shipping preparation & coordination</dt>
+              <dd className="font-medium text-foreground whitespace-nowrap">
+                {formatMoney(estimate.handling_fee)}
+              </dd>
+            </div>
+            <div className="flex justify-between gap-4">
+              <dt className="text-muted-foreground">Typical transit</dt>
+              <dd className="font-medium text-foreground whitespace-nowrap">
+                {estimate.estimated_transit_days.min}–{estimate.estimated_transit_days.max} business days
+              </dd>
+            </div>
+            <div className="flex justify-between gap-4 pt-3 border-t border-border">
+              <dt className="font-semibold text-foreground">Estimated total</dt>
+              <dd className="font-bold text-foreground whitespace-nowrap">
+                {formatMoney(estimate.total_cost)}
+              </dd>
+            </div>
+          </dl>
+          <p className="text-xs text-muted-foreground leading-relaxed mt-4">
+            {disclaimer ??
+              'Estimate only. Final pricing and scheduling are confirmed during freight coordination.'}{' '}
+            During checkout, the estimate is generated from the actual listing pickup location.
+          </p>
+        </div>
+      )}
+    </motion.div>
+  );
+};
+
+/* ------------------------------------------------------------------ */
 /* Related guides                                                      */
 /* ------------------------------------------------------------------ */
 
