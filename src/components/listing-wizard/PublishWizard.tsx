@@ -243,6 +243,7 @@ export const PublishWizard: React.FC = () => {
   const [listing, setListing] = useState<ListingData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [isSaveExiting, setIsSaveExiting] = useState(false);
   // Re-entrancy guards: double-clicks and the periodic guest auto-save must
   // never stack concurrent writes — queued requests contend on the client
   // connection and duplicate network calls, compounding the "Saving…" stall.
@@ -1329,6 +1330,40 @@ export const PublishWizard: React.FC = () => {
     }
     // Proceed with normal save for authenticated users
     await saveStep();
+  };
+
+  // Save & exit: persist the current wizard state BEFORE leaving. Authed
+  // drafts reuse saveStep (current-step fields + media uploads via the
+  // existing upload path); guest drafts reuse saveGuestDraftFields. On
+  // failure we stay on the page — the save helpers already surface why.
+  const handleSaveAndExit = async () => {
+    if (isSaveExiting || isSaving || saveInFlightRef.current) return;
+    setIsSaveExiting(true);
+    try {
+      if (isGuestDraft && !user) {
+        // If a background auto-save is mid-flight, give it a moment to finish
+        // so the save below captures the latest in-memory edits.
+        const waitStart = Date.now();
+        while (guestSaveBusyRef.current && Date.now() - waitStart < 27000) {
+          await new Promise((r) => window.setTimeout(r, 250));
+        }
+        const ok = await saveGuestDraftFields();
+        if (ok) {
+          navigate('/dashboard');
+        } else {
+          toast({
+            title: "We couldn't save your draft",
+            description: 'Your changes were not saved. Check your connection and try again — your answers are still on this page.',
+            variant: 'destructive'});
+        }
+        return;
+      }
+      const ok = await saveStep();
+      // saveStep already toasts on failure — only leave after a confirmed save.
+      if (ok) navigate('/dashboard');
+    } finally {
+      setIsSaveExiting(false);
+    }
   };
 
   // Calculate payout estimates
