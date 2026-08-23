@@ -30,7 +30,7 @@ import SEO from '@/components/SEO';
 import JsonLd from '@/components/JsonLd';
 import imgSelling from '@/assets/how-selling-hero.jpg';
 import imgGrilledCheese from '@/assets/food-truck-grilled-cheese.jpg';
-import documentsOkArt from '@/assets/education/documents-ok.svg';
+import documentsOkArt from '@/assets/education/documents-ok.svg.asset.json';
 
 /**
  * /how-it-works-seller — the warm, editorial seller guide.

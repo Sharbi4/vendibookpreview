@@ -19,7 +19,7 @@ import Footer from '@/components/layout/Footer';
 import { Button } from '@/components/ui/button';
 import { EquinoxFundingLogo } from '@/components/brand/ProviderLogos';
 import { FinancingAvailableBadge } from '@/components/financing/FinancingAvailableBadge';
-import loanArt from '@/assets/education/loan.svg';
+import loanArt from '@/assets/education/loan.svg.asset.json';
 import {
   trackFinancingApplyClick,
   trackFinancingPageViewed,

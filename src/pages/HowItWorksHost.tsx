@@ -29,7 +29,7 @@ import SEO from '@/components/SEO';
 import JsonLd from '@/components/JsonLd';
 import imgHosting from '@/assets/how-hosting-hero.jpg';
 import imgKitchen from '@/assets/concierge-kitchen.jpg';
-import documentsOkArt from '@/assets/education/documents-ok.svg';
+import documentsOkArt from '@/assets/education/documents-ok.svg.asset.json';
 
 /**
  * /how-it-works-host — the warm, editorial host/rental guide.

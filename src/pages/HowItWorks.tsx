@@ -26,8 +26,8 @@ import { Button } from '@/components/ui/button';
 import imgBuying from '@/assets/how-buying-hero.jpg';
 import imgCoffee from '@/assets/food-truck-coffee.jpg';
 import imgPopcorn from '@/assets/food-truck-popcorn.jpg';
-import searchPageArt from '@/assets/education/search-page.svg';
-import verificationArt from '@/assets/education/verification.svg';
+import searchPageArt from '@/assets/education/search-page.svg.asset.json';
+import verificationArt from '@/assets/education/verification.svg.asset.json';
 
 /**
  * /how-it-works — brand story + guide, not an operations manual.

@@ -29,9 +29,9 @@ import SEO from '@/components/SEO';
 import { Button } from '@/components/ui/button';
 import { PayPalMonogram, EquinoxFundingLogo } from '@/components/brand/ProviderLogos';
 import { cn } from '@/lib/utils';
-import businessNegotiationArt from '@/assets/education/business-negotiation.svg';
-import securePaymentArt from '@/assets/education/secure-payment.svg';
-import deliveryMapArt from '@/assets/education/delivery-map.svg';
+import businessNegotiationArt from '@/assets/education/business-negotiation.svg.asset.json';
+import securePaymentArt from '@/assets/education/secure-payment.svg.asset.json';
+import deliveryMapArt from '@/assets/education/delivery-map.svg.asset.json';
 
 /**
  * /how-purchasing-works — buyer education page for for-sale equipment.
