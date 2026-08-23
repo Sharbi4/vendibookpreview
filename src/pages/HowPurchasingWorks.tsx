@@ -32,6 +32,8 @@ import { cn } from '@/lib/utils';
 import businessNegotiationArt from '@/assets/education/business-negotiation.svg.asset.json';
 import securePaymentArt from '@/assets/education/secure-payment.svg.asset.json';
 import deliveryMapArt from '@/assets/education/delivery-map.svg.asset.json';
+import movingArt from '@/assets/education/moving.svg.asset.json';
+import documentsOkArt from '@/assets/education/documents-ok.svg.asset.json';
 
 /**
  * /how-purchasing-works — buyer education page for for-sale equipment.
@@ -484,12 +486,18 @@ const HowPurchasingWorks = () => {
                 Before you commit
               </p>
               <h2 className="text-2xl md:text-3xl font-bold text-foreground">
-                A clearer way to buy high-value equipment
+                Keep the purchase together
               </h2>
               <p className="text-base text-muted-foreground mt-3 max-w-xl mx-auto leading-relaxed">
-                You should know how payment, delivery, and confirmation work before you buy. Here are
-                the essentials.
+                Pay through PayPal online checkout or in person where the listing allows it, confirm the
+                handoff, and find the whole transaction in one record when you need it.
               </p>
+              <img
+                src={documentsOkArt.url}
+                alt="Purchase documents and payment confirmation in one record"
+                loading="lazy"
+                className="mx-auto mt-8 h-32 w-auto rounded-3xl border border-border bg-card object-contain shadow-sm"
+              />
             </motion.div>
 
             <ul className="space-y-3">
@@ -520,18 +528,17 @@ const HowPurchasingWorks = () => {
               <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground mb-2">
                 Flexible delivery options
               </p>
-              <h2 className="text-2xl md:text-3xl font-bold text-foreground">
-                Get it home your way
-              </h2>
+              <h2 className="text-2xl md:text-3xl font-bold text-foreground">Shop beyond local</h2>
               <p className="text-base text-muted-foreground mt-3 max-w-xl mx-auto leading-relaxed">
-                Buy nearby or shop farther from home — the right delivery option can make more inventory
-                possible.
+                Financing through third-party partners, pickup, seller delivery, and Vendibook Freight
+                where available — so the right truck in another state is a real option, not just a saved
+                tab.
               </p>
               <img
-                src={deliveryMapArt.url}
-                alt="Delivery route map from a seller to a buyer"
+                src={movingArt.url}
+                alt="Food truck being transported across state lines"
                 loading="lazy"
-                className="mx-auto mt-8 h-32 w-auto rounded-3xl border border-border bg-card object-contain shadow-sm"
+                className="mx-auto mt-8 h-36 w-auto rounded-3xl border border-border bg-card object-contain shadow-sm"
               />
             </motion.div>
 
