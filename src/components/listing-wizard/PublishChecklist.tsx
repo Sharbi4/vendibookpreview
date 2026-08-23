@@ -93,8 +93,8 @@ export const PublishChecklist: React.FC<PublishChecklistProps> = ({
 
   return (
     <div className={cn(
-      "rounded-2xl border border-border/60 shadow-xl backdrop-blur-md bg-card/70",
-      "bg-gradient-to-br from-background/80 via-card/60 to-muted/30",
+      "rounded-2xl border border-border bg-card",
+      "shadow-[0_1px_2px_rgba(24,20,16,0.04),0_10px_28px_-18px_rgba(24,20,16,0.28)]",
       className
     )}>
       {/* Collapsible Header */}
