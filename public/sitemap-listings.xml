@@ -485,17 +485,6 @@
     </image:image>
   </url>
   <url>
-    <loc>https://vendibook.com/listing/48d74da6-4702-4669-a601-9fa0463d8693</loc>
-    <lastmod>2026-08-23</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/c677e805-e035-48e5-a842-f40101f05657/48d74da6-4702-4669-a601-9fa0463d8693/1787418739279-4wo8sd.jpg</image:loc>
-      <image:title>TURNKEY  ITALIAN ICE BUSINESS </image:title>
-      <image:caption>TURNKEY  ITALIAN ICE BUSINESS  in Lincoln, DE on Vendibook</image:caption>
-    </image:image>
-  </url>
-  <url>
     <loc>https://vendibook.com/listing/c8d152a4-dbc2-4239-8e0a-56cecac50266</loc>
     <lastmod>2026-08-23</lastmod>
     <changefreq>weekly</changefreq>
@@ -702,6 +691,17 @@
       <image:loc>https://images.unsplash.com/photo-1565299585323-38d6b0865b47?w=800</image:loc>
       <image:title>Established Taco Truck</image:title>
       <image:caption>Established Taco Truck in Albuquerque, NM on Vendibook</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://vendibook.com/listing/48d74da6-4702-4669-a601-9fa0463d8693</loc>
+    <lastmod>2026-08-23</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/c677e805-e035-48e5-a842-f40101f05657/48d74da6-4702-4669-a601-9fa0463d8693/1787418739279-4wo8sd.jpg</image:loc>
+      <image:title>TURNKEY  ITALIAN ICE BUSINESS </image:title>
+      <image:caption>TURNKEY  ITALIAN ICE BUSINESS  in Lincoln, DE on Vendibook</image:caption>
     </image:image>
   </url>
   <url>

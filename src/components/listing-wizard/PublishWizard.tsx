@@ -1335,7 +1335,10 @@ export const PublishWizard: React.FC = () => {
         ? ['basics', 'photos', 'headline', 'includes', 'pricing', 'availability', 'location', 'documents', 'review']
         : ['basics', 'photos', 'headline', 'includes', 'pricing', 'location', 'review'];
       const currentIndex = steps.indexOf(step);
-      if (currentIndex < steps.length - 1) {
+      if (currentIndex === -1) {
+        // Orphaned/legacy step (e.g. ?step=details): continue forward.
+        setStep('includes');
+      } else if (currentIndex < steps.length - 1) {
         setStep(steps[currentIndex + 1]);
       }
       return;
@@ -2176,7 +2179,10 @@ export const PublishWizard: React.FC = () => {
         ? ['basics', 'photos', 'headline', 'includes', 'pricing', 'availability', 'location', 'documents', 'review']
         : ['basics', 'photos', 'headline', 'includes', 'pricing', 'location', 'review'];
       const currentIndex = steps.indexOf(step);
-      if (currentIndex < steps.length - 1) {
+      if (currentIndex === -1) {
+        // Orphaned/legacy step (e.g. ?step=details): continue forward.
+        setStep('includes');
+      } else if (currentIndex < steps.length - 1) {
         setStep(steps[currentIndex + 1]);
       }
       return true;
@@ -2662,7 +2668,7 @@ export const PublishWizard: React.FC = () => {
   // Per-step required answers. Steps can't be skipped while these are missing.
   const basicsMissing = stageMissing.filter((r) => r.step === 'basics');
   // Disclosure requirements are collected on the "What's included" step.
-  const includesMissing = stageMissing.filter((r) => r.step === 'details');
+  const includesMissing = stageMissing.filter((r) => r.step === 'includes');
 
   // Launch Checklist is the single progress/navigation system; 'basics'
   // completion feeds its first item so sellers can jump back freely.
