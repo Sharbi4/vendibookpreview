@@ -178,9 +178,9 @@ const JOURNEY = [
   },
   {
     icon: PackageCheck,
-    title: 'Receive it and close out the purchase',
-    body: 'Once the truck or trailer is in your hands, inspect it and confirm receipt when everything is in order. That confirmation helps move the purchase to completion and the seller’s payout process forward.',
-    tags: ['Inspect before confirming', 'Complete the purchase'],
+    title: 'Receive your truck and confirm delivery',
+    body: 'Once the truck or trailer is in your hands, inspect it and confirm receipt when everything is in order. That confirmation wraps up the handoff and moves the seller’s payout forward.',
+    tags: ['Inspect before confirming', 'Confirm & you’re set'],
   },
 ];
 
@@ -201,8 +201,8 @@ const TRUST_POINTS = [
   },
   {
     icon: 'clock',
-    title: 'The sale isn’t complete the moment you pay',
-    body: 'Payment is only one part of a high-value equipment purchase. Delivery or pickup and the required confirmations still need to happen before the transaction is treated as complete.',
+    title: 'Your purchase keeps moving after payment',
+    body: 'Once payment is completed, the next steps are pickup or delivery, receipt confirmation, and the seller’s payout. Vendibook keeps those steps organized so both sides always know what comes next.',
   },
   {
     icon: 'shield',
@@ -212,7 +212,7 @@ const TRUST_POINTS = [
   {
     icon: 'warning',
     title: 'Something not right? Tell us before you confirm.',
-    body: 'If there’s an issue with the equipment or delivery, report it through Vendibook before confirming receipt so the concern is documented while the purchase is still open.',
+    body: 'If there’s an issue with the equipment or delivery, report it through Vendibook before confirming receipt so the concern is documented and can be addressed during the handoff.',
   },
   {
     icon: 'building',
