@@ -36,6 +36,12 @@ export const InfoTooltip: React.FC<InfoTooltipProps> = ({
           <button
             type="button"
             onClick={() => setOpen((prev) => !prev)}
+            onTouchEnd={(e) => {
+              // Radix suppresses the synthesized click after touch; toggle here
+              // and preventDefault so a late click doesn't double-toggle.
+              e.preventDefault();
+              setOpen((prev) => !prev);
+            }}
             className={cn(
               "inline-flex items-center justify-center rounded-full p-0.5 text-muted-foreground hover:text-foreground transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary",
               className
