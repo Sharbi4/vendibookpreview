@@ -148,7 +148,14 @@ const HeroJourneyVisual = () => {
 /* Six-stage journey                                                   */
 /* ------------------------------------------------------------------ */
 
-const JOURNEY = [
+const JOURNEY: {
+  icon: LucideIcon;
+  title: string;
+  body: string;
+  tags: string[];
+  art?: string;
+  artAlt?: string;
+}[] = [
   {
     icon: Search,
     title: 'Find a truck that fits your business',
