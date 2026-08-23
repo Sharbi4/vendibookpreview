@@ -50,10 +50,10 @@ const fadeUp = {
 /* ------------------------------------------------------------------ */
 
 const HERO_FLOW = [
-  { icon: CreditCard, label: 'Secure payment' },
-  { icon: Truck, label: 'Fulfillment' },
-  { icon: PackageCheck, label: 'Confirmation' },
-  { icon: HandCoins, label: 'Seller payout' },
+  { icon: CreditCard, label: 'Choose how to pay' },
+  { icon: Truck, label: 'Plan pickup or delivery' },
+  { icon: PackageCheck, label: 'Confirm receipt' },
+  { icon: HandCoins, label: 'Purchase complete' },
 ];
 
 const HeroJourneyVisual = () => {
@@ -79,7 +79,7 @@ const HeroJourneyVisual = () => {
             <p className="text-sm font-bold text-foreground whitespace-nowrap">$68,500</p>
           </div>
           <div className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-foreground/5 border border-border px-2.5 py-1 text-[10px] font-medium text-foreground/70">
-            <ShieldCheck className="w-3 h-3 text-primary" /> Structured purchase flow
+            <ShieldCheck className="w-3 h-3 text-primary" /> Built for serious buyers
           </div>
         </div>
       </div>
@@ -148,39 +148,39 @@ const HeroJourneyVisual = () => {
 const JOURNEY = [
   {
     icon: Search,
-    title: 'Find the right equipment',
-    body: 'Browse listings with photos, specs, price, and location up front. Message the seller with questions, send an offer where the seller accepts them, and look for financing options on eligible for-sale listings.',
-    tags: ['Photos & specs', 'Messaging', 'Offers where supported'],
+    title: 'Find a truck that fits your business',
+    body: 'Explore detailed listings with photos, specs, pricing, and location information so you can quickly narrow in on the equipment that makes sense for your concept and budget.',
+    tags: ['Photos, specs & pricing', 'Browse nationwide'],
   },
   {
     icon: ReceiptText,
-    title: 'Review your purchase',
-    body: 'Checkout shows the price, your fulfillment choice, your buyer details, and the terms and costs that apply — before you commit to anything.',
-    tags: ['Price & terms shown up front'],
+    title: 'Ask questions. Compare. Make an offer.',
+    body: 'Message the seller directly, clarify the details that matter, and submit an offer where the listing supports it. You can take your time before deciding to move forward.',
+    tags: ['Message the seller', 'Offers where available'],
   },
   {
     icon: CreditCard,
-    title: 'Complete secure payment or a purchase request',
-    body: 'Where the seller enables it, you check out online through Vendibook’s secure PayPal checkout. If the listing allows Pay in Person, you arrange payment directly with the seller at handoff instead.',
-    tags: ['PayPal online checkout', 'Pay in Person'],
+    title: 'Choose how you want to pay',
+    body: 'When online checkout is offered, you can pay through Vendibook’s PayPal checkout. If the seller allows Pay in Person, you can arrange payment directly at pickup or delivery instead.',
+    tags: ['PayPal checkout', 'Pay in Person'],
   },
   {
     icon: MailCheck,
-    title: 'Seller confirmation & coordination',
-    body: 'The seller reviews the transaction in their dashboard and confirms it. From there, you coordinate the fulfillment details together in Vendibook Messages.',
-    tags: ['Seller review', 'In-app coordination'],
+    title: 'Seller confirms the sale',
+    body: 'The seller reviews the purchase and confirms the next steps. From there, you’ll coordinate the details you need for pickup, delivery, or freight.',
+    tags: ['Seller confirmation', 'Stay connected'],
   },
   {
     icon: Truck,
-    title: 'Pickup, seller delivery, or Vendibook Freight',
-    body: 'Take possession the way the listing supports: pick the equipment up yourself, have the seller deliver it, or request Vendibook-arranged freight — quoted and scheduled separately from the equipment payment.',
-    tags: ['3 fulfillment paths'],
+    title: 'Choose the delivery option that works for you',
+    body: 'Pick up locally, use seller delivery when offered, or explore Vendibook Freight for longer-distance purchases. Freight is quoted and arranged separately when available.',
+    tags: ['Pickup', 'Seller delivery', 'Vendibook Freight'],
   },
   {
     icon: PackageCheck,
-    title: 'Confirm the handoff',
-    body: 'When the equipment changes hands, both sides confirm in the transaction record. Confirmation moves the transaction toward completion, and Vendibook then reviews and initiates the seller’s payout under the applicable transaction terms.',
-    tags: ['Two-sided confirmation'],
+    title: 'Receive it and close out the purchase',
+    body: 'Once the truck or trailer is in your hands, inspect it and confirm receipt when everything is in order. That confirmation helps move the purchase to completion and the seller’s payout process forward.',
+    tags: ['Inspect before confirming', 'Complete the purchase'],
   },
 ];
 
@@ -191,33 +191,33 @@ const JOURNEY = [
 const TRUST_POINTS = [
   {
     icon: 'paypal',
-    title: 'Online payments run through PayPal checkout',
-    body: 'When a seller enables online checkout, you pay through Vendibook’s secure PayPal-powered checkout. Your payment is recorded to the transaction — it is not treated as paid out to the seller the moment you click Pay.',
+    title: 'Pay online with PayPal when it’s available',
+    body: 'For listings with online checkout, payment is completed through Vendibook’s PayPal-powered checkout and recorded with the purchase.',
   },
   {
     icon: 'banknote',
-    title: 'Pay in Person, when the listing allows it',
-    body: 'Some sellers accept payment in person. In that case you and the seller arrange payment directly at pickup or delivery, and Vendibook’s online-sale commission does not apply to that pay-in-person transaction.',
+    title: 'Prefer to pay in person? Some sellers offer that too.',
+    body: 'When Pay in Person is available, you and the seller arrange payment directly at pickup or delivery.',
   },
   {
     icon: 'clock',
-    title: 'Seller payout follows completion — not the click',
-    body: 'A purchase isn’t finished at the payment button. Vendibook reviews and initiates the seller’s payout after the required transaction steps — including handoff confirmation — are complete.',
+    title: 'The sale isn’t complete the moment you pay',
+    body: 'Payment is only one part of a high-value equipment purchase. Delivery or pickup and the required confirmations still need to happen before the transaction is treated as complete.',
   },
   {
     icon: 'shield',
-    title: 'Your confirmation matters',
-    body: 'Confirm receipt only when you actually have the equipment and it matches what you agreed to. Your confirmation is a key step that moves the transaction toward completion.',
+    title: 'Confirm only after you’ve received and inspected it',
+    body: 'Take a moment to inspect the equipment before confirming receipt. Your confirmation tells Vendibook the handoff has been completed.',
   },
   {
     icon: 'warning',
-    title: 'Report a problem before you confirm',
-    body: 'If something is wrong, report it through Vendibook before confirming receipt, while the transaction is still open. That keeps the issue on record and gives support a clear starting point.',
+    title: 'Something not right? Tell us before you confirm.',
+    body: 'If there’s an issue with the equipment or delivery, report it through Vendibook before confirming receipt so the concern is documented while the purchase is still open.',
   },
   {
     icon: 'building',
-    title: 'Vendibook is the marketplace',
-    body: 'Vendibook operates the marketplace — we are not the equipment manufacturer, the seller, or a lender. Sellers are responsible for their listings, and financing decisions belong to the financing partners.',
+    title: 'Vendibook brings the marketplace together',
+    body: 'Vendibook connects buyers and sellers and provides the marketplace tools around the purchase. The seller owns the equipment, and financing decisions are made by third-party financing partners.',
   },
 ];
 
@@ -288,20 +288,20 @@ const FULFILLMENT = [
   {
     icon: KeyRound,
     title: 'Pickup',
-    who: 'Coordinated by you and the seller',
-    body: 'You travel to the seller at an agreed time and take the equipment yourself. The most common path for local purchases — agree on the details in Messages before you set out.',
+    who: 'A simple option for local purchases',
+    body: 'Coordinate a pickup time with the seller and collect the truck or trailer directly. Final pickup details are arranged with the seller.',
   },
   {
     icon: MapPin,
     title: 'Seller delivery',
-    who: 'Coordinated by the seller',
-    body: 'Where the seller offers it, they bring the equipment to your address. Timing and any delivery fee are agreed with the seller directly in Messages.',
+    who: 'When delivery is offered by the seller',
+    body: 'Some sellers can bring the equipment to you. Availability, timing, and any delivery cost depend on the listing and are arranged with the seller.',
   },
   {
     icon: RouteIcon,
     title: 'Vendibook Freight',
-    who: 'Coordinated by Vendibook with freight partners',
-    body: 'For long-distance purchases where freight is available, Vendibook arranges professional transport. Freight is quoted and scheduled separately — it is not automatically included in the equipment payment.',
+    who: 'For longer-distance purchases',
+    body: 'Found the right truck in another city or state? When Freight is available, Vendibook can help coordinate transport so you can consider equipment beyond your local market. Freight is quoted and arranged separately.',
     freight: true,
   },
 ];
@@ -314,28 +314,28 @@ const RESOURCES = [
   {
     icon: Truck,
     title: 'Vendibook Freight',
-    body: 'How Vendibook-arranged freight works, when it applies, and what to expect.',
-    cta: 'Read the freight guide',
+    body: 'See how long-distance transport works and what to expect when Freight is available.',
+    cta: 'Explore Vendibook Freight',
     to: '/help/shipping-freight',
   },
   {
     icon: FileText,
     title: 'Disputes & buyer support',
-    body: 'What to do if something goes wrong, and what evidence helps resolve it.',
-    cta: 'See how disputes work',
+    body: 'Know what to do if there’s a problem before, during, or after the handoff.',
+    cta: 'Learn about buyer support',
     to: '/help/dispute-evidence',
   },
   {
     icon: BadgeDollarSign,
     title: 'Financing',
-    body: 'Buyers on eligible for-sale listings can apply with third-party financing partners.',
-    cta: 'Explore financing',
+    body: 'Explore financing options available through third-party partners on eligible equipment.',
+    cta: 'See financing options',
     to: '/financing',
   },
   {
     icon: HelpCircle,
     title: 'Help Center',
-    body: 'Guides for buying, selling, payments, documents, and account questions.',
+    body: 'Find answers about buying, payments, delivery, your account, and more.',
     cta: 'Visit the Help Center',
     to: '/help',
   },
