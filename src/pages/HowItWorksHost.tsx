@@ -304,7 +304,7 @@ const HowItWorksHost = () => {
                 </div>
               </motion.div>
 
-              <div className="pb-6 pl-2 sm:pl-6">
+              <div className="pb-6 pl-2 sm:pl-6 min-w-0 w-full">
                 <HeroCollage />
               </div>
             </div>
