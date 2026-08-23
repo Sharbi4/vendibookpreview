@@ -18,6 +18,7 @@ import {
 import SEO from '@/components/SEO';
 import Header from '@/components/layout/Header';
 import { Button } from '@/components/ui/button';
+import InlineLink from '@/components/education/InlineLink';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { useMonetizationProducts } from '@/hooks/useMonetizationProducts';
@@ -525,6 +526,12 @@ const Pricing = () => {
             <span className="inline-flex items-center gap-1.5"><Lock className="h-3.5 w-3.5" /> PayPal-secured billing</span>
             <span className="inline-flex items-center gap-1.5"><XCircle className="h-3.5 w-3.5" /> Cancel anytime online</span>
           </div>
+          <p className="mt-4 text-[13px] leading-relaxed text-muted-foreground">
+            See how fees fit into{' '}
+            <InlineLink to="/how-it-works-seller">selling on Vendibook</InlineLink>, how buyers pay in
+            the <InlineLink to="/how-purchasing-works">purchasing guide</InlineLink>, and when{' '}
+            <InlineLink to="/help/pay-in-person-guide">Pay in Person</InlineLink> is fee-free.
+          </p>
         </section>
 
         {/* Add-ons */}
