@@ -554,16 +554,10 @@ const HowItWorks = () => {
         <section className="py-12 md:py-20">
           <div className="container max-w-4xl mx-auto px-4">
             <motion.div {...(reduce ? {} : fadeUp)} className="text-center mb-10">
-              <div className="flex items-center justify-center gap-4 mb-6">
+              <div className="flex items-center justify-center mb-6">
                 <img
                   src={verificationArt.url}
                   alt="Verified identity badge on a Vendibook profile"
-                  loading="lazy"
-                  className="h-28 w-28 rounded-3xl border border-border bg-card object-contain shadow-sm"
-                />
-                <img
-                  src={signArt.url}
-                  alt="A clear written agreement being signed"
                   loading="lazy"
                   className="h-28 w-28 rounded-3xl border border-border bg-card object-contain shadow-sm"
                 />
