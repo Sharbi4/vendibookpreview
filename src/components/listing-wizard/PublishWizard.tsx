@@ -1853,8 +1853,11 @@ export const PublishWizard: React.FC = () => {
     return urls;
   };
 
-  const saveStep = async () => {
-    if (!listing || saveInFlightRef.current) return;
+  // Returns true when this step's fields were persisted (or nothing needed
+  // writing), false on any failure — Save & exit uses this to avoid
+  // navigating away with unsaved changes.
+  const saveStep = async (): Promise<boolean> => {
+    if (!listing || saveInFlightRef.current) return false;
     saveInFlightRef.current = true;
     setIsSaving(true);
 
@@ -1907,7 +1910,7 @@ export const PublishWizard: React.FC = () => {
               description: 'Please sign in to continue.',
               variant: 'destructive'});
             setIsSaving(false);
-            return;
+            return false;
           }
 
           let imageUrls = existingImages;
@@ -2025,7 +2028,7 @@ export const PublishWizard: React.FC = () => {
             description: 'Please add operating hours for at least one day when hourly bookings are enabled.',
             variant: 'destructive'});
           setIsSaving(false);
-          return;
+          return false;
         }
 
         updateData = {
@@ -2129,6 +2132,7 @@ export const PublishWizard: React.FC = () => {
       if (currentIndex < steps.length - 1) {
         setStep(steps[currentIndex + 1]);
       }
+      return true;
     } catch (error) {
       console.error('Error saving:', error);
       // Surface the real reason (constraint, policy, network) instead of a
@@ -2141,6 +2145,7 @@ export const PublishWizard: React.FC = () => {
           ? `${reason}${err?.code ? ` (${err.code})` : ''}`
           : 'Your changes were not saved. Check your connection and try again.',
         variant: 'destructive'});
+      return false;
     } finally {
       saveInFlightRef.current = false;
       setIsSaving(false);
