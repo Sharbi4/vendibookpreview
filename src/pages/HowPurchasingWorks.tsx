@@ -352,7 +352,7 @@ const HowPurchasingWorks = () => {
     <div className="min-h-screen bg-background flex flex-col">
       <SEO
         title="How Purchasing Works on Vendibook"
-        description="Buy a food truck or trailer with structure: review the listing, pay online through PayPal checkout or in person, coordinate pickup, delivery, or freight, and confirm the handoff."
+        description="See how buying a food truck or trailer works on Vendibook — from browsing listings and making an offer to PayPal checkout, financing options, pickup, delivery, and final confirmation."
         canonical="/how-purchasing-works"
       />
 
@@ -370,19 +370,19 @@ const HowPurchasingWorks = () => {
                 transition={{ duration: 0.5 }}
               >
                 <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-foreground/5 border border-border text-xs font-medium text-foreground mb-4">
-                  Buyer guide
+                  Buying on Vendibook
                 </div>
                 <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-foreground mb-5 leading-[1.08]">
-                  How purchasing works on Vendibook
+                  Buy your next food truck with more confidence.
                 </h1>
                 <p className="text-lg text-muted-foreground mb-8 max-w-xl leading-relaxed">
-                  Buying a food truck or trailer is a high-value decision. Vendibook guides you from
-                  listing review through secure payment and a confirmed handoff — with every step
-                  recorded in one structured transaction, not a classifieds thread.
+                  Shop food trucks and trailers from sellers across the marketplace, ask questions,
+                  compare options, make an offer where available, explore financing, and arrange pickup
+                  or delivery — all from one place.
                 </p>
                 <div className="flex flex-wrap gap-3">
                   <Button variant="cta" size="lg" className="rounded-full" asChild>
-                    <Link to="/browse">Browse equipment</Link>
+                    <Link to="/browse">Browse food trucks & trailers</Link>
                   </Button>
                   <Button variant="cta-outline" size="lg" className="rounded-full" asChild>
                     <Link to="/financing">Explore financing</Link>
@@ -406,10 +406,10 @@ const HowPurchasingWorks = () => {
           <div className="container max-w-3xl mx-auto px-4">
             <motion.div {...(reduce ? {} : fadeUp)} className="text-center mb-10">
               <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground mb-2">
-                The buyer journey
+                Buying on Vendibook
               </p>
               <h2 className="text-2xl md:text-3xl font-bold text-foreground">
-                Six stages, start to keys-in-hand
+                From first look to final handoff
               </h2>
             </motion.div>
 
@@ -432,7 +432,7 @@ const HowPurchasingWorks = () => {
                   </div>
                   <div className="min-w-0">
                     <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-primary mb-1">
-                      Stage {i + 1}
+                      0{i + 1}
                     </p>
                     <h3 className="text-lg font-semibold text-foreground mb-1.5">{stage.title}</h3>
                     <p className="text-sm text-muted-foreground leading-relaxed">{stage.body}</p>
@@ -458,14 +458,14 @@ const HowPurchasingWorks = () => {
           <div className="container max-w-3xl mx-auto px-4">
             <motion.div {...(reduce ? {} : fadeUp)} className="text-center mb-10">
               <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground mb-2">
-                Money &amp; trust
+                Before you commit
               </p>
               <h2 className="text-2xl md:text-3xl font-bold text-foreground">
-                Know what happens at every step
+                A clearer way to buy high-value equipment
               </h2>
               <p className="text-base text-muted-foreground mt-3 max-w-xl mx-auto leading-relaxed">
-                No fine-print surprises. Here is how money, confirmation, and responsibility actually
-                work on a Vendibook purchase.
+                You should know how payment, delivery, and confirmation work before you buy. Here are
+                the essentials.
               </p>
             </motion.div>
 
@@ -495,11 +495,15 @@ const HowPurchasingWorks = () => {
           <div className="container max-w-5xl mx-auto px-4">
             <motion.div {...(reduce ? {} : fadeUp)} className="text-center mb-10">
               <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground mb-2">
-                Getting the equipment
+                Flexible delivery options
               </p>
               <h2 className="text-2xl md:text-3xl font-bold text-foreground">
-                Three ways to take possession
+                Get it home your way
               </h2>
+              <p className="text-base text-muted-foreground mt-3 max-w-xl mx-auto leading-relaxed">
+                Buy nearby or shop farther from home — the right delivery option can make more inventory
+                possible.
+              </p>
             </motion.div>
 
             <div className="grid md:grid-cols-3 gap-4 md:gap-5">
@@ -534,19 +538,19 @@ const HowPurchasingWorks = () => {
             >
               <div className="flex-1">
                 <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-foreground/5 border border-border text-xs font-medium text-foreground mb-4">
-                  Optional · Eligible for-sale listings
+                  Financing available on eligible equipment
                 </div>
                 <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-3">
-                  Financing, without the guesswork
+                  Found the right truck? Explore financing.
                 </h2>
                 <p className="text-sm md:text-base text-muted-foreground leading-relaxed mb-5 max-w-xl">
-                  Eligible for-sale equipment supports buyer financing through third-party partners.
-                  Vendibook is not a lender — approval, rates, and terms are decided by the financing
-                  partner, and applying never obligates you to buy.
+                  Financing can make a larger equipment purchase more manageable. Eligible listings may
+                  offer access to third-party financing partners through Vendibook. Approval, rates, and
+                  terms are determined by the financing provider.
                 </p>
                 <Button variant="cta-outline" className="rounded-full" asChild>
                   <Link to="/financing">
-                    Explore financing options <ArrowRight className="w-4 h-4 ml-1.5" />
+                    See financing options <ArrowRight className="w-4 h-4 ml-1.5" />
                   </Link>
                 </Button>
               </div>
@@ -561,9 +565,9 @@ const HowPurchasingWorks = () => {
         <section className="py-12 md:py-16">
           <div className="container max-w-5xl mx-auto px-4">
             <motion.div {...(reduce ? {} : fadeUp)} className="text-center mb-10">
-              <h2 className="text-2xl md:text-3xl font-bold text-foreground">Keep exploring</h2>
+              <h2 className="text-2xl md:text-3xl font-bold text-foreground">Helpful before you buy</h2>
               <p className="text-base text-muted-foreground mt-3 max-w-xl mx-auto">
-                Deeper guides for each part of the purchase.
+                Learn more about delivery, financing, and what to do if something doesn’t go as planned.
               </p>
             </motion.div>
 
@@ -605,19 +609,19 @@ const HowPurchasingWorks = () => {
           <div className="container max-w-3xl mx-auto px-4 text-center">
             <motion.div {...(reduce ? {} : fadeUp)}>
               <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-3">
-                Ready to find your equipment?
+                Ready to start looking?
               </h2>
               <p className="text-base text-muted-foreground mb-7">
-                Every for-sale listing shows its payment and fulfillment options before you commit.
+                Browse food trucks and trailers for sale from sellers across the marketplace.
               </p>
               <Button variant="cta" size="lg" className="rounded-full" asChild>
                 <Link to="/browse">
-                  Browse equipment for sale <ArrowRight className="w-4 h-4 ml-1.5" />
+                  Browse food trucks & trailers <ArrowRight className="w-4 h-4 ml-1.5" />
                 </Link>
               </Button>
               <p className="text-xs text-muted-foreground mt-6 inline-flex items-center gap-1.5">
                 <LifeBuoy className="w-3.5 h-3.5" />
-                Questions before you buy? Visit the{' '}
+                Have questions before you buy? Visit the{' '}
                 <Link to="/help" className="underline underline-offset-2 hover:text-foreground">
                   Help Center
                 </Link>
