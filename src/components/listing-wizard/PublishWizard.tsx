@@ -2603,6 +2603,18 @@ export const PublishWizard: React.FC = () => {
       })
     : [];
 
+  // Per-step required answers. Steps can't be skipped while these are missing.
+  const basicsMissing = stageMissing.filter((r) => r.step === 'basics');
+  // Disclosure requirements are collected on the "What's included" step.
+  const includesMissing = stageMissing.filter((r) => r.step === 'details');
+
+  // Launch Checklist is the single progress/navigation system; 'basics'
+  // completion feeds its first item so sellers can jump back freely.
+  const checklistItems = createChecklistItems(
+    { ...checklistState, hasBasics: basicsMissing.length === 0 },
+    step,
+  );
+
   const stageRequirementsMet =
     checklistItems.filter(i => i.required).every(i => i.completed) && stageMissing.length === 0;
   const canPublish = stageRequirementsMet && allAttested(attestations);
