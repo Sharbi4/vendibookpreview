@@ -1335,7 +1335,10 @@ export const PublishWizard: React.FC = () => {
         ? ['basics', 'photos', 'headline', 'includes', 'pricing', 'availability', 'location', 'documents', 'review']
         : ['basics', 'photos', 'headline', 'includes', 'pricing', 'location', 'review'];
       const currentIndex = steps.indexOf(step);
-      if (currentIndex < steps.length - 1) {
+      if (currentIndex === -1) {
+        // Orphaned/legacy step (e.g. ?step=details): continue forward.
+        setStep('includes');
+      } else if (currentIndex < steps.length - 1) {
         setStep(steps[currentIndex + 1]);
       }
       return;
@@ -2176,7 +2179,10 @@ export const PublishWizard: React.FC = () => {
         ? ['basics', 'photos', 'headline', 'includes', 'pricing', 'availability', 'location', 'documents', 'review']
         : ['basics', 'photos', 'headline', 'includes', 'pricing', 'location', 'review'];
       const currentIndex = steps.indexOf(step);
-      if (currentIndex < steps.length - 1) {
+      if (currentIndex === -1) {
+        // Orphaned/legacy step (e.g. ?step=details): continue forward.
+        setStep('includes');
+      } else if (currentIndex < steps.length - 1) {
         setStep(steps[currentIndex + 1]);
       }
       return true;
