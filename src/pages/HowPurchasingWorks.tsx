@@ -168,7 +168,7 @@ const JOURNEY: {
     title: 'Ask questions. Compare. Make an offer.',
     body: 'Message the seller directly, clarify the details that matter, and submit an offer where the listing supports it. You can take your time before deciding to move forward.',
     tags: ['Message the seller', 'Offers where available'],
-    art: businessNegotiationArt,
+    art: businessNegotiationArt.url,
     artAlt: 'A buyer and seller negotiating an offer',
   },
   {
@@ -176,7 +176,7 @@ const JOURNEY: {
     title: 'Choose how you want to pay',
     body: 'When online checkout is offered, you can pay through Vendibook’s PayPal checkout. If the seller allows Pay in Person, you can arrange payment directly at pickup or delivery instead.',
     tags: ['PayPal checkout', 'Pay in Person'],
-    art: securePaymentArt,
+    art: securePaymentArt.url,
     artAlt: 'Paying securely online with PayPal checkout',
   },
   {
@@ -528,7 +528,7 @@ const HowPurchasingWorks = () => {
                 possible.
               </p>
               <img
-                src={deliveryMapArt}
+                src={deliveryMapArt.url}
                 alt="Delivery route map from a seller to a buyer"
                 loading="lazy"
                 className="mx-auto mt-8 h-32 w-auto rounded-3xl border border-border bg-card object-contain shadow-sm"

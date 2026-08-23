@@ -534,7 +534,7 @@ const HowItWorks = () => {
           <div className="container max-w-4xl mx-auto px-4">
             <motion.div {...(reduce ? {} : fadeUp)} className="text-center mb-10">
               <img
-                src={verificationArt}
+                src={verificationArt.url}
                 alt="Verified identity badge on a Vendibook profile"
                 loading="lazy"
                 className="mx-auto mb-6 h-28 w-28 rounded-3xl border border-border bg-card object-contain shadow-sm"

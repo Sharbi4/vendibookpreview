@@ -362,7 +362,7 @@ const HowItWorksSeller = () => {
                 </p>
               </div>
               <img
-                src={documentsOkArt}
+                src={documentsOkArt.url}
                 alt="Listing details and documents checked and in order"
                 loading="lazy"
                 className="hidden md:block h-32 w-auto shrink-0 rounded-2xl border border-border bg-card object-contain shadow-sm"

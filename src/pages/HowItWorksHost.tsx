@@ -332,7 +332,7 @@ const HowItWorksHost = () => {
                 </p>
               </div>
               <img
-                src={documentsOkArt}
+                src={documentsOkArt.url}
                 alt="Renter documents and house rules kept in one place"
                 loading="lazy"
                 className="hidden md:block h-32 w-auto shrink-0 rounded-2xl border border-border bg-card object-contain shadow-sm"

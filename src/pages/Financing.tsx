@@ -254,7 +254,7 @@ const Financing = () => {
               className="mt-10 mx-auto max-w-xl overflow-hidden rounded-3xl border border-border bg-card p-4 shadow-[0_18px_50px_-24px_rgba(0,0,0,0.15)]"
             >
               <img
-                src={loanArt}
+                src={loanArt.url}
                 alt="Financing a food truck purchase"
                 loading="lazy"
                 className="mx-auto h-auto w-full max-w-sm object-contain"
