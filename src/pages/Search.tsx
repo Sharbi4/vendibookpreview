@@ -361,6 +361,7 @@ const Search = () => {
 
   const clearFilters = () => {
     setSearchQuery('');
+    setDebouncedQuery('');
     setMode('all');
     setCategory('all');
     setLocationText('');
