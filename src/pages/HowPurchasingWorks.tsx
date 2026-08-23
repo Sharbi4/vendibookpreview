@@ -486,12 +486,18 @@ const HowPurchasingWorks = () => {
                 Before you commit
               </p>
               <h2 className="text-2xl md:text-3xl font-bold text-foreground">
-                A clearer way to buy high-value equipment
+                Keep the purchase together
               </h2>
               <p className="text-base text-muted-foreground mt-3 max-w-xl mx-auto leading-relaxed">
-                You should know how payment, delivery, and confirmation work before you buy. Here are
-                the essentials.
+                Pay through PayPal online checkout or in person where the listing allows it, confirm the
+                handoff, and find the whole transaction in one record when you need it.
               </p>
+              <img
+                src={documentsOkArt.url}
+                alt="Purchase documents and payment confirmation in one record"
+                loading="lazy"
+                className="mx-auto mt-8 h-32 w-auto rounded-3xl border border-border bg-card object-contain shadow-sm"
+              />
             </motion.div>
 
             <ul className="space-y-3">
