@@ -92,36 +92,36 @@ const Index = () => {
         {/* 3. Compact payments & verification strip */}
         <HomeTrustRail />
 
+        {/* 4. Seller education + Pricing & Pro */}
+        <HeroBelowFold />
+
+        {/* 5. Primary education funnel — compact How Vendibook Works */}
+        <HowVendibookWorks />
+
+        {/* 6. Announcement + referral */}
         <AnnouncementBanner />
+        <ReferralPromoCard />
 
         <Suspense fallback={<SectionSkeleton />}>
-          {/* 4. Featured / Pro inventory */}
+          {/* 7. Featured / Pro inventory */}
           <HomepageFeaturedRow />
 
-          {/* 5. Recently Added Trucks & Trailers */}
+          {/* 8. Recently Added Trucks & Trailers */}
           <ListingsSections />
         </Suspense>
 
-        {/* 6. Light How It Works editorial band */}
-        <HowVendibookWorks />
-
         <Suspense fallback={<SectionSkeleton />}>
-          {/* 7. Seller education + Pricing & Pro */}
-          <HeroBelowFold />
           <SellerHomeBlock />
           <PremiumDiscoveryBlock />
 
-          {/* 8. Concierge — primary soft conversion */}
+          {/* 9. Concierge — primary soft conversion */}
           <ConciergeSection />
 
-          {/* 9. Trust Infrastructure */}
+          {/* 10. Trust Infrastructure */}
           <TrustInfrastructure />
 
-          {/* 10. Become a Host / Seller */}
+          {/* 11. Become a Host / Seller */}
           <BecomeHostSection />
-
-          {/* 11. Referral program — lower down */}
-          <ReferralPromoCard />
 
           {/* 12. Final CTA */}
           <FinalCTA />
