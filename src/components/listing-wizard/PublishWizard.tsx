@@ -2869,14 +2869,14 @@ export const PublishWizard: React.FC = () => {
                           )}
 
                           {/* Drag handle */}
-                          <div className="absolute top-2 right-10 p-1.5 rounded-lg bg-black/50 text-white opacity-0 group-hover:opacity-100 transition-opacity">
+                          <div className="absolute top-2 right-10 p-1.5 rounded-lg bg-black/50 text-white opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
                             <GripVertical className="w-4 h-4" />
                           </div>
 
                           {/* Remove button */}
                           <button
                             onClick={() => removePhotoByGlobalIndex(globalIndex)}
-                            className="absolute top-2 right-2 w-7 h-7 bg-black/50 text-white rounded-full flex items-center justify-center hover:bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity"
+                            className="absolute top-2 right-2 w-7 h-7 bg-black/50 text-white rounded-full flex items-center justify-center hover:bg-black/70 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
                           >
                             <X className="w-4 h-4" />
                           </button>
@@ -2885,7 +2885,7 @@ export const PublishWizard: React.FC = () => {
                           {!isCover && (
                             <button
                               onClick={() => movePhotoToFirst(globalIndex)}
-                              className="absolute bottom-2 left-2 px-2 py-1 bg-black/60 text-white rounded-md text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/80 flex items-center gap-1"
+                              className="absolute bottom-2 left-2 px-2 py-1 bg-black/60 text-white rounded-md text-xs font-medium opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity hover:bg-black/80 flex items-center gap-1"
                             >
                               <Camera className="w-3 h-3" />
                               Cover
@@ -2934,7 +2934,7 @@ export const PublishWizard: React.FC = () => {
                             <button
                               type="button"
                               onClick={() => removeExistingVideo(index)}
-                              className="absolute top-2 right-2 w-7 h-7 bg-black/50 text-white rounded-full flex items-center justify-center hover:bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity"
+                              className="absolute top-2 right-2 w-7 h-7 bg-black/50 text-white rounded-full flex items-center justify-center hover:bg-black/70 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
                             >
                               <X className="w-4 h-4" />
                             </button>
@@ -2948,7 +2948,7 @@ export const PublishWizard: React.FC = () => {
                               <button
                                 type="button"
                                 onClick={() => removeVideo(index)}
-                                className="absolute top-2 right-2 w-7 h-7 bg-black/50 text-white rounded-full flex items-center justify-center hover:bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity"
+                                className="absolute top-2 right-2 w-7 h-7 bg-black/50 text-white rounded-full flex items-center justify-center hover:bg-black/70 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
                               >
                                 <X className="w-4 h-4" />
                               </button>
