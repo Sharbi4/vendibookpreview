@@ -177,7 +177,7 @@ const TOOL_LINKS: { icon: LucideIcon; name: string; note: string; to: string }[]
     icon: Truck,
     name: 'Vendibook Freight',
     note: 'Professional transport, coordinated as part of the transaction where available.',
-    to: '/help/shipping-freight',
+    to: '/vendibook-freight',
   },
 ];
 
@@ -269,7 +269,7 @@ const GUIDES: { icon: LucideIcon; title: string; body: string; cta: string; to: 
     title: 'Vendibook Freight',
     body: 'How arranged freight works, when it applies, and what to expect.',
     cta: 'Read the freight guide',
-    to: '/help/shipping-freight',
+    to: '/vendibook-freight',
     art: deliveryMapArt.url,
     artAlt: 'Delivery route map for arranged freight',
   },
