@@ -105,7 +105,7 @@ import {
   allAttested,
   type AttestationKey,
 } from './stages/PublishAttestations';
-import { PayPalMonogram, PayPalWordmark, EquinoxFundingLogo } from '@/components/brand/ProviderLogos';
+import { PayPalMonogram, EquinoxFundingLogo } from '@/components/brand/ProviderLogos';
 import {
   EQUINOX_DISCLOSURE_TEXT,
   EQUINOX_DISCLOSURE_VERSION,
@@ -2703,7 +2703,7 @@ export const PublishWizard: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="sale-light min-h-screen flex items-center justify-center bg-background">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
       </div>
     );
@@ -2713,7 +2713,7 @@ export const PublishWizard: React.FC = () => {
 
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="sale-light min-h-screen bg-background">
       {/* Claiming draft overlay */}
       {isClaimingDraft && (
         <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-[100] flex flex-col items-center justify-center gap-4">
@@ -2723,13 +2723,13 @@ export const PublishWizard: React.FC = () => {
         </div>
       )}
       {/* Header */}
-      <div className="border-b bg-card sticky top-0 z-10">
-        <div className="container max-w-4xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
+      <div className="sticky top-0 z-10 border-b border-border/80 bg-background/85 backdrop-blur-xl">
+        <div className="container max-w-4xl mx-auto px-4">
+          <div className="h-14 flex items-center justify-between gap-4">
             <button
               onClick={handleSaveAndExit}
               disabled={isSaveExiting || isSaving}
-              className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors disabled:opacity-60 disabled:pointer-events-none"
+              className="inline-flex items-center gap-2 rounded-lg -ml-1 px-1 py-1 text-sm text-muted-foreground hover:text-foreground transition-colors disabled:opacity-60 disabled:pointer-events-none"
             >
               {isSaveExiting || isSaving ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
@@ -2738,9 +2738,13 @@ export const PublishWizard: React.FC = () => {
               )}
               {isSaveExiting || isSaving ? 'Saving…' : 'Save & exit'}
             </button>
-            <h1 className="font-semibold">
+            <h1 className="text-sm font-semibold text-foreground truncate">
               {CATEGORY_LABELS[listing.category]} · {listing.mode === 'rent' ? 'For Rent' : 'For Sale'}
             </h1>
+            <span className="hidden sm:inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+              <Shield className="h-3.5 w-3.5" />
+              Free to publish
+            </span>
           </div>
         </div>
       </div>
@@ -2770,14 +2774,14 @@ export const PublishWizard: React.FC = () => {
               />
             </div>
 
-            <div className="bg-card rounded-2xl shadow-sm border p-6 md:p-8">
+            <div className="bg-sale-card rounded-3xl p-6 md:p-8">
               <MissingRequirementsAlert blockers={stepBlockers} className="mb-6" />
 
               {/* Stage 1: What are you listing? */}
               {step === 'basics' && (
                 <div className="space-y-6">
                   <div>
-                    <h2 className="text-xl font-bold text-foreground mb-2">The basics</h2>
+                    <h2 className="text-2xl font-bold tracking-tight text-foreground mb-2">The basics</h2>
                     <p className="text-muted-foreground">
                       A few essentials so buyers can tell at a glance what this is.
                     </p>
@@ -2814,7 +2818,7 @@ export const PublishWizard: React.FC = () => {
 
                 <div className="space-y-6">
                   <div>
-                    <h2 className="text-xl font-bold text-foreground mb-2">Add media</h2>
+                    <h2 className="text-2xl font-bold tracking-tight text-foreground mb-2">Add media</h2>
                     <p className="text-muted-foreground">
                       Upload at least 3 photos. Videos are optional. <span className="font-medium text-foreground">Drag to reorder</span> — first image is your cover.
                     </p>
@@ -2863,7 +2867,7 @@ export const PublishWizard: React.FC = () => {
 
                           {/* Saved badge for existing images */}
                           {item.type === 'existing' && !isCover && (
-                            <div className="absolute top-2 left-2 px-2 py-0.5 bg-black/50 text-white rounded text-xs">
+                            <div className="absolute top-2 left-2 px-2 py-0.5 bg-black/50 text-white rounded-md text-xs">
                               Saved
                             </div>
                           )}
@@ -2988,7 +2992,7 @@ export const PublishWizard: React.FC = () => {
                     <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-primary/10 mb-2">
                       <Type className="w-6 h-6 text-primary" />
                     </div>
-                    <h2 className="text-2xl font-bold">Let's create your listing</h2>
+                    <h2 className="text-2xl font-bold tracking-tight text-foreground">Let's create your listing</h2>
                     <p className="text-muted-foreground max-w-md mx-auto">
                       Start with a catchy headline and detailed description that will attract {listing.mode === 'rent' ? 'renters' : 'buyers'}.
                     </p>
@@ -3139,7 +3143,7 @@ export const PublishWizard: React.FC = () => {
                     <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-primary/10 mb-2">
                       <ListChecks className="w-6 h-6 text-primary" />
                     </div>
-                    <h2 className="text-2xl font-bold">What's Included?</h2>
+                    <h2 className="text-2xl font-bold tracking-tight text-foreground">What's Included?</h2>
                     <p className="text-muted-foreground max-w-md mx-auto">
                       Select features and add highlights to showcase what makes your listing special.
                     </p>
@@ -3367,7 +3371,7 @@ export const PublishWizard: React.FC = () => {
               {step === 'pricing' && (
                 <div className="space-y-6">
                   <div>
-                    <h2 className="text-xl font-bold text-foreground mb-2">Set your price</h2>
+                    <h2 className="text-2xl font-bold tracking-tight text-foreground mb-2">Set your price</h2>
                     <p className="text-muted-foreground">
                       {listing.mode === 'sale' ? 'Enter your asking price.' : 'Set daily and weekly rates.'}
                     </p>
@@ -3565,7 +3569,7 @@ export const PublishWizard: React.FC = () => {
                         </p>
 
                         <div className="space-y-4">
-                          <div className="flex items-start space-x-3 p-4 rounded-lg border border-border bg-card hover:border-primary/30 transition-colors">
+                          <div className="flex items-start space-x-3 p-4 rounded-2xl border border-border bg-card hover:border-primary/30 transition-colors">
                             <Checkbox
                               id="accept_paypal_checkout"
                               checked={acceptPayPalCheckout}
@@ -3577,7 +3581,7 @@ export const PublishWizard: React.FC = () => {
                                 htmlFor="accept_paypal_checkout"
                                 className="flex items-center gap-2 text-base font-medium cursor-pointer"
                               >
-                                <PayPalWordmark className="h-4 w-auto" />
+                                <PayPalMonogram className="h-4 w-4" />
                                 Pay online with PayPal
                               </Label>
                               <p className="text-sm text-muted-foreground mt-1">
@@ -3585,7 +3589,7 @@ export const PublishWizard: React.FC = () => {
                                 your account and paid out to your payout details after the sale is confirmed.
                               </p>
                               {acceptPayPalCheckout && (
-                                <div className="mt-2 p-2 bg-primary/5 rounded text-xs text-muted-foreground">
+                                <div className="mt-2 p-2 bg-primary/5 rounded-lg text-xs text-muted-foreground">
                                   <Info className="w-3 h-3 inline mr-1" />
                                   Add your payout details in Settings so we know where to send your proceeds.
                                 </div>
@@ -3593,7 +3597,7 @@ export const PublishWizard: React.FC = () => {
                             </div>
                           </div>
 
-                          <div className="flex items-start space-x-3 p-4 rounded-lg border border-border bg-card hover:border-primary/30 transition-colors">
+                          <div className="flex items-start space-x-3 p-4 rounded-2xl border border-border bg-card hover:border-primary/30 transition-colors">
                             <Checkbox
                               id="accept_cash_payment"
                               checked={acceptCashPayment}
@@ -3615,7 +3619,7 @@ export const PublishWizard: React.FC = () => {
                           </div>
 
                           {!acceptPayPalCheckout && !acceptCashPayment && (
-                            <div className="p-3 bg-muted/50 border border-border rounded-lg">
+                            <div className="p-3 bg-muted/50 border border-border rounded-xl">
                               <p className="text-sm text-muted-foreground flex items-center gap-2">
                                 <Info className="w-4 h-4" />
                                 Please select at least one payment method.
@@ -3875,11 +3879,11 @@ export const PublishWizard: React.FC = () => {
                               <div className="flex items-center gap-2 mb-1">
                                 <h4 className="font-semibold text-foreground">Security Deposit</h4>
                                 <InfoTooltip 
-                                  content="A refundable security deposit is charged at booking and returned after the rental ends without damage or delays." 
+                                  content="A refundable security deposit is arranged directly between you and the renter — it isn't charged through Vendibook checkout. Set the amount here so renters know what to expect before they book." 
                                 />
                               </div>
                               <p className="text-sm text-muted-foreground mb-3">
-                                Protect your equipment with a refundable deposit. Returned in full if no damage or late returns.
+                                Protect your equipment with a refundable deposit you collect and return directly with the renter.
                               </p>
                               
                               <div className="space-y-2">
@@ -3903,10 +3907,10 @@ export const PublishWizard: React.FC = () => {
                               </div>
 
                               {parseFloat(depositAmount) > 0 && (
-                                <div className="mt-4 p-3 bg-muted rounded-lg border border-border">
+                                <div className="mt-4 p-3 bg-muted rounded-xl border border-border">
                                   <p className="text-xs text-muted-foreground">
-                                    <strong className="text-primary">How it works:</strong> The ${parseFloat(depositAmount).toLocaleString()} deposit is charged when the booking is confirmed. 
-                                    After the rental ends, you can release the deposit in full or deduct for any damage/late fees.
+                                    <strong className="text-primary">How it works:</strong> The ${parseFloat(depositAmount).toLocaleString()} deposit is shown on your listing so renters know the expectation up front. 
+                                    It isn't part of the Vendibook payment — you collect and refund it directly with the renter.
                                   </p>
                                 </div>
                               )}
@@ -3953,7 +3957,7 @@ export const PublishWizard: React.FC = () => {
               {step === 'availability' && listing.mode === 'rent' && (
                 <div className="space-y-6">
                   <div>
-                    <h2 className="text-xl font-bold text-foreground mb-2">Set availability</h2>
+                    <h2 className="text-2xl font-bold tracking-tight text-foreground mb-2">Set availability</h2>
                     <p className="text-muted-foreground">
                       Control when your listing is available for bookings.
                     </p>
@@ -4077,7 +4081,7 @@ export const PublishWizard: React.FC = () => {
               {step === 'details' && (
                 <div className="space-y-6">
                   <div>
-                    <h2 className="text-xl font-bold text-foreground mb-2">Add details</h2>
+                    <h2 className="text-2xl font-bold tracking-tight text-foreground mb-2">Add details</h2>
                     <p className="text-muted-foreground">
                       {listing.mode === 'rent' ? 'Help renters understand your listing.' : 'Help buyers understand your listing.'}
                     </p>
@@ -4452,7 +4456,7 @@ export const PublishWizard: React.FC = () => {
               {step === 'location' && (
                 <div className="flex flex-col gap-6">
                   <div className="order-1">
-                    <h2 className="text-xl font-bold text-foreground mb-2">
+                    <h2 className="text-2xl font-bold tracking-tight text-foreground mb-2">
                       {listing.mode === 'sale' ? 'Pickup & delivery details' : 'Full Address & Fulfillment'}
                     </h2>
                     <p className="text-muted-foreground">
@@ -4821,7 +4825,7 @@ export const PublishWizard: React.FC = () => {
                   <div>
                     <div className="flex items-center gap-2 mb-2">
                       <Shield className="w-5 h-5 text-primary" />
-                      <h2 className="text-xl font-bold text-foreground">Required Documents</h2>
+                      <h2 className="text-2xl font-bold tracking-tight text-foreground">Required Documents</h2>
                     </div>
                     <p className="text-muted-foreground">
                       Specify which documents renters must provide and when they must be submitted.
@@ -5007,7 +5011,7 @@ export const PublishWizard: React.FC = () => {
               {step === 'review' && (
                 <div className="space-y-6">
                   <div>
-                    <h2 className="text-xl font-bold text-foreground mb-2">Review your listing</h2>
+                    <h2 className="text-2xl font-bold tracking-tight text-foreground mb-2">Review your listing</h2>
                     <p className="text-muted-foreground">Here's how your listing will appear to shoppers.</p>
                     <p className="mt-2 text-sm text-emerald-600 dark:text-emerald-400 font-medium">
                       ✓ Every sale and rental includes free online signatures — agreements handled for you.
@@ -5263,7 +5267,7 @@ export const PublishWizard: React.FC = () => {
 
       {/* Publish Confirmation Dialog */}
       <AlertDialog open={showPublishDialog} onOpenChange={setShowPublishDialog}>
-        <AlertDialogContent className="max-w-md">
+        <AlertDialogContent className="sale-light max-w-md">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-xl">Publish your listing?</AlertDialogTitle>
             <AlertDialogDescription asChild>

@@ -48,8 +48,8 @@ export function PrimaryActionBar({
       )}
     >
       {showBlockers && (
-        <div className="mb-3 rounded-lg border border-amber-500/30 bg-amber-500/[0.06] px-3 py-2">
-          <p className="text-xs font-medium text-amber-500">Add these to continue</p>
+        <div className="mb-3 rounded-xl border border-amber-500/30 bg-amber-500/[0.06] px-3 py-2">
+          <p className="text-xs font-medium text-amber-600">Add these to continue</p>
           <ul className="mt-1 space-y-0.5">
             {blockers!.map((b) => (
               <li key={b} className="text-xs text-muted-foreground">• {b}</li>
@@ -75,14 +75,15 @@ export function PrimaryActionBar({
             </Button>
           )}
           {secondary && (
-            <Button variant="outline" {...secondary} className={cn('w-full sm:w-auto', secondary.className)}>
+            <Button variant="cta-outline" {...secondary} className={cn('w-full sm:w-auto', secondary.className)}>
               {secondary.label}
             </Button>
           )}
           <Button
+            variant="cta"
             {...pRest}
             className={cn(
-              'w-full sm:w-auto min-w-[10rem] font-medium',
+              'w-full sm:w-auto min-w-[10rem]',
               pRest.className,
             )}
           >
