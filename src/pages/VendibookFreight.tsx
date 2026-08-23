@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, useReducedMotion } from 'framer-motion';
 import {
@@ -22,42 +21,29 @@ import {
   BadgeDollarSign,
   HelpCircle,
   LifeBuoy,
-  Loader2,
-  HandCoins,
-  type LucideIcon,
 } from 'lucide-react';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
-import SEO, { generateFAQSchema } from '@/components/SEO';
-import JsonLd from '@/components/JsonLd';
+import SEO from '@/components/SEO';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
-import InlineLink from '@/components/education/InlineLink';
-import { useFreightEstimate } from '@/hooks/useFreightEstimate';
 import { cn } from '@/lib/utils';
-import deliveryMapArt from '@/assets/education/delivery-map.svg.asset.json';
-import movingArt from '@/assets/education/moving.svg.asset.json';
 
 /**
  * /vendibook-freight — buyer education page for Vendibook Freight.
  *
  * Copy guardrails (do not regress): estimates come from the internal
  * geocoded-distance calculation ($4.50/mile base, $150 minimum base,
- * 8% fuel surcharge, $199 shipping preparation & coordination fee) —
- * they are NOT live broker quotes. Do not publish a tax rate; the
- * estimator adds no tax and jurisdiction-aware tax work is not finalized
- * ("applicable taxes, if any, are calculated in the transaction").
- * Service area is the contiguous 48 U.S. states. Pickup can often be
- * scheduled as soon as ~48 hours — always frame as availability-dependent,
- * never a guarantee. Do not claim insurance/cargo coverage, real-time
- * tracking, or guaranteed transit timing. Freight is optional, and is a
- * separate payment/coordination step after the seller confirms the sale
+ * 8% fuel surcharge, $75 handling) — they are NOT live broker quotes.
+ * Do not publish the hard-coded 8.25% default tax rate; jurisdiction-aware
+ * tax work is not finalized. Do not claim insurance/cargo coverage,
+ * real-time tracking, or guaranteed transit timing. Freight is a separate
+ * payment/coordination step after the seller confirms the sale
  * (see create-freight-checkout).
  */
 
@@ -182,7 +168,7 @@ const HeroRouteVisual = () => {
 /* How it works timeline                                               */
 /* ------------------------------------------------------------------ */
 
-const TIMELINE: { icon: LucideIcon; title: string; body: React.ReactNode }[] = [
+const TIMELINE = [
   {
     icon: Truck,
     title: 'Find the right equipment — wherever it is',
@@ -191,18 +177,12 @@ const TIMELINE: { icon: LucideIcon; title: string; body: React.ReactNode }[] = [
   {
     icon: Calculator,
     title: 'Review your freight estimate',
-    body: 'Enter your destination address in the delivery step and the estimate is calculated from the route between the pickup location and your address. You see the estimate before you commit — or try the estimator below anytime.',
+    body: 'Enter your destination address in the delivery step and the estimate is calculated from the route between the pickup location and your address. You see the estimate before you commit.',
   },
   {
     icon: CreditCard,
     title: 'Complete your purchase',
-    body: (
-      <>
-        Pay for the equipment through the normal{' '}
-        <InlineLink to="/how-purchasing-works">checkout flow</InlineLink>. Your purchase is recorded
-        and the sale moves forward.
-      </>
-    ),
+    body: 'Pay for the equipment through the normal checkout flow. Your purchase is recorded and the sale moves forward.',
   },
   {
     icon: MailCheck,
@@ -217,7 +197,7 @@ const TIMELINE: { icon: LucideIcon; title: string; body: React.ReactNode }[] = [
   {
     icon: CalendarClock,
     title: 'Pickup and delivery are coordinated',
-    body: 'Pickup at the seller and delivery to your address are scheduled. Pickup can often be scheduled as soon as about 48 hours after coordination begins — timing depends on carrier availability and route. Typical transit is estimated at 7–10 business days.',
+    body: 'Pickup at the seller and delivery to your address are scheduled. Typical transit is estimated at 7–10 business days; actual pickup and transit times can vary by route.',
   },
   {
     icon: PackageCheck,
@@ -247,14 +227,14 @@ const PRICING = [
     note: 'Currently 8% of the base freight charge, added to every estimate.',
   },
   {
-    label: 'Shipping preparation & coordination',
-    value: '$199',
-    note: 'A flat fee that covers shipment preparation, scheduling, and coordination with the carrier.',
+    label: 'Handling & coordination',
+    value: '$75',
+    note: 'A flat fee that covers scheduling and coordination of the shipment.',
   },
 ];
 
 /* Hypothetical 500-mile example using the current formula: */
-/* base = 500 × $4.50 = $2,250; fuel = 8% × $2,250 = $180; prep & coordination = $199. */
+/* base = 500 × $4.50 = $2,250; fuel = 8% × $2,250 = $180; handling = $75. */
 
 /* ------------------------------------------------------------------ */
 /* What affects the estimate                                           */
@@ -287,7 +267,7 @@ const FACTORS = [
 /* At delivery                                                         */
 /* ------------------------------------------------------------------ */
 
-const AT_DELIVERY: { icon: LucideIcon; title: string; body: React.ReactNode }[] = [
+const AT_DELIVERY = [
   {
     icon: CalendarClock,
     title: 'Be available for the delivery window',
@@ -306,13 +286,7 @@ const AT_DELIVERY: { icon: LucideIcon; title: string; body: React.ReactNode }[] 
   {
     icon: MessageSquareWarning,
     title: 'Report problems before confirming',
-    body: (
-      <>
-        If something isn’t right,{' '}
-        <InlineLink to="/help/dispute-evidence">contact Vendibook support</InlineLink> through your
-        order before confirming receipt so the concern is documented during the handoff.
-      </>
-    ),
+    body: 'If something isn’t right, contact Vendibook support through your order before confirming receipt so the concern is documented during the handoff.',
   },
 ];
 
@@ -351,11 +325,7 @@ const COMPARISON = [
 const FAQS = [
   {
     q: 'How much does Vendibook Freight cost?',
-    a: 'Estimates use a $4.50-per-mile base rate (with a $150 minimum base charge), plus a fuel surcharge currently set at 8% of the base and a flat $199 shipping preparation and coordination fee. The final amount depends on the actual route, distance, and shipment details, so the estimate is not a guaranteed final quote. Applicable taxes, if any, are calculated in the transaction.',
-  },
-  {
-    q: 'Where is Vendibook Freight available?',
-    a: 'Vendibook Freight serves the contiguous 48 U.S. states. Availability on a specific purchase still depends on the listing and the route — look for the Vendibook Freight option in the delivery step of checkout.',
+    a: 'Estimates use a $4.50-per-mile base rate (with a $150 minimum base charge), plus a fuel surcharge currently set at 8% of the base and a flat $75 handling and coordination fee. The final amount depends on the actual route, distance, and shipment details, so the checkout estimate is an estimate — not a guaranteed final quote. Any applicable taxes are determined in the transaction.',
   },
   {
     q: 'When do I pay for Freight?',
@@ -363,15 +333,11 @@ const FAQS = [
   },
   {
     q: 'Who pays for Freight?',
-    a: 'The buyer pays for freight in most transactions. Some sellers offer seller-paid freight — those listings show free shipping during checkout, and the seller covers the freight cost out of their sale proceeds.',
+    a: 'The buyer pays for freight in most transactions. Some sellers offer seller-paid freight — those listings show free shipping during checkout, and the seller covers the freight cost.',
   },
   {
     q: 'How long can delivery take?',
-    a: 'Pickup can often be scheduled as soon as about 48 hours after freight coordination begins, depending on carrier availability and route. Typical transit is estimated at 7–10 business days once the shipment is on the road. These are estimates, not guarantees — actual pickup scheduling and transit time vary by route and carrier availability.',
-  },
-  {
-    q: 'Can freight be included in financing?',
-    a: 'Freight may be included in eligible financing arrangements — confirm with the financing provider. Approval, rates, and terms are always determined by the financing partner.',
+    a: 'The current estimate is 7–10 business days of typical transit once the shipment is on the road. That is an estimate, not a guarantee — actual pickup scheduling and transit time can vary by route and carrier availability.',
   },
   {
     q: 'Can I use Freight for a food truck or trailer?',
@@ -382,145 +348,6 @@ const FAQS = [
     a: 'Inspect the equipment before confirming receipt. Document any visible condition concerns with photos and note them on the driver’s delivery paperwork, then report the issue to Vendibook support through your order before confirming everything is complete.',
   },
 ];
-
-/* ------------------------------------------------------------------ */
-/* Standalone estimator — reuses the shared estimate-freight engine     */
-/* (same hook + edge function as checkout; no transaction is mutated)  */
-/* ------------------------------------------------------------------ */
-
-const formatMoney = (n: number) =>
-  n.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
-
-const FreightEstimator = () => {
-  const reduce = useReducedMotion();
-  const { estimate, isLoading, disclaimer, getEstimate } = useFreightEstimate();
-  const [origin, setOrigin] = useState('');
-  const [destination, setDestination] = useState('');
-
-  const canSubmit = origin.trim().length >= 5 && destination.trim().length >= 5 && !isLoading;
-
-  const submit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!canSubmit) return;
-    void getEstimate({
-      origin_address: origin.trim(),
-      destination_address: destination.trim(),
-    });
-  };
-
-  return (
-    <motion.div
-      {...(reduce ? {} : fadeUp)}
-      className="rounded-3xl border border-border bg-card p-6 sm:p-8 shadow-[0_24px_60px_-24px_rgba(0,0,0,0.12)]"
-    >
-      <form onSubmit={submit} className="grid sm:grid-cols-2 gap-4">
-        <div>
-          <label
-            htmlFor="freight-origin"
-            className="block text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground mb-2"
-          >
-            Pickup location
-          </label>
-          <Input
-            id="freight-origin"
-            value={origin}
-            onChange={(e) => setOrigin(e.target.value)}
-            placeholder="City, state, or ZIP"
-            autoComplete="address-level2"
-            className="rounded-xl text-base"
-          />
-        </div>
-        <div>
-          <label
-            htmlFor="freight-destination"
-            className="block text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground mb-2"
-          >
-            Delivery destination
-          </label>
-          <Input
-            id="freight-destination"
-            value={destination}
-            onChange={(e) => setDestination(e.target.value)}
-            placeholder="City, state, or ZIP"
-            autoComplete="address-level2"
-            className="rounded-xl text-base"
-          />
-        </div>
-        <Button
-          type="submit"
-          variant="cta"
-          size="lg"
-          disabled={!canSubmit}
-          className="rounded-full sm:col-span-2"
-        >
-          {isLoading ? (
-            <>
-              <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> Calculating…
-            </>
-          ) : (
-            <>
-              <Calculator className="w-4 h-4 mr-1.5" /> Estimate freight
-            </>
-          )}
-        </Button>
-      </form>
-
-      {estimate && (
-        <div className="mt-6 rounded-2xl border border-border bg-background p-5 sm:p-6">
-          <div className="flex items-center justify-between gap-3 mb-4">
-            <p className="text-sm font-semibold text-foreground">Your estimate</p>
-            <span className="inline-flex items-center rounded-full bg-foreground/5 border border-border px-2.5 py-1 text-[10px] font-medium text-foreground/70">
-              Estimate — not a final quote
-            </span>
-          </div>
-          <dl className="space-y-2.5 text-sm">
-            <div className="flex justify-between gap-4">
-              <dt className="text-muted-foreground">Route distance</dt>
-              <dd className="font-medium text-foreground whitespace-nowrap">
-                ~{estimate.distance_miles.toLocaleString()} miles
-              </dd>
-            </div>
-            <div className="flex justify-between gap-4">
-              <dt className="text-muted-foreground">Base freight (${estimate.rate_per_mile.toFixed(2)}/mile)</dt>
-              <dd className="font-medium text-foreground whitespace-nowrap">
-                {formatMoney(estimate.base_cost)}
-              </dd>
-            </div>
-            <div className="flex justify-between gap-4">
-              <dt className="text-muted-foreground">Fuel surcharge</dt>
-              <dd className="font-medium text-foreground whitespace-nowrap">
-                {formatMoney(estimate.fuel_surcharge)}
-              </dd>
-            </div>
-            <div className="flex justify-between gap-4">
-              <dt className="text-muted-foreground">Shipping preparation & coordination</dt>
-              <dd className="font-medium text-foreground whitespace-nowrap">
-                {formatMoney(estimate.handling_fee)}
-              </dd>
-            </div>
-            <div className="flex justify-between gap-4">
-              <dt className="text-muted-foreground">Typical transit</dt>
-              <dd className="font-medium text-foreground whitespace-nowrap">
-                {estimate.estimated_transit_days.min}–{estimate.estimated_transit_days.max} business days
-              </dd>
-            </div>
-            <div className="flex justify-between gap-4 pt-3 border-t border-border">
-              <dt className="font-semibold text-foreground">Estimated total</dt>
-              <dd className="font-bold text-foreground whitespace-nowrap">
-                {formatMoney(estimate.total_cost)}
-              </dd>
-            </div>
-          </dl>
-          <p className="text-xs text-muted-foreground leading-relaxed mt-4">
-            {disclaimer ??
-              'Estimate only. Final pricing and scheduling are confirmed during freight coordination.'}{' '}
-            During checkout, the estimate is generated from the actual listing pickup location.
-          </p>
-        </div>
-      )}
-    </motion.div>
-  );
-};
 
 /* ------------------------------------------------------------------ */
 /* Related guides                                                      */
@@ -567,12 +394,9 @@ const VendibookFreight = () => {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <SEO
-        title="Vendibook Freight — Food Truck Shipping & Trailer Transport"
-        description="Food truck shipping and food trailer transport across the contiguous 48 states, coordinated through third-party carriers. See current rates and get an estimate."
+        title="Vendibook Freight — Food Truck & Trailer Transport"
+        description="Vendibook Freight helps coordinate long-distance transport for food trucks and trailers purchased on Vendibook. See how estimates work, current pricing, and what to expect at delivery."
         canonical="/vendibook-freight"
-      />
-      <JsonLd
-        schema={[generateFAQSchema(FAQS.map((f) => ({ question: f.q, answer: f.a })))]}
       />
 
       <Header />
@@ -596,11 +420,9 @@ const VendibookFreight = () => {
                   Vendibook Freight
                 </h1>
                 <p className="text-lg text-muted-foreground mb-8 max-w-xl leading-relaxed">
-                  Found the right food truck or trailer in another state? Vendibook Freight is food
-                  truck shipping and food trailer transport coordinated through third-party carriers
-                  across the contiguous 48 states — so distance doesn’t decide what you can buy.
-                  Here’s how it fits into{' '}
-                  <InlineLink to="/how-purchasing-works">how purchasing works</InlineLink>.
+                  Found the right food truck or trailer in another city or state? When Freight is
+                  available on a listing, Vendibook can help coordinate transport to your door after
+                  your purchase reaches the right stage — so distance doesn’t decide what you can buy.
                 </p>
                 <div className="flex flex-wrap gap-3">
                   <Button variant="cta" size="lg" className="rounded-full" asChild>
@@ -668,78 +490,6 @@ const VendibookFreight = () => {
           </div>
         </section>
 
-        {/* COVERAGE & FLEXIBILITY */}
-        <section className="py-12 md:py-16 border-y border-border bg-card/40">
-          <div className="container max-w-6xl mx-auto px-4">
-            <div className="grid lg:grid-cols-2 gap-10 lg:gap-14 items-center">
-              <motion.div {...(reduce ? {} : fadeUp)}>
-                <img
-                  src={deliveryMapArt.url}
-                  alt="Map of arranged food truck freight routes across the contiguous United States"
-                  loading="lazy"
-                  className="w-full h-auto rounded-3xl border border-border bg-background object-contain shadow-sm"
-                />
-              </motion.div>
-              <motion.div {...(reduce ? {} : fadeUp)}>
-                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground mb-2">
-                  Coverage & flexibility
-                </p>
-                <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-4">
-                  Freight across the contiguous 48 states
-                </h2>
-                <p className="text-base text-muted-foreground leading-relaxed mb-6">
-                  Transport is coordinated through third-party transportation carriers. Once freight
-                  coordination begins, pickup can often be scheduled as soon as about 48 hours out —
-                  timing always depends on carrier availability and the route.
-                </p>
-                <ul className="space-y-4">
-                  <li className="flex gap-3.5">
-                    <span className="w-10 h-10 rounded-full bg-background border border-border flex items-center justify-center shrink-0 text-foreground/70">
-                      <MapPin className="w-4.5 h-4.5" />
-                    </span>
-                    <div>
-                      <h3 className="text-base font-semibold text-foreground">Freight is optional</h3>
-                      <p className="text-sm text-muted-foreground leading-relaxed">
-                        Pickup and seller delivery remain options wherever they’re offered. Freight is
-                        there when distance would otherwise end the conversation.
-                      </p>
-                    </div>
-                  </li>
-                  <li className="flex gap-3.5">
-                    <span className="w-10 h-10 rounded-full bg-background border border-border flex items-center justify-center shrink-0 text-foreground/70">
-                      <HandCoins className="w-4.5 h-4.5" />
-                    </span>
-                    <div>
-                      <h3 className="text-base font-semibold text-foreground">
-                        Free shipping when the seller covers it
-                      </h3>
-                      <p className="text-sm text-muted-foreground leading-relaxed">
-                        On some listings, the seller chooses to cover the freight cost — you’ll see it
-                        as free shipping at checkout, and the freight amount is accounted for against
-                        the seller’s proceeds. Sellers can read more in the{' '}
-                        <InlineLink to="/how-it-works-seller">seller guide</InlineLink>.
-                      </p>
-                    </div>
-                  </li>
-                  <li className="flex gap-3.5">
-                    <span className="w-10 h-10 rounded-full bg-background border border-border flex items-center justify-center shrink-0 text-foreground/70">
-                      <BadgeDollarSign className="w-4.5 h-4.5" />
-                    </span>
-                    <div>
-                      <h3 className="text-base font-semibold text-foreground">Financing can help</h3>
-                      <p className="text-sm text-muted-foreground leading-relaxed">
-                        Freight may be included in eligible{' '}
-                        <InlineLink to="/financing">financing</InlineLink> arrangements — confirm with
-                        the financing provider.
-                      </p>
-                    </div>
-                  </li>
-                </ul>
-              </motion.div>
-            </div>
-          </div>
-        </section>
-
         {/* WHAT DOES IT COST */}
         <section className="py-12 md:py-16 border-y border-border bg-card/40">
           <div className="container max-w-5xl mx-auto px-4">
@@ -795,40 +545,21 @@ const VendibookFreight = () => {
                   <dd className="font-medium text-foreground whitespace-nowrap">$180.00</dd>
                 </div>
                 <div className="flex justify-between gap-4">
-                  <dt className="text-muted-foreground">Shipping preparation & coordination</dt>
-                  <dd className="font-medium text-foreground whitespace-nowrap">$199.00</dd>
+                  <dt className="text-muted-foreground">Handling & coordination</dt>
+                  <dd className="font-medium text-foreground whitespace-nowrap">$75.00</dd>
                 </div>
                 <div className="flex justify-between gap-4 pt-3 border-t border-border">
                   <dt className="font-semibold text-foreground">Example total</dt>
-                  <dd className="font-bold text-foreground whitespace-nowrap">$2,629.00</dd>
+                  <dd className="font-bold text-foreground whitespace-nowrap">$2,505.00</dd>
                 </div>
               </dl>
               <p className="text-xs text-muted-foreground leading-relaxed mt-5 rounded-xl bg-foreground/[0.04] border border-border px-3.5 py-3">
                 Hypothetical example only, calculated from the formula above — not a quote. Your
-                estimate is generated from the actual route at checkout, and applicable taxes, if
-                any, are calculated in the transaction. The freight amount is finalized as a separate
-                step after the seller confirms the sale.
+                estimate is generated from the actual route at checkout, and any applicable taxes are
+                determined in the transaction. The freight amount is finalized as a separate step
+                after the seller confirms the sale.
               </p>
             </motion.div>
-          </div>
-        </section>
-
-        {/* ESTIMATOR */}
-        <section className="py-12 md:py-16">
-          <div className="container max-w-3xl mx-auto px-4">
-            <motion.div {...(reduce ? {} : fadeUp)} className="text-center mb-10">
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground mb-2">
-                Try it yourself
-              </p>
-              <h2 className="text-2xl md:text-3xl font-bold text-foreground">
-                Get a freight estimate
-              </h2>
-              <p className="text-base text-muted-foreground mt-3 max-w-xl mx-auto leading-relaxed">
-                Enter a pickup location and a delivery destination — the same estimate engine used at
-                checkout calculates the route. Nothing is booked and no transaction is created.
-              </p>
-            </motion.div>
-            <FreightEstimator />
           </div>
         </section>
 
@@ -920,12 +651,6 @@ const VendibookFreight = () => {
               <p className="text-base text-muted-foreground mt-3 max-w-xl mx-auto leading-relaxed">
                 The same three options you’ll see across Vendibook — pick what fits the purchase.
               </p>
-              <img
-                src={movingArt.url}
-                alt="A food truck being transported to its new owner"
-                loading="lazy"
-                className="mx-auto mt-8 h-32 w-auto rounded-3xl border border-border bg-background object-contain shadow-sm"
-              />
             </motion.div>
 
             <div className="grid md:grid-cols-3 gap-4 md:gap-5">

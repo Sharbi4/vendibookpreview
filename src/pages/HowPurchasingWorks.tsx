@@ -27,7 +27,6 @@ import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import SEO from '@/components/SEO';
 import { Button } from '@/components/ui/button';
-import InlineLink from '@/components/education/InlineLink';
 import { PayPalMonogram, EquinoxFundingLogo } from '@/components/brand/ProviderLogos';
 import { cn } from '@/lib/utils';
 import businessNegotiationArt from '@/assets/education/business-negotiation.svg.asset.json';
@@ -155,29 +154,21 @@ const HeroJourneyVisual = () => {
 const JOURNEY: {
   icon: LucideIcon;
   title: string;
-  body: React.ReactNode;
+  body: string;
   tags: string[];
   art?: string;
   artAlt?: string;
 }[] = [
   {
     icon: Search,
-    title: 'Browse listings built for your business',
-    body: 'Search food trucks, food trailers, and vendor equipment by location, price, and category — and save the ones worth a second look.',
-    tags: ['Search & filters', 'Saved listings'],
-    art: deliveryMapArt.url,
-    artAlt: 'A map of food truck listings across cities and states',
+    title: 'Find a truck that fits your business',
+    body: 'Explore detailed listings with photos, specs, pricing, and location information so you can quickly narrow in on the equipment that makes sense for your concept and budget.',
+    tags: ['Photos, specs & pricing', 'Browse nationwide'],
   },
   {
     icon: ReceiptText,
     title: 'Ask questions. Compare. Make an offer.',
-    body: (
-      <>
-        Message the seller directly, clarify the details that matter, and{' '}
-        <InlineLink to="/help/making-offers">submit an offer</InlineLink> where the listing supports
-        it. You can take your time before deciding to move forward.
-      </>
-    ),
+    body: 'Message the seller directly, clarify the details that matter, and submit an offer where the listing supports it. You can take your time before deciding to move forward.',
     tags: ['Message the seller', 'Offers where available'],
     art: businessNegotiationArt.url,
     artAlt: 'A buyer and seller negotiating an offer',
@@ -185,14 +176,7 @@ const JOURNEY: {
   {
     icon: CreditCard,
     title: 'Choose how you want to pay',
-    body: (
-      <>
-        When online checkout is offered, you can pay through Vendibook’s{' '}
-        <InlineLink to="/help/buying-end-to-end">PayPal checkout</InlineLink>. If the seller allows{' '}
-        <InlineLink to="/help/pay-in-person-guide">Pay in Person</InlineLink>, you can arrange
-        payment directly at pickup or delivery instead.
-      </>
-    ),
+    body: 'When online checkout is offered, you can pay through Vendibook’s PayPal checkout. If the seller allows Pay in Person, you can arrange payment directly at pickup or delivery instead.',
     tags: ['PayPal checkout', 'Pay in Person'],
     art: securePaymentArt.url,
     artAlt: 'Paying securely online with PayPal checkout',
@@ -206,13 +190,7 @@ const JOURNEY: {
   {
     icon: Truck,
     title: 'Choose the delivery option that works for you',
-    body: (
-      <>
-        Pick up locally, use seller delivery when offered, or explore{' '}
-        <InlineLink to="/vendibook-freight">Vendibook Freight</InlineLink> for longer-distance
-        purchases. Freight is quoted and arranged separately when available.
-      </>
-    ),
+    body: 'Pick up locally, use seller delivery when offered, or explore Vendibook Freight for longer-distance purchases. Freight is quoted and arranged separately when available.',
     tags: ['Pickup', 'Seller delivery', 'Vendibook Freight'],
   },
   {
@@ -340,14 +318,7 @@ const FULFILLMENT = [
     icon: RouteIcon,
     title: 'Vendibook Freight',
     who: 'For longer-distance purchases',
-    body: (
-      <>
-        Found the right truck in another city or state? When{' '}
-        <InlineLink to="/vendibook-freight">Vendibook Freight</InlineLink> is available, Vendibook
-        can help coordinate transport so you can consider equipment beyond your local market. Freight
-        is quoted and arranged separately.
-      </>
-    ),
+    body: 'Found the right truck in another city or state? When Freight is available, Vendibook can help coordinate transport so you can consider equipment beyond your local market. Freight is quoted and arranged separately.',
     freight: true,
   },
 ];
@@ -397,8 +368,8 @@ const HowPurchasingWorks = () => {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <SEO
-        title="How to Buy a Food Truck or Trailer on Vendibook"
-        description="How to buy a food truck or food trailer online: browse listings, make offers, pay by PayPal or in person, and arrange pickup, delivery, or freight."
+        title="How Purchasing Works on Vendibook"
+        description="See how buying a food truck or trailer works on Vendibook — from browsing listings and making an offer to PayPal checkout, financing options, pickup, delivery, and final confirmation."
         canonical="/how-purchasing-works"
       />
 
