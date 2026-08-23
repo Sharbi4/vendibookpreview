@@ -770,10 +770,15 @@ export const PublishWizard: React.FC = () => {
   // This uses RLS policy "Allow guest draft updates with token"
   const saveGuestDraftFields = async () => {
     if (!isGuestDraft || !listing || !listingId) return;
+    // Skip overlapping saves: the step-change effect, the 30s interval,
+    // beforeunload and the Continue click can otherwise stack concurrent
+    // invokes that duplicate writes and contend on the client connection.
+    if (guestSaveBusyRef.current) return;
     
     const guestDraft = getGuestDraft();
     if (!guestDraft || guestDraft.listingId !== listingId) return;
 
+    guestSaveBusyRef.current = true;
     try {
       const safeParsePrice = (value: string): number | null => {
         if (!value || !value.trim()) return null;
@@ -865,6 +870,8 @@ export const PublishWizard: React.FC = () => {
       }
     } catch (err) {
       console.warn('Guest draft auto-save error:', err);
+    } finally {
+      guestSaveBusyRef.current = false;
     }
   };
 
@@ -1843,10 +1850,31 @@ export const PublishWizard: React.FC = () => {
   };
 
   const saveStep = async () => {
-    if (!listing) return;
+    if (!listing || saveInFlightRef.current) return;
+    saveInFlightRef.current = true;
     setIsSaving(true);
 
     try {
+      // Pre-flight session check with a hard cap. supabase-js serializes
+      // every request through the auth token-refresh lock, and the
+      // AbortSignal on the PATCH below only cancels the fetch itself — not
+      // the lock wait — so a stalled token refresh would pin Continue on
+      // "Saving…" for minutes (the reported ~2 minute stall). Surface it in
+      // 10s as a retryable error; on success the token is freshly cached, so
+      // the PATCH no longer queues behind a refresh.
+      await Promise.race([
+        supabase.auth.getSession(),
+        new Promise<never>((_, reject) =>
+          window.setTimeout(
+            () =>
+              reject(
+                new Error('Your session check timed out. Tap Continue again — your answers are still on this page.'),
+              ),
+            10000,
+          ),
+        ),
+      ]);
+
       let updateData: any = {};
 
       if (step === 'basics') {
