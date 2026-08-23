@@ -319,7 +319,14 @@ const FULFILLMENT = [
     icon: RouteIcon,
     title: 'Vendibook Freight',
     who: 'For longer-distance purchases',
-    body: 'Found the right truck in another city or state? When Freight is available, Vendibook can help coordinate transport so you can consider equipment beyond your local market. Freight is quoted and arranged separately.',
+    body: (
+      <>
+        Found the right truck in another city or state? When{' '}
+        <InlineLink to="/vendibook-freight">Vendibook Freight</InlineLink> is available, Vendibook
+        can help coordinate transport so you can consider equipment beyond your local market. Freight
+        is quoted and arranged separately.
+      </>
+    ),
     freight: true,
   },
 ];
@@ -369,8 +376,8 @@ const HowPurchasingWorks = () => {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <SEO
-        title="How Purchasing Works on Vendibook"
-        description="See how buying a food truck or trailer works on Vendibook — from browsing listings and making an offer to PayPal checkout, financing options, pickup, delivery, and final confirmation."
+        title="How to Buy a Food Truck or Trailer on Vendibook"
+        description="How to buy a food truck or food trailer online: browse listings, make offers, pay by PayPal or in person, and arrange pickup, delivery, or freight."
         canonical="/how-purchasing-works"
       />
 
