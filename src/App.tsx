@@ -67,6 +67,7 @@ const Terms = lazy(() => import("./pages/Terms"));
 const Insurance = lazy(() => import("./pages/Insurance"));
 const Search = lazy(() => import("./pages/Search"));
 const HowItWorks = lazy(() => import("./pages/HowItWorks"));
+const HowPurchasingWorks = lazy(() => import("./pages/HowPurchasingWorks"));
 const Contact = lazy(() => import("./pages/Contact"));
 const IdentityVerification = lazy(() => import("./pages/IdentityVerification"));
 const IdentityVerificationInfo = lazy(() => import("./pages/IdentityVerificationInfo"));
@@ -304,6 +305,7 @@ const AnimatedRoutes = () => {
           <Route path="/support" element={<Navigate to="/help" replace />} />
           <Route path="/legal/:slug" element={<PageTransition><LegalDocumentPage /></PageTransition>} />
           <Route path="/how-it-works" element={<PageTransition><HowItWorks /></PageTransition>} />
+          <Route path="/how-purchasing-works" element={<PageTransition><HowPurchasingWorks /></PageTransition>} />
           <Route path="/how-it-works-host" element={<PageTransition><HowItWorksHost /></PageTransition>} />
           <Route path="/how-it-works-seller" element={<PageTransition><HowItWorksSeller /></PageTransition>} />
           {/* Legacy inbound-link redirects — external sites/emails may have linked the slash forms */}
