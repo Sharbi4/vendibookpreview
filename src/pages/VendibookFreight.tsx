@@ -813,6 +813,25 @@ const VendibookFreight = () => {
           </div>
         </section>
 
+        {/* ESTIMATOR */}
+        <section className="py-12 md:py-16">
+          <div className="container max-w-3xl mx-auto px-4">
+            <motion.div {...(reduce ? {} : fadeUp)} className="text-center mb-10">
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground mb-2">
+                Try it yourself
+              </p>
+              <h2 className="text-2xl md:text-3xl font-bold text-foreground">
+                Get a freight estimate
+              </h2>
+              <p className="text-base text-muted-foreground mt-3 max-w-xl mx-auto leading-relaxed">
+                Enter a pickup location and a delivery destination — the same estimate engine used at
+                checkout calculates the route. Nothing is booked and no transaction is created.
+              </p>
+            </motion.div>
+            <FreightEstimator />
+          </div>
+        </section>
+
         {/* WHAT AFFECTS THE ESTIMATE */}
         <section className="py-12 md:py-16">
           <div className="container max-w-5xl mx-auto px-4">
@@ -901,6 +920,12 @@ const VendibookFreight = () => {
               <p className="text-base text-muted-foreground mt-3 max-w-xl mx-auto leading-relaxed">
                 The same three options you’ll see across Vendibook — pick what fits the purchase.
               </p>
+              <img
+                src={movingArt.url}
+                alt="A food truck being transported to its new owner"
+                loading="lazy"
+                className="mx-auto mt-8 h-32 w-auto rounded-3xl border border-border bg-background object-contain shadow-sm"
+              />
             </motion.div>
 
             <div className="grid md:grid-cols-3 gap-4 md:gap-5">
