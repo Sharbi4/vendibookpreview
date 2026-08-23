@@ -2867,7 +2867,7 @@ export const PublishWizard: React.FC = () => {
 
                           {/* Saved badge for existing images */}
                           {item.type === 'existing' && !isCover && (
-                            <div className="absolute top-2 left-2 px-2 py-0.5 bg-black/50 text-white rounded text-xs">
+                            <div className="absolute top-2 left-2 px-2 py-0.5 bg-black/50 text-white rounded-md text-xs">
                               Saved
                             </div>
                           )}
@@ -3569,7 +3569,7 @@ export const PublishWizard: React.FC = () => {
                         </p>
 
                         <div className="space-y-4">
-                          <div className="flex items-start space-x-3 p-4 rounded-lg border border-border bg-card hover:border-primary/30 transition-colors">
+                          <div className="flex items-start space-x-3 p-4 rounded-2xl border border-border bg-card hover:border-primary/30 transition-colors">
                             <Checkbox
                               id="accept_paypal_checkout"
                               checked={acceptPayPalCheckout}
@@ -3589,7 +3589,7 @@ export const PublishWizard: React.FC = () => {
                                 your account and paid out to your payout details after the sale is confirmed.
                               </p>
                               {acceptPayPalCheckout && (
-                                <div className="mt-2 p-2 bg-primary/5 rounded text-xs text-muted-foreground">
+                                <div className="mt-2 p-2 bg-primary/5 rounded-lg text-xs text-muted-foreground">
                                   <Info className="w-3 h-3 inline mr-1" />
                                   Add your payout details in Settings so we know where to send your proceeds.
                                 </div>
@@ -3597,7 +3597,7 @@ export const PublishWizard: React.FC = () => {
                             </div>
                           </div>
 
-                          <div className="flex items-start space-x-3 p-4 rounded-lg border border-border bg-card hover:border-primary/30 transition-colors">
+                          <div className="flex items-start space-x-3 p-4 rounded-2xl border border-border bg-card hover:border-primary/30 transition-colors">
                             <Checkbox
                               id="accept_cash_payment"
                               checked={acceptCashPayment}
@@ -3619,7 +3619,7 @@ export const PublishWizard: React.FC = () => {
                           </div>
 
                           {!acceptPayPalCheckout && !acceptCashPayment && (
-                            <div className="p-3 bg-muted/50 border border-border rounded-lg">
+                            <div className="p-3 bg-muted/50 border border-border rounded-xl">
                               <p className="text-sm text-muted-foreground flex items-center gap-2">
                                 <Info className="w-4 h-4" />
                                 Please select at least one payment method.
