@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { MapPin, Truck, Package, Check, Loader2, AlertCircle, CheckCircle2, AlertTriangle, Clock, MessageSquare, Info, CalendarClock } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
@@ -200,11 +201,11 @@ const METHOD_META: Record<FulfillmentSelection, {
   vendibook_freight: {
     icon: Package,
     name: 'Vendibook Freight',
-    tagline: 'Nationwide freight, scheduling included.',
+    tagline: 'Long-distance freight, scheduling included.',
     eta: '7–10 business days',
-    etaSub: 'Scheduled pickup + delivery with tracking',
+    etaSub: 'Estimated transit — actual pickup and delivery timing can vary',
     explainerTitle: 'How Vendibook Freight works',
-    explainerBody: 'We coordinate carrier pickup at the seller and delivery to you. Rate is quoted live from real freight brokers based on address, size, and weight. Insurance is included on eligible shipments.',
+    explainerBody: 'We coordinate carrier pickup at the seller and delivery to you. The estimate is calculated from the route distance using a per-mile rate plus a fuel surcharge and handling fee. Freight is finalized as a separate step after the seller confirms the sale.',
   },
 };
 
@@ -302,6 +303,19 @@ const MethodCard = ({ selection, selected, onSelect, priceNode, showRadio, child
           <div className="text-xs">
             <span className="font-semibold text-foreground">{meta.explainerTitle}. </span>
             <span className="text-muted-foreground">{meta.explainerBody}</span>
+            {selection === 'vendibook_freight' && (
+              <>
+                {' '}
+                <Link
+                  to="/vendibook-freight"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-medium text-primary underline underline-offset-2 hover:text-primary/80"
+                >
+                  Learn about Vendibook Freight
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </div>
