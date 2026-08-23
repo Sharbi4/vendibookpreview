@@ -31,6 +31,10 @@ import verificationArt from '@/assets/education/verification.svg.asset.json';
 import movingArt from '@/assets/education/moving.svg.asset.json';
 import documentsOkArt from '@/assets/education/documents-ok.svg.asset.json';
 import signArt from '@/assets/education/sign.svg.asset.json';
+import deliveryMapArt from '@/assets/education/delivery-map.svg.asset.json';
+import loanArt from '@/assets/education/loan.svg.asset.json';
+import businessNegotiationArt from '@/assets/education/business-negotiation.svg.asset.json';
+import happySupportTeamArt from '@/assets/education/happy-support-team.svg.asset.json';
 
 /**
  * /how-it-works — brand story + guide, not an operations manual.
@@ -250,13 +254,15 @@ const CONFIDENCE_POINTS: { icon: LucideIcon; title: string; body: string }[] = [
 /* Related guides                                                      */
 /* ------------------------------------------------------------------ */
 
-const GUIDES: { icon: LucideIcon; title: string; body: string; cta: string; to: string }[] = [
+const GUIDES: { icon: LucideIcon; title: string; body: string; cta: string; to: string; art: string; artAlt: string }[] = [
   {
     icon: ShoppingBag,
     title: 'How purchasing works',
     body: 'The full buyer journey, from first look to confirmed handoff.',
     cta: 'Read the buyer guide',
     to: '/how-purchasing-works',
+    art: signArt.url,
+    artAlt: 'Purchase agreement and confirmed handoff',
   },
   {
     icon: Truck,
@@ -264,6 +270,8 @@ const GUIDES: { icon: LucideIcon; title: string; body: string; cta: string; to: 
     body: 'How arranged freight works, when it applies, and what to expect.',
     cta: 'Read the freight guide',
     to: '/help/shipping-freight',
+    art: deliveryMapArt.url,
+    artAlt: 'Delivery route map for arranged freight',
   },
   {
     icon: BadgeDollarSign,
@@ -271,6 +279,8 @@ const GUIDES: { icon: LucideIcon; title: string; body: string; cta: string; to: 
     body: 'Buyer financing through third-party partners on eligible equipment.',
     cta: 'Explore financing',
     to: '/financing',
+    art: loanArt.url,
+    artAlt: 'Equipment financing application',
   },
   {
     icon: FileText,
@@ -278,6 +288,8 @@ const GUIDES: { icon: LucideIcon; title: string; body: string; cta: string; to: 
     body: 'What to do if something goes wrong, and what helps resolve it.',
     cta: 'See how disputes work',
     to: '/help/dispute-evidence',
+    art: businessNegotiationArt.url,
+    artAlt: 'Dispute resolution and buyer support',
   },
   {
     icon: HelpCircle,
@@ -285,6 +297,8 @@ const GUIDES: { icon: LucideIcon; title: string; body: string; cta: string; to: 
     body: 'Guides for buying, selling, renting, hosting, payments, and your account.',
     cta: 'Visit the Help Center',
     to: '/help',
+    art: happySupportTeamArt.url,
+    artAlt: 'Friendly Vendibook support team',
   },
 ];
 
@@ -540,16 +554,10 @@ const HowItWorks = () => {
         <section className="py-12 md:py-20">
           <div className="container max-w-4xl mx-auto px-4">
             <motion.div {...(reduce ? {} : fadeUp)} className="text-center mb-10">
-              <div className="flex items-center justify-center gap-4 mb-6">
+              <div className="flex items-center justify-center mb-6">
                 <img
                   src={verificationArt.url}
                   alt="Verified identity badge on a Vendibook profile"
-                  loading="lazy"
-                  className="h-28 w-28 rounded-3xl border border-border bg-card object-contain shadow-sm"
-                />
-                <img
-                  src={signArt.url}
-                  alt="A clear written agreement being signed"
                   loading="lazy"
                   className="h-28 w-28 rounded-3xl border border-border bg-card object-contain shadow-sm"
                 />
@@ -611,22 +619,28 @@ const HowItWorks = () => {
                 >
                   <Link
                     to={g.to}
-                    className="group flex gap-4 rounded-3xl border border-border bg-card p-6 h-full hover:shadow-md hover:border-foreground/25 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                    className="group flex flex-col rounded-3xl border border-border bg-card p-5 h-full hover:shadow-md hover:border-foreground/25 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                   >
-                    <span className="w-11 h-11 rounded-2xl bg-background border border-border flex items-center justify-center shrink-0 shadow-sm">
-                      <g.icon className="w-5 h-5 text-foreground/70" />
-                    </span>
-                    <span>
-                      <span className="block text-base font-semibold text-foreground mb-1">
+                    <img
+                      src={g.art}
+                      alt={g.artAlt}
+                      loading="lazy"
+                      className="mb-4 aspect-[16/10] w-full rounded-2xl border border-border bg-card object-cover shadow-sm"
+                    />
+                    <div className="flex items-center gap-3 mb-2">
+                      <span className="w-9 h-9 rounded-xl bg-background border border-border flex items-center justify-center shrink-0 shadow-sm">
+                        <g.icon className="w-4 h-4 text-foreground/70" />
+                      </span>
+                      <span className="block text-base font-semibold text-foreground">
                         {g.title}
                       </span>
-                      <span className="block text-sm text-muted-foreground leading-relaxed mb-2.5">
-                        {g.body}
-                      </span>
-                      <span className="inline-flex items-center text-sm font-medium text-primary">
-                        {g.cta}
-                        <ArrowRight className="w-3.5 h-3.5 ml-1 transition-transform group-hover:translate-x-0.5" />
-                      </span>
+                    </div>
+                    <span className="block text-sm text-muted-foreground leading-relaxed mb-3 flex-1">
+                      {g.body}
+                    </span>
+                    <span className="inline-flex items-center text-sm font-medium text-primary">
+                      {g.cta}
+                      <ArrowRight className="w-3.5 h-3.5 ml-1 transition-transform group-hover:translate-x-0.5" />
                     </span>
                   </Link>
                 </motion.div>
