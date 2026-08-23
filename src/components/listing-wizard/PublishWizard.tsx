@@ -3563,6 +3563,25 @@ export const PublishWizard: React.FC = () => {
                         <div className="flex items-center gap-2 mb-4">
                           <PayPalMonogram className="h-5 w-5" />
                           <h3 className="text-lg font-semibold">How buyers can pay</h3>
+                          <InfoTooltip
+                            side="top"
+                            align="start"
+                            content={
+                              <span className="block space-y-2">
+                                <span className="block">
+                                  <span className="font-medium">PayPal / Online Checkout:</span> Buyers
+                                  pay securely through Vendibook. The applicable Vendibook seller fee is
+                                  handled as part of the online transaction, and payout follows
+                                  Vendibook's completion/payout process.
+                                </span>
+                                <span className="block">
+                                  <span className="font-medium">Pay in Person:</span> You arrange payment
+                                  directly with the buyer at pickup or delivery; Vendibook does not charge
+                                  the online-sale commission on that pay-in-person transaction.
+                                </span>
+                              </span>
+                            }
+                          />
                         </div>
                         <p className="text-sm text-muted-foreground mb-4">
                           Select how buyers can pay for your item. You can enable both options.
@@ -5350,6 +5369,18 @@ export const PublishWizard: React.FC = () => {
           priceDaily: parseFloat(priceDaily) || null,
           priceWeekly: parseFloat(priceWeekly) || null,
           priceSale: parseFloat(priceSale) || null} : null}
+        paymentMethods={listing?.mode === 'sale' ? {
+          paypalCheckout: acceptPayPalCheckout,
+          payInPerson: acceptCashPayment} : null}
+        readiness={[
+          { label: 'Photos requirement met', met: checklistState.hasPhotos },
+          { label: 'Title & description complete', met: hasDescription },
+          { label: listing?.mode === 'sale' ? 'Valid sale price' : 'Valid daily rate', met: hasPriceAmount },
+          { label: 'Location & logistics complete', met: checklistState.hasLocation },
+          ...(listing?.mode === 'sale'
+            ? [{ label: 'Payment method selected', met: hasSalePaymentMethod }]
+            : []),
+        ]}
         onViewListing={() => navigate(`/listing/${listing?.id}`)}
       />
 

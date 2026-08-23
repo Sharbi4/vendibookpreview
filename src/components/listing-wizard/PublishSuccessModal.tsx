@@ -2,12 +2,19 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Check, ExternalLink, Share2, MapPin, Facebook, Linkedin, Link2, MessageCircle } from 'lucide-react';
+import { Check, ExternalLink, Share2, MapPin, Facebook, Linkedin, Link2, MessageCircle, Banknote, ArrowRight, ListChecks } from 'lucide-react';
 import { CATEGORY_LABELS, MODE_LABELS } from '@/types/listing';
 import { useToast } from '@/hooks/use-toast';
 import confetti from 'canvas-confetti';
 import { PostPublishFinancingCallout } from '@/components/listings/PostPublishFinancingCallout';
+import { PayPalMonogram } from '@/components/brand/ProviderLogos';
+import { cn } from '@/lib/utils';
 
+
+export interface ReadinessItem {
+  label: string;
+  met: boolean;
+}
 
 interface PublishSuccessModalProps {
   open: boolean;
@@ -23,6 +30,19 @@ interface PublishSuccessModalProps {
     priceWeekly: number | null;
     priceSale: number | null;
   } | null;
+  /**
+   * Sale listings only: which payment options the seller enabled. Omit/null
+   * for rentals so no sale payment copy renders.
+   */
+  paymentMethods?: {
+    paypalCheckout: boolean;
+    payInPerson: boolean;
+  } | null;
+  /**
+   * Compact readiness summary derived from the existing publish checklist
+   * truth. Only render what PublishWizard passes — no new eligibility rules.
+   */
+  readiness?: ReadinessItem[];
   onViewListing: () => void;
 }
 
@@ -58,6 +78,8 @@ export const PublishSuccessModal: React.FC<PublishSuccessModalProps> = ({
   open,
   onOpenChange,
   listing,
+  paymentMethods,
+  readiness,
   onViewListing,
 }) => {
   const navigate = useNavigate();
@@ -79,6 +101,7 @@ export const PublishSuccessModal: React.FC<PublishSuccessModalProps> = ({
     // Reset when modal closes
     if (!open) {
       setHasConfettiFired(false);
+      setShowShareOptions(false);
     }
   }, [open, listing, hasConfettiFired]);
 
@@ -95,6 +118,8 @@ export const PublishSuccessModal: React.FC<PublishSuccessModalProps> = ({
 
   const categoryLabel = CATEGORY_LABELS[listing.category as keyof typeof CATEGORY_LABELS] || listing.category;
   const modeLabel = MODE_LABELS[listing.mode as keyof typeof MODE_LABELS] || listing.mode;
+  const isSale = listing.mode === 'sale';
+  const showPaymentSummary = isSale && !!paymentMethods && (paymentMethods.paypalCheckout || paymentMethods.payInPerson);
   
   const listingUrl = `${window.location.origin}/listing/${listing.id}`;
   const shareText = `Check out this ${categoryLabel.toLowerCase()} ${listing.mode === 'rent' ? 'for rent' : 'for sale'} on VendiBook: ${listing.title}`;
@@ -148,9 +173,44 @@ export const PublishSuccessModal: React.FC<PublishSuccessModalProps> = ({
     navigate('/dashboard');
   };
 
+  const renderWhatHappensNext = () => {
+    if (!isSale || !paymentMethods) {
+      return (
+        <p className="text-sm text-muted-foreground leading-relaxed">
+          Renters can now find your listing and book it through Vendibook's secure online checkout.
+          You'll be notified when a new booking comes in, and payouts follow Vendibook's standard
+          transaction completion process.
+        </p>
+      );
+    }
+    const { paypalCheckout, payInPerson } = paymentMethods;
+    return (
+      <div className="space-y-2 text-sm text-muted-foreground leading-relaxed">
+        {paypalCheckout && (
+          <p>
+            <span className="font-medium text-foreground">Online checkout:</span> buyers can pay
+            securely through Vendibook with PayPal. The applicable Vendibook seller fee is handled
+            as part of the online transaction, and your payout follows Vendibook's transaction
+            completion and payout process.
+          </p>
+        )}
+        {payInPerson && (
+          <p>
+            <span className="font-medium text-foreground">Pay in Person:</span> you and the buyer
+            arrange payment directly at pickup or delivery. Vendibook does not charge the
+            online-sale commission on a pay-in-person transaction.
+          </p>
+        )}
+        {paypalCheckout && payInPerson && (
+          <p>Buyers may choose either available option at checkout.</p>
+        )}
+      </div>
+    );
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md max-h-[90dvh] overflow-y-auto">
         <DialogHeader>
           <div className="flex flex-col items-center text-center mb-2">
             <div className="w-16 h-16 rounded-full bg-green-500/10 flex items-center justify-center mb-4">
@@ -158,7 +218,7 @@ export const PublishSuccessModal: React.FC<PublishSuccessModalProps> = ({
             </div>
             <DialogTitle className="text-xl">You're live 🎉</DialogTitle>
             <p className="text-sm text-muted-foreground mt-1">
-              Share your listing to get booked faster.
+              Your listing is published and visible on the marketplace.
             </p>
           </div>
         </DialogHeader>
@@ -196,7 +256,70 @@ export const PublishSuccessModal: React.FC<PublishSuccessModalProps> = ({
           </div>
         </div>
 
-        {listing.mode === 'sale' && (
+        {/* Payment methods the seller enabled (sale listings only) */}
+        {showPaymentSummary && paymentMethods && (
+          <div className="rounded-xl border border-border bg-card p-4">
+            <h4 className="text-sm font-semibold text-foreground mb-3">How buyers can pay</h4>
+            <ul className="space-y-2">
+              {paymentMethods.paypalCheckout && (
+                <li className="flex items-center gap-2.5 text-sm text-foreground">
+                  <PayPalMonogram className="h-4 w-4 shrink-0" />
+                  <span className="flex-1">Online checkout with PayPal</span>
+                  <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-600">
+                    <Check className="w-3.5 h-3.5" /> Enabled
+                  </span>
+                </li>
+              )}
+              {paymentMethods.payInPerson && (
+                <li className="flex items-center gap-2.5 text-sm text-foreground">
+                  <Banknote className="h-4 w-4 shrink-0 text-muted-foreground" />
+                  <span className="flex-1">Pay in Person</span>
+                  <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-600">
+                    <Check className="w-3.5 h-3.5" /> Enabled
+                  </span>
+                </li>
+              )}
+            </ul>
+          </div>
+        )}
+
+        {/* Listing readiness — reuses the publish checklist truth */}
+        {readiness && readiness.length > 0 && (
+          <div className="rounded-xl border border-border bg-card p-4">
+            <h4 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+              <ListChecks className="w-4 h-4 text-primary" />
+              Listing readiness
+            </h4>
+            <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2">
+              {readiness.map((item) => (
+                <li key={item.label} className="flex items-center gap-2 text-sm">
+                  <span
+                    className={cn(
+                      'inline-flex h-4 w-4 items-center justify-center rounded-full shrink-0',
+                      item.met ? 'bg-emerald-500/15 text-emerald-600' : 'bg-muted text-muted-foreground',
+                    )}
+                  >
+                    <Check className="w-2.5 h-2.5" />
+                  </span>
+                  <span className={item.met ? 'text-foreground' : 'text-muted-foreground'}>
+                    {item.label}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {/* What happens next */}
+        <div className="rounded-xl border border-border bg-card p-4">
+          <h4 className="text-sm font-semibold text-foreground mb-2 flex items-center gap-2">
+            <ArrowRight className="w-4 h-4 text-primary" />
+            What happens next
+          </h4>
+          {renderWhatHappensNext()}
+        </div>
+
+        {isSale && (
           <PostPublishFinancingCallout listingId={listing.id} />
         )}
 
@@ -265,30 +388,34 @@ export const PublishSuccessModal: React.FC<PublishSuccessModalProps> = ({
             </Button>
           </div>
         ) : (
-          /* Action Buttons */
+          /* Action Buttons — View listing primary, dashboard secondary */
           <div className="flex flex-col gap-2 mt-2">
-            <Button onClick={() => setShowShareOptions(true)} className="w-full">
-              <Share2 className="w-4 h-4 mr-2" />
-              Share to Social Media
+            <Button onClick={onViewListing} className="w-full">
+              <ExternalLink className="w-4 h-4 mr-2" />
+              View listing
             </Button>
-            <Button onClick={handleShareKit} variant="secondary" className="w-full">
-              Get Full Share Kit
+            <Button
+              variant="outline"
+              onClick={handleDashboard}
+              className="w-full"
+            >
+              Go to dashboard
             </Button>
             <div className="flex gap-2">
               <Button
-                variant="outline"
-                onClick={onViewListing}
-                className="flex-1"
+                variant="ghost"
+                onClick={() => setShowShareOptions(true)}
+                className="flex-1 text-muted-foreground"
               >
-                <ExternalLink className="w-4 h-4 mr-2" />
-                View Listing
+                <Share2 className="w-4 h-4 mr-2" />
+                Share
               </Button>
               <Button
                 variant="ghost"
-                onClick={handleDashboard}
+                onClick={handleShareKit}
                 className="flex-1 text-muted-foreground"
               >
-                Dashboard
+                Share Kit
               </Button>
             </div>
           </div>
