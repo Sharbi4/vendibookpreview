@@ -31,6 +31,10 @@ import verificationArt from '@/assets/education/verification.svg.asset.json';
 import movingArt from '@/assets/education/moving.svg.asset.json';
 import documentsOkArt from '@/assets/education/documents-ok.svg.asset.json';
 import signArt from '@/assets/education/sign.svg.asset.json';
+import deliveryMapArt from '@/assets/education/delivery-map.svg.asset.json';
+import loanArt from '@/assets/education/loan.svg.asset.json';
+import businessNegotiationArt from '@/assets/education/business-negotiation.svg.asset.json';
+import happySupportTeamArt from '@/assets/education/happy-support-team.svg.asset.json';
 
 /**
  * /how-it-works — brand story + guide, not an operations manual.
