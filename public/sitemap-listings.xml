@@ -78,17 +78,6 @@
     </image:image>
   </url>
   <url>
-    <loc>https://vendibook.com/listing/d02ec787-17cb-4e37-b1a7-e70dec639b23</loc>
-    <lastmod>2026-08-23</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/421aa58f-ac7e-4eaf-92e3-2b6be284fb0a/d02ec787-17cb-4e37-b1a7-e70dec639b23/1784602053546-46lyaf.jpg</image:loc>
-      <image:title>16 Foot Ready-to-Operate - Food Trailer in Miami</image:title>
-      <image:caption>16 Foot Ready-to-Operate - Food Trailer in Miami in Miami, FL on Vendibook</image:caption>
-    </image:image>
-  </url>
-  <url>
     <loc>https://vendibook.com/listing/d94836ba-10fa-44e0-8b5b-046b0bf7d01b</loc>
     <lastmod>2026-08-20</lastmod>
     <changefreq>weekly</changefreq>
@@ -229,6 +218,17 @@
       <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/04eccfc2-efde-4d72-a0e9-dbcfea829376/26bd6a6a-f814-4f31-923d-68e7e326ff06/1785968367203-hxdpyo.jpeg</image:loc>
       <image:title>Fully equipped food trailer </image:title>
       <image:caption>Fully equipped food trailer  in Saginaw, MI on Vendibook</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://vendibook.com/listing/d02ec787-17cb-4e37-b1a7-e70dec639b23</loc>
+    <lastmod>2026-08-23</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/421aa58f-ac7e-4eaf-92e3-2b6be284fb0a/d02ec787-17cb-4e37-b1a7-e70dec639b23/1784602053546-46lyaf.jpg</image:loc>
+      <image:title>16 Foot Ready-to-Operate - Food Trailer in Miami</image:title>
+      <image:caption>16 Foot Ready-to-Operate - Food Trailer in Miami in Miami, FL on Vendibook</image:caption>
     </image:image>
   </url>
   <url>
