@@ -333,6 +333,17 @@ const HowItWorks = () => {
             <div className="container max-w-3xl mx-auto px-4 text-center">
               <h2 className="text-2xl md:text-4xl font-bold text-foreground mb-3">{config.label}, the Vendibook way</h2>
               <p className="text-base md:text-lg text-muted-foreground leading-relaxed">{config.blurb}</p>
+              {role === 'buy' && (
+                <p className="mt-4 text-sm">
+                  <Link
+                    to="/how-purchasing-works"
+                    className="inline-flex items-center gap-1 font-medium text-primary hover:underline underline-offset-4"
+                  >
+                    New to buying equipment here? See how purchasing works, step by step
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </Link>
+                </p>
+              )}
             </div>
           </motion.section>
         </AnimatePresence>
