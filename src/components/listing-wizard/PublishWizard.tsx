@@ -3879,11 +3879,11 @@ export const PublishWizard: React.FC = () => {
                               <div className="flex items-center gap-2 mb-1">
                                 <h4 className="font-semibold text-foreground">Security Deposit</h4>
                                 <InfoTooltip 
-                                  content="A refundable security deposit is charged at booking and returned after the rental ends without damage or delays." 
+                                  content="A refundable security deposit is arranged directly between you and the renter — it isn't charged through Vendibook checkout. Set the amount here so renters know what to expect before they book." 
                                 />
                               </div>
                               <p className="text-sm text-muted-foreground mb-3">
-                                Protect your equipment with a refundable deposit. Returned in full if no damage or late returns.
+                                Protect your equipment with a refundable deposit you collect and return directly with the renter.
                               </p>
                               
                               <div className="space-y-2">
@@ -3907,10 +3907,10 @@ export const PublishWizard: React.FC = () => {
                               </div>
 
                               {parseFloat(depositAmount) > 0 && (
-                                <div className="mt-4 p-3 bg-muted rounded-lg border border-border">
+                                <div className="mt-4 p-3 bg-muted rounded-xl border border-border">
                                   <p className="text-xs text-muted-foreground">
-                                    <strong className="text-primary">How it works:</strong> The ${parseFloat(depositAmount).toLocaleString()} deposit is charged when the booking is confirmed. 
-                                    After the rental ends, you can release the deposit in full or deduct for any damage/late fees.
+                                    <strong className="text-primary">How it works:</strong> The ${parseFloat(depositAmount).toLocaleString()} deposit is shown on your listing so renters know the expectation up front. 
+                                    It isn't part of the Vendibook payment — you collect and refund it directly with the renter.
                                   </p>
                                 </div>
                               )}
@@ -5267,7 +5267,7 @@ export const PublishWizard: React.FC = () => {
 
       {/* Publish Confirmation Dialog */}
       <AlertDialog open={showPublishDialog} onOpenChange={setShowPublishDialog}>
-        <AlertDialogContent className="max-w-md">
+        <AlertDialogContent className="sale-light max-w-md">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-xl">Publish your listing?</AlertDialogTitle>
             <AlertDialogDescription asChild>
