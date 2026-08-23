@@ -2777,7 +2777,7 @@ export const PublishWizard: React.FC = () => {
               {step === 'basics' && (
                 <div className="space-y-6">
                   <div>
-                    <h2 className="text-xl font-bold text-foreground mb-2">The basics</h2>
+                    <h2 className="text-2xl font-bold tracking-tight text-foreground mb-2">The basics</h2>
                     <p className="text-muted-foreground">
                       A few essentials so buyers can tell at a glance what this is.
                     </p>
@@ -2814,7 +2814,7 @@ export const PublishWizard: React.FC = () => {
 
                 <div className="space-y-6">
                   <div>
-                    <h2 className="text-xl font-bold text-foreground mb-2">Add media</h2>
+                    <h2 className="text-2xl font-bold tracking-tight text-foreground mb-2">Add media</h2>
                     <p className="text-muted-foreground">
                       Upload at least 3 photos. Videos are optional. <span className="font-medium text-foreground">Drag to reorder</span> — first image is your cover.
                     </p>
@@ -2988,7 +2988,7 @@ export const PublishWizard: React.FC = () => {
                     <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-primary/10 mb-2">
                       <Type className="w-6 h-6 text-primary" />
                     </div>
-                    <h2 className="text-2xl font-bold">Let's create your listing</h2>
+                    <h2 className="text-2xl font-bold tracking-tight text-foreground">Let's create your listing</h2>
                     <p className="text-muted-foreground max-w-md mx-auto">
                       Start with a catchy headline and detailed description that will attract {listing.mode === 'rent' ? 'renters' : 'buyers'}.
                     </p>
@@ -3139,7 +3139,7 @@ export const PublishWizard: React.FC = () => {
                     <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-primary/10 mb-2">
                       <ListChecks className="w-6 h-6 text-primary" />
                     </div>
-                    <h2 className="text-2xl font-bold">What's Included?</h2>
+                    <h2 className="text-2xl font-bold tracking-tight text-foreground">What's Included?</h2>
                     <p className="text-muted-foreground max-w-md mx-auto">
                       Select features and add highlights to showcase what makes your listing special.
                     </p>
@@ -3367,7 +3367,7 @@ export const PublishWizard: React.FC = () => {
               {step === 'pricing' && (
                 <div className="space-y-6">
                   <div>
-                    <h2 className="text-xl font-bold text-foreground mb-2">Set your price</h2>
+                    <h2 className="text-2xl font-bold tracking-tight text-foreground mb-2">Set your price</h2>
                     <p className="text-muted-foreground">
                       {listing.mode === 'sale' ? 'Enter your asking price.' : 'Set daily and weekly rates.'}
                     </p>
@@ -3953,7 +3953,7 @@ export const PublishWizard: React.FC = () => {
               {step === 'availability' && listing.mode === 'rent' && (
                 <div className="space-y-6">
                   <div>
-                    <h2 className="text-xl font-bold text-foreground mb-2">Set availability</h2>
+                    <h2 className="text-2xl font-bold tracking-tight text-foreground mb-2">Set availability</h2>
                     <p className="text-muted-foreground">
                       Control when your listing is available for bookings.
                     </p>
@@ -4077,7 +4077,7 @@ export const PublishWizard: React.FC = () => {
               {step === 'details' && (
                 <div className="space-y-6">
                   <div>
-                    <h2 className="text-xl font-bold text-foreground mb-2">Add details</h2>
+                    <h2 className="text-2xl font-bold tracking-tight text-foreground mb-2">Add details</h2>
                     <p className="text-muted-foreground">
                       {listing.mode === 'rent' ? 'Help renters understand your listing.' : 'Help buyers understand your listing.'}
                     </p>
@@ -4452,7 +4452,7 @@ export const PublishWizard: React.FC = () => {
               {step === 'location' && (
                 <div className="flex flex-col gap-6">
                   <div className="order-1">
-                    <h2 className="text-xl font-bold text-foreground mb-2">
+                    <h2 className="text-2xl font-bold tracking-tight text-foreground mb-2">
                       {listing.mode === 'sale' ? 'Pickup & delivery details' : 'Full Address & Fulfillment'}
                     </h2>
                     <p className="text-muted-foreground">
@@ -4821,7 +4821,7 @@ export const PublishWizard: React.FC = () => {
                   <div>
                     <div className="flex items-center gap-2 mb-2">
                       <Shield className="w-5 h-5 text-primary" />
-                      <h2 className="text-xl font-bold text-foreground">Required Documents</h2>
+                      <h2 className="text-2xl font-bold tracking-tight text-foreground">Required Documents</h2>
                     </div>
                     <p className="text-muted-foreground">
                       Specify which documents renters must provide and when they must be submitted.
@@ -5007,7 +5007,7 @@ export const PublishWizard: React.FC = () => {
               {step === 'review' && (
                 <div className="space-y-6">
                   <div>
-                    <h2 className="text-xl font-bold text-foreground mb-2">Review your listing</h2>
+                    <h2 className="text-2xl font-bold tracking-tight text-foreground mb-2">Review your listing</h2>
                     <p className="text-muted-foreground">Here's how your listing will appear to shoppers.</p>
                     <p className="mt-2 text-sm text-emerald-600 dark:text-emerald-400 font-medium">
                       ✓ Every sale and rental includes free online signatures — agreements handled for you.
