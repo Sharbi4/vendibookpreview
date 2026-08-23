@@ -98,6 +98,11 @@ const Search = () => {
   const initialPage = parseInt(searchParams.get('page') || '1', 10);
   
   const [searchQuery, setSearchQuery] = useState(initialQuery);
+  // Debounced twin of searchQuery. The input renders searchQuery immediately,
+  // but fetches/URL updates only use debouncedQuery — firing both per keystroke
+  // replaced the result list on every character, causing image flicker and
+  // scroll jank on mobile.
+  const [debouncedQuery, setDebouncedQuery] = useState(initialQuery);
   const [mode, setMode] = useState<ListingMode | 'all'>(initialMode);
   const [category, setCategory] = useState<ListingCategory | 'all'>(initialCategory);
   const [locationText, setLocationText] = useState(searchParams.get('location') || '');
@@ -241,29 +246,43 @@ const Search = () => {
 
 
 
-  // Update URL params
+  // Typing updates the input immediately (cheap); the expensive side effects
+  // (edge-function fetch, URL rewrite, sort switch) are debounced below so a
+  // full word costs one fetch instead of one per character.
   const handleSearch = (value: string) => {
     setSearchQuery(value);
-    setPage(1); // Reset to page 1 on new search
-    const params = new URLSearchParams(searchParams);
-    if (value.trim()) {
-      params.set('q', value);
-      // Auto-select relevance sort when searching
-      if (sortBy !== 'relevance') {
-        setSortBy('relevance');
-        params.set('sort', 'relevance');
-      }
-    } else {
-      params.delete('q');
-      // Reset to newest when clearing search
-      if (sortBy === 'relevance') {
-        setSortBy('newest');
-        params.delete('sort');
-      }
-    }
-    params.delete('page');
-    setSearchParams(params);
   };
+
+  // Debounce the actual search request + URL update until typing pauses.
+  useEffect(() => {
+    if (searchQuery === debouncedQuery) return;
+    const t = setTimeout(() => {
+      const value = searchQuery;
+      setDebouncedQuery(value);
+      setPage(1); // Reset to page 1 on new search
+      setSortBy(prev => {
+        if (value.trim() && prev !== 'relevance') return 'relevance';
+        if (!value.trim() && prev === 'relevance') return 'newest';
+        return prev;
+      });
+      setSearchParams(prev => {
+        const params = new URLSearchParams(prev);
+        if (value.trim()) {
+          params.set('q', value);
+          params.set('sort', 'relevance');
+        } else {
+          params.delete('q');
+          if (sortBy === 'relevance') params.delete('sort');
+        }
+        params.delete('page');
+        return params;
+      }, { replace: true });
+    }, 400);
+    return () => clearTimeout(t);
+    // Only re-run when the typed value changes; URL/sort are read functionally
+    // or as point-in-time snapshots to avoid clobbering concurrent filter taps.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchQuery]);
 
   const handleModeChange = (value: string) => {
     const newMode = value as ListingMode | 'all';
