@@ -2703,7 +2703,7 @@ export const PublishWizard: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="sale-light min-h-screen flex items-center justify-center bg-background">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
       </div>
     );
@@ -2713,7 +2713,7 @@ export const PublishWizard: React.FC = () => {
 
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="sale-light min-h-screen bg-background">
       {/* Claiming draft overlay */}
       {isClaimingDraft && (
         <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-[100] flex flex-col items-center justify-center gap-4">
@@ -2723,13 +2723,13 @@ export const PublishWizard: React.FC = () => {
         </div>
       )}
       {/* Header */}
-      <div className="border-b bg-card sticky top-0 z-10">
-        <div className="container max-w-4xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
+      <div className="sticky top-0 z-10 border-b border-border/80 bg-background/85 backdrop-blur-xl">
+        <div className="container max-w-4xl mx-auto px-4">
+          <div className="h-14 flex items-center justify-between gap-4">
             <button
               onClick={handleSaveAndExit}
               disabled={isSaveExiting || isSaving}
-              className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors disabled:opacity-60 disabled:pointer-events-none"
+              className="inline-flex items-center gap-2 rounded-lg -ml-1 px-1 py-1 text-sm text-muted-foreground hover:text-foreground transition-colors disabled:opacity-60 disabled:pointer-events-none"
             >
               {isSaveExiting || isSaving ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
@@ -2738,9 +2738,13 @@ export const PublishWizard: React.FC = () => {
               )}
               {isSaveExiting || isSaving ? 'Saving…' : 'Save & exit'}
             </button>
-            <h1 className="font-semibold">
+            <h1 className="text-sm font-semibold text-foreground truncate">
               {CATEGORY_LABELS[listing.category]} · {listing.mode === 'rent' ? 'For Rent' : 'For Sale'}
             </h1>
+            <span className="hidden sm:inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+              <Shield className="h-3.5 w-3.5" />
+              Free to publish
+            </span>
           </div>
         </div>
       </div>
@@ -2770,7 +2774,7 @@ export const PublishWizard: React.FC = () => {
               />
             </div>
 
-            <div className="bg-card rounded-2xl shadow-sm border p-6 md:p-8">
+            <div className="bg-sale-card rounded-3xl p-6 md:p-8">
               <MissingRequirementsAlert blockers={stepBlockers} className="mb-6" />
 
               {/* Stage 1: What are you listing? */}

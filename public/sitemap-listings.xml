@@ -221,17 +221,6 @@
     </image:image>
   </url>
   <url>
-    <loc>https://vendibook.com/listing/a2a2f761-da8c-4f59-ad5c-6a8b54f67083</loc>
-    <lastmod>2026-08-22</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/454f16ce-dcff-4a55-a5a1-e91e158758fe/a2a2f761-da8c-4f59-ad5c-6a8b54f67083/1782871635610-hc4b6f.jpeg</image:loc>
-      <image:title>Fully Built 1994 S&amp;H mobile Bar</image:title>
-      <image:caption>Fully Built 1994 S&amp;H mobile Bar in Magnolia, TX on Vendibook</image:caption>
-    </image:image>
-  </url>
-  <url>
     <loc>https://vendibook.com/listing/e746bd18-cad4-4cbf-9972-176bb8affc56</loc>
     <lastmod>2026-08-20</lastmod>
     <changefreq>weekly</changefreq>
@@ -581,6 +570,17 @@
       <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/e86990e4-0a49-4126-a786-ea2b29eb8457/d98cfc23-1156-489e-a4f7-1e0bafb74fe5/1782570587944-yn47a.jpeg</image:loc>
       <image:title>2022 fully equit with bathroom food trailer</image:title>
       <image:caption>2022 fully equit with bathroom food trailer in Lakeland, GA on Vendibook</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://vendibook.com/listing/a2a2f761-da8c-4f59-ad5c-6a8b54f67083</loc>
+    <lastmod>2026-08-23</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/454f16ce-dcff-4a55-a5a1-e91e158758fe/a2a2f761-da8c-4f59-ad5c-6a8b54f67083/1782871635610-hc4b6f.jpeg</image:loc>
+      <image:title>Fully Built 1994 S&amp;H mobile Bar</image:title>
+      <image:caption>Fully Built 1994 S&amp;H mobile Bar in Magnolia, TX on Vendibook</image:caption>
     </image:image>
   </url>
   <url>
