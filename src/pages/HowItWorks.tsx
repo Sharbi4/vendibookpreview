@@ -71,14 +71,14 @@ const HeroCollage = () => {
         />
         <div className="p-5">
           <div className="flex items-start justify-between gap-3">
-            <div>
-              <p className="text-base font-semibold text-foreground">Turn-key coffee truck</p>
+            <div className="min-w-0">
+              <p className="truncate text-base font-semibold text-foreground">Turn-key coffee truck</p>
               <p className="mt-0.5 flex items-center gap-1 text-xs text-muted-foreground">
                 <MapPin className="h-3 w-3" />
                 Portland, OR
               </p>
             </div>
-            <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1 text-[11px] font-semibold text-primary">
+            <span className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full bg-primary/10 px-2.5 py-1 text-[10px] font-semibold text-primary sm:text-[11px]">
               <BadgeDollarSign className="h-3 w-3" />
               Financing available
             </span>
@@ -94,7 +94,7 @@ const HeroCollage = () => {
 
       {/* Floating secondary card */}
       <motion.div
-        className="absolute bottom-24 left-3 w-40 overflow-hidden rounded-2xl border border-border bg-card shadow-lg sm:bottom-28 sm:left-6 sm:w-52"
+        className="absolute bottom-32 left-3 w-36 overflow-hidden rounded-2xl border border-border bg-card shadow-lg sm:bottom-28 sm:left-6 sm:w-52"
         initial={reduce ? { opacity: 0 } : { opacity: 0, y: 14 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: reduce ? 0 : 0.35 }}
