@@ -254,13 +254,15 @@ const CONFIDENCE_POINTS: { icon: LucideIcon; title: string; body: string }[] = [
 /* Related guides                                                      */
 /* ------------------------------------------------------------------ */
 
-const GUIDES: { icon: LucideIcon; title: string; body: string; cta: string; to: string }[] = [
+const GUIDES: { icon: LucideIcon; title: string; body: string; cta: string; to: string; art: string; artAlt: string }[] = [
   {
     icon: ShoppingBag,
     title: 'How purchasing works',
     body: 'The full buyer journey, from first look to confirmed handoff.',
     cta: 'Read the buyer guide',
     to: '/how-purchasing-works',
+    art: signArt.url,
+    artAlt: 'Purchase agreement and confirmed handoff',
   },
   {
     icon: Truck,
@@ -268,6 +270,8 @@ const GUIDES: { icon: LucideIcon; title: string; body: string; cta: string; to: 
     body: 'How arranged freight works, when it applies, and what to expect.',
     cta: 'Read the freight guide',
     to: '/help/shipping-freight',
+    art: deliveryMapArt.url,
+    artAlt: 'Delivery route map for arranged freight',
   },
   {
     icon: BadgeDollarSign,
@@ -275,6 +279,8 @@ const GUIDES: { icon: LucideIcon; title: string; body: string; cta: string; to: 
     body: 'Buyer financing through third-party partners on eligible equipment.',
     cta: 'Explore financing',
     to: '/financing',
+    art: loanArt.url,
+    artAlt: 'Equipment financing application',
   },
   {
     icon: FileText,
@@ -282,6 +288,8 @@ const GUIDES: { icon: LucideIcon; title: string; body: string; cta: string; to: 
     body: 'What to do if something goes wrong, and what helps resolve it.',
     cta: 'See how disputes work',
     to: '/help/dispute-evidence',
+    art: businessNegotiationArt.url,
+    artAlt: 'Dispute resolution and buyer support',
   },
   {
     icon: HelpCircle,
@@ -289,6 +297,8 @@ const GUIDES: { icon: LucideIcon; title: string; body: string; cta: string; to: 
     body: 'Guides for buying, selling, renting, hosting, payments, and your account.',
     cta: 'Visit the Help Center',
     to: '/help',
+    art: happySupportTeamArt.url,
+    artAlt: 'Friendly Vendibook support team',
   },
 ];
 
