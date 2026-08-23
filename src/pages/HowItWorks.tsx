@@ -26,6 +26,8 @@ import { Button } from '@/components/ui/button';
 import imgBuying from '@/assets/how-buying-hero.jpg';
 import imgCoffee from '@/assets/food-truck-coffee.jpg';
 import imgPopcorn from '@/assets/food-truck-popcorn.jpg';
+import searchPageArt from '@/assets/education/search-page.svg';
+import verificationArt from '@/assets/education/verification.svg';
 
 /**
  * /how-it-works — brand story + guide, not an operations manual.
@@ -126,10 +128,12 @@ const HeroCollage = () => {
 /* Why it feels different                                              */
 /* ------------------------------------------------------------------ */
 
-const DIFFERENCES: { title: string; body: string }[] = [
+const DIFFERENCES: { title: string; body: string; art?: string; artAlt?: string }[] = [
   {
     title: 'Shop with more context',
     body: 'Photos, video where sellers provide it, full specs, price, and location up front. Message the seller or make an offer where it’s supported — and keep every word attached to the listing.',
+    art: searchPageArt,
+    artAlt: 'Browsing Vendibook search results with rich listing details',
   },
   {
     title: 'Shop beyond local',
@@ -376,10 +380,19 @@ const HowItWorks = () => {
                   {...(reduce ? {} : fadeUp)}
                   transition={{ duration: 0.4, delay: reduce ? 0 : i * 0.07, ease }}
                 >
-                  <span
-                    aria-hidden
-                    className="block h-px w-10 bg-primary/50 mb-5"
-                  />
+                  {d.art ? (
+                    <img
+                      src={d.art}
+                      alt={d.artAlt ?? ''}
+                      loading="lazy"
+                      className="mb-5 h-28 w-28 rounded-2xl border border-border bg-card object-contain shadow-sm"
+                    />
+                  ) : (
+                    <span
+                      aria-hidden
+                      className="block h-px w-10 bg-primary/50 mb-5"
+                    />
+                  )}
                   <h3 className="text-lg font-semibold text-foreground mb-2">{d.title}</h3>
                   <p className="text-sm text-muted-foreground leading-relaxed">{d.body}</p>
                 </motion.div>
@@ -520,6 +533,12 @@ const HowItWorks = () => {
         <section className="py-12 md:py-20">
           <div className="container max-w-4xl mx-auto px-4">
             <motion.div {...(reduce ? {} : fadeUp)} className="text-center mb-10">
+              <img
+                src={verificationArt}
+                alt="Verified identity badge on a Vendibook profile"
+                loading="lazy"
+                className="mx-auto mb-6 h-28 w-28 rounded-3xl border border-border bg-card object-contain shadow-sm"
+              />
               <h2 className="text-2xl md:text-3xl font-bold text-foreground">
                 More confidence, fewer unknowns.
               </h2>
