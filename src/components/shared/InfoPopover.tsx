@@ -1,4 +1,5 @@
 import { Info } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import {
   Popover,
   PopoverContent,
@@ -68,11 +69,21 @@ export const EscrowInfoPopover = () => (
 export const FreightInfoPopover = () => (
   <InfoPopover title="How Freight Works">
     <ul className="list-disc list-inside space-y-1">
-      <li>After payment, we contact you within 2 business days to schedule</li>
-      <li>You'll receive tracking once the shipment is booked</li>
-      <li>Typical transit: 7–10 business days</li>
+      <li>After the seller confirms the sale, we contact you to schedule pickup and delivery</li>
+      <li>Typical transit estimate: 7–10 business days (timing can vary)</li>
+      <li>Freight is finalized as a separate step from the equipment payment</li>
       <li>Professional freight handling included</li>
     </ul>
+    <p className="mt-2">
+      <Link
+        to="/vendibook-freight"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="font-medium text-primary underline underline-offset-2 hover:text-primary/80"
+      >
+        Learn about Vendibook Freight
+      </Link>
+    </p>
   </InfoPopover>
 );
 
