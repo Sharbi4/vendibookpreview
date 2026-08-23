@@ -32,6 +32,8 @@ import { cn } from '@/lib/utils';
 import businessNegotiationArt from '@/assets/education/business-negotiation.svg.asset.json';
 import securePaymentArt from '@/assets/education/secure-payment.svg.asset.json';
 import deliveryMapArt from '@/assets/education/delivery-map.svg.asset.json';
+import movingArt from '@/assets/education/moving.svg.asset.json';
+import documentsOkArt from '@/assets/education/documents-ok.svg.asset.json';
 
 /**
  * /how-purchasing-works — buyer education page for for-sale equipment.
