@@ -1015,18 +1015,30 @@ export const PublishWizard: React.FC = () => {
 
       if (data.address) {
         const parts = data.address.split(',').map((p: string) => p.trim());
-        setStreetAddress(parts[0] || '');
-        if (parts.length >= 3) {
+        // Last part might be "STATE ZIP" (ZIP optional for locality strings)
+        const lastPart = parts[parts.length - 1] || '';
+        const stateZipMatch = lastPart.match(/^([A-Z]{2})(?:\s+(\d{5}))?$/);
+        if (parts.length === 2 && stateZipMatch) {
+          // Quick Start locality like "Houston, TX" — hydrate city/state/ZIP
+          // but NEVER treat the first segment as a street address.
+          if (!cityCol) setLocCity(parts[0] || '');
+          if (!stateCol) setLocState(stateZipMatch[1]);
+          if (!zipCol && stateZipMatch[2]) setLocZipCode(stateZipMatch[2]);
+        } else if (parts.length === 2) {
+          // Legacy "Street, City" — keep the street, add a city fallback.
+          setStreetAddress(parts[0] || '');
+          if (!cityCol) setLocCity(parts[1] || '');
+        } else if (parts.length >= 3) {
+          setStreetAddress(parts[0] || '');
           if (!cityCol) setLocCity(parts[parts.length - 2] || '');
-          // Last part might be "STATE ZIP"
-          const lastPart = parts[parts.length - 1] || '';
-          const stateZipMatch = lastPart.match(/^([A-Z]{2})\s+(\d{5})/);
           if (stateZipMatch) {
             if (!stateCol) setLocState(stateZipMatch[1]);
-            if (!zipCol) setLocZipCode(stateZipMatch[2]);
+            if (!zipCol && stateZipMatch[2]) setLocZipCode(stateZipMatch[2]);
           } else if (!stateCol) {
             setLocState(lastPart);
           }
+        } else if (parts[0]) {
+          setStreetAddress(parts[0]);
         }
       }
       setDeliveryFee(data.delivery_fee?.toString() || '');
@@ -2715,11 +2727,16 @@ export const PublishWizard: React.FC = () => {
         <div className="container max-w-4xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <button
-              onClick={() => navigate('/dashboard')}
-              className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
+              onClick={handleSaveAndExit}
+              disabled={isSaveExiting || isSaving}
+              className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors disabled:opacity-60 disabled:pointer-events-none"
             >
-              <ArrowLeft className="w-4 h-4" />
-              Save & exit
+              {isSaveExiting || isSaving ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <ArrowLeft className="w-4 h-4" />
+              )}
+              {isSaveExiting || isSaving ? 'Saving…' : 'Save & exit'}
             </button>
             <h1 className="font-semibold">
               {CATEGORY_LABELS[listing.category]} · {listing.mode === 'rent' ? 'For Rent' : 'For Sale'}
