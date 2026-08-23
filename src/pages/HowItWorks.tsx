@@ -619,22 +619,28 @@ const HowItWorks = () => {
                 >
                   <Link
                     to={g.to}
-                    className="group flex gap-4 rounded-3xl border border-border bg-card p-6 h-full hover:shadow-md hover:border-foreground/25 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                    className="group flex flex-col rounded-3xl border border-border bg-card p-5 h-full hover:shadow-md hover:border-foreground/25 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                   >
-                    <span className="w-11 h-11 rounded-2xl bg-background border border-border flex items-center justify-center shrink-0 shadow-sm">
-                      <g.icon className="w-5 h-5 text-foreground/70" />
-                    </span>
-                    <span>
-                      <span className="block text-base font-semibold text-foreground mb-1">
+                    <img
+                      src={g.art}
+                      alt={g.artAlt}
+                      loading="lazy"
+                      className="mb-4 aspect-[16/10] w-full rounded-2xl border border-border bg-card object-cover shadow-sm"
+                    />
+                    <div className="flex items-center gap-3 mb-2">
+                      <span className="w-9 h-9 rounded-xl bg-background border border-border flex items-center justify-center shrink-0 shadow-sm">
+                        <g.icon className="w-4 h-4 text-foreground/70" />
+                      </span>
+                      <span className="block text-base font-semibold text-foreground">
                         {g.title}
                       </span>
-                      <span className="block text-sm text-muted-foreground leading-relaxed mb-2.5">
-                        {g.body}
-                      </span>
-                      <span className="inline-flex items-center text-sm font-medium text-primary">
-                        {g.cta}
-                        <ArrowRight className="w-3.5 h-3.5 ml-1 transition-transform group-hover:translate-x-0.5" />
-                      </span>
+                    </div>
+                    <span className="block text-sm text-muted-foreground leading-relaxed mb-3 flex-1">
+                      {g.body}
+                    </span>
+                    <span className="inline-flex items-center text-sm font-medium text-primary">
+                      {g.cta}
+                      <ArrowRight className="w-3.5 h-3.5 ml-1 transition-transform group-hover:translate-x-0.5" />
                     </span>
                   </Link>
                 </motion.div>
