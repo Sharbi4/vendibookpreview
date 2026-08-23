@@ -3581,7 +3581,7 @@ export const PublishWizard: React.FC = () => {
                                 htmlFor="accept_paypal_checkout"
                                 className="flex items-center gap-2 text-base font-medium cursor-pointer"
                               >
-                                <PayPalWordmark className="h-4 w-auto" />
+                                <PayPalMonogram className="h-4 w-4" />
                                 Pay online with PayPal
                               </Label>
                               <p className="text-sm text-muted-foreground mt-1">
