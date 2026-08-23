@@ -243,6 +243,7 @@ export const PublishWizard: React.FC = () => {
   const [listing, setListing] = useState<ListingData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [isSaveExiting, setIsSaveExiting] = useState(false);
   // Re-entrancy guards: double-clicks and the periodic guest auto-save must
   // never stack concurrent writes — queued requests contend on the client
   // connection and duplicate network calls, compounding the "Saving…" stall.
@@ -768,15 +769,17 @@ export const PublishWizard: React.FC = () => {
 
   // Auto-save guest draft fields (title, description, pricing) periodically
   // This uses RLS policy "Allow guest draft updates with token"
-  const saveGuestDraftFields = async () => {
-    if (!isGuestDraft || !listing || !listingId) return;
+  // Returns true when the draft row was actually persisted — Save & exit
+  // relies on this to avoid leaving with unsaved changes.
+  const saveGuestDraftFields = async (): Promise<boolean> => {
+    if (!isGuestDraft || !listing || !listingId) return false;
     // Skip overlapping saves: the step-change effect, the 30s interval,
     // beforeunload and the Continue click can otherwise stack concurrent
     // invokes that duplicate writes and contend on the client connection.
-    if (guestSaveBusyRef.current) return;
-    
+    if (guestSaveBusyRef.current) return false;
+
     const guestDraft = getGuestDraft();
-    if (!guestDraft || guestDraft.listingId !== listingId) return;
+    if (!guestDraft || guestDraft.listingId !== listingId) return false;
 
     guestSaveBusyRef.current = true;
     try {
@@ -865,11 +868,13 @@ export const PublishWizard: React.FC = () => {
 
       if (error) {
         console.warn('Guest draft auto-save failed:', (error as any).message);
-      } else {
-        console.log('Guest draft auto-saved successfully');
+        return false;
       }
+      console.log('Guest draft auto-saved successfully');
+      return true;
     } catch (err) {
       console.warn('Guest draft auto-save error:', err);
+      return false;
     } finally {
       guestSaveBusyRef.current = false;
     }
@@ -1010,18 +1015,30 @@ export const PublishWizard: React.FC = () => {
 
       if (data.address) {
         const parts = data.address.split(',').map((p: string) => p.trim());
-        setStreetAddress(parts[0] || '');
-        if (parts.length >= 3) {
+        // Last part might be "STATE ZIP" (ZIP optional for locality strings)
+        const lastPart = parts[parts.length - 1] || '';
+        const stateZipMatch = lastPart.match(/^([A-Z]{2})(?:\s+(\d{5}))?$/);
+        if (parts.length === 2 && stateZipMatch) {
+          // Quick Start locality like "Houston, TX" — hydrate city/state/ZIP
+          // but NEVER treat the first segment as a street address.
+          if (!cityCol) setLocCity(parts[0] || '');
+          if (!stateCol) setLocState(stateZipMatch[1]);
+          if (!zipCol && stateZipMatch[2]) setLocZipCode(stateZipMatch[2]);
+        } else if (parts.length === 2) {
+          // Legacy "Street, City" — keep the street, add a city fallback.
+          setStreetAddress(parts[0] || '');
+          if (!cityCol) setLocCity(parts[1] || '');
+        } else if (parts.length >= 3) {
+          setStreetAddress(parts[0] || '');
           if (!cityCol) setLocCity(parts[parts.length - 2] || '');
-          // Last part might be "STATE ZIP"
-          const lastPart = parts[parts.length - 1] || '';
-          const stateZipMatch = lastPart.match(/^([A-Z]{2})\s+(\d{5})/);
           if (stateZipMatch) {
             if (!stateCol) setLocState(stateZipMatch[1]);
-            if (!zipCol) setLocZipCode(stateZipMatch[2]);
+            if (!zipCol && stateZipMatch[2]) setLocZipCode(stateZipMatch[2]);
           } else if (!stateCol) {
             setLocState(lastPart);
           }
+        } else if (parts[0]) {
+          setStreetAddress(parts[0]);
         }
       }
       setDeliveryFee(data.delivery_fee?.toString() || '');
@@ -1325,6 +1342,40 @@ export const PublishWizard: React.FC = () => {
     }
     // Proceed with normal save for authenticated users
     await saveStep();
+  };
+
+  // Save & exit: persist the current wizard state BEFORE leaving. Authed
+  // drafts reuse saveStep (current-step fields + media uploads via the
+  // existing upload path); guest drafts reuse saveGuestDraftFields. On
+  // failure we stay on the page — the save helpers already surface why.
+  const handleSaveAndExit = async () => {
+    if (isSaveExiting || isSaving || saveInFlightRef.current) return;
+    setIsSaveExiting(true);
+    try {
+      if (isGuestDraft && !user) {
+        // If a background auto-save is mid-flight, give it a moment to finish
+        // so the save below captures the latest in-memory edits.
+        const waitStart = Date.now();
+        while (guestSaveBusyRef.current && Date.now() - waitStart < 27000) {
+          await new Promise((r) => window.setTimeout(r, 250));
+        }
+        const ok = await saveGuestDraftFields();
+        if (ok) {
+          navigate('/dashboard');
+        } else {
+          toast({
+            title: "We couldn't save your draft",
+            description: 'Your changes were not saved. Check your connection and try again — your answers are still on this page.',
+            variant: 'destructive'});
+        }
+        return;
+      }
+      const ok = await saveStep();
+      // saveStep already toasts on failure — only leave after a confirmed save.
+      if (ok) navigate('/dashboard');
+    } finally {
+      setIsSaveExiting(false);
+    }
   };
 
   // Calculate payout estimates
@@ -1849,8 +1900,11 @@ export const PublishWizard: React.FC = () => {
     return urls;
   };
 
-  const saveStep = async () => {
-    if (!listing || saveInFlightRef.current) return;
+  // Returns true when this step's fields were persisted (or nothing needed
+  // writing), false on any failure — Save & exit uses this to avoid
+  // navigating away with unsaved changes.
+  const saveStep = async (): Promise<boolean> => {
+    if (!listing || saveInFlightRef.current) return false;
     saveInFlightRef.current = true;
     setIsSaving(true);
 
@@ -1903,7 +1957,7 @@ export const PublishWizard: React.FC = () => {
               description: 'Please sign in to continue.',
               variant: 'destructive'});
             setIsSaving(false);
-            return;
+            return false;
           }
 
           let imageUrls = existingImages;
@@ -2021,7 +2075,7 @@ export const PublishWizard: React.FC = () => {
             description: 'Please add operating hours for at least one day when hourly bookings are enabled.',
             variant: 'destructive'});
           setIsSaving(false);
-          return;
+          return false;
         }
 
         updateData = {
@@ -2125,6 +2179,7 @@ export const PublishWizard: React.FC = () => {
       if (currentIndex < steps.length - 1) {
         setStep(steps[currentIndex + 1]);
       }
+      return true;
     } catch (error) {
       console.error('Error saving:', error);
       // Surface the real reason (constraint, policy, network) instead of a
@@ -2137,6 +2192,7 @@ export const PublishWizard: React.FC = () => {
           ? `${reason}${err?.code ? ` (${err.code})` : ''}`
           : 'Your changes were not saved. Check your connection and try again.',
         variant: 'destructive'});
+      return false;
     } finally {
       saveInFlightRef.current = false;
       setIsSaving(false);
@@ -2671,11 +2727,16 @@ export const PublishWizard: React.FC = () => {
         <div className="container max-w-4xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <button
-              onClick={() => navigate('/dashboard')}
-              className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
+              onClick={handleSaveAndExit}
+              disabled={isSaveExiting || isSaving}
+              className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors disabled:opacity-60 disabled:pointer-events-none"
             >
-              <ArrowLeft className="w-4 h-4" />
-              Save & exit
+              {isSaveExiting || isSaving ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <ArrowLeft className="w-4 h-4" />
+              )}
+              {isSaveExiting || isSaving ? 'Saving…' : 'Save & exit'}
             </button>
             <h1 className="font-semibold">
               {CATEGORY_LABELS[listing.category]} · {listing.mode === 'rent' ? 'For Rent' : 'For Sale'}
@@ -2808,14 +2869,14 @@ export const PublishWizard: React.FC = () => {
                           )}
 
                           {/* Drag handle */}
-                          <div className="absolute top-2 right-10 p-1.5 rounded-lg bg-black/50 text-white opacity-0 group-hover:opacity-100 transition-opacity">
+                          <div className="absolute top-2 right-10 p-1.5 rounded-lg bg-black/50 text-white opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
                             <GripVertical className="w-4 h-4" />
                           </div>
 
                           {/* Remove button */}
                           <button
                             onClick={() => removePhotoByGlobalIndex(globalIndex)}
-                            className="absolute top-2 right-2 w-7 h-7 bg-black/50 text-white rounded-full flex items-center justify-center hover:bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity"
+                            className="absolute top-2 right-2 w-7 h-7 bg-black/50 text-white rounded-full flex items-center justify-center hover:bg-black/70 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
                           >
                             <X className="w-4 h-4" />
                           </button>
@@ -2824,7 +2885,7 @@ export const PublishWizard: React.FC = () => {
                           {!isCover && (
                             <button
                               onClick={() => movePhotoToFirst(globalIndex)}
-                              className="absolute bottom-2 left-2 px-2 py-1 bg-black/60 text-white rounded-md text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/80 flex items-center gap-1"
+                              className="absolute bottom-2 left-2 px-2 py-1 bg-black/60 text-white rounded-md text-xs font-medium opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity hover:bg-black/80 flex items-center gap-1"
                             >
                               <Camera className="w-3 h-3" />
                               Cover
@@ -2873,7 +2934,7 @@ export const PublishWizard: React.FC = () => {
                             <button
                               type="button"
                               onClick={() => removeExistingVideo(index)}
-                              className="absolute top-2 right-2 w-7 h-7 bg-black/50 text-white rounded-full flex items-center justify-center hover:bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity"
+                              className="absolute top-2 right-2 w-7 h-7 bg-black/50 text-white rounded-full flex items-center justify-center hover:bg-black/70 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
                             >
                               <X className="w-4 h-4" />
                             </button>
@@ -2887,7 +2948,7 @@ export const PublishWizard: React.FC = () => {
                               <button
                                 type="button"
                                 onClick={() => removeVideo(index)}
-                                className="absolute top-2 right-2 w-7 h-7 bg-black/50 text-white rounded-full flex items-center justify-center hover:bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity"
+                                className="absolute top-2 right-2 w-7 h-7 bg-black/50 text-white rounded-full flex items-center justify-center hover:bg-black/70 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
                               >
                                 <X className="w-4 h-4" />
                               </button>
