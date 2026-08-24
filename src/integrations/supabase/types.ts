@@ -628,6 +628,10 @@ export type Database = {
           start_date: string
           start_time: string | null
           status: Database["public"]["Enums"]["booking_status"]
+          tax_amount: number
+          tax_jurisdiction: string | null
+          tax_rate_pct: number | null
+          tax_source: string | null
           total_price: number
           updated_at: string
         }
@@ -695,6 +699,10 @@ export type Database = {
           start_date: string
           start_time?: string | null
           status?: Database["public"]["Enums"]["booking_status"]
+          tax_amount?: number
+          tax_jurisdiction?: string | null
+          tax_rate_pct?: number | null
+          tax_source?: string | null
           total_price: number
           updated_at?: string
         }
@@ -762,6 +770,10 @@ export type Database = {
           start_date?: string
           start_time?: string | null
           status?: Database["public"]["Enums"]["booking_status"]
+          tax_amount?: number
+          tax_jurisdiction?: string | null
+          tax_rate_pct?: number | null
+          tax_source?: string | null
           total_price?: number
           updated_at?: string
         }
@@ -4036,6 +4048,10 @@ export type Database = {
           stripe_customer_id: string | null
           stripe_payment_intent_id: string | null
           stripe_session_id: string | null
+          tax_cents: number
+          tax_jurisdiction: string | null
+          tax_rate_pct: number | null
+          tax_source: string | null
           updated_at: string
           user_id: string | null
         }
@@ -4065,6 +4081,10 @@ export type Database = {
           stripe_customer_id?: string | null
           stripe_payment_intent_id?: string | null
           stripe_session_id?: string | null
+          tax_cents?: number
+          tax_jurisdiction?: string | null
+          tax_rate_pct?: number | null
+          tax_source?: string | null
           updated_at?: string
           user_id?: string | null
         }
@@ -4094,6 +4114,10 @@ export type Database = {
           stripe_customer_id?: string | null
           stripe_payment_intent_id?: string | null
           stripe_session_id?: string | null
+          tax_cents?: number
+          tax_jurisdiction?: string | null
+          tax_rate_pct?: number | null
+          tax_source?: string | null
           updated_at?: string
           user_id?: string | null
         }
@@ -6914,6 +6938,10 @@ export type Database = {
           shipping_notes: string | null
           shipping_status: string | null
           status: string
+          tax_amount: number
+          tax_jurisdiction: string | null
+          tax_rate_pct: number | null
+          tax_source: string | null
           terms_id: string | null
           tracking_number: string | null
           tracking_url: string | null
@@ -6965,6 +6993,10 @@ export type Database = {
           shipping_notes?: string | null
           shipping_status?: string | null
           status?: string
+          tax_amount?: number
+          tax_jurisdiction?: string | null
+          tax_rate_pct?: number | null
+          tax_source?: string | null
           terms_id?: string | null
           tracking_number?: string | null
           tracking_url?: string | null
@@ -7016,6 +7048,10 @@ export type Database = {
           shipping_notes?: string | null
           shipping_status?: string | null
           status?: string
+          tax_amount?: number
+          tax_jurisdiction?: string | null
+          tax_rate_pct?: number | null
+          tax_source?: string | null
           terms_id?: string | null
           tracking_number?: string | null
           tracking_url?: string | null
@@ -10262,6 +10298,10 @@ export type Database = {
           shipping_notes: string | null
           shipping_status: string | null
           status: string
+          tax_amount: number
+          tax_jurisdiction: string | null
+          tax_rate_pct: number | null
+          tax_source: string | null
           terms_id: string | null
           tracking_number: string | null
           tracking_url: string | null
