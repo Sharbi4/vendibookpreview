@@ -300,6 +300,7 @@ Deno.serve(async (req) => {
                 confidenceLabel: valuation.confidenceLabel,
                 comparableCount: valuation.comparableCount,
                 medianComparablePrice: valuation.medianComparablePrice,
+                marketScope: SCOPE_HEADLINE[scope],
               },
               adjustments: valuation.adjustmentSummary,
               warnings: valuation.warnings,
@@ -317,14 +318,44 @@ Deno.serve(async (req) => {
           ),
       });
 
+      const saleDrivers = valuation.adjustmentSummary.slice(0, 4).map((a) => `${a.label}: ${a.detail}`);
+      if (!saleDrivers.length) {
+        saleDrivers.push(`${SCOPE_HEADLINE[scope]} evidence for ${CATEGORY_LABEL[subject.assetCategory].toLowerCase()}s`);
+      }
+      const saleMoves = [
+        `List at ${usd(valuation.recommendedListPrice)} to sit at the heart of the range.`,
+        `If you need a faster sale, ${usd(valuation.quickSalePrice)} keeps you competitive without giving the unit away.`,
+        `Strong photos, maintenance records and a clean title can support testing ${usd(valuation.premiumPositionPrice)}.`,
+      ];
+      if (scope === 'modeled') saleMoves.push('Treat this as directional — scan live listings near you before publishing a price.');
+
+      const generatedAt = new Date().toISOString();
       return jsonResponse(200, {
         ok: true,
         mode: 'sale',
+        // ── Unified pricing contract (consumed by the PricePilot report UI) ──
+        salePrice: valuation.recommendedListPrice,
+        saleLow: valuation.estimatedMarketLow,
+        saleHigh: valuation.estimatedMarketHigh,
+        marketBenchmark: valuation.medianComparablePrice || valuation.recommendedListPrice,
+        benchmarkLabel: SCOPE_LABEL[scope],
+        marketScope: scope,
+        marketScopeLabel: SCOPE_HEADLINE[scope],
+        confidence: mapConfidence(valuation.confidenceLabel, scope),
+        reasoning:
+          narrative?.summary ??
+          `${SCOPE_HEADLINE[scope]} read for this ${CATEGORY_LABEL[subject.assetCategory].toLowerCase()}: an estimated market range of ${usd(valuation.estimatedMarketLow)} to ${usd(valuation.estimatedMarketHigh)}, with ${usd(valuation.recommendedListPrice)} as the recommended position.`,
+        priceDrivers: saleDrivers,
+        pricingMoves: saleMoves,
+        sources: describeSources(pool, scope),
+        lastUpdated: generatedAt,
+        // ── Legacy shape (kept for backwards compatibility) ──
         subject: {
           assetCategory: subject.assetCategory,
           categoryLabel: CATEGORY_LABEL[subject.assetCategory],
           city: subject.city,
           state: subject.state,
+          zip: subject.zip,
           year: subject.year,
           make: subject.make,
           model: subject.model,
