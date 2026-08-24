@@ -31,11 +31,14 @@ export interface QuoteResult {
   reference: string;
   transactionType: VendibookTransactionType;
   currency: string;
+  /** Total the payer is charged (includes any applied tax). */
   grossCents: number;
   platformFeeCents: number;
+  /** Estimated sales tax collected for remittance — never paid out. */
   taxCents: number;
   depositCents: number;
   discountCents: number;
+  /** Amount owed to the seller/host (never includes tax). */
   sellerProceedsCents: number;
   description: string;
   breakdown: Array<{ label: string; amountCents: number; kind?: "fee" | "credit" }>;
@@ -43,10 +46,40 @@ export interface QuoteResult {
   buyerId: string | null;
   listingId: string | null;
   releaseAt: string | null;
+  /** Amount the tax engine treats as taxable (merchandise/rental/service base). */
+  taxableBaseCents: number;
+  /** Tax quote metadata, set by applyTaxToQuote. */
+  taxRatePct?: number;
+  taxState?: string | null;
+  taxSource?: string;
   /** Agreed seller/host fee snapshot (Vendibook Pro benefit), if any. */
   feeRatePct?: number | null;
   proDiscountCents?: number;
   proFeeApplied?: boolean;
+}
+
+/**
+ * Rides a sales-tax quote on top of an already-computed quote. Tax is added
+ * to gross and to the itemized breakdown, but NEVER to platform fees or
+ * seller proceeds — Vendibook collects it for remittance only.
+ */
+export function applyTaxToQuote(
+  quote: QuoteResult,
+  tax: { taxCents: number; ratePct: number; state: string | null; source: string; label: string },
+): QuoteResult {
+  if (!tax.taxCents || tax.taxCents <= 0) {
+    quote.taxRatePct = tax.ratePct;
+    quote.taxState = tax.state;
+    quote.taxSource = tax.source;
+    return quote;
+  }
+  quote.taxCents = tax.taxCents;
+  quote.grossCents += tax.taxCents;
+  quote.taxRatePct = tax.ratePct;
+  quote.taxState = tax.state;
+  quote.taxSource = tax.source;
+  quote.breakdown.push({ label: tax.label, amountCents: tax.taxCents, kind: "fee" });
+  return quote;
 }
 
 const cents = (n: unknown) => Math.round(Number(n ?? 0) * 100);
@@ -75,6 +108,7 @@ export function quoteSaleTransaction(tx: Record<string, any>, listingTitle: stri
     grossCents,
     platformFeeCents,
     taxCents: 0,
+    taxableBaseCents: grossCents,
     depositCents: 0,
     discountCents,
     sellerProceedsCents,
@@ -139,6 +173,7 @@ export function quoteBookingRequest(
     grossCents: buyerTotalCents,
     platformFeeCents: renterFeeCents + hostFeeCents,
     taxCents: 0,
+    taxableBaseCents: subtotalCents,
     depositCents,
     discountCents: 0,
     sellerProceedsCents,
@@ -171,6 +206,7 @@ export function quoteMonetizationProduct(
     grossCents: Math.max(0, amountCents),
     platformFeeCents: Math.max(0, amountCents),
     taxCents: 0,
+    taxableBaseCents: Math.max(0, amountCents),
     depositCents: 0,
     discountCents,
     sellerProceedsCents: 0, // Vendibook is the merchant for its own products
@@ -316,6 +352,7 @@ export function quoteServiceCharge(opts: {
     grossCents: amountCents,
     platformFeeCents: amountCents,
     taxCents: 0,
+    taxableBaseCents: amountCents,
     depositCents: opts.depositCents ?? 0,
     discountCents: 0,
     sellerProceedsCents: 0,
