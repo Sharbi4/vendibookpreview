@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { invokeTransactionalEmail } from '../_shared/invokeTransactionalEmail.ts'
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -25,8 +26,7 @@ serve(async (req) => {
       });
     }
     const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
-    const { error } = await admin.functions.invoke("send-transactional-email", {
-      body: {
+    const { error } = await invokeTransactionalEmail({
         templateName: "listing-draft-nudge",
         recipientEmail: data.to,
         idempotencyKey: `abandoned-${data.to}-${data.listingId || data.lastStep || "draft"}`,
@@ -37,8 +37,7 @@ serve(async (req) => {
           lastStep: data.lastStep,
           listingId: data.listingId,
         },
-      },
-    });
+      });
     if (error) throw error;
     return new Response(JSON.stringify({ success: true }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" }

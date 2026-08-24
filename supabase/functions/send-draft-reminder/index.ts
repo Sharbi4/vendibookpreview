@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
+import { invokeTransactionalEmail } from '../_shared/invokeTransactionalEmail.ts'
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -63,8 +64,7 @@ serve(async (req) => {
       const firstName = host.full_name?.split(' ')[0] || 'there';
 
       try {
-        const { error: emailError } = await supabaseClient.functions.invoke("send-transactional-email", {
-          body: {
+        const { error: emailError } = await invokeTransactionalEmail({
             templateName: "listing-draft-nudge",
             recipientEmail: host.email,
             idempotencyKey: `draft-reminder-${host.id}-${new Date().toISOString().slice(0,10)}`,
@@ -75,8 +75,7 @@ serve(async (req) => {
               listingId: mostRecentDraft?.id,
               lastStep: 'getting started',
             },
-          },
-        });
+          });
         if (emailError) {
           errors.push(`Host ${host.id}: ${emailError.message}`);
           continue;

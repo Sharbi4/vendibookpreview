@@ -2,6 +2,7 @@
 // Records the NPS score against the pending feedback_submissions row keyed by token,
 // then 302-redirects the user to /feedback?token=...&nps=N for an optional comment.
 import { createClient } from 'npm:@supabase/supabase-js@2';
+import { queueTransactionalEmail } from '../_shared/invokeTransactionalEmail.ts'
 
 const SITE_URL = 'https://vendibook.com';
 
@@ -39,8 +40,7 @@ Deno.serve(async (req) => {
 
       // Best-effort instant admin ping — lets us see signal even if no comment follows.
       for (const adminTo of ['support@vendibook.com']) {
-        supabase.functions.invoke('send-transactional-email', {
-          body: {
+        queueTransactionalEmail({
             templateName: 'feedback-received-admin',
             recipientEmail: adminTo,
             idempotencyKey: `feedback-admin-nps-${row.id}-${score}-${adminTo}`,
@@ -55,8 +55,7 @@ Deno.serve(async (req) => {
               businessType: null,
               canShare: false,
             },
-          },
-        }).catch(() => {});
+          });
       }
     }
   } catch (_) {

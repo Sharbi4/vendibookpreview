@@ -3,6 +3,7 @@
 // getting_started_sent_at is already stamped. Intended to run hourly via pg_cron.
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
+import { invokeTransactionalEmail } from '../_shared/invokeTransactionalEmail.ts'
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -90,8 +91,7 @@ serve(async (req) => {
     const actions = TIER_ACTIONS[tier] ?? TIER_ACTIONS.pro;
 
     try {
-      await supabase.functions.invoke("send-transactional-email", {
-        body: {
+      await invokeTransactionalEmail({
           templateName: "subscription-getting-started",
           recipientEmail: prof.email,
           idempotencyKey: `sub-getting-started-${row.id}`,
@@ -100,8 +100,7 @@ serve(async (req) => {
             planName,
             actions,
           },
-        },
-      });
+        });
       await supabase.from("host_subscriptions")
         .update({ getting_started_sent_at: new Date().toISOString() })
         .eq("id", row.id);

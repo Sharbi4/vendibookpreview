@@ -1,5 +1,6 @@
 // Thin proxy: routes new-message notification emails through Lovable Emails queue.
 import { createClient } from 'npm:@supabase/supabase-js@2';
+import { invokeTransactionalEmail } from '../_shared/invokeTransactionalEmail.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -22,8 +23,7 @@ Deno.serve(async (req) => {
     const conversationId = b.conversation_id || b.conversationId || (b.link ? String(b.link).split('/').pop() : undefined);
     const idemKey = `msg-${b.message_id || `${conversationId || recipientEmail}-${Date.now()}`}`;
 
-    const { error } = await supabase.functions.invoke('send-transactional-email', {
-      body: {
+    const { error } = await invokeTransactionalEmail({
         templateName: 'new-message',
         recipientEmail,
         idempotencyKey: idemKey,
@@ -35,8 +35,7 @@ Deno.serve(async (req) => {
           unreadCount: b.unread_count || 1,
           linkPath,
         },
-      },
-    });
+      });
     if (error) throw error;
     return new Response(JSON.stringify({ success: true }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

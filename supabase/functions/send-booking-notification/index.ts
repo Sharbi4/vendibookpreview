@@ -2,6 +2,7 @@
 // premium Satin Lux `generic-notice` template. No direct Resend usage.
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
+import { invokeTransactionalEmail } from '../_shared/invokeTransactionalEmail.ts'
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -382,14 +383,12 @@ serve(async (req) => {
     const results: { to: string; success: boolean; error?: string }[] = [];
     for (const e of emails) {
       try {
-        const { error } = await supabase.functions.invoke("send-transactional-email", {
-          body: {
+        const { error } = await invokeTransactionalEmail({
             templateName: "generic-notice",
             recipientEmail: e.to,
             idempotencyKey: e.idempotencyKey,
             templateData: e.payload,
-          },
-        });
+          });
         if (error) throw error;
         results.push({ to: e.to, success: true });
         logStep("Queued via Lovable Emails", { to: e.to, subject: e.subject });

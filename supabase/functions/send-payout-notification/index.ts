@@ -1,5 +1,6 @@
 // Thin proxy: routes payout notifications through Lovable Emails queue.
 import { createClient } from 'npm:@supabase/supabase-js@2';
+import { invokeTransactionalEmail } from '../_shared/invokeTransactionalEmail.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -36,8 +37,7 @@ Deno.serve(async (req) => {
 
     const idemKey = `payout-${p.transfer_id || p.transaction_id || p.booking_id || crypto.randomUUID()}-${p.payout_status || 'sent'}`;
 
-    const { error } = await supabase.functions.invoke('send-transactional-email', {
-      body: {
+    const { error } = await invokeTransactionalEmail({
         templateName: 'payout-sent',
         recipientEmail: host.email,
         idempotencyKey: idemKey,
@@ -48,8 +48,7 @@ Deno.serve(async (req) => {
           arrivesBy,
           listingTitle: p.listing_title,
         },
-      },
-    });
+      });
     if (error) throw error;
     return new Response(JSON.stringify({ success: true }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

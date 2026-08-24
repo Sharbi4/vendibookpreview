@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import { refundPayment } from "../_shared/paymentOps.ts";
+import { invokeTransactionalEmail } from '../_shared/invokeTransactionalEmail.ts'
 
 // Emails are sent via the Lovable Emails queue (send-transactional-email),
 // using the premium Satin Lux `generic-notice` template. No direct Resend usage.
@@ -520,14 +521,12 @@ serve(async (req) => {
     const results: { success: boolean; to: string; error?: string }[] = [];
     for (const email of emails) {
       try {
-        const { error } = await supabaseClient.functions.invoke("send-transactional-email", {
-          body: {
+        const { error } = await invokeTransactionalEmail({
             templateName: "generic-notice",
             recipientEmail: email.to,
             idempotencyKey: email.idempotencyKey,
             templateData: email.payload,
-          },
-        });
+          });
         if (error) throw error;
         logStep("Email enqueued via Lovable Emails", { to: email.to });
         results.push({ success: true, to: email.to });

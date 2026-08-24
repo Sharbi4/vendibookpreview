@@ -2,6 +2,7 @@
 // Looks up offer + buyer/seller, picks the right template + recipient, and
 // invokes send-transactional-email so all sends are queued, retried, and logged.
 import { createClient } from 'npm:@supabase/supabase-js@2';
+import { invokeTransactionalEmail } from '../_shared/invokeTransactionalEmail.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -101,14 +102,12 @@ Deno.serve(async (req) => {
       });
     }
 
-    const { error } = await supabase.functions.invoke('send-transactional-email', {
-      body: {
+    const { error } = await invokeTransactionalEmail({
         templateName,
         recipientEmail: recipient.email,
         idempotencyKey: `offer-${offer.id}-${event_type}`,
         templateData,
-      },
-    });
+      });
     if (error) throw error;
 
     return new Response(JSON.stringify({ success: true }), {

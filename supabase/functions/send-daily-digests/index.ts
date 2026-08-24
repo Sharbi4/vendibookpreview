@@ -2,6 +2,7 @@
 // One email per user. Activity-gated: skips users with nothing to report.
 // Triggered by pg_cron daily at 13:00 UTC.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { invokeTransactionalEmail } from '../_shared/invokeTransactionalEmail.ts'
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -77,9 +78,7 @@ Deno.serve(async (req) => {
 
     const send = async (templateName: string, email: string, idemp: string, data: any) => {
       if (dryRun) { previews.push({ templateName, email, data }); return true; }
-      const { error } = await supabase.functions.invoke("send-transactional-email", {
-        body: { templateName, recipientEmail: email, idempotencyKey: idemp, templateData: { ...data, aiSubject: true } },
-      });
+      const { error } = await invokeTransactionalEmail({ templateName, recipientEmail: email, idempotencyKey: idemp, templateData: { ...data, aiSubject: true } });
       return !error;
     };
 

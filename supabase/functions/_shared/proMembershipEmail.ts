@@ -11,6 +11,7 @@
  */
 import { formatUsd } from "./adminPaymentAlert.ts";
 import { isProTierSlug } from "./proBoostCredit.ts";
+import { invokeTransactionalEmail } from './invokeTransactionalEmail.ts'
 
 export type MembershipEmailKind = "activated" | "renewed" | "cancelled" | "payment_failed";
 
@@ -123,8 +124,7 @@ export async function sendProMembershipEmail(
         ? sub.next_billing_time ?? ""
         : "");
 
-    await admin.functions.invoke("send-transactional-email", {
-      body: {
+    await invokeTransactionalEmail({
         templateName: `pro-membership-${kind.replace("_", "-")}`,
         recipientEmail: profile.email,
         idempotencyKey: membershipEmailKey(sub.paypal_subscription_id, kind, stamp),
@@ -136,8 +136,7 @@ export async function sendProMembershipEmail(
           nextBillingDate: fmtDate(sub.next_billing_time),
           accessThrough: fmtDate(opts.accessThrough ?? sub.next_billing_time),
         },
-      },
-    });
+      });
   } catch (err) {
     console.error("[proMembershipEmail] send failed", kind, err);
   }

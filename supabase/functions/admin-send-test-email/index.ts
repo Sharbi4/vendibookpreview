@@ -18,6 +18,7 @@ import { renderAsync } from 'npm:@react-email/components@0.0.22'
 import { createClient } from 'npm:@supabase/supabase-js@2'
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors'
 import { TEMPLATES } from '../_shared/transactional-email-templates/registry.ts'
+import { invokeTransactionalEmail } from '../_shared/invokeTransactionalEmail.ts'
 
 const DEFAULT_TEST_RECIPIENT = 'atlasmom421@gmail.com'
 
@@ -146,9 +147,7 @@ Deno.serve(async (req) => {
   // Unique per test run so repeated tests are never deduped away.
   const idempotencyKey = `admin-test-${templateName}-${to}-${Date.now()}`
 
-  const { data, error } = await admin.functions.invoke('send-transactional-email', {
-    body: { templateName, recipientEmail: to, idempotencyKey, templateData },
-  })
+  const { data, error } = await invokeTransactionalEmail({ templateName, recipientEmail: to, idempotencyKey, templateData })
 
   if (error) {
     console.error('[admin-send-test-email] send failed', { templateName, to, error })

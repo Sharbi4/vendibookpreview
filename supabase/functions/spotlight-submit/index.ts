@@ -8,6 +8,7 @@
 // exposes anything publicly.
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
+import { invokeTransactionalEmail } from '../_shared/invokeTransactionalEmail.ts'
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -185,14 +186,12 @@ serve(async (req) => {
 
     for (const adminEmail of ADMIN_EMAILS) {
       try {
-        await svc.functions.invoke("send-transactional-email", {
-          body: {
+        await invokeTransactionalEmail({
             templateName: "generic-notice",
             recipientEmail: adminEmail,
             idempotencyKey: `spotlight-admin-${submission.id}-${adminEmail}`,
             templateData: adminTemplateData,
-          },
-        });
+          });
       } catch (e) {
         console.error("[spotlight-submit] admin email failed", adminEmail, e);
       }
@@ -200,8 +199,7 @@ serve(async (req) => {
 
     // Submitter acknowledgement — never promises a feature.
     try {
-      await svc.functions.invoke("send-transactional-email", {
-        body: {
+      await invokeTransactionalEmail({
           templateName: "generic-notice",
           recipientEmail: submission.email,
           idempotencyKey: `spotlight-ack-${submission.id}`,
@@ -218,8 +216,7 @@ serve(async (req) => {
             ctaUrl: "https://vendibook.com/search",
             footnote: "Questions? Reply to this email or call (725) 755-9598, Mon–Fri 9am–5pm AZ.",
           },
-        },
-      });
+        });
     } catch (e) {
       console.error("[spotlight-submit] acknowledgement email failed", e);
     }

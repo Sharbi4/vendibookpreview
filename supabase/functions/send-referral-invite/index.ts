@@ -3,6 +3,7 @@
 // one if missing) and dispatches via `send-transactional-email` with the
 // generic-notice template. Rate-limited to 10 recipients per call.
 import { createClient } from 'npm:@supabase/supabase-js@2'
+import { invokeTransactionalEmail } from '../_shared/invokeTransactionalEmail.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -103,8 +104,7 @@ Deno.serve(async (req) => {
         'Create a free account with the link below and you will both earn a $50 credit toward Vendibook fees when you subscribe to Starter or higher.',
       )
 
-      const { error: sendErr } = await admin.functions.invoke('send-transactional-email', {
-        body: {
+      const { error: sendErr } = await invokeTransactionalEmail({
           templateName: 'generic-notice',
           recipientEmail: email,
           idempotencyKey: `referral-invite:${user.id}:${email}`,
@@ -118,8 +118,7 @@ Deno.serve(async (req) => {
             footnote:
               'Credit issued after the referred host subscribes to Starter or higher. See vendibook.com/referral-terms.',
           },
-        },
-      })
+        })
 
       results.push({ email, ok: !sendErr, error: sendErr?.message })
     }

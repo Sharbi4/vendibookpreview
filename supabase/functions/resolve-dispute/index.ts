@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { refundPayment } from "../_shared/paymentOps.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import { resolveSaleTerms, formatTermsForEmail } from "../_shared/resolveSaleTerms.ts";
+import { invokeTransactionalEmail } from '../_shared/invokeTransactionalEmail.ts'
 
 
 const corsHeaders = {
@@ -345,8 +346,7 @@ serve(async (req) => {
             resolutionText,
             ...(termsBlock ? [termsBlock] : []),
           ];
-          const { error } = await supabaseClient.functions.invoke("send-transactional-email", {
-            body: {
+          const { error } = await invokeTransactionalEmail({
               templateName: "generic-notice",
               recipientEmail: to,
               idempotencyKey: `dispute-resolved-${transaction_id}-${audience}`,
@@ -368,8 +368,7 @@ serve(async (req) => {
                 ctaUrl: dashboardUrl,
                 footnote: "Questions? Email support@vendibook.com or call (725) 755-9598.",
               },
-            },
-          });
+            });
           if (error) throw error;
         } catch (e) {
           logStep("Failed to enqueue dispute email", { audience, error: String(e) });

@@ -16,6 +16,7 @@ import { getPayPalOrder, getPayPalSubscription } from "../_shared/paypal.ts";
 import { fulfillMonetizationPurchase } from "../_shared/fulfillMonetizationPurchase.ts";
 import { resolveSubscriptionPeriod } from "../_shared/subscriptionPeriod.ts";
 import { grantMonthlyBoostCredit } from "../_shared/proBoostCredit.ts";
+import { invokeTransactionalEmail } from '../_shared/invokeTransactionalEmail.ts'
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -337,8 +338,7 @@ serve(async (req) => {
         const { data: prof } = await (admin as any).from("profiles")
           .select("email, first_name").eq("id", r.user_id).maybeSingle();
         if (!prof?.email) continue;
-        await admin.functions.invoke("send-transactional-email", {
-          body: {
+        await invokeTransactionalEmail({
             templateName: "weekly-pass-ending",
             recipientEmail: prof.email,
             idempotencyKey: `weekly-pass-nudge-${r.id}`,
@@ -349,8 +349,7 @@ serve(async (req) => {
               monthlyPrice: "$89/mo",
               plansUrl: "/pricing",
             },
-          },
-        });
+          });
         await admin.from("monetization_purchases").update({ nudge_sent_at: nowIso }).eq("id", r.id);
         nudgesSent++;
       } catch (e) {

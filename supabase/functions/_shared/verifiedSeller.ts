@@ -30,6 +30,7 @@ import {
   type VerificationRecord,
 } from "./verifiedSellerLogic.ts";
 import { alertAdminsOfPaymentOnce } from "./adminPaymentAlert.ts";
+import { invokeTransactionalEmail } from './invokeTransactionalEmail.ts'
 
 // deno-lint-ignore no-explicit-any
 type Admin = any;
@@ -475,8 +476,7 @@ async function sendVerifiedReceipt(admin: Admin, userId: string, payment: Paymen
     const email = profile?.email;
     if (!email) return;
 
-    await admin.functions.invoke("send-transactional-email", {
-      body: {
+    await invokeTransactionalEmail({
         templateName: "verified-seller-receipt",
         recipientEmail: email,
         idempotencyKey: `verified-seller-receipt-${payment.id}`,
@@ -496,8 +496,7 @@ async function sendVerifiedReceipt(admin: Admin, userId: string, payment: Paymen
             year: "numeric",
           }),
         },
-      },
-    });
+      });
   } catch (err) {
     log("receipt_failed", { message: (err as Error).message });
   }

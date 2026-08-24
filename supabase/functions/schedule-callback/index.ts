@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { invokeTransactionalEmail } from '../_shared/invokeTransactionalEmail.ts'
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -45,8 +46,7 @@ serve(async (req) => {
 
     // Notify support team (silently forwarded to owner)
     for (const adminTo of SUPPORT_EMAILS) {
-      await admin.functions.invoke("send-transactional-email", {
-        body: {
+      await invokeTransactionalEmail({
           templateName: "support-reply",
           recipientEmail: adminTo,
           idempotencyKey: `callback-internal-${data.name}-${adminTo}-${Date.now()}`,
@@ -55,14 +55,12 @@ serve(async (req) => {
             subject: `Callback request from ${data.name}`,
             message: summary,
           },
-        },
-      });
+        });
     }
 
     // Confirm to requester if email provided
     if (data.email) {
-      await admin.functions.invoke("send-transactional-email", {
-        body: {
+      await invokeTransactionalEmail({
           templateName: "support-reply",
           recipientEmail: data.email,
           idempotencyKey: `callback-confirm-${data.email}-${Date.now()}`,
@@ -71,8 +69,7 @@ serve(async (req) => {
             subject: "We'll be in touch shortly",
             message: `Hi ${data.name}, we received your callback request and our team will reach out${data.scheduledTime ? ` around ${data.scheduledTime}` : " shortly"}.`,
           },
-        },
-      });
+        });
     }
 
     // Outbound Vapi call if phone provided

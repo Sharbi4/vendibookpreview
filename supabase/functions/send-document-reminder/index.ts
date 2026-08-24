@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { invokeTransactionalEmail } from '../_shared/invokeTransactionalEmail.ts'
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -201,8 +202,7 @@ serve(async (req) => {
           .join(", ");
 
         // Send the email via Lovable Email
-        const { error: emailError } = await supabaseClient.functions.invoke("send-transactional-email", {
-          body: {
+        const { error: emailError } = await invokeTransactionalEmail({
             templateName: "document-status",
             recipientEmail: renterEmail,
             idempotencyKey: `doc-reminder-${booking.id}-${isUrgent ? "urgent" : "normal"}-${new Date().toISOString().slice(0,10)}`,
@@ -215,8 +215,7 @@ serve(async (req) => {
               rejectedDocuments: rejectedDocsList,
               ctaUrl: "https://vendibook.com/dashboard",
             },
-          },
-        });
+          });
 
         if (emailError) {
           logStep("Email send failed", { bookingId: booking.id, error: emailError.message });
