@@ -4,6 +4,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import WhatsIncluded from './WhatsIncluded';
+import { FreightLink } from '@/components/shared/FreightLink';
 
 interface PriceLine {
   label: string;
@@ -80,7 +81,7 @@ const StickySummary = ({
     switch (fulfillmentType) {
       case 'pickup': return 'Local Pickup';
       case 'delivery': return 'Local Delivery';
-      case 'vendibook_freight': return 'VendiBook Freight';
+      case 'vendibook_freight': return <FreightLink />;
       case 'on_site': return 'On-Site Access';
       default: return null;
     }

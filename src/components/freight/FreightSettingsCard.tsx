@@ -53,7 +53,7 @@ export const FreightSettingsCard: React.FC<FreightSettingsCardProps> = ({
       {/* Enable Toggle */}
       <div className="flex items-center justify-between py-3 px-4 bg-muted/50 rounded-lg">
         <Label htmlFor="freight-enabled" className="flex items-center gap-2 cursor-pointer">
-          <span className="font-medium">Enable Vendibook Freight</span>
+          <span className="font-medium">Enable <FreightLink to={FREIGHT_QUOTE_PATH} /></span>
         </Label>
         <Switch
           id="freight-enabled"

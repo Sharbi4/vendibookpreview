@@ -7,6 +7,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 import WhatsIncluded from '@/components/shared/WhatsIncluded';
+import { FreightLink } from '@/components/shared/FreightLink';
 import { FeesInfoPopover } from '@/components/shared/InfoPopover';
 import { TrustModule, PAYMENT_TRUST_POINTS, PAYMENT_DISCLAIMER } from '@/components/journey';
 import PostPaymentTimeline from '@/components/checkout/PostPaymentTimeline';
@@ -141,7 +142,7 @@ const PurchaseStepReview = ({
             <p className="font-medium text-foreground">
               {fulfillmentSelected === 'pickup' && 'Local Pickup'}
               {fulfillmentSelected === 'delivery' && 'Local Delivery'}
-              {fulfillmentSelected === 'vendibook_freight' && 'VendiBook Freight'}
+              {fulfillmentSelected === 'vendibook_freight' && <FreightLink />}
             </p>
             {fulfillmentSelected === 'vendibook_freight' && (
               <p className="text-xs text-muted-foreground">7–10 business days • Anywhere in US</p>
@@ -220,7 +221,7 @@ const PurchaseStepReview = ({
             <div className="flex justify-between">
               <span className="text-muted-foreground flex items-center gap-1.5">
                 <Package className="h-3.5 w-3.5" />
-                VendiBook Freight
+                <FreightLink />
               </span>
               {isFreightSellerPaid ? (
                 <span className="text-emerald-600 font-medium">FREE</span>

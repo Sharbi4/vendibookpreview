@@ -347,6 +347,11 @@ export const DeliveryCheckSheet = ({
                 />
               )}
 
+              {freightEnabled && (
+                <p className="text-[11px] text-muted-foreground">
+                  <FreightLink>How Vendibook Freight works</FreightLink>
+                </p>
+              )}
 
               {offersPickup && (
                 <div className="flex items-start gap-3 pt-1">
