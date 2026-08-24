@@ -467,11 +467,16 @@ Deno.serve(async (req) => {
             },
             result: {
               dailyRate: rental.dailyRate,
+              dailyLow: rental.dailyLow,
+              dailyHigh: rental.dailyHigh,
               weeklyRate: rental.weeklyRate,
+              weeklyLow: rental.weeklyLow,
+              weeklyHigh: rental.weeklyHigh,
               monthlyRate: rental.monthlyRate,
               confidenceScore: rental.confidenceScore,
               confidenceLabel: rental.confidenceLabel,
               comparableCount: rental.comparableCount,
+              marketScope: SCOPE_HEADLINE[scope],
             },
             warnings: rental.warnings,
             topComparables: rental.comparables.slice(0, 8).map((c) => ({
@@ -486,14 +491,48 @@ Deno.serve(async (req) => {
         ),
     });
 
+    const rentalMoves = [
+      `Anchor your daily rate at ${usd(rental.dailyRate)} — the heart of the observed range.`,
+      `Offer a weekly bundle near ${usd(rental.weeklyRate)} to win longer bookings.`,
+      'A refundable deposit and clear delivery terms let you hold the top of the range.',
+    ];
+    if (scope === 'modeled') rentalMoves.push('Treat this as directional — check live rental listings near you before publishing rates.');
+    const rentalDrivers = [
+      `${CATEGORY_LABEL[subject.assetCategory]} daily asking rates in the ${SCOPE_HEADLINE[scope].toLowerCase()}`,
+      subject.condition ? `Condition: ${subject.condition}` : null,
+      subject.operationalStatus ? `Operational status: ${subject.operationalStatus.replace(/_/g, ' ')}` : null,
+    ].filter((d): d is string => !!d);
+
+    const generatedAt = new Date().toISOString();
     return jsonResponse(200, {
       ok: true,
       mode: 'rental',
+      // ── Unified pricing contract (consumed by the PricePilot report UI) ──
+      dailyRate: rental.dailyRate,
+      dailyLow: rental.dailyLow,
+      dailyHigh: rental.dailyHigh,
+      weeklyRate: rental.weeklyRate,
+      weeklyLow: rental.weeklyLow,
+      weeklyHigh: rental.weeklyHigh,
+      marketBenchmark: rental.dailyRate,
+      benchmarkLabel: SCOPE_LABEL[scope],
+      marketScope: scope,
+      marketScopeLabel: SCOPE_HEADLINE[scope],
+      confidence: mapConfidence(rental.confidenceLabel, scope),
+      reasoning:
+        narrative?.summary ??
+        `${SCOPE_HEADLINE[scope]} read for this ${CATEGORY_LABEL[subject.assetCategory].toLowerCase()}: a recommended daily rate of ${usd(rental.dailyRate)}, with a typical range of ${usd(rental.dailyLow)} to ${usd(rental.dailyHigh)}.`,
+      priceDrivers: rentalDrivers,
+      pricingMoves: rentalMoves,
+      sources: describeSources(pool, scope),
+      lastUpdated: generatedAt,
+      // ── Legacy shape (kept for backwards compatibility) ──
       subject: {
         assetCategory: subject.assetCategory,
         categoryLabel: CATEGORY_LABEL[subject.assetCategory],
         city: subject.city,
         state: subject.state,
+        zip: subject.zip,
         year: subject.year,
         make: subject.make,
         model: subject.model,
@@ -501,7 +540,11 @@ Deno.serve(async (req) => {
       },
       valuation: {
         dailyRate: rental.dailyRate,
+        dailyLow: rental.dailyLow,
+        dailyHigh: rental.dailyHigh,
         weeklyRate: rental.weeklyRate,
+        weeklyLow: rental.weeklyLow,
+        weeklyHigh: rental.weeklyHigh,
         monthlyRate: rental.monthlyRate,
         confidenceScore: rental.confidenceScore,
         confidenceLabel: rental.confidenceLabel,
@@ -527,7 +570,7 @@ Deno.serve(async (req) => {
       })),
       narrative,
       narrativeModel: model,
-      generatedAt: new Date().toISOString(),
+      generatedAt,
     });
   } catch (err) {
     console.error('pricepilot-appraisal error:', err);
