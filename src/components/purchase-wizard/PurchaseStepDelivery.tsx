@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { MapPin, Truck, Package, Check, Loader2, AlertCircle, CheckCircle2, AlertTriangle, Clock, MessageSquare, Info, CalendarClock } from 'lucide-react';
 import { Label } from '@/components/ui/label';
@@ -154,7 +154,7 @@ const SchedulingFields = ({
   </div>
 );
 
-const NEXT_STEPS: Record<FulfillmentSelection, { title: string; body: React.ReactNode }[]> = {
+const NEXT_STEPS: Record<FulfillmentSelection, { title: string; body: ReactNode }[]> = {
   pickup: [
     { title: 'Message the seller', body: 'After checkout, use in-app Messages to schedule an exact pickup time.' },
     { title: 'Meet & inspect', body: 'Meet at the seller\'s pickup location. Inspect the item before you leave.' },
