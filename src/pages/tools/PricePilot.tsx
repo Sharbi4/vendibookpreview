@@ -1,452 +1,670 @@
-import { useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import SEO from '@/components/SEO';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@/components/ui/breadcrumb';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
-import { 
-  DollarSign, 
-  Loader2, 
-  Home,
-  TrendingUp,
-  Target,
-  Zap,
-  BarChart3,
-  CheckCircle,
-  ArrowRight,
-  Calendar,
-  CalendarDays,
-  Tag
+import { invokeEdge } from '@/lib/edge/invokeFunction';
+import {
+  ArrowLeft, ArrowRight, Camera, Check, DollarSign, FileText, ImagePlus,
+  Loader2, MapPin, RotateCcw, ShieldCheck, TrendingDown, TrendingUp, Truck, X,
 } from 'lucide-react';
 import ToolCrossLinks from '@/components/tools/ToolCrossLinks';
-import { OutputCard, OutputMetric, OutputList, OutputSection, EmptyOutput } from '@/components/tools/OutputCard';
-import { SourcesSection, type ResearchSource } from '@/components/tools/SourcesSection';
+import { cn } from '@/lib/utils';
 
-// JSON-LD structured data for SEO
-const pageJsonLd = {
-  "@context": "https://schema.org",
-  "@type": "SoftwareApplication",
-  "name": "Vendi PricePilot - AI Pricing Tool for Food Trucks",
-  "applicationCategory": "BusinessApplication",
-  "operatingSystem": "Web",
-  "offers": {
-    "@type": "Offer",
-    "price": "0",
-    "priceCurrency": "USD"
-  },
-  "description": "Data-backed pricing recommendations, powered by Spark for food trucks, trailers, and shared kitchens. Get data-backed pricing that helps you book faster and earn more.",
-  "featureList": [
-    "Competitive market pricing analysis",
-    "Daily, weekly, and monthly rate suggestions",
-    "Sale price recommendations",
-    "Pricing optimization tips"
-  ]
-};
+// ─── Types (mirror pricepilot-appraisal response) ────────────────────────────
 
-interface PricingResult {
-  dailyRate: number | null;
-  weeklyRate: number | null;
-  salePrice: number | null;
-  reasoning: string;
-  tips: string[];
-  marketSignals?: string[];
-  sources?: ResearchSource[];
-  lastUpdated?: string;
+interface AdjustmentEntry { label: string; direction: 'up' | 'down' | 'neutral'; detail: string }
+interface CompRow {
+  id: string; title: string; city: string | null; state: string | null;
+  year: number | null; lengthFt: number | null; displayedPrice: number | null;
+  previousDisplayedPrice: number | null; observedStatus: string;
+  evidenceType: 'facebook_observed' | 'vendibook_asking' | 'vendibook_verified';
+  similarity: number; qualityFlags: string[];
+}
+interface Narrative {
+  headline?: string; summary?: string;
+  drivers_positive?: string[]; drivers_negative?: string[];
+  caveats?: string[]; photo_observations?: string[];
+}
+interface AppraisalResponse {
+  ok: true;
+  mode: 'sale' | 'rental';
+  subject: { assetCategory: string; categoryLabel: string; city: string | null; state: string | null; year: number | null; make: string | null; model: string | null; lengthFt: number | null };
+  valuation: {
+    estimatedMarketLow?: number; estimatedMarketHigh?: number;
+    recommendedListPrice?: number; quickSalePrice?: number; premiumPositionPrice?: number;
+    dailyRate?: number; weeklyRate?: number; monthlyRate?: number;
+    confidenceScore: number; confidenceLabel: 'high' | 'moderate' | 'limited';
+    comparableCount: number; strongComparableCount?: number; medianComparablePrice?: number;
+    adjustmentSummary: AdjustmentEntry[]; methodology: string[]; warnings: string[];
+  };
+  distribution: { min: number; q1: number; median: number; q3: number; max: number; recommended: number } | null;
+  comparables: CompRow[];
+  narrative: Narrative | null;
+  generatedAt: string;
 }
 
-const PricePilot = () => {
-  const { toast } = useToast();
-  const [isLoading, setIsLoading] = useState(false);
-  const [pricingForm, setPricingForm] = useState({
-    category: '',
-    location: '',
-    mode: '',
-    features: '',
-    condition: '',
-    additional: ''});
-  const [pricingResult, setPricingResult] = useState<PricingResult | null>(null);
+// ─── Constants ───────────────────────────────────────────────────────────────
 
-  const handlePricingSubmit = async () => {
-    setIsLoading(true);
+const CATEGORIES = [
+  { value: 'food_truck', label: 'Food truck', desc: 'Self-propelled kitchen on a chassis' },
+  { value: 'food_trailer', label: 'Food trailer', desc: 'Towed concession or kitchen trailer' },
+  { value: 'food_cart', label: 'Food cart', desc: 'Compact push or tow cart' },
+  { value: 'mobile_bar', label: 'Mobile bar', desc: 'Bar or beverage service unit' },
+] as const;
+
+const CONDITIONS = [
+  { value: 'excellent', label: 'Excellent' }, { value: 'good', label: 'Good' },
+  { value: 'fair', label: 'Fair' }, { value: 'project', label: 'Project' },
+] as const;
+
+const OPERATIONAL = [
+  { value: 'turnkey', label: 'Turnkey — ready to operate today' },
+  { value: 'running', label: 'Running, some work needed' },
+  { value: 'needs_work', label: 'Needs mechanical work' },
+  { value: 'not_running', label: 'Not currently running' },
+] as const;
+
+const FEATURES = [
+  { key: 'hood_fire_suppression', label: 'Hood & fire suppression' },
+  { key: 'generator', label: 'Onboard generator' },
+  { key: 'refrigeration', label: 'Refrigeration package' },
+  { key: 'plumbing', label: 'Fresh / grey water plumbing' },
+  { key: 'inspection_ready', label: 'Recently inspected' },
+] as const;
+
+const LOADING_STEPS = [
+  'Pulling comparable market evidence…',
+  'Scoring similarity and weighting evidence…',
+  'Filtering statistical outliers…',
+  'Computing the weighted market range…',
+  'Writing your professional interpretation…',
+];
+
+const fmt = (n: number | null | undefined) =>
+  typeof n === 'number' ? `$${Math.round(n).toLocaleString('en-US')}` : '—';
+
+// ─── Photo downscale ─────────────────────────────────────────────────────────
+
+async function downscalePhoto(file: File): Promise<string | null> {
+  try {
+    const bmp = await createImageBitmap(file);
+    const scale = Math.min(1, 1024 / Math.max(bmp.width, bmp.height));
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.round(bmp.width * scale);
+    canvas.height = Math.round(bmp.height * scale);
+    canvas.getContext('2d')!.drawImage(bmp, 0, 0, canvas.width, canvas.height);
+    return canvas.toDataURL('image/jpeg', 0.72);
+  } catch { return null; }
+}
+
+// ─── Small UI atoms ──────────────────────────────────────────────────────────
+
+const SectionCard: React.FC<React.PropsWithChildren<{ className?: string }>> = ({ children, className }) => (
+  <div className={cn('bg-sale-card rounded-2xl p-5 md:p-7', className)}>{children}</div>
+);
+
+const Eyebrow: React.FC<React.PropsWithChildren> = ({ children }) => (
+  <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">{children}</p>
+);
+
+const ConfidenceBadge: React.FC<{ score: number; label: string }> = ({ score, label }) => (
+  <span className={cn(
+    'inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-wider',
+    label === 'high' ? 'bg-emerald-500/10 text-emerald-700 ring-1 ring-emerald-600/25'
+      : label === 'moderate' ? 'chip-accent'
+      : 'bg-amber-500/10 text-amber-700 ring-1 ring-amber-600/25',
+  )}>
+    <ShieldCheck className="h-3.5 w-3.5" /> {label} confidence · {score}/100
+  </span>
+);
+
+const EvidenceBadge: React.FC<{ comp: CompRow }> = ({ comp }) => {
+  if (comp.evidenceType === 'facebook_observed' && comp.observedStatus === 'sold')
+    return <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-700 ring-1 ring-emerald-600/25">Sold-status observed</span>;
+  if (comp.observedStatus === 'pending')
+    return <span className="rounded-full bg-amber-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-700 ring-1 ring-amber-600/25">Pending</span>;
+  return <span className="rounded-full bg-black/[0.04] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground ring-1 ring-black/10">Asking price</span>;
+};
+
+// ─── Page ────────────────────────────────────────────────────────────────────
+
+const pageJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'SoftwareApplication',
+  name: 'PricePilot — Mobile Food Equipment Appraisals',
+  applicationCategory: 'BusinessApplication',
+  operatingSystem: 'Web',
+  offers: { '@type': 'Offer', price: '19.00', priceCurrency: 'USD' },
+  description:
+    'Data-driven appraisals for food trucks, trailers, carts, and mobile bars. Estimated market range, pricing strategies, and rental rate benchmarks computed from real comparable evidence.',
+  featureList: [
+    'Deterministic comparable-based valuation',
+    'Estimated market range with quick-sale and premium strategies',
+    'Daily, weekly, and monthly rental rate benchmarks',
+    'Confidence score, evidence table, and methodology disclosure',
+  ],
+};
+
+export default function PricePilot() {
+  const { toast } = useToast();
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  // Intake state
+  const [step, setStep] = useState(0);
+  const [mode, setMode] = useState<'sale' | 'rental'>('sale');
+  const [assetCategory, setAssetCategory] = useState<string>('food_truck');
+  const [year, setYear] = useState(''); const [make, setMake] = useState(''); const [model, setModel] = useState('');
+  const [lengthFt, setLengthFt] = useState(''); const [mileage, setMileage] = useState('');
+  const [city, setCity] = useState(''); const [state, setState] = useState('');
+  const [condition, setCondition] = useState('good'); const [operationalStatus, setOperationalStatus] = useState('turnkey');
+  const [features, setFeatures] = useState<Record<string, boolean>>({});
+  const [knownIssues, setKnownIssues] = useState(''); const [recentUpgrades, setRecentUpgrades] = useState('');
+  const [photos, setPhotos] = useState<string[]>([]);
+
+  // Run state
+  const [loading, setLoading] = useState(false);
+  const [loadStep, setLoadStep] = useState(0);
+  const [result, setResult] = useState<AppraisalResponse | null>(null);
+
+  const canContinue = step === 0 ? !!assetCategory : step === 1 ? state.trim().length === 2 : true;
+
+  const onPhotos = async (files: FileList | null) => {
+    if (!files) return;
+    const room = 3 - photos.length;
+    const chosen = Array.from(files).slice(0, room);
+    const scaled = (await Promise.all(chosen.map(downscalePhoto))).filter((p): p is string => !!p);
+    setPhotos((prev) => [...prev, ...scaled].slice(0, 3));
+  };
+
+  const runAppraisal = async () => {
+    setLoading(true); setLoadStep(0); setResult(null);
+    const ticker = setInterval(() => setLoadStep((s) => Math.min(s + 1, LOADING_STEPS.length - 1)), 1600);
     try {
-      const { data: response, error } = await supabase.functions.invoke('ai-tools', {
-        body: { tool: 'pricing', data: pricingForm }});
-      if (error) throw error;
-      if (response.error) {
-        toast({ title: 'Error', description: response.error, variant: 'destructive' });
+      const { data, error } = await invokeEdge<AppraisalResponse>('pricepilot-appraisal', {
+        body: {
+          mode, assetCategory,
+          year: year || undefined, make: make || undefined, model: model || undefined,
+          lengthFt: lengthFt || undefined, mileage: mileage || undefined,
+          city: city || undefined, state: state.toUpperCase() || undefined,
+          condition, operationalStatus, features,
+          knownIssues: knownIssues || undefined, recentUpgrades: recentUpgrades || undefined,
+          photos,
+        },
+      });
+      if (error || !data?.ok) {
+        toast({ title: 'Appraisal failed', description: error ?? 'Please try again.', variant: 'destructive' });
         return;
       }
-      setPricingResult(response.result);
-    } catch (error) {
-      console.error('AI tool error:', error);
-      toast({ title: 'Error', description: 'Failed to generate pricing. Please try again.', variant: 'destructive' });
+      setResult(data);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     } finally {
-      setIsLoading(false);
+      clearInterval(ticker);
+      setLoading(false);
     }
   };
+
+  const reset = () => { setResult(null); setStep(0); window.scrollTo({ top: 0, behavior: 'smooth' }); };
+
+  const v = result?.valuation;
 
   return (
     <>
       <SEO
-        title="Vendi PricePilot | AI Pricing for Food Trucks & Trailers | Vendibook"
-        description="Get data-backed pricing recommendations for your food truck, trailer, or shared kitchen. Data-backed analysis powered by Spark helps you book faster and earn more. Free to use."
-        canonical="/tools/pricepilot"
+        title="PricePilot — Food Truck & Trailer Appraisals | Vendibook"
+        description="Know what your equipment is worth before you list it. PricePilot computes a defensible market range, pricing strategies, and rental rate benchmarks from real comparable evidence."
       />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(pageJsonLd) }} />
-      
+
       <div className="min-h-screen flex flex-col bg-background">
         <Header />
-
         <main className="flex-1">
-          {/* Hero Section */}
-          <section className="relative py-16 md:py-24 overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/10 via-amber-500/5 to-orange-500/10" />
-            <div className="absolute inset-0 overflow-hidden pointer-events-none">
-              <div className="absolute top-10 right-10 w-[400px] h-[400px] bg-gradient-to-br from-yellow-500/10 to-amber-500/8 rounded-full blur-3xl animate-pulse" />
-              <div className="absolute bottom-10 left-10 w-[350px] h-[350px] bg-gradient-to-tr from-amber-500/8 to-orange-500/6 rounded-full blur-3xl" />
-            </div>
-            
-            <div className="container relative z-10">
-              <Breadcrumb className="mb-6">
-                <BreadcrumbList>
-                  <BreadcrumbItem>
-                    <BreadcrumbLink asChild>
-                      <Link to="/" className="flex items-center gap-1">
-                        <Home className="h-4 w-4" />
-                        Home
-                      </Link>
-                    </BreadcrumbLink>
-                  </BreadcrumbItem>
-                  <BreadcrumbSeparator />
-                  <BreadcrumbItem>
-                    <BreadcrumbLink asChild>
-                      <Link to="/tools">Host Tools</Link>
-                    </BreadcrumbLink>
-                  </BreadcrumbItem>
-                  <BreadcrumbSeparator />
-                  <BreadcrumbItem>
-                    <BreadcrumbPage>PricePilot</BreadcrumbPage>
-                  </BreadcrumbItem>
-                </BreadcrumbList>
-              </Breadcrumb>
-              
-              <div className="max-w-3xl">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center shadow-lg">
-                    <DollarSign className="h-6 w-6 text-white" />
-                  </div>
-                  <Badge className="bg-gradient-to-r from-yellow-500 to-amber-500 text-white border-0">
-                    PricePilot
-                  </Badge>
-                </div>
-                
-                <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-foreground mb-4 leading-tight">
-                  Price smarter in minutes, not days.
+          <div className="sale-light">
+            <div className="container max-w-3xl px-4 py-10 md:py-16">
+
+              {/* Header */}
+              <div className="mb-8 text-center">
+                <Eyebrow>Vendibook Premium Tools</Eyebrow>
+                <h1 className="mt-2 font-display text-3xl md:text-[2.75rem] leading-tight font-semibold text-foreground">
+                  {result ? 'Your appraisal report' : 'Price your equipment with evidence, not guesses'}
                 </h1>
-                <p className="text-xl text-foreground/70 mb-8">
-                  Data-backed pricing that helps you book faster and earn more. We analyze your asset and local market to suggest optimal rates.
+                <p className="mx-auto mt-3 max-w-xl text-sm md:text-base text-muted-foreground">
+                  {result
+                    ? `Prepared ${new Date(result.generatedAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })} · ${result.subject.categoryLabel}${result.subject.state ? ` · ${result.subject.state}` : ''}`
+                    : 'PricePilot analyzes observed market comparables with a deterministic valuation engine, then writes a professional interpretation of your result.'}
                 </p>
-                
-                <div className="flex flex-wrap gap-4">
-                  <Button size="lg" variant="dark-shine" onClick={() => document.getElementById('tool-section')?.scrollIntoView({ behavior: 'smooth' })}>
-                    Start Pricing
-                    <ArrowRight className="h-4 w-4 ml-2" />
-                  </Button>
-                  <Button size="lg" variant="dark-shine" asChild>
-                    <Link to="/search">See Example Listings</Link>
-                  </Button>
-                </div>
               </div>
-            </div>
-          </section>
 
-          {/* 3 Outcome Cards */}
-          <section className="py-16 bg-muted/30">
-            <div className="container">
-              <div className="grid gap-6 md:grid-cols-3">
-                <Card className="border-border bg-card shadow-lg">
-                  <CardContent className="pt-6">
-                    <div className="w-12 h-12 rounded-xl bg-green-500/15 flex items-center justify-center mb-4">
-                      <TrendingUp className="h-6 w-6 text-green-500" />
-                    </div>
-                    <h3 className="font-bold text-lg mb-2 text-foreground">Increase Bookings</h3>
-                    <p className="text-muted-foreground">Price competitively based on market data to attract more renters and close deals faster.</p>
-                  </CardContent>
-                </Card>
-                
-                <Card className="border-border bg-card shadow-lg">
-                  <CardContent className="pt-6">
-                    <div className="w-12 h-12 rounded-xl bg-blue-500/15 flex items-center justify-center mb-4">
-                      <Target className="h-6 w-6 text-blue-500" />
-                    </div>
-                    <h3 className="font-bold text-lg mb-2 text-foreground">Maximize Earnings</h3>
-                    <p className="text-muted-foreground">Don't leave money on the table. Get pricing that reflects your asset's true value.</p>
-                  </CardContent>
-                </Card>
-                
-                <Card className="border-border bg-card shadow-lg">
-                  <CardContent className="pt-6">
-                    <div className="w-12 h-12 rounded-xl bg-purple-500/15 flex items-center justify-center mb-4">
-                      <Zap className="h-6 w-6 text-purple-400" />
-                    </div>
-                    <h3 className="font-bold text-lg mb-2 text-foreground">Save Research Time</h3>
-                    <p className="text-muted-foreground">Skip hours of competitor research. Get instant recommendations backed by market analysis.</p>
-                  </CardContent>
-                </Card>
-              </div>
-            </div>
-          </section>
-
-          {/* How It Works */}
-          <section className="py-16">
-            <div className="container">
-              <h2 className="text-3xl font-bold text-center mb-12">How PricePilot Works</h2>
-              <div className="grid gap-8 md:grid-cols-3 max-w-4xl mx-auto">
-                <div className="text-center">
-                  <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                    <span className="text-2xl font-bold text-primary">1</span>
-                  </div>
-                  <h3 className="font-bold mb-2">Enter Your Details</h3>
-                  <p className="text-muted-foreground text-sm">Tell us about your asset: type, location, condition, and equipment.</p>
-                </div>
-                <div className="text-center">
-                  <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                    <span className="text-2xl font-bold text-primary">2</span>
-                  </div>
-                  <h3 className="font-bold mb-2">Market Analysis</h3>
-                  <p className="text-muted-foreground text-sm">We compare your asset to comparable market data and generate optimal pricing.</p>
-                </div>
-                <div className="text-center">
-                  <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                    <span className="text-2xl font-bold text-primary">3</span>
-                  </div>
-                  <h3 className="font-bold mb-2">Apply to Your Listing</h3>
-                  <p className="text-muted-foreground text-sm">Use the suggested rates directly on your Vendibook listing.</p>
-                </div>
-              </div>
-            </div>
-          </section>
-
-          {/* The Tool */}
-          <section id="tool-section" className="py-16 bg-muted/30">
-            <div className="container max-w-5xl">
-              <div className="grid gap-6 lg:grid-cols-2">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <DollarSign className="h-5 w-5 text-primary" />
-                      PricePilot
-                    </CardTitle>
-                    <CardDescription>Enter your asset details to get pricing recommendations.</CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="grid gap-4 sm:grid-cols-2">
-                      <div className="space-y-2">
-                        <Label>Category *</Label>
-                        <Select value={pricingForm.category} onValueChange={(v) => setPricingForm({ ...pricingForm, category: v })}>
-                          <SelectTrigger><SelectValue placeholder="Select type" /></SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="food_truck">Food Truck</SelectItem>
-                            <SelectItem value="food_trailer">Food Trailer</SelectItem>
-                            <SelectItem value="ghost_kitchen">Shared Kitchen</SelectItem>
-                            <SelectItem value="vendor_lot">Vendor Space</SelectItem>
-                          </SelectContent>
-                        </Select>
+              <AnimatePresence mode="wait">
+                {/* ─── LOADING ─── */}
+                {loading && (
+                  <motion.div key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                    <SectionCard className="py-14 text-center">
+                      <Loader2 className="mx-auto h-8 w-8 animate-spin text-orange-600" />
+                      <div className="mx-auto mt-6 max-w-xs space-y-2.5 text-left">
+                        {LOADING_STEPS.map((s, i) => (
+                          <div key={s} className={cn('flex items-center gap-2.5 text-sm transition-opacity', i > loadStep ? 'opacity-30' : 'opacity-100')}>
+                            {i < loadStep
+                              ? <Check className="h-4 w-4 text-emerald-600" />
+                              : i === loadStep
+                                ? <span className="h-4 w-4 animate-pulse rounded-full bg-orange-500/40" />
+                                : <span className="h-4 w-4 rounded-full bg-black/[0.08]" />}
+                            <span className="text-foreground/80">{s}</span>
+                          </div>
+                        ))}
                       </div>
-                      <div className="space-y-2">
-                        <Label>Mode *</Label>
-                        <Select value={pricingForm.mode} onValueChange={(v) => setPricingForm({ ...pricingForm, mode: v })}>
-                          <SelectTrigger><SelectValue placeholder="Rent or Sale" /></SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="rent">For Rent</SelectItem>
-                            <SelectItem value="sale">For Sale</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Location</Label>
-                      <Input placeholder="City, State" value={pricingForm.location} onChange={(e) => setPricingForm({ ...pricingForm, location: e.target.value })} />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Condition</Label>
-                      <Select value={pricingForm.condition} onValueChange={(v) => setPricingForm({ ...pricingForm, condition: v })}>
-                        <SelectTrigger><SelectValue placeholder="Select condition" /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="new">New / Like New</SelectItem>
-                          <SelectItem value="excellent">Excellent</SelectItem>
-                          <SelectItem value="good">Good</SelectItem>
-                          <SelectItem value="fair">Fair</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Equipment & Features</Label>
-                      <Textarea placeholder="List key equipment: fryer, griddle, refrigeration, generator, etc." value={pricingForm.features} onChange={(e) => setPricingForm({ ...pricingForm, features: e.target.value })} rows={3} />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Additional Details (Optional)</Label>
-                      <Textarea placeholder="Year, brand, recent upgrades, unique features..." value={pricingForm.additional} onChange={(e) => setPricingForm({ ...pricingForm, additional: e.target.value })} rows={2} />
-                    </div>
-                    <Button onClick={handlePricingSubmit} disabled={isLoading || !pricingForm.category || !pricingForm.mode} className="w-full">
-                      {isLoading ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Generating...</> : <>Generate Pricing</>}
-                    </Button>
-                  </CardContent>
-                </Card>
+                    </SectionCard>
+                  </motion.div>
+                )}
 
-                {/* Results */}
-                {pricingResult ? (
-                  <OutputCard
-                    title="Suggested Pricing"
-                    subtitle="Optimized rates based on market analysis"
-                    icon={<BarChart3 className="h-5 w-5" />}
-                    gradient="from-green-50 to-emerald-50 dark:from-green-950/30 dark:to-emerald-950/30"
-                  >
-                    <div className="space-y-6">
-                      {/* Pricing Metrics Grid */}
-                      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
-                        {pricingResult.dailyRate && (
-                          <OutputMetric
-                            label="Daily Rate"
-                            value={pricingResult.dailyRate}
-                            prefix="$"
-                            suffix="/day"
-                            variant="highlight"
-                            size="lg"
-                            icon={<Calendar className="h-4 w-4" />}
-                          />
-                        )}
-                        {pricingResult.weeklyRate && (
-                          <OutputMetric
-                            label="Weekly Rate"
-                            value={pricingResult.weeklyRate}
-                            prefix="$"
-                            suffix="/week"
-                            variant="highlight"
-                            size="lg"
-                            icon={<CalendarDays className="h-4 w-4" />}
-                          />
-                        )}
-                        {pricingResult.salePrice && (
-                          <OutputMetric
-                            label="Sale Price"
-                            value={pricingResult.salePrice}
-                            prefix="$"
-                            variant="success"
-                            size="lg"
-                            icon={<Tag className="h-4 w-4" />}
-                          />
-                        )}
-                      </div>
-
-                      {/* Reasoning */}
-                      <OutputSection title="Market Analysis">
-                        <p className="text-sm text-muted-foreground leading-relaxed">
-                          {pricingResult.reasoning}
+                {/* ─── REPORT ─── */}
+                {!loading && result && v && (
+                  <motion.div key="report" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="space-y-5">
+                    {/* Headline number */}
+                    <SectionCard className="text-center">
+                      <Eyebrow>{result.mode === 'sale' ? 'Recommended list price' : 'Recommended daily rate'}</Eyebrow>
+                      <p className="mt-2 font-display text-4xl md:text-5xl font-semibold tabular-nums text-foreground">
+                        {result.mode === 'sale' ? fmt(v.recommendedListPrice) : fmt(v.dailyRate)}
+                      </p>
+                      {result.mode === 'sale' && v.estimatedMarketLow && v.estimatedMarketHigh && (
+                        <p className="mt-2 text-sm text-muted-foreground">
+                          Estimated market range {fmt(v.estimatedMarketLow)} – {fmt(v.estimatedMarketHigh)}
                         </p>
-                      </OutputSection>
-
-                      {/* Tips */}
-                      {pricingResult.tips && pricingResult.tips.length > 0 && (
-                        <OutputSection title="Tips to Charge More" description="Optimize your listing for higher rates">
-                          <OutputList items={pricingResult.tips} variant="check" />
-                        </OutputSection>
                       )}
-
-                      {/* Market signals */}
-                      {pricingResult.marketSignals && pricingResult.marketSignals.length > 0 && (
-                        <OutputSection title="Market Signals" description="What the live comps are telling us">
-                          <OutputList items={pricingResult.marketSignals} variant="check" />
-                        </OutputSection>
+                      <div className="mt-4 flex justify-center">
+                        <ConfidenceBadge score={v.confidenceScore} label={v.confidenceLabel} />
+                      </div>
+                      {result.narrative?.headline && (
+                        <p className="mx-auto mt-4 max-w-lg text-sm italic text-foreground/75">“{result.narrative.headline}”</p>
                       )}
+                    </SectionCard>
 
-                      <SourcesSection sources={pricingResult.sources} lastUpdated={pricingResult.lastUpdated} label="Pricing Sources" />
+                    {/* Range visualization (sale) */}
+                    {result.mode === 'sale' && result.distribution && v.estimatedMarketLow && v.estimatedMarketHigh && (
+                      <SectionCard>
+                        <Eyebrow>Market position</Eyebrow>
+                        {(() => {
+                          const d = result.distribution!;
+                          const span = Math.max(1, d.max - d.min);
+                          const pct = (n: number) => `${(((n - d.min) / span) * 100).toFixed(1)}%`;
+                          return (
+                            <div className="mt-5">
+                              <div className="relative h-2.5 rounded-full bg-black/[0.06]">
+                                <div className="absolute inset-y-0 rounded-full bg-orange-500/25"
+                                  style={{ left: pct(v.estimatedMarketLow!), right: `${100 - ((v.estimatedMarketHigh! - d.min) / span) * 100}%` }} />
+                                <div className="absolute top-1/2 h-5 w-[3px] -translate-y-1/2 rounded bg-orange-600 shadow" style={{ left: pct(d.recommended) }} />
+                                <div className="absolute top-1/2 h-3 w-[2px] -translate-y-1/2 rounded bg-black/40" style={{ left: pct(d.median) }} />
+                              </div>
+                              <div className="mt-2 flex justify-between text-[11px] tabular-nums text-muted-foreground">
+                                <span>{fmt(d.min)}</span>
+                                <span>comp median {fmt(d.median)}</span>
+                                <span>{fmt(d.max)}</span>
+                              </div>
+                            </div>
+                          );
+                        })()}
+                        {/* Strategy cards */}
+                        <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
+                          {[
+                            { label: 'Quick sale', value: v.quickSalePrice, note: 'Priced to move fast' },
+                            { label: 'Recommended', value: v.recommendedListPrice, note: 'Balanced market position' },
+                            { label: 'Premium position', value: v.premiumPositionPrice, note: 'Test the top of the range' },
+                          ].map((s) => (
+                            <div key={s.label} className={cn('rounded-xl p-4 ring-1', s.label === 'Recommended' ? 'bg-orange-500/[0.07] ring-orange-600/30' : 'bg-black/[0.02] ring-black/10')}>
+                              <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{s.label}</p>
+                              <p className="mt-1 text-xl font-semibold tabular-nums text-foreground">{fmt(s.value)}</p>
+                              <p className="mt-0.5 text-[11px] text-muted-foreground">{s.note}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </SectionCard>
+                    )}
 
+                    {/* Rental rates */}
+                    {result.mode === 'rental' && (
+                      <SectionCard>
+                        <Eyebrow>Rate benchmarks</Eyebrow>
+                        <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
+                          {[
+                            { label: 'Daily', value: v.dailyRate }, { label: 'Weekly', value: v.weeklyRate }, { label: 'Monthly', value: v.monthlyRate },
+                          ].map((s) => (
+                            <div key={s.label} className="rounded-xl bg-black/[0.02] p-4 ring-1 ring-black/10 text-center">
+                              <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{s.label}</p>
+                              <p className="mt-1 text-2xl font-semibold tabular-nums text-foreground">{fmt(s.value)}</p>
+                            </div>
+                          ))}
+                        </div>
+                        <p className="mt-3 text-[11px] text-muted-foreground">
+                          Benchmarked from current published asking rates — equipment sale prices are never used to estimate rental rates.
+                        </p>
+                      </SectionCard>
+                    )}
 
-                      <Button variant="dark-shine" className="w-full" asChild>
-                        <Link to="/host">
-                          List Your Asset
-                          <ArrowRight className="h-4 w-4 ml-2" />
-                        </Link>
+                    {/* Adjustments */}
+                    {v.adjustmentSummary.length > 0 && (
+                      <SectionCard>
+                        <Eyebrow>How your equipment shaped the estimate</Eyebrow>
+                        <ul className="mt-3 divide-y divide-black/[0.06]">
+                          {v.adjustmentSummary.map((a) => (
+                            <li key={a.label} className="flex items-start gap-3 py-2.5">
+                              {a.direction === 'up' ? <TrendingUp className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
+                                : a.direction === 'down' ? <TrendingDown className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
+                                : <Check className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />}
+                              <div>
+                                <p className="text-sm font-medium text-foreground">{a.label}</p>
+                                <p className="text-[12px] text-muted-foreground">{a.detail}</p>
+                              </div>
+                            </li>
+                          ))}
+                        </ul>
+                      </SectionCard>
+                    )}
+
+                    {/* Professional interpretation */}
+                    {result.narrative && (
+                      <SectionCard>
+                        <div className="flex items-center gap-2"><FileText className="h-4 w-4 text-orange-600" /><Eyebrow>Professional interpretation</Eyebrow></div>
+                        {result.narrative.summary && <p className="mt-3 text-sm leading-relaxed text-foreground/85">{result.narrative.summary}</p>}
+                        <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                          {!!result.narrative.drivers_positive?.length && (
+                            <div>
+                              <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-emerald-700">Working in your favor</p>
+                              <ul className="space-y-1.5">{result.narrative.drivers_positive.map((d) => (
+                                <li key={d} className="flex items-start gap-2 text-[13px] text-foreground/80"><Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-600" />{d}</li>
+                              ))}</ul>
+                            </div>
+                          )}
+                          {!!result.narrative.drivers_negative?.length && (
+                            <div>
+                              <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-amber-700">Worth considering</p>
+                              <ul className="space-y-1.5">{result.narrative.drivers_negative.map((d) => (
+                                <li key={d} className="flex items-start gap-2 text-[13px] text-foreground/80"><TrendingDown className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-600" />{d}</li>
+                              ))}</ul>
+                            </div>
+                          )}
+                        </div>
+                        {!!result.narrative.photo_observations?.length && (
+                          <div className="mt-4 rounded-xl bg-black/[0.02] p-3.5 ring-1 ring-black/10">
+                            <p className="mb-1.5 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground"><Camera className="h-3.5 w-3.5" /> Photo observations</p>
+                            <ul className="space-y-1">{result.narrative.photo_observations.map((d) => (
+                              <li key={d} className="text-[13px] text-foreground/75">· {d}</li>
+                            ))}</ul>
+                          </div>
+                        )}
+                      </SectionCard>
+                    )}
+
+                    {/* Comparable evidence */}
+                    <SectionCard>
+                      <Eyebrow>Comparable evidence · {v.comparableCount} after outlier filtering</Eyebrow>
+                      <ul className="mt-3 divide-y divide-black/[0.06]">
+                        {result.comparables.map((c) => (
+                          <li key={c.id} className="flex flex-wrap items-center gap-x-3 gap-y-1 py-2.5">
+                            <div className="min-w-0 flex-1">
+                              <p className="truncate text-sm font-medium text-foreground">{c.title}</p>
+                              <p className="text-[11px] text-muted-foreground">
+                                {[c.year, c.lengthFt ? `${c.lengthFt} ft` : null, [c.city, c.state].filter(Boolean).join(', ')].filter(Boolean).join(' · ')} · {c.similarity}% match
+                              </p>
+                            </div>
+                            <EvidenceBadge comp={c} />
+                            <span className="text-sm font-semibold tabular-nums text-foreground">
+                              {fmt(c.displayedPrice)}
+                              {c.previousDisplayedPrice && <span className="ml-1.5 text-[11px] font-normal text-muted-foreground line-through">{fmt(c.previousDisplayedPrice)}</span>}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                      <p className="mt-3 text-[11px] leading-relaxed text-muted-foreground">
+                        “Sold-status observed” means a marketplace listing was marked sold — it signals market movement but is never treated as a verified closing price.
+                      </p>
+                    </SectionCard>
+
+                    {/* Warnings + methodology */}
+                    {v.warnings.length > 0 && (
+                      <div className="rounded-2xl bg-amber-500/[0.07] p-4 ring-1 ring-amber-600/20">
+                        {v.warnings.map((w) => <p key={w} className="text-[12px] leading-relaxed text-amber-800">· {w}</p>)}
+                      </div>
+                    )}
+                    <SectionCard>
+                      <Eyebrow>Methodology</Eyebrow>
+                      <ol className="mt-3 list-decimal space-y-1.5 pl-5 text-[13px] leading-relaxed text-foreground/75">
+                        {v.methodology.map((m) => <li key={m}>{m}</li>)}
+                      </ol>
+                      <p className="mt-4 border-t border-black/[0.06] pt-3 text-[11px] text-muted-foreground">
+                        PricePilot is an appraisal aid, not a certified appraisal. Always confirm local demand and condition with a professional before a major transaction.
+                      </p>
+                    </SectionCard>
+
+                    <div className="flex flex-wrap justify-center gap-3 pt-2">
+                      <Button size="lg" className="bg-orange-500 text-white hover:bg-orange-600" onClick={reset}>
+                        <RotateCcw className="mr-1.5 h-4 w-4" /> Run another appraisal
+                      </Button>
+                      <Button size="lg" variant="outline" asChild>
+                        <Link to="/list-start">List your equipment <ArrowRight className="ml-1.5 h-4 w-4" /></Link>
                       </Button>
                     </div>
-                  </OutputCard>
-                ) : (
-                  <Card className="flex items-center justify-center min-h-[400px]">
-                    <EmptyOutput
-                      icon={<DollarSign className="h-16 w-16" />}
-                      title="Ready to analyze"
-                      description="Fill in the details to get pricing suggestions"
-                    />
-                  </Card>
+                  </motion.div>
                 )}
-              </div>
-            </div>
-          </section>
 
-          {/* Trust & FAQ */}
-          <section className="py-16">
-            <div className="container max-w-3xl">
-              <div className="text-center mb-8">
-                <Badge variant="outline" className="mb-4">Your data is private</Badge>
-                <p className="text-sm text-muted-foreground">We don't store your asset details. All analysis happens in real-time.</p>
-              </div>
-              
+                {/* ─── INTAKE WIZARD ─── */}
+                {!loading && !result && (
+                  <motion.div key="intake" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                    <SectionCard>
+                      {/* Stepper */}
+                      <div className="mb-6 flex items-center gap-1.5">
+                        {['Equipment', 'Details', 'Condition', 'Photos & notes'].map((label, i) => (
+                          <button key={label} type="button" onClick={() => i < step && setStep(i)}
+                            className={cn('flex-1 rounded-lg px-2 py-2 text-[11px] font-semibold uppercase tracking-wide transition-colors',
+                              i === step ? 'bg-orange-500/10 text-orange-700 ring-1 ring-orange-600/30'
+                                : i < step ? 'text-emerald-700' : 'text-muted-foreground/60')}>
+                            {label}
+                          </button>
+                        ))}
+                      </div>
+
+                      <AnimatePresence mode="wait">
+                        {step === 0 && (
+                          <motion.div key="s0" initial={{ opacity: 0, x: 8 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -8 }}>
+                            <Eyebrow>What are we appraising?</Eyebrow>
+                            <div className="mt-3 grid grid-cols-2 gap-2.5">
+                              {(['sale', 'rental'] as const).map((m) => (
+                                <button key={m} type="button" onClick={() => setMode(m)}
+                                  className={cn('rounded-xl p-4 text-left ring-1 transition-all', mode === m ? 'bg-orange-500/[0.07] ring-orange-600/40' : 'bg-black/[0.02] ring-black/10 hover:ring-black/20')}>
+                                  <DollarSign className={cn('h-4 w-4', mode === m ? 'text-orange-600' : 'text-muted-foreground')} />
+                                  <p className="mt-2 text-sm font-semibold text-foreground">{m === 'sale' ? 'For sale' : 'For rent'}</p>
+                                  <p className="text-[11px] text-muted-foreground">{m === 'sale' ? 'Market value & list strategies' : 'Daily / weekly / monthly rates'}</p>
+                                </button>
+                              ))}
+                            </div>
+                            <div className="mt-4 grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+                              {CATEGORIES.map((c) => (
+                                <button key={c.value} type="button" onClick={() => setAssetCategory(c.value)}
+                                  className={cn('flex items-start gap-3 rounded-xl p-4 text-left ring-1 transition-all', assetCategory === c.value ? 'bg-orange-500/[0.07] ring-orange-600/40' : 'bg-black/[0.02] ring-black/10 hover:ring-black/20')}>
+                                  <Truck className={cn('mt-0.5 h-4 w-4 shrink-0', assetCategory === c.value ? 'text-orange-600' : 'text-muted-foreground')} />
+                                  <span>
+                                    <span className="block text-sm font-semibold text-foreground">{c.label}</span>
+                                    <span className="block text-[11px] text-muted-foreground">{c.desc}</span>
+                                  </span>
+                                </button>
+                              ))}
+                            </div>
+                          </motion.div>
+                        )}
+
+                        {step === 1 && (
+                          <motion.div key="s1" initial={{ opacity: 0, x: 8 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -8 }} className="space-y-4">
+                            <Eyebrow>Equipment details</Eyebrow>
+                            <div className="grid grid-cols-2 gap-3">
+                              <div><Label htmlFor="pp-year">Year</Label><Input id="pp-year" inputMode="numeric" placeholder="2019" value={year} onChange={(e) => setYear(e.target.value.replace(/\D/g, '').slice(0, 4))} className="text-base" /></div>
+                              <div><Label htmlFor="pp-len">Length (ft)</Label><Input id="pp-len" inputMode="decimal" placeholder="18" value={lengthFt} onChange={(e) => setLengthFt(e.target.value)} className="text-base" /></div>
+                              <div><Label htmlFor="pp-make">Make</Label><Input id="pp-make" placeholder="Ford" value={make} onChange={(e) => setMake(e.target.value)} className="text-base" /></div>
+                              <div><Label htmlFor="pp-model">Model</Label><Input id="pp-model" placeholder="E-450" value={model} onChange={(e) => setModel(e.target.value)} className="text-base" /></div>
+                            </div>
+                            {mode === 'sale' && assetCategory === 'food_truck' && (
+                              <div><Label htmlFor="pp-miles">Mileage</Label><Input id="pp-miles" inputMode="numeric" placeholder="85,000" value={mileage} onChange={(e) => setMileage(e.target.value.replace(/[^\d]/g, ''))} className="text-base" /></div>
+                            )}
+                            <div className="grid grid-cols-2 gap-3">
+                              <div><Label htmlFor="pp-city">City</Label><Input id="pp-city" placeholder="Austin" value={city} onChange={(e) => setCity(e.target.value)} className="text-base" /></div>
+                              <div>
+                                <Label htmlFor="pp-state">State <span className="text-orange-600">*</span></Label>
+                                <div className="relative">
+                                  <MapPin className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                                  <Input id="pp-state" placeholder="TX" maxLength={2} value={state} onChange={(e) => setState(e.target.value.toUpperCase().replace(/[^A-Z]/g, ''))} className="pl-9 text-base uppercase" />
+                                </div>
+                                <p className="mt-1 text-[11px] text-muted-foreground">Two-letter code — anchors the comparable set.</p>
+                              </div>
+                            </div>
+                          </motion.div>
+                        )}
+
+                        {step === 2 && (
+                          <motion.div key="s2" initial={{ opacity: 0, x: 8 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -8 }} className="space-y-4">
+                            <Eyebrow>Condition & equipment</Eyebrow>
+                            <div>
+                              <Label>Overall condition</Label>
+                              <div className="mt-1.5 grid grid-cols-4 gap-1.5">
+                                {CONDITIONS.map((c) => (
+                                  <button key={c.value} type="button" onClick={() => setCondition(c.value)}
+                                    className={cn('rounded-lg px-2 py-2.5 text-xs font-semibold ring-1 transition-all', condition === c.value ? 'bg-orange-500/[0.08] text-orange-700 ring-orange-600/40' : 'bg-black/[0.02] text-muted-foreground ring-black/10')}>
+                                    {c.label}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                            <div>
+                              <Label>Operational status</Label>
+                              <div className="mt-1.5 grid grid-cols-1 gap-1.5 sm:grid-cols-2">
+                                {OPERATIONAL.map((o) => (
+                                  <button key={o.value} type="button" onClick={() => setOperationalStatus(o.value)}
+                                    className={cn('rounded-lg px-3 py-2.5 text-left text-xs font-semibold ring-1 transition-all', operationalStatus === o.value ? 'bg-orange-500/[0.08] text-orange-700 ring-orange-600/40' : 'bg-black/[0.02] text-muted-foreground ring-black/10')}>
+                                    {o.label}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                            <div>
+                              <Label>Equipment package</Label>
+                              <div className="mt-1.5 flex flex-wrap gap-1.5">
+                                {FEATURES.map((f) => (
+                                  <button key={f.key} type="button" onClick={() => setFeatures((p) => ({ ...p, [f.key]: !p[f.key] }))}
+                                    className={cn('rounded-full px-3 py-1.5 text-xs font-medium ring-1 transition-all', features[f.key] ? 'bg-orange-500/[0.08] text-orange-700 ring-orange-600/40' : 'bg-black/[0.02] text-muted-foreground ring-black/10')}>
+                                    {features[f.key] && <Check className="mr-1 inline h-3 w-3" />}{f.label}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                            <div className="grid gap-3 sm:grid-cols-2">
+                              <div><Label htmlFor="pp-issues">Known issues</Label><Textarea id="pp-issues" rows={3} placeholder="Anything a buyer would discover on inspection…" value={knownIssues} onChange={(e) => setKnownIssues(e.target.value)} className="text-base" /></div>
+                              <div><Label htmlFor="pp-upgrades">Recent upgrades</Label><Textarea id="pp-upgrades" rows={3} placeholder="New tires, rebuilt engine, fresh wrap…" value={recentUpgrades} onChange={(e) => setRecentUpgrades(e.target.value)} className="text-base" /></div>
+                            </div>
+                          </motion.div>
+                        )}
+
+                        {step === 3 && (
+                          <motion.div key="s3" initial={{ opacity: 0, x: 8 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -8 }} className="space-y-4">
+                            <Eyebrow>Photos (optional)</Eyebrow>
+                            <p className="text-[12px] text-muted-foreground">
+                              Up to 3 photos. The appraiser notes conservative cosmetic observations only — photos never set the price.
+                            </p>
+                            <input ref={fileRef} type="file" accept="image/*" multiple className="hidden" onChange={(e) => onPhotos(e.target.files)} />
+                            <div className="flex flex-wrap gap-3">
+                              {photos.map((p, i) => (
+                                <div key={i} className="relative h-24 w-24 overflow-hidden rounded-xl ring-1 ring-black/10">
+                                  <img src={p} alt={`Equipment photo ${i + 1}`} className="h-full w-full object-cover" />
+                                  <button type="button" aria-label="Remove photo" onClick={() => setPhotos((prev) => prev.filter((_, j) => j !== i))}
+                                    className="absolute right-1 top-1 grid h-7 w-7 place-items-center rounded-full bg-black/60 text-white">
+                                    <X className="h-3.5 w-3.5" />
+                                  </button>
+                                </div>
+                              ))}
+                              {photos.length < 3 && (
+                                <button type="button" onClick={() => fileRef.current?.click()}
+                                  className="grid h-24 w-24 place-items-center rounded-xl border-2 border-dashed border-black/15 text-muted-foreground transition-colors hover:border-orange-500/50 hover:text-orange-600">
+                                  <ImagePlus className="h-5 w-5" />
+                                </button>
+                              )}
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+
+                      {/* Nav */}
+                      <div className="mt-7 flex items-center justify-between border-t border-black/[0.06] pt-5">
+                        <Button variant="ghost" onClick={() => setStep((s) => Math.max(0, s - 1))} disabled={step === 0}>
+                          <ArrowLeft className="mr-1.5 h-4 w-4" /> Back
+                        </Button>
+                        {step < 3 ? (
+                          <Button className="bg-orange-500 text-white hover:bg-orange-600" onClick={() => canContinue && setStep((s) => s + 1)} disabled={!canContinue}>
+                            Continue <ArrowRight className="ml-1.5 h-4 w-4" />
+                          </Button>
+                        ) : (
+                          <Button size="lg" className="bg-orange-500 text-white hover:bg-orange-600" onClick={runAppraisal}>
+                            Run my appraisal <ArrowRight className="ml-1.5 h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
+                    </SectionCard>
+
+                    {/* Trust copy */}
+                    <div className="mt-6 grid gap-3 sm:grid-cols-3">
+                      {[
+                        { icon: ShieldCheck, t: 'Evidence-based', d: 'Weighted comparable analysis — never a single AI-invented number.' },
+                        { icon: FileText, t: 'Fully disclosed', d: 'Every report shows its comps, adjustments, and methodology.' },
+                        { icon: DollarSign, t: 'Sale & rental', d: 'Sale valuations and rental rate benchmarks in one tool.' },
+                      ].map((c) => (
+                        <div key={c.t} className="rounded-xl bg-black/[0.02] p-4 ring-1 ring-black/[0.08]">
+                          <c.icon className="h-4 w-4 text-orange-600" />
+                          <p className="mt-2 text-sm font-semibold text-foreground">{c.t}</p>
+                          <p className="mt-0.5 text-[12px] leading-relaxed text-muted-foreground">{c.d}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
+            {/* FAQ */}
+            <section className="container max-w-3xl px-4 pb-16">
+              <h2 className="mb-4 text-center font-display text-2xl font-semibold text-foreground">Questions, answered</h2>
               <Accordion type="single" collapsible className="w-full">
                 <AccordionItem value="q1">
-                  <AccordionTrigger>How accurate is the pricing?</AccordionTrigger>
-                  <AccordionContent>We analyze market trends and comparable listings to provide competitive pricing. Results are suggestions—you should always consider local market conditions.</AccordionContent>
+                  <AccordionTrigger>How does PricePilot estimate value?</AccordionTrigger>
+                  <AccordionContent>It scores observed market comparables for similarity to your equipment, weights them by evidence quality, filters statistical outliers, and computes a weighted median with a quartile-based range. Documented adjustments for condition, operational status, equipment package, and year refine the result. AI writes the interpretation — it never invents the numbers.</AccordionContent>
                 </AccordionItem>
                 <AccordionItem value="q2">
                   <AccordionTrigger>Is PricePilot free?</AccordionTrigger>
-                  <AccordionContent>Yes, PricePilot is completely free to use. Generate as many pricing suggestions as you need.</AccordionContent>
+                  <AccordionContent>PricePilot is a premium tool. It is included with Growth and Operator memberships, and is also available as a one-time lifetime unlock from the tools page.</AccordionContent>
                 </AccordionItem>
                 <AccordionItem value="q3">
-                  <AccordionTrigger>Can I use this for any location?</AccordionTrigger>
-                  <AccordionContent>Yes, PricePilot works for any U.S. location. Enter your city and state for the most accurate local pricing recommendations.</AccordionContent>
+                  <AccordionTrigger>Where does the evidence come from?</AccordionTrigger>
+                  <AccordionContent>Observed marketplace listings (including sold-status records) and current Vendibook asking prices. Observed sold status signals market movement but is never treated as a verified closing price.</AccordionContent>
+                </AccordionItem>
+                <AccordionItem value="q4">
+                  <AccordionTrigger>Can it estimate rental rates?</AccordionTrigger>
+                  <AccordionContent>Yes. Rental mode benchmarks daily, weekly, and monthly rates from published Vendibook asking rates. Sale prices are never used to estimate rental rates.</AccordionContent>
                 </AccordionItem>
               </Accordion>
-            </div>
-          </section>
+            </section>
 
-          {/* Cross-Links */}
-          <ToolCrossLinks 
-            currentTool="pricepilot" 
-            title="Maximize Your Success"
-            subtitle="Got your pricing? Write compelling copy, research your market, or check permit requirements."
-          />
-
-          {/* Final CTA */}
-          <section className="py-20 bg-gradient-to-r from-yellow-500/10 via-amber-500/10 to-orange-500/10">
-            <div className="container text-center">
-              <h2 className="text-3xl md:text-4xl font-bold mb-4">Ready to price your listing?</h2>
-              <p className="text-lg text-muted-foreground mb-8 max-w-xl mx-auto">Get started with PricePilot now, or create a listing and we'll help you price it right.</p>
-              <div className="flex flex-wrap gap-4 justify-center">
-                <Button size="lg" variant="dark-shine" onClick={() => document.getElementById('tool-section')?.scrollIntoView({ behavior: 'smooth' })}>
-                  Start Pricing Now
-                </Button>
-                <Button size="lg" variant="dark-shine" asChild>
-                  <Link to="/host">List Your Asset</Link>
-                </Button>
-              </div>
+            <div className="container max-w-3xl px-4 pb-20">
+              <ToolCrossLinks
+                currentTool="pricepilot"
+                title="Keep building"
+                subtitle="Got your appraisal? Write a listing that converts, or map the permits you need to operate."
+              />
             </div>
-          </section>
+          </div>
         </main>
-
         <Footer />
       </div>
     </>
   );
-};
-
-export default PricePilot;
+}
