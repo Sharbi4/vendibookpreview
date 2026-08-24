@@ -12,18 +12,14 @@ import { useHideOnScroll } from '@/hooks/useHideOnScroll';
 
 interface MobileStickyBarProps {
   activeFiltersCount: number;
-  sortBy: 'newest' | 'price-low' | 'price-high' | 'distance' | 'relevance';
+  sortBy: 'featured' | 'newest' | 'price-low' | 'price-high' | 'distance' | 'relevance';
   onSortChange: (value: string) => void;
   onFiltersClick: () => void;
   hasLocation: boolean;
   hasSearchQuery: boolean;
+  /** Price sorts only exist in a single-mode context (sale vs rent units). */
+  showPriceSorts: boolean;
 }
-
-const SORT_OPTIONS = [
-  { value: 'newest', label: 'Recommended' },
-  { value: 'price-low', label: 'Price: Low to High' },
-  { value: 'price-high', label: 'Price: High to Low' },
-];
 
 export const MobileStickyBar = ({
   activeFiltersCount,
@@ -32,14 +28,22 @@ export const MobileStickyBar = ({
   onFiltersClick,
   hasLocation,
   hasSearchQuery,
+  showPriceSorts,
 }: MobileStickyBarProps) => {
   const sortOptions = [
-    ...SORT_OPTIONS,
-    ...(hasLocation ? [{ value: 'distance', label: 'Distance' }] : []),
+    { value: 'featured', label: 'Featured' },
     ...(hasSearchQuery ? [{ value: 'relevance', label: 'Relevance' }] : []),
+    { value: 'newest', label: 'Newest' },
+    ...(showPriceSorts
+      ? [
+          { value: 'price-low', label: 'Price: Low to High' },
+          { value: 'price-high', label: 'Price: High to Low' },
+        ]
+      : []),
+    ...(hasLocation ? [{ value: 'distance', label: 'Distance' }] : []),
   ];
 
-  const currentSortLabel = sortOptions.find(opt => opt.value === sortBy)?.label || 'Recommended';
+  const currentSortLabel = sortOptions.find(opt => opt.value === sortBy)?.label || 'Featured';
 
   const hidden = useHideOnScroll(48);
 

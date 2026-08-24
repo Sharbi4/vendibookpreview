@@ -1623,7 +1623,7 @@ const FilterContent = ({
 
   instantBookOnly,
   verifiedHostsOnly,
-  onModeChange,
+  
   onCategoryChange,
   onLocationTextChange,
   onLocationSelect,
