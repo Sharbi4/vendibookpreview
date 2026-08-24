@@ -96,7 +96,11 @@ export interface ValuationResult {
 
 export interface RentalValuationResult {
   dailyRate: number;
+  dailyLow: number;
+  dailyHigh: number;
   weeklyRate: number;
+  weeklyLow: number;
+  weeklyHigh: number;
   monthlyRate: number;
   confidenceScore: number;
   confidenceLabel: 'high' | 'moderate' | 'limited';
@@ -472,10 +476,16 @@ export function runRentalValuation(subject: SubjectProfile, comps: CompRecord[])
   if (usable.length < 3) {
     const [lo, hi] = RENTAL_FALLBACK_DAILY[subject.assetCategory];
     const daily = Math.round(((lo + hi) / 2) / 5) * 5;
+    const dailyLow = Math.round(lo / 5) * 5;
+    const dailyHigh = Math.round(hi / 5) * 5;
     warnings.push('Limited rental evidence for this equipment type. Rates below are broad category benchmarks, not a market read.');
     return {
       dailyRate: daily,
+      dailyLow,
+      dailyHigh,
       weeklyRate: Math.round((daily * 5.5) / 5) * 5,
+      weeklyLow: Math.round((dailyLow * 5.5) / 5) * 5,
+      weeklyHigh: Math.round((dailyHigh * 5.5) / 5) * 5,
       monthlyRate: Math.round((daily * 20) / 10) * 10,
       confidenceScore: 20,
       confidenceLabel: 'limited',
