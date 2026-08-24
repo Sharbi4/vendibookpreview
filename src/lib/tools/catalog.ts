@@ -72,16 +72,19 @@ export const TOOLS: ToolDef[] = [
   {
     slug: 'pricepilot',
     name: 'PricePilot',
-    tagline: 'Set nightly, weekly, and monthly rates that beat your local market.',
+    tagline: 'A defensible appraisal for your truck or trailer — priced from real market evidence.',
     bullets: [
-      'Pricing model powered by Spark trained on live marketplace data',
-      'Compares your rates to comparable listings in your metro',
-      'Recommends event-week and seasonal premiums',
+      'Deterministic valuation from observed comparables — never an AI guess',
+      'Estimated market range plus quick-sale and premium pricing strategies',
+      'Rental daily, weekly, and monthly rates benchmarked from real listings',
+      'Comparable evidence table with confidence score and methodology',
     ],
     icon: DollarSign,
     href: '/tools/pricepilot',
     screenshot: pricepilotShot,
     minTier: 'pro',
+    unlockProductSlug: 'tool_pricepilot',
+    unlockPrice: '$19',
   },
   {
     slug: 'listing-studio',
