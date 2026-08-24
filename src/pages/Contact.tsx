@@ -18,6 +18,7 @@ import SocialContactOptions from '@/components/support/SocialContactOptions';
 import FeaturedArticles from '@/components/support/FeaturedArticles';
 import { trackFormSubmit } from '@/lib/analytics';
 import { trackFormSubmitConversion } from '@/lib/gtagConversions';
+import contactPaperPlane from '@/assets/contact-paper-plane.svg.asset.json';
 
 const contactSchema = z.object({
   name: z.string().trim().min(1, "Name is required").max(100, "Name must be less than 100 characters"),
