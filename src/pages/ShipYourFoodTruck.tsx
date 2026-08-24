@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { motion, useReducedMotion } from 'framer-motion';
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import {
+  ArrowLeft,
   ArrowRight,
   MapPin,
   Navigation,
@@ -208,6 +209,12 @@ const EMPTY_FORM: QuoteForm = {
 
 type QuoteErrors = Partial<Record<'pickupLocation' | 'deliveryLocation' | 'equipmentType', string>>;
 
+const STEP_META = [
+  { label: 'Route & equipment', hint: 'Three essentials — takes under a minute.' },
+  { label: 'Equipment details', hint: 'All optional, but it sharpens the pricing.' },
+  { label: 'Review & send', hint: 'Confirm the details, then send your request.' },
+] as const;
+
 const inputClass =
   'h-12 rounded-xl text-base md:text-sm bg-background border-border focus-visible:ring-primary/40';
 
@@ -217,6 +224,7 @@ const ShipYourFoodTruck = () => {
   const [form, setForm] = useState<QuoteForm>(EMPTY_FORM);
   const [errors, setErrors] = useState<QuoteErrors>({});
   const [submitted, setSubmitted] = useState(false);
+  const [step, setStep] = useState<1 | 2 | 3>(1);
 
   const scrollToForm = () => {
     formSectionRef.current?.scrollIntoView({
@@ -238,6 +246,25 @@ const ShipYourFoodTruck = () => {
     if (!form.deliveryLocation.trim()) next.deliveryLocation = 'Enter the delivery city, state, or ZIP.';
     if (!form.equipmentType) next.equipmentType = 'Choose the equipment type.';
     return next;
+  };
+
+  const goToStep = (next: 1 | 2 | 3) => {
+    setStep(next);
+    requestAnimationFrame(() => {
+      formSectionRef.current?.scrollIntoView({
+        behavior: reduce ? 'auto' : 'smooth',
+        block: 'start',
+      });
+    });
+  };
+
+  const goNext = () => {
+    if (step === 1) {
+      const next = validate();
+      setErrors(next);
+      if (Object.keys(next).length > 0) return;
+    }
+    if (step < 3) goToStep((step + 1) as 1 | 2 | 3);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -435,7 +462,10 @@ const ShipYourFoodTruck = () => {
                       variant="cta-outline"
                       size="lg"
                       className="rounded-full"
-                      onClick={() => setSubmitted(false)}
+                      onClick={() => {
+                        setSubmitted(false);
+                        setStep(3);
+                      }}
                     >
                       <Pencil className="w-4 h-4 mr-1.5" /> Edit details
                     </Button>
@@ -459,238 +489,365 @@ const ShipYourFoodTruck = () => {
                   </div>
 
                   <form onSubmit={handleSubmit} noValidate>
-                    <RequiredLegend className="mb-5">
-                      Required to request pricing. The more detail you add, the more accurate the
-                      pricing.
-                    </RequiredLegend>
-
-                    <div className="grid sm:grid-cols-2 gap-4 sm:gap-5">
-                      <div>
-                        <Label htmlFor="pickup-location" className="mb-1.5 block text-sm font-semibold">
-                          Pickup location <RequiredMark />
-                        </Label>
-                        <div className="relative">
-                          <MapPin
-                            className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none"
-                            aria-hidden="true"
-                          />
-                          <Input
-                            id="pickup-location"
-                            value={form.pickupLocation}
-                            onChange={(e) => setField('pickupLocation', e.target.value)}
-                            placeholder="City, state, or ZIP"
-                            autoComplete="off"
-                            aria-invalid={!!errors.pickupLocation}
-                            className={cn(inputClass, 'pl-10')}
-                          />
-                        </div>
-                        {errors.pickupLocation && (
-                          <p className="text-xs text-destructive mt-1.5">{errors.pickupLocation}</p>
-                        )}
+                    {/* Step progress */}
+                    <div className="mb-7">
+                      <div className="flex items-baseline justify-between gap-3 mb-2.5">
+                        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-foreground">
+                          Step {step} of 3 · {STEP_META[step - 1].label}
+                        </p>
+                        <p className="text-xs text-muted-foreground hidden sm:block">
+                          {STEP_META[step - 1].hint}
+                        </p>
                       </div>
-
-                      <div>
-                        <Label htmlFor="delivery-location" className="mb-1.5 block text-sm font-semibold">
-                          Delivery location <RequiredMark />
-                        </Label>
-                        <div className="relative">
-                          <Navigation
-                            className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none"
-                            aria-hidden="true"
-                          />
-                          <Input
-                            id="delivery-location"
-                            value={form.deliveryLocation}
-                            onChange={(e) => setField('deliveryLocation', e.target.value)}
-                            placeholder="City, state, or ZIP"
-                            autoComplete="off"
-                            aria-invalid={!!errors.deliveryLocation}
-                            className={cn(inputClass, 'pl-10')}
-                          />
-                        </div>
-                        {errors.deliveryLocation && (
-                          <p className="text-xs text-destructive mt-1.5">{errors.deliveryLocation}</p>
-                        )}
-                      </div>
-
-                      <div className="sm:col-span-2">
-                        <Label htmlFor="equipment-type" className="mb-1.5 block text-sm font-semibold">
-                          Equipment type <RequiredMark />
-                        </Label>
-                        <Select
-                          value={form.equipmentType}
-                          onValueChange={(v) => setField('equipmentType', v)}
-                        >
-                          <SelectTrigger
-                            id="equipment-type"
-                            aria-invalid={!!errors.equipmentType}
-                            className={cn(inputClass, 'w-full')}
-                          >
-                            <div className="flex items-center gap-2">
-                              <Box className="w-4 h-4 text-muted-foreground" aria-hidden="true" />
-                              <SelectValue placeholder="Food truck, trailer, cart, or other" />
-                            </div>
-                          </SelectTrigger>
-                          <SelectContent>
-                            {EQUIPMENT_TYPES.map((t) => (
-                              <SelectItem key={t} value={t}>
-                                {t}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        {errors.equipmentType && (
-                          <p className="text-xs text-destructive mt-1.5">{errors.equipmentType}</p>
-                        )}
-                      </div>
-
-                      <div>
-                        <Label htmlFor="equipment-year" className="mb-1.5 block text-sm font-semibold">
-                          Year
-                        </Label>
-                        <Input
-                          id="equipment-year"
-                          inputMode="numeric"
-                          value={form.year}
-                          onChange={(e) => setField('year', e.target.value)}
-                          placeholder="e.g. 2019"
-                          autoComplete="off"
-                          className={inputClass}
-                        />
-                      </div>
-
-                      <div>
-                        <Label htmlFor="equipment-weight" className="mb-1.5 block text-sm font-semibold">
-                          Approximate weight (lbs)
-                        </Label>
-                        <Input
-                          id="equipment-weight"
-                          inputMode="numeric"
-                          value={form.weightLbs}
-                          onChange={(e) => setField('weightLbs', e.target.value)}
-                          placeholder="e.g. 9,500"
-                          autoComplete="off"
-                          className={inputClass}
-                        />
-                      </div>
-
-                      <div className="sm:col-span-2">
-                        <span className="mb-1.5 block text-sm font-semibold text-foreground">
-                          Approximate dimensions (feet)
-                        </span>
-                        <div className="grid grid-cols-3 gap-3">
-                          <div>
-                            <Label htmlFor="dim-length" className="sr-only">
-                              Length in feet
-                            </Label>
-                            <Input
-                              id="dim-length"
-                              inputMode="decimal"
-                              value={form.lengthFt}
-                              onChange={(e) => setField('lengthFt', e.target.value)}
-                              placeholder="Length"
-                              autoComplete="off"
-                              className={inputClass}
-                            />
-                          </div>
-                          <div>
-                            <Label htmlFor="dim-width" className="sr-only">
-                              Width in feet
-                            </Label>
-                            <Input
-                              id="dim-width"
-                              inputMode="decimal"
-                              value={form.widthFt}
-                              onChange={(e) => setField('widthFt', e.target.value)}
-                              placeholder="Width"
-                              autoComplete="off"
-                              className={inputClass}
-                            />
-                          </div>
-                          <div>
-                            <Label htmlFor="dim-height" className="sr-only">
-                              Height in feet
-                            </Label>
-                            <Input
-                              id="dim-height"
-                              inputMode="decimal"
-                              value={form.heightFt}
-                              onChange={(e) => setField('heightFt', e.target.value)}
-                              placeholder="Height"
-                              autoComplete="off"
-                              className={inputClass}
-                            />
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="sm:col-span-2">
-                        <span id="runs-label" className="mb-1.5 block text-sm font-semibold text-foreground">
-                          Does it run and drive?
-                        </span>
-                        <div
-                          role="radiogroup"
-                          aria-labelledby="runs-label"
-                          className="grid grid-cols-2 gap-3"
-                        >
-                          {(
-                            [
-                              { value: 'yes', label: 'Yes, it runs and drives' },
-                              { value: 'no', label: 'No, it does not run' },
-                            ] as const
-                          ).map((opt) => (
-                            <button
-                              key={opt.value}
-                              type="button"
-                              role="radio"
-                              aria-checked={form.runsAndDrives === opt.value}
-                              onClick={() => setField('runsAndDrives', opt.value)}
-                              className={cn(
-                                'h-12 rounded-xl border text-sm font-semibold transition-colors',
-                                form.runsAndDrives === opt.value
-                                  ? 'border-primary bg-primary/10 text-foreground'
-                                  : 'border-border bg-background text-muted-foreground hover:border-foreground/30',
-                              )}
-                            >
-                              {opt.label}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-
-                      <div className="sm:col-span-2">
-                        <Label htmlFor="pickup-date" className="mb-1.5 block text-sm font-semibold">
-                          Preferred pickup date
-                        </Label>
-                        <Input
-                          id="pickup-date"
-                          type="date"
-                          value={form.pickupDate}
-                          onChange={(e) => setField('pickupDate', e.target.value)}
-                          className={inputClass}
-                        />
-                      </div>
-
-                      <div className="sm:col-span-2">
-                        <Label htmlFor="shipment-notes" className="mb-1.5 block text-sm font-semibold">
-                          Notes or special handling
-                        </Label>
-                        <Textarea
-                          id="shipment-notes"
-                          value={form.notes}
-                          onChange={(e) => setField('notes', e.target.value)}
-                          placeholder="Gate access, tight lot, attached equipment, timing constraints, anything the driver should know."
-                          rows={4}
-                          className="rounded-xl text-base md:text-sm bg-background border-border focus-visible:ring-primary/40 resize-y"
+                      <div
+                        className="h-1.5 rounded-full bg-muted overflow-hidden"
+                        role="progressbar"
+                        aria-valuemin={1}
+                        aria-valuemax={3}
+                        aria-valuenow={step}
+                        aria-label="Quote request progress"
+                      >
+                        <motion.div
+                          className="h-full rounded-full bg-primary"
+                          initial={false}
+                          animate={{ width: `${(step / 3) * 100}%` }}
+                          transition={reduce ? { duration: 0 } : { duration: 0.35 }}
                         />
                       </div>
                     </div>
 
-                    <div className="mt-7 flex flex-col sm:flex-row sm:items-center gap-4">
-                      <Button type="submit" variant="cta" size="cta" className="rounded-full">
-                        Request Transportation Pricing <ArrowRight className="w-4 h-4 ml-1" />
-                      </Button>
-                      <p className="text-xs text-muted-foreground leading-relaxed max-w-sm">
+                    <AnimatePresence mode="wait" initial={false}>
+                      {step === 1 && (
+                        <motion.div
+                          key="step-1"
+                          initial={reduce ? false : { opacity: 0, x: 24 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          exit={reduce ? undefined : { opacity: 0, x: -24 }}
+                          transition={{ duration: 0.25 }}
+                          className="space-y-5"
+                        >
+                          <RequiredLegend>
+                            Required to request pricing. Everything else can wait for the next
+                            step.
+                          </RequiredLegend>
+
+                          <div>
+                            <Label htmlFor="pickup-location" className="mb-1.5 block text-sm font-semibold">
+                              Pickup location <RequiredMark />
+                            </Label>
+                            <div className="relative">
+                              <MapPin
+                                className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none"
+                                aria-hidden="true"
+                              />
+                              <Input
+                                id="pickup-location"
+                                value={form.pickupLocation}
+                                onChange={(e) => setField('pickupLocation', e.target.value)}
+                                placeholder="City, state, or ZIP"
+                                autoComplete="off"
+                                aria-invalid={!!errors.pickupLocation}
+                                className={cn(inputClass, 'pl-10')}
+                              />
+                            </div>
+                            {errors.pickupLocation && (
+                              <p className="text-xs text-destructive mt-1.5">{errors.pickupLocation}</p>
+                            )}
+                          </div>
+
+                          <div>
+                            <Label htmlFor="delivery-location" className="mb-1.5 block text-sm font-semibold">
+                              Delivery location <RequiredMark />
+                            </Label>
+                            <div className="relative">
+                              <Navigation
+                                className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none"
+                                aria-hidden="true"
+                              />
+                              <Input
+                                id="delivery-location"
+                                value={form.deliveryLocation}
+                                onChange={(e) => setField('deliveryLocation', e.target.value)}
+                                placeholder="City, state, or ZIP"
+                                autoComplete="off"
+                                aria-invalid={!!errors.deliveryLocation}
+                                className={cn(inputClass, 'pl-10')}
+                              />
+                            </div>
+                            {errors.deliveryLocation && (
+                              <p className="text-xs text-destructive mt-1.5">{errors.deliveryLocation}</p>
+                            )}
+                          </div>
+
+                          <div>
+                            <Label htmlFor="equipment-type" className="mb-1.5 block text-sm font-semibold">
+                              Equipment type <RequiredMark />
+                            </Label>
+                            <Select
+                              value={form.equipmentType}
+                              onValueChange={(v) => setField('equipmentType', v)}
+                            >
+                              <SelectTrigger
+                                id="equipment-type"
+                                aria-invalid={!!errors.equipmentType}
+                                className={cn(inputClass, 'w-full')}
+                              >
+                                <div className="flex items-center gap-2">
+                                  <Box className="w-4 h-4 text-muted-foreground" aria-hidden="true" />
+                                  <SelectValue placeholder="Food truck, trailer, cart, or other" />
+                                </div>
+                              </SelectTrigger>
+                              <SelectContent>
+                                {EQUIPMENT_TYPES.map((t) => (
+                                  <SelectItem key={t} value={t}>
+                                    {t}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            {errors.equipmentType && (
+                              <p className="text-xs text-destructive mt-1.5">{errors.equipmentType}</p>
+                            )}
+                          </div>
+                        </motion.div>
+                      )}
+
+                      {step === 2 && (
+                        <motion.div
+                          key="step-2"
+                          initial={reduce ? false : { opacity: 0, x: 24 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          exit={reduce ? undefined : { opacity: 0, x: -24 }}
+                          transition={{ duration: 0.25 }}
+                          className="space-y-5"
+                        >
+                          <p className="text-xs text-muted-foreground leading-relaxed">
+                            Everything on this step is optional — the more detail you add, the more
+                            accurate the pricing.
+                          </p>
+
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <Label htmlFor="equipment-year" className="mb-1.5 block text-sm font-semibold">
+                                Year
+                              </Label>
+                              <Input
+                                id="equipment-year"
+                                inputMode="numeric"
+                                value={form.year}
+                                onChange={(e) => setField('year', e.target.value)}
+                                placeholder="e.g. 2019"
+                                autoComplete="off"
+                                className={inputClass}
+                              />
+                            </div>
+
+                            <div>
+                              <Label htmlFor="equipment-weight" className="mb-1.5 block text-sm font-semibold">
+                                Weight (lbs)
+                              </Label>
+                              <Input
+                                id="equipment-weight"
+                                inputMode="numeric"
+                                value={form.weightLbs}
+                                onChange={(e) => setField('weightLbs', e.target.value)}
+                                placeholder="e.g. 9,500"
+                                autoComplete="off"
+                                className={inputClass}
+                              />
+                            </div>
+                          </div>
+
+                          <div>
+                            <span className="mb-1.5 block text-sm font-semibold text-foreground">
+                              Approximate dimensions (feet)
+                            </span>
+                            <div className="grid grid-cols-3 gap-3">
+                              <div>
+                                <Label htmlFor="dim-length" className="sr-only">
+                                  Length in feet
+                                </Label>
+                                <Input
+                                  id="dim-length"
+                                  inputMode="decimal"
+                                  value={form.lengthFt}
+                                  onChange={(e) => setField('lengthFt', e.target.value)}
+                                  placeholder="Length"
+                                  autoComplete="off"
+                                  className={inputClass}
+                                />
+                              </div>
+                              <div>
+                                <Label htmlFor="dim-width" className="sr-only">
+                                  Width in feet
+                                </Label>
+                                <Input
+                                  id="dim-width"
+                                  inputMode="decimal"
+                                  value={form.widthFt}
+                                  onChange={(e) => setField('widthFt', e.target.value)}
+                                  placeholder="Width"
+                                  autoComplete="off"
+                                  className={inputClass}
+                                />
+                              </div>
+                              <div>
+                                <Label htmlFor="dim-height" className="sr-only">
+                                  Height in feet
+                                </Label>
+                                <Input
+                                  id="dim-height"
+                                  inputMode="decimal"
+                                  value={form.heightFt}
+                                  onChange={(e) => setField('heightFt', e.target.value)}
+                                  placeholder="Height"
+                                  autoComplete="off"
+                                  className={inputClass}
+                                />
+                              </div>
+                            </div>
+                          </div>
+
+                          <div>
+                            <span id="runs-label" className="mb-1.5 block text-sm font-semibold text-foreground">
+                              Does it run and drive?
+                            </span>
+                            <div
+                              role="radiogroup"
+                              aria-labelledby="runs-label"
+                              className="grid grid-cols-1 sm:grid-cols-2 gap-3"
+                            >
+                              {(
+                                [
+                                  { value: 'yes', label: 'Yes, it runs and drives' },
+                                  { value: 'no', label: 'No, it does not run' },
+                                ] as const
+                              ).map((opt) => (
+                                <button
+                                  key={opt.value}
+                                  type="button"
+                                  role="radio"
+                                  aria-checked={form.runsAndDrives === opt.value}
+                                  onClick={() => setField('runsAndDrives', opt.value)}
+                                  className={cn(
+                                    'h-14 rounded-xl border text-sm font-semibold transition-colors',
+                                    form.runsAndDrives === opt.value
+                                      ? 'border-primary bg-primary/10 text-foreground'
+                                      : 'border-border bg-background text-muted-foreground hover:border-foreground/30',
+                                  )}
+                                >
+                                  {opt.label}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+
+                          <div>
+                            <Label htmlFor="pickup-date" className="mb-1.5 block text-sm font-semibold">
+                              Preferred pickup date
+                            </Label>
+                            <Input
+                              id="pickup-date"
+                              type="date"
+                              value={form.pickupDate}
+                              onChange={(e) => setField('pickupDate', e.target.value)}
+                              className={inputClass}
+                            />
+                          </div>
+                        </motion.div>
+                      )}
+
+                      {step === 3 && (
+                        <motion.div
+                          key="step-3"
+                          initial={reduce ? false : { opacity: 0, x: 24 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          exit={reduce ? undefined : { opacity: 0, x: -24 }}
+                          transition={{ duration: 0.25 }}
+                          className="space-y-5"
+                        >
+                          <div className="rounded-2xl border border-border bg-background p-5">
+                            <div className="flex items-center justify-between gap-3 mb-4">
+                              <h3 className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                                Your shipment
+                              </h3>
+                              <button
+                                type="button"
+                                onClick={() => goToStep(1)}
+                                className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline"
+                              >
+                                <Pencil className="w-3.5 h-3.5" aria-hidden="true" /> Edit
+                              </button>
+                            </div>
+                            <dl className="grid sm:grid-cols-2 gap-x-6 gap-y-3">
+                              {summaryRows
+                                .filter((r) => r.label !== 'Notes')
+                                .map((row) => (
+                                  <div key={row.label}>
+                                    <dt className="text-xs font-medium text-muted-foreground">
+                                      {row.label}
+                                    </dt>
+                                    <dd className="text-sm font-semibold text-foreground break-words">
+                                      {row.value}
+                                    </dd>
+                                  </div>
+                                ))}
+                            </dl>
+                          </div>
+
+                          <div>
+                            <Label htmlFor="shipment-notes" className="mb-1.5 block text-sm font-semibold">
+                              Notes or special handling
+                            </Label>
+                            <Textarea
+                              id="shipment-notes"
+                              value={form.notes}
+                              onChange={(e) => setField('notes', e.target.value)}
+                              placeholder="Gate access, tight lot, attached equipment, timing constraints, anything the driver should know."
+                              rows={4}
+                              className="rounded-xl text-base md:text-sm bg-background border-border focus-visible:ring-primary/40 resize-y"
+                            />
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+
+                    {/* Step navigation — sticky thumb-reach bar on mobile */}
+                    <div className="sticky bottom-3 z-10 mt-7">
+                      <div className="flex flex-col-reverse sm:flex-row gap-3 rounded-[1.75rem] border border-border bg-card/95 backdrop-blur p-3 shadow-[0_16px_40px_-16px_rgba(18,18,18,0.3)] sm:rounded-none sm:border-0 sm:bg-transparent sm:p-0 sm:shadow-none sm:backdrop-blur-0">
+                        {step > 1 && (
+                          <Button
+                            type="button"
+                            variant="cta-outline"
+                            size="lg"
+                            className="rounded-full w-full sm:w-auto h-14"
+                            onClick={() => goToStep((step - 1) as 1 | 2 | 3)}
+                          >
+                            <ArrowLeft className="w-4 h-4 mr-1.5" /> Back
+                          </Button>
+                        )}
+                        {step < 3 ? (
+                          <Button
+                            type="button"
+                            variant="cta"
+                            size="cta"
+                            className="rounded-full w-full sm:w-auto"
+                            onClick={goNext}
+                          >
+                            Continue <ArrowRight className="w-4 h-4 ml-1" />
+                          </Button>
+                        ) : (
+                          <Button
+                            type="submit"
+                            variant="cta"
+                            size="cta"
+                            className="rounded-full w-full sm:w-auto"
+                          >
+                            Request Transportation Pricing <ArrowRight className="w-4 h-4 ml-1" />
+                          </Button>
+                        )}
+                      </div>
+                      <p className="text-xs text-muted-foreground leading-relaxed text-center sm:text-left mt-3 px-2">
                         No payment is collected here. Transportation pricing is prepared around your
                         actual shipment.*
                       </p>
