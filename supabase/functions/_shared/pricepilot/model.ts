@@ -29,6 +29,23 @@ interface NarrativeRequest {
   photos?: string[];
 }
 
+/** A narrative is usable only if it parsed and carries at least one text field. */
+function isValidNarrative(n: unknown): n is PricePilotNarrative {
+  if (!n || typeof n !== 'object') return false;
+  const o = n as Record<string, unknown>;
+  return typeof o.headline === 'string' || typeof o.summary === 'string';
+}
+
+function parseNarrative(content: unknown): PricePilotNarrative | null {
+  if (typeof content !== 'string' || !content.trim()) return null;
+  try {
+    const parsed: unknown = JSON.parse(content);
+    return isValidNarrative(parsed) ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
 async function callGateway(
   model: string,
   req: NarrativeRequest,
@@ -67,13 +84,13 @@ async function callGateway(
       signal: controller.signal,
     });
     if (!res.ok) {
+      // 402/429/5xx all degrade to "no narrative" — the deterministic
+      // valuation still ships, and the caller never retries in a loop.
       console.warn(`PricePilot model ${model} HTTP ${res.status}`);
       return null;
     }
     const data = await res.json();
-    const content = data?.choices?.[0]?.message?.content;
-    if (typeof content !== 'string' || !content.trim()) return null;
-    return JSON.parse(content) as PricePilotNarrative;
+    return parseNarrative(data?.choices?.[0]?.message?.content);
   } catch (err) {
     console.warn(`PricePilot model ${model} failed:`, err);
     return null;
