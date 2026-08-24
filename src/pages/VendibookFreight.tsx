@@ -152,7 +152,7 @@ const VendibookFreight = () => {
   const reduce = useReducedMotion();
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="sale-light min-h-screen bg-background flex flex-col">
       <SEO
         title="Vendibook Freight | Food Truck & Food Trailer Transport"
         description="Move food trucks and food trailers across the lower 48 with Vendibook Freight. Get transportation pricing, coordinate pickup, and ship equipment whether you found it on Vendibook or elsewhere."
@@ -370,7 +370,13 @@ const VendibookFreight = () => {
                 className="rounded-[2rem] p-7 sm:p-10 flex flex-col text-white shadow-[0_20px_50px_-30px_rgba(18,18,18,0.4)]"
                 style={{ background: 'linear-gradient(150deg, #1a1a1c 0%, #0c0c0e 100%)' }}
               >
-                <span className="w-12 h-12 rounded-2xl bg-white/10 border border-white/15 flex items-center justify-center mb-6">
+                <span
+                  className="w-12 h-12 rounded-2xl flex items-center justify-center mb-6"
+                  style={{
+                    background: 'rgba(255,255,255,0.10)',
+                    border: '1px solid rgba(255,255,255,0.15)',
+                  }}
+                >
                   <RouteIcon className="w-5 h-5 text-white" />
                 </span>
                 <h2 className="text-2xl font-bold tracking-tight mb-3">
@@ -413,7 +419,11 @@ const VendibookFreight = () => {
                   key={s.num}
                   {...(reduce ? {} : fadeUp)}
                   transition={{ duration: 0.45, delay: reduce ? 0 : i * 0.08 }}
-                  className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-7 sm:p-8 backdrop-blur-sm"
+                  className="rounded-[2rem] p-7 sm:p-8 backdrop-blur-sm"
+                  style={{
+                    background: 'rgba(255,255,255,0.045)',
+                    border: '1px solid rgba(255,255,255,0.10)',
+                  }}
                 >
                   <p className="text-sm font-bold tracking-[0.2em] text-primary mb-5">{s.num}</p>
                   <h3 className="text-xl font-semibold mb-3">{s.title}</h3>
@@ -612,14 +622,13 @@ const VendibookFreight = () => {
                       Browse trucks &amp; trailers <ArrowRight className="w-4 h-4 ml-1" />
                     </Link>
                   </Button>
-                  <Button
-                    variant="cta-outline"
-                    size="lg"
-                    className="rounded-full h-14 border-white/20 text-white hover:bg-white/10 hover:text-white"
-                    asChild
+                  <Link
+                    to="/ship-your-food-truck"
+                    className="inline-flex items-center justify-center rounded-full h-14 px-8 text-base font-semibold text-white transition-colors hover:bg-white/[0.08]"
+                    style={{ border: '1px solid rgba(255,255,255,0.22)' }}
                   >
-                    <Link to="/ship-your-food-truck">Get a Freight Estimate</Link>
-                  </Button>
+                    Get a Freight Estimate
+                  </Link>
                 </div>
               </div>
             </motion.div>
