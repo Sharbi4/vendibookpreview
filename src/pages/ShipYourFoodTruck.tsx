@@ -225,6 +225,9 @@ const ShipYourFoodTruck = () => {
   const [errors, setErrors] = useState<QuoteErrors>({});
   const [submitted, setSubmitted] = useState(false);
   const [step, setStep] = useState<1 | 2 | 3>(1);
+  // Guards against stray/double-tap submits: the submit button replaces
+  // Continue in the same spot, so a fast second tap could otherwise fire it.
+  const step3EnteredAt = useRef(0);
 
   const scrollToForm = () => {
     formSectionRef.current?.scrollIntoView({
@@ -249,6 +252,7 @@ const ShipYourFoodTruck = () => {
   };
 
   const goToStep = (next: 1 | 2 | 3) => {
+    if (next === 3) step3EnteredAt.current = Date.now();
     setStep(next);
     requestAnimationFrame(() => {
       formSectionRef.current?.scrollIntoView({
@@ -269,6 +273,8 @@ const ShipYourFoodTruck = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (step !== 3) return;
+    if (Date.now() - step3EnteredAt.current < 700) return;
     const next = validate();
     setErrors(next);
     if (Object.keys(next).length > 0) return;
