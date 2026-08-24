@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { AddressAutocomplete } from '@/components/listing-detail/AddressAutocomplete';
 import NextStepHint from '@/components/shared/NextStepHint';
+import { FreightLink } from '@/components/shared/FreightLink';
 import { FreightInfoPopover } from '@/components/shared/InfoPopover';
 import InfoPopover from '@/components/shared/InfoPopover';
 
@@ -153,7 +154,7 @@ const SchedulingFields = ({
   </div>
 );
 
-const NEXT_STEPS: Record<FulfillmentSelection, { title: string; body: string }[]> = {
+const NEXT_STEPS: Record<FulfillmentSelection, { title: string; body: React.ReactNode }[]> = {
   pickup: [
     { title: 'Message the seller', body: 'After checkout, use in-app Messages to schedule an exact pickup time.' },
     { title: 'Meet & inspect', body: 'Meet at the seller\'s pickup location. Inspect the item before you leave.' },
@@ -165,7 +166,7 @@ const NEXT_STEPS: Record<FulfillmentSelection, { title: string; body: string }[]
     { title: 'Confirm receipt', body: 'Confirm in your dashboard — funds release to the seller after the protection window.' },
   ],
   vendibook_freight: [
-    { title: 'Freight scheduling', body: 'Vendibook Freight contacts you within 2 business days to schedule pickup and delivery.' },
+    { title: 'Freight scheduling', body: <><FreightLink /> contacts you within 2 business days to schedule pickup and delivery.</> },
     { title: 'Transit', body: '7–10 business days is the typical transit estimate; actual pickup and transit times can vary.' },
     { title: 'Inspect on delivery', body: 'Inspect the item before signing. Note any damage on the driver\'s BOL immediately.' },
   ],
