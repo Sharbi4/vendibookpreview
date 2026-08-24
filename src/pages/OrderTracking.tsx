@@ -288,8 +288,8 @@ const CashFreightTimeline = ({
             <CreditCard className="h-8 w-8 text-primary mx-auto mb-2" />
             <p className="font-medium text-foreground">Freight Payment Required</p>
             <p className="text-sm text-muted-foreground mt-1">
-              {isBuyer 
-                ? `Pay $${freightCost.toLocaleString()} for VendiBook Freight shipping to proceed.`
+              {isBuyer
+                ? <>Pay ${freightCost.toLocaleString()} for <FreightLink /> shipping to proceed.</>
                 : 'Waiting for the buyer to pay for freight shipping.'}
             </p>
             {canPayFreight && (
@@ -691,7 +691,7 @@ const OrderTracking = () => {
               {isCashFreightTransaction && (
                 <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">
                   <Truck className="h-3 w-3 mr-1" />
-                  VendiBook Freight
+                  <FreightLink className="text-inherit decoration-current" />
                 </Badge>
               )}
             </div>
