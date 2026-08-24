@@ -1682,6 +1682,15 @@ const FilterContent = ({
         </div>
       )}
 
+      {/* Price Filter */}
+      <div className="space-y-2">
+        <Label className="text-sm font-medium flex items-center gap-2">
+          <DollarSign className="h-4 w-4" />
+          Price
+        </Label>
+        <PriceRangeInputs value={priceRange} onChange={onPriceRangeChange} />
+      </div>
+
       {/* Date Range Filter - Only show for rent mode */}
       {mode !== 'sale' && (
         <div className="max-w-xs">
