@@ -3,6 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import { corsHeaders, jsonResponse, unknownErrorResponse } from "../_shared/jsonError.ts";
 import { formatUsd } from "../_shared/adminPaymentAlert.ts";
 import { notifyUser } from "../_shared/notify.ts";
+import { invokeTransactionalEmail } from '../_shared/invokeTransactionalEmail.ts'
 
 /**
  * Pre-renewal heads-up: emails + in-app notification a few days before a
@@ -106,8 +107,7 @@ serve(async (req) => {
 
       if (profile?.email) {
         try {
-          await admin.functions.invoke("send-transactional-email", {
-            body: {
+          await invokeTransactionalEmail({
               templateName: "pro-membership-renewal-reminder",
               recipientEmail: profile.email,
               idempotencyKey: idempotency_key,
@@ -120,8 +120,7 @@ serve(async (req) => {
                 daysUntil,
                 paymentMethod: "PayPal",
               },
-            },
-          });
+            });
         } catch (err) {
           console.error("[send-renewal-reminders] email failed", sub.paypal_subscription_id, err);
         }

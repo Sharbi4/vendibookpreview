@@ -1,6 +1,7 @@
 // Sends a password reset email via the premium Satin Lux `generic-notice`
 // template, routed through the Lovable Emails queue (no direct Resend usage).
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
+import { invokeTransactionalEmail } from '../_shared/invokeTransactionalEmail.ts'
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -36,8 +37,7 @@ Deno.serve(async (req) => {
 
     const greeting = userName ? `Hi ${userName},` : "Hi there,";
 
-    const { error } = await supabase.functions.invoke("send-transactional-email", {
-      body: {
+    const { error } = await invokeTransactionalEmail({
         templateName: "generic-notice",
         recipientEmail: email,
         // One token per address; reusing the same key suppresses duplicates within the window.
@@ -60,8 +60,7 @@ Deno.serve(async (req) => {
           ctaUrl: resetLink,
           footnote: "Need help? Call (725) 755-9598 or email support@vendibook.com.",
         },
-      },
-    });
+      });
 
     if (error) {
       console.error("Failed to enqueue password reset email:", error);

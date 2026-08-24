@@ -135,7 +135,7 @@ const VendorLots = lazy(() => import("./pages/VendorLots"));
 const Wanted = lazy(() => import("./pages/Wanted"));
 const FAQ = lazy(() => import("./pages/FAQ"));
 const Unsubscribe = lazy(() => import("./pages/Unsubscribe"));
-const EmailUnsubscribe = lazy(() => import("./pages/EmailUnsubscribe"));
+
 const Feedback = lazy(() => import("./pages/Feedback"));
 const VendiAISuite = lazy(() => import("./pages/VendiAISuite"));
 const Browse = lazy(() => import("./pages/Browse"));
@@ -421,7 +421,7 @@ const AnimatedRoutes = () => {
           <Route path="/faq" element={<PageTransition><FAQ /></PageTransition>} />
           <Route path="/signage-request" element={<PageTransition><SignageRequest /></PageTransition>} />
           <Route path="/unsubscribe" element={<PageTransition><Unsubscribe /></PageTransition>} />
-          <Route path="/email-unsubscribe" element={<PageTransition><EmailUnsubscribe /></PageTransition>} />
+          <Route path="/email-unsubscribe" element={<Navigate to="/unsubscribe" replace />} />
           <Route path="/feedback" element={<PageTransition><Feedback /></PageTransition>} />
           <Route path="/community/spotlight" element={<PageTransition><CommunitySpotlight /></PageTransition>} />
           <Route path="/spotlight" element={<PageTransition><CommunitySpotlight /></PageTransition>} />

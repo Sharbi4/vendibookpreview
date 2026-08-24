@@ -1,6 +1,7 @@
 // Per-user weekly digest for hosts — personalized stats + AI insight + tip.
 // Triggered by pg_cron weekly OR by admin manually. One email per host (transactional).
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { invokeTransactionalEmail } from '../_shared/invokeTransactionalEmail.ts'
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -147,14 +148,12 @@ Deno.serve(async (req) => {
         continue;
       }
 
-      const { error: invErr } = await supabase.functions.invoke("send-transactional-email", {
-        body: {
+      const { error: invErr } = await invokeTransactionalEmail({
           templateName: "host-weekly-digest",
           recipientEmail: profile.email,
           idempotencyKey: `host-digest-${hostId}-${since.toISOString().slice(0, 10)}`,
           templateData,
-        },
-      });
+        });
       if (!invErr) queued++;
     }
 

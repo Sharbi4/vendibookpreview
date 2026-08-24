@@ -1,5 +1,6 @@
 // Thin proxy: routes listing-published emails through Lovable Emails queue.
 import { createClient } from 'npm:@supabase/supabase-js@2';
+import { invokeTransactionalEmail } from '../_shared/invokeTransactionalEmail.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -17,8 +18,7 @@ Deno.serve(async (req) => {
     }
     const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
 
-    const { error } = await supabase.functions.invoke('send-transactional-email', {
-      body: {
+    const { error } = await invokeTransactionalEmail({
         templateName: 'listing-published',
         recipientEmail: b.hostEmail,
         idempotencyKey: `listing-published-${b.listingId}`,
@@ -31,8 +31,7 @@ Deno.serve(async (req) => {
           coverImageUrl: b.coverImageUrl,
           listingType: b.listingType, // 'rental' | 'sale' | 'both'
         },
-      },
-    });
+      });
     if (error) throw error;
     return new Response(JSON.stringify({ success: true }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

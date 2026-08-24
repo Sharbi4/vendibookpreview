@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import { resolveSaleTerms, formatTermsForEmail } from "../_shared/resolveSaleTerms.ts";
+import { invokeTransactionalEmail } from '../_shared/invokeTransactionalEmail.ts'
 
 
 
@@ -172,8 +173,7 @@ serve(async (req) => {
 
     if (raiserEmail) {
       emailPromises.push(
-        supabaseClient.functions.invoke("send-transactional-email", {
-          body: {
+        invokeTransactionalEmail({
             templateName: "support-reply",
             recipientEmail: raiserEmail,
             idempotencyKey: `dispute-raiser-${transaction_id}`,
@@ -182,8 +182,7 @@ serve(async (req) => {
               subject: `Dispute Submitted - ${listingTitle}`,
               bodyParagraphs: raiserParagraphs,
             },
-          },
-        }).catch(err => logStep("Raiser email failed", { error: err.message }))
+          }).catch(err => logStep("Raiser email failed", { error: err.message }))
       );
     }
 
@@ -196,8 +195,7 @@ serve(async (req) => {
 
     if (otherEmail) {
       emailPromises.push(
-        supabaseClient.functions.invoke("send-transactional-email", {
-          body: {
+        invokeTransactionalEmail({
             templateName: "support-reply",
             recipientEmail: otherEmail,
             idempotencyKey: `dispute-other-${transaction_id}`,
@@ -206,8 +204,7 @@ serve(async (req) => {
               subject: `Dispute Raised - ${listingTitle}`,
               bodyParagraphs: otherParagraphs,
             },
-          },
-        }).catch(err => logStep("Other party email failed", { error: err.message }))
+          }).catch(err => logStep("Other party email failed", { error: err.message }))
       );
     }
 
@@ -226,8 +223,7 @@ serve(async (req) => {
 
     for (const adminTo of ["support@vendibook.com"]) {
       emailPromises.push(
-        supabaseClient.functions.invoke("send-transactional-email", {
-          body: {
+        invokeTransactionalEmail({
             templateName: "support-reply",
             recipientEmail: adminTo,
             idempotencyKey: `dispute-admin-${transaction_id}-${adminTo}`,
@@ -236,8 +232,7 @@ serve(async (req) => {
               subject: `[ACTION REQUIRED] New Dispute - ${listingTitle}`,
               bodyParagraphs: adminParagraphs,
             },
-          },
-        }).catch(err => logStep("Admin email failed", { error: err.message, adminTo }))
+          }).catch(err => logStep("Admin email failed", { error: err.message, adminTo }))
       );
     }
 

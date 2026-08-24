@@ -3,6 +3,7 @@
 // and sends a personalized re-engagement email with optimization tips.
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
+import { invokeTransactionalEmail } from '../_shared/invokeTransactionalEmail.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -69,8 +70,7 @@ Deno.serve(async (req) => {
       // Send re-engagement email via existing transactional infrastructure
       const firstName = profile.first_name || profile.full_name?.split(' ')[0] || 'there';
       try {
-        await supabase.functions.invoke('send-transactional-email', {
-          body: {
+        await invokeTransactionalEmail({
             templateName: 'host-reengagement',
             recipientEmail: profile.email,
             idempotencyKey: `reengage-${listing.host_id}-${new Date().toISOString().slice(0, 10)}`,
@@ -79,8 +79,7 @@ Deno.serve(async (req) => {
               listingTitle: listing.title,
               listingId: listing.id,
             },
-          },
-        });
+          });
 
         await supabase
           .from('profiles')

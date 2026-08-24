@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { invokeTransactionalEmail } from '../_shared/invokeTransactionalEmail.ts'
 
 
 const corsHeaders = {
@@ -437,8 +438,7 @@ const handler = async (req: Request): Promise<Response> => {
     const dateStamp = new Date().toISOString().slice(0, 10);
     const sendResults: any[] = [];
     for (const adminEmail of adminEmails as string[]) {
-      const { error: emailError } = await supabase.functions.invoke("send-transactional-email", {
-        body: {
+      const { error: emailError } = await invokeTransactionalEmail({
           templateName: "admin-daily-digest",
           recipientEmail: adminEmail,
           idempotencyKey: `admin-digest-${adminEmail}-${dateStamp}`,
@@ -450,8 +450,7 @@ const handler = async (req: Request): Promise<Response> => {
             activeDisputes: enrichedDisputes,
             totalItems,
           },
-        },
-      });
+        });
       sendResults.push({ admin: adminEmail, ok: !emailError, error: emailError?.message });
     }
 

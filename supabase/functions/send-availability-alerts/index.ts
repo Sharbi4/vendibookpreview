@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { invokeTransactionalEmail } from '../_shared/invokeTransactionalEmail.ts'
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -185,8 +186,7 @@ const handler = async (req: Request): Promise<Response> => {
           : (listing.price_sale ? `$${listing.price_sale.toLocaleString()}` : "");
 
         try {
-          const { error: emailError } = await supabase.functions.invoke("send-transactional-email", {
-            body: {
+          const { error: emailError } = await invokeTransactionalEmail({
               templateName: "new-listing-alert",
               recipientEmail: alert.email,
               idempotencyKey: `availability-${alert.id}-${listing.id}`,
@@ -202,8 +202,7 @@ const handler = async (req: Request): Promise<Response> => {
                 distanceMiles: distance,
                 coverImageUrl: listing.cover_image_url || undefined,
               },
-            },
-          });
+            });
           if (emailError) {
             console.error(`[availability-alerts] email error for ${alert.email}`, emailError);
             continue;

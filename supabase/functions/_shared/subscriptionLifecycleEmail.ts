@@ -13,6 +13,7 @@
 import { formatUsd } from "./adminPaymentAlert.ts";
 import { isProTierSlug } from "./proBoostCredit.ts";
 import {
+import { invokeTransactionalEmail } from './invokeTransactionalEmail.ts'
   type MembershipEmailKind,
   membershipEmailKey,
   type MembershipSubscription,
@@ -77,8 +78,7 @@ export async function sendPermitPlusEmail(
         ? sub.next_billing_time ?? ""
         : "");
 
-    await admin.functions.invoke("send-transactional-email", {
-      body: {
+    await invokeTransactionalEmail({
         templateName: `permitpath-plus-${kind.replace("_", "-")}`,
         recipientEmail: profile.email,
         idempotencyKey: membershipEmailKey(sub.paypal_subscription_id, kind, stamp),
@@ -91,8 +91,7 @@ export async function sendPermitPlusEmail(
           nextBillingDate: fmtDate(sub.next_billing_time),
           accessThrough: fmtDate(opts.accessThrough ?? sub.next_billing_time),
         },
-      },
-    });
+      });
   } catch (err) {
     console.error("[permitPlusEmail] send failed", kind, err);
   }

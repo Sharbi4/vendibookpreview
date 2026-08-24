@@ -3,6 +3,7 @@
 // Requires the caller to be an authenticated admin (checks user_roles.role='admin').
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
+import { invokeTransactionalEmail } from '../_shared/invokeTransactionalEmail.ts'
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -147,14 +148,12 @@ serve(async (req) => {
 
   for (const t of TEMPLATES) {
     try {
-      const { error } = await supabase.functions.invoke("send-transactional-email", {
-        body: {
+      const { error } = await invokeTransactionalEmail({
           templateName: t.name,
           recipientEmail: to,
           idempotencyKey: `test-${t.name}-${t.label}-${stamp}`.replace(/\s+/g, "-"),
           templateData: t.data,
-        },
-      });
+        });
       if (error) throw new Error(error.message || String(error));
       results.push({ template: t.name, label: t.label, ok: true });
     } catch (e) {

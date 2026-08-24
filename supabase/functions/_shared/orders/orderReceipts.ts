@@ -8,6 +8,7 @@
  */
 
 import { recordOrderEvent } from './orderEvents.ts';
+import { invokeTransactionalEmail } from '../invokeTransactionalEmail.ts'
 
 const RECEIPT_TEMPLATE = 'order-receipt';
 const TEMPLATE_VERSION = 'v1';
@@ -103,14 +104,12 @@ async function deliver(
   templateData: Record<string, unknown>,
 ): Promise<{ sent: boolean; reason?: string }> {
   try {
-    const { data, error } = await supabase.functions.invoke('send-transactional-email', {
-      body: {
+    const { data, error } = await invokeTransactionalEmail({
         templateName,
         recipientEmail,
         idempotencyKey: `${templateName}-${paymentRecordId}`,
         templateData,
-      },
-    });
+      });
     if (error) throw error;
 
     await supabase.from('payment_receipts').update({

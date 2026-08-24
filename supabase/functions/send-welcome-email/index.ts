@@ -31,7 +31,7 @@ serve(async (req) => {
     });
 
     if (!resp.ok) {
-      throw new Error(`send-transactional-email failed (${resp.status}): ${resp.body}`);
+      throw new Error(`transactional email send failed (${resp.status}): ${resp.body}`);
     }
 
     return new Response(JSON.stringify({ success: true }), {

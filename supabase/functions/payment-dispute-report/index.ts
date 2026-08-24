@@ -2,6 +2,7 @@ import { createClient } from 'npm:@supabase/supabase-js@2';
 import { corsHeaders, jsonError, jsonResponse, unknownErrorResponse } from '../_shared/jsonError.ts';
 import { recordOrderEvent } from '../_shared/orders/orderEvents.ts';
 import { notifyUser } from '../_shared/notify.ts';
+import { invokeTransactionalEmail } from '../_shared/invokeTransactionalEmail.ts'
 
 /**
  * payment-dispute-report
@@ -126,8 +127,7 @@ Deno.serve(async (req) => {
     }
 
     try {
-      await admin.functions.invoke('send-transactional-email', {
-        body: {
+      await invokeTransactionalEmail({
           templateName: 'generic-notice',
           recipientEmail: SUPPORT_EMAIL,
           idempotencyKey: `dispute-${record.id}`,
@@ -142,8 +142,7 @@ Deno.serve(async (req) => {
               `Details: ${details}`,
             ].join('\n'),
           },
-        },
-      });
+        });
     } catch (_err) {
       // Support email is best-effort — the dispute is already recorded.
     }

@@ -7,6 +7,7 @@
 // IMPORTANT: routes admin alerts ONLY to support@vendibook.com per project rule.
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { invokeTransactionalEmail } from '../_shared/invokeTransactionalEmail.ts'
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -171,14 +172,12 @@ Deno.serve(async (req) => {
       try {
         const idemBucket = Math.floor(Date.now() / (ALERT_COOLDOWN_MINUTES * 60_000));
         for (const recipient of Array.from(new Set([ADMIN_EMAIL, ADMIN_CC_EMAIL]))) {
-          await admin.functions.invoke("send-transactional-email", {
-            body: {
+          await invokeTransactionalEmail({
               templateName: "admin-daily-digest",
               recipientEmail: recipient,
               idempotencyKey: `error-alert-${fingerprint}-${idemBucket}-${recipient}`,
               templateData: { subject, summary: subject, details },
-            },
-          });
+            });
         }
         alertSent = true;
 

@@ -2,6 +2,7 @@
 // feedback request email per (context_type, context_id). Idempotency is
 // guaranteed by the unique constraint on feedback_email_sent.
 import { createClient } from 'npm:@supabase/supabase-js@2'
+import { invokeTransactionalEmail } from '../_shared/invokeTransactionalEmail.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -74,8 +75,7 @@ Deno.serve(async (req) => {
       const recipientName = profile?.first_name || profile?.full_name?.split(' ')[0]
       const contextLabel = listing?.title ? `your booking at ${listing.title}` : 'your recent booking'
 
-      const { error } = await supabase.functions.invoke('send-transactional-email', {
-        body: {
+      const { error } = await invokeTransactionalEmail({
           templateName: 'feedback-request',
           recipientEmail: email,
           idempotencyKey: `feedback-booking-${b.id}`,
@@ -83,8 +83,7 @@ Deno.serve(async (req) => {
             recipientName, contextLabel, contextType: 'booking',
             feedbackToken: token, aiSubject: true,
           },
-        },
-      })
+        })
       if (error) errors.push({ booking: b.id, error: error.message })
       else sentLog.push({ type: 'booking', id: b.id, email })
     }
@@ -128,8 +127,7 @@ Deno.serve(async (req) => {
       const recipientName = profile?.first_name || profile?.full_name?.split(' ')[0]
       const contextLabel = listing?.title ? `your purchase of ${listing.title}` : 'your recent purchase'
 
-      const { error } = await supabase.functions.invoke('send-transactional-email', {
-        body: {
+      const { error } = await invokeTransactionalEmail({
           templateName: 'feedback-request',
           recipientEmail: email,
           idempotencyKey: `feedback-sale-${s.id}`,
@@ -137,8 +135,7 @@ Deno.serve(async (req) => {
             recipientName, contextLabel, contextType: 'sale',
             feedbackToken: token, aiSubject: true,
           },
-        },
-      })
+        })
       if (error) errors.push({ sale: s.id, error: error.message })
       else sentLog.push({ type: 'sale', id: s.id, email })
     }

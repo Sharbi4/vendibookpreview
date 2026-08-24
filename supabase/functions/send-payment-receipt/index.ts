@@ -1,5 +1,6 @@
 // Thin proxy: routes payment receipts through Lovable Emails queue.
 import { createClient } from 'npm:@supabase/supabase-js@2';
+import { invokeTransactionalEmail } from '../_shared/invokeTransactionalEmail.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -35,14 +36,12 @@ Deno.serve(async (req) => {
         : 'Purchase',
     };
 
-    const { error } = await supabase.functions.invoke('send-transactional-email', {
-      body: {
+    const { error } = await invokeTransactionalEmail({
         templateName: 'payment-receipt',
         recipientEmail: d.email,
         idempotencyKey: `receipt-${d.transactionId}`,
         templateData,
-      },
-    });
+      });
     if (error) throw error;
     return new Response(JSON.stringify({ success: true }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

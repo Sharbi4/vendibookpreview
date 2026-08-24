@@ -2,6 +2,7 @@
 // queue (send-transactional-email) so they get suppression checks, retries,
 // unsubscribe footers, and email_send_log tracking.
 import { createClient } from 'npm:@supabase/supabase-js@2';
+import { invokeTransactionalEmail } from '../_shared/invokeTransactionalEmail.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -90,14 +91,12 @@ Deno.serve(async (req) => {
       termsVersion,
     };
 
-    const { error } = await supabase.functions.invoke('send-transactional-email', {
-      body: {
+    const { error } = await invokeTransactionalEmail({
         templateName: 'booking-confirmation',
         recipientEmail: b.email,
         idempotencyKey: `booking-confirm-${b.bookingId}`,
         templateData,
-      },
-    });
+      });
     if (error) throw error;
     return new Response(JSON.stringify({ success: true, termsIncluded: Boolean(termsSnapshot) }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

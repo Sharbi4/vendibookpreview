@@ -8,6 +8,7 @@
 // Idempotency keys ensure each user gets each email at most once.
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { invokeTransactionalEmail } from '../_shared/invokeTransactionalEmail.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -56,14 +57,12 @@ Deno.serve(async (req) => {
     if ((refCount ?? 0) > 0) continue
 
     const firstName = u.first_name || u.display_name || u.full_name?.split(' ')[0]
-    const { error } = await supabase.functions.invoke('send-transactional-email', {
-      body: {
+    const { error } = await invokeTransactionalEmail({
         templateName: 'referral-onboarding',
         recipientEmail: u.email,
         idempotencyKey: `referral-onboarding-${u.id}`,
         templateData: { name: firstName },
-      },
-    })
+      })
     if (!error) onboardingQueued++
   }
 
@@ -114,14 +113,12 @@ Deno.serve(async (req) => {
     if (!profile?.email) continue
 
     const firstName = profile.first_name || profile.display_name || profile.full_name?.split(' ')[0]
-    const { error } = await supabase.functions.invoke('send-transactional-email', {
-      body: {
+    const { error } = await invokeTransactionalEmail({
         templateName: 'referral-post-tx-ps',
         recipientEmail: profile.email,
         idempotencyKey: `referral-post-tx-${tx.userId}`,
         templateData: { name: firstName, transactionType: tx.type },
-      },
-    })
+      })
     if (!error) psQueued++
   }
 

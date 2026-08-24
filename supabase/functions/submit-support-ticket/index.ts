@@ -7,6 +7,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import { forwardTicketToTawk } from "../_shared/tawkForward.ts";
+import { invokeTransactionalEmail } from '../_shared/invokeTransactionalEmail.ts'
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -198,8 +199,7 @@ serve(async (req) => {
     const recipient = insertPayload.reply_email;
     if (recipient) {
       try {
-        await svc.functions.invoke("send-transactional-email", {
-          body: {
+        await invokeTransactionalEmail({
             templateName: "generic-notice",
             recipientEmail: recipient,
             idempotencyKey: `support-ticket-received-${ticket.id}`,
@@ -221,8 +221,7 @@ serve(async (req) => {
               ctaUrl: "https://vendibook.com/dashboard",
               footnote: "Questions? Call (725) 755-9598 (Mon–Fri 9am–5pm AZ). We do not promise a fixed response window — urgent reports (fraud, payment problems, safety) get first priority.",
             },
-          },
-        });
+          });
       } catch (e) {
         console.error("[submit-support-ticket] confirmation email failed", e);
       }
@@ -243,8 +242,7 @@ serve(async (req) => {
         );
       }
 
-      await svc.functions.invoke("send-transactional-email", {
-        body: {
+      await invokeTransactionalEmail({
           templateName: "generic-notice",
           recipientEmail: "support@vendibook.com",
           idempotencyKey: `support-ticket-admin-${ticket.id}`,
@@ -266,8 +264,7 @@ serve(async (req) => {
             ctaLabel: "Open in admin",
             ctaUrl: `https://vendibook.com/admin/support?ticket=${ticket.id}`,
           },
-        },
-      });
+        });
     } catch (e) {
       console.error("[submit-support-ticket] admin notify failed", e);
     }
