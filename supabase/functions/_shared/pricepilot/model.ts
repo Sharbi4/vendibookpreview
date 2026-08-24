@@ -119,7 +119,21 @@ export async function generatePricePilotNarrative(
   const primary = await callGateway(PRICEPILOT_MODEL_PRIMARY, req, apiKey, false);
   if (primary) return { narrative: primary, model: PRICEPILOT_MODEL_PRIMARY };
 
-  const fallback = await callGateway(PRICEPILOT_MODEL_FALLBACK, req, apiKey, false);
+  // One controlled retry with a simpler, more grounded prompt when the first
+  // response was malformed or missing the required fields. Never loops.
+  const simplified: NarrativeRequest = {
+    ...req,
+    photos: undefined,
+    systemPrompt:
+      'You write one short appraisal interpretation. Reply with ONLY a valid JSON object, no markdown, with these keys: ' +
+      '"headline" (one sentence), "summary" (2 sentences max), "drivers_positive" (array of up to 3 short strings), ' +
+      '"drivers_negative" (array of up to 3 short strings), "caveats" (array of up to 2 short strings), "photo_observations" (empty array). ' +
+      'Use only the numbers in the brief. Never invent numbers or comparables.',
+  };
+  const retry = await callGateway(PRICEPILOT_MODEL_PRIMARY, simplified, apiKey, false);
+  if (retry) return { narrative: retry, model: PRICEPILOT_MODEL_PRIMARY };
+
+  const fallback = await callGateway(PRICEPILOT_MODEL_FALLBACK, simplified, apiKey, false);
   if (fallback) return { narrative: fallback, model: PRICEPILOT_MODEL_FALLBACK };
 
   return { narrative: null, model: null };
