@@ -1,4 +1,5 @@
 import { DollarSign, Truck, Clock, CalendarDays } from 'lucide-react';
+import { FreightLink } from '@/components/shared/FreightLink';
 
 interface PricingSectionProps {
   isRental: boolean;
@@ -103,7 +104,7 @@ const PricingSection = ({
           )}
           {vendibookFreightEnabled && (
             <p className="text-xs text-muted-foreground">
-              Vendibook Freight available for nationwide shipping
+              <FreightLink /> available for nationwide shipping
             </p>
           )}
         </div>

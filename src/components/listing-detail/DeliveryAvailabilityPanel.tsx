@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { invokeEdge } from '@/lib/edge/invokeFunction';
+import { FreightLink } from '@/components/shared/FreightLink';
 import {
   deliveryRateLabel,
   estimateDelivery,
@@ -215,7 +216,7 @@ export const DeliveryAvailabilityPanel = ({
               {!result.inRadius && (
                 <p className="mt-1 text-muted-foreground">
                   {vendibookFreightEnabled
-                    ? 'Vendibook Freight can still ship this to you — see below.'
+                    ? <><FreightLink /> can still ship this to you — see below.</>
                     : 'You can still message the seller to ask about longer-distance delivery.'}
                 </p>
               )}
@@ -235,7 +236,7 @@ export const DeliveryAvailabilityPanel = ({
         <div className="mt-5 rounded-xl border border-border/60 bg-background/40 p-4">
           <p className="font-medium flex items-center gap-2">
             <Truck className="h-4 w-4 text-primary" />
-            Vendibook Freight available
+            <span><FreightLink /> available</span>
           </p>
           <p className="text-sm text-muted-foreground mt-1">
             Freight shipping is available to all 48 contiguous states, so distance isn’t a dealbreaker.

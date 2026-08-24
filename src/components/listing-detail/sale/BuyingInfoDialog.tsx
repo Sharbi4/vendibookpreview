@@ -80,7 +80,11 @@ export const BuyingInfoDialog = ({
           {freightEnabled && (
             <Row icon={Package} title="Nationwide Vendibook Freight">
               Available to the 48 contiguous states. Your freight cost is quoted by distance during
-              checkout — nothing is charged until you confirm it.
+              checkout — nothing is charged until you confirm it.{' '}
+              <Link to="/vendibook-freight" className="underline underline-offset-2">
+                Learn about Vendibook Freight
+              </Link>
+              .
             </Row>
           )}
           <Row icon={EyeOff} title="Address privacy">
