@@ -25,6 +25,7 @@ import {
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import SEO from '@/components/SEO';
+import { GuideBreadcrumb } from '@/components/education/GuideBreadcrumb';
 import { Button } from '@/components/ui/button';
 import {
   Accordion,
@@ -406,6 +407,14 @@ const VendibookFreight = () => {
         <section className="relative pt-14 pb-12 md:pt-20 md:pb-16 overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-b from-foreground/[0.03] via-background to-background" />
           <div className="container max-w-6xl mx-auto px-4 relative z-10">
+            <GuideBreadcrumb
+              items={[
+                { label: 'Home', to: '/' },
+                { label: 'How Vendibook Works', to: '/how-it-works' },
+                { label: 'Vendibook Freight' },
+              ]}
+              className="mb-6"
+            />
             <div className="grid lg:grid-cols-2 gap-10 lg:gap-14 items-center">
               <motion.div
                 initial={reduce ? undefined : { opacity: 0, y: 20 }}

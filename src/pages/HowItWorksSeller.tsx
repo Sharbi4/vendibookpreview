@@ -18,6 +18,7 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { GuideBreadcrumb } from '@/components/education/GuideBreadcrumb';
 import {
   Accordion,
   AccordionContent,
@@ -269,6 +270,14 @@ const HowItWorksSeller = () => {
         <section className="relative pt-14 pb-16 md:pt-20 md:pb-20 overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-b from-foreground/[0.03] via-background to-background" />
           <div className="container max-w-6xl mx-auto px-4 relative z-10">
+            <GuideBreadcrumb
+              items={[
+                { label: 'Home', to: '/' },
+                { label: 'How Vendibook Works', to: '/how-it-works' },
+                { label: 'How Selling Works' },
+              ]}
+              className="mb-6"
+            />
             <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
               <motion.div
                 initial={reduce ? undefined : { opacity: 0, y: 20 }}

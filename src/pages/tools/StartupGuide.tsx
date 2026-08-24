@@ -12,7 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@/components/ui/breadcrumb';
+import { GuideBreadcrumb } from '@/components/education/GuideBreadcrumb';
 import { 
   Truck, 
   ChefHat, 
@@ -1053,28 +1053,14 @@ const StartupGuide = () => {
           </div>
           
           <div className="container mx-auto max-w-6xl relative z-10">
-            <Breadcrumb className="mb-6">
-              <BreadcrumbList>
-                <BreadcrumbItem>
-                  <BreadcrumbLink asChild>
-                    <Link to="/" aria-label="Vendibook home" className="flex items-center gap-1 text-muted-foreground hover:text-foreground">
-                      <Home className="h-4 w-4" aria-hidden="true" />
-                      <span className="sr-only">Home</span>
-                    </Link>
-                  </BreadcrumbLink>
-                </BreadcrumbItem>
-                <BreadcrumbSeparator />
-                <BreadcrumbItem>
-                  <BreadcrumbLink asChild>
-                    <Link to="/tools" className="text-muted-foreground hover:text-foreground">Tools</Link>
-                  </BreadcrumbLink>
-                </BreadcrumbItem>
-                <BreadcrumbSeparator />
-                <BreadcrumbItem>
-                  <BreadcrumbPage>Startup Guide</BreadcrumbPage>
-                </BreadcrumbItem>
-              </BreadcrumbList>
-            </Breadcrumb>
+            <GuideBreadcrumb
+              items={[
+                { label: 'Home', to: '/' },
+                { label: 'Tools', to: '/tools' },
+                { label: 'Startup Guide' },
+              ]}
+              className="mb-6"
+            />
 
             <motion.div
               initial={{ opacity: 0, y: 20 }}

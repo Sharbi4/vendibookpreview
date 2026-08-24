@@ -17,6 +17,7 @@ import JsonLd from '@/components/JsonLd';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { Button } from '@/components/ui/button';
+import { GuideBreadcrumb } from '@/components/education/GuideBreadcrumb';
 import { EquinoxFundingLogo } from '@/components/brand/ProviderLogos';
 import { FinancingAvailableBadge } from '@/components/financing/FinancingAvailableBadge';
 import loanArt from '@/assets/education/loan.svg.asset.json';
@@ -211,6 +212,15 @@ const Financing = () => {
         <section className="relative pt-14 pb-14 md:pt-20 md:pb-16 overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-b from-foreground/[0.03] via-background to-background" />
           <div className="container max-w-4xl mx-auto px-4 relative z-10">
+            <GuideBreadcrumb
+              items={[
+                { label: 'Home', to: '/' },
+                { label: 'How Vendibook Works', to: '/how-it-works' },
+                { label: 'Financing' },
+              ]}
+              className="mb-6 flex justify-center"
+              containerClassName="max-w-4xl"
+            />
             <motion.div
               initial={reduce ? undefined : { opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
