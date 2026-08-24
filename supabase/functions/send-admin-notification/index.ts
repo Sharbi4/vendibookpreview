@@ -40,6 +40,7 @@ serve(async (req) => {
       addon_purchase: "Add-on / upgrade purchased 💳",
       subscription_started: "New membership subscription 🎉",
       subscription_renewed: "Membership renewed 🔁",
+      freight_quote_request: "New Vendibook Freight quote request 🚚",
     };
 
     const labelMap: Record<string, string> = {
@@ -80,6 +81,16 @@ serve(async (req) => {
       paypal_order_id: "PayPal order ID",
       provider: "Payment provider",
       next_billing_time: "Next billing",
+      pickup_location: "Pickup",
+      delivery_location: "Delivery",
+      equipment_type: "Equipment",
+      year: "Year",
+      dimensions: "Dimensions",
+      weight: "Approx. weight",
+      runs_and_drives: "Runs and drives",
+      preferred_pickup: "Preferred pickup",
+      notes: "Notes",
+      source_page: "Source page",
     };
 
     const details = Object.entries(data || {})
