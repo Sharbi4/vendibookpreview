@@ -122,7 +122,7 @@ const Browse = () => {
                 icon={<MapPin className="h-8 w-8" />}
                 title="Vendor Spaces"
                 description="Prime vending locations"
-                href="/search?category=vendor_lot"
+                href="/search?category=vendor_space"
               />
             </div>
           </div>

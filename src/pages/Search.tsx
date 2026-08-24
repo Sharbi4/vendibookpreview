@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { ImpressionTracker } from '@/components/analytics/ImpressionTracker';
 import { HostSupplyCTA } from '@/components/search/HostSupplyCTA';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { Search as SearchIcon, SlidersHorizontal, X, MapPin, Tag, DollarSign, CalendarIcon, Navigation, CheckCircle2, Plug, Zap, Refrigerator, Flame, Wind, Wifi, Car, Shield, Droplet, Truck, LayoutGrid, Map, Columns, Rows3, Star, Heart } from 'lucide-react';
+import { Search as SearchIcon, SlidersHorizontal, X, MapPin, Tag, DollarSign, CalendarIcon, Navigation, CheckCircle2, Plug, Zap, Refrigerator, Flame, Wind, Wifi, Car, Shield, Droplet, Truck, LayoutGrid, Map, Columns, Rows3, Star, Heart, ArrowUpDown, ChevronDown, Check } from 'lucide-react';
 import { DateRange } from 'react-day-picker';
 import { format, parseISO } from 'date-fns';
 import Header from '@/components/layout/Header';
@@ -26,6 +26,7 @@ import ReferralBrowseStrip from '@/components/referrals/ReferralBrowseStrip';
 import MobileStickyBar from '@/components/search/MobileStickyBar';
 import SaveSearchButton from '@/components/search/SaveSearchButton';
 import { CategoryPillStrip } from '@/components/search/CategoryPillStrip';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { CategoryInfoModal } from '@/components/categories/CategoryGuide';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -98,9 +99,9 @@ const Search = () => {
   // sort values so shared/refreshed links never land on a blank control.
   const rawSortParam = searchParams.get('sort');
   const normalizedSortParam = rawSortParam === 'price_low' ? 'price-low' : rawSortParam === 'price_high' ? 'price-high' : rawSortParam;
-  const initialSort = (['newest', 'price-low', 'price-high', 'distance', 'relevance'].includes(normalizedSortParam || '')
+  const initialSort = (['featured', 'newest', 'price-low', 'price-high', 'distance', 'relevance'].includes(normalizedSortParam || '')
     ? normalizedSortParam
-    : 'newest') as 'newest' | 'price-low' | 'price-high' | 'distance' | 'relevance';
+    : 'featured') as 'featured' | 'newest' | 'price-low' | 'price-high' | 'distance' | 'relevance';
   const initialInstantBook = searchParams.get('instant') === 'true';
   const initialPage = parseInt(searchParams.get('page') || '1', 10);
   
@@ -137,7 +138,7 @@ const Search = () => {
   const [instantBookOnly, setInstantBookOnly] = useState(initialInstantBook);
   const [verifiedHostsOnly, setVerifiedHostsOnly] = useState(searchParams.get('verified') === 'true');
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
-  const [sortBy, setSortBy] = useState<'newest' | 'price-low' | 'price-high' | 'distance' | 'relevance'>(initialSort);
+  const [sortBy, setSortBy] = useState<'featured' | 'newest' | 'price-low' | 'price-high' | 'distance' | 'relevance'>(initialSort);
   // True when the text query was auto-geocoded into a place — tells the
   // backend to skip the city-name text filter so metro suburbs inside the
   // radius aren't excluded for not name-matching the searched city.
@@ -237,30 +238,25 @@ const Search = () => {
     [searchResults?.sponsored]
   );
 
-  // Sparse-metro auto-widen: a location search with fewer than 8 results at
-  // the default radius re-runs once at 100 mi, labeled in the UI.
-  const [radiusExpanded, setRadiusExpanded] = useState(false);
-  const lastLocationKeyRef = useRef<string | null>(null);
-  useEffect(() => {
-    const key = locationCoords ? locationCoords.join(',') : null;
-    if (key !== lastLocationKeyRef.current) {
-      lastLocationKeyRef.current = key;
-      setRadiusExpanded(false);
-    }
-  }, [locationCoords]);
+  // Sort options shown to the shopper. Price sorts only exist in a single-mode
+  // context (sale $ vs rent $/day are incompatible units); Distance requires a
+  // selected location; Relevance requires a text query.
+  const sortOptions = useMemo(() => [
+    { value: 'featured', label: 'Featured' },
+    ...(debouncedQuery.trim() ? [{ value: 'relevance', label: 'Relevance' }] : []),
+    { value: 'newest', label: 'Newest' },
+    ...(mode !== 'all' ? [
+      { value: 'price-low', label: 'Price: Low → High' },
+      { value: 'price-high', label: 'Price: High → Low' },
+    ] : []),
+    ...(locationCoords ? [{ value: 'distance', label: 'Distance' }] : []),
+  ], [debouncedQuery, mode, locationCoords]);
 
-  useEffect(() => {
-    if (!locationCoords || radiusExpanded || isFetching) return;
-    if (searchRadius >= 100 || page !== 1) return;
-    if (totalCount < 8) {
-      setRadiusExpanded(true);
-      setSearchRadius(100);
-      const params = new URLSearchParams(searchParams);
-      params.set('radius', '100');
-      setSearchParams(params, { replace: true });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [locationCoords, radiusExpanded, isFetching, totalCount, searchRadius, page]);
+  // Sparse metros stay honest at the chosen radius — when a 50-mi location
+  // search returns very few listings, an explicit "Expand to 100 miles" CTA
+  // appears above the results instead of silently widening.
+  const showExpandRadiusCta =
+    !!locationCoords && searchRadius < 100 && page === 1 && !isFetching && totalCount < 5;
 
   // Debounced search_performed funnel event — fires ~600ms after results settle so we
   // don't double-count while the user is still typing or toggling filters.
@@ -309,7 +305,7 @@ const Search = () => {
       setPage(1); // Reset to page 1 on new search
       setSortBy(prev => {
         if (value.trim() && prev !== 'relevance') return 'relevance';
-        if (!value.trim() && prev === 'relevance') return 'newest';
+        if (!value.trim() && prev === 'relevance') return 'featured';
         return prev;
       });
       setSearchParams(prev => {
@@ -340,6 +336,17 @@ const Search = () => {
       params.set('mode', newMode);
     } else {
       params.delete('mode');
+      // Price sorts/filters only exist in a single-mode context (sale price vs
+      // rental $/day are incompatible units) — reset them when returning to All.
+      if (sortBy === 'price-low' || sortBy === 'price-high') {
+        setSortBy('featured');
+        params.delete('sort');
+      }
+      if (priceRange[0] > 0 || priceRange[1] !== Infinity) {
+        setPriceRange([0, Infinity]);
+        params.delete('min_price');
+        params.delete('max_price');
+      }
     }
     params.delete('page');
     setSearchParams(params);
@@ -381,8 +388,6 @@ const Search = () => {
   };
 
   const handleRadiusChange = (radius: number) => {
-    // A manual radius choice wins over the sparse-inventory auto-expand.
-    setRadiusExpanded(true);
     setSearchRadius(radius);
     setPage(1);
     if (locationCoords) {
@@ -417,7 +422,6 @@ const Search = () => {
     setLocationCoords(null);
     setSearchRadius(50);
     setQueryIsLocation(false);
-    setRadiusExpanded(false);
     setPriceRange([0, Infinity]);
     setDateRange(undefined);
     setSelectedAmenities([]);
@@ -426,17 +430,17 @@ const Search = () => {
 
     setInstantBookOnly(false);
     setVerifiedHostsOnly(false);
-    setSortBy('newest');
+    setSortBy('featured');
     setPage(1);
     setSearchParams({});
   };
 
   const handleSortChange = (value: string) => {
-    const newSort = value as 'newest' | 'price-low' | 'price-high' | 'distance' | 'relevance';
+    const newSort = value as 'featured' | 'newest' | 'price-low' | 'price-high' | 'distance' | 'relevance';
     setSortBy(newSort);
     setPage(1);
     const params = new URLSearchParams(searchParams);
-    if (newSort !== 'newest') {
+    if (newSort !== 'featured') {
       params.set('sort', newSort);
     } else {
       params.delete('sort');
@@ -809,6 +813,37 @@ const Search = () => {
               </Sheet>
             </div>
 
+            {/* Mode segmented control — unmistakable All / For Sale / For Rent */}
+            <div className="mt-3">
+              <div
+                className="inline-flex items-center rounded-full border border-border/50 bg-background/60 backdrop-blur p-1 gap-0.5"
+                role="tablist"
+                aria-label="Listing type"
+              >
+                {([
+                  { value: 'all', label: 'All' },
+                  { value: 'sale', label: 'For Sale' },
+                  { value: 'rent', label: 'For Rent' },
+                ] as const).map((option) => (
+                  <button
+                    key={option.value}
+                    type="button"
+                    role="tab"
+                    aria-selected={mode === option.value}
+                    onClick={() => handleModeChange(option.value)}
+                    className={cn(
+                      'h-8 px-4 rounded-full text-sm font-medium transition-all duration-200 no-tap-highlight',
+                      mode === option.value
+                        ? 'bg-foreground text-background shadow-sm'
+                        : 'text-muted-foreground hover:text-foreground'
+                    )}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             {/* Airbnb-style category pill strip */}
             <div className="mt-3 -mx-1">
               <CategoryPillStrip
@@ -836,9 +871,6 @@ const Search = () => {
                       {' '}listing{totalCount !== 1 ? 's' : ''}
                       {locationCoords && (
                         <span className="hidden sm:inline"> within {searchRadius} mi of <span className="font-medium text-foreground">{locationText || 'selected location'}</span></span>
-                      )}
-                      {(sortBy === 'price-low' || sortBy === 'price-high') && mode === 'all' && (
-                        <span className="hidden md:inline text-muted-foreground/70"> · rental prices per day, sale prices full</span>
                       )}
                       {searchQuery && (
                         <span className="hidden sm:inline"> matching <span className="font-medium text-foreground">"{debouncedQuery}"</span></span>
@@ -881,22 +913,6 @@ const Search = () => {
                     <Map className="h-3.5 w-3.5" />
                   </ToggleGroupItem>
                 </ToggleGroup>
-
-
-                <div className="relative">
-                  <select
-                    value={sortBy}
-                    onChange={(e) => handleSortChange(e.target.value)}
-                    className="appearance-none text-xs font-medium text-muted-foreground hover:text-foreground border border-border/40 rounded-xl pl-3 pr-7 h-8 bg-transparent hover:border-border/70 transition-all cursor-pointer focus:outline-none focus:border-primary/60"
-                  >
-                    <option value="newest">Recommended</option>
-                    {searchQuery.trim() && <option value="relevance">Relevance</option>}
-                    <option value="price-low">Price: Low → High</option>
-                    <option value="price-high">Price: High → Low</option>
-                    {locationCoords && <option value="distance">Distance</option>}
-                  </select>
-                  <svg className="absolute right-2 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
-                </div>
               </div>
               {locationCoords && (
                 <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
@@ -919,11 +935,6 @@ const Search = () => {
                   <span className="text-[11px] text-muted-foreground">
                     of {locationText || 'selected location'}
                   </span>
-                  {radiusExpanded && searchRadius === 100 && (
-                    <span className="text-[11px] text-primary font-medium">
-                      · Expanded to 100 mi — limited inventory nearby
-                    </span>
-                  )}
                 </div>
               )}
             </div>
@@ -978,6 +989,30 @@ const Search = () => {
 
             {/* Results Grid */}
             <div className="flex-1">
+
+              {/* Results context + primary Sort control, directly above listings */}
+              <div className="flex items-center justify-between gap-3 mb-4">
+                <p className="text-sm text-muted-foreground min-w-0">
+                  {locationCoords ? (
+                    <>
+                      Showing within <span className="font-semibold text-foreground">{searchRadius} miles</span> of{' '}
+                      <span className="font-semibold text-foreground">{locationText || 'selected location'}</span>
+                    </>
+                  ) : (
+                    'Showing all listings nationwide'
+                  )}
+                  {showExpandRadiusCta && (
+                    <button
+                      type="button"
+                      onClick={() => handleRadiusChange(100)}
+                      className="ml-2 text-primary font-medium hover:underline underline-offset-2"
+                    >
+                      Expand to 100 miles
+                    </button>
+                  )}
+                </p>
+                <SortControl sortBy={sortBy} options={sortOptions} onChange={handleSortChange} />
+              </div>
 
               {/* Active Filters Badges */}
               {(mode !== 'all' || category !== 'all' || locationCoords || dateRange?.from || selectedAmenities.length > 0 || instantBookOnly || verifiedHostsOnly) && (
@@ -1163,7 +1198,13 @@ const Search = () => {
                       </div>
                     </div>
                   )}
-                  {listings.length > 0 ? (
+                  {isLoadingListings && listings.length === 0 ? (
+                    <div className="space-y-3">
+                      {Array.from({ length: 4 }).map((_, i) => (
+                        <SkeletonCard key={i} variant="row" />
+                      ))}
+                    </div>
+                  ) : listings.length > 0 ? (
                     <div className="space-y-3">
                       {listings.map((listing) => (
                         <div key={listing.id} className="relative">
@@ -1425,8 +1466,48 @@ const Search = () => {
         onFiltersClick={() => setIsFiltersOpen(true)}
         hasLocation={!!locationCoords}
         hasSearchQuery={!!searchQuery.trim()}
+        showPriceSorts={mode !== 'all'}
       />
     </div>
+  );
+};
+
+// Labeled Sort control rendered directly above results (desktop + mobile).
+const SortControl = ({ sortBy, options, onChange }: {
+  sortBy: string;
+  options: { value: string; label: string }[];
+  onChange: (value: string) => void;
+}) => {
+  const current = options.find((o) => o.value === sortBy)?.label ?? 'Featured';
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button
+          type="button"
+          aria-label={`Sort results, currently ${current}`}
+          className="inline-flex items-center gap-2 h-9 pl-3.5 pr-3 rounded-full border border-border/50 bg-background/70 backdrop-blur text-sm text-foreground hover:border-border transition-colors duration-200 shrink-0"
+        >
+          <ArrowUpDown className="h-3.5 w-3.5 text-muted-foreground" />
+          <span className="whitespace-nowrap">
+            <span className="text-muted-foreground">Sort:</span>{' '}
+            <span className="font-semibold">{current}</span>
+          </span>
+          <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-56 rounded-xl">
+        {options.map((o) => (
+          <DropdownMenuItem
+            key={o.value}
+            onClick={() => onChange(o.value)}
+            className="flex items-center justify-between gap-2"
+          >
+            {o.label}
+            {sortBy === o.value && <Check className="h-4 w-4 text-primary" />}
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 };
 
@@ -1542,7 +1623,7 @@ const FilterContent = ({
 
   instantBookOnly,
   verifiedHostsOnly,
-  onModeChange,
+  
   onCategoryChange,
   onLocationTextChange,
   onLocationSelect,
@@ -1568,40 +1649,6 @@ const FilterContent = ({
   const availableAmenities = getAvailableAmenities();
   return (
     <div className="space-y-5 [&>div+div]:pt-5 [&>div+div]:border-t [&>div+div]:border-foreground/[0.06]">
-      {/* Type Filter - First */}
-      <div className="space-y-2">
-        <Label className="text-sm font-medium flex items-center gap-2">
-          <Tag className="h-4 w-4" />
-          Listing Type
-        </Label>
-        <div className="flex flex-wrap gap-2">
-          {[
-            { value: 'all', label: 'All' },
-            { value: 'rent', label: 'For Rent' },
-            { value: 'sale', label: 'For Sale' },
-          ].map((option) => (
-            <label 
-              key={option.value} 
-              className={cn(
-                "flex items-center gap-1.5 cursor-pointer px-3 py-1.5 rounded-full border text-sm transition-colors duration-200",
-                mode === option.value 
-                  ? "bg-primary text-primary-foreground border-primary" 
-                  : "border-transparent bg-foreground/[0.04] text-foreground/80 hover:bg-foreground/[0.08]"
-              )}
-            >
-              <input
-                type="radio"
-                name="mode"
-                checked={mode === option.value}
-                onChange={() => onModeChange(option.value)}
-                className="sr-only"
-              />
-              <span>{option.label}</span>
-            </label>
-          ))}
-        </div>
-      </div>
-
       {/* Category Filter */}
       <div className="space-y-2">
         <Label className="text-sm font-medium flex items-center">
@@ -1682,14 +1729,20 @@ const FilterContent = ({
         </div>
       )}
 
-      {/* Price Filter */}
-      <div className="space-y-2">
-        <Label className="text-sm font-medium flex items-center gap-2">
-          <DollarSign className="h-4 w-4" />
-          Price
-        </Label>
-        <PriceRangeInputs value={priceRange} onChange={onPriceRangeChange} />
-      </div>
+      {/* Price Filter — only in a single-mode context (sale $ vs rent $/day
+          are incompatible units, so All mode intentionally has no price filter) */}
+      {mode !== 'all' && (
+        <div className="space-y-2">
+          <Label className="text-sm font-medium flex items-center gap-2">
+            <DollarSign className="h-4 w-4" />
+            Price
+          </Label>
+          <PriceRangeInputs value={priceRange} onChange={onPriceRangeChange} />
+          {mode === 'rent' && (
+            <p className="text-xs text-muted-foreground">Filters the listing's primary rental price (daily when set, otherwise hourly).</p>
+          )}
+        </div>
+      )}
 
       {/* Date Range Filter - Only show for rent mode */}
       {mode !== 'sale' && (
