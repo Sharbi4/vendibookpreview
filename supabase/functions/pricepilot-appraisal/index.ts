@@ -254,7 +254,15 @@ Deno.serve(async (req) => {
         }
       }
 
-      const valuation = runSaleValuation(subject, comps);
+      const { scope, pool } = stageScope(subject, comps);
+      const valuation = runSaleValuation(subject, pool);
+      if (scope === 'regional') {
+        valuation.warnings.push('Local evidence was sparse, so this report broadened to your surrounding region.');
+      } else if (scope === 'national') {
+        valuation.warnings.push('Local and regional evidence was sparse. This report uses the broader U.S. market.');
+      } else if (scope === 'modeled') {
+        valuation.warnings.push('This is a modeled directional estimate from your equipment profile and broad industry bands, not a read of live local comps.');
+      }
 
       const { narrative, model } = await generatePricePilotNarrative({
         photos,
