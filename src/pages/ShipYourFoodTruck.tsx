@@ -39,6 +39,7 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion';
 import { cn } from '@/lib/utils';
+import { supabase } from '@/integrations/supabase/client';
 import movingArt from '@/assets/education/moving.svg.asset.json';
 import deliveryMapArt from '@/assets/education/delivery-map.svg.asset.json';
 
@@ -278,9 +279,32 @@ const ShipYourFoodTruck = () => {
     const next = validate();
     setErrors(next);
     if (Object.keys(next).length > 0) return;
-    // Staged front-end flow: no persistence or pricing engine yet. The
-    // details stay in local state and are echoed back in the confirmation.
     setSubmitted(true);
+    // Notify the freight team in the background — never blocks the
+    // confirmation state.
+    supabase.functions
+      .invoke('send-admin-notification', {
+        body: {
+          type: 'freight_quote_request',
+          data: {
+            pickup_location: form.pickupLocation.trim(),
+            delivery_location: form.deliveryLocation.trim(),
+            equipment_type: form.equipmentType,
+            year: form.year.trim(),
+            dimensions:
+              [form.lengthFt && `${form.lengthFt} ft L`, form.widthFt && `${form.widthFt} ft W`, form.heightFt && `${form.heightFt} ft H`]
+                .filter(Boolean)
+                .join(' × '),
+            weight: form.weightLbs.trim() ? `${form.weightLbs.trim()} lbs` : '',
+            runs_and_drives:
+              form.runsAndDrives === 'yes' ? 'Yes' : form.runsAndDrives === 'no' ? 'No' : '',
+            preferred_pickup: form.pickupDate,
+            notes: form.notes.trim(),
+            source_page: '/ship-your-food-truck',
+          },
+        },
+      })
+      .catch((err) => console.error('Freight quote notification error:', err));
     requestAnimationFrame(() => {
       formSectionRef.current?.scrollIntoView({
         behavior: reduce ? 'auto' : 'smooth',
