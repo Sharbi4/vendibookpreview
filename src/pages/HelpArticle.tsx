@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ChevronLeft, ChevronRight, ArrowLeft, List } from 'lucide-react';
 import { getArticleBySlug, getAdjacentArticles, getRelatedArticles } from '@/data/helpArticles';
 import ContentFeedback from '@/components/support/ContentFeedback';
+import { linkifyFreight } from '@/components/shared/FreightLink';
 
 const HelpArticle = () => {
   const { slug } = useParams<{ slug: string }>();
