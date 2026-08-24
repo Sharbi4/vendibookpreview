@@ -437,8 +437,11 @@ Deno.serve(async (req) => {
       });
     } else if (sort_by === 'price_low') {
       filteredListings.sort((a, b) => {
-        const priceA = a.mode === 'rent' ? (a.price_daily || a.price_hourly || 0) : (a.price_sale || 0);
-        const priceB = b.mode === 'rent' ? (b.price_daily || b.price_hourly || 0) : (b.price_sale || 0);
+        const rawA = a.mode === 'rent' ? (a.price_daily || a.price_hourly || 0) : (a.price_sale || 0);
+        const rawB = b.mode === 'rent' ? (b.price_daily || b.price_hourly || 0) : (b.price_sale || 0);
+        // Price-unknown listings ("Price TBD") sink to the end, not the top.
+        const priceA = rawA > 0 ? rawA : Number.MAX_SAFE_INTEGER;
+        const priceB = rawB > 0 ? rawB : Number.MAX_SAFE_INTEGER;
         return priceA - priceB;
       });
     } else if (sort_by === 'price_high') {
