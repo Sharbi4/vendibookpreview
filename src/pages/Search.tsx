@@ -1461,6 +1461,73 @@ interface FilterContentProps {
   onClear: () => void;
 }
 
+// Min/max price inputs that commit on blur or Enter, so typing doesn't fire
+// a search per keystroke. Re-syncs when the parent value resets (Clear all).
+const PriceRangeInputs = ({
+  value,
+  onChange,
+}: {
+  value: [number, number];
+  onChange: (next: [number, number]) => void;
+}) => {
+  const formatMax = (v: number) => (Number.isFinite(v) && v > 0 ? String(v) : '');
+  const [minText, setMinText] = useState(value[0] > 0 ? String(value[0]) : '');
+  const [maxText, setMaxText] = useState(formatMax(value[1]));
+
+  useEffect(() => {
+    setMinText(value[0] > 0 ? String(value[0]) : '');
+    setMaxText(formatMax(value[1]));
+  }, [value]);
+
+  const commit = () => {
+    const min = minText.trim() === '' ? 0 : Math.max(0, Math.floor(Number(minText)) || 0);
+    let max = maxText.trim() === '' ? Infinity : Math.floor(Number(maxText)) || 0;
+    if (max <= 0) max = Infinity;
+    if (max !== Infinity && max < min) max = min;
+    onChange([min, max]);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
+  };
+
+  return (
+    <div className="flex items-center gap-2 max-w-xs">
+      <div className="relative flex-1">
+        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
+        <Input
+          type="number"
+          inputMode="numeric"
+          min={0}
+          placeholder="Min"
+          value={minText}
+          onChange={(e) => setMinText(e.target.value)}
+          onBlur={commit}
+          onKeyDown={handleKeyDown}
+          className="pl-7 h-9 text-base"
+          aria-label="Minimum price"
+        />
+      </div>
+      <span className="text-muted-foreground text-sm">–</span>
+      <div className="relative flex-1">
+        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
+        <Input
+          type="number"
+          inputMode="numeric"
+          min={0}
+          placeholder="Max"
+          value={maxText}
+          onChange={(e) => setMaxText(e.target.value)}
+          onBlur={commit}
+          onKeyDown={handleKeyDown}
+          className="pl-7 h-9 text-base"
+          aria-label="Maximum price"
+        />
+      </div>
+    </div>
+  );
+};
+
 const FilterContent = ({
   mode,
   category,
