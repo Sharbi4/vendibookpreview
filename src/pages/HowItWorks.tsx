@@ -1,48 +1,44 @@
 import { Link } from 'react-router-dom';
 import { motion, useReducedMotion } from 'framer-motion';
 import {
-  Search,
+  ArrowRight,
+  BadgeDollarSign,
+  BadgeCheck,
+  CalendarSearch,
+  ClipboardCheck,
+  Handshake,
+  KeyRound,
   MapPin,
   MessageCircle,
-  BadgeDollarSign,
-  Truck,
+  Search,
   ShoppingBag,
   Tag,
-  CalendarSearch,
-  KeyRound,
-  BadgeCheck,
+  Truck,
   Wallet,
-  FileText,
-  LifeBuoy,
-  HelpCircle,
-  ClipboardCheck,
-  ArrowRight,
   type LucideIcon,
 } from 'lucide-react';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import SEO from '@/components/SEO';
+import JsonLd from '@/components/JsonLd';
 import { Button } from '@/components/ui/button';
 import { GuideBreadcrumb } from '@/components/education/GuideBreadcrumb';
-import { linkifyFreight } from '@/components/shared/FreightLink';
+import { FreightLink } from '@/components/shared/FreightLink';
 import imgBuying from '@/assets/how-buying-hero.jpg';
+import imgSelling from '@/assets/how-selling-hero.jpg';
 import imgCoffee from '@/assets/food-truck-coffee.jpg';
-import imgPopcorn from '@/assets/food-truck-popcorn.jpg';
-import searchPageArt from '@/assets/education/search-page.svg.asset.json';
-import verificationArt from '@/assets/education/verification.svg.asset.json';
-import movingArt from '@/assets/education/moving.svg.asset.json';
-import documentsOkArt from '@/assets/education/documents-ok.svg.asset.json';
-import signArt from '@/assets/education/sign.svg.asset.json';
-import deliveryMapArt from '@/assets/education/delivery-map.svg.asset.json';
-import loanArt from '@/assets/education/loan.svg.asset.json';
-import businessNegotiationArt from '@/assets/education/business-negotiation.svg.asset.json';
-import happySupportTeamArt from '@/assets/education/happy-support-team.svg.asset.json';
+import searchPageArt from '@/assets/education/search-page.svg';
+import loanArt from '@/assets/education/loan.svg';
+import documentsOkArt from '@/assets/education/documents-ok.svg';
+import deliveryMapArt from '@/assets/education/delivery-map.svg';
+import signArt from '@/assets/education/sign.svg';
 
 /**
- * /how-it-works — brand story + guide, not an operations manual.
+ * /how-it-works — flagship brand page, not an explainer.
  *
- * Answers, in order: why Vendibook exists → what it feels like → what you can
- * do here → where to go next.
+ * Positioning: Vendibook is not classifieds. The marketplace and the
+ * transaction live in one place — discover, evaluate, connect, finance,
+ * transport, complete.
  *
  * Copy guardrails (do not regress): no escrow or "payment protection" claims,
  * no guaranteed/instant payout timing, no universal identity-verification
@@ -61,25 +57,20 @@ const fadeUp = {
 };
 
 /* ------------------------------------------------------------------ */
-/* Hero visual — editorial listing collage, not a process diagram      */
+/* Hero visual — live listing collage                                   */
 /* ------------------------------------------------------------------ */
 
 const HeroCollage = () => {
   const reduce = useReducedMotion();
   return (
     <div className="relative" aria-hidden="true">
-      {/* Main listing card */}
       <motion.div
-        className="relative overflow-hidden rounded-3xl border border-border bg-card shadow-[0_24px_60px_-24px_rgba(0,0,0,0.18)]"
+        className="relative overflow-hidden rounded-[28px] border border-border bg-card shadow-[0_28px_64px_-28px_rgba(24,20,16,0.3)]"
         initial={reduce ? { opacity: 0 } : { opacity: 0, scale: 0.97 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.6, delay: 0.1 }}
       >
-        <img
-          src={imgBuying}
-          alt=""
-          className="aspect-[16/9] w-full object-cover"
-        />
+        <img src={imgBuying} alt="" className="aspect-[16/9] w-full object-cover" />
         <div className="p-5">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
@@ -103,21 +94,19 @@ const HeroCollage = () => {
         </div>
       </motion.div>
 
-      {/* Floating secondary card */}
       <motion.div
         className="absolute bottom-32 left-3 w-36 overflow-hidden rounded-2xl border border-border bg-card shadow-lg sm:bottom-28 sm:left-6 sm:w-52"
         initial={reduce ? { opacity: 0 } : { opacity: 0, y: 14 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: reduce ? 0 : 0.35 }}
       >
-        <img src={imgPopcorn} alt="" className="aspect-[4/3] w-full object-cover" />
+        <img src={imgCoffee} alt="" className="aspect-[4/3] w-full object-cover" />
         <div className="p-3">
-          <p className="truncate text-xs font-semibold text-foreground">Popcorn trailer</p>
+          <p className="truncate text-xs font-semibold text-foreground">Coffee trailer</p>
           <p className="mt-0.5 text-[11px] text-muted-foreground">Nashville, TN</p>
         </div>
       </motion.div>
 
-      {/* Distance cue */}
       <motion.div
         className="absolute -right-3 top-6 rounded-full border border-border bg-card px-3.5 py-2 shadow-md sm:-right-6"
         initial={reduce ? { opacity: 0 } : { opacity: 0, y: -8 }}
@@ -126,7 +115,7 @@ const HeroCollage = () => {
       >
         <p className="flex items-center gap-1.5 text-[11px] font-medium text-foreground">
           <Truck className="h-3 w-3 text-primary" />
-          Across the country? Freight can help.
+          Found it in another state? Freight can move it.
         </p>
       </motion.div>
     </div>
@@ -134,204 +123,242 @@ const HeroCollage = () => {
 };
 
 /* ------------------------------------------------------------------ */
-/* Why it feels different                                              */
+/* Marketplace flow — five moves, editorial rows                        */
 /* ------------------------------------------------------------------ */
 
-const DIFFERENCES: { title: string; body: string; art?: string; artAlt?: string }[] = [
+interface FlowStep {
+  step: string;
+  title: string;
+  body: React.ReactNode;
+  art: string;
+  artAlt: string;
+}
+
+const FLOW: FlowStep[] = [
   {
-    title: 'Shop with more context',
-    body: 'Photos, video where sellers provide it, full specs, price, and location up front. Message the seller or make an offer where it’s supported — and keep every word attached to the listing.',
-    art: searchPageArt.url,
+    step: '01',
+    title: 'Find the right equipment',
+    body: (
+      <>
+        Every listing is built for a business decision: full specs, real photos, transparent
+        pricing, and location up front. Search{' '}
+        <Link to="/browse" className="font-medium text-primary underline underline-offset-2 decoration-primary/40 hover:text-primary/80">
+          equipment for sale
+        </Link>{' '}
+        or{' '}
+        <Link to="/search?mode=rent" className="font-medium text-primary underline underline-offset-2 decoration-primary/40 hover:text-primary/80">
+          rentals near you
+        </Link>{' '}
+        — and talk directly to the people behind them.
+      </>
+    ),
+    art: searchPageArt,
     artAlt: 'Browsing Vendibook search results with rich listing details',
   },
   {
-    title: 'Shop beyond local',
-    body: 'Financing through third-party partners, pickup, seller delivery, and Vendibook Freight where available — so the right truck in another state is a real option, not just a saved tab.',
-    art: movingArt.url,
-    artAlt: 'Food truck being delivered across state lines',
+    step: '02',
+    title: 'Understand the opportunity',
+    body: (
+      <>
+        Run the numbers before you commit.{' '}
+        <Link to="/tools/pricepilot" className="font-medium text-primary underline underline-offset-2 decoration-primary/40 hover:text-primary/80">
+          PricePilot
+        </Link>{' '}
+        benchmarks the asking price against comparable live listings,{' '}
+        <Link to="/financing" className="font-medium text-primary underline underline-offset-2 decoration-primary/40 hover:text-primary/80">
+          financing partners
+        </Link>{' '}
+        show what monthly payments could look like, and{' '}
+        <Link to="/tools/permitpath" className="font-medium text-primary underline underline-offset-2 decoration-primary/40 hover:text-primary/80">
+          PermitPath
+        </Link>{' '}
+        maps the licenses your city will ask for. You evaluate the whole deal — not just the truck.
+      </>
+    ),
+    art: loanArt,
+    artAlt: 'Evaluating equipment financing and pricing',
   },
   {
-    title: 'Keep the purchase together',
-    body: 'Pay through PayPal online checkout or in person where the listing allows it, confirm the handoff, and find the whole transaction in one record when you need it.',
-    art: documentsOkArt.url,
+    step: '03',
+    title: 'Make the purchase',
+    body: (
+      <>
+        Negotiate in writing, make an offer, and check out through secure PayPal online
+        payment — or Pay in Person where the listing allows it. Either way, the agreement,
+        the messages, and the payment live on one transaction record.
+      </>
+    ),
+    art: documentsOkArt,
     artAlt: 'Transaction documents checked and in order',
+  },
+  {
+    step: '04',
+    title: 'Get it where it needs to go',
+    body: (
+      <>
+        The right truck is rarely next door. Arrange pickup, seller delivery, or{' '}
+        <FreightLink /> where available — coordinated as part of the transaction, so
+        distance stops being a reason to settle.
+      </>
+    ),
+    art: deliveryMapArt,
+    artAlt: 'Delivery route map for arranged freight',
+  },
+  {
+    step: '05',
+    title: 'Complete the handoff',
+    body: (
+      <>
+        Confirm delivery, sign the paperwork online, and keep the entire record — messages,
+        offers, agreements, payment — in one place. When you're ready for the next truck,
+        everything you need is already here.
+      </>
+    ),
+    art: signArt,
+    artAlt: 'Purchase agreement signed and handoff confirmed',
   },
 ];
 
 /* ------------------------------------------------------------------ */
-/* Tools                                                               */
+/* Buying / selling cards                                               */
 /* ------------------------------------------------------------------ */
 
-const TOOL_LINKS: { icon: LucideIcon; name: string; note: string; to: string }[] = [
+interface SideCard {
+  icon: LucideIcon;
+  eyebrow: string;
+  title: string;
+  body: string;
+  points: string[];
+  cta: { label: string; to: string };
+  secondary: { label: string; to: string };
+  image: string;
+  imageAlt: string;
+}
+
+const SIDES: SideCard[] = [
   {
-    icon: ClipboardCheck,
-    name: 'PermitPath',
-    note: 'Every license, permit, and inspection for your address — in one roadmap.',
-    to: '/tools/permitpath',
+    icon: ShoppingBag,
+    eyebrow: 'For buyers',
+    title: 'Buying on Vendibook',
+    body: 'The market comes to you — with the context to act on it.',
+    points: [
+      'Rich listings with specs, photos, and seller history',
+      'Direct messaging and written offers on the listing',
+      'Financing and freight options built into the deal',
+    ],
+    cta: { label: 'Browse listings', to: '/browse' },
+    secondary: { label: 'How purchasing works', to: '/how-purchasing-works' },
+    image: imgBuying,
+    imageAlt: 'A food truck listed for sale on Vendibook',
+  },
+  {
+    icon: Tag,
+    eyebrow: 'For sellers',
+    title: 'Selling on Vendibook',
+    body: 'Put your equipment in front of people already shopping for it.',
+    points: [
+      'Standard listings are free — publish in minutes',
+      'Serious buyers message and offer through the platform',
+      'Offers, agreements, and payment on one record',
+    ],
+    cta: { label: 'List your equipment', to: '/list' },
+    secondary: { label: 'Read the seller guide', to: '/how-it-works-seller' },
+    image: imgSelling,
+    imageAlt: 'A seller preparing a food trailer listing on Vendibook',
+  },
+];
+
+/* ------------------------------------------------------------------ */
+/* Connected ecosystem                                                  */
+/* ------------------------------------------------------------------ */
+
+const ECOSYSTEM: { icon: LucideIcon; name: string; note: string; to: string }[] = [
+  {
+    icon: Search,
+    name: 'PricePilot',
+    note: 'Pricing guidance built on live Vendibook marketplace data.',
+    to: '/tools/pricepilot',
   },
   {
     icon: BadgeDollarSign,
     name: 'Financing',
-    note: 'Apply with third-party financing partners on eligible equipment.',
+    note: 'Apply with third-party lending partners on eligible equipment.',
     to: '/financing',
   },
   {
     icon: Truck,
     name: 'Vendibook Freight',
-    note: 'Professional transport, coordinated as part of the transaction where available.',
+    note: 'Professional transport, coordinated with your transaction.',
     to: '/vendibook-freight',
   },
-];
-
-/* ------------------------------------------------------------------ */
-/* Human pathways                                                      */
-/* ------------------------------------------------------------------ */
-
-interface Path {
-  icon: LucideIcon;
-  title: string;
-  body: string;
-  cta: { label: string; to: string };
-  secondary?: { label: string; to: string };
-}
-
-const PATHS: Path[] = [
   {
-    icon: ShoppingBag,
-    title: 'I’m looking for a truck or trailer',
-    body: 'Take your time. Compare listings, ask questions, and see how buying works before you commit to anything.',
-    cta: { label: 'See how purchasing works', to: '/how-purchasing-works' },
-    secondary: { label: 'Start browsing', to: '/browse' },
+    icon: ClipboardCheck,
+    name: 'PermitPath',
+    note: 'Every license, permit, and inspection for your address — one roadmap.',
+    to: '/tools/permitpath',
   },
   {
-    icon: Tag,
-    title: 'I’m ready to sell',
-    body: 'Standard listings are free. Add your photos and your price, and hear from people actually shopping for what you have.',
-    cta: { label: 'Read the seller guide', to: '/how-it-works-seller' },
-    secondary: { label: 'List for free', to: '/list/start?mode=sale' },
+    icon: ShoppingBag,
+    name: 'Equipment for sale',
+    note: 'Food trucks, trailers, and carts listed by their owners.',
+    to: '/browse',
   },
   {
     icon: CalendarSearch,
-    title: 'I need something to rent',
-    body: 'Trucks, kitchens, and vendor spaces with live availability. Request to book, or use Instant Book where the host offers it.',
-    cta: { label: 'Browse rentals', to: '/search?mode=rent' },
-  },
-  {
-    icon: KeyRound,
-    title: 'I have equipment or space to rent out',
-    body: 'Set your rates and availability, review requests or switch on Instant Book, and earn from what you already own.',
-    cta: { label: 'Read the host guide', to: '/how-it-works-host' },
-    secondary: { label: 'List for rent', to: '/list/start?mode=rent' },
+    name: 'Equipment for rent',
+    note: 'Trucks, commercial kitchens, and vendor spaces with live availability.',
+    to: '/search?mode=rent',
   },
 ];
 
 /* ------------------------------------------------------------------ */
-/* Confidence                                                          */
-/* ------------------------------------------------------------------ */
-
-const CONFIDENCE_POINTS: { icon: LucideIcon; title: string; body: string }[] = [
-  {
-    icon: BadgeCheck,
-    title: 'Know who you’re talking to',
-    body: 'Seller profiles, listing history, and verification badges where the seller has completed verification.',
-  },
-  {
-    icon: MessageCircle,
-    title: 'Keep conversations and offers in one place',
-    body: 'Every message and offer stays attached to the listing — no lost threads, no he-said-she-said.',
-  },
-  {
-    icon: Wallet,
-    title: 'Choose how you pay',
-    body: 'Secure PayPal online checkout, or Pay in Person where the listing allows it. Either way, it’s recorded to the transaction.',
-  },
-  {
-    icon: LifeBuoy,
-    title: 'Get help when it matters',
-    body: 'Support for financing questions, freight coordination, and transaction issues — before you confirm, not after.',
-  },
-];
-
-/* ------------------------------------------------------------------ */
-/* Related guides                                                      */
-/* ------------------------------------------------------------------ */
-
-const GUIDES: { icon: LucideIcon; title: string; body: string; cta: string; to: string; art: string; artAlt: string }[] = [
-  {
-    icon: ShoppingBag,
-    title: 'How purchasing works',
-    body: 'The full buyer journey, from first look to confirmed handoff.',
-    cta: 'Read the buyer guide',
-    to: '/how-purchasing-works',
-    art: signArt.url,
-    artAlt: 'Purchase agreement and confirmed handoff',
-  },
-  {
-    icon: Truck,
-    title: 'Vendibook Freight',
-    body: 'How arranged freight works, when it applies, and what to expect.',
-    cta: 'Read the freight guide',
-    to: '/vendibook-freight',
-    art: deliveryMapArt.url,
-    artAlt: 'Delivery route map for arranged freight',
-  },
-  {
-    icon: BadgeDollarSign,
-    title: 'Financing',
-    body: 'Buyer financing through third-party partners on eligible equipment.',
-    cta: 'Explore financing',
-    to: '/financing',
-    art: loanArt.url,
-    artAlt: 'Equipment financing application',
-  },
-  {
-    icon: FileText,
-    title: 'Disputes & buyer support',
-    body: 'What to do if something goes wrong, and what helps resolve it.',
-    cta: 'See how disputes work',
-    to: '/help/dispute-evidence',
-    art: businessNegotiationArt.url,
-    artAlt: 'Dispute resolution and buyer support',
-  },
-  {
-    icon: HelpCircle,
-    title: 'Help Center',
-    body: 'Guides for buying, selling, renting, hosting, payments, and your account.',
-    cta: 'Visit the Help Center',
-    to: '/help',
-    art: happySupportTeamArt.url,
-    artAlt: 'Friendly Vendibook support team',
-  },
-];
-
-/* ------------------------------------------------------------------ */
-/* Page                                                                */
+/* Page                                                                 */
 /* ------------------------------------------------------------------ */
 
 const HowItWorks = () => {
   const reduce = useReducedMotion();
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="sale-light min-h-screen bg-background flex flex-col">
       <SEO
-        title="How Vendibook Works — The Marketplace for Mobile Food"
-        description="Discover, buy, sell, and rent food trucks, trailers, kitchens, and vendor spaces across the U.S. — with financing, freight, and tools that help you decide."
+        title="How Vendibook Works | Food Truck & Trailer Marketplace"
+        description="Vendibook isn't classifieds. Discover, evaluate, finance, transport, and complete food truck and trailer transactions — all in one marketplace."
         canonical="/how-it-works"
+      />
+      <JsonLd
+        schema={{
+          '@context': 'https://schema.org',
+          '@type': 'AboutPage',
+          name: 'How Vendibook Works',
+          description:
+            'How Vendibook brings the marketplace and the transaction together for buying, selling, and renting food trucks, trailers, kitchens, and vendor spaces.',
+          url: 'https://vendibook.com/how-it-works',
+          isPartOf: { '@type': 'WebSite', name: 'Vendibook', url: 'https://vendibook.com' },
+        }}
       />
 
       <Header />
 
       <main className="flex-1">
-        {/* HERO */}
-        <section className="relative pt-14 pb-16 md:pt-20 md:pb-20 overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-b from-foreground/[0.03] via-background to-background" />
+        {/* ---------------------------------------------------------- */}
+        {/* HERO                                                        */}
+        {/* ---------------------------------------------------------- */}
+        <section className="relative pt-12 pb-16 md:pt-20 md:pb-24 overflow-hidden">
+          <div
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              background:
+                'radial-gradient(900px 480px at 85% -5%, rgba(255,106,26,0.10), transparent 65%)',
+            }}
+            aria-hidden="true"
+          />
           <div className="container max-w-6xl mx-auto px-4 relative z-10">
             <GuideBreadcrumb
               items={[
                 { label: 'Home', to: '/' },
                 { label: 'How Vendibook Works' },
               ]}
-              className="mb-6"
+              className="mb-8"
             />
             <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
               <motion.div
@@ -339,24 +366,29 @@ const HowItWorks = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5 }}
               >
-                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-foreground/5 border border-border text-xs font-medium text-foreground mb-4">
-                  The marketplace for the mobile-food world
+                <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-card border border-border text-[11px] font-semibold uppercase tracking-[0.16em] text-foreground mb-6 shadow-sm">
+                  <span className="w-1.5 h-1.5 rounded-full bg-primary" aria-hidden="true" />
+                  How Vendibook Works
                 </div>
-                <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-foreground mb-5 leading-[1.08]">
-                  Built for people serious about mobile food.
+                <h1 className="text-4xl sm:text-5xl md:text-[3.4rem] font-bold tracking-tight text-foreground mb-5 leading-[1.06]">
+                  We don&rsquo;t do classifieds.
                 </h1>
-                <p className="text-lg text-muted-foreground mb-8 max-w-xl leading-relaxed">
-                  Vendibook brings food trucks, trailers, kitchens, and vendor spaces
-                  into one place — along with the tools, financing options, and shipping
-                  that help buyers discover more and sellers reach the people actually
-                  looking.
+                <p className="text-lg text-muted-foreground mb-4 max-w-xl leading-relaxed">
+                  Classifieds end at the listing. Vendibook starts there — and stays with
+                  you through evaluation, financing, transport, and the final signature.
+                </p>
+                <p className="text-base text-muted-foreground mb-8 max-w-xl leading-relaxed">
+                  One marketplace for buying, selling, and renting food trucks, trailers,
+                  kitchens, and vendor spaces — with the transaction built in, not bolted on.
                 </p>
                 <div className="flex flex-wrap gap-3">
                   <Button variant="cta" size="lg" className="rounded-full" asChild>
-                    <Link to="/browse">Browse the marketplace</Link>
+                    <Link to="/browse">
+                      Browse listings <ArrowRight className="w-4 h-4 ml-1.5" />
+                    </Link>
                   </Button>
                   <Button variant="cta-outline" size="lg" className="rounded-full" asChild>
-                    <Link to="/list">List for free</Link>
+                    <Link to="/list">List your equipment</Link>
                   </Button>
                 </div>
               </motion.div>
@@ -368,190 +400,125 @@ const HowItWorks = () => {
           </div>
         </section>
 
-        {/* WHY VENDIBOOK FEELS DIFFERENT */}
-        <section className="py-12 md:py-20 border-y border-border bg-card/40">
+        {/* ---------------------------------------------------------- */}
+        {/* MARKETPLACE FLOW — editorial numbered rows                  */}
+        {/* ---------------------------------------------------------- */}
+        <section className="py-14 md:py-24 border-y border-border bg-card/50">
           <div className="container max-w-6xl mx-auto px-4">
-            {/* Featured editorial story — image + copy, varied composition */}
-            <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center mb-14 md:mb-20">
-              <motion.div {...(reduce ? {} : fadeUp)} className="order-2 lg:order-1">
-                <div className="overflow-hidden rounded-3xl border border-border shadow-[0_24px_60px_-24px_rgba(0,0,0,0.15)]">
-                  <img
-                    src={imgCoffee}
-                    alt="A coffee trailer listed on Vendibook"
-                    loading="lazy"
-                    className="aspect-[4/3] w-full object-cover"
-                  />
-                </div>
-              </motion.div>
-              <motion.div {...(reduce ? {} : fadeUp)} className="order-1 lg:order-2">
-                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground mb-2">
-                  Why Vendibook feels different
-                </p>
-                <h2 className="text-2xl md:text-3xl font-bold text-foreground leading-tight">
-                  A marketplace that only speaks food.
-                </h2>
-                <p className="text-base text-muted-foreground mt-4 leading-relaxed">
-                  General classifieds bury a turn-key coffee trailer between a couch and
-                  a carburetor. Vendibook exists for one category — food trucks, trailers,
-                  kitchens, and vendor spaces — so the listings are richer, the buyers are
-                  serious, and the sellers are actually in the business.
-                </p>
-                <p className="text-base text-muted-foreground mt-3 leading-relaxed">
-                  When everyone here speaks the same language, everything moves faster.
-                </p>
-              </motion.div>
-            </div>
+            <motion.div {...(reduce ? {} : fadeUp)} className="mb-12 md:mb-16 max-w-2xl">
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary mb-2">
+                The Vendibook way
+              </p>
+              <h2 className="text-2xl md:text-3xl font-bold text-foreground leading-tight">
+                From first search to final signature — one connected process.
+              </h2>
+              <p className="text-base text-muted-foreground mt-3 leading-relaxed">
+                Five moves. No dead ends, no scattered paperwork, no starting over in
+                someone else&rsquo;s inbox.
+              </p>
+            </motion.div>
 
-            {/* Three editorial blocks — no boxes, generous breathing room */}
-            <div className="grid sm:grid-cols-3 gap-8 md:gap-10">
-              {DIFFERENCES.map((d, i) => (
+            <div className="space-y-10 md:space-y-14">
+              {FLOW.map((f, i) => (
                 <motion.div
-                  key={d.title}
+                  key={f.step}
                   {...(reduce ? {} : fadeUp)}
-                  transition={{ duration: 0.4, delay: reduce ? 0 : i * 0.07, ease }}
+                  transition={{ duration: 0.5, delay: reduce ? 0 : 0.05, ease }}
+                  className={`grid md:grid-cols-2 gap-6 md:gap-12 items-center ${
+                    i % 2 === 1 ? 'md:[&>*:first-child]:order-2' : ''
+                  }`}
                 >
-                  {d.art ? (
+                  <div className="overflow-hidden rounded-[24px] border border-border bg-background shadow-[0_20px_48px_-24px_rgba(24,20,16,0.25)]">
                     <img
-                      src={d.art}
-                      alt={d.artAlt ?? ''}
+                      src={f.art}
+                      alt={f.artAlt}
                       loading="lazy"
-                      className="mb-5 h-28 w-28 rounded-2xl border border-border bg-card object-contain shadow-sm"
+                      className="aspect-[16/9] w-full object-contain p-5 sm:p-7"
                     />
-                  ) : (
+                  </div>
+                  <div>
                     <span
-                      aria-hidden
-                      className="block h-px w-10 bg-primary/50 mb-5"
-                    />
-                  )}
-                  <h3 className="text-lg font-semibold text-foreground mb-2">{d.title}</h3>
-                  <p className="text-sm text-muted-foreground leading-relaxed">{linkifyFreight(d.body)}</p>
+                      className="block text-5xl md:text-6xl font-bold text-primary/15 leading-none mb-3 select-none"
+                      aria-hidden="true"
+                    >
+                      {f.step}
+                    </span>
+                    <h3 className="text-xl md:text-2xl font-bold text-foreground mb-3">
+                      {f.title}
+                    </h3>
+                    <p className="text-base text-muted-foreground leading-relaxed max-w-lg">
+                      {f.body}
+                    </p>
+                  </div>
                 </motion.div>
               ))}
             </div>
           </div>
         </section>
 
-        {/* TOOLS FOR THE DECISION */}
-        <section className="py-12 md:py-20">
+        {/* ---------------------------------------------------------- */}
+        {/* BUYING / SELLING CARDS                                      */}
+        {/* ---------------------------------------------------------- */}
+        <section className="py-14 md:py-24">
           <div className="container max-w-6xl mx-auto px-4">
-            <motion.div {...(reduce ? {} : fadeUp)} className="mb-10 max-w-2xl">
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground mb-2">
-                More than listings
+            <motion.div {...(reduce ? {} : fadeUp)} className="mb-10 md:mb-12 max-w-2xl">
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary mb-2">
+                Two sides, one table
               </p>
-              <h2 className="text-2xl md:text-3xl font-bold text-foreground">
-                Tools for the decision, not just the listing.
-              </h2>
-              <p className="text-base text-muted-foreground mt-3 leading-relaxed">
-                Buying or selling a food truck is a business decision. Vendibook gives you
-                the research tools to make it a good one.
-              </p>
-            </motion.div>
-
-            <div className="grid lg:grid-cols-2 gap-4 md:gap-5">
-              {/* Featured tool — PricePilot */}
-              <motion.div {...(reduce ? {} : fadeUp)}>
-                <Link
-                  to="/tools/pricepilot"
-                  className="group flex flex-col h-full rounded-3xl border border-border bg-card p-7 sm:p-8 hover:shadow-md hover:border-foreground/25 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-                >
-                  <span className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center mb-5">
-                    <Search className="w-5 h-5 text-primary" />
-                  </span>
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-primary mb-1.5">
-                    Featured tool
-                  </p>
-                  <h3 className="text-xl font-semibold text-foreground mb-2.5">PricePilot</h3>
-                  <p className="text-sm text-muted-foreground leading-relaxed mb-6 flex-1">
-                    Not sure what to charge — or whether the asking price is fair?
-                    PricePilot compares rates against comparable live listings in your
-                    market and suggests pricing that holds up. Built on real Vendibook
-                    marketplace data.
-                  </p>
-                  <span className="inline-flex items-center text-sm font-semibold text-primary">
-                    Try PricePilot
-                    <ArrowRight className="w-3.5 h-3.5 ml-1 transition-transform group-hover:translate-x-0.5" />
-                  </span>
-                </Link>
-              </motion.div>
-
-              {/* Smaller tool links */}
-              <div className="flex flex-col gap-4 md:gap-5">
-                {TOOL_LINKS.map((t, i) => (
-                  <motion.div
-                    key={t.name}
-                    {...(reduce ? {} : fadeUp)}
-                    transition={{ duration: 0.4, delay: reduce ? 0 : 0.06 + i * 0.06, ease }}
-                    className="flex-1"
-                  >
-                    <Link
-                      to={t.to}
-                      className="group flex items-center gap-4 h-full rounded-3xl border border-border bg-card p-5 sm:p-6 hover:shadow-md hover:border-foreground/25 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-                    >
-                      <span className="w-11 h-11 rounded-2xl bg-background border border-border flex items-center justify-center shrink-0 shadow-sm">
-                        <t.icon className="w-5 h-5 text-foreground/70" />
-                      </span>
-                      <span className="flex-1">
-                        <span className="block text-base font-semibold text-foreground">
-                          {t.name}
-                        </span>
-                        <span className="block text-sm text-muted-foreground leading-relaxed mt-0.5">
-                          {t.note}
-                        </span>
-                      </span>
-                      <ArrowRight className="w-4 h-4 text-muted-foreground transition-transform group-hover:translate-x-0.5 shrink-0" />
-                    </Link>
-                  </motion.div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* HUMAN PATHWAYS */}
-        <section className="py-12 md:py-20 border-y border-border bg-card/40">
-          <div className="container max-w-5xl mx-auto px-4">
-            <motion.div {...(reduce ? {} : fadeUp)} className="mb-10 max-w-2xl">
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground mb-2">
-                Where do you fit in?
-              </p>
-              <h2 className="text-2xl md:text-3xl font-bold text-foreground">
-                Start wherever you are.
+              <h2 className="text-2xl md:text-3xl font-bold text-foreground leading-tight">
+                Built for the people on both ends of the deal.
               </h2>
             </motion.div>
 
-            <div className="grid sm:grid-cols-2 gap-4 md:gap-5">
-              {PATHS.map((p, i) => (
+            <div className="grid md:grid-cols-2 gap-5 md:gap-6">
+              {SIDES.map((s, i) => (
                 <motion.article
-                  key={p.title}
+                  key={s.title}
                   {...(reduce ? {} : fadeUp)}
-                  transition={{ duration: 0.4, delay: reduce ? 0 : i * 0.05, ease }}
-                  className="flex flex-col rounded-3xl border border-border bg-card p-6 sm:p-7 hover:shadow-md transition-shadow"
+                  transition={{ duration: 0.5, delay: reduce ? 0 : i * 0.08, ease }}
+                  className="group flex flex-col overflow-hidden rounded-[28px] border border-border bg-card shadow-[0_1px_2px_rgba(24,20,16,0.04),0_10px_28px_-18px_rgba(24,20,16,0.28)] hover:shadow-[0_24px_56px_-24px_rgba(24,20,16,0.35)] hover:-translate-y-1 transition-all duration-300"
                 >
-                  <div className="flex items-center gap-3 mb-4">
-                    <span className="w-11 h-11 rounded-2xl bg-background border border-border flex items-center justify-center shrink-0 shadow-sm">
-                      <p.icon className="w-5 h-5 text-foreground/70" />
+                  <div className="relative overflow-hidden">
+                    <img
+                      src={s.image}
+                      alt={s.imageAlt}
+                      loading="lazy"
+                      className="aspect-[16/8] w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+                    />
+                    <div
+                      className="absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-transparent"
+                      aria-hidden="true"
+                    />
+                    <span className="absolute top-4 left-4 inline-flex items-center gap-1.5 rounded-full bg-white/90 backdrop-blur px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-foreground shadow-sm">
+                      <s.icon className="w-3.5 h-3.5 text-primary" />
+                      {s.eyebrow}
                     </span>
                   </div>
-                  <h3 className="text-lg font-semibold text-foreground mb-2">{p.title}</h3>
-                  <p className="text-sm text-muted-foreground leading-relaxed mb-5 flex-1">
-                    {p.body}
-                  </p>
-                  <div className="flex flex-col gap-1.5">
-                    <Link
-                      to={p.cta.to}
-                      className="group inline-flex items-center text-sm font-semibold text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-sm"
-                    >
-                      {p.cta.label}
-                      <ArrowRight className="w-3.5 h-3.5 ml-1 transition-transform group-hover:translate-x-0.5" />
-                    </Link>
-                    {p.secondary && (
+                  <div className="flex flex-col flex-1 p-6 sm:p-8">
+                    <h3 className="text-xl md:text-2xl font-bold text-foreground mb-2">{s.title}</h3>
+                    <p className="text-base text-muted-foreground leading-relaxed mb-5">{s.body}</p>
+                    <ul className="space-y-2.5 mb-7">
+                      {s.points.map((pt) => (
+                        <li key={pt} className="flex items-start gap-2.5 text-sm text-foreground/85">
+                          <BadgeCheck className="w-4 h-4 mt-0.5 text-primary shrink-0" />
+                          {pt}
+                        </li>
+                      ))}
+                    </ul>
+                    <div className="mt-auto flex flex-col gap-3">
+                      <Button variant="cta" className="rounded-full w-full sm:w-auto" asChild>
+                        <Link to={s.cta.to}>
+                          {s.cta.label} <ArrowRight className="w-4 h-4 ml-1.5" />
+                        </Link>
+                      </Button>
                       <Link
-                        to={p.secondary.to}
-                        className="inline-flex items-center text-sm font-medium text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-sm"
+                        to={s.secondary.to}
+                        className="inline-flex items-center text-sm font-medium text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-sm"
                       >
-                        {p.secondary.label}
+                        {s.secondary.label}
+                        <ArrowRight className="w-3.5 h-3.5 ml-1" />
                       </Link>
-                    )}
+                    </div>
                   </div>
                 </motion.article>
               ))}
@@ -559,96 +526,46 @@ const HowItWorks = () => {
           </div>
         </section>
 
-        {/* CONFIDENCE — warm, concise, one quiet disclosure */}
-        <section className="py-12 md:py-20">
-          <div className="container max-w-4xl mx-auto px-4">
-            <motion.div {...(reduce ? {} : fadeUp)} className="text-center mb-10">
-              <div className="flex items-center justify-center mb-6">
-                <img
-                  src={verificationArt.url}
-                  alt="Verified identity badge on a Vendibook profile"
-                  loading="lazy"
-                  className="h-28 w-28 rounded-3xl border border-border bg-card object-contain shadow-sm"
-                />
-              </div>
-              <h2 className="text-2xl md:text-3xl font-bold text-foreground">
-                More confidence, fewer unknowns.
-              </h2>
-            </motion.div>
-
-            <div className="grid sm:grid-cols-2 gap-x-10 gap-y-8">
-              {CONFIDENCE_POINTS.map((point, i) => (
-                <motion.div
-                  key={point.title}
-                  {...(reduce ? {} : fadeUp)}
-                  transition={{ duration: 0.4, delay: reduce ? 0 : i * 0.05, ease }}
-                  className="flex gap-4"
-                >
-                  <span className="w-10 h-10 rounded-full bg-foreground/5 border border-border flex items-center justify-center shrink-0 text-foreground/70">
-                    <point.icon className="w-5 h-5" />
-                  </span>
-                  <div>
-                    <h3 className="text-base font-semibold text-foreground mb-1">{point.title}</h3>
-                    <p className="text-sm text-muted-foreground leading-relaxed">{point.body}</p>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-
-            <motion.p
-              {...(reduce ? {} : fadeUp)}
-              transition={{ duration: 0.4, delay: reduce ? 0 : 0.2, ease }}
-              className="mt-10 text-center text-xs text-muted-foreground leading-relaxed max-w-2xl mx-auto"
-            >
-              Vendibook operates the marketplace — we don’t own the equipment and we’re
-              not the seller, manufacturer, or lender. Financing is provided by
-              third-party partners, subject to their approval and terms.
-            </motion.p>
-          </div>
-        </section>
-
-        {/* RELATED GUIDES */}
-        <section className="py-12 md:py-16 border-t border-border bg-card/40">
-          <div className="container max-w-5xl mx-auto px-4">
-            <motion.div {...(reduce ? {} : fadeUp)} className="mb-10 max-w-xl">
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground mb-2">
-                Keep reading
+        {/* ---------------------------------------------------------- */}
+        {/* CONNECTED ECOSYSTEM                                         */}
+        {/* ---------------------------------------------------------- */}
+        <section className="py-14 md:py-24 border-y border-border bg-card/50">
+          <div className="container max-w-6xl mx-auto px-4">
+            <motion.div {...(reduce ? {} : fadeUp)} className="mb-10 md:mb-12 max-w-2xl">
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary mb-2">
+                The connected ecosystem
               </p>
-              <h2 className="text-2xl md:text-3xl font-bold text-foreground">
-                Guides worth your coffee break.
+              <h2 className="text-2xl md:text-3xl font-bold text-foreground leading-tight">
+                The tools around the transaction, in the same place as the transaction.
               </h2>
+              <p className="text-base text-muted-foreground mt-3 leading-relaxed">
+                Pricing, financing, transport, and permits aren&rsquo;t afterthoughts here.
+                They&rsquo;re part of the platform.
+              </p>
             </motion.div>
 
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5">
-              {GUIDES.map((g, i) => (
+              {ECOSYSTEM.map((t, i) => (
                 <motion.div
-                  key={g.title}
+                  key={t.name}
                   {...(reduce ? {} : fadeUp)}
                   transition={{ duration: 0.4, delay: reduce ? 0 : i * 0.05, ease }}
                 >
                   <Link
-                    to={g.to}
-                    className="group flex flex-col rounded-3xl border border-border bg-card p-5 h-full hover:shadow-md hover:border-foreground/25 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                    to={t.to}
+                    className="group flex flex-col h-full rounded-[24px] border border-border bg-card p-6 shadow-[0_1px_2px_rgba(24,20,16,0.04)] hover:shadow-[0_16px_40px_-20px_rgba(24,20,16,0.3)] hover:border-foreground/25 hover:-translate-y-0.5 transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                   >
-                    <img
-                      src={g.art}
-                      alt={g.artAlt}
-                      loading="lazy"
-                      className="mb-4 aspect-[16/10] w-full rounded-2xl border border-border bg-card object-cover shadow-sm"
-                    />
-                    <div className="flex items-center gap-3 mb-2">
-                      <span className="w-9 h-9 rounded-xl bg-background border border-border flex items-center justify-center shrink-0 shadow-sm">
-                        <g.icon className="w-4 h-4 text-foreground/70" />
-                      </span>
-                      <span className="block text-base font-semibold text-foreground">
-                        {g.title}
-                      </span>
-                    </div>
-                    <span className="block text-sm text-muted-foreground leading-relaxed mb-3 flex-1">
-                      {g.body}
+                    <span className="w-11 h-11 rounded-2xl bg-primary/10 flex items-center justify-center mb-4">
+                      <t.icon className="w-5 h-5 text-primary" />
                     </span>
-                    <span className="inline-flex items-center text-sm font-medium text-primary">
-                      {g.cta}
+                    <span className="block text-base font-semibold text-foreground mb-1.5">
+                      {t.name}
+                    </span>
+                    <span className="block text-sm text-muted-foreground leading-relaxed mb-4 flex-1">
+                      {t.note}
+                    </span>
+                    <span className="inline-flex items-center text-sm font-semibold text-primary">
+                      Explore
                       <ArrowRight className="w-3.5 h-3.5 ml-1 transition-transform group-hover:translate-x-0.5" />
                     </span>
                   </Link>
@@ -658,35 +575,118 @@ const HowItWorks = () => {
           </div>
         </section>
 
-        {/* FINAL CTA */}
-        <section className="py-16 md:py-20">
-          <div className="container max-w-3xl mx-auto px-4 text-center">
-            <motion.div {...(reduce ? {} : fadeUp)}>
-              <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-3">
-                Your next move is probably already listed.
-              </h2>
-              <p className="text-base text-muted-foreground mb-7">
-                Browse live listings, or put your own equipment in front of people
-                already looking for it.
-              </p>
-              <div className="flex flex-wrap gap-3 justify-center">
-                <Button variant="cta" size="lg" className="rounded-full" asChild>
-                  <Link to="/browse">
-                    Browse the marketplace <ArrowRight className="w-4 h-4 ml-1.5" />
-                  </Link>
-                </Button>
-                <Button variant="cta-outline" size="lg" className="rounded-full" asChild>
-                  <Link to="/list">List for free</Link>
-                </Button>
+        {/* ---------------------------------------------------------- */}
+        {/* RENT / HOST strip                                           */}
+        {/* ---------------------------------------------------------- */}
+        <section className="py-14 md:py-20">
+          <div className="container max-w-5xl mx-auto px-4">
+            <motion.div
+              {...(reduce ? {} : fadeUp)}
+              className="rounded-[28px] border border-border bg-card p-7 sm:p-10 shadow-[0_1px_2px_rgba(24,20,16,0.04),0_10px_28px_-18px_rgba(24,20,16,0.28)]"
+            >
+              <div className="grid md:grid-cols-2 gap-8 md:gap-12">
+                <div className="flex gap-4">
+                  <span className="w-11 h-11 rounded-2xl bg-primary/10 flex items-center justify-center shrink-0">
+                    <CalendarSearch className="w-5 h-5 text-primary" />
+                  </span>
+                  <div>
+                    <h2 className="text-lg font-bold text-foreground mb-1.5">Need it short-term?</h2>
+                    <p className="text-sm text-muted-foreground leading-relaxed mb-3">
+                      Rent trucks, commercial kitchens, and vendor spaces with live
+                      availability. Request to book, or use Instant Book where the host
+                      offers it.
+                    </p>
+                    <Link
+                      to="/search?mode=rent"
+                      className="group inline-flex items-center text-sm font-semibold text-primary"
+                    >
+                      Browse rentals
+                      <ArrowRight className="w-3.5 h-3.5 ml-1 transition-transform group-hover:translate-x-0.5" />
+                    </Link>
+                  </div>
+                </div>
+                <div className="flex gap-4">
+                  <span className="w-11 h-11 rounded-2xl bg-primary/10 flex items-center justify-center shrink-0">
+                    <KeyRound className="w-5 h-5 text-primary" />
+                  </span>
+                  <div>
+                    <h2 className="text-lg font-bold text-foreground mb-1.5">Own equipment or space?</h2>
+                    <p className="text-sm text-muted-foreground leading-relaxed mb-3">
+                      Set your rates and calendar, review requests or switch on Instant
+                      Book, and earn from what you already own.
+                    </p>
+                    <Link
+                      to="/how-it-works-host"
+                      className="group inline-flex items-center text-sm font-semibold text-primary"
+                    >
+                      Read the host guide
+                      <ArrowRight className="w-3.5 h-3.5 ml-1 transition-transform group-hover:translate-x-0.5" />
+                    </Link>
+                  </div>
+                </div>
               </div>
-              <p className="text-xs text-muted-foreground mt-6 inline-flex items-center gap-1.5">
-                <LifeBuoy className="w-3.5 h-3.5" />
-                Questions? Visit the{' '}
-                <Link to="/help" className="underline underline-offset-2 hover:text-foreground">
-                  Help Center
-                </Link>
-                .
-              </p>
+            </motion.div>
+
+            <motion.p
+              {...(reduce ? {} : fadeUp)}
+              transition={{ duration: 0.4, delay: reduce ? 0 : 0.15, ease }}
+              className="mt-8 text-center text-xs text-muted-foreground leading-relaxed max-w-2xl mx-auto"
+            >
+              Vendibook operates the marketplace — we don&rsquo;t own the equipment and
+              we&rsquo;re not the seller, manufacturer, or lender. Financing is provided by
+              third-party partners, subject to their approval and terms.
+            </motion.p>
+          </div>
+        </section>
+
+        {/* ---------------------------------------------------------- */}
+        {/* FINAL CTA                                                   */}
+        {/* ---------------------------------------------------------- */}
+        <section className="py-16 md:py-24 border-t border-border">
+          <div className="container max-w-4xl mx-auto px-4">
+            <motion.div
+              {...(reduce ? {} : fadeUp)}
+              className="relative overflow-hidden rounded-[32px] border border-border bg-card px-6 py-14 sm:px-12 md:py-16 text-center shadow-[0_28px_64px_-32px_rgba(24,20,16,0.35)]"
+            >
+              <div
+                className="absolute inset-0 pointer-events-none"
+                style={{
+                  background:
+                    'radial-gradient(600px 300px at 50% 0%, rgba(255,106,26,0.10), transparent 70%)',
+                }}
+                aria-hidden="true"
+              />
+              <div className="relative">
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3.5 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-primary mb-5">
+                  <Handshake className="w-3.5 h-3.5" />
+                  The marketplace for mobile food
+                </span>
+                <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-foreground mb-4 leading-tight">
+                  Serious about mobile food? So are we.
+                </h2>
+                <p className="text-base md:text-lg text-muted-foreground mb-8 max-w-xl mx-auto leading-relaxed">
+                  Vendibook is where food truck and trailer buyers, sellers, and operators
+                  get the whole deal done — not just the first step of it.
+                </p>
+                <div className="flex flex-wrap gap-3 justify-center">
+                  <Button variant="cta" size="lg" className="rounded-full" asChild>
+                    <Link to="/browse">
+                      Browse listings <ArrowRight className="w-4 h-4 ml-1.5" />
+                    </Link>
+                  </Button>
+                  <Button variant="cta-outline" size="lg" className="rounded-full" asChild>
+                    <Link to="/list">List your equipment</Link>
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground mt-7 inline-flex items-center gap-1.5">
+                  <Wallet className="w-3.5 h-3.5" />
+                  Questions first? Visit the{' '}
+                  <Link to="/help" className="underline underline-offset-2 hover:text-foreground">
+                    Help Center
+                  </Link>
+                  .
+                </p>
+              </div>
             </motion.div>
           </div>
         </section>

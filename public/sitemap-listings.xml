@@ -694,17 +694,6 @@
     </image:image>
   </url>
   <url>
-    <loc>https://vendibook.com/listing/c07375f0-c3c6-4ab4-a353-2deba419773b</loc>
-    <lastmod>2026-08-23</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/00f5eddf-153e-451c-998a-f7a2a410b959/c07375f0-c3c6-4ab4-a353-2deba419773b/1770413583980-o76z5.jpg</image:loc>
-      <image:title>The Q — Commercial Kitchen &amp; Commissary (Downtown Boaz, AL)</image:title>
-      <image:caption>The Q — Commercial Kitchen &amp; Commissary (Downtown Boaz, AL) in Boaz, AL on Vendibook</image:caption>
-    </image:image>
-  </url>
-  <url>
     <loc>https://vendibook.com/listing/3d4b8b98-aec6-4bdd-9af8-d45470c091c7</loc>
     <lastmod>2026-08-20</lastmod>
     <changefreq>weekly</changefreq>
@@ -724,6 +713,17 @@
       <image:loc>https://images.unsplash.com/photo-1567306226416-28f0efdc88ce?w=800</image:loc>
       <image:title>Starter Food Cart Business</image:title>
       <image:caption>Starter Food Cart Business in Denver, CO on Vendibook</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://vendibook.com/listing/c07375f0-c3c6-4ab4-a353-2deba419773b</loc>
+    <lastmod>2026-08-24</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/00f5eddf-153e-451c-998a-f7a2a410b959/c07375f0-c3c6-4ab4-a353-2deba419773b/1770413583980-o76z5.jpg</image:loc>
+      <image:title>The Q — Commercial Kitchen &amp; Commissary (Downtown Boaz, AL)</image:title>
+      <image:caption>The Q — Commercial Kitchen &amp; Commissary (Downtown Boaz, AL) in Boaz, AL on Vendibook</image:caption>
     </image:image>
   </url>
   <url>
