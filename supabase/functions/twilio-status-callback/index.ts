@@ -4,7 +4,11 @@
 // messages as failed/delivered.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const TWILIO_AUTH_TOKEN = Deno.env.get("TWILIO_AUTH_TOKEN") ?? "";
+// Twilio signs webhook requests with the account auth token. Accept the
+// dedicated secret first, falling back to the connector-managed key (which is
+// the same account credential used to authenticate Twilio API calls here).
+const TWILIO_AUTH_TOKEN =
+  Deno.env.get("TWILIO_AUTH_TOKEN") ?? Deno.env.get("TWILIO_API_KEY") ?? "";
 const SKIP_SIG_VERIFY =
   Deno.env.get("SMS_TEST_MODE") === "true" ||
   Deno.env.get("TWILIO_SKIP_SIGNATURE_VERIFY") === "true";
