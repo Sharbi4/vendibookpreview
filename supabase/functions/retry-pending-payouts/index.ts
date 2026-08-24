@@ -6,6 +6,7 @@
 // for release, and returns a report for the admin payouts queue.
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
+import { isAdminOrInternalCaller, internalOnlyResponse } from "../_shared/internalAuth.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -25,6 +26,11 @@ const logStep = (step: string, details?: Record<string, unknown>) => {
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
+  }
+
+  // Payout sweeps expose seller financial data — internal/admin callers only.
+  if (!(await isAdminOrInternalCaller(req))) {
+    return internalOnlyResponse(corsHeaders);
   }
 
   try {

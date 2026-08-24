@@ -6,6 +6,7 @@
 //
 // Trigger by POSTing to this function. Admin-only via service role.
 import { createClient } from 'npm:@supabase/supabase-js@2'
+import { isAdminOrInternalCaller, internalOnlyResponse } from '../_shared/internalAuth.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -14,6 +15,12 @@ const corsHeaders = {
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders })
+
+  // Mass host email job — internal scheduler or signed-in admin only.
+  if (!(await isAdminOrInternalCaller(req))) {
+    return internalOnlyResponse(corsHeaders)
+  }
+
   try {
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL')!,
