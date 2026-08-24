@@ -136,9 +136,6 @@ const Search = () => {
 
   const [instantBookOnly, setInstantBookOnly] = useState(initialInstantBook);
   const [verifiedHostsOnly, setVerifiedHostsOnly] = useState(searchParams.get('verified') === 'true');
-  const [featuredOnly, setFeaturedOnly] = useState(
-    searchParams.get('featured') === '1' || searchParams.get('featured') === 'true'
-  );
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
   const [sortBy, setSortBy] = useState<'newest' | 'price-low' | 'price-high' | 'distance' | 'relevance'>(initialSort);
   // True when the text query was auto-geocoded into a place — tells the
@@ -206,13 +203,12 @@ const Search = () => {
     max_price: priceRange[1] !== Infinity ? priceRange[1] : undefined,
     instant_book_only: instantBookOnly || undefined,
     verified_hosts_only: verifiedHostsOnly || undefined,
-    featured_only: featuredOnly || undefined,
     delivery_capable: deliveryFilterEnabled || undefined,
     fulfillment_types: fulfillmentTypes.length > 0 ? fulfillmentTypes : undefined,
     page,
     page_size: 20,
     sort_by: sortBy === 'price-low' ? 'price_low' : sortBy === 'price-high' ? 'price_high' : sortBy,
-  }), [debouncedQuery, queryIsLocation, mode, category, locationCoords, searchRadius, dateRange, selectedAmenities, priceRange, instantBookOnly, verifiedHostsOnly, featuredOnly, deliveryFilterEnabled, fulfillmentTypes, page, sortBy]);
+  }), [debouncedQuery, queryIsLocation, mode, category, locationCoords, searchRadius, dateRange, selectedAmenities, priceRange, instantBookOnly, verifiedHostsOnly, deliveryFilterEnabled, fulfillmentTypes, page, sortBy]);
 
 
   // Fetch listings from edge function
@@ -430,7 +426,6 @@ const Search = () => {
 
     setInstantBookOnly(false);
     setVerifiedHostsOnly(false);
-    setFeaturedOnly(false);
     setSortBy('newest');
     setPage(1);
     setSearchParams({});
