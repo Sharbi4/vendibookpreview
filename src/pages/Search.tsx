@@ -1149,6 +1149,25 @@ const Search = () => {
               {/* List View — compact horizontal rows */}
               {viewMode === 'list' && (
                 <>
+                  {sponsoredListings.length > 0 && (
+                    <div className="mb-5">
+                      <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">Sponsored</p>
+                      <div className="space-y-3">
+                        {sponsoredListings.map((listing) => (
+                          <ListingCard
+                            key={`sponsored-${listing.id}`}
+                            listing={listing}
+                            hostVerified={listing.host_verified ?? false}
+                            showQuickBook
+                            onQuickBook={handleQuickBook}
+                            canDeliverToUser={listing.can_deliver ?? false}
+                            variant="search"
+                            horizontal
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  )}
                   {listings.length > 0 ? (
                     <div className="space-y-3">
                       {listings.map((listing) => (
@@ -1247,6 +1266,24 @@ const Search = () => {
                     </div>
                   ) : listings.length > 0 ? (
                     <>
+                    {sponsoredListings.length > 0 && (
+                      <div className="mb-6">
+                        <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">Sponsored</p>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                          {sponsoredListings.map((listing) => (
+                            <ListingCard
+                              key={`sponsored-${listing.id}`}
+                              listing={listing}
+                              hostVerified={listing.host_verified ?? false}
+                              showQuickBook
+                              onQuickBook={handleQuickBook}
+                              canDeliverToUser={listing.can_deliver ?? false}
+                              variant="search"
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    )}
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
 
                       {listings.map((listing, index) => (
