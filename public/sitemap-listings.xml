@@ -486,7 +486,7 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/9fa1aac0-10d3-4c75-8e60-d8e16f7a0a47</loc>
-    <lastmod>2026-08-23</lastmod>
+    <lastmod>2026-08-24</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
@@ -683,17 +683,6 @@
     </image:image>
   </url>
   <url>
-    <loc>https://vendibook.com/listing/48d74da6-4702-4669-a601-9fa0463d8693</loc>
-    <lastmod>2026-08-23</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/c677e805-e035-48e5-a842-f40101f05657/48d74da6-4702-4669-a601-9fa0463d8693/1787418739279-4wo8sd.jpg</image:loc>
-      <image:title>TURNKEY  ITALIAN ICE BUSINESS </image:title>
-      <image:caption>TURNKEY  ITALIAN ICE BUSINESS  in Lincoln, DE on Vendibook</image:caption>
-    </image:image>
-  </url>
-  <url>
     <loc>https://vendibook.com/listing/3d4b8b98-aec6-4bdd-9af8-d45470c091c7</loc>
     <lastmod>2026-08-20</lastmod>
     <changefreq>weekly</changefreq>
@@ -702,6 +691,17 @@
       <image:loc>https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=800</image:loc>
       <image:title>Basic Food Prep Trailer</image:title>
       <image:caption>Basic Food Prep Trailer in Tucson, AZ on Vendibook</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://vendibook.com/listing/48d74da6-4702-4669-a601-9fa0463d8693</loc>
+    <lastmod>2026-08-24</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/c677e805-e035-48e5-a842-f40101f05657/48d74da6-4702-4669-a601-9fa0463d8693/1787418739279-4wo8sd.jpg</image:loc>
+      <image:title>TURNKEY  ITALIAN ICE BUSINESS </image:title>
+      <image:caption>TURNKEY  ITALIAN ICE BUSINESS  in Lincoln, DE on Vendibook</image:caption>
     </image:image>
   </url>
   <url>
@@ -783,7 +783,7 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/63f45b26-62bc-489e-a43f-8ae56f37217b</loc>
-    <lastmod>2026-08-23</lastmod>
+    <lastmod>2026-08-24</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
