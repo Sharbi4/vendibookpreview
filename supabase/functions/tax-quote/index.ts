@@ -42,7 +42,7 @@ serve(async (req) => {
       if (!listingId) return jsonError(400, "missing_fields", "Missing listing id.");
       const { data: listing } = await admin
         .from("listings")
-        .select("price_sale, city, state, zip_code")
+        .select("price_sale, city, state, address")
         .eq("id", listingId)
         .maybeSingle();
       if (!listing) return jsonError(404, "not_found", "We couldn't find that listing.");
@@ -63,9 +63,10 @@ serve(async (req) => {
         parsed.state = fromText.state;
         parsed.zip = fromText.zip;
       }
+      const listingLoc = parseStateZipFromAddress(listing.address);
       destination = {
         state: parsed.state ?? listing.state ?? null,
-        zip: parsed.zip ?? listing.zip_code ?? null,
+        zip: parsed.zip ?? listingLoc.zip ?? null,
         city: listing.city ?? null,
       };
     } else if (kind === "rental") {
@@ -73,7 +74,7 @@ serve(async (req) => {
       if (!listingId) return jsonError(400, "missing_fields", "Missing listing id.");
       const { data: listing } = await admin
         .from("listings")
-        .select("city, state, zip_code")
+        .select("city, state, address")
         .eq("id", listingId)
         .maybeSingle();
       if (!listing) return jsonError(404, "not_found", "We couldn't find that listing.");
@@ -82,9 +83,10 @@ serve(async (req) => {
       // applies to the rental subtotal only — never the fee or the deposit.
       const totalCents = Math.max(0, Math.round(Number(body?.total_cents ?? 0)));
       amountCents = Math.round(totalCents / (1 + RENTER_FEE_PERCENT / 100));
+      const listingLoc = parseStateZipFromAddress(listing.address);
       destination = {
         state: listing.state ?? null,
-        zip: listing.zip_code ?? null,
+        zip: listingLoc.zip ?? null,
         city: listing.city ?? null,
       };
     } else if (kind === "product") {
