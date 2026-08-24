@@ -152,7 +152,7 @@ const FLOW: FlowStep[] = [
         — and talk directly to the people behind them.
       </>
     ),
-    art: searchPageArt.url,
+    art: searchPageArt,
     artAlt: 'Browsing Vendibook search results with rich listing details',
   },
   {
@@ -175,7 +175,7 @@ const FLOW: FlowStep[] = [
         maps the licenses your city will ask for. You evaluate the whole deal — not just the truck.
       </>
     ),
-    art: loanArt.url,
+    art: loanArt,
     artAlt: 'Evaluating equipment financing and pricing',
   },
   {
@@ -188,7 +188,7 @@ const FLOW: FlowStep[] = [
         the messages, and the payment live on one transaction record.
       </>
     ),
-    art: documentsOkArt.url,
+    art: documentsOkArt,
     artAlt: 'Transaction documents checked and in order',
   },
   {
@@ -201,7 +201,7 @@ const FLOW: FlowStep[] = [
         distance stops being a reason to settle.
       </>
     ),
-    art: deliveryMapArt.url,
+    art: deliveryMapArt,
     artAlt: 'Delivery route map for arranged freight',
   },
   {
@@ -214,7 +214,7 @@ const FLOW: FlowStep[] = [
         everything you need is already here.
       </>
     ),
-    art: signArt.url,
+    art: signArt,
     artAlt: 'Purchase agreement signed and handoff confirmed',
   },
 ];
