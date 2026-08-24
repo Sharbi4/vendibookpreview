@@ -27,7 +27,6 @@ const statusConfig = {
 };
 
 const TicketStatusTracker = () => {
-  const [email, setEmail] = useState('');
   const [ticketId, setTicketId] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [tickets, setTickets] = useState<TicketStatus[] | null>(null);
