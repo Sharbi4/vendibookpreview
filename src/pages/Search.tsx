@@ -504,6 +504,28 @@ const Search = () => {
     });
   };
 
+  const handlePriceRangeChange = (value: [number, number]) => {
+    setPriceRange(value);
+    setPage(1);
+    const params = new URLSearchParams(searchParams);
+    if (value[0] > 0) params.set('min_price', String(value[0]));
+    else params.delete('min_price');
+    if (value[1] !== Infinity && Number.isFinite(value[1])) params.set('max_price', String(value[1]));
+    else params.delete('max_price');
+    params.delete('page');
+    setSearchParams(params);
+  };
+
+  const handleDeliveryFilterChange = (enabled: boolean) => {
+    setDeliveryFilterEnabled(enabled);
+    setPage(1);
+    const params = new URLSearchParams(searchParams);
+    if (enabled) params.set('delivery', '1');
+    else params.delete('delivery');
+    params.delete('page');
+    setSearchParams(params);
+  };
+
 
   const handlePageChange = (newPage: number) => {
     setPage(newPage);
@@ -767,10 +789,10 @@ const Search = () => {
                         onLocationTextChange={setLocationText}
                         onLocationSelect={handleLocationSelect}
                         onRadiusChange={handleRadiusChange}
-                        onPriceRangeChange={setPriceRange}
+                        onPriceRangeChange={handlePriceRangeChange}
                         onDateRangeChange={handleDateRangeChange}
                         onAmenityToggle={toggleAmenity}
-                        onDeliveryFilterChange={setDeliveryFilterEnabled}
+                        onDeliveryFilterChange={handleDeliveryFilterChange}
                         onFulfillmentToggle={handleFulfillmentToggle}
 
                         onInstantBookChange={handleInstantBookChange}
@@ -946,10 +968,10 @@ const Search = () => {
                   onLocationTextChange={setLocationText}
                   onLocationSelect={handleLocationSelect}
                   onRadiusChange={handleRadiusChange}
-                  onPriceRangeChange={setPriceRange}
+                  onPriceRangeChange={handlePriceRangeChange}
                   onDateRangeChange={handleDateRangeChange}
                   onAmenityToggle={toggleAmenity}
-                  onDeliveryFilterChange={setDeliveryFilterEnabled}
+                  onDeliveryFilterChange={handleDeliveryFilterChange}
                   onFulfillmentToggle={handleFulfillmentToggle}
 
                   onInstantBookChange={handleInstantBookChange}
