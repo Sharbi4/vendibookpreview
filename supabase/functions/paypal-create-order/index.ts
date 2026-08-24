@@ -91,7 +91,7 @@ serve(async (req) => {
       if (!targetId) return jsonError(400, "missing_fields", "Missing transaction id.");
       const { data: tx } = await admin
         .from("sale_transactions")
-        .select("*, listing:listings(title, city, state, zip_code)")
+        .select("*, listing:listings(title, city, state, address)")
         .eq("id", targetId)
         .maybeSingle();
       if (!tx) return jsonError(404, "not_found", "We couldn't find that transaction.");
@@ -107,19 +107,20 @@ serve(async (req) => {
       // Destination sourcing: delivery/freight tax where the goods land;
       // pickup/on-site tax where the listing sits.
       const listingLoc = (tx as any).listing ?? {};
+      const listingLocParsed = parseStateZipFromAddress(listingLoc.address);
       const delivers = tx.fulfillment_type === "delivery" ||
         tx.fulfillment_type === "vendibook_freight";
       const parsed = delivers ? parseStateZipFromAddress(tx.delivery_address) : { state: null, zip: null };
       taxDestination = {
         state: parsed.state ?? listingLoc.state ?? null,
-        zip: parsed.zip ?? listingLoc.zip_code ?? null,
+        zip: parsed.zip ?? listingLocParsed.zip ?? null,
         city: listingLoc.city ?? null,
       };
     } else if (kind === "booking") {
       if (!targetId) return jsonError(400, "missing_fields", "Missing booking id.");
       const { data: booking } = await admin
         .from("booking_requests")
-        .select("*, listing:listings(title, city, state, zip_code)")
+        .select("*, listing:listings(title, city, state, address)")
         .eq("id", targetId)
         .maybeSingle();
       if (!booking) return jsonError(404, "not_found", "We couldn't find that booking.");
@@ -138,9 +139,10 @@ serve(async (req) => {
       bookingRequestId = booking.id;
       taxKind = "rental";
       // Rentals are taxed where the rental happens — the listing's location.
+      const bookingListingLoc = parseStateZipFromAddress((booking as any).listing?.address);
       taxDestination = {
         state: (booking as any).listing?.state ?? null,
-        zip: (booking as any).listing?.zip_code ?? null,
+        zip: bookingListingLoc.zip ?? null,
         city: (booking as any).listing?.city ?? null,
       };
       if (booking.host_platform_fee === null || booking.host_platform_fee === undefined) {
@@ -204,7 +206,7 @@ serve(async (req) => {
       if (!targetId) return jsonError(400, "missing_fields", "Missing transaction id.");
       const { data: tx } = await admin
         .from("sale_transactions")
-        .select("*, listing:listings(title, city, state, zip_code)")
+        .select("*, listing:listings(title, city, state, address)")
         .eq("id", targetId)
         .maybeSingle();
       if (!tx) return jsonError(404, "not_found", "We couldn't find that transaction.");
@@ -225,10 +227,11 @@ serve(async (req) => {
       taxKind = "service";
       {
         const listingLoc = (tx as any).listing ?? {};
+        const listingLocParsed = parseStateZipFromAddress(listingLoc.address);
         const parsed = parseStateZipFromAddress(tx.delivery_address);
         taxDestination = {
           state: parsed.state ?? listingLoc.state ?? null,
-          zip: parsed.zip ?? listingLoc.zip_code ?? null,
+          zip: parsed.zip ?? listingLocParsed.zip ?? null,
           city: listingLoc.city ?? null,
         };
       }
@@ -247,7 +250,7 @@ serve(async (req) => {
       if (!targetId) return jsonError(400, "missing_fields", "Missing listing id.");
       const { data: listing } = await admin
         .from("listings")
-        .select("id, title, host_id, proof_notary_enabled, city, state, zip_code")
+        .select("id, title, host_id, proof_notary_enabled, city, state, address")
         .eq("id", targetId)
         .maybeSingle();
       if (!listing) return jsonError(404, "not_found", "We couldn't find that listing.");
