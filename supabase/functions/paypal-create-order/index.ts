@@ -266,9 +266,10 @@ serve(async (req) => {
       }
       taxKind = "service";
       // The notary service is performed at the listing.
+      const notaryLoc = parseStateZipFromAddress(listing.address);
       taxDestination = {
         state: listing.state ?? null,
-        zip: listing.zip_code ?? null,
+        zip: notaryLoc.zip ?? null,
         city: listing.city ?? null,
       };
       quote = quoteServiceCharge({
