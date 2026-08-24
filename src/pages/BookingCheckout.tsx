@@ -1222,12 +1222,12 @@ const BookingCheckout = () => {
                         ) : instantConfirm ? (
                           <>
                             <Zap className="h-5 w-5 mr-2" />
-                            Confirm and pay ${fees.customerTotal.toLocaleString()}
+                            Confirm and pay ${totalChargedToday.toLocaleString()}
                           </>
                         ) : (
                           <>
                             <CreditCard className="h-5 w-5 mr-2" />
-                            Continue to payment · ${fees.customerTotal.toLocaleString()}
+                            Continue to payment · ${totalChargedToday.toLocaleString()}
                           </>
                         )}
                       </Button>
@@ -1482,7 +1482,7 @@ const BookingCheckout = () => {
           target={{ kind: 'booking', id: paypalCheckout.bookingId }}
           returnUrl={paypalCheckout.returnUrl}
           onClose={() => setPaypalCheckout(null)}
-          totalUsd={fees.customerTotal}
+          totalUsd={totalChargedToday}
 
           summary={
             <CheckoutOrderSummary
@@ -1496,8 +1496,9 @@ const BookingCheckout = () => {
                   ? [{ label: 'Delivery', amount: currentDeliveryFee }]
                   : []),
                 { label: 'Service fee', amount: fees.renterFee },
+                ...(taxAmount > 0 ? [{ label: taxEstimate?.label || 'Estimated sales tax', amount: taxAmount }] : []),
               ]}
-              total={fees.customerTotal}
+              total={totalChargedToday}
             />
           }
         />
