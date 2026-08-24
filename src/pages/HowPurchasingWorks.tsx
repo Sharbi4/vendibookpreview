@@ -464,7 +464,7 @@ const HowPurchasingWorks = () => {
                     <h3 className="text-lg font-semibold text-foreground mb-1.5">{stage.title}</h3>
                     <p className="text-sm text-muted-foreground leading-relaxed">{linkifyFreight(stage.body)}</p>
                     <div className="flex flex-wrap gap-1.5 mt-3">
-                      {stage.tags.map((tag) => (
+                      {stage.tags.map((tag) => ( // eslint-disable-line
                         <span
                           key={tag}
                           className="inline-flex items-center rounded-full bg-foreground/5 border border-border px-2.5 py-1 text-[10px] font-medium text-foreground/70"

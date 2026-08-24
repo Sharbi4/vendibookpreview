@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { AddressAutocomplete } from '@/components/listing-detail/AddressAutocomplete';
 import NextStepHint from '@/components/shared/NextStepHint';
-import { FreightLink } from '@/components/shared/FreightLink';
+import { FreightLink, linkifyFreight } from '@/components/shared/FreightLink';
 import { FreightInfoPopover } from '@/components/shared/InfoPopover';
 import InfoPopover from '@/components/shared/InfoPopover';
 
@@ -276,7 +276,7 @@ const MethodCard = ({ selection, selected, onSelect, priceNode, showRadio, child
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="font-semibold text-foreground">{meta.name}</span>
+            <span className="font-semibold text-foreground">{linkifyFreight(meta.name)}</span>
             {selection === 'vendibook_freight' && <FreightInfoPopover />}
           </div>
           <p className="text-sm text-muted-foreground mt-0.5">{meta.tagline}</p>
@@ -302,8 +302,8 @@ const MethodCard = ({ selection, selected, onSelect, priceNode, showRadio, child
         <div className="rounded-lg bg-muted/40 border border-border px-3 py-2.5 flex gap-2">
           <Info className="h-4 w-4 text-primary shrink-0 mt-0.5" />
           <div className="text-xs">
-            <span className="font-semibold text-foreground">{meta.explainerTitle}. </span>
-            <span className="text-muted-foreground">{meta.explainerBody}</span>
+            <span className="font-semibold text-foreground">{linkifyFreight(meta.explainerTitle)}. </span>
+            <span className="text-muted-foreground">{linkifyFreight(meta.explainerBody)}</span>
             {selection === 'vendibook_freight' && (
               <>
                 {' '}
