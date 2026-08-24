@@ -275,6 +275,35 @@ const STATE_SALE_SPECS: StateSaleSpec[] = [
   { stateName: 'California',     stateCode: 'CA', category: 'food_truck' },
 ];
 
+// Per-state content overrides keyed by state slug. Texas gets richer copy:
+// Search Console shows high impressions but low CTR for "food truck for sale
+// in texas", so the snippet and body name real inventory corridors and the
+// 2026 statewide licensing change buyers are researching.
+const STATE_CONTENT_OVERRIDES: Record<string, {
+  description?: string;
+  introExtra?: string;
+  extraFaqs?: { q: string; a: string }[];
+  extraRelated?: { href: string; label: string }[];
+}> = {
+  texas: {
+    description: 'Find food trucks for sale in Texas on Vendibook — active owner-listed inventory across Houston, Dallas–Fort Worth, Austin, and San Antonio. Compare photos, equipment specs, and transparent asking prices.',
+    introExtra: 'Texas is one of the strongest mobile food markets in the country, and buyers here typically shop the Houston, Dallas–Fort Worth, Austin, and San Antonio corridors. It is also getting easier to operate statewide: as of July 1, 2026, Texas mobile food vendors move to a single statewide DSHS license, replacing the patchwork of county-by-county permits — so a truck bought in one metro can trade across the state with far less paperwork.',
+    extraFaqs: [
+      {
+        q: 'What changed for Texas food truck permits in 2026?',
+        a: 'Starting July 1, 2026, Texas mobile food vendors operate under a statewide DSHS license instead of separate county permits. That makes buying a truck anywhere in Texas more flexible, since you are no longer tied to one county\'s rules.',
+      },
+    ],
+    extraRelated: [
+      { href: '/blog/texas-mobile-food-vendor-law-2026', label: 'Texas 2026 mobile food vendor law explained' },
+      { href: '/food-trucks-for-sale/houston-tx', label: 'Food trucks for sale in Houston' },
+      { href: '/food-trucks-for-sale/dallas-tx', label: 'Food trucks for sale in Dallas' },
+      { href: '/food-trucks-for-sale/austin-tx', label: 'Food trucks for sale in Austin' },
+      { href: '/food-trucks-for-sale/san-antonio-tx', label: 'Food trucks for sale in San Antonio' },
+    ],
+  },
+};
+
 function slugify(s: string): string {
   return s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
 }
