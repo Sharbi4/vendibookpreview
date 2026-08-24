@@ -1472,6 +1472,45 @@ const Search = () => {
   );
 };
 
+// Labeled Sort control rendered directly above results (desktop + mobile).
+const SortControl = ({ sortBy, options, onChange }: {
+  sortBy: string;
+  options: { value: string; label: string }[];
+  onChange: (value: string) => void;
+}) => {
+  const current = options.find((o) => o.value === sortBy)?.label ?? 'Featured';
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button
+          type="button"
+          aria-label={`Sort results, currently ${current}`}
+          className="inline-flex items-center gap-2 h-9 pl-3.5 pr-3 rounded-full border border-border/50 bg-background/70 backdrop-blur text-sm text-foreground hover:border-border transition-colors duration-200 shrink-0"
+        >
+          <ArrowUpDown className="h-3.5 w-3.5 text-muted-foreground" />
+          <span className="whitespace-nowrap">
+            <span className="text-muted-foreground">Sort:</span>{' '}
+            <span className="font-semibold">{current}</span>
+          </span>
+          <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-56 rounded-xl">
+        {options.map((o) => (
+          <DropdownMenuItem
+            key={o.value}
+            onClick={() => onChange(o.value)}
+            className="flex items-center justify-between gap-2"
+          >
+            {o.label}
+            {sortBy === o.value && <Check className="h-4 w-4 text-primary" />}
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+};
+
 // Filter Content Component
 interface FilterContentProps {
   mode: ListingMode | 'all';
@@ -1610,40 +1649,6 @@ const FilterContent = ({
   const availableAmenities = getAvailableAmenities();
   return (
     <div className="space-y-5 [&>div+div]:pt-5 [&>div+div]:border-t [&>div+div]:border-foreground/[0.06]">
-      {/* Type Filter - First */}
-      <div className="space-y-2">
-        <Label className="text-sm font-medium flex items-center gap-2">
-          <Tag className="h-4 w-4" />
-          Listing Type
-        </Label>
-        <div className="flex flex-wrap gap-2">
-          {[
-            { value: 'all', label: 'All' },
-            { value: 'rent', label: 'For Rent' },
-            { value: 'sale', label: 'For Sale' },
-          ].map((option) => (
-            <label 
-              key={option.value} 
-              className={cn(
-                "flex items-center gap-1.5 cursor-pointer px-3 py-1.5 rounded-full border text-sm transition-colors duration-200",
-                mode === option.value 
-                  ? "bg-primary text-primary-foreground border-primary" 
-                  : "border-transparent bg-foreground/[0.04] text-foreground/80 hover:bg-foreground/[0.08]"
-              )}
-            >
-              <input
-                type="radio"
-                name="mode"
-                checked={mode === option.value}
-                onChange={() => onModeChange(option.value)}
-                className="sr-only"
-              />
-              <span>{option.label}</span>
-            </label>
-          ))}
-        </div>
-      </div>
-
       {/* Category Filter */}
       <div className="space-y-2">
         <Label className="text-sm font-medium flex items-center">
@@ -1724,14 +1729,20 @@ const FilterContent = ({
         </div>
       )}
 
-      {/* Price Filter */}
-      <div className="space-y-2">
-        <Label className="text-sm font-medium flex items-center gap-2">
-          <DollarSign className="h-4 w-4" />
-          Price
-        </Label>
-        <PriceRangeInputs value={priceRange} onChange={onPriceRangeChange} />
-      </div>
+      {/* Price Filter — only in a single-mode context (sale $ vs rent $/day
+          are incompatible units, so All mode intentionally has no price filter) */}
+      {mode !== 'all' && (
+        <div className="space-y-2">
+          <Label className="text-sm font-medium flex items-center gap-2">
+            <DollarSign className="h-4 w-4" />
+            Price
+          </Label>
+          <PriceRangeInputs value={priceRange} onChange={onPriceRangeChange} />
+          {mode === 'rent' && (
+            <p className="text-xs text-muted-foreground">Filters the listing's primary rental price (daily when set, otherwise hourly).</p>
+          )}
+        </div>
+      )}
 
       {/* Date Range Filter - Only show for rent mode */}
       {mode !== 'sale' && (
