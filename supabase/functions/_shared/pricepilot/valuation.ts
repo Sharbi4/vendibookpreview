@@ -23,6 +23,7 @@ export interface SubjectProfile {
   assetCategory: AssetCategory;
   city?: string | null;
   state?: string | null;
+  zip?: string | null;
   year?: number | null;
   make?: string | null;
   model?: string | null;
@@ -552,7 +553,11 @@ export function runRentalValuation(subject: SubjectProfile, comps: CompRecord[])
 
   return {
     dailyRate: daily,
+    dailyLow,
+    dailyHigh,
     weeklyRate: weekly,
+    weeklyLow,
+    weeklyHigh,
     monthlyRate: monthly,
     confidenceScore,
     confidenceLabel,
