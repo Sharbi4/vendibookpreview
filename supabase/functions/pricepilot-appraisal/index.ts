@@ -393,7 +393,7 @@ Deno.serve(async (req) => {
         })),
         narrative,
         narrativeModel: model,
-        generatedAt: new Date().toISOString(),
+        generatedAt,
       });
     }
 
@@ -436,7 +436,15 @@ Deno.serve(async (req) => {
       }
     }
 
-    const rental = runRentalValuation(subject, rentalComps);
+    const { scope, pool } = stageScope(subject, rentalComps);
+    const rental = runRentalValuation(subject, pool);
+    if (scope === 'regional') {
+      rental.warnings.push('Local rental evidence was sparse, so this report broadened to your surrounding region.');
+    } else if (scope === 'national') {
+      rental.warnings.push('Local and regional rental evidence was sparse. Rates reflect the broader U.S. market.');
+    } else if (scope === 'modeled') {
+      rental.warnings.push('This is a modeled directional estimate from your equipment profile and broad industry bands, not a read of live local rates.');
+    }
 
     const { narrative, model } = await generatePricePilotNarrative({
       photos,
