@@ -2,6 +2,7 @@ import { isPickupLocationRevealed, PICKUP_LOCKED_MESSAGE } from '@/lib/fulfillme
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link, useSearchParams } from 'react-router-dom';
 import OrderPaymentLink from '@/components/orders/OrderPaymentLink';
+import { FreightLink, linkifyFreight } from '@/components/shared/FreightLink';
 import { format } from 'date-fns';
 import { 
   Package, Truck, CheckCircle2, Clock, MapPin, 
@@ -834,10 +835,10 @@ const OrderTracking = () => {
                     <div className="flex gap-3">
                       <Truck className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
                       <div>
-                        <p className="font-medium text-foreground">VendiBook Freight</p>
+                        <p className="font-medium text-foreground"><FreightLink /></p>
                         <p className="text-sm text-muted-foreground mt-1">
-                          Your order is being coordinated through VendiBook Freight. You'll receive 
-                          an email with tracking information and instructions to schedule your 
+                          Your order is being coordinated through {linkifyFreight('Vendibook Freight')}. You'll receive
+                          an email with tracking information and instructions to schedule your
                           delivery time once the item ships.
                         </p>
                         <p className="text-sm text-muted-foreground mt-2">

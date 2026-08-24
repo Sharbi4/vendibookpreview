@@ -178,16 +178,16 @@ const HelpArticle = () => {
                           return <h3 key={i} className="text-lg font-semibold text-foreground mt-6 mb-2">{paragraph.replace(/\*\*/g, '')}</h3>;
                         }
                         if (paragraph.startsWith('- [ ]')) {
-                          return <div key={i} className="flex items-start gap-2 ml-4"><input type="checkbox" className="mt-1" readOnly /><span>{paragraph.replace('- [ ] ', '')}</span></div>;
+                          return <div key={i} className="flex items-start gap-2 ml-4"><input type="checkbox" className="mt-1" readOnly /><span>{linkifyFreight(paragraph.replace('- [ ] ', ''))}</span></div>;
                         }
                         if (paragraph.startsWith('- ')) {
-                          return <li key={i} className="ml-6 list-disc">{paragraph.replace('- ', '')}</li>;
+                          return <li key={i} className="ml-6 list-disc">{linkifyFreight(paragraph.replace('- ', ''))}</li>;
                         }
                         if (paragraph.match(/^\d+\./)) {
-                          return <li key={i} className="ml-6 list-decimal">{paragraph.replace(/^\d+\.\s*/, '')}</li>;
+                          return <li key={i} className="ml-6 list-decimal">{linkifyFreight(paragraph.replace(/^\d+\.\s*/, ''))}</li>;
                         }
                         if (paragraph.trim() === '') return <br key={i} />;
-                        return <p key={i} className="mb-3">{paragraph.replace(/\*\*(.*?)\*\*/g, '$1')}</p>;
+                        return <p key={i} className="mb-3">{linkifyFreight(paragraph.replace(/\*\*(.*?)\*\*/g, '$1'))}</p>;
                       })}
                     </div>
                   </section>
