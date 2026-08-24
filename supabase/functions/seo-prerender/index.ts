@@ -497,20 +497,41 @@ function buildListingHTML(listing: any, reviews: any[] = []): string {
     : listing.price_sale ? `$${Number(listing.price_sale).toLocaleString()}`
       : "";
 
-  const title = [listing.title, `${categoryLabel} ${modeLabel}`, locationShort ? `in ${locationShort}` : ""]
+  const title = [listing.title, `${categoryLabel} ${modeLabel}${locationShort ? ` in ${locationShort}` : ""}`]
     .filter(Boolean)
-    .join(" ");
+    .join(" — ");
 
-  const description = [
-    `${listing.mode === "rent" ? "Rent" : "Buy"} this ${categoryLabel.toLowerCase()}`,
-    locationShort ? `in ${locationShort}` : "",
-    priceText ? `starting at ${priceText}` : "",
-    "— on Vendibook.",
-  ].filter(Boolean).join(" ").slice(0, 160);
+  // Social description: lead with the REAL listing description (cleaned to one
+  // line, truncated), then append sale/rent + location + price context only as a
+  // short tail so it never displaces the seller's own words.
+  const cleanDescription = String(listing.description || "").replace(/\s+/g, " ").trim();
+  const contextBits = [
+    `${categoryLabel} ${modeLabel}`,
+    locationShort,
+    priceText,
+  ].filter(Boolean).join(" · ");
+  let description: string;
+  if (cleanDescription) {
+    const excerpt = cleanDescription.length > 150
+      ? `${cleanDescription.slice(0, 150).replace(/\s+\S*$/, "")}…`
+      : cleanDescription;
+    description = contextBits ? `${excerpt} · ${contextBits} — Vendibook` : `${excerpt} — Vendibook`;
+  } else {
+    description = `${contextBits} — on Vendibook.`;
+  }
 
   const canonicalUrl = `${SITE_URL}/listing/${listing.id}`;
-  const imageUrl = listing.cover_image_url || `${SITE_URL}/images/social/vendibook-og-default.jpg`;
-  const imageAlt = `${listing.title} — ${categoryLabel} ${modeLabel} on Vendibook`;
+  // Image: cover photo → first gallery image → branded Vendibook default OG.
+  const toAbsoluteImageUrl = (u: string): string =>
+    u.startsWith("http") ? u : `${SITE_URL}${u.startsWith("/") ? u : `/${u}`}`;
+  const firstGalleryImage = Array.isArray(listing.image_urls)
+    ? listing.image_urls.find((u: unknown) => typeof u === "string" && (u as string).trim().length > 0)
+    : "";
+  const rawImageUrl = (listing.cover_image_url && String(listing.cover_image_url).trim()) || firstGalleryImage || "";
+  const imageUrl = rawImageUrl
+    ? toAbsoluteImageUrl(rawImageUrl)
+    : `${SITE_URL}/images/social/vendibook-og-default.jpg`;
+  const imageAlt = String(listing.title || `${categoryLabel} ${modeLabel} on Vendibook`);
 
   // IMPORTANT: JSON-LD is in its own <script> tag with pure JSON only.
   // Redirect is in a SEPARATE <script> tag.
@@ -630,9 +651,8 @@ function buildBlogHTML(post: BlogPostMeta): string {
   <meta property="og:url" content="${canonicalUrl}" />
   <meta property="og:image" content="${escapeHtml(imageUrl)}" />
   <meta property="og:image:secure_url" content="${escapeHtml(imageUrl)}" />
-  <meta property="og:image:alt" content="${escapeHtml(imageAlt)}" />
+  <meta property="og:image:alt" content="${escapeHtml(post.title)}" />
   <meta property="og:site_name" content="Vendibook" />
-  <meta property="og:locale" content="en_US" />
   <meta property="og:locale" content="en_US" />
   <meta property="article:published_time" content="${post.datePublished}" />
   <meta property="article:author" content="${escapeHtml(post.author)}" />
@@ -643,7 +663,7 @@ function buildBlogHTML(post: BlogPostMeta): string {
   <meta name="twitter:title" content="${escapeHtml(post.title)}" />
   <meta name="twitter:description" content="${escapeHtml(post.description)}" />
   <meta name="twitter:image" content="${escapeHtml(imageUrl)}" />
-  <meta name="twitter:image:alt" content="${escapeHtml(imageAlt)}" />
+  <meta name="twitter:image:alt" content="${escapeHtml(post.title)}" />
   <meta name="twitter:site" content="@vendibook" />
 
   <!-- JSON-LD -->
