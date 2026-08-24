@@ -51,7 +51,7 @@ interface SearchRequest {
 
   page?: number;
   page_size?: number;
-  sort_by?: 'newest' | 'price_low' | 'price_high' | 'distance' | 'relevance';
+  sort_by?: 'featured' | 'newest' | 'price_low' | 'price_high' | 'distance' | 'relevance';
 }
 
 Deno.serve(async (req) => {
@@ -88,7 +88,7 @@ Deno.serve(async (req) => {
 
       page = 1,
       page_size = 20,
-      sort_by = 'newest',
+      sort_by = 'featured',
     } = body;
 
     // When the query IS the geocoded location, suppress the city-name text
@@ -114,7 +114,12 @@ Deno.serve(async (req) => {
 
     // Apply category filter (supports comma-separated list)
     if (category) {
-      const cats = category.split(',').map((c) => c.trim()).filter(Boolean);
+      let cats = category.split(',').map((c) => c.trim()).filter(Boolean);
+      // Vendor Spaces alias: current `vendor_space` and legacy `vendor_lot`
+      // records are the same shopper concept — always search both.
+      if (cats.includes('vendor_space') || cats.includes('vendor_lot')) {
+        cats = [...new Set([...cats, 'vendor_space', 'vendor_lot'])];
+      }
       if (cats.length > 1) {
         queryBuilder = queryBuilder.in('category', cats);
       } else if (cats.length === 1) {
@@ -412,13 +417,16 @@ Deno.serve(async (req) => {
     };
 
 
-    // Explicit shopper sorts (price/distance) are honored STRICTLY — pinning
-    // featured listings above them would misrepresent the requested order.
-    // Featured inventory is instead returned in `sponsored` for a labeled
-    // strip above the results. Default/relevance sorts keep featured-first.
+    // Explicit shopper sorts (price/distance/newest/relevance) are honored
+    // STRICTLY — pinning featured listings above them would misrepresent the
+    // requested order. Featured inventory is instead returned in `sponsored`
+    // for a labeled strip above the results. Only the default `featured`
+    // discovery sort pins featured listings first.
     const isExplicitSort =
       sort_by === 'price_low' ||
       sort_by === 'price_high' ||
+      sort_by === 'newest' ||
+      (sort_by === 'relevance' && !!query?.trim()) ||
       (sort_by === 'distance' && latitude !== undefined && longitude !== undefined);
     const sponsored = isExplicitSort
       ? filteredListings
@@ -450,17 +458,23 @@ Deno.serve(async (req) => {
         const priceB = b.mode === 'rent' ? (b.price_daily || b.price_hourly || 0) : (b.price_sale || 0);
         return priceB - priceA;
       });
+    } else if (sort_by === 'newest') {
+      // Explicit Newest: strict chronological, no featured override.
+      filteredListings.sort((a, b) =>
+        new Date(b.published_at || b.created_at).getTime() - new Date(a.published_at || a.created_at).getTime()
+      );
     } else if (sort_by === 'relevance' && query && query.trim()) {
+      // Explicit Relevance: title match strength then recency, no featured override.
       const searchLower = query.toLowerCase();
       filteredListings.sort((a, b) => {
-        const _f = featuredTiebreak(a, b); if (_f !== 0) return _f;
         const aTitleMatch = a.title?.toLowerCase().includes(searchLower) ? 0 : 1;
         const bTitleMatch = b.title?.toLowerCase().includes(searchLower) ? 0 : 1;
         if (aTitleMatch !== bTitleMatch) return aTitleMatch - bTitleMatch;
         return new Date(b.published_at || b.created_at).getTime() - new Date(a.published_at || a.created_at).getTime();
       });
     } else {
-      // Default: newest (featured-first)
+      // Default `featured` discovery sort: active featured listings first with
+      // fair daily rotation inside the featured cohort, then newest rest.
       filteredListings.sort((a, b) => {
         const _f = featuredTiebreak(a, b); if (_f !== 0) return _f;
         return new Date(b.published_at || b.created_at).getTime() - new Date(a.published_at || a.created_at).getTime();
