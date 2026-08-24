@@ -17,9 +17,14 @@ export interface GuideBreadcrumbItem {
 interface GuideBreadcrumbProps {
   items: GuideBreadcrumbItem[];
   className?: string;
+  containerClassName?: string;
 }
 
-export function GuideBreadcrumb({ items, className }: GuideBreadcrumbProps) {
+export function GuideBreadcrumb({
+  items,
+  className,
+  containerClassName = 'max-w-6xl',
+}: GuideBreadcrumbProps) {
   return (
     <div
       className={cn(
@@ -27,7 +32,7 @@ export function GuideBreadcrumb({ items, className }: GuideBreadcrumbProps) {
         className,
       )}
     >
-      <div className="container max-w-6xl mx-auto px-4">
+      <div className={cn('container mx-auto px-4', containerClassName)}>
         <div className="inline-flex items-center rounded-full border border-border bg-card/60 backdrop-blur-sm px-3 py-1.5 shadow-sm">
           <Breadcrumb>
             <BreadcrumbList className="text-xs sm:text-sm text-muted-foreground">
