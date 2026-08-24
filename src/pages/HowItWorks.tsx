@@ -27,11 +27,11 @@ import { FreightLink } from '@/components/shared/FreightLink';
 import imgBuying from '@/assets/how-buying-hero.jpg';
 import imgSelling from '@/assets/how-selling-hero.jpg';
 import imgCoffee from '@/assets/food-truck-coffee.jpg';
-import searchPageArt from '@/assets/education/search-page.svg.asset.json';
-import loanArt from '@/assets/education/loan.svg.asset.json';
-import documentsOkArt from '@/assets/education/documents-ok.svg.asset.json';
-import deliveryMapArt from '@/assets/education/delivery-map.svg.asset.json';
-import signArt from '@/assets/education/sign.svg.asset.json';
+import searchPageArt from '@/assets/education/search-page.svg';
+import loanArt from '@/assets/education/loan.svg';
+import documentsOkArt from '@/assets/education/documents-ok.svg';
+import deliveryMapArt from '@/assets/education/delivery-map.svg';
+import signArt from '@/assets/education/sign.svg';
 
 /**
  * /how-it-works — flagship brand page, not an explainer.
