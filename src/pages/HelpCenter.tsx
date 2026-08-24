@@ -163,7 +163,7 @@ const browseTopics: { title: string; icon: typeof BookOpen; articles: TopicLink[
     title: 'Delivery, pickup & freight',
     icon: Truck,
     articles: [
-      { label: 'Freight & shipping', to: '/help/shipping-freight' },
+      { label: 'Freight & shipping', to: '/vendibook-freight' },
       { label: 'Pickup & delivery options', to: '/help/pickup-delivery-checklist' },
       { label: 'Return checklist', to: '/help/pickup-delivery-checklist' },
     ],
