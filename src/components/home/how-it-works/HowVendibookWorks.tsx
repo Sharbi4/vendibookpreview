@@ -13,6 +13,7 @@ import imgCoffee from '@/assets/food-truck-coffee.jpg';
 import imgGrilledCheese from '@/assets/food-truck-grilled-cheese.jpg';
 import imgPopcorn from '@/assets/food-truck-popcorn.jpg';
 import { Button } from '@/components/ui/button';
+import { FreightLink } from '@/components/shared/FreightLink';
 
 /**
  * Homepage education funnel — warm, editorial, understandable in ~10 seconds.
@@ -161,7 +162,7 @@ export const HowVendibookWorks = () => {
                 </h3>
                 <p className="text-sm leading-relaxed text-muted-foreground">
                   Financing through third-party partners, seller delivery, pickup, and
-                  Vendibook Freight where available — so distance stops deciding for you.
+                  <FreightLink className="mx-1" /> where available — so distance stops deciding for you.
                 </p>
                 {/* Quiet route cue */}
                 <div
