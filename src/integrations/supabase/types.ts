@@ -5617,6 +5617,99 @@ export type Database = {
         }
         Relationships: []
       }
+      pricepilot_market_comparables: {
+        Row: {
+          asset_category: string
+          captured_at: string
+          city: string | null
+          claimed_sale_price: number | null
+          created_at: string
+          displayed_price: number | null
+          evidence_confidence: number | null
+          extraction_confidence: number | null
+          id: string
+          length_ft: number | null
+          make: string | null
+          model: string | null
+          normalized_features: Json
+          observed_status: string
+          previous_displayed_price: number | null
+          quality_flags: Json
+          raw_text: string | null
+          source: string
+          source_listing_id: string | null
+          source_title: string
+          source_url: string | null
+          state: string | null
+          transaction_price_verified: boolean
+          updated_at: string
+          usable_for_valuation: boolean
+          valuation_mode: string
+          verified_transaction_price: number | null
+          year: number | null
+        }
+        Insert: {
+          asset_category?: string
+          captured_at?: string
+          city?: string | null
+          claimed_sale_price?: number | null
+          created_at?: string
+          displayed_price?: number | null
+          evidence_confidence?: number | null
+          extraction_confidence?: number | null
+          id?: string
+          length_ft?: number | null
+          make?: string | null
+          model?: string | null
+          normalized_features?: Json
+          observed_status?: string
+          previous_displayed_price?: number | null
+          quality_flags?: Json
+          raw_text?: string | null
+          source: string
+          source_listing_id?: string | null
+          source_title: string
+          source_url?: string | null
+          state?: string | null
+          transaction_price_verified?: boolean
+          updated_at?: string
+          usable_for_valuation?: boolean
+          valuation_mode?: string
+          verified_transaction_price?: number | null
+          year?: number | null
+        }
+        Update: {
+          asset_category?: string
+          captured_at?: string
+          city?: string | null
+          claimed_sale_price?: number | null
+          created_at?: string
+          displayed_price?: number | null
+          evidence_confidence?: number | null
+          extraction_confidence?: number | null
+          id?: string
+          length_ft?: number | null
+          make?: string | null
+          model?: string | null
+          normalized_features?: Json
+          observed_status?: string
+          previous_displayed_price?: number | null
+          quality_flags?: Json
+          raw_text?: string | null
+          source?: string
+          source_listing_id?: string | null
+          source_title?: string
+          source_url?: string | null
+          state?: string | null
+          transaction_price_verified?: boolean
+          updated_at?: string
+          usable_for_valuation?: boolean
+          valuation_mode?: string
+          verified_transaction_price?: number | null
+          year?: number | null
+        }
+        Relationships: []
+      }
       pro_boost_credits: {
         Row: {
           created_at: string
