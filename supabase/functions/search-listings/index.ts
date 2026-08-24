@@ -44,6 +44,10 @@ interface SearchRequest {
   delivery_capable?: boolean;
   fulfillment_types?: Array<'pickup' | 'delivery' | 'on_site'>;
   featured_only?: boolean;
+  // True when `query` is the geocoded location itself (e.g. "Austin, TX") —
+  // the radius filter already scopes geography, so the city text filter must
+  // be skipped or surrounding suburbs get excluded (double-constraint bug).
+  location_scoped?: boolean;
 
   page?: number;
   page_size?: number;
@@ -80,11 +84,17 @@ Deno.serve(async (req) => {
       delivery_capable,
       fulfillment_types,
       featured_only,
+      location_scoped,
 
       page = 1,
       page_size = 20,
       sort_by = 'newest',
     } = body;
+
+    // When the query IS the geocoded location, suppress the city-name text
+    // filter — the Haversine radius below is the geographic source of truth.
+    const locationScoped =
+      !!location_scoped && latitude !== undefined && longitude !== undefined;
 
     // Clamp page_size to max 50
     const effectivePageSize = Math.min(page_size, 50);
@@ -148,8 +158,10 @@ Deno.serve(async (req) => {
       queryBuilder = queryBuilder.eq('category', inferredCategory);
     }
 
-    // Apply text search (ILIKE on title, description, address, city, state)
-    if (cleanedQuery) {
+    // Apply text search (ILIKE on title, description, address, city, state).
+    // Skipped for location-scoped searches so metro suburbs inside the radius
+    // aren't filtered out for not name-matching the searched city.
+    if (cleanedQuery && !locationScoped) {
       // Parse "City, State" format for location searches
       const parts = cleanedQuery.split(',').map(p => p.trim()).filter(Boolean);
       const houstonAreaCities = getHoustonAreaCities(cleanedQuery);
@@ -400,10 +412,24 @@ Deno.serve(async (req) => {
     };
 
 
-    // Apply sorting (featured-first, then requested order)
+    // Explicit shopper sorts (price/distance) are honored STRICTLY — pinning
+    // featured listings above them would misrepresent the requested order.
+    // Featured inventory is instead returned in `sponsored` for a labeled
+    // strip above the results. Default/relevance sorts keep featured-first.
+    const isExplicitSort =
+      sort_by === 'price_low' ||
+      sort_by === 'price_high' ||
+      (sort_by === 'distance' && latitude !== undefined && longitude !== undefined);
+    const sponsored = isExplicitSort
+      ? filteredListings
+          .filter((l) => isFeatured(l))
+          .sort((a, b) => rotKey(a) - rotKey(b))
+          .slice(0, 4)
+      : [];
+
+    // Apply sorting
     if (sort_by === 'distance' && latitude !== undefined && longitude !== undefined) {
       filteredListings.sort((a, b) => {
-        const _f = featuredTiebreak(a, b); if (_f !== 0) return _f;
         if (a.distance_miles === null && b.distance_miles === null) return 0;
         if (a.distance_miles === null) return 1;
         if (b.distance_miles === null) return -1;
@@ -411,14 +437,12 @@ Deno.serve(async (req) => {
       });
     } else if (sort_by === 'price_low') {
       filteredListings.sort((a, b) => {
-        const _f = featuredTiebreak(a, b); if (_f !== 0) return _f;
         const priceA = a.mode === 'rent' ? (a.price_daily || a.price_hourly || 0) : (a.price_sale || 0);
         const priceB = b.mode === 'rent' ? (b.price_daily || b.price_hourly || 0) : (b.price_sale || 0);
         return priceA - priceB;
       });
     } else if (sort_by === 'price_high') {
       filteredListings.sort((a, b) => {
-        const _f = featuredTiebreak(a, b); if (_f !== 0) return _f;
         const priceA = a.mode === 'rent' ? (a.price_daily || a.price_hourly || 0) : (a.price_sale || 0);
         const priceB = b.mode === 'rent' ? (b.price_daily || b.price_hourly || 0) : (b.price_sale || 0);
         return priceB - priceA;
@@ -450,6 +474,7 @@ Deno.serve(async (req) => {
     return new Response(
       JSON.stringify({
         listings: paginatedListings,
+        sponsored,
         total_count: totalCount,
         page,
         page_size: effectivePageSize,
