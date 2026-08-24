@@ -813,6 +813,37 @@ const Search = () => {
               </Sheet>
             </div>
 
+            {/* Mode segmented control — unmistakable All / For Sale / For Rent */}
+            <div className="mt-3">
+              <div
+                className="inline-flex items-center rounded-full border border-border/50 bg-background/60 backdrop-blur p-1 gap-0.5"
+                role="tablist"
+                aria-label="Listing type"
+              >
+                {([
+                  { value: 'all', label: 'All' },
+                  { value: 'sale', label: 'For Sale' },
+                  { value: 'rent', label: 'For Rent' },
+                ] as const).map((option) => (
+                  <button
+                    key={option.value}
+                    type="button"
+                    role="tab"
+                    aria-selected={mode === option.value}
+                    onClick={() => handleModeChange(option.value)}
+                    className={cn(
+                      'h-8 px-4 rounded-full text-sm font-medium transition-all duration-200 no-tap-highlight',
+                      mode === option.value
+                        ? 'bg-foreground text-background shadow-sm'
+                        : 'text-muted-foreground hover:text-foreground'
+                    )}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             {/* Airbnb-style category pill strip */}
             <div className="mt-3 -mx-1">
               <CategoryPillStrip
@@ -840,9 +871,6 @@ const Search = () => {
                       {' '}listing{totalCount !== 1 ? 's' : ''}
                       {locationCoords && (
                         <span className="hidden sm:inline"> within {searchRadius} mi of <span className="font-medium text-foreground">{locationText || 'selected location'}</span></span>
-                      )}
-                      {(sortBy === 'price-low' || sortBy === 'price-high') && mode === 'all' && (
-                        <span className="hidden md:inline text-muted-foreground/70"> · rental prices per day, sale prices full</span>
                       )}
                       {searchQuery && (
                         <span className="hidden sm:inline"> matching <span className="font-medium text-foreground">"{debouncedQuery}"</span></span>
@@ -885,22 +913,6 @@ const Search = () => {
                     <Map className="h-3.5 w-3.5" />
                   </ToggleGroupItem>
                 </ToggleGroup>
-
-
-                <div className="relative">
-                  <select
-                    value={sortBy}
-                    onChange={(e) => handleSortChange(e.target.value)}
-                    className="appearance-none text-xs font-medium text-muted-foreground hover:text-foreground border border-border/40 rounded-xl pl-3 pr-7 h-8 bg-transparent hover:border-border/70 transition-all cursor-pointer focus:outline-none focus:border-primary/60"
-                  >
-                    <option value="newest">Recommended</option>
-                    {searchQuery.trim() && <option value="relevance">Relevance</option>}
-                    <option value="price-low">Price: Low → High</option>
-                    <option value="price-high">Price: High → Low</option>
-                    {locationCoords && <option value="distance">Distance</option>}
-                  </select>
-                  <svg className="absolute right-2 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
-                </div>
               </div>
               {locationCoords && (
                 <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
@@ -923,11 +935,6 @@ const Search = () => {
                   <span className="text-[11px] text-muted-foreground">
                     of {locationText || 'selected location'}
                   </span>
-                  {radiusExpanded && searchRadius === 100 && (
-                    <span className="text-[11px] text-primary font-medium">
-                      · Expanded to 100 mi — limited inventory nearby
-                    </span>
-                  )}
                 </div>
               )}
             </div>
@@ -982,6 +989,30 @@ const Search = () => {
 
             {/* Results Grid */}
             <div className="flex-1">
+
+              {/* Results context + primary Sort control, directly above listings */}
+              <div className="flex items-center justify-between gap-3 mb-4">
+                <p className="text-sm text-muted-foreground min-w-0">
+                  {locationCoords ? (
+                    <>
+                      Showing within <span className="font-semibold text-foreground">{searchRadius} miles</span> of{' '}
+                      <span className="font-semibold text-foreground">{locationText || 'selected location'}</span>
+                    </>
+                  ) : (
+                    'Showing all listings nationwide'
+                  )}
+                  {showExpandRadiusCta && (
+                    <button
+                      type="button"
+                      onClick={() => handleRadiusChange(100)}
+                      className="ml-2 text-primary font-medium hover:underline underline-offset-2"
+                    >
+                      Expand to 100 miles
+                    </button>
+                  )}
+                </p>
+                <SortControl sortBy={sortBy} options={sortOptions} onChange={handleSortChange} />
+              </div>
 
               {/* Active Filters Badges */}
               {(mode !== 'all' || category !== 'all' || locationCoords || dateRange?.from || selectedAmenities.length > 0 || instantBookOnly || verifiedHostsOnly) && (
@@ -1167,7 +1198,13 @@ const Search = () => {
                       </div>
                     </div>
                   )}
-                  {listings.length > 0 ? (
+                  {isLoadingListings && listings.length === 0 ? (
+                    <div className="space-y-3">
+                      {Array.from({ length: 4 }).map((_, i) => (
+                        <SkeletonCard key={i} variant="row" />
+                      ))}
+                    </div>
+                  ) : listings.length > 0 ? (
                     <div className="space-y-3">
                       {listings.map((listing) => (
                         <div key={listing.id} className="relative">
@@ -1429,6 +1466,7 @@ const Search = () => {
         onFiltersClick={() => setIsFiltersOpen(true)}
         hasLocation={!!locationCoords}
         hasSearchQuery={!!searchQuery.trim()}
+        showPriceSorts={mode !== 'all'}
       />
     </div>
   );
