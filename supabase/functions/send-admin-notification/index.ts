@@ -107,7 +107,7 @@ serve(async (req) => {
         },
       });
       if (!r.ok) {
-        throw new Error(`send-transactional-email failed for ${recipient} (${r.status}): ${r.body}`);
+        throw new Error(`transactional email send failed for ${recipient} (${r.status}): ${r.body}`);
       }
     }));
 

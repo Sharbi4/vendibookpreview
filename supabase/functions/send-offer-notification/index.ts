@@ -1,6 +1,6 @@
 // Routes offer notification emails through Lovable Emails queue.
 // Looks up offer + buyer/seller, picks the right template + recipient, and
-// invokes send-transactional-email so all sends are queued, retried, and logged.
+// sends through the shared transactional email helper so all sends are queued, retried, and logged.
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { invokeTransactionalEmail } from '../_shared/invokeTransactionalEmail.ts'
 

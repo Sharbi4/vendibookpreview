@@ -75,7 +75,7 @@ Deno.serve(async (req) => {
       errors.push(`sms/${b.id}: ${e.message}`);
     }
 
-    // Email (idempotent via send-transactional-email)
+    // Email (idempotent via the transactional email helper)
     if (profile?.email) {
       try {
         await invokeTransactionalEmail({

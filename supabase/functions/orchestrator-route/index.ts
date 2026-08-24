@@ -7,7 +7,7 @@ const corsHeaders = {
 
 // Phase 4 — Central AI Orchestrator
 // Body: { user_id, event_type, entity_id?, payload? }
-// Decides channel + timing + content, then dispatches via concierge-orchestrator (in-app/SMS) or send-transactional-email.
+// Decides channel + timing + content, then dispatches via concierge-orchestrator (in-app/SMS) or the transactional email helper.
 
 interface RouteRequest {
   user_id: string;
