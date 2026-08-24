@@ -9876,6 +9876,7 @@ export type Database = {
         Args: { _listing_id: string }
         Returns: boolean
       }
+      is_privileged_financial_writer: { Args: never; Returns: boolean }
       is_seller_identity_verified: {
         Args: { _user_id: string }
         Returns: boolean
