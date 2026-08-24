@@ -1,4 +1,5 @@
 import { productCheckoutUrl, hostedCheckoutUrl } from '@/lib/payments/hostedCheckout';
+import { listingShareUrl } from '@/lib/share';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
@@ -165,7 +166,8 @@ const HostListingCard = ({
   const listingRef = shortListingId(listing.id);
 
   const handleShareListing = async () => {
-    const url = `${window.location.origin}/listing/${listing.id}`;
+    // Share the /share/listing/:id alias so social crawlers render listing OG tags.
+    const url = listingShareUrl(listing.id);
     try {
       if (typeof navigator !== 'undefined' && navigator.share) {
         await navigator.share({ title: listing.title, url });
