@@ -326,7 +326,7 @@ const HowItWorks = () => {
         canonical="/how-it-works"
       />
       <JsonLd
-        data={{
+        schema={{
           '@context': 'https://schema.org',
           '@type': 'AboutPage',
           name: 'How Vendibook Works',
