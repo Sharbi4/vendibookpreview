@@ -28,6 +28,7 @@ import Footer from '@/components/layout/Footer';
 import SEO from '@/components/SEO';
 import { Button } from '@/components/ui/button';
 import { GuideBreadcrumb } from '@/components/education/GuideBreadcrumb';
+import { FreightLink, linkifyFreight } from '@/components/shared/FreightLink';
 import { PayPalMonogram, EquinoxFundingLogo } from '@/components/brand/ProviderLogos';
 import { cn } from '@/lib/utils';
 import businessNegotiationArt from '@/assets/education/business-negotiation.svg.asset.json';
@@ -461,7 +462,7 @@ const HowPurchasingWorks = () => {
                       0{i + 1}
                     </p>
                     <h3 className="text-lg font-semibold text-foreground mb-1.5">{stage.title}</h3>
-                    <p className="text-sm text-muted-foreground leading-relaxed">{stage.body}</p>
+                    <p className="text-sm text-muted-foreground leading-relaxed">{linkifyFreight(stage.body)}</p>
                     <div className="flex flex-wrap gap-1.5 mt-3">
                       {stage.tags.map((tag) => (
                         <span
@@ -539,7 +540,7 @@ const HowPurchasingWorks = () => {
               </p>
               <h2 className="text-2xl md:text-3xl font-bold text-foreground">Shop beyond local</h2>
               <p className="text-base text-muted-foreground mt-3 max-w-xl mx-auto leading-relaxed">
-                Financing through third-party partners, pickup, seller delivery, and Vendibook Freight
+                Financing through third-party partners, pickup, seller delivery, and <FreightLink className="mx-0.5" />
                 where available — so the right truck in another state is a real option, not just a saved
                 tab.
               </p>
@@ -562,11 +563,11 @@ const HowPurchasingWorks = () => {
                   <span className="w-11 h-11 rounded-2xl bg-background border border-border flex items-center justify-center mb-4 shadow-sm">
                     <f.icon className="w-5 h-5 text-foreground/70" />
                   </span>
-                  <h3 className="text-lg font-semibold text-foreground">{f.title}</h3>
+                  <h3 className="text-lg font-semibold text-foreground">{linkifyFreight(f.title)}</h3>
                   <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-primary mt-1 mb-2.5">
                     {f.who}
                   </p>
-                  <p className="text-sm text-muted-foreground leading-relaxed">{f.body}</p>
+                  <p className="text-sm text-muted-foreground leading-relaxed">{linkifyFreight(f.body)}</p>
                   {f.freight && <FreightRouteAnimation />}
                 </motion.div>
               ))}

@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { GuideBreadcrumb } from '@/components/education/GuideBreadcrumb';
+import { linkifyFreight } from '@/components/shared/FreightLink';
 import {
   Accordion,
   AccordionContent,
@@ -453,7 +454,7 @@ const HowItWorksSeller = () => {
                         {r.title}
                       </span>
                       <span className="block text-sm text-muted-foreground leading-relaxed mt-0.5">
-                        {r.body}
+                        {linkifyFreight(r.body)}
                       </span>
                     </span>
                   </motion.div>
@@ -492,7 +493,7 @@ const HowItWorksSeller = () => {
                   <div>
                     <h3 className="text-base font-semibold text-foreground mb-1">{s.title}</h3>
                     <p className="text-sm text-muted-foreground leading-relaxed max-w-xl">
-                      {s.body}
+                      {linkifyFreight(s.body)}
                     </p>
                   </div>
                 </motion.li>
@@ -565,7 +566,7 @@ const HowItWorksSeller = () => {
                     {f.q}
                   </AccordionTrigger>
                   <AccordionContent className="text-muted-foreground leading-relaxed">
-                    {f.a}
+                    {linkifyFreight(f.a)}
                   </AccordionContent>
                 </AccordionItem>
               ))}
