@@ -24,6 +24,7 @@ import ListingReadinessCard from '@/components/listing/ListingReadinessCard';
 import ReadinessDisclaimer from '@/components/listing/ReadinessDisclaimer';
 import { publishListingIdempotent } from '@/lib/listings/publishListing';
 import { authPath } from '@/lib/auth/returnTo';
+import socialBubbleAsset from '@/assets/social-bubble.webm.asset.json';
 
 const ListingPublished: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -311,8 +312,19 @@ const ListingPublished: React.FC = () => {
       <div className="container mx-auto max-w-3xl space-y-8 px-4 py-10">
         {/* Success */}
         <header className="space-y-3">
-          <div className="flex items-center gap-2 text-emerald-500">
-            <CheckCircle2 className="h-6 w-6" />
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 text-emerald-500">
+              <CheckCircle2 className="h-6 w-6" />
+            </div>
+            <video
+              src={socialBubbleAsset.url}
+              autoPlay
+              loop
+              muted
+              playsInline
+              aria-hidden="true"
+              className="h-10 w-auto rounded-lg"
+            />
           </div>
           <h1 className="text-3xl font-semibold text-foreground">Your listing is live</h1>
           <p className="text-muted-foreground">
