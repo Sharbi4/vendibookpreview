@@ -65,6 +65,7 @@ function parseSubject(body: any): SubjectProfile | Response {
     assetCategory: assetCategory as SubjectProfile['assetCategory'],
     city: str(body?.city, 80),
     state: str(body?.state, 2)?.toUpperCase() ?? null,
+    zip: str(body?.zip, 10),
     year: num(body?.year) ? Math.min(new Date().getFullYear() + 2, Math.max(1950, num(body?.year)!)) : null,
     make: str(body?.make, 60),
     model: str(body?.model, 60),
@@ -92,6 +93,80 @@ const CATEGORY_LABEL: Record<string, string> = {
   food_cart: 'Food cart',
   mobile_bar: 'Mobile bar',
 };
+
+// ---------------------------------------------------------------------------
+// Staged market scope: local -> regional -> national -> modeled.
+// The valuation always runs on the tightest tier with enough real evidence;
+// the response names its scope so the UI never implies local evidence that
+// does not exist.
+// ---------------------------------------------------------------------------
+
+type MarketScope = 'local' | 'regional' | 'national' | 'modeled';
+
+const US_REGION: Record<string, string> = {
+  CT: 'northeast', ME: 'northeast', MA: 'northeast', NH: 'northeast', RI: 'northeast', VT: 'northeast',
+  NJ: 'northeast', NY: 'northeast', PA: 'northeast',
+  IL: 'midwest', IN: 'midwest', MI: 'midwest', OH: 'midwest', WI: 'midwest', IA: 'midwest',
+  KS: 'midwest', MN: 'midwest', MO: 'midwest', NE: 'midwest', ND: 'midwest', SD: 'midwest',
+  DE: 'south', FL: 'south', GA: 'south', MD: 'south', NC: 'south', SC: 'south', VA: 'south',
+  WV: 'south', DC: 'south', AL: 'south', KY: 'south', MS: 'south', TN: 'south', AR: 'south',
+  LA: 'south', OK: 'south', TX: 'south',
+  AZ: 'west', CO: 'west', ID: 'west', MT: 'west', NV: 'west', NM: 'west', UT: 'west',
+  WY: 'west', AK: 'west', CA: 'west', HI: 'west', OR: 'west', WA: 'west',
+};
+
+const SCOPE_LABEL: Record<MarketScope, string> = {
+  local: 'Local market average',
+  regional: 'Regional benchmark',
+  national: 'Broader market benchmark',
+  modeled: 'Modeled midpoint',
+};
+
+const SCOPE_HEADLINE: Record<MarketScope, string> = {
+  local: 'Local market',
+  regional: 'Expanded regional market',
+  national: 'Broader U.S. market',
+  modeled: 'Modeled estimate',
+};
+
+/** Pick the tightest geography tier with enough priced evidence to trust. */
+function stageScope(subject: SubjectProfile, comps: CompRecord[]): { scope: MarketScope; pool: CompRecord[] } {
+  const priced = comps.filter((c) => typeof c.displayedPrice === 'number' && (c.displayedPrice ?? 0) > 0);
+  const st = subject.state?.toUpperCase();
+  if (st) {
+    const localIds = new Set(priced.filter((c) => c.state?.toUpperCase() === st).map((c) => c.id));
+    if (localIds.size >= 5) return { scope: 'local', pool: comps.filter((c) => localIds.has(c.id)) };
+    const region = US_REGION[st];
+    if (region) {
+      const regionIds = new Set(
+        priced.filter((c) => c.state && US_REGION[c.state.toUpperCase()] === region).map((c) => c.id),
+      );
+      if (regionIds.size >= 5) return { scope: 'regional', pool: comps.filter((c) => regionIds.has(c.id)) };
+    }
+  }
+  if (priced.length >= 3) return { scope: 'national', pool: comps };
+  return { scope: 'modeled', pool: comps };
+}
+
+const SOURCE_DESC: Record<string, string> = {
+  facebook_observed: 'Observed marketplace listings, including sold- and pending-status records',
+  vendibook_asking: 'Current Vendibook asking prices',
+  vendibook_verified: 'Verified Vendibook transaction prices',
+};
+
+/** Genuine source labels for the evidence actually used; empty when modeled. */
+function describeSources(comps: CompRecord[], scope: MarketScope): string[] {
+  if (scope === 'modeled') return [];
+  const kinds = new Set(comps.map((c) => c.evidenceType));
+  return Object.keys(SOURCE_DESC).filter((k) => kinds.has(k as CompRecord['evidenceType'])).map((k) => SOURCE_DESC[k]);
+}
+
+function mapConfidence(label: 'high' | 'moderate' | 'limited', scope: MarketScope): 'high' | 'medium' | 'directional' {
+  if (scope === 'modeled') return 'directional';
+  return label === 'high' ? 'high' : label === 'moderate' ? 'medium' : 'directional';
+}
+
+const usd = (n: number) => `$${Math.round(n).toLocaleString('en-US')}`;
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
