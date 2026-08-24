@@ -335,6 +335,7 @@ CITY_CATEGORY_CONFIGS.push(
     const plural = catLabelPlural(s.category);
     const pluralTitle = citySaleLabel(s.category);
     const path = `/${citySaleSlug(s.category)}/${slugify(s.stateName)}`;
+    const override = STATE_CONTENT_OVERRIDES[slugify(s.stateName)];
     return {
       path,
       category: s.category,
@@ -342,13 +343,14 @@ CITY_CATEGORY_CONFIGS.push(
       state: { name: s.stateName, code: s.stateCode },
       h1: `${pluralTitle} for Sale in ${s.stateName}`,
       title: `${pluralTitle} for Sale in ${s.stateName} | Vendibook`,
-      description: `Browse ${plural} for sale across ${s.stateName} on Vendibook. Statewide inventory from owners, with nationwide fallback when local listings are limited.`,
-      intro: `Browse ${plural} for sale across ${s.stateName}. Each listing is owner-managed with photos, equipment specs, and direct messaging. When statewide inventory is limited, Vendibook also surfaces nationwide listings so you can compare more options.`,
-      faqs: stateSaleFaqs(s.stateName, s.category),
+      description: override?.description ?? `Browse ${plural} for sale across ${s.stateName} on Vendibook. Statewide inventory from owners, with nationwide fallback when local listings are limited.`,
+      intro: `Browse ${plural} for sale across ${s.stateName}. Each listing is owner-managed with photos, equipment specs, and direct messaging. When statewide inventory is limited, Vendibook also surfaces nationwide listings so you can compare more options.${override?.introExtra ? ` ${override.introExtra}` : ''}`,
+      faqs: [...stateSaleFaqs(s.stateName, s.category), ...(override?.extraFaqs ?? [])],
       related: [
         { href: `/${citySaleSlug(s.category)}`, label: `All ${pluralTitle.toLowerCase()} for sale` },
         { href: s.category === 'food_trailer' ? '/sell-food-trailer' : '/sell-food-truck', label: `Sell your ${s.category === 'food_trailer' ? 'food trailer' : 'food truck'}` },
         { href: `/${citySaleSlug(s.category === 'food_trailer' ? 'food_truck' : 'food_trailer')}/${slugify(s.stateName)}`, label: `${s.category === 'food_trailer' ? 'Food trucks' : 'Food trailers'} for sale in ${s.stateName}` },
+        ...(override?.extraRelated ?? []),
       ],
     };
   })
