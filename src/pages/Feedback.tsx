@@ -186,22 +186,18 @@ export default function Feedback() {
     }
 
     supabase.functions
-      .invoke("send-transactional-email", {
+      .invoke("send-feedback-admin-notification", {
         body: {
-          templateName: "feedback-received-admin",
-          recipientEmail: "support@vendibook.com",
-          idempotencyKey: `feedback-admin-${record.id}`,
-          templateData: {
-            fromEmail: record?.email,
-            fromName: record?.metadata?.recipient_name,
-            rating,
-            nps,
-            message,
-            contextType: record?.context_type,
-            contextLabel: record?.metadata?.listing_title,
-            businessType: resolvedBusinessType,
-            canShare,
-          },
+          recordId: String(record.id),
+          fromEmail: record?.email,
+          fromName: record?.metadata?.recipient_name,
+          rating,
+          nps,
+          message,
+          contextType: record?.context_type,
+          contextLabel: record?.metadata?.listing_title,
+          businessType: resolvedBusinessType,
+          canShare,
         },
       })
       .catch(() => {});
@@ -243,22 +239,18 @@ export default function Feedback() {
     }
 
     supabase.functions
-      .invoke("send-transactional-email", {
+      .invoke("send-feedback-admin-notification", {
         body: {
-          templateName: "feedback-received-admin",
-          recipientEmail: "support@vendibook.com",
-          idempotencyKey: `feedback-admin-${data}`,
-          templateData: {
-            fromEmail: email.trim() || undefined,
-            fromName: name.trim() || undefined,
-            rating,
-            nps: null,
-            message: message.trim(),
-            contextType: "general",
-            contextLabel: category || "General feedback",
-            businessType: category,
-            canShare,
-          },
+          recordId: String(data),
+          fromEmail: email.trim() || undefined,
+          fromName: name.trim() || undefined,
+          rating,
+          nps: null,
+          message: message.trim(),
+          contextType: "general",
+          contextLabel: category || "General feedback",
+          businessType: category,
+          canShare,
         },
       })
       .catch(() => {});

@@ -214,40 +214,23 @@ export const TellVendibookModal = ({
       const leadKey = `${(email || phone || 'anon').toLowerCase()}-${Date.now()}`;
       const firstName = (name.trim().split(/\s+/)[0]) || undefined;
 
-      // 1) Confirmation to the requester (only if they gave an email)
-      if (email && email.trim()) {
-        supabase.functions.invoke('send-transactional-email', {
-          body: {
-            templateName: 'support-reply',
-            recipientEmail: email.trim(),
-            idempotencyKey: `lead-confirm-${leadKey}`,
-            templateData: {
-              firstName,
-              subject: 'We got your Vendibook concierge request',
-              bodyParagraphs: [
-                `Thanks for reaching out — a Vendibook concierge will follow up within 1 business hour (Mon–Fri, 9am–5pm AZ time).`,
-                `Here's what we have on file: ${intentLabel} · ${categoryLabel} · ${city.trim()}${timeline ? ` · ${timeline.replace(/_/g, ' ')}` : ''}${budget ? ` · ${budget.replace(/_/g, ' ')}` : ''}.`,
-                `We'll confirm availability, pricing, and next steps before you commit to anything. Outside business hours? We'll reach out first thing the next business day.`],
-              signedBy: 'Vendibook Concierge',
-              signedTitle: 'Concierge Team'}}}).catch((err) => console.warn('[TellVendibook] confirmation email failed', err));
-      }
-
-      // 2) Internal notification to support
-      supabase.functions.invoke('send-transactional-email', {
+      // Confirmation to the requester + internal notification to support
+      supabase.functions.invoke('send-lead-confirmation', {
         body: {
-          templateName: 'support-reply',
-          recipientEmail: 'support@vendibook.com',
-          idempotencyKey: `lead-internal-${leadKey}`,
-          templateData: {
-            firstName: 'Vendibook Support',
-            subject: `New concierge request: ${intentLabel} · ${categoryLabel} · ${city.trim()}`,
-            bodyParagraphs: [
-              `New lead from ${sourcePage || (typeof window !== 'undefined' ? window.location.pathname : 'site')}.`,
-              `Contact: ${name.trim() || '(no name)'} · ${email.trim() || '(no email)'} · ${phone.trim() || '(no phone)'}`,
-              `Intent: ${intentLabel} · Category: ${categoryLabel} · City: ${city.trim()}${timeline ? ` · Timeline: ${timeline}` : ''}${budget ? ` · Budget: ${budget}` : ''}${listingId ? ` · Listing: ${listingId}` : ''}`,
-              notes.trim() ? `Notes: ${notes.trim()}` : 'No notes provided.'],
-            signedBy: 'Vendibook Lead Router',
-            signedTitle: 'Internal Notification'}}}).catch((err) => console.warn('[TellVendibook] support notify failed', err));
+          leadKey,
+          firstName,
+          name: name.trim(),
+          email: email.trim(),
+          phone: phone.trim(),
+          intentLabel,
+          categoryLabel,
+          city: city.trim(),
+          timeline,
+          budget,
+          notes: notes.trim(),
+          listingId,
+          sourcePage: sourcePage || (typeof window !== 'undefined' ? window.location.pathname : 'site'),
+        }}).catch((err) => console.warn('[TellVendibook] lead emails failed', err));
 
       setSubmitted(true);
       toast({ title: 'We got it — talk soon!', description: 'Vendibook will follow up within 1 business hour.' });
