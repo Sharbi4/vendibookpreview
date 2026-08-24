@@ -46,6 +46,26 @@ const ProductCheckout = () => {
 
   const priceCents = useMemo(() => (product ? effectivePriceCents(product) : 0), [product]);
 
+  // Estimated sales tax — server-computed; the authoritative amount is
+  // re-locked at order creation in `paypal-create-order`.
+  const [taxEstimate, setTaxEstimate] = useState<{ tax_cents: number; rate_pct: number; label: string } | null>(null);
+  useEffect(() => {
+    if (!slug) return;
+    let cancelled = false;
+    supabase.functions
+      .invoke('tax-quote', { body: { kind: 'product', slug } })
+      .then(({ data, error }) => {
+        if (!error && data && !cancelled) setTaxEstimate(data);
+      })
+      .catch(() => { /* estimate is cosmetic; server re-computes authoritatively */ });
+    return () => {
+      cancelled = true;
+    };
+  }, [slug]);
+
+  const taxCents = taxEstimate?.tax_cents ?? 0;
+  const totalCents = priceCents + taxCents;
+
   if (loading) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
