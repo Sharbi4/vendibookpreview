@@ -211,6 +211,34 @@ const BookingCheckout = () => {
   const fees = calculateRentalFees(basePrice, currentDeliveryFee);
   const depositAmount = (listing as any)?.deposit_amount || null;
 
+  // Estimated sales tax — server-computed (TaxJar / state table). The
+  // authoritative amount is re-locked at order creation in
+  // `paypal-create-order`; this is only so the renter sees the real total
+  // before the PayPal window opens.
+  const [taxEstimate, setTaxEstimate] = useState<{ tax_cents: number; rate_pct: number; label: string } | null>(null);
+  useEffect(() => {
+    if (!listing?.id || !fees.customerTotal) { setTaxEstimate(null); return; }
+    const controller = new AbortController();
+    const t = setTimeout(() => {
+      supabase.functions
+        .invoke('tax-quote', {
+          body: {
+            kind: 'rental',
+            listing_id: listing.id,
+            total_cents: Math.round(fees.customerTotal * 100),
+          },
+        })
+        .then(({ data, error }) => {
+          if (!error && data && !controller.signal.aborted) setTaxEstimate(data);
+        })
+        .catch(() => { /* estimate is cosmetic; server re-computes authoritatively */ });
+    }, 350);
+    return () => { clearTimeout(t); controller.abort(); };
+  }, [listing?.id, fees.customerTotal]);
+
+  const taxAmount = (taxEstimate?.tax_cents ?? 0) / 100;
+  const totalChargedToday = fees.customerTotal + taxAmount;
+
   // Step definitions - dynamic based on listing requirements
   // Auth is now deferred: guests can fill everything first, auth is required only at submission
   // Step order: Business Info (if food) -> Documents (if required) -> Fulfillment -> Review
@@ -1194,12 +1222,12 @@ const BookingCheckout = () => {
                         ) : instantConfirm ? (
                           <>
                             <Zap className="h-5 w-5 mr-2" />
-                            Confirm and pay ${fees.customerTotal.toLocaleString()}
+                            Confirm and pay ${totalChargedToday.toLocaleString()}
                           </>
                         ) : (
                           <>
                             <CreditCard className="h-5 w-5 mr-2" />
-                            Continue to payment · ${fees.customerTotal.toLocaleString()}
+                            Continue to payment · ${totalChargedToday.toLocaleString()}
                           </>
                         )}
                       </Button>
@@ -1362,9 +1390,16 @@ const BookingCheckout = () => {
                   <span>${fees.renterFee.toLocaleString()}</span>
                 </div>
 
+                {taxAmount > 0 && (
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">{taxEstimate?.label || 'Estimated sales tax'}</span>
+                    <span>${taxAmount.toLocaleString()}</span>
+                  </div>
+                )}
+
                 <div className="flex items-center justify-between pt-3 border-t border-border">
                   <span className="font-semibold">Total charged today</span>
-                  <span className="font-semibold">${fees.customerTotal.toLocaleString()}</span>
+                  <span className="font-semibold">${totalChargedToday.toLocaleString()}</span>
                 </div>
 
                 {depositAmount ? (
@@ -1447,7 +1482,7 @@ const BookingCheckout = () => {
           target={{ kind: 'booking', id: paypalCheckout.bookingId }}
           returnUrl={paypalCheckout.returnUrl}
           onClose={() => setPaypalCheckout(null)}
-          totalUsd={fees.customerTotal}
+          totalUsd={totalChargedToday}
 
           summary={
             <CheckoutOrderSummary
@@ -1461,8 +1496,9 @@ const BookingCheckout = () => {
                   ? [{ label: 'Delivery', amount: currentDeliveryFee }]
                   : []),
                 { label: 'Service fee', amount: fees.renterFee },
+                ...(taxAmount > 0 ? [{ label: taxEstimate?.label || 'Estimated sales tax', amount: taxAmount }] : []),
               ]}
-              total={fees.customerTotal}
+              total={totalChargedToday}
             />
           }
         />

@@ -46,6 +46,26 @@ const ProductCheckout = () => {
 
   const priceCents = useMemo(() => (product ? effectivePriceCents(product) : 0), [product]);
 
+  // Estimated sales tax — server-computed; the authoritative amount is
+  // re-locked at order creation in `paypal-create-order`.
+  const [taxEstimate, setTaxEstimate] = useState<{ tax_cents: number; rate_pct: number; label: string } | null>(null);
+  useEffect(() => {
+    if (!slug) return;
+    let cancelled = false;
+    supabase.functions
+      .invoke('tax-quote', { body: { kind: 'product', slug } })
+      .then(({ data, error }) => {
+        if (!error && data && !cancelled) setTaxEstimate(data);
+      })
+      .catch(() => { /* estimate is cosmetic; server re-computes authoritatively */ });
+    return () => {
+      cancelled = true;
+    };
+  }, [slug]);
+
+  const taxCents = taxEstimate?.tax_cents ?? 0;
+  const totalCents = priceCents + taxCents;
+
   if (loading) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
@@ -77,7 +97,7 @@ const ProductCheckout = () => {
       <SEO title={`Checkout — ${product.name} | Vendibook`} description={product.description ?? undefined} noindex />
       <PayPalPaymentPanel
         target={{ kind: 'product', slug: product.slug, listing_id: listingId }}
-        totalUsd={priceCents / 100}
+        totalUsd={totalCents / 100}
         returnUrl={successPath}
         onClose={() => navigate(cancelPath)}
         onSuccess={(result) => {
@@ -95,7 +115,15 @@ const ProductCheckout = () => {
             {product.description && (
               <p className="text-xs text-muted-foreground">{product.description}</p>
             )}
-            <p className="text-lg font-semibold">{formatUsd(priceCents)}</p>
+            <div className="space-y-0.5 pt-1">
+              <p className="text-sm">{formatUsd(priceCents)}</p>
+              {taxCents > 0 && (
+                <p className="text-sm text-muted-foreground">
+                  {taxEstimate?.label || 'Estimated sales tax'} · {formatUsd(taxCents)}
+                </p>
+              )}
+              <p className="text-lg font-semibold">{formatUsd(totalCents)}</p>
+            </div>
           </div>
         }
       />

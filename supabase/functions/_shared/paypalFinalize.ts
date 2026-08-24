@@ -272,6 +272,21 @@ export async function finalizeCapture(
     });
   }
 
+  // Sales tax collected on top of the merchandise total — held by Vendibook
+  // for remittance, never paid out to the seller/host.
+  if (current.tax_cents > 0) {
+    await appendLedgerEntry(supabase, {
+      paymentRecordId: current.id,
+      entryType: "tax_collected",
+      amountCents: current.tax_cents,
+      currency: facts.currency,
+      direction: "credit",
+      description: "Estimated sales tax collected — held for remittance",
+      dedupeKey: `tax:${facts.captureId}`,
+      metadata: { source },
+    });
+  }
+
   const releaseAt = current.fee_breakdown?.release_at ?? null;
   await ensureSellerPayable(supabase, current, releaseAt);
 
