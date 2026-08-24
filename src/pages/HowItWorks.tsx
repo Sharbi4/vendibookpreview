@@ -433,7 +433,7 @@ const HowItWorks = () => {
                       src={f.art}
                       alt={f.artAlt}
                       loading="lazy"
-                      className="aspect-[16/9] w-full object-cover"
+                      className="aspect-[16/9] w-full object-contain p-5 sm:p-7"
                     />
                   </div>
                   <div>
