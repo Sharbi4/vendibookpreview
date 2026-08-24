@@ -134,7 +134,10 @@ async function quoteViaTaxJar(
       }),
       signal: controller.signal,
     });
-    if (!res.ok) throw new Error(`taxjar_http_${res.status}`);
+    if (!res.ok) {
+      const detail = (await res.text().catch(() => "")).replace(/\s+/g, " ").slice(0, 300);
+      throw new Error(`taxjar_http_${res.status}${detail ? `: ${detail}` : ""}`);
+    }
     const json = await res.json();
     const toCollect = Number(json?.tax?.amount_to_collect ?? NaN);
     const rate = Number(json?.tax?.rate ?? NaN);
@@ -174,7 +177,9 @@ export async function quoteSalesTax(opts: {
 
   const zip = opts.destination.zip?.trim() || null;
 
-  if (Deno.env.get("TAXJAR_API_KEY")) {
+  // TaxJar requires to_zip for US destinations — without a ZIP the call
+  // deterministically 400s, so go straight to the state-table estimate.
+  if (zip && Deno.env.get("TAXJAR_API_KEY")) {
     try {
       const exact = await quoteViaTaxJar(taxableAmountCents, {
         state,
