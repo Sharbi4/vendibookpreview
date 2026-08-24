@@ -29,6 +29,7 @@ serve(async (req) => {
         Authorization: `Bearer ${LOVABLE_API_KEY}`,
       },
       body: JSON.stringify({
+        model: "google/gemini-3.7-flash",
         messages: [
           {
             role: "system",
