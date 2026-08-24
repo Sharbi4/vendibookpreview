@@ -430,17 +430,6 @@
     </image:image>
   </url>
   <url>
-    <loc>https://vendibook.com/listing/a3ead971-38c7-4c0c-8f3f-2b02185c7c2f</loc>
-    <lastmod>2026-08-24</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/bf4754c8-46ce-472e-8a71-2b8a7769a833/a3ead971-38c7-4c0c-8f3f-2b02185c7c2f/1770294077101-jgoyi.jpg</image:loc>
-      <image:title>Custom-Built 6&apos; x 12&apos; Pop-Up Lemonade Concession Trailer</image:title>
-      <image:caption>Custom-Built 6&apos; x 12&apos; Pop-Up Lemonade Concession Trailer in Charlotte, NC on Vendibook</image:caption>
-    </image:image>
-  </url>
-  <url>
     <loc>https://vendibook.com/listing/208387b2-6318-4488-963f-3741be63d929</loc>
     <lastmod>2026-08-24</lastmod>
     <changefreq>weekly</changefreq>
@@ -823,6 +812,17 @@
       <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/65c3a84b-d9a3-496a-96be-ebe7b66bca9b/1fcfc8c8-8742-4534-b5f6-5ecca7eabf17/1786033254827-l6oclj.jpeg</image:loc>
       <image:title>2024 16’ Food Trailer, Fully Equipped </image:title>
       <image:caption>2024 16’ Food Trailer, Fully Equipped  in Montgomery, TX on Vendibook</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://vendibook.com/listing/a3ead971-38c7-4c0c-8f3f-2b02185c7c2f</loc>
+    <lastmod>2026-08-24</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/bf4754c8-46ce-472e-8a71-2b8a7769a833/a3ead971-38c7-4c0c-8f3f-2b02185c7c2f/1770294077101-jgoyi.jpg</image:loc>
+      <image:title>Custom-Built 6&apos; x 12&apos; Pop-Up Lemonade Concession Trailer</image:title>
+      <image:caption>Custom-Built 6&apos; x 12&apos; Pop-Up Lemonade Concession Trailer in Charlotte, NC on Vendibook</image:caption>
     </image:image>
   </url>
   <url>
