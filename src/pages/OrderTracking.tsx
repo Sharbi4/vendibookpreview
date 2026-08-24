@@ -2,6 +2,7 @@ import { isPickupLocationRevealed, PICKUP_LOCKED_MESSAGE } from '@/lib/fulfillme
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link, useSearchParams } from 'react-router-dom';
 import OrderPaymentLink from '@/components/orders/OrderPaymentLink';
+import { FreightLink, linkifyFreight } from '@/components/shared/FreightLink';
 import { format } from 'date-fns';
 import { 
   Package, Truck, CheckCircle2, Clock, MapPin, 
@@ -287,8 +288,8 @@ const CashFreightTimeline = ({
             <CreditCard className="h-8 w-8 text-primary mx-auto mb-2" />
             <p className="font-medium text-foreground">Freight Payment Required</p>
             <p className="text-sm text-muted-foreground mt-1">
-              {isBuyer 
-                ? `Pay $${freightCost.toLocaleString()} for VendiBook Freight shipping to proceed.`
+              {isBuyer
+                ? <>Pay ${freightCost.toLocaleString()} for <FreightLink /> shipping to proceed.</>
                 : 'Waiting for the buyer to pay for freight shipping.'}
             </p>
             {canPayFreight && (
@@ -690,7 +691,7 @@ const OrderTracking = () => {
               {isCashFreightTransaction && (
                 <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">
                   <Truck className="h-3 w-3 mr-1" />
-                  VendiBook Freight
+                  <FreightLink className="text-inherit decoration-current" />
                 </Badge>
               )}
             </div>
@@ -834,10 +835,10 @@ const OrderTracking = () => {
                     <div className="flex gap-3">
                       <Truck className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
                       <div>
-                        <p className="font-medium text-foreground">VendiBook Freight</p>
+                        <p className="font-medium text-foreground"><FreightLink /></p>
                         <p className="text-sm text-muted-foreground mt-1">
-                          Your order is being coordinated through VendiBook Freight. You'll receive 
-                          an email with tracking information and instructions to schedule your 
+                          Your order is being coordinated through {linkifyFreight('Vendibook Freight')}. You'll receive
+                          an email with tracking information and instructions to schedule your
                           delivery time once the item ships.
                         </p>
                         <p className="text-sm text-muted-foreground mt-2">

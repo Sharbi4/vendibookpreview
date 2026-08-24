@@ -20,6 +20,7 @@ import {
   type DeliveryEstimate,
 } from '@/lib/fulfillment/delivery';
 import { cn } from '@/lib/utils';
+import { FreightLink } from '@/components/shared/FreightLink';
 
 export type DeliveryChoice = {
   /** Matches the checkout's FulfillmentSelection values. */
@@ -312,7 +313,7 @@ export const DeliveryCheckSheet = ({
                     <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
                       {place || zip} is about {miles} mi away, outside the seller’s {radius}-mile
                       delivery radius.
-                      {freightEnabled ? ' Vendibook Freight can still ship it to you.' : ''}
+                      {freightEnabled ? <> <FreightLink /> can still ship it to you.</> : null}
                     </p>
                   </div>
                 </div>
@@ -346,6 +347,11 @@ export const DeliveryCheckSheet = ({
                 />
               )}
 
+              {freightEnabled && (
+                <p className="text-[11px] text-muted-foreground">
+                  <FreightLink>How Vendibook Freight works</FreightLink>
+                </p>
+              )}
 
               {offersPickup && (
                 <div className="flex items-start gap-3 pt-1">

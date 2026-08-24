@@ -2757,8 +2757,8 @@ You are only charged if:
 **Self-Arrange**
 Handle your own pickup or hire your own transport.
 
-**Vendibook Freight (Coming Soon)**
-Request quotes from vetted freight carriers directly through the platform.
+**Vendibook Freight**
+Coordinated transport for food trucks, trailers, and mobile food equipment across the 48 contiguous states. See the Vendibook Freight page for how it works and how pricing is prepared.
 
 **Seller Delivery**
 Some sellers offer delivery within a certain radius.`

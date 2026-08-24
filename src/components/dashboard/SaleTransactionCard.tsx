@@ -4,6 +4,7 @@ import { format } from 'date-fns';
 import { Link } from 'react-router-dom';
 import { CheckCircle2, Clock, DollarSign, ShieldCheck, AlertCircle, Loader2, Flag, MapPin, Truck, Package, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { FreightLink } from '@/components/shared/FreightLink';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -310,7 +311,7 @@ const SaleTransactionCard = ({
                   )}
                   <div className="flex-1">
                     <p className="text-sm font-medium text-foreground">
-                      {transaction.fulfillment_type === 'vendibook_freight' ? 'VendiBook Freight' :
+                      {transaction.fulfillment_type === 'vendibook_freight' ? <FreightLink /> :
                        transaction.fulfillment_type === 'delivery' ? 'Delivery' : 'Pickup'}
                     </p>
                     {(transaction.fulfillment_type === 'delivery' || transaction.fulfillment_type === 'vendibook_freight') ? (

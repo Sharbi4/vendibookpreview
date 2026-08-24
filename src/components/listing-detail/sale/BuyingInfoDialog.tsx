@@ -1,5 +1,6 @@
 import { useState, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
+import { FreightLink } from '@/components/shared/FreightLink';
 import { MapPin, Truck, Package, ShieldCheck, Lock, FileText, Banknote, EyeOff } from 'lucide-react';
 import {
   Dialog,
@@ -20,7 +21,7 @@ interface BuyingInfoDialogProps {
   trigger?: ReactNode;
 }
 
-const Row = ({ icon: Icon, title, children }: { icon: any; title: string; children: ReactNode }) => (
+const Row = ({ icon: Icon, title, children }: { icon: any; title: ReactNode; children: ReactNode }) => (
   <div className="flex items-start gap-3">
     <Icon className="h-[18px] w-[18px] mt-0.5 shrink-0 text-muted-foreground" />
     <div className="min-w-0">
@@ -78,9 +79,13 @@ export const BuyingInfoDialog = ({
             </Row>
           )}
           {freightEnabled && (
-            <Row icon={Package} title="Nationwide Vendibook Freight">
+            <Row icon={Package} title={<>Nationwide <FreightLink /></>}>
               Available to the 48 contiguous states. Your freight cost is quoted by distance during
-              checkout — nothing is charged until you confirm it.
+              checkout — nothing is charged until you confirm it.{' '}
+              <Link to="/vendibook-freight" className="underline underline-offset-2">
+                Learn about Vendibook Freight
+              </Link>
+              .
             </Row>
           )}
           <Row icon={EyeOff} title="Address privacy">

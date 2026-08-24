@@ -12,6 +12,7 @@ import {
   Pause
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { FreightLink } from '@/components/shared/FreightLink';
 import { cn } from '@/lib/utils';
 
 interface WalkthroughStep {
@@ -149,7 +150,7 @@ const ListingWalkthrough = () => {
             className="flex items-center gap-2 p-2.5 rounded-lg bg-primary/5 border border-primary/20"
           >
             <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
-            <span className="text-xs text-muted-foreground">Vendibook Freight available in your area</span>
+            <span className="text-xs text-muted-foreground"><FreightLink /> available in your area</span>
           </motion.div>
         </div>
       )},

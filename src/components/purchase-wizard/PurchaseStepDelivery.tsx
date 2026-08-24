@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { MapPin, Truck, Package, Check, Loader2, AlertCircle, CheckCircle2, AlertTriangle, Clock, MessageSquare, Info, CalendarClock } from 'lucide-react';
 import { Label } from '@/components/ui/label';
@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { AddressAutocomplete } from '@/components/listing-detail/AddressAutocomplete';
 import NextStepHint from '@/components/shared/NextStepHint';
+import { FreightLink, linkifyFreight } from '@/components/shared/FreightLink';
 import { FreightInfoPopover } from '@/components/shared/InfoPopover';
 import InfoPopover from '@/components/shared/InfoPopover';
 
@@ -153,7 +154,7 @@ const SchedulingFields = ({
   </div>
 );
 
-const NEXT_STEPS: Record<FulfillmentSelection, { title: string; body: string }[]> = {
+const NEXT_STEPS: Record<FulfillmentSelection, { title: string; body: ReactNode }[]> = {
   pickup: [
     { title: 'Message the seller', body: 'After checkout, use in-app Messages to schedule an exact pickup time.' },
     { title: 'Meet & inspect', body: 'Meet at the seller\'s pickup location. Inspect the item before you leave.' },
@@ -165,7 +166,7 @@ const NEXT_STEPS: Record<FulfillmentSelection, { title: string; body: string }[]
     { title: 'Confirm receipt', body: 'Confirm in your dashboard — funds release to the seller after the protection window.' },
   ],
   vendibook_freight: [
-    { title: 'Freight scheduling', body: 'Vendibook Freight contacts you within 2 business days to schedule pickup and delivery.' },
+    { title: 'Freight scheduling', body: <><FreightLink /> contacts you within 2 business days to schedule pickup and delivery.</> },
     { title: 'Transit', body: '7–10 business days is the typical transit estimate; actual pickup and transit times can vary.' },
     { title: 'Inspect on delivery', body: 'Inspect the item before signing. Note any damage on the driver\'s BOL immediately.' },
   ],
@@ -275,7 +276,7 @@ const MethodCard = ({ selection, selected, onSelect, priceNode, showRadio, child
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="font-semibold text-foreground">{meta.name}</span>
+            <span className="font-semibold text-foreground">{linkifyFreight(meta.name)}</span>
             {selection === 'vendibook_freight' && <FreightInfoPopover />}
           </div>
           <p className="text-sm text-muted-foreground mt-0.5">{meta.tagline}</p>
@@ -301,8 +302,8 @@ const MethodCard = ({ selection, selected, onSelect, priceNode, showRadio, child
         <div className="rounded-lg bg-muted/40 border border-border px-3 py-2.5 flex gap-2">
           <Info className="h-4 w-4 text-primary shrink-0 mt-0.5" />
           <div className="text-xs">
-            <span className="font-semibold text-foreground">{meta.explainerTitle}. </span>
-            <span className="text-muted-foreground">{meta.explainerBody}</span>
+            <span className="font-semibold text-foreground">{linkifyFreight(meta.explainerTitle)}. </span>
+            <span className="text-muted-foreground">{linkifyFreight(meta.explainerBody)}</span>
             {selection === 'vendibook_freight' && (
               <>
                 {' '}

@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { linkifyFreight } from '@/components/shared/FreightLink';
 import {
   FileText,
   MessagesSquare,
@@ -124,7 +125,7 @@ const SellerPaymentsExplainer = ({
                   <Icon className="h-4 w-4 text-primary" aria-hidden="true" />
                 </div>
                 <h3 className="text-base font-semibold text-foreground">{s.title}</h3>
-                <p className="text-sm text-muted-foreground leading-relaxed">{s.body}</p>
+                <p className="text-sm text-muted-foreground leading-relaxed">{linkifyFreight(s.body)}</p>
               </li>
             );
           })}

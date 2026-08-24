@@ -24,6 +24,7 @@ import Footer from '@/components/layout/Footer';
 import SEO from '@/components/SEO';
 import { Button } from '@/components/ui/button';
 import { GuideBreadcrumb } from '@/components/education/GuideBreadcrumb';
+import { linkifyFreight } from '@/components/shared/FreightLink';
 import imgBuying from '@/assets/how-buying-hero.jpg';
 import imgCoffee from '@/assets/food-truck-coffee.jpg';
 import imgPopcorn from '@/assets/food-truck-popcorn.jpg';
@@ -178,7 +179,7 @@ const TOOL_LINKS: { icon: LucideIcon; name: string; note: string; to: string }[]
     icon: Truck,
     name: 'Vendibook Freight',
     note: 'Professional transport, coordinated as part of the transaction where available.',
-    to: '/help/shipping-freight',
+    to: '/vendibook-freight',
   },
 ];
 
@@ -270,7 +271,7 @@ const GUIDES: { icon: LucideIcon; title: string; body: string; cta: string; to: 
     title: 'Vendibook Freight',
     body: 'How arranged freight works, when it applies, and what to expect.',
     cta: 'Read the freight guide',
-    to: '/help/shipping-freight',
+    to: '/vendibook-freight',
     art: deliveryMapArt.url,
     artAlt: 'Delivery route map for arranged freight',
   },
@@ -423,7 +424,7 @@ const HowItWorks = () => {
                     />
                   )}
                   <h3 className="text-lg font-semibold text-foreground mb-2">{d.title}</h3>
-                  <p className="text-sm text-muted-foreground leading-relaxed">{d.body}</p>
+                  <p className="text-sm text-muted-foreground leading-relaxed">{linkifyFreight(d.body)}</p>
                 </motion.div>
               ))}
             </div>
