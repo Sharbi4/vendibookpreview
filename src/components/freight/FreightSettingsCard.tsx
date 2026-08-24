@@ -4,6 +4,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { InfoTooltip } from '@/components/ui/info-tooltip';
+import { FreightLink, FREIGHT_QUOTE_PATH } from '@/components/shared/FreightLink';
 import { FreightComparisonCard } from './FreightInfoCard';
 
 interface FreightSettingsCardProps {
@@ -42,6 +43,9 @@ export const FreightSettingsCard: React.FC<FreightSettingsCardProps> = ({
             <p className="text-sm text-muted-foreground mt-1">
               We coordinate freight through a trusted third-party carrier.
             </p>
+            <FreightLink to={FREIGHT_QUOTE_PATH} className="mt-1.5 inline-block text-xs">
+              How Vendibook Freight works
+            </FreightLink>
           </div>
         </div>
       </div>

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Truck, Clock, Mail } from 'lucide-react';
 import { InfoTooltip } from '@/components/ui/info-tooltip';
+import { FreightLink } from '@/components/shared/FreightLink';
 
 interface FreightInfoCardProps {
   isSellerPaid: boolean;
@@ -23,7 +24,7 @@ export const FreightInfoCard: React.FC<FreightInfoCardProps> = ({
         <div className="flex items-center gap-2">
           <Truck className="h-5 w-5 text-emerald-600" />
           <h4 className="font-semibold text-foreground">
-            Delivery: Free Shipping (Vendibook Freight)
+            Delivery: Free Shipping (<FreightLink />)
           </h4>
         </div>
         
@@ -81,7 +82,7 @@ export const FreightInfoCard: React.FC<FreightInfoCardProps> = ({
     <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-xl p-4 space-y-3">
       <div className="flex items-center gap-2">
         <Truck className="h-5 w-5 text-blue-600" />
-        <h4 className="font-semibold text-foreground">Delivery: Vendibook Freight</h4>
+        <h4 className="font-semibold text-foreground">Delivery: <FreightLink /></h4>
       </div>
       
       <ul className="space-y-2 text-sm text-muted-foreground">
@@ -132,7 +133,7 @@ export const FreightComparisonCard: React.FC = () => {
     <div className="bg-muted/50 rounded-lg p-3 text-sm">
       <div className="flex items-center gap-2 mb-2">
         <Truck className="h-4 w-4 text-primary" />
-        <span className="font-medium text-foreground">Vendibook Freight — Payment Options</span>
+        <span className="font-medium text-foreground"><FreightLink /> — Payment Options</span>
         <InfoTooltip
           content="No matter who pays, Vendibook coordinates the carrier and scheduling emails."
         />

@@ -573,17 +573,6 @@
     </image:image>
   </url>
   <url>
-    <loc>https://vendibook.com/listing/d98cfc23-1156-489e-a4f7-1e0bafb74fe5</loc>
-    <lastmod>2026-08-22</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/e86990e4-0a49-4126-a786-ea2b29eb8457/d98cfc23-1156-489e-a4f7-1e0bafb74fe5/1782570587944-yn47a.jpeg</image:loc>
-      <image:title>2022 fully equit with bathroom food trailer</image:title>
-      <image:caption>2022 fully equit with bathroom food trailer in Lakeland, GA on Vendibook</image:caption>
-    </image:image>
-  </url>
-  <url>
     <loc>https://vendibook.com/listing/a2a2f761-da8c-4f59-ad5c-6a8b54f67083</loc>
     <lastmod>2026-08-24</lastmod>
     <changefreq>weekly</changefreq>
@@ -603,6 +592,17 @@
       <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/7b0ce910-912e-47a4-bf55-6243abe7cbb8/b7392745-3c33-48be-b4e9-2c5afc0d5890/1784131173628-98kr4j.jpeg</image:loc>
       <image:title>2024 fully equipped Cynergy concession trailer</image:title>
       <image:caption>2024 fully equipped Cynergy concession trailer in Toledo, OH on Vendibook</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://vendibook.com/listing/d98cfc23-1156-489e-a4f7-1e0bafb74fe5</loc>
+    <lastmod>2026-08-24</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/e86990e4-0a49-4126-a786-ea2b29eb8457/d98cfc23-1156-489e-a4f7-1e0bafb74fe5/1782570587944-yn47a.jpeg</image:loc>
+      <image:title>2022 fully equit with bathroom food trailer</image:title>
+      <image:caption>2022 fully equit with bathroom food trailer in Lakeland, GA on Vendibook</image:caption>
     </image:image>
   </url>
   <url>
