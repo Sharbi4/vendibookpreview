@@ -36,10 +36,13 @@ const TicketStatusTracker = () => {
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!email && !ticketId) {
+    // Ticket subjects/status are private — the function requires a signed-in
+    // session and always looks up tickets for the caller's own account email.
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
       toast({
-        title: 'Enter search criteria',
-        description: 'Please enter your email address or ticket ID.',
+        title: 'Sign in required',
+        description: 'Please sign in with the account you contacted support from to view your tickets.',
         variant: 'destructive',
       });
       return;
@@ -50,7 +53,7 @@ const TicketStatusTracker = () => {
 
     try {
       const { data, error } = await supabase.functions.invoke('check-ticket-status', {
-        body: { email, ticketId: ticketId || undefined },
+        body: { ticketId: ticketId || undefined },
       });
 
       if (error) throw error;
@@ -60,7 +63,7 @@ const TicketStatusTracker = () => {
       } else {
         toast({
           title: 'No tickets found',
-          description: 'We couldn\'t find any tickets matching your search.',
+          description: 'We couldn\'t find any tickets for your account.',
         });
         setTickets([]);
       }
@@ -85,28 +88,14 @@ const TicketStatusTracker = () => {
         <div>
           <h3 className="font-semibold text-foreground">Check Ticket Status</h3>
           <p className="text-sm text-muted-foreground">
-            Track the status of your support requests
+            Track the status of your support requests — sign in and we'll show tickets linked to your account
           </p>
         </div>
       </div>
 
       <form onSubmit={handleSearch} className="space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="ticket-email">Email Address</Label>
-          <Input
-            id="ticket-email"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="your@email.com"
-            disabled={isLoading}
-          />
-        </div>
-
-        <div className="text-center text-sm text-muted-foreground">or</div>
-
-        <div className="space-y-2">
-          <Label htmlFor="ticket-id">Ticket ID</Label>
+          <Label htmlFor="ticket-id">Ticket ID (optional)</Label>
           <Input
             id="ticket-id"
             value={ticketId}
