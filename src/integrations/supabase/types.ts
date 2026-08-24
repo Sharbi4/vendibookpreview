@@ -9236,6 +9236,62 @@ export type Database = {
           },
         ]
       }
+      payment_attempts_safe: {
+        Row: {
+          attempt_number: number | null
+          buyer_id: string | null
+          completed_at: string | null
+          created_at: string | null
+          failure_category: string | null
+          failure_code: string | null
+          failure_message_safe: string | null
+          id: string | null
+          payment_record_id: string | null
+          provider: Database["public"]["Enums"]["payment_provider"] | null
+          provider_order_id: string | null
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          attempt_number?: number | null
+          buyer_id?: string | null
+          completed_at?: string | null
+          created_at?: string | null
+          failure_category?: string | null
+          failure_code?: string | null
+          failure_message_safe?: string | null
+          id?: string | null
+          payment_record_id?: string | null
+          provider?: Database["public"]["Enums"]["payment_provider"] | null
+          provider_order_id?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          attempt_number?: number | null
+          buyer_id?: string | null
+          completed_at?: string | null
+          created_at?: string | null
+          failure_category?: string | null
+          failure_code?: string | null
+          failure_message_safe?: string | null
+          id?: string | null
+          payment_record_id?: string | null
+          provider?: Database["public"]["Enums"]["payment_provider"] | null
+          provider_order_id?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_attempts_payment_record_id_fkey"
+            columns: ["payment_record_id"]
+            isOneToOne: false
+            referencedRelation: "payment_records"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       public_listings: {
         Row: {
           accept_card_payment: boolean | null

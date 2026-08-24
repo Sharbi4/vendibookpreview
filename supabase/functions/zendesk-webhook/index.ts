@@ -28,6 +28,34 @@ interface ZendeskWebhookPayload {
   };
 }
 
+async function hmacSha256Base64(key: string, message: string): Promise<string> {
+  const enc = new TextEncoder();
+  const cryptoKey = await crypto.subtle.importKey(
+    "raw",
+    enc.encode(key),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"],
+  );
+  const sig = await crypto.subtle.sign("HMAC", cryptoKey, enc.encode(message));
+  const bytes = new Uint8Array(sig);
+  let bin = "";
+  for (const b of bytes) bin += String.fromCharCode(b);
+  return btoa(bin);
+}
+
+// Zendesk webhook signing: base64(HMAC-SHA256(secret, timestamp + rawBody))
+// with the timestamp from x-zendesk-webhook-signature-timestamp.
+async function verifyZendeskSignature(req: Request, rawBody: string): Promise<boolean> {
+  const secret = Deno.env.get("ZENDESK_WEBHOOK_SIGNING_SECRET") ?? "";
+  const sig = req.headers.get("x-zendesk-webhook-signature") ?? "";
+  const timestamp = req.headers.get("x-zendesk-webhook-signature-timestamp") ?? "";
+  // Fail closed: without a configured secret we cannot authenticate callers.
+  if (!secret || !sig || !timestamp) return false;
+  const expected = await hmacSha256Base64(secret, timestamp + rawBody);
+  return expected === sig;
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -36,16 +64,29 @@ serve(async (req) => {
   try {
     logStep("Webhook received");
 
+    // Read the raw body first so the signature can be verified over the exact bytes.
+    const rawBody = await req.text();
+
+    // Verify the Zendesk webhook signature — without it anyone who knows this
+    // URL could inject forged support comments into dispute threads.
+    if (!(await verifyZendeskSignature(req, rawBody))) {
+      logStep("Invalid or missing webhook signature");
+      return new Response(
+        JSON.stringify({ error: "invalid signature" }),
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     // Initialize Supabase client with service role for inserting
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    const payload: ZendeskWebhookPayload = await req.json();
-    logStep("Payload parsed", { 
+    const payload: ZendeskWebhookPayload = JSON.parse(rawBody);
+    logStep("Payload parsed", {
       ticket_id: payload.ticket_id,
       comment_id: payload.comment?.id,
-      external_id: payload.ticket_external_id 
+      external_id: payload.ticket_external_id
     });
 
     // Validate required fields

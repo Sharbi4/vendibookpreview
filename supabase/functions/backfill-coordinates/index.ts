@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { isAdminOrInternalCaller, internalOnlyResponse } from "../_shared/internalAuth.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -164,6 +165,11 @@ async function geocodeZipCentroid(
 serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
+  }
+
+  // Paid geocoding API calls — internal scheduler or signed-in admin only.
+  if (!(await isAdminOrInternalCaller(req))) {
+    return internalOnlyResponse(corsHeaders);
   }
 
   try {

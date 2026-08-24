@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { isAdminOrInternalCaller, internalOnlyResponse } from "../_shared/internalAuth.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -9,6 +10,14 @@ const corsHeaders = {
 const logStep = (step: string, details?: Record<string, unknown>) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
   console.log(`[BULK-SYNC-ZENDESK] ${step}${detailsStr}`);
+};
+
+// Never echo raw user emails back in HTTP responses — mask them.
+const maskEmail = (email: string | null | undefined): string => {
+  if (!email) return "(no-email)";
+  const at = email.indexOf("@");
+  if (at <= 1) return "***";
+  return `${email.slice(0, 2)}***@${email.slice(at + 1)}`;
 };
 
 interface BulkSyncRequest {
@@ -34,6 +43,11 @@ interface ZendeskUser {
 const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
+  }
+
+  // Bulk-exports user PII to Zendesk — internal scheduler or signed-in admin only.
+  if (!(await isAdminOrInternalCaller(req))) {
+    return internalOnlyResponse(corsHeaders);
   }
 
   try {
@@ -218,8 +232,8 @@ const handler = async (req: Request): Promise<Response> => {
         } else {
           const errorText = await response.text();
           results.failed++;
-          results.errors.push(`${profile.email}: ${response.status}`);
-          logStep("User sync failed", { email: profile.email, error: errorText });
+          results.errors.push(`${maskEmail(profile.email)}: ${response.status}`);
+          logStep("User sync failed", { email: maskEmail(profile.email), error: errorText });
         }
 
         // Rate limiting - Zendesk allows ~400 requests/min
@@ -227,7 +241,7 @@ const handler = async (req: Request): Promise<Response> => {
 
       } catch (userError) {
         results.failed++;
-        results.errors.push(`${profile.email}: ${userError instanceof Error ? userError.message : 'Unknown error'}`);
+        results.errors.push(`${maskEmail(profile.email)}: ${userError instanceof Error ? userError.message : 'Unknown error'}`);
       }
     }
 

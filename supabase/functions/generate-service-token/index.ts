@@ -53,15 +53,18 @@ serve(async (req) => {
       );
     }
 
-    // Generate JWT token
-    const supabaseJwtSecret = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-    if (!supabaseJwtSecret) {
-      throw new Error('JWT secret not configured');
+    // Generate JWT token using a dedicated, independent signing secret.
+    // Never derive signing material from SUPABASE_SERVICE_ROLE_KEY — reusing
+    // part of the platform's most privileged credential for an unrelated
+    // purpose weakens both secrets.
+    const signingSecret = Deno.env.get('SERVICE_TOKEN_SIGNING_SECRET');
+    if (!signingSecret || signingSecret.length < 32) {
+      console.error('SERVICE_TOKEN_SIGNING_SECRET is not configured');
+      throw new Error('Token signing not configured');
     }
 
-    // Use the service role key to create a signing key
     const encoder = new TextEncoder();
-    const secretKey = encoder.encode(supabaseJwtSecret.substring(0, 32)); // Use first 32 chars as key
+    const secretKey = encoder.encode(signingSecret);
 
     const now = Math.floor(Date.now() / 1000);
     const expiresIn = 3600; // 1 hour
