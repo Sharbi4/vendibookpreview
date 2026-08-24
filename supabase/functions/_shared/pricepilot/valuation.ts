@@ -506,6 +506,12 @@ export function runRentalValuation(subject: SubjectProfile, comps: CompRecord[])
 
   const weighted = scored.map((c) => ({ value: c.displayedPrice!, weight: c.weight }));
   const daily = Math.round(weightedQuantile(weighted, 0.5) / 5) * 5;
+  let dailyLow = Math.round(weightedQuantile(weighted, 0.25) / 5) * 5;
+  let dailyHigh = Math.round(weightedQuantile(weighted, 0.75) / 5) * 5;
+  if (dailyHigh <= dailyLow) {
+    dailyLow = Math.round((daily * 0.85) / 5) * 5;
+    dailyHigh = Math.round((daily * 1.15) / 5) * 5;
+  }
 
   const weeklyRates = scored
     .map((c) => (c.features?.__weeklyRate as number) || 0)
@@ -517,6 +523,12 @@ export function runRentalValuation(subject: SubjectProfile, comps: CompRecord[])
   const weekly = weeklyRates.length >= 3
     ? Math.round(median(weeklyRates) / 5) * 5
     : Math.round((daily * 5.5) / 5) * 5;
+  const weeklyLow = weeklyRates.length >= 3
+    ? Math.round(Math.min(...weeklyRates) / 5) * 5
+    : Math.round((dailyLow * 5.5) / 5) * 5;
+  const weeklyHigh = weeklyRates.length >= 3
+    ? Math.round(Math.max(...weeklyRates) / 5) * 5
+    : Math.round((dailyHigh * 5.5) / 5) * 5;
   const monthly = monthlyRates.length >= 3
     ? Math.round(median(monthlyRates) / 10) * 10
     : Math.round((daily * 20) / 10) * 10;
