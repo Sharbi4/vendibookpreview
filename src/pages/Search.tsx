@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { ImpressionTracker } from '@/components/analytics/ImpressionTracker';
 import { HostSupplyCTA } from '@/components/search/HostSupplyCTA';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { Search as SearchIcon, SlidersHorizontal, X, MapPin, Tag, DollarSign, CalendarIcon, Navigation, CheckCircle2, Plug, Zap, Refrigerator, Flame, Wind, Wifi, Car, Shield, Droplet, Truck, LayoutGrid, Map, Columns, Rows3, Star, Heart } from 'lucide-react';
+import { Search as SearchIcon, SlidersHorizontal, X, MapPin, Tag, DollarSign, CalendarIcon, Navigation, CheckCircle2, Plug, Zap, Refrigerator, Flame, Wind, Wifi, Car, Shield, Droplet, Truck, LayoutGrid, Map, Columns, Rows3, Star, Heart, ArrowUpDown, ChevronDown, Check } from 'lucide-react';
 import { DateRange } from 'react-day-picker';
 import { format, parseISO } from 'date-fns';
 import Header from '@/components/layout/Header';
@@ -26,6 +26,7 @@ import ReferralBrowseStrip from '@/components/referrals/ReferralBrowseStrip';
 import MobileStickyBar from '@/components/search/MobileStickyBar';
 import SaveSearchButton from '@/components/search/SaveSearchButton';
 import { CategoryPillStrip } from '@/components/search/CategoryPillStrip';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { CategoryInfoModal } from '@/components/categories/CategoryGuide';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -98,9 +99,9 @@ const Search = () => {
   // sort values so shared/refreshed links never land on a blank control.
   const rawSortParam = searchParams.get('sort');
   const normalizedSortParam = rawSortParam === 'price_low' ? 'price-low' : rawSortParam === 'price_high' ? 'price-high' : rawSortParam;
-  const initialSort = (['newest', 'price-low', 'price-high', 'distance', 'relevance'].includes(normalizedSortParam || '')
+  const initialSort = (['featured', 'newest', 'price-low', 'price-high', 'distance', 'relevance'].includes(normalizedSortParam || '')
     ? normalizedSortParam
-    : 'newest') as 'newest' | 'price-low' | 'price-high' | 'distance' | 'relevance';
+    : 'featured') as 'featured' | 'newest' | 'price-low' | 'price-high' | 'distance' | 'relevance';
   const initialInstantBook = searchParams.get('instant') === 'true';
   const initialPage = parseInt(searchParams.get('page') || '1', 10);
   
@@ -137,7 +138,7 @@ const Search = () => {
   const [instantBookOnly, setInstantBookOnly] = useState(initialInstantBook);
   const [verifiedHostsOnly, setVerifiedHostsOnly] = useState(searchParams.get('verified') === 'true');
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
-  const [sortBy, setSortBy] = useState<'newest' | 'price-low' | 'price-high' | 'distance' | 'relevance'>(initialSort);
+  const [sortBy, setSortBy] = useState<'featured' | 'newest' | 'price-low' | 'price-high' | 'distance' | 'relevance'>(initialSort);
   // True when the text query was auto-geocoded into a place — tells the
   // backend to skip the city-name text filter so metro suburbs inside the
   // radius aren't excluded for not name-matching the searched city.
@@ -237,30 +238,25 @@ const Search = () => {
     [searchResults?.sponsored]
   );
 
-  // Sparse-metro auto-widen: a location search with fewer than 8 results at
-  // the default radius re-runs once at 100 mi, labeled in the UI.
-  const [radiusExpanded, setRadiusExpanded] = useState(false);
-  const lastLocationKeyRef = useRef<string | null>(null);
-  useEffect(() => {
-    const key = locationCoords ? locationCoords.join(',') : null;
-    if (key !== lastLocationKeyRef.current) {
-      lastLocationKeyRef.current = key;
-      setRadiusExpanded(false);
-    }
-  }, [locationCoords]);
+  // Sort options shown to the shopper. Price sorts only exist in a single-mode
+  // context (sale $ vs rent $/day are incompatible units); Distance requires a
+  // selected location; Relevance requires a text query.
+  const sortOptions = useMemo(() => [
+    { value: 'featured', label: 'Featured' },
+    ...(debouncedQuery.trim() ? [{ value: 'relevance', label: 'Relevance' }] : []),
+    { value: 'newest', label: 'Newest' },
+    ...(mode !== 'all' ? [
+      { value: 'price-low', label: 'Price: Low → High' },
+      { value: 'price-high', label: 'Price: High → Low' },
+    ] : []),
+    ...(locationCoords ? [{ value: 'distance', label: 'Distance' }] : []),
+  ], [debouncedQuery, mode, locationCoords]);
 
-  useEffect(() => {
-    if (!locationCoords || radiusExpanded || isFetching) return;
-    if (searchRadius >= 100 || page !== 1) return;
-    if (totalCount < 8) {
-      setRadiusExpanded(true);
-      setSearchRadius(100);
-      const params = new URLSearchParams(searchParams);
-      params.set('radius', '100');
-      setSearchParams(params, { replace: true });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [locationCoords, radiusExpanded, isFetching, totalCount, searchRadius, page]);
+  // Sparse metros stay honest at the chosen radius — when a 50-mi location
+  // search returns very few listings, an explicit "Expand to 100 miles" CTA
+  // appears above the results instead of silently widening.
+  const showExpandRadiusCta =
+    !!locationCoords && searchRadius < 100 && page === 1 && !isFetching && totalCount < 5;
 
   // Debounced search_performed funnel event — fires ~600ms after results settle so we
   // don't double-count while the user is still typing or toggling filters.
@@ -309,7 +305,7 @@ const Search = () => {
       setPage(1); // Reset to page 1 on new search
       setSortBy(prev => {
         if (value.trim() && prev !== 'relevance') return 'relevance';
-        if (!value.trim() && prev === 'relevance') return 'newest';
+        if (!value.trim() && prev === 'relevance') return 'featured';
         return prev;
       });
       setSearchParams(prev => {
@@ -340,6 +336,17 @@ const Search = () => {
       params.set('mode', newMode);
     } else {
       params.delete('mode');
+      // Price sorts/filters only exist in a single-mode context (sale price vs
+      // rental $/day are incompatible units) — reset them when returning to All.
+      if (sortBy === 'price-low' || sortBy === 'price-high') {
+        setSortBy('featured');
+        params.delete('sort');
+      }
+      if (priceRange[0] > 0 || priceRange[1] !== Infinity) {
+        setPriceRange([0, Infinity]);
+        params.delete('min_price');
+        params.delete('max_price');
+      }
     }
     params.delete('page');
     setSearchParams(params);
@@ -381,8 +388,6 @@ const Search = () => {
   };
 
   const handleRadiusChange = (radius: number) => {
-    // A manual radius choice wins over the sparse-inventory auto-expand.
-    setRadiusExpanded(true);
     setSearchRadius(radius);
     setPage(1);
     if (locationCoords) {
@@ -417,7 +422,6 @@ const Search = () => {
     setLocationCoords(null);
     setSearchRadius(50);
     setQueryIsLocation(false);
-    setRadiusExpanded(false);
     setPriceRange([0, Infinity]);
     setDateRange(undefined);
     setSelectedAmenities([]);
@@ -426,17 +430,17 @@ const Search = () => {
 
     setInstantBookOnly(false);
     setVerifiedHostsOnly(false);
-    setSortBy('newest');
+    setSortBy('featured');
     setPage(1);
     setSearchParams({});
   };
 
   const handleSortChange = (value: string) => {
-    const newSort = value as 'newest' | 'price-low' | 'price-high' | 'distance' | 'relevance';
+    const newSort = value as 'featured' | 'newest' | 'price-low' | 'price-high' | 'distance' | 'relevance';
     setSortBy(newSort);
     setPage(1);
     const params = new URLSearchParams(searchParams);
-    if (newSort !== 'newest') {
+    if (newSort !== 'featured') {
       params.set('sort', newSort);
     } else {
       params.delete('sort');
