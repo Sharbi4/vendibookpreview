@@ -481,7 +481,37 @@ const SaleCheckout = () => {
   /** Buyer-paid freight, invoiced separately once the seller confirms. */
   const freightDueLater =
     fulfillmentSelected === 'vendibook_freight' && !isFreightSellerPaid ? freightCost : 0;
-  const totalPrice = priceSale + currentDeliveryFee;
+
+  // Estimated sales tax — server-computed (TaxJar / state table) so the buyer
+  // sees the real total before PayPal opens. The authoritative amount is
+  // re-locked at order creation in `paypal-create-order`.
+  const [taxEstimate, setTaxEstimate] = useState<{ tax_cents: number; rate_pct: number; label: string } | null>(null);
+  useEffect(() => {
+    if (!listing?.id || !priceSale) { setTaxEstimate(null); return; }
+    const isDelivery = fulfillmentSelected === 'delivery' || fulfillmentSelected === 'vendibook_freight';
+    if (isDelivery && !deliveryAddress.trim()) { setTaxEstimate(null); return; }
+    const controller = new AbortController();
+    const t = setTimeout(() => {
+      supabase.functions
+        .invoke('tax-quote', {
+          body: {
+            kind: 'sale',
+            listing_id: listing.id,
+            fulfillment_type: fulfillmentSelected,
+            delivery_fee_cents: Math.round(currentDeliveryFee * 100),
+            delivery_address: isDelivery ? deliveryAddress : undefined,
+          },
+        })
+        .then(({ data, error }) => {
+          if (!error && data && !controller.signal.aborted) setTaxEstimate(data);
+        })
+        .catch(() => { /* estimate is cosmetic; server re-computes authoritatively */ });
+    }, 350);
+    return () => { clearTimeout(t); controller.abort(); };
+  }, [listing?.id, priceSale, fulfillmentSelected, currentDeliveryFee, deliveryAddress]);
+
+  const taxAmount = (taxEstimate?.tax_cents ?? 0) / 100;
+  const totalPrice = priceSale + currentDeliveryFee + taxAmount;
 
 
   // Validation
@@ -877,6 +907,7 @@ const SaleCheckout = () => {
           amount: currentDeliveryFee,
         }]
       : []),
+    ...(taxAmount > 0 ? [{ label: taxEstimate?.label || 'Estimated sales tax', amount: taxAmount }] : []),
   ];
 
   const fulfillmentDetail =
@@ -1226,6 +1257,7 @@ const SaleCheckout = () => {
                       amount: currentDeliveryFee,
                     }]
                   : []),
+                ...(taxAmount > 0 ? [{ label: taxEstimate?.label || 'Estimated sales tax', amount: taxAmount }] : []),
               ]}
               total={totalPrice}
             />

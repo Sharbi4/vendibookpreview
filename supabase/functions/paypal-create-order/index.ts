@@ -7,14 +7,29 @@ import { auditPayment, requestIp } from "../_shared/paymentAudit.ts";
 import { assertListingPurchasable } from "../_shared/listingGuard.ts";
 import { resolveProStatus } from "../_shared/proEligibility.ts";
 import {
+  applyTaxToQuote,
   quoteBookingRequest,
   quoteMonetizationProduct,
   quoteSaleTransaction,
   quoteServiceCharge,
   type QuoteResult,
 } from "../_shared/paypalAccounting.ts";
+import {
+  parseStateZipFromAddress,
+  quoteSalesTax,
+  type TaxDestination,
+  type TaxKind,
+} from "../_shared/tax.ts";
 
 const NOTARY_FEE_CENTS = 4500;
+
+/** Serializable tax snapshot included in every create-order response. */
+const taxPayload = (quote: QuoteResult) => ({
+  tax_cents: quote.taxCents,
+  rate_pct: quote.taxRatePct ?? null,
+  state: quote.taxState ?? null,
+  source: quote.taxSource ?? null,
+});
 
 /**
  * Creates a PayPal Orders v2 order for a Vendibook transaction.
@@ -52,12 +67,31 @@ serve(async (req) => {
     let monetizationPurchaseId: string | null = null;
     /** Set for Vendibook service charges so the capture can fulfil them. */
     let fulfillment: Record<string, string> | null = null;
+    /** Where the purchase is taxed — resolved per checkout kind below. */
+    let taxDestination: TaxDestination = {};
+    let taxKind: TaxKind = "service";
+    /** Deposits toward a future sale are taxed on the sale itself, not here. */
+    let skipTax = false;
+
+    /** Buyer profile location — used for Vendibook-owned products/services. */
+    const buyerTaxLocation = async (): Promise<TaxDestination> => {
+      const { data: profile } = await admin
+        .from("profiles")
+        .select("state, zip_code, city")
+        .eq("id", user.id)
+        .maybeSingle();
+      return {
+        state: profile?.state ?? null,
+        zip: profile?.zip_code ?? null,
+        city: profile?.city ?? null,
+      };
+    };
 
     if (kind === "sale") {
       if (!targetId) return jsonError(400, "missing_fields", "Missing transaction id.");
       const { data: tx } = await admin
         .from("sale_transactions")
-        .select("*, listing:listings(title)")
+        .select("*, listing:listings(title, city, state, zip_code)")
         .eq("id", targetId)
         .maybeSingle();
       if (!tx) return jsonError(404, "not_found", "We couldn't find that transaction.");
@@ -69,11 +103,23 @@ serve(async (req) => {
       }
       quote = quoteSaleTransaction(tx, (tx as any).listing?.title ?? "Listing");
       saleTransactionId = tx.id;
+      taxKind = "sale";
+      // Destination sourcing: delivery/freight tax where the goods land;
+      // pickup/on-site tax where the listing sits.
+      const listingLoc = (tx as any).listing ?? {};
+      const delivers = tx.fulfillment_type === "delivery" ||
+        tx.fulfillment_type === "vendibook_freight";
+      const parsed = delivers ? parseStateZipFromAddress(tx.delivery_address) : { state: null, zip: null };
+      taxDestination = {
+        state: parsed.state ?? listingLoc.state ?? null,
+        zip: parsed.zip ?? listingLoc.zip_code ?? null,
+        city: listingLoc.city ?? null,
+      };
     } else if (kind === "booking") {
       if (!targetId) return jsonError(400, "missing_fields", "Missing booking id.");
       const { data: booking } = await admin
         .from("booking_requests")
-        .select("*, listing:listings(title)")
+        .select("*, listing:listings(title, city, state, zip_code)")
         .eq("id", targetId)
         .maybeSingle();
       if (!booking) return jsonError(404, "not_found", "We couldn't find that booking.");
@@ -89,6 +135,14 @@ serve(async (req) => {
         ? { isPro: !!booking.pro_fee_applied }
         : { isPro: (await resolveProStatus(admin, booking.host_id)).isPro };
       quote = quoteBookingRequest(booking, (booking as any).listing?.title ?? "Listing", hostPro);
+      bookingRequestId = booking.id;
+      taxKind = "rental";
+      // Rentals are taxed where the rental happens — the listing's location.
+      taxDestination = {
+        state: (booking as any).listing?.state ?? null,
+        zip: (booking as any).listing?.zip_code ?? null,
+        city: (booking as any).listing?.city ?? null,
+      };
       if (booking.host_platform_fee === null || booking.host_platform_fee === undefined) {
         await admin
           .from("booking_requests")
@@ -102,7 +156,6 @@ serve(async (req) => {
           .eq("id", booking.id)
           .is("host_platform_fee", null);
       }
-      bookingRequestId = booking.id;
     } else if (kind === "product") {
       const slug = body?.slug ? String(body.slug) : null;
       if (!slug) return jsonError(400, "missing_fields", "Missing product slug.");
@@ -127,6 +180,9 @@ serve(async (req) => {
       const discount = promoActive ? (product.price_cents - product.promo_price_cents) : 0;
       quote = quoteMonetizationProduct(product, amountCents, discount);
       quote.buyerId = user.id;
+      taxKind = "product";
+      // Vendibook-owned products are taxed at the buyer's location.
+      taxDestination = await buyerTaxLocation();
 
       const { data: purchase } = await admin
         .from("monetization_purchases")
@@ -148,7 +204,7 @@ serve(async (req) => {
       if (!targetId) return jsonError(400, "missing_fields", "Missing transaction id.");
       const { data: tx } = await admin
         .from("sale_transactions")
-        .select("*, listing:listings(title)")
+        .select("*, listing:listings(title, city, state, zip_code)")
         .eq("id", targetId)
         .maybeSingle();
       if (!tx) return jsonError(404, "not_found", "We couldn't find that transaction.");
@@ -166,6 +222,16 @@ serve(async (req) => {
       }
       const freightCents = Math.round(Number(tx.freight_cost ?? 0) * 100);
       if (freightCents <= 0) return jsonError(400, "invalid_amount", "There's no freight amount due.");
+      taxKind = "service";
+      {
+        const listingLoc = (tx as any).listing ?? {};
+        const parsed = parseStateZipFromAddress(tx.delivery_address);
+        taxDestination = {
+          state: parsed.state ?? listingLoc.state ?? null,
+          zip: parsed.zip ?? listingLoc.zip_code ?? null,
+          city: listingLoc.city ?? null,
+        };
+      }
       quote = quoteServiceCharge({
         prefix: "VB-FRT",
         transactionType: "freight",
@@ -181,7 +247,7 @@ serve(async (req) => {
       if (!targetId) return jsonError(400, "missing_fields", "Missing listing id.");
       const { data: listing } = await admin
         .from("listings")
-        .select("id, title, host_id, proof_notary_enabled")
+        .select("id, title, host_id, proof_notary_enabled, city, state, zip_code")
         .eq("id", targetId)
         .maybeSingle();
       if (!listing) return jsonError(404, "not_found", "We couldn't find that listing.");
@@ -195,6 +261,13 @@ serve(async (req) => {
       if (listing.proof_notary_enabled) {
         return jsonError(409, "already_active", "Proof Notary is already active on this listing.");
       }
+      taxKind = "service";
+      // The notary service is performed at the listing.
+      taxDestination = {
+        state: listing.state ?? null,
+        zip: listing.zip_code ?? null,
+        city: listing.city ?? null,
+      };
       quote = quoteServiceCharge({
         prefix: "VB-NOT",
         transactionType: "addon",
@@ -225,6 +298,9 @@ serve(async (req) => {
       if (!order.price_cents || order.price_cents <= 0) {
         return jsonError(400, "invalid_amount", "This concierge order has no amount due.");
       }
+      taxKind = "service";
+      // Concierge is a Vendibook service billed to the seller — their location.
+      taxDestination = await buyerTaxLocation();
       quote = quoteServiceCharge({
         prefix: "VB-CON",
         transactionType: "addon",
@@ -255,6 +331,9 @@ serve(async (req) => {
       if (!ps.deposit_cents || ps.deposit_cents <= 0) {
         return jsonError(400, "invalid_amount", "There's no deposit amount due.");
       }
+      // A deposit is a partial payment toward the protected sale — the sale
+      // itself carries the tax, so collecting tax here would double-charge.
+      skipTax = true;
       quote = quoteServiceCharge({
         prefix: "VB-DEP",
         transactionType: "booking_deposit",
@@ -280,6 +359,43 @@ serve(async (req) => {
     if (quote.listingId) {
       const blocked = await assertListingPurchasable(admin, quote.listingId);
       if (blocked) return blocked;
+    }
+
+    // ── Sales tax (marketplace facilitator model) ─────────────────────────
+    // Computed authoritatively here via _shared/tax.ts (TaxJar when
+    // configured, state table fallback). Tax rides on top of the merchandise /
+    // rental / service amount — it is NEVER part of the seller payout or the
+    // commission base, and is booked to `tax_collected` at capture.
+    if (!skipTax) {
+      const tax = await quoteSalesTax({
+        amountCents: quote.taxableBaseCents,
+        destination: taxDestination,
+        kind: taxKind,
+      });
+      applyTaxToQuote(quote, tax);
+
+      // Persist the tax snapshot on the business record so receipts, order
+      // detail pages, and accounting all read the same numbers.
+      const taxSnapshot = {
+        tax_rate_pct: tax.ratePct,
+        tax_source: tax.source,
+        tax_jurisdiction: tax.state,
+      };
+      if (saleTransactionId) {
+        await admin.from("sale_transactions")
+          .update({ ...taxSnapshot, tax_amount: tax.taxCents / 100 })
+          .eq("id", saleTransactionId);
+      }
+      if (bookingRequestId) {
+        await admin.from("booking_requests")
+          .update({ ...taxSnapshot, tax_amount: tax.taxCents / 100 })
+          .eq("id", bookingRequestId);
+      }
+      if (monetizationPurchaseId) {
+        await admin.from("monetization_purchases")
+          .update({ ...taxSnapshot, tax_cents: tax.taxCents })
+          .eq("id", monetizationPurchaseId);
+      }
     }
 
     if (quote.grossCents <= 0) {
@@ -320,6 +436,7 @@ serve(async (req) => {
           amount_cents: inflight.gross_amount_cents,
           currency: quote.currency,
           breakdown: quote.breakdown,
+          tax: taxPayload(quote),
           reused: true,
         });
       }
@@ -344,6 +461,7 @@ serve(async (req) => {
           amount_cents: existing.gross_amount_cents,
           currency: quote.currency,
           breakdown: quote.breakdown,
+          tax: taxPayload(quote),
           reused: true,
         });
       }
@@ -408,6 +526,10 @@ serve(async (req) => {
       description: quote.description,
       idempotencyKey: quote.reference,
       softDescriptor: "VENDIBOOK",
+      // Itemized amounts must reconcile exactly with the order total.
+      breakdown: quote.taxCents > 0
+        ? { itemTotalCents: quote.grossCents - quote.taxCents, taxCents: quote.taxCents }
+        : undefined,
     });
 
     await admin
@@ -443,6 +565,7 @@ serve(async (req) => {
       amount_cents: quote.grossCents,
       currency: quote.currency,
       breakdown: quote.breakdown,
+      tax: taxPayload(quote),
     });
   } catch (err) {
     if (err instanceof PaymentProviderError || err instanceof PayPalError) {
