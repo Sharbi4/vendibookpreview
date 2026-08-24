@@ -177,7 +177,9 @@ export async function quoteSalesTax(opts: {
 
   const zip = opts.destination.zip?.trim() || null;
 
-  if (Deno.env.get("TAXJAR_API_KEY")) {
+  // TaxJar requires to_zip for US destinations — without a ZIP the call
+  // deterministically 400s, so go straight to the state-table estimate.
+  if (zip && Deno.env.get("TAXJAR_API_KEY")) {
     try {
       const exact = await quoteViaTaxJar(taxableAmountCents, {
         state,
