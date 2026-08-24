@@ -20,6 +20,7 @@ import {
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import SEO from '@/components/SEO';
+import { trackCTAClick } from '@/lib/analytics';
 import { GuideBreadcrumb } from '@/components/education/GuideBreadcrumb';
 import { Button } from '@/components/ui/button';
 import {
@@ -221,12 +222,20 @@ const VendibookFreight = () => {
                 </p>
                 <div className="flex flex-col sm:flex-row gap-3 mb-8">
                   <Button variant="cta" size="cta" className="rounded-full" asChild>
-                    <Link to="/ship-your-food-truck">
+                    <Link
+                      to="/ship-your-food-truck"
+                      onClick={() => trackCTAClick('get_freight_estimate', 'vendibook_freight_hero')}
+                    >
                       Get a Freight Estimate <ArrowRight className="w-4 h-4 ml-1" />
                     </Link>
                   </Button>
                   <Button variant="cta-outline" size="lg" className="rounded-full h-14" asChild>
-                    <Link to="/browse">Browse Food Trucks &amp; Trailers</Link>
+                    <Link
+                      to="/browse"
+                      onClick={() => trackCTAClick('browse_food_trucks', 'vendibook_freight_hero')}
+                    >
+                      Browse Food Trucks &amp; Trailers
+                    </Link>
                   </Button>
                 </div>
                 <ul className="flex flex-wrap gap-x-5 gap-y-2">
@@ -298,7 +307,10 @@ const VendibookFreight = () => {
                 </div>
                 <div className="lg:pl-4">
                   <Button variant="cta" size="cta" className="rounded-full w-full lg:w-auto" asChild>
-                    <Link to="/ship-your-food-truck">
+                    <Link
+                      to="/ship-your-food-truck"
+                      onClick={() => trackCTAClick('get_freight_estimate', 'vendibook_freight_pricing_factors')}
+                    >
                       Get a Freight Estimate <ArrowRight className="w-4 h-4 ml-1" />
                     </Link>
                   </Button>
@@ -377,7 +389,10 @@ const VendibookFreight = () => {
                 </p>
                 <div className="mt-auto">
                   <Button variant="cta-outline" size="lg" className="rounded-full" asChild>
-                    <Link to="/browse">
+                    <Link
+                      to="/browse"
+                      onClick={() => trackCTAClick('browse_equipment', 'vendibook_freight_paths_card')}
+                    >
                       Browse equipment <ArrowRight className="w-4 h-4 ml-1" />
                     </Link>
                   </Button>
@@ -408,7 +423,10 @@ const VendibookFreight = () => {
                 </p>
                 <div className="mt-auto">
                   <Button variant="cta" size="lg" className="rounded-full" asChild>
-                    <Link to="/ship-your-food-truck">
+                    <Link
+                      to="/ship-your-food-truck"
+                      onClick={() => trackCTAClick('get_freight_estimate', 'vendibook_freight_paths_card')}
+                    >
                       Ship a truck or trailer <ArrowRight className="w-4 h-4 ml-1" />
                     </Link>
                   </Button>
@@ -510,7 +528,10 @@ const VendibookFreight = () => {
                 </p>
                 <div className="mt-auto">
                   <Button variant="cta" size="lg" className="rounded-full w-full" asChild>
-                    <Link to="/ship-your-food-truck">
+                    <Link
+                      to="/ship-your-food-truck"
+                      onClick={() => trackCTAClick('request_transportation_pricing', 'vendibook_freight_fee_card')}
+                    >
                       Request Transportation Pricing <ArrowRight className="w-4 h-4 ml-1" />
                     </Link>
                   </Button>
@@ -638,12 +659,16 @@ const VendibookFreight = () => {
                 </p>
                 <div className="flex flex-col sm:flex-row gap-3 justify-center">
                   <Button variant="cta" size="cta" className="rounded-full" asChild>
-                    <Link to="/browse">
+                    <Link
+                      to="/browse"
+                      onClick={() => trackCTAClick('browse_food_trucks', 'vendibook_freight_final_cta')}
+                    >
                       Browse trucks &amp; trailers <ArrowRight className="w-4 h-4 ml-1" />
                     </Link>
                   </Button>
                   <Link
                     to="/ship-your-food-truck"
+                    onClick={() => trackCTAClick('get_freight_estimate', 'vendibook_freight_final_cta')}
                     className="inline-flex items-center justify-center rounded-full h-14 px-8 text-base font-semibold text-white transition-colors hover:bg-white/[0.08]"
                     style={{ border: '1px solid rgba(255,255,255,0.22)' }}
                   >
