@@ -39,6 +39,7 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion';
 import { cn } from '@/lib/utils';
+import { supabase } from '@/integrations/supabase/client';
 import movingArt from '@/assets/education/moving.svg.asset.json';
 import deliveryMapArt from '@/assets/education/delivery-map.svg.asset.json';
 
