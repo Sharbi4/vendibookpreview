@@ -165,7 +165,7 @@ export const explainers: Explainer[] = [
       ],
     ),
     ctaLabel: 'Explore Rentals',
-    ctaRoute: '/browse?mode=rent',
+    ctaRoute: '/search?mode=rent',
     secondaryCtaLabel: 'How Rentals Work',
     secondaryCtaRoute: '/how-it-works',
     transcript: RENTING_SENTENCES.join(' '),

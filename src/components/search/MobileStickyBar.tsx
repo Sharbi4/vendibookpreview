@@ -20,7 +20,7 @@ interface MobileStickyBarProps {
 }
 
 const SORT_OPTIONS = [
-  { value: 'newest', label: 'Newest' },
+  { value: 'newest', label: 'Recommended' },
   { value: 'price-low', label: 'Price: Low to High' },
   { value: 'price-high', label: 'Price: High to Low' },
 ];
@@ -39,7 +39,7 @@ export const MobileStickyBar = ({
     ...(hasSearchQuery ? [{ value: 'relevance', label: 'Relevance' }] : []),
   ];
 
-  const currentSortLabel = sortOptions.find(opt => opt.value === sortBy)?.label || 'Newest';
+  const currentSortLabel = sortOptions.find(opt => opt.value === sortBy)?.label || 'Recommended';
 
   const hidden = useHideOnScroll(48);
 

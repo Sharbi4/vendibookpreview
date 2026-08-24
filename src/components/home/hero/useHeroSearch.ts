@@ -142,7 +142,7 @@ export const useHeroSearch = () => {
     const query = location.trim();
     if (!query) {
       trackLeadEvent('search_performed', { query: '', source: 'home_hero' });
-      navigate('/search?mode=rent');
+      navigate('/search');
       return;
     }
 
@@ -156,13 +156,15 @@ export const useHeroSearch = () => {
         if (error) throw error;
         const params = new URLSearchParams();
         if (data.location) params.set('q', data.location);
-        if (data.mode) params.set('mode', data.mode === 'sale' ? 'sale' : 'rent');
+        // Only scope to a mode when the parser is confident the shopper
+        // explicitly said rent vs buy — ambiguous searches browse everything.
+        if (data.mode === 'rent' || data.mode === 'sale') params.set('mode', data.mode);
         if (data.category) params.set('category', data.category);
         trackLeadEvent('search_performed', {
           query,
           city: data.location,
           category: data.category,
-          intent: data.mode,
+          intent: data.mode ?? 'all',
           source: 'home_hero_ai',
         });
         navigate(`/search?${params.toString()}`);

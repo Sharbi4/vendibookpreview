@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { ImpressionTracker } from '@/components/analytics/ImpressionTracker';
 import { HostSupplyCTA } from '@/components/search/HostSupplyCTA';
 import { useSearchParams, useNavigate } from 'react-router-dom';
@@ -70,6 +70,7 @@ interface SearchListing extends Listing {
 
 interface SearchResponse {
   listings: SearchListing[];
+  sponsored?: SearchListing[];
   total_count: number;
   page: number;
   page_size: number;
@@ -93,7 +94,13 @@ const Search = () => {
   const initialLat = searchParams.get('lat');
   const initialLng = searchParams.get('lng');
   const initialRadius = searchParams.get('radius');
-  const initialSort = searchParams.get('sort') as 'newest' | 'price-low' | 'price-high' | 'distance' | 'relevance' || 'newest';
+  // Accept both hyphenated (UI contract) and snake_case (backend contract)
+  // sort values so shared/refreshed links never land on a blank control.
+  const rawSortParam = searchParams.get('sort');
+  const normalizedSortParam = rawSortParam === 'price_low' ? 'price-low' : rawSortParam === 'price_high' ? 'price-high' : rawSortParam;
+  const initialSort = (['newest', 'price-low', 'price-high', 'distance', 'relevance'].includes(normalizedSortParam || '')
+    ? normalizedSortParam
+    : 'newest') as 'newest' | 'price-low' | 'price-high' | 'distance' | 'relevance';
   const initialInstantBook = searchParams.get('instant') === 'true';
   const initialPage = parseInt(searchParams.get('page') || '1', 10);
   
@@ -109,26 +116,32 @@ const Search = () => {
   const [locationCoords, setLocationCoords] = useState<[number, number] | null>(
     initialLat && initialLng ? [parseFloat(initialLng), parseFloat(initialLat)] : null
   );
-  const [searchRadius, setSearchRadius] = useState(initialRadius ? parseInt(initialRadius) : 100);
-  const [priceRange, setPriceRange] = useState<[number, number]>([0, Infinity]);
+  const [searchRadius, setSearchRadius] = useState(initialRadius ? parseInt(initialRadius) : 50);
+  const [priceRange, setPriceRange] = useState<[number, number]>([
+    searchParams.get('min_price') ? Number(searchParams.get('min_price')) : 0,
+    searchParams.get('max_price') ? Number(searchParams.get('max_price')) : Infinity,
+  ]);
   const [dateRange, setDateRange] = useState<DateRange | undefined>(
     initialStartDate && initialEndDate
       ? { from: parseISO(initialStartDate), to: parseISO(initialEndDate) }
       : undefined
   );
-  const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
-  const [deliveryFilterEnabled, setDeliveryFilterEnabled] = useState(false);
+  const [selectedAmenities, setSelectedAmenities] = useState<string[]>(
+    searchParams.get('amenities')?.split(',').filter(Boolean) ?? []
+  );
+  const [deliveryFilterEnabled, setDeliveryFilterEnabled] = useState(searchParams.get('delivery') === '1');
   const [fulfillmentTypes, setFulfillmentTypes] = useState<Array<'pickup' | 'delivery' | 'on_site'>>(
     (searchParams.get('fulfillment')?.split(',').filter(Boolean) as Array<'pickup' | 'delivery' | 'on_site'>) || []
   );
 
   const [instantBookOnly, setInstantBookOnly] = useState(initialInstantBook);
   const [verifiedHostsOnly, setVerifiedHostsOnly] = useState(searchParams.get('verified') === 'true');
-  const [featuredOnly, setFeaturedOnly] = useState(
-    searchParams.get('featured') === '1' || searchParams.get('featured') === 'true'
-  );
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
   const [sortBy, setSortBy] = useState<'newest' | 'price-low' | 'price-high' | 'distance' | 'relevance'>(initialSort);
+  // True when the text query was auto-geocoded into a place — tells the
+  // backend to skip the city-name text filter so metro suburbs inside the
+  // radius aren't excluded for not name-matching the searched city.
+  const [queryIsLocation, setQueryIsLocation] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'map' | 'split' | 'list'>('list');
   const [hoveredListingId, setHoveredListingId] = useState<string | null>(null);
   const [page, setPage] = useState(initialPage);
@@ -151,6 +164,7 @@ const Search = () => {
           const coords: [number, number] = result.center; // [lng, lat]
           setLocationCoords(coords);
           setLocationText(result.text);
+          setQueryIsLocation(true);
           // Update URL with coordinates
           const params = new URLSearchParams(searchParams);
           params.set('lat', coords[1].toString());
@@ -176,6 +190,7 @@ const Search = () => {
   // Build search request params for edge function
   const searchRequestParams = useMemo(() => ({
     query: debouncedQuery.trim() || undefined,
+    location_scoped: queryIsLocation || undefined,
     mode: mode !== 'all' ? mode : undefined,
     category: category !== 'all' ? category : undefined,
     latitude: locationCoords?.[1],
@@ -188,17 +203,16 @@ const Search = () => {
     max_price: priceRange[1] !== Infinity ? priceRange[1] : undefined,
     instant_book_only: instantBookOnly || undefined,
     verified_hosts_only: verifiedHostsOnly || undefined,
-    featured_only: featuredOnly || undefined,
     delivery_capable: deliveryFilterEnabled || undefined,
     fulfillment_types: fulfillmentTypes.length > 0 ? fulfillmentTypes : undefined,
     page,
     page_size: 20,
     sort_by: sortBy === 'price-low' ? 'price_low' : sortBy === 'price-high' ? 'price_high' : sortBy,
-  }), [debouncedQuery, mode, category, locationCoords, searchRadius, dateRange, selectedAmenities, priceRange, instantBookOnly, verifiedHostsOnly, featuredOnly, deliveryFilterEnabled, fulfillmentTypes, page, sortBy]);
+  }), [debouncedQuery, queryIsLocation, mode, category, locationCoords, searchRadius, dateRange, selectedAmenities, priceRange, instantBookOnly, verifiedHostsOnly, deliveryFilterEnabled, fulfillmentTypes, page, sortBy]);
 
 
   // Fetch listings from edge function
-  const { data: searchResults, isLoading: isLoadingListings } = useQuery({
+  const { data: searchResults, isLoading: isLoadingListings, isFetching } = useQuery({
     queryKey: ['search-listings', searchRequestParams],
     queryFn: async (): Promise<SearchResponse> => {
       const { data, error } = await supabase.functions.invoke('search-listings', {
@@ -216,6 +230,37 @@ const Search = () => {
   const listings = filterPubliclyVisible(searchResults?.listings ?? []);
   const totalCount = searchResults?.total_count ?? 0;
   const totalPages = searchResults?.total_pages ?? 0;
+  // Featured inventory returned separately for the labeled "Sponsored" strip
+  // when the shopper picks an explicit sort — the main list honors it strictly.
+  const sponsoredListings = useMemo(
+    () => filterPubliclyVisible(searchResults?.sponsored ?? []),
+    [searchResults?.sponsored]
+  );
+
+  // Sparse-metro auto-widen: a location search with fewer than 8 results at
+  // the default radius re-runs once at 100 mi, labeled in the UI.
+  const [radiusExpanded, setRadiusExpanded] = useState(false);
+  const lastLocationKeyRef = useRef<string | null>(null);
+  useEffect(() => {
+    const key = locationCoords ? locationCoords.join(',') : null;
+    if (key !== lastLocationKeyRef.current) {
+      lastLocationKeyRef.current = key;
+      setRadiusExpanded(false);
+    }
+  }, [locationCoords]);
+
+  useEffect(() => {
+    if (!locationCoords || radiusExpanded || isFetching) return;
+    if (searchRadius >= 100 || page !== 1) return;
+    if (totalCount < 8) {
+      setRadiusExpanded(true);
+      setSearchRadius(100);
+      const params = new URLSearchParams(searchParams);
+      params.set('radius', '100');
+      setSearchParams(params, { replace: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [locationCoords, radiusExpanded, isFetching, totalCount, searchRadius, page]);
 
   // Debounced search_performed funnel event — fires ~600ms after results settle so we
   // don't double-count while the user is still typing or toggling filters.
@@ -259,6 +304,8 @@ const Search = () => {
     const t = setTimeout(() => {
       const value = searchQuery;
       setDebouncedQuery(value);
+      // Freshly typed text is keyword search, not the auto-geocoded place.
+      setQueryIsLocation(false);
       setPage(1); // Reset to page 1 on new search
       setSortBy(prev => {
         if (value.trim() && prev !== 'relevance') return 'relevance';
@@ -334,6 +381,8 @@ const Search = () => {
   };
 
   const handleRadiusChange = (radius: number) => {
+    // A manual radius choice wins over the sparse-inventory auto-expand.
+    setRadiusExpanded(true);
     setSearchRadius(radius);
     setPage(1);
     if (locationCoords) {
@@ -366,7 +415,9 @@ const Search = () => {
     setCategory('all');
     setLocationText('');
     setLocationCoords(null);
-    setSearchRadius(100);
+    setSearchRadius(50);
+    setQueryIsLocation(false);
+    setRadiusExpanded(false);
     setPriceRange([0, Infinity]);
     setDateRange(undefined);
     setSelectedAmenities([]);
@@ -375,7 +426,6 @@ const Search = () => {
 
     setInstantBookOnly(false);
     setVerifiedHostsOnly(false);
-    setFeaturedOnly(false);
     setSortBy('newest');
     setPage(1);
     setSearchParams({});
@@ -397,11 +447,17 @@ const Search = () => {
 
   const toggleAmenity = (amenityId: string) => {
     setPage(1);
-    setSelectedAmenities(prev =>
-      prev.includes(amenityId)
+    setSelectedAmenities(prev => {
+      const next = prev.includes(amenityId)
         ? prev.filter(a => a !== amenityId)
-        : [...prev, amenityId]
-    );
+        : [...prev, amenityId];
+      const params = new URLSearchParams(searchParams);
+      if (next.length > 0) params.set('amenities', next.join(','));
+      else params.delete('amenities');
+      params.delete('page');
+      setSearchParams(params);
+      return next;
+    });
   };
 
   const handleInstantBookChange = (enabled: boolean) => {
@@ -441,6 +497,28 @@ const Search = () => {
       setSearchParams(params);
       return next;
     });
+  };
+
+  const handlePriceRangeChange = (value: [number, number]) => {
+    setPriceRange(value);
+    setPage(1);
+    const params = new URLSearchParams(searchParams);
+    if (value[0] > 0) params.set('min_price', String(value[0]));
+    else params.delete('min_price');
+    if (value[1] !== Infinity && Number.isFinite(value[1])) params.set('max_price', String(value[1]));
+    else params.delete('max_price');
+    params.delete('page');
+    setSearchParams(params);
+  };
+
+  const handleDeliveryFilterChange = (enabled: boolean) => {
+    setDeliveryFilterEnabled(enabled);
+    setPage(1);
+    const params = new URLSearchParams(searchParams);
+    if (enabled) params.set('delivery', '1');
+    else params.delete('delivery');
+    params.delete('page');
+    setSearchParams(params);
   };
 
 
@@ -706,10 +784,10 @@ const Search = () => {
                         onLocationTextChange={setLocationText}
                         onLocationSelect={handleLocationSelect}
                         onRadiusChange={handleRadiusChange}
-                        onPriceRangeChange={setPriceRange}
+                        onPriceRangeChange={handlePriceRangeChange}
                         onDateRangeChange={handleDateRangeChange}
                         onAmenityToggle={toggleAmenity}
-                        onDeliveryFilterChange={setDeliveryFilterEnabled}
+                        onDeliveryFilterChange={handleDeliveryFilterChange}
                         onFulfillmentToggle={handleFulfillmentToggle}
 
                         onInstantBookChange={handleInstantBookChange}
@@ -756,6 +834,12 @@ const Search = () => {
                     <>
                       <span className="font-bold text-foreground tabular-nums">{totalCount.toLocaleString()}</span>
                       {' '}listing{totalCount !== 1 ? 's' : ''}
+                      {locationCoords && (
+                        <span className="hidden sm:inline"> within {searchRadius} mi of <span className="font-medium text-foreground">{locationText || 'selected location'}</span></span>
+                      )}
+                      {(sortBy === 'price-low' || sortBy === 'price-high') && mode === 'all' && (
+                        <span className="hidden md:inline text-muted-foreground/70"> · rental prices per day, sale prices full</span>
+                      )}
                       {searchQuery && (
                         <span className="hidden sm:inline"> matching <span className="font-medium text-foreground">"{debouncedQuery}"</span></span>
                       )}
@@ -805,7 +889,7 @@ const Search = () => {
                     onChange={(e) => handleSortChange(e.target.value)}
                     className="appearance-none text-xs font-medium text-muted-foreground hover:text-foreground border border-border/40 rounded-xl pl-3 pr-7 h-8 bg-transparent hover:border-border/70 transition-all cursor-pointer focus:outline-none focus:border-primary/60"
                   >
-                    <option value="newest">Newest</option>
+                    <option value="newest">Recommended</option>
                     {searchQuery.trim() && <option value="relevance">Relevance</option>}
                     <option value="price-low">Price: Low → High</option>
                     <option value="price-high">Price: High → Low</option>
@@ -814,6 +898,34 @@ const Search = () => {
                   <svg className="absolute right-2 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
                 </div>
               </div>
+              {locationCoords && (
+                <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
+                  <span className="text-[11px] text-muted-foreground">Within</span>
+                  {[10, 25, 50, 100, 250].map((r) => (
+                    <button
+                      key={r}
+                      type="button"
+                      onClick={() => handleRadiusChange(r)}
+                      className={cn(
+                        'px-2.5 py-1 rounded-full text-[11px] font-medium border transition-colors duration-200',
+                        searchRadius === r
+                          ? 'bg-primary text-primary-foreground border-primary'
+                          : 'border-border/50 text-muted-foreground hover:text-foreground hover:border-border'
+                      )}
+                    >
+                      {r} mi
+                    </button>
+                  ))}
+                  <span className="text-[11px] text-muted-foreground">
+                    of {locationText || 'selected location'}
+                  </span>
+                  {radiusExpanded && searchRadius === 100 && (
+                    <span className="text-[11px] text-primary font-medium">
+                      · Expanded to 100 mi — limited inventory nearby
+                    </span>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -851,10 +963,10 @@ const Search = () => {
                   onLocationTextChange={setLocationText}
                   onLocationSelect={handleLocationSelect}
                   onRadiusChange={handleRadiusChange}
-                  onPriceRangeChange={setPriceRange}
+                  onPriceRangeChange={handlePriceRangeChange}
                   onDateRangeChange={handleDateRangeChange}
                   onAmenityToggle={toggleAmenity}
-                  onDeliveryFilterChange={setDeliveryFilterEnabled}
+                  onDeliveryFilterChange={handleDeliveryFilterChange}
                   onFulfillmentToggle={handleFulfillmentToggle}
 
                   onInstantBookChange={handleInstantBookChange}
@@ -1032,6 +1144,25 @@ const Search = () => {
               {/* List View — compact horizontal rows */}
               {viewMode === 'list' && (
                 <>
+                  {sponsoredListings.length > 0 && (
+                    <div className="mb-5">
+                      <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">Sponsored</p>
+                      <div className="space-y-3">
+                        {sponsoredListings.map((listing) => (
+                          <ListingCard
+                            key={`sponsored-${listing.id}`}
+                            listing={listing}
+                            hostVerified={listing.host_verified ?? false}
+                            showQuickBook
+                            onQuickBook={handleQuickBook}
+                            canDeliverToUser={listing.can_deliver ?? false}
+                            variant="search"
+                            horizontal
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  )}
                   {listings.length > 0 ? (
                     <div className="space-y-3">
                       {listings.map((listing) => (
@@ -1130,6 +1261,24 @@ const Search = () => {
                     </div>
                   ) : listings.length > 0 ? (
                     <>
+                    {sponsoredListings.length > 0 && (
+                      <div className="mb-6">
+                        <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">Sponsored</p>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                          {sponsoredListings.map((listing) => (
+                            <ListingCard
+                              key={`sponsored-${listing.id}`}
+                              listing={listing}
+                              hostVerified={listing.host_verified ?? false}
+                              showQuickBook
+                              onQuickBook={handleQuickBook}
+                              canDeliverToUser={listing.can_deliver ?? false}
+                              variant="search"
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    )}
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
 
                       {listings.map((listing, index) => (
@@ -1312,6 +1461,73 @@ interface FilterContentProps {
   onClear: () => void;
 }
 
+// Min/max price inputs that commit on blur or Enter, so typing doesn't fire
+// a search per keystroke. Re-syncs when the parent value resets (Clear all).
+const PriceRangeInputs = ({
+  value,
+  onChange,
+}: {
+  value: [number, number];
+  onChange: (next: [number, number]) => void;
+}) => {
+  const formatMax = (v: number) => (Number.isFinite(v) && v > 0 ? String(v) : '');
+  const [minText, setMinText] = useState(value[0] > 0 ? String(value[0]) : '');
+  const [maxText, setMaxText] = useState(formatMax(value[1]));
+
+  useEffect(() => {
+    setMinText(value[0] > 0 ? String(value[0]) : '');
+    setMaxText(formatMax(value[1]));
+  }, [value]);
+
+  const commit = () => {
+    const min = minText.trim() === '' ? 0 : Math.max(0, Math.floor(Number(minText)) || 0);
+    let max = maxText.trim() === '' ? Infinity : Math.floor(Number(maxText)) || 0;
+    if (max <= 0) max = Infinity;
+    if (max !== Infinity && max < min) max = min;
+    onChange([min, max]);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
+  };
+
+  return (
+    <div className="flex items-center gap-2 max-w-xs">
+      <div className="relative flex-1">
+        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
+        <Input
+          type="number"
+          inputMode="numeric"
+          min={0}
+          placeholder="Min"
+          value={minText}
+          onChange={(e) => setMinText(e.target.value)}
+          onBlur={commit}
+          onKeyDown={handleKeyDown}
+          className="pl-7 h-9 text-base"
+          aria-label="Minimum price"
+        />
+      </div>
+      <span className="text-muted-foreground text-sm">–</span>
+      <div className="relative flex-1">
+        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
+        <Input
+          type="number"
+          inputMode="numeric"
+          min={0}
+          placeholder="Max"
+          value={maxText}
+          onChange={(e) => setMaxText(e.target.value)}
+          onBlur={commit}
+          onKeyDown={handleKeyDown}
+          className="pl-7 h-9 text-base"
+          aria-label="Maximum price"
+        />
+      </div>
+    </div>
+  );
+};
+
 const FilterContent = ({
   mode,
   category,
@@ -1465,6 +1681,15 @@ const FilterContent = ({
           />
         </div>
       )}
+
+      {/* Price Filter */}
+      <div className="space-y-2">
+        <Label className="text-sm font-medium flex items-center gap-2">
+          <DollarSign className="h-4 w-4" />
+          Price
+        </Label>
+        <PriceRangeInputs value={priceRange} onChange={onPriceRangeChange} />
+      </div>
 
       {/* Date Range Filter - Only show for rent mode */}
       {mode !== 'sale' && (

@@ -37,7 +37,7 @@ serve(async (req) => {
 
 Extract these fields from the user query:
 - location: city, state, or zip code mentioned
-- mode: "rent" or "sale" (default "rent" if ambiguous)
+- mode: "rent" ONLY when the query clearly signals renting (rent, rental, lease, "for the weekend"); "sale" ONLY when it clearly signals buying (buy, purchase, for sale, own). OMIT mode entirely when ambiguous — never guess.
 - category: one of "food_truck", "food_trailer", "ghost_kitchen", "vendor_lot", "vendor_space" or null
 - dateHint: any date/time mentioned (e.g. "this weekend", "next month") or null
 
@@ -62,7 +62,6 @@ Always respond with valid JSON only. No explanation.`,
                   },
                   dateHint: { type: "string", description: "Date/time reference" },
                 },
-                required: ["mode"],
                 additionalProperties: false,
               },
             },
@@ -92,7 +91,7 @@ Always respond with valid JSON only. No explanation.`,
     const toolCall = data.choices?.[0]?.message?.tool_calls?.[0];
     
     if (!toolCall) {
-      return new Response(JSON.stringify({ location: "", mode: "rent", category: null, dateHint: null }), {
+      return new Response(JSON.stringify({ location: "", mode: null, category: null, dateHint: null }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
