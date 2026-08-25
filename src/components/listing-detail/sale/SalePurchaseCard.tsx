@@ -91,12 +91,13 @@ export const SalePurchaseCard = ({
   const navigate = useNavigate();
   const { user } = useAuth();
   const financingEnabled = useEquinoxFinancingEnabled(listing);
+  const { startFinancingApply, financingLeadDialog } = useFinancingHandoff();
 
   const [showOffer, setShowOffer] = useState(false);
   const [showAuthGate, setShowAuthGate] = useState(false);
   const [pending, setPending] = useState<'buy' | 'offer' | null>(null);
   const [showContact, setShowContact] = useState(false);
-  const [applying, setApplying] = useState(false);
+
 
   // Delivery / address check — answered on this page, never a checkout jump.
   const [zip, setZip] = useState('');
