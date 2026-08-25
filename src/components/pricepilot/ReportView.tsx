@@ -30,7 +30,7 @@ export const ReportView: React.FC<{
       {/* Report masthead */}
       <Reveal className="text-center">
         <Eyebrow>Your PricePilot report</Eyebrow>
-        <h1 className="mt-3 font-display text-3xl font-semibold leading-tight text-foreground md:text-5xl">
+        <h1 className="mt-3 text-3xl md:text-5xl font-bold tracking-tight leading-tight text-foreground">
           {result.subject.categoryLabel}
           {result.subject.year ? ` · ${result.subject.year}` : ''}
           {result.subject.city || result.subject.state
@@ -44,10 +44,10 @@ export const ReportView: React.FC<{
 
       {/* Opening valuation composition */}
       <Reveal delay={0.08}>
-        <div className="mt-10 rounded-[28px] bg-sale-card px-6 py-10 text-center md:px-12 md:py-14">
+        <div className="mt-10 rounded-[24px] bg-sale-card px-6 py-10 text-center md:px-12 md:py-14">
           <Eyebrow>{isSale ? 'Recommended list price' : 'Recommended daily rate'}</Eyebrow>
           {typeof primary === 'number' && (
-            <p className="mt-4 font-display text-6xl font-semibold tabular-nums text-foreground md:text-7xl">
+            <p className="mt-4 text-6xl md:text-7xl font-bold tracking-tight tabular-nums text-foreground">
               <CountUpMoney value={primary} suffix={isSale ? '' : '/day'} />
             </p>
           )}
@@ -87,10 +87,10 @@ export const ReportView: React.FC<{
       {/* Weekly benchmark (rental, secondary) */}
       {!isSale && typeof result.weeklyRate === 'number' && (
         <Reveal>
-          <div className="mt-12 border-t border-black/[0.07] pt-10">
+          <div className="mt-12 border-t border-border pt-10">
             <Eyebrow>Weekly benchmark</Eyebrow>
             <div className="mt-4 flex flex-wrap items-end gap-x-6 gap-y-2">
-              <p className="font-display text-4xl font-semibold tabular-nums text-foreground">
+              <p className="text-4xl font-bold tracking-tight tabular-nums text-foreground">
                 {fmt(result.weeklyRate)}<span className="text-lg font-normal text-muted-foreground">/week</span>
               </p>
               {typeof result.weeklyLow === 'number' && typeof result.weeklyHigh === 'number' && result.weeklyHigh > result.weeklyLow && (
@@ -109,19 +109,19 @@ export const ReportView: React.FC<{
       {/* Sale strategies */}
       {isSale && (result.valuation.quickSalePrice || result.valuation.premiumPositionPrice) && (
         <Reveal>
-          <div className="mt-12 border-t border-black/[0.07] pt-10">
+          <div className="mt-12 border-t border-border pt-10">
             <Eyebrow>Three ways to position it</Eyebrow>
-            <div className="mt-6 grid gap-6 sm:grid-cols-3 sm:gap-0 sm:divide-x sm:divide-black/[0.07]">
+            <div className="mt-6 grid gap-6 sm:grid-cols-3 sm:gap-0 sm:divide-x sm:divide-border">
               {[
                 { label: 'Quick sale', value: result.valuation.quickSalePrice, note: 'Priced to move fast' },
                 { label: 'Recommended', value: result.salePrice, note: 'Balanced market position' },
                 { label: 'Premium position', value: result.valuation.premiumPositionPrice, note: 'Test the top of the range' },
               ].filter((s) => typeof s.value === 'number').map((s) => (
                 <div key={s.label} className="sm:px-6 sm:first:pl-0 sm:last:pr-0">
-                  <p className={cn('text-[11px] font-semibold uppercase tracking-wider', s.label === 'Recommended' ? 'text-orange-700' : 'text-muted-foreground')}>
+                  <p className={cn('text-[11px] font-semibold uppercase tracking-wider', s.label === 'Recommended' ? 'text-primary' : 'text-muted-foreground')}>
                     {s.label}
                   </p>
-                  <p className="mt-2 text-2xl font-semibold tabular-nums text-foreground md:text-3xl">{fmt(s.value)}</p>
+                  <p className="mt-2 text-2xl md:text-3xl font-bold tracking-tight tabular-nums text-foreground">{fmt(s.value)}</p>
                   <p className="mt-1 text-[12px] text-muted-foreground">{s.note}</p>
                 </div>
               ))}
@@ -132,7 +132,7 @@ export const ReportView: React.FC<{
 
       {/* Why this range */}
       <Reveal>
-        <div className="mt-12 border-t border-black/[0.07] pt-10">
+        <div className="mt-12 border-t border-border pt-10">
           <Eyebrow>Why this range</Eyebrow>
           <p className="mt-4 max-w-2xl text-[15px] leading-relaxed text-foreground/85">{result.reasoning}</p>
           {result.priceDrivers.length > 0 && (
@@ -145,7 +145,7 @@ export const ReportView: React.FC<{
             </ul>
           )}
           {!!result.narrative?.drivers_negative?.length && (
-            <div className="mt-6 rounded-2xl bg-black/[0.02] p-4 ring-1 ring-black/10">
+            <div className="mt-6 rounded-2xl bg-muted p-4 ring-1 ring-border">
               <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-amber-700">Worth considering</p>
               <ul className="space-y-1">
                 {result.narrative.drivers_negative.map((d) => (
@@ -160,12 +160,12 @@ export const ReportView: React.FC<{
       {/* Pricing moves */}
       {result.pricingMoves.length > 0 && (
         <Reveal>
-          <div className="mt-12 border-t border-black/[0.07] pt-10">
+          <div className="mt-12 border-t border-border pt-10">
             <Eyebrow>What could move the price</Eyebrow>
             <ol className="mt-5 space-y-3">
               {result.pricingMoves.map((m, i) => (
                 <li key={m} className="flex items-start gap-3 text-sm leading-relaxed text-foreground/85">
-                  <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-orange-500/10 text-[11px] font-bold text-orange-700 ring-1 ring-orange-600/25">
+                  <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-primary/10 text-[11px] font-bold text-primary ring-1 ring-primary/25">
                     {i + 1}
                   </span>
                   {m}
@@ -179,9 +179,9 @@ export const ReportView: React.FC<{
       {/* Comparable evidence — real rows only, never invented */}
       {result.comparables.length > 0 && (
         <Reveal>
-          <div className="mt-12 border-t border-black/[0.07] pt-10">
+          <div className="mt-12 border-t border-border pt-10">
             <Eyebrow>Evidence behind the estimate</Eyebrow>
-            <ul className="mt-4 divide-y divide-black/[0.06]">
+            <ul className="mt-4 divide-y divide-border">
               {result.comparables.map((c) => (
                 <li key={c.id} className="flex flex-wrap items-center gap-x-3 gap-y-1 py-3.5">
                   <div className="min-w-0 flex-1">
@@ -206,7 +206,7 @@ export const ReportView: React.FC<{
       {/* Sources — only when genuine */}
       {result.sources.length > 0 && (
         <Reveal>
-          <div className="mt-12 border-t border-black/[0.07] pt-10">
+          <div className="mt-12 border-t border-border pt-10">
             <Eyebrow>Sources</Eyebrow>
             <ul className="mt-4 space-y-2">
               {result.sources.map((s) => (
@@ -235,7 +235,7 @@ export const ReportView: React.FC<{
 
       {/* Methodology */}
       <Reveal>
-        <div className="mt-12 border-t border-black/[0.07] pt-4">
+        <div className="mt-12 border-t border-border pt-4">
           <Accordion type="single" collapsible>
             <AccordionItem value="method" className="border-none">
               <AccordionTrigger className="py-3 text-sm">How this was calculated</AccordionTrigger>
@@ -243,7 +243,7 @@ export const ReportView: React.FC<{
                 <ol className="list-decimal space-y-1.5 pl-5 pt-2 text-[13px] leading-relaxed text-foreground/75">
                   {result.valuation.methodology.map((m) => <li key={m}>{m}</li>)}
                 </ol>
-                <p className="mt-4 border-t border-black/[0.06] pt-3 text-[11px] text-muted-foreground">
+                <p className="mt-4 border-t border-border pt-3 text-[11px] text-muted-foreground">
                   PricePilot is a pricing aid, not a certified appraisal. Confirm local demand and condition before a major transaction.
                 </p>
               </AccordionContent>
@@ -254,12 +254,12 @@ export const ReportView: React.FC<{
 
       {/* CTAs */}
       <Reveal>
-        <div className="mt-14 flex flex-wrap justify-center gap-3">
-          <Button size="lg" className="bg-orange-500 text-white hover:bg-orange-600" asChild>
+        <div className="mt-14 flex flex-col items-center justify-center gap-3 sm:flex-row">
+          <Button variant="cta" size="cta" className="w-full sm:w-auto" asChild>
             <Link to="/list">List it on Vendibook <ArrowRight className="ml-1.5 h-4 w-4" /></Link>
           </Button>
-          <Button size="lg" variant="outline" onClick={onAdjust}>Adjust my answers</Button>
-          <Button size="lg" variant="ghost" onClick={onStartOver}>
+          <Button variant="cta-outline" size="cta" className="w-full sm:w-auto" onClick={onAdjust}>Adjust my answers</Button>
+          <Button variant="ghost" size="cta" className="w-full sm:w-auto" onClick={onStartOver}>
             <RotateCcw className="mr-1.5 h-4 w-4" /> Start over
           </Button>
         </div>
