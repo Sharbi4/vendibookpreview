@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Helmet } from 'react-helmet-async';
 import {
   ArrowRight, BarChart3, Calculator, TrendingUp, Truck, Container,
   MapPin, Banknote, Tag, ChevronDown, RefreshCw,
 } from 'lucide-react';
-import { Header } from '@/components/layout/Header';
-import { Footer } from '@/components/layout/Footer';
+import Header from '@/components/layout/Header';
+import Footer from '@/components/layout/Footer';
+import SEO from '@/components/SEO';
 import JsonLd from '@/components/JsonLd';
 import { Button } from '@/components/ui/button';
 import {
@@ -224,15 +224,7 @@ const FoodTruckPrices = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Helmet>
-        <title>{title}</title>
-        <meta name="description" content={description} />
-        <link rel="canonical" href={CANONICAL} />
-        <meta property="og:title" content={title} />
-        <meta property="og:description" content={description} />
-        <meta property="og:url" content={CANONICAL} />
-        <meta property="og:type" content="article" />
-      </Helmet>
+      <SEO title={title} description={description} canonical="/food-truck-prices" type="article" />
       <JsonLd schema={jsonLd} />
       <Header />
 
