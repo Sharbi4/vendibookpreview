@@ -55,6 +55,11 @@
   <!-- Specialty marketplace hubs -->
   <url><loc>https://vendibook.com/coffee-trucks-trailers-for-sale</loc><lastmod>2026-08-25</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>
   <url><loc>https://vendibook.com/ice-cream-trucks-trailers-for-sale</loc><lastmod>2026-08-25</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://vendibook.com/pizza-trucks-trailers-for-sale</loc><lastmod>2026-08-27</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://vendibook.com/bbq-trucks-trailers-for-sale</loc><lastmod>2026-08-27</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://vendibook.com/snow-cone-shaved-ice-trailers-for-sale</loc><lastmod>2026-08-27</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://vendibook.com/beverage-bar-trailers-for-sale</loc><lastmod>2026-08-27</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://vendibook.com/mobile-kitchen-trailers-for-sale</loc><lastmod>2026-08-27</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>
 
   <!-- City-level SEO pages (city → state → nationwide fallback) -->
   <url><loc>https://vendibook.com/food-trucks-for-sale/tucson-az</loc><lastmod>2026-06-12</lastmod><changefreq>weekly</changefreq><priority>0.85</priority></url>
