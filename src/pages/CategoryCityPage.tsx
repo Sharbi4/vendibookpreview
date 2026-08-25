@@ -46,6 +46,53 @@ interface ListingRow {
   instant_book: boolean | null;
 }
 
+/**
+ * Custom SEO copy for the rental city pages Google is already testing
+ * (GSC baseline 2026-08-25). Only override where we have real traction —
+ * every other city keeps the templated copy.
+ */
+interface RentalCityOverride {
+  h1: string;
+  title: string;
+  description: string;
+  intro: string;
+}
+
+const RENTAL_CITY_OVERRIDES: Record<string, RentalCityOverride> = {
+  'food-trailers/miami-fl': {
+    h1: 'Food Trailers for Rent in Miami, FL',
+    title: 'Food Trailers for Rent in Miami, FL | Concession Trailer Rentals | Vendibook',
+    description:
+      'Rent a food trailer in Miami, FL for your business. Compare owner-listed concession trailers with photos, equipment, rates, and daily, weekly, or monthly terms.',
+    intro:
+      'Miami is one of Vendibook\'s most active trailer rental markets. Browse food trailers and concession trailers available to rent for events, pop-ups, markets, and full-time operations across Miami-Dade. Every listing is owner-managed with photos, equipment details, and transparent rates — daily, weekly, and monthly terms are set per listing.',
+  },
+  'food-trailers/los-angeles-ca': {
+    h1: 'Food Trailers for Rent in Los Angeles, CA',
+    title: 'Food Trailers for Rent in Los Angeles, CA | Vendibook',
+    description:
+      'Rent a food trailer in Los Angeles, CA. Owner-listed concession trailers with photos, equipment, transparent rates, and flexible daily to monthly terms.',
+    intro:
+      'Rent a food trailer in Los Angeles for your next market, pop-up, or full-time operation. LA\'s year-round event calendar makes trailer rentals a practical way to test or expand a mobile food concept. Compare owner-listed trailers with equipment details and rates before you message a host.',
+  },
+  'food-trucks/los-angeles-ca': {
+    h1: 'Food Trucks for Rent in Los Angeles, CA',
+    title: 'Food Trucks for Rent in Los Angeles, CA | Vendibook',
+    description:
+      'Rent a food truck in Los Angeles, CA for your business. Browse owner-listed trucks with kitchen equipment, rates, and daily, weekly, or monthly rental terms.',
+    intro:
+      'Los Angeles is the birthplace of modern food truck culture and one of Vendibook\'s strongest rental markets. Rent a fully equipped food truck to test a concept, cover a seasonal rush, or operate while your build is completed. Terms are set by each owner — review the listing or message the host about monthly arrangements.',
+  },
+  'food-trucks/houston-tx': {
+    h1: 'Food Trucks for Rent in Houston, TX',
+    title: 'Food Trucks for Rent in Houston, TX | Vendibook',
+    description:
+      'Rent a food truck in Houston, TX for your business. Owner-listed trucks with kitchen equipment, transparent rates, and daily, weekly, or monthly terms.',
+    intro:
+      'Houston is a food truck capital and one of Vendibook\'s most active rental markets. Rent a fully equipped truck to test a concept, cover events, or run a monthly arrangement — and since July 1, 2026, Texas mobile food vendors operate under a single statewide DSHS license, so a truck rented in Houston can trade across Texas with far less paperwork.',
+  },
+};
+
 const CategoryCityPage = ({ mode }: CategoryCityPageProps) => {
   const { categorySlug, cityStateSlug } = useParams<{ categorySlug: string; cityStateSlug: string }>();
   const [listings, setListings] = useState<ListingRow[]>([]);
