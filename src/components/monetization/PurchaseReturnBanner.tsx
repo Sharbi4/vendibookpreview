@@ -14,9 +14,14 @@ import { getReturnRoute } from '@/lib/monetization/returnRoutes';
  */
 export function PurchaseReturnBanner() {
   const [params, setParams] = useSearchParams();
-  const purchase = params.get('purchase');
-  const productSlug = params.get('product') || '';
-  const listingId = params.get('listing') || undefined;
+  // Latch the initial values: the URL params are stripped shortly after mount
+  // (so back/forward doesn't re-fire), but the banner must stay rendered.
+  const [latched] = useState(() => ({
+    purchase: params.get('purchase'),
+    productSlug: params.get('product') || '',
+    listingId: params.get('listing') || undefined,
+  }));
+  const { purchase, productSlug, listingId } = latched;
   const [dismissed, setDismissed] = useState(false);
 
   const content = getReturnRoute(productSlug, { listingId });

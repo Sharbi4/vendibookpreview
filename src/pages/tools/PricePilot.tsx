@@ -19,8 +19,10 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToolAccess } from '@/hooks/useToolAccess';
 import { trackLeadEvent } from '@/lib/leadTracking';
 import { SectionCard } from '@/components/pricepilot/ui';
-import { Hero, ValuationVisual, WhatItLooksAt, HowItWorks, SampleValuation, FinalConnections } from '@/components/pricepilot/PublicSections';
+import { Hero, ValuePoints, WhatItLooksAt, HowItWorks, SampleValuation, FinalConnections } from '@/components/pricepilot/PublicSections';
 import { ReportView } from '@/components/pricepilot/ReportView';
+import { UnlockLadder } from '@/components/monetization/UnlockLadder';
+import { PurchaseReturnBanner } from '@/components/monetization/PurchaseReturnBanner';
 
 // ─── Types (mirror pricepilot-appraisal response) ────────────────────────────
 
@@ -91,7 +93,7 @@ const CONDITIONS = [
 ] as const;
 
 const OPERATIONAL = [
-  { value: 'turnkey', label: 'Turnkey — ready to operate today' },
+  { value: 'turnkey', label: 'Turnkey, ready to operate today' },
   { value: 'running', label: 'Running, some work needed' },
   { value: 'needs_work', label: 'Needs mechanical work' },
   { value: 'not_running', label: 'Not currently running' },
@@ -199,7 +201,7 @@ const pageJsonLd = {
   applicationCategory: 'BusinessApplication',
   operatingSystem: 'Web',
   description:
-    'Market-informed pricing guidance for food trucks, food trailers, carts, and mobile bars. Recommended ranges, benchmarks, and rental rates computed from real comparable evidence. Included with Vendibook Pro.',
+    'Get a market-backed pricing recommendation for your food truck or food trailer. PricePilot helps sellers and owners understand value, pricing range, and market signals before listing. Premium access via Vendibook Pro or a one-time unlock.',
   featureList: [
     'Comparable-based market range with low, recommended, and high positions',
     'Local, regional, national, and modeled market scope disclosure',
@@ -345,7 +347,7 @@ export default function PricePilot() {
     });
     setLoading(false);
     if (err || !data?.ok) {
-      setError(err ?? 'The pricing service could not complete your appraisal. Your answers are saved — try again.');
+      setError(err ?? 'The pricing service could not complete your appraisal. Your answers are saved, so try again.');
       scrollToStart();
       return;
     }
@@ -379,7 +381,7 @@ export default function PricePilot() {
     <>
       <SEO
         title="PricePilot | Food Truck & Food Trailer Pricing | Vendibook"
-        description="Market-informed pricing guidance for food trucks, food trailers, carts, and mobile bars. Get a defensible market range, rental rate benchmarks, and practical pricing moves — included with Vendibook Pro."
+        description="Get a market-backed pricing recommendation for your food truck or food trailer. PricePilot helps sellers and owners understand value, pricing range, and market signals before listing."
       />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(pageJsonLd) }} />
 
@@ -393,8 +395,14 @@ export default function PricePilot() {
             ) : (
               /* ─── PUBLIC PRODUCT EXPERIENCE ─── */
               <>
-                <Hero onStart={scrollToStart} onSample={scrollToSample} />
-                <ValuationVisual />
+                <Hero
+                  signedOut={!user}
+                  unlocked={unlocked}
+                  onStart={scrollToStart}
+                  onSample={scrollToSample}
+                  signInHref={signInHref}
+                />
+                <ValuePoints />
                 <WhatItLooksAt />
                 <HowItWorks />
                 <SampleValuation ref={sampleRef} />
@@ -412,6 +420,7 @@ export default function PricePilot() {
                   </div>
 
                   <div ref={panelRef} className="mt-10">
+                    <PurchaseReturnBanner />
                     <AnimatePresence mode="wait">
                       {/* Resolving access */}
                       {(authLoading || accessLoading) && (
@@ -439,23 +448,27 @@ export default function PricePilot() {
                         </motion.div>
                       )}
 
-                      {/* Signed in, not entitled — polished Pro access state */}
+                      {/* Signed in, not entitled — real catalog unlock options */}
                       {!authLoading && !accessLoading && user && !unlocked && (
                         <motion.div key="locked" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-                          className="rounded-[24px] bg-sale-card px-6 py-12 text-center md:px-12">
-                          <h3 className="text-2xl font-bold tracking-tight text-foreground">
-                            PricePilot is included with Vendibook Pro
-                          </h3>
-                          <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-muted-foreground">
-                            One membership unlocks every appraisal — sale ranges, rental benchmarks, and the evidence behind
-                            both — along with the rest of the Pro seller toolkit.
-                          </p>
-                          <Button variant="cta" size="cta" className="mt-6" asChild>
-                            <Link to="/pricing">Explore Vendibook Pro <ArrowRight className="ml-1.5 h-4 w-4" /></Link>
-                          </Button>
-                          <p className="mt-4 text-[12px] text-muted-foreground">
-                            A one-time unlock is also available on the pricing page.
-                          </p>
+                          className="rounded-[24px] bg-sale-card px-5 py-10 md:px-10 md:py-12">
+                          <div className="mx-auto max-w-xl text-center">
+                            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">Unlock PricePilot</p>
+                            <h3 className="mt-3 text-2xl md:text-3xl font-bold tracking-tight text-foreground">
+                              Two ways in. Both start here.
+                            </h3>
+                            <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-muted-foreground">
+                              Unlock PricePilot once, or get it included with a Vendibook Pro
+                              membership. Either way you come straight back to your appraisal.
+                            </p>
+                          </div>
+                          <UnlockLadder
+                            toolSlug="pricepilot"
+                            surface="pricepilot_page"
+                            tone="light"
+                            returnPath="/tools/pricepilot"
+                            className="mx-auto mt-8 max-w-2xl"
+                          />
                         </motion.div>
                       )}
 
@@ -477,7 +490,7 @@ export default function PricePilot() {
                                 </Button>
                                 <Button variant="cta-outline" onClick={() => setError(null)}>Review my answers</Button>
                               </div>
-                              <p className="mt-4 text-[11px] text-muted-foreground">Everything you entered is still here — nothing was lost.</p>
+                              <p className="mt-4 text-[11px] text-muted-foreground">Everything you entered is still here. Nothing was lost.</p>
                             </SectionCard>
                           ) : (
                             <SectionCard className="rounded-[24px] p-5 md:p-8">
@@ -524,7 +537,7 @@ export default function PricePilot() {
                                   {step === 0 && (
                                     <motion.div key="s0" {...stepMotion} transition={{ duration: 0.25 }}>
                                       <h3 className="text-xl md:text-2xl font-bold tracking-tight text-foreground">What are you pricing?<Req /></h3>
-                                      <p className="mt-1 text-sm text-muted-foreground">Choose the closest match — it anchors the market evidence.</p>
+                                      <p className="mt-1 text-sm text-muted-foreground">Choose the closest match. It anchors the market evidence.</p>
                                       <div
                                         data-pp-field="assetCategory"
                                         role="group"
@@ -763,11 +776,11 @@ export default function PricePilot() {
                   <Accordion type="single" collapsible className="w-full">
                     <AccordionItem value="q1">
                       <AccordionTrigger>How does PricePilot set the range?</AccordionTrigger>
-                      <AccordionContent>It scores real comparable evidence for similarity to your equipment, weights it by evidence quality, filters statistical outliers, and computes a weighted market range. Documented adjustments for condition, operational status, and equipment package refine the result. AI writes the interpretation — it never invents the numbers.</AccordionContent>
+                      <AccordionContent>It scores real comparable evidence for similarity to your equipment, weights it by evidence quality, filters statistical outliers, and computes a weighted market range. Documented adjustments for condition, operational status, and equipment package refine the result. AI writes the interpretation. It never invents the numbers.</AccordionContent>
                     </AccordionItem>
                     <AccordionItem value="q2">
                       <AccordionTrigger>What does PricePilot cost?</AccordionTrigger>
-                      <AccordionContent>PricePilot is a premium tool, included with Vendibook Pro memberships and the lifetime tools unlock. There is no per-report fee once you have access.</AccordionContent>
+                      <AccordionContent>PricePilot is a premium tool. It's included with Vendibook Pro memberships, or available as a one-time unlock. There's no per-report fee once you have access.</AccordionContent>
                     </AccordionItem>
                     <AccordionItem value="q3">
                       <AccordionTrigger>What if there isn't much data near me?</AccordionTrigger>

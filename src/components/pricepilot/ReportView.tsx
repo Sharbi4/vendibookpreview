@@ -139,14 +139,14 @@ export const ReportView: React.FC<{
             <ul className="mt-6 space-y-2.5">
               {result.priceDrivers.map((d) => (
                 <li key={d} className="flex items-start gap-2.5 text-sm text-foreground/80">
-                  <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />{d}
+                  <Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" />{d}
                 </li>
               ))}
             </ul>
           )}
           {!!result.narrative?.drivers_negative?.length && (
             <div className="mt-6 rounded-2xl bg-muted p-4 ring-1 ring-border">
-              <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-amber-700">Worth considering</p>
+              <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Worth considering</p>
               <ul className="space-y-1">
                 {result.narrative.drivers_negative.map((d) => (
                   <li key={d} className="text-[13px] text-foreground/75">· {d}</li>
@@ -241,9 +241,9 @@ export const ReportView: React.FC<{
       {/* Warnings */}
       {result.valuation.warnings.length > 0 && (
         <Reveal>
-          <div className="mt-12 rounded-2xl bg-amber-500/[0.07] p-5 ring-1 ring-amber-600/20">
+          <div className="mt-12 rounded-2xl bg-muted p-5 ring-1 ring-border">
             {result.valuation.warnings.map((w) => (
-              <p key={w} className="text-[12px] leading-relaxed text-amber-800">· {w}</p>
+              <p key={w} className="text-[12px] leading-relaxed text-foreground/70">· {w}</p>
             ))}
           </div>
         </Reveal>
