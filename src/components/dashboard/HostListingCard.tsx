@@ -72,6 +72,9 @@ import { canBoostListing, canRepublishListing } from '@/lib/listings/publicVisib
 import { useNavigate } from 'react-router-dom';
 import { GetVerifiedButton } from '@/components/verification/GetVerifiedButton';
 import { ListingDimensionsPrompt } from '@/components/dashboard/ListingDimensionsPrompt';
+import { isRentalConversionEligible, linkedRentalCtaLabel } from '@/lib/listings/rentalConversion';
+import { useLinkedRental, useCreateLinkedRental } from '@/hooks/useLinkedRental';
+
 
 
 type Listing = Tables<'listings'>;
