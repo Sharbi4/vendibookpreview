@@ -253,7 +253,7 @@ CITY_CATEGORY_CONFIGS.push(
       related: [
         { href: `/${citySaleSlug(s.category)}`, label: `All ${pluralTitle.toLowerCase()} for sale` },
         { href: `/${citySaleSlug(s.category)}/${slugify(s.stateName)}`, label: `${pluralTitle} for sale in ${s.stateName}` },
-        { href: s.category === 'food_trailer' ? '/sell-food-trailer' : '/sell-food-truck', label: `Sell your ${s.category === 'food_trailer' ? 'food trailer' : 'food truck'}` },
+        { href: s.category === 'food_trailer' ? '/sell-food-trailer' : '/sell-my-food-truck', label: `Sell your ${s.category === 'food_trailer' ? 'food trailer' : 'food truck'}` },
         { href: `/${citySaleSlug(s.category === 'food_trailer' ? 'food_truck' : 'food_trailer')}/${s.citySlug}`, label: `${s.category === 'food_trailer' ? 'Food trucks' : 'Food trailers'} for sale in ${s.cityName}` },
       ],
     };
@@ -348,7 +348,7 @@ CITY_CATEGORY_CONFIGS.push(
       faqs: [...stateSaleFaqs(s.stateName, s.category), ...(override?.extraFaqs ?? [])],
       related: [
         { href: `/${citySaleSlug(s.category)}`, label: `All ${pluralTitle.toLowerCase()} for sale` },
-        { href: s.category === 'food_trailer' ? '/sell-food-trailer' : '/sell-food-truck', label: `Sell your ${s.category === 'food_trailer' ? 'food trailer' : 'food truck'}` },
+        { href: s.category === 'food_trailer' ? '/sell-food-trailer' : '/sell-my-food-truck', label: `Sell your ${s.category === 'food_trailer' ? 'food trailer' : 'food truck'}` },
         { href: `/${citySaleSlug(s.category === 'food_trailer' ? 'food_truck' : 'food_trailer')}/${slugify(s.stateName)}`, label: `${s.category === 'food_trailer' ? 'Food trucks' : 'Food trailers'} for sale in ${s.stateName}` },
         ...(override?.extraRelated ?? []),
       ],

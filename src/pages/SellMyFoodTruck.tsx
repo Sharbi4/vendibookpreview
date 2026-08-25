@@ -30,6 +30,21 @@ const LIST_HREF = '/list/start?mode=sale';
 
 const faqs = [
   {
+    question: 'Where can I sell my food truck?',
+    answer:
+      'Vendibook is a marketplace built specifically for mobile food equipment. Create a free listing with photos, specs, and your asking price, and it becomes discoverable to buyers searching for food trucks, food trailers, and concession trailers nationwide. You communicate with interested buyers directly through Vendibook messaging and offers.',
+  },
+  {
+    question: 'How do I sell a food truck online?',
+    answer:
+      'Create a free Vendibook account, open the listing builder, and add exterior and interior photos, equipment specs, dimensions, and an honest asking price. Once published, buyers can message you and submit offers, and you can accept, decline, or counter from your dashboard. You choose how to complete the sale — in person or through Vendibook online checkout.',
+  },
+  {
+    question: 'Can I sell a food trailer or concession trailer on Vendibook?',
+    answer:
+      'Yes. Vendibook supports food trailers, concession trailers, mobile kitchens, and specialty trailers alongside food trucks, with equipment-specific fields for towing, dimensions, power, and water setup. List your trailer the same way you would a truck — publishing is free.',
+  },
+  {
     question: 'Is it really free to list?',
     answer:
       'Yes. Publishing a standard for-sale listing is free, subject to current account and listing limits. You do not need identity verification, a membership, or any paid add-on to publish.',
@@ -48,6 +63,11 @@ const faqs = [
     question: 'How does Vendibook Pro reduce my fee?',
     answer:
       'Active Vendibook Pro sellers save 2 percentage points on eligible seller transaction fees — 10.9% instead of 12.9% — with savings capped at $500 per completed transaction. Pro also includes one Featured Boost credit each paid billing period, premium seller tools, and PermitPath Plus.',
+  },
+  {
+    question: 'Can I sell directly to a buyer?',
+    answer:
+      'Yes. You can settle the sale in person with no Vendibook commission — you and the buyer arrange payment and the handoff directly. Vendibook online checkout is an optional alternative for buyers who want to pay through the platform, at a standard 12.9% seller fee.',
   },
   {
     question: 'Can a buyer finance my food truck or trailer?',
@@ -129,23 +149,19 @@ const steps = [
 
 const SellMyFoodTruck = () => {
   const boost = useCatalogPrice(ACTIVE_PRODUCT_SLUGS.featuredBoost);
-  const proListing = useCatalogPrice(ACTIVE_PRODUCT_SLUGS.proListing);
   const concierge = useCatalogPrice(ACTIVE_PRODUCT_SLUGS.conciergeListing);
-  const rewrite = useCatalogPrice(ACTIVE_PRODUCT_SLUGS.listingRewrite);
   const pro = useCatalogPrice(ACTIVE_PRODUCT_SLUGS.vendibookPro);
 
   const addOns = [
     { key: 'boost', name: 'Featured Boost', price: boost.detailLabel, body: 'Move your listing into featured placement on relevant marketplace pages.', href: '/dashboard?tab=upgrades', cta: 'See boost options' },
-    { key: 'pro-listing', name: 'Pro Listing', price: proListing.detailLabel, body: 'Extended premium placement plus an organic Facebook featured spot for your listing.', href: '/dashboard?tab=upgrades', cta: 'See Pro Listing' },
     { key: 'concierge', name: 'Concierge Listing', price: concierge.detailLabel, body: 'Our team builds and polishes the listing from your photos and information.', href: '/list/concierge', cta: 'Start concierge' },
-    { key: 'rewrite', name: 'Listing Rewrite', price: rewrite.detailLabel, body: 'A rewritten title, description, and spec summary for a listing you already published.', href: '/dashboard?tab=upgrades', cta: 'See rewrite' },
-  ].filter((a) => a.key !== 'rewrite' || rewrite.isActive);
+  ];
 
   return (
     <>
       <SEO
-        title="Sell Your Food Truck or Trailer | Vendibook"
-        description="List your food truck or trailer free on Vendibook. Reach buyers shopping for mobile food equipment, settle in person with no commission, or use optional online checkout at 12.9%."
+        title="Sell My Food Truck | List Your Food Truck or Trailer | Vendibook"
+        description="Sell your food truck or food trailer on Vendibook. Create your listing, connect directly with buyers, offer financing options, and reach serious food-business buyers nationwide."
         canonical="/sell-my-food-truck"
         type="website"
         ogTitle="Sell your food truck or trailer on Vendibook"
@@ -176,22 +192,23 @@ const SellMyFoodTruck = () => {
                   For sellers
                 </span>
                 <h1 className="mt-4 text-3xl md:text-5xl font-semibold tracking-tight text-foreground leading-[1.08]">
-                  Sell your food truck or trailer on Vendibook.
+                  Sell Your Food Truck or Food Trailer
                 </h1>
                 <p className="mt-4 text-base md:text-lg text-muted-foreground leading-relaxed max-w-2xl">
-                  List free, reach buyers shopping specifically for mobile food equipment, and choose the
-                  transaction path that works for you.
+                  List free, reach buyers nationwide who are shopping specifically for mobile food equipment,
+                  message them directly, offer financing options to eligible buyers, and choose how you want
+                  to get paid.
                 </p>
 
                 <div className="mt-7 flex flex-col sm:flex-row gap-3">
                   <Button size="lg" variant="cta" asChild>
                     <Link to={LIST_HREF}>
-                      List my equipment free
+                      List My Food Truck
                       <ArrowRight className="ml-2 h-4 w-4" />
                     </Link>
                   </Button>
                   <Button size="lg" variant="outline" className="rounded-2xl" asChild>
-                    <Link to="/tools/pricepilot">Estimate my price</Link>
+                    <a href="#how-selling-works">See How Selling Works</a>
                   </Button>
                 </div>
 
@@ -240,6 +257,30 @@ const SellMyFoodTruck = () => {
             </div>
           </section>
 
+          {/* FOOD TRAILER COVERAGE */}
+          <section className="py-12 md:py-16 border-t border-border">
+            <div className="container max-w-4xl">
+              <h2 className="text-2xl md:text-3xl font-semibold text-foreground">Selling a food trailer?</h2>
+              <p className="mt-3 text-muted-foreground leading-relaxed max-w-2xl">
+                Vendibook isn&apos;t only for trucks. Sellers list food trailers, concession trailers, mobile
+                kitchens, and specialty trailers every day — with equipment-specific fields for towing setup,
+                dimensions, power, and water that general classifieds don&apos;t have. Publishing is free, and
+                the same messaging, offers, and payment options apply.
+              </p>
+              <div className="mt-6 flex flex-wrap gap-3">
+                <Button variant="outline" className="rounded-2xl" asChild>
+                  <Link to="/sell-food-trailer">Sell your food trailer</Link>
+                </Button>
+                <Button variant="outline" className="rounded-2xl" asChild>
+                  <Link to="/sell-concession-trailer">Sell your concession trailer</Link>
+                </Button>
+                <Button variant="outline" className="rounded-2xl" asChild>
+                  <Link to="/food-trailers-for-sale">Browse food trailers for sale</Link>
+                </Button>
+              </div>
+            </div>
+          </section>
+
           {/* MARKETPLACE COMPARISON */}
           <section className="py-12 md:py-16 border-t border-border">
             <div className="container max-w-5xl">
@@ -280,7 +321,7 @@ const SellMyFoodTruck = () => {
           </section>
 
           {/* HOW SELLING WORKS */}
-          <section className="py-12 md:py-16 border-t border-border">
+          <section id="how-selling-works" className="py-12 md:py-16 border-t border-border scroll-mt-24">
             <div className="container max-w-5xl">
               <h2 className="text-2xl md:text-3xl font-semibold text-foreground">How selling works</h2>
               <div className="mt-8 grid sm:grid-cols-2 gap-4">
@@ -496,6 +537,23 @@ const SellMyFoodTruck = () => {
             </div>
           </section>
 
+          {/* EXPLORE THE MARKETPLACE */}
+          <section className="py-12 md:py-16 border-t border-border">
+            <div className="container max-w-4xl">
+              <h2 className="text-2xl md:text-3xl font-semibold text-foreground">Part of the Vendibook marketplace</h2>
+              <p className="mt-3 text-muted-foreground max-w-2xl">
+                Your listing sits inside the same marketplace buyers already use to find equipment.
+              </p>
+              <ul className="mt-6 grid sm:grid-cols-2 gap-x-8 gap-y-2.5 text-sm">
+                <li><Link to="/food-trucks-for-sale" className="font-medium text-primary hover:underline">Food trucks for sale →</Link></li>
+                <li><Link to="/food-trailers-for-sale" className="font-medium text-primary hover:underline">Food trailers for sale →</Link></li>
+                <li><Link to="/financing" className="font-medium text-primary hover:underline">How buyer financing works →</Link></li>
+                <li><Link to="/how-it-works?role=sell" className="font-medium text-primary hover:underline">The full seller journey →</Link></li>
+                <li><Link to="/tools/pricepilot" className="font-medium text-primary hover:underline">Estimate your asking price with PricePilot →</Link></li>
+              </ul>
+            </div>
+          </section>
+
           {/* FINAL CTA */}
           <section className="py-14 md:py-20 border-t border-border">
             <div className="container max-w-3xl text-center">
@@ -508,7 +566,7 @@ const SellMyFoodTruck = () => {
               <div className="mt-7 flex flex-col sm:flex-row gap-3 justify-center">
                 <Button size="lg" variant="cta" asChild>
                   <Link to={LIST_HREF}>
-                    List my equipment free
+                    List My Food Truck
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Link>
                 </Button>
@@ -527,7 +585,7 @@ const SellMyFoodTruck = () => {
         {/* Sticky mobile CTA */}
         <div className="fixed bottom-0 left-0 right-0 z-40 md:hidden border-t border-border bg-background/95 backdrop-blur-sm p-3">
           <Button variant="cta" className="w-full" asChild>
-            <Link to={LIST_HREF}>List free</Link>
+            <Link to={LIST_HREF}>List My Food Truck</Link>
           </Button>
         </div>
       </div>

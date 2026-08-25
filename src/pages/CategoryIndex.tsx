@@ -369,7 +369,7 @@ const CategoryIndex = ({ config }: { config: CategoryIndexConfig }) => {
             </div>
             <div className="flex flex-wrap gap-2">
               <Button asChild variant="dark-shine">
-                <Link to={config.category === 'food_trailer' ? '/sell-food-trailer' : '/sell-food-truck'}>
+                <Link to={config.category === 'food_trailer' ? '/sell-food-trailer' : '/sell-my-food-truck'}>
                   List Your {categoryLabel(config.category)} Free
                 </Link>
               </Button>

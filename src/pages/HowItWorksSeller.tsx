@@ -40,11 +40,12 @@ import documentsOkArt from '@/assets/education/documents-ok.svg.asset.json';
  * Answers, in order: why list here → what buyers see → how a sale comes
  * together → what it costs → questions.
  *
- * Copy guardrails (do not regress): no Stripe, no "verified buyers" or
- * universal verification claims, no "payment protection"/escrow language, no
- * guaranteed or instant payouts, no fabricated performance metrics (sell
- * times, photo multipliers, state counts), no Affirm/Klarna/Afterpay. Fees
- * match src/lib/commissions.ts and src/lib/fees/proFee.ts.
+ * Copy guardrails (do not regress): no retired payment or financing
+ * providers, no "verified buyers" or universal verification claims, no
+ * third-party-funds-holding language, no guaranteed or immediate payouts,
+ * and no fabricated performance metrics (sell times, photo multipliers,
+ * state counts). Fees match src/lib/commissions.ts and src/lib/fees/proFee.ts.
+ * See src/pages/__tests__/sellerPages.test.ts for the banned-term list.
  */
 
 const ease = [0.22, 1, 0.36, 1] as const;
