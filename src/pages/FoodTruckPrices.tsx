@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   ArrowRight, BarChart3, Calculator, TrendingUp, Truck, Container,
-  MapPin, Banknote, Tag, ChevronDown, RefreshCw,
+  MapPin, Banknote, Tag, ChevronDown, RefreshCw, Download, Newspaper,
 } from 'lucide-react';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
@@ -14,6 +14,7 @@ import {
   snapshotLabel, MIN_SAMPLE, PRICE_MIN_USD, PRICE_MAX_USD,
   type MarketStats, type GroupStats, type PricingRow,
 } from '@/lib/market-data/foodTruckPrices';
+import { buildPriceDistributionSvg, downloadSvg } from '@/lib/market-data/shareChart';
 import { trackEvent } from '@/lib/analytics';
 import { cn } from '@/lib/utils';
 
@@ -406,6 +407,18 @@ const FoodTruckPrices = () => {
                   <Bar pct={b.pct} />
                 </div>
               ))}
+            </div>
+            <div className="flex flex-wrap items-center gap-3 mt-6">
+              <Button
+                variant="outline"
+                className="rounded-2xl"
+                onClick={handleDownloadChart}
+              >
+                <Download className="h-4 w-4" /> Download chart for articles &amp; social
+              </Button>
+              <p className="text-xs text-muted-foreground">
+                Free to republish with attribution — the file includes "Source: Vendibook Marketplace Data".
+              </p>
             </div>
           </Section>
 
