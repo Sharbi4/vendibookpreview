@@ -271,6 +271,20 @@ const CategoryCityPage = ({ mode }: CategoryCityPageProps) => {
                   <Link to={`/search?mode=${dbMode}&category=${dbCategory}`}>{categoryLabel}</Link>
                 </BreadcrumbLink>
               </BreadcrumbItem>
+              {mode === 'rent' && (
+                <>
+                  <BreadcrumbSeparator />
+                  <BreadcrumbItem>
+                    <BreadcrumbLink asChild>
+                      <Link to={stateRentHubPath ?? '/food-trucks-for-rent'}>
+                        {stateRentHubPath
+                          ? `${city.stateCode === 'TX' ? 'Texas' : city.stateCode === 'FL' ? 'Florida' : 'California'} Rentals`
+                          : 'Rentals Nationwide'}
+                      </Link>
+                    </BreadcrumbLink>
+                  </BreadcrumbItem>
+                </>
+              )}
               <BreadcrumbSeparator />
               <BreadcrumbItem>
                 <BreadcrumbPage>{city.name}, {city.stateCode}</BreadcrumbPage>
