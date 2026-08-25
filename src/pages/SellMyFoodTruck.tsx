@@ -152,7 +152,7 @@ const SellMyFoodTruck = () => {
         ogDescription="List free, reach buyers shopping specifically for mobile food equipment, and choose the transaction path that works for you."
         twitterTitle="Sell your food truck or trailer on Vendibook"
         twitterDescription="List free and choose pay in person or optional online checkout."
-        image="/images/social/vendibook-og-sell.jpg"
+        image="https://vendibook.com/images/social/vendibook-og-sell.jpg"
         imageAlt="Sell your food truck or trailer on Vendibook"
       />
 

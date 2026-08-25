@@ -124,7 +124,7 @@ const CookieConsent = () => {
                     <Link to="/privacy" className="text-primary hover:underline">
                       Privacy Policy
                     </Link>{' '}
-                    to learn more.
+                    for details on the data we collect and how we use it.
                   </p>
                 </div>
               </div>

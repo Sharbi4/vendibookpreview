@@ -286,7 +286,7 @@ const STATE_CONTENT_OVERRIDES: Record<string, {
   extraRelated?: { href: string; label: string }[];
 }> = {
   texas: {
-    description: 'Find food trucks for sale in Texas on Vendibook — active owner-listed inventory across Houston, Dallas–Fort Worth, Austin, and San Antonio. Compare photos, equipment specs, and transparent asking prices.',
+    description: 'Food trucks for sale in Texas: owner-listed trucks in Houston, DFW, Austin & San Antonio with real photos, specs, and asking prices. Message sellers directly — financing available.',
     introExtra: 'Texas is one of the strongest mobile food markets in the country, and buyers here typically shop the Houston, Dallas–Fort Worth, Austin, and San Antonio corridors. It is also getting easier to operate statewide: as of July 1, 2026, Texas mobile food vendors move to a single statewide DSHS license, replacing the patchwork of county-by-county permits — so a truck bought in one metro can trade across the state with far less paperwork.',
     extraFaqs: [
       {
