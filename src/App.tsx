@@ -375,6 +375,7 @@ const AnimatedRoutes = () => {
           <Route path="/tools" element={<PageTransition><ToolsIndex /></PageTransition>} />
           <Route path="/tools/pricepilot" element={<PageTransition><ToolAccessGate slug="pricepilot"><PricePilot /></ToolAccessGate></PageTransition>} />
           <Route path="/pricepilot" element={<Navigate to="/tools/pricepilot" replace />} />
+          <Route path="/tools/pricepilot/preview" element={<Navigate to="/tools/pricepilot" replace />} />
           <Route path="/tools/:slug/preview" element={<PageTransition><ToolPreview /></PageTransition>} />
           <Route path="/tools/permitpath" element={<PageTransition><ToolAccessGate slug="permitpath"><PermitPath /></ToolAccessGate></PageTransition>} />
           <Route path="/tools/buildkit" element={<PageTransition><ToolAccessGate slug="buildkit"><BuildKit /></ToolAccessGate></PageTransition>} />
