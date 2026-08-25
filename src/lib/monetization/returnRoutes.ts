@@ -195,6 +195,21 @@ export const RETURN_ROUTES: Record<string, ReturnRoute> = {
     '/permit-path',
   ),
 
+  // ---- Tool unlocks ----------------------------------------------------
+  tool_pricepilot: {
+    title: 'PricePilot is unlocked',
+    subtitle: 'Your appraisal access is active on this account.',
+    steps: [
+      { title: 'Start with the equipment details', hint: 'Category, condition, and location drive the estimate.' },
+      { title: 'Review the range and the market signals', hint: 'Every estimate discloses the evidence behind it.' },
+    ],
+    ctaLabel: 'Start your appraisal',
+    ctaHref: '/tools/pricepilot',
+    secondary: { label: 'Browse the marketplace', href: '/search' },
+    successPath: '/tools/pricepilot?purchase=success',
+    cancelPath: '/tools/pricepilot?purchase=cancelled',
+  },
+
   // ---- Protected sale --------------------------------------------------
   'protected-sale-fee': buildDashboard(
     'Protected Sale is active',
