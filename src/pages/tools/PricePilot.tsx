@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import Header from '@/components/layout/Header';
@@ -37,6 +37,7 @@ export interface CompRow {
 interface Narrative {
   headline?: string; summary?: string;
   drivers_positive?: string[]; drivers_negative?: string[];
+  what_could_change?: string[];
   caveats?: string[];
 }
 export interface PricingResponse {
