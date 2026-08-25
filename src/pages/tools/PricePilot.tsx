@@ -739,11 +739,11 @@ export default function PricePilot() {
                                     <ArrowLeft className="mr-1.5 h-4 w-4" /> Back
                                   </Button>
                                   {step < lastStep ? (
-                                    <Button variant="cta" onClick={goNext} disabled={!canContinue}>
+                                    <Button variant="cta" onClick={goNext}>
                                       Continue <ArrowRight className="ml-1.5 h-4 w-4" />
                                     </Button>
                                   ) : (
-                                    <Button variant="cta" size="cta" onClick={goNext} disabled={!canContinue}>
+                                    <Button variant="cta" size="cta" onClick={goNext}>
                                       Get my pricing <ArrowRight className="ml-1.5 h-4 w-4" />
                                     </Button>
                                   )}
