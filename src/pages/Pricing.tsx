@@ -359,7 +359,7 @@ const Pricing = () => {
         title="Vendibook Pricing — Free & Vendibook Pro Membership"
         description="Start free on Vendibook or go Pro for a lower 10.9% seller fee, a monthly Featured Boost credit and premium tools. Cancel anytime."
         canonical="/pricing"
-        image="/images/social/vendibook-og-pricing.jpg"
+        image="https://vendibook.com/images/social/vendibook-og-pricing.jpg"
         imageAlt="Vendibook plans and pricing"
       />
 

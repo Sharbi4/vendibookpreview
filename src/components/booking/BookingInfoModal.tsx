@@ -438,7 +438,7 @@ export function BookingInfoModal({
                 </p>
                 <Button variant="outline" size="sm" asChild>
                   <a href="https://www.fliprogram.com" target="_blank" rel="noopener noreferrer" className="gap-1.5">
-                    Learn More <ExternalLink className="h-3 w-3" />
+                    Learn more about FLIP vendor coverage <ExternalLink className="h-3 w-3" />
                   </a>
                 </Button>
               </div>

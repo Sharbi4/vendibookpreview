@@ -130,7 +130,7 @@ const ConciergeSection = () => {
                   </h3>
                   <p className="relative text-sm leading-relaxed text-muted-foreground">{p.body}</p>
                   <span className="relative mt-5 inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.14em] text-foreground/70 transition-colors group-hover:text-primary">
-                    Learn more
+                    Learn more about {p.name}
                     <ArrowUpRight className="h-3.5 w-3.5" aria-hidden="true" />
                   </span>
                 </Link>

@@ -102,6 +102,7 @@ const NotificationItem = ({
       <Button
         variant="ghost"
         size="icon"
+        aria-label="Delete notification"
         className="h-8 w-8 flex-shrink-0 opacity-0 group-hover:opacity-100 hover:opacity-100"
         onClick={(e) => {
           e.stopPropagation();
@@ -151,7 +152,12 @@ const NotificationCenter = () => {
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button variant="ghost" size="icon" className="relative">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="relative"
+          aria-label={unreadCount > 0 ? `Notifications, ${unreadCount} unread` : 'Notifications'}
+        >
           <Bell className="h-5 w-5" />
           {unreadCount > 0 && (
             <Badge 
@@ -170,6 +176,7 @@ const NotificationCenter = () => {
             <Button
               variant="ghost"
               size="icon"
+              aria-label="Notification preferences"
               className="h-7 w-7"
               onClick={() => {
                 setOpen(false);
@@ -208,6 +215,7 @@ const NotificationCenter = () => {
                 <Button
                   variant="ghost"
                   size="icon"
+                  aria-label="Clear search"
                   className="absolute right-0.5 top-1/2 -translate-y-1/2 h-7 w-7"
                   onClick={() => setSearchQuery('')}
                 >
