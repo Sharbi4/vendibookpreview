@@ -23,6 +23,8 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion';
 import { PayPalMonogram } from '@/components/brand/ProviderLogos';
+import paypalAppImage from '@/assets/paypal-app-2025.webp.asset.json';
+import paypalWordmarkWhite from '@/assets/paypal-logo-white.png.asset.json';
 
 /**
  * /payments — public, editorial commerce page explaining Vendibook checkout
