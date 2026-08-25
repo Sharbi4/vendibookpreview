@@ -209,9 +209,36 @@ const CategoryCityPage = ({ mode }: CategoryCityPageProps) => {
   );
 
   const breadcrumbSchema = generateCityCategoryBreadcrumbSchema(mode, categorySlug!, categoryLabel, cityStateSlug!, city.name, city.stateCode);
-  const faqSchema = generateCityCategoryFAQSchema(city.name, city.stateCode, categoryLabel, mode);
+  const baseFaqSchema = generateCityCategoryFAQSchema(city.name, city.stateCode, categoryLabel, mode);
 
-  // 6 high-intent FAQs surfaced in the UI (mirrors the JSON-LD)
+  // Extra rental FAQs for the business-equipment intent (kept in sync with
+  // the visible FAQ section below — JSON-LD and UI render the same list).
+  const rentalExtraFaqs = mode === 'rent' ? [
+    {
+      q: `Can I rent a ${categoryLabel.toLowerCase().replace(/s$/, '')} monthly in ${city.name}?`,
+      a: `Often, yes. Rental terms are set by each owner, and many ${city.name} listings offer weekly and monthly arrangements alongside daily rates. Review the terms on the individual listing or message the owner to discuss a monthly rental.`,
+    },
+    {
+      q: 'Is this a catering rental or equipment rental?',
+      a: `The listings on this page are equipment rentals — you rent the ${categoryLabel.toLowerCase().replace(/s$/, '')} and operate it yourself for your own food business. If you want a staffed unit for an event, message the owner through their listing to ask about staffed services.`,
+    },
+  ] : [];
+
+  const faqSchema = rentalExtraFaqs.length
+    ? {
+        ...baseFaqSchema,
+        mainEntity: [
+          ...(baseFaqSchema.mainEntity as any[]),
+          ...rentalExtraFaqs.map((f) => ({
+            '@type': 'Question',
+            name: f.q,
+            acceptedAnswer: { '@type': 'Answer', text: f.a },
+          })),
+        ],
+      }
+    : baseFaqSchema;
+
+  // High-intent FAQs surfaced in the UI (mirrors the JSON-LD)
   const faqs = (faqSchema.mainEntity as any[]).map((m) => ({
     q: m.name as string,
     a: m.acceptedAnswer.text as string,
