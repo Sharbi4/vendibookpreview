@@ -533,7 +533,7 @@ export default function PricePilot() {
                                         aria-describedby={errors.assetCategory ? 'pp-err-assetCategory' : undefined}
                                         tabIndex={-1}
                                         className={cn('mt-5 grid grid-cols-1 gap-2.5 rounded-2xl focus:outline-none sm:grid-cols-2',
-                                          errors.assetCategory && 'ring-2 ring-amber-600/40 ring-offset-2 ring-offset-sale-card')}
+                                          errors.assetCategory && 'ring-2 ring-amber-600/40')}
                                       >
                                         {CATEGORIES.map((c) => (
                                           <button key={c.value} type="button" onClick={() => { setAssetCategory(c.value); clearError('assetCategory'); }}
@@ -664,7 +664,7 @@ export default function PricePilot() {
                                           aria-describedby={errors.condition ? 'pp-err-condition' : undefined}
                                           tabIndex={-1}
                                           className={cn('mt-1.5 grid grid-cols-2 gap-2 rounded-2xl focus:outline-none sm:grid-cols-4',
-                                            errors.condition && 'ring-2 ring-amber-600/40 ring-offset-2 ring-offset-sale-card')}
+                                            errors.condition && 'ring-2 ring-amber-600/40')}
                                         >
                                           {CONDITIONS.map((c) => (
                                             <button key={c.value} type="button" onClick={() => { setCondition(c.value); clearError('condition'); }}
@@ -688,7 +688,7 @@ export default function PricePilot() {
                                           aria-describedby={errors.operationalStatus ? 'pp-err-operationalStatus' : undefined}
                                           tabIndex={-1}
                                           className={cn('mt-1.5 grid grid-cols-1 gap-1.5 rounded-2xl focus:outline-none sm:grid-cols-2',
-                                            errors.operationalStatus && 'ring-2 ring-amber-600/40 ring-offset-2 ring-offset-sale-card')}
+                                            errors.operationalStatus && 'ring-2 ring-amber-600/40')}
                                         >
                                           {OPERATIONAL.map((o) => (
                                             <button key={o.value} type="button" onClick={() => { setOperationalStatus(o.value); clearError('operationalStatus'); }}
