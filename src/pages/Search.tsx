@@ -53,6 +53,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { filterPubliclyVisible } from '@/lib/listings/publicVisibility';
 import { useQuery } from '@tanstack/react-query';
 import { Listing, CATEGORY_LABELS, ListingCategory, ListingMode, AMENITIES_BY_CATEGORY } from '@/types/listing';
+import { SPECIALTY_DEFS, type SpecialtyKey, type SpecialtyVehicle } from '@/lib/listings/specialty';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useGoogleMapsToken } from '@/hooks/useGoogleMapsToken';
