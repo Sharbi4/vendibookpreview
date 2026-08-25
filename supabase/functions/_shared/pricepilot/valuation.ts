@@ -23,6 +23,7 @@ export interface SubjectProfile {
   assetCategory: AssetCategory;
   city?: string | null;
   state?: string | null;
+  zip?: string | null;
   year?: number | null;
   make?: string | null;
   model?: string | null;
@@ -96,7 +97,11 @@ export interface ValuationResult {
 
 export interface RentalValuationResult {
   dailyRate: number;
+  dailyLow: number;
+  dailyHigh: number;
   weeklyRate: number;
+  weeklyLow: number;
+  weeklyHigh: number;
   monthlyRate: number;
   confidenceScore: number;
   confidenceLabel: 'high' | 'moderate' | 'limited';
@@ -472,10 +477,16 @@ export function runRentalValuation(subject: SubjectProfile, comps: CompRecord[])
   if (usable.length < 3) {
     const [lo, hi] = RENTAL_FALLBACK_DAILY[subject.assetCategory];
     const daily = Math.round(((lo + hi) / 2) / 5) * 5;
+    const dailyLow = Math.round(lo / 5) * 5;
+    const dailyHigh = Math.round(hi / 5) * 5;
     warnings.push('Limited rental evidence for this equipment type. Rates below are broad category benchmarks, not a market read.');
     return {
       dailyRate: daily,
+      dailyLow,
+      dailyHigh,
       weeklyRate: Math.round((daily * 5.5) / 5) * 5,
+      weeklyLow: Math.round((dailyLow * 5.5) / 5) * 5,
+      weeklyHigh: Math.round((dailyHigh * 5.5) / 5) * 5,
       monthlyRate: Math.round((daily * 20) / 10) * 10,
       confidenceScore: 20,
       confidenceLabel: 'limited',
@@ -496,6 +507,12 @@ export function runRentalValuation(subject: SubjectProfile, comps: CompRecord[])
 
   const weighted = scored.map((c) => ({ value: c.displayedPrice!, weight: c.weight }));
   const daily = Math.round(weightedQuantile(weighted, 0.5) / 5) * 5;
+  let dailyLow = Math.round(weightedQuantile(weighted, 0.25) / 5) * 5;
+  let dailyHigh = Math.round(weightedQuantile(weighted, 0.75) / 5) * 5;
+  if (dailyHigh <= dailyLow) {
+    dailyLow = Math.round((daily * 0.85) / 5) * 5;
+    dailyHigh = Math.round((daily * 1.15) / 5) * 5;
+  }
 
   const weeklyRates = scored
     .map((c) => (c.features?.__weeklyRate as number) || 0)
@@ -507,6 +524,12 @@ export function runRentalValuation(subject: SubjectProfile, comps: CompRecord[])
   const weekly = weeklyRates.length >= 3
     ? Math.round(median(weeklyRates) / 5) * 5
     : Math.round((daily * 5.5) / 5) * 5;
+  const weeklyLow = weeklyRates.length >= 3
+    ? Math.round(Math.min(...weeklyRates) / 5) * 5
+    : Math.round((dailyLow * 5.5) / 5) * 5;
+  const weeklyHigh = weeklyRates.length >= 3
+    ? Math.round(Math.max(...weeklyRates) / 5) * 5
+    : Math.round((dailyHigh * 5.5) / 5) * 5;
   const monthly = monthlyRates.length >= 3
     ? Math.round(median(monthlyRates) / 10) * 10
     : Math.round((daily * 20) / 10) * 10;
@@ -530,7 +553,11 @@ export function runRentalValuation(subject: SubjectProfile, comps: CompRecord[])
 
   return {
     dailyRate: daily,
+    dailyLow,
+    dailyHigh,
     weeklyRate: weekly,
+    weeklyLow,
+    weeklyHigh,
     monthlyRate: monthly,
     confidenceScore,
     confidenceLabel,

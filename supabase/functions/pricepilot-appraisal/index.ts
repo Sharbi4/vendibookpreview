@@ -65,6 +65,7 @@ function parseSubject(body: any): SubjectProfile | Response {
     assetCategory: assetCategory as SubjectProfile['assetCategory'],
     city: str(body?.city, 80),
     state: str(body?.state, 2)?.toUpperCase() ?? null,
+    zip: str(body?.zip, 10),
     year: num(body?.year) ? Math.min(new Date().getFullYear() + 2, Math.max(1950, num(body?.year)!)) : null,
     make: str(body?.make, 60),
     model: str(body?.model, 60),
@@ -92,6 +93,80 @@ const CATEGORY_LABEL: Record<string, string> = {
   food_cart: 'Food cart',
   mobile_bar: 'Mobile bar',
 };
+
+// ---------------------------------------------------------------------------
+// Staged market scope: local -> regional -> national -> modeled.
+// The valuation always runs on the tightest tier with enough real evidence;
+// the response names its scope so the UI never implies local evidence that
+// does not exist.
+// ---------------------------------------------------------------------------
+
+type MarketScope = 'local' | 'regional' | 'national' | 'modeled';
+
+const US_REGION: Record<string, string> = {
+  CT: 'northeast', ME: 'northeast', MA: 'northeast', NH: 'northeast', RI: 'northeast', VT: 'northeast',
+  NJ: 'northeast', NY: 'northeast', PA: 'northeast',
+  IL: 'midwest', IN: 'midwest', MI: 'midwest', OH: 'midwest', WI: 'midwest', IA: 'midwest',
+  KS: 'midwest', MN: 'midwest', MO: 'midwest', NE: 'midwest', ND: 'midwest', SD: 'midwest',
+  DE: 'south', FL: 'south', GA: 'south', MD: 'south', NC: 'south', SC: 'south', VA: 'south',
+  WV: 'south', DC: 'south', AL: 'south', KY: 'south', MS: 'south', TN: 'south', AR: 'south',
+  LA: 'south', OK: 'south', TX: 'south',
+  AZ: 'west', CO: 'west', ID: 'west', MT: 'west', NV: 'west', NM: 'west', UT: 'west',
+  WY: 'west', AK: 'west', CA: 'west', HI: 'west', OR: 'west', WA: 'west',
+};
+
+const SCOPE_LABEL: Record<MarketScope, string> = {
+  local: 'Local market average',
+  regional: 'Regional benchmark',
+  national: 'Broader market benchmark',
+  modeled: 'Modeled midpoint',
+};
+
+const SCOPE_HEADLINE: Record<MarketScope, string> = {
+  local: 'Local market',
+  regional: 'Expanded regional market',
+  national: 'Broader U.S. market',
+  modeled: 'Modeled estimate',
+};
+
+/** Pick the tightest geography tier with enough priced evidence to trust. */
+function stageScope(subject: SubjectProfile, comps: CompRecord[]): { scope: MarketScope; pool: CompRecord[] } {
+  const priced = comps.filter((c) => typeof c.displayedPrice === 'number' && (c.displayedPrice ?? 0) > 0);
+  const st = subject.state?.toUpperCase();
+  if (st) {
+    const localIds = new Set(priced.filter((c) => c.state?.toUpperCase() === st).map((c) => c.id));
+    if (localIds.size >= 5) return { scope: 'local', pool: comps.filter((c) => localIds.has(c.id)) };
+    const region = US_REGION[st];
+    if (region) {
+      const regionIds = new Set(
+        priced.filter((c) => c.state && US_REGION[c.state.toUpperCase()] === region).map((c) => c.id),
+      );
+      if (regionIds.size >= 5) return { scope: 'regional', pool: comps.filter((c) => regionIds.has(c.id)) };
+    }
+  }
+  if (priced.length >= 3) return { scope: 'national', pool: comps };
+  return { scope: 'modeled', pool: comps };
+}
+
+const SOURCE_DESC: Record<string, string> = {
+  facebook_observed: 'Observed marketplace listings, including sold- and pending-status records',
+  vendibook_asking: 'Current Vendibook asking prices',
+  vendibook_verified: 'Verified Vendibook transaction prices',
+};
+
+/** Genuine source labels for the evidence actually used; empty when modeled. */
+function describeSources(comps: CompRecord[], scope: MarketScope): string[] {
+  if (scope === 'modeled') return [];
+  const kinds = new Set(comps.map((c) => c.evidenceType));
+  return Object.keys(SOURCE_DESC).filter((k) => kinds.has(k as CompRecord['evidenceType'])).map((k) => SOURCE_DESC[k]);
+}
+
+function mapConfidence(label: 'high' | 'moderate' | 'limited', scope: MarketScope): 'high' | 'medium' | 'directional' {
+  if (scope === 'modeled') return 'directional';
+  return label === 'high' ? 'high' : label === 'moderate' ? 'medium' : 'directional';
+}
+
+const usd = (n: number) => `$${Math.round(n).toLocaleString('en-US')}`;
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
@@ -179,7 +254,15 @@ Deno.serve(async (req) => {
         }
       }
 
-      const valuation = runSaleValuation(subject, comps);
+      const { scope, pool } = stageScope(subject, comps);
+      const valuation = runSaleValuation(subject, pool);
+      if (scope === 'regional') {
+        valuation.warnings.push('Local evidence was sparse, so this report broadened to your surrounding region.');
+      } else if (scope === 'national') {
+        valuation.warnings.push('Local and regional evidence was sparse. This report uses the broader U.S. market.');
+      } else if (scope === 'modeled') {
+        valuation.warnings.push('This is a modeled directional estimate from your equipment profile and broad industry bands, not a read of live local comps.');
+      }
 
       const { narrative, model } = await generatePricePilotNarrative({
         photos,
@@ -217,6 +300,7 @@ Deno.serve(async (req) => {
                 confidenceLabel: valuation.confidenceLabel,
                 comparableCount: valuation.comparableCount,
                 medianComparablePrice: valuation.medianComparablePrice,
+                marketScope: SCOPE_HEADLINE[scope],
               },
               adjustments: valuation.adjustmentSummary,
               warnings: valuation.warnings,
@@ -234,14 +318,44 @@ Deno.serve(async (req) => {
           ),
       });
 
+      const saleDrivers = valuation.adjustmentSummary.slice(0, 4).map((a) => `${a.label}: ${a.detail}`);
+      if (!saleDrivers.length) {
+        saleDrivers.push(`${SCOPE_HEADLINE[scope]} evidence for ${CATEGORY_LABEL[subject.assetCategory].toLowerCase()}s`);
+      }
+      const saleMoves = [
+        `List at ${usd(valuation.recommendedListPrice)} to sit at the heart of the range.`,
+        `If you need a faster sale, ${usd(valuation.quickSalePrice)} keeps you competitive without giving the unit away.`,
+        `Strong photos, maintenance records and a clean title can support testing ${usd(valuation.premiumPositionPrice)}.`,
+      ];
+      if (scope === 'modeled') saleMoves.push('Treat this as directional — scan live listings near you before publishing a price.');
+
+      const generatedAt = new Date().toISOString();
       return jsonResponse(200, {
         ok: true,
         mode: 'sale',
+        // ── Unified pricing contract (consumed by the PricePilot report UI) ──
+        salePrice: valuation.recommendedListPrice,
+        saleLow: valuation.estimatedMarketLow,
+        saleHigh: valuation.estimatedMarketHigh,
+        marketBenchmark: valuation.medianComparablePrice || valuation.recommendedListPrice,
+        benchmarkLabel: SCOPE_LABEL[scope],
+        marketScope: scope,
+        marketScopeLabel: SCOPE_HEADLINE[scope],
+        confidence: mapConfidence(valuation.confidenceLabel, scope),
+        reasoning:
+          narrative?.summary ??
+          `${SCOPE_HEADLINE[scope]} read for this ${CATEGORY_LABEL[subject.assetCategory].toLowerCase()}: an estimated market range of ${usd(valuation.estimatedMarketLow)} to ${usd(valuation.estimatedMarketHigh)}, with ${usd(valuation.recommendedListPrice)} as the recommended position.`,
+        priceDrivers: saleDrivers,
+        pricingMoves: saleMoves,
+        sources: describeSources(pool, scope),
+        lastUpdated: generatedAt,
+        // ── Legacy shape (kept for backwards compatibility) ──
         subject: {
           assetCategory: subject.assetCategory,
           categoryLabel: CATEGORY_LABEL[subject.assetCategory],
           city: subject.city,
           state: subject.state,
+          zip: subject.zip,
           year: subject.year,
           make: subject.make,
           model: subject.model,
@@ -279,7 +393,7 @@ Deno.serve(async (req) => {
         })),
         narrative,
         narrativeModel: model,
-        generatedAt: new Date().toISOString(),
+        generatedAt,
       });
     }
 
@@ -322,7 +436,15 @@ Deno.serve(async (req) => {
       }
     }
 
-    const rental = runRentalValuation(subject, rentalComps);
+    const { scope, pool } = stageScope(subject, rentalComps);
+    const rental = runRentalValuation(subject, pool);
+    if (scope === 'regional') {
+      rental.warnings.push('Local rental evidence was sparse, so this report broadened to your surrounding region.');
+    } else if (scope === 'national') {
+      rental.warnings.push('Local and regional rental evidence was sparse. Rates reflect the broader U.S. market.');
+    } else if (scope === 'modeled') {
+      rental.warnings.push('This is a modeled directional estimate from your equipment profile and broad industry bands, not a read of live local rates.');
+    }
 
     const { narrative, model } = await generatePricePilotNarrative({
       photos,
@@ -345,11 +467,16 @@ Deno.serve(async (req) => {
             },
             result: {
               dailyRate: rental.dailyRate,
+              dailyLow: rental.dailyLow,
+              dailyHigh: rental.dailyHigh,
               weeklyRate: rental.weeklyRate,
+              weeklyLow: rental.weeklyLow,
+              weeklyHigh: rental.weeklyHigh,
               monthlyRate: rental.monthlyRate,
               confidenceScore: rental.confidenceScore,
               confidenceLabel: rental.confidenceLabel,
               comparableCount: rental.comparableCount,
+              marketScope: SCOPE_HEADLINE[scope],
             },
             warnings: rental.warnings,
             topComparables: rental.comparables.slice(0, 8).map((c) => ({
@@ -364,14 +491,48 @@ Deno.serve(async (req) => {
         ),
     });
 
+    const rentalMoves = [
+      `Anchor your daily rate at ${usd(rental.dailyRate)} — the heart of the observed range.`,
+      `Offer a weekly bundle near ${usd(rental.weeklyRate)} to win longer bookings.`,
+      'A refundable deposit and clear delivery terms let you hold the top of the range.',
+    ];
+    if (scope === 'modeled') rentalMoves.push('Treat this as directional — check live rental listings near you before publishing rates.');
+    const rentalDrivers = [
+      `${CATEGORY_LABEL[subject.assetCategory]} daily asking rates in the ${SCOPE_HEADLINE[scope].toLowerCase()}`,
+      subject.condition ? `Condition: ${subject.condition}` : null,
+      subject.operationalStatus ? `Operational status: ${subject.operationalStatus.replace(/_/g, ' ')}` : null,
+    ].filter((d): d is string => !!d);
+
+    const generatedAt = new Date().toISOString();
     return jsonResponse(200, {
       ok: true,
       mode: 'rental',
+      // ── Unified pricing contract (consumed by the PricePilot report UI) ──
+      dailyRate: rental.dailyRate,
+      dailyLow: rental.dailyLow,
+      dailyHigh: rental.dailyHigh,
+      weeklyRate: rental.weeklyRate,
+      weeklyLow: rental.weeklyLow,
+      weeklyHigh: rental.weeklyHigh,
+      marketBenchmark: rental.dailyRate,
+      benchmarkLabel: SCOPE_LABEL[scope],
+      marketScope: scope,
+      marketScopeLabel: SCOPE_HEADLINE[scope],
+      confidence: mapConfidence(rental.confidenceLabel, scope),
+      reasoning:
+        narrative?.summary ??
+        `${SCOPE_HEADLINE[scope]} read for this ${CATEGORY_LABEL[subject.assetCategory].toLowerCase()}: a recommended daily rate of ${usd(rental.dailyRate)}, with a typical range of ${usd(rental.dailyLow)} to ${usd(rental.dailyHigh)}.`,
+      priceDrivers: rentalDrivers,
+      pricingMoves: rentalMoves,
+      sources: describeSources(pool, scope),
+      lastUpdated: generatedAt,
+      // ── Legacy shape (kept for backwards compatibility) ──
       subject: {
         assetCategory: subject.assetCategory,
         categoryLabel: CATEGORY_LABEL[subject.assetCategory],
         city: subject.city,
         state: subject.state,
+        zip: subject.zip,
         year: subject.year,
         make: subject.make,
         model: subject.model,
@@ -379,7 +540,11 @@ Deno.serve(async (req) => {
       },
       valuation: {
         dailyRate: rental.dailyRate,
+        dailyLow: rental.dailyLow,
+        dailyHigh: rental.dailyHigh,
         weeklyRate: rental.weeklyRate,
+        weeklyLow: rental.weeklyLow,
+        weeklyHigh: rental.weeklyHigh,
         monthlyRate: rental.monthlyRate,
         confidenceScore: rental.confidenceScore,
         confidenceLabel: rental.confidenceLabel,
@@ -405,7 +570,7 @@ Deno.serve(async (req) => {
       })),
       narrative,
       narrativeModel: model,
-      generatedAt: new Date().toISOString(),
+      generatedAt,
     });
   } catch (err) {
     console.error('pricepilot-appraisal error:', err);
