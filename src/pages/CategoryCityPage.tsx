@@ -1,3 +1,4 @@
+import { trackEvent } from '@/lib/analytics';
 import { filterPubliclyVisible } from '@/lib/listings/publicVisibility';
 import { useParams, Link } from 'react-router-dom';
 import { useEffect, useState } from 'react';
