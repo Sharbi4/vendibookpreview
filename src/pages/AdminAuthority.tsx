@@ -69,7 +69,7 @@ const OpportunityRow = ({ o }: { o: BacklinkOpportunity }) => (
 );
 
 const AdminAuthority = () => {
-  const { user, loading: authLoading } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [priorityFilter, setPriorityFilter] = useState<OpportunityPriority | 'all'>('all');
 
