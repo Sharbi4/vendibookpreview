@@ -131,8 +131,6 @@ export const MembershipInlinePanel: React.FC<MembershipInlinePanelProps> = ({ re
           </button>
         </div>
       </div>
-      {/* Consent dialog must be rendered inside the wizard tree. */}
-      {dialog}
     </>
   );
 };
