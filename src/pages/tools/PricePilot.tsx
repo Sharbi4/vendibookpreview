@@ -548,6 +548,7 @@ export default function PricePilot() {
                                           </button>
                                         ))}
                                       </div>
+                                      <FieldError id="pp-err-assetCategory" message={errors.assetCategory} />
                                     </motion.div>
                                   )}
 
