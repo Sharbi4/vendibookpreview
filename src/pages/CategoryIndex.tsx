@@ -286,6 +286,18 @@ const CategoryIndex = ({ config }: { config: CategoryIndexConfig }) => {
   // hubs and the coffee/ice-cream vehicle landing pages.
   const noindex = !loading && (primary.length === 0 || totalListings === 0);
 
+  // Low-inventory freight funnel. Triggered by the page's OWN on-topic
+  // inventory (primary tier) — geographic fallback rows are not local supply.
+  const localCount = primary.length;
+  const isLowInventory = !loading && localCount < LOW_INVENTORY_THRESHOLD;
+  const nationwide = useNationwideInventory({
+    categories,
+    mode: config.mode,
+    specialty: config.specialty,
+    enabled: isLowInventory,
+  });
+
+
 
   const cityLabel = config.city ? `${config.city.name}, ${config.city.stateCode}` : null;
   const stateLabel = config.city ? config.city.stateCode : config.state?.name ?? null;
