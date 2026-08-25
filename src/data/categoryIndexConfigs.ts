@@ -297,6 +297,7 @@ export const CATEGORY_INDEX_CONFIGS: CategoryIndexConfig[] = [
       { href: '/food-trucks-for-sale', label: 'Food trucks for sale' },
       { href: '/coffee-trucks-trailers-for-sale', label: 'Coffee trucks & trailers for sale' },
       { href: '/ice-cream-trucks-trailers-for-sale', label: 'Ice cream trucks & trailers for sale' },
+      { href: '/food-truck-prices', label: 'Food trailer prices & cost data' },
       { href: '/sell-my-food-truck', label: 'Sell my trailer or truck' },
     ],
   },
