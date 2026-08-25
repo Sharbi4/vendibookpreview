@@ -375,9 +375,31 @@ const Search = () => {
     setSearchParams(params);
   };
 
+  // Clears an applied specialty filter — back to a neutral marketplace search.
+  const handleSpecialtyClear = () => {
+    setSearchQuery('');
+    setDebouncedQuery('');
+    setQueryIsLocation(false);
+    setCategory('all');
+    setMode('all');
+    setPage(1);
+    const params = new URLSearchParams(searchParams);
+    params.delete('q');
+    params.delete('category');
+    params.delete('mode');
+    params.delete('page');
+    setSearchParams(params);
+    trackEvent({ category: 'Search', action: 'specialty_filter_cleared', label: activeSpecialty?.key });
+  };
+
   // Specialty browse deep links (coffee/ice cream × truck/trailer) — sets the
   // exact same state the hub-header and listing-card links navigate to.
+  // Re-tapping the active specialty pill toggles the filter off.
   const handleSpecialtySelect = (key: SpecialtyKey, vehicle: SpecialtyVehicle) => {
+    if (activeSpecialty?.key === key && activeSpecialty?.vehicle === vehicle) {
+      handleSpecialtyClear();
+      return;
+    }
     const def = SPECIALTY_DEFS[key];
     const newCategory: ListingCategory = vehicle === 'truck' ? 'food_truck' : 'food_trailer';
     setSearchQuery(def.searchQuery);
