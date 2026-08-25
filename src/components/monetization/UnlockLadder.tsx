@@ -1,179 +1,270 @@
-/**
- * UnlockLadder — the standardized "how to unlock this tool" price ladder.
- *
- * Cheapest first, with the recommended row (usually Growth) marked
- * "Best value". Never renders a tier that doesn't actually include the
- * tool the user is trying to unlock — the ladder is resolved by
- * `resolveUnlockLadder()` from real monetization_products rows.
- */
-import * as React from 'react';
-import { Check, Loader2, ShieldCheck, Sparkles as _NoSparkleBanned, TrendingUp } from 'lucide-react';
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Check, Crown, Loader2, ShieldCheck } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
-import { useMonetizationProducts } from '@/hooks/useMonetizationProducts';
+import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
 import { useSubscriptionConsent } from '@/hooks/useSubscriptionConsent';
-import { startMonetizationCheckout } from '@/lib/monetization/products';
-import { buildCheckoutReturnPaths } from '@/lib/monetization/returnRoutes';
-import { resolveUnlockLadder, type LadderOption } from '@/lib/monetization/unlockLadder';
-import { getToolBySlug } from '@/lib/tools/catalog';
-import { useHostEntitlements } from '@/hooks/useHostEntitlements';
-import { trackLeadEvent } from '@/lib/leadTracking';
-import { toast } from 'sonner';
+import {
+  buildUnlockOptions,
+  type UnlockOption,
+} from '@/lib/monetization/unlockLadder';
+import {
+  monetizationProductUrl,
+  startMonetizationCheckout,
+} from '@/lib/monetization/products';
+import { cn } from '@/lib/utils';
 
-// no-sparkle-icons: alias is not used, kept for lint reference.
-void _NoSparkleBanned;
-
-export interface UnlockLadderProps {
-  toolSlug: string;
-  /** Analytics surface (e.g. "tool_gate", "preview_page", "wizard_ai_gate"). */
-  surface: string;
-  /** Called after checkout is initiated so the parent can close a modal. */
-  onCheckoutStarted?: (option: LadderOption) => void;
-  className?: string;
-  /** If provided, shown above the ladder. */
+type Props = {
+  slug: string;
+  eyebrow?: string;
   headline?: string;
-}
+  subhead?: string;
+  className?: string;
+  /**
+   * 'dark' (default) matches the satin-lux dashboard theme.
+   * 'light' renders for ivory / sale-light surfaces (white cards, charcoal text).
+   */
+  tone?: 'dark' | 'light';
+  /**
+   * When set (e.g. '/tools/pricepilot'), PayPal returns the buyer to this path
+   * with ?purchase=success|cancelled instead of the product's default route.
+   * Keeps tool unlocks landing back on the tool.
+   */
+  returnPath?: string;
+};
 
+/**
+ * Progressive unlock ladder: shows the tool's one-time unlock and the
+ * membership alternative that includes it. Resolves everything from the live
+ * monetization catalog — no hardcoded prices.
+ */
 export function UnlockLadder({
-  toolSlug,
-  surface,
-  onCheckoutStarted,
-  className,
+  slug,
+  eyebrow,
   headline,
-}: UnlockLadderProps) {
-  // The ladder can pull from multiple product categories.
-  const subs = useMonetizationProducts('host_subscription');
-  const services = useMonetizationProducts('seller_service');
-  const permits = useMonetizationProducts('permit_upgrade');
-  const listing = useMonetizationProducts('listing_upgrade');
-  const [busySlug, setBusySlug] = React.useState<string | null>(null);
-  // The consent dialog MUST be rendered (see bottom of JSX) — without it a
-  // recurring selection sets pending state with no visible gate and stalls.
-  const { requestCheckout, dialog: consentDialog } = useSubscriptionConsent();
-  const { tier: currentTier } = useHostEntitlements();
+  subhead,
+  className,
+  tone = 'dark',
+  returnPath,
+}: Props) {
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const navigate = useNavigate();
+  const { requireConsent, dialog: consentDialog } = useSubscriptionConsent();
+  const [busySlug, setBusySlug] = useState<string | null>(null);
+  const options = buildUnlockOptions(slug);
+  const light = tone === 'light';
 
-  const tool = getToolBySlug(toolSlug);
-  const products = React.useMemo(
-    () => [...subs.products, ...services.products, ...permits.products, ...listing.products],
-    [subs.products, services.products, permits.products, listing.products],
-  );
-  const ladder = React.useMemo(
-    () => resolveUnlockLadder(toolSlug, products, currentTier),
-    [toolSlug, products, currentTier],
-  );
-  const loading = subs.loading || services.loading || permits.loading || listing.loading;
+  if (options.length === 0) return null;
 
+  const handlePick = async (opt: UnlockOption) => {
+    if (!user) {
+      navigate(
+        `/auth?mode=signin&next=${encodeURIComponent(window.location.pathname + window.location.search)}`,
+      );
+      return;
+    }
+    if (busySlug) return;
 
-  const handleSelect = async (option: LadderOption) => {
-    setBusySlug(option.productSlug);
-    trackLeadEvent('unlock_ladder_option_selected', {
-      tool_slug: toolSlug,
-      product_slug: option.productSlug,
-      kind: option.kind,
-      surface,
-    });
-    trackLeadEvent('tool_preview_converted', {
-      tool_slug: toolSlug,
-      product_slug: option.productSlug,
-      surface,
-    });
+    if (opt.billingType === 'recurring') {
+      const consented = await requireConsent({
+        planName: opt.product.name,
+        amountCents: opt.priceCents,
+        interval: opt.interval,
+        context: opt.product.slug,
+        returnPath: window.location.pathname,
+      });
+      if (!consented) return;
+    }
+
+    setBusySlug(opt.product.slug);
     try {
-      const paths = buildCheckoutReturnPaths(option.productSlug);
-      if (option.product.billing_type === 'recurring') {
-        await requestCheckout(option.product, {
-          interval: 'monthly',
-          successPath: paths.successPath,
-          cancelPath: paths.cancelPath,
-        });
-      } else {
-        const { url } = await startMonetizationCheckout({
-          productSlug: option.productSlug,
-          successPath: paths.successPath,
-          cancelPath: paths.cancelPath,
-        });
-        onCheckoutStarted?.(option);
-        window.location.href = url;
-        return;
-      }
-      onCheckoutStarted?.(option);
+      const overrides = returnPath
+        ? {
+            successPath: `${returnPath}?purchase=success&product=${opt.product.slug}`,
+            cancelPath: `${returnPath}?purchase=cancelled&product=${opt.product.slug}`,
+          }
+        : {};
+      await startMonetizationCheckout(opt.product, overrides);
     } catch (err) {
-      console.error('[UnlockLadder] checkout failed', err);
-      toast.error('Could not start checkout. Please try again.');
-    } finally {
+      toast({
+        title: 'Could not start checkout',
+        description:
+          err instanceof Error ? err.message : 'Please try again.',
+        variant: 'destructive',
+      });
       setBusySlug(null);
     }
   };
 
-  if (loading) {
-    return (
-      <div className={cn('flex items-center justify-center py-6', className)}>
-        <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-      </div>
-    );
-  }
-
-  if (!tool || ladder.length === 0) {
-    return null;
-  }
-
   return (
-    <div className={cn('space-y-3', className)}>
-      {headline && (
-        <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-          {headline}
-        </p>
-      )}
-      <div className={cn('grid gap-2.5', ladder.length === 2 && 'sm:grid-cols-2')}>
-        {ladder.map((option) => {
-          const busy = busySlug === option.productSlug;
-          return (
-            <button
-              type="button"
-              key={option.productSlug}
-              onClick={() => handleSelect(option)}
-              disabled={busy}
+    <div className={cn('space-y-4', className)}>
+      {(eyebrow || headline || subhead) && (
+        <div className="text-center space-y-1">
+          {eyebrow && (
+            <p className="text-[11px] uppercase tracking-[0.2em] text-primary">
+              {eyebrow}
+            </p>
+          )}
+          {headline && (
+            <h3
               className={cn(
-                'group relative flex h-full flex-col gap-2 rounded-md border-[1.5px] px-4 py-3.5 text-left transition-colors',
-                option.bestValue
-                  ? 'border-orange-500/60 bg-orange-500/[0.06] hover:bg-orange-500/[0.10]'
-                  : 'border-white/12 bg-white/[0.03] hover:border-white/25 hover:bg-white/[0.05]',
-                busy && 'opacity-60',
+                'text-xl font-semibold tracking-tight',
+                light ? 'text-foreground' : 'text-white',
               )}
             >
-              <div className="flex items-center gap-2">
-                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md border-[1.5px] border-white/12 bg-white/[0.04] text-orange-300">
-                  {option.kind === 'one_time' && <Check className="h-3.5 w-3.5" />}
-                  {option.kind === 'weekly_pass' && <ShieldCheck className="h-3.5 w-3.5" />}
-                  {(option.kind === 'subscription' || option.kind === 'upgrade') && <TrendingUp className="h-3.5 w-3.5" />}
-                </div>
-                <span className="text-sm font-semibold text-foreground truncate">
-                  {option.productName}
-                </span>
-                {option.bestValue && (
-                  <span className="ml-auto shrink-0 rounded-full border-[1.5px] border-orange-500/60 bg-orange-500/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-orange-300">
-                    Best value
-                  </span>
-                )}
-              </div>
-              <div className="flex items-baseline gap-1.5">
-                <span className="text-2xl font-bold tabular-nums text-foreground">
-                  {option.priceLabel}
-                </span>
-                <span className="text-xs text-muted-foreground">{option.cadenceLabel}</span>
-              </div>
-              <p className="text-xs leading-relaxed text-foreground/70">
-                {option.reason}
-              </p>
-              {busy && (
-                <Loader2 className="absolute right-3 top-3 h-4 w-4 animate-spin text-muted-foreground" />
+              {headline}
+            </h3>
+          )}
+          {subhead && (
+            <p
+              className={cn(
+                'text-sm',
+                light ? 'text-muted-foreground' : 'text-white/55',
               )}
-            </button>
+            >
+              {subhead}
+            </p>
+          )}
+        </div>
+      )}
+
+      <div
+        className={cn(
+          'grid gap-4',
+          options.length > 1 ? 'md:grid-cols-2' : 'max-w-md mx-auto',
+        )}
+      >
+        {options.map((opt) => {
+          const url = monetizationProductUrl(opt.product);
+          const busy = busySlug === opt.product.slug;
+          return (
+            <div
+              key={opt.product.slug}
+              className={cn(
+                'relative rounded-2xl border p-5 transition-colors',
+                light
+                  ? 'bg-card text-card-foreground shadow-[0_1px_2px_rgba(24,20,16,0.04),0_10px_28px_-18px_rgba(24,20,16,0.28)]'
+                  : 'bg-white/[0.04]',
+                opt.recommended
+                  ? light
+                    ? 'border-primary/50 ring-1 ring-primary/20'
+                    : 'border-primary/50 ring-1 ring-primary/20'
+                  : light
+                    ? 'border-border'
+                    : 'border-white/10',
+              )}
+            >
+              {opt.recommended && (
+                <Badge className="absolute -top-2.5 left-4 bg-primary text-primary-foreground border-0">
+                  Best value
+                </Badge>
+              )}
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <div className="flex items-center gap-2">
+                    {opt.kind === 'membership' && (
+                      <Crown className="h-4 w-4 text-primary" aria-hidden />
+                    )}
+                    <h4
+                      className={cn(
+                        'font-semibold',
+                        light ? 'text-foreground' : 'text-white',
+                      )}
+                    >
+                      {opt.product.name}
+                    </h4>
+                  </div>
+                  <p
+                    className={cn(
+                      'text-xs mt-0.5',
+                      light ? 'text-muted-foreground' : 'text-white/50',
+                    )}
+                  >
+                    {opt.kind === 'membership'
+                      ? 'Recurring membership'
+                      : 'One-time unlock'}
+                  </p>
+                </div>
+                <div className="text-right shrink-0">
+                  <p
+                    className={cn(
+                      'text-2xl font-bold',
+                      light ? 'text-foreground' : 'text-white',
+                    )}
+                  >
+                    {opt.priceLabel}
+                  </p>
+                  {opt.interval && (
+                    <p
+                      className={cn(
+                        'text-[11px]',
+                        light ? 'text-muted-foreground' : 'text-white/45',
+                      )}
+                    >
+                      per {opt.interval}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              <p
+                className={cn(
+                  'text-sm mt-3',
+                  light ? 'text-muted-foreground' : 'text-white/65',
+                )}
+              >
+                {opt.reason}
+              </p>
+
+              {opt.includes && opt.includes.length > 0 && (
+                <ul
+                  className={cn(
+                    'mt-3 space-y-1.5 text-xs',
+                    light ? 'text-muted-foreground' : 'text-white/55',
+                  )}
+                >
+                  {opt.includes.slice(0, 4).map((inc) => (
+                    <li key={inc} className="flex items-center gap-1.5">
+                      <Check className="h-3.5 w-3.5 text-primary shrink-0" aria-hidden />
+                      {inc}
+                    </li>
+                  ))}
+                </ul>
+              )}
+
+              <Button
+                className="w-full mt-4"
+                variant={opt.recommended ? 'cta' : 'default'}
+                disabled={!url || busy || busySlug !== null}
+                onClick={() => void handlePick(opt)}
+              >
+                {busy ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-1.5 animate-spin" aria-hidden />
+                    Opening checkout...
+                  </>
+                ) : opt.billingType === 'recurring' ? (
+                  `Start ${opt.product.name}`
+                ) : (
+                  `Unlock once, ${opt.priceLabel}`
+                )}
+              </Button>
+            </div>
           );
         })}
       </div>
 
-      <p className="text-[11px] text-muted-foreground">
-        Payment protection — refund within 7 days if the tool doesn't help.
+      <p
+        className={cn(
+          'text-center text-xs flex items-center justify-center gap-1.5',
+          light ? 'text-muted-foreground' : 'text-white/45',
+        )}
+      >
+        <ShieldCheck className="h-3.5 w-3.5 text-primary" aria-hidden />
+        Secure PayPal checkout. Cancel memberships any time.
       </p>
       {consentDialog}
     </div>
