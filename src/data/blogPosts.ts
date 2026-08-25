@@ -1738,7 +1738,7 @@ export const BLOG_POSTS: BlogPost[] = [
 
 <h2 class="text-2xl font-bold mt-10 mb-4">2. Write a description with real specifics</h2>
 <p class="mb-4">"Food truck for rent, good condition" tells a buyer nothing. Name the equipment, the dimensions, the tank sizes, the generator, and what the unit is genuinely well suited to. Then name the flaws — it builds credibility and prevents renegotiation later.</p>
-<p class="mb-8"><a href="/tools/listing-studio" data-cta="tools_listing_studio_article" class="text-primary underline font-medium">Listing Studio</a> turns your specs into a title, description, and highlights, so you are editing a draft instead of staring at a blank field.</p>
+<p class="mb-8">Draft the title, description, and highlights from your spec sheet before you publish, so you are editing a draft instead of staring at a blank field.</p>
 
 <h2 class="text-2xl font-bold mt-10 mb-4">3. Be clear about permits and compliance</h2>
 <p class="mb-4">The scariest unknown for a first-time renter or buyer is whether they can legally operate. Say what the unit has — current inspections, suppression tag, any state build approval — and be equally clear about what they will need to obtain themselves.</p>
@@ -1746,7 +1746,7 @@ export const BLOG_POSTS: BlogPost[] = [
 
 <h2 class="text-2xl font-bold mt-10 mb-4">4. Help people picture the business</h2>
 <p class="mb-4">A specialized build can look limiting. Spelling out what else the equipment supports widens your audience.</p>
-<p class="mb-8"><a href="/tools/concept-lab" data-cta="tools_concept_lab_article" class="text-primary underline font-medium">Concept Lab</a> generates concept ideas that fit a given setup, and <a href="/tools/market-radar" data-cta="tools_market_radar_article" class="text-primary underline font-medium">Market Radar</a> pulls location intel, competitor snapshots, and demand signals you can reference. For maintenance and equipment guidance to include with a rental, see <a href="/tools/buildkit" class="text-primary underline font-medium">BuildKit</a>.</p>
+<p class="mb-8">Spell out two or three concepts the equipment genuinely supports, and include maintenance and equipment guidance with a rental so the next operator can picture themselves succeeding in it.</p>
 
 <h2 class="text-2xl font-bold mt-10 mb-4">And the basics that still decide it</h2>
 <ul class="mb-8 space-y-2">
@@ -1762,7 +1762,7 @@ export const BLOG_POSTS: BlogPost[] = [
     datePublished: '2026-01-21',
     dateModified: '2026-08-21',
     category: 'business-tips',
-    tags: ['food truck marketplace', 'listing optimization', 'PricePilot', 'Listing Studio', 'PermitPath', 'rental income'],
+    tags: ['food truck marketplace', 'listing optimization', 'PricePilot', 'PermitPath', 'rental income'],
     image: '/images/food-truck-marketplace-analytics.jpg',
     readingTime: 6,
     featured: true,
