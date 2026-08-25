@@ -431,7 +431,7 @@ const Pricing = () => {
                 <ul className="mt-8 space-y-3.5">
                   {STARTER_FEATURES.map((f) => (
                     <li key={f} className="flex gap-3 text-[15px] leading-relaxed text-muted-foreground">
-                      <Check className="mt-0.5 h-4.5 w-4.5 shrink-0 text-foreground/40" />
+                      <Check className="mt-0.5 h-5 w-5 shrink-0 text-foreground/40" />
                       <span>{f}</span>
                     </li>
                   ))}
@@ -500,7 +500,7 @@ const Pricing = () => {
                 <ul className="mt-8 space-y-3.5">
                   {PRO_FEATURES.map((f) => (
                     <li key={f} className="flex gap-3 text-[15px] leading-relaxed text-foreground">
-                      <Check className="mt-0.5 h-4.5 w-4.5 shrink-0 text-primary" />
+                      <Check className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
                       <span>{f}</span>
                     </li>
                   ))}
