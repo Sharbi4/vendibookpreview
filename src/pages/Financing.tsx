@@ -20,6 +20,7 @@ import { Button } from '@/components/ui/button';
 import { GuideBreadcrumb } from '@/components/education/GuideBreadcrumb';
 import { EquinoxFundingLogo } from '@/components/brand/ProviderLogos';
 import { FinancingAvailableBadge } from '@/components/financing/FinancingAvailableBadge';
+import { useFinancingHandoff } from '@/hooks/useFinancingHandoff';
 import loanArt from '@/assets/education/loan.svg.asset.json';
 import {
   trackFinancingApplyClick,
@@ -160,25 +161,27 @@ const ApplyCta = ({
   className = '',
   source,
   listingId,
+  onApply,
 }: {
   className?: string;
   source: FinancingSource;
   listingId?: string;
+  onApply: (source: FinancingSource, listingId?: string) => void;
 }) => (
-  <Button variant="cta" size="lg" className={`rounded-full ${className}`} asChild>
-    <a
-      href={APPLY_URL}
-      target="_blank"
-      rel="noopener noreferrer"
-      onClick={() => trackFinancingApplyClick(source, listingId)}
-    >
-      Apply with Equinox Funding
-      <ExternalLink className="w-4 h-4 ml-1.5" aria-hidden />
-    </a>
+  <Button
+    variant="cta"
+    size="lg"
+    className={`rounded-full ${className}`}
+    onClick={() => onApply(source, listingId)}
+  >
+    Apply with Equinox Funding
+    <ExternalLink className="w-4 h-4 ml-1.5" aria-hidden />
   </Button>
 );
 
+
 const Financing = () => {
+  const { startFinancingApply, financingLeadDialog } = useFinancingHandoff();
   const reduce = useReducedMotion();
   const [params] = useSearchParams();
   const listingIdParam = params.get('listing_id');
@@ -251,7 +254,7 @@ const Financing = () => {
                 you qualify for, and decide what works for your business.
               </p>
               <div className="flex flex-wrap gap-3 justify-center">
-                <ApplyCta source="financing_page_hero" listingId={listingId} />
+                <ApplyCta onApply={startFinancingApply} source="financing_page_hero" listingId={listingId} />
                 <Button variant="cta-outline" size="lg" className="rounded-full" asChild>
                   <Link to="/browse">Keep browsing</Link>
                 </Button>
@@ -412,7 +415,7 @@ const Financing = () => {
             </ol>
 
             <motion.div {...(reduce ? {} : fadeUp)} className="mt-8">
-              <ApplyCta source="financing_page_mid" listingId={listingId} />
+              <ApplyCta onApply={startFinancingApply} source="financing_page_mid" listingId={listingId} />
             </motion.div>
           </div>
         </section>
@@ -569,7 +572,7 @@ const Financing = () => {
                 Funding — not to Vendibook.
               </p>
               <div className="flex flex-wrap gap-3 justify-center">
-                <ApplyCta source="financing_page_footer" listingId={listingId} />
+                <ApplyCta onApply={startFinancingApply} source="financing_page_footer" listingId={listingId} />
                 <Button variant="cta-outline" size="lg" className="rounded-full" asChild>
                   <Link to="/how-purchasing-works">How purchasing works</Link>
                 </Button>
@@ -592,7 +595,9 @@ const Financing = () => {
       </main>
 
       <Footer />
+      {financingLeadDialog}
     </div>
+
   );
 };
 

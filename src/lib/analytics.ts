@@ -835,7 +835,9 @@ export type FinancingSource =
   | 'financing_page_footer'
   | 'financing_page_context'
   | 'listing_panel'
+  | 'listing_price_line'
   | 'listing_card';
+
 
 export const trackFinancingBannerImpression = (): void => {
   trackEvent({
@@ -859,11 +861,29 @@ export const trackFinancingPageViewed = (listingId?: string): void => {
   });
 };
 
+/**
+ * Placement-level financing CTA click. Emitted for every financing entry
+ * point so placements can be compared directly (the near-price line on a
+ * listing vs the detail panel vs the home banner vs the /financing hub).
+ */
+export const trackFinancingCtaClick = (
+  source: FinancingSource,
+  listingId?: string,
+): void => {
+  trackEvent({
+    category: 'Financing',
+    action: 'financing_cta_click',
+    label: source,
+    metadata: { source, listing_id: listingId ?? null, provider: 'equinox' },
+  });
+};
+
 /** Click on any "Apply now for financing" CTA. */
 export const trackFinancingApplyClick = (
   source: FinancingSource,
   listingId?: string,
 ): void => {
+  trackFinancingCtaClick(source, listingId);
   trackEvent({
     category: 'Financing',
     action: 'financing_apply_click',
@@ -877,6 +897,30 @@ export const trackFinancingApplyClick = (
   });
   trackGA4GenerateLead({ value: 0, currency: 'USD', lead_source: `financing_${source}` });
 };
+
+/**
+ * Vendibook captured the buyer's contact details before the Equinox handoff.
+ * `identified` distinguishes a signed-in silent capture from a form submit.
+ */
+export const trackFinancingLeadCaptured = (
+  source: FinancingSource,
+  listingId: string | undefined,
+  mode: 'signed_in' | 'form',
+): void => {
+  trackEvent({
+    category: 'Financing',
+    action: 'lead_captured',
+    label: source,
+    metadata: { source, listing_id: listingId ?? null, capture_mode: mode, provider: 'equinox' },
+  });
+  trackLeadEvent('lead_captured', {
+    source,
+    listing_id: listingId,
+    capture_mode: mode,
+    provider: 'equinox',
+  });
+};
+
 
 /** Seller toggled buyer financing on/off for one listing. */
 export const trackSellerFinancingToggled = (listingId: string, enabled: boolean): void => {

@@ -1915,6 +1915,54 @@ export type Database = {
         }
         Relationships: []
       }
+      financing_leads: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          listing_id: string | null
+          name: string | null
+          provider: string
+          source: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          listing_id?: string | null
+          name?: string | null
+          provider?: string
+          source?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          listing_id?: string | null
+          name?: string | null
+          provider?: string
+          source?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "financing_leads_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "financing_leads_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "public_listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       host_payment_eligibility: {
         Row: {
           charges_enabled: boolean

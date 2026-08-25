@@ -145,6 +145,7 @@ export type LeadEventName =
   // Equipment financing (Equinox)
   | 'financing_page_view'
   | 'financing_apply_click'
+  | 'lead_captured'
   | 'seller_financing_enabled'
   | 'seller_financing_disabled';
 
@@ -291,6 +292,7 @@ const EVENT_CATEGORY: Record<LeadEventName, string> = {
   // Equipment financing (Equinox)
   financing_page_view: 'financing',
   financing_apply_click: 'financing',
+  lead_captured: 'financing',
   seller_financing_enabled: 'financing',
   seller_financing_disabled: 'financing',
 };

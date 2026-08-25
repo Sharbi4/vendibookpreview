@@ -29,7 +29,9 @@ import { getPublicDisplayName } from '@/lib/displayName';
 import { formatLastActive } from '@/hooks/useActivityTracker';
 import { deliveryRateLabel } from '@/lib/fulfillment/delivery';
 import { trackCTAClick } from '@/lib/analytics';
-import { trackFinancingApplyClick, trackFinancingLearnMoreClick } from '@/lib/analytics';
+import { trackFinancingLearnMoreClick, type FinancingSource } from '@/lib/analytics';
+import { useFinancingHandoff } from '@/hooks/useFinancingHandoff';
+
 import { SaleCard } from './SaleCard';
 import { BuyingInfoDialog } from './BuyingInfoDialog';
 import { DeliveryCheckSheet, type DeliveryChoice } from './DeliveryCheckSheet';
@@ -89,12 +91,13 @@ export const SalePurchaseCard = ({
   const navigate = useNavigate();
   const { user } = useAuth();
   const financingEnabled = useEquinoxFinancingEnabled(listing);
+  const { startFinancingApply, financingLeadDialog } = useFinancingHandoff();
 
   const [showOffer, setShowOffer] = useState(false);
   const [showAuthGate, setShowAuthGate] = useState(false);
   const [pending, setPending] = useState<'buy' | 'offer' | null>(null);
   const [showContact, setShowContact] = useState(false);
-  const [applying, setApplying] = useState(false);
+
 
   // Delivery / address check — answered on this page, never a checkout jump.
   const [zip, setZip] = useState('');
@@ -158,24 +161,12 @@ export const SalePurchaseCard = ({
   };
 
 
-  const handleApplyFinancing = async () => {
-    trackFinancingApplyClick('listing_panel', listing.id);
-    setApplying(true);
-    const win = window.open('', '_blank', 'noopener,noreferrer');
-    try {
-      const { data, error } = await supabase.functions.invoke('financing-apply-link', {
-        body: { listingId: listing.id },
-      });
-      if (error || !data?.applyUrl) throw new Error('apply_unavailable');
-      if (win) win.location.href = data.applyUrl;
-      else window.location.href = data.applyUrl;
-    } catch {
-      win?.close();
-      toast.error('Could not open the financing application. Please try again.');
-    } finally {
-      setApplying(false);
-    }
+  // Every financing entry point on this card runs through the shared handoff:
+  // placement tracking → Vendibook lead capture → Equinox.
+  const handleApplyFinancing = (source: FinancingSource) => {
+    startFinancingApply(source, listing.id);
   };
+
 
   if (isOwner) {
     return (
@@ -195,9 +186,15 @@ export const SalePurchaseCard = ({
 
   const sellerName = getPublicDisplayName(host, 'Seller');
   const zipInputId = `sale-delivery-zip-${instanceId}`;
+  const financingNoun = String(listing?.category ?? '').includes('trailer')
+    ? 'trailer'
+    : String(listing?.category ?? '').includes('truck')
+      ? 'truck'
+      : 'equipment';
   const deliveryNote = radius
     ? `${rateLabel ? `${rateLabel} · ` : ''}within ${radius} mi of ${originLabel}`
     : rateLabel || null;
+
 
   return (
     <>
@@ -220,7 +217,26 @@ export const SalePurchaseCard = ({
             <span className="font-medium text-foreground">PayPal</span>
           </div>
 
+          {/* Primary financing entry point: in the buyer's eyeline, directly
+              under the price. No payment amounts, rates, or down payments. */}
+          {financingEnabled && (
+            <div className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 rounded-xl border border-primary/20 bg-primary/[0.04] px-3 py-2.5">
+              <Banknote className="h-4 w-4 shrink-0 text-primary" aria-hidden />
+              <span className="text-sm font-medium">
+                Financing available for this {financingNoun}
+              </span>
+              <button
+                type="button"
+                onClick={() => handleApplyFinancing('listing_price_line')}
+                className="text-sm font-semibold text-primary underline underline-offset-4 hover:opacity-80"
+              >
+                Check your options
+              </button>
+            </div>
+          )}
+
         </div>
+
 
         <div className="px-5 sm:px-6 pb-5 sm:pb-6 space-y-5">
           {/* Fulfillment */}
@@ -293,14 +309,15 @@ export const SalePurchaseCard = ({
                 the provider.
               </p>
               <div className="flex flex-wrap gap-2">
-                <Button size="sm" variant="outline" onClick={() => void handleApplyFinancing()} disabled={applying}>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => handleApplyFinancing('listing_panel')}
+                >
                   Apply now
-                  {applying ? (
-                    <Loader2 className="h-3.5 w-3.5 ml-1.5 animate-spin" />
-                  ) : (
-                    <ExternalLink className="h-3.5 w-3.5 ml-1.5" />
-                  )}
+                  <ExternalLink className="h-3.5 w-3.5 ml-1.5" />
                 </Button>
+
                 <Button size="sm" variant="ghost" asChild>
                   <Link
                     to={`/financing?listing_id=${listing.id}`}
@@ -441,7 +458,9 @@ export const SalePurchaseCard = ({
           askingPrice={priceSale}
         />
       )}
+      {financingLeadDialog}
     </>
+
   );
 };
 

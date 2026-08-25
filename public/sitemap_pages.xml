@@ -61,6 +61,23 @@
   <url><loc>https://vendibook.com/beverage-bar-trailers-for-sale</loc><lastmod>2026-08-27</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>
   <url><loc>https://vendibook.com/mobile-kitchen-trailers-for-sale</loc><lastmod>2026-08-27</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>
 
+  <!-- Specialty vehicle landing pages (coffee / ice cream x truck / trailer).
+       These are the canonical destinations for coffee and ice-cream browse
+       intent; the equivalent /search deep links canonicalize here, so only
+       specialties without a dedicated landing page list a /search URL below. -->
+  <url><loc>https://vendibook.com/coffee-trucks-for-sale</loc><lastmod>2026-08-25</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://vendibook.com/coffee-trailers-for-sale</loc><lastmod>2026-08-25</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://vendibook.com/ice-cream-trucks-for-sale</loc><lastmod>2026-08-25</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://vendibook.com/ice-cream-trailers-for-sale</loc><lastmod>2026-08-25</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>
+
+  <!-- Specialty filtered-search deep links (self-canonicalizing) -->
+  <url><loc>https://vendibook.com/search?q=pizza&amp;category=food_truck&amp;mode=sale</loc><lastmod>2026-08-25</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://vendibook.com/search?q=pizza&amp;category=food_trailer&amp;mode=sale</loc><lastmod>2026-08-25</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://vendibook.com/search?q=bbq&amp;category=food_truck&amp;mode=sale</loc><lastmod>2026-08-25</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://vendibook.com/search?q=bbq&amp;category=food_trailer&amp;mode=sale</loc><lastmod>2026-08-25</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>
+
+
+
   <!-- City-level SEO pages (city → state → nationwide fallback) -->
   <url><loc>https://vendibook.com/food-trucks-for-sale/tucson-az</loc><lastmod>2026-06-12</lastmod><changefreq>weekly</changefreq><priority>0.85</priority></url>
   <url><loc>https://vendibook.com/food-trucks-for-sale/phoenix-az</loc><lastmod>2026-06-12</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>
