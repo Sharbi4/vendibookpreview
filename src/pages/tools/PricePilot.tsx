@@ -19,8 +19,10 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToolAccess } from '@/hooks/useToolAccess';
 import { trackLeadEvent } from '@/lib/leadTracking';
 import { SectionCard } from '@/components/pricepilot/ui';
-import { Hero, ValuationVisual, WhatItLooksAt, HowItWorks, SampleValuation, FinalConnections } from '@/components/pricepilot/PublicSections';
+import { Hero, ValuePoints, WhatItLooksAt, HowItWorks, SampleValuation, FinalConnections } from '@/components/pricepilot/PublicSections';
 import { ReportView } from '@/components/pricepilot/ReportView';
+import { UnlockLadder } from '@/components/monetization/UnlockLadder';
+import { PurchaseReturnBanner } from '@/components/monetization/PurchaseReturnBanner';
 
 // ─── Types (mirror pricepilot-appraisal response) ────────────────────────────
 
@@ -199,7 +201,7 @@ const pageJsonLd = {
   applicationCategory: 'BusinessApplication',
   operatingSystem: 'Web',
   description:
-    'Market-informed pricing guidance for food trucks, food trailers, carts, and mobile bars. Recommended ranges, benchmarks, and rental rates computed from real comparable evidence. Included with Vendibook Pro.',
+    'Get a market-backed pricing recommendation for your food truck or food trailer. PricePilot helps sellers and owners understand value, pricing range, and market signals before listing. Premium access via Vendibook Pro or a one-time unlock.',
   featureList: [
     'Comparable-based market range with low, recommended, and high positions',
     'Local, regional, national, and modeled market scope disclosure',
