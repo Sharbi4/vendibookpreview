@@ -399,6 +399,29 @@ const CategoryIndex = ({ config }: { config: CategoryIndexConfig }) => {
             </div>
           )}
 
+          {/* Editorial / commercial sections (SEO rental hub, state pages, etc.) */}
+          {config.sections?.map((s) => (
+            <section key={s.heading} className="space-y-3 max-w-3xl">
+              <h2 className="text-xl md:text-2xl font-semibold text-foreground">{s.heading}</h2>
+              {s.paragraphs.map((p, i) => (
+                <p key={i} className="text-muted-foreground leading-relaxed">{p}</p>
+              ))}
+              {s.links && s.links.length > 0 && (
+                <div className="flex flex-wrap gap-2 pt-1">
+                  {s.links.map((l) => (
+                    <Link
+                      key={l.href + l.label}
+                      to={l.href}
+                      className="inline-block px-3 py-1.5 rounded-full border border-border bg-card text-sm text-foreground hover:border-primary hover:text-primary transition-colors"
+                    >
+                      {l.label}
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </section>
+          ))}
+
           {/* Related categories */}
           <section aria-labelledby="related-heading" className="space-y-3">
             <h2 id="related-heading" className="text-xl font-semibold text-foreground">
@@ -421,19 +444,21 @@ const CategoryIndex = ({ config }: { config: CategoryIndexConfig }) => {
           {/* Seller cross-link strip */}
           <section className="rounded-2xl border border-border bg-card p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
             <div>
-              <h2 className="text-lg font-semibold text-foreground">Have a {categoryLabel(config.category).toLowerCase()} to sell?</h2>
+              <h2 className="text-lg font-semibold text-foreground">{sellerCta.heading}</h2>
               <p className="text-sm text-muted-foreground">
-                List free on Vendibook — photos, video, equipment, offers, and optional secure transaction tools.
+                {sellerCta.body}
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
               <Button asChild variant="dark-shine">
-                <Link to={config.category === 'food_trailer' ? '/sell-food-trailer' : '/sell-my-food-truck'}>
-                  List Your {categoryLabel(config.category)} Free
+                <Link to={sellerCta.ctaHref}>
+                  {sellerCta.ctaLabel}
                 </Link>
               </Button>
               <Button asChild variant="outline">
-                <Link to="/how-it-works-seller">Learn How Selling Works</Link>
+                <Link to={config.mode === 'rent' ? '/how-it-works-host' : '/how-it-works-seller'}>
+                  {config.mode === 'rent' ? 'Learn How Renting Works' : 'Learn How Selling Works'}
+                </Link>
               </Button>
             </div>
           </section>
