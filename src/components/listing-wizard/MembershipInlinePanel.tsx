@@ -20,17 +20,15 @@ interface MembershipInlinePanelProps {
 
 /**
  * Slim, dismissible panel shown once per user inside the publish flow.
- * The "Go Pro" CTA opens the ROSCA/AB 2863 consent gate before PayPal
- * Checkout — same path as every other recurring purchase. The consent
- * dialog is rendered inline so it mounts inside the wizard tree.
+ * The "Go Pro" CTA routes to the premium /pricing hub — never straight
+ * into the recurring-billing consent gate. Consent only appears after the
+ * member has reviewed plans and picked one on the pricing page.
  */
 export const MembershipInlinePanel: React.FC<MembershipInlinePanelProps> = ({ returnTo, listingId }) => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { tier } = useHostEntitlements();
   const quota = useListingQuota();
-  const { products } = useMonetizationProducts('host_subscription');
-  const { requestCheckout, dialog, pendingSlug } = useSubscriptionConsent();
 
   const [dismissed, setDismissed] = useState<boolean>(() => {
     if (typeof window === 'undefined') return true;
