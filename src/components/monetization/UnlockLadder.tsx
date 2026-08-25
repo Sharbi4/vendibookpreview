@@ -83,7 +83,7 @@ export function UnlockLadder({
     if (busySlug || pendingSlug) return;
     setBusySlug(opt.product.slug);
     if (surface) {
-      trackLeadEvent('tool_unlock_clicked', {
+      trackLeadEvent('tool_preview_converted', {
         tool_slug: toolSlug,
         surface,
         product_slug: opt.product.slug,
