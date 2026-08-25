@@ -3627,6 +3627,7 @@ export type Database = {
           kitchen_build_year_unknown: boolean
           known_problems: Json
           latitude: number | null
+          legacy_pickup_contact_text: string | null
           length_inches: number | null
           location_notes: string | null
           longitude: number | null
@@ -3660,6 +3661,7 @@ export type Database = {
           rental_buffer_days: number | null
           rental_min_days: number | null
           slot_names: string[] | null
+          source_listing_id: string | null
           space_sqft: number | null
           state: string | null
           status: Database["public"]["Enums"]["listing_status"]
@@ -3725,6 +3727,7 @@ export type Database = {
           kitchen_build_year_unknown?: boolean
           known_problems?: Json
           latitude?: number | null
+          legacy_pickup_contact_text?: string | null
           length_inches?: number | null
           location_notes?: string | null
           longitude?: number | null
@@ -3758,6 +3761,7 @@ export type Database = {
           rental_buffer_days?: number | null
           rental_min_days?: number | null
           slot_names?: string[] | null
+          source_listing_id?: string | null
           space_sqft?: number | null
           state?: string | null
           status?: Database["public"]["Enums"]["listing_status"]
@@ -3823,6 +3827,7 @@ export type Database = {
           kitchen_build_year_unknown?: boolean
           known_problems?: Json
           latitude?: number | null
+          legacy_pickup_contact_text?: string | null
           length_inches?: number | null
           location_notes?: string | null
           longitude?: number | null
@@ -3856,6 +3861,7 @@ export type Database = {
           rental_buffer_days?: number | null
           rental_min_days?: number | null
           slot_names?: string[] | null
+          source_listing_id?: string | null
           space_sqft?: number | null
           state?: string | null
           status?: Database["public"]["Enums"]["listing_status"]
@@ -3871,7 +3877,22 @@ export type Database = {
           width_inches?: number | null
           year_built?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "listings_source_listing_id_fkey"
+            columns: ["source_listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "listings_source_listing_id_fkey"
+            columns: ["source_listing_id"]
+            isOneToOne: false
+            referencedRelation: "public_listings"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       message_reactions: {
         Row: {
@@ -9818,6 +9839,7 @@ export type Database = {
           kitchen_build_year_unknown: boolean
           known_problems: Json
           latitude: number | null
+          legacy_pickup_contact_text: string | null
           length_inches: number | null
           location_notes: string | null
           longitude: number | null
@@ -9851,6 +9873,7 @@ export type Database = {
           rental_buffer_days: number | null
           rental_min_days: number | null
           slot_names: string[] | null
+          source_listing_id: string | null
           space_sqft: number | null
           state: string | null
           status: Database["public"]["Enums"]["listing_status"]

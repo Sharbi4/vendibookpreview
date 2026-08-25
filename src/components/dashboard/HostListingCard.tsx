@@ -72,6 +72,9 @@ import { canBoostListing, canRepublishListing } from '@/lib/listings/publicVisib
 import { useNavigate } from 'react-router-dom';
 import { GetVerifiedButton } from '@/components/verification/GetVerifiedButton';
 import { ListingDimensionsPrompt } from '@/components/dashboard/ListingDimensionsPrompt';
+import { isRentalConversionEligible, linkedRentalCtaLabel } from '@/lib/listings/rentalConversion';
+import { useLinkedRental, useCreateLinkedRental } from '@/hooks/useLinkedRental';
+
 
 
 type Listing = Tables<'listings'>;
@@ -191,6 +194,32 @@ const HostListingCard = ({
   const hasNotary = (listing as { proof_notary_enabled?: boolean })
     .proof_notary_enabled;
   const isRental = listing.mode === 'rent';
+
+  // "Rent it out": turn an existing sale truck/trailer into a linked rental.
+  const rentalEligible = isRentalConversionEligible(listing);
+  const { rental: linkedRental, state: linkedState, isLoading: linkedLoading } =
+    useLinkedRental(listing.id, rentalEligible);
+  const createLinkedRental = useCreateLinkedRental();
+
+  const handleRentItOut = async () => {
+    if (createLinkedRental.isPending) return;
+    if (linkedRental?.id && linkedState !== 'draft') {
+      navigate(`/create-listing/${linkedRental.id}`);
+      return;
+    }
+    try {
+      const result = await createLinkedRental.mutateAsync(listing.id);
+      navigate(`/listings/${listing.id}/rent-it-out`);
+      return result;
+    } catch (err) {
+      toast({
+        title: 'Could not start rental setup',
+        description: err instanceof Error ? err.message : 'Please try again.',
+        variant: 'destructive',
+      });
+    }
+  };
+
 
   // Paid promotion eligibility mirrors public visibility exactly: no boosts on
   // paused, removed, deleted, archived, rejected, suspended or expired listings.
@@ -379,15 +408,35 @@ const HostListingCard = ({
             Boost Listing
           </Button>
         )}
-        <Button
-          variant="outline"
-          size="sm"
-          className={cn(ACTION_BTN, 'border-white/15 bg-white/[0.04] hover:bg-white/[0.08]')}
-          onClick={handleShareListing}
-        >
-          <Share2 className="h-4 w-4 mr-1.5 shrink-0" />
-          Share Listing
-        </Button>
+        {rentalEligible && (
+          <Button
+            size="sm"
+            onClick={handleRentItOut}
+            disabled={createLinkedRental.isPending || linkedLoading}
+            className={cn(
+              ACTION_BTN,
+              'bg-white text-[#08080a] hover:bg-white/90 border-0 font-semibold',
+            )}
+          >
+            {createLinkedRental.isPending ? (
+              <Loader2 className="h-4 w-4 mr-1.5 shrink-0 animate-spin" />
+            ) : (
+              <Calendar className="h-4 w-4 mr-1.5 shrink-0" />
+            )}
+            {linkedRentalCtaLabel(linkedState)}
+          </Button>
+        )}
+        {!rentalEligible && (
+          <Button
+            variant="outline"
+            size="sm"
+            className={cn(ACTION_BTN, 'border-white/15 bg-white/[0.04] hover:bg-white/[0.08]')}
+            onClick={handleShareListing}
+          >
+            <Share2 className="h-4 w-4 mr-1.5 shrink-0" />
+            Share Listing
+          </Button>
+        )}
         <Button
           variant="outline"
           size="sm"
@@ -399,6 +448,12 @@ const HostListingCard = ({
         </Button>
 
         <KebabMenu>
+          {rentalEligible && (
+            <DropdownMenuItem onClick={handleShareListing} className="gap-2">
+              <Share2 className="h-4 w-4" /> Share Listing
+            </DropdownMenuItem>
+          )}
+
           <DropdownMenuItem asChild className="gap-2">
             <Link to={`/listing/${listing.id}`}>
               <Eye className="h-4 w-4" /> View as buyer
