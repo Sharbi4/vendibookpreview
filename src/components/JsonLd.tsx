@@ -227,7 +227,7 @@ export const generateCityCategoryFAQSchema = (
     ? [
         {
           q: `How much does it cost to rent a ${lowerSingular} in ${city}, ${state}?`,
-          a: `${city} ${lowerSingular} rentals on Vendibook typically range from $200–$500 per day, with weekly and monthly discounts available. Pricing varies by size, equipment, and host. Browse live ${city} listings for current rates.`,
+          a: `Cost depends on the vehicle or trailer type, location within ${city}, rental term, equipment, and condition. Each Vendibook listing shows the owner's current daily, weekly, and (where offered) monthly rates, so you can compare real ${city} options side by side.`,
         },
         {
           q: `Do I need a license to operate a ${lowerSingular} in ${city}?`,
@@ -247,7 +247,7 @@ export const generateCityCategoryFAQSchema = (
         },
         {
           q: `Is renting cheaper than buying a ${lowerSingular} in ${city}?`,
-          a: `For most new operators in ${city}, renting is dramatically cheaper than buying. A new ${lowerSingular} costs $50K–$150K+ to purchase, while Vendibook rentals start under $300/day — letting you test concepts and locations before committing.`,
+          a: `Renting reduces upfront investment and fits operators testing a concept, covering a seasonal rush, or needing temporary equipment. Buying builds equity in the asset and suits long-term, full-time operation. Compare current ${city} rental listings with ${city} purchase listings on Vendibook to see real numbers for both paths.`,
         },
       ]
     : [
