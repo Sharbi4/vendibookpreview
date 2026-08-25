@@ -18,6 +18,7 @@ export interface PricePilotNarrative {
   summary?: string;
   drivers_positive?: string[];
   drivers_negative?: string[];
+  what_could_change?: string[];
   caveats?: string[];
   photo_observations?: string[];
 }

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import Header from '@/components/layout/Header';
@@ -37,6 +37,7 @@ export interface CompRow {
 interface Narrative {
   headline?: string; summary?: string;
   drivers_positive?: string[]; drivers_negative?: string[];
+  what_could_change?: string[];
   caveats?: string[];
 }
 export interface PricingResponse {
@@ -112,6 +113,19 @@ const ANALYSIS_FACTORS = [
   { icon: MapPin, label: 'Regional evidence' },
   { icon: LineChart, label: 'Market range' },
 ];
+
+/** Understated required-field marker, paired with the "* Required" legend. */
+const Req: React.FC = () => (
+  <span className="ml-0.5 align-super text-[0.72em] font-semibold text-primary" aria-hidden="true">*</span>
+);
+
+/** Inline field-level validation message. */
+const FieldError: React.FC<{ id: string; message?: string }> = ({ id, message }) =>
+  message ? (
+    <p id={id} role="alert" className="mt-2 flex items-center gap-1.5 text-[12px] font-medium text-amber-700">
+      <AlertCircle className="h-3.5 w-3.5 shrink-0" />{message}
+    </p>
+  ) : null;
 
 /** Staged analysis state shown while the appraisal runs. */
 const AnalysisState: React.FC = () => {
@@ -219,6 +233,10 @@ export default function PricePilot() {
   const [result, setResult] = useState<PricingResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  // Validation state — inline per-field messages plus one summary banner
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [formSummary, setFormSummary] = useState<string | null>(null);
+
   // Preview analytics (replaces the old route-level gate tracking)
   useEffect(() => {
     if (!authLoading && !accessLoading && !unlocked) {
@@ -227,20 +245,90 @@ export default function PricePilot() {
   }, [authLoading, accessLoading, unlocked]);
 
   const lastStep = STEP_LABELS.length - 1;
-  const canContinue = useMemo(() => {
-    switch (step) {
-      case 0: return !!assetCategory;
-      case 1: return !!mode;
-      case 2: return state.trim().length === 2 || zip.trim().length === 5;
-      case 3: return true; // year/size optional but encouraged
-      case 4: return !!condition && !!operationalStatus;
-      default: return true;
+  const currentYear = new Date().getFullYear();
+
+  const yearValid = (v: string) => {
+    const n = Number(v);
+    return /^\d{4}$/.test(v.trim()) && n >= 1950 && n <= currentYear + 2;
+  };
+
+  /**
+   * Required fields per step — only what a defensible appraisal genuinely
+   * needs: equipment identity, market location, age, and honest condition.
+   * Size, mileage, features and notes stay optional on purpose.
+   */
+  const validateStep = (s: number): { errors: Record<string, string>; missing: string[] } => {
+    const errs: Record<string, string> = {};
+    const missing: string[] = [];
+    if (s === 0 && !assetCategory) {
+      errs.assetCategory = 'Choose the equipment type closest to yours.';
+      missing.push('equipment type');
     }
-  }, [step, assetCategory, mode, state, zip, condition, operationalStatus]);
+    if (s === 2 && !(state.trim().length === 2 || zip.trim().length === 5)) {
+      errs.location = 'Enter a two-letter state or a 5-digit ZIP code.';
+      missing.push('location');
+    }
+    if (s === 3 && !yearValid(year)) {
+      errs.year = `Enter the 4-digit year (1950–${currentYear + 2}). Age is core to a defensible value.`;
+      missing.push('year');
+    }
+    if (s === 4) {
+      if (!condition) { errs.condition = 'Select the overall condition.'; missing.push('condition'); }
+      if (!operationalStatus) { errs.operationalStatus = 'Select the operational status.'; missing.push('operational status'); }
+    }
+    return { errors: errs, missing };
+  };
+
+  const clearError = (key: string) =>
+    setErrors((prev) => {
+      if (!prev[key]) return prev;
+      const next = { ...prev };
+      delete next[key];
+      if (!Object.keys(next).length) setFormSummary(null);
+      return next;
+    });
+
+  // Where focus lands when a field fails validation (inputs, or the group
+  // wrapper for choice grids).
+  const FOCUS_TARGET: Record<string, string> = {
+    assetCategory: '[data-pp-field="assetCategory"]',
+    location: '#pp-state',
+    year: '#pp-year',
+    condition: '[data-pp-field="condition"]',
+    operationalStatus: '[data-pp-field="operationalStatus"]',
+  };
+
+  const failValidation = (v: { errors: Record<string, string>; missing: string[] }) => {
+    setErrors(v.errors);
+    setFormSummary(
+      v.missing.length > 1
+        ? `Complete the required fields to continue: ${v.missing.join(', ')}.`
+        : `Add the ${v.missing[0]} to continue.`,
+    );
+    const firstKey = Object.keys(FOCUS_TARGET).find((k) => v.errors[k]);
+    requestAnimationFrame(() => {
+      const el = firstKey ? document.querySelector<HTMLElement>(FOCUS_TARGET[firstKey]) : null;
+      el?.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'center' });
+      el?.focus({ preventScroll: true });
+    });
+  };
 
   const goNext = () => {
-    if (!canContinue) return;
+    const v = validateStep(step);
+    if (Object.keys(v.errors).length) { failValidation(v); return; }
+    setErrors({});
+    setFormSummary(null);
     if (step < lastStep) { setStep((s) => s + 1); return; }
+    // Final submit: re-verify every earlier step before spending an appraisal.
+    for (let s = 0; s < lastStep; s++) {
+      const earlier = validateStep(s);
+      if (Object.keys(earlier.errors).length) {
+        setStep(s);
+        // Wait for the step transition before focusing.
+        setTimeout(() => failValidation(earlier), 350);
+        return;
+      }
+    }
     void runAppraisal();
   };
 
@@ -408,17 +496,47 @@ export default function PricePilot() {
                                       transition={reduce ? { duration: 0 } : { duration: 0.4, ease: 'easeOut' }}
                                     />
                                   </div>
+                                  <p className="mt-2 text-right text-[11px] text-muted-foreground">
+                                    <span aria-hidden="true" className="font-semibold text-primary">*</span> Required
+                                  </p>
                                 </div>
+
+                                {/* Validation summary — names what's missing */}
+                                <AnimatePresence>
+                                  {formSummary && (
+                                    <motion.div
+                                      key="form-summary"
+                                      initial={reduce ? { opacity: 0 } : { opacity: 0, y: -6 }}
+                                      animate={{ opacity: 1, y: 0 }}
+                                      exit={{ opacity: 0 }}
+                                      transition={{ duration: 0.2 }}
+                                      role="alert"
+                                      className="mb-5 flex items-start gap-2.5 rounded-xl bg-amber-500/[0.08] px-4 py-3 ring-1 ring-amber-600/25"
+                                    >
+                                      <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-amber-700" />
+                                      <p className="text-[13px] font-medium leading-snug text-amber-800">{formSummary}</p>
+                                    </motion.div>
+                                  )}
+                                </AnimatePresence>
 
                                 <AnimatePresence mode="wait">
                                   {/* 1 — What are you pricing */}
                                   {step === 0 && (
                                     <motion.div key="s0" {...stepMotion} transition={{ duration: 0.25 }}>
-                                      <h3 className="text-xl md:text-2xl font-bold tracking-tight text-foreground">What are you pricing?</h3>
+                                      <h3 className="text-xl md:text-2xl font-bold tracking-tight text-foreground">What are you pricing?<Req /></h3>
                                       <p className="mt-1 text-sm text-muted-foreground">Choose the closest match — it anchors the market evidence.</p>
-                                      <div className="mt-5 grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+                                      <div
+                                        data-pp-field="assetCategory"
+                                        role="group"
+                                        aria-label="Equipment type"
+                                        aria-invalid={!!errors.assetCategory}
+                                        aria-describedby={errors.assetCategory ? 'pp-err-assetCategory' : undefined}
+                                        tabIndex={-1}
+                                        className={cn('mt-5 grid grid-cols-1 gap-2.5 rounded-2xl focus:outline-none sm:grid-cols-2',
+                                          errors.assetCategory && 'ring-2 ring-amber-600/40')}
+                                      >
                                         {CATEGORIES.map((c) => (
-                                          <button key={c.value} type="button" onClick={() => setAssetCategory(c.value)}
+                                          <button key={c.value} type="button" onClick={() => { setAssetCategory(c.value); clearError('assetCategory'); }}
                                             aria-pressed={assetCategory === c.value}
                                             className={cn('flex items-start gap-3 rounded-xl p-4 text-left ring-1 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
                                               assetCategory === c.value ? 'bg-primary/[0.07] ring-primary/50' : 'bg-muted/60 ring-border hover:ring-foreground/25')}>
@@ -430,6 +548,7 @@ export default function PricePilot() {
                                           </button>
                                         ))}
                                       </div>
+                                      <FieldError id="pp-err-assetCategory" message={errors.assetCategory} />
                                     </motion.div>
                                   )}
 
@@ -460,20 +579,22 @@ export default function PricePilot() {
                                   {step === 2 && (
                                     <motion.div key="s2" {...stepMotion} transition={{ duration: 0.25 }} className="space-y-4">
                                       <div>
-                                        <h3 className="text-xl md:text-2xl font-bold tracking-tight text-foreground">Where is it?</h3>
+                                        <h3 className="text-xl md:text-2xl font-bold tracking-tight text-foreground">Where is it?<Req /></h3>
                                         <p className="mt-1 text-sm text-muted-foreground">Prices move by market. A state or ZIP anchors your report locally first.</p>
                                       </div>
                                       <div className="grid grid-cols-2 gap-3">
                                         <div className="col-span-2 sm:col-span-1">
-                                          <Label htmlFor="pp-city">City</Label>
+                                          <Label htmlFor="pp-city">City <span className="font-normal text-muted-foreground">(optional)</span></Label>
                                           <Input id="pp-city" placeholder="Austin" value={city} onChange={(e) => setCity(e.target.value)} className="mt-1 h-12 rounded-xl text-base" />
                                         </div>
                                         <div>
-                                          <Label htmlFor="pp-state">State</Label>
+                                          <Label htmlFor="pp-state">State<Req /></Label>
                                           <div className="relative mt-1">
                                             <MapPin className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                                             <Input id="pp-state" placeholder="TX" maxLength={2} value={state}
-                                              onChange={(e) => setState(e.target.value.toUpperCase().replace(/[^A-Z]/g, ''))}
+                                              onChange={(e) => { setState(e.target.value.toUpperCase().replace(/[^A-Z]/g, '')); clearError('location'); }}
+                                              aria-invalid={!!errors.location}
+                                              aria-describedby={errors.location ? 'pp-err-location' : undefined}
                                               className="h-12 rounded-xl pl-9 text-base uppercase" />
                                           </div>
                                         </div>
@@ -482,11 +603,14 @@ export default function PricePilot() {
                                         <span className="h-px flex-1 bg-border" />or<span className="h-px flex-1 bg-border" />
                                       </div>
                                       <div>
-                                        <Label htmlFor="pp-zip">ZIP code</Label>
+                                        <Label htmlFor="pp-zip">ZIP code<Req /></Label>
                                         <Input id="pp-zip" inputMode="numeric" placeholder="78704" maxLength={5} value={zip}
-                                          onChange={(e) => setZip(e.target.value.replace(/\D/g, '').slice(0, 5))} className="mt-1 h-12 rounded-xl text-base" />
+                                          onChange={(e) => { setZip(e.target.value.replace(/\D/g, '').slice(0, 5)); clearError('location'); }}
+                                          aria-invalid={!!errors.location}
+                                          aria-describedby={errors.location ? 'pp-err-location' : undefined}
+                                          className="mt-1 h-12 rounded-xl text-base" />
                                       </div>
-                                      {!canContinue && <p className="text-[12px] text-amber-700">Enter a two-letter state or a ZIP code to continue.</p>}
+                                      <FieldError id="pp-err-location" message={errors.location} />
                                     </motion.div>
                                   )}
 
@@ -495,23 +619,27 @@ export default function PricePilot() {
                                     <motion.div key="s3" {...stepMotion} transition={{ duration: 0.25 }} className="space-y-4">
                                       <div>
                                         <h3 className="text-xl md:text-2xl font-bold tracking-tight text-foreground">Year and approximate size</h3>
-                                        <p className="mt-1 text-sm text-muted-foreground">Both optional — but each one tightens your range.</p>
+                                        <p className="mt-1 text-sm text-muted-foreground">The year anchors depreciation. Size is optional but tightens your range.</p>
                                       </div>
                                       <div className="grid grid-cols-2 gap-3">
                                         <div>
-                                          <Label htmlFor="pp-year">Year</Label>
+                                          <Label htmlFor="pp-year">Year<Req /></Label>
                                           <Input id="pp-year" inputMode="numeric" placeholder="2019" value={year}
-                                            onChange={(e) => setYear(e.target.value.replace(/\D/g, '').slice(0, 4))} className="mt-1 h-12 rounded-xl text-base" />
+                                            onChange={(e) => { setYear(e.target.value.replace(/\D/g, '').slice(0, 4)); clearError('year'); }}
+                                            aria-invalid={!!errors.year}
+                                            aria-describedby={errors.year ? 'pp-err-year' : undefined}
+                                            className="mt-1 h-12 rounded-xl text-base" />
+                                          <FieldError id="pp-err-year" message={errors.year} />
                                         </div>
                                         <div>
-                                          <Label htmlFor="pp-len">Length (ft)</Label>
+                                          <Label htmlFor="pp-len">Length (ft) <span className="font-normal text-muted-foreground">(optional)</span></Label>
                                           <Input id="pp-len" inputMode="decimal" placeholder="18" value={lengthFt}
                                             onChange={(e) => setLengthFt(e.target.value.replace(/[^\d.]/g, '').slice(0, 5))} className="mt-1 h-12 rounded-xl text-base" />
                                         </div>
                                       </div>
                                       {mode === 'sale' && assetCategory === 'food_truck' && (
                                         <div>
-                                          <Label htmlFor="pp-miles">Mileage</Label>
+                                          <Label htmlFor="pp-miles">Mileage <span className="font-normal text-muted-foreground">(optional)</span></Label>
                                           <Input id="pp-miles" inputMode="numeric" placeholder="85,000" value={mileage}
                                             onChange={(e) => setMileage(e.target.value.replace(/\D/g, ''))} className="mt-1 h-12 rounded-xl text-base" />
                                         </div>
@@ -527,10 +655,19 @@ export default function PricePilot() {
                                         <p className="mt-1 text-sm text-muted-foreground">Honest answers price better than optimistic ones.</p>
                                       </div>
                                       <div>
-                                        <Label>Overall condition</Label>
-                                        <div className="mt-1.5 grid grid-cols-2 gap-2 sm:grid-cols-4">
+                                        <Label>Overall condition<Req /></Label>
+                                        <div
+                                          data-pp-field="condition"
+                                          role="group"
+                                          aria-label="Overall condition"
+                                          aria-invalid={!!errors.condition}
+                                          aria-describedby={errors.condition ? 'pp-err-condition' : undefined}
+                                          tabIndex={-1}
+                                          className={cn('mt-1.5 grid grid-cols-2 gap-2 rounded-2xl focus:outline-none sm:grid-cols-4',
+                                            errors.condition && 'ring-2 ring-amber-600/40')}
+                                        >
                                           {CONDITIONS.map((c) => (
-                                            <button key={c.value} type="button" onClick={() => setCondition(c.value)}
+                                            <button key={c.value} type="button" onClick={() => { setCondition(c.value); clearError('condition'); }}
                                               aria-pressed={condition === c.value}
                                               className={cn('rounded-xl px-3 py-3 text-left ring-1 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
                                                 condition === c.value ? 'bg-primary/[0.08] ring-primary/50' : 'bg-muted/60 ring-border hover:ring-foreground/25')}>
@@ -539,19 +676,30 @@ export default function PricePilot() {
                                             </button>
                                           ))}
                                         </div>
+                                        <FieldError id="pp-err-condition" message={errors.condition} />
                                       </div>
                                       <div>
-                                        <Label>Operational status</Label>
-                                        <div className="mt-1.5 grid grid-cols-1 gap-1.5 sm:grid-cols-2">
+                                        <Label>Operational status<Req /></Label>
+                                        <div
+                                          data-pp-field="operationalStatus"
+                                          role="group"
+                                          aria-label="Operational status"
+                                          aria-invalid={!!errors.operationalStatus}
+                                          aria-describedby={errors.operationalStatus ? 'pp-err-operationalStatus' : undefined}
+                                          tabIndex={-1}
+                                          className={cn('mt-1.5 grid grid-cols-1 gap-1.5 rounded-2xl focus:outline-none sm:grid-cols-2',
+                                            errors.operationalStatus && 'ring-2 ring-amber-600/40')}
+                                        >
                                           {OPERATIONAL.map((o) => (
-                                            <button key={o.value} type="button" onClick={() => setOperationalStatus(o.value)}
+                                            <button key={o.value} type="button" onClick={() => { setOperationalStatus(o.value); clearError('operationalStatus'); }}
                                               aria-pressed={operationalStatus === o.value}
                                               className={cn('rounded-xl px-3 py-2.5 text-left text-xs font-semibold ring-1 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
                                                 operationalStatus === o.value ? 'bg-primary/[0.08] text-primary ring-primary/50' : 'bg-muted/60 text-muted-foreground ring-border hover:ring-foreground/25')}>
-                                              {o.label}
-                                            </button>
-                                          ))}
+                                                {o.label}
+                                              </button>
+                                            ))}
                                         </div>
+                                        <FieldError id="pp-err-operationalStatus" message={errors.operationalStatus} />
                                       </div>
                                     </motion.div>
                                   )}
@@ -591,11 +739,11 @@ export default function PricePilot() {
                                     <ArrowLeft className="mr-1.5 h-4 w-4" /> Back
                                   </Button>
                                   {step < lastStep ? (
-                                    <Button variant="cta" onClick={goNext} disabled={!canContinue}>
+                                    <Button variant="cta" onClick={goNext}>
                                       Continue <ArrowRight className="ml-1.5 h-4 w-4" />
                                     </Button>
                                   ) : (
-                                    <Button variant="cta" size="cta" onClick={goNext} disabled={!canContinue}>
+                                    <Button variant="cta" size="cta" onClick={goNext}>
                                       Get my pricing <ArrowRight className="ml-1.5 h-4 w-4" />
                                     </Button>
                                   )}

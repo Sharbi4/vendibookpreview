@@ -157,6 +157,22 @@ export const ReportView: React.FC<{
         </div>
       </Reveal>
 
+      {/* What could change the value (AI inference, when available) */}
+      {!!result.narrative?.what_could_change?.length && (
+        <Reveal>
+          <div className="mt-12 border-t border-border pt-10">
+            <Eyebrow>What could change this value</Eyebrow>
+            <ul className="mt-5 space-y-2.5">
+              {result.narrative.what_could_change.map((d) => (
+                <li key={d} className="flex items-start gap-2.5 text-sm leading-relaxed text-foreground/85">
+                  <ArrowRight className="mt-0.5 h-4 w-4 shrink-0 text-primary" />{d}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </Reveal>
+      )}
+
       {/* Pricing moves */}
       {result.pricingMoves.length > 0 && (
         <Reveal>

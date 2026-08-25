@@ -35,6 +35,27 @@ const VALID_OPERATIONAL = new Set(['turnkey', 'running', 'needs_work', 'not_runn
 const MAX_PHOTOS = 3;
 const MAX_PHOTO_BYTES = 1_200_000; // per data URL, after client-side downscale
 
+/**
+ * Conservative analyst rules shared by the sale and rental narratives. The
+ * deterministic engine owns every number; the model interprets and explains.
+ * The model must never fabricate comparables, stats, or missing inputs, and
+ * must flag the fields that would materially improve the appraisal.
+ */
+const ANALYST_RULES =
+  'You are a conservative senior valuation analyst specializing in used mobile food equipment (food trucks and food trailers) in the United States. ' +
+  'The numbers and confidence score in the brief were computed by a deterministic statistical engine and are FINAL. ' +
+  'Rules: ' +
+  '(1) Never propose, restate differently, or "correct" any number from the brief. ' +
+  '(2) Never invent a comparable listing, sale, price, mileage, location, source, or market statistic. Only cite comparables that appear under topComparables in the brief, by title and price or rate. ' +
+  'If topComparables is empty, state plainly that no direct comparable listings were available and lean on the deterministic adjustments instead. ' +
+  '(3) Never claim a marketplace observed or asking status is a verified closing price. ' +
+  '(4) Fields that are null, "unknown", or "Not specified" were not supplied. Do not guess them; if a missing field materially limits the analysis, name it in caveats or what_could_change. ' +
+  '(5) Apply equipment-type reasoning: for food trucks weigh chassis and engine age, mileage, and drivability; for food trailers weigh tow condition and the absence of a powertrain; for both weigh installed commercial kitchen equipment, hood and fire suppression, generator and power, water systems, refrigeration, cooking line, build quality, operating readiness, and disclosed upgrades or known issues. ' +
+  '(6) Keep supplied facts (the subject block) separate from your judgment (drivers, summary, what_could_change). ' +
+  '(7) Be plain-spoken and concrete. No hype, no filler, no marketing language. Do not use em dashes. ' +
+  '(8) If photos are attached, describe only conservative visible cosmetic observations; never claim mechanical condition from a photo. ' +
+  'what_could_change: 2 to 3 concrete things that would materially move this estimate (for example verified service records, an added equipment package, a stronger comparable sample), one short sentence each. ';
+
 function parseSubject(body: any): SubjectProfile | Response {
   const mode = body?.mode === 'rental' ? 'rental' : body?.mode === 'sale' ? 'sale' : null;
   if (!mode) return jsonError(400, 'invalid_subject', 'Choose sale or rental appraisal.');
@@ -59,6 +80,31 @@ function parseSubject(body: any): SubjectProfile | Response {
 
   const condition = VALID_CONDITIONS.has(body?.condition) ? body.condition : null;
   const operationalStatus = VALID_OPERATIONAL.has(body?.operationalStatus) ? body.operationalStatus : null;
+
+  // Required-field enforcement (mirrors the client wizard). Only what a
+  // defensible appraisal genuinely needs: market location, age, condition
+  // and operating readiness. Size/mileage/features/notes stay optional and
+  // are passed through as unknown (null) rather than guessed.
+  const stateRaw = str(body?.state, 2)?.toUpperCase() ?? null;
+  const zipRaw = str(body?.zip, 10);
+  const hasLocation = !!stateRaw || /^\d{5}$/.test(zipRaw ?? '');
+  const yearNum = num(body?.year)
+    ? Math.min(new Date().getFullYear() + 2, Math.max(1950, num(body?.year)!))
+    : null;
+
+  const missing: string[] = [];
+  if (!hasLocation) missing.push('location (state or ZIP code)');
+  if (!yearNum) missing.push('year');
+  if (!condition) missing.push('condition');
+  if (!operationalStatus) missing.push('operational status');
+  if (missing.length) {
+    return jsonError(
+      400,
+      'missing_required_fields',
+      `Missing required fields: ${missing.join(', ')}. These are needed to produce a defensible appraisal.`,
+      { missing },
+    );
+  }
 
   return {
     mode,
@@ -267,11 +313,9 @@ Deno.serve(async (req) => {
       const { narrative, model } = await generatePricePilotNarrative({
         photos,
         systemPrompt:
-          'You are a senior mobile food equipment appraiser writing the professional interpretation section of a valuation report. ' +
-          'The numbers in the brief were computed by a deterministic statistical engine and are FINAL. ' +
-          'Never propose different numbers, never invent comps, never claim a marketplace sold status is a verified closing price. ' +
-          'If photos are attached, describe only conservative visible cosmetic observations (never claim mechanical condition from a photo). ' +
-          'Do not use em dashes. Return strict JSON: {"headline": string, "summary": string (2-4 sentences), "drivers_positive": string[] (max 4), "drivers_negative": string[] (max 4), "caveats": string[] (max 3), "photo_observations": string[] (max 3, empty if no photos)}.',
+          ANALYST_RULES +
+          'You are writing the professional interpretation section of a SALE pricing report. ' +
+          'Return strict JSON: {"headline": string, "summary": string (2-4 sentences), "drivers_positive": string[] (max 4), "drivers_negative": string[] (max 4), "what_could_change": string[] (2-3), "caveats": string[] (max 3), "photo_observations": string[] (max 3, empty if no photos)}.',
         userPrompt:
           `VALUATION BRIEF (numbers are final, interpret only):\n` +
           JSON.stringify(
@@ -449,21 +493,28 @@ Deno.serve(async (req) => {
     const { narrative, model } = await generatePricePilotNarrative({
       photos,
       systemPrompt:
-        'You are a senior mobile food equipment appraiser writing the professional interpretation section of a rental rate report. ' +
-        'The rates in the brief were computed by a deterministic statistical engine and are FINAL. ' +
-        'Never propose different numbers. Rates are benchmarked from current asking rates, not sale prices. ' +
-        'If photos are attached, describe only conservative visible cosmetic observations. ' +
-        'Do not use em dashes. Return strict JSON: {"headline": string, "summary": string (2-4 sentences), "drivers_positive": string[] (max 4), "drivers_negative": string[] (max 4), "caveats": string[] (max 3), "photo_observations": string[] (max 3, empty if no photos)}.',
+        ANALYST_RULES +
+        'You are writing the professional interpretation section of a RENTAL rate report. ' +
+        'Rates are benchmarked from current asking rates, not sale prices. ' +
+        'Drivers should cover what pushes the rental rate up or down: readiness, equipment package, market demand, and venue or event suitability. ' +
+        'Return strict JSON: {"headline": string, "summary": string (2-4 sentences), "drivers_positive": string[] (max 4), "drivers_negative": string[] (max 4), "what_could_change": string[] (2-3), "caveats": string[] (max 3), "photo_observations": string[] (max 3, empty if no photos)}.',
       userPrompt:
         `RENTAL RATE BRIEF (numbers are final, interpret only):\n` +
         JSON.stringify(
           {
             subject: {
               type: CATEGORY_LABEL[subject.assetCategory],
-              location: [subject.city, subject.state].filter(Boolean).join(', ') || 'Not specified',
-              year: subject.year,
+              location: [subject.city, subject.state].filter(Boolean).join(', ') || 'unknown',
+              year: subject.year ?? 'unknown',
+              make: subject.make ?? 'unknown',
+              model: subject.model ?? 'unknown',
+              lengthFt: subject.lengthFt ?? 'unknown',
+              mileage: subject.mileage ?? 'unknown',
               condition: subject.condition,
               operationalStatus: subject.operationalStatus,
+              equipment: Object.entries(subject.features).filter(([, v]) => v).map(([k]) => k),
+              knownIssues: subject.knownIssues ?? 'unknown',
+              recentUpgrades: subject.recentUpgrades ?? 'unknown',
             },
             result: {
               dailyRate: rental.dailyRate,
