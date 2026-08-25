@@ -188,6 +188,17 @@
     </image:image>
   </url>
   <url>
+    <loc>https://vendibook.com/listing/24594068-25df-4bbe-b142-7bad96aacf39</loc>
+    <lastmod>2026-08-25</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/bf4754c8-46ce-472e-8a71-2b8a7769a833/24594068-25df-4bbe-b142-7bad96aacf39/1770302856730-he0b8f.jpg</image:loc>
+      <image:title>Commissary Kitchen For Rent</image:title>
+      <image:caption>Commissary Kitchen For Rent in Charlotte, NC on Vendibook</image:caption>
+    </image:image>
+  </url>
+  <url>
     <loc>https://vendibook.com/listing/1791e770-182f-4723-a207-59f727e8310e</loc>
     <lastmod>2026-08-22</lastmod>
     <changefreq>weekly</changefreq>
@@ -617,17 +628,6 @@
     </image:image>
   </url>
   <url>
-    <loc>https://vendibook.com/listing/24594068-25df-4bbe-b142-7bad96aacf39</loc>
-    <lastmod>2026-08-23</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/bf4754c8-46ce-472e-8a71-2b8a7769a833/24594068-25df-4bbe-b142-7bad96aacf39/1770302856730-he0b8f.jpg</image:loc>
-      <image:title>Commissary Kitchen For Rent</image:title>
-      <image:caption>Commissary Kitchen For Rent in Charlotte, NC on Vendibook</image:caption>
-    </image:image>
-  </url>
-  <url>
     <loc>https://vendibook.com/listing/29db594a-1746-4d42-954a-16673d9ff875</loc>
     <lastmod>2026-08-24</lastmod>
     <changefreq>weekly</changefreq>
@@ -695,7 +695,7 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/c07375f0-c3c6-4ab4-a353-2deba419773b</loc>
-    <lastmod>2026-08-24</lastmod>
+    <lastmod>2026-08-25</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
