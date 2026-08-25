@@ -153,7 +153,11 @@ const Search = () => {
 
   // Auto-geocode the search query if it looks like a location and no coordinates are set
   useEffect(() => {
-    const shouldGeocode = initialQuery && !initialLat && !initialLng && !locationCoords;
+    // Specialty keywords ("coffee", "ice cream") are equipment searches, not
+    // places — the geocoder otherwise resolves "coffee" to Coffeeville, MS
+    // and wrongly location-scopes the deep links.
+    const shouldGeocode = initialQuery && !initialLat && !initialLng && !locationCoords
+      && !SPECIALTY_SEARCH_QUERIES.has(initialQuery.trim().toLowerCase());
     if (!shouldGeocode) return;
 
     const geocodeQuery = async () => {
