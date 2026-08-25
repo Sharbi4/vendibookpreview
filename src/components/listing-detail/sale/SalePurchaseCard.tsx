@@ -458,7 +458,9 @@ export const SalePurchaseCard = ({
           askingPrice={priceSale}
         />
       )}
+      {financingLeadDialog}
     </>
+
   );
 };
 
