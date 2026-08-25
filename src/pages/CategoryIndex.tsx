@@ -520,6 +520,13 @@ const CategoryIndex = ({ config }: { config: CategoryIndexConfig }) => {
 
           ) : (
             <div className="space-y-10">
+              {localCount > 0 && localCount <= NEAR_EMPTY_THRESHOLD && (
+                <LowInventoryInlineLine
+                  pageSlug={canonical}
+                  resultCount={localCount}
+                  nationwide={nationwide}
+                />
+              )}
               {renderTier(primaryHeading, primary)}
               {stateFallback.length > 0 && renderTier(
                 `More ${catPluralLower}${intentLabel ? ` ${intentLabel}` : ''} across ${stateLabel ?? 'nearby states'}`,
@@ -532,6 +539,13 @@ const CategoryIndex = ({ config }: { config: CategoryIndexConfig }) => {
                 `Additional ${catPluralLower}${intentLabel ? ` ${intentLabel}` : ''} available nationwide`,
                 nationwideFallback,
                 'Vendibook ships and connects across the US — these listings are open to buyers from other states.',
+              )}
+              {isLowInventory && (
+                <ExpandSearchModule
+                  pageSlug={canonical}
+                  resultCount={localCount}
+                  nationwide={nationwide}
+                />
               )}
             </div>
           )}
