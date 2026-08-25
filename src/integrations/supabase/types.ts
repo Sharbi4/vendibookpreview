@@ -9159,6 +9159,72 @@ export type Database = {
         }
         Relationships: []
       }
+      weekly_digests: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          article_excerpt: string
+          article_image_url: string
+          article_title: string
+          article_url: string
+          broadcast_id: string | null
+          created_at: string
+          featured_listing_ids: string[]
+          id: string
+          preview_text: string
+          recipient_count: number | null
+          sent_at: string | null
+          sent_by: string | null
+          status: string
+          subject: string
+          updated_at: string
+          week_key: string
+          whats_new: Json
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          article_excerpt?: string
+          article_image_url?: string
+          article_title?: string
+          article_url?: string
+          broadcast_id?: string | null
+          created_at?: string
+          featured_listing_ids?: string[]
+          id?: string
+          preview_text?: string
+          recipient_count?: number | null
+          sent_at?: string | null
+          sent_by?: string | null
+          status?: string
+          subject?: string
+          updated_at?: string
+          week_key: string
+          whats_new?: Json
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          article_excerpt?: string
+          article_image_url?: string
+          article_title?: string
+          article_url?: string
+          broadcast_id?: string | null
+          created_at?: string
+          featured_listing_ids?: string[]
+          id?: string
+          preview_text?: string
+          recipient_count?: number | null
+          sent_at?: string | null
+          sent_by?: string | null
+          status?: string
+          subject?: string
+          updated_at?: string
+          week_key?: string
+          whats_new?: Json
+        }
+        Relationships: []
+      }
       zendesk_ticket_comments: {
         Row: {
           author_email: string | null
