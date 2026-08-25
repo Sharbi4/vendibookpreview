@@ -55,12 +55,6 @@ export const MembershipInlinePanel: React.FC<MembershipInlinePanelProps> = ({ re
     };
   }, [dismissed, user]);
 
-  // Recommended plan is the active membership in the catalog (Vendibook Pro).
-  const growthProduct = useMemo(
-    () => products.find((p) => p.slug === ACTIVE_PRODUCT_SLUGS.vendibookPro) ?? null,
-    [products],
-  );
-
   if (dismissed || tier !== 'free') return null;
 
   const persistDismiss = async () => {
@@ -78,23 +72,11 @@ export const MembershipInlinePanel: React.FC<MembershipInlinePanelProps> = ({ re
     }
   };
 
-  const handleUpgrade = async () => {
-    if (!growthProduct) {
-      // Product catalog not loaded yet — fall back to the pricing hub so the
-      // user is never left with a dead click.
-      navigate(`/pricing?returnTo=${encodeURIComponent(returnTo)}${listingId ? `&listingContext=${listingId}` : ''}`);
-      return;
-    }
-    const suffix = listingId ? `/${listingId}` : '';
-    await requestCheckout(growthProduct, {
-      listingId,
-      interval: 'monthly',
-      successPath: `/create-listing${suffix}?unlocked=${growthProduct.slug}&step=review`,
-      cancelPath: `/create-listing${suffix}?membership_cancelled=true&step=review`,
-    });
+  // "Go Pro" always lands on the premium pricing hub first — plan selection
+  // and the recurring-billing consent gate live there, not in this panel.
+  const handleUpgrade = () => {
+    navigate(`/pricing?returnTo=${encodeURIComponent(returnTo)}${listingId ? `&listingContext=${listingId}` : ''}`);
   };
-
-  const isPending = pendingSlug === growthProduct?.slug;
 
   return (
     <>
