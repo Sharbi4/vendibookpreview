@@ -1,4 +1,4 @@
-import type { CategoryIndexConfig, CategoryKey, ModeFilter } from '@/pages/CategoryIndex';
+import type { CategoryIndexConfig, CategoryIndexSection, CategoryKey, ModeFilter } from '@/pages/CategoryIndex';
 
 // City/category landing pages — only created where Vendibook has active inventory
 // or a meaningful market focus. Thin pages with no inventory will auto-noindex
