@@ -53,7 +53,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { filterPubliclyVisible } from '@/lib/listings/publicVisibility';
 import { useQuery } from '@tanstack/react-query';
 import { Listing, CATEGORY_LABELS, ListingCategory, ListingMode, AMENITIES_BY_CATEGORY } from '@/types/listing';
-import { SPECIALTY_DEFS, SPECIALTY_SEARCH_QUERIES, type SpecialtyKey, type SpecialtyVehicle } from '@/lib/listings/specialty';
+import { SPECIALTY_DEFS, SPECIALTY_SEARCH_QUERIES, SPECIALTY_SEARCH_SEO, specialtyVehicleHref, type SpecialtyKey, type SpecialtyVehicle } from '@/lib/listings/specialty';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useGoogleMapsToken } from '@/hooks/useGoogleMapsToken';
@@ -664,13 +664,35 @@ const Search = () => {
     });
   }, [listings, mode, category, debouncedQuery, locationText]);
 
-  const breadcrumbSchema = useMemo(() => generateSearchBreadcrumbSchema({
-    mode: mode as 'rent' | 'sale' | 'all',
-    category: category !== 'all' ? category : undefined,
-  }), [mode, category]);
+  // Dedicated breadcrumb for specialty filtered-search URLs
+  // (Home → specialty hub → vehicle landing page); generic otherwise.
+  const breadcrumbSchema = useMemo(() => {
+    if (activeSpecialty) {
+      const def = SPECIALTY_DEFS[activeSpecialty.key];
+      const seo = SPECIALTY_SEARCH_SEO[activeSpecialty.key][activeSpecialty.vehicle];
+      const landingPath = specialtyVehicleHref(activeSpecialty.key, activeSpecialty.vehicle);
+      return {
+        '@context': 'https://schema.org',
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://vendibook.com/' },
+          { '@type': 'ListItem', position: 2, name: `${def.pluralTitle} for Sale`, item: `https://vendibook.com${def.hubPath}` },
+          { '@type': 'ListItem', position: 3, name: seo.crumb, item: `https://vendibook.com${landingPath}` },
+        ],
+      };
+    }
+    return generateSearchBreadcrumbSchema({
+      mode: mode as 'rent' | 'sale' | 'all',
+      category: category !== 'all' ? category : undefined,
+    });
+  }, [activeSpecialty, mode, category]);
 
-  // Build dynamic SEO title and description
+  // Build dynamic SEO title and description. Specialty filtered-search URLs
+  // get dedicated editorial metadata instead of the generic pattern.
   const seoTitle = useMemo(() => {
+    if (activeSpecialty) {
+      return SPECIALTY_SEARCH_SEO[activeSpecialty.key][activeSpecialty.vehicle].title;
+    }
     const parts: string[] = [];
     if (category !== 'all') {
       parts.push(CATEGORY_LABELS[category as keyof typeof CATEGORY_LABELS] || 'Listings');
@@ -684,18 +706,30 @@ const Search = () => {
       parts.push(`in ${locationText}`);
     }
     return `${parts.join(' ')} | Vendibook`;
-  }, [category, mode, locationText]);
+  }, [activeSpecialty, category, mode, locationText]);
 
   const seoDescription = useMemo(() => {
-    const categoryLabel = category !== 'all' 
-      ? CATEGORY_LABELS[category as keyof typeof CATEGORY_LABELS]?.toLowerCase() 
+    if (activeSpecialty) {
+      return SPECIALTY_SEARCH_SEO[activeSpecialty.key][activeSpecialty.vehicle].description;
+    }
+    const categoryLabel = category !== 'all'
+      ? CATEGORY_LABELS[category as keyof typeof CATEGORY_LABELS]?.toLowerCase()
       : 'food trucks, trailers, and shared kitchens';
-    const modeLabel = mode !== 'all' 
-      ? (mode === 'rent' ? 'rent' : 'buy') 
+    const modeLabel = mode !== 'all'
+      ? (mode === 'rent' ? 'rent' : 'buy')
       : 'rent or buy';
     const locationLabel = locationText ? ` in ${locationText}` : '';
     return `Browse ${totalCount}+ ${categoryLabel} available to ${modeLabel}${locationLabel}. Compare listings and book with payment protection on Vendibook.`;
-  }, [category, mode, locationText, totalCount]);
+  }, [activeSpecialty, category, mode, locationText, totalCount]);
+
+  // Specialty filtered-search URLs self-canonicalize with their full query
+  // string so each deep link is a distinct, indexable search state.
+  const seoCanonical = useMemo(() => {
+    if (!activeSpecialty) return '/search';
+    const def = SPECIALTY_DEFS[activeSpecialty.key];
+    const cat = activeSpecialty.vehicle === 'truck' ? 'food_truck' : 'food_trailer';
+    return `/search?q=${encodeURIComponent(def.searchQuery)}&category=${cat}&mode=sale`;
+  }, [activeSpecialty]);
 
   // Generate page numbers for pagination
   const getPageNumbers = () => {
@@ -734,7 +768,7 @@ const Search = () => {
       <SEO
         title={seoTitle}
         description={seoDescription}
-        canonical="/search"
+        canonical={seoCanonical}
       />
       <JsonLd schema={[itemListSchema, breadcrumbSchema]} />
       <Header hideSearch />
