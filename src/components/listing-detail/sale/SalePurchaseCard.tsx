@@ -158,24 +158,12 @@ export const SalePurchaseCard = ({
   };
 
 
-  const handleApplyFinancing = async () => {
-    trackFinancingApplyClick('listing_panel', listing.id);
-    setApplying(true);
-    const win = window.open('', '_blank', 'noopener,noreferrer');
-    try {
-      const { data, error } = await supabase.functions.invoke('financing-apply-link', {
-        body: { listingId: listing.id },
-      });
-      if (error || !data?.applyUrl) throw new Error('apply_unavailable');
-      if (win) win.location.href = data.applyUrl;
-      else window.location.href = data.applyUrl;
-    } catch {
-      win?.close();
-      toast.error('Could not open the financing application. Please try again.');
-    } finally {
-      setApplying(false);
-    }
+  // Every financing entry point on this card runs through the shared handoff:
+  // placement tracking → Vendibook lead capture → Equinox.
+  const handleApplyFinancing = (source: FinancingSource) => {
+    startFinancingApply(source, listing.id);
   };
+
 
   if (isOwner) {
     return (
