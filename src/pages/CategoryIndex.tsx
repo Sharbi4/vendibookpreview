@@ -280,8 +280,33 @@ const CategoryIndex = ({ config }: { config: CategoryIndexConfig }) => {
       </section>
     );
 
-  const catPluralLower = categoryLabel(config.category).toLowerCase() + 's';
+  const labelPlural = multiCategory
+    ? 'Food Trucks & Food Trailers'
+    : categoryLabel(config.category) + 's';
+  const catPluralLower = multiCategory
+    ? 'food trucks & food trailers'
+    : categoryLabel(config.category).toLowerCase() + 's';
   const intentLabel = config.mode === 'sale' ? 'for sale' : config.mode === 'rent' ? 'for rent' : '';
+
+  const searchHref = multiCategory
+    ? `/search?mode=${config.mode}`
+    : `/search?category=${config.category}${config.mode !== 'any' ? `&mode=${config.mode}` : ''}`;
+
+  const sellerCta = config.sellerCta ?? (config.mode === 'rent'
+    ? {
+        heading: multiCategory
+          ? 'Have a food truck or trailer available for rent?'
+          : `Have a ${categoryLabel(config.category).toLowerCase()} available for rent?`,
+        body: 'List free on Vendibook — set your own daily, weekly, or monthly rates and terms, and receive booking requests from verified operators.',
+        ctaLabel: multiCategory ? 'List My Food Truck for Rent' : `List Your ${categoryLabel(config.category)} for Rent`,
+        ctaHref: config.category === 'ghost_kitchen' ? '/rent-my-commercial-kitchen' : '/rent-out-my-food-truck',
+      }
+    : {
+        heading: `Have a ${categoryLabel(config.category).toLowerCase()} to sell?`,
+        body: 'List free on Vendibook — photos, video, equipment, offers, and optional secure transaction tools.',
+        ctaLabel: `List Your ${categoryLabel(config.category)} Free`,
+        ctaHref: config.category === 'food_trailer' ? '/sell-food-trailer' : '/sell-my-food-truck',
+      });
 
   const primaryHeading = config.city
     ? `${catPluralLower.charAt(0).toUpperCase() + catPluralLower.slice(1)}${intentLabel ? ` ${intentLabel}` : ''} in ${cityLabel}`
