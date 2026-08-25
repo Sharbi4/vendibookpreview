@@ -523,11 +523,20 @@ export default function PricePilot() {
                                   {/* 1 — What are you pricing */}
                                   {step === 0 && (
                                     <motion.div key="s0" {...stepMotion} transition={{ duration: 0.25 }}>
-                                      <h3 className="text-xl md:text-2xl font-bold tracking-tight text-foreground">What are you pricing?</h3>
+                                      <h3 className="text-xl md:text-2xl font-bold tracking-tight text-foreground">What are you pricing?<Req /></h3>
                                       <p className="mt-1 text-sm text-muted-foreground">Choose the closest match — it anchors the market evidence.</p>
-                                      <div className="mt-5 grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+                                      <div
+                                        data-pp-field="assetCategory"
+                                        role="group"
+                                        aria-label="Equipment type"
+                                        aria-invalid={!!errors.assetCategory}
+                                        aria-describedby={errors.assetCategory ? 'pp-err-assetCategory' : undefined}
+                                        tabIndex={-1}
+                                        className={cn('mt-5 grid grid-cols-1 gap-2.5 rounded-2xl focus:outline-none sm:grid-cols-2',
+                                          errors.assetCategory && 'ring-2 ring-amber-600/40 ring-offset-2 ring-offset-sale-card')}
+                                      >
                                         {CATEGORIES.map((c) => (
-                                          <button key={c.value} type="button" onClick={() => setAssetCategory(c.value)}
+                                          <button key={c.value} type="button" onClick={() => { setAssetCategory(c.value); clearError('assetCategory'); }}
                                             aria-pressed={assetCategory === c.value}
                                             className={cn('flex items-start gap-3 rounded-xl p-4 text-left ring-1 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
                                               assetCategory === c.value ? 'bg-primary/[0.07] ring-primary/50' : 'bg-muted/60 ring-border hover:ring-foreground/25')}>
