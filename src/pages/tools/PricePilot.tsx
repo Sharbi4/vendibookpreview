@@ -420,6 +420,7 @@ export default function PricePilot() {
                   </div>
 
                   <div ref={panelRef} className="mt-10">
+                    <PurchaseReturnBanner />
                     <AnimatePresence mode="wait">
                       {/* Resolving access */}
                       {(authLoading || accessLoading) && (
@@ -447,23 +448,26 @@ export default function PricePilot() {
                         </motion.div>
                       )}
 
-                      {/* Signed in, not entitled — polished Pro access state */}
+                      {/* Signed in, not entitled — real catalog unlock options */}
                       {!authLoading && !accessLoading && user && !unlocked && (
                         <motion.div key="locked" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-                          className="rounded-[24px] bg-sale-card px-6 py-12 text-center md:px-12">
-                          <h3 className="text-2xl font-bold tracking-tight text-foreground">
-                            PricePilot is included with Vendibook Pro
-                          </h3>
-                          <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-muted-foreground">
-                            One membership unlocks every appraisal — sale ranges, rental benchmarks, and the evidence behind
-                            both — along with the rest of the Pro seller toolkit.
-                          </p>
-                          <Button variant="cta" size="cta" className="mt-6" asChild>
-                            <Link to="/pricing">Explore Vendibook Pro <ArrowRight className="ml-1.5 h-4 w-4" /></Link>
-                          </Button>
-                          <p className="mt-4 text-[12px] text-muted-foreground">
-                            A one-time unlock is also available on the pricing page.
-                          </p>
+                          className="rounded-[24px] bg-sale-card px-5 py-10 md:px-10 md:py-12">
+                          <div className="mx-auto max-w-xl text-center">
+                            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">Unlock PricePilot</p>
+                            <h3 className="mt-3 text-2xl md:text-3xl font-bold tracking-tight text-foreground">
+                              Two ways in. Both start here.
+                            </h3>
+                            <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-muted-foreground">
+                              Unlock PricePilot once, or get it included with a Vendibook Pro
+                              membership. Either way you come straight back to your appraisal.
+                            </p>
+                          </div>
+                          <UnlockLadder
+                            slug="pricepilot"
+                            tone="light"
+                            returnPath="/tools/pricepilot"
+                            className="mx-auto mt-8 max-w-2xl"
+                          />
                         </motion.div>
                       )}
 
