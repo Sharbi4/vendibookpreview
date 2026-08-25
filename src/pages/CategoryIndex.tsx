@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { Loader2, MapPin, ArrowRight, Tag } from 'lucide-react';
+import { Loader2, MapPin, ArrowRight, Tag, Info } from 'lucide-react';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import SEO from '@/components/SEO';
 import JsonLd from '@/components/JsonLd';
 import { Button } from '@/components/ui/button';
+import { trackEvent } from '@/lib/analytics';
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -20,9 +21,17 @@ import { CITY_DATA, getCityStateSlug } from '@/data/cityData';
 export type CategoryKey = 'food_truck' | 'food_trailer' | 'ghost_kitchen' | 'vendor_space';
 export type ModeFilter = 'rent' | 'sale' | 'any';
 
+export interface CategoryIndexSection {
+  heading: string;
+  paragraphs: string[];
+  links?: { href: string; label: string }[];
+}
+
 export interface CategoryIndexConfig {
   path: string;
   category: CategoryKey;
+  /** Multi-category pages (e.g. the national rental hub shows trucks + trailers). */
+  categories?: CategoryKey[];
   mode: ModeFilter;
   /** Optional city filter. When listings are short, page falls back to state then nationwide. */
   city?: { name: string; stateCode: string };
@@ -32,8 +41,14 @@ export interface CategoryIndexConfig {
   title: string;
   description: string;
   intro: string;
+  /** One-line intent clarification rendered directly under the intro. */
+  clarification?: string;
+  /** Mid-page content sections rendered after the inventory grid. */
+  sections?: CategoryIndexSection[];
   faqs: { q: string; a: string }[];
   related: { href: string; label: string }[];
+  /** Overrides the default seller cross-link strip. */
+  sellerCta?: { heading: string; body: string; ctaLabel: string; ctaHref: string };
 }
 
 interface ListingRow {
