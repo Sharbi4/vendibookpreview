@@ -191,6 +191,22 @@
     color: #ffd2b8;
   }
 
+  /* Hand-drawn highlighter stroke behind inline text.
+     box-decoration-break: clone repeats the stroke on every wrapped line,
+     and the vertical padding makes consecutive lines overlap slightly —
+     like real marker passes. A darker leading edge mimics the marker
+     pressing down at the start of each stroke. */
+  .text-highlighter {
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
+    background-image:
+      linear-gradient(99deg, hsl(var(--primary) / 0.34), hsl(var(--primary) / 0.10) 26%, hsl(var(--primary) / 0) 48%),
+      linear-gradient(96deg, hsl(var(--primary) / 0.30), hsl(var(--primary) / 0.22) 52%, hsl(var(--primary) / 0.32));
+    background-repeat: no-repeat;
+    border-radius: 0.3em 0.7em 0.35em 0.6em;
+    padding: 0.05em 0.22em 0.07em;
+  }
+
   .bg-cta-primary {
     background: linear-gradient(135deg, #FF4B1F 0%, #FF5A1F 45%, #FF7A22 100%);
   }
