@@ -323,6 +323,10 @@ const CategoryCityPage = ({ mode }: CategoryCityPageProps) => {
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
           ) : listings.length > 0 ? (
+            <div className="space-y-8">
+            {localCount <= NEAR_EMPTY_THRESHOLD && (
+              <LowInventoryInlineLine pageSlug={canonicalPath} resultCount={localCount} nationwide={nationwide} />
+            )}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {listings.map((l) => {
                 const price = l.mode === 'rent' ? (l.price_daily || l.price_weekly) : l.price_sale;
