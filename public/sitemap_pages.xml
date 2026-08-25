@@ -72,7 +72,7 @@
   <url><loc>https://vendibook.com/rent/food-trucks/los-angeles-ca</loc><lastmod>2026-08-25</lastmod><changefreq>daily</changefreq><priority>0.9</priority></url>
   <url><loc>https://vendibook.com/food-trailers</loc><lastmod>2026-05-23</lastmod><changefreq>daily</changefreq><priority>0.9</priority></url>
   <url><loc>https://vendibook.com/food-trailers-for-sale</loc><lastmod>2026-05-23</lastmod><changefreq>daily</changefreq><priority>0.9</priority></url>
-  <url><loc>https://vendibook.com/food-trailers-for-rent</loc><lastmod>2026-05-23</lastmod><changefreq>daily</changefreq><priority>0.9</priority></url>
+  
   <url><loc>https://vendibook.com/shared-kitchens</loc><lastmod>2026-05-23</lastmod><changefreq>daily</changefreq><priority>0.9</priority></url>
   <url><loc>https://vendibook.com/shared-kitchens-for-rent</loc><lastmod>2026-05-23</lastmod><changefreq>daily</changefreq><priority>0.9</priority></url>
   <url><loc>https://vendibook.com/ghost-kitchens</loc><lastmod>2026-05-23</lastmod><changefreq>daily</changefreq><priority>0.85</priority></url>
@@ -81,7 +81,7 @@
   <!-- City + category landing pages (crawlable, city-filtered) -->
   <url><loc>https://vendibook.com/houston/food-trucks</loc><lastmod>2026-05-23</lastmod><changefreq>daily</changefreq><priority>0.9</priority></url>
   <url><loc>https://vendibook.com/houston/food-trucks-for-sale</loc><lastmod>2026-05-23</lastmod><changefreq>daily</changefreq><priority>0.9</priority></url>
-  <url><loc>https://vendibook.com/houston/food-trucks-for-rent</loc><lastmod>2026-05-23</lastmod><changefreq>daily</changefreq><priority>0.9</priority></url>
+  
   <url><loc>https://vendibook.com/phoenix/food-trucks</loc><lastmod>2026-05-23</lastmod><changefreq>weekly</changefreq><priority>0.85</priority></url>
   <url><loc>https://vendibook.com/tucson/food-trucks</loc><lastmod>2026-05-23</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://vendibook.com/portland/shared-kitchens</loc><lastmod>2026-05-23</lastmod><changefreq>weekly</changefreq><priority>0.85</priority></url>
