@@ -245,20 +245,90 @@ export default function PricePilot() {
   }, [authLoading, accessLoading, unlocked]);
 
   const lastStep = STEP_LABELS.length - 1;
-  const canContinue = useMemo(() => {
-    switch (step) {
-      case 0: return !!assetCategory;
-      case 1: return !!mode;
-      case 2: return state.trim().length === 2 || zip.trim().length === 5;
-      case 3: return true; // year/size optional but encouraged
-      case 4: return !!condition && !!operationalStatus;
-      default: return true;
+  const currentYear = new Date().getFullYear();
+
+  const yearValid = (v: string) => {
+    const n = Number(v);
+    return /^\d{4}$/.test(v.trim()) && n >= 1950 && n <= currentYear + 2;
+  };
+
+  /**
+   * Required fields per step — only what a defensible appraisal genuinely
+   * needs: equipment identity, market location, age, and honest condition.
+   * Size, mileage, features and notes stay optional on purpose.
+   */
+  const validateStep = (s: number): { errors: Record<string, string>; missing: string[] } => {
+    const errs: Record<string, string> = {};
+    const missing: string[] = [];
+    if (s === 0 && !assetCategory) {
+      errs.assetCategory = 'Choose the equipment type closest to yours.';
+      missing.push('equipment type');
     }
-  }, [step, assetCategory, mode, state, zip, condition, operationalStatus]);
+    if (s === 2 && !(state.trim().length === 2 || zip.trim().length === 5)) {
+      errs.location = 'Enter a two-letter state or a 5-digit ZIP code.';
+      missing.push('location');
+    }
+    if (s === 3 && !yearValid(year)) {
+      errs.year = `Enter the 4-digit year (1950–${currentYear + 2}). Age is core to a defensible value.`;
+      missing.push('year');
+    }
+    if (s === 4) {
+      if (!condition) { errs.condition = 'Select the overall condition.'; missing.push('condition'); }
+      if (!operationalStatus) { errs.operationalStatus = 'Select the operational status.'; missing.push('operational status'); }
+    }
+    return { errors: errs, missing };
+  };
+
+  const clearError = (key: string) =>
+    setErrors((prev) => {
+      if (!prev[key]) return prev;
+      const next = { ...prev };
+      delete next[key];
+      if (!Object.keys(next).length) setFormSummary(null);
+      return next;
+    });
+
+  // Where focus lands when a field fails validation (inputs, or the group
+  // wrapper for choice grids).
+  const FOCUS_TARGET: Record<string, string> = {
+    assetCategory: '[data-pp-field="assetCategory"]',
+    location: '#pp-state',
+    year: '#pp-year',
+    condition: '[data-pp-field="condition"]',
+    operationalStatus: '[data-pp-field="operationalStatus"]',
+  };
+
+  const failValidation = (v: { errors: Record<string, string>; missing: string[] }) => {
+    setErrors(v.errors);
+    setFormSummary(
+      v.missing.length > 1
+        ? `Complete the required fields to continue: ${v.missing.join(', ')}.`
+        : `Add the ${v.missing[0]} to continue.`,
+    );
+    const firstKey = Object.keys(FOCUS_TARGET).find((k) => v.errors[k]);
+    requestAnimationFrame(() => {
+      const el = firstKey ? document.querySelector<HTMLElement>(FOCUS_TARGET[firstKey]) : null;
+      el?.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'center' });
+      el?.focus({ preventScroll: true });
+    });
+  };
 
   const goNext = () => {
-    if (!canContinue) return;
+    const v = validateStep(step);
+    if (Object.keys(v.errors).length) { failValidation(v); return; }
+    setErrors({});
+    setFormSummary(null);
     if (step < lastStep) { setStep((s) => s + 1); return; }
+    // Final submit: re-verify every earlier step before spending an appraisal.
+    for (let s = 0; s < lastStep; s++) {
+      const earlier = validateStep(s);
+      if (Object.keys(earlier.errors).length) {
+        setStep(s);
+        // Wait for the step transition before focusing.
+        setTimeout(() => failValidation(earlier), 350);
+        return;
+      }
+    }
     void runAppraisal();
   };
 
