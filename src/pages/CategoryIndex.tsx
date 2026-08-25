@@ -17,6 +17,7 @@ import {
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
 import { CITY_DATA, getCityStateSlug } from '@/data/cityData';
+import { SPECIALTY_DEFS, specialtyOrFilter, type SpecialtyKey } from '@/lib/listings/specialty';
 
 export type CategoryKey = 'food_truck' | 'food_trailer' | 'ghost_kitchen' | 'vendor_space';
 export type ModeFilter = 'rent' | 'sale' | 'any';
@@ -49,6 +50,14 @@ export interface CategoryIndexConfig {
   related: { href: string; label: string }[];
   /** Overrides the default seller cross-link strip. */
   sellerCta?: { heading: string; body: string; ctaLabel: string; ctaHref: string };
+  /** Specialty collection (coffee / ice cream). Filters inventory to the
+   *  specialty and disables geographic fallback tiers so unrelated listings
+   *  are never shown as specialty matches. */
+  specialty?: SpecialtyKey;
+  /** Breadcrumb parent between Home and the page (specialty hubs). */
+  breadcrumbParent?: { name: string; href: string };
+  /** Overrides the hero search CTA href. */
+  searchHrefOverride?: string;
 }
 
 interface ListingRow {
@@ -96,7 +105,7 @@ const categoryLabel = (c: CategoryKey): string =>
 
 const baseSelect = 'id, title, description, cover_image_url, price_daily, price_weekly, price_sale, mode, category, city, state, address';
 
-const baseQuery = (categories: CategoryKey[], mode: ModeFilter, limit: number) => {
+const baseQuery = (categories: CategoryKey[], mode: ModeFilter, limit: number, orFilter?: string) => {
   let q = supabase
     .from('listings')
     .select(baseSelect)
@@ -107,6 +116,7 @@ const baseQuery = (categories: CategoryKey[], mode: ModeFilter, limit: number) =
     .order('updated_at', { ascending: false })
     .limit(limit);
   if (mode !== 'any') q = q.eq('mode', mode);
+  if (orFilter) q = q.or(orFilter);
   return q;
 };
 
@@ -120,14 +130,16 @@ const CategoryIndex = ({ config }: { config: CategoryIndexConfig }) => {
   const multiCategory = categories.length > 1;
 
   useEffect(() => {
-    if (config.mode === 'rent') {
+    if (config.specialty) {
+      trackEvent({ category: 'SEO', action: 'specialty_hub_viewed', label: config.path });
+    } else if (config.mode === 'rent') {
       trackEvent({
         category: 'SEO',
         action: config.city ? 'rental_city_index_viewed' : config.state ? 'rental_state_viewed' : 'rental_hub_viewed',
         label: config.path,
       });
     }
-  }, [config.mode, config.path, config.city, config.state]);
+  }, [config.mode, config.path, config.city, config.state, config.specialty]);
 
   useEffect(() => {
     let cancelled = false;
@@ -137,8 +149,9 @@ const CategoryIndex = ({ config }: { config: CategoryIndexConfig }) => {
       setStateFallback([]);
       setNationwideFallback([]);
 
-      // Tier 1: city OR state OR all
-      let q1 = baseQuery(categories, config.mode, 48);
+      // Tier 1: city OR state OR specialty OR all
+      const specialtyFilter = config.specialty ? specialtyOrFilter(config.specialty) : undefined;
+      let q1 = baseQuery(categories, config.mode, 48, specialtyFilter);
       if (config.city) {
         q1 = q1.or(`city.ilike.${config.city.name},address.ilike.%${config.city.name}%`);
       } else if (config.state) {
@@ -151,32 +164,36 @@ const CategoryIndex = ({ config }: { config: CategoryIndexConfig }) => {
 
       const excludeIds = new Set(primaryRows.map((r) => r.id));
 
-      // Tier 2: state fallback (only when city is set AND primary is thin)
-      if (config.city && primaryRows.length < MIN_TIER) {
-        let q2 = baseQuery(categories, config.mode, 24);
-        q2 = q2.or(`state.eq.${config.city.stateCode},state.ilike.${config.city.stateCode}`);
-        const { data: d2 } = await q2;
-        const stateRows = ((d2 as ListingRow[]) || []).filter((r) => !excludeIds.has(r.id));
-        if (cancelled) return;
-        setStateFallback(stateRows);
-        stateRows.forEach((r) => excludeIds.add(r.id));
-      }
+      // Specialty pages never fall back to unrelated inventory — only real
+      // specialty matches may appear on the collection.
+      if (!config.specialty) {
+        // Tier 2: state fallback (only when city is set AND primary is thin)
+        if (config.city && primaryRows.length < MIN_TIER) {
+          let q2 = baseQuery(categories, config.mode, 24);
+          q2 = q2.or(`state.eq.${config.city.stateCode},state.ilike.${config.city.stateCode}`);
+          const { data: d2 } = await q2;
+          const stateRows = ((d2 as ListingRow[]) || []).filter((r) => !excludeIds.has(r.id));
+          if (cancelled) return;
+          setStateFallback(stateRows);
+          stateRows.forEach((r) => excludeIds.add(r.id));
+        }
 
-      // Tier 3: nationwide fallback (when primary + state still thin, or state-only page is thin)
-      const tier2Count = config.city && primaryRows.length < MIN_TIER ? -1 : 0;
-      const enoughSoFar = primaryRows.length + (tier2Count === -1 ? MIN_TIER : 0);
-      if (enoughSoFar < MIN_TIER) {
-        const q3 = baseQuery(categories, config.mode, 24);
-        const { data: d3 } = await q3;
-        const natRows = ((d3 as ListingRow[]) || []).filter((r) => !excludeIds.has(r.id));
-        if (cancelled) return;
-        setNationwideFallback(natRows);
+        // Tier 3: nationwide fallback (when primary + state still thin, or state-only page is thin)
+        const tier2Count = config.city && primaryRows.length < MIN_TIER ? -1 : 0;
+        const enoughSoFar = primaryRows.length + (tier2Count === -1 ? MIN_TIER : 0);
+        if (enoughSoFar < MIN_TIER) {
+          const q3 = baseQuery(categories, config.mode, 24);
+          const { data: d3 } = await q3;
+          const natRows = ((d3 as ListingRow[]) || []).filter((r) => !excludeIds.has(r.id));
+          if (cancelled) return;
+          setNationwideFallback(natRows);
+        }
       }
 
       setLoading(false);
     })();
     return () => { cancelled = true; };
-  }, [config.category, config.mode, config.city?.name, config.state?.code, categories.join(',')]);
+  }, [config.category, config.mode, config.city?.name, config.state?.code, config.specialty, categories.join(',')]);
 
   const canonical = config.path;
   const totalListings = primary.length + stateFallback.length + nationwideFallback.length;
@@ -213,7 +230,11 @@ const CategoryIndex = ({ config }: { config: CategoryIndexConfig }) => {
   ));
 
   const crumbs: { name: string; href?: string }[] = [{ name: 'Home', href: '/' }];
-  if (config.city || config.state) crumbs.push({ name: crumbNationalLabel, href: crumbNationalPath });
+  if (config.breadcrumbParent) {
+    crumbs.push(config.breadcrumbParent);
+  } else if (config.city || config.state) {
+    crumbs.push({ name: crumbNationalLabel, href: crumbNationalPath });
+  }
   if (statePageExists && cityStateName && cityStateSlug) {
     crumbs.push({ name: cityStateName, href: `${crumbNationalPath}/${cityStateSlug}` });
   }
@@ -251,8 +272,10 @@ const CategoryIndex = ({ config }: { config: CategoryIndexConfig }) => {
     })),
   };
 
-  // noindex if zero across all tiers (extreme edge case)
-  const noindex = !loading && totalListings === 0;
+  // noindex if zero across all tiers (extreme edge case). Specialty hubs stay
+  // indexable: they carry evergreen buyer/seller content even when inventory
+  // is temporarily thin.
+  const noindex = !loading && totalListings === 0 && !config.specialty;
 
   const cityLabel = config.city ? `${config.city.name}, ${config.city.stateCode}` : null;
   const stateLabel = config.city ? config.city.stateCode : config.state?.name ?? null;
@@ -326,17 +349,21 @@ const CategoryIndex = ({ config }: { config: CategoryIndexConfig }) => {
       </section>
     );
 
-  const labelPlural = multiCategory
-    ? 'Food Trucks & Food Trailers'
-    : categoryLabel(config.category) + 's';
-  const catPluralLower = multiCategory
-    ? 'food trucks & food trailers'
-    : categoryLabel(config.category).toLowerCase() + 's';
+  const labelPlural = config.specialty
+    ? SPECIALTY_DEFS[config.specialty].pluralTitle
+    : multiCategory
+      ? 'Food Trucks & Food Trailers'
+      : categoryLabel(config.category) + 's';
+  const catPluralLower = config.specialty
+    ? SPECIALTY_DEFS[config.specialty].pluralLower
+    : multiCategory
+      ? 'food trucks & food trailers'
+      : categoryLabel(config.category).toLowerCase() + 's';
   const intentLabel = config.mode === 'sale' ? 'for sale' : config.mode === 'rent' ? 'for rent' : '';
 
-  const searchHref = multiCategory
+  const searchHref = config.searchHrefOverride ?? (multiCategory
     ? `/search?mode=${config.mode}`
-    : `/search?category=${config.category}${config.mode !== 'any' ? `&mode=${config.mode}` : ''}`;
+    : `/search?category=${config.category}${config.mode !== 'any' ? `&mode=${config.mode}` : ''}`);
 
   const sellerCta = config.sellerCta ?? (config.mode === 'rent'
     ? {
@@ -512,7 +539,8 @@ const CategoryIndex = ({ config }: { config: CategoryIndexConfig }) => {
             </div>
           </section>
 
-          {/* City links */}
+          {/* City links (hidden on specialty hubs — those links are not specialty-filtered) */}
+          {!config.specialty && (
           <section aria-labelledby="cities-heading" className="space-y-3">
             <h2 id="cities-heading" className="text-xl font-semibold text-foreground">
               Browse {catPluralLower} by city
@@ -536,6 +564,7 @@ const CategoryIndex = ({ config }: { config: CategoryIndexConfig }) => {
               })}
             </ul>
           </section>
+          )}
 
           {/* FAQ */}
           <section aria-labelledby="faq-heading" className="space-y-4 max-w-3xl">

@@ -35,6 +35,8 @@ const footerSections: FooterSection[] = [
     links: [
       { label: 'Food Trucks for Sale', href: '/food-trucks-for-sale' },
       { label: 'Food Trailers for Sale', href: '/food-trailers-for-sale' },
+      { label: 'Coffee Trucks & Trailers', href: '/coffee-trucks-trailers-for-sale' },
+      { label: 'Ice Cream Trucks & Trailers', href: '/ice-cream-trucks-trailers-for-sale' },
       { label: 'Food Trucks & Trailers for Rent', href: '/food-trucks-for-rent' },
       { label: 'Food Trailers for Rent', href: '/food-trailers-for-rent' },
       { label: 'Shared Kitchens', href: '/shared-kitchens' },
