@@ -17,7 +17,7 @@ import {
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
 import { CITY_DATA, getCityStateSlug } from '@/data/cityData';
-import { SPECIALTY_DEFS, specialtyOrFilter, type SpecialtyKey } from '@/lib/listings/specialty';
+import { SPECIALTY_DEFS, specialtyOrFilter, specialtyBrowseLinks, specialtyBrowseHref, SPECIALTY_VEHICLE_LABELS, type SpecialtyKey } from '@/lib/listings/specialty';
 
 export type CategoryKey = 'food_truck' | 'food_trailer' | 'ghost_kitchen' | 'vendor_space';
 export type ModeFilter = 'rent' | 'sale' | 'any';
@@ -324,6 +324,16 @@ const CategoryIndex = ({ config }: { config: CategoryIndexConfig }) => {
                 {l.description}
               </p>
             )}
+            {config.specialty && (l.category === 'food_truck' || l.category === 'food_trailer') && (
+              <Link
+                to={specialtyBrowseHref(config.specialty, l.category === 'food_truck' ? 'truck' : 'trailer')}
+                onClick={(e) => e.stopPropagation()}
+                className="relative z-10 inline-flex w-fit items-center gap-1 text-xs font-medium text-primary hover:underline"
+              >
+                {SPECIALTY_VEHICLE_LABELS[config.specialty][l.category === 'food_truck' ? 'truck' : 'trailer']}
+                <ArrowRight className="h-3 w-3" />
+              </Link>
+            )}
             <div className="pt-1 flex items-center justify-between">
               <span className="font-semibold text-foreground">{formatPrice(l)}</span>
               <span className="text-xs text-primary inline-flex items-center gap-1">
@@ -438,6 +448,15 @@ const CategoryIndex = ({ config }: { config: CategoryIndexConfig }) => {
                 <Link to={sellerCta.ctaHref}>{sellerCta.ctaLabel}</Link>
               </Button>
             </div>
+            {config.specialty && (
+              <div className="flex flex-wrap gap-2 pt-1">
+                {specialtyBrowseLinks(config.specialty).map((l) => (
+                  <Button key={l.href} asChild variant="outline" size="sm">
+                    <Link to={l.href}>{l.label}</Link>
+                  </Button>
+                ))}
+              </div>
+            )}
           </header>
 
           {loading ? (

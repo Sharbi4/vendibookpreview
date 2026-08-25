@@ -53,6 +53,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { filterPubliclyVisible } from '@/lib/listings/publicVisibility';
 import { useQuery } from '@tanstack/react-query';
 import { Listing, CATEGORY_LABELS, ListingCategory, ListingMode, AMENITIES_BY_CATEGORY } from '@/types/listing';
+import { SPECIALTY_DEFS, SPECIALTY_SEARCH_QUERIES, type SpecialtyKey, type SpecialtyVehicle } from '@/lib/listings/specialty';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useGoogleMapsToken } from '@/hooks/useGoogleMapsToken';
@@ -152,7 +153,11 @@ const Search = () => {
 
   // Auto-geocode the search query if it looks like a location and no coordinates are set
   useEffect(() => {
-    const shouldGeocode = initialQuery && !initialLat && !initialLng && !locationCoords;
+    // Specialty keywords ("coffee", "ice cream") are equipment searches, not
+    // places — the geocoder otherwise resolves "coffee" to Coffeeville, MS
+    // and wrongly location-scopes the deep links.
+    const shouldGeocode = initialQuery && !initialLat && !initialLng && !locationCoords
+      && !SPECIALTY_SEARCH_QUERIES.has(initialQuery.trim().toLowerCase());
     if (!shouldGeocode) return;
 
     const geocodeQuery = async () => {
@@ -327,6 +332,24 @@ const Search = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchQuery]);
 
+  // Deep links (specialty "Browse coffee trucks" chips, hub CTAs) can change
+  // the URL while /search is already mounted — re-sync the core filters from
+  // the params. Only applies values that differ from current state so the
+  // user's own typing/filter taps (which write the same params) never loop.
+  useEffect(() => {
+    const q = searchParams.get('q') || '';
+    const m = (searchParams.get('mode') as ListingMode | 'all') || 'all';
+    const c = (searchParams.get('category') as ListingCategory | 'all') || 'all';
+    if (q !== searchQuery && q !== debouncedQuery) {
+      setSearchQuery(q);
+      setDebouncedQuery(q);
+      setQueryIsLocation(false);
+    }
+    if (m !== mode) setMode(m);
+    if (c !== category) setCategory(c);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
+
   const handleModeChange = (value: string) => {
     const newMode = value as ListingMode | 'all';
     setMode(newMode);
@@ -351,6 +374,34 @@ const Search = () => {
     params.delete('page');
     setSearchParams(params);
   };
+
+  // Specialty browse deep links (coffee/ice cream × truck/trailer) — sets the
+  // exact same state the hub-header and listing-card links navigate to.
+  const handleSpecialtySelect = (key: SpecialtyKey, vehicle: SpecialtyVehicle) => {
+    const def = SPECIALTY_DEFS[key];
+    const newCategory: ListingCategory = vehicle === 'truck' ? 'food_truck' : 'food_trailer';
+    setSearchQuery(def.searchQuery);
+    setDebouncedQuery(def.searchQuery);
+    setQueryIsLocation(false);
+    setCategory(newCategory);
+    setMode('sale');
+    setPage(1);
+    const params = new URLSearchParams(searchParams);
+    params.set('q', def.searchQuery);
+    params.set('category', newCategory);
+    params.set('mode', 'sale');
+    params.delete('page');
+    setSearchParams(params);
+  };
+
+  // Highlights the matching specialty pill when the current search state is
+  // exactly a specialty browse deep link.
+  const activeSpecialty = useMemo(() => {
+    if (mode !== 'sale' || (category !== 'food_truck' && category !== 'food_trailer')) return null;
+    const q = debouncedQuery.trim().toLowerCase();
+    const key = (Object.keys(SPECIALTY_DEFS) as SpecialtyKey[]).find((k) => SPECIALTY_DEFS[k].searchQuery === q);
+    return key ? { key, vehicle: (category === 'food_truck' ? 'truck' : 'trailer') as SpecialtyVehicle } : null;
+  }, [debouncedQuery, category, mode]);
 
   const handleCategoryChange = (value: string) => {
     const newCategory = value as ListingCategory | 'all';
@@ -853,6 +904,8 @@ const Search = () => {
                 onInstantBookToggle={handleInstantBookChange}
                 verifiedHostsOnly={verifiedHostsOnly}
                 onVerifiedToggle={handleVerifiedHostsChange}
+                activeSpecialty={activeSpecialty}
+                onSpecialtySelect={handleSpecialtySelect}
               />
             </div>
 

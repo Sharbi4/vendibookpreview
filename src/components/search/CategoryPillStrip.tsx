@@ -1,7 +1,18 @@
 import { useRef } from 'react';
-import { ChevronLeft, ChevronRight, Truck, Container, ChefHat, Store, Zap, ShieldCheck } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Truck, Container, ChefHat, Store, Zap, ShieldCheck, Coffee, IceCreamCone } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ListingCategory } from '@/types/listing';
+import { SPECIALTY_VEHICLE_SHORT_LABELS, type SpecialtyKey, type SpecialtyVehicle } from '@/lib/listings/specialty';
+
+// Specialty collection shortcuts — these set the same deep-link state
+// (specialty query + vehicle category + sale mode) used by hub headers and
+// listing-card chips, so navigation stays consistent across the marketplace.
+const SPECIALTY_PILLS: { key: SpecialtyKey; vehicle: SpecialtyVehicle; icon: React.ComponentType<{ className?: string }> }[] = [
+  { key: 'coffee', vehicle: 'truck', icon: Coffee },
+  { key: 'coffee', vehicle: 'trailer', icon: Coffee },
+  { key: 'ice_cream', vehicle: 'truck', icon: IceCreamCone },
+  { key: 'ice_cream', vehicle: 'trailer', icon: IceCreamCone },
+];
 
 interface PillItem {
   key: string;
@@ -23,6 +34,9 @@ interface Props {
   onInstantBookToggle: (v: boolean) => void;
   verifiedHostsOnly: boolean;
   onVerifiedToggle: (v: boolean) => void;
+  /** Currently applied specialty browse state, if the search matches one. */
+  activeSpecialty?: { key: SpecialtyKey; vehicle: SpecialtyVehicle } | null;
+  onSpecialtySelect?: (key: SpecialtyKey, vehicle: SpecialtyVehicle) => void;
 }
 
 export const CategoryPillStrip = ({
@@ -31,7 +45,9 @@ export const CategoryPillStrip = ({
   instantBookOnly,
   onInstantBookToggle,
   verifiedHostsOnly,
-  onVerifiedToggle}: Props) => {
+  onVerifiedToggle,
+  activeSpecialty,
+  onSpecialtySelect}: Props) => {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const scroll = (dir: 'l' | 'r') => {
@@ -73,6 +89,28 @@ export const CategoryPillStrip = ({
                   active ? 'bg-primary opacity-100' : 'bg-foreground/30 opacity-0 group-hover/pill:opacity-100',
                 )}
               />
+            </button>
+          );
+        })}
+
+        <div className="w-px bg-white/10 mx-2 my-2 shrink-0" />
+
+        {onSpecialtySelect && SPECIALTY_PILLS.map(({ key, vehicle, icon: Icon }) => {
+          const active = activeSpecialty?.key === key && activeSpecialty?.vehicle === vehicle;
+          return (
+            <button
+              key={`${key}-${vehicle}`}
+              onClick={() => onSpecialtySelect(key, vehicle)}
+              className={cn(
+                'flex items-center gap-1.5 h-9 px-3.5 rounded-full border text-[12px] font-medium whitespace-nowrap shrink-0 transition-all duration-200 ease-out self-center',
+                active
+                  ? 'border-primary/50 bg-primary/12 text-foreground'
+                  : 'border-white/12 bg-white/[0.03] text-muted-foreground hover:text-foreground hover:bg-white/[0.07]'
+              )}
+              aria-pressed={active}
+            >
+              <Icon className={cn('h-4 w-4', active && 'text-primary')} />
+              <span>{SPECIALTY_VEHICLE_SHORT_LABELS[key][vehicle]}</span>
             </button>
           );
         })}

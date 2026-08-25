@@ -1,7 +1,8 @@
 import { deliveryRateLabel } from '@/lib/fulfillment/delivery';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { MapPin, Plug, Zap, Droplet, Refrigerator, Flame, Wind, Wifi, Car, Shield, Sun, Truck, Calendar, Clock, ArrowRight, Banknote } from 'lucide-react';
+import { MapPin, Plug, Zap, Droplet, Refrigerator, Flame, Wind, Wifi, Car, Shield, Sun, Truck, Calendar, Clock, ArrowRight, Banknote, Coffee, IceCreamCone } from 'lucide-react';
+import { detectSpecialty, specialtyBrowseHref, SPECIALTY_VEHICLE_LABELS, type SpecialtyVehicle } from '@/lib/listings/specialty';
 import FeaturedBadge from '@/components/listing/FeaturedBadge';
 import { FinancingAvailableBadge } from '@/components/financing/FinancingAvailableBadge';
 import { useEquinoxFinancingEnabled } from '@/hooks/useListingFinancing';
@@ -179,6 +180,23 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
   // Featured badge: dynamic, source of truth in src/lib/featured.ts
   const isFeatured = isListingFeatured(listing as any);
   const financingEnabled = useEquinoxFinancingEnabled(listing as any);
+
+  // Specialty collection chip (coffee / ice cream) — deep-links to the same
+  // filtered /search state used by the hub headers and filter pill strip.
+  const specialtyKey = detectSpecialty({
+    title: listing.title,
+    subcategory: (listing as any).subcategory,
+    description: (listing as any).description,
+  });
+  const specialtyVehicle: SpecialtyVehicle | null =
+    listing.category === 'food_truck' ? 'truck' : listing.category === 'food_trailer' ? 'trailer' : null;
+  const specialtyChip = !compact && specialtyKey && specialtyVehicle
+    ? {
+        key: specialtyKey,
+        label: SPECIALTY_VEHICLE_LABELS[specialtyKey][specialtyVehicle],
+        href: specialtyBrowseHref(specialtyKey, specialtyVehicle),
+      }
+    : null;
 
 
   // Safely format price with proper null handling
@@ -517,10 +535,33 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
           {!compact && <RatingBadge listingId={listing.id} />}
         </div>
 
+        {/* Specialty collection deep link (dark/default surface) */}
+        {!isSearch && specialtyChip && (
+          <Link
+            to={specialtyChip.href}
+            onClick={(e) => e.stopPropagation()}
+            className="relative z-10 inline-flex w-fit items-center gap-1 text-[11px] font-medium text-white/60 hover:text-primary transition-colors"
+          >
+            {specialtyChip.key === 'coffee' ? <Coffee className="h-3 w-3" /> : <IceCreamCone className="h-3 w-3" />}
+            {specialtyChip.label}
+            <ArrowRight className="h-3 w-3" />
+          </Link>
+        )}
+
         {/* Search-only quiet detail row: financing + amenity summary live here
             instead of competing with the primary badges over the image. */}
-        {isSearch && (financingEnabled || popularAmenities.length > 0 || remainingAmenitiesCount > 0) && (
+        {isSearch && (financingEnabled || popularAmenities.length > 0 || remainingAmenitiesCount > 0 || specialtyChip) && (
           <div className="flex flex-wrap items-center gap-1.5">
+            {specialtyChip && (
+              <Link
+                to={specialtyChip.href}
+                onClick={(e) => e.stopPropagation()}
+                className="relative z-10 inline-flex items-center gap-1 rounded-full bg-[#1b1714]/[0.05] px-2.5 py-1 text-[11px] font-medium text-[#1b1714]/70 hover:bg-[#1b1714]/[0.09] transition-colors"
+              >
+                {specialtyChip.key === 'coffee' ? <Coffee className="h-3 w-3" /> : <IceCreamCone className="h-3 w-3" />}
+                {specialtyChip.label}
+              </Link>
+            )}
             {financingEnabled && (
               <Link
                 to={`/financing?listing_id=${listing.id}`}
