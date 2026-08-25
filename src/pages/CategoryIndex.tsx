@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { Loader2, MapPin, ArrowRight, Tag } from 'lucide-react';
+import { Loader2, MapPin, ArrowRight, Tag, Info } from 'lucide-react';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import SEO from '@/components/SEO';
 import JsonLd from '@/components/JsonLd';
 import { Button } from '@/components/ui/button';
+import { trackEvent } from '@/lib/analytics';
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -20,9 +21,17 @@ import { CITY_DATA, getCityStateSlug } from '@/data/cityData';
 export type CategoryKey = 'food_truck' | 'food_trailer' | 'ghost_kitchen' | 'vendor_space';
 export type ModeFilter = 'rent' | 'sale' | 'any';
 
+export interface CategoryIndexSection {
+  heading: string;
+  paragraphs: string[];
+  links?: { href: string; label: string }[];
+}
+
 export interface CategoryIndexConfig {
   path: string;
   category: CategoryKey;
+  /** Multi-category pages (e.g. the national rental hub shows trucks + trailers). */
+  categories?: CategoryKey[];
   mode: ModeFilter;
   /** Optional city filter. When listings are short, page falls back to state then nationwide. */
   city?: { name: string; stateCode: string };
@@ -32,8 +41,14 @@ export interface CategoryIndexConfig {
   title: string;
   description: string;
   intro: string;
+  /** One-line intent clarification rendered directly under the intro. */
+  clarification?: string;
+  /** Mid-page content sections rendered after the inventory grid. */
+  sections?: CategoryIndexSection[];
   faqs: { q: string; a: string }[];
   related: { href: string; label: string }[];
+  /** Overrides the default seller cross-link strip. */
+  sellerCta?: { heading: string; body: string; ctaLabel: string; ctaHref: string };
 }
 
 interface ListingRow {
@@ -68,12 +83,12 @@ const categoryLabel = (c: CategoryKey): string =>
 
 const baseSelect = 'id, title, description, cover_image_url, price_daily, price_weekly, price_sale, mode, category, city, state, address';
 
-const baseQuery = (category: CategoryKey, mode: ModeFilter, limit: number) => {
+const baseQuery = (categories: CategoryKey[], mode: ModeFilter, limit: number) => {
   let q = supabase
     .from('listings')
     .select(baseSelect)
     .eq('status', 'published').not('published_at', 'is', null).is('deleted_at', null).eq('moderation_status', 'clear')
-    .eq('category', category as any)
+    .in('category', categories as any[])
     .not('published_at', 'is', null)
     .not('title', 'ilike', 'demo%')
     .order('updated_at', { ascending: false })
@@ -88,6 +103,19 @@ const CategoryIndex = ({ config }: { config: CategoryIndexConfig }) => {
   const [nationwideFallback, setNationwideFallback] = useState<ListingRow[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const categories = config.categories ?? [config.category];
+  const multiCategory = categories.length > 1;
+
+  useEffect(() => {
+    if (config.mode === 'rent') {
+      trackEvent({
+        category: 'SEO',
+        action: config.city ? 'rental_city_index_viewed' : config.state ? 'rental_state_viewed' : 'rental_hub_viewed',
+        label: config.path,
+      });
+    }
+  }, [config.mode, config.path, config.city, config.state]);
+
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -97,7 +125,7 @@ const CategoryIndex = ({ config }: { config: CategoryIndexConfig }) => {
       setNationwideFallback([]);
 
       // Tier 1: city OR state OR all
-      let q1 = baseQuery(config.category, config.mode, 48);
+      let q1 = baseQuery(categories, config.mode, 48);
       if (config.city) {
         q1 = q1.or(`city.ilike.${config.city.name},address.ilike.%${config.city.name}%`);
       } else if (config.state) {
@@ -112,7 +140,7 @@ const CategoryIndex = ({ config }: { config: CategoryIndexConfig }) => {
 
       // Tier 2: state fallback (only when city is set AND primary is thin)
       if (config.city && primaryRows.length < MIN_TIER) {
-        let q2 = baseQuery(config.category, config.mode, 24);
+        let q2 = baseQuery(categories, config.mode, 24);
         q2 = q2.or(`state.eq.${config.city.stateCode},state.ilike.${config.city.stateCode}`);
         const { data: d2 } = await q2;
         const stateRows = ((d2 as ListingRow[]) || []).filter((r) => !excludeIds.has(r.id));
@@ -125,7 +153,7 @@ const CategoryIndex = ({ config }: { config: CategoryIndexConfig }) => {
       const tier2Count = config.city && primaryRows.length < MIN_TIER ? -1 : 0;
       const enoughSoFar = primaryRows.length + (tier2Count === -1 ? MIN_TIER : 0);
       if (enoughSoFar < MIN_TIER) {
-        const q3 = baseQuery(config.category, config.mode, 24);
+        const q3 = baseQuery(categories, config.mode, 24);
         const { data: d3 } = await q3;
         const natRows = ((d3 as ListingRow[]) || []).filter((r) => !excludeIds.has(r.id));
         if (cancelled) return;
@@ -135,7 +163,7 @@ const CategoryIndex = ({ config }: { config: CategoryIndexConfig }) => {
       setLoading(false);
     })();
     return () => { cancelled = true; };
-  }, [config.category, config.mode, config.city?.name, config.state?.code]);
+  }, [config.category, config.mode, config.city?.name, config.state?.code, categories.join(',')]);
 
   const canonical = config.path;
   const totalListings = primary.length + stateFallback.length + nationwideFallback.length;
@@ -252,8 +280,33 @@ const CategoryIndex = ({ config }: { config: CategoryIndexConfig }) => {
       </section>
     );
 
-  const catPluralLower = categoryLabel(config.category).toLowerCase() + 's';
+  const labelPlural = multiCategory
+    ? 'Food Trucks & Food Trailers'
+    : categoryLabel(config.category) + 's';
+  const catPluralLower = multiCategory
+    ? 'food trucks & food trailers'
+    : categoryLabel(config.category).toLowerCase() + 's';
   const intentLabel = config.mode === 'sale' ? 'for sale' : config.mode === 'rent' ? 'for rent' : '';
+
+  const searchHref = multiCategory
+    ? `/search?mode=${config.mode}`
+    : `/search?category=${config.category}${config.mode !== 'any' ? `&mode=${config.mode}` : ''}`;
+
+  const sellerCta = config.sellerCta ?? (config.mode === 'rent'
+    ? {
+        heading: multiCategory
+          ? 'Have a food truck or trailer available for rent?'
+          : `Have a ${categoryLabel(config.category).toLowerCase()} available for rent?`,
+        body: 'List free on Vendibook — set your own daily, weekly, or monthly rates and terms, and receive booking requests from verified operators.',
+        ctaLabel: multiCategory ? 'List My Food Truck for Rent' : `List Your ${categoryLabel(config.category)} for Rent`,
+        ctaHref: config.category === 'ghost_kitchen' ? '/rent-my-commercial-kitchen' : '/rent-out-my-food-truck',
+      }
+    : {
+        heading: `Have a ${categoryLabel(config.category).toLowerCase()} to sell?`,
+        body: 'List free on Vendibook — photos, video, equipment, offers, and optional secure transaction tools.',
+        ctaLabel: `List Your ${categoryLabel(config.category)} Free`,
+        ctaHref: config.category === 'food_trailer' ? '/sell-food-trailer' : '/sell-my-food-truck',
+      });
 
   const primaryHeading = config.city
     ? `${catPluralLower.charAt(0).toUpperCase() + catPluralLower.slice(1)}${intentLabel ? ` ${intentLabel}` : ''} in ${cityLabel}`
@@ -293,14 +346,20 @@ const CategoryIndex = ({ config }: { config: CategoryIndexConfig }) => {
             <p className="text-base md:text-lg text-muted-foreground leading-relaxed">
               {config.intro}
             </p>
+            {config.clarification && (
+              <p className="flex items-start gap-2 text-sm text-muted-foreground leading-relaxed rounded-xl border border-border bg-card px-4 py-3">
+                <Info className="h-4 w-4 mt-0.5 shrink-0 text-primary" aria-hidden="true" />
+                <span>{config.clarification}</span>
+              </p>
+            )}
             <div className="flex flex-wrap gap-2 pt-2">
               <Button asChild variant="dark-shine">
-                <Link to={`/search?category=${config.category}${config.mode !== 'any' ? `&mode=${config.mode}` : ''}`}>
-                  Open advanced search
+                <Link to={searchHref}>
+                  Search {catPluralLower} {intentLabel}
                 </Link>
               </Button>
               <Button asChild variant="outline">
-                <Link to="/list">List your {categoryLabel(config.category).toLowerCase()}</Link>
+                <Link to={sellerCta.ctaHref}>{sellerCta.ctaLabel}</Link>
               </Button>
             </div>
           </header>
@@ -340,6 +399,29 @@ const CategoryIndex = ({ config }: { config: CategoryIndexConfig }) => {
             </div>
           )}
 
+          {/* Editorial / commercial sections (SEO rental hub, state pages, etc.) */}
+          {config.sections?.map((s) => (
+            <section key={s.heading} className="space-y-3 max-w-3xl">
+              <h2 className="text-xl md:text-2xl font-semibold text-foreground">{s.heading}</h2>
+              {s.paragraphs.map((p, i) => (
+                <p key={i} className="text-muted-foreground leading-relaxed">{p}</p>
+              ))}
+              {s.links && s.links.length > 0 && (
+                <div className="flex flex-wrap gap-2 pt-1">
+                  {s.links.map((l) => (
+                    <Link
+                      key={l.href + l.label}
+                      to={l.href}
+                      className="inline-block px-3 py-1.5 rounded-full border border-border bg-card text-sm text-foreground hover:border-primary hover:text-primary transition-colors"
+                    >
+                      {l.label}
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </section>
+          ))}
+
           {/* Related categories */}
           <section aria-labelledby="related-heading" className="space-y-3">
             <h2 id="related-heading" className="text-xl font-semibold text-foreground">
@@ -362,19 +444,21 @@ const CategoryIndex = ({ config }: { config: CategoryIndexConfig }) => {
           {/* Seller cross-link strip */}
           <section className="rounded-2xl border border-border bg-card p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
             <div>
-              <h2 className="text-lg font-semibold text-foreground">Have a {categoryLabel(config.category).toLowerCase()} to sell?</h2>
+              <h2 className="text-lg font-semibold text-foreground">{sellerCta.heading}</h2>
               <p className="text-sm text-muted-foreground">
-                List free on Vendibook — photos, video, equipment, offers, and optional secure transaction tools.
+                {sellerCta.body}
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
               <Button asChild variant="dark-shine">
-                <Link to={config.category === 'food_trailer' ? '/sell-food-trailer' : '/sell-my-food-truck'}>
-                  List Your {categoryLabel(config.category)} Free
+                <Link to={sellerCta.ctaHref}>
+                  {sellerCta.ctaLabel}
                 </Link>
               </Button>
               <Button asChild variant="outline">
-                <Link to="/how-it-works-seller">Learn How Selling Works</Link>
+                <Link to={config.mode === 'rent' ? '/how-it-works-host' : '/how-it-works-seller'}>
+                  {config.mode === 'rent' ? 'Learn How Renting Works' : 'Learn How Selling Works'}
+                </Link>
               </Button>
             </div>
           </section>
@@ -382,7 +466,7 @@ const CategoryIndex = ({ config }: { config: CategoryIndexConfig }) => {
           {/* City links */}
           <section aria-labelledby="cities-heading" className="space-y-3">
             <h2 id="cities-heading" className="text-xl font-semibold text-foreground">
-              Browse {categoryLabel(config.category).toLowerCase()}s by city
+              Browse {catPluralLower} by city
             </h2>
             <ul className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
               {cityLinks.map((c) => {

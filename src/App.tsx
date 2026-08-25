@@ -489,6 +489,8 @@ const AnimatedRoutes = () => {
           
           {/* Programmatic SEO: category + city + mode pages */}
           <Route path="/rent/:categorySlug/:cityStateSlug" element={<PageTransition><CategoryCityPage mode="rent" /></PageTransition>} />
+          {/* Legacy duplicate rental path → canonical city rental page */}
+          <Route path="/houston/food-trucks-for-rent" element={<Navigate to="/rent/food-trucks/houston-tx" replace />} />
           <Route path="/buy/:categorySlug/:cityStateSlug" element={<PageTransition><CategoryCityPage mode="buy" /></PageTransition>} />
 
           {/* SEO category index pages — crawlable listing grids */}

@@ -227,7 +227,7 @@ export const generateCityCategoryFAQSchema = (
     ? [
         {
           q: `How much does it cost to rent a ${lowerSingular} in ${city}, ${state}?`,
-          a: `${city} ${lowerSingular} rentals on Vendibook typically range from $200–$500 per day, with weekly and monthly discounts available. Pricing varies by size, equipment, and host. Browse live ${city} listings for current rates.`,
+          a: `Cost depends on the vehicle or trailer type, location within ${city}, rental term, equipment, and condition. Each Vendibook listing shows the owner's current daily, weekly, and (where offered) monthly rates, so you can compare real ${city} options side by side.`,
         },
         {
           q: `Do I need a license to operate a ${lowerSingular} in ${city}?`,
@@ -247,7 +247,7 @@ export const generateCityCategoryFAQSchema = (
         },
         {
           q: `Is renting cheaper than buying a ${lowerSingular} in ${city}?`,
-          a: `For most new operators in ${city}, renting is dramatically cheaper than buying. A new ${lowerSingular} costs $50K–$150K+ to purchase, while Vendibook rentals start under $300/day — letting you test concepts and locations before committing.`,
+          a: `Renting reduces upfront investment and fits operators testing a concept, covering a seasonal rush, or needing temporary equipment. Buying builds equity in the asset and suits long-term, full-time operation. Compare current ${city} rental listings with ${city} purchase listings on Vendibook to see real numbers for both paths.`,
         },
       ]
     : [
@@ -682,16 +682,15 @@ export const generateCityCategoryBreadcrumbSchema = (
   cityStateSlug: string,
   cityName: string,
   stateCode: string
-) => ({
-  '@context': 'https://schema.org',
-  '@type': 'BreadcrumbList',
-  itemListElement: [
-    {
-      '@type': 'ListItem',
-      position: 1,
-      name: 'Home',
-      item: 'https://vendibook.com',
-    },
+) => {
+  const stateHubs: Record<string, { slug: string; name: string }> = {
+    TX: { slug: 'texas', name: 'Texas Rentals' },
+    FL: { slug: 'florida', name: 'Florida Rentals' },
+    CA: { slug: 'california', name: 'California Rentals' },
+  };
+
+  const items: { '@type': string; position: number; name: string; item: string }[] = [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://vendibook.com' },
     {
       '@type': 'ListItem',
       position: 2,
@@ -704,14 +703,34 @@ export const generateCityCategoryBreadcrumbSchema = (
       name: categoryLabel,
       item: `https://vendibook.com/search?mode=${mode === 'buy' ? 'sale' : 'rent'}&category=${categorySlug}`,
     },
-    {
+  ];
+
+  // Rental pages sit under the national/state rental hubs (hub-and-spoke SEO).
+  if (mode === 'rent') {
+    const stateHub = stateHubs[stateCode];
+    items.push({
       '@type': 'ListItem',
       position: 4,
-      name: `${cityName}, ${stateCode}`,
-      item: `https://vendibook.com/${mode}/${categorySlug}/${cityStateSlug}`,
-    },
-  ],
-});
+      name: stateHub ? stateHub.name : 'Rentals Nationwide',
+      item: stateHub
+        ? `https://vendibook.com/food-trucks-for-rent/${stateHub.slug}`
+        : 'https://vendibook.com/food-trucks-for-rent',
+    });
+  }
+
+  items.push({
+    '@type': 'ListItem',
+    position: items.length + 1,
+    name: `${cityName}, ${stateCode}`,
+    item: `https://vendibook.com/${mode}/${categorySlug}/${cityStateSlug}`,
+  });
+
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: items,
+  };
+};
 
 // Search results breadcrumb schema
 export const generateSearchBreadcrumbSchema = (searchParams?: {
