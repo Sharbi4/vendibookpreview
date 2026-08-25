@@ -14,7 +14,7 @@ export function PlansFAQ() {
   const [open, setOpen] = useState<number | null>(0);
   return (
     <div className="space-y-2">
-      <h3 className="text-lg font-semibold text-foreground mb-4">Questions people ask before subscribing</h3>
+      <h3 className="text-2xl md:text-3xl font-bold tracking-tight text-foreground leading-tight mb-8">Questions people ask before subscribing</h3>
       {FAQ.map((item, i) => {
         const isOpen = open === i;
         return (
