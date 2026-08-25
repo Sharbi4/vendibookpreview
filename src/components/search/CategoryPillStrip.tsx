@@ -1,5 +1,5 @@
 import { useRef } from 'react';
-import { ChevronLeft, ChevronRight, Truck, Container, ChefHat, Store, Zap, ShieldCheck, Coffee, IceCreamCone } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Truck, Container, ChefHat, Store, Zap, ShieldCheck, Coffee, IceCreamCone, Pizza, Flame, Snowflake, CupSoda, CookingPot } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ListingCategory } from '@/types/listing';
 import { SPECIALTY_VEHICLE_SHORT_LABELS, type SpecialtyKey, type SpecialtyVehicle } from '@/lib/listings/specialty';
@@ -12,6 +12,16 @@ const SPECIALTY_PILLS: { key: SpecialtyKey; vehicle: SpecialtyVehicle; icon: Rea
   { key: 'coffee', vehicle: 'trailer', icon: Coffee },
   { key: 'ice_cream', vehicle: 'truck', icon: IceCreamCone },
   { key: 'ice_cream', vehicle: 'trailer', icon: IceCreamCone },
+  { key: 'pizza', vehicle: 'truck', icon: Pizza },
+  { key: 'pizza', vehicle: 'trailer', icon: Pizza },
+  { key: 'bbq', vehicle: 'truck', icon: Flame },
+  { key: 'bbq', vehicle: 'trailer', icon: Flame },
+  { key: 'snow_cone', vehicle: 'truck', icon: Snowflake },
+  { key: 'snow_cone', vehicle: 'trailer', icon: Snowflake },
+  { key: 'beverage', vehicle: 'truck', icon: CupSoda },
+  { key: 'beverage', vehicle: 'trailer', icon: CupSoda },
+  { key: 'mobile_kitchen', vehicle: 'truck', icon: CookingPot },
+  { key: 'mobile_kitchen', vehicle: 'trailer', icon: CookingPot },
 ];
 
 interface PillItem {

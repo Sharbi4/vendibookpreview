@@ -18,6 +18,7 @@ import {
 } from '@/components/ui/breadcrumb';
 import { CITY_DATA, getCityStateSlug } from '@/data/cityData';
 import { SPECIALTY_DEFS, specialtyOrFilter, specialtyBrowseLinks, specialtyBrowseHref, SPECIALTY_VEHICLE_LABELS, type SpecialtyKey } from '@/lib/listings/specialty';
+import BrowseByBusinessType from '@/components/marketplace/BrowseByBusinessType';
 
 export type CategoryKey = 'food_truck' | 'food_trailer' | 'ghost_kitchen' | 'vendor_space';
 export type ModeFilter = 'rent' | 'sale' | 'any';
@@ -58,6 +59,10 @@ export interface CategoryIndexConfig {
   breadcrumbParent?: { name: string; href: string };
   /** Overrides the hero search CTA href. */
   searchHrefOverride?: string;
+  /** Absolute https URL used for og:image / twitter:image (per-category social preview). */
+  ogImage?: string;
+  /** Render the cross-category "Browse by business type" navigation band (Phase 6). */
+  businessTypeNav?: boolean;
 }
 
 interface ListingRow {
@@ -403,6 +408,7 @@ const CategoryIndex = ({ config }: { config: CategoryIndexConfig }) => {
         title={config.title}
         description={config.description}
         canonical={canonical}
+        image={config.ogImage}
         noindex={noindex}
       />
       <JsonLd schema={[breadcrumbSchema, faqSchema, ...(totalListings > 0 ? [itemListSchema] : [])]} />
@@ -584,6 +590,9 @@ const CategoryIndex = ({ config }: { config: CategoryIndexConfig }) => {
             </ul>
           </section>
           )}
+
+          {/* Cross-specialty navigation (national hubs + specialty pages) */}
+          {config.businessTypeNav && <BrowseByBusinessType exclude={config.specialty} />}
 
           {/* FAQ */}
           <section aria-labelledby="faq-heading" className="space-y-4 max-w-3xl">
