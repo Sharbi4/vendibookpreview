@@ -192,6 +192,32 @@ const HostListingCard = ({
     .proof_notary_enabled;
   const isRental = listing.mode === 'rent';
 
+  // "Rent it out": turn an existing sale truck/trailer into a linked rental.
+  const rentalEligible = isRentalConversionEligible(listing);
+  const { rental: linkedRental, state: linkedState, isLoading: linkedLoading } =
+    useLinkedRental(listing.id, rentalEligible);
+  const createLinkedRental = useCreateLinkedRental();
+
+  const handleRentItOut = async () => {
+    if (createLinkedRental.isPending) return;
+    if (linkedRental?.id && linkedState !== 'draft') {
+      navigate(`/create-listing/${linkedRental.id}`);
+      return;
+    }
+    try {
+      const result = await createLinkedRental.mutateAsync(listing.id);
+      navigate(`/listings/${listing.id}/rent-it-out`);
+      return result;
+    } catch (err) {
+      toast({
+        title: 'Could not start rental setup',
+        description: err instanceof Error ? err.message : 'Please try again.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+
   // Paid promotion eligibility mirrors public visibility exactly: no boosts on
   // paused, removed, deleted, archived, rejected, suspended or expired listings.
   const canBoost = canBoostListing(listing as never);
