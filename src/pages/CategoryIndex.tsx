@@ -19,6 +19,8 @@ import {
 import { CITY_DATA, getCityStateSlug } from '@/data/cityData';
 import { SPECIALTY_DEFS, specialtyOrFilter, specialtyBrowseLinks, specialtyVehicleHref, SPECIALTY_VEHICLE_LABELS, type SpecialtyKey } from '@/lib/listings/specialty';
 import BrowseByBusinessType from '@/components/marketplace/BrowseByBusinessType';
+import { useNationwideInventory } from '@/hooks/useNationwideInventory';
+import ExpandSearchModule, { LowInventoryInlineLine, LOW_INVENTORY_THRESHOLD, NEAR_EMPTY_THRESHOLD } from '@/components/seo/ExpandSearchModule';
 
 export type CategoryKey = 'food_truck' | 'food_trailer' | 'ghost_kitchen' | 'vendor_space';
 export type ModeFilter = 'rent' | 'sale' | 'any';
