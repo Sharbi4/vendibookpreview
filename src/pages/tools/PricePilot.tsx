@@ -133,7 +133,7 @@ const Pill: React.FC<React.PropsWithChildren<{ tone?: 'neutral' | 'good' | 'warn
     </span>
   );
 
-const confidenceTone = (c: Confidence) => (c === 'high' ? 'good' : c === 'medium' ? 'accent' : 'warn') as const;
+const confidenceTone = (c: Confidence): 'good' | 'accent' | 'warn' => (c === 'high' ? 'good' : c === 'medium' ? 'accent' : 'warn');
 const confidenceText = (c: Confidence) => (c === 'high' ? 'High confidence' : c === 'medium' ? 'Medium confidence' : 'Directional estimate');
 
 /** Animated low → estimate → high range bar. Understandable with no legend. */
