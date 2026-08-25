@@ -80,6 +80,14 @@ export const specialtyOrFilter = (key: SpecialtyKey): string => {
 };
 
 /**
+ * Map a structured subcategory value to its specialty, if any.
+ */
+export const specialtyForSubcategory = (subcategory: string): SpecialtyKey | undefined =>
+  (Object.keys(SPECIALTY_DEFS) as SpecialtyKey[]).find((key) =>
+    SPECIALTY_DEFS[key].subcategories.includes(subcategory),
+  );
+
+/**
  * Client-side detection for a single listing row.
  */
 export const detectSpecialty = (row: {

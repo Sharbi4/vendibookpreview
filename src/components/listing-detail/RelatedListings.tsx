@@ -60,7 +60,7 @@ const RelatedListings = ({ listingId, category, mode, address, latitude, longitu
         specialtyFirst = filterPubliclyVisible(specData ?? []) as unknown as RelatedListing[];
       }
 
-      const pool = [...visible, ...specialtyFirst];
+      const pool: RelatedListing[] = [...(visible as unknown as RelatedListing[]), ...specialtyFirst];
       if (pool.length > 0) {
         let sorted: RelatedListing[];
 
