@@ -639,7 +639,7 @@ export default function PricePilot() {
                                       </div>
                                       {mode === 'sale' && assetCategory === 'food_truck' && (
                                         <div>
-                                          <Label htmlFor="pp-miles">Mileage</Label>
+                                          <Label htmlFor="pp-miles">Mileage <span className="font-normal text-muted-foreground">(optional)</span></Label>
                                           <Input id="pp-miles" inputMode="numeric" placeholder="85,000" value={mileage}
                                             onChange={(e) => setMileage(e.target.value.replace(/\D/g, ''))} className="mt-1 h-12 rounded-xl text-base" />
                                         </div>
