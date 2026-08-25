@@ -83,12 +83,12 @@ const categoryLabel = (c: CategoryKey): string =>
 
 const baseSelect = 'id, title, description, cover_image_url, price_daily, price_weekly, price_sale, mode, category, city, state, address';
 
-const baseQuery = (category: CategoryKey, mode: ModeFilter, limit: number) => {
+const baseQuery = (categories: CategoryKey[], mode: ModeFilter, limit: number) => {
   let q = supabase
     .from('listings')
     .select(baseSelect)
     .eq('status', 'published').not('published_at', 'is', null).is('deleted_at', null).eq('moderation_status', 'clear')
-    .eq('category', category as any)
+    .in('category', categories as any[])
     .not('published_at', 'is', null)
     .not('title', 'ilike', 'demo%')
     .order('updated_at', { ascending: false })
@@ -103,6 +103,19 @@ const CategoryIndex = ({ config }: { config: CategoryIndexConfig }) => {
   const [nationwideFallback, setNationwideFallback] = useState<ListingRow[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const categories = config.categories ?? [config.category];
+  const multiCategory = categories.length > 1;
+
+  useEffect(() => {
+    if (config.mode === 'rent') {
+      trackEvent({
+        category: 'SEO',
+        action: config.city ? 'rental_city_index_viewed' : config.state ? 'rental_state_viewed' : 'rental_hub_viewed',
+        label: config.path,
+      });
+    }
+  }, [config.mode, config.path, config.city, config.state]);
+
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -112,7 +125,7 @@ const CategoryIndex = ({ config }: { config: CategoryIndexConfig }) => {
       setNationwideFallback([]);
 
       // Tier 1: city OR state OR all
-      let q1 = baseQuery(config.category, config.mode, 48);
+      let q1 = baseQuery(categories, config.mode, 48);
       if (config.city) {
         q1 = q1.or(`city.ilike.${config.city.name},address.ilike.%${config.city.name}%`);
       } else if (config.state) {
