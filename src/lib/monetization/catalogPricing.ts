@@ -19,6 +19,7 @@ export const ACTIVE_PRODUCT_SLUGS = {
   featuredBoost: 'boost-featured-30',
   conciergeListing: 'listing_concierge',
   listingRewrite: 'listing_rewrite',
+  pricePilot: 'tool_pricepilot',
 } as const;
 
 export type ActiveProductSlug =
@@ -33,6 +34,7 @@ export const FALLBACK_PRICE_CENTS: Record<string, number> = {
   'boost-featured-30': 4900,
   listing_concierge: 7900,
   listing_rewrite: 5900,
+  tool_pricepilot: 1900,
 };
 
 /** Mirrors monetization_products.billing_type / duration_days. */
@@ -47,6 +49,7 @@ export const FALLBACK_CADENCE: Record<
   'boost-featured-30': { billing_type: 'one_time', duration_days: 30 },
   listing_concierge: { billing_type: 'one_time', duration_days: null },
   listing_rewrite: { billing_type: 'one_time', duration_days: null },
+  tool_pricepilot: { billing_type: 'one_time', duration_days: null },
 };
 
 /**

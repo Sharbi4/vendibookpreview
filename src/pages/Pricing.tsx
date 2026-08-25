@@ -63,18 +63,19 @@ const ADDON_DETAILS: Record<
       'Vendibook Pro members receive 1 boost credit per billing period.',
     ],
   },
-  [ACTIVE_PRODUCT_SLUGS.proListing]: {
-    summary: 'Premium presentation and priority placement for 30 days.',
+  [ACTIVE_PRODUCT_SLUGS.pricePilot]: {
+    summary: 'A data-backed appraisal of what your equipment is worth — for sale or for rent.',
     included: [
-      'Premium listing presentation',
-      'Priority placement in relevant search results',
-      'Runs for 30 days from activation',
+      'Comparable market evidence, weighted by similarity and filtered for outliers',
+      'A defensible low-to-high range with a recommended position',
+      'Quick sale, recommended, and premium pricing strategies',
+      'Rental rate benchmarks when pricing for rent',
     ],
-    bestFor: 'Higher-value equipment where presentation and extra visibility drive the inquiry.',
-    billing: 'One-time charge. Does not renew.',
+    bestFor: 'Anyone about to list — or reprice — a truck, trailer, cart or mobile bar.',
+    billing: 'One-time unlock. Does not renew.',
     finePrint: [
-      '30-day duration · non-recurring.',
-      'Applies to one listing you select.',
+      'Included with Vendibook Pro at no extra cost.',
+      'Run as many appraisals as you like once unlocked.',
     ],
   },
   [ACTIVE_PRODUCT_SLUGS.conciergeListing]: {
@@ -87,17 +88,6 @@ const ADDON_DETAILS: Record<
     bestFor: 'Sellers who would rather hand the listing off than write it.',
     billing: 'One-time charge per listing.',
     finePrint: ['One-time service · non-recurring.', 'You review and approve before publishing.'],
-  },
-  [ACTIVE_PRODUCT_SLUGS.listingRewrite]: {
-    summary: 'A rewrite of an existing listing so the title, description and specs read cleanly.',
-    included: [
-      'Rewritten title and description',
-      'Cleaned-up specification sheet',
-      'Applied to one listing you choose',
-    ],
-    bestFor: 'A live listing that is getting views but not inquiries.',
-    billing: 'One-time charge per listing.',
-    finePrint: ['One-time service · non-recurring.'],
   },
   [ACTIVE_PRODUCT_SLUGS.permitPathPlus]: {
     summary: 'The saving and tracking layer on top of PermitPath. Roadmap generation stays free.',
@@ -120,10 +110,9 @@ const ADDON_DETAILS: Record<
 /** Short benefit copy per active add-on. Falls back to the DB description. */
 const ONE_LINERS: Record<string, string> = {
   [ACTIVE_PRODUCT_SLUGS.featuredBoost]: 'Top of search and a highlighted card for 30 days.',
-  [ACTIVE_PRODUCT_SLUGS.proListing]: 'Premium presentation and priority placement for 30 days.',
+  [ACTIVE_PRODUCT_SLUGS.pricePilot]: 'Know your number — a comparable-backed range and recommended price.',
   [ACTIVE_PRODUCT_SLUGS.conciergeListing]: 'Our team writes and structures your listing for you.',
   [ACTIVE_PRODUCT_SLUGS.permitPathPlus]: 'Save roadmaps, track permits, store documents, export PDFs.',
-  [ACTIVE_PRODUCT_SLUGS.listingRewrite]: 'A rewritten title, description and spec sheet for your listing.',
 };
 
 const FREE_FEATURES = [
@@ -293,8 +282,13 @@ const Pricing = () => {
 
   const addOns = useMemo(() => {
     const seen = new Set<string>();
+    // Hidden from the pricing page (still honored for existing purchases):
+    const hidden = new Set<string>([
+      ACTIVE_PRODUCT_SLUGS.proListing,
+      ACTIVE_PRODUCT_SLUGS.listingRewrite,
+    ]);
     return [...listingUpgrades, ...sellerServices, ...permitUpgrades].filter((p) => {
-      if (isRetiredProduct(p.slug) || seen.has(p.slug)) return false;
+      if (isRetiredProduct(p.slug) || hidden.has(p.slug) || seen.has(p.slug)) return false;
       seen.add(p.slug);
       return true;
     });
@@ -547,7 +541,11 @@ const Pricing = () => {
                   key={p.id}
                   product={p}
                   includedLabel={
-                    p.slug === ACTIVE_PRODUCT_SLUGS.permitPathPlus ? permitIncluded : null
+                    p.slug === ACTIVE_PRODUCT_SLUGS.permitPathPlus
+                      ? permitIncluded
+                      : p.slug === ACTIVE_PRODUCT_SLUGS.pricePilot && isPro
+                        ? 'Included with Vendibook Pro'
+                        : null
                   }
                 />
               ))}
