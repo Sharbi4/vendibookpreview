@@ -346,14 +346,20 @@ const CategoryIndex = ({ config }: { config: CategoryIndexConfig }) => {
             <p className="text-base md:text-lg text-muted-foreground leading-relaxed">
               {config.intro}
             </p>
+            {config.clarification && (
+              <p className="flex items-start gap-2 text-sm text-muted-foreground leading-relaxed rounded-xl border border-border bg-card px-4 py-3">
+                <Info className="h-4 w-4 mt-0.5 shrink-0 text-primary" aria-hidden="true" />
+                <span>{config.clarification}</span>
+              </p>
+            )}
             <div className="flex flex-wrap gap-2 pt-2">
               <Button asChild variant="dark-shine">
-                <Link to={`/search?category=${config.category}${config.mode !== 'any' ? `&mode=${config.mode}` : ''}`}>
-                  Open advanced search
+                <Link to={searchHref}>
+                  Search {catPluralLower} {intentLabel}
                 </Link>
               </Button>
               <Button asChild variant="outline">
-                <Link to="/list">List your {categoryLabel(config.category).toLowerCase()}</Link>
+                <Link to={sellerCta.ctaHref}>{sellerCta.ctaLabel}</Link>
               </Button>
             </div>
           </header>
