@@ -149,9 +149,7 @@ const steps = [
 
 const SellMyFoodTruck = () => {
   const boost = useCatalogPrice(ACTIVE_PRODUCT_SLUGS.featuredBoost);
-  const proListing = useCatalogPrice(ACTIVE_PRODUCT_SLUGS.proListing);
   const concierge = useCatalogPrice(ACTIVE_PRODUCT_SLUGS.conciergeListing);
-  const rewrite = useCatalogPrice(ACTIVE_PRODUCT_SLUGS.listingRewrite);
   const pro = useCatalogPrice(ACTIVE_PRODUCT_SLUGS.vendibookPro);
 
   const addOns = [
