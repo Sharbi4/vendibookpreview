@@ -1,7 +1,18 @@
 import { useRef } from 'react';
-import { ChevronLeft, ChevronRight, Truck, Container, ChefHat, Store, Zap, ShieldCheck } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Truck, Container, ChefHat, Store, Zap, ShieldCheck, Coffee, IceCreamCone } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ListingCategory } from '@/types/listing';
+import { SPECIALTY_VEHICLE_LABELS, type SpecialtyKey, type SpecialtyVehicle } from '@/lib/listings/specialty';
+
+// Specialty collection shortcuts — these set the same deep-link state
+// (specialty query + vehicle category + sale mode) used by hub headers and
+// listing-card chips, so navigation stays consistent across the marketplace.
+const SPECIALTY_PILLS: { key: SpecialtyKey; vehicle: SpecialtyVehicle; icon: React.ComponentType<{ className?: string }> }[] = [
+  { key: 'coffee', vehicle: 'truck', icon: Coffee },
+  { key: 'coffee', vehicle: 'trailer', icon: Coffee },
+  { key: 'ice_cream', vehicle: 'truck', icon: IceCreamCone },
+  { key: 'ice_cream', vehicle: 'trailer', icon: IceCreamCone },
+];
 
 interface PillItem {
   key: string;
