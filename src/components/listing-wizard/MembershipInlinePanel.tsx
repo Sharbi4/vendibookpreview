@@ -111,15 +111,9 @@ export const MembershipInlinePanel: React.FC<MembershipInlinePanelProps> = ({ re
           <Button variant="outline" onClick={persistDismiss} className="w-full">
             Continue free
           </Button>
-          <Button onClick={handleUpgrade} disabled={isPending} className="w-full">
-            {isPending ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                Starting checkout…
-              </>
-            ) : (
-              'Go Pro'
-            )}
+          <Button variant="cta" size="cta" onClick={handleUpgrade} className="w-full">
+            Go Pro
+            <ArrowRight className="ml-1.5 h-4 w-4" aria-hidden />
           </Button>
         </div>
 
