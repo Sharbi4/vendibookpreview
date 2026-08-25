@@ -632,7 +632,7 @@ const Payments = () => {
                 src={paypalWordmarkWhite.url}
                 alt="PayPal"
                 loading="lazy"
-                className="mx-auto mb-7 h-7 w-auto opacity-90"
+                className="mx-auto mb-7 h-16 w-auto opacity-90 mix-blend-screen"
               />
               <h2 className="mx-auto max-w-2xl text-3xl font-bold tracking-tight sm:text-4xl">
                 Find the equipment. Choose the payment path that works for you.
