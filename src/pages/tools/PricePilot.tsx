@@ -114,6 +114,19 @@ const ANALYSIS_FACTORS = [
   { icon: LineChart, label: 'Market range' },
 ];
 
+/** Understated required-field marker, paired with the "* Required" legend. */
+const Req: React.FC = () => (
+  <span className="ml-0.5 align-super text-[0.72em] font-semibold text-primary" aria-hidden="true">*</span>
+);
+
+/** Inline field-level validation message. */
+const FieldError: React.FC<{ id: string; message?: string }> = ({ id, message }) =>
+  message ? (
+    <p id={id} role="alert" className="mt-2 flex items-center gap-1.5 text-[12px] font-medium text-amber-700">
+      <AlertCircle className="h-3.5 w-3.5 shrink-0" />{message}
+    </p>
+  ) : null;
+
 /** Staged analysis state shown while the appraisal runs. */
 const AnalysisState: React.FC = () => {
   const reduce = useReducedMotion();
