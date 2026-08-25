@@ -259,7 +259,8 @@ const CategoryCityPage = ({ mode }: CategoryCityPageProps) => {
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
-      <SEO title={seoTitle} description={metaDescription} canonical={canonicalPath} />
+      {/* Zero live listings = thin page; the expand-search module adds user value but not indexability. */}
+      <SEO title={seoTitle} description={metaDescription} canonical={canonicalPath} noindex={!isLoading && listings.length === 0} />
       <JsonLd schema={[itemListSchema, breadcrumbSchema, faqSchema]} />
       <ExitIntentCapture category={dbCategory || undefined} city={city.name} />
       <Header />
