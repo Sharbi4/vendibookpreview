@@ -628,9 +628,16 @@ const Payments = () => {
               {...fadeUp}
               className="rounded-[32px] border border-border bg-foreground px-7 py-14 text-center text-background sm:px-12"
             >
+              <img
+                src={paypalWordmarkWhite.url}
+                alt="PayPal"
+                loading="lazy"
+                className="mx-auto mb-7 h-7 w-auto opacity-90"
+              />
               <h2 className="mx-auto max-w-2xl text-3xl font-bold tracking-tight sm:text-4xl">
                 Find the equipment. Choose the payment path that works for you.
               </h2>
+
               <div className="mt-8 flex flex-wrap justify-center gap-3">
                 <Button variant="cta" size="lg" className="rounded-full" asChild>
                   <Link to="/browse">
