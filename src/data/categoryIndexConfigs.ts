@@ -265,17 +265,31 @@ export const CATEGORY_INDEX_CONFIGS: CategoryIndexConfig[] = [
     category: 'food_trailer',
     mode: 'rent',
     h1: 'Food Trailers for Rent',
-    title: 'Food Trailers for Rent — Events, Festivals, Pop-Ups | Vendibook',
+    title: 'Food Trailers for Rent | Concession Trailer Rentals | Vendibook',
     description:
-      'Rent a food trailer for events, festivals, or short-term operations. Daily, weekly, and monthly rentals with optional delivery from verified hosts.',
+      'Rent a food trailer or concession trailer for your business. Daily, weekly, and monthly terms from owners nationwide, with photos, equipment details, and delivery options.',
     intro:
-      'Rent a food trailer for your next event, pop-up, or seasonal operation. Verified hosts, transparent pricing, optional delivery, and instant booking.',
-    faqs: trailerFaqs,
+      'Rent a food trailer for your next season, market, pop-up, or full-time operation. Concession trailers tow behind a standard vehicle and typically rent for less than a self-propelled truck. Every listing is owner-managed with photos, equipment lists, transparent rates, and direct messaging.',
+    clarification:
+      'This is equipment rental: you rent the trailer and operate it yourself. Rental terms — daily, weekly, or monthly — are set by each owner and shown on the listing.',
+    faqs: [
+      ...trailerFaqs,
+      {
+        q: 'Can I rent a food trailer monthly?',
+        a: 'Often, yes. Many owners offer monthly food trailer rental terms alongside daily and weekly rates. Terms are set per listing — review the listing or message the owner to structure a longer arrangement.',
+      },
+      {
+        q: 'How much does it cost to rent a food trailer?',
+        a: 'Cost depends on trailer size, location, rental term, equipment, and condition. Each Vendibook listing shows the owner\'s current rates so you can compare real options.',
+      },
+    ],
     related: [
       { href: '/food-trailers', label: 'All food trailers' },
-      { href: '/food-trailers-for-sale', label: 'Food trailers for sale' },
       { href: '/food-trucks-for-rent', label: 'Food trucks for rent' },
-      { href: '/shared-kitchens-for-rent', label: 'Shared kitchens for rent' },
+      { href: '/food-trailers-for-sale', label: 'Food trailers for sale' },
+      { href: '/rent/food-trailers/miami-fl', label: 'Food trailers for rent in Miami' },
+      { href: '/rent/food-trailers/houston-tx', label: 'Food trailers for rent in Houston' },
+      { href: '/rent-out-my-food-truck', label: 'Rent out your trailer' },
     ],
   },
   // SHARED / GHOST KITCHENS

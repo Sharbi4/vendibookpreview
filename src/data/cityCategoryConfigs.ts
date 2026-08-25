@@ -13,10 +13,11 @@ type CityCatSpec = {
 };
 
 const SPECS: CityCatSpec[] = [
-  // Houston (food truck capital, all 3 modes)
+  // Houston (food truck capital). NOTE: the rental city page lives at
+  // /rent/food-trucks/houston-tx (CategoryCityPage, proven GSC traction) —
+  // /houston/food-trucks-for-rent 301s there to avoid duplicate rent intent.
   { citySlug: 'houston', cityName: 'Houston', stateCode: 'TX', category: 'food_truck', mode: 'any' },
   { citySlug: 'houston', cityName: 'Houston', stateCode: 'TX', category: 'food_truck', mode: 'sale' },
-  { citySlug: 'houston', cityName: 'Houston', stateCode: 'TX', category: 'food_truck', mode: 'rent' },
 
   // Phoenix
   { citySlug: 'phoenix', cityName: 'Phoenix', stateCode: 'AZ', category: 'food_truck', mode: 'any' },
