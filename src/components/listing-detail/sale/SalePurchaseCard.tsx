@@ -29,7 +29,9 @@ import { getPublicDisplayName } from '@/lib/displayName';
 import { formatLastActive } from '@/hooks/useActivityTracker';
 import { deliveryRateLabel } from '@/lib/fulfillment/delivery';
 import { trackCTAClick } from '@/lib/analytics';
-import { trackFinancingApplyClick, trackFinancingLearnMoreClick } from '@/lib/analytics';
+import { trackFinancingLearnMoreClick, type FinancingSource } from '@/lib/analytics';
+import { useFinancingHandoff } from '@/hooks/useFinancingHandoff';
+
 import { SaleCard } from './SaleCard';
 import { BuyingInfoDialog } from './BuyingInfoDialog';
 import { DeliveryCheckSheet, type DeliveryChoice } from './DeliveryCheckSheet';
