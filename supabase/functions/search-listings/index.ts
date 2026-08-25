@@ -481,17 +481,28 @@ Deno.serve(async (req) => {
       });
     }
 
+    // A listing shown in the Sponsored strip must not also appear in the
+    // main results below it — the same truck would render twice on the page.
+    // Exclude sponsored ids from the result list (order-independent, so this
+    // runs after sorting) so each listing is shown exactly once.
+    const sponsoredIds = new Set(sponsored.map((l: any) => l.id));
+    const resultsListings = sponsoredIds.size
+      ? filteredListings.filter((l) => !sponsoredIds.has(l.id))
+      : filteredListings;
+
     // Calculate total after all filters
-    const totalCount = filteredListings.length;
+    const totalCount = resultsListings.length;
     const totalPages = Math.ceil(totalCount / effectivePageSize);
 
     // Apply pagination
-    const paginatedListings = filteredListings.slice(offset, offset + effectivePageSize);
+    const paginatedListings = resultsListings.slice(offset, offset + effectivePageSize);
 
     return new Response(
       JSON.stringify({
         listings: paginatedListings,
-        sponsored,
+        // Sponsored strip is a page-1 header; repeating it on later pages
+        // would re-show listings the shopper already saw.
+        sponsored: page <= 1 ? sponsored : [],
         total_count: totalCount,
         page,
         page_size: effectivePageSize,
