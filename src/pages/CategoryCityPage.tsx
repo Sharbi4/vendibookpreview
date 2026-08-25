@@ -136,6 +136,17 @@ const CategoryCityPage = ({ mode }: CategoryCityPageProps) => {
     }
   }, [city?.name, dbCategory, dbMode]);
 
+  // Low-inventory freight funnel (thin city pages must never dead-end).
+  const localCount = listings.length;
+  const isLowInventory = !isLoading && localCount < LOW_INVENTORY_THRESHOLD;
+  const nationwide = useNationwideInventory({
+    categories: [(dbCategory as InventoryCategory) ?? 'food_truck'],
+    mode: dbMode as 'rent' | 'sale',
+    enabled: isLowInventory && Boolean(dbCategory),
+  });
+
+
+
   if (!city || !categoryLabel || !dbCategory) {
     return (
       <div className="min-h-screen flex flex-col bg-background">
