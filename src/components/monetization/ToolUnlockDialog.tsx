@@ -37,7 +37,8 @@ export function ToolUnlockDialog({ open, onOpenChange, toolSlug, surface }: Tool
     if (!open) openedRef.current = false;
   }, [open, toolSlug, surface]);
 
-  if (!tool) return null;
+  // Parked tools (enabled: false in the catalog) never render an upsell.
+  if (!tool || tool.enabled === false) return null;
   const Icon = tool.icon;
 
   const Body = (

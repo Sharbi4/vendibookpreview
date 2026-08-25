@@ -22,7 +22,7 @@ const ToolPreview = () => {
     if (tool) trackLeadEvent('tool_preview_viewed', { tool_slug: tool.slug, surface: 'preview_page' });
   }, [tool]);
 
-  if (!tool) return <Navigate to="/tools" replace />;
+  if (!tool || tool.enabled === false) return <Navigate to="/tools" replace />;
   const acc = access.bySlug[tool.slug];
   const openTool = () => nav(tool.href);
   const Icon = tool.icon;

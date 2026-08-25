@@ -1239,7 +1239,7 @@ const StartupGuide = () => {
             </div>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {[
-                { n: 1, title: 'Choose your business model', desc: 'Truck, trailer, or shared kitchen — pick what fits your menu, mobility, and budget.', icon: Target, link: { href: '/tools/concept-lab', label: 'Explore Concept Lab' } },
+                { n: 1, title: 'Choose your business model', desc: 'Truck, trailer, or shared kitchen — pick what fits your menu, mobility, and budget.', icon: Target, link: { href: '/search', label: 'See what\'s available' } },
                 { n: 2, title: 'Estimate startup costs', desc: 'Use real ranges for vehicle, buildout, permits, insurance, and a cash reserve.', icon: Calculator, link: { href: '/tools/food-truck-startup-costs-2026', label: 'Open cost calculator' } },
                 { n: 3, title: 'Find a truck, trailer, or kitchen', desc: 'Browse Vendibook to rent or buy what you need without a months-long custom build.', icon: Truck, link: { href: '/search?category=food_truck', label: 'Browse trucks & trailers' } },
                 { n: 4, title: 'Check permit requirements', desc: 'Every city differs. Look up mobile vendor, health, and fire permits before you commit.', icon: FileCheck, link: { href: '/tools/permitpath', label: 'Use PermitPath' } },
@@ -1387,14 +1387,14 @@ const StartupGuide = () => {
 
               <Card className="border-0 shadow-xl bg-card/80 backdrop-blur-sm hover:shadow-2xl transition-all group">
                 <CardContent className="p-6">
-                  <Link to="/tools/buildkit" className="block">
+                  <Link to="/tools/pricepilot" className="block">
                     <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-orange-500 to-red-600 text-white flex items-center justify-center mb-4 group-hover:scale-105 transition-transform">
-                      <Wrench className="h-6 w-6" />
+                      <DollarSign className="h-6 w-6" />
                     </div>
-                    <h3 className="font-semibold text-lg mb-2">BuildKit</h3>
-                    <p className="text-sm text-muted-foreground mb-3">Calculate buildout costs and create equipment lists for your setup.</p>
+                    <h3 className="font-semibold text-lg mb-2">PricePilot</h3>
+                    <p className="text-sm text-muted-foreground mb-3">Get a defensible appraisal for a truck or trailer, priced from real market evidence.</p>
                     <span className="text-primary text-sm font-medium inline-flex items-center gap-1 group-hover:gap-2 transition-all">
-                      Plan Buildout <ArrowRight className="h-4 w-4" />
+                      Price a Unit <ArrowRight className="h-4 w-4" />
                     </span>
                   </Link>
                 </CardContent>

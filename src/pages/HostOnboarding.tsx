@@ -108,7 +108,7 @@ const HostOnboarding = () => {
 
   const tools = [
     { icon: <Calculator className="h-5 w-5" />, title: 'PricePilot', description: 'Market-based rental and sale pricing guidance.' },
-    { icon: <FileText className="h-5 w-5" />, title: 'Listing Studio', description: 'High-converting descriptions from your specs and photos.' },
+    { icon: <ClipboardCheck className="h-5 w-5" />, title: 'Regulations Hub', description: 'State-by-state operating rules, certifications, and inspections.' },
     { icon: <Lightbulb className="h-5 w-5" />, title: 'PermitPath', description: 'Find required licenses and documents by location.' }];
 
   const testimonials = [

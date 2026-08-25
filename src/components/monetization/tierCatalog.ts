@@ -74,7 +74,7 @@ export const TIER_CATALOG: Record<TierRole, TierFeatureGroups> = {
     ctaLabel: 'Go Pro',
     sellers: [
       '1 active Featured Boost included',
-      'Full premium tools bundle — PricePilot, Listing Studio, Marketing Studio',
+      'Premium tools bundle — PricePilot appraisals and PermitPath Plus',
     ],
     hosts: [
       'Multiple active listings',
@@ -82,7 +82,7 @@ export const TIER_CATALOG: Record<TierRole, TierFeatureGroups> = {
       'Storage add-ons and cleaning fees',
     ],
     shared: [
-      'Concept Lab, Market Radar, PermitPath Plus — no per-tool paywalls',
+      'PermitPath Plus included — no per-tool paywalls',
       'Lower Vendibook fee — 10.9% instead of 12.9% on your side',
       'Everything in Free',
     ],
@@ -103,7 +103,7 @@ export const TIER_CATALOG: Record<TierRole, TierFeatureGroups> = {
       'Urgent-tier priority support',
     ],
     shared: [
-      'BuildKit included',
+      'Every premium tool included',
       'Dedicated support in hours, not days',
       'Everything in Growth',
     ],

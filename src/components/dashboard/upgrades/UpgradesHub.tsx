@@ -29,7 +29,7 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { TOOLS } from '@/lib/tools/catalog';
+import { ACTIVE_TOOLS } from '@/lib/tools/catalog';
 import { useToolAccess } from '@/hooks/useToolAccess';
 import { useCatalogPrice } from '@/hooks/useCatalogPrices';
 import { ACTIVE_PRODUCT_SLUGS } from '@/lib/monetization/catalogPricing';
@@ -196,7 +196,7 @@ const PremiumToolsSection = () => {
       </header>
 
       <ul className="grid gap-3 sm:grid-cols-2">
-        {TOOLS.map((tool) => {
+        {ACTIVE_TOOLS.map((tool) => {
           const a = access.bySlug[tool.slug];
           const state = stateFor(tool.slug);
           const open = !!a?.unlocked;

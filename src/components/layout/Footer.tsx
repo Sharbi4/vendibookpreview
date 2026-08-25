@@ -73,8 +73,8 @@ const footerSections: FooterSection[] = [
       { label: 'All Tools', href: '/tools' },
       { label: 'Startup Guide', href: '/tools/startup-guide' },
       { label: 'Price Pilot', href: '/tools/pricepilot' },
-      { label: 'Listing Studio', href: '/tools/listing-studio' },
       { label: 'Permit Path', href: '/tools/permitpath' },
+      { label: 'Regulations Hub', href: '/tools/regulations-hub' },
     ],
   },
   {

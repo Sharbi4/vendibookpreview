@@ -98,7 +98,7 @@ export const PromotionHub = () => {
     } catch (e: any) {
       const parsed = await parseEdgeError(e);
       if (isPremiumError(parsed)) {
-        premiumUpsell.show(featureFromParsed(parsed) ?? 'marketing-studio', 'promotion_hub');
+        premiumUpsell.show(featureFromParsed(parsed) ?? 'pricepilot', 'promotion_hub');
       } else {
         toast({
           title: 'Could not generate copy',
