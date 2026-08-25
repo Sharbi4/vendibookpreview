@@ -137,6 +137,10 @@ const FAQS = [
     a: 'No. Freight is available for Vendibook purchases, where it stays connected to your transaction, and as a standalone service for equipment you found somewhere else. Either way, you tell us what is moving and where it needs to go.',
   },
   {
+    q: 'Can Vendibook Freight be financed?',
+    a: 'Yes — freight transportation may be included in eligible financing arrangements, depending on the financing provider and the transaction. Mention transportation when you apply. See the Financing page for how equipment financing works on Vendibook.',
+  },
+  {
     q: 'Where does Vendibook Freight operate?',
     a: 'Vendibook Freight helps move food trucks and food trailers across the lower 48 states.* Route availability can vary by shipment and transportation provider.',
   },
@@ -553,11 +557,12 @@ const VendibookFreight = () => {
               </span>
               <div className="flex-1">
                 <h2 className="text-xl md:text-2xl font-bold text-foreground tracking-tight mb-2">
-                  Buying with financing? Bring Freight into the conversation.
+                  Yes — Vendibook Freight can be financed too.
                 </h2>
                 <p className="text-sm md:text-base text-muted-foreground leading-relaxed">
-                  Freight may be included in eligible financing arrangements depending on the
-                  financing provider and transaction.*
+                  Freight transportation may be included in eligible financing arrangements,
+                  depending on the financing provider and the transaction.* Buying the equipment
+                  with financing as well? Mention Freight when you apply.
                 </p>
               </div>
               <Button variant="cta-outline" size="lg" className="rounded-full shrink-0" asChild>
@@ -688,7 +693,10 @@ const VendibookFreight = () => {
               third party transportation and logistics providers. Availability, pricing, pickup
               timing, delivery timing, routes, equipment eligibility, and transportation
               requirements vary by shipment and provider. Estimates are provided for planning
-              purposes and may change when final transportation details are confirmed.
+              purposes and may change when final transportation details are confirmed. Financing,
+              where referenced, is provided by third-party financing partners and is subject to
+              application, prequalification, and underwriting; Vendibook is not a lender and does
+              not guarantee approval, rates, terms, or funding.
             </p>
           </div>
         </section>
