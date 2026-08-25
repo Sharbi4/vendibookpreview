@@ -257,6 +257,30 @@ const SellMyFoodTruck = () => {
             </div>
           </section>
 
+          {/* FOOD TRAILER COVERAGE */}
+          <section className="py-12 md:py-16 border-t border-border">
+            <div className="container max-w-4xl">
+              <h2 className="text-2xl md:text-3xl font-semibold text-foreground">Selling a food trailer?</h2>
+              <p className="mt-3 text-muted-foreground leading-relaxed max-w-2xl">
+                Vendibook isn&apos;t only for trucks. Sellers list food trailers, concession trailers, mobile
+                kitchens, and specialty trailers every day — with equipment-specific fields for towing setup,
+                dimensions, power, and water that general classifieds don&apos;t have. Publishing is free, and
+                the same messaging, offers, and payment options apply.
+              </p>
+              <div className="mt-6 flex flex-wrap gap-3">
+                <Button variant="outline" className="rounded-2xl" asChild>
+                  <Link to="/sell-food-trailer">Sell your food trailer</Link>
+                </Button>
+                <Button variant="outline" className="rounded-2xl" asChild>
+                  <Link to="/sell-concession-trailer">Sell your concession trailer</Link>
+                </Button>
+                <Button variant="outline" className="rounded-2xl" asChild>
+                  <Link to="/food-trailers-for-sale">Browse food trailers for sale</Link>
+                </Button>
+              </div>
+            </div>
+          </section>
+
           {/* MARKETPLACE COMPARISON */}
           <section className="py-12 md:py-16 border-t border-border">
             <div className="container max-w-5xl">
