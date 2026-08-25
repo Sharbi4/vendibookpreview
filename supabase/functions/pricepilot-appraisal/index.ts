@@ -60,6 +60,31 @@ function parseSubject(body: any): SubjectProfile | Response {
   const condition = VALID_CONDITIONS.has(body?.condition) ? body.condition : null;
   const operationalStatus = VALID_OPERATIONAL.has(body?.operationalStatus) ? body.operationalStatus : null;
 
+  // Required-field enforcement (mirrors the client wizard). Only what a
+  // defensible appraisal genuinely needs: market location, age, condition
+  // and operating readiness. Size/mileage/features/notes stay optional and
+  // are passed through as unknown (null) rather than guessed.
+  const stateRaw = str(body?.state, 2)?.toUpperCase() ?? null;
+  const zipRaw = str(body?.zip, 10);
+  const hasLocation = !!stateRaw || /^\d{5}$/.test(zipRaw ?? '');
+  const yearNum = num(body?.year)
+    ? Math.min(new Date().getFullYear() + 2, Math.max(1950, num(body?.year)!))
+    : null;
+
+  const missing: string[] = [];
+  if (!hasLocation) missing.push('location (state or ZIP code)');
+  if (!yearNum) missing.push('year');
+  if (!condition) missing.push('condition');
+  if (!operationalStatus) missing.push('operational status');
+  if (missing.length) {
+    return jsonError(
+      400,
+      'missing_required_fields',
+      `Missing required fields: ${missing.join(', ')}. These are needed to produce a defensible appraisal.`,
+      { missing },
+    );
+  }
+
   return {
     mode,
     assetCategory: assetCategory as SubjectProfile['assetCategory'],
