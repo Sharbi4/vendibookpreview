@@ -5,13 +5,14 @@ import { cn } from '@/lib/utils';
 export const fmt = (n: number | null | undefined) =>
   typeof n === 'number' ? `$${Math.round(n).toLocaleString('en-US')}` : '—';
 
-/** Soft white editorial surface on the warm ivory canvas. */
+/** Soft white editorial surface on the warm ivory canvas — matches SaleCard. */
 export const SectionCard: React.FC<React.PropsWithChildren<{ className?: string }>> = ({ children, className }) => (
-  <div className={cn('bg-sale-card rounded-2xl p-5 md:p-7', className)}>{children}</div>
+  <div className={cn('rounded-[24px] bg-sale-card p-5 md:p-7', className)}>{children}</div>
 );
 
+/** Section eyebrow — same treatment as How It Works / sale detail (`text-primary`). */
 export const Eyebrow: React.FC<React.PropsWithChildren<{ className?: string }>> = ({ children, className }) => (
-  <p className={cn('text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground', className)}>{children}</p>
+  <p className={cn('text-xs font-semibold uppercase tracking-[0.16em] text-primary', className)}>{children}</p>
 );
 
 export const Pill: React.FC<React.PropsWithChildren<{ tone?: 'neutral' | 'good' | 'warn' | 'accent'; icon?: React.ReactNode }>> =
@@ -21,7 +22,7 @@ export const Pill: React.FC<React.PropsWithChildren<{ tone?: 'neutral' | 'good' 
       tone === 'good' && 'bg-emerald-500/10 text-emerald-700 ring-emerald-600/25',
       tone === 'warn' && 'bg-amber-500/10 text-amber-700 ring-amber-600/25',
       tone === 'accent' && 'chip-accent',
-      tone === 'neutral' && 'bg-black/[0.04] text-muted-foreground ring-black/10',
+      tone === 'neutral' && 'bg-muted text-muted-foreground ring-border',
     )}>
       {icon}{children}
     </span>
@@ -49,10 +50,10 @@ export const RangeBar: React.FC<{
 
   return (
     <div className={lg ? 'pt-14' : 'pt-9'}>
-      <div className={cn('relative rounded-full bg-black/[0.06]', lg ? 'h-3' : 'h-2.5')}>
+      <div className={cn('relative rounded-full bg-muted', lg ? 'h-3' : 'h-2.5')}>
         {/* Market range band — draws outward from the estimate */}
         <motion.div
-          className="absolute inset-y-0 rounded-full bg-orange-500/25"
+          className="absolute inset-y-0 rounded-full bg-primary/25"
           initial={reduce ? false : { left: `${pct(estimate)}%`, right: `${100 - pct(estimate)}%` }}
           whileInView={{ left: `${pct(low)}%`, right: `${100 - pct(high)}%` }}
           viewport={{ once: true, amount: 0.6 }}
@@ -61,7 +62,7 @@ export const RangeBar: React.FC<{
         {/* Benchmark tick */}
         {typeof benchmark === 'number' && benchmark > min && benchmark < max && (
           <motion.div
-            className={cn('absolute top-1/2 w-[2px] -translate-y-1/2 rounded bg-black/40', lg ? 'h-4' : 'h-3.5')}
+            className={cn('absolute top-1/2 w-[2px] -translate-y-1/2 rounded bg-foreground/40', lg ? 'h-4' : 'h-3.5')}
             style={{ left: `${pct(benchmark)}%` }}
             initial={reduce ? false : { opacity: 0 }}
             whileInView={{ opacity: 1 }}
@@ -71,7 +72,7 @@ export const RangeBar: React.FC<{
         )}
         {/* Estimate marker — settles into place once */}
         <motion.div
-          className={cn('absolute top-1/2 -translate-y-1/2 rounded-full bg-orange-500 shadow-md ring-4 ring-white', lg ? 'h-7 w-7' : 'h-6 w-6')}
+          className={cn('absolute top-1/2 -translate-y-1/2 rounded-full bg-primary shadow-md ring-4 ring-card', lg ? 'h-7 w-7' : 'h-6 w-6')}
           initial={reduce ? false : { left: `${pct(low)}%`, scale: 0.6, opacity: 0 }}
           whileInView={{ left: `${pct(estimate)}%`, scale: 1, opacity: 1, x: '-50%' }}
           viewport={{ once: true, amount: 0.6 }}
