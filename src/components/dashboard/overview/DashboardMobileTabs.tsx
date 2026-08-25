@@ -47,8 +47,9 @@ const DashboardMobileTabs = ({ mode }: Props) => {
       ];
 
   return (
-    <div className="md:hidden -mx-4 px-4 mb-4 relative">
-      <div className="no-scrollbar overflow-x-auto flex gap-2 py-1">
+    <div className="md:hidden mb-4">
+      {/* Wrap into rows so every tab is visible at once — no swiping required. */}
+      <div className="flex flex-wrap gap-2">
         {pills.map((p) => {
           const active = p.path
             ? location.pathname === p.path
@@ -58,7 +59,7 @@ const DashboardMobileTabs = ({ mode }: Props) => {
               key={p.label}
               to={p.href}
               className={cn(
-                'shrink-0 px-5 py-2.5 rounded-full text-[13px] font-semibold border transition-all',
+                'px-4 py-2 rounded-full text-[13px] font-semibold border transition-all',
                 active
                   ? 'bg-cta-primary text-white border-transparent shadow-cta-primary'
                   : 'border-white/[0.12] text-[rgb(var(--dash-text-2))] bg-white/[0.03] hover:text-[rgb(var(--dash-text-1))] hover:border-white/20',
@@ -69,9 +70,6 @@ const DashboardMobileTabs = ({ mode }: Props) => {
           );
         })}
       </div>
-      {/* edge-fade hint that the row scrolls */}
-      <div className="pointer-events-none absolute top-0 bottom-0 right-0 w-8 bg-gradient-to-l from-background to-transparent" />
-      <div className="pointer-events-none absolute top-0 bottom-0 left-0 w-4 bg-gradient-to-r from-background to-transparent" />
     </div>
   );
 };
