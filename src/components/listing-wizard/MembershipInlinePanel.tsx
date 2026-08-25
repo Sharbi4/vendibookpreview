@@ -1,13 +1,10 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { X, Loader2 } from 'lucide-react';
+import { X, ArrowRight } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useHostEntitlements } from '@/hooks/useHostEntitlements';
 import { useListingQuota } from '@/hooks/useListingQuota';
-import { useMonetizationProducts } from '@/hooks/useMonetizationProducts';
-import { useSubscriptionConsent } from '@/hooks/useSubscriptionConsent';
 import { supabase } from '@/integrations/supabase/client';
-import { ACTIVE_PRODUCT_SLUGS } from '@/lib/monetization/catalogPricing';
 import { Button } from '@/components/ui/button';
 import { MiniPlansComparison } from '@/components/monetization/MiniPlansComparison';
 
@@ -23,17 +20,15 @@ interface MembershipInlinePanelProps {
 
 /**
  * Slim, dismissible panel shown once per user inside the publish flow.
- * The "Go Pro" CTA opens the ROSCA/AB 2863 consent gate before PayPal
- * Checkout — same path as every other recurring purchase. The consent
- * dialog is rendered inline so it mounts inside the wizard tree.
+ * The "Go Pro" CTA routes to the premium /pricing hub — never straight
+ * into the recurring-billing consent gate. Consent only appears after the
+ * member has reviewed plans and picked one on the pricing page.
  */
 export const MembershipInlinePanel: React.FC<MembershipInlinePanelProps> = ({ returnTo, listingId }) => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { tier } = useHostEntitlements();
   const quota = useListingQuota();
-  const { products } = useMonetizationProducts('host_subscription');
-  const { requestCheckout, dialog, pendingSlug } = useSubscriptionConsent();
 
   const [dismissed, setDismissed] = useState<boolean>(() => {
     if (typeof window === 'undefined') return true;
@@ -60,12 +55,6 @@ export const MembershipInlinePanel: React.FC<MembershipInlinePanelProps> = ({ re
     };
   }, [dismissed, user]);
 
-  // Recommended plan is the active membership in the catalog (Vendibook Pro).
-  const growthProduct = useMemo(
-    () => products.find((p) => p.slug === ACTIVE_PRODUCT_SLUGS.vendibookPro) ?? null,
-    [products],
-  );
-
   if (dismissed || tier !== 'free') return null;
 
   const persistDismiss = async () => {
@@ -83,23 +72,11 @@ export const MembershipInlinePanel: React.FC<MembershipInlinePanelProps> = ({ re
     }
   };
 
-  const handleUpgrade = async () => {
-    if (!growthProduct) {
-      // Product catalog not loaded yet — fall back to the pricing hub so the
-      // user is never left with a dead click.
-      navigate(`/pricing?returnTo=${encodeURIComponent(returnTo)}${listingId ? `&listingContext=${listingId}` : ''}`);
-      return;
-    }
-    const suffix = listingId ? `/${listingId}` : '';
-    await requestCheckout(growthProduct, {
-      listingId,
-      interval: 'monthly',
-      successPath: `/create-listing${suffix}?unlocked=${growthProduct.slug}&step=review`,
-      cancelPath: `/create-listing${suffix}?membership_cancelled=true&step=review`,
-    });
+  // "Go Pro" always lands on the premium pricing hub first — plan selection
+  // and the recurring-billing consent gate live there, not in this panel.
+  const handleUpgrade = () => {
+    navigate(`/pricing?returnTo=${encodeURIComponent(returnTo)}${listingId ? `&listingContext=${listingId}` : ''}`);
   };
-
-  const isPending = pendingSlug === growthProduct?.slug;
 
   return (
     <>
@@ -134,15 +111,9 @@ export const MembershipInlinePanel: React.FC<MembershipInlinePanelProps> = ({ re
           <Button variant="outline" onClick={persistDismiss} className="w-full">
             Continue free
           </Button>
-          <Button onClick={handleUpgrade} disabled={isPending} className="w-full">
-            {isPending ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                Starting checkout…
-              </>
-            ) : (
-              'Go Pro'
-            )}
+          <Button variant="cta" size="cta" onClick={handleUpgrade} className="w-full">
+            Go Pro
+            <ArrowRight className="ml-1.5 h-4 w-4" aria-hidden />
           </Button>
         </div>
 
@@ -160,8 +131,6 @@ export const MembershipInlinePanel: React.FC<MembershipInlinePanelProps> = ({ re
           </button>
         </div>
       </div>
-      {/* Consent dialog must be rendered inside the wizard tree. */}
-      {dialog}
     </>
   );
 };

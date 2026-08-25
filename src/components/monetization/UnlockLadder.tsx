@@ -47,7 +47,9 @@ export function UnlockLadder({
   const permits = useMonetizationProducts('permit_upgrade');
   const listing = useMonetizationProducts('listing_upgrade');
   const [busySlug, setBusySlug] = React.useState<string | null>(null);
-  const { requestCheckout } = useSubscriptionConsent();
+  // The consent dialog MUST be rendered (see bottom of JSX) — without it a
+  // recurring selection sets pending state with no visible gate and stalls.
+  const { requestCheckout, dialog: consentDialog } = useSubscriptionConsent();
   const { tier: currentTier } = useHostEntitlements();
 
   const tool = getToolBySlug(toolSlug);
@@ -173,6 +175,7 @@ export function UnlockLadder({
       <p className="text-[11px] text-muted-foreground">
         Payment protection — refund within 7 days if the tool doesn't help.
       </p>
+      {consentDialog}
     </div>
   );
 }
