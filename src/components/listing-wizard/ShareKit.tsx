@@ -17,6 +17,7 @@ import {
   Send,
   Image as ImageIcon,
   Wand2,
+  Globe,
   Camera} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
@@ -133,6 +134,7 @@ export const ShareKit: React.FC<ShareKitProps> = ({ listing, onClose }) => {
   const [captionCopied, setCaptionCopied] = useState(false);
   const [emailLinkCopied, setEmailLinkCopied] = useState(false);
   const [smsLinkCopied, setSmsLinkCopied] = useState(false);
+  const [websiteSnippetCopied, setWebsiteSnippetCopied] = useState(false);
   const [captionVariant, setCaptionVariant] = useState(0);
   const [shareWithImageBusy, setShareWithImageBusy] = useState(false);
 
@@ -230,6 +232,12 @@ export const ShareKit: React.FC<ShareKitProps> = ({ listing, onClose }) => {
   const handleCopySmsLink = () => {
     const sms = `${listing.title} — book now: ${withUtm('sms', 'message')}`;
     copy(sms, setSmsLinkCopied, 'SMS message copied!');
+  };
+  const handleCopyWebsiteSnippet = () => {
+    const anchorText = listing.mode === 'sale' ? 'View this listing on Vendibook' : 'Book on Vendibook';
+    const html = `<a href="${withUtm('seller_website', 'referral')}" target="_blank" rel="noopener">${anchorText}</a>`;
+    copy(html, setWebsiteSnippetCopied, 'Website link copied — paste it into your site');
+    logShare('copy' as ShareChannel, { share_url: listingUrl, content_type: 'website_snippet' });
   };
 
   const handleNativeShare = async () => {
@@ -964,6 +972,36 @@ const generateStoryImageBlob = (
           {emailLinkCopied ? 'Copied' : 'Copy'}
         </div>
       </button>
+
+      {/* YOUR WEBSITE — transparent link snippet for sellers with their own sites */}
+      <div className="rounded-2xl border bg-card p-4 space-y-3">
+        <div className="flex items-start gap-3">
+          <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center shrink-0">
+            <Globe className="w-5 h-5 text-muted-foreground" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="font-semibold text-sm">Link from your own website</div>
+            <div className="text-xs text-muted-foreground">
+              Have a business site? A visible link to your Vendibook listing sends your visitors
+              straight to a page with photos, pricing, and secure checkout.
+            </div>
+          </div>
+        </div>
+        <button
+          onClick={handleCopyWebsiteSnippet}
+          className="w-full flex items-center justify-between gap-3 rounded-xl bg-muted/60 px-3 py-2.5 text-left hover:bg-muted transition-colors"
+        >
+          <code className="text-[11px] text-muted-foreground truncate">
+            &lt;a href="{prettyUrl}"&gt;{listing.mode === 'sale' ? 'View this listing on Vendibook' : 'Book on Vendibook'}&lt;/a&gt;
+          </code>
+          <span className={cn(
+            'shrink-0 text-xs font-medium px-3 py-1.5 rounded-lg',
+            websiteSnippetCopied ? 'bg-emerald-500 text-white' : 'bg-background text-foreground'
+          )}>
+            {websiteSnippetCopied ? 'Copied' : 'Copy HTML'}
+          </span>
+        </button>
+      </div>
 
       {/* SECONDARY ACTIONS */}
       <div className="grid grid-cols-2 gap-2">

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   ArrowRight, BarChart3, Calculator, TrendingUp, Truck, Container,
-  MapPin, Banknote, Tag, ChevronDown, RefreshCw,
+  MapPin, Banknote, Tag, ChevronDown, RefreshCw, Download, Newspaper,
 } from 'lucide-react';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
@@ -14,6 +14,7 @@ import {
   snapshotLabel, MIN_SAMPLE, PRICE_MIN_USD, PRICE_MAX_USD,
   type MarketStats, type GroupStats, type PricingRow,
 } from '@/lib/market-data/foodTruckPrices';
+import { buildPriceDistributionSvg, downloadSvg } from '@/lib/market-data/shareChart';
 import { trackEvent } from '@/lib/analytics';
 import { cn } from '@/lib/utils';
 
@@ -145,6 +146,18 @@ const FoodTruckPrices = () => {
     () => (stats ? [...stats.bands].sort((a, b) => b.count - a.count)[0] : null),
     [stats],
   );
+
+  const handleDownloadChart = () => {
+    if (!stats) return;
+    const svg = buildPriceDistributionSvg({
+      title: `What Price Range Are Most Food Trucks Listed In? (${YEAR})`,
+      subtitle: `Share of ${stats.totalListings} food trucks & trailers listed on Vendibook`,
+      bands: stats.bands.map((b) => ({ label: b.label, count: b.count, pct: b.pct })),
+      snapshot,
+    });
+    downloadSvg(svg, `vendibook-food-truck-prices-${YEAR}.svg`);
+    trackEvent({ category: 'SEO', action: 'price_report_chart_downloaded', label: '/food-truck-prices' });
+  };
 
   const title = `Food Truck Prices & Cost Calculator (${YEAR}) | Vendibook`;
   const description =
@@ -407,6 +420,18 @@ const FoodTruckPrices = () => {
                 </div>
               ))}
             </div>
+            <div className="flex flex-wrap items-center gap-3 mt-6">
+              <Button
+                variant="outline"
+                className="rounded-2xl"
+                onClick={handleDownloadChart}
+              >
+                <Download className="h-4 w-4" /> Download chart for articles &amp; social
+              </Button>
+              <p className="text-xs text-muted-foreground">
+                Free to republish with attribution — the file includes "Source: Vendibook Marketplace Data".
+              </p>
+            </div>
           </Section>
 
           {/* By state */}
@@ -585,10 +610,16 @@ const FoodTruckPrices = () => {
                 prices unless otherwise stated. Analysis excludes listings without valid pricing, demo
                 listings, and price outliers.
               </p>
-              <p className="text-sm text-muted-foreground leading-relaxed">
+              <p className="text-sm text-muted-foreground leading-relaxed mb-4">
                 Journalists, lenders, builders, and publishers may reference these figures with attribution
                 to "Vendibook marketplace data" and a link to this page. Questions: support@vendibook.com.
               </p>
+              <Link
+                to="/press"
+                className="inline-flex items-center gap-1.5 text-sm font-semibold text-cta-primary hover:underline"
+              >
+                <Newspaper className="h-4 w-4" /> Press &amp; media resources
+              </Link>
             </div>
           </Section>
 
