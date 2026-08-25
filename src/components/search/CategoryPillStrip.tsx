@@ -34,6 +34,9 @@ interface Props {
   onInstantBookToggle: (v: boolean) => void;
   verifiedHostsOnly: boolean;
   onVerifiedToggle: (v: boolean) => void;
+  /** Currently applied specialty browse state, if the search matches one. */
+  activeSpecialty?: { key: SpecialtyKey; vehicle: SpecialtyVehicle } | null;
+  onSpecialtySelect?: (key: SpecialtyKey, vehicle: SpecialtyVehicle) => void;
 }
 
 export const CategoryPillStrip = ({
@@ -42,7 +45,9 @@ export const CategoryPillStrip = ({
   instantBookOnly,
   onInstantBookToggle,
   verifiedHostsOnly,
-  onVerifiedToggle}: Props) => {
+  onVerifiedToggle,
+  activeSpecialty,
+  onSpecialtySelect}: Props) => {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const scroll = (dir: 'l' | 'r') => {
