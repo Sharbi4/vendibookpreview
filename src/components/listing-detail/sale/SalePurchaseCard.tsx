@@ -186,9 +186,15 @@ export const SalePurchaseCard = ({
 
   const sellerName = getPublicDisplayName(host, 'Seller');
   const zipInputId = `sale-delivery-zip-${instanceId}`;
+  const financingNoun = String(listing?.category ?? '').includes('trailer')
+    ? 'trailer'
+    : String(listing?.category ?? '').includes('truck')
+      ? 'truck'
+      : 'equipment';
   const deliveryNote = radius
     ? `${rateLabel ? `${rateLabel} · ` : ''}within ${radius} mi of ${originLabel}`
     : rateLabel || null;
+
 
   return (
     <>
