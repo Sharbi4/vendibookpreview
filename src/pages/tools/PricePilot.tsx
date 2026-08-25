@@ -780,7 +780,7 @@ export default function PricePilot() {
                     </AccordionItem>
                     <AccordionItem value="q2">
                       <AccordionTrigger>What does PricePilot cost?</AccordionTrigger>
-                      <AccordionContent>PricePilot is a premium tool, included with Vendibook Pro memberships and the lifetime tools unlock. There is no per-report fee once you have access.</AccordionContent>
+                      <AccordionContent>PricePilot is a premium tool. It's included with Vendibook Pro memberships, or available as a one-time unlock. There's no per-report fee once you have access.</AccordionContent>
                     </AccordionItem>
                     <AccordionItem value="q3">
                       <AccordionTrigger>What if there isn't much data near me?</AccordionTrigger>
