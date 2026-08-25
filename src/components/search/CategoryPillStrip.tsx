@@ -110,7 +110,7 @@ export const CategoryPillStrip = ({
               aria-pressed={active}
             >
               <Icon className={cn('h-4 w-4', active && 'text-primary')} />
-              <span>{SPECIALTY_VEHICLE_LABELS[key][vehicle].replace('Browse ', '')}</span>
+              <span>{SPECIALTY_VEHICLE_SHORT_LABELS[key][vehicle]}</span>
             </button>
           );
         })}
