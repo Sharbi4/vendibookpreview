@@ -181,6 +181,23 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
   const isFeatured = isListingFeatured(listing as any);
   const financingEnabled = useEquinoxFinancingEnabled(listing as any);
 
+  // Specialty collection chip (coffee / ice cream) — deep-links to the same
+  // filtered /search state used by the hub headers and filter pill strip.
+  const specialtyKey = detectSpecialty({
+    title: listing.title,
+    subcategory: (listing as any).subcategory,
+    description: (listing as any).description,
+  });
+  const specialtyVehicle: SpecialtyVehicle | null =
+    listing.category === 'food_truck' ? 'truck' : listing.category === 'food_trailer' ? 'trailer' : null;
+  const specialtyChip = !compact && specialtyKey && specialtyVehicle
+    ? {
+        key: specialtyKey,
+        label: SPECIALTY_VEHICLE_LABELS[specialtyKey][specialtyVehicle],
+        href: specialtyBrowseHref(specialtyKey, specialtyVehicle),
+      }
+    : null;
+
 
   // Safely format price with proper null handling
   const formatListingPrice = () => {
