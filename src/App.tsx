@@ -201,6 +201,7 @@ const CategoryIndex = lazy(() => import("./pages/CategoryIndex"));
 const BlogShareRedirect = lazy(() => import("./pages/BlogShareRedirect"));
 import { CATEGORY_INDEX_CONFIGS } from "./data/categoryIndexConfigs";
 import { CITY_CATEGORY_CONFIGS } from "./data/cityCategoryConfigs";
+import { SPECIALTY_CATEGORY_CONFIGS } from "./data/specialtyCategoryConfigs";
 
 // City landing pages - direct imports since they're lightweight wrappers
 import {
@@ -495,6 +496,15 @@ const AnimatedRoutes = () => {
 
           {/* SEO category index pages — crawlable listing grids */}
           {CATEGORY_INDEX_CONFIGS.map((cfg) => (
+            <Route
+              key={cfg.path}
+              path={cfg.path}
+              element={<PageTransition><CategoryIndex config={cfg} /></PageTransition>}
+            />
+          ))}
+
+          {/* SEO specialty category hubs (coffee / ice cream) */}
+          {SPECIALTY_CATEGORY_CONFIGS.map((cfg) => (
             <Route
               key={cfg.path}
               path={cfg.path}
