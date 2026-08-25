@@ -682,16 +682,15 @@ export const generateCityCategoryBreadcrumbSchema = (
   cityStateSlug: string,
   cityName: string,
   stateCode: string
-) => ({
-  '@context': 'https://schema.org',
-  '@type': 'BreadcrumbList',
-  itemListElement: [
-    {
-      '@type': 'ListItem',
-      position: 1,
-      name: 'Home',
-      item: 'https://vendibook.com',
-    },
+) => {
+  const stateHubs: Record<string, { slug: string; name: string }> = {
+    TX: { slug: 'texas', name: 'Texas Rentals' },
+    FL: { slug: 'florida', name: 'Florida Rentals' },
+    CA: { slug: 'california', name: 'California Rentals' },
+  };
+
+  const items: { '@type': string; position: number; name: string; item: string }[] = [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://vendibook.com' },
     {
       '@type': 'ListItem',
       position: 2,
@@ -704,14 +703,34 @@ export const generateCityCategoryBreadcrumbSchema = (
       name: categoryLabel,
       item: `https://vendibook.com/search?mode=${mode === 'buy' ? 'sale' : 'rent'}&category=${categorySlug}`,
     },
-    {
+  ];
+
+  // Rental pages sit under the national/state rental hubs (hub-and-spoke SEO).
+  if (mode === 'rent') {
+    const stateHub = stateHubs[stateCode];
+    items.push({
       '@type': 'ListItem',
       position: 4,
-      name: `${cityName}, ${stateCode}`,
-      item: `https://vendibook.com/${mode}/${categorySlug}/${cityStateSlug}`,
-    },
-  ],
-});
+      name: stateHub ? stateHub.name : 'Rentals Nationwide',
+      item: stateHub
+        ? `https://vendibook.com/food-trucks-for-rent/${stateHub.slug}`
+        : 'https://vendibook.com/food-trucks-for-rent',
+    });
+  }
+
+  items.push({
+    '@type': 'ListItem',
+    position: items.length + 1,
+    name: `${cityName}, ${stateCode}`,
+    item: `https://vendibook.com/${mode}/${categorySlug}/${cityStateSlug}`,
+  });
+
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: items,
+  };
+};
 
 // Search results breadcrumb schema
 export const generateSearchBreadcrumbSchema = (searchParams?: {
