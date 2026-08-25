@@ -372,18 +372,22 @@ const CategoryCityPage = ({ mode }: CategoryCityPageProps) => {
                 );
               })}
             </div>
-          ) : (
-            <div className="text-center py-16 space-y-4">
-              <p className="text-lg text-muted-foreground">
-                No {categoryLabel.toLowerCase()} {modeLabel.toLowerCase()} in {city.name} yet.
-              </p>
-              <p className="text-muted-foreground">
-                Be the first to list — or browse other cities below.
-              </p>
-              <Button variant="dark-shine" asChild>
-                <Link to="/list">List Your Asset <ArrowRight className="h-4 w-4 ml-1" /></Link>
-              </Button>
+            {isLowInventory && (
+              <ExpandSearchModule pageSlug={canonicalPath} resultCount={localCount} nationwide={nationwide} />
+            )}
             </div>
+          ) : (
+            <ExpandSearchModule
+              pageSlug={canonicalPath}
+              resultCount={0}
+              nationwide={nationwide}
+              zeroResults
+              sellCta={{
+                label: 'List free',
+                href: dbCategory === 'food_trailer' ? '/sell-food-trailer' : '/sell-my-food-truck',
+              }}
+              alertContext={{ category: dbCategory, mode: dbMode }}
+            />
           )}
 
           {/* Internal Linking: Related Categories */}
