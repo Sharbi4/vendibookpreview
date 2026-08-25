@@ -81,44 +81,47 @@ const PayPalVisualFrame = () => {
       initial={reduce ? { opacity: 0 } : { opacity: 0, scale: 0.97 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.6, delay: 0.1 }}
-      aria-hidden="true"
     >
-      <div className="overflow-hidden rounded-[28px] border border-border bg-card p-6 shadow-[0_28px_64px_-28px_rgba(24,20,16,0.3)] sm:p-8">
-        <div className="flex items-center gap-2.5">
-          <PayPalMonogram className="h-6" />
-          <span className="text-sm font-semibold text-foreground">Checkout</span>
-        </div>
+      <div className="overflow-hidden rounded-[28px] border border-border bg-card shadow-[0_28px_64px_-28px_rgba(24,20,16,0.3)]">
+        <img
+          src={paypalAppImage.url}
+          alt="A person holding a phone with the PayPal app open beside a coffee and pastry"
+          loading="lazy"
+          className="aspect-[3/2] w-full object-cover"
+        />
 
-        <div className="mt-6 space-y-3">
-          {[
-            { label: 'PayPal balance, bank or debit', hint: 'Where available' },
-            { label: 'Card through PayPal', hint: 'Where available' },
-          ].map((row) => (
-            <div
-              key={row.label}
-              className="flex items-center justify-between gap-3 rounded-2xl border border-border bg-background px-4 py-3.5"
-            >
-              <span className="text-sm font-medium text-foreground">{row.label}</span>
-              <span className="text-[11px] uppercase tracking-wider text-muted-foreground">
-                {row.hint}
-              </span>
-            </div>
-          ))}
-          <div className="flex items-center justify-between gap-3 rounded-2xl border border-primary/30 bg-primary/[0.06] px-4 py-3.5">
-            <span className="text-sm font-semibold text-foreground">Pay Later</span>
-            <span className="text-[11px] uppercase tracking-wider text-primary">When eligible</span>
+        <div className="p-6 sm:p-8">
+          <div className="flex items-center gap-2.5">
+            <PayPalMonogram className="h-6" />
+            <span className="text-sm font-semibold text-foreground">Checkout</span>
           </div>
-        </div>
 
-        <div className="mt-6 rounded-2xl border border-dashed border-border/80 bg-muted/40 px-4 py-6 text-center">
-          <p className="text-xs leading-relaxed text-muted-foreground">
-            Reserved space for official PayPal Pay Later artwork
-          </p>
+          <div className="mt-6 space-y-3">
+            {[
+              { label: 'PayPal balance, bank or debit', hint: 'Where available' },
+              { label: 'Card through PayPal', hint: 'Where available' },
+            ].map((row) => (
+              <div
+                key={row.label}
+                className="flex items-center justify-between gap-3 rounded-2xl border border-border bg-background px-4 py-3.5"
+              >
+                <span className="text-sm font-medium text-foreground">{row.label}</span>
+                <span className="text-[11px] uppercase tracking-wider text-muted-foreground">
+                  {row.hint}
+                </span>
+              </div>
+            ))}
+            <div className="flex items-center justify-between gap-3 rounded-2xl border border-primary/30 bg-primary/[0.06] px-4 py-3.5">
+              <span className="text-sm font-semibold text-foreground">Pay Later</span>
+              <span className="text-[11px] uppercase tracking-wider text-primary">When eligible</span>
+            </div>
+          </div>
         </div>
       </div>
     </motion.div>
   );
 };
+
 
 /* ------------------------------------------------------------------ */
 
