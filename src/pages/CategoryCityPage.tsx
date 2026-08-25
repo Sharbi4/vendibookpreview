@@ -421,6 +421,53 @@ const CategoryCityPage = ({ mode }: CategoryCityPageProps) => {
             </div>
           </section>
 
+          {/* Rental hub links */}
+          {mode === 'rent' && (
+            <section className="space-y-3 pt-4 border-t border-border">
+              <h2 className="text-lg font-semibold text-foreground">
+                Explore more rental options
+              </h2>
+              <div className="flex flex-wrap gap-2">
+                <Link
+                  to="/food-trucks-for-rent"
+                  className="px-4 py-2 rounded-full border border-border text-sm text-foreground hover:bg-muted transition-colors"
+                >
+                  Food Trucks & Trailers for Rent Nationwide
+                </Link>
+                {stateRentHubPath && (
+                  <Link
+                    to={stateRentHubPath}
+                    className="px-4 py-2 rounded-full border border-border text-sm text-foreground hover:bg-muted transition-colors"
+                  >
+                    Rentals in {city.stateCode === 'TX' ? 'Texas' : city.stateCode === 'FL' ? 'Florida' : 'California'}
+                  </Link>
+                )}
+                {dbCategory === 'food_truck' && (
+                  <Link
+                    to={`/rent/food-trailers/${cityStateSlug}`}
+                    className="px-4 py-2 rounded-full border border-border text-sm text-foreground hover:bg-muted transition-colors"
+                  >
+                    Food Trailers for Rent in {city.name}
+                  </Link>
+                )}
+                {dbCategory === 'food_trailer' && (
+                  <Link
+                    to={`/rent/food-trucks/${cityStateSlug}`}
+                    className="px-4 py-2 rounded-full border border-border text-sm text-foreground hover:bg-muted transition-colors"
+                  >
+                    Food Trucks for Rent in {city.name}
+                  </Link>
+                )}
+                <Link
+                  to="/rent-out-my-food-truck"
+                  className="px-4 py-2 rounded-full border border-border text-sm text-foreground hover:bg-muted transition-colors"
+                >
+                  Rent Out Your Equipment
+                </Link>
+              </div>
+            </section>
+          )}
+
           {/* FAQ Section — visible content matching FAQPage JSON-LD for rich results */}
           <section className="space-y-4 pt-6 border-t border-border">
             <h2 className="text-xl md:text-2xl font-semibold text-foreground">
