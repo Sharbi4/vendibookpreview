@@ -655,10 +655,19 @@ export default function PricePilot() {
                                         <p className="mt-1 text-sm text-muted-foreground">Honest answers price better than optimistic ones.</p>
                                       </div>
                                       <div>
-                                        <Label>Overall condition</Label>
-                                        <div className="mt-1.5 grid grid-cols-2 gap-2 sm:grid-cols-4">
+                                        <Label>Overall condition<Req /></Label>
+                                        <div
+                                          data-pp-field="condition"
+                                          role="group"
+                                          aria-label="Overall condition"
+                                          aria-invalid={!!errors.condition}
+                                          aria-describedby={errors.condition ? 'pp-err-condition' : undefined}
+                                          tabIndex={-1}
+                                          className={cn('mt-1.5 grid grid-cols-2 gap-2 rounded-2xl focus:outline-none sm:grid-cols-4',
+                                            errors.condition && 'ring-2 ring-amber-600/40 ring-offset-2 ring-offset-sale-card')}
+                                        >
                                           {CONDITIONS.map((c) => (
-                                            <button key={c.value} type="button" onClick={() => setCondition(c.value)}
+                                            <button key={c.value} type="button" onClick={() => { setCondition(c.value); clearError('condition'); }}
                                               aria-pressed={condition === c.value}
                                               className={cn('rounded-xl px-3 py-3 text-left ring-1 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
                                                 condition === c.value ? 'bg-primary/[0.08] ring-primary/50' : 'bg-muted/60 ring-border hover:ring-foreground/25')}>
