@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import {
   ArrowRight, BarChart3, Calculator, TrendingUp, Truck, Container,
-  MapPin, Info, Banknote, Tag, ChevronDown, Database, RefreshCw,
+  MapPin, Banknote, Tag, ChevronDown, RefreshCw,
 } from 'lucide-react';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
