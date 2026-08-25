@@ -79,6 +79,30 @@ export const specialtyOrFilter = (key: SpecialtyKey): string => {
   return parts.join(',');
 };
 
+// ---------------------------------------------------------------------------
+// Specialty browse deep links — one canonical search URL per specialty +
+// vehicle split. Used by hub headers, the search filter strip, and listing
+// cards so every entry point lands on the same filtered /search state.
+// ---------------------------------------------------------------------------
+
+export type SpecialtyVehicle = 'truck' | 'trailer';
+
+export const SPECIALTY_VEHICLE_LABELS: Record<SpecialtyKey, Record<SpecialtyVehicle, string>> = {
+  coffee: { truck: 'Browse coffee trucks', trailer: 'Browse coffee trailers' },
+  ice_cream: { truck: 'Browse ice cream trucks', trailer: 'Browse ice cream trailers' },
+};
+
+export const specialtyBrowseHref = (key: SpecialtyKey, vehicle: SpecialtyVehicle): string => {
+  const def = SPECIALTY_DEFS[key];
+  const category = vehicle === 'truck' ? 'food_truck' : 'food_trailer';
+  return `/search?q=${encodeURIComponent(def.searchQuery)}&category=${category}&mode=sale`;
+};
+
+export const specialtyBrowseLinks = (key: SpecialtyKey): { label: string; href: string }[] => [
+  { label: SPECIALTY_VEHICLE_LABELS[key].truck, href: specialtyBrowseHref(key, 'truck') },
+  { label: SPECIALTY_VEHICLE_LABELS[key].trailer, href: specialtyBrowseHref(key, 'trailer') },
+];
+
 /**
  * Map a structured subcategory value to its specialty, if any.
  */
