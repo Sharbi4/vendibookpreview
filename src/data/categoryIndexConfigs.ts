@@ -67,6 +67,7 @@ export const CATEGORY_INDEX_CONFIGS: CategoryIndexConfig[] = [
     path: '/food-trucks',
     category: 'food_truck',
     mode: 'any',
+    businessTypeNav: true,
     h1: 'Food Trucks for Sale & Rent',
     title: 'Food Trucks for Sale & Rent | Vendibook',
     description:
@@ -87,6 +88,7 @@ export const CATEGORY_INDEX_CONFIGS: CategoryIndexConfig[] = [
     path: '/food-trucks-for-sale',
     category: 'food_truck',
     mode: 'sale',
+    businessTypeNav: true,
     h1: 'Food Trucks for Sale',
     title: 'Food Trucks for Sale | Used & New | Vendibook',
     description:
@@ -249,6 +251,7 @@ export const CATEGORY_INDEX_CONFIGS: CategoryIndexConfig[] = [
     path: '/food-trailers',
     category: 'food_trailer',
     mode: 'any',
+    businessTypeNav: true,
     h1: 'Food Trailers for Sale & Rent',
     title: 'Food Trailers for Sale & Rent | Vendibook',
     description:
@@ -268,6 +271,7 @@ export const CATEGORY_INDEX_CONFIGS: CategoryIndexConfig[] = [
     path: '/food-trailers-for-sale',
     category: 'food_trailer',
     mode: 'sale',
+    businessTypeNav: true,
     h1: 'Food Trailers for Sale',
     title: 'Food Trailers for Sale | Concession & Mobile Kitchen | Vendibook',
     description:
