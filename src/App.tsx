@@ -198,6 +198,7 @@ const Subscribe = lazy(() => import("./pages/Subscribe"));
 const EmailFeedbackThanks = lazy(() => import("./pages/EmailFeedbackThanks"));
 const CategoryCityPage = lazy(() => import("./pages/CategoryCityPage"));
 const CategoryIndex = lazy(() => import("./pages/CategoryIndex"));
+const FoodTruckPrices = lazy(() => import("./pages/FoodTruckPrices"));
 const BlogShareRedirect = lazy(() => import("./pages/BlogShareRedirect"));
 import { CATEGORY_INDEX_CONFIGS } from "./data/categoryIndexConfigs";
 import { CITY_CATEGORY_CONFIGS } from "./data/cityCategoryConfigs";
@@ -493,6 +494,9 @@ const AnimatedRoutes = () => {
           {/* Legacy duplicate rental path → canonical city rental page */}
           <Route path="/houston/food-trucks-for-rent" element={<Navigate to="/rent/food-trucks/houston-tx" replace />} />
           <Route path="/buy/:categorySlug/:cityStateSlug" element={<PageTransition><CategoryCityPage mode="buy" /></PageTransition>} />
+
+          {/* Food truck prices data hub — evergreen buyer research asset */}
+          <Route path="/food-truck-prices" element={<PageTransition><FoodTruckPrices /></PageTransition>} />
 
           {/* SEO category index pages — crawlable listing grids */}
           {CATEGORY_INDEX_CONFIGS.map((cfg) => (
