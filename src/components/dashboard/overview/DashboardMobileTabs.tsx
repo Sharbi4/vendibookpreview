@@ -58,10 +58,10 @@ const DashboardMobileTabs = ({ mode }: Props) => {
               key={p.label}
               to={p.href}
               className={cn(
-                'shrink-0 px-3.5 py-1.5 rounded-full text-[13px] font-medium border transition-all',
+                'shrink-0 px-5 py-2.5 rounded-full text-[13px] font-semibold border transition-all',
                 active
-                  ? 'bg-primary text-primary-foreground border-primary shadow-[0_0_16px_-4px_rgba(255,81,36,0.6)]'
-                  : 'border-white/10 text-[rgb(var(--dash-text-2))] bg-white/[0.03] hover:text-[rgb(var(--dash-text-1))]',
+                  ? 'bg-cta-primary text-white border-transparent shadow-cta-primary'
+                  : 'border-white/[0.12] text-[rgb(var(--dash-text-2))] bg-white/[0.03] hover:text-[rgb(var(--dash-text-1))] hover:border-white/20',
               )}
             >
               {p.label}
