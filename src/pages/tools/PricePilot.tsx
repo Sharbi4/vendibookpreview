@@ -124,9 +124,9 @@ const AnalysisState: React.FC = () => {
   }, [reduce]);
 
   return (
-    <SectionCard className="rounded-[28px] py-12 md:py-16">
+    <SectionCard className="rounded-[24px] py-12 md:py-16">
       <div className="mx-auto max-w-sm">
-        <p className="text-center font-display text-xl font-semibold text-foreground">Building your pricing report</p>
+        <p className="text-center text-xl font-bold tracking-tight text-foreground">Building your pricing report</p>
         <p className="mt-1.5 text-center text-[13px] text-muted-foreground">Weighing your equipment against real market evidence.</p>
 
         <div className="mt-8 space-y-3">
@@ -144,8 +144,8 @@ const AnalysisState: React.FC = () => {
                 <span className={cn(
                   'grid h-8 w-8 shrink-0 place-items-center rounded-full ring-1 transition-colors',
                   done ? 'bg-emerald-500/10 text-emerald-600 ring-emerald-600/25'
-                    : current ? 'bg-orange-500/10 text-orange-600 ring-orange-600/30'
-                    : 'bg-black/[0.03] text-muted-foreground ring-black/10',
+                    : current ? 'bg-primary/10 text-primary ring-primary/30'
+                    : 'bg-muted text-muted-foreground ring-border',
                 )}>
                   {done ? <Check className="h-4 w-4" /> : <f.icon className="h-4 w-4" />}
                 </span>
@@ -159,9 +159,9 @@ const AnalysisState: React.FC = () => {
 
         {/* Drawing range line */}
         <div className="mt-9">
-          <div className="relative h-1.5 overflow-hidden rounded-full bg-black/[0.06]">
+          <div className="relative h-1.5 overflow-hidden rounded-full bg-muted">
             <motion.div
-              className="absolute inset-y-0 left-0 rounded-full bg-orange-500/60"
+              className="absolute inset-y-0 left-0 rounded-full bg-primary/60"
               initial={reduce ? false : { width: '6%' }}
               animate={{ width: reduce ? '100%' : ['12%', '58%', '86%', '94%'] }}
               transition={reduce ? { duration: 0 } : { duration: 6.5, ease: 'easeOut' }}
@@ -314,8 +314,8 @@ export default function PricePilot() {
                 {/* ─── APPRAISAL ENTRY POINT — the only access wall ─── */}
                 <section id="start" className="container max-w-3xl scroll-mt-24 px-4 pt-20 md:pt-28">
                   <div className="mx-auto max-w-xl text-center">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Your turn</p>
-                    <h2 className="mt-3 font-display text-3xl font-semibold leading-tight text-foreground md:text-4xl">
+                    <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">Your turn</p>
+                    <h2 className="mt-3 text-3xl md:text-4xl font-bold tracking-tight leading-tight text-foreground">
                       Start your PricePilot appraisal
                     </h2>
                     <p className="mt-4 text-[15px] leading-relaxed text-muted-foreground">
@@ -328,7 +328,7 @@ export default function PricePilot() {
                       {/* Resolving access */}
                       {(authLoading || accessLoading) && (
                         <motion.div key="resolving" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                          className="flex items-center justify-center rounded-[28px] bg-sale-card py-16">
+                          className="flex items-center justify-center rounded-[24px] bg-sale-card py-16">
                           <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
                         </motion.div>
                       )}
@@ -336,16 +336,16 @@ export default function PricePilot() {
                       {/* Signed out — polished inline sign-in */}
                       {!authLoading && !accessLoading && !user && (
                         <motion.div key="signed-out" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-                          className="rounded-[28px] bg-sale-card px-6 py-12 text-center md:px-12">
-                          <h3 className="font-display text-2xl font-semibold text-foreground">Sign in to begin</h3>
+                          className="rounded-[24px] bg-sale-card px-6 py-12 text-center md:px-12">
+                          <h3 className="text-2xl font-bold tracking-tight text-foreground">Sign in to begin</h3>
                           <p className="mx-auto mt-3 max-w-sm text-sm leading-relaxed text-muted-foreground">
                             Your appraisal saves to your account so you can revisit it whenever you're ready to list.
                           </p>
-                          <Button size="lg" className="mt-6 bg-orange-500 text-white hover:bg-orange-600" asChild>
+                          <Button variant="cta" size="cta" className="mt-6" asChild>
                             <Link to={signInHref}>Sign in to continue <ArrowRight className="ml-1.5 h-4 w-4" /></Link>
                           </Button>
                           <p className="mt-4 flex items-center justify-center gap-1.5 text-[12px] text-muted-foreground">
-                            <BadgeCheck className="h-3.5 w-3.5 shrink-0 text-orange-600" />
+                            <BadgeCheck className="h-3.5 w-3.5 shrink-0 text-primary" />
                             PricePilot is included with Vendibook Pro
                           </p>
                         </motion.div>
@@ -354,15 +354,15 @@ export default function PricePilot() {
                       {/* Signed in, not entitled — polished Pro access state */}
                       {!authLoading && !accessLoading && user && !unlocked && (
                         <motion.div key="locked" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-                          className="rounded-[28px] bg-sale-card px-6 py-12 text-center md:px-12">
-                          <h3 className="font-display text-2xl font-semibold text-foreground">
+                          className="rounded-[24px] bg-sale-card px-6 py-12 text-center md:px-12">
+                          <h3 className="text-2xl font-bold tracking-tight text-foreground">
                             PricePilot is included with Vendibook Pro
                           </h3>
                           <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-muted-foreground">
                             One membership unlocks every appraisal — sale ranges, rental benchmarks, and the evidence behind
                             both — along with the rest of the Pro seller toolkit.
                           </p>
-                          <Button size="lg" className="mt-6 bg-orange-500 text-white hover:bg-orange-600" asChild>
+                          <Button variant="cta" size="cta" className="mt-6" asChild>
                             <Link to="/pricing">Explore Vendibook Pro <ArrowRight className="ml-1.5 h-4 w-4" /></Link>
                           </Button>
                           <p className="mt-4 text-[12px] text-muted-foreground">
@@ -377,22 +377,22 @@ export default function PricePilot() {
                           {loading ? (
                             <AnalysisState />
                           ) : error ? (
-                            <SectionCard className="rounded-[28px] py-10 text-center">
+                            <SectionCard className="rounded-[24px] py-10 text-center">
                               <span className="mx-auto grid h-12 w-12 place-items-center rounded-full bg-amber-500/10 ring-1 ring-amber-600/25">
                                 <AlertCircle className="h-5 w-5 text-amber-600" />
                               </span>
-                              <h3 className="mt-4 font-display text-xl font-semibold text-foreground">We couldn't finish that appraisal</h3>
+                              <h3 className="mt-4 text-xl font-bold tracking-tight text-foreground">We couldn't finish that appraisal</h3>
                               <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-muted-foreground">{error}</p>
                               <div className="mt-6 flex flex-wrap justify-center gap-3">
-                                <Button className="bg-orange-500 text-white hover:bg-orange-600" onClick={() => void runAppraisal()}>
+                                <Button variant="cta" onClick={() => void runAppraisal()}>
                                   <RotateCcw className="mr-1.5 h-4 w-4" /> Try again
                                 </Button>
-                                <Button variant="outline" onClick={() => setError(null)}>Review my answers</Button>
+                                <Button variant="cta-outline" onClick={() => setError(null)}>Review my answers</Button>
                               </div>
                               <p className="mt-4 text-[11px] text-muted-foreground">Everything you entered is still here — nothing was lost.</p>
                             </SectionCard>
                           ) : (
-                            <SectionCard className="rounded-[28px] p-5 md:p-8">
+                            <SectionCard className="rounded-[24px] p-5 md:p-8">
                               <div onKeyDown={onPanelKeyDown}>
                                 {/* Progress */}
                                 <div className="mb-6">
@@ -400,9 +400,9 @@ export default function PricePilot() {
                                     <span>{STEP_LABELS[step]}</span>
                                     <span className="tabular-nums">Step {step + 1} of {STEP_LABELS.length}</span>
                                   </div>
-                                  <div className="mt-2 h-1 overflow-hidden rounded-full bg-black/[0.06]">
+                                  <div className="mt-2 h-1 overflow-hidden rounded-full bg-muted">
                                     <motion.div
-                                      className="h-full rounded-full bg-orange-500"
+                                      className="h-full rounded-full bg-primary"
                                       initial={false}
                                       animate={{ width: `${((step + 1) / STEP_LABELS.length) * 100}%` }}
                                       transition={reduce ? { duration: 0 } : { duration: 0.4, ease: 'easeOut' }}
@@ -414,15 +414,15 @@ export default function PricePilot() {
                                   {/* 1 — What are you pricing */}
                                   {step === 0 && (
                                     <motion.div key="s0" {...stepMotion} transition={{ duration: 0.25 }}>
-                                      <h3 className="font-display text-xl md:text-2xl font-semibold text-foreground">What are you pricing?</h3>
+                                      <h3 className="text-xl md:text-2xl font-bold tracking-tight text-foreground">What are you pricing?</h3>
                                       <p className="mt-1 text-sm text-muted-foreground">Choose the closest match — it anchors the market evidence.</p>
                                       <div className="mt-5 grid grid-cols-1 gap-2.5 sm:grid-cols-2">
                                         {CATEGORIES.map((c) => (
                                           <button key={c.value} type="button" onClick={() => setAssetCategory(c.value)}
                                             aria-pressed={assetCategory === c.value}
-                                            className={cn('flex items-start gap-3 rounded-xl p-4 text-left ring-1 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500',
-                                              assetCategory === c.value ? 'bg-orange-500/[0.07] ring-orange-600/40' : 'bg-black/[0.02] ring-black/10 hover:ring-black/20')}>
-                                            <Truck className={cn('mt-0.5 h-4 w-4 shrink-0', assetCategory === c.value ? 'text-orange-600' : 'text-muted-foreground')} />
+                                            className={cn('flex items-start gap-3 rounded-xl p-4 text-left ring-1 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
+                                              assetCategory === c.value ? 'bg-primary/[0.07] ring-primary/50' : 'bg-muted/60 ring-border hover:ring-foreground/25')}>
+                                            <Truck className={cn('mt-0.5 h-4 w-4 shrink-0', assetCategory === c.value ? 'text-primary' : 'text-muted-foreground')} />
                                             <span>
                                               <span className="block text-sm font-semibold text-foreground">{c.label}</span>
                                               <span className="block text-[11px] text-muted-foreground">{c.desc}</span>
@@ -436,7 +436,7 @@ export default function PricePilot() {
                                   {/* 2 — Sale or rent */}
                                   {step === 1 && (
                                     <motion.div key="s1" {...stepMotion} transition={{ duration: 0.25 }}>
-                                      <h3 className="font-display text-xl md:text-2xl font-semibold text-foreground">Selling it, or renting it out?</h3>
+                                      <h3 className="text-xl md:text-2xl font-bold tracking-tight text-foreground">Selling it, or renting it out?</h3>
                                       <p className="mt-1 text-sm text-muted-foreground">Sale pricing and rental rates come from different evidence.</p>
                                       <div className="mt-5 grid grid-cols-1 gap-2.5 sm:grid-cols-2">
                                         {([
@@ -445,9 +445,9 @@ export default function PricePilot() {
                                         ] as const).map((m) => (
                                           <button key={m.value} type="button" onClick={() => setMode(m.value)}
                                             aria-pressed={mode === m.value}
-                                            className={cn('rounded-xl p-5 text-left ring-1 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500',
-                                              mode === m.value ? 'bg-orange-500/[0.07] ring-orange-600/40' : 'bg-black/[0.02] ring-black/10 hover:ring-black/20')}>
-                                            <m.icon className={cn('h-5 w-5', mode === m.value ? 'text-orange-600' : 'text-muted-foreground')} />
+                                            className={cn('rounded-xl p-5 text-left ring-1 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
+                                              mode === m.value ? 'bg-primary/[0.07] ring-primary/50' : 'bg-muted/60 ring-border hover:ring-foreground/25')}>
+                                            <m.icon className={cn('h-5 w-5', mode === m.value ? 'text-primary' : 'text-muted-foreground')} />
                                             <p className="mt-2.5 text-sm font-semibold text-foreground">{m.label}</p>
                                             <p className="text-[11px] text-muted-foreground">{m.desc}</p>
                                           </button>
@@ -460,13 +460,13 @@ export default function PricePilot() {
                                   {step === 2 && (
                                     <motion.div key="s2" {...stepMotion} transition={{ duration: 0.25 }} className="space-y-4">
                                       <div>
-                                        <h3 className="font-display text-xl md:text-2xl font-semibold text-foreground">Where is it?</h3>
+                                        <h3 className="text-xl md:text-2xl font-bold tracking-tight text-foreground">Where is it?</h3>
                                         <p className="mt-1 text-sm text-muted-foreground">Prices move by market. A state or ZIP anchors your report locally first.</p>
                                       </div>
                                       <div className="grid grid-cols-2 gap-3">
                                         <div className="col-span-2 sm:col-span-1">
                                           <Label htmlFor="pp-city">City</Label>
-                                          <Input id="pp-city" placeholder="Austin" value={city} onChange={(e) => setCity(e.target.value)} className="mt-1 text-base" />
+                                          <Input id="pp-city" placeholder="Austin" value={city} onChange={(e) => setCity(e.target.value)} className="mt-1 rounded-xl text-base" />
                                         </div>
                                         <div>
                                           <Label htmlFor="pp-state">State</Label>
@@ -474,17 +474,17 @@ export default function PricePilot() {
                                             <MapPin className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                                             <Input id="pp-state" placeholder="TX" maxLength={2} value={state}
                                               onChange={(e) => setState(e.target.value.toUpperCase().replace(/[^A-Z]/g, ''))}
-                                              className="pl-9 text-base uppercase" />
+                                              className="h-12 rounded-xl pl-9 text-base uppercase" />
                                           </div>
                                         </div>
                                       </div>
                                       <div className="flex items-center gap-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                                        <span className="h-px flex-1 bg-black/[0.08]" />or<span className="h-px flex-1 bg-black/[0.08]" />
+                                        <span className="h-px flex-1 bg-border" />or<span className="h-px flex-1 bg-border" />
                                       </div>
                                       <div>
                                         <Label htmlFor="pp-zip">ZIP code</Label>
                                         <Input id="pp-zip" inputMode="numeric" placeholder="78704" maxLength={5} value={zip}
-                                          onChange={(e) => setZip(e.target.value.replace(/\D/g, '').slice(0, 5))} className="mt-1 text-base" />
+                                          onChange={(e) => setZip(e.target.value.replace(/\D/g, '').slice(0, 5))} className="mt-1 rounded-xl text-base" />
                                       </div>
                                       {!canContinue && <p className="text-[12px] text-amber-700">Enter a two-letter state or a ZIP code to continue.</p>}
                                     </motion.div>
@@ -494,26 +494,26 @@ export default function PricePilot() {
                                   {step === 3 && (
                                     <motion.div key="s3" {...stepMotion} transition={{ duration: 0.25 }} className="space-y-4">
                                       <div>
-                                        <h3 className="font-display text-xl md:text-2xl font-semibold text-foreground">Year and approximate size</h3>
+                                        <h3 className="text-xl md:text-2xl font-bold tracking-tight text-foreground">Year and approximate size</h3>
                                         <p className="mt-1 text-sm text-muted-foreground">Both optional — but each one tightens your range.</p>
                                       </div>
                                       <div className="grid grid-cols-2 gap-3">
                                         <div>
                                           <Label htmlFor="pp-year">Year</Label>
                                           <Input id="pp-year" inputMode="numeric" placeholder="2019" value={year}
-                                            onChange={(e) => setYear(e.target.value.replace(/\D/g, '').slice(0, 4))} className="mt-1 text-base" />
+                                            onChange={(e) => setYear(e.target.value.replace(/\D/g, '').slice(0, 4))} className="mt-1 rounded-xl text-base" />
                                         </div>
                                         <div>
                                           <Label htmlFor="pp-len">Length (ft)</Label>
                                           <Input id="pp-len" inputMode="decimal" placeholder="18" value={lengthFt}
-                                            onChange={(e) => setLengthFt(e.target.value.replace(/[^\d.]/g, '').slice(0, 5))} className="mt-1 text-base" />
+                                            onChange={(e) => setLengthFt(e.target.value.replace(/[^\d.]/g, '').slice(0, 5))} className="mt-1 rounded-xl text-base" />
                                         </div>
                                       </div>
                                       {mode === 'sale' && assetCategory === 'food_truck' && (
                                         <div>
                                           <Label htmlFor="pp-miles">Mileage</Label>
                                           <Input id="pp-miles" inputMode="numeric" placeholder="85,000" value={mileage}
-                                            onChange={(e) => setMileage(e.target.value.replace(/\D/g, ''))} className="mt-1 text-base" />
+                                            onChange={(e) => setMileage(e.target.value.replace(/\D/g, ''))} className="mt-1 rounded-xl text-base" />
                                         </div>
                                       )}
                                     </motion.div>
@@ -523,7 +523,7 @@ export default function PricePilot() {
                                   {step === 4 && (
                                     <motion.div key="s4" {...stepMotion} transition={{ duration: 0.25 }} className="space-y-5">
                                       <div>
-                                        <h3 className="font-display text-xl md:text-2xl font-semibold text-foreground">How's it holding up?</h3>
+                                        <h3 className="text-xl md:text-2xl font-bold tracking-tight text-foreground">How's it holding up?</h3>
                                         <p className="mt-1 text-sm text-muted-foreground">Honest answers price better than optimistic ones.</p>
                                       </div>
                                       <div>
@@ -532,9 +532,9 @@ export default function PricePilot() {
                                           {CONDITIONS.map((c) => (
                                             <button key={c.value} type="button" onClick={() => setCondition(c.value)}
                                               aria-pressed={condition === c.value}
-                                              className={cn('rounded-xl px-3 py-3 text-left ring-1 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500',
-                                                condition === c.value ? 'bg-orange-500/[0.08] ring-orange-600/40' : 'bg-black/[0.02] ring-black/10 hover:ring-black/20')}>
-                                              <span className={cn('block text-sm font-semibold', condition === c.value ? 'text-orange-700' : 'text-foreground')}>{c.label}</span>
+                                              className={cn('rounded-xl px-3 py-3 text-left ring-1 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
+                                                condition === c.value ? 'bg-primary/[0.08] ring-primary/50' : 'bg-muted/60 ring-border hover:ring-foreground/25')}>
+                                              <span className={cn('block text-sm font-semibold', condition === c.value ? 'text-primary' : 'text-foreground')}>{c.label}</span>
                                               <span className="block text-[10px] text-muted-foreground">{c.desc}</span>
                                             </button>
                                           ))}
@@ -546,8 +546,8 @@ export default function PricePilot() {
                                           {OPERATIONAL.map((o) => (
                                             <button key={o.value} type="button" onClick={() => setOperationalStatus(o.value)}
                                               aria-pressed={operationalStatus === o.value}
-                                              className={cn('rounded-xl px-3 py-2.5 text-left text-xs font-semibold ring-1 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500',
-                                                operationalStatus === o.value ? 'bg-orange-500/[0.08] text-orange-700 ring-orange-600/40' : 'bg-black/[0.02] text-muted-foreground ring-black/10 hover:ring-black/20')}>
+                                              className={cn('rounded-xl px-3 py-2.5 text-left text-xs font-semibold ring-1 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
+                                                operationalStatus === o.value ? 'bg-primary/[0.08] text-primary ring-primary/50' : 'bg-muted/60 text-muted-foreground ring-border hover:ring-foreground/25')}>
                                               {o.label}
                                             </button>
                                           ))}
@@ -560,7 +560,7 @@ export default function PricePilot() {
                                   {step === 5 && (
                                     <motion.div key="s5" {...stepMotion} transition={{ duration: 0.25 }} className="space-y-5">
                                       <div>
-                                        <h3 className="font-display text-xl md:text-2xl font-semibold text-foreground">Equipment & anything else</h3>
+                                        <h3 className="text-xl md:text-2xl font-bold tracking-tight text-foreground">Equipment & anything else</h3>
                                         <p className="mt-1 text-sm text-muted-foreground">Tap what's on board. Everything here is optional.</p>
                                       </div>
                                       <div className="flex flex-wrap gap-1.5">
@@ -568,8 +568,8 @@ export default function PricePilot() {
                                           <button key={f.key} type="button"
                                             onClick={() => setFeatures((p) => ({ ...p, [f.key]: !p[f.key] }))}
                                             aria-pressed={!!features[f.key]}
-                                            className={cn('rounded-full px-3.5 py-2 text-xs font-medium ring-1 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500',
-                                              features[f.key] ? 'bg-orange-500/[0.08] text-orange-700 ring-orange-600/40' : 'bg-black/[0.02] text-muted-foreground ring-black/10 hover:ring-black/20')}>
+                                            className={cn('rounded-full px-3.5 py-2 text-xs font-medium ring-1 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
+                                              features[f.key] ? 'bg-primary/[0.08] text-primary ring-primary/50' : 'bg-muted/60 text-muted-foreground ring-border hover:ring-foreground/25')}>
                                             {f.label}
                                           </button>
                                         ))}
@@ -578,7 +578,7 @@ export default function PricePilot() {
                                         <Label htmlFor="pp-notes">Anything worth noting <span className="font-normal text-muted-foreground">(optional)</span></Label>
                                         <Textarea id="pp-notes" rows={3} value={notes} onChange={(e) => setNotes(e.target.value)}
                                           placeholder="New tires, rebuilt engine, fresh wrap, a known issue a buyer would find on inspection…"
-                                          className="mt-1 text-base" />
+                                          className="mt-1 rounded-xl text-base" />
                                         <p className="mt-1 text-[11px] text-muted-foreground">One line is plenty. Skip it if nothing comes to mind.</p>
                                       </div>
                                     </motion.div>
@@ -586,16 +586,16 @@ export default function PricePilot() {
                                 </AnimatePresence>
 
                                 {/* Nav */}
-                                <div className="mt-7 flex items-center justify-between border-t border-black/[0.06] pt-5">
+                                <div className="mt-7 flex items-center justify-between border-t border-border pt-5">
                                   <Button variant="ghost" onClick={() => setStep((s) => Math.max(0, s - 1))} disabled={step === 0}>
                                     <ArrowLeft className="mr-1.5 h-4 w-4" /> Back
                                   </Button>
                                   {step < lastStep ? (
-                                    <Button className="bg-orange-500 text-white hover:bg-orange-600" onClick={goNext} disabled={!canContinue}>
+                                    <Button variant="cta" onClick={goNext} disabled={!canContinue}>
                                       Continue <ArrowRight className="ml-1.5 h-4 w-4" />
                                     </Button>
                                   ) : (
-                                    <Button size="lg" className="bg-orange-500 text-white hover:bg-orange-600" onClick={goNext} disabled={!canContinue}>
+                                    <Button variant="cta" size="cta" onClick={goNext} disabled={!canContinue}>
                                       Get my pricing <ArrowRight className="ml-1.5 h-4 w-4" />
                                     </Button>
                                   )}
@@ -611,7 +611,7 @@ export default function PricePilot() {
 
                 {/* ─── FAQ ─── */}
                 <section className="container max-w-2xl px-4 pt-20 md:pt-28">
-                  <h2 className="mb-4 text-center font-display text-2xl font-semibold text-foreground md:text-3xl">Questions, answered</h2>
+                  <h2 className="mb-4 text-center text-2xl font-bold tracking-tight text-foreground md:text-3xl">Questions, answered</h2>
                   <Accordion type="single" collapsible className="w-full">
                     <AccordionItem value="q1">
                       <AccordionTrigger>How does PricePilot set the range?</AccordionTrigger>
