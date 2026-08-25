@@ -140,7 +140,7 @@ const CategoryIndex = ({ config }: { config: CategoryIndexConfig }) => {
 
       // Tier 2: state fallback (only when city is set AND primary is thin)
       if (config.city && primaryRows.length < MIN_TIER) {
-        let q2 = baseQuery(config.category, config.mode, 24);
+        let q2 = baseQuery(categories, config.mode, 24);
         q2 = q2.or(`state.eq.${config.city.stateCode},state.ilike.${config.city.stateCode}`);
         const { data: d2 } = await q2;
         const stateRows = ((d2 as ListingRow[]) || []).filter((r) => !excludeIds.has(r.id));
@@ -153,7 +153,7 @@ const CategoryIndex = ({ config }: { config: CategoryIndexConfig }) => {
       const tier2Count = config.city && primaryRows.length < MIN_TIER ? -1 : 0;
       const enoughSoFar = primaryRows.length + (tier2Count === -1 ? MIN_TIER : 0);
       if (enoughSoFar < MIN_TIER) {
-        const q3 = baseQuery(config.category, config.mode, 24);
+        const q3 = baseQuery(categories, config.mode, 24);
         const { data: d3 } = await q3;
         const natRows = ((d3 as ListingRow[]) || []).filter((r) => !excludeIds.has(r.id));
         if (cancelled) return;
@@ -163,7 +163,7 @@ const CategoryIndex = ({ config }: { config: CategoryIndexConfig }) => {
       setLoading(false);
     })();
     return () => { cancelled = true; };
-  }, [config.category, config.mode, config.city?.name, config.state?.code]);
+  }, [config.category, config.mode, config.city?.name, config.state?.code, categories.join(',')]);
 
   const canonical = config.path;
   const totalListings = primary.length + stateFallback.length + nationwideFallback.length;
