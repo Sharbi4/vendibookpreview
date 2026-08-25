@@ -95,6 +95,28 @@ export const CategoryPillStrip = ({
 
         <div className="w-px bg-white/10 mx-2 my-2 shrink-0" />
 
+        {onSpecialtySelect && SPECIALTY_PILLS.map(({ key, vehicle, icon: Icon }) => {
+          const active = activeSpecialty?.key === key && activeSpecialty?.vehicle === vehicle;
+          return (
+            <button
+              key={`${key}-${vehicle}`}
+              onClick={() => onSpecialtySelect(key, vehicle)}
+              className={cn(
+                'flex items-center gap-1.5 h-9 px-3.5 rounded-full border text-[12px] font-medium whitespace-nowrap shrink-0 transition-all duration-200 ease-out self-center',
+                active
+                  ? 'border-primary/50 bg-primary/12 text-foreground'
+                  : 'border-white/12 bg-white/[0.03] text-muted-foreground hover:text-foreground hover:bg-white/[0.07]'
+              )}
+              aria-pressed={active}
+            >
+              <Icon className={cn('h-4 w-4', active && 'text-primary')} />
+              <span>{SPECIALTY_VEHICLE_LABELS[key][vehicle].replace('Browse ', '')}</span>
+            </button>
+          );
+        })}
+
+        <div className="w-px bg-white/10 mx-2 my-2 shrink-0" />
+
         <button
           onClick={() => onInstantBookToggle(!instantBookOnly)}
           className={cn(
