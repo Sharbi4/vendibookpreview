@@ -617,9 +617,359 @@ const mobileKitchen: CategoryIndexConfig = {
   },
 };
 
+// ---------------------------------------------------------------------------
+// Specialty vehicle landing pages (coffee & ice cream × truck/trailer).
+// One canonical page per intent, child of the dual-category hub, with the
+// live specialty-filtered inventory grid acting as the curated summary.
+// ---------------------------------------------------------------------------
+
+const coffeeTruck: CategoryIndexConfig = {
+  path: SPECIALTY_DEFS.coffee.truckPath!,
+  category: 'food_truck',
+  mode: 'sale',
+  specialty: 'coffee',
+  breadcrumbParent: { name: 'Coffee Trucks & Trailers', href: SPECIALTY_DEFS.coffee.hubPath },
+  searchHrefOverride: `/search?q=${encodeURIComponent(SPECIALTY_DEFS.coffee.searchQuery)}&category=food_truck&mode=sale`,
+  h1: 'Coffee Trucks for Sale',
+  title: 'Coffee Trucks for Sale | Vendibook',
+  description:
+    'Shop coffee trucks for sale nationwide — owner-listed mobile coffee trucks with espresso equipment, real asking prices, direct seller messaging, and financing options on Vendibook.',
+  intro:
+    'Browse self-contained coffee trucks for sale from owners across the US — drive-away mobile coffee businesses with the espresso machine, power setup, and workflow already built in. Every listing shows real photos, the equipment the seller has included, and a transparent asking price, and you can message the owner directly to verify condition and history before you travel.',
+  clarification:
+    'These are equipment and business-asset sales: you buy the truck and operate your own coffee business. Want a trailer you can tow instead? See the coffee trailers page, or compare everything together on the coffee trucks & trailers hub.',
+  sections: [
+    {
+      heading: 'Coffee truck inventory on Vendibook',
+      paragraphs: [
+        'The listings above are the live, current set of coffee trucks for sale on the marketplace — inventory changes as owners list and sell, so check back or save your search. Typical builds range from compact step-van espresso setups to full-size trucks with dual-group machines, generators, and refrigeration for milk and syrups.',
+        'Because sellers list their own equipment, each truck is different: open a listing to see exactly what is included, then message the owner for maintenance records, the espresso machine\'s model and service history, and extra photos.',
+      ],
+      links: [{ href: SPECIALTY_DEFS.coffee.trailerPath!, label: 'Compare coffee trailers' }],
+    },
+    {
+      heading: 'What to check before buying a coffee truck',
+      paragraphs: [
+        'Start with power and water: confirm the electrical service or generator can carry the espresso machine, grinder, and refrigeration simultaneously, and check fresh/grey tank capacity, the pump, and the water heater. Count sinks — many health departments expect dedicated hand-wash and ware-washing setups — and test the service-window workflow for a one-person rush.',
+        'Then evaluate the vehicle itself: engine, mileage, transmission, tires, and bodywork are part of the asset. A truck that cannot pass inspection is not a bargain at any price.',
+      ],
+      links: [
+        { href: '/tools/startup-guide', label: 'Coffee business startup guide' },
+        { href: '/tools/permitpath', label: 'Permit & licensing checklist' },
+      ],
+    },
+    {
+      heading: 'Financing a coffee truck',
+      paragraphs: [
+        'Coffee trucks are business assets, and many buyers spread the cost with equipment financing. Vendibook\'s financing page connects qualified buyers with financing options — applications, approval, rates, and terms are handled by the financing provider, not by Vendibook.',
+      ],
+      links: [{ href: '/financing', label: 'Explore financing options' }],
+    },
+  ],
+  faqs: [
+    {
+      q: 'Where can I buy a coffee truck?',
+      a: 'Right here — Vendibook lists owner-listed coffee trucks for sale nationwide. Each listing includes photos, equipment details, price, and location, and you can message the seller directly.',
+    },
+    {
+      q: 'Can I buy a used coffee truck?',
+      a: 'Yes. Most coffee trucks on Vendibook are used, owner-listed units. Sellers describe condition and included equipment on each listing, and you can request maintenance records or additional photos through direct messaging.',
+    },
+    {
+      q: 'Can a coffee truck be financed?',
+      a: 'Often, yes — coffee trucks are typically eligible for equipment financing as business assets. Qualified buyers can explore options through Vendibook\'s financing page; approval, rates, and terms are set by the financing provider.',
+    },
+    {
+      q: 'What equipment should a coffee truck include?',
+      a: 'Look for the espresso machine and its power requirements, grinder, refrigeration, water tanks and pump, sink configuration, generator or shore-power setup, service windows, and storage. Each listing on this page shows what the seller has included.',
+    },
+    {
+      q: 'Is a coffee truck or coffee trailer better for a startup?',
+      a: 'Trucks offer self-contained daily mobility — no tow vehicle needed. Trailers usually cost less upfront and suit semi-permanent spots. Compare both: the coffee trailers page lists the towable units, and the hub shows everything together.',
+    },
+    {
+      q: 'Can I sell my coffee truck on Vendibook?',
+      a: 'Yes — listing is free. Add photos, equipment, and your asking price, and buyers searching specifically for coffee trucks can find and message you directly.',
+    },
+  ],
+  related: [
+    { href: SPECIALTY_DEFS.coffee.hubPath, label: 'All coffee trucks & trailers' },
+    { href: SPECIALTY_DEFS.coffee.trailerPath!, label: 'Coffee trailers for sale' },
+    { href: '/food-trucks-for-sale', label: 'All food trucks for sale' },
+    ...siblingLinks('coffee').slice(0, 3),
+    { href: '/financing', label: 'Equipment financing' },
+    { href: '/sell-my-food-truck', label: 'Sell my coffee truck' },
+  ],
+  sellerCta: {
+    heading: 'Selling a coffee truck?',
+    body: 'List your coffee truck free on Vendibook — photos, espresso equipment, and your asking price in front of buyers searching specifically for coffee setups.',
+    ctaLabel: 'List My Coffee Truck',
+    ctaHref: '/sell-my-food-truck',
+  },
+};
+
+const coffeeTrailer: CategoryIndexConfig = {
+  path: SPECIALTY_DEFS.coffee.trailerPath!,
+  category: 'food_trailer',
+  mode: 'sale',
+  specialty: 'coffee',
+  breadcrumbParent: { name: 'Coffee Trucks & Trailers', href: SPECIALTY_DEFS.coffee.hubPath },
+  searchHrefOverride: `/search?q=${encodeURIComponent(SPECIALTY_DEFS.coffee.searchQuery)}&category=food_trailer&mode=sale`,
+  h1: 'Coffee Trailers for Sale',
+  title: 'Coffee Trailers for Sale | Vendibook',
+  description:
+    'Shop coffee trailers for sale nationwide — owner-listed mobile coffee trailers and espresso trailers with equipment details, real prices, and financing options on Vendibook.',
+  intro:
+    'Browse towable coffee trailers for sale from owners across the US — from compact espresso trailers to full mobile coffee bars you can park at a semi-permanent spot. Every listing shows real photos, the equipment the seller has included, and a transparent asking price, with direct messaging to the owner so you can verify utilities and condition before you buy.',
+  clarification:
+    'These are equipment and business-asset sales: you buy the trailer and operate your own coffee business, towing it with a vehicle you already own. Prefer a drive-away unit? See the coffee trucks page, or compare everything on the coffee trucks & trailers hub.',
+  sections: [
+    {
+      heading: 'Coffee trailer inventory on Vendibook',
+      paragraphs: [
+        'The listings above are the live, current set of coffee trailers for sale on the marketplace — inventory changes as owners list and sell, so check back or save your search. Typical builds include compact single-axle espresso trailers, larger dual-axle units with full water systems, and cart-style setups for low-overhead startups.',
+        'Each seller lists their own equipment, so open a listing to see exactly what is included, then message the owner for the espresso machine\'s model and service history, tank sizes, and extra photos.',
+      ],
+      links: [{ href: SPECIALTY_DEFS.coffee.truckPath!, label: 'Compare coffee trucks' }],
+    },
+    {
+      heading: 'What to check before buying a coffee trailer',
+      paragraphs: [
+        'Utilities decide whether a coffee trailer works: confirm the electrical service and generator or shore-power setup can run the espresso machine, grinder, and refrigeration at once; check fresh and grey water capacity, the pump, and the water heater; and count sinks against your local health department\'s hand-wash and ware-washing expectations.',
+        'Then inspect the trailer itself — axles, tires, brakes, coupler, and bodywork — and confirm your tow vehicle\'s rated capacity against the trailer\'s loaded weight before you commit.',
+      ],
+      links: [
+        { href: '/tools/startup-guide', label: 'Coffee business startup guide' },
+        { href: '/tools/permitpath', label: 'Permit & licensing checklist' },
+      ],
+    },
+    {
+      heading: 'Financing a coffee trailer',
+      paragraphs: [
+        'Coffee trailers are business assets, and many buyers spread the cost with equipment financing. Vendibook\'s financing page connects qualified buyers with financing options — applications, approval, rates, and terms are handled by the financing provider, not by Vendibook.',
+      ],
+      links: [{ href: '/financing', label: 'Explore financing options' }],
+    },
+  ],
+  faqs: [
+    {
+      q: 'Where can I buy a coffee trailer?',
+      a: 'Right here — Vendibook is a marketplace for owner-listed coffee trailers for sale nationwide. Each listing includes photos, equipment details, price, and location, and you can message the seller directly.',
+    },
+    {
+      q: 'How much does a coffee trailer cost?',
+      a: 'It varies with size, equipment, and condition — a compact espresso trailer and a full dual-axle coffee bar are very different assets. The listings on this page show each seller\'s current asking price so you can compare real units side by side.',
+    },
+    {
+      q: 'Can a coffee trailer be financed?',
+      a: 'Often, yes — coffee trailers are typically eligible for equipment financing as business assets. Qualified buyers can explore options through Vendibook\'s financing page; approval, rates, and terms are set by the financing provider.',
+    },
+    {
+      q: 'What equipment should a coffee trailer include?',
+      a: 'Focus on the espresso machine and its power requirements, electrical capacity, water tanks and pump, sink configuration, refrigeration, generator or shore-power setup, service windows, and storage. Listings on this page show what each seller includes.',
+    },
+    {
+      q: 'Do I need a special vehicle to tow a coffee trailer?',
+      a: 'You need a vehicle rated for the trailer\'s loaded weight with the correct hitch and brake connections. Check the trailer\'s axle rating and tongue weight on the listing, and confirm your tow vehicle\'s capacity before buying.',
+    },
+    {
+      q: 'Can I sell my coffee trailer on Vendibook?',
+      a: 'Yes — listing is free. Add photos, equipment, and your asking price, and buyers looking specifically for coffee trailers can find and message you directly.',
+    },
+  ],
+  related: [
+    { href: SPECIALTY_DEFS.coffee.hubPath, label: 'All coffee trucks & trailers' },
+    { href: SPECIALTY_DEFS.coffee.truckPath!, label: 'Coffee trucks for sale' },
+    { href: '/food-trailers-for-sale', label: 'All food trailers for sale' },
+    ...siblingLinks('coffee').slice(0, 3),
+    { href: '/financing', label: 'Equipment financing' },
+    { href: '/sell-my-food-truck', label: 'Sell my coffee trailer' },
+  ],
+  sellerCta: {
+    heading: 'Selling a coffee trailer?',
+    body: 'List your coffee trailer free on Vendibook — photos, espresso equipment, and your asking price in front of buyers searching specifically for coffee setups.',
+    ctaLabel: 'List My Coffee Trailer',
+    ctaHref: '/sell-my-food-truck',
+  },
+};
+
+const iceCreamTruck: CategoryIndexConfig = {
+  path: SPECIALTY_DEFS.ice_cream.truckPath!,
+  category: 'food_truck',
+  mode: 'sale',
+  specialty: 'ice_cream',
+  breadcrumbParent: { name: 'Ice Cream Trucks & Trailers', href: SPECIALTY_DEFS.ice_cream.hubPath },
+  searchHrefOverride: `/search?q=${encodeURIComponent(SPECIALTY_DEFS.ice_cream.searchQuery)}&category=food_truck&mode=sale`,
+  h1: 'Ice Cream Trucks for Sale',
+  title: 'Ice Cream Trucks for Sale | Vendibook',
+  description:
+    'Shop ice cream trucks for sale nationwide — used soft serve and scoop trucks with freezer equipment, transparent asking prices, and direct seller messaging on Vendibook.',
+  intro:
+    'Browse ice cream trucks for sale from owners across the US — self-contained soft serve and scoop trucks ready for neighborhood routes and event circuits. Every listing includes real photos, the freezer and machine equipment the seller has included, and a transparent asking price, with direct messaging to the owner so you can verify refrigeration performance before you buy.',
+  clarification:
+    'These are equipment and business-asset sales: you buy the truck and operate your own ice cream business. This page is not for hiring an ice cream truck for an event — message any owner through their listing to ask about services instead.',
+  sections: [
+    {
+      heading: 'Ice cream truck inventory on Vendibook',
+      paragraphs: [
+        'The listings above are the live, current set of ice cream trucks for sale on the marketplace — inventory changes as owners list and sell, so check back or save your search. Typical builds include soft serve trucks with one or two machines, novelty/freezer trucks for pre-packaged product, and scoop setups with dipping cabinets.',
+        'Each seller lists their own equipment, so open a listing to see exactly what is included, then message the owner for machine models, compressor or cold-plate details, and service history.',
+      ],
+      links: [{ href: SPECIALTY_DEFS.ice_cream.trailerPath!, label: 'Compare ice cream trailers' }],
+    },
+    {
+      heading: 'What to check before buying an ice cream truck',
+      paragraphs: [
+        'Refrigeration is the whole business: inspect freezers and cold-plate or compressor systems, confirm holding temperatures, and ask how units stay cold on the move versus overnight. Verify the electrical system and generator capacity against the freezer load, plus the water and sink setup your health department expects.',
+        'Then evaluate the vehicle: engine, mileage, tires, and bodywork are part of the asset. Request maintenance records and freezer temperature logs through direct messaging before you travel.',
+      ],
+      links: [
+        { href: '/tools/startup-guide', label: 'Ice cream business startup guide' },
+        { href: '/tools/permitpath', label: 'Permit & licensing checklist' },
+      ],
+    },
+    {
+      heading: 'Financing an ice cream truck',
+      paragraphs: [
+        'Ice cream trucks are business assets, and many buyers spread the cost with equipment financing. Vendibook\'s financing page connects qualified buyers with financing options — applications, approval, rates, and terms are handled by the financing provider, not by Vendibook.',
+      ],
+      links: [{ href: '/financing', label: 'Explore financing options' }],
+    },
+  ],
+  faqs: [
+    {
+      q: 'Where can I buy a used ice cream truck?',
+      a: 'Right here — Vendibook lists owner-listed used ice cream trucks for sale nationwide. Each listing shows photos, freezer and machine equipment, price, and location, and you can message the seller directly to verify condition.',
+    },
+    {
+      q: 'How much does an ice cream truck cost?',
+      a: 'It varies widely by vehicle condition, refrigeration equipment, and what is included. The listings on this page show each seller\'s current asking price so you can compare real units side by side.',
+    },
+    {
+      q: 'Can I finance an ice cream truck?',
+      a: 'Often, yes — ice cream trucks are typically eligible for equipment financing as business assets. Qualified buyers can explore options through Vendibook\'s financing page; approval, rates, and terms are set by the financing provider.',
+    },
+    {
+      q: 'What is the difference between soft serve and scoop setups?',
+      a: 'Soft serve trucks carry machines that freeze and dispense mix on demand — faster service, higher electrical and maintenance demands. Scoop and novelty setups rely on freezers holding pre-made product — simpler utilities, more storage-dependent. Listings note which configuration each unit has.',
+    },
+    {
+      q: 'Is an ice cream truck or trailer better for a startup?',
+      a: 'Trucks offer self-contained mobility for daily routes and events; trailers usually cost less upfront and suit fixed or seasonal spots. Compare both — the ice cream trailers page lists the towable units.',
+    },
+    {
+      q: 'Can I sell my ice cream truck on Vendibook?',
+      a: 'Yes — listing is free. Add photos, freezer and equipment details, and your asking price, and buyers searching specifically for ice cream trucks can find and message you directly.',
+    },
+  ],
+  related: [
+    { href: SPECIALTY_DEFS.ice_cream.hubPath, label: 'All ice cream trucks & trailers' },
+    { href: SPECIALTY_DEFS.ice_cream.trailerPath!, label: 'Ice cream trailers for sale' },
+    { href: '/food-trucks-for-sale', label: 'All food trucks for sale' },
+    ...siblingLinks('ice_cream').slice(0, 3),
+    { href: '/financing', label: 'Equipment financing' },
+    { href: '/sell-my-food-truck', label: 'Sell my ice cream truck' },
+  ],
+  sellerCta: {
+    heading: 'Selling an ice cream truck?',
+    body: 'List your ice cream truck free on Vendibook — photos, freezer and machine details, and your asking price in front of buyers searching specifically for ice cream setups.',
+    ctaLabel: 'List My Ice Cream Truck',
+    ctaHref: '/sell-my-food-truck',
+  },
+};
+
+const iceCreamTrailer: CategoryIndexConfig = {
+  path: SPECIALTY_DEFS.ice_cream.trailerPath!,
+  category: 'food_trailer',
+  mode: 'sale',
+  specialty: 'ice_cream',
+  breadcrumbParent: { name: 'Ice Cream Trucks & Trailers', href: SPECIALTY_DEFS.ice_cream.hubPath },
+  searchHrefOverride: `/search?q=${encodeURIComponent(SPECIALTY_DEFS.ice_cream.searchQuery)}&category=food_trailer&mode=sale`,
+  h1: 'Ice Cream Trailers for Sale',
+  title: 'Ice Cream Trailers for Sale | Vendibook',
+  description:
+    'Shop ice cream trailers for sale nationwide — freezer-equipped concession trailers with soft serve or scoop setups, real prices, and financing options on Vendibook.',
+  intro:
+    'Browse ice cream trailers for sale from owners across the US — towable, freezer-equipped concession trailers that suit fixed spots, seasonal locations, and event circuits. Every listing includes real photos, the equipment the seller has included, and a transparent asking price, with direct messaging to the owner so you can verify refrigeration and condition before you buy.',
+  clarification:
+    'These are equipment and business-asset sales: you buy the trailer and operate your own ice cream business, towing it with a vehicle you already own. Prefer a drive-away unit? See the ice cream trucks page, or compare everything on the ice cream trucks & trailers hub.',
+  sections: [
+    {
+      heading: 'Ice cream trailer inventory on Vendibook',
+      paragraphs: [
+        'The listings above are the live, current set of ice cream trailers for sale on the marketplace — inventory changes as owners list and sell, so check back or save your search. Typical builds include soft serve trailers, dipping-cabinet scoop trailers, and novelty units with chest or display freezers.',
+        'Each seller lists their own equipment, so open a listing to see exactly what is included, then message the owner for freezer specifications, power requirements, and service history.',
+      ],
+      links: [{ href: SPECIALTY_DEFS.ice_cream.truckPath!, label: 'Compare ice cream trucks' }],
+    },
+    {
+      heading: 'What to check before buying an ice cream trailer',
+      paragraphs: [
+        'Refrigeration comes first: inspect freezers, cold-plate or compressor systems, and holding temperatures, and confirm how the units are powered while parked versus overnight. Check the electrical service and generator or shore-power capacity against the freezer load, plus the water and sink setup your health department expects.',
+        'Then inspect the trailer itself — axles, tires, brakes, coupler, and bodywork — and confirm your tow vehicle\'s rated capacity against the trailer\'s loaded weight before you commit.',
+      ],
+      links: [
+        { href: '/tools/startup-guide', label: 'Ice cream business startup guide' },
+        { href: '/tools/permitpath', label: 'Permit & licensing checklist' },
+      ],
+    },
+    {
+      heading: 'Financing an ice cream trailer',
+      paragraphs: [
+        'Ice cream trailers are business assets, and many buyers spread the cost with equipment financing. Vendibook\'s financing page connects qualified buyers with financing options — applications, approval, rates, and terms are handled by the financing provider, not by Vendibook.',
+      ],
+      links: [{ href: '/financing', label: 'Explore financing options' }],
+    },
+  ],
+  faqs: [
+    {
+      q: 'Where can I buy an ice cream trailer?',
+      a: 'Right here — Vendibook lists owner-listed ice cream trailers for sale nationwide. Each listing includes photos, freezer equipment, price, and location, and you can message the seller directly.',
+    },
+    {
+      q: 'How much does an ice cream trailer cost?',
+      a: 'It varies with size, refrigeration equipment, and condition. The listings on this page show each seller\'s current asking price so you can compare real units side by side.',
+    },
+    {
+      q: 'Can an ice cream trailer be financed?',
+      a: 'Often, yes — ice cream trailers are typically eligible for equipment financing as business assets. Qualified buyers can explore options through Vendibook\'s financing page; approval, rates, and terms are set by the financing provider.',
+    },
+    {
+      q: 'What equipment should an ice cream trailer include?',
+      a: 'Focus on freezers or soft serve machines and their power requirements, electrical capacity, generator or shore-power setup, water tanks and sinks, serving windows, and storage. Listings on this page show what each seller includes.',
+    },
+    {
+      q: 'Do I need a special vehicle to tow an ice cream trailer?',
+      a: 'You need a vehicle rated for the trailer\'s loaded weight with the correct hitch and brake connections. Check the trailer\'s axle rating on the listing and confirm your tow vehicle\'s capacity before buying.',
+    },
+    {
+      q: 'Can I sell my ice cream trailer on Vendibook?',
+      a: 'Yes — listing is free. Add photos, freezer and equipment details, and your asking price, and buyers searching specifically for ice cream trailers can find and message you directly.',
+    },
+  ],
+  related: [
+    { href: SPECIALTY_DEFS.ice_cream.hubPath, label: 'All ice cream trucks & trailers' },
+    { href: SPECIALTY_DEFS.ice_cream.truckPath!, label: 'Ice cream trucks for sale' },
+    { href: '/food-trailers-for-sale', label: 'All food trailers for sale' },
+    ...siblingLinks('ice_cream').slice(0, 3),
+    { href: '/financing', label: 'Equipment financing' },
+    { href: '/sell-my-food-truck', label: 'Sell my ice cream trailer' },
+  ],
+  sellerCta: {
+    heading: 'Selling an ice cream trailer?',
+    body: 'List your ice cream trailer free on Vendibook — photos, freezer and equipment details, and your asking price in front of buyers searching specifically for ice cream setups.',
+    ctaLabel: 'List My Ice Cream Trailer',
+    ctaHref: '/sell-my-food-truck',
+  },
+};
+
 export const SPECIALTY_CATEGORY_CONFIGS: CategoryIndexConfig[] = [
   coffee,
+  coffeeTruck,
+  coffeeTrailer,
   iceCream,
+  iceCreamTruck,
+  iceCreamTrailer,
   pizza,
   bbq,
   snowCone,
