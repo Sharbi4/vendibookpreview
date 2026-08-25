@@ -504,10 +504,17 @@ Deno.serve(async (req) => {
           {
             subject: {
               type: CATEGORY_LABEL[subject.assetCategory],
-              location: [subject.city, subject.state].filter(Boolean).join(', ') || 'Not specified',
-              year: subject.year,
+              location: [subject.city, subject.state].filter(Boolean).join(', ') || 'unknown',
+              year: subject.year ?? 'unknown',
+              make: subject.make ?? 'unknown',
+              model: subject.model ?? 'unknown',
+              lengthFt: subject.lengthFt ?? 'unknown',
+              mileage: subject.mileage ?? 'unknown',
               condition: subject.condition,
               operationalStatus: subject.operationalStatus,
+              equipment: Object.entries(subject.features).filter(([, v]) => v).map(([k]) => k),
+              knownIssues: subject.knownIssues ?? 'unknown',
+              recentUpgrades: subject.recentUpgrades ?? 'unknown',
             },
             result: {
               dailyRate: rental.dailyRate,
