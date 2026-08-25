@@ -125,6 +125,15 @@ const CategoryCityPage = ({ mode }: CategoryCityPageProps) => {
     };
 
     fetchListings();
+
+    if (city && dbCategory) {
+      trackEvent({
+        category: 'SEO City Page',
+        action: mode === 'rent' ? 'rental_city_page_view' : 'sale_city_page_view',
+        label: `${mode}/${categorySlug}/${cityStateSlug}`,
+        metadata: { city: city.name, state: city.stateCode, category: dbCategory, mode },
+      });
+    }
   }, [city?.name, dbCategory, dbMode]);
 
   if (!city || !categoryLabel || !dbCategory) {
@@ -245,7 +254,7 @@ const CategoryCityPage = ({ mode }: CategoryCityPageProps) => {
           {/* H1 */}
           <div className="space-y-4">
             <h1 className="text-3xl md:text-4xl font-bold text-foreground">
-              {categoryLabel} {modeLabel} in {city.name}, {city.stateCode}
+              {override?.h1 ?? `${categoryLabel} ${modeLabel} in ${city.name}, ${city.stateCode}`}
             </h1>
             {seoIntro && (
               <p className="text-muted-foreground text-base md:text-lg max-w-3xl leading-relaxed">
