@@ -1,12 +1,19 @@
 import type { CategoryIndexConfig } from '@/pages/CategoryIndex';
-import { SPECIALTY_DEFS } from '@/lib/listings/specialty';
+import { SPECIALTY_DEFS, type SpecialtyKey } from '@/lib/listings/specialty';
 
 // ============================================================================
-// Phase 4 SEO: national specialty marketplace hubs.
+// Phase 4 + Phase 6 SEO: national specialty marketplace hubs.
 // One authoritative dual-category page per specialty (trucks + trailers
 // together) — singular/plural and used/new variants are targeted naturally by
 // the same page instead of separate thin URLs.
 // ============================================================================
+
+/** Cross-links to every other specialty hub — builds the
+ *  National → Specialty → Listing → Specialty internal-link loop. */
+const siblingLinks = (except: SpecialtyKey): { href: string; label: string }[] =>
+  (Object.keys(SPECIALTY_DEFS) as SpecialtyKey[])
+    .filter((k) => k !== except)
+    .map((k) => ({ href: SPECIALTY_DEFS[k].hubPath, label: `${SPECIALTY_DEFS[k].pluralTitle} for sale` }));
 
 const coffee: CategoryIndexConfig = {
   path: SPECIALTY_DEFS.coffee.hubPath,
