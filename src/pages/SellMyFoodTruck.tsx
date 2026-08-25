@@ -30,6 +30,21 @@ const LIST_HREF = '/list/start?mode=sale';
 
 const faqs = [
   {
+    question: 'Where can I sell my food truck?',
+    answer:
+      'Vendibook is a marketplace built specifically for mobile food equipment. Create a free listing with photos, specs, and your asking price, and it becomes discoverable to buyers searching for food trucks, food trailers, and concession trailers nationwide. You communicate with interested buyers directly through Vendibook messaging and offers.',
+  },
+  {
+    question: 'How do I sell a food truck online?',
+    answer:
+      'Create a free Vendibook account, open the listing builder, and add exterior and interior photos, equipment specs, dimensions, and an honest asking price. Once published, buyers can message you and submit offers, and you can accept, decline, or counter from your dashboard. You choose how to complete the sale — in person or through Vendibook online checkout.',
+  },
+  {
+    question: 'Can I sell a food trailer or concession trailer on Vendibook?',
+    answer:
+      'Yes. Vendibook supports food trailers, concession trailers, mobile kitchens, and specialty trailers alongside food trucks, with equipment-specific fields for towing, dimensions, power, and water setup. List your trailer the same way you would a truck — publishing is free.',
+  },
+  {
     question: 'Is it really free to list?',
     answer:
       'Yes. Publishing a standard for-sale listing is free, subject to current account and listing limits. You do not need identity verification, a membership, or any paid add-on to publish.',
@@ -48,6 +63,11 @@ const faqs = [
     question: 'How does Vendibook Pro reduce my fee?',
     answer:
       'Active Vendibook Pro sellers save 2 percentage points on eligible seller transaction fees — 10.9% instead of 12.9% — with savings capped at $500 per completed transaction. Pro also includes one Featured Boost credit each paid billing period, premium seller tools, and PermitPath Plus.',
+  },
+  {
+    question: 'Can I sell directly to a buyer?',
+    answer:
+      'Yes. You can settle the sale in person with no Vendibook commission — you and the buyer arrange payment and the handoff directly. Vendibook online checkout is an optional alternative for buyers who want to pay through the platform, at a standard 12.9% seller fee.',
   },
   {
     question: 'Can a buyer finance my food truck or trailer?',
