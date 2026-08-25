@@ -87,7 +87,7 @@ const coffee: CategoryIndexConfig = {
   related: [
     { href: '/food-trucks-for-sale', label: 'All food trucks for sale' },
     { href: '/food-trailers-for-sale', label: 'All food trailers for sale' },
-    { href: SPECIALTY_DEFS.ice_cream.hubPath, label: 'Ice cream trucks & trailers for sale' },
+    ...siblingLinks('coffee'),
     { href: '/financing', label: 'Equipment financing' },
     { href: '/sell-my-food-truck', label: 'Sell my food truck or trailer' },
   ],
@@ -177,7 +177,7 @@ const iceCream: CategoryIndexConfig = {
   related: [
     { href: '/food-trucks-for-sale', label: 'All food trucks for sale' },
     { href: '/food-trailers-for-sale', label: 'All food trailers for sale' },
-    { href: SPECIALTY_DEFS.coffee.hubPath, label: 'Coffee trucks & trailers for sale' },
+    ...siblingLinks('ice_cream'),
     { href: '/financing', label: 'Equipment financing' },
     { href: '/sell-my-food-truck', label: 'Sell my food truck or trailer' },
   ],
