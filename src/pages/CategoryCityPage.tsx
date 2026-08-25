@@ -26,6 +26,8 @@ import {
   getCityStateSlug,
   CITY_DATA,
 } from '@/data/cityData';
+import { useNationwideInventory, type InventoryCategory } from '@/hooks/useNationwideInventory';
+import ExpandSearchModule, { LowInventoryInlineLine, LOW_INVENTORY_THRESHOLD, NEAR_EMPTY_THRESHOLD } from '@/components/seo/ExpandSearchModule';
 
 interface CategoryCityPageProps {
   mode: 'rent' | 'buy';
@@ -135,6 +137,17 @@ const CategoryCityPage = ({ mode }: CategoryCityPageProps) => {
       });
     }
   }, [city?.name, dbCategory, dbMode]);
+
+  // Low-inventory freight funnel (thin city pages must never dead-end).
+  const localCount = listings.length;
+  const isLowInventory = !isLoading && localCount < LOW_INVENTORY_THRESHOLD;
+  const nationwide = useNationwideInventory({
+    categories: [(dbCategory as InventoryCategory) ?? 'food_truck'],
+    mode: dbMode as 'rent' | 'sale',
+    enabled: isLowInventory && Boolean(dbCategory),
+  });
+
+
 
   if (!city || !categoryLabel || !dbCategory) {
     return (
@@ -246,7 +259,8 @@ const CategoryCityPage = ({ mode }: CategoryCityPageProps) => {
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
-      <SEO title={seoTitle} description={metaDescription} canonical={canonicalPath} />
+      {/* Zero live listings = thin page; the expand-search module adds user value but not indexability. */}
+      <SEO title={seoTitle} description={metaDescription} canonical={canonicalPath} noindex={!isLoading && listings.length === 0} />
       <JsonLd schema={[itemListSchema, breadcrumbSchema, faqSchema]} />
       <ExitIntentCapture category={dbCategory || undefined} city={city.name} />
       <Header />
@@ -310,6 +324,10 @@ const CategoryCityPage = ({ mode }: CategoryCityPageProps) => {
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
           ) : listings.length > 0 ? (
+            <div className="space-y-8">
+            {localCount <= NEAR_EMPTY_THRESHOLD && (
+              <LowInventoryInlineLine pageSlug={canonicalPath} resultCount={localCount} nationwide={nationwide} />
+            )}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {listings.map((l) => {
                 const price = l.mode === 'rent' ? (l.price_daily || l.price_weekly) : l.price_sale;
@@ -355,18 +373,22 @@ const CategoryCityPage = ({ mode }: CategoryCityPageProps) => {
                 );
               })}
             </div>
-          ) : (
-            <div className="text-center py-16 space-y-4">
-              <p className="text-lg text-muted-foreground">
-                No {categoryLabel.toLowerCase()} {modeLabel.toLowerCase()} in {city.name} yet.
-              </p>
-              <p className="text-muted-foreground">
-                Be the first to list — or browse other cities below.
-              </p>
-              <Button variant="dark-shine" asChild>
-                <Link to="/list">List Your Asset <ArrowRight className="h-4 w-4 ml-1" /></Link>
-              </Button>
+            {isLowInventory && (
+              <ExpandSearchModule pageSlug={canonicalPath} resultCount={localCount} nationwide={nationwide} />
+            )}
             </div>
+          ) : (
+            <ExpandSearchModule
+              pageSlug={canonicalPath}
+              resultCount={0}
+              nationwide={nationwide}
+              zeroResults
+              sellCta={{
+                label: 'List free',
+                href: dbCategory === 'food_trailer' ? '/sell-food-trailer' : '/sell-my-food-truck',
+              }}
+              alertContext={{ category: dbCategory, mode: dbMode }}
+            />
           )}
 
           {/* Internal Linking: Related Categories */}
