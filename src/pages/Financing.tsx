@@ -160,23 +160,24 @@ const ApplyCta = ({
   className = '',
   source,
   listingId,
+  onApply,
 }: {
   className?: string;
   source: FinancingSource;
   listingId?: string;
+  onApply: (source: FinancingSource, listingId?: string) => void;
 }) => (
-  <Button variant="cta" size="lg" className={`rounded-full ${className}`} asChild>
-    <a
-      href={APPLY_URL}
-      target="_blank"
-      rel="noopener noreferrer"
-      onClick={() => trackFinancingApplyClick(source, listingId)}
-    >
-      Apply with Equinox Funding
-      <ExternalLink className="w-4 h-4 ml-1.5" aria-hidden />
-    </a>
+  <Button
+    variant="cta"
+    size="lg"
+    className={`rounded-full ${className}`}
+    onClick={() => onApply(source, listingId)}
+  >
+    Apply with Equinox Funding
+    <ExternalLink className="w-4 h-4 ml-1.5" aria-hidden />
   </Button>
 );
+
 
 const Financing = () => {
   const reduce = useReducedMotion();
