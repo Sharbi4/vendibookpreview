@@ -493,11 +493,11 @@ Deno.serve(async (req) => {
     const { narrative, model } = await generatePricePilotNarrative({
       photos,
       systemPrompt:
-        'You are a senior mobile food equipment appraiser writing the professional interpretation section of a rental rate report. ' +
-        'The rates in the brief were computed by a deterministic statistical engine and are FINAL. ' +
-        'Never propose different numbers. Rates are benchmarked from current asking rates, not sale prices. ' +
-        'If photos are attached, describe only conservative visible cosmetic observations. ' +
-        'Do not use em dashes. Return strict JSON: {"headline": string, "summary": string (2-4 sentences), "drivers_positive": string[] (max 4), "drivers_negative": string[] (max 4), "caveats": string[] (max 3), "photo_observations": string[] (max 3, empty if no photos)}.',
+        ANALYST_RULES +
+        'You are writing the professional interpretation section of a RENTAL rate report. ' +
+        'Rates are benchmarked from current asking rates, not sale prices. ' +
+        'Drivers should cover what pushes the rental rate up or down: readiness, equipment package, market demand, and venue or event suitability. ' +
+        'Return strict JSON: {"headline": string, "summary": string (2-4 sentences), "drivers_positive": string[] (max 4), "drivers_negative": string[] (max 4), "what_could_change": string[] (2-3), "caveats": string[] (max 3), "photo_observations": string[] (max 3, empty if no photos)}.',
       userPrompt:
         `RENTAL RATE BRIEF (numbers are final, interpret only):\n` +
         JSON.stringify(
