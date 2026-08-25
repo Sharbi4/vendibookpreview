@@ -408,15 +408,35 @@ const HostListingCard = ({
             Boost Listing
           </Button>
         )}
-        <Button
-          variant="outline"
-          size="sm"
-          className={cn(ACTION_BTN, 'border-white/15 bg-white/[0.04] hover:bg-white/[0.08]')}
-          onClick={handleShareListing}
-        >
-          <Share2 className="h-4 w-4 mr-1.5 shrink-0" />
-          Share Listing
-        </Button>
+        {rentalEligible && (
+          <Button
+            size="sm"
+            onClick={handleRentItOut}
+            disabled={createLinkedRental.isPending || linkedLoading}
+            className={cn(
+              ACTION_BTN,
+              'bg-white text-[#08080a] hover:bg-white/90 border-0 font-semibold',
+            )}
+          >
+            {createLinkedRental.isPending ? (
+              <Loader2 className="h-4 w-4 mr-1.5 shrink-0 animate-spin" />
+            ) : (
+              <Calendar className="h-4 w-4 mr-1.5 shrink-0" />
+            )}
+            {linkedRentalCtaLabel(linkedState)}
+          </Button>
+        )}
+        {!rentalEligible && (
+          <Button
+            variant="outline"
+            size="sm"
+            className={cn(ACTION_BTN, 'border-white/15 bg-white/[0.04] hover:bg-white/[0.08]')}
+            onClick={handleShareListing}
+          >
+            <Share2 className="h-4 w-4 mr-1.5 shrink-0" />
+            Share Listing
+          </Button>
+        )}
         <Button
           variant="outline"
           size="sm"
@@ -428,6 +448,12 @@ const HostListingCard = ({
         </Button>
 
         <KebabMenu>
+          {rentalEligible && (
+            <DropdownMenuItem onClick={handleShareListing} className="gap-2">
+              <Share2 className="h-4 w-4" /> Share Listing
+            </DropdownMenuItem>
+          )}
+
           <DropdownMenuItem asChild className="gap-2">
             <Link to={`/listing/${listing.id}`}>
               <Eye className="h-4 w-4" /> View as buyer
