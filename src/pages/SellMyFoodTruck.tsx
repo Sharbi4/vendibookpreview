@@ -164,8 +164,8 @@ const SellMyFoodTruck = () => {
   return (
     <>
       <SEO
-        title="Sell Your Food Truck or Trailer | Vendibook"
-        description="List your food truck or trailer free on Vendibook. Reach buyers shopping for mobile food equipment, settle in person with no commission, or use optional online checkout at 12.9%."
+        title="Sell My Food Truck | List Your Food Truck or Trailer | Vendibook"
+        description="Sell your food truck or food trailer on Vendibook. Create your listing, connect directly with buyers, offer financing options, and reach serious food-business buyers nationwide."
         canonical="/sell-my-food-truck"
         type="website"
         ogTitle="Sell your food truck or trailer on Vendibook"
@@ -196,22 +196,23 @@ const SellMyFoodTruck = () => {
                   For sellers
                 </span>
                 <h1 className="mt-4 text-3xl md:text-5xl font-semibold tracking-tight text-foreground leading-[1.08]">
-                  Sell your food truck or trailer on Vendibook.
+                  Sell Your Food Truck or Food Trailer
                 </h1>
                 <p className="mt-4 text-base md:text-lg text-muted-foreground leading-relaxed max-w-2xl">
-                  List free, reach buyers shopping specifically for mobile food equipment, and choose the
-                  transaction path that works for you.
+                  List free, reach buyers nationwide who are shopping specifically for mobile food equipment,
+                  message them directly, offer financing options to eligible buyers, and choose how you want
+                  to get paid.
                 </p>
 
                 <div className="mt-7 flex flex-col sm:flex-row gap-3">
                   <Button size="lg" variant="cta" asChild>
                     <Link to={LIST_HREF}>
-                      List my equipment free
+                      List My Food Truck
                       <ArrowRight className="ml-2 h-4 w-4" />
                     </Link>
                   </Button>
                   <Button size="lg" variant="outline" className="rounded-2xl" asChild>
-                    <Link to="/tools/pricepilot">Estimate my price</Link>
+                    <a href="#how-selling-works">See How Selling Works</a>
                   </Button>
                 </div>
 
