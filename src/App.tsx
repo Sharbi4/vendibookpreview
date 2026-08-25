@@ -373,7 +373,8 @@ const AnimatedRoutes = () => {
           
           {/* Tools - /tools is the canonical hub */}
           <Route path="/tools" element={<PageTransition><ToolsIndex /></PageTransition>} />
-          <Route path="/tools/pricepilot" element={<PageTransition><ToolAccessGate slug="pricepilot"><PricePilot /></ToolAccessGate></PageTransition>} />
+          {/* PricePilot is a public product page — the access wall lives at the appraisal entry point inside the page, not on the route. */}
+          <Route path="/tools/pricepilot" element={<PageTransition><PricePilot /></PageTransition>} />
           <Route path="/pricepilot" element={<Navigate to="/tools/pricepilot" replace />} />
           <Route path="/tools/pricepilot/preview" element={<Navigate to="/tools/pricepilot" replace />} />
           <Route path="/tools/:slug/preview" element={<PageTransition><ToolPreview /></PageTransition>} />
