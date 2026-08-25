@@ -962,6 +962,7 @@ const Search = () => {
                 onVerifiedToggle={handleVerifiedHostsChange}
                 activeSpecialty={activeSpecialty}
                 onSpecialtySelect={handleSpecialtySelect}
+                onSpecialtyClear={handleSpecialtyClear}
               />
             </div>
 
