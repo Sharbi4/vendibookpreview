@@ -463,7 +463,8 @@ export default function PricePilot() {
                             </p>
                           </div>
                           <UnlockLadder
-                            slug="pricepilot"
+                            toolSlug="pricepilot"
+                            surface="pricepilot_page"
                             tone="light"
                             returnPath="/tools/pricepilot"
                             className="mx-auto mt-8 max-w-2xl"
