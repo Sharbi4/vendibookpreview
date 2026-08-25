@@ -223,7 +223,7 @@ const FoodTruckPrices = () => {
   }, [faqs, description]);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="sale-light min-h-screen bg-background flex flex-col">
       <SEO title={title} description={description} canonical="/food-truck-prices" type="article" />
       <JsonLd schema={jsonLd} />
       <Header />
