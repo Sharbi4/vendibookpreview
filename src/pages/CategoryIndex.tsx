@@ -17,7 +17,7 @@ import {
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
 import { CITY_DATA, getCityStateSlug } from '@/data/cityData';
-import { SPECIALTY_DEFS, specialtyOrFilter, specialtyBrowseLinks, specialtyBrowseHref, SPECIALTY_VEHICLE_LABELS, type SpecialtyKey } from '@/lib/listings/specialty';
+import { SPECIALTY_DEFS, specialtyOrFilter, specialtyBrowseLinks, specialtyVehicleHref, SPECIALTY_VEHICLE_LABELS, type SpecialtyKey } from '@/lib/listings/specialty';
 import BrowseByBusinessType from '@/components/marketplace/BrowseByBusinessType';
 
 export type CategoryKey = 'food_truck' | 'food_trailer' | 'ghost_kitchen' | 'vendor_space';
@@ -331,7 +331,7 @@ const CategoryIndex = ({ config }: { config: CategoryIndexConfig }) => {
             )}
             {config.specialty && (l.category === 'food_truck' || l.category === 'food_trailer') && (
               <Link
-                to={specialtyBrowseHref(config.specialty, l.category === 'food_truck' ? 'truck' : 'trailer')}
+                to={specialtyVehicleHref(config.specialty, l.category === 'food_truck' ? 'truck' : 'trailer')}
                 onClick={(e) => e.stopPropagation()}
                 className="relative z-10 inline-flex w-fit items-center gap-1 text-xs font-medium text-primary hover:underline"
               >

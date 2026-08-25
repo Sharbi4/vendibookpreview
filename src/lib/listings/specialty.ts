@@ -25,6 +25,10 @@ export interface SpecialtyDef {
   pluralLower: string;
   /** Hub route, e.g. /coffee-trucks-trailers-for-sale */
   hubPath: string;
+  /** Dedicated truck landing page, e.g. /coffee-trucks-for-sale */
+  truckPath?: string;
+  /** Dedicated trailer landing page, e.g. /coffee-trailers-for-sale */
+  trailerPath?: string;
   /** Query used for the search CTA, e.g. /search?q=coffee */
   searchQuery: string;
   subcategories: string[];
@@ -39,6 +43,8 @@ export const SPECIALTY_DEFS: Record<SpecialtyKey, SpecialtyDef> = {
     pluralTitle: 'Coffee Trucks & Coffee Trailers',
     pluralLower: 'coffee trucks & coffee trailers',
     hubPath: '/coffee-trucks-trailers-for-sale',
+    truckPath: '/coffee-trucks-for-sale',
+    trailerPath: '/coffee-trailers-for-sale',
     searchQuery: 'coffee',
     subcategories: ['coffee_beverage'],
     titlePatterns: ['coffee', 'espresso', 'cold brew', 'cold-brew'],
@@ -54,6 +60,8 @@ export const SPECIALTY_DEFS: Record<SpecialtyKey, SpecialtyDef> = {
     pluralTitle: 'Ice Cream Trucks & Ice Cream Trailers',
     pluralLower: 'ice cream trucks & ice cream trailers',
     hubPath: '/ice-cream-trucks-trailers-for-sale',
+    truckPath: '/ice-cream-trucks-for-sale',
+    trailerPath: '/ice-cream-trailers-for-sale',
     searchQuery: 'ice cream',
     subcategories: ['ice_cream_dessert'],
     titlePatterns: [
@@ -244,10 +252,122 @@ export const specialtyBrowseHref = (key: SpecialtyKey, vehicle: SpecialtyVehicle
   return `/search?q=${encodeURIComponent(def.searchQuery)}&category=${category}&mode=sale`;
 };
 
+/**
+ * Canonical destination for a specialty × vehicle browse action. Dedicated
+ * landing pages win where they exist (coffee / ice cream); other specialties
+ * deep-link into the equivalent filtered /search state. Hub headers, search
+ * pills, and listing-card chips must all use this so every entry point lands
+ * on the same URL.
+ */
+export const specialtyVehicleHref = (key: SpecialtyKey, vehicle: SpecialtyVehicle): string => {
+  const def = SPECIALTY_DEFS[key];
+  return (vehicle === 'truck' ? def.truckPath : def.trailerPath) ?? specialtyBrowseHref(key, vehicle);
+};
+
 export const specialtyBrowseLinks = (key: SpecialtyKey): { label: string; href: string }[] => [
-  { label: SPECIALTY_VEHICLE_LABELS[key].truck, href: specialtyBrowseHref(key, 'truck') },
-  { label: SPECIALTY_VEHICLE_LABELS[key].trailer, href: specialtyBrowseHref(key, 'trailer') },
+  { label: SPECIALTY_VEHICLE_LABELS[key].truck, href: specialtyVehicleHref(key, 'truck') },
+  { label: SPECIALTY_VEHICLE_LABELS[key].trailer, href: specialtyVehicleHref(key, 'trailer') },
 ];
+
+// ---------------------------------------------------------------------------
+// Dedicated SEO metadata for specialty filtered-search URLs
+// (/search?q=<specialty>&category=<vehicle>&mode=sale). Applied in Search.tsx
+// whenever the current state exactly matches a specialty browse deep link.
+// ---------------------------------------------------------------------------
+
+export interface SpecialtySearchSeo {
+  /** Breadcrumb/title segment, e.g. 'Coffee Trucks for Sale' */
+  crumb: string;
+  title: string;
+  description: string;
+}
+
+export const SPECIALTY_SEARCH_SEO: Record<SpecialtyKey, Record<SpecialtyVehicle, SpecialtySearchSeo>> = {
+  coffee: {
+    truck: {
+      crumb: 'Coffee Trucks for Sale',
+      title: 'Coffee Trucks for Sale | Vendibook',
+      description: 'Browse coffee trucks for sale nationwide — owner-listed mobile coffee trucks with espresso equipment, transparent prices, and direct seller messaging on Vendibook.',
+    },
+    trailer: {
+      crumb: 'Coffee Trailers for Sale',
+      title: 'Coffee Trailers for Sale | Vendibook',
+      description: 'Browse coffee trailers for sale nationwide — owner-listed mobile coffee trailers and carts with equipment details, real prices, and direct seller messaging on Vendibook.',
+    },
+  },
+  ice_cream: {
+    truck: {
+      crumb: 'Ice Cream Trucks for Sale',
+      title: 'Ice Cream Trucks for Sale | Vendibook',
+      description: 'Browse ice cream trucks for sale nationwide — used soft serve and scoop trucks with freezer equipment, transparent asking prices, and direct seller messaging on Vendibook.',
+    },
+    trailer: {
+      crumb: 'Ice Cream Trailers for Sale',
+      title: 'Ice Cream Trailers for Sale | Vendibook',
+      description: 'Browse ice cream trailers for sale nationwide — freezer-equipped concession trailers with equipment details, real prices, and direct seller messaging on Vendibook.',
+    },
+  },
+  pizza: {
+    truck: {
+      crumb: 'Pizza Trucks for Sale',
+      title: 'Pizza Trucks for Sale | Vendibook',
+      description: 'Browse pizza trucks for sale nationwide — mobile pizza kitchens with oven and equipment details, transparent prices, and direct seller messaging on Vendibook.',
+    },
+    trailer: {
+      crumb: 'Pizza Trailers for Sale',
+      title: 'Pizza Trailers for Sale | Vendibook',
+      description: 'Browse pizza trailers for sale nationwide — wood-fired and deck-oven pizza trailers with equipment details, real prices, and direct seller messaging on Vendibook.',
+    },
+  },
+  bbq: {
+    truck: {
+      crumb: 'BBQ Trucks for Sale',
+      title: 'BBQ Trucks for Sale | Vendibook',
+      description: 'Browse BBQ trucks for sale nationwide — smoker-equipped food trucks with equipment details, transparent prices, and direct seller messaging on Vendibook.',
+    },
+    trailer: {
+      crumb: 'BBQ Trailers for Sale',
+      title: 'BBQ Trailers for Sale | Vendibook',
+      description: 'Browse BBQ trailers for sale nationwide — smoker and pit trailers with equipment details, real prices, and direct seller messaging on Vendibook.',
+    },
+  },
+  snow_cone: {
+    truck: {
+      crumb: 'Snow Cone Trucks for Sale',
+      title: 'Snow Cone Trucks for Sale | Vendibook',
+      description: 'Browse snow cone and shaved ice trucks for sale nationwide — owner-listed units with equipment details, transparent prices, and direct seller messaging on Vendibook.',
+    },
+    trailer: {
+      crumb: 'Snow Cone Trailers for Sale',
+      title: 'Snow Cone & Shaved Ice Trailers for Sale | Vendibook',
+      description: 'Browse snow cone and shaved ice trailers for sale nationwide — owner-listed units with equipment details, real prices, and direct seller messaging on Vendibook.',
+    },
+  },
+  beverage: {
+    truck: {
+      crumb: 'Beverage & Bar Trucks for Sale',
+      title: 'Beverage & Mobile Bar Trucks for Sale | Vendibook',
+      description: 'Browse beverage and mobile bar trucks for sale nationwide — owner-listed units with equipment details, transparent prices, and direct seller messaging on Vendibook.',
+    },
+    trailer: {
+      crumb: 'Beverage & Bar Trailers for Sale',
+      title: 'Beverage & Mobile Bar Trailers for Sale | Vendibook',
+      description: 'Browse beverage and mobile bar trailers for sale nationwide — tap and drink trailers with equipment details, real prices, and direct seller messaging on Vendibook.',
+    },
+  },
+  mobile_kitchen: {
+    truck: {
+      crumb: 'Mobile Kitchen Trucks for Sale',
+      title: 'Mobile Kitchen Trucks for Sale | Vendibook',
+      description: 'Browse mobile kitchen trucks for sale nationwide — commercial kitchen vehicles with equipment details, transparent prices, and direct seller messaging on Vendibook.',
+    },
+    trailer: {
+      crumb: 'Kitchen Trailers for Sale',
+      title: 'Mobile Kitchen Trailers for Sale | Vendibook',
+      description: 'Browse mobile kitchen trailers for sale nationwide — commercial kitchen trailers with equipment details, real prices, and direct seller messaging on Vendibook.',
+    },
+  },
+};
 
 /**
  * Map a structured subcategory value to its specialty, if any.

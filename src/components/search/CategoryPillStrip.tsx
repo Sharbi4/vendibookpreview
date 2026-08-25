@@ -1,5 +1,5 @@
 import { useRef } from 'react';
-import { ChevronLeft, ChevronRight, Truck, Container, ChefHat, Store, Zap, ShieldCheck, Coffee, IceCreamCone, Pizza, Flame, Snowflake, CupSoda, CookingPot } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Truck, Container, ChefHat, Store, Zap, ShieldCheck, Coffee, IceCreamCone, Pizza, Flame, Snowflake, CupSoda, CookingPot, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ListingCategory } from '@/types/listing';
 import { SPECIALTY_VEHICLE_SHORT_LABELS, type SpecialtyKey, type SpecialtyVehicle } from '@/lib/listings/specialty';
@@ -47,6 +47,8 @@ interface Props {
   /** Currently applied specialty browse state, if the search matches one. */
   activeSpecialty?: { key: SpecialtyKey; vehicle: SpecialtyVehicle } | null;
   onSpecialtySelect?: (key: SpecialtyKey, vehicle: SpecialtyVehicle) => void;
+  /** Clears the active specialty filter (query + vehicle category + mode). */
+  onSpecialtyClear?: () => void;
 }
 
 export const CategoryPillStrip = ({
@@ -57,7 +59,8 @@ export const CategoryPillStrip = ({
   verifiedHostsOnly,
   onVerifiedToggle,
   activeSpecialty,
-  onSpecialtySelect}: Props) => {
+  onSpecialtySelect,
+  onSpecialtyClear}: Props) => {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const scroll = (dir: 'l' | 'r') => {
@@ -110,7 +113,7 @@ export const CategoryPillStrip = ({
           return (
             <button
               key={`${key}-${vehicle}`}
-              onClick={() => onSpecialtySelect(key, vehicle)}
+              onClick={() => (active && onSpecialtyClear ? onSpecialtyClear() : onSpecialtySelect(key, vehicle))}
               className={cn(
                 'flex items-center gap-1.5 h-9 px-3.5 rounded-full border text-[12px] font-medium whitespace-nowrap shrink-0 transition-all duration-200 ease-out self-center',
                 active
@@ -124,6 +127,19 @@ export const CategoryPillStrip = ({
             </button>
           );
         })}
+
+        {/* Always-visible clear control whenever a specialty filter is applied —
+            same pill geometry as the specialty pills it resets. */}
+        {onSpecialtyClear && activeSpecialty && (
+          <button
+            onClick={onSpecialtyClear}
+            className="flex items-center gap-1.5 h-9 px-3.5 rounded-full border border-primary/50 bg-primary/12 text-foreground text-[12px] font-medium whitespace-nowrap shrink-0 transition-all duration-200 ease-out self-center hover:bg-primary/20"
+            aria-label="Clear specialty filters"
+          >
+            <X className="h-4 w-4 text-primary" />
+            <span>Clear specialty filters</span>
+          </button>
+        )}
 
         <div className="w-px bg-white/10 mx-2 my-2 shrink-0" />
 

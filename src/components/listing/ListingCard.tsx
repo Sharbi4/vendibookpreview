@@ -2,7 +2,7 @@ import { deliveryRateLabel } from '@/lib/fulfillment/delivery';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { MapPin, Plug, Zap, Droplet, Refrigerator, Flame, Wind, Wifi, Car, Shield, Sun, Truck, Calendar, Clock, ArrowRight, Banknote, Coffee, IceCreamCone } from 'lucide-react';
-import { detectSpecialty, specialtyBrowseHref, SPECIALTY_VEHICLE_LABELS, type SpecialtyVehicle } from '@/lib/listings/specialty';
+import { detectSpecialty, specialtyVehicleHref, SPECIALTY_VEHICLE_LABELS, type SpecialtyVehicle } from '@/lib/listings/specialty';
 import FeaturedBadge from '@/components/listing/FeaturedBadge';
 import { FinancingAvailableBadge } from '@/components/financing/FinancingAvailableBadge';
 import { useEquinoxFinancingEnabled } from '@/hooks/useListingFinancing';
@@ -194,7 +194,7 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
     ? {
         key: specialtyKey,
         label: SPECIALTY_VEHICLE_LABELS[specialtyKey][specialtyVehicle],
-        href: specialtyBrowseHref(specialtyKey, specialtyVehicle),
+        href: specialtyVehicleHref(specialtyKey, specialtyVehicle),
       }
     : null;
 
