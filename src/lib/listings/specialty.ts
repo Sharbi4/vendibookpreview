@@ -1,11 +1,22 @@
-// Specialty marketplace categories (Phase 4 SEO): coffee and ice cream.
-// Matching prefers the structured `subcategory` column and falls back to
-// tight title/description keyword patterns so listings created before the
+// Specialty marketplace categories (Phase 4 + Phase 6 SEO). Matching prefers
+// the structured `subcategory` column and falls back to tight
+// title/description keyword patterns so listings created before the
 // subcategory existed still surface. Patterns are intentionally narrow —
 // a generic mention of "coffee" in a description must not pull unrelated
 // listings into the collection.
+//
+// Phase 6 additions: pizza, bbq, snow_cone, beverage, mobile_kitchen.
+// Iteration order matters for detectSpecialty: coffee/ice_cream stay first,
+// mobile_kitchen (broadest) stays last.
 
-export type SpecialtyKey = 'coffee' | 'ice_cream';
+export type SpecialtyKey =
+  | 'coffee'
+  | 'ice_cream'
+  | 'pizza'
+  | 'bbq'
+  | 'snow_cone'
+  | 'beverage'
+  | 'mobile_kitchen';
 
 export interface SpecialtyDef {
   /** Display: 'Coffee Trucks & Coffee Trailers' */
