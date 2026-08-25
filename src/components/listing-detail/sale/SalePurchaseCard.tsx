@@ -309,14 +309,15 @@ export const SalePurchaseCard = ({
                 the provider.
               </p>
               <div className="flex flex-wrap gap-2">
-                <Button size="sm" variant="outline" onClick={() => void handleApplyFinancing()} disabled={applying}>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => handleApplyFinancing('listing_panel')}
+                >
                   Apply now
-                  {applying ? (
-                    <Loader2 className="h-3.5 w-3.5 ml-1.5 animate-spin" />
-                  ) : (
-                    <ExternalLink className="h-3.5 w-3.5 ml-1.5" />
-                  )}
+                  <ExternalLink className="h-3.5 w-3.5 ml-1.5" />
                 </Button>
+
                 <Button size="sm" variant="ghost" asChild>
                   <Link
                     to={`/financing?listing_id=${listing.id}`}
