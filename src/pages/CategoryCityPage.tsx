@@ -142,15 +142,26 @@ const CategoryCityPage = ({ mode }: CategoryCityPageProps) => {
     );
   }
 
-  const seoTitle = mode === 'buy'
+  const override = mode === 'rent'
+    ? RENTAL_CITY_OVERRIDES[`${categorySlug}/${cityStateSlug}`]
+    : undefined;
+
+  const seoTitle = override?.title ?? (mode === 'buy'
     ? `${categoryLabel} for Sale in ${city.name}, ${city.stateCode} | Used & New | Vendibook`
-    : `${categoryLabel} for Rent in ${city.name}, ${city.stateCode} | Daily, Weekly, Monthly | Vendibook`;
-  const metaDescription = mode === 'buy'
+    : `${categoryLabel} for Rent in ${city.name}, ${city.stateCode} | Daily, Weekly, Monthly | Vendibook`);
+  const metaDescription = override?.description ?? (mode === 'buy'
     ? `Buy ${categoryLabel.toLowerCase()} in ${city.name}, ${city.stateCode}. Browse verified used and new listings from local sellers. Financing & inspection support. List price, photos, specs upfront.`
-    : `Rent ${categoryLabel.toLowerCase()} in ${city.name}, ${city.stateCode} by the day, week, or month. Instant booking, verified hosts, transparent pricing — start serving in days, not months.`;
+    : `Rent ${categoryLabel.toLowerCase()} in ${city.name}, ${city.stateCode} by the day, week, or month. Instant booking, verified hosts, transparent pricing — start serving in days, not months.`);
   const canonicalPath = `/${mode}/${categorySlug}/${cityStateSlug}`;
 
-  const seoIntro = city.seoIntros?.[dbCategory] || '';
+  const seoIntro = override?.intro ?? (city.seoIntros?.[dbCategory] || '');
+
+  // State rental hub (Phase 2 SEO): exists for the states where we built
+  // /food-trucks-for-rent/<state> pages — TX, FL, CA.
+  const stateRentHubPath =
+    mode === 'rent' && ['TX', 'FL', 'CA'].includes(city.stateCode)
+      ? `/food-trucks-for-rent/${city.stateCode === 'TX' ? 'texas' : city.stateCode === 'FL' ? 'florida' : 'california'}`
+      : null;
 
   // Related categories for internal linking
   const otherCategories = Object.entries(CATEGORY_SLUG_MAP)
