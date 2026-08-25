@@ -965,6 +965,36 @@ const generateStoryImageBlob = (
         </div>
       </button>
 
+      {/* YOUR WEBSITE — transparent link snippet for sellers with their own sites */}
+      <div className="rounded-2xl border bg-card p-4 space-y-3">
+        <div className="flex items-start gap-3">
+          <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center shrink-0">
+            <Globe className="w-5 h-5 text-muted-foreground" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="font-semibold text-sm">Link from your own website</div>
+            <div className="text-xs text-muted-foreground">
+              Have a business site? A visible link to your Vendibook listing sends your visitors
+              straight to a page with photos, pricing, and secure checkout.
+            </div>
+          </div>
+        </div>
+        <button
+          onClick={handleCopyWebsiteSnippet}
+          className="w-full flex items-center justify-between gap-3 rounded-xl bg-muted/60 px-3 py-2.5 text-left hover:bg-muted transition-colors"
+        >
+          <code className="text-[11px] text-muted-foreground truncate">
+            &lt;a href="{prettyUrl}"&gt;{listing.mode === 'sale' ? 'View this listing on Vendibook' : 'Book on Vendibook'}&lt;/a&gt;
+          </code>
+          <span className={cn(
+            'shrink-0 text-xs font-medium px-3 py-1.5 rounded-lg',
+            websiteSnippetCopied ? 'bg-emerald-500 text-white' : 'bg-background text-foreground'
+          )}>
+            {websiteSnippetCopied ? 'Copied' : 'Copy HTML'}
+          </span>
+        </button>
+      </div>
+
       {/* SECONDARY ACTIONS */}
       <div className="grid grid-cols-2 gap-2">
         <Button onClick={handleViewListing} variant="outline" size="lg" className="rounded-xl">
