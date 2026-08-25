@@ -619,16 +619,20 @@ export default function PricePilot() {
                                     <motion.div key="s3" {...stepMotion} transition={{ duration: 0.25 }} className="space-y-4">
                                       <div>
                                         <h3 className="text-xl md:text-2xl font-bold tracking-tight text-foreground">Year and approximate size</h3>
-                                        <p className="mt-1 text-sm text-muted-foreground">Both optional — but each one tightens your range.</p>
+                                        <p className="mt-1 text-sm text-muted-foreground">The year anchors depreciation. Size is optional but tightens your range.</p>
                                       </div>
                                       <div className="grid grid-cols-2 gap-3">
                                         <div>
-                                          <Label htmlFor="pp-year">Year</Label>
+                                          <Label htmlFor="pp-year">Year<Req /></Label>
                                           <Input id="pp-year" inputMode="numeric" placeholder="2019" value={year}
-                                            onChange={(e) => setYear(e.target.value.replace(/\D/g, '').slice(0, 4))} className="mt-1 h-12 rounded-xl text-base" />
+                                            onChange={(e) => { setYear(e.target.value.replace(/\D/g, '').slice(0, 4)); clearError('year'); }}
+                                            aria-invalid={!!errors.year}
+                                            aria-describedby={errors.year ? 'pp-err-year' : undefined}
+                                            className="mt-1 h-12 rounded-xl text-base" />
+                                          <FieldError id="pp-err-year" message={errors.year} />
                                         </div>
                                         <div>
-                                          <Label htmlFor="pp-len">Length (ft)</Label>
+                                          <Label htmlFor="pp-len">Length (ft) <span className="font-normal text-muted-foreground">(optional)</span></Label>
                                           <Input id="pp-len" inputMode="decimal" placeholder="18" value={lengthFt}
                                             onChange={(e) => setLengthFt(e.target.value.replace(/[^\d.]/g, '').slice(0, 5))} className="mt-1 h-12 rounded-xl text-base" />
                                         </div>
