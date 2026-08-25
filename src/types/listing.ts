@@ -15,11 +15,13 @@ export type FoodTruckSubcategory =
   | 'pizza_truck' 
   | 'ice_cream_dessert';
 
-export type FoodTrailerSubcategory = 
-  | 'concession_trailer' 
-  | 'catering_trailer' 
-  | 'bbq_pit_trailer' 
-  | 'mobile_bar' 
+export type FoodTrailerSubcategory =
+  | 'concession_trailer'
+  | 'catering_trailer'
+  | 'bbq_pit_trailer'
+  | 'mobile_bar'
+  | 'coffee_beverage'
+  | 'ice_cream_dessert'
   | 'specialty_food';
 
 export type GhostKitchenSubcategory = 
@@ -61,6 +63,8 @@ export const SUBCATEGORIES_BY_CATEGORY: Record<ListingCategory, {
     { value: 'catering_trailer', label: 'Catering Trailer', description: 'High-volume event catering setup' },
     { value: 'bbq_pit_trailer', label: 'BBQ Pit Trailer', description: 'Dedicated smoker and BBQ pit' },
     { value: 'mobile_bar', label: 'Mobile Bar', description: 'Beverage service with bar setup' },
+    { value: 'coffee_beverage', label: 'Coffee & Beverage', description: 'Espresso, smoothie, or specialty drink build' },
+    { value: 'ice_cream_dessert', label: 'Ice Cream & Dessert', description: 'Freezers and soft-serve equipment' },
     { value: 'specialty_food', label: 'Specialty Food Trailer', description: 'Unique cuisine or concept builds' },
   ],
   ghost_kitchen: [
