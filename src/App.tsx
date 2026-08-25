@@ -118,11 +118,14 @@ const CaliforniaPrivacy = lazy(() => import("./pages/CaliforniaPrivacy"));
 const ToolsIndex = lazy(() => import("./pages/tools/Index"));
 const PricePilot = lazy(() => import("./pages/tools/PricePilot"));
 const PermitPath = lazy(() => import("./pages/tools/PermitPath"));
-const BuildKit = lazy(() => import("./pages/tools/BuildKit"));
-const ListingStudio = lazy(() => import("./pages/tools/ListingStudio"));
-const ConceptLab = lazy(() => import("./pages/tools/ConceptLab"));
-const MarketRadar = lazy(() => import("./pages/tools/MarketRadar"));
-const MarketingStudio = lazy(() => import("./pages/tools/MarketingStudio"));
+// PARKED 2026-08-25: BuildKit, Listing Studio, Concept Lab, Market Radar, and
+// Marketing Studio are disabled site-wide (back burner for a future project).
+// Their pages stay in src/pages/tools/ — restore the imports + routes to relaunch.
+// const BuildKit = lazy(() => import("./pages/tools/BuildKit"));
+// const ListingStudio = lazy(() => import("./pages/tools/ListingStudio"));
+// const ConceptLab = lazy(() => import("./pages/tools/ConceptLab"));
+// const MarketRadar = lazy(() => import("./pages/tools/MarketRadar"));
+// const MarketingStudio = lazy(() => import("./pages/tools/MarketingStudio"));
 const StartupGuide = lazy(() => import("./pages/tools/StartupGuide"));
 const FoodTruckStartupCosts2026 = lazy(() => import("./pages/tools/FoodTruckStartupCosts2026"));
 const RegulationsHub = lazy(() => import("./pages/tools/RegulationsHub"));
@@ -379,11 +382,13 @@ const AnimatedRoutes = () => {
           <Route path="/tools/pricepilot/preview" element={<Navigate to="/tools/pricepilot" replace />} />
           <Route path="/tools/:slug/preview" element={<PageTransition><ToolPreview /></PageTransition>} />
           <Route path="/tools/permitpath" element={<PageTransition><ToolAccessGate slug="permitpath"><PermitPath /></ToolAccessGate></PageTransition>} />
+          {/* PARKED tools — routes disabled; direct visits fall through to NotFound.
           <Route path="/tools/buildkit" element={<PageTransition><ToolAccessGate slug="buildkit"><BuildKit /></ToolAccessGate></PageTransition>} />
           <Route path="/tools/listing-studio" element={<PageTransition><ToolAccessGate slug="listing-studio"><ListingStudio /></ToolAccessGate></PageTransition>} />
           <Route path="/tools/concept-lab" element={<PageTransition><ToolAccessGate slug="concept-lab"><ConceptLab /></ToolAccessGate></PageTransition>} />
           <Route path="/tools/market-radar" element={<PageTransition><ToolAccessGate slug="market-radar"><MarketRadar /></ToolAccessGate></PageTransition>} />
           <Route path="/tools/marketing-studio" element={<PageTransition><ToolAccessGate slug="marketing-studio"><MarketingStudio /></ToolAccessGate></PageTransition>} />
+          */}
           <Route path="/tools/startup-guide" element={<PageTransition><StartupGuide /></PageTransition>} />
           <Route path="/tools/food-truck-startup-costs-2026" element={<PageTransition><FoodTruckStartupCosts2026 /></PageTransition>} />
           <Route path="/tools/regulations-hub" element={<PageTransition><RegulationsHub /></PageTransition>} />

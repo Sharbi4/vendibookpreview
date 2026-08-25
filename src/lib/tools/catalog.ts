@@ -48,6 +48,12 @@ export interface ToolDef {
   unlockPrice?: string;
   /** Flame accent for the highest-value / lead tool. */
   flame?: boolean;
+  /**
+   * Set to false to park a tool "on the back burner": it stays in code for
+   * a future relaunch but is hidden from every surface (tools grid, upgrades
+   * hub, cross-links, routes). Default true.
+   */
+  enabled?: boolean;
 }
 
 export const TOOLS: ToolDef[] = [
@@ -88,6 +94,7 @@ export const TOOLS: ToolDef[] = [
   },
   {
     slug: 'listing-studio',
+    enabled: false, // PARKED 2026-08-25 — relaunch later; hidden from all surfaces
     name: 'Listing Studio',
     tagline: 'Write listings that convert browsers into paid bookings.',
     bullets: [
@@ -102,6 +109,7 @@ export const TOOLS: ToolDef[] = [
   },
   {
     slug: 'marketing-studio',
+    enabled: false, // PARKED 2026-08-25 — relaunch later; hidden from all surfaces
     name: 'Marketing Studio',
     tagline: 'Ad copy, social posts, and launch kits — ready to publish.',
     bullets: [
@@ -116,6 +124,7 @@ export const TOOLS: ToolDef[] = [
   },
   {
     slug: 'concept-lab',
+    enabled: false, // PARKED 2026-08-25 — relaunch later; hidden from all surfaces
     name: 'Concept Lab',
     tagline: 'Validate menu, truck, and business concepts before you invest.',
     bullets: [
@@ -130,6 +139,7 @@ export const TOOLS: ToolDef[] = [
   },
   {
     slug: 'market-radar',
+    enabled: false, // PARKED 2026-08-25 — relaunch later; hidden from all surfaces
     name: 'Market Radar',
     tagline: 'See demand, competition, and opportunity gaps in any metro.',
     bullets: [
@@ -144,6 +154,7 @@ export const TOOLS: ToolDef[] = [
   },
   {
     slug: 'buildkit',
+    enabled: false, // PARKED 2026-08-25 — relaunch later; hidden from all surfaces
     name: 'BuildKit',
     tagline: 'Blueprints, equipment specs, and vetted vendor sourcing.',
     bullets: [
@@ -189,3 +200,10 @@ export const TOOLS: ToolDef[] = [
 
 export const getToolBySlug = (slug: string): ToolDef | undefined =>
   TOOLS.find((t) => t.slug === slug);
+
+/** Tools currently live on the site. Parked tools (enabled: false) stay in
+ * TOOLS for a future relaunch but are filtered out of every UI surface. */
+export const ACTIVE_TOOLS: ToolDef[] = TOOLS.filter((t) => t.enabled !== false);
+
+export const isToolEnabled = (slug: string): boolean =>
+  getToolBySlug(slug)?.enabled !== false;

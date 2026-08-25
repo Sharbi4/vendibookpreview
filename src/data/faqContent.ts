@@ -317,8 +317,8 @@ export const faqCategories: FaqCategory[] = [
         id: "good-listing",
         question: "What makes a great listing?",
         answer:
-          "Ten or more sharp daylight photos including the interior, equipment, and exterior from all angles. A clear title that includes year/make/model. A description that covers equipment, condition, service history, and what's included. Accurate specs (year, mileage, dimensions, generator hours, permits). Firm pricing. Fast replies to messages. Vendibook Pro members can auto-generate a polished description via Listing Studio.",
-        actions: [{ label: "Try Listing Studio", href: "/tools/listing-studio" }],
+          "Ten or more sharp daylight photos including the interior, equipment, and exterior from all angles. A clear title that includes year/make/model. A description that covers equipment, condition, service history, and what's included. Accurate specs (year, mileage, dimensions, generator hours, permits). Firm pricing. Fast replies to messages. Not sure what to charge? PricePilot benchmarks your price against real comparable listings.",
+        actions: [{ label: "Try PricePilot", href: "/tools/pricepilot" }],
       },
       {
         id: "offers-negotiation",
@@ -414,7 +414,7 @@ export const faqCategories: FaqCategory[] = [
         id: "tiers-overview",
         question: "What plans are available?",
         answer:
-          "Two: Free (2 active listings, core buying, selling and renting) and Vendibook Pro at {{price:vendibook_pro}} (unlimited listings, the Premium Tools bundle including PricePilot / Listing Studio / Marketing Studio, PermitPath Plus, advanced seller analytics, one Featured Boost credit each paid billing period, and a reduced 10.9% seller/host fee capped at $500 saved per completed transaction). PermitPath Plus is also available on its own for {{price:permit_path_plus_monthly}}. See the full comparison on the pricing page.",
+          "Two: Free (2 active listings, core buying, selling and renting) and Vendibook Pro at {{price:vendibook_pro}} (unlimited listings, the Premium Tools bundle including PricePilot and PermitPath Plus, advanced seller analytics, one Featured Boost credit each paid billing period, and a reduced 10.9% seller/host fee capped at $500 saved per completed transaction). PermitPath Plus is also available on its own for {{price:permit_path_plus_monthly}}. See the full comparison on the pricing page.",
         actions: [A.pricing],
       },
       {
@@ -502,41 +502,6 @@ export const faqCategories: FaqCategory[] = [
         answer:
           "PricePilot analyzes comparable listings in your market and recommends a competitive sale or rental price. Included with Vendibook Pro.",
         actions: [{ label: "See PricePilot", href: "/plans/tools/pricepilot" }],
-      },
-      {
-        id: "listing-studio",
-        question: "What is Listing Studio?",
-        answer:
-          "Listing Studio uses AI to rewrite your listing — title, description, and highlights — for higher conversion. Generates in seconds, editable to your voice. Included with Vendibook Pro.",
-        actions: [{ label: "See Listing Studio", href: "/plans/tools/listing-studio" }],
-      },
-      {
-        id: "marketing-studio",
-        question: "What is Marketing Studio?",
-        answer:
-          "Marketing Studio generates ad copy, social captions, and email blurbs for your listing — sized for Instagram, Facebook, and Google. Included with Vendibook Pro.",
-        actions: [{ label: "See Marketing Studio", href: "/plans/tools/marketing-studio" }],
-      },
-      {
-        id: "market-radar",
-        question: "What is Market Radar?",
-        answer:
-          "Market Radar tracks demand, supply, and average pricing by city and category so you know where to buy, sell, or expand. Included with Vendibook Pro.",
-        actions: [{ label: "See Market Radar", href: "/plans/tools/market-radar" }],
-      },
-      {
-        id: "concept-lab",
-        question: "What is Concept Lab?",
-        answer:
-          "Concept Lab helps you validate a food concept — menu ideas, pricing, target market, break-even math — before you buy a truck. Included with Vendibook Pro.",
-        actions: [{ label: "See Concept Lab", href: "/plans/tools/concept-lab" }],
-      },
-      {
-        id: "buildkit",
-        question: "What is BuildKit?",
-        answer:
-          "BuildKit is the Vendibook Pro planner for building or converting your own truck: layout templates, equipment lists, generator sizing, budget calculator, and vendor referrals.",
-        actions: [{ label: "See BuildKit", href: "/plans/tools/buildkit" }],
       },
       {
         id: "featured-boost",
