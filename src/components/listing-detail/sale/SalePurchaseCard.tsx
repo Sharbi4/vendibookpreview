@@ -211,7 +211,26 @@ export const SalePurchaseCard = ({
             <span className="font-medium text-foreground">PayPal</span>
           </div>
 
+          {/* Primary financing entry point: in the buyer's eyeline, directly
+              under the price. No payment amounts, rates, or down payments. */}
+          {financingEnabled && (
+            <div className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 rounded-xl border border-primary/20 bg-primary/[0.04] px-3 py-2.5">
+              <Banknote className="h-4 w-4 shrink-0 text-primary" aria-hidden />
+              <span className="text-sm font-medium">
+                Financing available for this {financingNoun}
+              </span>
+              <button
+                type="button"
+                onClick={() => handleApplyFinancing('listing_price_line')}
+                className="text-sm font-semibold text-primary underline underline-offset-4 hover:opacity-80"
+              >
+                Check your options
+              </button>
+            </div>
+          )}
+
         </div>
+
 
         <div className="px-5 sm:px-6 pb-5 sm:pb-6 space-y-5">
           {/* Fulfillment */}
