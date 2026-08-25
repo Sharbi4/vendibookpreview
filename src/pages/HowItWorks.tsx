@@ -370,8 +370,8 @@ const HowItWorks = () => {
                   <span className="w-1.5 h-1.5 rounded-full bg-primary" aria-hidden="true" />
                   How Vendibook Works
                 </div>
-                <h1 className="text-4xl sm:text-5xl md:text-[3.4rem] font-bold tracking-tight text-foreground mb-5 leading-[1.06]">
-                  We don&rsquo;t do classifieds.
+                <h1 className="text-4xl sm:text-5xl md:text-[3.4rem] font-bold tracking-tight text-foreground mb-5 leading-[1.12]">
+                  <span className="text-highlighter">We don&rsquo;t do classifieds.</span>
                 </h1>
                 <p className="text-lg text-muted-foreground mb-4 max-w-xl leading-relaxed">
                   Classifieds end at the listing. Vendibook starts there — and stays with
