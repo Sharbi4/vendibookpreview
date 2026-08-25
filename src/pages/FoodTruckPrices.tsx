@@ -147,6 +147,18 @@ const FoodTruckPrices = () => {
     [stats],
   );
 
+  const handleDownloadChart = () => {
+    if (!stats) return;
+    const svg = buildPriceDistributionSvg({
+      title: `What Price Range Are Most Food Trucks Listed In? (${YEAR})`,
+      subtitle: `Share of ${stats.totalListings} food trucks & trailers listed on Vendibook`,
+      bands: stats.bands.map((b) => ({ label: b.label, count: b.count, pct: b.pct })),
+      snapshot,
+    });
+    downloadSvg(svg, `vendibook-food-truck-prices-${YEAR}.svg`);
+    trackEvent({ category: 'SEO', action: 'price_report_chart_downloaded', label: '/food-truck-prices' });
+  };
+
   const title = `Food Truck Prices & Cost Calculator (${YEAR}) | Vendibook`;
   const description =
     `See what food trucks and trailers cost in ${YEAR} using real Vendibook marketplace data. Compare prices, explore cost factors, and estimate your truck with PricePilot.`;
@@ -598,10 +610,16 @@ const FoodTruckPrices = () => {
                 prices unless otherwise stated. Analysis excludes listings without valid pricing, demo
                 listings, and price outliers.
               </p>
-              <p className="text-sm text-muted-foreground leading-relaxed">
+              <p className="text-sm text-muted-foreground leading-relaxed mb-4">
                 Journalists, lenders, builders, and publishers may reference these figures with attribution
                 to "Vendibook marketplace data" and a link to this page. Questions: support@vendibook.com.
               </p>
+              <Link
+                to="/press"
+                className="inline-flex items-center gap-1.5 text-sm font-semibold text-cta-primary hover:underline"
+              >
+                <Newspaper className="h-4 w-4" /> Press &amp; media resources
+              </Link>
             </div>
           </Section>
 
