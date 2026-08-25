@@ -466,7 +466,7 @@ export default function PricePilot() {
                                       <div className="grid grid-cols-2 gap-3">
                                         <div className="col-span-2 sm:col-span-1">
                                           <Label htmlFor="pp-city">City</Label>
-                                          <Input id="pp-city" placeholder="Austin" value={city} onChange={(e) => setCity(e.target.value)} className="mt-1 rounded-xl text-base" />
+                                          <Input id="pp-city" placeholder="Austin" value={city} onChange={(e) => setCity(e.target.value)} className="mt-1 h-12 rounded-xl text-base" />
                                         </div>
                                         <div>
                                           <Label htmlFor="pp-state">State</Label>
@@ -484,7 +484,7 @@ export default function PricePilot() {
                                       <div>
                                         <Label htmlFor="pp-zip">ZIP code</Label>
                                         <Input id="pp-zip" inputMode="numeric" placeholder="78704" maxLength={5} value={zip}
-                                          onChange={(e) => setZip(e.target.value.replace(/\D/g, '').slice(0, 5))} className="mt-1 rounded-xl text-base" />
+                                          onChange={(e) => setZip(e.target.value.replace(/\D/g, '').slice(0, 5))} className="mt-1 h-12 rounded-xl text-base" />
                                       </div>
                                       {!canContinue && <p className="text-[12px] text-amber-700">Enter a two-letter state or a ZIP code to continue.</p>}
                                     </motion.div>
@@ -501,19 +501,19 @@ export default function PricePilot() {
                                         <div>
                                           <Label htmlFor="pp-year">Year</Label>
                                           <Input id="pp-year" inputMode="numeric" placeholder="2019" value={year}
-                                            onChange={(e) => setYear(e.target.value.replace(/\D/g, '').slice(0, 4))} className="mt-1 rounded-xl text-base" />
+                                            onChange={(e) => setYear(e.target.value.replace(/\D/g, '').slice(0, 4))} className="mt-1 h-12 rounded-xl text-base" />
                                         </div>
                                         <div>
                                           <Label htmlFor="pp-len">Length (ft)</Label>
                                           <Input id="pp-len" inputMode="decimal" placeholder="18" value={lengthFt}
-                                            onChange={(e) => setLengthFt(e.target.value.replace(/[^\d.]/g, '').slice(0, 5))} className="mt-1 rounded-xl text-base" />
+                                            onChange={(e) => setLengthFt(e.target.value.replace(/[^\d.]/g, '').slice(0, 5))} className="mt-1 h-12 rounded-xl text-base" />
                                         </div>
                                       </div>
                                       {mode === 'sale' && assetCategory === 'food_truck' && (
                                         <div>
                                           <Label htmlFor="pp-miles">Mileage</Label>
                                           <Input id="pp-miles" inputMode="numeric" placeholder="85,000" value={mileage}
-                                            onChange={(e) => setMileage(e.target.value.replace(/\D/g, ''))} className="mt-1 rounded-xl text-base" />
+                                            onChange={(e) => setMileage(e.target.value.replace(/\D/g, ''))} className="mt-1 h-12 rounded-xl text-base" />
                                         </div>
                                       )}
                                     </motion.div>
