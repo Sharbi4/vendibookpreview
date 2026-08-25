@@ -611,9 +611,6 @@ const Pricing = () => {
         <section className="py-14 md:py-20 border-t border-border">
           <div className="container max-w-3xl mx-auto px-4">
             <motion.div {...(reduce ? {} : fadeUp)}>
-              <h2 className="text-2xl md:text-3xl font-bold text-foreground leading-tight mb-8">
-                Questions people ask before subscribing
-              </h2>
               <PlansFAQ />
             </motion.div>
           </div>
