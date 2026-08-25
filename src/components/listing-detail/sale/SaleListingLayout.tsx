@@ -225,6 +225,7 @@ export const SaleListingLayout = ({
               address={listing.address}
               latitude={listing.latitude}
               longitude={listing.longitude}
+              subcategory={listing.subcategory}
             />
           </div>
 
