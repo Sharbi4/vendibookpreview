@@ -1,13 +1,10 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { X, Loader2 } from 'lucide-react';
+import { X, ArrowRight } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useHostEntitlements } from '@/hooks/useHostEntitlements';
 import { useListingQuota } from '@/hooks/useListingQuota';
-import { useMonetizationProducts } from '@/hooks/useMonetizationProducts';
-import { useSubscriptionConsent } from '@/hooks/useSubscriptionConsent';
 import { supabase } from '@/integrations/supabase/client';
-import { ACTIVE_PRODUCT_SLUGS } from '@/lib/monetization/catalogPricing';
 import { Button } from '@/components/ui/button';
 import { MiniPlansComparison } from '@/components/monetization/MiniPlansComparison';
 
