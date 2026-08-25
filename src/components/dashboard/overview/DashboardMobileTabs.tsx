@@ -28,7 +28,7 @@ const DashboardMobileTabs = ({ mode }: Props) => {
         { label: 'My Account', href: '/account', tab: null, path: '/account' },
         { label: 'Sales', href: '/dashboard?view=host&tab=sales', tab: 'sales' },
         { label: 'Insights', href: '/dashboard?view=host&tab=insights', tab: 'insights' },
-        { label: 'Promote', href: '/dashboard?view=host&tab=promote', tab: 'promote' },
+        { label: 'Premium tools', href: '/dashboard?view=host&tab=promote', tab: 'promote' },
         { label: 'Membership', href: '/dashboard?view=host&tab=membership', tab: 'membership' },
         { label: 'Payouts', href: '/dashboard?view=host&tab=payouts', tab: 'payouts' },
         { label: 'Notifications', href: '/dashboard?view=host&tab=notifications', tab: 'notifications' },
