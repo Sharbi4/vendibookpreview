@@ -579,20 +579,22 @@ export default function PricePilot() {
                                   {step === 2 && (
                                     <motion.div key="s2" {...stepMotion} transition={{ duration: 0.25 }} className="space-y-4">
                                       <div>
-                                        <h3 className="text-xl md:text-2xl font-bold tracking-tight text-foreground">Where is it?</h3>
+                                        <h3 className="text-xl md:text-2xl font-bold tracking-tight text-foreground">Where is it?<Req /></h3>
                                         <p className="mt-1 text-sm text-muted-foreground">Prices move by market. A state or ZIP anchors your report locally first.</p>
                                       </div>
                                       <div className="grid grid-cols-2 gap-3">
                                         <div className="col-span-2 sm:col-span-1">
-                                          <Label htmlFor="pp-city">City</Label>
+                                          <Label htmlFor="pp-city">City <span className="font-normal text-muted-foreground">(optional)</span></Label>
                                           <Input id="pp-city" placeholder="Austin" value={city} onChange={(e) => setCity(e.target.value)} className="mt-1 h-12 rounded-xl text-base" />
                                         </div>
                                         <div>
-                                          <Label htmlFor="pp-state">State</Label>
+                                          <Label htmlFor="pp-state">State<Req /></Label>
                                           <div className="relative mt-1">
                                             <MapPin className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                                             <Input id="pp-state" placeholder="TX" maxLength={2} value={state}
-                                              onChange={(e) => setState(e.target.value.toUpperCase().replace(/[^A-Z]/g, ''))}
+                                              onChange={(e) => { setState(e.target.value.toUpperCase().replace(/[^A-Z]/g, '')); clearError('location'); }}
+                                              aria-invalid={!!errors.location}
+                                              aria-describedby={errors.location ? 'pp-err-location' : undefined}
                                               className="h-12 rounded-xl pl-9 text-base uppercase" />
                                           </div>
                                         </div>
@@ -601,11 +603,14 @@ export default function PricePilot() {
                                         <span className="h-px flex-1 bg-border" />or<span className="h-px flex-1 bg-border" />
                                       </div>
                                       <div>
-                                        <Label htmlFor="pp-zip">ZIP code</Label>
+                                        <Label htmlFor="pp-zip">ZIP code<Req /></Label>
                                         <Input id="pp-zip" inputMode="numeric" placeholder="78704" maxLength={5} value={zip}
-                                          onChange={(e) => setZip(e.target.value.replace(/\D/g, '').slice(0, 5))} className="mt-1 h-12 rounded-xl text-base" />
+                                          onChange={(e) => { setZip(e.target.value.replace(/\D/g, '').slice(0, 5)); clearError('location'); }}
+                                          aria-invalid={!!errors.location}
+                                          aria-describedby={errors.location ? 'pp-err-location' : undefined}
+                                          className="mt-1 h-12 rounded-xl text-base" />
                                       </div>
-                                      {!canContinue && <p className="text-[12px] text-amber-700">Enter a two-letter state or a ZIP code to continue.</p>}
+                                      <FieldError id="pp-err-location" message={errors.location} />
                                     </motion.div>
                                   )}
 
