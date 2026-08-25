@@ -60,11 +60,13 @@ const footerSections: FooterSection[] = [
   {
     title: 'By State',
     links: [
-      { label: 'Arizona Food Trucks', href: '/food-trucks-for-sale/arizona' },
       { label: 'Texas Food Trucks', href: '/food-trucks-for-sale/texas' },
+      { label: 'Texas Food Trailers', href: '/food-trailers-for-sale/texas' },
+      { label: 'Arizona Food Trucks', href: '/food-trucks-for-sale/arizona' },
       { label: 'Florida Food Trucks', href: '/food-trucks-for-sale/florida' },
       { label: 'Georgia Food Trucks', href: '/food-trucks-for-sale/georgia' },
-      { label: 'North Carolina', href: '/food-trucks-for-sale/north-carolina' },
+      { label: 'Michigan Food Trucks', href: '/food-trucks-for-sale/michigan' },
+      { label: 'Ohio Food Trucks', href: '/food-trucks-for-sale/ohio' },
       { label: 'California', href: '/food-trucks-for-sale/california' },
     ],
   },

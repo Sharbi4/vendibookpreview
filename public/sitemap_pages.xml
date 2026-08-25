@@ -40,6 +40,17 @@
   <url><loc>https://vendibook.com/food-trucks-for-sale/north-carolina</loc><lastmod>2026-06-12</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>
   <url><loc>https://vendibook.com/food-trucks-for-sale/oregon</loc><lastmod>2026-06-12</lastmod><changefreq>weekly</changefreq><priority>0.85</priority></url>
   <url><loc>https://vendibook.com/food-trucks-for-sale/california</loc><lastmod>2026-06-12</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://vendibook.com/food-trucks-for-sale/michigan</loc><lastmod>2026-08-25</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://vendibook.com/food-trucks-for-sale/ohio</loc><lastmod>2026-08-25</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>
+
+  <!-- State-level food trailer SEO pages -->
+  <url><loc>https://vendibook.com/food-trailers-for-sale/texas</loc><lastmod>2026-08-25</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://vendibook.com/food-trailers-for-sale/georgia</loc><lastmod>2026-08-25</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://vendibook.com/food-trailers-for-sale/florida</loc><lastmod>2026-08-25</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://vendibook.com/food-trailers-for-sale/michigan</loc><lastmod>2026-08-25</lastmod><changefreq>weekly</changefreq><priority>0.85</priority></url>
+  <url><loc>https://vendibook.com/food-trailers-for-sale/ohio</loc><lastmod>2026-08-25</lastmod><changefreq>weekly</changefreq><priority>0.85</priority></url>
+  <url><loc>https://vendibook.com/food-trailers-for-sale/arizona</loc><lastmod>2026-08-25</lastmod><changefreq>weekly</changefreq><priority>0.85</priority></url>
+
 
   <!-- City-level SEO pages (city → state → nationwide fallback) -->
   <url><loc>https://vendibook.com/food-trucks-for-sale/tucson-az</loc><lastmod>2026-06-12</lastmod><changefreq>weekly</changefreq><priority>0.85</priority></url>
