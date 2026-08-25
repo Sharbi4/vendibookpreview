@@ -723,14 +723,15 @@ const Search = () => {
     return `Browse ${totalCount}+ ${categoryLabel} available to ${modeLabel}${locationLabel}. Compare listings and book with payment protection on Vendibook.`;
   }, [activeSpecialty, category, mode, locationText, totalCount]);
 
-  // Specialty filtered-search URLs self-canonicalize with their full query
-  // string so each deep link is a distinct, indexable search state.
+  // Specialty filtered-search URLs canonicalize to their dedicated landing
+  // page where one exists (coffee / ice cream) so the two surfaces never
+  // compete for the same query; the rest self-canonicalize with their full
+  // query string as a distinct, indexable search state.
   const seoCanonical = useMemo(() => {
     if (!activeSpecialty) return '/search';
-    const def = SPECIALTY_DEFS[activeSpecialty.key];
-    const cat = activeSpecialty.vehicle === 'truck' ? 'food_truck' : 'food_trailer';
-    return `/search?q=${encodeURIComponent(def.searchQuery)}&category=${cat}&mode=sale`;
+    return specialtyVehicleHref(activeSpecialty.key, activeSpecialty.vehicle);
   }, [activeSpecialty]);
+
 
   // Generate page numbers for pagination
   const getPageNumbers = () => {

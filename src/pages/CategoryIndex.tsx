@@ -277,10 +277,13 @@ const CategoryIndex = ({ config }: { config: CategoryIndexConfig }) => {
     })),
   };
 
-  // noindex if zero across all tiers (extreme edge case). Specialty hubs stay
-  // indexable: they carry evergreen buyer/seller content even when inventory
-  // is temporarily thin.
-  const noindex = !loading && totalListings === 0 && !config.specialty;
+  // Thin-page guard. A collection page is only indexable when it has real
+  // on-topic inventory in its primary tier — nationwide fallback rows keep the
+  // page useful for a visitor but do not make a specialty/state/city page
+  // worth indexing on its own. This applies to every hub, including specialty
+  // hubs and the coffee/ice-cream vehicle landing pages.
+  const noindex = !loading && (primary.length === 0 || totalListings === 0);
+
 
   const cityLabel = config.city ? `${config.city.name}, ${config.city.stateCode}` : null;
   const stateLabel = config.city ? config.city.stateCode : config.state?.name ?? null;

@@ -835,7 +835,9 @@ export type FinancingSource =
   | 'financing_page_footer'
   | 'financing_page_context'
   | 'listing_panel'
+  | 'listing_price_line'
   | 'listing_card';
+
 
 export const trackFinancingBannerImpression = (): void => {
   trackEvent({
