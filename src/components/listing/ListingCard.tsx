@@ -535,10 +535,33 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
           {!compact && <RatingBadge listingId={listing.id} />}
         </div>
 
+        {/* Specialty collection deep link (dark/default surface) */}
+        {!isSearch && specialtyChip && (
+          <Link
+            to={specialtyChip.href}
+            onClick={(e) => e.stopPropagation()}
+            className="relative z-10 inline-flex w-fit items-center gap-1 text-[11px] font-medium text-white/60 hover:text-primary transition-colors"
+          >
+            {specialtyChip.key === 'coffee' ? <Coffee className="h-3 w-3" /> : <IceCreamCone className="h-3 w-3" />}
+            {specialtyChip.label}
+            <ArrowRight className="h-3 w-3" />
+          </Link>
+        )}
+
         {/* Search-only quiet detail row: financing + amenity summary live here
             instead of competing with the primary badges over the image. */}
-        {isSearch && (financingEnabled || popularAmenities.length > 0 || remainingAmenitiesCount > 0) && (
+        {isSearch && (financingEnabled || popularAmenities.length > 0 || remainingAmenitiesCount > 0 || specialtyChip) && (
           <div className="flex flex-wrap items-center gap-1.5">
+            {specialtyChip && (
+              <Link
+                to={specialtyChip.href}
+                onClick={(e) => e.stopPropagation()}
+                className="relative z-10 inline-flex items-center gap-1 rounded-full bg-[#1b1714]/[0.05] px-2.5 py-1 text-[11px] font-medium text-[#1b1714]/70 hover:bg-[#1b1714]/[0.09] transition-colors"
+              >
+                {specialtyChip.key === 'coffee' ? <Coffee className="h-3 w-3" /> : <IceCreamCone className="h-3 w-3" />}
+                {specialtyChip.label}
+              </Link>
+            )}
             {financingEnabled && (
               <Link
                 to={`/financing?listing_id=${listing.id}`}

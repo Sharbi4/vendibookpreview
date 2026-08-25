@@ -900,6 +900,8 @@ const Search = () => {
                 onInstantBookToggle={handleInstantBookChange}
                 verifiedHostsOnly={verifiedHostsOnly}
                 onVerifiedToggle={handleVerifiedHostsChange}
+                activeSpecialty={activeSpecialty}
+                onSpecialtySelect={handleSpecialtySelect}
               />
             </div>
 
