@@ -12,7 +12,6 @@ const FILES = [
   'src/pages/HowItWorksSeller.tsx',
   'src/components/sell/SellerLandingPage.tsx',
   'src/components/sell/SellerPaymentsExplainer.tsx',
-  'src/pages/sell/SellFoodTruck.tsx',
   'src/pages/sell/SellFoodTrailer.tsx',
   'src/pages/sell/SellConcessionTrailer.tsx',
 ];

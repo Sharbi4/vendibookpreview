@@ -46,7 +46,7 @@ const footerSections: FooterSection[] = [
     links: [
       { label: 'List Food Truck for Sale', href: '/list-food-truck-for-sale' },
       { label: 'Rent Out My Food Truck', href: '/rent-out-my-food-truck' },
-      { label: 'Sell a Food Truck', href: '/sell-food-truck' },
+      { label: 'Sell a Food Truck', href: '/sell-my-food-truck' },
       { label: 'Sell a Food Trailer', href: '/sell-food-trailer' },
       { label: 'Sell a Concession Trailer', href: '/sell-concession-trailer' },
       { label: 'Rent My Kitchen', href: '/rent-my-commercial-kitchen' },
