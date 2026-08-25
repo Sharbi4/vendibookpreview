@@ -135,6 +135,10 @@ const FAQ = [
     a: 'Fully custom builds and conversions may be financed.',
   },
   {
+    q: 'Can shipping or freight be financed too?',
+    a: 'Vendibook Freight transportation may be included in eligible financing arrangements, depending on the financing provider and the transaction. Mention transportation when you apply.',
+  },
+  {
     q: 'How fast are decisions?',
     a: 'Many decisions are returned within 24–48 hours.',
   },
@@ -345,6 +349,28 @@ const Financing = () => {
                 Look for this badge as you browse — financing is available on eligible
                 for-sale listings across Vendibook.
               </p>
+            </motion.div>
+
+            {/* Freight cross-link — transportation can ride along on financing */}
+            <motion.div
+              {...(reduce ? {} : fadeUp)}
+              className="mt-6 flex flex-col sm:flex-row sm:items-center gap-4 rounded-3xl border border-border bg-card px-5 py-4"
+            >
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-border bg-background shadow-sm">
+                <Truck className="h-4 w-4 text-foreground/70" aria-hidden />
+              </span>
+              <p className="flex-1 min-w-[240px] text-sm text-muted-foreground leading-relaxed">
+                <span className="font-semibold text-foreground">Buying from out of state?</span>{' '}
+                Vendibook Freight can be financed too — transportation may be included in
+                eligible financing arrangements, depending on the financing provider and
+                the transaction.
+              </p>
+              <Button variant="cta-outline" size="sm" className="rounded-full shrink-0" asChild>
+                <Link to="/vendibook-freight">
+                  About Vendibook Freight
+                  <ArrowRight className="w-3.5 h-3.5 ml-1" aria-hidden />
+                </Link>
+              </Button>
             </motion.div>
           </div>
         </section>

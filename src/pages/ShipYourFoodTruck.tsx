@@ -163,6 +163,10 @@ const FAQS = [
     a: 'Transportation charges vary with the origin and destination, the route, equipment dimensions and weight, running condition, current transportation availability, travel and fuel costs, pickup and delivery access, and any special handling.* Vendibook charges a separate $150 Freight Coordination Fee.',
   },
   {
+    q: 'Can the transportation itself be financed?',
+    a: 'Yes — freight may be included in eligible financing arrangements, depending on the financing provider and the transaction. See the Financing page for how equipment financing works, and mention transportation when you apply.*',
+  },
+  {
     q: 'What information do I need to request transportation pricing?',
     a: 'The pickup location, delivery location, and equipment type are the starting point. Adding the year, dimensions, approximate weight, running condition, and preferred pickup date makes the pricing more accurate for your specific shipment.',
   },
@@ -1118,11 +1122,12 @@ const ShipYourFoodTruck = () => {
               </span>
               <div className="flex-1">
                 <h2 className="text-xl md:text-2xl font-bold text-foreground tracking-tight mb-2">
-                  Buying the equipment too?
+                  Yes — Vendibook Freight can be financed too.
                 </h2>
                 <p className="text-sm md:text-base text-muted-foreground leading-relaxed">
-                  Freight may be included in eligible financing arrangements depending on the
-                  financing provider and transaction.*
+                  Freight transportation may be included in eligible financing arrangements,
+                  depending on the financing provider and the transaction.* Mention it when you
+                  apply for equipment financing.
                 </p>
               </div>
               <Button variant="cta-outline" size="lg" className="rounded-full shrink-0" asChild>
@@ -1212,7 +1217,10 @@ const ShipYourFoodTruck = () => {
               third party transportation and logistics providers. Availability, pricing, pickup
               timing, delivery timing, routes, equipment eligibility, and transportation
               requirements vary by shipment and provider. Estimates are provided for planning
-              purposes and may change when final transportation details are confirmed.
+              purposes and may change when final transportation details are confirmed. Financing,
+              where referenced, is provided by third-party financing partners and is subject to
+              application, prequalification, and underwriting; Vendibook is not a lender and does
+              not guarantee approval, rates, terms, or funding.
             </p>
           </div>
         </section>
