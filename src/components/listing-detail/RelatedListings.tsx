@@ -16,6 +16,8 @@ interface RelatedListing {
   mode: string;
   category: string;
   address: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
   distance_miles?: number;
 }
 
