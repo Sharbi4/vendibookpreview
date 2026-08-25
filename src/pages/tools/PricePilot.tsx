@@ -233,6 +233,10 @@ export default function PricePilot() {
   const [result, setResult] = useState<PricingResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  // Validation state — inline per-field messages plus one summary banner
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [formSummary, setFormSummary] = useState<string | null>(null);
+
   // Preview analytics (replaces the old route-level gate tracking)
   useEffect(() => {
     if (!authLoading && !accessLoading && !unlocked) {
