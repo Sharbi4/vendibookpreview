@@ -156,10 +156,8 @@ const SellMyFoodTruck = () => {
 
   const addOns = [
     { key: 'boost', name: 'Featured Boost', price: boost.detailLabel, body: 'Move your listing into featured placement on relevant marketplace pages.', href: '/dashboard?tab=upgrades', cta: 'See boost options' },
-    { key: 'pro-listing', name: 'Pro Listing', price: proListing.detailLabel, body: 'Extended premium placement plus an organic Facebook featured spot for your listing.', href: '/dashboard?tab=upgrades', cta: 'See Pro Listing' },
     { key: 'concierge', name: 'Concierge Listing', price: concierge.detailLabel, body: 'Our team builds and polishes the listing from your photos and information.', href: '/list/concierge', cta: 'Start concierge' },
-    { key: 'rewrite', name: 'Listing Rewrite', price: rewrite.detailLabel, body: 'A rewritten title, description, and spec summary for a listing you already published.', href: '/dashboard?tab=upgrades', cta: 'See rewrite' },
-  ].filter((a) => a.key !== 'rewrite' || rewrite.isActive);
+  ];
 
   return (
     <>
@@ -301,7 +299,7 @@ const SellMyFoodTruck = () => {
           </section>
 
           {/* HOW SELLING WORKS */}
-          <section className="py-12 md:py-16 border-t border-border">
+          <section id="how-selling-works" className="py-12 md:py-16 border-t border-border scroll-mt-24">
             <div className="container max-w-5xl">
               <h2 className="text-2xl md:text-3xl font-semibold text-foreground">How selling works</h2>
               <div className="mt-8 grid sm:grid-cols-2 gap-4">
