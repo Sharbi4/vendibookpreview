@@ -381,7 +381,7 @@ export default function PricePilot() {
     <>
       <SEO
         title="PricePilot | Food Truck & Food Trailer Pricing | Vendibook"
-        description="Market-informed pricing guidance for food trucks, food trailers, carts, and mobile bars. Get a defensible market range, rental rate benchmarks, and practical pricing moves — included with Vendibook Pro."
+        description="Get a market-backed pricing recommendation for your food truck or food trailer. PricePilot helps sellers and owners understand value, pricing range, and market signals before listing."
       />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(pageJsonLd) }} />
 
@@ -395,8 +395,14 @@ export default function PricePilot() {
             ) : (
               /* ─── PUBLIC PRODUCT EXPERIENCE ─── */
               <>
-                <Hero onStart={scrollToStart} onSample={scrollToSample} />
-                <ValuationVisual />
+                <Hero
+                  signedOut={!user}
+                  unlocked={unlocked}
+                  onStart={scrollToStart}
+                  onSample={scrollToSample}
+                  signInHref={signInHref}
+                />
+                <ValuePoints />
                 <WhatItLooksAt />
                 <HowItWorks />
                 <SampleValuation ref={sampleRef} />
