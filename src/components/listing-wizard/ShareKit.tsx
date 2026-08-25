@@ -17,6 +17,7 @@ import {
   Send,
   Image as ImageIcon,
   Wand2,
+  Globe,
   Camera} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
@@ -133,6 +134,7 @@ export const ShareKit: React.FC<ShareKitProps> = ({ listing, onClose }) => {
   const [captionCopied, setCaptionCopied] = useState(false);
   const [emailLinkCopied, setEmailLinkCopied] = useState(false);
   const [smsLinkCopied, setSmsLinkCopied] = useState(false);
+  const [websiteSnippetCopied, setWebsiteSnippetCopied] = useState(false);
   const [captionVariant, setCaptionVariant] = useState(0);
   const [shareWithImageBusy, setShareWithImageBusy] = useState(false);
 
@@ -230,6 +232,12 @@ export const ShareKit: React.FC<ShareKitProps> = ({ listing, onClose }) => {
   const handleCopySmsLink = () => {
     const sms = `${listing.title} — book now: ${withUtm('sms', 'message')}`;
     copy(sms, setSmsLinkCopied, 'SMS message copied!');
+  };
+  const handleCopyWebsiteSnippet = () => {
+    const anchorText = listing.mode === 'sale' ? 'View this listing on Vendibook' : 'Book on Vendibook';
+    const html = `<a href="${withUtm('seller_website', 'referral')}" target="_blank" rel="noopener">${anchorText}</a>`;
+    copy(html, setWebsiteSnippetCopied, 'Website link copied — paste it into your site');
+    logShare('copy' as ShareChannel, { share_url: listingUrl, content_type: 'website_snippet' });
   };
 
   const handleNativeShare = async () => {
