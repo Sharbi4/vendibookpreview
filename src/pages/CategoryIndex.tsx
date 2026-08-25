@@ -68,6 +68,19 @@ interface ListingRow {
 
 const MIN_TIER = 6;
 
+// States with a live state-level page, for breadcrumb parent links.
+const STATE_NAME_BY_CODE: Record<string, string> = {
+  TX: 'Texas', AZ: 'Arizona', GA: 'Georgia', FL: 'Florida', MI: 'Michigan',
+  OH: 'Ohio', NC: 'North Carolina', OR: 'Oregon', CA: 'California',
+};
+const STATE_SALE_PAGE_CODES: Record<CategoryKey, Set<string>> = {
+  food_truck: new Set(['TX', 'AZ', 'GA', 'FL', 'MI', 'OH', 'NC', 'OR', 'CA']),
+  food_trailer: new Set(['TX', 'GA', 'FL', 'MI', 'OH', 'AZ']),
+  ghost_kitchen: new Set(),
+  vendor_space: new Set(),
+};
+const STATE_RENT_PAGE_CODES = new Set(['TX', 'FL', 'CA']);
+
 const formatPrice = (l: ListingRow): string => {
   if (l.mode === 'sale' && l.price_sale) return `$${Number(l.price_sale).toLocaleString()}`;
   if (l.price_daily) return `$${Number(l.price_daily).toLocaleString()}/day`;
@@ -175,14 +188,47 @@ const CategoryIndex = ({ config }: { config: CategoryIndexConfig }) => {
       : config.category === 'ghost_kitchen' ? 'commercial-kitchens'
       : 'vendor-spaces';
 
+  // Breadcrumb hierarchy: Home → National category → State → City.
+  const crumbCategoryPlural = multiCategory ? 'Food Trucks & Food Trailers' : `${categoryLabel(config.category)}s`;
+  const crumbNationalLabel = config.mode === 'any'
+    ? crumbCategoryPlural
+    : `${crumbCategoryPlural} ${config.mode === 'sale' ? 'for Sale' : 'for Rent'}`;
+  const crumbNationalPath =
+    config.mode === 'rent'
+      ? (config.category === 'food_trailer' ? '/food-trailers-for-rent' : '/food-trucks-for-rent')
+      : config.mode === 'sale'
+        ? (config.category === 'food_trailer' ? '/food-trailers-for-sale' : '/food-trucks-for-sale')
+        : (config.category === 'food_truck' ? '/food-trucks'
+          : config.category === 'food_trailer' ? '/food-trailers'
+          : config.category === 'ghost_kitchen' ? '/shared-kitchens' : '/vendor-spaces');
+
+  const cityStateName = config.city ? STATE_NAME_BY_CODE[config.city.stateCode] : undefined;
+  const cityStateSlug = cityStateName ? cityStateName.toLowerCase().replace(/[^a-z0-9]+/g, '-') : undefined;
+  const statePageExists = !!(config.city && config.city.stateCode && cityStateSlug && (
+    config.mode === 'sale'
+      ? STATE_SALE_PAGE_CODES[config.category]?.has(config.city.stateCode)
+      : config.mode === 'rent' && config.category === 'food_truck'
+        ? STATE_RENT_PAGE_CODES.has(config.city.stateCode)
+        : false
+  ));
+
+  const crumbs: { name: string; href?: string }[] = [{ name: 'Home', href: '/' }];
+  if (config.city || config.state) crumbs.push({ name: crumbNationalLabel, href: crumbNationalPath });
+  if (statePageExists && cityStateName && cityStateSlug) {
+    crumbs.push({ name: cityStateName, href: `${crumbNationalPath}/${cityStateSlug}` });
+  }
+  crumbs.push({ name: config.h1 });
+
   // Schemas
   const breadcrumbSchema = {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
-    itemListElement: [
-      { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://vendibook.com/' },
-      { '@type': 'ListItem', position: 2, name: config.h1, item: `https://vendibook.com${canonical}` },
-    ],
+    itemListElement: crumbs.map((c, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      name: c.name,
+      item: `https://vendibook.com${c.href ?? canonical}`,
+    })),
   };
   const faqSchema = {
     '@context': 'https://schema.org',
@@ -329,13 +375,16 @@ const CategoryIndex = ({ config }: { config: CategoryIndexConfig }) => {
         <div className="container py-6 md:py-10 space-y-10">
           <Breadcrumb>
             <BreadcrumbList>
-              <BreadcrumbItem>
-                <BreadcrumbLink asChild><Link to="/">Home</Link></BreadcrumbLink>
-              </BreadcrumbItem>
-              <BreadcrumbSeparator />
-              <BreadcrumbItem>
-                <BreadcrumbPage>{config.h1}</BreadcrumbPage>
-              </BreadcrumbItem>
+              {crumbs.map((c, i) => (
+                <BreadcrumbItem key={`${c.name}-${i}`}>
+                  {i > 0 && <BreadcrumbSeparator />}
+                  {c.href ? (
+                    <BreadcrumbLink asChild><Link to={c.href}>{c.name}</Link></BreadcrumbLink>
+                  ) : (
+                    <BreadcrumbPage>{c.name}</BreadcrumbPage>
+                  )}
+                </BreadcrumbItem>
+              ))}
             </BreadcrumbList>
           </Breadcrumb>
 

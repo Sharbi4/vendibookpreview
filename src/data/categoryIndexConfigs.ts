@@ -93,6 +93,25 @@ export const CATEGORY_INDEX_CONFIGS: CategoryIndexConfig[] = [
       'Browse food trucks for sale on Vendibook. Verified sellers, full photos, specs, and pricing on used and new mobile kitchens across the US.',
     intro:
       'Find food trucks for sale from verified sellers across the country. Every listing includes detailed photos, equipment specs, mileage, and asking price so you can compare and buy with confidence.',
+    sections: [
+      {
+        heading: 'Browse food trucks for sale by state',
+        paragraphs: [
+          'Shopping locally? Browse food trucks for sale in the states where Vendibook has active inventory and dedicated marketplace pages.',
+        ],
+        links: [
+          { href: '/food-trucks-for-sale/texas', label: 'Texas' },
+          { href: '/food-trucks-for-sale/arizona', label: 'Arizona' },
+          { href: '/food-trucks-for-sale/georgia', label: 'Georgia' },
+          { href: '/food-trucks-for-sale/florida', label: 'Florida' },
+          { href: '/food-trucks-for-sale/michigan', label: 'Michigan' },
+          { href: '/food-trucks-for-sale/ohio', label: 'Ohio' },
+          { href: '/food-trucks-for-sale/california', label: 'California' },
+          { href: '/food-trucks-for-sale/north-carolina', label: 'North Carolina' },
+          { href: '/food-trucks-for-sale/oregon', label: 'Oregon' },
+        ],
+      },
+    ],
     faqs: truckFaqs,
     related: [
       { href: '/food-trucks', label: 'All food trucks' },
@@ -252,6 +271,22 @@ export const CATEGORY_INDEX_CONFIGS: CategoryIndexConfig[] = [
       'Used and new food trailers for sale on Vendibook. Browse concession trailers, BBQ trailers, and turnkey mobile kitchens with photos, specs, and pricing.',
     intro:
       'Find food trailers for sale from verified owners. Compare concession trailers, BBQ pits, and full mobile kitchens with full photos, equipment lists, and asking prices.',
+    sections: [
+      {
+        heading: 'Browse food trailers for sale by state',
+        paragraphs: [
+          'Shopping locally? Browse food trailers for sale in the states where Vendibook has active inventory and dedicated marketplace pages.',
+        ],
+        links: [
+          { href: '/food-trailers-for-sale/texas', label: 'Texas' },
+          { href: '/food-trailers-for-sale/georgia', label: 'Georgia' },
+          { href: '/food-trailers-for-sale/florida', label: 'Florida' },
+          { href: '/food-trailers-for-sale/michigan', label: 'Michigan' },
+          { href: '/food-trailers-for-sale/ohio', label: 'Ohio' },
+          { href: '/food-trailers-for-sale/arizona', label: 'Arizona' },
+        ],
+      },
+    ],
     faqs: trailerFaqs,
     related: [
       { href: '/food-trailers', label: 'All food trailers' },
