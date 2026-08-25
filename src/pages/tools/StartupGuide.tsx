@@ -402,7 +402,7 @@ const StartupGuide = () => {
         type="article"
       />
       <JsonLd
-        data={{
+        schema={{
           '@context': 'https://schema.org',
           '@type': 'Article',
           headline: 'How to Start a Food Truck or Trailer',
@@ -510,7 +510,7 @@ const StartupGuide = () => {
                       <ul className="grid gap-2 sm:grid-cols-2">
                         {step.points.map((p) => (
                           <li key={p} className="flex items-start gap-2 text-sm text-muted-foreground leading-relaxed">
-                            <CheckCircle2 className="h-4 w-4 mt-0.5 shrink-0 text-cta-primary" aria-hidden="true" />
+                            <CheckCircle2 className="h-4 w-4 mt-0.5 shrink-0 text-primary" aria-hidden="true" />
                             {p}
                           </li>
                         ))}
@@ -570,7 +570,7 @@ const StartupGuide = () => {
                     <ul className="space-y-2">
                       {profile.changes.map((c) => (
                         <li key={c} className="flex items-start gap-2 text-sm text-muted-foreground leading-relaxed">
-                          <CheckCircle2 className="h-4 w-4 mt-0.5 shrink-0 text-cta-primary" aria-hidden="true" />
+                          <CheckCircle2 className="h-4 w-4 mt-0.5 shrink-0 text-primary" aria-hidden="true" />
                           {c}
                         </li>
                       ))}
@@ -599,7 +599,7 @@ const StartupGuide = () => {
                 <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 mb-10">
                   {BUDGET_CATEGORIES.map((c) => (
                     <li key={c} className="flex items-start gap-2 text-sm text-muted-foreground">
-                      <DollarSign className="h-4 w-4 mt-0.5 shrink-0 text-cta-primary" aria-hidden="true" />
+                      <DollarSign className="h-4 w-4 mt-0.5 shrink-0 text-primary" aria-hidden="true" />
                       {c}
                     </li>
                   ))}
@@ -752,7 +752,7 @@ const StartupGuide = () => {
                       </div>
                       <h3 className="font-bold tracking-tight mb-1">{link.title}</h3>
                       <p className="text-sm text-muted-foreground leading-relaxed flex-1 mb-4">{link.body}</p>
-                      <span className="inline-flex items-center text-sm font-semibold text-cta-primary">
+                      <span className="inline-flex items-center text-sm font-semibold text-primary">
                         {link.cta}
                         <ArrowRight className="ml-1.5 h-4 w-4 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
                       </span>

@@ -451,7 +451,7 @@ const RegulationsHub = () => {
         type="article"
       />
       <JsonLd
-        data={{
+        schema={{
           '@context': 'https://schema.org',
           '@type': 'Article',
           headline: 'Food Truck Regulations and Permit Guide',
@@ -609,7 +609,7 @@ const RegulationsHub = () => {
                         {stateBlock.regions.map((region) => (
                           <div key={region.name} className="bg-sale-card rounded-3xl p-7 h-full flex flex-col">
                             <div className="flex items-start gap-3 mb-1">
-                              <MapPin className="h-5 w-5 mt-0.5 shrink-0 text-cta-primary" aria-hidden="true" />
+                              <MapPin className="h-5 w-5 mt-0.5 shrink-0 text-primary" aria-hidden="true" />
                               <div>
                                 <h4 className="font-bold tracking-tight">{region.name}</h4>
                                 <p className="text-xs text-muted-foreground">{region.agency}</p>
@@ -621,7 +621,7 @@ const RegulationsHub = () => {
                             <ul className="space-y-2 mb-5">
                               {region.verify.map((v) => (
                                 <li key={v} className="flex items-start gap-2 text-sm text-muted-foreground leading-relaxed">
-                                  <CheckCircle2 className="h-4 w-4 mt-0.5 shrink-0 text-cta-primary" aria-hidden="true" />
+                                  <CheckCircle2 className="h-4 w-4 mt-0.5 shrink-0 text-primary" aria-hidden="true" />
                                   {v}
                                 </li>
                               ))}
@@ -736,7 +736,7 @@ const RegulationsHub = () => {
                 <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 mb-10">
                   {COMMISSARY_FUNCTIONS.map((f) => (
                     <li key={f} className="flex items-start gap-2 text-sm text-muted-foreground">
-                      <CheckCircle2 className="h-4 w-4 mt-0.5 shrink-0 text-cta-primary" aria-hidden="true" />
+                      <CheckCircle2 className="h-4 w-4 mt-0.5 shrink-0 text-primary" aria-hidden="true" />
                       {f}
                     </li>
                   ))}
@@ -771,7 +771,7 @@ const RegulationsHub = () => {
                 <FadeIn key={ex.state} delay={Math.min(i * 0.04, 0.2)}>
                   <div className="bg-sale-card rounded-3xl p-6 h-full">
                     <div className="flex items-center gap-2 mb-2">
-                      <Home className="h-4 w-4 text-cta-primary" aria-hidden="true" />
+                      <Home className="h-4 w-4 text-primary" aria-hidden="true" />
                       <h3 className="font-bold tracking-tight">{ex.state}</h3>
                     </div>
                     <span className="chip-accent rounded-full px-3 py-1 text-xs font-medium inline-block mb-3">
