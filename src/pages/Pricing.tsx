@@ -389,7 +389,7 @@ const Pricing = () => {
                 Pricing
               </div>
               <h1 className="text-4xl sm:text-5xl md:text-[3.4rem] font-bold tracking-tight text-foreground mb-5 leading-[1.06]">
-                Sell more. Keep more when you close.
+                Vendibook Pricing — Membership and Seller Plans
               </h1>
               <p className="text-lg text-muted-foreground max-w-xl mx-auto leading-relaxed">
                 Start free and pay only when you earn. Upgrade to Pro when you&rsquo;re

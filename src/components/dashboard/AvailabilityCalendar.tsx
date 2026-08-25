@@ -132,7 +132,7 @@ const AvailabilityCalendar = ({ listing, onClose }: AvailabilityCalendarProps) =
             <h2 className="text-xl font-bold text-foreground">Availability Calendar</h2>
             <p className="text-sm text-muted-foreground mt-1">{listing.title}</p>
           </div>
-          <Button variant="ghost" size="icon" onClick={onClose}>
+          <Button variant="ghost" size="icon" onClick={onClose} aria-label="Close availability calendar">
             <X className="h-5 w-5" />
           </Button>
         </div>
@@ -142,13 +142,13 @@ const AvailabilityCalendar = ({ listing, onClose }: AvailabilityCalendarProps) =
           <div className="flex-1 p-6">
             {/* Month Navigation */}
             <div className="flex items-center justify-between mb-6">
-              <Button variant="outline" size="icon" onClick={handlePrevMonth}>
+              <Button variant="outline" size="icon" onClick={handlePrevMonth} aria-label="Previous month">
                 <ChevronLeft className="h-4 w-4" />
               </Button>
               <h3 className="text-lg font-semibold text-foreground">
                 {format(currentMonth, 'MMMM yyyy')}
               </h3>
-              <Button variant="outline" size="icon" onClick={handleNextMonth}>
+              <Button variant="outline" size="icon" onClick={handleNextMonth} aria-label="Next month">
                 <ChevronRight className="h-4 w-4" />
               </Button>
             </div>

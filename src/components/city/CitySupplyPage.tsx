@@ -135,7 +135,7 @@ export function CitySupplyPage({ city, assetType }: CitySupplyPageProps) {
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
                 <Button size="lg" variant="outline" asChild>
-                  <Link to="/how-it-works">Learn more</Link>
+                  <Link to="/how-it-works">Learn how selling works</Link>
                 </Button>
               </div>
 

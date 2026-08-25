@@ -338,7 +338,7 @@ const STATE_CONTENT_OVERRIDES: Record<string, {
 }> = {
   'texas:food_truck': {
     title: 'Food Trucks for Sale in Texas | Used & Owner-Listed | Vendibook',
-    description: 'Food trucks for sale in Texas: owner-listed trucks in Houston, DFW, Austin & San Antonio with real photos, specs, and asking prices. Message sellers directly — financing available.',
+    description: 'Used food trucks for sale in Texas — Houston, DFW, Austin & San Antonio. Real photos, equipment specs, and asking prices from owners. Message sellers direct, financing & delivery available.',
     introExtra: 'Texas is one of the strongest mobile food markets in the country, and buyers here typically shop the Houston, Dallas–Fort Worth, Austin, and San Antonio corridors. It is also getting easier to operate statewide: as of July 1, 2026, Texas mobile food vendors move to a single statewide DSHS license, replacing the patchwork of county-by-county permits — so a truck bought in one metro can trade across the state with far less paperwork.',
     sections: [
       {
@@ -349,6 +349,17 @@ const STATE_CONTENT_OVERRIDES: Record<string, {
         ],
       },
       {
+        heading: 'Texas permits, licensing, and local rules',
+        paragraphs: [
+          'Before you buy, check what your city and county require for commissary agreements, fire suppression inspections, and mobile vending zones — those rules decide whether a specific truck can start earning right away or needs work first. PermitPath builds a checklist for your Texas city, and the Regulations Hub covers the statewide license change and health-department basics.',
+        ],
+        links: [
+          { href: '/tools/permitpath', label: 'Texas permit checklist (PermitPath)' },
+          { href: '/tools/regulations-hub', label: 'Mobile food regulations hub' },
+          { href: '/blog/texas-mobile-food-vendor-law-2026', label: 'Texas 2026 statewide license explained' },
+        ],
+      },
+      {
         heading: 'Financing a food truck in Texas',
         paragraphs: [
           'Qualified Texas buyers can explore equipment financing on eligible listings instead of paying the full asking price up front. Financing availability, terms, and approval are determined by the financing partner — check any listing for the financing option or start with our financing overview.',
@@ -356,6 +367,7 @@ const STATE_CONTENT_OVERRIDES: Record<string, {
         links: [
           { href: '/financing', label: 'Explore food truck financing' },
           { href: '/ship-your-food-truck', label: 'Freight delivery for purchases' },
+          { href: '/food-truck-prices', label: 'What food trucks actually sell for' },
         ],
       },
     ],
