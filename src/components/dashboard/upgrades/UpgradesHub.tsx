@@ -21,10 +21,8 @@ import {
   ClipboardCheck,
   ConciergeBell,
   Crown,
-  FileText,
   Flame,
   Lock,
-  PenLine,
   Zap,
   type LucideIcon,
 } from 'lucide-react';
@@ -280,9 +278,7 @@ const OneTimeUpgrades = () => {
   const isPro = tier === 'pro' || tier === 'premium';
 
   const boost = useCatalogPrice(ACTIVE_PRODUCT_SLUGS.featuredBoost);
-  const proListing = useCatalogPrice(ACTIVE_PRODUCT_SLUGS.proListing);
   const concierge = useCatalogPrice(ACTIVE_PRODUCT_SLUGS.conciergeListing);
-  const rewrite = useCatalogPrice(ACTIVE_PRODUCT_SLUGS.listingRewrite);
 
   const owns = (slug: string) => {
     const e = bySlug[slug];
@@ -310,17 +306,6 @@ const OneTimeUpgrades = () => {
       href: '/host/listings',
     },
     {
-      key: 'pro-listing',
-      icon: FileText,
-      name: 'Pro Listing',
-      benefit:
-        'Premium presentation and priority placement for 30 days.',
-      price: proListing.detailLabel,
-      state: owns(ACTIVE_PRODUCT_SLUGS.proListing) ? 'Active on your account' : null,
-      ctaLabel: 'Choose a listing',
-      href: '/host/listings',
-    },
-    {
       key: 'concierge',
       icon: ConciergeBell,
       name: 'Concierge Listing',
@@ -330,20 +315,6 @@ const OneTimeUpgrades = () => {
       ctaLabel: 'Start concierge',
       href: '/list/concierge',
     },
-    ...(rewrite.isActive
-      ? [
-          {
-            key: 'rewrite',
-            icon: PenLine,
-            name: 'Listing Rewrite',
-            benefit: 'A rewritten title, description and highlights for one listing.',
-            price: rewrite.detailLabel,
-            state: owns(ACTIVE_PRODUCT_SLUGS.listingRewrite) ? 'Purchased' : null,
-            ctaLabel: 'Choose a listing',
-            href: '/host/listings',
-          } as AddOn,
-        ]
-      : []),
   ];
 
   return (
