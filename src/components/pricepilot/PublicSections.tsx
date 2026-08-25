@@ -154,12 +154,13 @@ export const SampleValuation = React.forwardRef<HTMLElement>((_props, ref) => (
     </Reveal>
 
     <Reveal delay={0.1}>
-      <div className="relative mt-10 rounded-[28px] bg-sale-card p-6 md:p-10">
-        <span className="absolute right-5 top-5 rounded-full bg-black/[0.05] px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground ring-1 ring-black/10">
-          Sample · Illustrative data
-        </span>
-
-        <Eyebrow>2021 Food Truck · Austin, TX</Eyebrow>
+      <div className="mt-10 rounded-[28px] bg-sale-card p-6 md:p-10">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <Eyebrow>2021 Food Truck · Austin, TX</Eyebrow>
+          <span className="rounded-full bg-black/[0.05] px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground ring-1 ring-black/10">
+            Sample · Illustrative data
+          </span>
+        </div>
 
         {/* Recommended figure */}
         <div className="mt-8 text-center">

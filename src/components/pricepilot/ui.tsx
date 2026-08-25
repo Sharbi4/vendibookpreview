@@ -93,7 +93,10 @@ export const RangeBar: React.FC<{
       </div>
       <div className={cn('mt-2.5 flex items-center justify-between tabular-nums text-muted-foreground', lg ? 'text-[13px]' : 'text-[12px]')}>
         <span>Low · {fmt(low)}{suffix ?? ''}</span>
-        {typeof benchmark === 'number' && <span className="hidden sm:inline">{fmt(benchmark)} benchmark</span>}
+        {/* Center benchmark caption only when it can't collide with the estimate marker */}
+        {typeof benchmark === 'number' && Math.abs(pct(benchmark) - pct(estimate)) > 12 && (
+          <span className="hidden sm:inline">{fmt(benchmark)} benchmark</span>
+        )}
         <span>High · {fmt(high)}{suffix ?? ''}</span>
       </div>
     </div>

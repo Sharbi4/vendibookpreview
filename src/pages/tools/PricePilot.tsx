@@ -344,8 +344,8 @@ export default function PricePilot() {
                           <Button size="lg" className="mt-6 bg-orange-500 text-white hover:bg-orange-600" asChild>
                             <Link to={signInHref}>Sign in to continue <ArrowRight className="ml-1.5 h-4 w-4" /></Link>
                           </Button>
-                          <p className="mt-4 inline-flex items-center gap-1.5 text-[12px] text-muted-foreground">
-                            <BadgeCheck className="h-3.5 w-3.5 text-orange-600" />
+                          <p className="mt-4 flex items-center justify-center gap-1.5 text-[12px] text-muted-foreground">
+                            <BadgeCheck className="h-3.5 w-3.5 shrink-0 text-orange-600" />
                             PricePilot is included with Vendibook Pro
                           </p>
                         </motion.div>
