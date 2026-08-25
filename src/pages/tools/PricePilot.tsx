@@ -93,7 +93,7 @@ const CONDITIONS = [
 ] as const;
 
 const OPERATIONAL = [
-  { value: 'turnkey', label: 'Turnkey — ready to operate today' },
+  { value: 'turnkey', label: 'Turnkey, ready to operate today' },
   { value: 'running', label: 'Running, some work needed' },
   { value: 'needs_work', label: 'Needs mechanical work' },
   { value: 'not_running', label: 'Not currently running' },
@@ -347,7 +347,7 @@ export default function PricePilot() {
     });
     setLoading(false);
     if (err || !data?.ok) {
-      setError(err ?? 'The pricing service could not complete your appraisal. Your answers are saved — try again.');
+      setError(err ?? 'The pricing service could not complete your appraisal. Your answers are saved, so try again.');
       scrollToStart();
       return;
     }
@@ -489,7 +489,7 @@ export default function PricePilot() {
                                 </Button>
                                 <Button variant="cta-outline" onClick={() => setError(null)}>Review my answers</Button>
                               </div>
-                              <p className="mt-4 text-[11px] text-muted-foreground">Everything you entered is still here — nothing was lost.</p>
+                              <p className="mt-4 text-[11px] text-muted-foreground">Everything you entered is still here. Nothing was lost.</p>
                             </SectionCard>
                           ) : (
                             <SectionCard className="rounded-[24px] p-5 md:p-8">
@@ -536,7 +536,7 @@ export default function PricePilot() {
                                   {step === 0 && (
                                     <motion.div key="s0" {...stepMotion} transition={{ duration: 0.25 }}>
                                       <h3 className="text-xl md:text-2xl font-bold tracking-tight text-foreground">What are you pricing?<Req /></h3>
-                                      <p className="mt-1 text-sm text-muted-foreground">Choose the closest match — it anchors the market evidence.</p>
+                                      <p className="mt-1 text-sm text-muted-foreground">Choose the closest match. It anchors the market evidence.</p>
                                       <div
                                         data-pp-field="assetCategory"
                                         role="group"
@@ -775,7 +775,7 @@ export default function PricePilot() {
                   <Accordion type="single" collapsible className="w-full">
                     <AccordionItem value="q1">
                       <AccordionTrigger>How does PricePilot set the range?</AccordionTrigger>
-                      <AccordionContent>It scores real comparable evidence for similarity to your equipment, weights it by evidence quality, filters statistical outliers, and computes a weighted market range. Documented adjustments for condition, operational status, and equipment package refine the result. AI writes the interpretation — it never invents the numbers.</AccordionContent>
+                      <AccordionContent>It scores real comparable evidence for similarity to your equipment, weights it by evidence quality, filters statistical outliers, and computes a weighted market range. Documented adjustments for condition, operational status, and equipment package refine the result. AI writes the interpretation. It never invents the numbers.</AccordionContent>
                     </AccordionItem>
                     <AccordionItem value="q2">
                       <AccordionTrigger>What does PricePilot cost?</AccordionTrigger>
