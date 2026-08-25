@@ -537,6 +537,23 @@ const SellMyFoodTruck = () => {
             </div>
           </section>
 
+          {/* EXPLORE THE MARKETPLACE */}
+          <section className="py-12 md:py-16 border-t border-border">
+            <div className="container max-w-4xl">
+              <h2 className="text-2xl md:text-3xl font-semibold text-foreground">Part of the Vendibook marketplace</h2>
+              <p className="mt-3 text-muted-foreground max-w-2xl">
+                Your listing sits inside the same marketplace buyers already use to find equipment.
+              </p>
+              <ul className="mt-6 grid sm:grid-cols-2 gap-x-8 gap-y-2.5 text-sm">
+                <li><Link to="/food-trucks-for-sale" className="font-medium text-primary hover:underline">Food trucks for sale →</Link></li>
+                <li><Link to="/food-trailers-for-sale" className="font-medium text-primary hover:underline">Food trailers for sale →</Link></li>
+                <li><Link to="/financing" className="font-medium text-primary hover:underline">How buyer financing works →</Link></li>
+                <li><Link to="/how-it-works?role=sell" className="font-medium text-primary hover:underline">The full seller journey →</Link></li>
+                <li><Link to="/tools/pricepilot" className="font-medium text-primary hover:underline">Estimate your asking price with PricePilot →</Link></li>
+              </ul>
+            </div>
+          </section>
+
           {/* FINAL CTA */}
           <section className="py-14 md:py-20 border-t border-border">
             <div className="container max-w-3xl text-center">
