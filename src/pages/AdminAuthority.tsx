@@ -111,7 +111,7 @@ const AdminAuthority = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <SEO title="Authority & Backlinks (Admin) | Vendibook" description="Internal SEO authority dashboard." noIndex />
+      <SEO title="Authority & Backlinks (Admin) | Vendibook" description="Internal SEO authority dashboard." noindex />
       <Header />
       <main className="flex-1 max-w-5xl mx-auto w-full px-4 py-10">
         <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-foreground mb-2">
