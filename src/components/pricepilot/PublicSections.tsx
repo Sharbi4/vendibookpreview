@@ -425,6 +425,9 @@ export const FinalConnections: React.FC = () => (
         <Link to="/search" className="group inline-flex items-center gap-1.5 font-semibold text-foreground transition-colors hover:text-primary">
           Browse the marketplace <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
         </Link>
+        <Link to="/food-truck-prices" className="group inline-flex items-center gap-1.5 font-semibold text-foreground transition-colors hover:text-primary">
+          Food truck prices &amp; cost data <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+        </Link>
       </div>
     </Reveal>
   </section>
