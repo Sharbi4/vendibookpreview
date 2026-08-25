@@ -26,6 +26,8 @@ import {
   getCityStateSlug,
   CITY_DATA,
 } from '@/data/cityData';
+import { useNationwideInventory, type InventoryCategory } from '@/hooks/useNationwideInventory';
+import ExpandSearchModule, { LowInventoryInlineLine, LOW_INVENTORY_THRESHOLD, NEAR_EMPTY_THRESHOLD } from '@/components/seo/ExpandSearchModule';
 
 interface CategoryCityPageProps {
   mode: 'rent' | 'buy';
