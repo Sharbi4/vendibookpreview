@@ -676,12 +676,22 @@ export default function PricePilot() {
                                             </button>
                                           ))}
                                         </div>
+                                        <FieldError id="pp-err-condition" message={errors.condition} />
                                       </div>
                                       <div>
-                                        <Label>Operational status</Label>
-                                        <div className="mt-1.5 grid grid-cols-1 gap-1.5 sm:grid-cols-2">
+                                        <Label>Operational status<Req /></Label>
+                                        <div
+                                          data-pp-field="operationalStatus"
+                                          role="group"
+                                          aria-label="Operational status"
+                                          aria-invalid={!!errors.operationalStatus}
+                                          aria-describedby={errors.operationalStatus ? 'pp-err-operationalStatus' : undefined}
+                                          tabIndex={-1}
+                                          className={cn('mt-1.5 grid grid-cols-1 gap-1.5 rounded-2xl focus:outline-none sm:grid-cols-2',
+                                            errors.operationalStatus && 'ring-2 ring-amber-600/40 ring-offset-2 ring-offset-sale-card')}
+                                        >
                                           {OPERATIONAL.map((o) => (
-                                            <button key={o.value} type="button" onClick={() => setOperationalStatus(o.value)}
+                                            <button key={o.value} type="button" onClick={() => { setOperationalStatus(o.value); clearError('operationalStatus'); }}
                                               aria-pressed={operationalStatus === o.value}
                                               className={cn('rounded-xl px-3 py-2.5 text-left text-xs font-semibold ring-1 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
                                                 operationalStatus === o.value ? 'bg-primary/[0.08] text-primary ring-primary/50' : 'bg-muted/60 text-muted-foreground ring-border hover:ring-foreground/25')}>
