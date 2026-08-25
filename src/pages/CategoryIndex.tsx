@@ -466,7 +466,7 @@ const CategoryIndex = ({ config }: { config: CategoryIndexConfig }) => {
           {/* City links */}
           <section aria-labelledby="cities-heading" className="space-y-3">
             <h2 id="cities-heading" className="text-xl font-semibold text-foreground">
-              Browse {categoryLabel(config.category).toLowerCase()}s by city
+              Browse {catPluralLower} by city
             </h2>
             <ul className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
               {cityLinks.map((c) => {
