@@ -345,6 +345,7 @@ const Header = ({ hideSearch = false }: HeaderProps) => {
                 size="icon"
                 onClick={closeMobileSearch}
                 className="shrink-0"
+                aria-label="Close search"
               >
                 <X className="h-5 w-5" />
               </Button>
