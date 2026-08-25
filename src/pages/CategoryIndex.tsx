@@ -486,19 +486,38 @@ const CategoryIndex = ({ config }: { config: CategoryIndexConfig }) => {
             <div className="flex items-center justify-center py-16 text-muted-foreground">
               <Loader2 className="h-6 w-6 animate-spin" />
             </div>
-          ) : totalListings === 0 ? (
-            <div className="rounded-lg border border-border bg-card p-8 text-center space-y-4">
-              <p className="text-muted-foreground">
-                No active listings in this category right now. Browse related categories or list yours.
-              </p>
-              <div className="flex flex-wrap gap-2 justify-center">
+          ) : localCount === 0 ? (
+            <div className="space-y-6">
+              <ExpandSearchModule
+                pageSlug={canonical}
+                resultCount={0}
+                nationwide={nationwide}
+                zeroResults
+                sellCta={{ label: sellerCta.ctaLabel, href: sellerCta.ctaHref }}
+                alertContext={{ category: config.category, mode: config.mode === 'any' ? undefined : config.mode }}
+              />
+              <div className="flex flex-wrap gap-2">
                 {config.related.map((r) => (
                   <Button key={r.href} asChild variant="outline" size="sm">
                     <Link to={r.href}>{r.label}</Link>
                   </Button>
                 ))}
               </div>
+              {(stateFallback.length > 0 || nationwideFallback.length > 0) && (
+                <div className="space-y-10">
+                  {renderTier(
+                    `More ${catPluralLower}${intentLabel ? ` ${intentLabel}` : ''} across ${stateLabel ?? 'nearby states'}`,
+                    stateFallback,
+                  )}
+                  {renderTier(
+                    `Additional ${catPluralLower}${intentLabel ? ` ${intentLabel}` : ''} available nationwide`,
+                    nationwideFallback,
+                    'Vendibook ships and connects across the US — these listings are open to buyers from other states.',
+                  )}
+                </div>
+              )}
             </div>
+
           ) : (
             <div className="space-y-10">
               {renderTier(primaryHeading, primary)}
