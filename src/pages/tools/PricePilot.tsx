@@ -496,7 +496,28 @@ export default function PricePilot() {
                                       transition={reduce ? { duration: 0 } : { duration: 0.4, ease: 'easeOut' }}
                                     />
                                   </div>
+                                  <p className="mt-2 text-right text-[11px] text-muted-foreground">
+                                    <span aria-hidden="true" className="font-semibold text-primary">*</span> Required
+                                  </p>
                                 </div>
+
+                                {/* Validation summary — names what's missing */}
+                                <AnimatePresence>
+                                  {formSummary && (
+                                    <motion.div
+                                      key="form-summary"
+                                      initial={reduce ? { opacity: 0 } : { opacity: 0, y: -6 }}
+                                      animate={{ opacity: 1, y: 0 }}
+                                      exit={{ opacity: 0 }}
+                                      transition={{ duration: 0.2 }}
+                                      role="alert"
+                                      className="mb-5 flex items-start gap-2.5 rounded-xl bg-amber-500/[0.08] px-4 py-3 ring-1 ring-amber-600/25"
+                                    >
+                                      <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-amber-700" />
+                                      <p className="text-[13px] font-medium leading-snug text-amber-800">{formSummary}</p>
+                                    </motion.div>
+                                  )}
+                                </AnimatePresence>
 
                                 <AnimatePresence mode="wait">
                                   {/* 1 — What are you pricing */}
