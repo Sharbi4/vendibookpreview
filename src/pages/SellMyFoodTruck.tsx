@@ -566,7 +566,7 @@ const SellMyFoodTruck = () => {
               <div className="mt-7 flex flex-col sm:flex-row gap-3 justify-center">
                 <Button size="lg" variant="cta" asChild>
                   <Link to={LIST_HREF}>
-                    List my equipment free
+                    List My Food Truck
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Link>
                 </Button>
@@ -585,7 +585,7 @@ const SellMyFoodTruck = () => {
         {/* Sticky mobile CTA */}
         <div className="fixed bottom-0 left-0 right-0 z-40 md:hidden border-t border-border bg-background/95 backdrop-blur-sm p-3">
           <Button variant="cta" className="w-full" asChild>
-            <Link to={LIST_HREF}>List free</Link>
+            <Link to={LIST_HREF}>List My Food Truck</Link>
           </Button>
         </div>
       </div>
