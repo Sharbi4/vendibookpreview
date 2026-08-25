@@ -120,6 +120,7 @@ export const CATEGORY_INDEX_CONFIGS: CategoryIndexConfig[] = [
       { href: '/coffee-trucks-trailers-for-sale', label: 'Coffee trucks & trailers for sale' },
       { href: '/ice-cream-trucks-trailers-for-sale', label: 'Ice cream trucks & trailers for sale' },
       { href: '/sell-my-food-truck', label: 'Sell my food truck' },
+      { href: '/food-truck-prices', label: 'Food truck prices & cost calculator' },
       { href: '/tools/food-truck-startup-costs-2026', label: '2026 startup costs' },
     ],
   },
