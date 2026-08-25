@@ -8,6 +8,7 @@ import { SaleCard } from '@/components/listing-detail/sale/SaleCard';
 import { generateFinancingPurchaseSheet } from '@/lib/financing/purchaseSheet';
 import { FinancingAvailableBadge } from '@/components/financing/FinancingAvailableBadge';
 import { useEquinoxFinancingEnabled } from '@/hooks/useListingFinancing';
+import { useFinancingHandoff } from '@/hooks/useFinancingHandoff';
 import { isFinanceableSaleListing } from '@/lib/financing/disclosure';
 import { toast } from 'sonner';
 import {
@@ -31,7 +32,7 @@ interface FinancingActionPanelProps {
  */
 export const FinancingActionPanel = ({ listing, className }: FinancingActionPanelProps) => {
   const [busy, setBusy] = useState(false);
-  const [applying, setApplying] = useState(false);
+  const { startFinancingApply, financingLeadDialog } = useFinancingHandoff();
   const enabled = useEquinoxFinancingEnabled(listing);
 
   if (!enabled) return null;
@@ -41,31 +42,9 @@ export const FinancingActionPanel = ({ listing, className }: FinancingActionPane
       ? 'Financing is not enabled for this listing.'
       : null;
 
-  // The apply URL is issued by the server only after it re-verifies the launch
-  // flag and this seller's per-listing opt-in.
-  const handleApply = async () => {
-    trackFinancingApplyClick('listing_panel', listing.id);
-    setApplying(true);
-    // Open synchronously so mobile browsers don't block the popup.
-    const win = window.open('', '_blank', 'noopener,noreferrer');
-    try {
-      const { data, error } = await supabase.functions.invoke('financing-apply-link', {
-        body: { listingId: listing.id },
-      });
-      if (error || !data?.applyUrl) throw new Error(data?.code || 'apply_unavailable');
-      if (win) win.location.href = data.applyUrl;
-      else window.location.href = data.applyUrl;
-    } catch (err: any) {
-      win?.close();
-      toast.error(
-        err?.message === 'financing_not_available'
-          ? 'Financing is not enabled for this listing.'
-          : 'Could not open the financing application. Please try again.',
-      );
-    } finally {
-      setApplying(false);
-    }
-  };
+  // Handoff runs through the shared flow: placement tracking, Vendibook lead
+  // capture, then the server-issued Equinox apply URL.
+  const handleApply = () => startFinancingApply('listing_panel', listing.id);
 
   const handleDownload = async () => {
     setBusy(true);
@@ -114,15 +93,10 @@ export const FinancingActionPanel = ({ listing, className }: FinancingActionPane
         <Button
           size="sm"
           className="finance-cta justify-center font-semibold"
-          onClick={() => void handleApply()}
-          disabled={applying}
+          onClick={handleApply}
         >
           Apply Now with Equinox
-          {applying ? (
-            <Loader2 className="h-3.5 w-3.5 ml-1.5 animate-spin" />
-          ) : (
-            <ExternalLink className="h-3.5 w-3.5 ml-1.5" />
-          )}
+          <ExternalLink className="h-3.5 w-3.5 ml-1.5" />
         </Button>
 
         <Button
@@ -161,6 +135,7 @@ export const FinancingActionPanel = ({ listing, className }: FinancingActionPane
         approval. Financing is subject to Equinox Funding and/or its funding providers&rsquo;
         approval and terms. Vendibook is not a lender.
       </p>
+      {financingLeadDialog}
     </SaleCard>
   );
 };
