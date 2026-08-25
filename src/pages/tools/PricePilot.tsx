@@ -695,10 +695,11 @@ export default function PricePilot() {
                                               aria-pressed={operationalStatus === o.value}
                                               className={cn('rounded-xl px-3 py-2.5 text-left text-xs font-semibold ring-1 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
                                                 operationalStatus === o.value ? 'bg-primary/[0.08] text-primary ring-primary/50' : 'bg-muted/60 text-muted-foreground ring-border hover:ring-foreground/25')}>
-                                              {o.label}
-                                            </button>
-                                          ))}
+                                                {o.label}
+                                              </button>
+                                            ))}
                                         </div>
+                                        <FieldError id="pp-err-operationalStatus" message={errors.operationalStatus} />
                                       </div>
                                     </motion.div>
                                   )}
