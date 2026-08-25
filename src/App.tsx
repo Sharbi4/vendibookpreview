@@ -144,7 +144,7 @@ const Feedback = lazy(() => import("./pages/Feedback"));
 const VendiAISuite = lazy(() => import("./pages/VendiAISuite"));
 const Browse = lazy(() => import("./pages/Browse"));
 const SellMyFoodTruck = lazy(() => import("./pages/SellMyFoodTruck"));
-const SellFoodTruck = lazy(() => import("./pages/sell/SellFoodTruck"));
+
 const SellFoodTrailer = lazy(() => import("./pages/sell/SellFoodTrailer"));
 const SellConcessionTrailer = lazy(() => import("./pages/sell/SellConcessionTrailer"));
 const RentMyCommercialKitchen = lazy(() => import("./pages/RentMyCommercialKitchen"));
@@ -443,7 +443,8 @@ const AnimatedRoutes = () => {
           
           {/* Seller landing pages */}
           <Route path="/sell-my-food-truck" element={<PageTransition><SellMyFoodTruck /></PageTransition>} />
-          <Route path="/sell-food-truck" element={<PageTransition><SellFoodTruck /></PageTransition>} />
+          {/* Consolidated: /sell-food-truck permanently redirects to the canonical seller page */}
+          <Route path="/sell-food-truck" element={<Navigate to="/sell-my-food-truck" replace />} />
           <Route path="/sell-food-trailer" element={<PageTransition><SellFoodTrailer /></PageTransition>} />
           <Route path="/sell-concession-trailer" element={<PageTransition><SellConcessionTrailer /></PageTransition>} />
 
