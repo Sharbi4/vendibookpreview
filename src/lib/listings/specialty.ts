@@ -25,6 +25,10 @@ export interface SpecialtyDef {
   pluralLower: string;
   /** Hub route, e.g. /coffee-trucks-trailers-for-sale */
   hubPath: string;
+  /** Dedicated truck landing page, e.g. /coffee-trucks-for-sale */
+  truckPath?: string;
+  /** Dedicated trailer landing page, e.g. /coffee-trailers-for-sale */
+  trailerPath?: string;
   /** Query used for the search CTA, e.g. /search?q=coffee */
   searchQuery: string;
   subcategories: string[];
@@ -39,6 +43,8 @@ export const SPECIALTY_DEFS: Record<SpecialtyKey, SpecialtyDef> = {
     pluralTitle: 'Coffee Trucks & Coffee Trailers',
     pluralLower: 'coffee trucks & coffee trailers',
     hubPath: '/coffee-trucks-trailers-for-sale',
+    truckPath: '/coffee-trucks-for-sale',
+    trailerPath: '/coffee-trailers-for-sale',
     searchQuery: 'coffee',
     subcategories: ['coffee_beverage'],
     titlePatterns: ['coffee', 'espresso', 'cold brew', 'cold-brew'],
@@ -54,6 +60,8 @@ export const SPECIALTY_DEFS: Record<SpecialtyKey, SpecialtyDef> = {
     pluralTitle: 'Ice Cream Trucks & Ice Cream Trailers',
     pluralLower: 'ice cream trucks & ice cream trailers',
     hubPath: '/ice-cream-trucks-trailers-for-sale',
+    truckPath: '/ice-cream-trucks-for-sale',
+    trailerPath: '/ice-cream-trailers-for-sale',
     searchQuery: 'ice cream',
     subcategories: ['ice_cream_dessert'],
     titlePatterns: [
