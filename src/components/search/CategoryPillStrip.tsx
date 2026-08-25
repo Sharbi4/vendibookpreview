@@ -2,7 +2,7 @@ import { useRef } from 'react';
 import { ChevronLeft, ChevronRight, Truck, Container, ChefHat, Store, Zap, ShieldCheck, Coffee, IceCreamCone } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ListingCategory } from '@/types/listing';
-import { SPECIALTY_VEHICLE_LABELS, type SpecialtyKey, type SpecialtyVehicle } from '@/lib/listings/specialty';
+import { SPECIALTY_VEHICLE_SHORT_LABELS, type SpecialtyKey, type SpecialtyVehicle } from '@/lib/listings/specialty';
 
 // Specialty collection shortcuts — these set the same deep-link state
 // (specialty query + vehicle category + sale mode) used by hub headers and

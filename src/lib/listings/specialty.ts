@@ -92,6 +92,17 @@ export const SPECIALTY_VEHICLE_LABELS: Record<SpecialtyKey, Record<SpecialtyVehi
   ice_cream: { truck: 'Browse ice cream trucks', trailer: 'Browse ice cream trailers' },
 };
 
+/** Compact labels for filter pills / card chips. */
+export const SPECIALTY_VEHICLE_SHORT_LABELS: Record<SpecialtyKey, Record<SpecialtyVehicle, string>> = {
+  coffee: { truck: 'Coffee trucks', trailer: 'Coffee trailers' },
+  ice_cream: { truck: 'Ice cream trucks', trailer: 'Ice cream trailers' },
+};
+
+/** Specialty search queries must never be treated as place names. */
+export const SPECIALTY_SEARCH_QUERIES = new Set(
+  (Object.keys(SPECIALTY_DEFS) as SpecialtyKey[]).map((k) => SPECIALTY_DEFS[k].searchQuery),
+);
+
 export const specialtyBrowseHref = (key: SpecialtyKey, vehicle: SpecialtyVehicle): string => {
   const def = SPECIALTY_DEFS[key];
   const category = vehicle === 'truck' ? 'food_truck' : 'food_trailer';
