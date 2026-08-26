@@ -346,21 +346,40 @@ const VendiListingBuilder: React.FC = () => {
     return () => window.clearTimeout(timer);
   }, [draft, uploadedUrls, uploadedVideoUrls, draftId, hydrated, resumeChecked, resumeOffers.length, user?.id]);
 
-  // Ask the next unanswered question — once, and only once per question.
+  // Ask the next unanswered question — once, and only once per question, and
+  // always the highest-value one rather than the next line of a script.
   useEffect(() => {
     if (!hydrated || reviewing) return;
-    const q = nextQuestion(draft, answered);
+    const q = rankedNextQuestion(draft, answered, imageCount);
     if (!q) { setReviewing(true); return; }
     if (askedRef.current.has(q.id)) return;
     askedRef.current.add(q.id);
     setAsked((prev) => (prev.includes(q.id) ? prev : [...prev, q.id]));
+    trackVendi('vendi_question_shown', { userId: user?.id, listingId: draftId, metadata: { question: q.id } });
     const prompt = promptText(q, draft);
     setMessages((prev) => {
       const last = prev[prev.length - 1];
       if (last?.role === 'vendi' && last.content === prompt) return prev;
       return [...prev, { id: uid(), role: 'vendi', content: prompt }];
     });
-  }, [draft, answered, hydrated, reviewing]);
+  }, [draft, answered, hydrated, reviewing, imageCount, user?.id, draftId]);
+
+  // The moment the listing first becomes viable, say so plainly. Vendi never
+  // publishes on its own — this is an offer, not an action.
+  useEffect(() => {
+    if (!hydrated || readyAnnouncedRef.current) return;
+    if (getPublishBlockers(draft, imageCount).length) return;
+    readyAnnouncedRef.current = true;
+    trackVendi('vendi_ready_to_publish', { userId: user?.id, listingId: draftId });
+    setMessages((prev) => [...prev, { id: uid(), role: 'vendi', content: READY_MESSAGE }]);
+  }, [draft, imageCount, hydrated, user?.id, draftId]);
+
+  // One "started" event per interview.
+  useEffect(() => {
+    if (!hydrated || !user || startedAnnouncedRef.current) return;
+    startedAnnouncedRef.current = true;
+    trackVendi('vendi_started', { userId: user.id, sessionKey: sessionKeyRef.current });
+  }, [hydrated, user]);
 
 
   // Final publish gate: present the same seller disclosure the step-by-step
@@ -386,12 +405,60 @@ const VendiListingBuilder: React.FC = () => {
   const say = (role: Msg['role'], content: string) =>
     setMessages((prev) => [...prev, { id: uid(), role, content }]);
 
-  const submitAnswer = useCallback((raw: string, display?: string) => {
+  /**
+   * Every seller message goes through corrections first.
+   *
+   * "change the price to 119k", "remove generator", "actually it’s in North
+   * Charleston, SC", "undo that", "what’s missing?" are handled wherever the
+   * seller is in the interview — the draft is edited in place and the interview
+   * never restarts. Only when a message is not a command is it treated as the
+   * answer to the current question.
+   */
+  const submitAnswer = useCallback((raw: string, display?: string, fromButton = false) => {
     const q = current;
-    if (!q) return;
     const text = raw.trim();
     if (!text) return;
     const echo = display ?? (text.length > 420 ? `${text.slice(0, 420)}…` : text);
+
+    if (!fromButton) {
+      const command = parseCommand(text, draft, imageCount);
+      if (command?.kind === 'answer') {
+        say('user', echo); setInput('');
+        say('vendi', command.text);
+        return;
+      }
+      if (command?.kind === 'undo') {
+        say('user', echo); setInput('');
+        if (!history.length) { say('vendi', 'Nothing to undo yet.'); return; }
+        const previous = history[history.length - 1];
+        setHistory((h) => h.slice(0, -1));
+        setDraft(previous);
+        say('vendi', 'Reverted that last change. Everything else is untouched.');
+        return;
+      }
+      if (command?.kind === 'edit') {
+        say('user', echo); setInput('');
+        setHistory((h) => [...h, draft].slice(-10));
+        setDraft((prev) => ({ ...prev, ...command.patch }));
+        if (command.dropAnswered?.length) {
+          const drop = new Set(command.dropAnswered);
+          drop.forEach((id) => askedRef.current.delete(id));
+          setAsked((ids) => ids.filter((id) => !drop.has(id)));
+          setAnswered((ids) => ids.filter((id) => !drop.has(id)));
+          setReviewing(false);
+        }
+        if (command.answeredIds?.length) {
+          setAnswered((ids) => Array.from(new Set([...ids, ...command.answeredIds!])));
+        }
+        trackVendi('vendi_field_corrected', {
+          userId: user?.id, listingId: draftId, metadata: { fields: command.fields.join(',') },
+        });
+        say('vendi', command.ack);
+        return;
+      }
+    }
+
+    if (!q) return;
     say('user', echo);
     setInput('');
 
@@ -402,10 +469,34 @@ const VendiListingBuilder: React.FC = () => {
 
     const result = q.apply(draft, text);
     if (result.error) { say('vendi', result.error); return; }
+
+    setHistory((h) => [...h, draft].slice(-10));
     setDraft((prev) => ({ ...prev, ...(result.patch ?? {}) }));
-    setAnswered((prev) => [...prev, q.id, ...(result.answeredIds ?? [])]);
+
+    // "Publish now" at the ready gate must end the interview, not hand the
+    // seller the rest of the optional questions one at a time.
+    const skipRest = q.id === 'ready_gate' && /review|publish|no|skip/i.test(text);
+    setAnswered((prev) => {
+      const next = [...prev, q.id, ...(result.answeredIds ?? [])];
+      return skipRest
+        ? Array.from(new Set([...next, ...remainingQuestionIds(draft, next)]))
+        : next;
+    });
+
+    if (q.id === 'import_paste') {
+      trackVendi('vendi_bulk_input_used', {
+        userId: user?.id, listingId: draftId,
+        metadata: { fields: (result.answeredIds ?? []).join(',') },
+      });
+    }
+    if (result.answeredIds?.length) {
+      trackVendi('vendi_field_captured', {
+        userId: user?.id, listingId: draftId, metadata: { fields: result.answeredIds.join(',') },
+      });
+    }
     if (result.say) say('vendi', result.say);
-  }, [current, draft]);
+  }, [current, draft, imageCount, history, user?.id, draftId]);
+
 
 
   const handlePhotos = (files: FileList | null) => {
