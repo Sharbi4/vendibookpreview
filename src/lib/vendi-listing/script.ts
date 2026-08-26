@@ -407,17 +407,32 @@ export const QUESTIONS: Question[] = [
     id: 'description',
     kind: 'text',
     tier: 'core',
-    prompt: (d) => (isStaticLocation(d.category)
-      ? 'Tell me about the space in your own words — equipment, size, who it suits.'
-      : 'Tell me about it in your own words — the build, equipment, condition, what’s included.'),
+    prompt: (d) => {
+      const label = categoryLabel(d);
+      if (isStaticLocation(d.category)) {
+        return 'Now tell me about the space in your own words — size, equipment, who it suits, anything a vendor would want to know. ' +
+          'You don’t have to organize it; I’ll do that part.';
+      }
+      return `Now tell me about the ${label ?? 'it'} in your own words — year, condition, what it was used for, equipment that’s ` +
+        'included, anything you think a buyer would want to know. You don’t have to organize it; I’ll do that part.';
+    },
     tip: () => 'Naming the actual equipment is what turns browsers into buyers. Only what you know for sure.',
     placeholder: 'Tell me about the build, equipment, and condition…',
-    apply: (_d, raw) => {
+    apply: (d, raw) => {
       const description = cleanText(raw).slice(0, 4000);
       if (description.length < 20) return { error: 'A couple more sentences would help — at least 20 characters.' };
-      return { patch: { description } };
+      // A seller can answer several fields at once. Anything explicitly stated
+      // here is captured now and never asked again.
+      const facts = extractExtraFacts(d, raw);
+      const merged = { ...d, description, ...facts.patch } as VendiDraft;
+      return {
+        patch: { description, ...facts.patch },
+        answeredIds: facts.answeredIds,
+        say: facts.captured.length ? captureSummary(merged) : undefined,
+      };
     },
   },
+
   {
     id: 'fulfillment',
     kind: 'choice',
