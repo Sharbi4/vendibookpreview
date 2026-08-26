@@ -298,8 +298,10 @@ const VendiListingBuilder: React.FC = () => {
       setConsentId(id);
       say('vendi', 'Recorded and dated. Publish Listing is now unlocked — publishing is still your explicit action.');
     } catch (error) {
+      setAttestError('We could not record your acknowledgment. Type YES again to retry.');
       say('vendi', 'I could not record your acknowledgment. Please try typing YES again, or contact support@vendibook.com.');
       toast.error(error instanceof Error ? error.message : 'Could not record your acceptance.');
+
     } finally {
       setAttesting(false);
     }
