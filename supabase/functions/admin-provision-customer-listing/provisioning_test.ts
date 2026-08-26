@@ -50,3 +50,14 @@ Deno.test("rejects unknown categories and non-HTTPS photos", () => {
     image_urls: ["http://example.com/photo.jpg"],
   }));
 });
+
+Deno.test("rejects inferred or privileged structured fields", () => {
+  assertThrows(() => buildConciergeListing({
+    mode: "rent",
+    category: "food_trailer",
+    title: "Rental",
+    description: "Customer-provided description.",
+    image_urls: [],
+    length_inches: 192,
+  } as never));
+});

@@ -22,6 +22,11 @@ export interface ConciergeListingInput {
 const ALLOWED_MODES = new Set<ListingMode>(["rent", "sale"]);
 const ALLOWED_CATEGORIES = new Set(["food_truck", "food_trailer"]);
 const ALLOWED_FULFILLMENT = new Set(["pickup", "delivery", "both", "on_site"]);
+const ALLOWED_INPUT_KEYS = new Set([
+  "mode", "category", "title", "description", "subcategory",
+  "price_daily", "price_weekly", "price_monthly", "price_hourly", "price_sale",
+  "city", "state", "postal_code", "image_urls", "cover_image_url", "fulfillment_type",
+]);
 
 function optionalText(value: unknown, maxLength: number): string | null {
   if (value === null || value === undefined || value === "") return null;
@@ -67,6 +72,11 @@ function imageUrls(value: unknown): string[] {
  * photo or added as an undocumented assumption. Unknown fields stay null.
  */
 export function buildConciergeListing(input: ConciergeListingInput) {
+  const unsupported = Object.keys(input).filter((key) => !ALLOWED_INPUT_KEYS.has(key));
+  if (unsupported.length) {
+    throw new Error(`Unsupported listing fields: ${unsupported.join(", ")}. Unknown details must be left blank.`);
+  }
+
   const mode = typeof input.mode === "string" ? input.mode.trim() as ListingMode : "";
   if (!ALLOWED_MODES.has(mode as ListingMode)) throw new Error("mode must be rent or sale.");
 
