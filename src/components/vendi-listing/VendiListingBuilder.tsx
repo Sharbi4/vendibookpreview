@@ -65,6 +65,7 @@ const VendiListingBuilder: React.FC = () => {
   const [input, setInput] = useState('');
   const [photos, setPhotos] = useState<LocalPhoto[]>([]);
   const [uploadedUrls, setUploadedUrls] = useState<string[]>([]);
+  const [uploadedVideoUrls, setUploadedVideoUrls] = useState<string[]>([]);
   const [reviewing, setReviewing] = useState(false);
   const [publishing, setPublishing] = useState(false);
   const [showMobilePreview, setShowMobilePreview] = useState(false);
@@ -74,6 +75,8 @@ const VendiListingBuilder: React.FC = () => {
   const [attesting, setAttesting] = useState(false);
   const [attestInput, setAttestInput] = useState('');
   const [attestError, setAttestError] = useState<string | null>(null);
+  const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+  const [savingManually, setSavingManually] = useState(false);
 
   const creatingDraftRef = useRef(false);
   const disclosureShownRef = useRef(false);
@@ -94,7 +97,8 @@ const VendiListingBuilder: React.FC = () => {
     [draft, answered, reviewing],
   );
 
-  // Restore this signed-in owner's in-progress conversation
+  // Restore this signed-in owner's in-progress conversation. We never restart
+  // the interview or re-ask something they already answered.
   useEffect(() => {
     if (!storageKey) return;
     try {
@@ -104,7 +108,14 @@ const VendiListingBuilder: React.FC = () => {
         if (parsed?.draft) {
           setDraft(parsed.draft);
           setAnswered(parsed.answered ?? []);
-          setMessages(parsed.messages ?? []);
+          const restored = parsed.messages ?? [];
+          setMessages(restored.length
+            ? [...restored, {
+                id: uid(),
+                role: 'vendi' as const,
+                content: 'Welcome back — I saved your progress. We can pick up right where you left off.',
+              }]
+            : restored);
           setDraftId(parsed.draftId ?? null);
           setConsentId(parsed.consentId ?? null);
         }
@@ -119,6 +130,7 @@ const VendiListingBuilder: React.FC = () => {
       localStorage.setItem(storageKey, JSON.stringify({ draft, answered, messages, draftId, consentId }));
     } catch { /* quota — non-fatal */ }
   }, [draft, answered, messages, draftId, consentId, hydrated, storageKey]);
+
 
 
   // Create the owned draft row as soon as we know mode + category, so every
