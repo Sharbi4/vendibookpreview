@@ -191,19 +191,80 @@ export async function findActiveVendiDraft(
   return session;
 }
 
-/** Re-read one draft (used when returning from the full editor). */
-export async function reloadVendiDraft(listingId: string): Promise<ActiveVendiDraft | null> {
+/**
+ * What the server says about the row this browser thinks it is editing.
+ *
+ * A cached `draftId` is a hint, never a fact: between two visits the seller may
+ * have published it, archived it, or deleted it from the dashboard or the full
+ * editor. Vendi must never keep chatting into — or autosaving onto — a row that
+ * is no longer an unfinished draft.
+ */
+export type DraftVerification =
+  | { state: 'active'; draft: ActiveVendiDraft }
+  /** Deleted, soft-deleted, or not owned by this account. */
+  | { state: 'gone' }
+  /** Still exists but has left the draft lifecycle (published / paused / archived). */
+  | { state: 'not_draft'; status: string };
+
+/**
+ * Authoritative re-read of one listing for this owner. Used on resume, when a
+ * cached draft id is restored, when returning from the full editor, and when
+ * the tab regains focus — so the newest server values always win over stale
+ * browser state, and a removed draft is detected instead of silently written to.
+ */
+export async function verifyVendiDraft(
+  listingId: string,
+  userId: string,
+): Promise<DraftVerification> {
   const { data } = await supabase
     .from('listings')
-    .select(ACTIVE_DRAFT_COLUMNS)
+    .select(`${ACTIVE_DRAFT_COLUMNS},deleted_at,host_id`)
     .eq('id', listingId)
+    .eq('host_id', userId)
     .maybeSingle();
-  if (!data) return null;
+
+  if (!data) return { state: 'gone' };
   const row = data as unknown as ListingRow;
-  if (row.status !== RESUMABLE_STATUS) return null;
+  if (row.deleted_at) return { state: 'gone' };
+  if (row.status !== RESUMABLE_STATUS) return { state: 'not_draft', status: String(row.status ?? '') };
+
   const docs = row.mode === 'rent' ? await loadRequiredDocuments(String(row.id)) : [];
-  return toActive(row, docs);
+  return { state: 'active', draft: toActive(row, docs) };
 }
+
+/**
+ * Open any of the owner's own drafts in Vendi (dashboard "Continue with Vendi").
+ *
+ * A draft the seller started in the manual wizard has no Vendi session key yet;
+ * claiming it with this browser's key keeps the one-row guarantee intact, so
+ * later create calls resolve to this listing instead of inserting a second one.
+ */
+export async function adoptDraftIntoVendiSession(
+  listingId: string,
+  userId: string,
+  sessionKey: string,
+): Promise<DraftVerification> {
+  const verified = await verifyVendiDraft(listingId, userId);
+  if (verified.state !== 'active') return verified;
+
+  if (verified.draft.session_key) {
+    adoptVendiSessionKey(userId, verified.draft.session_key);
+    return verified;
+  }
+
+  const { error } = await supabase
+    .from('listings')
+    .update({ vendi_session_key: sessionKey } as never)
+    .eq('id', listingId)
+    .eq('host_id', userId)
+    .eq('status', RESUMABLE_STATUS)
+    .is('vendi_session_key', null);
+  // A claim collision just means another tab got there first; the row is still
+  // this listing, so continuing is safe either way.
+  if (error) return verified;
+  return { state: 'active', draft: { ...verified.draft, session_key: sessionKey } };
+}
+
 
 export interface CreateDraftArgs {
   sessionKey: string;

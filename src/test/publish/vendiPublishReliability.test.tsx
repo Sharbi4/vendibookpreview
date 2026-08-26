@@ -43,7 +43,21 @@ vi.mock('@/integrations/supabase/client', () => {
       insert: async () => ({ error: null }),
       select: () => b,
       eq: () => b,
-      maybeSingle: async () => ({ data: null, error: null }),
+      is: () => b,
+      not: () => b,
+      order: () => b,
+      limit: () => b,
+      // The builder verifies its cached draft id against the server on arrival;
+      // this row is the seller's still-unfinished draft.
+      maybeSingle: async () => ({
+        data: {
+          id: 'listing-1', host_id: USER.id, status: 'draft', deleted_at: null,
+          mode: 'rent', category: 'food_trailer', vendi_session_key: 'key-1',
+          created_at: '2026-01-01T00:00:00Z', updated_at: '2026-01-02T00:00:00Z',
+        },
+        error: null,
+      }),
+
     };
     return b;
   };
