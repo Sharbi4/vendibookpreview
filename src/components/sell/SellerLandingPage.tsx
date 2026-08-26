@@ -183,7 +183,13 @@ const SellerLandingPage = ({
                 {TRUST_BULLETS.map((b) => (
                   <li key={b} className="flex items-center gap-2">
                     <Check className="h-4 w-4 text-primary flex-shrink-0" />
-                    <span>{b}</span>
+                    {b.startsWith('PayPal Checkout') ? (
+                      <Link to="/payments" className="underline underline-offset-4 hover:text-foreground">
+                        {b}
+                      </Link>
+                    ) : (
+                      <span>{b}</span>
+                    )}
                   </li>
                 ))}
               </ul>
