@@ -36,6 +36,21 @@ export interface CompRow {
   evidenceType: 'facebook_observed' | 'vendibook_asking' | 'vendibook_verified';
   similarity: number; qualityFlags: string[];
 }
+export interface MarketEvidenceComp {
+  title: string; category: string | null; city: string | null; state: string | null;
+  year: number | null; lengthFt: number | null; displayedPrice: number | null;
+  observedStatus: string; sourceLabel: string; transactionPriceVerified: boolean;
+  evidenceNote: string;
+}
+export interface MarketEvidence {
+  observationsAnalyzed: number;
+  closeMatches: number;
+  geographicScope: string;
+  medianDisplayedPrice: number | null;
+  rangeLow: number | null;
+  rangeHigh: number | null;
+  comparables: MarketEvidenceComp[];
+}
 interface Narrative {
   headline?: string; summary?: string;
   drivers_positive?: string[]; drivers_negative?: string[];
@@ -72,6 +87,7 @@ export interface PricingResponse {
     comparableCount: number;
   };
   comparables: CompRow[];
+  marketEvidence?: MarketEvidence | null;
   narrative: Narrative | null;
   generatedAt: string;
 }
