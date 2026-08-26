@@ -468,6 +468,23 @@ async function propagateToDomainRecord(
           });
         }
       }
+
+      // Instant Book auto-approved on payment: ensure the rental agreement is
+      // out for signature. Idempotent + config-tolerant; host-approved bookings
+      // trigger the same helper from the approval path.
+      if (update.status === "approved") {
+        try {
+          const { ensureRentalAgreement } = await import("./signnowDocuments.ts");
+          const res = await ensureRentalAgreement(record.booking_request_id);
+          safeLog("signnow_rental_agreement", { bookingId: record.booking_request_id, res });
+        } catch (err) {
+          safeLog("signnow_rental_agreement_failed", {
+            bookingId: record.booking_request_id,
+            message: (err as Error).message,
+          });
+        }
+      }
+
     }
     if (record.monetization_purchase_id) {
       await supabase.from("monetization_purchases").update({
