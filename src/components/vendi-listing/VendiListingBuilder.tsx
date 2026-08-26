@@ -1399,6 +1399,30 @@ const VendiListingBuilder: React.FC = () => {
                   </ul>
                 )}
 
+                {/* Plain-language recap of the captured facts. Each row is
+                    tappable so a last-second correction never means retyping. */}
+                {facts.length > 0 && (
+                  <dl className="mt-5 divide-y divide-white/[0.06] overflow-hidden rounded-2xl border border-white/[0.08] bg-white/[0.025]">
+                    {facts.map((f) => (
+                      <div key={`review-${f.questionId}-${f.label}`} className="flex items-start gap-3 px-4 py-2.5">
+                        <dt className="w-28 flex-none text-xs uppercase tracking-[0.12em] text-muted-foreground">
+                          {f.label}
+                        </dt>
+                        <dd className="min-w-0 flex-1 text-sm text-foreground/90">{f.value}</dd>
+                        <button
+                          type="button"
+                          onClick={() => reopenFact(f.questionId)}
+                          className="flex-none text-xs text-primary underline-offset-4 hover:underline"
+                        >
+                          Change
+                        </button>
+                      </div>
+                    ))}
+                  </dl>
+                )}
+
+
+
                 {/* Seller disclosure — identical language to the standard wizard */}
                 <div className="mt-6 rounded-2xl border border-white/[0.1] bg-white/[0.03] p-5">
                   <h3 className="text-sm font-semibold tracking-[-0.01em]">Before you publish</h3>
