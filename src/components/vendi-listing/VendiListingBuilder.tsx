@@ -914,7 +914,9 @@ const VendiListingBuilder: React.FC = () => {
 
       <div className="relative mx-auto grid max-w-6xl gap-6 px-4 py-6 sm:px-6 lg:grid-cols-[1fr_400px] lg:py-10">
         <section className="dash-glass flex min-h-[68vh] flex-col overflow-hidden p-0">
-          <div className="flex-1 space-y-5 overflow-y-auto px-4 py-6 sm:px-7 sm:py-8">
+          {/* Keyed by session: "Start over" drops the old thread instantly
+              instead of leaving exiting bubbles on screen. */}
+          <div key={sessionSeq} className="flex-1 space-y-5 overflow-y-auto px-4 py-6 sm:px-7 sm:py-8">
             <AnimatePresence initial={false}>
               {messages.map((m) => (
                 <motion.div
